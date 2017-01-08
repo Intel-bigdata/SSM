@@ -41,6 +41,8 @@ import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.protocol.CorruptFileBlocks;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.EncryptionZone;
+import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+import org.apache.hadoop.hdfs.protocol.FilesInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LastBlockWithStatus;
@@ -98,6 +100,10 @@ import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.FsyncR
 import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.FsyncResponseProto;
 import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetAdditionalDatanodeRequestProto;
 import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetAdditionalDatanodeResponseProto;
+import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetFilesAccessInfoRequestProto;
+import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetFilesAccessInfoResponseProto;
+import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetFilesInfoRequestProto;
+import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetFilesInfoResponseProto;
 import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetBlockLocationsRequestProto;
 import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetBlockLocationsResponseProto;
 import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetBlockLocationsResponseProto.Builder;
@@ -374,6 +380,43 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
   public ClientNamenodeProtocolServerSideTranslatorPB(ClientProtocol server)
       throws IOException {
     this.server = server;
+  }
+
+  @Override
+  public GetFilesInfoResponseProto getFilesInfo(RpcController controller,
+      GetFilesInfoRequestProto req) throws ServiceException {
+    try {
+      List<String> paths = req.getFilePathsList();
+      FilesInfo info = server.getFilesInfo(paths.toArray(
+          new String[paths.size()]),
+          req.getInfoType(),
+          req.getExpandDir(),
+          req.getIncludeDir());
+      GetFilesInfoResponseProto.Builder builder =
+          GetFilesInfoResponseProto.newBuilder();
+      if (builder != null) {
+        return builder.setInfo(PBHelperClient.convert(info)).build();
+      }
+      return null;
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public GetFilesAccessInfoResponseProto getFilesAccessInfo(
+          RpcController controller, GetFilesAccessInfoRequestProto req)
+    throws ServiceException {
+    try {
+      FilesAccessInfo info = server.getFilesAccessInfo();
+      GetFilesAccessInfoResponseProto.Builder builder = GetFilesAccessInfoResponseProto.newBuilder();
+      if (builder != null) {
+        return builder.setAccessInfo(PBHelperClient.convert(info)).build();
+      }
+      return null;
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
   }
 
   @Override

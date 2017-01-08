@@ -261,12 +261,31 @@ message DeleteResponseProto {
     required bool result = 1;
 }
 
+message GetFilesAccessInfoRequestProto { // void
+}
+
+message GetFilesAccessInfoResponseProto {
+    required FilesAccessInfoProto accessInfo = 1;
+}
+
+message GetFilesInfoRequestProto {
+    repeated string filePaths = 1;
+    required int32 infoType = 2;
+    required bool expandDir = 3;
+    required bool includeDir = 4;
+}
+
+message GetFilesInfoResponseProto {
+    required FilesInfoProto info = 1;
+}
+
 message MkdirsRequestProto {
   required string src = 1;
   required FsPermissionProto masked = 2;
   required bool createParent = 3;
   optional FsPermissionProto unmasked = 4;
 }
+
 message MkdirsResponseProto {
     required bool result = 1;
 }
@@ -751,6 +770,10 @@ message GetEditsFromTxidResponseProto {
 }
 
 service ClientNamenodeProtocol {
+  rpc getFilesInfo(GetFilesInfoRequestProto)
+      returns(GetFilesInfoResponseProto);
+  rpc getFilesAccessInfo(GetFilesAccessInfoRequestProto)
+      returns(GetFilesAccessInfoResponseProto);
   rpc getBlockLocations(GetBlockLocationsRequestProto)
       returns(GetBlockLocationsResponseProto);
   rpc getServerDefaults(GetServerDefaultsRequestProto)

@@ -136,6 +136,27 @@ public interface ClientProtocol {
   FsServerDefaults getServerDefaults() throws IOException;
 
   /**
+   *
+   * @return
+   * @throws IOException
+   */
+  @Idempotent
+  FilesAccessInfo getFilesAccessInfo() throws IOException;
+
+  /**
+   * Get certain info of files
+   * @param filePaths
+   * @param infoType the types of info to be returned
+   * @param expandDir get files in the directory if the path is a directory
+   * @param includeDir log the directory info also if true
+   * @return
+   * @throws IOException
+   */
+  @Idempotent
+  FilesInfo getFilesInfo(String[] filePaths, int infoType,
+      boolean expandDir, boolean includeDir) throws IOException;
+
+  /**
    * Create a new file entry in the namespace.
    * <p>
    * This will create an empty file specified by the source path.
