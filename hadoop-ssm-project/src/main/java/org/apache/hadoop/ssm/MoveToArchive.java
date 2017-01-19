@@ -16,10 +16,9 @@ public  class MoveToArchive extends ActionBase {
 
   private static MoveToArchive instance;
   public static final byte COLD_STORAGE_POLICY_ID = 2;
-//  public static final String COLD_STORAGE_POLICY_NAME = "COLD";
-  String fileName;
+  private String fileName;
   private DFSClient dfsClient;
-  Configuration conf;
+  private Configuration conf;
 
   public MoveToArchive(DFSClient client, Configuration conf) {
     super(client);

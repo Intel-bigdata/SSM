@@ -16,10 +16,9 @@ public  class MoveToSSD extends ActionBase {
 
   private static MoveToSSD instance;
   public static final byte ALLSSD_STORAGE_POLICY_ID = 12;
-  public static final String ALLSSD_STORAGE_POLICY_NAME = "ALL_SSD";
-  String fileName;
+  private String fileName;
   private DFSClient dfsClient;
-  Configuration conf;
+  private Configuration conf;
 
   public MoveToSSD(DFSClient client, Configuration conf) {
     super(client);
