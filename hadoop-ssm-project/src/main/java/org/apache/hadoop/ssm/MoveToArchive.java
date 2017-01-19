@@ -1,6 +1,8 @@
 
 package org.apache.hadoop.ssm;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.FilesInfo;
@@ -13,16 +15,14 @@ import static org.apache.hadoop.hdfs.protocol.FilesInfo.STORAGEPOLICY;
  * Created by cc on 17-1-15.
  */
 public  class MoveToArchive extends ActionBase {
-
+  private static final Log LOG = LogFactory.getLog(MoveToArchive.class);
   private static MoveToArchive instance;
   public static final byte COLD_STORAGE_POLICY_ID = 2;
   private String fileName;
-  private DFSClient dfsClient;
   private Configuration conf;
 
   public MoveToArchive(DFSClient client, Configuration conf) {
     super(client);
-    this.dfsClient = client;
     this.conf = conf;
   }
 
@@ -54,7 +54,7 @@ public  class MoveToArchive extends ActionBase {
     if (getStoragePolicy(fileName) == COLD_STORAGE_POLICY_ID) {
       return true;
     }
-    System.out.println("*" + System.currentTimeMillis() + " : " + fileName + " -> " + "archive");
+    LOG.info("*" + System.currentTimeMillis() + " : " + fileName + " -> " + "archive");
     try {
       dfsClient.setStoragePolicy(fileName, "COLD");
     } catch (Exception e) {

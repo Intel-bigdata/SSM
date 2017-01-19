@@ -1,6 +1,8 @@
 
 package org.apache.hadoop.ssm;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.FilesInfo;
@@ -13,16 +15,14 @@ import static org.apache.hadoop.hdfs.protocol.FilesInfo.STORAGEPOLICY;
  * Created by cc on 17-1-15.
  */
 public  class MoveToSSD extends ActionBase {
-
+  private static final Log LOG = LogFactory.getLog(MoveToSSD.class);
   private static MoveToSSD instance;
   public static final byte ALLSSD_STORAGE_POLICY_ID = 12;
   private String fileName;
-  private DFSClient dfsClient;
   private Configuration conf;
 
   public MoveToSSD(DFSClient client, Configuration conf) {
     super(client);
-    this.dfsClient = client;
     this.conf = conf;
   }
 
@@ -54,7 +54,7 @@ public  class MoveToSSD extends ActionBase {
     if (getStoragePolicy(fileName) == ALLSSD_STORAGE_POLICY_ID) {
       return true;
     }
-    System.out.println("*" + System.currentTimeMillis() + " : " + fileName + " -> " + "ssd");
+    LOG.info("*" + System.currentTimeMillis() + " : " + fileName + " -> " + "ssd");
     try {
       dfsClient.setStoragePolicy(fileName, "ALL_SSD");
     } catch (Exception e) {
