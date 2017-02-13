@@ -17,39 +17,32 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.ws.rs.core.Response;
-import java.util.UUID;
-
-
 /**
- * SSM web methods.
+ * Created by root on 2/10/17.
  */
-public class SSMWebMethods {
-  public static final Log LOG = LogFactory.getLog(SSMWebMethods.class);
+public class HttpPutOp extends HttpOp{
+  public enum Op implements HttpOp.Op{
+    ADDRULE,
+    RUNCOMMAND;
 
-  private Response put(HttpPutOp op) {
-    switch (op.getOp()) {
-      case ADDRULE: {
-
-      }
-      case RUNCOMMAND: {
-
-      }
-      default:
-        throw new UnsupportedOperationException(op + " is not supported");
+    @Override
+    public Type getType() {
+      return Type.PUT;
     }
   }
 
-  private Response get(HttpGetOp op, UUID id) {
-    switch (op.getOp()) {
-      case GETCOMMANDSTATUS: {
+  private Op op;
 
-      }
-      default:
-        throw new UnsupportedOperationException(op + " is not supported");
-    }
+  public HttpPutOp(Op op) {
+    this.op = op;
+  }
+
+  public void setOp(Op op) {
+    this.op = op;
+  }
+
+  @Override
+  public Op getOp() {
+    return op;
   }
 }
