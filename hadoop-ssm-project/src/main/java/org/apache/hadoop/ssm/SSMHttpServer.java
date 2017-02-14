@@ -19,27 +19,23 @@ package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.server.namenode.web.resources.NamenodeWebHdfsMethods;
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
+import org.apache.hadoop.hdfs.web.resources.Param;
 import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.net.NetUtils;
-import org.apache.hadoop.security.authorize.AccessControlList;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_ADMIN;
-
 /**
- * Encapsulates the HTTP server started by the NameNode.
+ * Encapsulates the HTTP server started by the SSMHttpServer.
  */
 @InterfaceAudience.Private
 public class SSMHttpServer {
-  private static HttpServer2 httpServer;
+  private HttpServer2 httpServer;
   private final Configuration conf;
-//  private InetSocketAddress httpAddress;
-//  private InetSocketAddress httpsAddress;
   private final InetSocketAddress bindAddress;
 
   SSMHttpServer(InetSocketAddress bindAddress, Configuration conf) {
@@ -47,23 +43,32 @@ public class SSMHttpServer {
     this.conf = conf;
   }
 
-  private static void init() {
+  private void init() throws IOException {
+//    final String className = conf.get(
+//            DFSConfigKeys.DFS_WEBHDFS_AUTHENTICATION_FILTER_KEY,
+//            DFSConfigKeys.DFS_WEBHDFS_AUTHENTICATION_FILTER_DEFAULT);
+//    final String name = className;
+
     final String pathSpec = WebHdfsFileSystem.PATH_PREFIX + "/*";
-//    httpServer.addJerseyResourcePackage(SSMWebMethods.class
-//                    .getPackage().getName() + ";" + Param.class.getPackage().getName(),
-//            pathSpec);
+//    Map<String, String> params = getAuthFilterParams(conf);
+//    HttpServer2.defineFilter(httpServer.getWebAppContext(), name, className,
+//            params, new String[] { pathSpec });
+    httpServer.addJerseyResourcePackage(NamenodeWebHdfsMethods.class
+                    .getPackage().getName() + ";" + Param.class.getPackage().getName(),
+            pathSpec);
   }
-  
+
   void start() throws IOException, URISyntaxException {
+//    init();
     HttpServer2.Builder builder = new HttpServer2.Builder().setName("hdfs")
-            .setConf(conf).setACL(new AccessControlList(conf.get(DFS_ADMIN, " ")));
-    builder.setSecurityEnabled(true);
+            .setConf(conf);
+//    .setACL(new AccessControlList(conf.get(DFS_ADMIN, " "))
+//    builder.setSecurityEnabled(true);
     if (bindAddress.getPort() == 0) {
       builder.setFindPort(true);
     }
     URI uri = URI.create("http://" + NetUtils.getHostPortString(bindAddress));
     builder.addEndpoint(uri);
-
     httpServer = builder.build();
 //    setupServlets(httpServer, conf);
     httpServer.start();
@@ -74,7 +79,63 @@ public class SSMHttpServer {
       httpServer.stop();
     }
   }
+
+  /**
+   * Joins the httpserver.
+   */
+  public void join() throws InterruptedException {
+    if (httpServer != null) {
+      httpServer.join();
+    }
+  }
 }
+//  private Map<String, String> getAuthFilterParams(Configuration conf)
+//          throws IOException {
+//    Map<String, String> params = new HashMap<String, String>();
+//    // Select configs beginning with 'dfs.web.authentication.'
+//    Iterator<Map.Entry<String, String>> iterator = conf.iterator();
+//    while (iterator.hasNext()) {
+//      Map.Entry<String, String> kvPair = iterator.next();
+//      if (kvPair.getKey().startsWith(AuthFilter.CONF_PREFIX)) {
+//        params.put(kvPair.getKey(), kvPair.getValue());
+//      }
+//    }
+//    String principalInConf = conf
+//            .get(DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBEROS_PRINCIPAL_KEY);
+//    if (principalInConf != null && !principalInConf.isEmpty()) {
+//      params
+//              .put(
+//                      DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBEROS_PRINCIPAL_KEY,
+//                      SecurityUtil.getServerPrincipal(principalInConf,
+//                              bindAddress.getHostName()));
+//    } else if (UserGroupInformation.isSecurityEnabled()) {
+//      HttpServer2.LOG.error(
+//              "WebHDFS and security are enabled, but configuration property '" +
+//                      DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBEROS_PRINCIPAL_KEY +
+//                      "' is not set.");
+//    }
+//    String httpKeytab = conf.get(DFSUtil.getSpnegoKeytabKey(conf,
+//            DFSConfigKeys.DFS_NAMENODE_KEYTAB_FILE_KEY));
+//    if (httpKeytab != null && !httpKeytab.isEmpty()) {
+//      params.put(
+//              DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBEROS_KEYTAB_KEY,
+//              httpKeytab);
+//    } else if (UserGroupInformation.isSecurityEnabled()) {
+//      HttpServer2.LOG.error(
+//              "WebHDFS and security are enabled, but configuration property '" +
+//                      DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBEROS_KEYTAB_KEY +
+//                      "' is not set.");
+//    }
+//    String anonymousAllowed = conf
+//            .get(DFSConfigKeys.DFS_WEB_AUTHENTICATION_SIMPLE_ANONYMOUS_ALLOWED);
+//    if (anonymousAllowed != null && !anonymousAllowed.isEmpty()) {
+//      params.put(
+//              DFSConfigKeys.DFS_WEB_AUTHENTICATION_SIMPLE_ANONYMOUS_ALLOWED,
+//              anonymousAllowed);
+//    }
+//    return params;
+//  }
+//}
 
 
 //    final boolean xFrameEnabled = conf.getBoolean(
