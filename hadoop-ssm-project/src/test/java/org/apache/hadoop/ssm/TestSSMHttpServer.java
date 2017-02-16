@@ -18,7 +18,6 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.web.URLConnectionFactory;
 import org.apache.hadoop.http.HttpConfig.Policy;
 import org.apache.hadoop.net.NetUtils;
@@ -26,6 +25,7 @@ import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -60,49 +60,39 @@ public class TestSSMHttpServer {
     this.policy = policy;
   }
 
-//  @BeforeClass
-//  public static void setUp() throws Exception {
-//    File base = new File(BASEDIR);
+  @BeforeClass
+  public static void setUp() throws Exception {
+    File base = new File(BASEDIR);
 //    FileUtil.fullyDelete(base);
 //    base.mkdirs();
-//    conf = new Configuration();
+    conf = new Configuration();
 //    keystoresDir = new File(BASEDIR).getAbsolutePath();
 //    sslConfDir = KeyStoreTestUtil.getClasspathDir(TestSSMHttpServer.class);
 //    KeyStoreTestUtil.setupSSLConfig(keystoresDir, sslConfDir, conf, false);
-//    connectionFactory = URLConnectionFactory
-//            .newDefaultURLConnectionFactory(conf);
+    connectionFactory = URLConnectionFactory
+            .newDefaultURLConnectionFactory(conf);
 //    conf.set(DFSConfigKeys.DFS_CLIENT_HTTPS_KEYSTORE_RESOURCE_KEY,
 //            KeyStoreTestUtil.getClientSSLConfigFileName());
 //    conf.set(DFSConfigKeys.DFS_SERVER_HTTPS_KEYSTORE_RESOURCE_KEY,
 //            KeyStoreTestUtil.getServerSSLConfigFileName());
-//  }
+  }
 
   @AfterClass
   public static void tearDown() throws Exception {
-    FileUtil.fullyDelete(new File(BASEDIR));
+//    FileUtil.fullyDelete(new File(BASEDIR));
     KeyStoreTestUtil.cleanupSSLConfig(keystoresDir, sslConfDir);
   }
 
   @Test
   public void testHttpPolicy() throws Exception {
-    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 0);
+    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost",8181);//port can't equal 0
     Configuration conf1 = new Configuration();
     SSMHttpServer server = null;
     try {
       server = new SSMHttpServer(addr,conf1);
       server.start();
-      String scheme = "localhost";
+      String scheme = "http";
       Assert.assertTrue(canAccess(scheme,addr));
-//      Assert.assertTrue(implies(policy.isHttpEnabled(),
-//              canAccess("http", server.getHttpAddress())));
-//      Assert.assertTrue(implies(!policy.isHttpEnabled(),
-//              server.getHttpAddress() == null));
-//
-//      Assert.assertTrue(implies(policy.isHttpsEnabled(),
-//              canAccess("https", server.getHttpsAddress())));
-//      Assert.assertTrue(implies(!policy.isHttpsEnabled(),
-//              server.getHttpsAddress() == null));
-
     } finally {
       if (server != null) {
         server.stop();
