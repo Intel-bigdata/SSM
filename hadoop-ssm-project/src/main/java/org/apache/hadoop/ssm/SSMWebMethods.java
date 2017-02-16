@@ -19,32 +19,71 @@ package org.apache.hadoop.ssm;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hdfs.web.JsonUtil;
+import org.apache.hadoop.hdfs.web.resources.UriFsPathParam;
+import org.apache.hadoop.http.JettyUtils;
+import org.apache.hadoop.ssm.web.resources.CommandParam;
+import org.apache.hadoop.ssm.web.resources.GetOpParam;
+import org.apache.hadoop.ssm.web.resources.PutOpParam;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
-
 /**
- * SSM web methods.
+ * SSM web methods implementation.
  */
+@Path("")
 public class SSMWebMethods {
   public static final Log LOG = LogFactory.getLog(SSMWebMethods.class);
 
-  private Response put(HttpPutOp op) {
-    switch (op.getOp()) {
+  private @Context ServletContext context;
+  private @Context HttpServletResponse response;
+
+  /** Handle HTTP PUT request. */
+  @PUT
+  @Path("{" + UriFsPathParam.NAME + ":.*}")
+  @Consumes({"*/*"})
+  @Produces({MediaType.APPLICATION_OCTET_STREAM + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8})
+  public Response put(
+    @QueryParam(PutOpParam.NAME) @DefaultValue(PutOpParam.DEFAULT)
+          final PutOpParam op,
+    @QueryParam(CommandParam.NAME) @DefaultValue(CommandParam.DEFAULT)
+          final CommandParam cmd
+  ) {
+    return put(op, cmd.getValue());
+  }
+
+  private Response put(PutOpParam op, String cmd) {
+    switch (op.getValue()) {
       case ADDRULE: {
 
       }
       case RUNCOMMAND: {
-
+        CommandPool commandPool = CommandPool.getInstance();
+        UUID commandId = commandPool.runCommand(cmd);
+        CommandStatus commandStatus = commandPool.getCommandStatus(commandId);
+        String[] stdOutput = commandStatus.getOutput().getStdOutput();
+        final String js = JsonUtil.toJsonString("stdout", stdOutput);
+        return Response.ok(js).type(MediaType.APPLICATION_JSON).build();
       }
       default:
         throw new UnsupportedOperationException(op + " is not supported");
     }
   }
 
-  private Response get(HttpGetOp op, UUID id) {
-    switch (op.getOp()) {
+  private Response get(GetOpParam op, UUID id) {
+    switch (op.getValue()) {
       case GETCOMMANDSTATUS: {
 
       }
@@ -52,4 +91,5 @@ public class SSMWebMethods {
         throw new UnsupportedOperationException(op + " is not supported");
     }
   }
+
 }

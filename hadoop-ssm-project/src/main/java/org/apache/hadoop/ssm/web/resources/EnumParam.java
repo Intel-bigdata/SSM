@@ -15,33 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.web.resources;
 
-/**
- * Created by root on 2/10/17.
- */
-public class HttpGetOp extends HttpOp{
-  public enum Op implements HttpOp.Op{
-    GETCOMMANDSTATUS;
+import org.apache.hadoop.util.StringUtils;
+
+import java.util.Arrays;
+
+abstract class EnumParam<E extends Enum<E>>
+    extends Param<E, EnumParam.Domain<E>> {
+  EnumParam(final Domain<E> domain, final E value) {
+    super(domain, value);
+  }
+
+  /** The domain of the parameter. */
+  static final class Domain<E extends Enum<E>> extends Param.Domain<E> {
+    private final Class<E> enumClass;
+
+    Domain(String name, final Class<E> enumClass) {
+      super(name);
+      this.enumClass = enumClass;
+    }
 
     @Override
-    public HttpOp.Type getType() {
-      return Type.GET;
+    public final String getDomain() {
+      return Arrays.asList(enumClass.getEnumConstants()).toString();
     }
-  }
 
-  private Op op;
-
-  public HttpGetOp(Op op) {
-    this.op = op;
-  }
-
-  public void setOp(Op op) {
-    this.op = op;
-  }
-
-  @Override
-  public Op getOp() {
-    return op;
+    @Override
+    final E parse(final String str) {
+      return Enum.valueOf(enumClass, StringUtils.toUpperCase(str));
+    }
   }
 }
