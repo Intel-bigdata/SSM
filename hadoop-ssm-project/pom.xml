@@ -96,6 +96,90 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>target/lib</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <configuration>
+          <skipTests>false</skipTests>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-web-xmls</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <copy file="${basedir}/src/main/webapps/proto-web.xml"
+                      tofile="${project.build.directory}/webapps/command/WEB-INF/web.xml"
+                      filtering="true"/>
+                <copy toDir="${project.build.directory}/webapps">
+                  <fileset dir="${basedir}/src/main/webapps">
+                    <exclude name="**/proto-web.xml"/>
+                  </fileset>
+                </copy>
+                <copy toDir="${project.build.directory}/">
+                  <fileset dir="${basedir}/src/main/bin/">
+                  </fileset>
+                </copy>
+                <replace dir="${project.build.directory}/webapps" value="${release-year}">
+                  <include name="**/*.html"/>
+                  <replacetoken>{release-year-token}</replacetoken>
+                </replace>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>create-log-dir</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <delete dir="${test.build.data}"/>
+                <mkdir dir="${test.build.data}"/>
+
+                <copy todir="${project.build.directory}/test-classes/webapps">
+                  <fileset dir="${project.build.directory}/webapps">
+                    <exclude name="proto-*-web.xml"/>
+                    <exclude name="**/proto-web.xml"/>
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <phase>pre-site</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <copy file="src/main/resources/hdfs-default.xml" todir="src/site/resources"/>
+                <copy file="src/main/xsl/configuration.xsl" todir="src/site/resources"/>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>

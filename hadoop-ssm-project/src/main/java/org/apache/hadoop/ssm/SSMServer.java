@@ -3,15 +3,14 @@ package org.apache.hadoop.ssm;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.DFSUtilClient;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
-import org.apache.hadoop.ssm.api.Expression.*;
-import org.apache.hadoop.ssm.parse.SSMRuleParser;
+import org.apache.hadoop.http.HttpConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Timer;
+import java.net.InetSocketAddress;
 import java.util.TimerTask;
 
 /**
@@ -57,7 +56,7 @@ public class SSMServer {
   }
 
   public static void main(String[] args) throws Exception {
-    DFSClient dfsClient = new DFSClient(DFSUtilClient.getNNAddress(conf), conf);
+    /*DFSClient dfsClient = new DFSClient(DFSUtilClient.getNNAddress(conf), conf);
     long updateDuration = 1*60;
 
     DecisionMaker decisionMaker = new DecisionMaker(dfsClient, conf, updateDuration);
@@ -75,5 +74,13 @@ public class SSMServer {
 
     Timer timer = new Timer();
     timer.schedule(new DecisionMakerTask(dfsClient, decisionMaker), 2*1000L, updateDuration*1000L);
+    */
+
+    conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, HttpConfig.Policy.HTTP_ONLY.name());
+    conf.set(DFSConfigKeys.DFS_NAMENODE_HTTPS_ADDRESS_KEY, "localhost:9871");
+    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
+    NameNodeHttpServer server = new NameNodeHttpServer(conf, null, addr);
+    server.start();
+    System.out.println("SSM webserver started. Port is : 9871");
   }
 }
