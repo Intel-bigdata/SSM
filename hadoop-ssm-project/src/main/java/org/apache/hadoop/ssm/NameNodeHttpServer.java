@@ -36,7 +36,6 @@ import org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgress;
 import org.apache.hadoop.hdfs.server.namenode.web.resources.NamenodeWebHdfsMethods;
 import org.apache.hadoop.hdfs.web.AuthFilter;
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
-import org.apache.hadoop.hdfs.web.resources.Param;
 import org.apache.hadoop.hdfs.web.resources.UserParam;
 import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.http.HttpServer2;
@@ -44,6 +43,7 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.http.RestCsrfPreventionFilter;
+import org.apache.hadoop.ssm.web.resources.Param;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
@@ -90,7 +90,7 @@ public class NameNodeHttpServer {
         DFSConfigKeys.DFS_WEBHDFS_AUTHENTICATION_FILTER_DEFAULT);
     final String name = className;
 
-    final String pathSpec = WebHdfsFileSystem.PATH_PREFIX + "/*";
+    final String pathSpec = "/ssm/v1/*";
     Map<String, String> params = getAuthFilterParams(conf);
     HttpServer2.defineFilter(httpServer.getWebAppContext(), name, className,
         params, new String[] { pathSpec });
@@ -108,7 +108,7 @@ public class NameNodeHttpServer {
     }
 
     // add webhdfs packages
-    httpServer.addJerseyResourcePackage(NamenodeWebHdfsMethods.class
+    httpServer.addJerseyResourcePackage(SSMWebMethods.class
         .getPackage().getName() + ";" + Param.class.getPackage().getName(),
         pathSpec);
   }
@@ -139,7 +139,7 @@ public class NameNodeHttpServer {
     }
 
     HttpServer2.Builder builder = DFSUtil.httpServerTemplateForNNAndJN(conf,
-        httpAddr, httpsAddr, "command",
+        httpAddr, httpsAddr, "",
         DFSConfigKeys.DFS_NAMENODE_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY,
         DFSConfigKeys.DFS_NAMENODE_KEYTAB_FILE_KEY);
 

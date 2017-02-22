@@ -17,9 +17,11 @@
  */
 package org.apache.hadoop.ssm;
 
+import com.sun.jersey.spi.container.ResourceFilters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hdfs.web.JsonUtil;
+import org.apache.hadoop.hdfs.web.ParamFilter;
 import org.apache.hadoop.hdfs.web.resources.UriFsPathParam;
 import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.ssm.web.resources.CommandParam;
@@ -30,6 +32,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -43,16 +46,15 @@ import java.util.UUID;
  * SSM web methods implementation.
  */
 @Path("")
+@ResourceFilters(ParamFilter.class)
 public class SSMWebMethods {
   public static final Log LOG = LogFactory.getLog(SSMWebMethods.class);
 
   private @Context ServletContext context;
   private @Context HttpServletResponse response;
 
-  /** Handle HTTP PUT request. */
-  @PUT
-  @Path("{" + UriFsPathParam.NAME + ":.*}")
-  @Consumes({"*/*"})
+  /** Handle HTTP GET request. */
+  @GET
   @Produces({MediaType.APPLICATION_OCTET_STREAM + "; " + JettyUtils.UTF_8,
       MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8})
   public Response put(
@@ -72,6 +74,11 @@ public class SSMWebMethods {
       case RUNCOMMAND: {
         CommandPool commandPool = CommandPool.getInstance();
         UUID commandId = commandPool.runCommand(cmd);
+        try {
+          Thread.sleep(500);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
         CommandStatus commandStatus = commandPool.getCommandStatus(commandId);
         String[] stdOutput = commandStatus.getOutput().getStdOutput();
         final String js = JsonUtil.toJsonString("stdout", stdOutput);
