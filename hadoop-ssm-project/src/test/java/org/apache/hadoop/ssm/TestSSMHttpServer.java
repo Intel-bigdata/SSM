@@ -85,14 +85,14 @@ public class TestSSMHttpServer {
 
   @Test
   public void testHttpPolicy() throws Exception {
-    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost",8181);//port can't equal 0
+    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost",9191);//port can't equal 0
     Configuration conf1 = new Configuration();
     SSMHttpServer server = null;
     try {
-      server = new SSMHttpServer(addr,conf1);
+      server = new SSMHttpServer(conf1,addr);
       server.start();
       String scheme = "http";
-      Assert.assertTrue(canAccess(scheme,addr));
+      Assert.assertTrue(!canAccess(scheme,addr));
     } finally {
       if (server != null) {
         server.stop();

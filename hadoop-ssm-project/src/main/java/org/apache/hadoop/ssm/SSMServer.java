@@ -79,7 +79,7 @@ public class SSMServer {
     conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, HttpConfig.Policy.HTTP_ONLY.name());
     conf.set(DFSConfigKeys.DFS_NAMENODE_HTTPS_ADDRESS_KEY, "localhost:9871");
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
-    NameNodeHttpServer server = new NameNodeHttpServer(conf, null, addr);
+    SSMHttpServer server = new SSMHttpServer(conf,addr);
     server.start();
     System.out.println("SSM webserver started. Port is : 9871");
   }
