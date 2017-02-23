@@ -138,13 +138,13 @@ public class CommandPool {
 
     public String[] getOutput() {
       String[] stdOutputArray = stdOutput.toArray(new String[0]);
-      stdOutput.clear();
+      //stdOutput.clear();
       return stdOutputArray;
     }
 
     public String[] getError() {
       String[] stdErrorArray = stdError.toArray(new String[0]);
-      stdError.clear();
+      //stdError.clear();
       return stdErrorArray;
     }
 

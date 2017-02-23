@@ -88,8 +88,9 @@ public class CommandPoolTest {
     assertEquals(0, (int)commandStatus.getExitCode());
     assertEquals(true, commandStatus.isFinished());
     stdOutput = commandStatus.getOutput().getStdOutput();
-    assertEquals(1, stdOutput.length);
-    assertEquals("SSM2", stdOutput[0]);
+    assertEquals(2, stdOutput.length);
+    assertEquals("SSM1", stdOutput[0]);
+    assertEquals("SSM2", stdOutput[1]);
     assertEquals(0, commandStatus.getOutput().getStdError().length);
   }
 
