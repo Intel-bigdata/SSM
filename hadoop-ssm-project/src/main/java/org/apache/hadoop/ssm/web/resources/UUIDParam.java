@@ -20,18 +20,18 @@ package org.apache.hadoop.ssm.web.resources;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.text.MessageFormat;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
-/** Command parameter. */
-public class CommandParam extends StringParam {
+public class UUIDParam extends StringParam {
     /** Parameter name. */
-  public static final String NAME = "cmd";
+  public static final String NAME = "uuid";
   /** Default parameter value. */
   public static final String DEFAULT = "";
 
-  private static String COMMAND_PATTERN = "^[A-Za-z_][A-Za-z0-9._ -/]*[$]?$";
+  private static String UUID_PATTERN = "^[A-Za-z_][A-Za-z0-9._ -/]*[$]?$";
   private static Domain domain = new Domain(NAME,
-      Pattern.compile(COMMAND_PATTERN));
+      Pattern.compile(UUID_PATTERN));
 
   @VisibleForTesting
   public static Domain getCommandPatternDomain() {
@@ -64,7 +64,7 @@ public class CommandParam extends StringParam {
    * Constructor.
    * @param str a string representation of the parameter value.
    */
-  public CommandParam(final String str) {
+  public UUIDParam(final String str) {
     super(domain, str == null ||
         str.equals(DEFAULT) ? null : validateLength(str));
   }
