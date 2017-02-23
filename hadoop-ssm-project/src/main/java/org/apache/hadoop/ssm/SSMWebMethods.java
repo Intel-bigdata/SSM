@@ -74,14 +74,18 @@ public class SSMWebMethods {
       case RUNCOMMAND: {
         CommandPool commandPool = CommandPool.getInstance();
         UUID commandId = commandPool.runCommand(cmd);
-        try {
-          Thread.sleep(500);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
+//        while (!commandPool.getCommandStatus(commandId).isFinished()) {
+          try {
+            Thread.sleep(5000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+//        }
         CommandStatus commandStatus = commandPool.getCommandStatus(commandId);
         String[] stdOutput = commandStatus.getOutput().getStdOutput();
-        final String js = JsonUtil.toJsonString("stdout", stdOutput);
+        String[] stdError = commandStatus.getOutput().getStdError();
+        final String js = JsonUtil.toJsonString("stdout", stdOutput)
+          + JsonUtil.toJsonString("stderr", stdError);
         return Response.ok(js).type(MediaType.APPLICATION_JSON).build();
       }
       default:

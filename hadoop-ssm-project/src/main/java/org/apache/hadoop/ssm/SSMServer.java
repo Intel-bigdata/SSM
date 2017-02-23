@@ -20,9 +20,9 @@ public class SSMServer {
   public static final Configuration conf;
   static {
     conf = new HdfsConfiguration();
-    Path path = new Path("/home/sorttest/hadoop/etc/hadoop/core-site.xml");
+//    Path path = new Path("/home/sorttest/hadoop/etc/hadoop/core-site.xml");
     //Path path = new Path("/home/hadoop_src/hadoop-2.7.2/hadoop-dist/target/hadoop-2.7.2/etc/hadoop/core-site.xml");
-    conf.addResource(path);
+//    conf.addResource(path);
   }
   public static final Logger LOG = LoggerFactory.getLogger(SSMServer.class);
 

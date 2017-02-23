@@ -93,6 +93,25 @@ public class CommandPoolTest {
     assertEquals(0, commandStatus.getOutput().getStdError().length);
   }
 
+  @Test
+  public void getStatusUntilFinished() {
+    CommandPool commandPool = CommandPool.getInstance();
+    UUID commandId = commandPool.runCommand("sleep 3 && echo SSM1");
+    while (!commandPool.getCommandStatus(commandId).isFinished()) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    CommandStatus commandStatus = commandPool.getCommandStatus(commandId);
+    assertEquals(true, commandStatus.isFinished());
+    String[] stdOutput = commandStatus.getOutput().getStdOutput();
+    assertEquals(1, stdOutput.length);
+    assertEquals("SSM1", stdOutput[0]);
+    assertEquals(0, commandStatus.getOutput().getStdError().length);
+  }
+
   /**
    * Delete a command
    */
