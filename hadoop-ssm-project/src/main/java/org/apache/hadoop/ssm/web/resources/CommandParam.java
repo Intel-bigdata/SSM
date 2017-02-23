@@ -18,7 +18,6 @@
 package org.apache.hadoop.ssm.web.resources;
 
 import com.google.common.annotations.VisibleForTesting;
-import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_USER_PATTERN_DEFAULT;
 
 import java.text.MessageFormat;
 import java.util.regex.Pattern;
@@ -30,8 +29,9 @@ public class CommandParam extends StringParam {
   /** Default parameter value. */
   public static final String DEFAULT = "";
 
+  private static String COMMAND_PATTERN = "^[A-Za-z_][A-Za-z0-9._ -/]*[$]?$";
   private static Domain domain = new Domain(NAME,
-      Pattern.compile(DFS_WEBHDFS_USER_PATTERN_DEFAULT));
+      Pattern.compile(COMMAND_PATTERN));
 
   @VisibleForTesting
   public static Domain getCommandPatternDomain() {
