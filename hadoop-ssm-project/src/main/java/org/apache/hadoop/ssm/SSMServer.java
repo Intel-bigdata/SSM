@@ -1,7 +1,6 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
@@ -79,7 +78,7 @@ public class SSMServer {
     conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, HttpConfig.Policy.HTTP_ONLY.name());
     conf.set(DFSConfigKeys.DFS_NAMENODE_HTTPS_ADDRESS_KEY, "localhost:9871");
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
-    SSMHttpServer server = new SSMHttpServer(conf,addr);
+    SSMHttpServer server = new SSMHttpServer(conf, addr);
     server.start();
     System.out.println("SSM webserver started. Port is : 9871");
   }
