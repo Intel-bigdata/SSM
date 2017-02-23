@@ -74,13 +74,13 @@ public class SSMWebMethods {
       case RUNCOMMAND: {
         CommandPool commandPool = CommandPool.getInstance();
         UUID commandId = commandPool.runCommand(cmd);
-//        while (!commandPool.getCommandStatus(commandId).isFinished()) {
+        while (!commandPool.getCommandStatus(commandId).isFinished()) {
           try {
-            Thread.sleep(5000);
+            Thread.sleep(100);
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
-//        }
+        }
         CommandStatus commandStatus = commandPool.getCommandStatus(commandId);
         String[] stdOutput = commandStatus.getOutput().getStdOutput();
         String[] stdError = commandStatus.getOutput().getStdError();
