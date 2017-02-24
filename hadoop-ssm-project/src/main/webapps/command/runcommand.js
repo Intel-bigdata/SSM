@@ -26,8 +26,8 @@
         url: url
     }).then(function(data) {
         for (var i=0;i<data.stdout.length;i++) {
-        $('.stdout').append(data.stdout[i]).append(&nbsp;);
-        $('.stderr').append(data.stderr[i]).append(&nbsp);
+        $('.stdout').append(data.stdout[i]+'<br>');
+        $('.stderr').append(data.stderr[i]+'<br>');
         }
     });
 
