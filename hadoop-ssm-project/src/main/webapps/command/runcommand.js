@@ -25,8 +25,10 @@
     $.ajax({
         url: url
     }).then(function(data) {
-       $('.stdout').append(data.stdout);
-       $('.stderr').append(data.stderr);
+        for (var i=0;i<data.stdout.length;i++) {
+        $('.stdout').append(data.stdout[i]).append(&nbsp;);
+        $('.stderr').append(data.stderr[i]).append(&nbsp);
+        }
     });
 
     });
