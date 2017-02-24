@@ -17,19 +17,30 @@
  */
 package org.apache.hadoop.ssm;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.client.HdfsClientConfigKeys;
+import org.apache.hadoop.hdfs.server.common.JspHelper;
+import org.apache.hadoop.hdfs.server.namenode.FSImage;
+import org.apache.hadoop.hdfs.server.namenode.FsckServlet;
+import org.apache.hadoop.hdfs.server.namenode.ImageServlet;
+import org.apache.hadoop.hdfs.server.namenode.StartupProgressServlet;
+import org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgress;
 import org.apache.hadoop.hdfs.web.AuthFilter;
-import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
+import org.apache.hadoop.hdfs.web.resources.Param;
 import org.apache.hadoop.hdfs.web.resources.UserParam;
+import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.http.RestCsrfPreventionFilter;
 
+import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -38,6 +49,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_ADMIN;
 import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_REST_CSRF_ENABLED_DEFAULT;
 import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_REST_CSRF_ENABLED_KEY;
 
@@ -48,9 +60,16 @@ import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_RES
 public class SSMHttpServer {
   private HttpServer2 httpServer;
   private final Configuration conf;
+
+  private InetSocketAddress httpAddress;
+  private InetSocketAddress httpsAddress;
   private final InetSocketAddress bindAddress;
 
-  SSMHttpServer(InetSocketAddress bindAddress, Configuration conf) {
+  public static final String SSM_ADDRESS_ATTRIBUTE_KEY = "ssm.address";
+  public static final String FSIMAGE_ATTRIBUTE_KEY = "name.system.image";
+  public static final String STARTUP_PROGRESS_ATTRIBUTE_KEY = "startup.progress";
+
+  SSMHttpServer( Configuration conf,InetSocketAddress bindAddress) {
     this.bindAddress = bindAddress;
     this.conf = conf;
   }
@@ -66,7 +85,8 @@ public class SSMHttpServer {
             DFSConfigKeys.DFS_WEBHDFS_AUTHENTICATION_FILTER_DEFAULT);
     final String name = className;
 
-    final String pathSpec = WebHdfsFileSystem.PATH_PREFIX + "/*";
+//    final String pathSpec = WebHdfsFileSystem.PATH_PREFIX + "/*";
+    final String pathSpec = "/ssm/v1/*";
     Map<String, String> params = getAuthFilterParams(conf);
     HttpServer2.defineFilter(httpServer.getWebAppContext(), name, className,
             params, new String[]{pathSpec});
@@ -82,27 +102,65 @@ public class SSMHttpServer {
       HttpServer2.defineFilter(httpServer.getWebAppContext(), restCsrfClassName,
               restCsrfClassName, restCsrfParams, new String[]{pathSpec});
     }
-//    httpServer.addJerseyResourcePackage(SSMWebMethods.class
-//                    .getPackage().getName() + ";" + Param.class.getPackage().getName(),
-//            pathSpec);
+    httpServer.addJerseyResourcePackage(SSMWebMethods.class
+                    .getPackage().getName() + ";" + Param.class.getPackage().getName(),
+            pathSpec);
   }
 
   void start() throws IOException, URISyntaxException {
-    HttpServer2.Builder builder = new HttpServer2.Builder().setName("hdfs")
-            .setConf(conf);//Name need modify later
+    HttpConfig.Policy policy = DFSUtil.getHttpPolicy(conf);
+    final String infoHost = bindAddress.getHostName();
+    HttpServer2.Builder builder = new HttpServer2.Builder().setName("")
+            .setConf(conf).setACL(new AccessControlList(conf.get(DFS_ADMIN, " ")))
+            .setSecurityEnabled(UserGroupInformation.isSecurityEnabled())
+            .setUsernameConfKey(DFSConfigKeys.DFS_SSM_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY)
+            .setKeytabConfKey(getSpnegoKeytabKey(conf, DFSConfigKeys.DFS_SSM_KEYTAB_FILE_KEY));
 
-//    .setACL(new AccessControlList(conf.get(DFS_ADMIN, " "))
-//    builder.setSecurityEnabled(true);
+
     if (bindAddress.getPort() == 0) {
       builder.setFindPort(true);
     }
     URI uri = URI.create("http://" + NetUtils.getHostPortString(bindAddress));
     builder.addEndpoint(uri);
+
+    final boolean xFrameEnabled = conf.getBoolean(
+            DFSConfigKeys.DFS_XFRAME_OPTION_ENABLED,
+            DFSConfigKeys.DFS_XFRAME_OPTION_ENABLED_DEFAULT);
+
+    final String xFrameOptionValue = conf.getTrimmed(
+            DFSConfigKeys.DFS_XFRAME_OPTION_VALUE,
+            DFSConfigKeys.DFS_XFRAME_OPTION_VALUE_DEFAULT);
+
+    builder.configureXFrame(xFrameEnabled).setXFrameOption(xFrameOptionValue);
     httpServer = builder.build();
+//    if (policy.isHttpsEnabled()) {
+//      // assume same ssl port for ssm and the defult port is 9965
+//      InetSocketAddress ssmSslPort = NetUtils.createSocketAddr(conf.getTrimmed(
+//              DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY, infoHost + ":"
+//                      + DFSConfigKeys.DFS_SSM_HTTPS_DEFAULT_PORT));
+//      httpServer.setAttribute(DFSConfigKeys.DFS_SSM_HTTPS_PORT_KEY,
+//              ssmSslPort.getPort());
+//    }
+
     init(conf);
-//    setupServlets(httpServer, conf);
+    httpServer.setAttribute(JspHelper.CURRENT_CONF, conf);
+    setupServlets(httpServer, conf);
     httpServer.start();
+
+    int connIdx = 0;
+    if (policy.isHttpEnabled()) {
+      httpAddress = httpServer.getConnectorAddress(connIdx++);
+      conf.set(DFSConfigKeys.DFS_SSM_HTTP_ADDRESS_KEY,
+              NetUtils.getHostPortString(httpAddress));
+    }
+
+    if (policy.isHttpsEnabled()) {
+      httpsAddress = httpServer.getConnectorAddress(connIdx);
+      conf.set(DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY,
+              NetUtils.getHostPortString(httpsAddress));
+    }
   }
+
 
   void stop() throws Exception {
     if (httpServer != null) {
@@ -117,6 +175,15 @@ public class SSMHttpServer {
     if (httpServer != null) {
       httpServer.join();
     }
+  }
+
+  private static void setupServlets(HttpServer2 httpServer, Configuration conf) {
+    httpServer.addInternalServlet("startupProgress",
+            StartupProgressServlet.PATH_SPEC, StartupProgressServlet.class);
+    httpServer.addInternalServlet("fsck", "/fsck", FsckServlet.class,
+            true);
+    httpServer.addInternalServlet("imagetransfer", ImageServlet.PATH_SPEC,
+            ImageServlet.class, true);
   }
 
   private Map<String, String> getAuthFilterParams(Configuration conf)
@@ -140,7 +207,7 @@ public class SSMHttpServer {
                               bindAddress.getHostName()));
     }
     String httpKeytab = conf.get(DFSUtil.getSpnegoKeytabKey(conf,
-            DFSConfigKeys.DFS_NAMENODE_KEYTAB_FILE_KEY));
+            DFSConfigKeys.DFS_SSM_KEYTAB_FILE_KEY));
     if (httpKeytab != null && !httpKeytab.isEmpty()) {
       params.put(
               DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBEROS_KEYTAB_KEY,
@@ -155,18 +222,90 @@ public class SSMHttpServer {
     }
     return params;
   }
+
+  /**
+   * Get SPNEGO keytab Key from configuration
+   *
+   * @param conf       Configuration
+   * @param defaultKey default key to be used for config lookup
+   * @return DFS_WEB_AUTHENTICATION_KERBEROS_KEYTAB_KEY if the key is not empty
+   * else return defaultKey
+   */
+  public static String getSpnegoKeytabKey(Configuration conf, String defaultKey) {
+    String value =
+            conf.get(DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBEROS_KEYTAB_KEY);
+    return (value == null || value.isEmpty()) ?
+            defaultKey : DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBEROS_KEYTAB_KEY;
+  }
+
+  InetSocketAddress getHttpAddress() {
+    return httpAddress;
+  }
+
+  InetSocketAddress getHttpsAddress() {
+    return httpsAddress;
+  }
+
+  /**
+   * Sets fsimage for use by servlets.
+   *
+   * @param fsImage FSImage to set
+   */
+  void setFSImage(FSImage fsImage) {
+    httpServer.setAttribute(FSIMAGE_ATTRIBUTE_KEY, fsImage);
+  }
+
+  /**
+   * Sets address of namenode for use by servlets.
+   *
+   * @param ssmAddress InetSocketAddress to set
+   */
+  void setNameNodeAddress(InetSocketAddress ssmAddress) {
+    httpServer.setAttribute(SSM_ADDRESS_ATTRIBUTE_KEY,
+            NetUtils.getConnectAddress(ssmAddress));
+  }
+
+  /**
+   * Sets startup progress of namenode for use by servlets.
+   *
+   * @param prog StartupProgress to set
+   */
+  void setStartupProgress(StartupProgress prog) {
+    httpServer.setAttribute(STARTUP_PROGRESS_ATTRIBUTE_KEY, prog);
+  }
+
+  static FSImage getFsImageFromContext(ServletContext context) {
+    return (FSImage) context.getAttribute(FSIMAGE_ATTRIBUTE_KEY);
+  }
+
+  static Configuration getConfFromContext(ServletContext context) {
+    return (Configuration) context.getAttribute(JspHelper.CURRENT_CONF);
+  }
+
+  public static InetSocketAddress getSSMAddressFromContext(
+          ServletContext context) {
+    return (InetSocketAddress) context.getAttribute(
+            SSM_ADDRESS_ATTRIBUTE_KEY);
+  }
+
+  /**
+   * Returns StartupProgress associated with ServletContext.
+   *
+   * @param context ServletContext to get
+   * @return StartupProgress associated with context
+   */
+  static StartupProgress getStartupProgressFromContext(
+          ServletContext context) {
+    return (StartupProgress) context.getAttribute(STARTUP_PROGRESS_ATTRIBUTE_KEY);
+  }
+
+  /**
+   * Returns the httpServer.
+   *
+   * @return HttpServer2
+   */
+  @VisibleForTesting
+  public HttpServer2 getHttpServer() {
+    return httpServer;
+  }
 }
-
-
-
-//    final boolean xFrameEnabled = conf.getBoolean(
-//            DFSConfigKeys.DFS_XFRAME_OPTION_ENABLED,
-//            DFSConfigKeys.DFS_XFRAME_OPTION_ENABLED_DEFAULT);
-//    final String xFrameOptionValue = conf.getTrimmed(
-//            DFSConfigKeys.DFS_XFRAME_OPTION_VALUE,
-//            DFSConfigKeys.DFS_XFRAME_OPTION_VALUE_DEFAULT);
-//    builder.configureXFrame(xFrameEnabled).setXFrameOption(xFrameOptionValue);
-
-//    builder.setName("hdfs");
-//    URI ssmServerUri = new URI("http://127.0.0.1:0");//127.0.0.1
-//    builder.addEndpoint(ssmServerUri);
