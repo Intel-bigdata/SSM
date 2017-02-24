@@ -17,9 +17,12 @@
  */
 package org.apache.hadoop.ssm;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.spi.container.ResourceFilters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.hdfs.web.JsonUtil;
 import org.apache.hadoop.hdfs.web.ParamFilter;
 import org.apache.hadoop.hdfs.web.resources.UriFsPathParam;
@@ -40,6 +43,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -82,15 +88,28 @@ public class SSMWebMethods {
           }
         }
         CommandStatus commandStatus = commandPool.getCommandStatus(commandId);
-        String[] stdOutput = commandStatus.getOutput().getStdOutput();
-        String[] stdError = commandStatus.getOutput().getStdError();
-        final String js = JsonUtil.toJsonString("stdout", stdOutput)
-          + JsonUtil.toJsonString("stderr", stdError);
+        ObjectMapper MAPPER = new ObjectMapper();
+        String js = null;
+        try {
+          js = MAPPER.writeValueAsString(toJsonMap(commandStatus.getOutput()));
+        } catch (JsonProcessingException e) {
+          e.printStackTrace();
+        }
         return Response.ok(js).type(MediaType.APPLICATION_JSON).build();
       }
       default:
         throw new UnsupportedOperationException(op + " is not supported");
     }
+  }
+
+  public static Map<String, Object> toJsonMap(final CommandStatus.OutPutType outPut) {
+    if (outPut == null) {
+      return null;
+    }
+    final Map<String, Object> m = new TreeMap<String, Object>();
+    m.put("stdout", outPut.getStdOutput());
+    m.put("stderr", outPut.getStdError());
+    return m;
   }
 
   private Response get(GetOpParam op, UUID id) {

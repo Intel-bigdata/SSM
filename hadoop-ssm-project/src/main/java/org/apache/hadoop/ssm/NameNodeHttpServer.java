@@ -139,7 +139,7 @@ public class NameNodeHttpServer {
     }
 
     HttpServer2.Builder builder = DFSUtil.httpServerTemplateForNNAndJN(conf,
-        httpAddr, httpsAddr, "",
+        httpAddr, httpsAddr, "command",
         DFSConfigKeys.DFS_NAMENODE_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY,
         DFSConfigKeys.DFS_NAMENODE_KEYTAB_FILE_KEY);
 
