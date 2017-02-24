@@ -110,7 +110,7 @@ public class SSMHttpServer {
   void start() throws IOException, URISyntaxException {
     HttpConfig.Policy policy = DFSUtil.getHttpPolicy(conf);
     final String infoHost = bindAddress.getHostName();
-    HttpServer2.Builder builder = new HttpServer2.Builder().setName("")
+    HttpServer2.Builder builder = new HttpServer2.Builder().setName("command")
             .setConf(conf).setACL(new AccessControlList(conf.get(DFS_ADMIN, " ")))
             .setSecurityEnabled(UserGroupInformation.isSecurityEnabled())
             .setUsernameConfKey(DFSConfigKeys.DFS_SSM_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY)
