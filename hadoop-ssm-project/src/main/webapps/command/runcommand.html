@@ -60,14 +60,12 @@
           <input type="text" class="form-control" id="cmd"/>
             <span class="input-group-btn">
               <button class="btn btn-default" type="button" id="btn-run-cmd">Run!</button>
-                <button class="" type="button" id="show-cache">showcache</button>
             </span>
         </div>
         <div>
             <p class="stdout">stdout is </p>
             <p class="stderr">stderr is </p>
         </div>
-          <div id="myChart" style="width:600px;height:400px;"></div>
       </form>
 
       <p class="s"> </p>
@@ -75,6 +73,17 @@
   </div>
 
     <script type="text/javascript" src="/static/jquery-1.10.2.min.js">
+    <div class="row">
+        <div class="col-xs-10 col-md-10">
+            <span class="input-group-btn">
+              <button class="btn btn-default" type="button" id="btn-show-cache">Show Cache</button>
+            </span>
+        </div>
+        <div>
+            <p class="cachestatus" id="mychart" style="width:600px;height:400px;">status</p>
+        </div>
+    </div>
+
 </script><script type="text/javascript" src="/static/jquery.dataTables.min.js">
 </script><script type="text/javascript" src="/static/bootstrap-3.0.2/js/bootstrap.min.js">
 </script><script type="text/javascript" src="/static/dataTables.bootstrap.js">

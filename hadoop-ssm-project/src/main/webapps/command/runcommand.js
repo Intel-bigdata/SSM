@@ -38,7 +38,93 @@
     });
 
 
+    $('#btn-show-cache').click(function () {
 
-    
+    var url = '/ssm/v1?op=SHOWCACHE'
 
+    $.ajax({
+        type: 'GET',
+        url: url
+    }).then(function(data) {
+       $('.cachestatus').text(data.cacheUsedPercentage);
+    });
+
+    });
+
+
+
+    $('#show-cache').click(function () {
+
+            var url = '/ssm/v1?op=RUNCOMMAND&cmd=' + $('#cmd').val()
+
+            var myChart = echarts.init(document.getElementById('myChart'));
+            var option = {
+                title : {
+                    text: '课程统计饼图',
+                    x:'center'
+                },
+                tooltip : {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                 },
+                legend: {
+                    orient : 'vertical',
+                    x : 'left',
+                    data:['c++','python','java','html']
+                },
+                toolbox: {
+                    show : true,
+                    feature : {
+                        mark : {show: true},
+                        dataView : {show: true, readOnly: false},
+                        magicType : {
+                            show: true,
+                            type: ['pie', 'funnel'],
+                            option: {
+                                funnel: {
+                                    x: '25%',
+                                    width: '50%',
+                                    funnelAlign: 'left',
+                                    max: 1548
+                                }
+                            }
+                        },
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+                calculable : true,
+                series : [
+                {
+                    name:'实验课程',
+                    type:'pie',
+                    radius : '55%',
+                    center: ['50%', '60%'],
+                    data: (function(){
+                        var arr=[];
+                        $.ajax({
+                            type : "post",
+                            async : false, //同步执行
+                            url : url,
+                            data : {},
+                            dataType : "json", //返回数据形式为json
+                            success : function(result) {
+                                arr=result;
+                            },
+                            error : function(errorMsg) {
+                                alert("sorry，请求数据失败");
+                                myChart.hideLoading();
+                            }
+                        })
+
+                        return arr;
+                    })()
+
+                }
+                ]
+            };
+
+            myChart.setOption(option);
+
+        });
 })();

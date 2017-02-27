@@ -25,6 +25,7 @@ public class GetOpParam extends HttpOpParam<GetOpParam.Op> {
   /** Get operations. */
   public enum Op implements HttpOpParam.Op {
     GETCOMMANDSTATUS(false, HttpURLConnection.HTTP_OK),
+    SHOWCACHE(false, HttpURLConnection.HTTP_OK),
 
     NULL(false, HttpURLConnection.HTTP_NOT_IMPLEMENTED);
 
