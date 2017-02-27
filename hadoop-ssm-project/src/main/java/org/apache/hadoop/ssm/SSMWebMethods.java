@@ -59,8 +59,8 @@ public class SSMWebMethods {
   private @Context ServletContext context;
   private @Context HttpServletResponse response;
 
-  /** Handle HTTP GET request. */
-  @GET
+  /** Handle HTTP PUT request. */
+  @PUT
   @Produces({MediaType.APPLICATION_OCTET_STREAM + "; " + JettyUtils.UTF_8,
       MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8})
   public Response put(

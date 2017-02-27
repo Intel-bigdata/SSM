@@ -23,6 +23,7 @@
     var url = '/ssm/v1?op=RUNCOMMAND&cmd=' + $('#cmd').val()
 
     $.ajax({
+        type: 'PUT',
         url: url
     }).then(function(data) {
         for (var i=0;i<data.stdout.length;i++) {
