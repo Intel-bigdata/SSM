@@ -37,4 +37,17 @@
 
     });
 
+    $('#btn-show-cache').click(function () {
+
+    var url = '/ssm/v1?op=SHOWCACHE'
+
+    $.ajax({
+        type: 'GET',
+        url: url
+    }).then(function(data) {
+       $('.cachestatus').text(data.cacheUsedPercentage);
+    });
+
+    });
+
 })();
