@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,8 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.web.URLConnectionFactory;
 import org.apache.hadoop.http.HttpConfig.Policy;
 import org.apache.hadoop.net.NetUtils;
@@ -48,8 +50,8 @@ public class TestSSMHttpServer {
 
   @Parameterized.Parameters
   public static Collection<Object[]> policy() {
-    Object[][] params = new Object[][] { { Policy.HTTP_ONLY },
-            { Policy.HTTPS_ONLY }, { Policy.HTTP_AND_HTTPS } };
+    Object[][] params = new Object[][]{{Policy.HTTP_ONLY},
+            {Policy.HTTPS_ONLY}, {Policy.HTTP_AND_HTTPS}};
     return Arrays.asList(params);
   }
 
@@ -64,7 +66,7 @@ public class TestSSMHttpServer {
   public static void setUp() throws Exception {
     File base = new File(BASEDIR);
 //    FileUtil.fullyDelete(base);
-//    base.mkdirs();
+    base.mkdirs();
     conf = new Configuration();
 //    keystoresDir = new File(BASEDIR).getAbsolutePath();
 //    sslConfDir = KeyStoreTestUtil.getClasspathDir(TestSSMHttpServer.class);
@@ -77,22 +79,41 @@ public class TestSSMHttpServer {
 //            KeyStoreTestUtil.getServerSSLConfigFileName());
   }
 
+
+//  @BeforeClass
+//  public static void setUp() throws Exception {
+//    File base = new File(BASEDIR);
+//    FileUtil.fullyDelete(base);
+//    base.mkdirs();
+//    conf = new Configuration();
+//    keystoresDir = new File(BASEDIR).getAbsolutePath();
+//   // sslConfDir = KeyStoreTestUtil.getClasspathDir(TestSSMHttpServer.class);
+//    KeyStoreTestUtil.setupSSLConfig(keystoresDir, sslConfDir, conf, false);
+//    connectionFactory = URLConnectionFactory
+//            .newDefaultURLConnectionFactory(conf);
+//    conf.set(DFSConfigKeys.DFS_CLIENT_HTTPS_KEYSTORE_RESOURCE_KEY,
+//            KeyStoreTestUtil.getClientSSLConfigFileName());
+//    conf.set(DFSConfigKeys.DFS_SERVER_HTTPS_KEYSTORE_RESOURCE_KEY,
+//            KeyStoreTestUtil.getServerSSLConfigFileName());
+//  }
+
   @AfterClass
   public static void tearDown() throws Exception {
-//    FileUtil.fullyDelete(new File(BASEDIR));
+    FileUtil.fullyDelete(new File(BASEDIR));
     KeyStoreTestUtil.cleanupSSLConfig(keystoresDir, sslConfDir);
   }
 
   @Test
   public void testHttpPolicy() throws Exception {
-    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost",9191);//port can't equal 0
-    Configuration conf1 = new Configuration();
+    conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, Policy.HTTP_AND_HTTPS.name());
+    conf.set(DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY, "localhost:9494");
+    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9494);//port can't equal 0
     SSMHttpServer server = null;
     try {
-      server = new SSMHttpServer(conf1,addr);
+      server = new SSMHttpServer(conf, addr);
       server.start();
-      String scheme = "http";
-      Assert.assertTrue(!canAccess(scheme,addr));
+      Assert.assertTrue(implies(policy.isHttpEnabled(),
+              canAccess("https", server.getHttpsAddress())));
     } finally {
       if (server != null) {
         server.stop();

@@ -75,8 +75,8 @@ public class SSMServer {
     timer.schedule(new DecisionMakerTask(dfsClient, decisionMaker), 2*1000L, updateDuration*1000L);
     */
 
-    conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, HttpConfig.Policy.HTTP_ONLY.name());
-    conf.set(DFSConfigKeys.DFS_NAMENODE_HTTPS_ADDRESS_KEY, "localhost:9871");
+    conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, HttpConfig.Policy.HTTP_AND_HTTPS.name());
+    conf.set(DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY, "localhost:9871");
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
     SSMHttpServer server = new SSMHttpServer(conf, addr);
     server.start();

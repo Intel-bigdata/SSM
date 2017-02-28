@@ -36,20 +36,16 @@ import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtil;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.http.RestCsrfPreventionFilter;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_ADMIN;
 import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_REST_CSRF_ENABLED_DEFAULT;
 import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_REST_CSRF_ENABLED_KEY;
 
@@ -69,7 +65,7 @@ public class SSMHttpServer {
   public static final String FSIMAGE_ATTRIBUTE_KEY = "name.system.image";
   public static final String STARTUP_PROGRESS_ATTRIBUTE_KEY = "startup.progress";
 
-  SSMHttpServer( Configuration conf,InetSocketAddress bindAddress) {
+  SSMHttpServer(Configuration conf, InetSocketAddress bindAddress) {
     this.bindAddress = bindAddress;
     this.conf = conf;
   }
@@ -109,20 +105,18 @@ public class SSMHttpServer {
 
   void start() throws IOException, URISyntaxException {
     HttpConfig.Policy policy = DFSUtil.getHttpPolicy(conf);
-    final String infoHost = bindAddress.getHostName();
-    HttpServer2.Builder builder = new HttpServer2.Builder().setName("command")
-            .setConf(conf).setACL(new AccessControlList(conf.get(DFS_ADMIN, " ")))
-            .setSecurityEnabled(UserGroupInformation.isSecurityEnabled())
-            .setUsernameConfKey(DFSConfigKeys.DFS_SSM_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY)
-            .setKeytabConfKey(getSpnegoKeytabKey(conf, DFSConfigKeys.DFS_SSM_KEYTAB_FILE_KEY));
 
+    final InetSocketAddress httpAddr = bindAddress;
+    final String httpsAddrString = conf.getTrimmed(
+            DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY,
+            DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_DEFAULT);
+    InetSocketAddress httpsAddr = NetUtils.createSocketAddr(httpsAddrString);
 
-    if (bindAddress.getPort() == 0) {
-      builder.setFindPort(true);
-    }
-    URI uri = URI.create("http://" + NetUtils.getHostPortString(bindAddress));
-    builder.addEndpoint(uri);
-
+    HttpServer2.Builder builder = DFSUtil.httpServerTemplateForSSM(conf,
+            httpAddr, httpsAddr, "",
+            DFSConfigKeys.DFS_SSM_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY,
+            DFSConfigKeys.DFS_SSM_KEYTAB_FILE_KEY);
+    builder.setFindPort(true);
     final boolean xFrameEnabled = conf.getBoolean(
             DFSConfigKeys.DFS_XFRAME_OPTION_ENABLED,
             DFSConfigKeys.DFS_XFRAME_OPTION_ENABLED_DEFAULT);
