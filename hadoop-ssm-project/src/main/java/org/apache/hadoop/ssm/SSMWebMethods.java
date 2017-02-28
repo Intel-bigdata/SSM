@@ -22,10 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.spi.container.ResourceFilters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.BlockLocation;
-import org.apache.hadoop.hdfs.web.JsonUtil;
 import org.apache.hadoop.hdfs.web.ParamFilter;
-import org.apache.hadoop.hdfs.web.resources.UriFsPathParam;
 import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.ssm.web.resources.CommandParam;
 import org.apache.hadoop.ssm.web.resources.GetOpParam;
@@ -33,7 +30,6 @@ import org.apache.hadoop.ssm.web.resources.PutOpParam;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -59,8 +55,8 @@ public class SSMWebMethods {
   private @Context ServletContext context;
   private @Context HttpServletResponse response;
 
-  /** Handle HTTP GET request. */
-  @GET
+  /** Handle HTTP PUT request. */
+  @PUT
   @Produces({MediaType.APPLICATION_OCTET_STREAM + "; " + JettyUtils.UTF_8,
       MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8})
   public Response put(
@@ -112,8 +108,37 @@ public class SSMWebMethods {
     return m;
   }
 
-  private Response get(GetOpParam op, UUID id) {
+  /** Handle HTTP GET request. */
+  @GET
+  @Produces({MediaType.APPLICATION_OCTET_STREAM + "; " + JettyUtils.UTF_8,
+    MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8})
+  public Response get(
+    @QueryParam(GetOpParam.NAME) @DefaultValue(PutOpParam.DEFAULT)
+    final GetOpParam op,
+    @QueryParam(CommandParam.NAME) @DefaultValue(CommandParam.DEFAULT)
+    final CommandParam cmd
+
+  ) throws IOException, InterruptedException {
+    return get(op, cmd.getValue());
+  }
+
+  private Response get(GetOpParam op, String cmd) {
     switch (op.getValue()) {
+      case SHOWCACHE: {
+        final Map<String, Object> m = new TreeMap<String, Object>();
+        m.put("cacheCapacity", 3);
+        m.put("cacheUsed", 1);
+        m.put("cacheRemaining", 2);
+        m.put("cacheUsedPercentage", 33);
+        ObjectMapper MAPPER = new ObjectMapper();
+        String js = null;
+        try {
+          js = MAPPER.writeValueAsString(m);
+        } catch (JsonProcessingException e) {
+          e.printStackTrace();
+        }
+        return Response.ok(js).type(MediaType.APPLICATION_JSON).build();
+      }
       case GETCOMMANDSTATUS: {
 
       }
