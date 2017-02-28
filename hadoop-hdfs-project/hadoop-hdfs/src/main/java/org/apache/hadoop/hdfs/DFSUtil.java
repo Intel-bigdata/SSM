@@ -881,7 +881,7 @@ public class DFSUtil {
    *     not the NameServiceId-suffixed keys.
    * @return nameserviceId, or null if no match found
    */
-  public static String getNameServiceIdFromAddress(final Configuration conf, 
+  public static String getNameServiceIdFromAddress(final Configuration conf,
       final InetSocketAddress address, String... keys) {
     // Configuration with a single namenode and no nameserviceId
     String[] ids = getSuffixIDs(conf, address, keys);
