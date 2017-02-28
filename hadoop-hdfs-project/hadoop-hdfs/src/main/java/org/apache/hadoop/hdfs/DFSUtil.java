@@ -297,7 +297,7 @@ public class DFSUtil {
     }
     // append remaining components as "/component".
     for (int i=offset + 1; i < range; i++) {
-      result[pos++] = (byte) Path.SEPARATOR_CHAR;
+      result[pos++] = (byte)Path.SEPARATOR_CHAR;
       int len = components[i].length;
       System.arraycopy(components[i], 0, result, pos, len);
       pos += len;
@@ -341,7 +341,7 @@ public class DFSUtil {
   public static byte[][] getPathComponents(String path) {
     // avoid intermediate split to String[]
     final byte[] bytes = string2Bytes(path);
-    return bytes2byteArray(bytes, bytes.length, (byte) Path.SEPARATOR_CHAR);
+    return bytes2byteArray(bytes, bytes.length, (byte)Path.SEPARATOR_CHAR);
   }
 
   /**
@@ -416,7 +416,7 @@ public class DFSUtil {
    * @return A map from nnId -> RPC address of each NN in the nameservice.
    */
   public static Map<String, InetSocketAddress> getRpcAddressesForNameserviceId(
-          Configuration conf, String nsId, String defaultValue) {
+      Configuration conf, String nsId, String defaultValue) {
     return DFSUtilClient.getAddressesForNameserviceId(conf, nsId, defaultValue,
                                                       DFS_NAMENODE_RPC_ADDRESS_KEY);
   }
@@ -898,7 +898,7 @@ public class DFSUtil {
    * @throws IOException 
    */
   public static URI getInfoServer(InetSocketAddress namenodeAddr,
-                                  Configuration conf, String scheme) throws IOException {
+      Configuration conf, String scheme) throws IOException {
     String[] suffixes = null;
     if (namenodeAddr != null) {
       // if non-default namenode, try reverse look up 
@@ -940,7 +940,7 @@ public class DFSUtil {
    * @throws IOException
    */
   public static URI getInfoServerWithDefaultHost(String defaultHost,
-                                                 Configuration conf, final String scheme) throws IOException {
+      Configuration conf, final String scheme) throws IOException {
     URI configuredAddr = getInfoServer(null, conf, scheme);
     String authority = substituteForWildcardAddress(
         configuredAddr.getAuthority(), defaultHost);
@@ -1105,8 +1105,8 @@ public class DFSUtil {
    * @throws HadoopIllegalArgumentException on error
    */
   static String[] getSuffixIDs(final Configuration conf, final String addressKey,
-                               String knownNsId, String knownNNId,
-                               final AddressMatcher matcher) {
+      String knownNsId, String knownNNId,
+      final AddressMatcher matcher) {
     String nameserviceId = null;
     String namenodeId = null;
     int found = 0;
@@ -1215,7 +1215,7 @@ public class DFSUtil {
    * @throws IOException
    */
   public static void addPBProtocol(Configuration conf, Class<?> protocol,
-                                   BlockingService service, RPC.Server server) throws IOException {
+      BlockingService service, RPC.Server server) throws IOException {
     RPC.setProtocolEngine(conf, protocol, ProtobufRpcEngine.class);
     server.addProtocol(RPC.RpcKind.RPC_PROTOCOL_BUFFER, protocol, service);
   }
@@ -1373,7 +1373,7 @@ public class DFSUtil {
   }
 
   public static HttpServer2.Builder loadSslConfToHttpServerBuilder(HttpServer2.Builder builder,
-                                                                   Configuration sslConf) {
+      Configuration sslConf) {
     return builder
         .needsClientAuth(
             sslConf.getBoolean(DFS_CLIENT_HTTPS_NEED_AUTH_KEY,
@@ -1497,9 +1497,9 @@ public class DFSUtil {
    *
    */
   public static HttpServer2.Builder httpServerTemplateForNNAndJN(
-          Configuration conf, final InetSocketAddress httpAddr,
-          final InetSocketAddress httpsAddr, String name, String spnegoUserNameKey,
-          String spnegoKeytabFileKey) throws IOException {
+      Configuration conf, final InetSocketAddress httpAddr,
+      final InetSocketAddress httpsAddr, String name, String spnegoUserNameKey,
+      String spnegoKeytabFileKey) throws IOException {
     HttpConfig.Policy policy = getHttpPolicy(conf);
 
     HttpServer2.Builder builder = new HttpServer2.Builder().setName(name)
