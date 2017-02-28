@@ -18,13 +18,47 @@
 
 package org.apache.hadoop.hdfs;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.protobuf.BlockingService;
-import org.apache.commons.cli.*;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_ADMIN;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_CLIENT_HTTPS_NEED_AUTH_DEFAULT;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_CLIENT_HTTPS_NEED_AUTH_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_HA_NAMENODE_ID_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_BACKUP_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTPS_ADDRESS_DEFAULT;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTPS_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_DEFAULT;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_LIFELINE_RPC_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_SECONDARY_HTTP_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMESERVICE_ID;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_SERVER_HTTPS_KEYPASSWORD_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_SERVER_HTTPS_KEYSTORE_PASSWORD_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_SERVER_HTTPS_TRUSTSTORE_PASSWORD_KEY;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
@@ -48,17 +82,12 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.SecureRandom;
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-
-import static org.apache.hadoop.hdfs.DFSConfigKeys.*;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.protobuf.BlockingService;
 
 @InterfaceAudience.Private
 public class DFSUtil {
@@ -124,7 +153,7 @@ public class DFSUtil {
    * stale, decommissioned and entering_maintenance states.
    * Order: live -> stale -> entering_maintenance -> decommissioned
    */
-  @InterfaceAudience.Private 
+  @InterfaceAudience.Private
   public static class ServiceAndStaleComparator extends ServiceComparator {
     private final long staleInterval;
 
@@ -268,7 +297,7 @@ public class DFSUtil {
     }
     // append remaining components as "/component".
     for (int i=offset + 1; i < range; i++) {
-      result[pos++] = (byte)Path.SEPARATOR_CHAR;
+      result[pos++] = (byte) Path.SEPARATOR_CHAR;
       int len = components[i].length;
       System.arraycopy(components[i], 0, result, pos, len);
       pos += len;
@@ -312,7 +341,7 @@ public class DFSUtil {
   public static byte[][] getPathComponents(String path) {
     // avoid intermediate split to String[]
     final byte[] bytes = string2Bytes(path);
-    return bytes2byteArray(bytes, bytes.length, (byte)Path.SEPARATOR_CHAR);
+    return bytes2byteArray(bytes, bytes.length, (byte) Path.SEPARATOR_CHAR);
   }
 
   /**
@@ -387,7 +416,7 @@ public class DFSUtil {
    * @return A map from nnId -> RPC address of each NN in the nameservice.
    */
   public static Map<String, InetSocketAddress> getRpcAddressesForNameserviceId(
-      Configuration conf, String nsId, String defaultValue) {
+          Configuration conf, String nsId, String defaultValue) {
     return DFSUtilClient.getAddressesForNameserviceId(conf, nsId, defaultValue,
                                                       DFS_NAMENODE_RPC_ADDRESS_KEY);
   }
@@ -852,7 +881,7 @@ public class DFSUtil {
    *     not the NameServiceId-suffixed keys.
    * @return nameserviceId, or null if no match found
    */
-  public static String getNameServiceIdFromAddress(final Configuration conf, 
+  public static String getNameServiceIdFromAddress(final Configuration conf,
       final InetSocketAddress address, String... keys) {
     // Configuration with a single namenode and no nameserviceId
     String[] ids = getSuffixIDs(conf, address, keys);
@@ -869,7 +898,7 @@ public class DFSUtil {
    * @throws IOException 
    */
   public static URI getInfoServer(InetSocketAddress namenodeAddr,
-      Configuration conf, String scheme) throws IOException {
+                                  Configuration conf, String scheme) throws IOException {
     String[] suffixes = null;
     if (namenodeAddr != null) {
       // if non-default namenode, try reverse look up 
@@ -911,7 +940,7 @@ public class DFSUtil {
    * @throws IOException
    */
   public static URI getInfoServerWithDefaultHost(String defaultHost,
-      Configuration conf, final String scheme) throws IOException {
+                                                 Configuration conf, final String scheme) throws IOException {
     URI configuredAddr = getInfoServer(null, conf, scheme);
     String authority = substituteForWildcardAddress(
         configuredAddr.getAuthority(), defaultHost);
@@ -1076,8 +1105,8 @@ public class DFSUtil {
    * @throws HadoopIllegalArgumentException on error
    */
   static String[] getSuffixIDs(final Configuration conf, final String addressKey,
-      String knownNsId, String knownNNId,
-      final AddressMatcher matcher) {
+                               String knownNsId, String knownNNId,
+                               final AddressMatcher matcher) {
     String nameserviceId = null;
     String namenodeId = null;
     int found = 0;
@@ -1178,7 +1207,7 @@ public class DFSUtil {
   }
 
   /**
-   * Add protobuf based protocol to the {@link RPC.Server}
+   * Add protobuf based protocol to the {@link org.apache.hadoop.ipc.RPC.Server}
    * @param conf configuration
    * @param protocol Protocol interface
    * @param service service that implements the protocol
@@ -1186,7 +1215,7 @@ public class DFSUtil {
    * @throws IOException
    */
   public static void addPBProtocol(Configuration conf, Class<?> protocol,
-      BlockingService service, RPC.Server server) throws IOException {
+                                   BlockingService service, RPC.Server server) throws IOException {
     RPC.setProtocolEngine(conf, protocol, ProtobufRpcEngine.class);
     server.addProtocol(RPC.RpcKind.RPC_PROTOCOL_BUFFER, protocol, service);
   }
@@ -1344,7 +1373,7 @@ public class DFSUtil {
   }
 
   public static HttpServer2.Builder loadSslConfToHttpServerBuilder(HttpServer2.Builder builder,
-      Configuration sslConf) {
+                                                                   Configuration sslConf) {
     return builder
         .needsClientAuth(
             sslConf.getBoolean(DFS_CLIENT_HTTPS_NEED_AUTH_KEY,
@@ -1468,9 +1497,9 @@ public class DFSUtil {
    *
    */
   public static HttpServer2.Builder httpServerTemplateForNNAndJN(
-      Configuration conf, final InetSocketAddress httpAddr,
-      final InetSocketAddress httpsAddr, String name, String spnegoUserNameKey,
-      String spnegoKeytabFileKey) throws IOException {
+          Configuration conf, final InetSocketAddress httpAddr,
+          final InetSocketAddress httpsAddr, String name, String spnegoUserNameKey,
+          String spnegoKeytabFileKey) throws IOException {
     HttpConfig.Policy policy = getHttpPolicy(conf);
 
     HttpServer2.Builder builder = new HttpServer2.Builder().setName(name)
@@ -1510,7 +1539,6 @@ public class DFSUtil {
     }
     return builder;
   }
-
   /**
    * Return a HttpServer.Builder that the ssm can use to
    * initialize their HTTP / HTTPS server.
@@ -1559,7 +1587,6 @@ public class DFSUtil {
     }
     return builder;
   }
-
 
   /**
    * Assert that all objects in the collection are equal. Returns silently if

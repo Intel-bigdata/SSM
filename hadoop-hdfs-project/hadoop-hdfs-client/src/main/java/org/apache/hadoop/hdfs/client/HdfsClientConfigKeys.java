@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 public interface HdfsClientConfigKeys {
   long SECOND = 1000L;
   long MINUTE = 60 * SECOND;
+
   String  DFS_BLOCK_SIZE_KEY = "dfs.blocksize";
   long    DFS_BLOCK_SIZE_DEFAULT = 128*1024*1024;
   String  DFS_REPLICATION_KEY = "dfs.replication";
