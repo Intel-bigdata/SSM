@@ -61,14 +61,40 @@
               type:'pie',
               radius : '55%',
               center: ['50%', '60%'],
-                  data:[{name:'cacheCapacity',value:3},{name:'cacheRemaining',value:2},{name:'cacheUsed',value:1},{name:'cacheUsedPercentage',value:33}]
+//                  data:[{name:'cacheCapacity',value:3},{name:'cacheRemaining',value:2},{name:'cacheUsed',value:1},{name:'cacheUsedPercentage',value:33}]
+              data: (function() {
+                var arr = [];
+                $.ajax({
+                    type:"post",
+                    async : false,
+                    url : 'http://localhost:9871/ssm/v1?cmd=ls&op=SHOWCACHE',
+                    data : {},
+                    dataType:"json",
+                    success : function(result) {
+                    alert(result);
+                        var keys = [];
+                        var values = [];
+                        for (var key in result) {
+                            keys.push(key);
+                            values.push(result[key]);
+                            arr.push({name:key.toString(),value:result[key]});
+
+                        }
+                    },
+                    error : function(errorMsg) {
+                        alert("sorry, 请求数据失败");
+                        myChart.hideLoading();
+                    }
+                })
+                return arr;
+              })()
 
           }
 
           ]
-      };
+   };
 
-      myChart.setOption(option);
+   myChart.setOption(option);
 
 
 })();
