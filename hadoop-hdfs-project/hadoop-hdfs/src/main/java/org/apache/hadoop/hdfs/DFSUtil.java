@@ -151,9 +151,9 @@ public class DFSUtil {
   /**
    * Comparator for sorting DataNodeInfo[] based on
    * stale, decommissioned and entering_maintenance states.
-   * Order: live -> stale -> entering_maintenance -> decommissioned
+   * Order: live -l> stale -> entering_maintenance -> decommissioned
    */
-  @InterfaceAudience.Private
+  @InterfaceAudience.Private 
   public static class ServiceAndStaleComparator extends ServiceComparator {
     private final long staleInterval;
 
@@ -881,7 +881,7 @@ public class DFSUtil {
    *     not the NameServiceId-suffixed keys.
    * @return nameserviceId, or null if no match found
    */
-  public static String getNameServiceIdFromAddress(final Configuration conf,
+  public static String getNameServiceIdFromAddress(final Configuration conf, 
       final InetSocketAddress address, String... keys) {
     // Configuration with a single namenode and no nameserviceId
     String[] ids = getSuffixIDs(conf, address, keys);

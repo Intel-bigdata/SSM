@@ -1044,7 +1044,7 @@ public class DFSConfigKeys extends CommonConfigurationKeys {
       = HdfsClientConfigKeys.Retry.POLICY_ENABLED_KEY;
   @Deprecated
   public static final boolean DFS_CLIENT_RETRY_POLICY_ENABLED_DEFAULT
-      = HdfsClientConfigKeys.Retry.POLICY_ENABLED_DEFAULT;
+      = HdfsClientConfigKeys.Retry.POLICY_ENABLED_DEFAULT; 
   @Deprecated
   public static final String  DFS_CLIENT_RETRY_POLICY_SPEC_KEY
       = HdfsClientConfigKeys.Retry.POLICY_SPEC_KEY;
@@ -1190,10 +1190,10 @@ public class DFSConfigKeys extends CommonConfigurationKeys {
   // dfs.client.read confs are moved to HdfsClientConfigKeys.Read 
   @Deprecated
   public static final String  DFS_CLIENT_READ_PREFETCH_SIZE_KEY
-      = HdfsClientConfigKeys.Read.PREFETCH_SIZE_KEY;
+      = HdfsClientConfigKeys.Read.PREFETCH_SIZE_KEY; 
   @Deprecated
   public static final String  DFS_CLIENT_READ_SHORTCIRCUIT_KEY
-      = HdfsClientConfigKeys.Read.ShortCircuit.KEY;
+      = HdfsClientConfigKeys.Read.ShortCircuit.KEY; 
   @Deprecated
   public static final boolean DFS_CLIENT_READ_SHORTCIRCUIT_DEFAULT
       = HdfsClientConfigKeys.Read.ShortCircuit.DEFAULT;
