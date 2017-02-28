@@ -1193,7 +1193,7 @@ public class DFSConfigKeys extends CommonConfigurationKeys {
       = HdfsClientConfigKeys.Read.PREFETCH_SIZE_KEY;
   @Deprecated
   public static final String  DFS_CLIENT_READ_SHORTCIRCUIT_KEY
-      = HdfsClientConfigKeys.Read.ShortCircuit.KEY;
+      = HdfsClientConfigKeys.Read.ShortCircuit.KEY; 
   @Deprecated
   public static final boolean DFS_CLIENT_READ_SHORTCIRCUIT_DEFAULT
       = HdfsClientConfigKeys.Read.ShortCircuit.DEFAULT;
