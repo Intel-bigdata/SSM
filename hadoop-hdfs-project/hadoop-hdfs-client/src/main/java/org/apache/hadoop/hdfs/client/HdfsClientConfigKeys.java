@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 public interface HdfsClientConfigKeys {
   long SECOND = 1000L;
   long MINUTE = 60 * SECOND;
-
   String  DFS_BLOCK_SIZE_KEY = "dfs.blocksize";
   long    DFS_BLOCK_SIZE_DEFAULT = 128*1024*1024;
   String  DFS_REPLICATION_KEY = "dfs.replication";
@@ -170,8 +169,8 @@ public interface HdfsClientConfigKeys {
 
   //ssm
   String  DFS_SSM_HTTP_ADDRESS_KEY = "dfs.ssm.http-address";
-  String  DFS_SSM_HTTPS_ADDRESS_KEY = "dfs.namenode.https-address";
-
+  String  DFS_SSM_HTTPS_ADDRESS_KEY = "dfs.ssm.https-address";
+  int     DFS_SSM_HTTPS_PORT_DEFAULT = 9971;
   /**
    * These are deprecated config keys to client code.
    */
