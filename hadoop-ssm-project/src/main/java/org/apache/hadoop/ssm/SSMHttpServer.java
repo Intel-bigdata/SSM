@@ -17,7 +17,18 @@
  */
 package org.apache.hadoop.ssm;
 
-import com.google.common.annotations.VisibleForTesting;
+import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_REST_CSRF_ENABLED_DEFAULT;
+import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_REST_CSRF_ENABLED_KEY;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -38,16 +49,7 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.http.RestCsrfPreventionFilter;
 
-import javax.servlet.ServletContext;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_REST_CSRF_ENABLED_DEFAULT;
-import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_WEBHDFS_REST_CSRF_ENABLED_KEY;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Encapsulates the HTTP server started by the SSMHttpServer.
@@ -113,7 +115,7 @@ public class SSMHttpServer {
     InetSocketAddress httpsAddr = NetUtils.createSocketAddr(httpsAddrString);
 
     HttpServer2.Builder builder = DFSUtil.httpServerTemplateForSSM(conf,
-            httpAddr, httpsAddr, "",
+            httpAddr, httpsAddr, "command",
             DFSConfigKeys.DFS_SSM_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY,
             DFSConfigKeys.DFS_SSM_KEYTAB_FILE_KEY);
     builder.setFindPort(true);

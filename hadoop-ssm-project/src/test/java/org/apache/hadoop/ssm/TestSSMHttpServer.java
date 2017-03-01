@@ -17,6 +17,13 @@
  */
 package org.apache.hadoop.ssm;
 
+import java.io.File;
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -31,13 +38,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.File;
-import java.net.InetSocketAddress;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Arrays;
-import java.util.Collection;
 
 @RunWith(value = Parameterized.class)
 public class TestSSMHttpServer {
@@ -105,7 +105,7 @@ public class TestSSMHttpServer {
 
   @Test
   public void testHttpPolicy() throws Exception {
-    conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, Policy.HTTP_AND_HTTPS.name());
+    conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, Policy.HTTP_ONLY.name());
     conf.set(DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY, "localhost:9494");
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9494);//port can't equal 0
     SSMHttpServer server = null;
@@ -113,7 +113,7 @@ public class TestSSMHttpServer {
       server = new SSMHttpServer(conf, addr);
       server.start();
       Assert.assertTrue(implies(policy.isHttpEnabled(),
-              canAccess("https", server.getHttpsAddress())));
+              canAccess("http", server.getHttpsAddress())));
     } finally {
       if (server != null) {
         server.stop();
