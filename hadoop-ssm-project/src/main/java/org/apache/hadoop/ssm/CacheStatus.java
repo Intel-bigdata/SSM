@@ -1,21 +1,24 @@
 package org.apache.hadoop.ssm;
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by cc on 17-2-28.
  */
 public class CacheStatus {
-  private String CachePoolName;
-  private Map<String, cacheFileInfo> cacheStatusMap;
+  // the key named cachePoolName
+  private Map<String, List<cacheFileInfo>> cacheStatusMap;
   private int cacheCapacity;
   private int cacheUsed;
   private int cacheRemaining;
   private int cacheUsedPercentage;
 
-
   public CacheStatus() {
-    
+    cacheCapacity = 0;
+    cacheUsed = 0;
+    cacheRemaining = 0;
+    cacheUsedPercentage = 0;
   }
 
   class cacheFileInfo {
@@ -23,6 +26,8 @@ public class CacheStatus {
     private int repliNum;
 
     public cacheFileInfo() {
+      filePath = null;
+      repliNum = 0;
     }
 
     public String getFilePath() {
@@ -42,14 +47,6 @@ public class CacheStatus {
     }
   }
 
-  public String getCachePoolName() {
-    return CachePoolName;
-  }
-
-  public void setCachePoolName(String cachePoolName) {
-    CachePoolName = cachePoolName;
-  }
-  
   public int getCacheCapacity() {
     return cacheCapacity;
   }
@@ -82,11 +79,11 @@ public class CacheStatus {
     this.cacheUsedPercentage = cacheUsedPercentage;
   }
 
-  public Map<String, cacheFileInfo> getCacheStatusMap() {
+  public Map<String, List<cacheFileInfo>> getCacheStatusMap() {
     return cacheStatusMap;
   }
 
-  public void setCacheStatusMap(Map<String, cacheFileInfo> cacheStatusMap) {
+  public void setCacheStatusMap(Map<String, List<cacheFileInfo>> cacheStatusMap) {
     this.cacheStatusMap = cacheStatusMap;
   }
 }
