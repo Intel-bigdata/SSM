@@ -19,8 +19,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="X-UA-Compatible" content="IE=9" />
-    <script src="echarts.js"></script>
-    <script src="jquery.js"></script>
     <script src="/static/jquery-1.10.2.min.js"></script>
 <link rel="stylesheet" type="text/css" href="/static/bootstrap-3.0.2/css/bootstrap.min.css" />
 <link rel="stylesheet" type="text/css" href="/static/dataTables.bootstrap.css" />
@@ -74,10 +72,22 @@
       <p class="s"> </p>
     </div>
   </div>
+
+  <div>
     <div>
-        <button id="btn-show-cache" type="button">切换</button>
-        <div id="myChart" style="width:600px;height:400px;"></div>
+      <select id = "select" name = "chart">
+        <option >chart</option>
+        <option value="line">line chart</option>
+        <option value="bar">bar chart</option>
+        <option value="pie">pie chart</option>
+      </select>
     </div>
+    <div>
+      <div id="myChart1" style="width:600px;height:400px;margin:0 auto;"></div>
+      <div id="myChart2" style="width:600px;height:400px;margin:0 auto;"></div>
+      <div id="myChart3" style="width:600px;height:400px;margin:0 auto;"></div>
+    </div>
+  </div>
 
 
 </div>
@@ -90,9 +100,11 @@
 </script><script type="text/javascript" src="/static/dust-helpers-1.1.1.min.js">
 </script><script type="text/javascript" src="/static/dfs-dust.js">
 </script><script type="text/javascript" src="/static/echarts.js">
-</script><script type="text/javascript" src="/static/jquery.js">
 </script><script type="text/javascript" src="runcommand.js">
+</script><script type="text/javascript" src="line.js">
+</script><script type="text/javascript" src="bar.js">
 </script><script type="text/javascript" src="pie.js">
+</script><script type="text/javascript" src="select.js">
 </script>
 </body>
 </html>

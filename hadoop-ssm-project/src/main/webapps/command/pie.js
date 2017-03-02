@@ -18,7 +18,7 @@
 (function() {
   "use strict";
 
-  var myChart = echarts.init(document.getElementById('myChart'));
+  var myChart = echarts.init(document.getElementById('myChart3'));
   var option = {
           title : {
               text: 'Cache统计饼图',
@@ -31,7 +31,28 @@
           legend: {
               orient : 'vertical',
               x : 'left',
-              data:['cacheCapacity','cacheRemaining','cacheUsed','cacheUsedPercentage']
+              data: (function() {
+                    var arr1 = [];
+                    $.ajax({
+                        type:"GET",
+                        url : 'http://localhost:9871/ssm/v1?op=SHOWCACHE',
+                        dataType:"json",
+                        async: false,
+                        success : function(result) {
+                            for (var key in result) {
+                                arr1.push(key);
+                            }
+
+                        },
+                        error : function(errorMsg) {
+                            alert("sorry, 请求数据失败");
+                            myChart.hideLoading();
+                        }
+                    })
+
+                    return arr1;
+              })()
+
           },
           toolbox: {
               show : true,
@@ -61,24 +82,17 @@
               type:'pie',
               radius : '55%',
               center: ['50%', '60%'],
-//                  data:[{name:'cacheCapacity',value:3},{name:'cacheRemaining',value:2},{name:'cacheUsed',value:1},{name:'cacheUsedPercentage',value:33}]
+//                  data:[{"name":"cacheCapacity","value":"3"},{"name":"cacheRemaining","value":2},{"name":"cacheUsed","value":1},{"name":"cacheUsedPercentage","value":33}]
               data: (function() {
                 var arr = [];
                 $.ajax({
-                    type:"post",
+                    type:"GET",
+                    url : 'http://localhost:9871/ssm/v1?op=SHOWCACHE',
                     async : false,
-                    url : 'http://localhost:9871/ssm/v1?cmd=ls&op=SHOWCACHE',
-                    data : {},
                     dataType:"json",
                     success : function(result) {
-                    alert(result);
-                        var keys = [];
-                        var values = [];
                         for (var key in result) {
-                            keys.push(key);
-                            values.push(result[key]);
-                            arr.push({name:key.toString(),value:result[key]});
-
+                        arr.push({"name":key,"value":result[key]});
                         }
                     },
                     error : function(errorMsg) {
