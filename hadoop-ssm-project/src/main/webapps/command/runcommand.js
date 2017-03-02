@@ -36,8 +36,8 @@
     });
 
     });
-//
-//
+
+
 //    $('#btn-show-cache').click(function () {
 //
 //    var url = '/ssm/v1?op=SHOWCACHE'
@@ -50,9 +50,7 @@
 //    });
 //
 //    });
-        $("#btn-show-cache").click(function() {
-                            $("#mychart").toggle();
-                        });
+
 
 
 })();

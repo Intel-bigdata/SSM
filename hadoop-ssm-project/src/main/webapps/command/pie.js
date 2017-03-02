@@ -18,97 +18,97 @@
 (function() {
   "use strict";
 
-  var myChart = echarts.init(document.getElementById('myChart3'));
-  var option = {
-          title : {
-              text: 'Cache统计饼图',
-              x:'center'
-          },
-          tooltip : {
-              trigger: 'item',
-              formatter: "{a} <br/>{b} : {c} ({d}%)"
-          },
-          legend: {
-              orient : 'vertical',
-              x : 'left',
-              data: (function() {
-                    var arr1 = [];
+      var myChart = echarts.init(document.getElementById('myChart3'));
+      var option = {
+              title : {
+                  text: 'Cache统计',
+                  x:'center'
+              },
+              tooltip : {
+                  trigger: 'item',
+                  formatter: "{a} <br/>{b} : {c} ({d}%)"
+              },
+              legend: {
+                  orient : 'vertical',
+                  x : 'left',
+                  data: (function() {
+                        var arr1 = [];
+                        $.ajax({
+                            type:"GET",
+                            url : 'http://localhost:9871/ssm/v1?op=SHOWCACHE',
+                            dataType:"json",
+                            async: false,
+                            success : function(result) {
+                                for (var key in result) {
+                                    arr1.push(key);
+                                }
+
+                            },
+                            error : function(errorMsg) {
+                                alert("sorry, 请求数据失败");
+                                myChart.hideLoading();
+                            }
+                        })
+
+                        return arr1;
+                  })()
+
+              },
+              toolbox: {
+                  show : true,
+                  feature : {
+                      mark : {show: true},
+                      dataView : {show: true, readOnly: false},
+                      magicType : {
+                          show: true,
+                          type: ['pie', 'funnel'],
+                          option: {
+                              funnel: {
+                                  x: '25%',
+                                  width: '50%',
+                                  funnelAlign: 'left',
+                                  max: 1548
+                              }
+                          }
+                      },
+                      restore : {show: true},
+                      saveAsImage : {show: true}
+                  }
+              },
+              calculable : true,
+              series : [
+              {
+                  name:'Cache使用情况',
+                  type:'pie',
+                  radius : '55%',
+                  center: ['50%', '60%'],
+    //                  data:[{"name":"cacheCapacity","value":"3"},{"name":"cacheRemaining","value":2},{"name":"cacheUsed","value":1},{"name":"cacheUsedPercentage","value":33}]
+                  data: (function() {
+                    var arr = [];
                     $.ajax({
                         type:"GET",
                         url : 'http://localhost:9871/ssm/v1?op=SHOWCACHE',
+                        async : false,
                         dataType:"json",
-                        async: false,
                         success : function(result) {
                             for (var key in result) {
-                                arr1.push(key);
+                            arr.push({"name":key,"value":result[key]});
                             }
-
                         },
                         error : function(errorMsg) {
                             alert("sorry, 请求数据失败");
                             myChart.hideLoading();
                         }
                     })
+                    return arr;
+                  })()
 
-                    return arr1;
-              })()
-
-          },
-          toolbox: {
-              show : true,
-              feature : {
-                  mark : {show: true},
-                  dataView : {show: true, readOnly: false},
-                  magicType : {
-                      show: true,
-                      type: ['pie', 'funnel'],
-                      option: {
-                          funnel: {
-                              x: '25%',
-                              width: '50%',
-                              funnelAlign: 'left',
-                              max: 1548
-                          }
-                      }
-                  },
-                  restore : {show: true},
-                  saveAsImage : {show: true}
               }
-          },
-          calculable : true,
-          series : [
-          {
-              name:'Cache使用情况',
-              type:'pie',
-              radius : '55%',
-              center: ['50%', '60%'],
-//                  data:[{"name":"cacheCapacity","value":"3"},{"name":"cacheRemaining","value":2},{"name":"cacheUsed","value":1},{"name":"cacheUsedPercentage","value":33}]
-              data: (function() {
-                var arr = [];
-                $.ajax({
-                    type:"GET",
-                    url : 'http://localhost:9871/ssm/v1?op=SHOWCACHE',
-                    async : false,
-                    dataType:"json",
-                    success : function(result) {
-                        for (var key in result) {
-                        arr.push({"name":key,"value":result[key]});
-                        }
-                    },
-                    error : function(errorMsg) {
-                        alert("sorry, 请求数据失败");
-                        myChart.hideLoading();
-                    }
-                })
-                return arr;
-              })()
 
-          }
+              ]
+       };
 
-          ]
-   };
-
-   myChart.setOption(option);
+       myChart.setOption(option);
 
 
 })();
