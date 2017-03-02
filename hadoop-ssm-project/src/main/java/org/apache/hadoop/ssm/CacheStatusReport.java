@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 
 /**
  * Created by cc on 17-3-1.
@@ -33,6 +34,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 public class CacheStatusReport {
   private Configuration conf;
   private Map<String, List<CacheStatus.cacheFileInfo>> reportMap;
+  private Map<String, CacheStatus.nodeCacheInfo> dnCacheReportMap;
 
   public CacheStatusReport() {
     conf = new Configuration();
@@ -45,27 +47,41 @@ public class CacheStatusReport {
   public CacheStatus getCacheStatusReport() throws IOException {
     DFSClient dfsClient = new DFSClient(conf);
     CacheStatus cacheStatus = new CacheStatus();
+    long cacheCapacity;
+    long cacheUsed;
+    long cacheRemaining;
+    float cacheUsedPercentage;
     long cacheCapacityTotal = 0;
     long cacheUsedTotal = 0;
     long cacheRemaTotal = 0;
     float cacheUsedPerTotal = 0;
+    CacheStatus.nodeCacheInfo nodeCacheInfo = null;
     int len = dfsClient.getDatanodeStorageReport(HdfsConstants.DatanodeReportType.LIVE).length;
+    DatanodeStorageReport dnStorageReport;
     //get info from each dataNode
     for (int i = 0; i < len; i++) {
-      cacheCapacityTotal += dfsClient.getDatanodeStorageReport(HdfsConstants.
-              DatanodeReportType.LIVE)[i].getDatanodeInfo().getCacheCapacity();
-      cacheUsedTotal += dfsClient.getDatanodeStorageReport(HdfsConstants.
-              DatanodeReportType.LIVE)[i].getDatanodeInfo().getCacheUsed();
-      cacheRemaTotal += dfsClient.getDatanodeStorageReport(HdfsConstants.
-              DatanodeReportType.LIVE)[i].getDatanodeInfo().getCacheRemaining();
-      cacheUsedPerTotal += dfsClient.getDatanodeStorageReport(HdfsConstants.
-              DatanodeReportType.LIVE)[i].getDatanodeInfo().getCacheUsedPercent();
+      dnStorageReport = dfsClient.getDatanodeStorageReport(HdfsConstants.
+              DatanodeReportType.LIVE)[i];
+      cacheCapacity = dnStorageReport.getDatanodeInfo().getCacheCapacity();
+      cacheUsed = dnStorageReport.getDatanodeInfo().getCacheUsed();
+      cacheRemaining = dnStorageReport.getDatanodeInfo().getCacheRemaining();
+      cacheUsedPercentage = dnStorageReport.getDatanodeInfo().getCacheUsedPercent();
+      nodeCacheInfo.setCacheCapacity(cacheCapacity);
+      nodeCacheInfo.setCacheUsed(cacheUsed);
+      nodeCacheInfo.setCacheRemaining(cacheRemaining);
+      nodeCacheInfo.setCacheUsedPercentage(cacheUsedPercentage);
+      //Each host name cannot be equal
+      dnCacheReportMap.put(dnStorageReport.getDatanodeInfo().getHostName(), nodeCacheInfo);
+      //summary
+      cacheCapacityTotal += cacheCapacity;
+      cacheUsedTotal += cacheUsed;
+      cacheRemaTotal += cacheRemaining;
+      cacheUsedPerTotal += cacheUsedPercentage;
     }
-    cacheStatus.setCacheCapacity(cacheCapacityTotal);
-    cacheStatus.setCacheUsed(cacheUsedTotal);
-    cacheStatus.setCacheRemaining(cacheRemaTotal);
-    cacheStatus.setCacheUsedPercentage(cacheUsedPerTotal);
-    
+    cacheStatus.setCacheCapacityTotal(cacheCapacityTotal);
+    cacheStatus.setCacheUsedTotal(cacheUsedTotal);
+    cacheStatus.setCacheRemainingTotal(cacheRemaTotal);
+    cacheStatus.setCacheUsedPercentageTotal(cacheUsedPerTotal);
     //get the cacheStatusMap
     String poolName;
     String path;
@@ -90,6 +106,7 @@ public class CacheStatusReport {
       }
     }
     cacheStatus.setCacheStatusMap(reportMap);
+    cacheStatus.setdnCacheStatusMap(dnCacheReportMap);
     return cacheStatus;
   }
 }

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,19 +26,22 @@ import java.util.Map;
 public class CacheStatus {
   // the key named cachePoolName
   private Map<String, List<cacheFileInfo>> cacheStatusMap;
-  private long cacheCapacity;
-  private long cacheUsed;
-  private long cacheRemaining;
-  private float cacheUsedPercentage;
+  //cache for each node information,the key means Datanote host name
+  private Map<String, nodeCacheInfo> dnCacheStatusMap;
+  private long cacheCapacityTotal;
+  private long cacheUsedTotal;
+  private long cacheRemainingTotal;
+  private float cacheUsedPercentageTotal;
+
 
   public CacheStatus() {
-    cacheCapacity = 0;
-    cacheUsed = 0;
-    cacheRemaining = 0;
-    cacheUsedPercentage = 0;
+    cacheCapacityTotal = 0;
+    cacheUsedTotal = 0;
+    cacheRemainingTotal = 0;
+    cacheUsedPercentageTotal = 0;
   }
 
-   class cacheFileInfo {
+  class cacheFileInfo {
     private String filePath;
     private int repliNum;
 
@@ -64,6 +67,54 @@ public class CacheStatus {
     }
   }
 
+  //only contain DataNode info
+  class nodeCacheInfo {
+    private long cacheCapacity;
+    private long cacheUsed;
+    private long cacheRemaining;
+    private float cacheUsedPercentage;
+
+
+    public nodeCacheInfo() {
+      cacheCapacity = 0;
+      cacheUsed = 0;
+      cacheRemaining = 0;
+      cacheUsedPercentage = 0;
+    }
+
+    public long getCacheCapacity() {
+      return cacheCapacity;
+    }
+
+    public void setCacheCapacity(long cacheCapacity) {
+      this.cacheCapacity = cacheCapacity;
+    }
+
+    public long getCacheUsed() {
+      return cacheUsed;
+    }
+
+    public void setCacheUsed(long cacheUsed) {
+      this.cacheUsed = cacheUsed;
+    }
+
+    public long getCacheRemaining() {
+      return cacheRemaining;
+    }
+
+    public void setCacheRemaining(long cacheRemaining) {
+      this.cacheRemaining = cacheRemaining;
+    }
+
+    public float getCacheUsedPercentage() {
+      return cacheUsedPercentage;
+    }
+
+    public void setCacheUsedPercentage(float cacheUsedPercentage) {
+      this.cacheUsedPercentage = cacheUsedPercentage;
+    }
+  }
+
   public Map<String, List<cacheFileInfo>> getCacheStatusMap() {
     return cacheStatusMap;
   }
@@ -72,35 +123,43 @@ public class CacheStatus {
     this.cacheStatusMap = cacheStatusMap;
   }
 
-  public long getCacheCapacity() {
-    return cacheCapacity;
+  public Map<String, nodeCacheInfo> getdnCacheStatusMap() {
+    return dnCacheStatusMap;
   }
 
-  public void setCacheCapacity(long cacheCapacity) {
-    this.cacheCapacity = cacheCapacity;
+  public void setdnCacheStatusMap(Map<String, nodeCacheInfo> dnCacheStatusMap) {
+    this.dnCacheStatusMap = dnCacheStatusMap;
   }
 
-  public long getCacheUsed() {
-    return cacheUsed;
+  public long getCacheCapacityTotal() {
+    return cacheCapacityTotal;
   }
 
-  public void setCacheUsed(long cacheUsed) {
-    this.cacheUsed = cacheUsed;
+  public void setCacheCapacityTotal(long cacheCapacityTotal) {
+    this.cacheCapacityTotal = cacheCapacityTotal;
   }
 
-  public long getCacheRemaining() {
-    return cacheRemaining;
+  public long getCacheUsedTotal() {
+    return cacheUsedTotal;
   }
 
-  public void setCacheRemaining(long cacheRemaining) {
-    this.cacheRemaining = cacheRemaining;
+  public void setCacheUsedTotal(long cacheUsedTotal) {
+    this.cacheUsedTotal = cacheUsedTotal;
   }
 
-  public float getCacheUsedPercentage() {
-    return cacheUsedPercentage;
+  public long getCacheRemainingTotal() {
+    return cacheRemainingTotal;
   }
 
-  public void setCacheUsedPercentage(float cacheUsedPercentage) {
-    this.cacheUsedPercentage = cacheUsedPercentage;
+  public void setCacheRemainingTotal(long cacheRemainingTotal) {
+    this.cacheRemainingTotal = cacheRemainingTotal;
+  }
+
+  public float getCacheUsedPercentageTotal() {
+    return cacheUsedPercentageTotal;
+  }
+
+  public void setCacheUsedPercentageTotal(float cacheUsedPercentageTotal) {
+    this.cacheUsedPercentageTotal = cacheUsedPercentageTotal;
   }
 }
