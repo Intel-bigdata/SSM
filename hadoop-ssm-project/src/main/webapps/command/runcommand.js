@@ -52,5 +52,23 @@
 //    });
 
 
+     $('#btn-new').click(function () {
+                 var $div = $('<form onsubmit="return false;">'
+                     +'<div class="input-group">'
+                         +'<input type="text" class="form-control" id="cmd"/>'
+                         +'<span class="input-group-btn">'
+                         +'<button class="btn btn-default" type="button" id="btn-run-cmd">Run!</button>'
+                         +'</span>'
+                     +'</div>'
+                     +'<div>'
+                         +'<p class="stdout">stdout is </p>'
+                         +'<p class="stderr">stderr is </p>'
+                     +'</div>'
+                 +'</form>');
+                 $("#div").append($div);
+
+     });
+
+
 
 })();
