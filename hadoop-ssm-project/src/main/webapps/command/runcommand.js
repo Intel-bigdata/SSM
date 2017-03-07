@@ -17,7 +17,7 @@
  */
 (function() {
   "use strict";
-
+    var i = 0;
     $('#btn-run-cmd').click(function () {
 
     var url = '/ssm/v1?op=RUNCOMMAND&cmd=' + $('#cmd').val()
@@ -26,16 +26,41 @@
         type: 'PUT',
         url: url
     }).then(function(data) {
+        $('#stdout').html('');
+        $('#stderr').html('');
         for (var i=0;i<data.stdout.length;i++) {
-            $('.stdout').append(data.stdout[i]+'<br>');
+            $('#stdout').append(data.stdout[i]+'<br>');
         }
 
         for (var i=0;i<data.stderr.length;i++) {
-            $('.stderr').append(data.stderr[i]+'<br>');
+            $('#stderr').append(data.stderr[i]+'<br>');
         }
     });
 
     });
+
+
+//     $('[id^=btn-run-cmd]').click(function () {
+//
+//          var url = '/ssm/v1?op=RUNCOMMAND&cmd=' + $('[id^=btn-run-cmd]').parent().prev().val();
+//          alert();
+//
+//          $.ajax({
+//              type: 'PUT',
+//              url: url
+//          }).then(function(data) {
+//              $('[id^=btn-run-cmd]').parent().parent().prev().children(":first").html('');
+//              $('[id^=btn-run-cmd]').parent().parent().prev().children(":last").html('');
+//              for (var i=0;i<data.stdout.length;i++) {
+//                  $('[id^=btn-run-cmd]').parent().parent().prev().children(":first").append(data.stdout[i]+'<br>');
+//              }
+//
+//              for (var i=0;i<data.stderr.length;i++) {
+//                  $('[id^=btn-run-cmd]').parent().parent().prev().children(":last").append(data.stderr[i]+'<br>');
+//              }
+//          });
+
+//     });
 
 
 //    $('#btn-show-cache').click(function () {
@@ -53,16 +78,17 @@
 
 
      $('#btn-new').click(function () {
+                 i = i+1;
                  var $div = $('<form onsubmit="return false;">'
                      +'<div class="input-group">'
-                         +'<input type="text" class="form-control" id="cmd"/>'
+                         +'<input type="text" class="form-control" id="cmd'+i+'"/>'
                          +'<span class="input-group-btn">'
-                         +'<button class="btn btn-default" type="button" id="btn-run-cmd">Run!</button>'
+                         +'<button class="btn btn-default" type="button" id="btn-run-cmd'+i+'">Run!</button>'
                          +'</span>'
                      +'</div>'
                      +'<div>'
-                         +'<p class="stdout">stdout is </p>'
-                         +'<p class="stderr">stderr is </p>'
+                         +'<p id="stdout'+i+'">stdout is </p>'
+                         +'<p id="stderr'+i+'">stderr is </p>'
                      +'</div>'
                  +'</form>');
                  $("#div").append($div);
