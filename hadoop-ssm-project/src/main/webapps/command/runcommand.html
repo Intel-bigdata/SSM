@@ -59,21 +59,21 @@
         <div class="col-xs-10 col-md-10" id="div" >
             <form onsubmit="return false;">
                 <div class="input-group" >
-                    <input type="text" class="form-control" id="cmd"/>
+                    <input type="text" class="form-control" id="cmd0"/>
                     <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" id="btn-run-cmd">Run!</button>
+                    <button class="btn btn-default" type="button" onclick="run(this.id)" id="btn-run-cmd0">Run!</button>
                     </span>
                 </div>
                 <div>
-                    stdout is <p id="stdout"></p>
-                    stderr is <p id="stderr"></p>
+                    stdout is <p id="stdout0"></p>
+                    stderr is <p id="stderr0"></p>
                 </div>
             </form>
             <p class="s"></p>
         </div>
 
     </div>
-    <button class="btn btn-default" onclick="newDiv()" id="btn-new">new!</button>
+    <button class="btn btn-default" id="btn-new" onclick="newDiv()">new</button>
 
     <div>
         <div>
