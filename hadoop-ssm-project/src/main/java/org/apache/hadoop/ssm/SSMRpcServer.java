@@ -17,8 +17,17 @@
  */
 package org.apache.hadoop.ssm;
 
+import org.apache.hadoop.conf.Configuration;
+
 /**
  * Implements the rpc calls.
  */
 public class SSMRpcServer {
+  private SSM ssm;
+  private Configuration conf;
+
+  public SSMRpcServer(SSM ssm, Configuration conf) {
+    this.ssm = ssm;
+    this.conf = conf;
+  }
 }

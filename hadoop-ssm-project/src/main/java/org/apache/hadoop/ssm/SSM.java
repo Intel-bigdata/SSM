@@ -19,6 +19,8 @@ package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
 
+import java.net.InetSocketAddress;
+
 import static org.apache.hadoop.util.ExitUtil.terminate;
 
 /**
@@ -28,8 +30,13 @@ public class SSM {
   private StatesManager statesManager;
   private RuleManager ruleManager;
   private CommandExecutor commandExecutor;
+  private SSMHttpServer httpServer;
+  private Configuration config;
 
   SSM(Configuration conf) {
+    config = conf;
+    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
+    httpServer = new SSMHttpServer(conf, addr);
     statesManager = new StatesManager(this, conf);
     ruleManager = new RuleManager();
     commandExecutor = new CommandExecutor(this, conf);
@@ -95,6 +102,7 @@ public class SSM {
    * @throws Exception
    */
   public void runSSMDaemons() throws Exception {
+    httpServer.start();
     statesManager.start();
     ruleManager.start();
     commandExecutor.start();
