@@ -17,38 +17,36 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.hdfs.DFSClient;
+import java.util.concurrent.Semaphore;
 
 /**
- * Base for actions
+ * Controls the concurrency of actions execution.
  */
-public abstract class ActionBase {
-  private ActionType2 actionType;
-  protected DFSClient dfsClient;
+final public class ActionExecutor {
+  // To control the concurrency of certain type of action
+  static private Semaphore[] semaphores = new Semaphore[ActionType2.values().length];
 
-  public ActionBase(DFSClient client) {
-    this.dfsClient = client;
+  static {
+    // TODO: make configurable
+    semaphores[ActionType2.BalanceCluster.getValue()] = new Semaphore(1);
   }
 
-  /**
-   * Used to initialize the action.
-   * @param args Action specific
-   */
-  public abstract void initial(String[] args);
-
-  /**
-   * Execute an action.
-   * @return true if success, otherwise return false.
-   */
-  protected abstract boolean execute();
-
-  public abstract ActionType2 getActionType();
-
-  public final boolean run() {
-    return execute();
-  }
-
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
+  public static boolean run(ActionBase action) {
+    int v = action.getActionType().getValue();
+    boolean acquired = false;
+    try {
+      if (semaphores[v] != null) {
+        semaphores[v].acquire();
+      }
+      acquired = true;
+      return action.run();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      return false;
+    } finally {
+      if (acquired && semaphores[v] != null) {
+        semaphores[v].release();
+      }
+    }
   }
 }

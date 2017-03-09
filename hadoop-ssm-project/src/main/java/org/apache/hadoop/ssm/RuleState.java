@@ -17,38 +17,22 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.hdfs.DFSClient;
-
 /**
- * Base for actions
+ * The possible state that a rule can be in.
  */
-public abstract class ActionBase {
-  private ActionType2 actionType;
-  protected DFSClient dfsClient;
+public enum RuleState {
+  ACTIVE(0),      // functioning
+  DRYRUN(1),      // without execute the rule commands
+  DISABLED(2),    // stop maintain info for the rule
+  FINISHED(3);    // for one-shot rule
 
-  public ActionBase(DFSClient client) {
-    this.dfsClient = client;
+  private int value;
+
+  private RuleState(int value) {
+    this.value = value;
   }
 
-  /**
-   * Used to initialize the action.
-   * @param args Action specific
-   */
-  public abstract void initial(String[] args);
-
-  /**
-   * Execute an action.
-   * @return true if success, otherwise return false.
-   */
-  protected abstract boolean execute();
-
-  public abstract ActionType2 getActionType();
-
-  public final boolean run() {
-    return execute();
-  }
-
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
+  public int getValue() {
+    return value;
   }
 }

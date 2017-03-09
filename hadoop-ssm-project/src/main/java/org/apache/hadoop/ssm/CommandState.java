@@ -17,38 +17,24 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.hdfs.DFSClient;
-
 /**
- * Base for actions
+ * The possible state that a command can be in.
  */
-public abstract class ActionBase {
-  private ActionType2 actionType;
-  protected DFSClient dfsClient;
+public enum CommandState {
+  NOTINITED(0),
+  READY(1),
+  EXECUTING(2),
+  PAUSED(3),
+  DONE(4),
+  CANCELLED(5);
 
-  public ActionBase(DFSClient client) {
-    this.dfsClient = client;
+  private int value;
+
+  private CommandState(int value) {
+    this.value = value;
   }
 
-  /**
-   * Used to initialize the action.
-   * @param args Action specific
-   */
-  public abstract void initial(String[] args);
-
-  /**
-   * Execute an action.
-   * @return true if success, otherwise return false.
-   */
-  protected abstract boolean execute();
-
-  public abstract ActionType2 getActionType();
-
-  public final boolean run() {
-    return execute();
-  }
-
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
+  public int getValue() {
+    return value;
   }
 }

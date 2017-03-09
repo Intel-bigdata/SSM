@@ -17,38 +17,27 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.HdfsConfiguration;
+
+import java.io.Console;
+import java.io.IOException;
 
 /**
- * Base for actions
+ * SSM related configurations as well as HDFS configurations.
  */
-public abstract class ActionBase {
-  private ActionType2 actionType;
-  protected DFSClient dfsClient;
-
-  public ActionBase(DFSClient client) {
-    this.dfsClient = client;
+public class SSMConfiguration extends HdfsConfiguration {
+  public SSMConfiguration() {
+    Configuration.addDefaultResource("ssm-default.xml");
+    Configuration.addDefaultResource("ssm-site.xml");
   }
 
-  /**
-   * Used to initialize the action.
-   * @param args Action specific
-   */
-  public abstract void initial(String[] args);
-
-  /**
-   * Execute an action.
-   * @return true if success, otherwise return false.
-   */
-  protected abstract boolean execute();
-
-  public abstract ActionType2 getActionType();
-
-  public final boolean run() {
-    return execute();
-  }
-
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
+  public static void main(String[] args) {
+    Console console = System.console();
+    try {
+      Configuration.dumpConfiguration(new SSMConfiguration(), console.writer());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

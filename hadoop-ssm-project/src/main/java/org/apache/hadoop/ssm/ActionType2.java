@@ -17,38 +17,35 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.hdfs.DFSClient;
-
 /**
- * Base for actions
+ * Internal actions supported.
  */
-public abstract class ActionBase {
-  private ActionType2 actionType;
-  protected DFSClient dfsClient;
+public enum ActionType2 {
+  None(0, "None"),           // doing nothing
+  External(1, "External"),   // execute some command lines specified
+  CacheFile(2, "CacheFile"),
+  UncacheFile(3, "UncacheFile"),
+  SetStoragePolicy(4, "SetStoragePolicy"),
+  EnforceStoragePolicy(5, "EnforceStoragePolicy"),
+  ConvertToEC(6, "ConvertToEC"),
+  ConvertToReplica(7, "ConvertToReplica"),
+  Distcp(8, "Distcp"),
+  DiskBalance(9, "DiskBalance"),
+  BalanceCluster(10, "BalanceCluster");
 
-  public ActionBase(DFSClient client) {
-    this.dfsClient = client;
+  private final int value;
+  private final String displayName;
+
+  private ActionType2(int value, String name) {
+    this.value = value;
+    this.displayName = name;
   }
 
-  /**
-   * Used to initialize the action.
-   * @param args Action specific
-   */
-  public abstract void initial(String[] args);
-
-  /**
-   * Execute an action.
-   * @return true if success, otherwise return false.
-   */
-  protected abstract boolean execute();
-
-  public abstract ActionType2 getActionType();
-
-  public final boolean run() {
-    return execute();
+  public int getValue() {
+    return value;
   }
 
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
+  public String getDisplayName() {
+    return displayName;
   }
 }

@@ -15,40 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
-
-import org.apache.hadoop.hdfs.DFSClient;
+package org.apache.hadoop.ssm.protocol;
 
 /**
- * Base for actions
+ * SSM client can communicate with SSM through this protocol.
  */
-public abstract class ActionBase {
-  private ActionType2 actionType;
-  protected DFSClient dfsClient;
-
-  public ActionBase(DFSClient client) {
-    this.dfsClient = client;
-  }
-
-  /**
-   * Used to initialize the action.
-   * @param args Action specific
-   */
-  public abstract void initial(String[] args);
-
-  /**
-   * Execute an action.
-   * @return true if success, otherwise return false.
-   */
-  protected abstract boolean execute();
-
-  public abstract ActionType2 getActionType();
-
-  public final boolean run() {
-    return execute();
-  }
-
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
-  }
+public class ClientProtocol {
 }

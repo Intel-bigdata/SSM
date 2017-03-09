@@ -17,38 +17,35 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.hdfs.DFSClient;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.xml.XmlConfiguration;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 /**
- * Base for actions
+ * Providing RESTApi service.
  */
-public abstract class ActionBase {
-  private ActionType2 actionType;
-  protected DFSClient dfsClient;
+public class RestApiServer {
+  private Server server;
 
-  public ActionBase(DFSClient client) {
-    this.dfsClient = client;
+  public boolean initialize(String configFile) {
+    try {
+      server = new Server();
+      FileInputStream xmlIn = new FileInputStream(configFile);
+      XmlConfiguration conf = new XmlConfiguration(xmlIn);
+      conf.configure(server);
+      return true;
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return false;
   }
 
-  /**
-   * Used to initialize the action.
-   * @param args Action specific
-   */
-  public abstract void initial(String[] args);
-
-  /**
-   * Execute an action.
-   * @return true if success, otherwise return false.
-   */
-  protected abstract boolean execute();
-
-  public abstract ActionType2 getActionType();
-
-  public final boolean run() {
-    return execute();
-  }
-
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
+  public void start() throws Exception {
+    server.start();
   }
 }
