@@ -24,11 +24,11 @@ import java.util.concurrent.Semaphore;
  */
 final public class ActionExecutor {
   // To control the concurrency of certain type of action
-  static private Semaphore[] semaphores = new Semaphore[ActionType2.values().length];
+  static private Semaphore[] semaphores = new Semaphore[ActionType.values().length];
 
   static {
     // TODO: make configurable
-    semaphores[ActionType2.BalanceCluster.getValue()] = new Semaphore(1);
+    semaphores[ActionType.BalanceCluster.getValue()] = new Semaphore(1);
   }
 
   public static boolean run(ActionBase action) {

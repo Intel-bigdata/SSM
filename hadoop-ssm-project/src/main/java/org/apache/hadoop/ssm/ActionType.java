@@ -17,18 +17,35 @@
  */
 package org.apache.hadoop.ssm;
 
+/**
+ * Internal actions supported.
+ */
 public enum ActionType {
-  CACHE,      // Cache a file or directory
-  ARCHIVE,    // Set storage policy to ARCHIVE and enforce policy
-  SSD;        // Set storage policy to ONE_SSD and enforce policy
+  None(0, "None"),           // doing nothing
+  External(1, "External"),   // execute some command lines specified
+  CacheFile(2, "CacheFile"),
+  UncacheFile(3, "UncacheFile"),
+  SetStoragePolicy(4, "SetStoragePolicy"),
+  EnforceStoragePolicy(5, "EnforceStoragePolicy"),
+  ConvertToEC(6, "ConvertToEC"),
+  ConvertToReplica(7, "ConvertToReplica"),
+  Distcp(8, "Distcp"),
+  DiskBalance(9, "DiskBalance"),
+  BalanceCluster(10, "BalanceCluster");
 
-  public static ActionType getActionType(String str) {
-    if (str.equals("cache"))
-      return CACHE;
-    else if (str.equals("archive"))
-      return ARCHIVE;
-    else if (str.equals("ssd"))
-      return SSD;
-    return null;
+  private final int value;
+  private final String displayName;
+
+  private ActionType(int value, String name) {
+    this.value = value;
+    this.displayName = name;
+  }
+
+  public int getValue() {
+    return value;
+  }
+
+  public String getDisplayName() {
+    return displayName;
   }
 }
