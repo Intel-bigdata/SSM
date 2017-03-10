@@ -24,10 +24,10 @@ import org.apache.hadoop.conf.Configuration;
  * Polls metrics and events from NameNode
  */
 public class StatesManager {
-  private SSM ssm;
+  private SSMServer ssm;
   private Configuration conf;
 
-  public StatesManager(SSM ssm, Configuration conf) {
+  public StatesManager(SSMServer ssm, Configuration conf) {
     this.ssm = ssm;
     this.conf = conf;
   }

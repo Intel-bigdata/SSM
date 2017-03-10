@@ -18,16 +18,62 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ipc.RPC;
+
+import java.io.IOException;
+import java.util.EnumSet;
+import java.util.List;
 
 /**
  * Implements the rpc calls.
+ * TODO: Implement statistics for SSM rpc server
  */
-public class SSMRpcServer {
-  private SSM ssm;
+public class SSMRpcServer implements SSMProtocols {
+  private SSMServer ssm;
   private Configuration conf;
 
-  public SSMRpcServer(SSM ssm, Configuration conf) {
+  private final RPC.Server clientRpcServer;
+
+  public SSMRpcServer(SSMServer ssm, Configuration conf) throws IOException {
     this.ssm = ssm;
     this.conf = conf;
+
+    // TODO: implement ssm ClientProtocol
+    clientRpcServer = new RPC.Builder(conf).build();
+  }
+
+  @Override
+  public long submitRule(String rule, RuleState initState) throws IOException {
+    return 0L;
+  }
+
+  @Override
+  public List<RuleInfo> listRules(EnumSet<RuleState> rulesInStates)
+    throws IOException {
+    return null;
+  }
+
+  @Override
+  public long executeCommand(String command) throws IOException {
+    return 0L;
+  }
+
+  /**
+   * Start SSM RPC service
+   */
+  public void start() {
+    // TODO: start clientRpcServer
+  }
+
+  /**
+   * Stop SSM RPC service
+   */
+  public void stop() {
+  }
+
+  /**
+   * Waiting for RPC threads to exit.
+   */
+  public void join() {
   }
 }

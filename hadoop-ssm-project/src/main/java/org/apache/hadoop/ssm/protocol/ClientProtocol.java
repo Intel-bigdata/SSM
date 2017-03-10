@@ -17,8 +17,42 @@
  */
 package org.apache.hadoop.ssm.protocol;
 
+import org.apache.hadoop.ssm.RuleInfo;
+import org.apache.hadoop.ssm.RuleState;
+
+import java.io.IOException;
+import java.util.EnumSet;
+import java.util.List;
+
 /**
  * SSM client can communicate with SSM through this protocol.
  */
-public class ClientProtocol {
+public interface ClientProtocol {
+
+  /**
+   * Submit a rule to SSM.
+   * @param rule rule string
+   * @return unique id for the rule
+   * @throws IOException
+   */
+  long submitRule(String rule, RuleState initState) throws IOException;
+
+  /**
+   * List rules in the specified states in SSM.
+   * @param rulesInStates
+   * @return
+   * @throws IOException
+   */
+  List<RuleInfo> listRules(EnumSet<RuleState> rulesInStates) throws IOException;
+
+  /**
+   * Execute command through SSM.
+   * TODO: Command check to avoid security issues.
+   *
+   * @param command
+   * @return unique id of the command,
+   *           can be used to query info about this command.
+   * @throws IOException
+   */
+  long executeCommand(String command) throws IOException;
 }

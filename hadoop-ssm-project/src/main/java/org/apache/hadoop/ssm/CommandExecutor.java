@@ -37,9 +37,9 @@ public class CommandExecutor implements Runnable {
   private Daemon commandExecutorThread;
   private ThreadGroup execThreadGroup;
 
-  private SSM ssm;
+  private SSMServer ssm;
 
-  public CommandExecutor(SSM ssm, Configuration conf) {
+  public CommandExecutor(SSMServer ssm, Configuration conf) {
     //ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
     this.ssm = ssm;
     for (CommandState s : CommandState.values()) {

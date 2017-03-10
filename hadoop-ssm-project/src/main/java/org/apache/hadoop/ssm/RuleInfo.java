@@ -17,42 +17,15 @@
  */
 package org.apache.hadoop.ssm;
 
-import java.io.IOException;
-import java.util.Map;
-
 /**
- * Manage and execute rules
+ * Contains info about a rule inside SSM.
  */
-public class RuleManager {
-  Map<Long, RuleContainer2> rules;
+public class RuleInfo {
+  private long id;
+  private long submitTime;
+  private String ruleText;
+  private RuleState state;
 
-  public void addRule() throws IOException {
-  }
-
-  /**
-   * Init RuleManager, this includes:
-   *    1. Load related data from local storage or HDFS
-   *    2. Initial
-   * @throws IOException
-   */
-  public void init() throws IOException {
-  }
-
-  /**
-   * Start services
-   */
-  public void start() {
-  }
-
-  /**
-   * Stop services
-   */
-  public void stop() {
-  }
-
-  /**
-   * Waiting for threads to exit.
-   */
-  public void join() {
-  }
+  private long countConditionChecked;
+  private long countConditionFulfilled;
 }

@@ -17,42 +17,10 @@
  */
 package org.apache.hadoop.ssm;
 
-import java.io.IOException;
-import java.util.Map;
+import org.apache.hadoop.ssm.protocol.ClientProtocol;
 
 /**
- * Manage and execute rules
+ * Protocols for SSM to implement.
  */
-public class RuleManager {
-  Map<Long, RuleContainer2> rules;
-
-  public void addRule() throws IOException {
-  }
-
-  /**
-   * Init RuleManager, this includes:
-   *    1. Load related data from local storage or HDFS
-   *    2. Initial
-   * @throws IOException
-   */
-  public void init() throws IOException {
-  }
-
-  /**
-   * Start services
-   */
-  public void start() {
-  }
-
-  /**
-   * Stop services
-   */
-  public void stop() {
-  }
-
-  /**
-   * Waiting for threads to exit.
-   */
-  public void join() {
-  }
+public interface SSMProtocols extends ClientProtocol {
 }
