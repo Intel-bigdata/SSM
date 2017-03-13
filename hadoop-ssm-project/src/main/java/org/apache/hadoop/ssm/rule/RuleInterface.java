@@ -15,17 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.rule;
+
+import org.apache.hadoop.ssm.rule.objects.SSMObject;
 
 /**
- * Contains info about a rule inside SSM.
+ * Created by root on 3/13/17.
  */
-public class RuleInfo {
-  private long id;
-  private long submitTime;
-  private String ruleText;
-  private RuleState state;
+public interface RuleInterface {
+  long getRuleID();
 
-  private long countConditionChecked;
-  private long countConditionFulfilled;
+  SSMObject getObjectToProc();
+
 }

@@ -15,44 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
-
-import java.io.IOException;
-import java.util.Map;
+package org.apache.hadoop.ssm.rule.objects;
 
 /**
- * Manage and execute rules
+ * Definition of rule object 'Storage'.
  */
-public class RuleManager {
-  Map<Long, RuleContainer2> rules;
-
-  public void addRule() throws IOException {
-  }
-
-  /**
-   * Init RuleManager, this includes:
-   *    1. Load related data from local storage or HDFS
-   *    2. Initial
-   * @throws IOException
-   */
-  public void init() throws IOException {
-  }
-
-  /**
-   * Start services
-   */
-  public void start() {
-  }
-
-  /**
-   * Stop services
-   */
-  public void stop() {
-  }
-
-  /**
-   * Waiting for threads to exit.
-   */
-  public void join() {
-  }
+public class Storage {
 }

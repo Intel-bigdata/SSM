@@ -15,10 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.rule.objects;
 
 /**
- * Created by root on 1/16/17.
+ * Acts as base of SSM objects.
  */
-public class RuleContainer2 {
+public abstract class SSMObject {
+  private ObjectType type;
+
+  SSMObject(ObjectType type) {
+    this.type = type;
+  }
+
+  public abstract ObjectType getType();
 }

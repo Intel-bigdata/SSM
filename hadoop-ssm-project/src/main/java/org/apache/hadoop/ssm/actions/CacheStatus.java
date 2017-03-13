@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import java.util.List;
 import java.util.Map;
@@ -41,7 +41,7 @@ public class CacheStatus {
     cacheUsedPercentageTotal = 0;
   }
 
-  class cacheFileInfo {
+  public class cacheFileInfo {
     private String filePath;
     private int repliNum;
 
@@ -68,7 +68,7 @@ public class CacheStatus {
   }
 
   //only contain DataNode info
-  class nodeCacheInfo {
+  public static class nodeCacheInfo {
     private long cacheCapacity;
     private long cacheUsed;
     private long cacheRemaining;

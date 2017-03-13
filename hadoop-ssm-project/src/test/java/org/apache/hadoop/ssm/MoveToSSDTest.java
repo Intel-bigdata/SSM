@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.ssm.actions.MoveToSSD;
 import org.junit.Assert;
 import org.junit.Test;
 

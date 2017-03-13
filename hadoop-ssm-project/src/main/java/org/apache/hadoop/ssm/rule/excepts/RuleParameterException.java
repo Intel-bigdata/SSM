@@ -1,4 +1,4 @@
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.rule.excepts;
 
 /**
  * Created by root on 11/8/16.

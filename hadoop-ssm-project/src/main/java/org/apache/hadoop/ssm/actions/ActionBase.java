@@ -15,24 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
+
+import org.apache.hadoop.hdfs.DFSClient;
 
 /**
- * The possible state that a rule can be in.
+ * Base for actions
  */
-public enum RuleState {
-  ACTIVE(0),      // functioning
-  DRYRUN(1),      // without execute the rule commands
-  DISABLED(2),    // stop maintain info for the rule
-  FINISHED(3);    // for one-shot rule
+public abstract class ActionBase {
+  private ActionType actionType;
+  protected DFSClient dfsClient;
 
-  private int value;
-
-  private RuleState(int value) {
-    this.value = value;
+  public ActionBase(DFSClient client) {
+    this.dfsClient = client;
   }
 
-  public int getValue() {
-    return value;
+  /**
+   * Used to initialize the action.
+   * @param args Action specific
+   */
+  public abstract void initial(String[] args);
+
+  /**
+   * Execute an action.
+   * @return true if success, otherwise return false.
+   */
+  protected abstract boolean execute();
+
+  public ActionType getActionType() {
+    return actionType;
+  }
+
+  public final boolean run() {
+    return execute();
+  }
+
+  public static ActionBase getInstance(ActionType actionType) {
+    return null;
   }
 }

@@ -15,42 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
-
-import org.apache.hadoop.hdfs.DFSClient;
+package org.apache.hadoop.ssm.rule.objects;
 
 /**
- * Base for actions
+ * Definition of rule object 'Directory'.
  */
-public abstract class ActionBase {
-  private ActionType actionType;
-  protected DFSClient dfsClient;
-
-  public ActionBase(DFSClient client) {
-    this.dfsClient = client;
-  }
-
-  /**
-   * Used to initialize the action.
-   * @param args Action specific
-   */
-  public abstract void initial(String[] args);
-
-  /**
-   * Execute an action.
-   * @return true if success, otherwise return false.
-   */
-  protected abstract boolean execute();
-
-  public ActionType getActionType() {
-    return actionType;
-  }
-
-  public final boolean run() {
-    return execute();
-  }
-
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
-  }
+public class Directory {
 }

@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ssm.rule.RuleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

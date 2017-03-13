@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.ssm;
 
+import org.apache.hadoop.ssm.actions.ActionBase;
+
 /**
  * Command is the minimum unit of execution. Different commands can be
  * executed at the same time, but actions belongs to an action can only be

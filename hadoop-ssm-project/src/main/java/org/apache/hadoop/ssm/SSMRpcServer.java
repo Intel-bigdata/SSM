@@ -19,6 +19,8 @@ package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 import java.util.EnumSet;

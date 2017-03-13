@@ -1,4 +1,4 @@
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,6 +11,7 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
+import org.apache.hadoop.ssm.Action;
 
 import java.util.EnumSet;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -18,7 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Created by hadoop on 17-1-15.
  */
-public class MoveToCache extends ActionBase{
+public class MoveToCache extends ActionBase {
     private static final Log LOG = LogFactory.getLog(MoveToCache.class);
     private static MoveToCache instance;
     private DFSClient dfsClient;

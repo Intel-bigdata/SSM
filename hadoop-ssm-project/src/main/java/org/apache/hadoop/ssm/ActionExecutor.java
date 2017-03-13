@@ -17,6 +17,9 @@
  */
 package org.apache.hadoop.ssm;
 
+import org.apache.hadoop.ssm.actions.ActionBase;
+import org.apache.hadoop.ssm.actions.ActionType;
+
 import java.util.concurrent.Semaphore;
 
 /**

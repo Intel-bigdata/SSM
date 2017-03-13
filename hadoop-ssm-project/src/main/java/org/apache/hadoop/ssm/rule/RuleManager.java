@@ -15,44 +15,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.protocol;
-
-import org.apache.hadoop.ssm.rule.RuleInfo;
-import org.apache.hadoop.ssm.rule.RuleState;
+package org.apache.hadoop.ssm.rule;
 
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
 
 /**
- * SSM client can communicate with SSM through this protocol.
+ * Manage and execute rules.
  */
-public interface ClientProtocol {
+public class RuleManager {
 
   /**
-   * Submit a rule to SSM.
-   * @param rule rule string
-   * @return unique id for the rule
-   * @throws IOException
-   */
-  long submitRule(String rule, RuleState initState) throws IOException;
-
-  /**
-   * List rules in the specified states in SSM.
-   * @param rulesInStates
+   * Submit a rule to RuleManger.
+   * @param rule
+   * @param initState
    * @return
    * @throws IOException
    */
-  List<RuleInfo> listRules(EnumSet<RuleState> rulesInStates) throws IOException;
+  public long submitRule(String rule, RuleState initState) throws IOException {
+    return 0L;
+  }
 
   /**
-   * Execute command through SSM.
-   * TODO: Command check to avoid security issues.
-   *
-   * @param command
-   * @return unique id of the command,
-   *           can be used to query info about this command.
+   * Init RuleManager, this includes:
+   *    1. Load related data from local storage or HDFS
+   *    2. Initial
    * @throws IOException
    */
-  long executeCommand(String command) throws IOException;
+  public void init() throws IOException {
+  }
+
+  /**
+   * Start services
+   */
+  public void start() {
+  }
+
+  /**
+   * Stop services
+   */
+  public void stop() {
+  }
+
+  /**
+   * Waiting for threads to exit.
+   */
+  public void join() {
+  }
 }
