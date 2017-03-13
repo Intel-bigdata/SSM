@@ -17,26 +17,26 @@
  */
 package org.apache.hadoop.ssm.rule.objects;
 
+
 /**
  * Definition of rule object 'File'.
  */
-public class File {
-  private String path;
-  private long mtime;
-  private long atime;
-  // TODO: add other properties
+public class File extends SSMObject {
+  public enum PropertyType {
+    PATH,
+    MTIME,
+    ATIME; // TODO: add other properties
 
-  public enum Property {
-    ACCESSCOUNT, AGE;
+    public int getValue() {
+      return ordinal();
+    }
 
-    public static Property getPropertyType(String str) {
-      if (str.equals("age"))
-        return AGE;
-      else if (str.equals("accessCount"))
-        return ACCESSCOUNT;
-      return null;
+    public PropertyType toType(int value) {
+      return values()[value];
     }
   }
 
-
+  public File() {
+    super(ObjectType.FILE);
+  }
 }

@@ -19,12 +19,25 @@ package org.apache.hadoop.ssm.rule;
 
 import org.apache.hadoop.ssm.rule.objects.SSMObject;
 
+import java.util.List;
+
 /**
  * Created by root on 3/13/17.
  */
 public interface RuleInterface {
+
+  /**
+   * Get the unique id of the rule.
+   * @return
+   */
   long getRuleID();
 
-  SSMObject getObjectToProc();
+  /**
+   * Get SSM Objects that related to this rule.
+   * @return
+   */
+  List<SSMObject> getObjectToProc();
+
+
 
 }

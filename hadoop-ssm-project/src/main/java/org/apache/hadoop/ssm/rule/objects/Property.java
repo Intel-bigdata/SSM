@@ -20,30 +20,38 @@ package org.apache.hadoop.ssm.rule.objects;
 import java.util.List;
 
 /**
- * Acts as base of SSM objects.
+ * Property of SSM object.
  */
-public abstract class SSMObject {
-  private ObjectType type;
-
-  public SSMObject(ObjectType type) {
-    this.type = type;
+public class Property {
+  public enum ParameterType {
+    INT, LONG, STRING;
   }
 
-  public ObjectType getType() {
-    return type;
+  private int index;
+
+  List<ParameterType> types;
+  List<Object> parameters;  // value of each parameter
+
+  public Property(int index) {
+    this.index = index;
   }
 
-  private List<Property> requiredProperties;
-
-  /**
-   * The following properties of this Object are required.
-   * @param properties
-   */
-  public void setRequiredProperties(List<Property> properties) {
-    requiredProperties = properties;
+  public Property(int index, List<ParameterType> types,
+      List<Object> parameters) {
+    this.index = index;
+    this.types = types;
+    this.parameters = parameters;
   }
 
-  public List<Property> getPropertyRequired() {
-    return requiredProperties;
+  public int getPropertyIndex() {
+    return index;
+  }
+
+  public List<ParameterType> getTypes() {
+    return types;
+  }
+
+  public List<Object> getParameters() {
+    return parameters;
   }
 }
