@@ -72,6 +72,12 @@
       <version>${scala.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr4-runtime</artifactId>
+      <version>4.6</version>
+    </dependency>
+
     <!--test-->
     <dependency>
       <groupId>junit</groupId>
@@ -115,9 +121,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <configuration>
-          <skipTests>false</skipTests>
-        </configuration>
         <executions>
           <execution>
             <id>create-web-xmls</id>
@@ -177,6 +180,21 @@
                 <copy file="src/main/xsl/configuration.xsl" todir="src/site/resources"/>
               </tasks>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr4-maven-plugin</artifactId>
+        <version>4.6</version>
+        <configuration>
+          <visitor>true</visitor>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>antlr4</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
