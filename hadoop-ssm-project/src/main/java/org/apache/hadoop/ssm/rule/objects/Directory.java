@@ -20,5 +20,8 @@ package org.apache.hadoop.ssm.rule.objects;
 /**
  * Definition of rule object 'Directory'.
  */
-public class Directory {
+public class Directory extends SSMObject {
+  public Directory() {
+    super(ObjectType.DIRECTORY);
+  }
 }

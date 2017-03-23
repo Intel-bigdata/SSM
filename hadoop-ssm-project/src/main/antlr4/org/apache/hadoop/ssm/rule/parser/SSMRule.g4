@@ -24,16 +24,17 @@ ssmrule
 
 // TODO: Fix this item
 object
-    : ID
+    : OBJECTTYPE                            #objTypeOnly
+    | OBJECTTYPE WITH boolvalue             #objTypeWith
     ;
 
 trigger
-    : AT timepointexpr
-    | EVERY timeintvalexpr duringexpr?
-    | ON fileEvent duringexpr?
+    : AT timepointexpr                      #triTimePoint
+    | EVERY timeintvalexpr duringexpr?      #triCycle
+    | ON fileEvent duringexpr?              #triFileEvent
     ;
 
-duringexpr : FROM timepointexpr (TO timepointexpr)?;
+duringexpr : FROM timepointexpr (TO timepointexpr)? ;
 
 
 conditions
@@ -46,30 +47,33 @@ boolvalue
     | NOT boolvalue
     | boolvalue AND boolvalue
     | boolvalue OR boolvalue
+    | id
     | TRUE
     | FALSE
     ;
 
 compareexpr
-    : ID oPCMP ID
-    | (ID | INT) oPCMP (ID | INT)
-    | (ID | STRING) ('==' | '!=') (ID | STRING)
-    | (ID | STRING) MATCHES (ID | STRING)
-    | timeintvalexpr oPCMP timeintvalexpr
-    | timepointexpr oPCMP timepointexpr
+    : id oPCMP id                                           #cmpIdId
+    | (id | LONG) oPCMP (id | LONG)                         #cmpIdLong
+    | (id | STRING) ('==' | '!=') (id | STRING)             #cmpIdString
+    | (id | STRING) MATCHES (id | STRING)                   #cmpIdStringMatches
+    | timeintvalexpr oPCMP timeintvalexpr                   #cmpTimeintvalTimeintval
+    | timepointexpr oPCMP timepointexpr                     #cmpTimepointTimePoint
     ;
 
 timeintvalexpr
-    : TIMEINTVALCONST
-    | timepointexpr '-' timepointexpr
-    | timeintvalexpr ('-' | '+') timeintvalexpr
+    : '(' timeintvalexpr ')'                                #tieCurves
+    | TIMEINTVALCONST                                       #tieConst
+    | timepointexpr '-' timepointexpr                       #tieTpExpr
+    | timeintvalexpr ('-' | '+') timeintvalexpr             #tieTiExpr
     ;
 
 
 timepointexpr
-    : NOW
-    | TIMEPOINTCONST
-    | timepointexpr ('+' | '-') timeintvalexpr
+    : '(' timepointexpr ')'                                 #tpeCurves
+    | NOW                                                   #tpeNow
+    | TIMEPOINTCONST                                        #tpeTimeConst
+    | timepointexpr ('+' | '-') timeintvalexpr              #tpeTimeExpr
     ;
 
 commands
@@ -80,9 +84,21 @@ command
     : ID (ID | OPTION | STRING)*
     ;
 
-OPTION: '-' [a-zA-Z0-9]+ ;
+commonexpr
+    : '(' commonexpr ')'
+    | LONG
+    | STRING
+    | ID
+    | boolvalue
+    | timeintvalexpr
+    | timepointexpr
+    | oprexpr
+    ;
 
-Linecomment : '#' .*? '\r'? '\n' -> skip ;
+id
+    : ID
+    | ID '(' commonexpr (',' commonexpr)* ')'
+    ;
 
 
 oPCMP
@@ -103,7 +119,7 @@ opr
    ;
 
 oprexpr
-   : INT opr INT
+   : LONG opr LONG
    | STRING '+' STRING
    ;
 
@@ -117,6 +133,14 @@ fileEvent
    | FILETRUNCATE
    ;
 
+
+OBJECTTYPE
+    : FILE
+    | DIRECTORY
+    | STORAGE
+    | CACHE
+    ;
+
 AT : 'at' ;
 AND : 'and' ;
 EVERY : 'every' ;
@@ -128,7 +152,13 @@ NOT : 'not' ;
 TO : 'to' ;
 TRUE : 'true' ;
 FALSE : 'false' ;
+WITH : 'with' ;
 MATCHES : 'matches' ;
+
+FILE : 'file' ;
+DIRECTORY : 'directory' ;
+STORAGE : 'storage' ;
+CACHE : 'cache' ;
 
 FILECREATE: 'FileCreate' ;
 FILECLOSE: 'FileClose' ;
@@ -140,20 +170,23 @@ FILETRUNCATE: 'FileTruncate' ;
 
 
 TIMEINTVALCONST
-    : [1-9] [0-9]* ('s' | 'm' | 'h' | 'd' | 'mon' | 'y') ;
+    : ([1-9] [0-9]* ('s' | 'm' | 'h' | 'd'))+ ;
 
 TIMEPOINTCONST
     : '"' [1-9][0-9][0-9][0-9] '-' [0-9][0-9] '-' [0-9][0-9] ' '+ [0-9][0-9] ':' [0-9][0-9] ':' [0-9][0-9] '"'
     ;
 
-// TODO: support parameters
 ID
     : PARTID
     | PARTID '.' PARTID
-    | PARTID '.' PARTID '(' ')'
     ;
 
 fragment PARTID : [a-zA-Z_] [a-zA-Z0-9_]* ;
+
+
+OPTION: '-' [a-zA-Z0-9]+ ;
+
+Linecomment : '#' .*? '\r'? '\n' -> skip ;
 
 WS : [ \t\r\n]+ -> skip ;
 
@@ -163,14 +196,14 @@ fragment ESCAPE : '\\' (["\\/bfnrt] | UNICODE) ;
 fragment UNICODE : 'u' HEX HEX HEX HEX ;
 fragment HEX : [0-9a-fA-F] ;
 
-INT
+LONG
     : '0'
     | [1-9] [0-9]*
     | ('0' | [1-9] [0-9]*) ('PB' | 'TB' | 'GB' | 'MB' | 'KB' | 'B')
     ;
 
 CONST
-    : INT
+    : LONG
     | STRING
     | TIMEINTVALCONST
     | TIMEPOINTCONST

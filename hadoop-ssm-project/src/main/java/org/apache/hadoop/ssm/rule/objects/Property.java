@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class Property {
   public enum ParameterType {
-    INT, LONG, STRING;
+    LONG, STRING, TIMEINTVAL, TIMEPOINT;
   }
 
   private int index;

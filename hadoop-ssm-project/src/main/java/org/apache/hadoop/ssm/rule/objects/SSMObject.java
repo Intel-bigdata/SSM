@@ -35,6 +35,17 @@ public abstract class SSMObject {
 
   private List<Property> requiredProperties;
 
+  public static SSMObject getInstance(String typeName) {
+    switch (typeName) {
+      case "file":
+        return new File();
+      case "directory":
+        return new Directory();
+      default:
+        return null;
+    }
+  }
+
   /**
    * The following properties of this Object are required.
    * @param properties
@@ -45,5 +56,9 @@ public abstract class SSMObject {
 
   public List<Property> getPropertyRequired() {
     return requiredProperties;
+  }
+
+  public Property getProperty() {
+    return null;
   }
 }

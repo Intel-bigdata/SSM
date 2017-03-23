@@ -39,5 +39,4 @@ public interface RuleInterface {
   List<SSMObject> getObjectToProc();
 
 
-
 }

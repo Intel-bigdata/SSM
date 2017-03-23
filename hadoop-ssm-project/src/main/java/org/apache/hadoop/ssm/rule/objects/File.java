@@ -18,10 +18,15 @@
 package org.apache.hadoop.ssm.rule.objects;
 
 
+import java.util.List;
+
 /**
  * Definition of rule object 'File'.
  */
 public class File extends SSMObject {
+
+  public static final List<Property> properties = null;
+
   public enum PropertyType {
     PATH,
     MTIME,

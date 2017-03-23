@@ -21,5 +21,24 @@ package org.apache.hadoop.ssm.rule.objects;
  * Type of this object.
  */
 public enum ObjectType {
-    FILE, CACHE, DIRECTORY;
+    FILE("file"), CACHE("cache"), DIRECTORY("directory");
+
+    private String name;
+
+    ObjectType(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public static ObjectType fromName(String name) {
+        for (ObjectType v : values()) {
+            if (v.getName().equals(name)) {
+                return v;
+            }
+        }
+        return null;
+    }
 }
