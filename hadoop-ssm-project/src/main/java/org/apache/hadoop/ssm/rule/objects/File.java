@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm.rule.objects;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,12 +26,12 @@ import java.util.List;
  */
 public class File extends SSMObject {
 
-  public static final List<Property> properties = null;
+  public static final List<Property> properties = new ArrayList<>();
 
   public enum PropertyType {
     PATH,
-    MTIME,
-    ATIME; // TODO: add other properties
+    ACCESSCOUNT
+    ; // TODO: add other properties
 
     public int getValue() {
       return ordinal();

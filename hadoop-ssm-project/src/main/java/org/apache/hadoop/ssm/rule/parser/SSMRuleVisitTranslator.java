@@ -55,6 +55,11 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<VisitResult> {
   // time point
 
   @Override
+  public VisitResult visitTpeCurves(SSMRuleParser.TpeCurvesContext ctx) {
+    return visit(ctx.getChild(1));
+  }
+
+  @Override
   public VisitResult visitTpeNow(SSMRuleParser.TpeNowContext ctx) {
     return new VisitResult(ValueType.TIMEPOINT, System.currentTimeMillis());
   }
@@ -81,11 +86,18 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<VisitResult> {
 
   // Time interval
 
-  @Override public VisitResult visitTieTpExpr(SSMRuleParser.TieTpExprContext ctx) {
+  @Override
+  public VisitResult visitTieCurves(SSMRuleParser.TieCurvesContext ctx) {
+    return visit(ctx.getChild(1));
+  }
+
+  @Override
+  public VisitResult visitTieTpExpr(SSMRuleParser.TieTpExprContext ctx) {
     return evalLongExpr(ctx, ValueType.TIMEINTVAL);
   }
 
-  @Override public VisitResult visitTieConst(SSMRuleParser.TieConstContext ctx) {
+  @Override
+  public VisitResult visitTieConst(SSMRuleParser.TieConstContext ctx) {
     long intval = 0L;
     String str = ctx.getText();
     Pattern p = Pattern.compile("[0-9]+");
@@ -127,10 +139,27 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<VisitResult> {
     VisitResult r1 = visit(ctx.getChild(0));
     VisitResult r2 = visit(ctx.getChild(2));
     VisitResult r = new VisitResult(retType);
-    if (ctx.getChild(1).getText().equals("+")) {
-      r.setValue((Long)r1.getValue() + (Long)r2.getValue());
-    } else {
-      r.setValue((Long)r1.getValue() - (Long)r2.getValue());
+    String op = ctx.getChild(1).getText();
+    switch (op) {
+      case "+":
+        r.setValue((Long)r1.getValue() + (Long)r2.getValue());
+        break;
+      case "-":
+        r.setValue((Long)r1.getValue() - (Long)r2.getValue());
+        break;
+      case "*":
+        r.setValue((Long)r1.getValue() * (Long)r2.getValue());
+        break;
+      case "/":
+        r.setValue((Long)r1.getValue() / (Long)r2.getValue());
+        break;
+      case "%":
+        r.setValue((Long)r1.getValue() % (Long)r2.getValue());
+        break;
+      default:
+        System.out.println("Error: " + ctx.getText());
+        r = new VisitResult();
+        break;
     }
     return r;
   }

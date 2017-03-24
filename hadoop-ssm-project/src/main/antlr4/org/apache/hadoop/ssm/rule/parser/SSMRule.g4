@@ -42,21 +42,20 @@ conditions
     ;
 
 boolvalue
-    : '(' boolvalue ')'
-    | compareexpr
+    : compareexpr
     | NOT boolvalue
     | boolvalue AND boolvalue
     | boolvalue OR boolvalue
     | id
     | TRUE
     | FALSE
+    | '(' boolvalue ')'
     ;
 
 compareexpr
-    : id oPCMP id                                           #cmpIdId
-    | (id | LONG) oPCMP (id | LONG)                         #cmpIdLong
-    | (id | STRING) ('==' | '!=') (id | STRING)             #cmpIdString
-    | (id | STRING) MATCHES (id | STRING)                   #cmpIdStringMatches
+    : numricexpr oPCMP numricexpr                           #cmpIdLong
+    | stringexpr ('==' | '!=') stringexpr                   #cmpIdString
+    | stringexpr MATCHES stringexpr                         #cmpIdStringMatches
     | timeintvalexpr oPCMP timeintvalexpr                   #cmpTimeintvalTimeintval
     | timepointexpr oPCMP timepointexpr                     #cmpTimepointTimePoint
     ;
@@ -76,6 +75,32 @@ timepointexpr
     | timepointexpr ('+' | '-') timeintvalexpr              #tpeTimeExpr
     ;
 
+commonexpr
+    : boolvalue
+    | timeintvalexpr
+    | timepointexpr
+    | numricexpr
+    | LONG
+    | STRING
+    | id
+    | '(' commonexpr ')'
+    ;
+
+numricexpr
+   : numricexpr opr numricexpr
+   | id
+   | LONG
+   | '(' numricexpr ')'
+   ;
+
+stringexpr
+   : '(' stringexpr ')'
+   | STRING
+   | TIMEPOINTCONST
+   | id
+   | stringexpr '+' stringexpr
+   ;
+
 commands
     : command (';' command)*
     ;
@@ -84,20 +109,11 @@ command
     : ID (ID | OPTION | STRING)*
     ;
 
-commonexpr
-    : '(' commonexpr ')'
-    | LONG
-    | STRING
-    | ID
-    | boolvalue
-    | timeintvalexpr
-    | timepointexpr
-    | oprexpr
-    ;
-
 id
     : ID
+    | OBJECTTYPE '.' ID
     | ID '(' commonexpr (',' commonexpr)* ')'
+    | OBJECTTYPE '.' ID '(' commonexpr (',' commonexpr)* ')'
     ;
 
 
@@ -118,10 +134,6 @@ opr
    | '%'
    ;
 
-oprexpr
-   : LONG opr LONG
-   | STRING '+' STRING
-   ;
 
 fileEvent
    : FILECREATE
@@ -176,12 +188,7 @@ TIMEPOINTCONST
     : '"' [1-9][0-9][0-9][0-9] '-' [0-9][0-9] '-' [0-9][0-9] ' '+ [0-9][0-9] ':' [0-9][0-9] ':' [0-9][0-9] '"'
     ;
 
-ID
-    : PARTID
-    | PARTID '.' PARTID
-    ;
-
-fragment PARTID : [a-zA-Z_] [a-zA-Z0-9_]* ;
+ID : [a-zA-Z_] [a-zA-Z0-9_]* ;
 
 
 OPTION: '-' [a-zA-Z0-9]+ ;

@@ -62,7 +62,7 @@ public class TestSSMRuleParser {
   @Test
   public void parseRule() throws IOException {
     String rule = "file with path matches \"/a/b*.dat\"  : "
-        + "on FileCreate from \"2013-07-09 19:21:34\" to now + 7d | "
+        + "on FileCreate from \"2013-07-09 19:21:34\" to now + (7d + 4s ) | "
         + "isincache and accessCount(10m) > 10 and x == y and "
         + "x matches \"hello\" and \"/file/*.db\" matches file.path "
         + "and true or c > 10 and 100 > d or 10d > 20s | delete";
