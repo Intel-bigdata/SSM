@@ -110,10 +110,10 @@ command
     ;
 
 id
-    : ID
-    | OBJECTTYPE '.' ID
-    | ID '(' commonexpr (',' commonexpr)* ')'
-    | OBJECTTYPE '.' ID '(' commonexpr (',' commonexpr)* ')'
+    : ID                                                            #idAtt
+    | OBJECTTYPE '.' ID                                             #idObjAtt
+    | ID '(' commonexpr (',' commonexpr)* ')'                       #idAttPara
+    | OBJECTTYPE '.' ID '(' commonexpr (',' commonexpr)* ')'        #idObjAttPara
     ;
 
 
