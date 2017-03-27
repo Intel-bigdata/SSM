@@ -224,9 +224,11 @@ message NNEventProto {
 }
 
 message FilesAccessInfoProto {
-  repeated string filesAccessed = 1;
-  repeated int32 filesAccessCounts = 2;
-  repeated NNEventProto nnEvents = 3;
+  required int64 startTime = 1;
+  required int64 endTime = 2;
+  repeated string filesAccessed = 3;
+  repeated int32 filesAccessCounts = 4;
+  repeated NNEventProto nnEvents = 5;
 }
 
 message FilesInfoProto {
