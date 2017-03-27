@@ -49,6 +49,7 @@ public class VisitResult {
   }
 
   public Object getValue() {
+    // TODO: handle identify issu
     return value;
   }
 
@@ -82,6 +83,13 @@ public class VisitResult {
       case NOT:
         r = new VisitResult(ValueType.BOOLEAN, !toBoolean());
         break;
+      case ADD:
+      case SUB:
+      case MUL:
+      case DIV:
+      case MOD:
+        r = generateCalc(type, dst);
+        break;
       // TODO:
       default:
         throw new IOException("Unknown type");
@@ -89,11 +97,61 @@ public class VisitResult {
     return r;
   }
 
+  private VisitResult generateCalc(OperatorType opType, VisitResult dst) {
+    ValueType retType = null;
+    Object retValue = null;
+    boolean haveTimePoint = getValueType() == ValueType.TIMEPOINT
+        || (dst != null && dst.getValueType() == ValueType.TIMEPOINT);
+
+    if (haveTimePoint) {
+      if (opType == OperatorType.ADD) {
+        retType = ValueType.TIMEPOINT;
+      } else if (opType == OperatorType.SUB) {
+        retType = ValueType.TIMEINTVAL;
+      }
+    }
+
+    if (retType == null) {
+      retType = getValueType();
+    }
+
+    switch (type) {
+      case STRING:
+        switch (opType) {
+          case ADD:
+            retValue = (String)getValue() + (String)dst.getValue();
+        }
+        break;
+
+      default:
+        Long r1 = (Long)getValue();
+        Long r2 = (Long)dst.getValue();
+        switch (opType) {
+          case ADD:
+            retValue = r1 + r2;
+            break;
+          case SUB:
+            retValue = r1 - r2;
+            break;
+          case MUL:
+            retValue = r1 * r2;
+            break;
+          case DIV:
+            retValue = r1 / r2;
+            break;
+          case MOD:
+            retValue = r1 % r2;
+            break;
+        }
+    }
+    return new VisitResult(retType, retValue);
+  }
+
   private boolean toBoolean() throws IOException {
     if (type != ValueType.BOOLEAN) {
       throw new IOException("Type must be boolean: " + this);
     }
-    return (Boolean)value;
+    return (Boolean)getValue();
   }
 
   private int compareTo(VisitResult dst) throws IOException {
@@ -106,15 +164,16 @@ public class VisitResult {
       case LONG:
       case TIMEINTVAL:
       case TIMEPOINT:
-        return (int)((Long)value - (Long)(dst.getValue()));
+        return (int)((Long)getValue() - (Long)(dst.getValue()));
       case STRING:
-        return ((String)value).equals((String)(dst.getValue())) ? 0 : 1;
+        return ((String)getValue()).equals((String)(dst.getValue())) ? 0 : 1;
       default:
         throw new IOException("Invalid type for compare: [1] "
             + this + " [2] " + dst);
     }
   }
 
-
-
+  public boolean isConst() {
+    return type != ValueType.ERROR && getValue() != null;
+  }
 }

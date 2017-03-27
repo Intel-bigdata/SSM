@@ -44,8 +44,7 @@ conditions
 boolvalue
     : compareexpr                                           #bvCompareexpr
     | NOT boolvalue                                         #bvNot
-    | boolvalue AND boolvalue                               #bvAnd
-    | boolvalue OR boolvalue                                #bvOr
+    | boolvalue (AND | OR) boolvalue                        #bvAndOR
     | id                                                    #bvId
     | TRUE                                                  #bvTrue
     | FALSE                                                 #bvFalse

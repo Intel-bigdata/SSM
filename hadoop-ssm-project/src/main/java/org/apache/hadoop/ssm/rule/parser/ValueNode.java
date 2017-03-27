@@ -22,7 +22,7 @@ import java.io.IOException;
 /**
  * Created by root on 3/24/17.
  */
-public class ValueNode extends TreeNode{
+public class ValueNode extends TreeNode {
   private VisitResult value;
 
   public ValueNode(VisitResult value) {
@@ -39,5 +39,9 @@ public class ValueNode extends TreeNode{
 
   public VisitResult eval() {
     return value;
+  }
+
+  public boolean isOperNode() {
+    return false;
   }
 }

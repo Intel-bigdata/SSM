@@ -39,4 +39,14 @@ public abstract class TreeNode {
   //public String toString();
 
   public abstract void checkValueType() throws IOException;
+
+  public TreeNode getLeft() {
+    return left;
+  }
+
+  public TreeNode getRight() {
+    return right;
+  }
+
+  public abstract boolean isOperNode();
 }

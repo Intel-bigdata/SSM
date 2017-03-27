@@ -24,7 +24,6 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.apache.hadoop.ssm.rule.parser.SSMRuleLexer;
 import org.apache.hadoop.ssm.rule.parser.SSMRuleParser;
 import org.apache.hadoop.ssm.rule.parser.SSMRuleVisitTranslator;
@@ -66,7 +65,7 @@ public class TestSSMRuleParser {
         + "isincache and accessCount(10m) > 10 and x == y and "
         + "x matches \"hello\" and \"/file/*.db\" matches file.path "
         + "and true or c > 10 and 100 > d or 10d > 20s | delete";
-    String rule1 = "file with length > 1GB :  and  blocksize > 1 + 3 | delete";
+    String rule1 = "file with length > 1GB :  blocksize > 1 + 3 | delete";
     InputStream input = new ByteArrayInputStream(rule1.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);
     SSMRuleLexer lexer = new SSMRuleLexer(antlrInput);

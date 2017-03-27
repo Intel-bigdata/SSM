@@ -33,9 +33,10 @@ public enum OperatorType {
   LE("<=", true), // "<="
   EQ("==", true), // "=="
   NE("!=", true), // "!="
+  MATCHES("matches", true),
   AND("and", true),
   OR("or", true),
-  NOT("not", true)
+  NOT("not", true),
   ;
 
   private String name;

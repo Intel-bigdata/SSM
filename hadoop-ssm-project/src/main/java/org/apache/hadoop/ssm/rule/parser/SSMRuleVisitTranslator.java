@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.hadoop.ssm.rule.objects.Property;
 import org.apache.hadoop.ssm.rule.objects.SSMObject;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,7 +35,7 @@ import java.util.regex.Pattern;
 /**
  * Convert SSM parse tree into internal representation.
  */
-public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<VisitResult> {
+public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   private Map<String, SSMObject> objects = new HashMap<>();
   private int nError = 0;
 
@@ -42,87 +43,93 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<VisitResult> {
   private Stack<TreeNode> nodes = new Stack<>();
 
   @Override
-  public VisitResult visitRuleLine(SSMRuleParser.RuleLineContext ctx) {
+  public TreeNode visitRuleLine(SSMRuleParser.RuleLineContext ctx) {
     return visitChildren(ctx);
   }
 
   @Override
-  public VisitResult visitObjTypeOnly(SSMRuleParser.ObjTypeOnlyContext ctx) {
+  public TreeNode visitObjTypeOnly(SSMRuleParser.ObjTypeOnlyContext ctx) {
     System.out.println("XXXXXXXXXXXXXXX");
     String objName = ctx.OBJECTTYPE().getText();
     SSMObject obj = SSMObject.getInstance(objName);
     objects.put(objName, obj);
     objects.put("Default", obj);
-    return visitChildren(ctx);
+    return null;
   }
 
   @Override
-  public VisitResult visitObjTypeWith(SSMRuleParser.ObjTypeWithContext ctx) {
+  public TreeNode visitObjTypeWith(SSMRuleParser.ObjTypeWithContext ctx) {
     System.out.println("YYYYYYYYY");
     String objName = ctx.OBJECTTYPE().getText();
     SSMObject obj = SSMObject.getInstance(objName);
     objects.put(objName, obj);
     objects.put("Default", obj);
-    return visitChildren(ctx);
+    TreeNode cond = visit(ctx.conditions());
+    return null;
   }
 
   @Override
-  public VisitResult visitConditions(SSMRuleParser.ConditionsContext ctx) {
+  public TreeNode visitConditions(SSMRuleParser.ConditionsContext ctx) {
     System.out.println("Condition: " + ctx.getText());
-    return visitChildren(ctx);
+    TreeNode tree = visit(ctx.boolvalue());
+    return tree;
   }
 
   @Override
-  public VisitResult visitTriTimePoint(SSMRuleParser.TriTimePointContext ctx) {
+  public TreeNode visitTriTimePoint(SSMRuleParser.TriTimePointContext ctx) {
     return visitChildren(ctx);
   }
 
   // time point
 
   @Override
-  public VisitResult visitTpeCurves(SSMRuleParser.TpeCurvesContext ctx) {
+  public TreeNode visitTpeCurves(SSMRuleParser.TpeCurvesContext ctx) {
     return visit(ctx.getChild(1));
   }
 
   @Override
-  public VisitResult visitTpeNow(SSMRuleParser.TpeNowContext ctx) {
-    return new VisitResult(ValueType.TIMEPOINT, System.currentTimeMillis());
+  public TreeNode visitTpeNow(SSMRuleParser.TpeNowContext ctx) {
+    return new ValueNode(new VisitResult(ValueType.TIMEPOINT, System.currentTimeMillis()));
   }
 
   @Override
-  public VisitResult visitTpeTimeConst(SSMRuleParser.TpeTimeConstContext ctx) {
+  public TreeNode visitTpeTimeConst(SSMRuleParser.TpeTimeConstContext ctx) {
     SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    VisitResult result;
+    TreeNode result;
     Date date;
     try {
       date = ft.parse(ctx.getText());
-      result = new VisitResult(ValueType.TIMEPOINT, date.getTime());
+      result = new ValueNode(new VisitResult(ValueType.TIMEPOINT, date.getTime()));
     } catch (ParseException e) {
-      result = new VisitResult();
+      result = new ValueNode(new VisitResult());
     }
     return result;
   }
 
+  // | timepointexpr ('+' | '-') timeintvalexpr              #tpeTimeExpr
   @Override
-  public VisitResult visitTpeTimeExpr(SSMRuleParser.TpeTimeExprContext ctx) {
-    return evalLongExpr(ctx, ValueType.TIMEPOINT);
+  public TreeNode visitTpeTimeExpr(SSMRuleParser.TpeTimeExprContext ctx) {
+    return generalExprOpExpr(ctx);
+    //return evalLongExpr(ctx, ValueType.TIMEPOINT);
   }
 
 
   // Time interval
 
   @Override
-  public VisitResult visitTieCurves(SSMRuleParser.TieCurvesContext ctx) {
+  public TreeNode visitTieCurves(SSMRuleParser.TieCurvesContext ctx) {
     return visit(ctx.getChild(1));
   }
 
+  // | timepointexpr '-' timepointexpr                       #tieTpExpr
   @Override
-  public VisitResult visitTieTpExpr(SSMRuleParser.TieTpExprContext ctx) {
-    return evalLongExpr(ctx, ValueType.TIMEINTVAL);
+  public TreeNode visitTieTpExpr(SSMRuleParser.TieTpExprContext ctx) {
+    return generalExprOpExpr(ctx);
+    //return evalLongExpr(ctx, ValueType.TIMEINTVAL);
   }
 
   @Override
-  public VisitResult visitTieConst(SSMRuleParser.TieConstContext ctx) {
+  public TreeNode visitTieConst(SSMRuleParser.TieConstContext ctx) {
     long intval = 0L;
     String str = ctx.getText();
     Pattern p = Pattern.compile("[0-9]+");
@@ -152,12 +159,14 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<VisitResult> {
       }
       start += m.group().length() + 1;
     }
-    return new VisitResult(ValueType.TIMEINTVAL, intval);
+    return new ValueNode(new VisitResult(ValueType.TIMEINTVAL, intval));
   }
 
+  // timeintvalexpr ('-' | '+') timeintvalexpr             #tieTiExpr
   @Override
-  public VisitResult visitTieTiExpr(SSMRuleParser.TieTiExprContext ctx) {
-    return evalLongExpr(ctx, ValueType.TIMEINTVAL);
+  public TreeNode visitTieTiExpr(SSMRuleParser.TieTiExprContext ctx) {
+    return generalExprOpExpr(ctx);
+    //return evalLongExpr(ctx, ValueType.TIMEINTVAL);
   }
 
 
@@ -173,93 +182,62 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<VisitResult> {
   // ID
 
   @Override
-  public VisitResult visitIdAtt(SSMRuleParser.IdAttContext ctx) {
+  public TreeNode visitIdAtt(SSMRuleParser.IdAttContext ctx) {
     System.out.println("Bare ID: " + ctx.getText());
     Property p = objects.get("Default").getProperty(ctx.getText());
     if (p == null) {
       // TODO: error happened
       nError++;
-      return new VisitResult();
+      return new ValueNode(new VisitResult());
     }
-    return new VisitResult(p.getValueType(), null);
+    return new ValueNode(new VisitResult(p.getValueType(), null));
   }
 
   @Override
-  public VisitResult visitIdObjAtt(SSMRuleParser.IdObjAttContext ctx) {
+  public TreeNode visitIdObjAtt(SSMRuleParser.IdObjAttContext ctx) {
     Property p = createIfNotExist(ctx.OBJECTTYPE().toString()).getProperty(ctx.ID().getText());
     if (p == null) {
       nError++;
-      return new VisitResult();
+      return new ValueNode(new VisitResult());
     }
     if (p.getParamsTypes() != null) {
       nError++;
     }
-    return new VisitResult(p.getValueType(), null);
+    return new ValueNode(new VisitResult(p.getValueType(), null));
   }
 
   @Override
-  public VisitResult visitIdAttPara(SSMRuleParser.IdAttParaContext ctx) {
+  public TreeNode visitIdAttPara(SSMRuleParser.IdAttParaContext ctx) {
     Property p = createIfNotExist("Default").getProperty(ctx.ID().getText());
     if (p == null) {
       nError++;
-      return new VisitResult();
+      return new ValueNode(new VisitResult());
     }
     if (p.getParamsTypes() == null) {
       nError++;
-      return new VisitResult();
+      return new ValueNode(new VisitResult());
     }
-    return new VisitResult(p.getValueType(), null);
+    return new ValueNode(new VisitResult(p.getValueType(), null));
   }
 
   @Override
-  public VisitResult visitIdObjAttPara(SSMRuleParser.IdObjAttParaContext ctx) {
+  public TreeNode visitIdObjAttPara(SSMRuleParser.IdObjAttParaContext ctx) {
     Property p = createIfNotExist(ctx.OBJECTTYPE().getText()).getProperty(ctx.ID().getText());
     if (p == null) {
       nError++;
-      return new VisitResult();
+      return new ValueNode(new VisitResult());
     }
     if (p.getParamsTypes() == null) {
       nError++;
-      return new VisitResult();
+      return new ValueNode(new VisitResult());
     }
-    return new VisitResult(p.getValueType(), null);
-  }
-
-
-
-  private VisitResult evalLongExpr(ParserRuleContext ctx, ValueType retType) {
-    VisitResult r1 = visit(ctx.getChild(0));
-    VisitResult r2 = visit(ctx.getChild(2));
-    VisitResult r = new VisitResult(retType);
-    String op = ctx.getChild(1).getText();
-    switch (op) {
-      case "+":
-        r.setValue((Long)r1.getValue() + (Long)r2.getValue());
-        break;
-      case "-":
-        r.setValue((Long)r1.getValue() - (Long)r2.getValue());
-        break;
-      case "*":
-        r.setValue((Long)r1.getValue() * (Long)r2.getValue());
-        break;
-      case "/":
-        r.setValue((Long)r1.getValue() / (Long)r2.getValue());
-        break;
-      case "%":
-        r.setValue((Long)r1.getValue() % (Long)r2.getValue());
-        break;
-      default:
-        System.out.println("Error: " + ctx.getText());
-        r = new VisitResult();
-        break;
-    }
-    return r;
+    return new ValueNode(new VisitResult(p.getValueType(), null));
   }
 
   // numricexpr
 
   @Override
-  public VisitResult visitNumricexprId(SSMRuleParser.NumricexprIdContext ctx) {
+  public TreeNode visitNumricexprId(SSMRuleParser.NumricexprIdContext ctx) {
     return visitChildren(ctx);
   }
   /**
@@ -269,38 +247,103 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<VisitResult> {
    * {@link #visitChildren} on {@code ctx}.</p>
    */
   @Override public
-  VisitResult visitNumricexprCurve(SSMRuleParser.NumricexprCurveContext ctx) {
+  TreeNode visitNumricexprCurve(SSMRuleParser.NumricexprCurveContext ctx) {
     return visitChildren(ctx);
   }
-  /**
-   * {@inheritDoc}
-   *
-   * <p>The default implementation returns the result of calling
-   * {@link #visitChildren} on {@code ctx}.</p>
-   */
+
+  // numricexpr opr numricexpr
   @Override
-  public VisitResult visitNumricexpr2(SSMRuleParser.Numricexpr2Context ctx) {
-    VisitResult r1 = visit(ctx.getChild(0));
-    VisitResult r2 = visit(ctx.getChild(2));
-    if (r1.getValue() == null || r2.getValue() == null) {
-      new OperNode(OperatorType.fromString(ctx.opr().getText()), )
+  public TreeNode visitNumricexpr2(SSMRuleParser.Numricexpr2Context ctx) {
+    return generalExprOpExpr(ctx);
+  }
+
+  private TreeNode generalExprOpExpr(ParserRuleContext ctx) {
+    TreeNode r1 = visit(ctx.getChild(0));
+    TreeNode r2 = visit(ctx.getChild(2));
+    return generalHandleExpr(ctx.getChild(1).getText(), r1, r2);
+  }
+
+  private TreeNode generalHandleExpr(String operator, TreeNode left, TreeNode right) {
+    TreeNode ret = null;
+    try {
+      if (left.isOperNode() ||  right.isOperNode()) {
+        ret = new OperNode(OperatorType.fromString(operator), left, right);
+      } else if (left.eval().isConst() && right.eval().isConst()) {
+        ret = new ValueNode(left.eval().eval(OperatorType.fromString(operator), right.eval()));
+      } else {
+        ret = new OperNode(OperatorType.fromString(operator), left, right);
+      }
+    } catch (IOException e) {
+      // Error handle
     }
-    return visitChildren(ctx);
+    return ret;
   }
-  /**
-   * {@inheritDoc}
-   *
-   * <p>The default implementation returns the result of calling
-   * {@link #visitChildren} on {@code ctx}.</p>
-   */
+
+
   @Override
-  public VisitResult visitNumricexprLong(SSMRuleParser.NumricexprLongContext ctx) {
+  public TreeNode visitNumricexprLong(SSMRuleParser.NumricexprLongContext ctx) {
     Long ret = 0L;
     try {
       ret = Long.parseLong(ctx.LONG().getText());
     } catch (NumberFormatException e) {
       // ignore, impossible
     }
-    return new VisitResult(ValueType.LONG, ret);
+    return new ValueNode(new VisitResult(ValueType.LONG, ret));
+  }
+
+  // bool value
+  @Override
+  public TreeNode visitBvAndOR(SSMRuleParser.BvAndORContext ctx) {
+    return generalExprOpExpr(ctx);
+  }
+
+  @Override
+  public TreeNode visitBvId(SSMRuleParser.BvIdContext ctx) {
+    return visit(ctx.id());
+  }
+
+  @Override
+  public TreeNode visitBvTrue(SSMRuleParser.BvTrueContext ctx) {
+    return new ValueNode(new VisitResult(ValueType.BOOLEAN, true));
+  }
+
+  @Override
+  public TreeNode visitBvNot(SSMRuleParser.BvNotContext ctx) {
+    TreeNode left = visit(ctx.boolvalue());
+    // TODO: bypass null
+    TreeNode right = new ValueNode(new VisitResult(ValueType.BOOLEAN, true));
+    return generalHandleExpr(ctx.NOT().getText(), left, right);
+  }
+
+  @Override
+  public TreeNode visitBvFalse(SSMRuleParser.BvFalseContext ctx) {
+    return new ValueNode(new VisitResult(ValueType.BOOLEAN, false));
+  }
+
+  // Compare
+
+  @Override
+  public TreeNode visitCmpIdLong(SSMRuleParser.CmpIdLongContext ctx) {
+    return generalExprOpExpr(ctx);
+  }
+
+  @Override
+  public TreeNode visitCmpIdString(SSMRuleParser.CmpIdStringContext ctx) {
+    return generalExprOpExpr(ctx);
+  }
+
+  @Override
+  public TreeNode visitCmpIdStringMatches(SSMRuleParser.CmpIdStringMatchesContext ctx) {
+    return generalExprOpExpr(ctx);
+  }
+
+  @Override
+  public TreeNode visitCmpTimeintvalTimeintval(SSMRuleParser.CmpTimeintvalTimeintvalContext ctx) {
+    return generalExprOpExpr(ctx);
+  }
+
+  @Override
+  public TreeNode visitCmpTimepointTimePoint(SSMRuleParser.CmpTimepointTimePointContext ctx) {
+    return generalExprOpExpr(ctx);
   }
 }

@@ -46,4 +46,8 @@ public class OperNode extends TreeNode {
   public VisitResult eval() throws IOException {
     return left.eval().eval(operatorType, right == null ? null : right.eval());
   }
+
+  public boolean isOperNode() {
+    return true;
+  }
 }
