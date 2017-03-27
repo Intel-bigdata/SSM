@@ -18,31 +18,31 @@
 package org.apache.hadoop.ssm.rule.objects;
 
 
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.hadoop.ssm.rule.parser.ValueType;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Definition of rule object 'File'.
  */
 public class File extends SSMObject {
 
-  public static final List<Property> properties = new ArrayList<>();
+  public static final Map<String, Property> properties;
 
-  public enum PropertyType {
-    PATH,
-    ACCESSCOUNT
-    ; // TODO: add other properties
-
-    public int getValue() {
-      return ordinal();
-    }
-
-    public PropertyType toType(int value) {
-      return values()[value];
-    }
+  static {
+    properties = new HashMap<>();
+    properties.put("path", new Property(ValueType.STRING, null));
+    properties.put("accessCount", new Property(ValueType.LONG, Arrays.asList(ValueType.TIMEINTVAL)));
+    properties.put("length", new Property(ValueType.LONG, null));
   }
 
   public File() {
     super(ObjectType.FILE);
+  }
+
+  public Map<String, Property> getProperties() {
+    return properties;
   }
 }

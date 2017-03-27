@@ -17,41 +17,29 @@
  */
 package org.apache.hadoop.ssm.rule.objects;
 
+import org.apache.hadoop.ssm.rule.parser.ValueType;
+
 import java.util.List;
 
 /**
  * Property of SSM object.
  */
 public class Property {
-  public enum ParameterType {
-    LONG, STRING, TIMEINTVAL, TIMEPOINT;
+
+  private ValueType retType;
+  private List<ValueType> paramsTypes;
+
+  public Property(ValueType retType, List<ValueType> paramsTypes) {
+    this.retType = retType;
+    this.paramsTypes = paramsTypes;
   }
 
-  private int index;
-
-  List<ParameterType> types;
-  List<Object> parameters;  // value of each parameter
-
-  public Property(int index) {
-    this.index = index;
+  public ValueType getValueType() {
+    return retType;
   }
 
-  public Property(int index, List<ParameterType> types,
-      List<Object> parameters) {
-    this.index = index;
-    this.types = types;
-    this.parameters = parameters;
+  public List<ValueType> getParamsTypes() {
+    return paramsTypes;
   }
 
-  public int getPropertyIndex() {
-    return index;
-  }
-
-  public List<ParameterType> getTypes() {
-    return types;
-  }
-
-  public List<Object> getParameters() {
-    return parameters;
-  }
 }

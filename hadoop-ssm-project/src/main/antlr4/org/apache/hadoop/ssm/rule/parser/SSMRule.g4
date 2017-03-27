@@ -18,14 +18,14 @@
 grammar SSMRule;
 
 ssmrule
-    : object ':' (trigger '|')? conditions '|' commands
-    | Linecomment+
+    : object ':' (trigger '|')? conditions '|' commands     #ruleLine
+    | Linecomment+                                          #commentLine
     ;
 
 // TODO: Fix this item
 object
     : OBJECTTYPE                            #objTypeOnly
-    | OBJECTTYPE WITH boolvalue             #objTypeWith
+    | OBJECTTYPE WITH conditions            #objTypeWith
     ;
 
 trigger
@@ -42,14 +42,14 @@ conditions
     ;
 
 boolvalue
-    : compareexpr
-    | NOT boolvalue
-    | boolvalue AND boolvalue
-    | boolvalue OR boolvalue
-    | id
-    | TRUE
-    | FALSE
-    | '(' boolvalue ')'
+    : compareexpr                                           #bvCompareexpr
+    | NOT boolvalue                                         #bvNot
+    | boolvalue AND boolvalue                               #bvAnd
+    | boolvalue OR boolvalue                                #bvOr
+    | id                                                    #bvId
+    | TRUE                                                  #bvTrue
+    | FALSE                                                 #bvFalse
+    | '(' boolvalue ')'                                     #bvCurve
     ;
 
 compareexpr
@@ -87,10 +87,10 @@ commonexpr
     ;
 
 numricexpr
-   : numricexpr opr numricexpr
-   | id
-   | LONG
-   | '(' numricexpr ')'
+   : numricexpr opr numricexpr                              #numricexpr2
+   | id                                                     #numricexprId
+   | LONG                                                   #numricexprLong
+   | '(' numricexpr ')'                                     #numricexprCurve
    ;
 
 stringexpr

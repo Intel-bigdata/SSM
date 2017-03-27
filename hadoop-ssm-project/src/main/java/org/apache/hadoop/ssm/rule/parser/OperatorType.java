@@ -21,29 +21,41 @@ package org.apache.hadoop.ssm.rule.parser;
  * Created by root on 3/24/17.
  */
 public enum OperatorType {
-  ADD(false), // "+-*/%"
-  SUB(false),
-  MUL(false),
-  DIV(false),
-  MOD(false),
-  GT(true), // ">"
-  GE(true), // ">="
-  LT(true), // "<"
-  LE(true), // "<="
-  EQ(true), // "=="
-  NE(true), // "!="
-  AND(true),
-  OR(true),
-  NOT(true)
+  NONE("none", false),   // for error handling
+  ADD("+", false),
+  SUB("-", false),
+  MUL("*", false),
+  DIV("/", false),
+  MOD("%", false),
+  GT(">", true), // ">"
+  GE(">=", true), // ">="
+  LT("<", true), // "<"
+  LE("<=", true), // "<="
+  EQ("==", true), // "=="
+  NE("!=", true), // "!="
+  AND("and", true),
+  OR("or", true),
+  NOT("not", true)
   ;
 
+  private String name;
   private boolean isLogical;
 
   public boolean isLogicalOperation() {
     return isLogical;
   }
 
-  private OperatorType(boolean isLogical) {
+  public static OperatorType fromString(String nameStr) {
+    for (OperatorType v : values()) {
+      if (v.name.equals(nameStr)) {
+        return v;
+      }
+    }
+    return NONE;
+  }
+
+  private OperatorType(String name, boolean isLogical) {
+    this.name = name;
     this.isLogical = isLogical;
   }
 }

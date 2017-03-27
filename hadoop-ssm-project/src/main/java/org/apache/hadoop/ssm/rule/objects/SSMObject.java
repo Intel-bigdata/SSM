@@ -18,11 +18,13 @@
 package org.apache.hadoop.ssm.rule.objects;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Acts as base of SSM objects.
  */
 public abstract class SSMObject {
+
   private ObjectType type;
 
   public SSMObject(ObjectType type) {
@@ -39,8 +41,6 @@ public abstract class SSMObject {
     switch (typeName) {
       case "file":
         return new File();
-      case "directory":
-        return new Directory();
       default:
         return null;
     }
@@ -58,7 +58,13 @@ public abstract class SSMObject {
     return requiredProperties;
   }
 
-  public Property getProperty() {
-    return null;
+  public boolean containsProperty(String propertyName) {
+    return getProperties().get(propertyName) != null;
   }
+
+  public Property getProperty(String propertyName) {
+    return getProperties().get(propertyName);
+  }
+
+  public abstract Map<String, Property> getProperties();
 }
