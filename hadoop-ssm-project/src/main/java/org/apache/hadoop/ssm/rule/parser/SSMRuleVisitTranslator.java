@@ -19,6 +19,7 @@ package org.apache.hadoop.ssm.rule.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.apache.hadoop.ssm.rule.excepts.RuleParserException;
 import org.apache.hadoop.ssm.rule.objects.Property;
 import org.apache.hadoop.ssm.rule.objects.SSMObject;
 
@@ -186,36 +187,51 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     System.out.println("Bare ID: " + ctx.getText());
     Property p = objects.get("Default").getProperty(ctx.getText());
     if (p == null) {
-      // TODO: error happened
-      nError++;
-      return new ValueNode(new VisitResult());
+      throw new RuleParserException("Object " + objects.get("Default").toString()
+          + " does not have a attribute named '" + "'" + ctx.getText());
+    }
+
+    if (p.getParamsTypes() != null) {
+      throw new RuleParserException("No parameter(s) found for "
+          + ctx.getText());
     }
     return new ValueNode(new VisitResult(p.getValueType(), null));
   }
 
   @Override
   public TreeNode visitIdObjAtt(SSMRuleParser.IdObjAttContext ctx) {
-    Property p = createIfNotExist(ctx.OBJECTTYPE().toString()).getProperty(ctx.ID().getText());
+    SSMObject obj = createIfNotExist(ctx.OBJECTTYPE().toString());
+    Property p = obj.getProperty(ctx.ID().getText());
     if (p == null) {
-      nError++;
-      return new ValueNode(new VisitResult());
+      throw new RuleParserException("Object " + obj.toString()
+          + " does not have a attribute named '" + "'" + ctx.ID().getText());
     }
     if (p.getParamsTypes() != null) {
-      nError++;
+      throw new RuleParserException("No parameter(s) found for "
+          + ctx.getText());
     }
     return new ValueNode(new VisitResult(p.getValueType(), null));
   }
 
   @Override
   public TreeNode visitIdAttPara(SSMRuleParser.IdAttParaContext ctx) {
-    Property p = createIfNotExist("Default").getProperty(ctx.ID().getText());
+    SSMObject obj = createIfNotExist("Default");
+    Property p = obj.getProperty(ctx.ID().getText());
     if (p == null) {
-      nError++;
-      return new ValueNode(new VisitResult());
+      throw new RuleParserException("Object " + obj.toString()
+          + " does not have a attribute named '" + "'" + ctx.ID().getText());
     }
+
     if (p.getParamsTypes() == null) {
-      nError++;
-      return new ValueNode(new VisitResult());
+      throw new RuleParserException(obj.toString() + "." + ctx.ID().getText()
+          + " does not need parameter(s)");
+    }
+
+    int numParameters = ctx.getChildCount() - 3;
+    if (p.getParamsTypes().size() != numParameters) {
+      throw new RuleParserException(obj.toString() + "." + ctx.ID().getText()
+          + " needs " + p.getParamsTypes().size() + " instead of "
+          + numParameters);
     }
     return new ValueNode(new VisitResult(p.getValueType(), null));
   }
@@ -345,5 +361,34 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   @Override
   public TreeNode visitCmpTimepointTimePoint(SSMRuleParser.CmpTimepointTimePointContext ctx) {
     return generalExprOpExpr(ctx);
+  }
+
+  // String
+  @Override
+  public TreeNode visitStrPlus(SSMRuleParser.StrPlusContext ctx) {
+    return generalExprOpExpr(ctx);
+  }
+
+
+  @Override
+  public TreeNode visitStrOrdString(SSMRuleParser.StrOrdStringContext ctx) {
+    return new ValueNode(new VisitResult(ValueType.STRING,
+        ctx.STRING().getText()));
+  }
+
+  @Override
+  public TreeNode visitStrID(SSMRuleParser.StrIDContext ctx) {
+    return visit(ctx.id());
+  }
+
+  @Override
+  public TreeNode visitStrCurve(SSMRuleParser.StrCurveContext ctx) {
+    return visit(ctx.getChild(1));
+  }
+
+  @Override
+  public TreeNode visitStrTimePointStr(SSMRuleParser.StrTimePointStrContext ctx) {
+    return new ValueNode(new VisitResult(ValueType.STRING,
+        ctx.TIMEPOINTCONST().getText()));
   }
 }

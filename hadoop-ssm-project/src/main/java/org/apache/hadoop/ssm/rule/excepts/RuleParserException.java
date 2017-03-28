@@ -15,35 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.rule.objects;
-
-
-import org.apache.hadoop.ssm.rule.parser.ValueType;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+package org.apache.hadoop.ssm.rule.excepts;
 
 /**
- * Definition of rule object 'File'.
+ * Represent an error in rule parser.
  */
-public class File extends SSMObject {
-
-  public static final Map<String, Property> properties;
-
-  static {
-    properties = new HashMap<>();
-    properties.put("path", new Property(ValueType.STRING, null));
-    properties.put("accessCount", new Property(ValueType.LONG, Arrays.asList(ValueType.TIMEINTVAL)));
-    properties.put("length", new Property(ValueType.LONG, null));
-    properties.put("blocksize", new Property(ValueType.LONG, null));
-  }
-
-  public File() {
-    super(ObjectType.FILE);
-  }
-
-  public Map<String, Property> getProperties() {
-    return properties;
+public class RuleParserException extends RuntimeException {
+  public RuleParserException(String info) {
+    super(info);
   }
 }

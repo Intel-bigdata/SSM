@@ -93,11 +93,11 @@ numricexpr
    ;
 
 stringexpr
-   : '(' stringexpr ')'
-   | STRING
-   | TIMEPOINTCONST
-   | id
-   | stringexpr '+' stringexpr
+   : '(' stringexpr ')'                                     #strCurve
+   | STRING                                                 #strOrdString
+   | TIMEPOINTCONST                                         #strTimePointStr
+   | id                                                     #strID
+   | stringexpr '+' stringexpr                              #strPlus
    ;
 
 commands
@@ -111,8 +111,8 @@ command
 id
     : ID                                                            #idAtt
     | OBJECTTYPE '.' ID                                             #idObjAtt
-    | ID '(' commonexpr (',' commonexpr)* ')'                       #idAttPara
-    | OBJECTTYPE '.' ID '(' commonexpr (',' commonexpr)* ')'        #idObjAttPara
+    | ID '(' constexpr (',' constexpr)* ')'                                 #idAttPara
+    | OBJECTTYPE '.' ID '(' constexpr (',' constexpr)* ')'                  #idObjAttPara
     ;
 
 
@@ -208,7 +208,7 @@ LONG
     | ('0' | [1-9] [0-9]*) ('PB' | 'TB' | 'GB' | 'MB' | 'KB' | 'B')
     ;
 
-CONST
+constexpr
     : LONG
     | STRING
     | TIMEINTVALCONST
