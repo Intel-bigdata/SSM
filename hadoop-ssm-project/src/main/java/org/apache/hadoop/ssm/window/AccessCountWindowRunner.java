@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.ssm.window;
 
-import com.gs.collections.impl.list.mutable.FastList;
 import com.gs.collections.impl.map.mutable.UnifiedMap;
 import com.gs.collections.impl.map.sorted.mutable.TreeSortedMap;
 
@@ -25,38 +24,37 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WindowRunner<IN, OUT> {
-  private UnifiedMap<IN, TreeSortedMap<Window, FastList<OUT>>> windowInputs;
+public class AccessCountWindowRunner<K> {
+  private UnifiedMap<K, TreeSortedMap<Window, Integer>> windowInputs;
   private WindowAssigner windowAssigner;
 
-  public WindowRunner(WindowAssigner windowAssigner) {
+  public AccessCountWindowRunner(WindowAssigner windowAssigner) {
     this.windowAssigner = windowAssigner;
     this.windowInputs = new UnifiedMap<>();
   }
 
-  public void process(IN key, Window window, OUT value) {
+  public void process(K key, Window window, Integer value) {
     if (!this.windowInputs.containsKey(key)) {
       this.windowInputs.put(key, new TreeSortedMap<>());
     }
-    TreeSortedMap<Window, FastList<OUT>> windows = this.windowInputs.get(key);
+    TreeSortedMap<Window, Integer> windows = this.windowInputs.get(key);
     Collection<Window> assignedWindows = this.windowAssigner.assignWindow(window);
     for (Window w: assignedWindows) {
       if (!windows.containsKey(w)) {
-        FastList<OUT> values = new FastList<>(1);
-        windows.put(w, values);
+        windows.put(w, 0);
       }
-      windows.get(w).add(value);
+      windows.put(w, windows.get(w) + value);
     }
   }
 
-  public Map<IN, Collection<OUT>> trigger(Long timestamp) {
-    Map<IN, Collection<OUT>> results = new HashMap<IN, Collection<OUT>>();
-    for (IN key: windowInputs.keySet()) {
-      TreeSortedMap<Window, FastList<OUT>> windows = this.windowInputs.get(key);
+  public Map<K, Integer> trigger(Long timestamp) {
+    Map<K, Integer> results = new HashMap<K, Integer>();
+    for (K key: windowInputs.keySet()) {
+      TreeSortedMap<Window, Integer> windows = this.windowInputs.get(key);
       if (windows.notEmpty()) {
         Window firstKey = windows.firstKey();
         if (timestamp >= firstKey.getEnd()) {
-          FastList<OUT> inputs = windows.remove(firstKey);
+          Integer inputs = windows.remove(firstKey);
           results.put(key, inputs);
         }
       }

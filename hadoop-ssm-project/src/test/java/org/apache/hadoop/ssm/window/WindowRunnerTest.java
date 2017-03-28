@@ -17,41 +17,27 @@
  */
 package org.apache.hadoop.ssm.window;
 
-public class Window implements Comparable<Window> {
-  private final Long start;
-  private final Long end;
+import org.junit.Test;
+import org.junit.Assert;
 
-  public Window(Long start, Long end) {
-    this.start = start;
-    this.end = end;
-  }
+public class WindowRunnerTest {
 
-  public Long getLength() {
-    return this.end - this.start;
-  }
+  @Test
+  public void testWindowRunner() {
+    WindowAssigner windowAssigner = new SlidingWindowAssigner(15L, 5L);
+    AccessCountWindowRunner<String> windowRunner =
+      new AccessCountWindowRunner<>(windowAssigner);
+    windowRunner.process("file1", new Window(0L, 5L), 10);
+    // Window [-10, 5]
+    Assert.assertTrue(windowRunner.trigger(5L).get("file1") == 10);
 
-  public Boolean intersects(Window other) {
-    return this.start <= other.end && this.end >= other.start;
-  }
+    windowRunner.process("file1", new Window(5L, 10L), 10);
+    // Window [-5, 10]
+    Assert.assertTrue(windowRunner.trigger(10L).get("file1") == 20);
 
-  public Boolean include(Window other) {
-    return (this.end >= other.end) && (this.start <= other.start);
-  }
+    windowRunner.process("file1", new Window(10L, 15L), 10);
+    // Window [0, 15]
+    Assert.assertTrue(windowRunner.trigger(15L).get("file1") == 30);
 
-  public Long getStart() {
-    return start;
-  }
-
-  public Long getEnd() {
-    return end;
-  }
-
-  @Override
-  public int compareTo(Window o) {
-    int ret = start.compareTo(o.start);
-    if (ret == 0) {
-      ret = end.compareTo(o.end);
-    }
-    return ret;
   }
 }
