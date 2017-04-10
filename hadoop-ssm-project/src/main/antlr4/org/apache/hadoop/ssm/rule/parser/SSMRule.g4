@@ -25,7 +25,7 @@ ssmrule
 // TODO: Fix this item
 object
     : OBJECTTYPE                            #objTypeOnly
-    | OBJECTTYPE WITH conditions            #objTypeWith
+    | OBJECTTYPE WITH objfilter             #objTypeWith
     ;
 
 trigger
@@ -36,6 +36,9 @@ trigger
 
 duringexpr : FROM timepointexpr (TO timepointexpr)? ;
 
+objfilter
+    : boolvalue
+    ;
 
 conditions
     : boolvalue
@@ -111,8 +114,8 @@ command
 id
     : ID                                                            #idAtt
     | OBJECTTYPE '.' ID                                             #idObjAtt
-    | ID '(' constexpr (',' constexpr)* ')'                                 #idAttPara
-    | OBJECTTYPE '.' ID '(' constexpr (',' constexpr)* ')'                  #idObjAttPara
+    | ID '(' constexpr (',' constexpr)* ')'                         #idAttPara
+    | OBJECTTYPE '.' ID '(' constexpr (',' constexpr)* ')'          #idObjAttPara
     ;
 
 

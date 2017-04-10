@@ -38,6 +38,9 @@ import java.util.regex.Pattern;
  */
 public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   private Map<String, SSMObject> objects = new HashMap<>();
+  private TreeNode objFilter = null;
+  private TreeNode conditions = null;
+
   private int nError = 0;
 
   private TreeNode root ;
@@ -50,7 +53,6 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitObjTypeOnly(SSMRuleParser.ObjTypeOnlyContext ctx) {
-    System.out.println("XXXXXXXXXXXXXXX");
     String objName = ctx.OBJECTTYPE().getText();
     SSMObject obj = SSMObject.getInstance(objName);
     objects.put(objName, obj);
@@ -60,20 +62,19 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitObjTypeWith(SSMRuleParser.ObjTypeWithContext ctx) {
-    System.out.println("YYYYYYYYY");
     String objName = ctx.OBJECTTYPE().getText();
     SSMObject obj = SSMObject.getInstance(objName);
     objects.put(objName, obj);
     objects.put("Default", obj);
-    TreeNode cond = visit(ctx.conditions());
+    objFilter = visit(ctx.objfilter());
     return null;
   }
 
   @Override
   public TreeNode visitConditions(SSMRuleParser.ConditionsContext ctx) {
     System.out.println("Condition: " + ctx.getText());
-    TreeNode tree = visit(ctx.boolvalue());
-    return tree;
+    conditions = visit(ctx.boolvalue());
+    return conditions;
   }
 
   @Override
