@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.ssm.actions.MoveToSSD;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -64,46 +65,4 @@ public class MoveToSSDTest {
       cluster.shutdown();
     }
   }
-
-//  @Test
-//  public void test1() {
-//  /* init conf */
-//    final Configuration dfsConf = new HdfsConfiguration();
-//    final Path baseDir = new Path(
-//            PathUtils.getTestDir(getClass()).getAbsolutePath(),
-//            GenericTestUtils.getMethodName());
-////    dfsConf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.toString());
-//
-//    final int numDn = 3;
-//    /* init cluster */
-//    try (MiniDFSCluster miniCluster = new MiniDFSCluster.Builder(dfsConf).numDataNodes(numDn).build()) {
-//      miniCluster.waitActive();
-//      assertEquals(numDn, miniCluster.getDataNodes().size());
-//      /* local vars */
-////    final DFSAdmin dfsAdmin = new DFSAdmin(dfsConf);
-//      final DFSClient client = miniCluster.getFileSystem().getClient();
-//      //create a file
-//      final short replFactor = 1;
-//      final long fileLength = 512L;
-//      final FileSystem fs = miniCluster.getFileSystem();
-//      final Path file = new Path(baseDir, "/testfile");
-//      DFSTestUtil.createFile(fs, file, fileLength, replFactor, 12345L);
-//
-//      //move to ssd
-//      ActionType actionType = ActionType.getActionType("ssd");
-//
-//      String[] str = {"testfile1"};
-//      MoveToSSD_copy.getInstance(client, dfsConf).initial(str);
-//      MoveToSSD_copy.getInstance(client, dfsConf).execute();
-////      moveToSSD.initial(str);
-////      NameNode nn = client.getNamenode().;
-////      client.get
-//      byte by = client.getFileInfo("testfile").getStoragePolicy();
-//
-//      assertEquals(12, by);
-//      assertEquals(StorageType.SSD, client.getFileInfo("testfile").getStoragePolicy());
-//    } catch (IOException ioe) {
-//
-//    }
-//  }
 }

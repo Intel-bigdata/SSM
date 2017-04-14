@@ -151,7 +151,7 @@ public class DFSUtil {
   /**
    * Comparator for sorting DataNodeInfo[] based on
    * stale, decommissioned and entering_maintenance states.
-   * Order: live -> stale -> entering_maintenance -> decommissioned
+   * Order: live -l> stale -> entering_maintenance -> decommissioned
    */
   @InterfaceAudience.Private 
   public static class ServiceAndStaleComparator extends ServiceComparator {
@@ -1530,6 +1530,54 @@ public class DFSUtil {
       loadSslConfToHttpServerBuilder(builder, sslConf);
 
       if (httpsAddr.getPort() == 0) {
+        builder.setFindPort(true);
+      }
+
+      URI uri = URI.create("https://" + NetUtils.getHostPortString(httpsAddr));
+      builder.addEndpoint(uri);
+      LOG.info("Starting Web-server for " + name + " at: " + uri);
+    }
+    return builder;
+  }
+  /**
+   * Return a HttpServer.Builder that the ssm can use to
+   * initialize their HTTP / HTTPS server.
+   *
+   */
+  public static HttpServer2.Builder httpServerTemplateForSSM(
+          Configuration conf, final InetSocketAddress httpAddr,
+          final InetSocketAddress httpsAddr, String name, String spnegoUserNameKey,
+          String spnegoKeytabFileKey) throws IOException {
+    HttpConfig.Policy policy = getHttpPolicy(conf);
+
+    HttpServer2.Builder builder = new HttpServer2.Builder().setName(name)
+            .setConf(conf).setACL(new AccessControlList(conf.get(DFS_ADMIN, " ")))
+            .setSecurityEnabled(UserGroupInformation.isSecurityEnabled())
+            .setUsernameConfKey(spnegoUserNameKey)
+            .setKeytabConfKey(getSpnegoKeytabKey(conf, spnegoKeytabFileKey));
+
+    // initialize the webserver for uploading/downloading files.
+    if (UserGroupInformation.isSecurityEnabled()) {
+      LOG.info("Starting web server as: "
+              + SecurityUtil.getServerPrincipal(conf.get(spnegoUserNameKey),
+              httpAddr.getHostName()));
+    }
+
+    if (policy.isHttpEnabled()) {
+      if (httpAddr.getPort() == 0) {
+        builder.setFindPort(true);
+      }
+
+      URI uri = URI.create("http://" + NetUtils.getHostPortString(httpAddr));
+      builder.addEndpoint(uri);
+      LOG.info("Starting Web-server for " + name + " at: " + uri);
+    }
+
+    if (policy.isHttpsEnabled() && httpsAddr != null) {
+      Configuration sslConf = loadSslConfiguration(conf);
+      loadSslConfToHttpServerBuilder(builder, sslConf);
+
+      if (httpsAddr.getPort() == 9492) {
         builder.setFindPort(true);
       }
 

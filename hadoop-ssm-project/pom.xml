@@ -33,6 +33,11 @@
       <artifactId>hadoop-hdfs</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.goldmansachs</groupId>
+      <artifactId>gs-collections</artifactId>
+      <version>7.0.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <scope>test</scope>
@@ -72,6 +77,12 @@
       <version>${scala.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr4-runtime</artifactId>
+      <version>4.6</version>
+    </dependency>
+
     <!--test-->
     <dependency>
       <groupId>junit</groupId>
@@ -92,6 +103,102 @@
             <phase>generate-sources</phase>
             <goals>
               <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>target/lib</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-web-xmls</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <copy file="${basedir}/src/main/webapps/proto-web.xml"
+                      tofile="${project.build.directory}/webapps/command/WEB-INF/web.xml"
+                      filtering="true"/>
+                <copy toDir="${project.build.directory}/webapps">
+                  <fileset dir="${basedir}/src/main/webapps">
+                    <exclude name="**/proto-web.xml"/>
+                  </fileset>
+                </copy>
+                <copy toDir="${project.build.directory}/">
+                  <fileset dir="${basedir}/src/main/bin/">
+                  </fileset>
+                </copy>
+                <replace dir="${project.build.directory}/webapps" value="${release-year}">
+                  <include name="**/*.html"/>
+                  <replacetoken>{release-year-token}</replacetoken>
+                </replace>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>create-log-dir</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <delete dir="${test.build.data}"/>
+                <mkdir dir="${test.build.data}"/>
+
+                <copy todir="${project.build.directory}/test-classes/webapps">
+                  <fileset dir="${project.build.directory}/webapps">
+                    <exclude name="proto-*-web.xml"/>
+                    <exclude name="**/proto-web.xml"/>
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <phase>pre-site</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <copy file="src/main/resources/hdfs-default.xml" todir="src/site/resources"/>
+                <copy file="src/main/xsl/configuration.xsl" todir="src/site/resources"/>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr4-maven-plugin</artifactId>
+        <version>4.6</version>
+        <configuration>
+          <visitor>true</visitor>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>antlr4</goal>
             </goals>
           </execution>
         </executions>

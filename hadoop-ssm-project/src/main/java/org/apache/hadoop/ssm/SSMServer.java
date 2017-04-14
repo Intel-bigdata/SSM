@@ -1,79 +1,123 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.DFSUtilClient;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
-import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
-import org.apache.hadoop.ssm.api.Expression.*;
-import org.apache.hadoop.ssm.parse.SSMRuleParser;
+import org.apache.hadoop.ssm.rule.RuleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
+import static org.apache.hadoop.util.ExitUtil.terminate;
 
 /**
- * Created by root on 11/1/16.
+ * From this Smart Storage Management begins.
  */
 public class SSMServer {
-  public static final Configuration conf;
-  static {
-    conf = new HdfsConfiguration();
-    Path path = new Path("/home/sorttest/hadoop/etc/hadoop/core-site.xml");
-    //Path path = new Path("/home/hadoop_src/hadoop-2.7.2/hadoop-dist/target/hadoop-2.7.2/etc/hadoop/core-site.xml");
-    conf.addResource(path);
-  }
+  private StatesManager statesManager;
+  private RuleManager ruleManager;
+  private CommandExecutor commandExecutor;
+  private SSMHttpServer httpServer;
+  private Configuration config;
+
   public static final Logger LOG = LoggerFactory.getLogger(SSMServer.class);
 
-  static class DecisionMakerTask extends TimerTask {
-    private DFSClient dfsClient;
-    private DecisionMaker decisionMaker;
+  SSMServer(Configuration conf) throws IOException {
+    config = conf;
+    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
+    httpServer = new SSMHttpServer(conf, addr);
+    statesManager = new StatesManager(this, conf);
+    ruleManager = new RuleManager();
+    commandExecutor = new CommandExecutor(this, conf);
+  }
 
-    public DecisionMakerTask(DFSClient dfsClient, DecisionMaker decisionMaker) {
-      this.dfsClient = dfsClient;
-      this.decisionMaker = decisionMaker;
+  public StatesManager getStatesManager() {
+    return statesManager;
+  }
+
+  public RuleManager getRuleManager() {
+    return ruleManager;
+  }
+
+  public CommandExecutor getCommandExecutor() {
+    return commandExecutor;
+  }
+
+  /**
+   * Create SSM instance and launch the daemon threads.
+   * @param args
+   * @param conf
+   * @return
+   */
+  public static SSMServer createSSM(String[] args, Configuration conf)
+      throws Exception {
+    SSMServer ssm = new SSMServer(conf);
+    ssm.runSSMDaemons();
+    return ssm;
+  }
+
+  private static final String USAGE =
+      "Usage: ssm [-help | -foo" +
+          " ]\n" +
+          "    -help               : Show this usage information.\n" +
+          "    -foo                : For example.\n";  // TODO: to be removed
+
+  public static void main(String[] args) {
+    if (args.length > 0 && args[0].equals("-help")) {
+      System.out.print(USAGE);
+      terminate(0);
     }
 
-    @Override
-    public void run() {
-      //LOG.info("Update all information:");
-      System.out.println("========Update all information========");
-      FilesAccessInfo filesAccessInfo;
-      try {
-        filesAccessInfo = dfsClient.getFilesAccessInfo();
-        //LOG.info("Number of accessed files = " + filesAccessInfo.getFilesAccessed().size());
-        System.out.println("1. filesAccessInfo");
-        for (int i = 0; i < filesAccessInfo.getFilesAccessed().size(); i++) {
-          System.out.println(filesAccessInfo.getFilesAccessed().get(i) + "\t" + filesAccessInfo.getFilesAccessCounts().get(i));
-        }
-      } catch (Exception e) {
-        //LOG.warn("getFilesAccessInfo exception");
-        throw new RuntimeException(e);
+    Configuration conf = new SSMConfiguration();
+
+    int errorCode = 0;  // if SSM exit normally then the errorCode is 0
+    try {
+      SSMServer ssm = createSSM(args, conf);
+      if (ssm != null) {
+        ssm.join();
+      } else {
+        errorCode = 1;
       }
-      decisionMaker.execution(dfsClient, conf, filesAccessInfo);
+    } catch (Exception e) {
+      e.printStackTrace();
+      terminate(1, e);
+    } finally {
+      terminate(errorCode);
     }
   }
 
-  public static void main(String[] args) throws Exception {
-    DFSClient dfsClient = new DFSClient(DFSUtilClient.getNNAddress(conf), conf);
-    long updateDuration = 1*60;
+  /**
+   * Bring up all the daemons threads needed.
+   * @throws Exception
+   */
+  public void runSSMDaemons() throws Exception {
+    httpServer.start();
+    commandExecutor.start();
+    statesManager.start();
+    ruleManager.start();
+  }
 
-    DecisionMaker decisionMaker = new DecisionMaker(dfsClient, conf, updateDuration);
-    SSMRule ruleObject = SSMRuleParser.parseAll("file.path matches('/home/SSDtest/[a-z]*') : accessCount (3 min) >= 10 | ssd").get();
-    //decisionMaker.addRule(ruleObject);
-    ruleObject = SSMRuleParser.parseAll("file.path matches('/home/ARCHIVEtest/[a-z]*') : age >= 1200000 | archive").get(); //20min
-    //decisionMaker.addRule(ruleObject);
-    ruleObject = SSMRuleParser.parseAll("file.path matches('/home/CACHEtest/[a-z]*') : accessCount (3 min) >= 10 | cache").get(); //20min
-    decisionMaker.addRule(ruleObject);
-
-    //LOG.info("Initialization completed");
-    System.out.println("Initialization completed");
-
-    MoverExecutor.getInstance(dfsClient, conf).run();
-
-    Timer timer = new Timer();
-    timer.schedule(new DecisionMakerTask(dfsClient, decisionMaker), 2*1000L, updateDuration*1000L);
+  /**
+   * Waiting services to exit.
+   */
+  private void join() throws Exception {
+    httpServer.join();
   }
 }

@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 public class TestDFSGetFilesAccessInfo {
@@ -118,6 +119,7 @@ public class TestDFSGetFilesAccessInfo {
     Map<String, Integer> accessMap;
     try {
       info = fs.dfs.getFilesAccessInfo();
+      long startTime = info.getEndTime();
       accessMap = info.getFilesAccessedHashMap();
       for (int i = 0; i < files.length; i++) {
         Integer acc = accessMap.get(files[i]);
@@ -131,7 +133,15 @@ public class TestDFSGetFilesAccessInfo {
         }
       }
 
+      try {
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        // ignore it
+      }
+
       info = fs.dfs.getFilesAccessInfo();
+      long endTime = info.getEndTime();
+      assertTrue(endTime - startTime > 5000);
       accessMap = info.getFilesAccessedHashMap();
       for (int i = 0; i < files.length; i++) {
         Integer acc = accessMap.get(files[i]);

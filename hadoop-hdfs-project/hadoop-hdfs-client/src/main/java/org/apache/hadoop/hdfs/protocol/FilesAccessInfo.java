@@ -24,9 +24,11 @@ import java.util.Map;
 
 
 public class FilesAccessInfo {
+  private long startTime;  // NN local time for statistic
+  private long endTime;
   private List<String> filesAccessed;
   private List<Integer> filesAccessCounts;
-  private List<NNEvent> nnEvents;
+  private List<NNEvent> nnEvents;  // Keep it for now
 
   public FilesAccessInfo() {
   }
@@ -39,6 +41,22 @@ public class FilesAccessInfo {
   public void setAccessCounter(List<String> files, List<Integer> counts) {
     filesAccessed = files;
     filesAccessCounts = counts;
+  }
+
+  public void setStartTime(long startTime) {
+    this.startTime = startTime;
+  }
+
+  public void setEndTime(long endTime) {
+    this.endTime = endTime;
+  }
+
+  public long getStartTime() {
+    return startTime;
+  }
+
+  public long getEndTime() {
+    return endTime;
   }
 
   public Map<String, Integer> getFilesAccessedHashMap() {

@@ -168,6 +168,10 @@ public interface HdfsClientConfigKeys {
       "dfs.data.transfer.client.tcpnodelay";
   boolean DFS_DATA_TRANSFER_CLIENT_TCPNODELAY_DEFAULT = true;
 
+  //ssm
+  String  DFS_SSM_HTTP_ADDRESS_KEY = "dfs.ssm.http-address";
+  String  DFS_SSM_HTTPS_ADDRESS_KEY = "dfs.ssm.https-address";
+  int     DFS_SSM_HTTPS_PORT_DEFAULT = 9971;
   /**
    * These are deprecated config keys to client code.
    */

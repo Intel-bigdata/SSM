@@ -753,6 +753,8 @@ public class PBHelperClient {
     FilesAccessInfo ret = new FilesAccessInfo();
     ret.setAccessCounter(proto.getFilesAccessedList(),
             proto.getFilesAccessCountsList());
+    ret.setStartTime(proto.getStartTime());
+    ret.setEndTime(proto.getEndTime());
     List<NNEventProto> eventsProto = proto.getNnEventsList();
     List<NNEvent> events;
     if (eventsProto == null) {
@@ -773,6 +775,7 @@ public class PBHelperClient {
     }
 
     FilesAccessInfoProto.Builder builder = FilesAccessInfoProto.newBuilder();
+    builder.setStartTime(info.getStartTime()).setEndTime(info.getEndTime());
     builder.addAllFilesAccessed(info.getFilesAccessed());
     builder.addAllFilesAccessCounts(info.getFilesAccessCounts());
     List<NNEvent> events = info.getNnEvents();
