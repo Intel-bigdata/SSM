@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,65 +17,98 @@
  */
 package org.apache.hadoop.ssm;
 
+import com.google.protobuf.BlockingService;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSUtil;
+import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.ssm.rule.RuleInfo;
-import org.apache.hadoop.ssm.rule.RuleState;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
+import org.apache.hadoop.ssm.protocol.HAServiceStatus;
+import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB;
+import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolServerSideTranslatorPB;
 
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
+import java.net.InetSocketAddress;
 
 /**
  * Implements the rpc calls.
  * TODO: Implement statistics for SSM rpc server
  */
-public class SSMRpcServer implements SSMProtocols {
-  private SSMServer ssm;
-  private Configuration conf;
-
-  private final RPC.Server clientRpcServer;
+public class SSMRpcServer implements ClientSSMProtocol {
+  protected SSMServer ssm;
+  protected Configuration conf;
+  protected final InetSocketAddress clientRpcAddress;
+  protected int serviceHandlerCount = 1;
+  protected final RPC.Server clientRpcServer;
 
   public SSMRpcServer(SSMServer ssm, Configuration conf) throws IOException {
     this.ssm = ssm;
     this.conf = conf;
+    // TODO: implement ssm ClientSSMProtocol
+    InetSocketAddress rpcAddr = ssm.getRpcServerAddress(conf);
+    RPC.setProtocolEngine(conf, ClientSSMProtocolPB.class, ProtobufRpcEngine.class);
 
-    // TODO: implement ssm ClientProtocol
-    clientRpcServer = new RPC.Builder(conf).build();
+    ClientSSMProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB =
+            new ClientSSMProtocolServerSideTranslatorPB(this);
+    BlockingService clientSSMPbService = ClientSSMProto.StatusService
+            .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
+    clientRpcServer = new RPC.Builder(conf)
+            .setProtocol(ClientSSMProtocolPB.class)
+            .setInstance(clientSSMPbService)
+            .setBindAddress(rpcAddr.getHostName())
+            .setPort(rpcAddr.getPort())
+            .setNumHandlers(serviceHandlerCount)
+            .setVerbose(true)
+            .build();
+
+    InetSocketAddress listenAddr = clientRpcServer.getListenerAddress();
+    clientRpcAddress = new InetSocketAddress(
+            rpcAddr.getHostName(), listenAddr.getPort());
+
+    DFSUtil.addPBProtocol(conf, ClientSSMProtocolPB.class, clientSSMPbService,
+            clientRpcServer);
   }
 
-  @Override
-  public long submitRule(String rule, RuleState initState) throws IOException {
-    return 0L;
-  }
-
-  @Override
-  public List<RuleInfo> listRules(EnumSet<RuleState> rulesInStates)
-    throws IOException {
-    return null;
-  }
-
-  @Override
-  public long executeCommand(String command) throws IOException {
-    return 0L;
-  }
 
   /**
    * Start SSM RPC service
    */
   public void start() {
     // TODO: start clientRpcServer
+    if (clientRpcServer != null) {
+      clientRpcServer.start();
+    }
   }
 
   /**
    * Stop SSM RPC service
    */
   public void stop() {
+    if (clientRpcServer != null) {
+      clientRpcServer.stop();
+    }
   }
 
-  /**
+  /*
    * Waiting for RPC threads to exit.
    */
-  public void join() {
+  public void join() throws InterruptedException {
+    if (clientRpcServer != null) {
+      clientRpcServer.join();
+    }
   }
+
+  @Override
+  public int add(int para1, int para2) {
+    return para1 + para2;
+  }
+
+  @Override
+  public HAServiceStatus getServiceStatus() {
+    HAServiceStatus haServiceStatus = new HAServiceStatus(HAServiceStatus.HAServiceState.SAFEMODE);
+    haServiceStatus.setisActive(false);
+    return haServiceStatus;
+  }
+
 }

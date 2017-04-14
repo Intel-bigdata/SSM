@@ -1,0 +1,28 @@
+package org.apache.hadoop.ssm.protocol;
+
+option java_package = "org.apache.hadoop.ssm.protocol";
+option java_outer_classname = "ClientSSMProto";
+option java_generic_services = true;
+option java_generate_equals_and_hash = true;
+
+message AddParameters {
+    optional int32 para1 =1;
+    optional int32 para2 = 3;
+}
+
+message AddResult {
+    optional int32 result =1;
+}
+
+message StatusPara {
+
+}
+message StatusResult {
+    required string HAServiceState = 1;
+    required bool isActive = 2;
+}
+
+service StatusService {
+    rpc getServiceStatus (StatusPara) returns (StatusResult);
+    rpc add (AddParameters) returns (AddResult);
+}
