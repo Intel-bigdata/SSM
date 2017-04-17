@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,6 +35,7 @@ public class SSMServer {
   private RuleManager ruleManager;
   private CommandExecutor commandExecutor;
   private SSMHttpServer httpServer;
+  private SSMRpcServer rpcServer;
   private Configuration config;
 
   public static final Logger LOG = LoggerFactory.getLogger(SSMServer.class);
@@ -43,6 +44,7 @@ public class SSMServer {
     config = conf;
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
     httpServer = new SSMHttpServer(conf, addr);
+    rpcServer = new SSMRpcServer(this, conf);
     statesManager = new StatesManager(this, conf);
     ruleManager = new RuleManager();
     commandExecutor = new CommandExecutor(this, conf);
@@ -62,22 +64,23 @@ public class SSMServer {
 
   /**
    * Create SSM instance and launch the daemon threads.
+   *
    * @param args
    * @param conf
    * @return
    */
   public static SSMServer createSSM(String[] args, Configuration conf)
-      throws Exception {
+          throws Exception {
     SSMServer ssm = new SSMServer(conf);
     ssm.runSSMDaemons();
     return ssm;
   }
 
   private static final String USAGE =
-      "Usage: ssm [-help | -foo" +
-          " ]\n" +
-          "    -help               : Show this usage information.\n" +
-          "    -foo                : For example.\n";  // TODO: to be removed
+          "Usage: ssm [-help | -foo" +
+                  " ]\n" +
+                  "    -help               : Show this usage information.\n" +
+                  "    -foo                : For example.\n";// TODO: to be removed
 
   public static void main(String[] args) {
     if (args.length > 0 && args[0].equals("-help")) {
@@ -105,10 +108,12 @@ public class SSMServer {
 
   /**
    * Bring up all the daemons threads needed.
+   *
    * @throws Exception
    */
   public void runSSMDaemons() throws Exception {
-    httpServer.start();
+//    httpServer.start();
+    rpcServer.start();
     commandExecutor.start();
     statesManager.start();
     ruleManager.start();
@@ -118,6 +123,13 @@ public class SSMServer {
    * Waiting services to exit.
    */
   private void join() throws Exception {
-    httpServer.join();
+    //httpServer.join();
+    rpcServer.join();
+  }
+
+  protected InetSocketAddress getRpcServerAddress(Configuration conf) {
+//    URI filesystemURI = FileSystem.getDefaultUri(conf);
+    return InetSocketAddress.createUnresolved("localhost",
+            9998);
   }
 }
