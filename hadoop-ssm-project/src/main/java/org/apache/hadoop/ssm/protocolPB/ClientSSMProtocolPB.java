@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,7 @@ import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 
 @ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB",
-        protocolVersion = 1)
+    protocolVersion = 1)
 public interface ClientSSMProtocolPB {
   public ClientSSMProto.AddResult
   add(RpcController controller, ClientSSMProto.AddParameters p);

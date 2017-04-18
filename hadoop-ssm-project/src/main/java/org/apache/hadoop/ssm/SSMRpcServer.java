@@ -51,24 +51,26 @@ public class SSMRpcServer implements ClientSSMProtocol {
     RPC.setProtocolEngine(conf, ClientSSMProtocolPB.class, ProtobufRpcEngine.class);
 
     ClientSSMProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
-            = new ClientSSMProtocolServerSideTranslatorPB(this);
+        = new ClientSSMProtocolServerSideTranslatorPB(this);
+
     BlockingService clientSSMPbService = ClientSSMProto.StatusService
-            .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
+        .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
+
     clientRpcServer = new RPC.Builder(conf)
-            .setProtocol(ClientSSMProtocolPB.class)
-            .setInstance(clientSSMPbService)
-            .setBindAddress(rpcAddr.getHostName())
-            .setPort(rpcAddr.getPort())
-            .setNumHandlers(serviceHandlerCount)
-            .setVerbose(true)
-            .build();
+        .setProtocol(ClientSSMProtocolPB.class)
+        .setInstance(clientSSMPbService)
+        .setBindAddress(rpcAddr.getHostName())
+        .setPort(rpcAddr.getPort())
+        .setNumHandlers(serviceHandlerCount)
+        .setVerbose(true)
+        .build();
 
     InetSocketAddress listenAddr = clientRpcServer.getListenerAddress();
     clientRpcAddress = new InetSocketAddress(
-            rpcAddr.getHostName(), listenAddr.getPort());
+        rpcAddr.getHostName(), listenAddr.getPort());
 
-    DFSUtil.addPBProtocol(conf, ClientSSMProtocolPB.class, clientSSMPbService,
-            clientRpcServer);
+    DFSUtil.addPBProtocol(conf, ClientSSMProtocolPB.class,
+        clientSSMPbService, clientRpcServer);
   }
 
 
@@ -107,9 +109,8 @@ public class SSMRpcServer implements ClientSSMProtocol {
 
   @Override
   public SSMServiceStates getServiceStatus() {
-    SSMServiceStates ssmServiceStates =
-            new SSMServiceStates(SSMServiceState.SAFEMODE);
+    SSMServiceStates ssmServiceStates
+        = new SSMServiceStates(SSMServiceState.SAFEMODE);
     return ssmServiceStates;
   }
-
 }

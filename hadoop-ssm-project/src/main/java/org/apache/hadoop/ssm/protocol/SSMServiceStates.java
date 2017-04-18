@@ -34,7 +34,5 @@ public class SSMServiceStates {
   @Override
   public String toString() {
     return "state: " + state.getName();
-
   }
-
 }

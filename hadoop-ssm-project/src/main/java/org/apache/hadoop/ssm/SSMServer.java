@@ -70,17 +70,17 @@ public class SSMServer {
    * @return
    */
   public static SSMServer createSSM(String[] args, Configuration conf)
-          throws Exception {
+      throws Exception {
     SSMServer ssm = new SSMServer(conf);
     ssm.runSSMDaemons();
     return ssm;
   }
 
   private static final String USAGE =
-          "Usage: ssm [-help | -foo" +
-                  " ]\n" +
-                  "    -help               : Show this usage information.\n" +
-                  "    -foo                : For example.\n";// TODO: to be removed
+      "Usage: ssm [-help | -foo" +
+          " ]\n" +
+          "    -help    : Show this usage information.\n" +
+          "    -foo     : For example.\n";// TODO: to be removed
 
   public static void main(String[] args) {
     if (args.length > 0 && args[0].equals("-help")) {
@@ -129,7 +129,6 @@ public class SSMServer {
 
   protected InetSocketAddress getRpcServerAddress(Configuration conf) {
 //    URI filesystemURI = FileSystem.getDefaultUri(conf);
-    return InetSocketAddress.createUnresolved("localhost",
-            9998);
+    return InetSocketAddress.createUnresolved("localhost", 9998);
   }
 }

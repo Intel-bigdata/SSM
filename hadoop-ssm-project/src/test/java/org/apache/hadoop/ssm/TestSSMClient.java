@@ -29,18 +29,13 @@ public class TestSSMClient {
 
   @Test
   public void test() throws Exception {
-
     String ADDRESS = "localhost";
     int port = 9998;
     InetSocketAddress addr = new InetSocketAddress(ADDRESS, port);
+    // rpcServer start in SSMServer
     SSMServer.createSSM(null, new Configuration());
     SSMClient ssmClient = new SSMClient(new Configuration(), addr);
     String state = ssmClient.getServiceStatus().getState().name();
-    boolean isStateExpected;
-    if ("SAFEMODE".equals(state) || "ACTIVE".equals(state)) isStateExpected = true;
-    else isStateExpected = false;
-    assertTrue(isStateExpected);
-
+    assertTrue("SAFEMODE".equals(state));
   }
-
 }
