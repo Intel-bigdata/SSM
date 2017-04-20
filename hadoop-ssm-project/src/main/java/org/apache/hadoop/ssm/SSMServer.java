@@ -18,12 +18,22 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.ssm.rule.RuleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 
 import static org.apache.hadoop.util.ExitUtil.terminate;
 
@@ -31,16 +41,20 @@ import static org.apache.hadoop.util.ExitUtil.terminate;
  * From this Smart Storage Management begins.
  */
 public class SSMServer {
+  private static boolean write2IdFile = true;
   private StatesManager statesManager;
   private RuleManager ruleManager;
   private CommandExecutor commandExecutor;
   private SSMHttpServer httpServer;
   private SSMRpcServer rpcServer;
   private Configuration config;
-
+  private DistributedFileSystem fs = null;
+  private final OutputStream out;
+  static final Path SSM_ID_PATH = new Path("/system/ssm.id");
   public static final Logger LOG = LoggerFactory.getLogger(SSMServer.class);
 
-  SSMServer(Configuration conf) throws IOException {
+  SSMServer(URI nameNodeUri, Configuration conf) throws IOException {
+    this.fs = (DistributedFileSystem) FileSystem.get(nameNodeUri, conf);
     config = conf;
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
     httpServer = new SSMHttpServer(conf, addr);
@@ -48,6 +62,12 @@ public class SSMServer {
     statesManager = new StatesManager(this, conf);
     ruleManager = new RuleManager();
     commandExecutor = new CommandExecutor(this, conf);
+
+    out = checkAndMarkRunning();
+    if (out == null) {
+      // Exit if there is another one running.
+      throw new IOException("Another " + "SSMServer" + " is running.");
+    }
   }
 
   public StatesManager getStatesManager() {
@@ -62,6 +82,10 @@ public class SSMServer {
     return commandExecutor;
   }
 
+  public OutputStream getOut() {
+    return out;
+  }
+
   /**
    * Create SSM instance and launch the daemon threads.
    *
@@ -69,9 +93,9 @@ public class SSMServer {
    * @param conf
    * @return
    */
-  public static SSMServer createSSM(String[] args, Configuration conf)
+  public static SSMServer createSSM(String[] args, URI nameNodeUri, Configuration conf)
       throws Exception {
-    SSMServer ssm = new SSMServer(conf);
+    SSMServer ssm = new SSMServer(nameNodeUri, conf);
     ssm.runSSMDaemons();
     return ssm;
   }
@@ -92,12 +116,12 @@ public class SSMServer {
 
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {
-      SSMServer ssm = createSSM(args, conf);
+      /*SSMServer ssm = createSSM(args, conf);
       if (ssm != null) {
         ssm.join();
       } else {
         errorCode = 1;
-      }
+      }*/
     } catch (Exception e) {
       e.printStackTrace();
       terminate(1, e);
@@ -131,4 +155,34 @@ public class SSMServer {
 //    URI filesystemURI = FileSystem.getDefaultUri(conf);
     return InetSocketAddress.createUnresolved("localhost", 9998);
   }
+
+  public static void setWrite2IdFile(boolean write2IdFile) {
+    SSMServer.write2IdFile = write2IdFile;
+  }
+  
+  private OutputStream checkAndMarkRunning() throws IOException {
+    try {
+      if (fs.exists(SSM_ID_PATH)) {
+        // try appending to it so that it will fail fast if another balancer is
+        // running.
+        IOUtils.closeStream(fs.append(SSM_ID_PATH));
+        fs.delete(SSM_ID_PATH, true);
+      }
+      final FSDataOutputStream fsout = fs.create(SSM_ID_PATH, false);
+      // mark balancer idPath to be deleted during filesystem closure
+      fs.deleteOnExit(SSM_ID_PATH);
+      if (write2IdFile) {
+        fsout.writeBytes(InetAddress.getLocalHost().getHostName());
+        fsout.hflush();
+      }
+      return fsout;
+    } catch (RemoteException e) {
+      if (AlreadyBeingCreatedException.class.getName().equals(e.getClassName())) {
+        return null;
+      } else {
+        throw e;
+      }
+    }
+  }
+
 }
