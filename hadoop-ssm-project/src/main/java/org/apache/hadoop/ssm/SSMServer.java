@@ -159,7 +159,7 @@ public class SSMServer {
   public static void setWrite2IdFile(boolean write2IdFile) {
     SSMServer.write2IdFile = write2IdFile;
   }
-
+  
   private OutputStream checkAndMarkRunning() throws IOException {
     try {
       if (fs.exists(SSM_ID_PATH)) {
