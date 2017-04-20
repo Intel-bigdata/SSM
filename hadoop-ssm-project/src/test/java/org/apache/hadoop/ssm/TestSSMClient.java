@@ -53,6 +53,7 @@ public class TestSSMClient {
 
     final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
+
     // rpcServer start in SSMServer
     SSMServer ssmServer = SSMServer.createSSM(null, uriList.get(0), new Configuration());
     SSMClient ssmClient = new SSMClient(new Configuration(), addr);
