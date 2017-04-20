@@ -38,9 +38,12 @@ public abstract class SSMObject {
   private List<Property> requiredProperties;
 
   public static SSMObject getInstance(String typeName) {
+    // TODO: create through class name
     switch (typeName) {
       case "file":
         return new File();
+      case "storage":
+        return new Storage();
       default:
         return null;
     }

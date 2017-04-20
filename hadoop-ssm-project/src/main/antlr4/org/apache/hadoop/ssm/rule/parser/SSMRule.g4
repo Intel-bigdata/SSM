@@ -49,8 +49,6 @@ boolvalue
     | NOT boolvalue                                         #bvNot
     | boolvalue (AND | OR) boolvalue                        #bvAndOR
     | id                                                    #bvId
-    | TRUE                                                  #bvTrue
-    | FALSE                                                 #bvFalse
     | '(' boolvalue ')'                                     #bvCurve
     ;
 
@@ -109,6 +107,7 @@ commands
 
 command
     : 'cachefile'
+    | 'uncachefile'
     | 'movefile' STRING
     | 'archive'
     ;
@@ -149,6 +148,13 @@ fileEvent
    | FILETRUNCATE
    ;
 
+constexpr
+    : LONG                                  #constLong
+    | STRING                                #constString
+    | TIMEINTVALCONST                       #constTimeInverval
+    | TIMEPOINTCONST                        #constTimePoint
+    ;
+
 
 OBJECTTYPE
     : FILE
@@ -166,8 +172,6 @@ OR : 'or' ;
 NOW : 'now' ;
 NOT : 'not' ;
 TO : 'to' ;
-TRUE : 'true' ;
-FALSE : 'false' ;
 WITH : 'with' ;
 MATCHES : 'matches' ;
 
@@ -211,13 +215,6 @@ LONG
     : '0'
     | [1-9] [0-9]*
     | ('0' | [1-9] [0-9]*) ('PB' | 'TB' | 'GB' | 'MB' | 'KB' | 'B')
-    ;
-
-constexpr
-    : LONG
-    | STRING
-    | TIMEINTVALCONST
-    | TIMEPOINTCONST
     ;
 
 NEWLINE : '\r'? '\n' ;

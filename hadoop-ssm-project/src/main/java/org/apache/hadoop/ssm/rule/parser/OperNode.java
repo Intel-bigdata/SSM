@@ -39,6 +39,10 @@ public class OperNode extends TreeNode {
     return left.getValueType();
   }
 
+  public OperatorType getOperatorType() {
+    return operatorType;
+  }
+
   // TODO: check if any miss match in the tree
   public void checkValueType() throws IOException {
   }

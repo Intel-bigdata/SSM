@@ -19,6 +19,7 @@ package org.apache.hadoop.ssm.rule.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.hadoop.ssm.rule.excepts.RuleParserException;
 import org.apache.hadoop.ssm.rule.objects.ObjectType;
 import org.apache.hadoop.ssm.rule.objects.Property;
@@ -100,16 +101,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitTpeTimeConst(SSMRuleParser.TpeTimeConstContext ctx) {
-    SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    TreeNode result;
-    Date date;
-    try {
-      date = ft.parse(ctx.getText());
-      result = new ValueNode(new VisitResult(ValueType.TIMEPOINT, date.getTime()));
-    } catch (ParseException e) {
-      result = new ValueNode(new VisitResult());
-    }
-    return result;
+    return pharseConstTimePoint(ctx.getText());
   }
 
   // | timepointexpr ('+' | '-') timeintvalexpr              #tpeTimeExpr
@@ -136,36 +128,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitTieConst(SSMRuleParser.TieConstContext ctx) {
-    long intval = 0L;
-    String str = ctx.getText();
-    Pattern p = Pattern.compile("[0-9]+");
-    Matcher m = p.matcher(str);
-    int start = 0;
-    while (m.find(start)) {
-      String digStr = m.group();
-      long value = 0;
-      try {
-        value = Long.parseLong(digStr);
-      } catch (NumberFormatException e) {
-      }
-      char suffix = str.charAt(start + digStr.length());
-      switch (suffix) {
-        case 'd':
-          intval += value * 24 * 3600 * 1000;
-          break;
-        case 'h':
-          intval += value * 3600 * 1000;
-          break;
-        case 'm':
-          intval += value * 60 * 1000;
-          break;
-        case 's':
-          intval += value * 1000;
-          break;
-      }
-      start += m.group().length() + 1;
-    }
-    return new ValueNode(new VisitResult(ValueType.TIMEINTVAL, intval));
+    return pharseConstTimeInterval(ctx.getText());
   }
 
   // timeintvalexpr ('-' | '+') timeintvalexpr             #tieTiExpr
@@ -200,7 +163,8 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
       throw new RuleParserException("Should have no parameter(s) for "
           + ctx.getText());
     }
-    return new ValueNode(new VisitResult(p.getValueType(), null));
+    PropertyRealParas realParas = new PropertyRealParas(p, null);
+    return new ValueNode(new VisitResult(p.getValueType(), null, realParas));
   }
 
   @Override
@@ -215,7 +179,8 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
       throw new RuleParserException("Should have no parameter(s) for "
           + ctx.getText());
     }
-    return new ValueNode(new VisitResult(p.getValueType(), null));
+    PropertyRealParas realParas = new PropertyRealParas(p, null);
+    return new ValueNode(new VisitResult(p.getValueType(), null, realParas));
   }
 
   @Override
@@ -244,7 +209,9 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitIdObjAttPara(SSMRuleParser.IdObjAttParaContext ctx) {
-    Property p = createIfNotExist(ctx.OBJECTTYPE().getText()).getProperty(ctx.ID().getText());
+    String objName = ctx.OBJECTTYPE().getText();
+    String propertyName = ctx.ID().getText();
+    Property p = createIfNotExist(objName).getProperty(propertyName);
 
     if (p == null) {
       throw new RuleParserException("Object " + ctx.OBJECTTYPE().toString()
@@ -269,9 +236,11 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   private TreeNode parseIdParams(ParserRuleContext ctx, Property p, int start) {
     int paraIndex = 0;
     List<Object> paras = new ArrayList<>();
+    //String a = ctx.getText();
     for (int i = start; i < ctx.getChildCount() - 1; i += 2) {
+      String c = ctx.getChild(i).getText();
       TreeNode res = visit(ctx.getChild(i));
-      if (!res.isOperNode()) {
+      if (res.isOperNode()) {
         throw new RuleParserException("Should be direct.");
       }
       if (res.getValueType() != p.getParamsTypes().get(paraIndex)) {
@@ -333,13 +302,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitNumricexprLong(SSMRuleParser.NumricexprLongContext ctx) {
-    Long ret = 0L;
-    try {
-      ret = Long.parseLong(ctx.LONG().getText());
-    } catch (NumberFormatException e) {
-      // ignore, impossible
-    }
-    return new ValueNode(new VisitResult(ValueType.LONG, ret));
+    return pharseConstLong(ctx.LONG().getText());
   }
 
   // bool value
@@ -407,8 +370,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitStrOrdString(SSMRuleParser.StrOrdStringContext ctx) {
-    return new ValueNode(new VisitResult(ValueType.STRING,
-        ctx.STRING().getText()));
+    return pharseConstString(ctx.STRING().getText());
   }
 
   @Override
@@ -427,26 +389,143 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
         ctx.TIMEPOINTCONST().getText()));
   }
 
-  public String generateSql(TreeNode root) {
-    return null;
+  @Override
+  public TreeNode visitConstLong(SSMRuleParser.ConstLongContext ctx) {
+    return pharseConstLong(ctx.getText());
   }
 
-  public String doGenerateSql(TreeNode root, String tableName) {
+  @Override
+  public TreeNode visitConstString(SSMRuleParser.ConstStringContext ctx) {
+    return pharseConstString(ctx.getText());
+  }
+
+  @Override
+  public TreeNode visitConstTimeInverval(SSMRuleParser.ConstTimeInvervalContext ctx) {
+    return pharseConstTimeInterval(ctx.getText());
+  }
+
+  @Override
+  public TreeNode visitConstTimePoint(SSMRuleParser.ConstTimePointContext ctx) {
+    return pharseConstTimePoint(ctx.getText());
+  }
+
+  private TreeNode pharseConstTimeInterval(String str) {
+    long intval = 0L;
+    Pattern p = Pattern.compile("[0-9]+");
+    Matcher m = p.matcher(str);
+    int start = 0;
+    while (m.find(start)) {
+      String digStr = m.group();
+      long value = 0;
+      try {
+        value = Long.parseLong(digStr);
+      } catch (NumberFormatException e) {
+      }
+      char suffix = str.charAt(start + digStr.length());
+      switch (suffix) {
+        case 'd':
+          intval += value * 24 * 3600 * 1000;
+          break;
+        case 'h':
+          intval += value * 3600 * 1000;
+          break;
+        case 'm':
+          intval += value * 60 * 1000;
+          break;
+        case 's':
+          intval += value * 1000;
+          break;
+      }
+      start += m.group().length() + 1;
+    }
+    return new ValueNode(new VisitResult(ValueType.TIMEINTVAL, intval));
+  }
+
+  private TreeNode pharseConstString(String str) {
+    return new ValueNode(new VisitResult(ValueType.STRING, str));
+  }
+
+  private TreeNode pharseConstLong(String str) {
+    Long ret = 0L;
+    try {
+      ret = Long.parseLong(str);
+    } catch (NumberFormatException e) {
+      // ignore, impossible
+    }
+    return new ValueNode(new VisitResult(ValueType.LONG, ret));
+  }
+
+  public TreeNode pharseConstTimePoint(String str) {
+    SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    TreeNode result;
+    Date date;
+    try {
+      date = ft.parse(str);
+      result = new ValueNode(new VisitResult(ValueType.TIMEPOINT, date.getTime()));
+    } catch (ParseException e) {
+      result = new ValueNode(new VisitResult());
+    }
+    return result;
+  }
+
+  public String generateSql() throws IOException {
+    TreeNode root = new OperNode(OperatorType.AND, objFilter, conditions);
+    return doGenerateSql(root, "files").getRet();
+  }
+
+  private class TranslateResult {
+    private String tableName;
+    private String ret;
+
+    public TranslateResult(String tableName, String ret) {
+      this.tableName = tableName;
+      this.ret = ret;
+    }
+
+    public String getTableName() {
+      return tableName;
+    }
+
+    public String getRet() {
+      return ret;
+    }
+  }
+
+  public TranslateResult doGenerateSql(TreeNode root, String tableName) throws IOException {
     if (root == null) {
-      return "";
+      return new TranslateResult(tableName, "");
     }
 
     if (root.isOperNode()) {
-      doGenerateSql(root.getLeft(), tableName);
-      doGenerateSql(root.getRight(), tableName);
+      String lop = doGenerateSql(root.getLeft(), tableName);
+      String rop = doGenerateSql(root.getRight(), tableName);
+      OperatorType optype = ((OperNode) root).getOperatorType();
+      String op = optype.getOpInSql();
+      if (optype == OperatorType.NOT) {
+        return op + " " + lop;
+      }
+      return lop + " " + op + " " + rop;
     } else {
       ValueNode vNode = (ValueNode) root;
       VisitResult vr = vNode.eval();
       if (vr.isConst()) {
+        switch (vr.getValueType()) {
+          case LONG:
+            return "" + ((Long) vr.getValue());
+          case STRING:
+            return "'" + ((String) vr.getValue()) + "'";
+          // TODO: for other types
+          default:
+            throw new IOException("Type = " + vr.getValueType().toString());
+        }
       } else {
         PropertyRealParas realParas = vr.getRealParas();
         Property p = realParas.getProperty();
         List<Object> paraValues = realParas.getValues();
+
+        if (p.isGlobal()) {
+
+        }
 
         if (p.hasParameters()) {
         } else {
