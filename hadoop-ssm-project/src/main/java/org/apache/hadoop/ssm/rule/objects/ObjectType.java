@@ -21,7 +21,7 @@ package org.apache.hadoop.ssm.rule.objects;
  * Type of this object.
  */
 public enum ObjectType {
-    FILE("file"), CACHE("cache"), DIRECTORY("directory");
+    FILE("file"), CACHE("cache"), STORAGE("storage"), DIRECTORY("directory");
 
     private String name;
 

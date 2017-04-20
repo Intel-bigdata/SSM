@@ -20,14 +20,18 @@ package org.apache.hadoop.ssm.rule.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.hadoop.ssm.rule.excepts.RuleParserException;
+import org.apache.hadoop.ssm.rule.objects.ObjectType;
 import org.apache.hadoop.ssm.rule.objects.Property;
+import org.apache.hadoop.ssm.rule.objects.PropertyRealParas;
 import org.apache.hadoop.ssm.rule.objects.SSMObject;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -193,7 +197,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     }
 
     if (p.getParamsTypes() != null) {
-      throw new RuleParserException("No parameter(s) found for "
+      throw new RuleParserException("Should have no parameter(s) for "
           + ctx.getText());
     }
     return new ValueNode(new VisitResult(p.getValueType(), null));
@@ -208,7 +212,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
           + " does not have a attribute named '" + "'" + ctx.ID().getText());
     }
     if (p.getParamsTypes() != null) {
-      throw new RuleParserException("No parameter(s) found for "
+      throw new RuleParserException("Should have no parameter(s) for "
           + ctx.getText());
     }
     return new ValueNode(new VisitResult(p.getValueType(), null));
@@ -228,27 +232,57 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
           + " does not need parameter(s)");
     }
 
-    int numParameters = ctx.getChildCount() - 3;
+    int numParameters = ctx.getChildCount() / 2 - 1;
     if (p.getParamsTypes().size() != numParameters) {
       throw new RuleParserException(obj.toString() + "." + ctx.ID().getText()
           + " needs " + p.getParamsTypes().size() + " instead of "
           + numParameters);
     }
-    return new ValueNode(new VisitResult(p.getValueType(), null));
+
+    return parseIdParams(ctx, p, 2);
   }
 
   @Override
   public TreeNode visitIdObjAttPara(SSMRuleParser.IdObjAttParaContext ctx) {
     Property p = createIfNotExist(ctx.OBJECTTYPE().getText()).getProperty(ctx.ID().getText());
+
     if (p == null) {
-      nError++;
-      return new ValueNode(new VisitResult());
+      throw new RuleParserException("Object " + ctx.OBJECTTYPE().toString()
+          + " does not have a attribute named '" + "'" + ctx.ID().getText());
     }
+
     if (p.getParamsTypes() == null) {
-      nError++;
-      return new ValueNode(new VisitResult());
+      throw new RuleParserException(ctx.OBJECTTYPE().toString() + "." + ctx.ID().getText()
+          + " does not need parameter(s)");
     }
-    return new ValueNode(new VisitResult(p.getValueType(), null));
+
+    int numParameters = ctx.getChildCount() / 2 - 2;
+    if (p.getParamsTypes().size() != numParameters) {
+      throw new RuleParserException(ctx.OBJECTTYPE().toString() + "." + ctx.ID().getText()
+          + " needs " + p.getParamsTypes().size() + " instead of "
+          + numParameters);
+    }
+
+    return parseIdParams(ctx, p, 4);
+  }
+
+  private TreeNode parseIdParams(ParserRuleContext ctx, Property p, int start) {
+    int paraIndex = 0;
+    List<Object> paras = new ArrayList<>();
+    for (int i = start; i < ctx.getChildCount() - 1; i += 2) {
+      TreeNode res = visit(ctx.getChild(i));
+      if (!res.isOperNode()) {
+        throw new RuleParserException("Should be direct.");
+      }
+      if (res.getValueType() != p.getParamsTypes().get(paraIndex)) {
+        throw new RuleParserException("Unexpected parameter type: "
+            + ctx.getChild(i).getText());
+      }
+      paras.add(((ValueNode) res).eval().getValue());
+      paraIndex++;
+    }
+    PropertyRealParas realParas = new PropertyRealParas(p, paras);
+    return new ValueNode(new VisitResult(p.getValueType(), null, realParas));
   }
 
   // numricexpr
@@ -391,5 +425,39 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   public TreeNode visitStrTimePointStr(SSMRuleParser.StrTimePointStrContext ctx) {
     return new ValueNode(new VisitResult(ValueType.STRING,
         ctx.TIMEPOINTCONST().getText()));
+  }
+
+  public String generateSql(TreeNode root) {
+    return null;
+  }
+
+  public String doGenerateSql(TreeNode root, String tableName) {
+    if (root == null) {
+      return "";
+    }
+
+    if (root.isOperNode()) {
+      doGenerateSql(root.getLeft(), tableName);
+      doGenerateSql(root.getRight(), tableName);
+    } else {
+      ValueNode vNode = (ValueNode) root;
+      VisitResult vr = vNode.eval();
+      if (vr.isConst()) {
+      } else {
+        PropertyRealParas realParas = vr.getRealParas();
+        Property p = realParas.getProperty();
+        List<Object> paraValues = realParas.getValues();
+
+        if (p.hasParameters()) {
+        } else {
+          if (p.getTableName() == tableName) {
+            return p.getTableItemName();
+          } else {
+            return "";
+          }
+        }
+      }
+    }
+    return null;
   }
 }

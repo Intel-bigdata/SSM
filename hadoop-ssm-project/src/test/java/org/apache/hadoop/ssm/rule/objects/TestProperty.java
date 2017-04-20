@@ -17,33 +17,41 @@
  */
 package org.apache.hadoop.ssm.rule.objects;
 
-
+import junit.framework.Assert;
 import org.apache.hadoop.ssm.rule.parser.ValueType;
+import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
- * Definition of rule object 'File'.
+ * Tests to test Property.
  */
-public class File extends SSMObject {
+public class TestProperty {
+  @Test
+  public void testEqual() {
+    Property p1 = new Property(ValueType.LONG,
+        Arrays.asList(ValueType.TIMEINTVAL),
+        "access_count_table", "", false);
 
-  public static final Map<String, Property> properties;
+    Property p2 = new Property(ValueType.LONG,
+        Arrays.asList(ValueType.LONG),
+        "access_count_table", "", false);
 
-  static {
-    properties = new HashMap<>();
-    properties.put("path", new Property(ValueType.STRING, null, "files", "path", false));
-    properties.put("accessCount", new Property(ValueType.LONG, Arrays.asList(ValueType.TIMEINTVAL), "access_count_table", "", false));
-    properties.put("length", new Property(ValueType.LONG, null, "files", "length", false));
-    properties.put("blocksize", new Property(ValueType.LONG, null, "files", "block_size", false));
-  }
+    Property p3 = new Property(ValueType.LONG,
+        Arrays.asList(ValueType.TIMEINTVAL),
+        "access_count_table", "", false);
 
-  public File() {
-    super(ObjectType.FILE);
-  }
+    Property p4 = new Property(ValueType.TIMEINTVAL,
+        Arrays.asList(ValueType.TIMEINTVAL),
+        "access_count_table", "", false);
 
-  public Map<String, Property> getProperties() {
-    return properties;
+    Property p5 = new Property(ValueType.LONG,
+        null,
+        "access_count_table", "", false);
+
+    Assert.assertTrue(!p1.equals(p2));
+    Assert.assertTrue(p1.equals(p3));
+    Assert.assertTrue(!p1.equals(p4));
+    Assert.assertTrue(!p1.equals(p5));
   }
 }

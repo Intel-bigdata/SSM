@@ -108,7 +108,9 @@ commands
     ;
 
 command
-    : ID (ID | OPTION | STRING)*
+    : 'cachefile'
+    | 'movefile' STRING
+    | 'archive'
     ;
 
 id

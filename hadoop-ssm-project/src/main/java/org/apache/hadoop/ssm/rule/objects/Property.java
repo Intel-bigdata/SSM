@@ -29,9 +29,17 @@ public class Property {
   private ValueType retType;
   private List<ValueType> paramsTypes;
 
-  public Property(ValueType retType, List<ValueType> paramsTypes) {
+  private String tableName;
+  private String tableItemName;
+  private boolean isGlobal;
+
+  public Property(ValueType retType, List<ValueType> paramsTypes,
+       String tableName, String tableItemName, boolean isGlobal) {
     this.retType = retType;
     this.paramsTypes = paramsTypes;
+    this.tableName = tableName;
+    this.tableItemName = tableItemName;
+    this.isGlobal = isGlobal;
   }
 
   public ValueType getValueType() {
@@ -42,4 +50,54 @@ public class Property {
     return paramsTypes;
   }
 
+  public String getTableName() {
+    return tableName;
+  }
+
+  public String getTableItemName() {
+    return tableItemName;
+  }
+
+  public boolean isGlobal() {
+    return isGlobal;
+  }
+
+  public boolean hasParameters() {
+    return paramsTypes != null;
+  }
+
+  public boolean equals(Property p) {
+    if (p == null) {
+      return false;
+    }
+    // null
+    boolean others = retType == p.getValueType()
+        && tableName.equals(p.getTableName())
+        && tableItemName.equals(p.getTableItemName())
+        && isGlobal == p.isGlobal();
+
+    if (!others) {
+      return false;
+    }
+
+    if (paramsTypes == null && p.getParamsTypes() == null) {
+      return true;
+    }
+
+    if (paramsTypes == null || p.getParamsTypes() == null) {
+      return false;
+    }
+
+    if (paramsTypes.size() != p.getParamsTypes().size()) {
+      return false;
+    }
+
+    for (int i = 0; i < paramsTypes.size(); i++) {
+      if (!paramsTypes.get(i).equals(p.getParamsTypes().get(i))) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }

@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.ssm.rule.parser;
 
+import org.apache.hadoop.ssm.rule.objects.PropertyRealParas;
+
 import java.io.IOException;
 
 /**
@@ -26,6 +28,7 @@ public class VisitResult {
 
   private ValueType type;
   private Object value;
+  private PropertyRealParas realParas;
 
   public VisitResult() {
     this.type = ValueType.ERROR;
@@ -42,6 +45,17 @@ public class VisitResult {
   public VisitResult(ValueType type, Object value) {
     this.type = type;
     this.value = value;
+  }
+
+  public VisitResult(ValueType type, Object value,
+      PropertyRealParas realParas) {
+    this.type = type;
+    this.value = value;
+    this.realParas = realParas;
+  }
+
+  public PropertyRealParas getRealParas() {
+    return realParas;
   }
 
   public ValueType getValueType() {

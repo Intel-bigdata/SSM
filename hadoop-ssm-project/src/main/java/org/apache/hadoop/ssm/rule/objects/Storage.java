@@ -17,8 +17,29 @@
  */
 package org.apache.hadoop.ssm.rule.objects;
 
+import org.apache.hadoop.ssm.rule.parser.ValueType;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Definition of rule object 'Storage'.
  */
-public class Storage {
+public class Storage extends SSMObject {
+  public static final Map<String, Property> properties;
+
+  static {
+    properties = new HashMap<>();
+    properties.put("capacity", new Property(ValueType.LONG, Arrays.asList(ValueType.STRING), "storages", "capacity", true));
+    properties.put("free", new Property(ValueType.LONG, Arrays.asList(ValueType.STRING), "storages", "free", true));
+  }
+
+  public Storage() {
+    super(ObjectType.STORAGE);
+  }
+
+  public Map<String, Property> getProperties() {
+    return properties;
+  }
 }
