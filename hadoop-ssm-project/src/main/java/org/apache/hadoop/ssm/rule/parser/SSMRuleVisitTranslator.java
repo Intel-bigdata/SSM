@@ -316,21 +316,11 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   }
 
   @Override
-  public TreeNode visitBvTrue(SSMRuleParser.BvTrueContext ctx) {
-    return new ValueNode(new VisitResult(ValueType.BOOLEAN, true));
-  }
-
-  @Override
   public TreeNode visitBvNot(SSMRuleParser.BvNotContext ctx) {
     TreeNode left = visit(ctx.boolvalue());
     // TODO: bypass null
     TreeNode right = new ValueNode(new VisitResult(ValueType.BOOLEAN, null));
     return generalHandleExpr(ctx.NOT().getText(), left, right);
-  }
-
-  @Override
-  public TreeNode visitBvFalse(SSMRuleParser.BvFalseContext ctx) {
-    return new ValueNode(new VisitResult(ValueType.BOOLEAN, false));
   }
 
   // Compare
