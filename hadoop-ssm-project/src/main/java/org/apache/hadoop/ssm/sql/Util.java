@@ -29,58 +29,76 @@ public class Util {
         "DROP TABLE IF EXISTS `cached_files`;",
         "DROP TABLE IF EXISTS `ecpolicys`;",
         "DROP TABLE IF EXISTS `files`;",
+        "DROP TABLE IF EXISTS `groups`;",
         "DROP TABLE IF EXISTS `storages`;",
+        "DROP TABLE IF EXISTS `storage_policy`;",
         "DROP TABLE IF EXISTS `xattr`;",
+        "DROP TABLE IF EXISTS `owners`;",
         "CREATE TABLE `access_count_tables` (\n" +
-            "  `table_name` varchar(255) DEFAULT NULL,\n" +
-            "  `start_time` datetime DEFAULT NULL,\n" +
-            "  `end_time` datetime DEFAULT NULL\n" +
-            ");",
+            "  `table_name` varchar(255) NOT NULL,\n" +
+            "  `start_time` bigint(20) NOT NULL,\n" +
+            "  `end_time` bigint(20) NOT NULL\n" +
+            ") ;",
 
         "CREATE TABLE `cached_files` (\n" +
             "  `fid` bigint(20) NOT NULL,\n" +
-            "  `from_time` datetime DEFAULT NULL,\n" +
-            "  `last_access_time` datetime DEFAULT NULL,\n" +
-            "  `num_accessed` int(11) DEFAULT NULL\n" +
-            ");",
+            "  `from_time` bigint(20) NOT NULL,\n" +
+            "  `last_access_time` bigint(20) NOT NULL,\n" +
+            "  `num_accessed` int(11) NOT NULL\n" +
+            ") ;",
 
         "CREATE TABLE `ecpolicys` (\n" +
-            "  `id` smallint(6) DEFAULT NULL,\n" +
+            "  `id` INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  `name` varchar(255) DEFAULT NULL,\n" +
             "  `cellsize` int(11) DEFAULT NULL,\n" +
             "  `numDataUnits` int(11) DEFAULT NULL,\n" +
             "  `numParityUnits` int(11) DEFAULT NULL,\n" +
             "  `codecName` varchar(64) DEFAULT NULL\n" +
-            ");",
+            ") ;",
 
         "CREATE TABLE `files` (\n" +
-            "  `path` varchar(4096) DEFAULT NULL,\n" +
+            "  `path` varchar(4096) NOT NULL,\n" +
             "  `fid` bigint(20) NOT NULL,\n" +
             "  `length` bigint(20) DEFAULT NULL,\n" +
             "  `block_replication` smallint(6) DEFAULT NULL,\n" +
             "  `block_size` bigint(20) DEFAULT NULL,\n" +
-            "  `modification_time` datetime DEFAULT NULL,\n" +
-            "  `access_time` datetime DEFAULT NULL,\n" +
+            "  `modification_time` bigint(20) DEFAULT NULL,\n" +
+            "  `access_time` bigint(20) DEFAULT NULL,\n" +
             "  `is_dir` bit(1) DEFAULT NULL,\n" +
-            "  `storage_policy` varchar(4) DEFAULT NULL,\n" +
-            "  `owner` varchar(11) DEFAULT NULL,\n" +
-            "  `group` varchar(11) DEFAULT NULL,\n" +
+            "  `sid` tinyint(4) DEFAULT NULL,\n" +
+            "  `oid` smallint(6) DEFAULT NULL,\n" +
+            "  `gid` smallint(6) DEFAULT NULL,\n" +
             "  `permission` smallint(6) DEFAULT NULL,\n" +
             "  `ec_policy_id` smallint(6) DEFAULT NULL\n" +
-            ");",
+            ") ;",
+
+        "CREATE TABLE `groups` (\n" +
+            "  `gid` smallint(6) NOT NULL,\n" +
+            "  `group_name` varchar(255) DEFAULT NULL\n" +
+            ") ;",
+
+        "CREATE TABLE `owners` (\n" +
+            "  `oid` smallint(6) NOT NULL,\n" +
+            "  `owner_name` varchar(255) DEFAULT NULL\n" +
+            ") ;",
 
         "CREATE TABLE `storages` (\n" +
-            "  `type` varchar(255) DEFAULT NULL,\n" +
-            "  `capacity` bigint(20) DEFAULT NULL,\n" +
-            "  `free` bigint(20) DEFAULT NULL\n" +
-            ");",
+            "  `type` varchar(255) NOT NULL,\n" +
+            "  `capacity` bigint(20) NOT NULL,\n" +
+            "  `free` bigint(20) NOT NULL\n" +
+            ") ;",
+
+        "CREATE TABLE `storage_policy` (\n" +
+            "  `sid` tinyint(4) NOT NULL,\n" +
+            "  `policy_name` varchar(64) DEFAULT NULL\n" +
+            ") ;",
 
         "CREATE TABLE `xattr` (\n" +
             "  `fid` bigint(20) NOT NULL,\n" +
             "  `namespace` varchar(255) DEFAULT NULL,\n" +
             "  `name` varchar(255) DEFAULT NULL,\n" +
             "  `value` varchar(255) DEFAULT NULL\n" +
-            ");"
+            ") ;"
     };
 
     for (String s : createEmptyTables) {
