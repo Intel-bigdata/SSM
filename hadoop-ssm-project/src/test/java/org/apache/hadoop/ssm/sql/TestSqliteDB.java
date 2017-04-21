@@ -29,6 +29,7 @@ public class TestSqliteDB {
 
   @Test
   public void testCreateNewSqliteDB() throws Exception {
+    File testDir = new File(System.getProperty("test.dir", "target"));
     String dbFile = "test.db";
     Connection conn = null;
     try {

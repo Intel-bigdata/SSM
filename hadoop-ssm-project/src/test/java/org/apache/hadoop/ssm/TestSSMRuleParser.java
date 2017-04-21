@@ -65,7 +65,8 @@ public class TestSSMRuleParser {
         + "isincache and accessCount(10m) > 10 and x == y and "
         + "x matches \"hello\" and \"/file/*.db\" matches file.path "
         + "and true or c > 10 and 100 > d or 10d > 20s | cachefile";
-    String rule1 = "file with length > 1GB :  blocksize > 1 + 3 and accessCount(30s) > 3 and storage.free(\"SSD\") > 100 | cachefile";
+    //String rule1 = "file with length > 1GB :  blocksize > 1 + 3 and accessCount(30s) > 3 and storage.free(\"SSD\") > 100 | cachefile";
+    String rule1 = "file with length > 3 : storage.free(\"SSD\") > 100 and not inCache | cachefile";
     InputStream input = new ByteArrayInputStream(rule1.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);
     SSMRuleLexer lexer = new SSMRuleLexer(antlrInput);

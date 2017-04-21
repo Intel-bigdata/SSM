@@ -68,4 +68,8 @@ public class PropertyRealParas {
     }
     return true;
   }
+
+  public String formatParameters() {
+    return property.formatParameters(values);
+  }
 }

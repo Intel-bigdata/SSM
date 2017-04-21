@@ -31,6 +31,7 @@ public class Property {
 
   private String tableName;
   private String tableItemName;
+  private String formatTemplate;
   private boolean isGlobal;
 
   public Property(ValueType retType, List<ValueType> paramsTypes,
@@ -39,6 +40,18 @@ public class Property {
     this.paramsTypes = paramsTypes;
     this.tableName = tableName;
     this.tableItemName = tableItemName;
+    this.isGlobal = isGlobal;
+  }
+
+  // TODO: re-arch to couple paramsTypes and formatTemplate
+  public Property(ValueType retType, List<ValueType> paramsTypes,
+      String tableName, String tableItemName, boolean isGlobal,
+      String formatTemplate) {
+    this.retType = retType;
+    this.paramsTypes = paramsTypes;
+    this.tableName = tableName;
+    this.tableItemName = tableItemName;
+    this.formatTemplate = formatTemplate;
     this.isGlobal = isGlobal;
   }
 
@@ -99,5 +112,35 @@ public class Property {
     }
 
     return true;
+  }
+
+  public String formatParameters(List<Object> values) {
+    if (formatTemplate == null) {
+      return tableItemName;
+    }
+
+    String ret = formatTemplate;
+
+    // TODO: need more checks to ensure replace correctly
+    for (int i = 0; i < values.size(); i++) {
+      if (ret.contains("$" + i)) {
+        String v;
+        switch (paramsTypes.get(i)) {
+          case TIMEINTVAL:
+          case LONG:
+            v = "" + ((Long) values.get(i));
+            break;
+          case STRING:
+            v = "'" + ((String) values.get(i)) + "'";
+            break;
+          default:
+            v = null;  // TODO: throw exception
+        }
+        if (v != null) {
+          ret = ret.replaceAll("\\$" + i, v);
+        }
+      }
+    }
+    return ret;
   }
 }

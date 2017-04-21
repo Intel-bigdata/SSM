@@ -21,7 +21,7 @@ package org.apache.hadoop.ssm.rule.parser;
  * Created by root on 3/24/17.
  */
 public enum OperatorType {
-  NONE("none", false),   // for error handling
+  NONE("none", false, ""),   // for error handling
   ADD("+", false),
   SUB("-", false),
   MUL("*", false),

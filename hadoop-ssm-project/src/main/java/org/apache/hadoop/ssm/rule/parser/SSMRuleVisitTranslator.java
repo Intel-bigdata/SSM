@@ -19,12 +19,11 @@ package org.apache.hadoop.ssm.rule.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.hadoop.ssm.rule.excepts.RuleParserException;
-import org.apache.hadoop.ssm.rule.objects.ObjectType;
 import org.apache.hadoop.ssm.rule.objects.Property;
 import org.apache.hadoop.ssm.rule.objects.PropertyRealParas;
 import org.apache.hadoop.ssm.rule.objects.SSMObject;
+import org.apache.hadoop.ssm.sql.TableMetaData;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -325,7 +324,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   public TreeNode visitBvNot(SSMRuleParser.BvNotContext ctx) {
     TreeNode left = visit(ctx.boolvalue());
     // TODO: bypass null
-    TreeNode right = new ValueNode(new VisitResult(ValueType.BOOLEAN, true));
+    TreeNode right = new ValueNode(new VisitResult(ValueType.BOOLEAN, null));
     return generalHandleExpr(ctx.NOT().getText(), left, right);
   }
 
@@ -442,7 +441,8 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   }
 
   private TreeNode pharseConstString(String str) {
-    return new ValueNode(new VisitResult(ValueType.STRING, str));
+    String ret = str.substring(1, str.length() - 1);
+    return new ValueNode(new VisitResult(ValueType.STRING, ret));
   }
 
   private TreeNode pharseConstLong(String str) {
@@ -469,8 +469,26 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   }
 
   public String generateSql() throws IOException {
-    TreeNode root = new OperNode(OperatorType.AND, objFilter, conditions);
-    return doGenerateSql(root, "files").getRet();
+    String ret = "";
+    TreeNode l = objFilter != null ? objFilter : conditions;
+    TreeNode r = objFilter == null ? objFilter : conditions;
+    switch (objects.get("Default").getType()) {
+      case DIRECTORY:
+      case FILE:
+        ret = "SELECT path FROM files";
+        break;
+      default:
+        throw new IOException("No operation defined for Object "
+            + objects.get("Default").getType());
+    }
+
+    if (l != null) {
+      TreeNode actRoot = r == null ? l : new OperNode(OperatorType.AND, l, r);
+      TreeNode root = new OperNode(OperatorType.NONE, actRoot, null);
+      ret += " WHERE " + doGenerateSql(root, "files").getRet(); // TODO: only file now
+    }
+
+    return ret;
   }
 
   private class TranslateResult {
@@ -491,29 +509,68 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     }
   }
 
+  private String connectTables(String baseTable, TranslateResult curr) {
+    String[] key = TableMetaData.getJoinableKey(baseTable, curr.getTableName());
+    String subSql = null;
+    if (key == null) {
+      return "(SELECT COUNT(*) FROM " + curr.getTableName()
+          + (curr.getRet() != null ? " WHERE " + curr.getRet() : "")
+          + ") <> 0";
+    } else {
+      return key[0] + " IN "
+          + "(SELECT " + key[1] + " FROM " + curr.getTableName()
+          + (curr.getRet() != null ? " WHERE " + curr.getRet() : "")
+          + ")";
+    }
+  }
+
   public TranslateResult doGenerateSql(TreeNode root, String tableName) throws IOException {
     if (root == null) {
       return new TranslateResult(tableName, "");
     }
 
     if (root.isOperNode()) {
-      String lop = doGenerateSql(root.getLeft(), tableName);
-      String rop = doGenerateSql(root.getRight(), tableName);
       OperatorType optype = ((OperNode) root).getOperatorType();
       String op = optype.getOpInSql();
-      if (optype == OperatorType.NOT) {
-        return op + " " + lop;
+      TranslateResult lop = doGenerateSql(root.getLeft(), tableName);
+      TranslateResult rop = null;
+      if (optype != OperatorType.NOT) {
+        rop = doGenerateSql(root.getRight(), tableName);
       }
-      return lop + " " + op + " " + rop;
+
+      if (lop.getTableName() == null && rop.getTableName() != null) {
+        TranslateResult temp = lop;
+        lop = rop;
+        rop = temp;
+      }
+
+      if (optype == OperatorType.AND || optype == OperatorType.OR) {
+        if (!lop.getTableName().equals(tableName)) {
+          lop = new TranslateResult(tableName, connectTables(tableName, lop));
+        }
+
+        if (!rop.getTableName().equals(tableName)) {
+          rop = new TranslateResult(tableName, connectTables(tableName, rop));
+        }
+      }
+
+      if (optype == OperatorType.NOT) {
+        return new TranslateResult(tableName,
+            op + " " + connectTables(tableName, lop));
+      }
+      return new TranslateResult(
+          lop.getTableName() != null ? lop.getTableName() : rop.getTableName(),
+          "(" + lop.getRet() + " " + op + " " + rop.getRet() + ")");
+
     } else {
       ValueNode vNode = (ValueNode) root;
       VisitResult vr = vNode.eval();
       if (vr.isConst()) {
         switch (vr.getValueType()) {
           case LONG:
-            return "" + ((Long) vr.getValue());
+            return new TranslateResult(null, "" + ((Long) vr.getValue()));
           case STRING:
-            return "'" + ((String) vr.getValue()) + "'";
+            return new TranslateResult(null, "'" + ((String) vr.getValue()) + "'");
           // TODO: for other types
           default:
             throw new IOException("Type = " + vr.getValueType().toString());
@@ -521,22 +578,10 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
       } else {
         PropertyRealParas realParas = vr.getRealParas();
         Property p = realParas.getProperty();
-        List<Object> paraValues = realParas.getValues();
 
-        if (p.isGlobal()) {
-
-        }
-
-        if (p.hasParameters()) {
-        } else {
-          if (p.getTableName() == tableName) {
-            return p.getTableItemName();
-          } else {
-            return "";
-          }
-        }
+        return new TranslateResult(p.getTableName(), realParas.formatParameters());
       }
     }
-    return null;
+    //return new TranslateResult(tableName, "");
   }
 }

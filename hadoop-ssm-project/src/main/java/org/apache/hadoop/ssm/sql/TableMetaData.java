@@ -21,10 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Constraints and relations between tables.
+ * Info, constraints and relations about tables.
  */
-public class TableRelations {
+public class TableMetaData {
   private static Map<String, String[]> mapJoinableKeys = new HashMap<>();
+  private static Map<String, String[]> mapTableColumns = new HashMap<>();
 
   static {
     mapJoinableKeys.clear();
@@ -37,6 +38,16 @@ public class TableRelations {
     mapJoinableKeys.put("files-owners",
         new String[] {"oid", "oid"});
     // TODO: others
+
+    // TODO: hard code them now
+    mapTableColumns.clear();
+    mapTableColumns.put("files", new String[] {
+        "path", "fid"
+    });
+    mapTableColumns.put("storages", new String[] {
+        "type", "capacity", "free"
+    });
+    // TODO: add other tables
   }
 
   public static String[] getJoinableKey(String tableA, String tableB) {
@@ -50,6 +61,13 @@ public class TableRelations {
       String[] result = mapJoinableKeys.get(key);
       String[] ret = new String[] {result[1], result[0]};
       return ret;
+    }
+    return null;
+  }
+
+  public static String[] getTableColumns(String tableName) {
+    if (mapTableColumns.containsKey(tableName)) {
+      return mapTableColumns.get(tableName).clone();
     }
     return null;
   }
