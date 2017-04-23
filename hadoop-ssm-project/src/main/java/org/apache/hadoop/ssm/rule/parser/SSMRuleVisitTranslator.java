@@ -257,7 +257,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitNumricexprId(SSMRuleParser.NumricexprIdContext ctx) {
-    return visitChildren(ctx);
+    return visit(ctx.id());
   }
   /**
    * {@inheritDoc}
@@ -265,15 +265,25 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
    * <p>The default implementation returns the result of calling
    * {@link #visitChildren} on {@code ctx}.</p>
    */
-  @Override public
-  TreeNode visitNumricexprCurve(SSMRuleParser.NumricexprCurveContext ctx) {
-    return visitChildren(ctx);
+  @Override
+  public TreeNode visitNumricexprCurve(SSMRuleParser.NumricexprCurveContext ctx) {
+    return visit(ctx.numricexpr());
   }
 
   // numricexpr opr numricexpr
   @Override
-  public TreeNode visitNumricexpr2(SSMRuleParser.Numricexpr2Context ctx) {
+  public TreeNode visitNumricexprAdd(SSMRuleParser.NumricexprAddContext ctx) {
     return generalExprOpExpr(ctx);
+  }
+
+  @Override
+  public TreeNode visitNumricexprMul(SSMRuleParser.NumricexprMulContext ctx) {
+    return generalExprOpExpr(ctx);
+  }
+
+  @Override
+  public TreeNode visitNumricexprLong(SSMRuleParser.NumricexprLongContext ctx) {
+    return pharseConstLong(ctx.LONG().getText());
   }
 
   private TreeNode generalExprOpExpr(ParserRuleContext ctx) {
@@ -298,12 +308,6 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     return ret;
   }
 
-
-  @Override
-  public TreeNode visitNumricexprLong(SSMRuleParser.NumricexprLongContext ctx) {
-    return pharseConstLong(ctx.LONG().getText());
-  }
-
   // bool value
   @Override
   public TreeNode visitBvAndOR(SSMRuleParser.BvAndORContext ctx) {
@@ -321,6 +325,16 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     // TODO: bypass null
     TreeNode right = new ValueNode(new VisitResult(ValueType.BOOLEAN, null));
     return generalHandleExpr(ctx.NOT().getText(), left, right);
+  }
+
+  @Override
+  public TreeNode visitBvCurve(SSMRuleParser.BvCurveContext ctx) {
+    return visit(ctx.boolvalue());
+  }
+
+  @Override
+  public TreeNode visitBvCompareexpr(SSMRuleParser.BvCompareexprContext ctx) {
+    return visit(ctx.compareexpr());
   }
 
   // Compare
@@ -435,14 +449,35 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     return new ValueNode(new VisitResult(ValueType.STRING, ret));
   }
 
-  private TreeNode pharseConstLong(String str) {
+  private TreeNode pharseConstLong(String strLong) {
+    String str = strLong.toUpperCase();
     Long ret = 0L;
+    long times = 1;
     try {
+      Pattern p = Pattern.compile("[PTGMK]?B");
+      Matcher m = p.matcher(str);
+      String unit = "";
+      if (m.find()) {
+        unit = m.group();
+      }
+      str = str.substring(0, str.length() - unit.length());
+      switch (unit) {
+        case "PB":
+          times *= 1024;
+        case "TB":
+          times *= 1024;
+        case "GB":
+          times *= 1024;
+        case "MB":
+          times *= 1024;
+        case "KB":
+          times *= 1024;
+      }
       ret = Long.parseLong(str);
     } catch (NumberFormatException e) {
       // ignore, impossible
     }
-    return new ValueNode(new VisitResult(ValueType.LONG, ret));
+    return new ValueNode(new VisitResult(ValueType.LONG, ret * times));
   }
 
   public TreeNode pharseConstTimePoint(String str) {

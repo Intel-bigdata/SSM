@@ -87,7 +87,8 @@ commonexpr
     ;
 
 numricexpr
-   : numricexpr opr numricexpr                              #numricexpr2
+   : numricexpr op=('*' | '/' | '%') numricexpr             #numricexprMul
+   | numricexpr op=('+' | '-') numricexpr                   #numricexprAdd
    | id                                                     #numricexprId
    | LONG                                                   #numricexprLong
    | '(' numricexpr ')'                                     #numricexprCurve
