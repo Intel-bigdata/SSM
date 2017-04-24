@@ -18,12 +18,23 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.ssm.rule.RuleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static org.apache.hadoop.util.ExitUtil.terminate;
 
@@ -37,10 +48,13 @@ public class SSMServer {
   private SSMHttpServer httpServer;
   private SSMRpcServer rpcServer;
   private Configuration config;
-
+  private DistributedFileSystem fs = null;
+  private OutputStream out;
+  static final Path SSM_ID_PATH = new Path("/system/ssm.id");
   public static final Logger LOG = LoggerFactory.getLogger(SSMServer.class);
 
-  SSMServer(Configuration conf) throws IOException {
+  SSMServer(Configuration conf) throws IOException, URISyntaxException {
+    this.fs = (DistributedFileSystem) FileSystem.get(new URI(conf.get("dfs.ssm.namenode.rpcserver")), conf);
     config = conf;
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
     httpServer = new SSMHttpServer(conf, addr);
@@ -72,9 +86,15 @@ public class SSMServer {
   public static SSMServer createSSM(String[] args, Configuration conf)
       throws Exception {
     SSMServer ssm = new SSMServer(conf);
+    ssm.out = ssm.checkAndMarkRunning();
+    if (ssm.out == null) {
+      // Exit if there is another one running.
+      throw new IOException("Another SSMServer is running");
+    }
     ssm.runSSMDaemons();
     return ssm;
   }
+
 
   private static final String USAGE =
       "Usage: ssm [-help | -foo" +
@@ -92,12 +112,12 @@ public class SSMServer {
 
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {
-      SSMServer ssm = createSSM(args, conf);
+      /*SSMServer ssm = createSSM(args, conf);
       if (ssm != null) {
         ssm.join();
       } else {
         errorCode = 1;
-      }
+      }*/
     } catch (Exception e) {
       e.printStackTrace();
       terminate(1, e);
@@ -128,7 +148,32 @@ public class SSMServer {
   }
 
   protected InetSocketAddress getRpcServerAddress(Configuration conf) {
-//    URI filesystemURI = FileSystem.getDefaultUri(conf);
-    return InetSocketAddress.createUnresolved("localhost", 9998);
+    String[] strings = conf.get("dfs.ssm.rpcserver").split(":");
+    return InetSocketAddress.createUnresolved(strings[strings.length - 2]
+        , Integer.parseInt(strings[strings.length - 1]));
   }
+
+  private OutputStream checkAndMarkRunning() throws IOException {
+    try {
+      if (fs.exists(SSM_ID_PATH)) {
+        // try appending to it so that it will fail fast if another balancer is
+        // running.
+        IOUtils.closeStream(fs.append(SSM_ID_PATH));
+        fs.delete(SSM_ID_PATH, true);
+      }
+      final FSDataOutputStream fsout = fs.create(SSM_ID_PATH, false);
+      // mark balancer idPath to be deleted during filesystem closure
+      fs.deleteOnExit(SSM_ID_PATH);
+      fsout.writeBytes(InetAddress.getLocalHost().getHostName());
+      fsout.hflush();
+      return fsout;
+    } catch (RemoteException e) {
+      if (AlreadyBeingCreatedException.class.getName().equals(e.getClassName())) {
+        return null;
+      } else {
+        throw e;
+      }
+    }
+  }
+
 }

@@ -18,24 +18,50 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSUtil;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.ssm.protocol.SSMClient;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestSSMClient {
 
   @Test
   public void test() throws Exception {
-    String ADDRESS = "localhost";
-    int port = 9998;
-    InetSocketAddress addr = new InetSocketAddress(ADDRESS, port);
+    final Configuration conf = new SSMConfiguration();
+    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(4).build();
+    // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
+    final DistributedFileSystem dfs = cluster.getFileSystem();
+
+    InetSocketAddress addr = new InetSocketAddress("localhost"
+        , SSMConfigureKeys.DFS_SSM_RPC_PROT_DEFAULT);
+
+    final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
+    List<URI> uriList = new ArrayList<>(namenodes);
+    conf.set("dfs.ssm.namenode.rpcserver", uriList.get(0).toString());
+
     // rpcServer start in SSMServer
-    SSMServer.createSSM(null, new Configuration());
-    SSMClient ssmClient = new SSMClient(new Configuration(), addr);
+    SSMServer.createSSM(null, conf);
+    SSMClient ssmClient = new SSMClient(conf, addr);
     String state = ssmClient.getServiceStatus().getState().name();
     assertTrue("SAFEMODE".equals(state));
+    try {
+      conf.set("dfs.ssm.rpcserver", "localhost:7043");
+      SSMServer.createSSM(null, conf);
+    } catch (IOException e) {
+      assertEquals("java.io.IOException: Another SSMServer is running", e.toString());
+    }
+    cluster.close();
   }
 }
