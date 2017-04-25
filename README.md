@@ -13,8 +13,7 @@ The SSM project is separated into two phases:
 
 **Phase 2.** Implement a rule-generator that can be aware of all these factors, and can automatically generate comprehensive rules. It’s the advanced part and makes SSM works smartly.
 
-In Phase 1, we target at implementing a rule-based automatic engine that can execute user-defined rules to do automatic stuff. It provides a unified interface (through rules) to manage and tune HDFS cluster.
-* This Phase includes the following general subtasks:
+The project is on Phase 1 now, it includes the following general subtasks:
 * Define metrics to collect from HDFS
 * Define rule DSL regarding syntax and build-in variables used for rules.
 * Implement rule engine and different actions
