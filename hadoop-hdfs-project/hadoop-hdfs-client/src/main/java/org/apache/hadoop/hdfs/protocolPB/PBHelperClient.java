@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +79,8 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.EncryptionZone;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+import org.apache.hadoop.hdfs.protocol.FilesInfo;
 import org.apache.hadoop.hdfs.protocol.FsPermissionExtension;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
@@ -88,6 +91,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.protocol.LocatedStripedBlock;
+import org.apache.hadoop.hdfs.protocol.NNEvent;
 import org.apache.hadoop.hdfs.protocol.RollingUpgradeInfo;
 import org.apache.hadoop.hdfs.protocol.RollingUpgradeStatus;
 import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
@@ -141,6 +145,8 @@ import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.DatanodeStorageProto.Sto
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.DirectoryListingProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.ExtendedBlockProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.ErasureCodingPolicyProto;
+import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.FilesAccessInfoProto;
+import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.FilesInfoProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.FsPermissionProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.FsServerDefaultsProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.HdfsFileStatusProto;
@@ -148,6 +154,7 @@ import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.HdfsFileStatusProto.File
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.LocatedBlockProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.LocatedBlockProto.Builder;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.LocatedBlocksProto;
+import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.NNEventProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.QuotaUsageProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.RollingUpgradeStatusProto;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.SnapshotDiffReportEntryProto;
@@ -711,6 +718,138 @@ public class PBHelperClient {
     default:
       return AdminStates.NORMAL;
     }
+  }
+
+  // NNEventProto
+  public static NNEvent convert(NNEventProto proto) {
+    int size = proto.getArgsCount();
+    NNEvent ret = new NNEvent(proto.getEventType(),
+            proto.getArgsList().toArray(new String[size]));
+    return ret;
+  }
+
+  public static NNEventProto convert(NNEvent event) {
+    if (event == null) {
+      return null;
+    }
+
+    NNEventProto.Builder builder = NNEventProto.newBuilder();
+    builder.setEventType(event.getEventType());
+    for (String arg : event.getArgs()) {
+      builder.addArgs(arg);
+    }
+    return builder.build();
+  }
+
+  public static FilesInfo convert(FilesInfoProto proto) {
+    FilesInfo info = new FilesInfo(proto.getVaildItems());
+    info.setAccessTime(proto.getAccessTimeList());
+    info.setAllPaths(proto.getAllPathsList());
+    List<Short> reps = null;
+    List<Integer> ints = proto.getBlockReplicationList();
+    if (ints != null) {
+      reps = new LinkedList<>();
+      for (Integer s : ints) {
+        reps.add(s.shortValue());
+      }
+    }
+    info.setBlockReplication(reps);
+    info.setBlocksize(proto.getBlockSizeList());
+    info.setChildrenNum(proto.getChildrenNumList());
+    info.setFileId(proto.getFileIdList());
+    info.setLength(proto.getLengthList());
+    info.setGroup(proto.getGroupsList());
+    info.setOwner(proto.getOwnerList());
+    info.setIsdir(proto.getIsdirList());
+    info.setModificationTime(proto.getModificationTimeList());
+    List<Byte> origPolicy = null;
+    List<Integer> tranPolicy = proto.getStoragePolicyList();
+    if (tranPolicy != null) {
+      origPolicy = new LinkedList<>();
+      for (Integer s : tranPolicy) {
+        origPolicy.add(s.byteValue());
+      }
+    }
+    info.setStoragePolicy(origPolicy);
+    return info;
+  }
+
+  public static FilesInfoProto convert(FilesInfo info) {
+    FilesInfoProto.Builder builder = FilesInfoProto.newBuilder();
+    builder.setVaildItems(info.getVaildItems());
+    builder.addAllAccessTime(info.getAccessTime());
+    builder.addAllAllPaths(info.getAllPaths());
+    List<Short> reps = info.getBlockReplication();
+    List<Integer> ints = null;
+    if (reps != null) {
+      ints = new LinkedList<>();
+      for (Short s : reps) {
+        ints.add(s.intValue());
+      }
+    }
+    builder.addAllBlockReplication(ints);
+    builder.addAllBlockSize(info.getBlocksize());
+    builder.addAllChildrenNum(info.getChildrenNum());
+    builder.addAllFileId(info.getFileId());
+    builder.addAllLength(info.getLength());
+    builder.addAllGroups(info.getGroup());
+    builder.addAllOwner(info.getOwner());
+    builder.addAllIsdir(info.getIsdir());
+    builder.addAllModificationTime(info.getModificationTime());
+    List<Byte> origPolicy = info.getStoragePolicy();
+    List<Integer> tranPolicy = null;
+    if (origPolicy != null) {
+      tranPolicy = new LinkedList<>();
+      for (Byte s : origPolicy) {
+        tranPolicy.add(s.intValue());
+      }
+    }
+    builder.addAllStoragePolicy(tranPolicy);
+    return builder.build();
+  }
+
+  // FilesAccessInfoProto
+  public static FilesAccessInfo convert(FilesAccessInfoProto proto) {
+    FilesAccessInfo ret = new FilesAccessInfo();
+    ret.setAccessCounter(proto.getFilesAccessedList(),
+            proto.getFilesAccessCountsList());
+    ret.setStartTime(proto.getStartTime());
+    ret.setEndTime(proto.getEndTime());
+    List<NNEventProto> eventsProto = proto.getNnEventsList();
+    List<NNEvent> events;
+    if (eventsProto == null) {
+      events = null;
+    } else {
+      events = new ArrayList<>(eventsProto.size());
+      for (int i = 0; i < eventsProto.size(); i++) {
+        events.add(i, convert(eventsProto.get(i)));
+      }
+    }
+    ret.setNnEvents(events);
+    return ret;
+  }
+
+  public static FilesAccessInfoProto convert(FilesAccessInfo info) {
+    if (info == null) {
+      return null;
+    }
+
+    FilesAccessInfoProto.Builder builder = FilesAccessInfoProto.newBuilder();
+    builder.setStartTime(info.getStartTime()).setEndTime(info.getEndTime());
+    builder.addAllFilesAccessed(info.getFilesAccessed());
+    builder.addAllFilesAccessCounts(info.getFilesAccessCounts());
+    List<NNEvent> events = info.getNnEvents();
+    List<NNEventProto> eventsProto;
+    if (events == null) {
+      eventsProto = null;
+    } else {
+      eventsProto = new ArrayList<>(events.size());
+      for (int i = 0; i < events.size(); i++) {
+        eventsProto.add(i, convert(events.get(i)));
+      }
+    }
+    builder.addAllNnEvents(eventsProto);
+    return builder.build();
   }
 
   // LocatedBlocks

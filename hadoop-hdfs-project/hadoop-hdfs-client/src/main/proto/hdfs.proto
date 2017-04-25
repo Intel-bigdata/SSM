@@ -228,6 +228,34 @@ message BlockStoragePolicyProto {
   optional StorageTypesProto replicationFallbackPolicy = 5;
 }
 
+message NNEventProto {
+  required int32 eventType = 1;
+  repeated string args = 2;
+}
+
+message FilesAccessInfoProto {
+  required int64 startTime = 1;
+  required int64 endTime = 2;
+  repeated string filesAccessed = 3;
+  repeated int32 filesAccessCounts = 4;
+  repeated NNEventProto nnEvents = 5;
+}
+
+message FilesInfoProto {
+  repeated string allPaths = 1;
+  repeated uint64 length = 2;
+  repeated bool isdir = 3;
+  repeated uint32 blockReplication = 4;
+  repeated uint64 blockSize = 5;
+  repeated uint64 modificationTime = 6;
+  repeated uint64 accessTime = 7;
+  repeated string owner = 8;
+  repeated string groups = 9;
+  repeated uint64 fileId = 10;
+  repeated int32 childrenNum = 11;
+  repeated uint32 storagePolicy = 12;
+  required int32 vaildItems = 13;
+}
 
 /**
  * A LocatedBlock gives information about a block and its location.
