@@ -23,11 +23,15 @@ public class AccessCountTable {
   private Long endTime;
   private TimeGranularity granularity;
 
-  public AccessCountTable(Long startTime, Long endTime, TimeGranularity granularity) {
+  public AccessCountTable(String name, Long startTime, Long endTime, TimeGranularity granularity) {
     this.startTime = startTime;
     this.endTime = endTime;
     this.granularity = granularity;
-    this.tableName = "accessCount_" + startTime + "_" + endTime;
+    this.tableName = name;
+  }
+
+  public AccessCountTable(Long startTime, Long endTime, TimeGranularity granularity) {
+    this("accessCount_" + startTime + "_" + endTime, startTime, endTime, granularity);
   }
 
   public String getTableName() {

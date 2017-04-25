@@ -32,10 +32,12 @@ public class AccessCountTableAggregator {
     }
   }
 
-  private String aggregateSQLStatement(AccessCountTable destinationTable,
+  protected String aggregateSQLStatement(AccessCountTable destinationTable,
       List<AccessCountTable> tablesToAggregate) {
     StringBuilder statement = new StringBuilder();
-    statement.append("SELECT " + FILE_FIELD + ", SUM(" + ACCESSCOUNT_FIELD + ") FROM (");
+//    statement.append("CREATE TABLE " + destinationTable.getTableName() + " as ");
+    statement.append("SELECT " + FILE_FIELD + ", SUM(" + ACCESSCOUNT_FIELD + ") as "
+      + ACCESSCOUNT_FIELD + " FROM (");
     Iterator<AccessCountTable> tableIterator = tablesToAggregate.iterator();
     while (tableIterator.hasNext()) {
       AccessCountTable table = tableIterator.next();

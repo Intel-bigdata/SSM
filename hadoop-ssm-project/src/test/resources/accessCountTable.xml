@@ -1,0 +1,54 @@
+<dataset>
+    <table name="table1">
+        <column>file_name</column>
+        <column>access_count</column>
+        <row>
+            <value>file1</value>
+            <value>2</value>
+        </row>
+        <row>
+            <value>file2</value>
+            <value>3</value>
+        </row>
+        <row>
+            <value>file3</value>
+            <value>4</value>
+        </row>
+    </table>
+    <table name="table2">
+        <column>file_name</column>
+        <column>access_count</column>
+        <row>
+            <value>file2</value>
+            <value>3</value>
+        </row>
+        <row>
+            <value>file3</value>
+            <value>1</value>
+        </row>
+        <row>
+            <value>file4</value>
+            <value>3</value>
+        </row>
+    </table>
+    <table name='expect'>
+        <column>file_name</column>
+        <column>access_count</column>
+        <row>
+            <value>file1</value>
+            <value>2</value>
+        </row>
+        <row>
+            <value>file2</value>
+            <value>6</value>
+        </row>
+        <row>
+            <value>file3</value>
+            <value>5</value>
+        </row>
+        <row>
+            <value>file4</value>
+            <value>3</value>
+        </row>
+    </table>
+</dataset>
