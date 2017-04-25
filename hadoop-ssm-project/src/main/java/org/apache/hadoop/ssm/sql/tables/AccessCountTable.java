@@ -59,6 +59,13 @@ public class AccessCountTable {
     }
     AccessCountTable other = (AccessCountTable) o;
     return other.getStartTime().equals(this.startTime) &&
-        other.getEndTime().equals(this.endTime);
+        other.getEndTime().equals(this.endTime) &&
+        other.getGranularity().equals(this.granularity);
+  }
+
+  @Override
+  public String toString() {
+    return "AccessCountTable " + this.tableName + " start from " + this.startTime +
+      " end with " + this.endTime + " and granularity is " + this.granularity;
   }
 }

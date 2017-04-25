@@ -21,19 +21,22 @@ import java.util.List;
 
 public abstract class TableAddOpListener {
   AccessCountTableList coarseGrainedTable;
+  AccessCountTableAggregator tableAggregator;
 
-  TableAddOpListener(AccessCountTableList list) {
+  TableAddOpListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
     this.coarseGrainedTable = list;
+    this.tableAggregator = aggregator;
   }
 
   public void tableAdded(AccessCountTableList fineGrainedTableList, AccessCountTable table) {
     // Here is a critical part for handling time window like [59s, 61s)
-    AccessCountTable lastCoarseGrainedTable = lastCoarseGrainedTableFor(table.getStartTime());
+    AccessCountTable lastCoarseGrainedTable = lastCoarseGrainedTableFor(table.getEndTime());
     if (!coarseGrainedTable.contains(lastCoarseGrainedTable)) {
       List<AccessCountTable> tablesToAggregate =
-        fineGrainedTableList.getTables(table.getStartTime(), table.getEndTime());
-      coarseGrainedTable.addTable(lastCoarseGrainedTable);
-      TableAggregator.aggregateTables(lastCoarseGrainedTable, tablesToAggregate);
+        fineGrainedTableList.getTables(lastCoarseGrainedTable.getStartTime(),
+          lastCoarseGrainedTable.getEndTime());
+      coarseGrainedTable.add(lastCoarseGrainedTable);
+      this.tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
     }
   }
 
@@ -42,8 +45,8 @@ public abstract class TableAddOpListener {
   public static class MinuteTableListener extends TableAddOpListener {
     private static final Long ONE_MINUTE = 60L * 1000;
 
-    public MinuteTableListener(AccessCountTableList list) {
-      super(list);
+    public MinuteTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
+      super(list, aggregator);
     }
 
     @Override
@@ -57,8 +60,8 @@ public abstract class TableAddOpListener {
   public static class HourTableListener extends TableAddOpListener {
     private static final Long ONE_HOUR = 60 * MinuteTableListener.ONE_MINUTE;
 
-    public HourTableListener(AccessCountTableList list) {
-      super(list);
+    public HourTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
+      super(list, aggregator);
     }
 
     @Override
@@ -72,8 +75,8 @@ public abstract class TableAddOpListener {
   public static class DayTableListener extends TableAddOpListener {
     private static final Long ONE_DAY = 24 * HourTableListener.ONE_HOUR;
 
-    public DayTableListener(AccessCountTableList list) {
-      super(list);
+    public DayTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
+      super(list, aggregator);
     }
 
     @Override
@@ -83,4 +86,6 @@ public abstract class TableAddOpListener {
       return new AccessCountTable(lastStart, lastEnd, TimeGranularity.DAY);
     }
   }
+
+  // Todo: WeekTableListener, MonthTableListener, YearTableListener
 }

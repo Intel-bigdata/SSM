@@ -20,8 +20,7 @@ package org.apache.hadoop.ssm.sql.tables;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AccessCountTableList {
-  private List<AccessCountTable> tables;
+public class AccessCountTableList extends ArrayList<AccessCountTable> {
   private TableAddOpListener listener;
 
   public AccessCountTableList() {
@@ -29,28 +28,25 @@ public class AccessCountTableList {
   }
 
   public AccessCountTableList(TableAddOpListener listener) {
-    this.tables = new ArrayList<>();
+    super();
     this.listener = listener;
   }
 
-  public void addTable(AccessCountTable table) {
-    this.tables.add(table);
+  public boolean add(AccessCountTable table) {
+    super.add(table);
     if (this.listener != null) {
       this.listener.tableAdded(this, table);
     }
+    return true;
   }
 
   public List<AccessCountTable> getTables(Long start, Long end) {
     List<AccessCountTable> results = new ArrayList<>();
-    for (AccessCountTable table : tables) {
+    this.forEach(table -> {
       if (table.getStartTime() >= start && table.getEndTime() <= end) {
         results.add(table);
       }
-    }
+    });
     return results;
-  }
-
-  public boolean contains(AccessCountTable table) {
-    return this.tables.contains(table);
   }
 }

@@ -17,27 +17,41 @@
  */
 package org.apache.hadoop.ssm.sql.tables;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class AccessCountTableManager {
   private Map<TimeGranularity, AccessCountTableList> tableLists;
+  private AccessCountTableList secondTableList;
 
   public AccessCountTableManager() {
+    AccessCountTableAggregator aggregator = new AccessCountTableAggregator();
     AccessCountTableList dayTableList = new AccessCountTableList();
     TableAddOpListener dayTableListener =
-      new TableAddOpListener.DayTableListener(dayTableList);
+      new TableAddOpListener.DayTableListener(dayTableList, aggregator);
     AccessCountTableList hourTableList = new AccessCountTableList(dayTableListener);
     TableAddOpListener hourTableListener =
-      new TableAddOpListener.HourTableListener(hourTableList);
+      new TableAddOpListener.HourTableListener(hourTableList, aggregator);
     AccessCountTableList minuteTableList = new AccessCountTableList(hourTableListener);
     TableAddOpListener minuteTableListener =
-      new TableAddOpListener.MinuteTableListener(minuteTableList);
-    AccessCountTableList secondTableList = new AccessCountTableList(minuteTableListener);
+      new TableAddOpListener.MinuteTableListener(minuteTableList, aggregator);
+    this.secondTableList = new AccessCountTableList(minuteTableListener);
     this.tableLists = new HashMap<>();
-    this.tableLists.put(TimeGranularity.SECOND, secondTableList);
+    this.tableLists.put(TimeGranularity.SECOND, this.secondTableList);
     this.tableLists.put(TimeGranularity.MINUTE, minuteTableList);
     this.tableLists.put(TimeGranularity.HOUR, hourTableList);
     this.tableLists.put(TimeGranularity.DAY, dayTableList);
+  }
+
+  public void addSecondTable(AccessCountTable accessCountTable) {
+    assert accessCountTable.getGranularity().equals(TimeGranularity.SECOND);
+    this.secondTableList.add(accessCountTable);
+  }
+
+  @VisibleForTesting
+  protected Map<TimeGranularity, AccessCountTableList> getTableLists() {
+    return this.tableLists;
   }
 }
