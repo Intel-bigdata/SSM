@@ -34,7 +34,7 @@
 
   <property>
     <name>dfs.ssm.rpcserver</name>
-    <value>0.0.0.0:7042</value>
+    <value>localhost:7042</value>
     <description>rpc server of SSM</description>
   </property>
 
@@ -48,5 +48,11 @@
     <name>dfs.ssm.poll.namenode.interval</name>
     <value>5</value>
     <description>Time interval in seconds for SSM to fetch info from NN</description>
+  </property>
+
+  <property>
+    <name>dfs.ssm.namenode.rpcserver</name>
+    <value></value>
+    <description>get namenode.rpcserver by ssm</description>
   </property>
 </configuration>
