@@ -31,6 +31,22 @@
             <value>3</value>
         </row>
     </table>
+    <table name="table3">
+        <column>file_name</column>
+        <column>access_count</column>
+        <row>
+            <value>file3</value>
+            <value>2</value>
+        </row>
+        <row>
+            <value>file4</value>
+            <value>2</value>
+        </row>
+        <row>
+            <value>file5</value>
+            <value>4</value>
+        </row>
+    </table>
     <table name='expect'>
         <column>file_name</column>
         <column>access_count</column>
@@ -44,11 +60,15 @@
         </row>
         <row>
             <value>file3</value>
-            <value>5</value>
+            <value>7</value>
         </row>
         <row>
             <value>file4</value>
-            <value>3</value>
+            <value>5</value>
+        </row>
+        <row>
+            <value>file5</value>
+            <value>4</value>
         </row>
     </table>
 </dataset>

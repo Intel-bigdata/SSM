@@ -17,11 +17,15 @@
  */
 package org.apache.hadoop.ssm.sql.tables;
 
+import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.mockito.Mockito.mock;
+
 public class TestAddTableOpListener {
-  AccessCountTableAggregator aggregator = new AccessCountTableAggregator();
+  AccessCountTableAggregator aggregator = new AccessCountTableAggregator(
+      mock(DBAdapter.class));
 
   @Test
   public void testMinuteTableListener() {

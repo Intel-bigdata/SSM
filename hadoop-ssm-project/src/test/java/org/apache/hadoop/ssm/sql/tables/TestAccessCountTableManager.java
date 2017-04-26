@@ -17,16 +17,20 @@
  */
 package org.apache.hadoop.ssm.sql.tables;
 
+import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Map;
 
+import static org.mockito.Mockito.mock;
+
 public class TestAccessCountTableManager {
 
   @Test
   public void testAccessCountTableManager() {
-    AccessCountTableManager manager = new AccessCountTableManager();
+    DBAdapter adapter = mock(DBAdapter.class);
+    AccessCountTableManager manager = new AccessCountTableManager(adapter);
     Long firstDayEnd = 24 * 60 * 60 * 1000L;
     AccessCountTable accessCountTable = new AccessCountTable(firstDayEnd - 5 * 1000,
       firstDayEnd, TimeGranularity.SECOND);

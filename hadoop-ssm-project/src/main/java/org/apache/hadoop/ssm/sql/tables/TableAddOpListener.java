@@ -17,6 +17,9 @@
  */
 package org.apache.hadoop.ssm.sql.tables;
 
+import org.apache.hadoop.ssm.utils.Constants;
+
+import java.sql.SQLException;
 import java.util.List;
 
 public abstract class TableAddOpListener {
@@ -36,53 +39,52 @@ public abstract class TableAddOpListener {
         fineGrainedTableList.getTables(lastCoarseGrainedTable.getStartTime(),
           lastCoarseGrainedTable.getEndTime());
       coarseGrainedTable.add(lastCoarseGrainedTable);
-      this.tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
+      //Todo: exception
+      try {
+        this.tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
     }
   }
 
   public abstract AccessCountTable lastCoarseGrainedTableFor(Long startTime);
 
   public static class MinuteTableListener extends TableAddOpListener {
-    private static final Long ONE_MINUTE = 60L * 1000;
-
     public MinuteTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
       super(list, aggregator);
     }
 
     @Override
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
-      Long lastEnd = endTime - (endTime % ONE_MINUTE);
-      Long lastStart = lastEnd - ONE_MINUTE;
+      Long lastEnd = endTime - (endTime % Constants.ONE_MINUTE_IN_MILLIS);
+      Long lastStart = lastEnd - Constants.ONE_MINUTE_IN_MILLIS;
       return new AccessCountTable(lastStart, lastEnd, TimeGranularity.MINUTE);
     }
   }
 
   public static class HourTableListener extends TableAddOpListener {
-    private static final Long ONE_HOUR = 60 * MinuteTableListener.ONE_MINUTE;
-
     public HourTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
       super(list, aggregator);
     }
 
     @Override
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
-      Long lastEnd = endTime - (endTime % ONE_HOUR);
-      Long lastStart = lastEnd - ONE_HOUR;
+      Long lastEnd = endTime - (endTime % Constants.ONE_HOUR_IN_MILLIS);
+      Long lastStart = lastEnd - Constants.ONE_HOUR_IN_MILLIS;
       return new AccessCountTable(lastStart, lastEnd, TimeGranularity.HOUR);
     }
   }
 
   public static class DayTableListener extends TableAddOpListener {
-    private static final Long ONE_DAY = 24 * HourTableListener.ONE_HOUR;
-
     public DayTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
       super(list, aggregator);
     }
 
     @Override
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
-      Long lastEnd = endTime - (endTime % ONE_DAY);
-      Long lastStart = lastEnd - ONE_DAY;
+      Long lastEnd = endTime - (endTime % Constants.ONE_DAY_IN_MILLIS);
+      Long lastStart = lastEnd - Constants.ONE_DAY_IN_MILLIS;
       return new AccessCountTable(lastStart, lastEnd, TimeGranularity.DAY);
     }
   }

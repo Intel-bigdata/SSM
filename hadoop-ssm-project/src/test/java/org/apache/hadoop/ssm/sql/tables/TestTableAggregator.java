@@ -25,7 +25,6 @@ import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.xml.XmlDataSet;
-import org.dbunit.operation.DatabaseOperation;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,21 +38,25 @@ public class TestTableAggregator {
   public void setUp() {
     File db = new File(DB_PATH);
     if (db.exists()) {
-      db.deleteOnExit();
+      db.delete();
     }
   }
 
   private void createTables(IDatabaseConnection connection) throws Exception {
     Statement statement = connection.getConnection().createStatement();
-    statement.execute("CREATE TABLE IF NOT EXISTS table1 (\n" +
+    statement.execute("CREATE TABLE table1 (\n" +
       "  file_name varchar(20) NOT NULL,\n" +
       "  access_count int(11) NOT NULL\n" +
       ")");
-    statement.execute("CREATE TABLE IF NOT EXISTS table2 (\n" +
+    statement.execute("CREATE TABLE table2 (\n" +
       "  file_name varchar(20) NOT NULL,\n" +
       "  access_count int(11) NOT NULL\n" +
       ")");
-    statement.execute("CREATE TABLE IF NOT EXISTS expect (\n" +
+    statement.execute("CREATE TABLE table3 (\n" +
+      "  file_name varchar(20) NOT NULL,\n" +
+      "  access_count int(11) NOT NULL\n" +
+      ")");
+    statement.execute("CREATE TABLE expect (\n" +
       "  file_name varchar(20) NOT NULL,\n" +
       "  access_count int(11) NOT NULL\n" +
       ")");
@@ -62,7 +65,7 @@ public class TestTableAggregator {
 
   @Test
   public void testAggregate() throws Exception {
-    AccessCountTableAggregator aggregator = new AccessCountTableAggregator();
+    AccessCountTableAggregator aggregator = new AccessCountTableAggregator(null);
     IDatabaseTester databaseTester = new JdbcDatabaseTester("org.sqlite.JDBC",
       "jdbc:sqlite:" + DB_PATH);
     createTables(databaseTester.getConnection());
@@ -71,17 +74,22 @@ public class TestTableAggregator {
     databaseTester.setDataSet(dataSet);
     databaseTester.onSetup();
 
-    AccessCountTable result = new AccessCountTable("result", 0L,
+    AccessCountTable result = new AccessCountTable("actual", 0L,
       0L, TimeGranularity.MINUTE);
     AccessCountTable table1 = new AccessCountTable("table1", 0L,
       0L, TimeGranularity.SECOND);
     AccessCountTable table2 = new AccessCountTable("table2", 0L,
       0L, TimeGranularity.SECOND);
+    AccessCountTable table3 = new AccessCountTable("table3", 0L,
+      0L, TimeGranularity.SECOND);
     String aggregateStatement = aggregator.aggregateSQLStatement(result,
-        Lists.newArrayList(table1, table2));
-    ITable test = databaseTester.getConnection().createQueryTable("test", aggregateStatement);
+        Lists.newArrayList(table1, table2, table3));
+    Statement statement = databaseTester.getConnection().getConnection().createStatement();
+    statement.execute(aggregateStatement);
+    statement.close();
 
+    ITable actual = databaseTester.getConnection().createTable(result.getTableName());
     ITable expect = databaseTester.getDataSet().getTable("expect");
-    Assertion.assertEquals(expect, test);
+    Assertion.assertEquals(expect, actual);
   }
 }

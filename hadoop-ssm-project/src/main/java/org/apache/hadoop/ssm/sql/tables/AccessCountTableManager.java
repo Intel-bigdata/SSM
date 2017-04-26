@@ -18,16 +18,20 @@
 package org.apache.hadoop.ssm.sql.tables;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+import org.apache.hadoop.ssm.sql.DBAdapter;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class AccessCountTableManager {
+  private DBAdapter dbAdapter;
   private Map<TimeGranularity, AccessCountTableList> tableLists;
   private AccessCountTableList secondTableList;
 
-  public AccessCountTableManager() {
-    AccessCountTableAggregator aggregator = new AccessCountTableAggregator();
+  public AccessCountTableManager(DBAdapter adapter) {
+    this.dbAdapter = adapter;
+    AccessCountTableAggregator aggregator = new AccessCountTableAggregator(dbAdapter);
     AccessCountTableList dayTableList = new AccessCountTableList();
     TableAddOpListener dayTableListener =
       new TableAddOpListener.DayTableListener(dayTableList, aggregator);
@@ -46,8 +50,12 @@ public class AccessCountTableManager {
   }
 
   public void addSecondTable(AccessCountTable accessCountTable) {
-    assert accessCountTable.getGranularity().equals(TimeGranularity.SECOND);
     this.secondTableList.add(accessCountTable);
+  }
+
+  public void addAccessCountInfo(FilesAccessInfo accessInfo) {
+    AccessCountTable newTable = new AccessCountTable(accessInfo.getStartTime(),
+        accessInfo.getStartTime(), TimeGranularity.SECOND);
   }
 
   @VisibleForTesting

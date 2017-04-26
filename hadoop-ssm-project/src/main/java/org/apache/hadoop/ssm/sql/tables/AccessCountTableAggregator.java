@@ -17,25 +17,34 @@
  */
 package org.apache.hadoop.ssm.sql.tables;
 
+import org.apache.hadoop.ssm.sql.DBAdapter;
+
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
 public class AccessCountTableAggregator {
+  private final DBAdapter adapter;
   private final String FILE_FIELD = "file_name";
   private final String ACCESSCOUNT_FIELD = "access_count";
 
+  public AccessCountTableAggregator(DBAdapter adapter) {
+    this.adapter = adapter;
+  }
+
   public void aggregate(AccessCountTable destinationTable,
-      List<AccessCountTable> tablesToAggregate) {
+      List<AccessCountTable> tablesToAggregate) throws SQLException {
     if (tablesToAggregate.size() > 0) {
-      String sqlStatement = this.aggregateSQLStatement(destinationTable, tablesToAggregate);
-      System.out.println(sqlStatement);
+      String aggregateSQ = this.aggregateSQLStatement(destinationTable, tablesToAggregate);
+      System.out.println(aggregateSQ);
+      this.adapter.executeQuery(aggregateSQ);
     }
   }
 
   protected String aggregateSQLStatement(AccessCountTable destinationTable,
       List<AccessCountTable> tablesToAggregate) {
     StringBuilder statement = new StringBuilder();
-//    statement.append("CREATE TABLE " + destinationTable.getTableName() + " as ");
+    statement.append("CREATE TABLE " + destinationTable.getTableName() + " as ");
     statement.append("SELECT " + FILE_FIELD + ", SUM(" + ACCESSCOUNT_FIELD + ") as "
       + ACCESSCOUNT_FIELD + " FROM (");
     Iterator<AccessCountTable> tableIterator = tablesToAggregate.iterator();
