@@ -65,7 +65,7 @@ public class DBAdapter {
       ResultSet rsTableNames = executeQuery(sqlGetTableNames);
       List<String> tableNames = new LinkedList<>();
       while (rsTableNames.next()) {
-        tableNames.add(rsTableNames.getString(0));
+        tableNames.add(rsTableNames.getString(1));
       }
 
       if (tableNames.size() == 0) {
@@ -87,7 +87,7 @@ public class DBAdapter {
           "HAVING SUM(count) " + countFilter;
       String sqlFinal = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
 
-      ResultSet rsValues = executeQuery(sqlGetTableNames);
+      ResultSet rsValues = executeQuery(sqlFinal);
 
       Map<Long, Integer> ret = new HashMap<>();
       while (rsValues.next()) {
@@ -95,7 +95,7 @@ public class DBAdapter {
       }
       return ret;
     } catch (SQLException e) {
-      // TODO: log and handle
+      e.printStackTrace();
     }
     return null;
   }
