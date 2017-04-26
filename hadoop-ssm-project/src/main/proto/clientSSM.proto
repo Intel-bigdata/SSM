@@ -32,7 +32,6 @@ message AddResult {
 }
 
 message StatusPara {
-
 }
 message StatusResult {
     required string SSMServiceState = 1;
