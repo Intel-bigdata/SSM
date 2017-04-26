@@ -17,8 +17,15 @@
  */
 package org.apache.hadoop.ssm.sql;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * Utilities for accessing the testing database.
@@ -31,8 +38,68 @@ public class TestDBUtil {
    *
    * @return
    */
-  public static Connection getTestDBInstance() throws IOException {
-    return null; // TODO
+  public static Connection getTestDBInstance()
+      throws IOException, SQLException, ClassNotFoundException {
+    String srcdir = System.getProperty("srcdir",
+        System.getProperty("user.dir") + "/src/resources");
+    String testdir = System.getProperty("testdir",
+        System.getProperty("user.dir") +
+        "/src/test/java/org/apache/hadoop/ssm/sql");
+    String srcPath = srcdir + "/data-schema.db";
+    String destPath = testdir + "/" + (int)Math.random()*1000 + 1 + ".db";
+    copyFile(srcPath, destPath);
+    Connection conn = Util.createSqliteConnection(destPath);
+    return conn;
   }
 
+  public static boolean copyFile(String srcPath, String destPath) {
+    boolean flag = false;
+    File src = new File(srcPath);
+    if (!src.exists()) {
+      System.out.println("source file:" + srcPath + "not exist");
+      return false;
+    }
+    File dest = new File(destPath);
+    if (dest.exists()) {
+      dest.delete();
+    } else {
+      if (!dest.getParentFile().exists()) {
+        if (!dest.getParentFile().mkdirs()) {
+          return false;
+        }
+      }
+    }
+
+    BufferedInputStream in = null;
+    PrintStream out = null;
+
+    try {
+      in = new BufferedInputStream(new FileInputStream(src));
+      out = new PrintStream(
+        new BufferedOutputStream(
+          new FileOutputStream(dest)));
+
+      byte[] buffer = new byte[1024 * 100];
+      int len = -1;
+      while ((len = in.read(buffer)) != -1) {
+        out.write(buffer, 0, len);
+      }
+      dest.deleteOnExit();
+      return true;
+    } catch (Exception e) {
+      System.out.println("copying failed" + e.getMessage());
+      flag = true;
+      return false;
+    } finally {
+      try {
+        in.close();
+        out.close();
+        if (flag) {
+          dest.delete();
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
 }
