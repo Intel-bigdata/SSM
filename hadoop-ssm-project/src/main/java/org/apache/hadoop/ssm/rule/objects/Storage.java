@@ -31,12 +31,14 @@ public class Storage extends SSMObject {
 
   static {
     properties = new HashMap<>();
-    properties.put("capacity",
-        new Property(ValueType.LONG, Arrays.asList(ValueType.STRING), "storages", "capacity", true,
+    properties.put("capacity", new Property("capacity", ValueType.LONG,
+        Arrays.asList(ValueType.STRING), "storages", "capacity", true,
         "type = $0"));
-    properties.put("free", new Property(ValueType.LONG, Arrays.asList(ValueType.STRING), "storages", "free", true,
+    properties.put("free", new Property("free", ValueType.LONG,
+        Arrays.asList(ValueType.STRING), "storages", "free", true,
         "type = $0 AND free"));
-    properties.put("usdRatio", new Property(ValueType.LONG, Arrays.asList(ValueType.STRING), "storages", "free", true,
+    properties.put("usedRatio", new Property("usedRatio", ValueType.LONG,
+        Arrays.asList(ValueType.STRING), "storages", "free", true,
         "type = $0 AND (capacity - free) * 100.0 / capacity"));
   }
 

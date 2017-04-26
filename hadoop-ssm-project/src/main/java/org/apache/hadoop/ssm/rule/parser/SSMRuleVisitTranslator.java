@@ -20,6 +20,7 @@ package org.apache.hadoop.ssm.rule.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.hadoop.ssm.rule.excepts.RuleParserException;
+import org.apache.hadoop.ssm.rule.objects.ObjectType;
 import org.apache.hadoop.ssm.rule.objects.Property;
 import org.apache.hadoop.ssm.rule.objects.PropertyRealParas;
 import org.apache.hadoop.ssm.rule.objects.SSMObject;
@@ -29,8 +30,10 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -44,6 +47,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   private Map<String, SSMObject> objects = new HashMap<>();
   private TreeNode objFilter = null;
   private TreeNode conditions = null;
+  private List<PropertyRealParas> realParases = new LinkedList<>();
 
   private int nError = 0;
 
@@ -163,6 +167,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
           + ctx.getText());
     }
     PropertyRealParas realParas = new PropertyRealParas(p, null);
+    realParases.add(realParas);
     return new ValueNode(new VisitResult(p.getValueType(), null, realParas));
   }
 
@@ -179,6 +184,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
           + ctx.getText());
     }
     PropertyRealParas realParas = new PropertyRealParas(p, null);
+    realParases.add(realParas);
     return new ValueNode(new VisitResult(p.getValueType(), null, realParas));
   }
 
@@ -250,6 +256,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
       paraIndex++;
     }
     PropertyRealParas realParas = new PropertyRealParas(p, paras);
+    realParases.add(realParas);
     return new ValueNode(new VisitResult(p.getValueType(), null, realParas));
   }
 
@@ -486,14 +493,19 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     Date date;
     try {
       date = ft.parse(str);
-      result = new ValueNode(new VisitResult(ValueType.TIMEPOINT, date.getTime()));
+      result = new ValueNode(
+          new VisitResult(ValueType.TIMEPOINT, date.getTime()));
     } catch (ParseException e) {
       result = new ValueNode(new VisitResult());
     }
     return result;
   }
 
-  public String generateSql() throws IOException {
+  List<String> sqlStatements = new LinkedList<>();
+  List<String> tempTableNames = new LinkedList<>();
+  Map<String, List<Object>> dynamicParameters = new HashMap<>();
+
+  public TranslateResult generateSql() throws IOException {
     String ret = "";
     TreeNode l = objFilter != null ? objFilter : conditions;
     TreeNode r = objFilter == null ? objFilter : conditions;
@@ -510,17 +522,21 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     if (l != null) {
       TreeNode actRoot = r == null ? l : new OperNode(OperatorType.AND, l, r);
       TreeNode root = new OperNode(OperatorType.NONE, actRoot, null);
-      ret += " WHERE " + doGenerateSql(root, "files").getRet(); // TODO: only file now
+      // TODO: only file now
+      ret += " WHERE " + doGenerateSql(root, "files").getRet();
     }
 
-    return ret;
+    sqlStatements.add(ret);
+
+    return new TranslateResult(sqlStatements,
+        tempTableNames, dynamicParameters, sqlStatements.size() - 1);
   }
 
-  private class TranslateResult {
+  private class NodeTransResult {
     private String tableName;
     private String ret;
 
-    public TranslateResult(String tableName, String ret) {
+    public NodeTransResult(String tableName, String ret) {
       this.tableName = tableName;
       this.ret = ret;
     }
@@ -534,56 +550,59 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     }
   }
 
-  private String connectTables(String baseTable, TranslateResult curr) {
-    String[] key = TableMetaData.getJoinableKey(baseTable, curr.getTableName());
+  private String connectTables(String baseTable, NodeTransResult curr) {
+    String[] key =
+        TableMetaData.getJoinableKey(baseTable, curr.getTableName());
     String subSql = null;
     if (key == null) {
       return "(SELECT COUNT(*) FROM " + curr.getTableName()
-          + (curr.getRet() != null ? " WHERE " + curr.getRet() : "")
+          + (curr.getRet() != null ? " WHERE (" + curr.getRet() + ")" : "")
           + ") <> 0";
     } else {
       return key[0] + " IN "
           + "(SELECT " + key[1] + " FROM " + curr.getTableName()
-          + (curr.getRet() != null ? " WHERE " + curr.getRet() : "")
+          + (curr.getRet() != null ? " WHERE (" + curr.getRet() + ")" : "")
           + ")";
     }
   }
 
-  public TranslateResult doGenerateSql(TreeNode root, String tableName) throws IOException {
+  public NodeTransResult doGenerateSql(TreeNode root, String tableName)
+      throws IOException {
     if (root == null) {
-      return new TranslateResult(tableName, "");
+      return new NodeTransResult(tableName, "");
     }
 
     if (root.isOperNode()) {
       OperatorType optype = ((OperNode) root).getOperatorType();
       String op = optype.getOpInSql();
-      TranslateResult lop = doGenerateSql(root.getLeft(), tableName);
-      TranslateResult rop = null;
+      NodeTransResult lop = doGenerateSql(root.getLeft(), tableName);
+      NodeTransResult rop = null;
       if (optype != OperatorType.NOT) {
         rop = doGenerateSql(root.getRight(), tableName);
       }
 
       if (lop.getTableName() == null && rop.getTableName() != null) {
-        TranslateResult temp = lop;
+        NodeTransResult temp = lop;
         lop = rop;
         rop = temp;
       }
 
-      if (optype == OperatorType.AND || optype == OperatorType.OR) {
+      if (optype == OperatorType.AND || optype == OperatorType.OR
+          || optype == OperatorType.NONE) {
         if (!lop.getTableName().equals(tableName)) {
-          lop = new TranslateResult(tableName, connectTables(tableName, lop));
+          lop = new NodeTransResult(tableName, connectTables(tableName, lop));
         }
 
         if (!rop.getTableName().equals(tableName)) {
-          rop = new TranslateResult(tableName, connectTables(tableName, rop));
+          rop = new NodeTransResult(tableName, connectTables(tableName, rop));
         }
       }
 
       if (optype == OperatorType.NOT) {
-        return new TranslateResult(tableName,
+        return new NodeTransResult(tableName,
             op + " " + connectTables(tableName, lop));
       }
-      return new TranslateResult(
+      return new NodeTransResult(
           lop.getTableName() != null ? lop.getTableName() : rop.getTableName(),
           "(" + lop.getRet() + " " + op + " " + rop.getRet() + ")");
 
@@ -593,9 +612,10 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
       if (vr.isConst()) {
         switch (vr.getValueType()) {
           case LONG:
-            return new TranslateResult(null, "" + ((Long) vr.getValue()));
+            return new NodeTransResult(null, "" + ((Long) vr.getValue()));
           case STRING:
-            return new TranslateResult(null, "'" + ((String) vr.getValue()) + "'");
+            return new NodeTransResult(null,
+                "'" + ((String) vr.getValue()) + "'");
           // TODO: for other types
           default:
             throw new IOException("Type = " + vr.getValueType().toString());
@@ -603,10 +623,22 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
       } else {
         PropertyRealParas realParas = vr.getRealParas();
         Property p = realParas.getProperty();
+        // TODO: hard code now, abstract later
+        if (p.getPropertyName() == "accessCount") {
+          String virTab = "VIR_ACC_CNT_TAB_" + realParas.instId();
+          tempTableNames.add(virTab);
+          sqlStatements.add("DROP TABLE IF EXISTS " + virTab);
+          sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
+          dynamicParameters.put(virTab,
+              Arrays.asList(realParas.getValues(), virTab));
+          return new NodeTransResult(virTab,
+              realParas.formatParameters());
+        }
 
-        return new TranslateResult(p.getTableName(), realParas.formatParameters());
+        return new NodeTransResult(p.getTableName(),
+            realParas.formatParameters());
       }
     }
-    //return new TranslateResult(tableName, "");
+    //return new NodeTransResult(tableName, "");
   }
 }

@@ -27,6 +27,11 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.hadoop.ssm.rule.parser.SSMRuleLexer;
 import org.apache.hadoop.ssm.rule.parser.SSMRuleParser;
 import org.apache.hadoop.ssm.rule.parser.SSMRuleVisitTranslator;
+import org.apache.hadoop.ssm.rule.parser.TranslateResult;
+import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.sql.ExecutionContext;
+import org.apache.hadoop.ssm.sql.RuleQueryExecutor;
+import org.apache.hadoop.ssm.sql.TestDBUtil;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -36,9 +41,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by root on 3/21/17.
- */
 public class TestSSMRuleParser {
   List<RecognitionException> parseErrors = new ArrayList<RecognitionException>();
 
@@ -48,8 +50,7 @@ public class TestSSMRuleParser {
                             Object offendingSymbol,
                             int line, int charPositionInLine,
                             String msg,
-                            RecognitionException e)
-    {
+                            RecognitionException e) {
       List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
       Collections.reverse(stack);
       System.err.println("rule stack: "+stack);
@@ -59,15 +60,20 @@ public class TestSSMRuleParser {
   }
 
   @Test
-  public void parseRule() throws IOException {
-    String rule = "file with path matches \"/a/b*.dat\"  : "
+  public void parseRule() throws Exception {
+    String rule0 = "file with path matches \"/a/b*.dat\"  : "
         + "on FileCreate from \"2013-07-09 19:21:34\" to now + (7d + 4s ) | "
         + "isincache and accessCount(10m) > 10 and x == y and "
         + "x matches \"hello\" and \"/file/*.db\" matches file.path "
         + "and true or c > 10 and 100 > d or 10d > 20s | cachefile";
-    //String rule1 = "file with length > 1GB :  blocksize > 1 + 3 and accessCount(30s) > 3 and storage.free(\"SSD\") > 100 | cachefile";
-    String rule1 = "file with length > 3 : storage.free(\"SSD\") > 100 and not inCache | cachefile";
-    InputStream input = new ByteArrayInputStream(rule1.getBytes());
+    String rule1 = "file with length > 1GB :  "
+        + "blocksize > 1 + 3 and accessCount(30s) > 3 "
+        + "and storage.free(\"SSD\") > 100 | cachefile";
+    String rule2 = "file with length > 3 : "
+        + "storage.free(\"SSD\") > 100 and not inCache | cachefile";
+    String rule3 = "file : accessCount(10m) > 20 | cachefile";
+    String rule = rule3;
+    InputStream input = new ByteArrayInputStream(rule.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);
     SSMRuleLexer lexer = new SSMRuleLexer(antlrInput);
     CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -82,6 +88,22 @@ public class TestSSMRuleParser {
     visitor.visit(tree);
 
     System.out.println("\nQuery:");
-    System.out.println(visitor.generateSql());
+    TranslateResult result = visitor.generateSql();
+    int index = 1;
+    for (String sql : result.getSqlStatements()) {
+      System.out.println("" + index + ". " + sql);
+      index++;
+    }
+
+    ExecutionContext ctx = new ExecutionContext();
+    DBAdapter dbAdapter = new DBAdapter(TestDBUtil.getTestDBInstance());
+    RuleQueryExecutor  qe = new RuleQueryExecutor(ctx, result, dbAdapter);
+    List<String> paths = qe.executeFileRuleQuery();
+    index = 1;
+    System.out.println("\nFiles:");
+    for (String path : paths) {
+      System.out.println("" + index + ". " + path);
+      index++;
+    }
   }
 }

@@ -201,7 +201,8 @@ public class DBAdapter {
     }
   }
 
-  private Map<Integer, ErasureCodingPolicy> convertEcPoliciesTableItem(ResultSet resultSet) {
+  private Map<Integer, ErasureCodingPolicy> convertEcPoliciesTableItem(
+      ResultSet resultSet) {
     Map<Integer, ErasureCodingPolicy> ret = new HashMap<>();
     if (resultSet == null) {
       return ret;
@@ -303,6 +304,25 @@ public class DBAdapter {
     return s.executeUpdate(sqlUpdate);
   }
 
+  public void execute(String sql) throws SQLException {
+    Statement s = conn.createStatement();
+    s.executeUpdate(sql);
+  }
+
+  public List<String> executeFilesPathQuery(String sql) throws SQLException {
+    List<String> paths = new LinkedList<>();
+    ResultSet res = executeQuery(sql);
+    while (res.next()) {
+      paths.add(res.getString(1));
+    }
+    return paths;
+  }
+
   public synchronized void close() {
+  }
+
+  public List<HdfsFileStatus> executeFileRuleQuery() {
+    ResultSet resultSet = null;
+    return convertFilesTableItem(resultSet);
   }
 }

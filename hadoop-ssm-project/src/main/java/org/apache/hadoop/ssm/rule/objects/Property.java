@@ -25,7 +25,7 @@ import java.util.List;
  * Property of SSM object.
  */
 public class Property {
-
+  private String propertyName;
   private ValueType retType;
   private List<ValueType> paramsTypes;
 
@@ -34,8 +34,9 @@ public class Property {
   private String formatTemplate;
   private boolean isGlobal;
 
-  public Property(ValueType retType, List<ValueType> paramsTypes,
+  public Property(String propertyName, ValueType retType, List<ValueType> paramsTypes,
        String tableName, String tableItemName, boolean isGlobal) {
+    this.propertyName = propertyName;
     this.retType = retType;
     this.paramsTypes = paramsTypes;
     this.tableName = tableName;
@@ -44,15 +45,21 @@ public class Property {
   }
 
   // TODO: re-arch to couple paramsTypes and formatTemplate
-  public Property(ValueType retType, List<ValueType> paramsTypes,
-      String tableName, String tableItemName, boolean isGlobal,
+  public Property(String propertyName, ValueType retType,
+      List<ValueType> paramsTypes, String tableName,
+      String tableItemName, boolean isGlobal,
       String formatTemplate) {
+    this.propertyName = propertyName;
     this.retType = retType;
     this.paramsTypes = paramsTypes;
     this.tableName = tableName;
     this.tableItemName = tableItemName;
     this.formatTemplate = formatTemplate;
     this.isGlobal = isGlobal;
+  }
+
+  public String getPropertyName() {
+    return propertyName;
   }
 
   public ValueType getValueType() {
@@ -112,6 +119,28 @@ public class Property {
     }
 
     return true;
+  }
+
+  public String instId(List<Object> values) {
+    if (getParamsTypes() == null) {
+      return propertyName;
+    }
+    String ret = propertyName;
+    assert(values.size() == getParamsTypes().size());
+    for (int i = 0; i < values.size(); i++) {
+      switch (getValueType()) {
+        case TIMEINTVAL:
+        case LONG:
+          ret += "_" + ((Long) values.get(i));
+          break;
+        case STRING:
+          ret += "_" + ((String) values.get(i)).replaceAll("[\t -\"']+", "_");
+          break;
+        default:
+           assert (false);  // TODO: throw exception
+      }
+    }
+    return ret;
   }
 
   public String formatParameters(List<Object> values) {
