@@ -27,7 +27,7 @@ Use Cases
 ### Optimizations when data becoming hot
 ![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm-docs/ssm-hot-cases.png)
 
-Without SSM, data will always be readed from HDD. With SSM, optimizaitons can be made through rules. As showned in the figure above, data can be moved to faster storage or cached in memory to achive better performance.
+Without SSM, data will always be readed from HDD (a.). With SSM, optimizaitons can be made through rules. As showned in the figure above, data can be moved to faster storage (b.) or cached in memory (c.) to achive better performance.
 
 ### Archive cold data
 Files are less likely to be read during the ending of lifecycle, so it’s better to move these cold files into lower performance storage to decrease the cost of data storage. The following rule shows the example of archiving data that has not been read over 3 times during the last 30 days.
@@ -84,12 +84,12 @@ SSM uses SQL database to maintain data internally. Core tables in SSM:
 ![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm-docs/ssm-core-tables.png)
 
 
-Take file accessCount metric for example to demonstrate how it works. As showed in the following chart:
+Take file accessCount metric for example to demonstrate how it works. As shown in the following chart:
 
 ![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm-docs/ssm-access-count-tables.png)
 
-1. SSM polls accessCount data from NN to get file access count info happened in the time interval (for example, 5s).
-2. Create a table to store the info and insert the table name into table access_count_table.
+1. SSM polls accessCount data from NN to get file access count info generated in the time interval (for example, 5s).
+2. Create a table to store the info and insert the table name into table access_count_tables.
 3. Then file access count of last time interval can be calculated by accumulating data in tables that their start time and end time falls in the interval.
 4. To control the total amount of data, second-level of accessCount tables will be aggregated into minute-level, hour-level, day-level, month-level and year-level. The longer the time from now, the larger the granularity for aggregation. More accurate data kept for near now than long ago.
 
