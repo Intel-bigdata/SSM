@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm.sql.tables;
 
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.utils.TimeGranularity;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,27 +37,27 @@ public class TestAccessCountTableManager {
       firstDayEnd, TimeGranularity.SECOND);
     manager.addSecondTable(accessCountTable);
 
-    Map<TimeGranularity, AccessCountTableList> map = manager.getTableLists();
-    AccessCountTableList second = map.get(TimeGranularity.SECOND);
+    Map<TimeGranularity, AccessCountTableDeque> map = manager.getTableDeques();
+    AccessCountTableDeque second = map.get(TimeGranularity.SECOND);
     Assert.assertTrue(second.size() == 1);
-    Assert.assertEquals(second.get(0), accessCountTable);
+    Assert.assertEquals(second.peek(), accessCountTable);
 
-    AccessCountTableList minute = map.get(TimeGranularity.MINUTE);
+    AccessCountTableDeque minute = map.get(TimeGranularity.MINUTE);
     AccessCountTable minuteTable = new AccessCountTable(firstDayEnd - 60 * 1000,
       firstDayEnd, TimeGranularity.MINUTE);
     Assert.assertTrue(minute.size() == 1);
-    Assert.assertEquals(minute.get(0), minuteTable);
+    Assert.assertEquals(minute.peek(), minuteTable);
 
-    AccessCountTableList hour = map.get(TimeGranularity.HOUR);
+    AccessCountTableDeque hour = map.get(TimeGranularity.HOUR);
     AccessCountTable hourTable = new AccessCountTable(firstDayEnd - 60 *60 * 1000,
       firstDayEnd, TimeGranularity.HOUR);
     Assert.assertTrue(hour.size() == 1);
-    Assert.assertEquals(hour.get(0), hourTable);
+    Assert.assertEquals(hour.peek(), hourTable);
 
-    AccessCountTableList day = map.get(TimeGranularity.DAY);
+    AccessCountTableDeque day = map.get(TimeGranularity.DAY);
     AccessCountTable dayTable = new AccessCountTable(firstDayEnd - 24 * 60 *60 * 1000,
       firstDayEnd, TimeGranularity.DAY);
     Assert.assertTrue(day.size() == 1);
-    Assert.assertEquals(day.get(0), dayTable);
+    Assert.assertEquals(day.peek(), dayTable);
   }
 }

@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm.sql.tables;
 
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.utils.TimeGranularity;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -30,78 +31,87 @@ public class TestAddTableOpListener {
   @Test
   public void testMinuteTableListener() {
     Long oneSec = 1000L;
-    AccessCountTableList minuteTableList = new AccessCountTableList();
+    TableEvictor tableEvictor = new CountEvictor(10);
+    AccessCountTableDeque minuteTableDeque = new AccessCountTableDeque(tableEvictor);
     TableAddOpListener minuteTableListener =
-      new TableAddOpListener.MinuteTableListener(minuteTableList, aggregator);
-    AccessCountTableList secondTableList = new AccessCountTableList(minuteTableListener);
+        new TableAddOpListener.MinuteTableListener(minuteTableDeque, aggregator);
+    AccessCountTableDeque secondTableDeque = new AccessCountTableDeque(
+        tableEvictor, minuteTableListener);
 
     AccessCountTable table1 = new AccessCountTable(45 * oneSec, 50 * oneSec, TimeGranularity.SECOND);
     AccessCountTable table2 = new AccessCountTable(50 * oneSec, 55 * oneSec, TimeGranularity.SECOND);
     AccessCountTable table3 = new AccessCountTable(55 * oneSec, 60 * oneSec, TimeGranularity.SECOND);
 
-    secondTableList.add(table1);
-    Assert.assertTrue(minuteTableList.size() == 1);
+    secondTableDeque.add(table1);
+    Assert.assertTrue(minuteTableDeque.size() == 1);
     AccessCountTable expected1 = new AccessCountTable(-60 * oneSec, 0L, TimeGranularity.MINUTE);
-    Assert.assertEquals(minuteTableList.get(0), expected1);
+    Assert.assertEquals(minuteTableDeque.peek(), expected1);
 
-    secondTableList.add(table2);
-    Assert.assertTrue(minuteTableList.size() == 1);
+    secondTableDeque.add(table2);
+    Assert.assertTrue(minuteTableDeque.size() == 1);
 
-    secondTableList.add(table3);
-    Assert.assertTrue(minuteTableList.size() == 2);
+    secondTableDeque.add(table3);
+    Assert.assertTrue(minuteTableDeque.size() == 2);
     AccessCountTable expected2 = new AccessCountTable(0L, 60 * oneSec, TimeGranularity.MINUTE);
-    Assert.assertEquals(minuteTableList.get(1), expected2);
+    minuteTableDeque.poll();
+    Assert.assertEquals(minuteTableDeque.poll(), expected2);
   }
 
   @Test
   public void testHourTableListener() {
     Long oneMin = 60 * 1000L;
-    AccessCountTableList hourTableList = new AccessCountTableList();
+    TableEvictor tableEvictor = new CountEvictor(10);
+    AccessCountTableDeque hourTableDeque = new AccessCountTableDeque(tableEvictor);
     TableAddOpListener hourTableListener =
-      new TableAddOpListener.HourTableListener(hourTableList, aggregator);
-    AccessCountTableList minuteTableList = new AccessCountTableList(hourTableListener);
+        new TableAddOpListener.HourTableListener(hourTableDeque, aggregator);
+    AccessCountTableDeque minuteTableDeque = new AccessCountTableDeque(
+        tableEvictor, hourTableListener);
 
     AccessCountTable table1 = new AccessCountTable(57 * oneMin, 58 * oneMin, TimeGranularity.MINUTE);
     AccessCountTable table2 = new AccessCountTable(58 * oneMin, 59 * oneMin, TimeGranularity.MINUTE);
     AccessCountTable table3 = new AccessCountTable(59 * oneMin, 60 * oneMin, TimeGranularity.MINUTE);
 
-    minuteTableList.add(table1);
-    Assert.assertTrue(hourTableList.size() == 1);
+    minuteTableDeque.add(table1);
+    Assert.assertTrue(hourTableDeque.size() == 1);
     AccessCountTable expected1 = new AccessCountTable(-60 * oneMin, 0L, TimeGranularity.HOUR);
-    Assert.assertEquals(hourTableList.get(0), expected1);
+    Assert.assertEquals(hourTableDeque.peek(), expected1);
 
-    minuteTableList.add(table2);
-    Assert.assertTrue(hourTableList.size() == 1);
+    minuteTableDeque.add(table2);
+    Assert.assertTrue(hourTableDeque.size() == 1);
 
-    minuteTableList.add(table3);
-    Assert.assertTrue(hourTableList.size() == 2);
+    minuteTableDeque.add(table3);
+    Assert.assertTrue(hourTableDeque.size() == 2);
     AccessCountTable expected2 = new AccessCountTable(0L, 60 * oneMin, TimeGranularity.HOUR);
-    Assert.assertEquals(hourTableList.get(1), expected2);
+    hourTableDeque.poll();
+    Assert.assertEquals(hourTableDeque.poll(), expected2);
   }
 
   @Test
   public void testDayTableListener() {
     Long oneHour = 60 * 60 * 1000L;
-    AccessCountTableList dayTableList = new AccessCountTableList();
+    TableEvictor tableEvictor = new CountEvictor(10);
+    AccessCountTableDeque dayTableDeque = new AccessCountTableDeque(tableEvictor);
     TableAddOpListener dayTableListener =
-      new TableAddOpListener.DayTableListener(dayTableList, aggregator);
-    AccessCountTableList hourTableList = new AccessCountTableList(dayTableListener);
+        new TableAddOpListener.DayTableListener(dayTableDeque, aggregator);
+    AccessCountTableDeque hourTableDeque = new AccessCountTableDeque(
+        tableEvictor, dayTableListener);
 
     AccessCountTable table1 = new AccessCountTable(21 * oneHour, 22 * oneHour, TimeGranularity.HOUR);
     AccessCountTable table2 = new AccessCountTable(22 * oneHour, 23 * oneHour, TimeGranularity.HOUR);
     AccessCountTable table3 = new AccessCountTable(23 * oneHour, 24 * oneHour, TimeGranularity.HOUR);
 
-    hourTableList.add(table1);
-    Assert.assertTrue(dayTableList.size() == 1);
+    hourTableDeque.add(table1);
+    Assert.assertTrue(dayTableDeque.size() == 1);
     AccessCountTable lastDay = new AccessCountTable(-24 * oneHour, 0L, TimeGranularity.DAY);
-    Assert.assertEquals(dayTableList.get(0), lastDay);
+    Assert.assertEquals(dayTableDeque.peek(), lastDay);
 
-    hourTableList.add(table2);
-    Assert.assertTrue(dayTableList.size() == 1);
+    hourTableDeque.add(table2);
+    Assert.assertTrue(dayTableDeque.size() == 1);
 
-    hourTableList.add(table3);
-    Assert.assertTrue(dayTableList.size() == 2);
+    hourTableDeque.add(table3);
+    Assert.assertTrue(dayTableDeque.size() == 2);
     AccessCountTable today = new AccessCountTable(0L, 24 * oneHour, TimeGranularity.DAY);
-    Assert.assertEquals(dayTableList.get(1), today);
+    dayTableDeque.poll();
+    Assert.assertEquals(dayTableDeque.poll(), today);
   }
 }

@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm.sql.tables;
 
 import com.google.common.collect.Lists;
+import org.apache.hadoop.ssm.utils.TimeGranularity;
 import org.dbunit.Assertion;
 import org.dbunit.IDatabaseTester;
 import org.dbunit.JdbcDatabaseTester;

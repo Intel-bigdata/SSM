@@ -20,37 +20,54 @@ package org.apache.hadoop.ssm.sql.tables;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.utils.TimeGranularity;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class AccessCountTableManager {
+  private static final int NUM_DAY_TABLES_TO_KEEP = 30;
+  private static final int NUM_HOUR_TABLES_TO_KEEP = 30;
+  private static final int NUM_MINUTE_TABLES_TO_KEEP = 30;
+  private static final int NUM_SECOND_TABLES_TO_KEEP = 30;
+
   private DBAdapter dbAdapter;
-  private Map<TimeGranularity, AccessCountTableList> tableLists;
-  private AccessCountTableList secondTableList;
+  private Map<TimeGranularity, AccessCountTableDeque> tableDeques;
+  private AccessCountTableDeque secondTableDeque;
 
   public AccessCountTableManager(DBAdapter adapter) {
     this.dbAdapter = adapter;
+    this.tableDeques = new HashMap<>();
+    this.initTables();
+  }
+
+  private void initTables(){
     AccessCountTableAggregator aggregator = new AccessCountTableAggregator(dbAdapter);
-    AccessCountTableList dayTableList = new AccessCountTableList();
+    AccessCountTableDeque dayTableDeque = new AccessCountTableDeque(
+        new CountEvictor(NUM_DAY_TABLES_TO_KEEP));
     TableAddOpListener dayTableListener =
-      new TableAddOpListener.DayTableListener(dayTableList, aggregator);
-    AccessCountTableList hourTableList = new AccessCountTableList(dayTableListener);
+        new TableAddOpListener.DayTableListener(dayTableDeque, aggregator);
+
+    AccessCountTableDeque hourTableDeque = new AccessCountTableDeque(
+        new CountEvictor(NUM_HOUR_TABLES_TO_KEEP), dayTableListener);
     TableAddOpListener hourTableListener =
-      new TableAddOpListener.HourTableListener(hourTableList, aggregator);
-    AccessCountTableList minuteTableList = new AccessCountTableList(hourTableListener);
+        new TableAddOpListener.HourTableListener(hourTableDeque, aggregator);
+
+    AccessCountTableDeque minuteTableDeque = new AccessCountTableDeque(
+      new CountEvictor(NUM_MINUTE_TABLES_TO_KEEP), hourTableListener);
     TableAddOpListener minuteTableListener =
-      new TableAddOpListener.MinuteTableListener(minuteTableList, aggregator);
-    this.secondTableList = new AccessCountTableList(minuteTableListener);
-    this.tableLists = new HashMap<>();
-    this.tableLists.put(TimeGranularity.SECOND, this.secondTableList);
-    this.tableLists.put(TimeGranularity.MINUTE, minuteTableList);
-    this.tableLists.put(TimeGranularity.HOUR, hourTableList);
-    this.tableLists.put(TimeGranularity.DAY, dayTableList);
+      new TableAddOpListener.MinuteTableListener(minuteTableDeque, aggregator);
+
+    this.secondTableDeque = new AccessCountTableDeque(
+      new CountEvictor(NUM_SECOND_TABLES_TO_KEEP), minuteTableListener);
+    this.tableDeques.put(TimeGranularity.SECOND, this.secondTableDeque);
+    this.tableDeques.put(TimeGranularity.MINUTE, minuteTableDeque);
+    this.tableDeques.put(TimeGranularity.HOUR, hourTableDeque);
+    this.tableDeques.put(TimeGranularity.DAY, dayTableDeque);
   }
 
   public void addSecondTable(AccessCountTable accessCountTable) {
-    this.secondTableList.add(accessCountTable);
+    this.secondTableDeque.add(accessCountTable);
   }
 
   public void addAccessCountInfo(FilesAccessInfo accessInfo) {
@@ -59,7 +76,7 @@ public class AccessCountTableManager {
   }
 
   @VisibleForTesting
-  protected Map<TimeGranularity, AccessCountTableList> getTableLists() {
-    return this.tableLists;
+  protected Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
+    return this.tableDeques;
   }
 }

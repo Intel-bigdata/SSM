@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-package org.apache.hadoop.ssm.sql.tables;
+package org.apache.hadoop.ssm.utils;
 
 public enum TimeGranularity {
   SECOND,
