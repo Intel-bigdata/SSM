@@ -261,7 +261,7 @@ public class NameNodeRpcServer implements NamenodeProtocols {
   public FilesAccessInfo getFilesAccessInfo() throws IOException {
     FilesAccessInfo ret = new FilesAccessInfo();
     synchronized (accessCounter) {
-      ret.setAccessCounter(accessCounter);
+      ret.setAccessCountMap(accessCounter);
       ret.setStartTime(accessCounterStartTime);
       accessCounterStartTime = System.currentTimeMillis();
       ret.setEndTime(accessCounterStartTime);

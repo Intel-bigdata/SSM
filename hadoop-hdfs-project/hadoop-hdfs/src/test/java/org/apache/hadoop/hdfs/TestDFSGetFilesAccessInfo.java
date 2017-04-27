@@ -50,7 +50,7 @@ public class TestDFSGetFilesAccessInfo {
     }
     try {
       FilesAccessInfo info = fs.dfs.getFilesAccessInfo();
-      Map<String, Integer> accessMap = info.getFilesAccessedHashMap();
+      Map<String, Integer> accessMap = info.getAccessCountMap();
       assertEquals(numOpen, accessMap.get(filePath).intValue());
     } finally {
       cluster.shutdown();
@@ -82,7 +82,7 @@ public class TestDFSGetFilesAccessInfo {
 
     try {
       FilesAccessInfo info = fs.dfs.getFilesAccessInfo();
-      Map<String, Integer> accessMap = info.getFilesAccessedHashMap();
+      Map<String, Integer> accessMap = info.getAccessCountMap();
       for (int i = 0; i < files.length; i++) {
         Integer acc = accessMap.get(files[i]);
         assertEquals(numAccess[i], acc == null ? 0 : acc.intValue());
@@ -120,7 +120,7 @@ public class TestDFSGetFilesAccessInfo {
     try {
       info = fs.dfs.getFilesAccessInfo();
       long startTime = info.getEndTime();
-      accessMap = info.getFilesAccessedHashMap();
+      accessMap = info.getAccessCountMap();
       for (int i = 0; i < files.length; i++) {
         Integer acc = accessMap.get(files[i]);
         assertEquals(numAccess[i], acc == null ? 0 : acc.intValue());
@@ -142,7 +142,7 @@ public class TestDFSGetFilesAccessInfo {
       info = fs.dfs.getFilesAccessInfo();
       long endTime = info.getEndTime();
       assertTrue(endTime - startTime > 5000);
-      accessMap = info.getFilesAccessedHashMap();
+      accessMap = info.getAccessCountMap();
       for (int i = 0; i < files.length; i++) {
         Integer acc = accessMap.get(files[i]);
         assertEquals(numAccess[i], acc == null ? 0 : acc.intValue());

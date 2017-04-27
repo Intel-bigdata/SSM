@@ -17,8 +17,6 @@
  */
 package org.apache.hadoop.hdfs.protocol;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,21 +24,18 @@ import java.util.Map;
 public class FilesAccessInfo {
   private long startTime;  // NN local time for statistic
   private long endTime;
-  private List<String> filesAccessed;
-  private List<Integer> filesAccessCounts;
+
+  private Map<String, Integer> accessCountMap;
   private List<NNEvent> nnEvents;  // Keep it for now
 
-  public FilesAccessInfo() {
+  public FilesAccessInfo() {}
+
+  public long getStartTime() {
+    return startTime;
   }
 
-  public void setAccessCounter(Map<String, Integer> countsMap) {
-    this.filesAccessed = new ArrayList<>(countsMap.keySet());
-    this.filesAccessCounts = new ArrayList<>(countsMap.values());
-  }
-
-  public void setAccessCounter(List<String> files, List<Integer> counts) {
-    filesAccessed = files;
-    filesAccessCounts = counts;
+  public long getEndTime() {
+    return endTime;
   }
 
   public void setStartTime(long startTime) {
@@ -51,31 +46,12 @@ public class FilesAccessInfo {
     this.endTime = endTime;
   }
 
-  public long getStartTime() {
-    return startTime;
+  public Map<String, Integer> getAccessCountMap() {
+    return accessCountMap;
   }
 
-  public long getEndTime() {
-    return endTime;
-  }
-
-  public Map<String, Integer> getFilesAccessedHashMap() {
-    if (filesAccessed == null || filesAccessCounts == null) {
-      return null;
-    }
-    Map<String, Integer> ret = new HashMap<>();
-    for (int i = 0; i < filesAccessed.size(); i++) {
-      ret.put(filesAccessed.get(i), filesAccessCounts.get(i));
-    }
-    return ret;
-  }
-
-  public List<String> getFilesAccessed() {
-    return filesAccessed;
-  }
-
-  public List<Integer> getFilesAccessCounts() {
-    return filesAccessCounts;
+  public void setAccessCountMap(Map<String, Integer> accessCountMap) {
+    this.accessCountMap = accessCountMap;
   }
 
   public void setNnEvents(List<NNEvent> events) {

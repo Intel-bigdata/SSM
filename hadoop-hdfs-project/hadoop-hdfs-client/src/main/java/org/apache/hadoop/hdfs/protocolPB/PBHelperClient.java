@@ -811,16 +811,16 @@ public class PBHelperClient {
   // FilesAccessInfoProto
   public static FilesAccessInfo convert(FilesAccessInfoProto proto) {
     FilesAccessInfo ret = new FilesAccessInfo();
-    ret.setAccessCounter(proto.getFilesAccessedList(),
-            proto.getFilesAccessCountsList());
+    Map<String, Integer> accessCountMap = new HashMap<>();
+    for (HdfsProtos.StringIntMapProto mapProto : proto.getAccessCountMapList()) {
+      accessCountMap.put(mapProto.getKey(), mapProto.getValue());
+    }
+    ret.setAccessCountMap(accessCountMap);
     ret.setStartTime(proto.getStartTime());
     ret.setEndTime(proto.getEndTime());
     List<NNEventProto> eventsProto = proto.getNnEventsList();
-    List<NNEvent> events;
-    if (eventsProto == null) {
-      events = null;
-    } else {
-      events = new ArrayList<>(eventsProto.size());
+    List<NNEvent> events = new ArrayList<>();
+    if (eventsProto != null) {
       for (int i = 0; i < eventsProto.size(); i++) {
         events.add(i, convert(eventsProto.get(i)));
       }
@@ -834,16 +834,19 @@ public class PBHelperClient {
       return null;
     }
 
+    List<HdfsProtos.StringIntMapProto> protos =
+        new ArrayList<>(info.getAccessCountMap().size());
+    for (Map.Entry<String, Integer> entry : info.getAccessCountMap().entrySet()) {
+      HdfsProtos.StringIntMapProto proto = HdfsProtos.StringIntMapProto
+          .newBuilder().setKey(entry.getKey()).setValue(entry.getValue()).build();
+      protos.add(proto);
+    }
     FilesAccessInfoProto.Builder builder = FilesAccessInfoProto.newBuilder();
     builder.setStartTime(info.getStartTime()).setEndTime(info.getEndTime());
-    builder.addAllFilesAccessed(info.getFilesAccessed());
-    builder.addAllFilesAccessCounts(info.getFilesAccessCounts());
+    builder.addAllAccessCountMap(protos);
     List<NNEvent> events = info.getNnEvents();
-    List<NNEventProto> eventsProto;
-    if (events == null) {
-      eventsProto = null;
-    } else {
-      eventsProto = new ArrayList<>(events.size());
+    List<NNEventProto> eventsProto = new ArrayList<>();
+    if (events != null) {
       for (int i = 0; i < events.size(); i++) {
         eventsProto.add(i, convert(events.get(i)));
       }
