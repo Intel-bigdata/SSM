@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.ssm.rule.objects;
 
-import junit.framework.Assert;
 import org.apache.hadoop.ssm.rule.parser.ValueType;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -29,23 +29,23 @@ import java.util.Arrays;
 public class TestProperty {
   @Test
   public void testEqual() {
-    Property p1 = new Property(ValueType.LONG,
+    Property p1 = new Property("test", ValueType.LONG,
         Arrays.asList(ValueType.TIMEINTVAL),
         "access_count_table", "", false);
 
-    Property p2 = new Property(ValueType.LONG,
+    Property p2 = new Property("test", ValueType.LONG,
         Arrays.asList(ValueType.LONG),
         "access_count_table", "", false);
 
-    Property p3 = new Property(ValueType.LONG,
+    Property p3 = new Property("test", ValueType.LONG,
         Arrays.asList(ValueType.TIMEINTVAL),
         "access_count_table", "", false);
 
-    Property p4 = new Property(ValueType.TIMEINTVAL,
+    Property p4 = new Property("test", ValueType.TIMEINTVAL,
         Arrays.asList(ValueType.TIMEINTVAL),
         "access_count_table", "", false);
 
-    Property p5 = new Property(ValueType.LONG,
+    Property p5 = new Property("test", ValueType.LONG,
         null,
         "access_count_table", "", false);
 

@@ -22,6 +22,8 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.ssm.protocol.SSMClient;
+import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -44,8 +46,8 @@ public class TestSSMClient {
     // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
     final DistributedFileSystem dfs = cluster.getFileSystem();
 
-    InetSocketAddress addr = new InetSocketAddress("localhost"
-        , SSMConfigureKeys.DFS_SSM_RPC_PROT_DEFAULT);
+    InetSocketAddress addr = new InetSocketAddress("localhost",
+        SSMConfigureKeys.DFS_SSM_RPC_PROT_DEFAULT);
 
     final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
@@ -54,8 +56,16 @@ public class TestSSMClient {
     // rpcServer start in SSMServer
     SSMServer.createSSM(null, conf);
     SSMClient ssmClient = new SSMClient(conf, addr);
+
+    //test getServiceStatus
     String state = ssmClient.getServiceStatus().getState().name();
     assertTrue("SAFEMODE".equals(state));
+
+    //test getRuleInfo
+    RuleInfo ruleInfo = ssmClient.getRuleInfo(5);
+    assertEquals(ruleInfo.getState(), RuleState.ACTIVE);
+
+    //test single SSM
     try {
       conf.set("dfs.ssm.rpcserver", "localhost:7043");
       SSMServer.createSSM(null, conf);

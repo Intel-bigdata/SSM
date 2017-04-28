@@ -26,10 +26,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Operations supported for upper functions.
@@ -144,6 +146,25 @@ public class DBAdapter {
       }
     }
     return ret.size() > 0 ? ret.get(0) : null;
+  }
+
+  public Map<String, Long> getFileIDs(Collection<String> paths) {
+    Map<String, Long> pathToId = new HashMap<>();
+    String in = paths.stream().map(s -> "'" + s +"'")
+        .collect(Collectors.joining(", "));
+    String sql = "SELECT fid, path FROM files WHERE path IN (" + in + ")";
+    ResultSet result;
+    try {
+      result = executeQuery(sql);
+      while (result.next()) {
+        pathToId.put(result.getString("path"),
+            result.getLong("fid"));
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return pathToId;
+    }
+    return pathToId;
   }
 
   public HdfsFileStatus getFile(String path) {
@@ -374,7 +395,6 @@ public class DBAdapter {
     return ret.size() == 0 ? null : ret;
   }
 
-
   public ResultSet executeQuery(String sqlQuery) throws SQLException {
     Statement s = conn.createStatement();
     ResultSet result = s.executeQuery(sqlQuery);
@@ -387,6 +407,25 @@ public class DBAdapter {
     return result;
   }
 
+  public void execute(String sql) throws SQLException {
+    Statement s = conn.createStatement();
+    s.executeUpdate(sql);
+  }
+
+  public List<String> executeFilesPathQuery(String sql) throws SQLException {
+    List<String> paths = new LinkedList<>();
+    ResultSet res = executeQuery(sql);
+    while (res.next()) {
+      paths.add(res.getString(1));
+    }
+    return paths;
+  }
+
   public synchronized void close() {
+  }
+
+  public List<HdfsFileStatus> executeFileRuleQuery() {
+    ResultSet resultSet = null;
+    return convertFilesTableItem(resultSet);
   }
 }

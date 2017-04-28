@@ -20,46 +20,117 @@ package org.apache.hadoop.ssm.sql.tables;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.utils.Constants;
+import org.apache.hadoop.ssm.utils.TimeGranularity;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AccessCountTableManager {
+  private static final int NUM_DAY_TABLES_TO_KEEP = 30;
+  private static final int NUM_HOUR_TABLES_TO_KEEP = 30;
+  private static final int NUM_MINUTE_TABLES_TO_KEEP = 30;
+  private static final int NUM_SECOND_TABLES_TO_KEEP = 30;
+
   private DBAdapter dbAdapter;
-  private Map<TimeGranularity, AccessCountTableList> tableLists;
-  private AccessCountTableList secondTableList;
+  private Map<TimeGranularity, AccessCountTableDeque> tableDeques;
+  private AccessCountTableDeque secondTableDeque;
 
   public AccessCountTableManager(DBAdapter adapter) {
     this.dbAdapter = adapter;
-    AccessCountTableAggregator aggregator = new AccessCountTableAggregator(dbAdapter);
-    AccessCountTableList dayTableList = new AccessCountTableList();
-    TableAddOpListener dayTableListener =
-      new TableAddOpListener.DayTableListener(dayTableList, aggregator);
-    AccessCountTableList hourTableList = new AccessCountTableList(dayTableListener);
-    TableAddOpListener hourTableListener =
-      new TableAddOpListener.HourTableListener(hourTableList, aggregator);
-    AccessCountTableList minuteTableList = new AccessCountTableList(hourTableListener);
-    TableAddOpListener minuteTableListener =
-      new TableAddOpListener.MinuteTableListener(minuteTableList, aggregator);
-    this.secondTableList = new AccessCountTableList(minuteTableListener);
-    this.tableLists = new HashMap<>();
-    this.tableLists.put(TimeGranularity.SECOND, this.secondTableList);
-    this.tableLists.put(TimeGranularity.MINUTE, minuteTableList);
-    this.tableLists.put(TimeGranularity.HOUR, hourTableList);
-    this.tableLists.put(TimeGranularity.DAY, dayTableList);
+    this.tableDeques = new HashMap<>();
+    this.initTables();
   }
 
-  public void addSecondTable(AccessCountTable accessCountTable) {
-    this.secondTableList.add(accessCountTable);
+  private void initTables(){
+    AccessCountTableAggregator aggregator = new AccessCountTableAggregator(dbAdapter);
+    AccessCountTableDeque dayTableDeque = new AccessCountTableDeque(
+        new CountEvictor(NUM_DAY_TABLES_TO_KEEP));
+    TableAddOpListener dayTableListener =
+        new TableAddOpListener.DayTableListener(dayTableDeque, aggregator);
+
+    AccessCountTableDeque hourTableDeque = new AccessCountTableDeque(
+        new CountEvictor(NUM_HOUR_TABLES_TO_KEEP), dayTableListener);
+    TableAddOpListener hourTableListener =
+        new TableAddOpListener.HourTableListener(hourTableDeque, aggregator);
+
+    AccessCountTableDeque minuteTableDeque = new AccessCountTableDeque(
+      new CountEvictor(NUM_MINUTE_TABLES_TO_KEEP), hourTableListener);
+    TableAddOpListener minuteTableListener =
+      new TableAddOpListener.MinuteTableListener(minuteTableDeque, aggregator);
+
+    this.secondTableDeque = new AccessCountTableDeque(
+      new CountEvictor(NUM_SECOND_TABLES_TO_KEEP), minuteTableListener);
+    this.tableDeques.put(TimeGranularity.SECOND, this.secondTableDeque);
+    this.tableDeques.put(TimeGranularity.MINUTE, minuteTableDeque);
+    this.tableDeques.put(TimeGranularity.HOUR, hourTableDeque);
+    this.tableDeques.put(TimeGranularity.DAY, dayTableDeque);
+  }
+
+  public void addTable(AccessCountTable accessCountTable) {
+    this.secondTableDeque.add(accessCountTable);
   }
 
   public void addAccessCountInfo(FilesAccessInfo accessInfo) {
-    AccessCountTable newTable = new AccessCountTable(accessInfo.getStartTime(),
-        accessInfo.getStartTime(), TimeGranularity.SECOND);
+    long start = accessInfo.getStartTime();
+    long end = accessInfo.getEndTime();
+    long length = end - start;
+    Map<String, Long> pathToFileID = dbAdapter.getFileIDs(
+        accessInfo.getAccessCountMap().keySet());
+    // Todo: span across multiple minutes?
+    if (spanAcrossTwoMinutes(start, end)) {
+      long spanPoint = end - end % Constants.ONE_MINUTE_IN_MILLIS;
+      FilesAccessInfo first = new FilesAccessInfo(start, spanPoint);
+      FilesAccessInfo second = new FilesAccessInfo(spanPoint, end);
+      Map<String, Integer> firstAccessMap = new HashMap<>();
+      Map<String, Integer> secondAccessMap = new HashMap<>();
+      for(Map.Entry<String, Integer> entry : accessInfo.getAccessCountMap().entrySet()) {
+        Long firstValue = entry.getValue() * (spanPoint - start) / length;
+        firstAccessMap.put(entry.getKey(), firstValue.intValue());
+        secondAccessMap.put(entry.getKey(), entry.getValue() - firstValue.intValue());
+      }
+      first.setAccessCountMap(firstAccessMap);
+      second.setAccessCountMap(secondAccessMap);
+      this.addAccessCountTable(first, pathToFileID);
+      this.addAccessCountTable(second, pathToFileID);
+    } else {
+      this.addAccessCountTable(accessInfo, pathToFileID);
+    }
+  }
+
+  private void addAccessCountTable(FilesAccessInfo info, Map<String, Long> pathToFileID) {
+    AccessCountTable accessCountTable =
+        new AccessCountTable(info.getStartTime(), info.getEndTime());
+    String createTable = AccessCountTable.createTableSQL(accessCountTable.getTableName());
+    String values = info.getAccessCountMap().entrySet().stream().map(entry ->
+        "(" + pathToFileID.get(entry.getKey()) + ", " + entry.getValue() + ")")
+        .collect(Collectors.joining(","));
+
+    StringBuilder builder = new StringBuilder(createTable + ";");
+    builder.append("INSERT INTO ").append(accessCountTable.getTableName()).append("(")
+        .append(AccessCountTable.FILE_FIELD).append(", ")
+        .append(AccessCountTable.ACCESSCOUNT_FIELD).append(") VALUES ").append(values);
+    // Todo: exception
+    try {
+      this.dbAdapter.execute(builder.toString());
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
   @VisibleForTesting
-  protected Map<TimeGranularity, AccessCountTableList> getTableLists() {
-    return this.tableLists;
+  protected Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
+    return this.tableDeques;
+  }
+
+  private boolean spanAcrossTwoMinutes(long first, long second) {
+    return first / Constants.ONE_MINUTE_IN_MILLIS !=
+        second / Constants.ONE_MINUTE_IN_MILLIS;
+  }
+
+  private String insertAccessCountValuesSQL() {
+    return "";
   }
 }

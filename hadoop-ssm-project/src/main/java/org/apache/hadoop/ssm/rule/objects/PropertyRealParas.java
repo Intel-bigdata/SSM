@@ -72,4 +72,8 @@ public class PropertyRealParas {
   public String formatParameters() {
     return property.formatParameters(values);
   }
+
+  public String instId() {
+    return property.instId(values);
+  }
 }

@@ -17,36 +17,47 @@
  */
 package org.apache.hadoop.ssm.sql.tables;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AccessCountTableList extends ArrayList<AccessCountTable> {
+/**
+ * Use deque to accelerate remove operation.
+ */
+public class AccessCountTableDeque extends ArrayDeque<AccessCountTable> {
   private TableAddOpListener listener;
+  private TableEvictor tableEvictor;
 
-  public AccessCountTableList() {
-    this(null);
+  public AccessCountTableDeque(TableEvictor tableEvictor) {
+    this(tableEvictor, null);
   }
 
-  public AccessCountTableList(TableAddOpListener listener) {
+  public AccessCountTableDeque(TableEvictor tableEvictor, TableAddOpListener listener) {
     super();
     this.listener = listener;
+    this.tableEvictor = tableEvictor;
   }
 
   public boolean add(AccessCountTable table) {
+    if (this.peek() != null) {
+      assert table.getEndTime() > this.peekLast().getEndTime();
+    }
+
     super.add(table);
     if (this.listener != null) {
       this.listener.tableAdded(this, table);
     }
+    tableEvictor.evictTables(this, this.size());
     return true;
   }
 
   public List<AccessCountTable> getTables(Long start, Long end) {
     List<AccessCountTable> results = new ArrayList<>();
-    this.forEach(table -> {
+    for (AccessCountTable table : this) {
       if (table.getStartTime() >= start && table.getEndTime() <= end) {
         results.add(table);
       }
-    });
+    }
     return results;
   }
 }

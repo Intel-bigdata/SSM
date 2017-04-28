@@ -29,7 +29,7 @@ public class TableMetaData {
 
   static {
     mapJoinableKeys.clear();
-    mapJoinableKeys.put("files-access_count_tables",
+    mapJoinableKeys.put("files-VIR_ACC_CNT_TAB",
         new String[] {"fid", "fid"});
     mapJoinableKeys.put("files-cached_files",
         new String[] {"fid", "fid"});
@@ -51,17 +51,24 @@ public class TableMetaData {
   }
 
   public static String[] getJoinableKey(String tableA, String tableB) {
-    String key = tableA + "-" + tableB;
-    if (mapJoinableKeys.containsKey(key)) {
-      return mapJoinableKeys.get(key).clone();
+    String keyAB = tableA + "-" + tableB;
+    if (mapJoinableKeys.containsKey(keyAB)) {
+      return mapJoinableKeys.get(keyAB).clone();
     }
 
-    key = tableB + "-" + tableA;
-    if (mapJoinableKeys.containsKey(key)) {
-      String[] result = mapJoinableKeys.get(key);
+    String keyBA = tableB + "-" + tableA;
+    if (mapJoinableKeys.containsKey(keyBA)) {
+      String[] result = mapJoinableKeys.get(keyBA);
       String[] ret = new String[] {result[1], result[0]};
       return ret;
     }
+
+    for (String key : mapJoinableKeys.keySet()) {
+      if (keyAB.startsWith(key)) {
+        return mapJoinableKeys.get(key).clone();
+      }
+    }
+
     return null;
   }
 

@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.ssm.rule.objects;
 
-import junit.framework.Assert;
 import org.apache.hadoop.ssm.rule.parser.ValueType;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -31,7 +31,7 @@ public class TestPropertyRealParas {
 
   @Test
   public void testEqual() {
-    Property p = new Property(ValueType.LONG,
+    Property p = new Property("test", ValueType.LONG,
         Arrays.asList(ValueType.LONG),
         "test", "", false);
 

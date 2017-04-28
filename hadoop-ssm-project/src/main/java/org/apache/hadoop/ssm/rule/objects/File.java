@@ -33,13 +33,21 @@ public class File extends SSMObject {
 
   static {
     properties = new HashMap<>();
-    properties.put("path", new Property(ValueType.STRING, null, "files", "path", false));
+    properties.put("path",
+        new Property("path", ValueType.STRING, null, "files", "path", false));
     properties.put("accessCount",
-        new Property(ValueType.LONG, Arrays.asList(ValueType.TIMEINTVAL), "access_count_table", "", false,
-            "start_time >= NOW - $0 AND end_time <= NOW"));
-    properties.put("length", new Property(ValueType.LONG, null, "files", "length", false));
-    properties.put("blocksize", new Property(ValueType.LONG, null, "files", "block_size", false));
-    properties.put("inCache", new Property(ValueType.BOOLEAN, null, "cached_files", null, false));
+        new Property("accessCount", ValueType.LONG,
+            Arrays.asList(ValueType.TIMEINTVAL),
+            "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
+    properties.put("length",
+        new Property("length", ValueType.LONG,
+            null, "files", "length", false));
+    properties.put("blocksize",
+        new Property("blocksize", ValueType.LONG,
+            null, "files", "block_size", false));
+    properties.put("inCache",
+        new Property("inCache", ValueType.BOOLEAN,
+            null, "cached_files", null, false));
   }
 
   public File() {

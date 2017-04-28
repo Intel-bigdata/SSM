@@ -25,8 +25,6 @@ import java.util.List;
 
 public class AccessCountTableAggregator {
   private final DBAdapter adapter;
-  private final String FILE_FIELD = "file_name";
-  private final String ACCESSCOUNT_FIELD = "access_count";
 
   public AccessCountTableAggregator(DBAdapter adapter) {
     this.adapter = adapter;
@@ -45,8 +43,9 @@ public class AccessCountTableAggregator {
       List<AccessCountTable> tablesToAggregate) {
     StringBuilder statement = new StringBuilder();
     statement.append("CREATE TABLE " + destinationTable.getTableName() + " as ");
-    statement.append("SELECT " + FILE_FIELD + ", SUM(" + ACCESSCOUNT_FIELD + ") as "
-      + ACCESSCOUNT_FIELD + " FROM (");
+    statement.append("SELECT " + AccessCountTable.FILE_FIELD + ", SUM(" +
+        AccessCountTable.ACCESSCOUNT_FIELD + ") as " +
+        AccessCountTable.ACCESSCOUNT_FIELD + " FROM (");
     Iterator<AccessCountTable> tableIterator = tablesToAggregate.iterator();
     while (tableIterator.hasNext()) {
       AccessCountTable table = tableIterator.next();
@@ -56,7 +55,7 @@ public class AccessCountTableAggregator {
         statement.append("SELECT * FROM " + table.getTableName());
       }
     }
-    statement.append(") tmp GROUP BY " + FILE_FIELD);
+    statement.append(") tmp GROUP BY " + AccessCountTable.FILE_FIELD);
     return statement.toString();
   }
 }

@@ -17,37 +17,20 @@
  */
 package org.apache.hadoop.hdfs.protocol;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 
 public class FilesAccessInfo {
   private long startTime;  // NN local time for statistic
   private long endTime;
-  private List<String> filesAccessed;
-  private List<Integer> filesAccessCounts;
+
+  private Map<String, Integer> accessCountMap;
   private List<NNEvent> nnEvents;  // Keep it for now
 
-  public FilesAccessInfo() {
-  }
+  public FilesAccessInfo() {}
 
-  public void setAccessCounter(Map<String, Integer> countsMap) {
-    this.filesAccessed = new ArrayList<>(countsMap.keySet());
-    this.filesAccessCounts = new ArrayList<>(countsMap.values());
-  }
-
-  public void setAccessCounter(List<String> files, List<Integer> counts) {
-    filesAccessed = files;
-    filesAccessCounts = counts;
-  }
-
-  public void setStartTime(long startTime) {
+  public FilesAccessInfo(long startTime, long endTime) {
     this.startTime = startTime;
-  }
-
-  public void setEndTime(long endTime) {
     this.endTime = endTime;
   }
 
@@ -59,23 +42,20 @@ public class FilesAccessInfo {
     return endTime;
   }
 
-  public Map<String, Integer> getFilesAccessedHashMap() {
-    if (filesAccessed == null || filesAccessCounts == null) {
-      return null;
-    }
-    Map<String, Integer> ret = new HashMap<>();
-    for (int i = 0; i < filesAccessed.size(); i++) {
-      ret.put(filesAccessed.get(i), filesAccessCounts.get(i));
-    }
-    return ret;
+  public void setStartTime(long startTime) {
+    this.startTime = startTime;
   }
 
-  public List<String> getFilesAccessed() {
-    return filesAccessed;
+  public void setEndTime(long endTime) {
+    this.endTime = endTime;
   }
 
-  public List<Integer> getFilesAccessCounts() {
-    return filesAccessCounts;
+  public Map<String, Integer> getAccessCountMap() {
+    return accessCountMap;
+  }
+
+  public void setAccessCountMap(Map<String, Integer> accessCountMap) {
+    this.accessCountMap = accessCountMap;
   }
 
   public void setNnEvents(List<NNEvent> events) {

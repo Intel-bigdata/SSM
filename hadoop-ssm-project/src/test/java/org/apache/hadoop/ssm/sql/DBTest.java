@@ -15,14 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.utils;
+package org.apache.hadoop.ssm.sql;
 
-public class Constants {
-  public static final long ONE_SECOND_IN_MILLIS = 1000L;
+import org.dbunit.IDatabaseTester;
+import org.dbunit.JdbcDatabaseTester;
+import org.junit.Before;
 
-  public static final long ONE_MINUTE_IN_MILLIS = 60 * ONE_SECOND_IN_MILLIS;
+import java.io.File;
 
-  public static final long ONE_HOUR_IN_MILLIS = 60 * ONE_MINUTE_IN_MILLIS;
+public abstract class DBTest {
+  protected IDatabaseTester databaseTester;
+  private static final String DB_PATH = "/tmp/test.db";
 
-  public static final long ONE_DAY_IN_MILLIS = 24 * ONE_HOUR_IN_MILLIS;
+  @Before
+  public void setUp() throws ClassNotFoundException {
+    File db = new File(DB_PATH);
+    if (db.exists()) {
+      db.delete();
+    }
+    databaseTester = new JdbcDatabaseTester("org.sqlite.JDBC",
+      "jdbc:sqlite:" + DB_PATH);
+  }
 }

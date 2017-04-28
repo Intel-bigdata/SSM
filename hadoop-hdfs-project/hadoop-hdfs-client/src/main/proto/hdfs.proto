@@ -233,12 +233,16 @@ message NNEventProto {
   repeated string args = 2;
 }
 
+message StringIntMapProto {
+  required string key = 1;
+  required int32 value = 2;
+}
+
 message FilesAccessInfoProto {
   required int64 startTime = 1;
   required int64 endTime = 2;
-  repeated string filesAccessed = 3;
-  repeated int32 filesAccessCounts = 4;
-  repeated NNEventProto nnEvents = 5;
+  repeated StringIntMapProto accessCountMap = 3;
+  repeated NNEventProto nnEvents = 4;
 }
 
 message FilesInfoProto {

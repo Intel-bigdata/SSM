@@ -15,14 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.utils;
+package org.apache.hadoop.ssm.sql.tables;
 
-public class Constants {
-  public static final long ONE_SECOND_IN_MILLIS = 1000L;
-
-  public static final long ONE_MINUTE_IN_MILLIS = 60 * ONE_SECOND_IN_MILLIS;
-
-  public static final long ONE_HOUR_IN_MILLIS = 60 * ONE_MINUTE_IN_MILLIS;
-
-  public static final long ONE_DAY_IN_MILLIS = 24 * ONE_HOUR_IN_MILLIS;
+public interface TableEvictor {
+  void evictTables(AccessCountTableDeque tables, int size);
 }

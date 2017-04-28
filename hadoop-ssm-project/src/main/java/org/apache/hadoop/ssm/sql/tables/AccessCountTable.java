@@ -17,21 +17,30 @@
  */
 package org.apache.hadoop.ssm.sql.tables;
 
+import org.apache.hadoop.ssm.utils.TimeGranularity;
+
 public class AccessCountTable {
+  public final static String FILE_FIELD = "file_id";
+  public final static String ACCESSCOUNT_FIELD = "access_count";
+
   private String tableName;
   private Long startTime;
   private Long endTime;
   private TimeGranularity granularity;
+
+  public AccessCountTable(Long startTime, Long endTime) {
+    this(startTime, endTime, TimeGranularity.SECOND);
+  }
+
+  public AccessCountTable(Long startTime, Long endTime, TimeGranularity granularity) {
+    this("accessCount_" + startTime + "_" + endTime, startTime, endTime, granularity);
+  }
 
   public AccessCountTable(String name, Long startTime, Long endTime, TimeGranularity granularity) {
     this.startTime = startTime;
     this.endTime = endTime;
     this.granularity = granularity;
     this.tableName = name;
-  }
-
-  public AccessCountTable(Long startTime, Long endTime, TimeGranularity granularity) {
-    this("accessCount_" + startTime + "_" + endTime, startTime, endTime, granularity);
   }
 
   public String getTableName() {
@@ -71,5 +80,11 @@ public class AccessCountTable {
   public String toString() {
     return "AccessCountTable " + this.tableName + " start from " + this.startTime +
       " end with " + this.endTime + " and granularity is " + this.granularity;
+  }
+
+  public static String createTableSQL(String tableName) {
+    return "CREATE TABLE " + tableName + " (" +
+      FILE_FIELD  +" INTEGER NOT NULL, " +
+      ACCESSCOUNT_FIELD + " INTEGER NOT NULL)";
   }
 }

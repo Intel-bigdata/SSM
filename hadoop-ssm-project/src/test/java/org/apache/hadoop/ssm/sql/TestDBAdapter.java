@@ -1,73 +1,58 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hadoop.ssm.sql;
 
-import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
+import org.dbunit.database.IDatabaseConnection;
+import org.dbunit.dataset.IDataSet;
+import org.dbunit.dataset.xml.XmlDataSet;
 import org.junit.Assert;
 import org.junit.Test;
-import java.sql.Connection;
+
+import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class TestDBAdapter {
-  @Test
-  public void testGetAccessCount() throws Exception {
-    Connection conn = new TestDBUtil().getTestDBInstance();
-    DBAdapter dbAdapter = new DBAdapter(conn);
-    Map<Long, Integer> ret = dbAdapter.getAccessCount(1490932740000l,
-        1490936400000l, null);
-    Assert.assertTrue(ret.get(2l) == 32);
-    if (conn != null) {
-      conn.close();
-    }
+public class TestDBAdapter extends DBTest {
+  private void createTables(IDatabaseConnection connection) throws Exception {
+    Statement statement = connection.getConnection().createStatement();
+    statement.execute(AccessCountTable.createTableSQL("expect1"));
+    String sql = "CREATE TABLE `files` (" +
+      "`path` varchar(4096) NOT NULL," +
+      "`fid` bigint(20) NOT NULL )";
+    statement.execute(sql);
+    statement.close();
   }
 
   @Test
-  public void testGetFiles () throws Exception {
-    Connection conn = new TestDBUtil().getTestDBInstance();
-    DBAdapter dbAdapter = new DBAdapter(conn);
-    HdfsFileStatus hdfsFileStatus = dbAdapter.getFile(56);
-    Assert.assertTrue(hdfsFileStatus.getLen() == 20484l);
-    HdfsFileStatus hdfsFileStatus1 = dbAdapter.getFile("/des");
-    Assert.assertTrue(hdfsFileStatus1.getAccessTime() == 1490936390000l);
-    if (conn != null) {
-      conn.close();
-    }
-  }
+  public void testAggregate() throws Exception {
+    createTables(databaseTester.getConnection());
+    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader()
+      .getResourceAsStream("files.xml"));
+    databaseTester.setDataSet(dataSet);
+    databaseTester.onSetup();
 
-  @Test
-  public void testGetStorageCapacity () throws Exception {
-    Connection conn = new TestDBUtil().getTestDBInstance();
-    DBAdapter dbAdapter = new DBAdapter(conn);
-    StorageCapacity storageCapacity = dbAdapter.getStorageCapacity("HDD");
-    Assert.assertTrue(storageCapacity.getCapacity() == 65536000l);
-    if (conn != null) {
-      conn.close();
-    }
-  }
-
-  @Test
-  public void testGetCachedFileStatus () throws Exception {
-    Connection conn = new TestDBUtil().getTestDBInstance();
-    DBAdapter dbAdapter = new DBAdapter(conn);
-    CachedFileStatus cachedFileStatus = dbAdapter.getCachedFileStatus(6);
-    Assert.assertTrue(cachedFileStatus.getFromTime() == 1490918400000l);
-    List<CachedFileStatus> cachedFileList = dbAdapter.getCachedFileStatus();
-    Assert.assertTrue(cachedFileList.get(0).getFid() == 6);
-    Assert.assertTrue(cachedFileList.get(1).getFid() == 19);
-    Assert.assertTrue(cachedFileList.get(2).getFid() == 23);
-    if (conn != null) {
-      conn.close();
-    }
-  }
-
-  @Test
-  public void testGetErasureCodingPolicy () throws Exception {
-    Connection conn = new TestDBUtil().getTestDBInstance();
-    DBAdapter dbAdapter = new DBAdapter(conn);
-    ErasureCodingPolicy erasureCodingPolicy = dbAdapter.getErasureCodingPolicy(4);
-    Assert.assertEquals(erasureCodingPolicy.getCodecName(),"xor");
-    if (conn != null) {
-      conn.close();
-    }
+    DBAdapter dbAdapter = new DBAdapter(databaseTester.getConnection().getConnection());
+    List<String> paths = Arrays.asList("file1", "file2", "file3");
+    Map<String, Long> pathToID = dbAdapter.getFileIDs(paths);
+    Assert.assertTrue(pathToID.get("file1") == 101);
+    Assert.assertTrue(pathToID.get("file2") == 102);
+    Assert.assertTrue(pathToID.get("file3") == 103);
   }
 }

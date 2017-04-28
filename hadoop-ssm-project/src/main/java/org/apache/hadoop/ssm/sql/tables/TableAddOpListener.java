@@ -18,25 +18,27 @@
 package org.apache.hadoop.ssm.sql.tables;
 
 import org.apache.hadoop.ssm.utils.Constants;
+import org.apache.hadoop.ssm.utils.TimeGranularity;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public abstract class TableAddOpListener {
-  AccessCountTableList coarseGrainedTable;
+  AccessCountTableDeque coarseGrainedTable;
   AccessCountTableAggregator tableAggregator;
 
-  TableAddOpListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
-    this.coarseGrainedTable = list;
+  TableAddOpListener(AccessCountTableDeque deque, AccessCountTableAggregator aggregator) {
+    this.coarseGrainedTable = deque;
     this.tableAggregator = aggregator;
   }
 
-  public void tableAdded(AccessCountTableList fineGrainedTableList, AccessCountTable table) {
+  public void tableAdded(AccessCountTableDeque fineGrainedTableDeque, AccessCountTable table) {
     // Here is a critical part for handling time window like [59s, 61s)
     AccessCountTable lastCoarseGrainedTable = lastCoarseGrainedTableFor(table.getEndTime());
+    // Todo: optimize contains
     if (!coarseGrainedTable.contains(lastCoarseGrainedTable)) {
       List<AccessCountTable> tablesToAggregate =
-        fineGrainedTableList.getTables(lastCoarseGrainedTable.getStartTime(),
+        fineGrainedTableDeque.getTables(lastCoarseGrainedTable.getStartTime(),
           lastCoarseGrainedTable.getEndTime());
       coarseGrainedTable.add(lastCoarseGrainedTable);
       //Todo: exception
@@ -51,8 +53,8 @@ public abstract class TableAddOpListener {
   public abstract AccessCountTable lastCoarseGrainedTableFor(Long startTime);
 
   public static class MinuteTableListener extends TableAddOpListener {
-    public MinuteTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
-      super(list, aggregator);
+    public MinuteTableListener(AccessCountTableDeque deque, AccessCountTableAggregator aggregator) {
+      super(deque, aggregator);
     }
 
     @Override
@@ -64,8 +66,8 @@ public abstract class TableAddOpListener {
   }
 
   public static class HourTableListener extends TableAddOpListener {
-    public HourTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
-      super(list, aggregator);
+    public HourTableListener(AccessCountTableDeque deque, AccessCountTableAggregator aggregator) {
+      super(deque, aggregator);
     }
 
     @Override
@@ -77,8 +79,8 @@ public abstract class TableAddOpListener {
   }
 
   public static class DayTableListener extends TableAddOpListener {
-    public DayTableListener(AccessCountTableList list, AccessCountTableAggregator aggregator) {
-      super(list, aggregator);
+    public DayTableListener(AccessCountTableDeque deque, AccessCountTableAggregator aggregator) {
+      super(deque, aggregator);
     }
 
     @Override

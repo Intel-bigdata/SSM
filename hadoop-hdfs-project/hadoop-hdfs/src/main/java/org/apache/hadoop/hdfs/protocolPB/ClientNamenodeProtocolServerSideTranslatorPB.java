@@ -411,7 +411,8 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
     throws ServiceException {
     try {
       FilesAccessInfo info = server.getFilesAccessInfo();
-      GetFilesAccessInfoResponseProto.Builder builder = GetFilesAccessInfoResponseProto.newBuilder();
+      GetFilesAccessInfoResponseProto.Builder builder =
+          GetFilesAccessInfoResponseProto.newBuilder();
       if (builder != null) {
         return builder.setAccessInfo(PBHelperClient.convert(info)).build();
       }
