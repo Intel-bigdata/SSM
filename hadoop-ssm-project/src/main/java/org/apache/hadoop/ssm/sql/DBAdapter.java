@@ -67,7 +67,9 @@ public class DBAdapter {
       while (rsTableNames.next()) {
         tableNames.add(rsTableNames.getString(1));
       }
-
+      if (rsTableNames != null) {
+        rsTableNames.close();
+      }
       if (tableNames.size() == 0) {
         return null;
       }
@@ -92,6 +94,9 @@ public class DBAdapter {
       Map<Long, Integer> ret = new HashMap<>();
       while (rsValues.next()) {
         ret.put(rsValues.getLong(1), rsValues.getInt(2));
+      }
+      if(rsValues != null) {
+        rsValues.close();
       }
       return ret;
     } catch (SQLException e) {
@@ -129,11 +134,52 @@ public class DBAdapter {
       return null;
     }
     List<HdfsFileStatus> ret = convertFilesTableItem(result);
+    if(result != null) {
+      try {
+        result.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
     return ret.size() > 0 ? ret.get(0) : null;
   }
 
   public HdfsFileStatus getFile(String path) {
-    return null;
+    String sql = "SELECT * FROM files WHERE path = \'" + path + "\'";
+    ResultSet result;
+    try {
+      result = executeQuery(sql);
+    } catch (SQLException e) {
+      return null;
+    }
+    List<HdfsFileStatus> ret = convertFilesTableItem(result);
+    if(result != null) {
+      try {
+        result.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+    return ret.size() > 0 ? ret.get(0) : null;
+  }
+
+  public ErasureCodingPolicy getErasureCodingPolicy(int id) {
+    String sql = "SELECT * FROM ecpolicys WHERE id = " + id;
+    ResultSet result;
+    try {
+      result = executeQuery(sql);
+    } catch (SQLException e) {
+      return null;
+    }
+    Map<Integer, ErasureCodingPolicy> ecpolicys = convertEcPoliciesTableItem(result);
+    if(result != null) {
+      try {
+        result.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+    return ecpolicys != null  ? ecpolicys.get(id) : null;
   }
 
   /**
@@ -149,6 +195,7 @@ public class DBAdapter {
     if (resultSet == null) {
       return ret;
     }
+    updateCache();
     try {
       while (resultSet.next()) {
         HdfsFileStatus status = new HdfsFileStatus(
@@ -172,6 +219,13 @@ public class DBAdapter {
       }
     } catch (SQLException e) {
       return null;
+    }
+    if(resultSet != null) {
+      try {
+        resultSet.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
     }
     return ret;
   }
@@ -198,6 +252,7 @@ public class DBAdapter {
         mapECPolicy = convertEcPoliciesTableItem(executeQuery(sql));
       }
     } catch (SQLException e) {
+      e.printStackTrace();
     }
   }
 
@@ -282,12 +337,19 @@ public class DBAdapter {
             resultSet.getLong("fid"),
             resultSet.getLong("from_time"),
             resultSet.getLong("last_access_time"),
-            resultSet.getInt("count")
+            resultSet.getInt("num_accessed")
         );
         ret.add(f);
       }
     } catch (SQLException e) {
       return null;
+    }
+    if(resultSet != null) {
+      try {
+        resultSet.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
     }
     return ret.size() == 0 ? null : ret;
   }
@@ -295,12 +357,14 @@ public class DBAdapter {
 
   public ResultSet executeQuery(String sqlQuery) throws SQLException {
     Statement s = conn.createStatement();
-    return s.executeQuery(sqlQuery);
+    ResultSet result = s.executeQuery(sqlQuery);
+    return result;
   }
 
   public int executeUpdate(String sqlUpdate) throws SQLException {
     Statement s = conn.createStatement();
-    return s.executeUpdate(sqlUpdate);
+    int result = s.executeUpdate(sqlUpdate);
+    return result;
   }
 
   public synchronized void close() {
