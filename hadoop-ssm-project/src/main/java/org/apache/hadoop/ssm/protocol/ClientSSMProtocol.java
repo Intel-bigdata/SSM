@@ -17,8 +17,10 @@
  */
 package org.apache.hadoop.ssm.protocol;
 
-public interface ClientSSMProtocol {
-  public int add(int para1, int para2);
+import org.apache.hadoop.ssm.rule.RuleInfo;
 
+public interface ClientSSMProtocol {
   public SSMServiceStates getServiceStatus();
+
+  public RuleInfo getRuleInfo(long id);
 }

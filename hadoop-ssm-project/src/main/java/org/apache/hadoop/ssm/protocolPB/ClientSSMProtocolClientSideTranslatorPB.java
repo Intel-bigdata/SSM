@@ -21,6 +21,8 @@ import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.protocol.SSMServiceStates;
+import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
 
 public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtocol {
   final private ClientSSMProtocolPB rpcProxy;
@@ -28,17 +30,11 @@ public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtoco
   public ClientSSMProtocolClientSideTranslatorPB(ClientSSMProtocolPB proxy) {
     this.rpcProxy = proxy;
   }
-
-  public int add(int para1, int para2) {
-    // TODO Auto-generated method stub
-    ClientSSMProto.AddParameters req = ClientSSMProto.AddParameters.newBuilder()
-        .setPara1(para1).setPara2(para2).build();
-    return rpcProxy.add(null, req).getResult();
-  }
-
+  
   @Override
   public SSMServiceStates getServiceStatus() {
-    ClientSSMProto.StatusPara req = ClientSSMProto.StatusPara.newBuilder().build();
+    ClientSSMProto.StatusParaProto req =
+        ClientSSMProto.StatusParaProto.newBuilder().build();
     String state = rpcProxy.getServiceStatus(null, req).getSSMServiceState();
     SSMServiceStates ssmServiceStates;
     if (state != null && state.equals(SSMServiceState.ACTIVE)) {
@@ -47,5 +43,40 @@ public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtoco
       ssmServiceStates = new SSMServiceStates(SSMServiceState.SAFEMODE);
     }
     return ssmServiceStates;
+  }
+
+  @Override
+  public RuleInfo getRuleInfo(long id) {
+    ClientSSMProto.RuleInfoParaProto req =
+        ClientSSMProto.RuleInfoParaProto.newBuilder().setPara(id).build();
+    ClientSSMProto.RuleInfoResultTypeProto r =
+        rpcProxy.getRuleInfo(null, req).getResult();
+    RuleInfo.Builder builder = new RuleInfo.Builder();
+    ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto ruleStateProto =
+        r.getRulestateProto();
+    RuleState ruleState;
+    switch (ruleStateProto) {
+      case ACTIVE:
+        ruleState = RuleState.ACTIVE;
+        break;
+      case DRYRUN:
+        ruleState = RuleState.DRYRUN;
+        break;
+      case DISABLED:
+        ruleState = RuleState.DISABLED;
+        break;
+      case FINISHED:
+        ruleState = RuleState.FINISHED;
+        break;
+      default:
+        ruleState = null;
+    }
+    builder.setId(r.getId())
+        .setSubmitTime(r.getSubmitTime())
+        .setRuleText(r.getRuleText())
+        .setCountConditionChecked(r.getCountConditionChecked())
+        .setCountConditionFulfilled(r.getCountConditionFulfilled())
+        .setState(ruleState);
+    return builder.build();
   }
 }

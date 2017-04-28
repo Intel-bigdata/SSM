@@ -24,9 +24,10 @@ import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 @ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB",
     protocolVersion = 1)
 public interface ClientSSMProtocolPB {
-  public ClientSSMProto.AddResult
-  add(RpcController controller, ClientSSMProto.AddParameters p);
 
-  public ClientSSMProto.StatusResult
-  getServiceStatus(RpcController controller, ClientSSMProto.StatusPara p);
+  public ClientSSMProto.StatusResultProto
+  getServiceStatus(RpcController controller, ClientSSMProto.StatusParaProto p);
+
+  public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller
+      , ClientSSMProto.RuleInfoParaProto para);
 }
