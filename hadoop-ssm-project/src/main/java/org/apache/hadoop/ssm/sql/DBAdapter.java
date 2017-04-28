@@ -26,10 +26,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Operations supported for upper functions.
@@ -130,6 +132,25 @@ public class DBAdapter {
     }
     List<HdfsFileStatus> ret = convertFilesTableItem(result);
     return ret.size() > 0 ? ret.get(0) : null;
+  }
+
+  public Map<String, Long> getFileIDs(Collection<String> paths) {
+    Map<String, Long> pathToId = new HashMap<>();
+    String in = paths.stream().map(s -> "'" + s +"'")
+        .collect(Collectors.joining(", "));
+    String sql = "SELECT fid, path FROM files WHERE path IN (" + in + ")";
+    ResultSet result;
+    try {
+      result = executeQuery(sql);
+      while (result.next()) {
+        pathToId.put(result.getString("path"),
+            result.getLong("fid"));
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return pathToId;
+    }
+    return pathToId;
   }
 
   public HdfsFileStatus getFile(String path) {
@@ -292,7 +313,6 @@ public class DBAdapter {
     }
     return ret.size() == 0 ? null : ret;
   }
-
 
   public ResultSet executeQuery(String sqlQuery) throws SQLException {
     Statement s = conn.createStatement();

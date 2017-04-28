@@ -20,10 +20,13 @@ package org.apache.hadoop.ssm.sql.tables;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.utils.Constants;
 import org.apache.hadoop.ssm.utils.TimeGranularity;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AccessCountTableManager {
   private static final int NUM_DAY_TABLES_TO_KEEP = 30;
@@ -66,17 +69,68 @@ public class AccessCountTableManager {
     this.tableDeques.put(TimeGranularity.DAY, dayTableDeque);
   }
 
-  public void addSecondTable(AccessCountTable accessCountTable) {
+  public void addTable(AccessCountTable accessCountTable) {
     this.secondTableDeque.add(accessCountTable);
   }
 
   public void addAccessCountInfo(FilesAccessInfo accessInfo) {
-    AccessCountTable newTable = new AccessCountTable(accessInfo.getStartTime(),
-        accessInfo.getStartTime(), TimeGranularity.SECOND);
+    long start = accessInfo.getStartTime();
+    long end = accessInfo.getEndTime();
+    long length = end - start;
+    Map<String, Long> pathToFileID = dbAdapter.getFileIDs(
+        accessInfo.getAccessCountMap().keySet());
+    // Todo: span across multiple minutes?
+    if (spanAcrossTwoMinutes(start, end)) {
+      long spanPoint = end - end % Constants.ONE_MINUTE_IN_MILLIS;
+      FilesAccessInfo first = new FilesAccessInfo(start, spanPoint);
+      FilesAccessInfo second = new FilesAccessInfo(spanPoint, end);
+      Map<String, Integer> firstAccessMap = new HashMap<>();
+      Map<String, Integer> secondAccessMap = new HashMap<>();
+      for(Map.Entry<String, Integer> entry : accessInfo.getAccessCountMap().entrySet()) {
+        Long firstValue = entry.getValue() * (spanPoint - start) / length;
+        firstAccessMap.put(entry.getKey(), firstValue.intValue());
+        secondAccessMap.put(entry.getKey(), entry.getValue() - firstValue.intValue());
+      }
+      first.setAccessCountMap(firstAccessMap);
+      second.setAccessCountMap(secondAccessMap);
+      this.addAccessCountTable(first, pathToFileID);
+      this.addAccessCountTable(second, pathToFileID);
+    } else {
+      this.addAccessCountTable(accessInfo, pathToFileID);
+    }
+  }
+
+  private void addAccessCountTable(FilesAccessInfo info, Map<String, Long> pathToFileID) {
+    AccessCountTable accessCountTable =
+        new AccessCountTable(info.getStartTime(), info.getEndTime());
+    String createTable = AccessCountTable.createTableSQL(accessCountTable.getTableName());
+    String values = info.getAccessCountMap().entrySet().stream().map(entry ->
+        "(" + pathToFileID.get(entry.getKey()) + ", " + entry.getValue() + ")")
+        .collect(Collectors.joining(","));
+
+    StringBuilder builder = new StringBuilder(createTable + ";");
+    builder.append("INSERT INTO ").append(accessCountTable.getTableName()).append("(")
+        .append(AccessCountTable.FILE_FIELD).append(", ")
+        .append(AccessCountTable.ACCESSCOUNT_FIELD).append(") VALUES ").append(values);
+    // Todo: exception
+    try {
+      this.dbAdapter.execute(builder.toString());
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
   @VisibleForTesting
   protected Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
     return this.tableDeques;
+  }
+
+  private boolean spanAcrossTwoMinutes(long first, long second) {
+    return first / Constants.ONE_MINUTE_IN_MILLIS !=
+        second / Constants.ONE_MINUTE_IN_MILLIS;
+  }
+
+  private String insertAccessCountValuesSQL() {
+    return "";
   }
 }

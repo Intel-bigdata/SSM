@@ -1,0 +1,34 @@
+<dataset>
+    <table name="files">
+        <column>path</column>
+        <column>fid</column>
+        <row>
+            <value>file1</value>
+            <value>101</value>
+        </row>
+        <row>
+            <value>file2</value>
+            <value>102</value>
+        </row>
+        <row>
+            <value>file3</value>
+            <value>103</value>
+        </row>
+    </table>
+    <table name="expect1">
+        <column>file_id</column>
+        <column>access_count</column>
+        <row>
+            <value>101</value>
+            <value>5</value>
+        </row>
+        <row>
+            <value>102</value>
+            <value>10</value>
+        </row>
+        <row>
+            <value>103</value>
+            <value>15</value>
+        </row>
+    </table>
+</dataset>

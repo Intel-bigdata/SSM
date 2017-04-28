@@ -18,57 +18,31 @@
 package org.apache.hadoop.ssm.sql.tables;
 
 import com.google.common.collect.Lists;
+import org.apache.hadoop.ssm.sql.DBTest;
 import org.apache.hadoop.ssm.utils.TimeGranularity;
 import org.dbunit.Assertion;
-import org.dbunit.IDatabaseTester;
-import org.dbunit.JdbcDatabaseTester;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.xml.XmlDataSet;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.sql.Statement;
 
-public class TestTableAggregator {
-  private static final String DB_PATH = "/tmp/test.db";
-
-  @Before
-  public void setUp() {
-    File db = new File(DB_PATH);
-    if (db.exists()) {
-      db.delete();
-    }
-  }
+public class TestTableAggregator extends DBTest {
 
   private void createTables(IDatabaseConnection connection) throws Exception {
     Statement statement = connection.getConnection().createStatement();
-    statement.execute("CREATE TABLE table1 (\n" +
-      "  file_name varchar(20) NOT NULL,\n" +
-      "  access_count int(11) NOT NULL\n" +
-      ")");
-    statement.execute("CREATE TABLE table2 (\n" +
-      "  file_name varchar(20) NOT NULL,\n" +
-      "  access_count int(11) NOT NULL\n" +
-      ")");
-    statement.execute("CREATE TABLE table3 (\n" +
-      "  file_name varchar(20) NOT NULL,\n" +
-      "  access_count int(11) NOT NULL\n" +
-      ")");
-    statement.execute("CREATE TABLE expect (\n" +
-      "  file_name varchar(20) NOT NULL,\n" +
-      "  access_count int(11) NOT NULL\n" +
-      ")");
+    statement.execute(AccessCountTable.createTableSQL("table1"));
+    statement.execute(AccessCountTable.createTableSQL("table2"));
+    statement.execute(AccessCountTable.createTableSQL("table3"));
+    statement.execute(AccessCountTable.createTableSQL("expect"));
     statement.close();
   }
 
   @Test
   public void testAggregate() throws Exception {
     AccessCountTableAggregator aggregator = new AccessCountTableAggregator(null);
-    IDatabaseTester databaseTester = new JdbcDatabaseTester("org.sqlite.JDBC",
-      "jdbc:sqlite:" + DB_PATH);
     createTables(databaseTester.getConnection());
     IDataSet dataSet = new XmlDataSet(getClass().getClassLoader()
       .getResourceAsStream("accessCountTable.xml"));

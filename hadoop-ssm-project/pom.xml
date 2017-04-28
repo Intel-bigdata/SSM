@@ -5,14 +5,14 @@
   <parent>
     <artifactId>hadoop-project</artifactId>
     <groupId>org.apache.hadoop</groupId>
-    <version>3.0.0-alpha2-SNAPSHOT</version>
+    <version>3.0.0-alpha3-SNAPSHOT</version>
     <relativePath>../hadoop-project</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.hadoop</groupId>
   <artifactId>hadoop-ssm-project</artifactId>
-  <version>3.0.0-alpha2-SNAPSHOT</version>
+  <version>3.0.0-alpha3-SNAPSHOT</version>
   <description>Apache Hadoop SSM Project</description>
   <name>Apache Hadoop SSM Project</name>
   <packaging>jar</packaging>

@@ -20,7 +20,6 @@ package org.apache.hadoop.hdfs.protocol;
 import java.util.List;
 import java.util.Map;
 
-
 public class FilesAccessInfo {
   private long startTime;  // NN local time for statistic
   private long endTime;
@@ -29,6 +28,11 @@ public class FilesAccessInfo {
   private List<NNEvent> nnEvents;  // Keep it for now
 
   public FilesAccessInfo() {}
+
+  public FilesAccessInfo(long startTime, long endTime) {
+    this.startTime = startTime;
+    this.endTime = endTime;
+  }
 
   public long getStartTime() {
     return startTime;
