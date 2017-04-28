@@ -42,6 +42,7 @@ public class DBAdapter {
   private Map<Integer, String> mapGroupIdName = null;
   private Map<Integer, String> mapStoragePolicyIdName = null;
   private Map<Integer, ErasureCodingPolicy> mapECPolicy = null;
+  private Map<String, Storage> mapStorage = null;
 
   public DBAdapter(Connection conn) {
     this.conn = conn;
@@ -115,6 +116,7 @@ public class DBAdapter {
    */
   public synchronized void insertAccessCountData(long startTime, long endTime,
       long[] fids, int[] counts) {
+
   }
 
   /**
@@ -134,7 +136,7 @@ public class DBAdapter {
       return null;
     }
     List<HdfsFileStatus> ret = convertFilesTableItem(result);
-    if(result != null) {
+    if (result != null) {
       try {
         result.close();
       } catch (SQLException e) {
@@ -153,7 +155,7 @@ public class DBAdapter {
       return null;
     }
     List<HdfsFileStatus> ret = convertFilesTableItem(result);
-    if(result != null) {
+    if (result != null) {
       try {
         result.close();
       } catch (SQLException e) {
@@ -172,7 +174,7 @@ public class DBAdapter {
       return null;
     }
     Map<Integer, ErasureCodingPolicy> ecpolicys = convertEcPoliciesTableItem(result);
-    if(result != null) {
+    if (result != null) {
       try {
         result.close();
       } catch (SQLException e) {
@@ -220,7 +222,7 @@ public class DBAdapter {
     } catch (SQLException e) {
       return null;
     }
-    if(resultSet != null) {
+    if (resultSet != null) {
       try {
         resultSet.close();
       } catch (SQLException e) {
@@ -250,6 +252,11 @@ public class DBAdapter {
       if (mapECPolicy == null) {
         String sql = "SELECT * FROM ecpolicys";
         mapECPolicy = convertEcPoliciesTableItem(executeQuery(sql));
+      }
+
+      if (mapStorage == null) {
+        String sql = "SELECT * FROM storages";
+        mapStorage = convertStorageTablesItem(executeQuery(sql));
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -284,6 +291,27 @@ public class DBAdapter {
       return null;
     }
     return ret;
+  }
+
+  public Map<String, Storage> convertStorageTablesItem(ResultSet resultSet) {
+    Map<String, Storage> map = new HashMap<>();
+    if (resultSet == null) {
+      return map;
+    }
+    try {
+      while (resultSet.next()) {
+        String type = resultSet.getString(1);
+        Storage storage = new Storage(
+          resultSet.getString(1),
+          resultSet.getLong(2),
+          resultSet.getLong(3)
+        );
+        map.put(type, storage);
+      }
+    } catch (SQLException e) {
+      return null;
+    }
+    return map;
   }
 
   private Map<Integer, String> convertToMap(ResultSet resultSet) {

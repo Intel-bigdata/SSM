@@ -36,6 +36,19 @@ public class TestDBAdapter {
   }
 
   @Test
+  public void testConvertStorageTablesItem () throws Exception {
+    Connection conn = new TestDBUtil().getTestDBInstance();
+    DBAdapter dbAdapter = new DBAdapter(conn);
+    String sql = "SELECT * FROM storages";
+    Map<String, Storage> map =
+      dbAdapter.convertStorageTablesItem(dbAdapter.executeQuery(sql));
+    Assert.assertTrue(map.get("HDD").getCapacity() == 65536000l);
+    if (conn != null) {
+      conn.close();
+    }
+  }
+
+  @Test
   public void testGetCachedFileStatus () throws Exception {
     Connection conn = new TestDBUtil().getTestDBInstance();
     DBAdapter dbAdapter = new DBAdapter(conn);
