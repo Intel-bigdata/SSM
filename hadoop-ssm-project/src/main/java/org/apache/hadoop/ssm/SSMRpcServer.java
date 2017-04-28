@@ -28,6 +28,8 @@ import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.protocol.SSMServiceStates;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolServerSideTranslatorPB;
+import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -53,7 +55,7 @@ public class SSMRpcServer implements ClientSSMProtocol {
     ClientSSMProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
         = new ClientSSMProtocolServerSideTranslatorPB(this);
 
-    BlockingService clientSSMPbService = ClientSSMProto.StatusService
+    BlockingService clientSSMPbService = ClientSSMProto.protoService
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
 
     clientRpcServer = new RPC.Builder(conf)
@@ -103,14 +105,21 @@ public class SSMRpcServer implements ClientSSMProtocol {
   }
 
   @Override
-  public int add(int para1, int para2) {
-    return para1 + para2;
-  }
-
-  @Override
   public SSMServiceStates getServiceStatus() {
     SSMServiceStates ssmServiceStates
         = new SSMServiceStates(SSMServiceState.SAFEMODE);
     return ssmServiceStates;
+  }
+
+  @Override
+  public RuleInfo getRuleInfo(long id) {
+    RuleInfo.Builder builder = RuleInfo.newBuilder();
+    builder.setId(id)
+        .setSubmitTime(6)
+        .setRuleText("ruleTest")
+        .setCountConditionChecked(7)
+        .setCountConditionFulfilled(8)
+        .setState(RuleState.ACTIVE);
+    return builder.build();
   }
 }

@@ -21,9 +21,10 @@ import com.google.protobuf.RpcController;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceStates;
+import org.apache.hadoop.ssm.rule.RuleInfo;
 
 public class ClientSSMProtocolServerSideTranslatorPB implements
-    ClientSSMProtocolPB, ClientSSMProto.StatusService.BlockingInterface {
+    ClientSSMProtocolPB, ClientSSMProto.protoService.BlockingInterface {
   final private ClientSSMProtocol server;
 
   public ClientSSMProtocolServerSideTranslatorPB(ClientSSMProtocol server) {
@@ -31,22 +32,49 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public ClientSSMProto.StatusResult getServiceStatus(
-      RpcController controller, ClientSSMProto.StatusPara request) {
-    ClientSSMProto.StatusResult.Builder builder =
-        ClientSSMProto.StatusResult.newBuilder();
+  public ClientSSMProto.StatusResultProto getServiceStatus(
+      RpcController controller, ClientSSMProto.StatusParaProto request) {
+    ClientSSMProto.StatusResultProto.Builder builder =
+        ClientSSMProto.StatusResultProto.newBuilder();
     SSMServiceStates SSMServiceStates = server.getServiceStatus();
     builder.setSSMServiceState(SSMServiceStates.getState().name());
     return builder.build();
   }
 
-  public ClientSSMProto.AddResult add(
-      RpcController controller, ClientSSMProto.AddParameters p) {
-    // TODO Auto-generated method stub
-    ClientSSMProto.AddResult.Builder builder =
-        ClientSSMProto.AddResult.newBuilder();
-    int result = server.add(p.getPara1(), p.getPara2());
-    builder.setResult(result);
+  @Override
+  public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller,
+      ClientSSMProto.RuleInfoParaProto para) {
+    ClientSSMProto.RuleInfoResultProto.Builder builder
+        = ClientSSMProto.RuleInfoResultProto.newBuilder();
+    RuleInfo ruleInfo = server.getRuleInfo(para.getPara());
+    ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto ruleStateProto;
+    switch (ruleInfo.getState()) {
+      case ACTIVE:
+        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.ACTIVE;
+        break;
+      case DRYRUN:
+        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.DRYRUN;
+        break;
+      case DISABLED:
+        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.DISABLED;
+        break;
+      case FINISHED:
+        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.FINISHED;
+        break;
+      default:
+        ruleStateProto = null;
+    }
+    ClientSSMProto.RuleInfoResultTypeProto.Builder rtBuilder = ClientSSMProto
+        .RuleInfoResultTypeProto
+        .newBuilder()
+        .setId(ruleInfo.getId())
+        .setSubmitTime(ruleInfo.getSubmitTime())
+        .setRuleText(ruleInfo.getRuleText())
+        .setRulestateProto(ruleStateProto)
+        .setCountConditionChecked(ruleInfo.getCountConditionChecked())
+        .setCountConditionFulfilled(ruleInfo.getCountConditionFulfilled());
+    builder.setResult(rtBuilder.build());
     return builder.build();
   }
+
 }

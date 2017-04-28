@@ -22,22 +22,34 @@ option java_outer_classname = "ClientSSMProto";
 option java_generic_services = true;
 option java_generate_equals_and_hash = true;
 
-message AddParameters {
-    optional int32 para1 = 1;
-    optional int32 para2 = 3;
+message StatusParaProto {
+}
+message StatusResultProto {
+  required string SSMServiceState = 1;
 }
 
-message AddResult {
-    optional int32 result = 1;
+message RuleInfoParaProto {
+  required sint64 para = 1;
+}
+message RuleInfoResultTypeProto {
+  required sint64 id = 1;
+  required sint64 submitTime = 2;
+  required sint64 countConditionChecked = 3;
+  required sint64 countConditionFulfilled = 4;
+  required string ruleText = 5;
+  required RuleStateProto rulestateProto = 6;
+  enum RuleStateProto {
+    ACTIVE = 0x0;
+    DRYRUN = 0x1;
+    DISABLED = 0x2;
+    FINISHED = 0x3;
+  }
+}
+message RuleInfoResultProto {
+  required RuleInfoResultTypeProto result = 1;
 }
 
-message StatusPara {
-}
-message StatusResult {
-    required string SSMServiceState = 1;
-}
-
-service StatusService {
-    rpc getServiceStatus (StatusPara) returns (StatusResult);
-    rpc add (AddParameters) returns (AddResult);
+service protoService {
+  rpc getServiceStatus (StatusParaProto) returns (StatusResultProto);
+  rpc getRuleInfo (RuleInfoParaProto) returns (RuleInfoResultProto);
 }

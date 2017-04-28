@@ -22,6 +22,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolClientSideTranslatorPB;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB;
+import org.apache.hadoop.ssm.rule.RuleInfo;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -48,11 +49,11 @@ public class SSMClient {
     this.ssm = clientSSMProtocol;
   }
 
-  public int add(int para1, int para2) {
-    return ssm.add(para1, para2);
-  }
-
   public SSMServiceStates getServiceStatus() {
     return ssm.getServiceStatus();
+  }
+
+  public RuleInfo getRuleInfo(long id) {
+    return ssm.getRuleInfo(id);
   }
 }
