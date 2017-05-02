@@ -56,6 +56,7 @@ public class TestSSMRuleParser {
       System.err.println("rule stack: "+stack);
       System.err.println("line "+line+":"+charPositionInLine+" at "+
           offendingSymbol+": "+msg);
+      parseErrors.add(e);
     }
   }
 
@@ -72,6 +73,7 @@ public class TestSSMRuleParser {
     String rule2 = "file with length > 3 : "
         + "storage.free(\"SSD\") > 100 and not inCache | cachefile";
     String rule3 = "file : accessCount(10m) > 20 | cachefile";
+    String rule4 = "file : accessCountX(10m) > 2 and length() > 3 | cachefile";
     String rule = rule3;
     InputStream input = new ByteArrayInputStream(rule.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);

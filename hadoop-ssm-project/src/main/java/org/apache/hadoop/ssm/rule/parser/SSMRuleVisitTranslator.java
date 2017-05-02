@@ -194,7 +194,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     Property p = obj.getProperty(ctx.ID().getText());
     if (p == null) {
       throw new RuleParserException("Object " + obj.toString()
-          + " does not have a attribute named '" + "'" + ctx.ID().getText());
+          + " does not have a attribute named '" + ctx.ID().getText() + "'");
     }
 
     if (p.getParamsTypes() == null) {
