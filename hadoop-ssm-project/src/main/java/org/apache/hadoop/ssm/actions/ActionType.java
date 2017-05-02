@@ -45,6 +45,24 @@ public enum ActionType {
     return value;
   }
 
+  public static ActionType fromValue(int value) {
+    for (ActionType t : values()) {
+      if (t.getValue() == value) {
+        return t;
+      }
+    }
+    return null;
+  }
+
+  public static ActionType fromName(String name) {
+    for (ActionType t : values()) {
+      if (t.getDisplayName().equalsIgnoreCase(name)) {
+        return t;
+      }
+    }
+    return null;
+  }
+
   public String getDisplayName() {
     return displayName;
   }
