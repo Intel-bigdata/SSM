@@ -26,6 +26,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -118,7 +119,6 @@ public class DBAdapter {
    */
   public synchronized void insertAccessCountData(long startTime, long endTime,
       long[] fids, int[] counts) {
-
   }
 
   /**
@@ -127,6 +127,47 @@ public class DBAdapter {
    * @param files
    */
   public synchronized void insertFiles(HdfsFileStatus[] files) {
+    for (int i=0;i<files.length;i++) {
+      String sql = "INSERT INTO 'files' VALUES('" + files[i].getLocalName() +
+          "','" + files[i].getFileId() + "','" + files[i].getLen() + "','" +
+          files[i].getReplication() + "','" + files[i].getBlockSize() + "','"+
+          files[i].getModificationTime() + "','" + files[i].getAccessTime() +
+          "','" + booleanToInt(files[i].isDir()) + "','" + files[i].getStoragePolicy() +
+          "','" + getKey(mapOwnerIdName, files[i].getOwner()) + "','" +
+          getKey(mapGroupIdName, files[i].getGroup()) + "','" +
+          files[i].getPermission().toShort() + "','" +
+          getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
+      try {
+        executeUpdate(sql);
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public int booleanToInt(boolean b) {
+    if (b == true) {
+      return 1;
+    }else {
+      return 0;
+    }
+  }
+
+  public Integer getKey(Map<Integer, String> map, String value) {
+    for (Integer key: map.keySet()) {
+      if (map.get(key).equals(value)) {
+        return key;
+      }
+    }
+    return null;
+  }
+  public Integer getKey(Map<Integer, ErasureCodingPolicy> map, ErasureCodingPolicy value) {
+    for (Integer key: map.keySet()) {
+      if (map.get(key) .equals(value)) {
+        return key;
+      }
+    }
+    return null;
   }
 
   public HdfsFileStatus getFile(long fid) {

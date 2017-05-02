@@ -1,5 +1,7 @@
 package org.apache.hadoop.ssm.sql;
 
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
@@ -7,6 +9,8 @@ import org.junit.Test;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
+
+import static org.mockito.Matchers.anyString;
 
 public class TestDBMethod {
     @Test
@@ -22,7 +26,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetFiles () throws Exception {
+    public void testGetFiles() throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
       HdfsFileStatus hdfsFileStatus = dbAdapter.getFile(56);
@@ -35,7 +39,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetStorageCapacity () throws Exception {
+    public void testGetStorageCapacity() throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
       StorageCapacity storageCapacity = dbAdapter.getStorageCapacity("HDD");
@@ -46,7 +50,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetCachedFileStatus () throws Exception {
+    public void testGetCachedFileStatus() throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
       CachedFileStatus cachedFileStatus = dbAdapter.getCachedFileStatus(6);
@@ -61,11 +65,58 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetErasureCodingPolicy () throws Exception {
+    public void testGetErasureCodingPolicy() throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
       ErasureCodingPolicy erasureCodingPolicy = dbAdapter.getErasureCodingPolicy(4);
       Assert.assertEquals(erasureCodingPolicy.getCodecName(), "xor");
+      if (conn != null) {
+        conn.close();
+      }
+    }
+
+    @Test
+    public void testInsetFiles() throws Exception {
+      Connection conn = new TestDBUtil().getTestDBInstance();
+      DBAdapter dbAdapter = new DBAdapter(conn);
+      String pathString = "/tmp/testFile";
+      long length = 123L;
+      boolean isDir = false;
+      int blockReplication = 1;
+      long blockSize = 128 *1024L;
+      long modTime = 123123123L;
+      long accessTime = 123123120L;
+      FsPermission perms = FsPermission.getDefault();
+      String owner = "root";
+      String group = "admin";
+      byte[] symlink = null;
+      byte[] path = DFSUtil.string2Bytes(pathString);
+      long fileId = 312321L;
+      int numChildren = 1;
+      byte storagePolicy = 0;
+
+      HdfsFileStatus[] files = { new HdfsFileStatus(length, isDir, blockReplication,
+          blockSize, modTime, accessTime, perms, owner, group, symlink,
+          path, fileId, numChildren, null, storagePolicy, null) };
+      dbAdapter.insertFiles(files);
+      HdfsFileStatus hdfsFileStatus = dbAdapter.getFile("/tmp/testFile");
+      Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 *1024L);
+      if (conn != null) {
+        conn.close();
+      }
+    }
+
+    @Test
+    public void testInsertAccessCountData() throws Exception {
+      Connection conn = new TestDBUtil().getTestDBInstance();
+      DBAdapter dbAdapter = new DBAdapter(conn);
+      long startTime = 111134566l;
+      long endTime = 123333333l;
+      long[] fids = {45l,78l,999l};
+      int[] counts = {666,356,2134};
+      dbAdapter.insertAccessCountData(startTime, endTime, fids, counts);
+      HdfsFileStatus hdfsFileStatus = dbAdapter.getFile("/tmp/testFile");
+      Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 *1024L);
       if (conn != null) {
         conn.close();
       }
