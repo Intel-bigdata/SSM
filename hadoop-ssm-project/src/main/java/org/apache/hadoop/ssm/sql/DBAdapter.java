@@ -130,6 +130,7 @@ public class DBAdapter {
    * @param files
    */
   public synchronized void insertFiles(HdfsFileStatus[] files) {
+    updateCache();
     for (int i=0;i<files.length;i++) {
       String sql = "INSERT INTO 'files' VALUES('" + files[i].getLocalName() +
           "','" + files[i].getFileId() + "','" + files[i].getLen() + "','" +
