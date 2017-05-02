@@ -54,13 +54,15 @@ public class SSMServer {
   public static final Logger LOG = LoggerFactory.getLogger(SSMServer.class);
 
   SSMServer(Configuration conf) throws IOException, URISyntaxException {
-    this.fs = (DistributedFileSystem) FileSystem.get(new URI(conf.get("dfs.ssm.namenode.rpcserver")), conf);
+    String rpcAddr = conf.get("dfs.ssm.namenode.rpcserver");
+    URI rpcURL = new URI(rpcAddr);
+    this.fs = (DistributedFileSystem) FileSystem.get(rpcURL, conf);
     config = conf;
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
     httpServer = new SSMHttpServer(conf, addr);
     rpcServer = new SSMRpcServer(this, conf);
     statesManager = new StatesManager(this, conf);
-    ruleManager = new RuleManager();
+    ruleManager = new RuleManager(this, conf, null); // TODO: to be replaced
     commandExecutor = new CommandExecutor(this, conf);
   }
 
@@ -112,12 +114,12 @@ public class SSMServer {
 
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {
-      /*SSMServer ssm = createSSM(args, conf);
+      SSMServer ssm = createSSM(args, conf);
       if (ssm != null) {
         ssm.join();
       } else {
         errorCode = 1;
-      }*/
+      }
     } catch (Exception e) {
       e.printStackTrace();
       terminate(1, e);

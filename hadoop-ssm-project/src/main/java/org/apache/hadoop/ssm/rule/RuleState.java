@@ -32,6 +32,15 @@ public enum RuleState {
     this.value = value;
   }
 
+  public static RuleState fromValue(int value) {
+    for (RuleState r : values()) {
+      if (value == r.getValue()) {
+        return r;
+      }
+    }
+    return null;
+  }
+
   public int getValue() {
     return value;
   }

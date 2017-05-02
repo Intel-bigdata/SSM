@@ -21,6 +21,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.erasurecode.ECSchema;
+import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -427,5 +429,69 @@ public class DBAdapter {
   public List<HdfsFileStatus> executeFileRuleQuery() {
     ResultSet resultSet = null;
     return convertFilesTableItem(resultSet);
+  }
+
+  public synchronized boolean insertNewRule(RuleInfo info) {
+    long ruleId = 0;
+    if (info.getSubmitTime() == 0) {
+      info.setSubmitTime(System.currentTimeMillis());
+    }
+
+    String sql = "INSERT INTO rules (state, rule_text, submit_time, "
+        + "checked_count, commands_generated"
+        + (info.getLastCheckTime() == 0 ? "" : ", last_check_time")
+        + ") VALUES ("
+        + info.getState().getValue()
+        + ", '" + info.getRuleText() + "'" // TODO: take care of '
+        + ", " + info.getSubmitTime()
+        + ", " + info.getCountConditionChecked()
+        + ", " + info.getCountConditionFulfilled()
+        + (info.getLastCheckTime() == 0 ? "" : ", " + info.getLastCheckTime())
+        +");";
+
+    try {
+      execute(sql);
+      ResultSet rs = executeQuery("SELECT MAX(id) FROM rules;");
+      if (rs.next()) {
+        ruleId = rs.getLong(1);
+        info.setId(ruleId);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (SQLException e) {
+    }
+    return false;
+  }
+
+  public RuleInfo getRuleInfo(long ruleId) {
+    String sql = "SELECT * FROM rules WHERE id = " + ruleId;
+    List<RuleInfo> infos = doGetRuleInfo(sql);
+    return infos.size() == 1 ? infos.get(0) : null;
+  }
+
+  public List<RuleInfo> getRuleInfo() {
+    String sql = "SELECT * FROM rules";
+    return doGetRuleInfo(sql);
+  }
+
+  private List<RuleInfo> doGetRuleInfo(String sql) {
+    List<RuleInfo> infos = new LinkedList<>();
+    try {
+      ResultSet rs = executeQuery(sql);
+      while (rs.next()) {
+        infos.add(new RuleInfo(
+            rs.getLong("id"),
+            rs.getLong("submit_time"),
+            rs.getString("rule_text"),
+            RuleState.fromValue((int)rs.getByte("state")),
+            rs.getLong("checked_count"),
+            rs.getLong("commands_generated"),
+            rs.getLong("last_check_time")
+        ));
+      }
+    } catch (SQLException e) {
+    }
+    return infos;
   }
 }

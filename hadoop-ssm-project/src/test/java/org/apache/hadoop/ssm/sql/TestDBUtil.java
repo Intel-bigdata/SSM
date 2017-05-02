@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.UUID;
 
 /**
  * Utilities for accessing the testing database.
@@ -42,14 +43,25 @@ public class TestDBUtil {
       throws IOException, SQLException, ClassNotFoundException {
     String srcdir = System.getProperty("srcdir",
         System.getProperty("user.dir") + "/src/resources");
-    String testdir = System.getProperty("testdir",
-        System.getProperty("user.dir") +
-        "/src/test/java/org/apache/hadoop/ssm/sql");
     String srcPath = srcdir + "/data-schema.db";
-    String destPath = testdir + "/" + (int)Math.random()*1000 + 1 + ".db";
+    String destPath = getUniqueDBFilePath();
     copyFile(srcPath, destPath);
     Connection conn = Util.createSqliteConnection(destPath);
     return conn;
+  }
+
+  public static String getTestDir() {
+    String testdir = System.getProperty("testdir",
+        System.getProperty("user.dir") + "/target/test-dir");
+    return testdir;
+  }
+
+  public static String getUniqueFilePath() {
+    return getTestDir() + "/" + UUID.randomUUID().toString();
+  }
+
+  public static String getUniqueDBFilePath() {
+    return getUniqueFilePath() + ".db";
   }
 
   public static boolean copyFile(String srcPath, String destPath) {
