@@ -17,12 +17,29 @@
  */
 package org.apache.hadoop.ssm.rule;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ssm.SSMServer;
+import org.apache.hadoop.ssm.rule.parser.RuleStringParser;
+import org.apache.hadoop.ssm.rule.parser.TranslateResult;
+import org.apache.hadoop.ssm.sql.DBAdapter;
+
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Manage and execute rules.
+ * We can have 'cache' here to decrease the needs to execute a SQL query.
  */
 public class RuleManager {
+  private SSMServer ssm;
+  private Configuration conf;
+  private DBAdapter dbAdapter;
+
+  public RuleManager(SSMServer ssm, Configuration conf, DBAdapter dbAdapter) {
+    this.ssm = ssm;
+    this.conf = conf;
+    this.dbAdapter = dbAdapter;
+  }
 
   /**
    * Submit a rule to RuleManger.
@@ -31,9 +48,53 @@ public class RuleManager {
    * @return
    * @throws IOException
    */
-  public long submitRule(String rule, RuleState initState) throws IOException {
-    return 0L;
+  public long submitRule(String rule, RuleState initState)
+      throws IOException {
+    TranslateResult tr = doCheckRule(rule);
+    RuleInfo.Builder builder = RuleInfo.newBuilder();
+    builder.setRuleText(rule).setState(initState);
+    RuleInfo ruleInfo = builder.build();
+    if (!dbAdapter.insertNewRule(ruleInfo)) {
+      throw new IOException("Create rule failed");
+    }
+    return ruleInfo.getId();
   }
+
+  private TranslateResult doCheckRule(String rule) throws IOException {
+    RuleStringParser parser = new RuleStringParser(rule);
+    return parser.translate();
+  }
+
+  public void checkRule(String rule) throws IOException {
+    doCheckRule(rule);
+  }
+
+  /**
+   * Delete a rule in SSM. if dropPendingCommands equals false then the rule
+   * record will still be kept in Table 'rules', the record will be deleted
+   * sometime later.
+   *
+   * @param ruleID
+   * @param dropPendingCommands pending commands triggered by the rule will be
+   *                            discarded if true.
+   * @throws IOException
+   */
+  public void DeleteRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
+  }
+
+  public void setRuleState(long ruleID, RuleState newState,
+      boolean dropPendingCommands) throws IOException {
+  }
+
+  public RuleInfo getRuleInfo(long ruleID) throws IOException {
+    return dbAdapter.getRuleInfo(ruleID);
+  }
+
+  public List<RuleInfo> getRuleInfo() throws IOException {
+    return dbAdapter.getRuleInfo();
+  }
+
 
   /**
    * Init RuleManager, this includes:

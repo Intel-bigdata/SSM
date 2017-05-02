@@ -30,10 +30,13 @@ public class Util {
         "DROP TABLE IF EXISTS `ecpolicys`;",
         "DROP TABLE IF EXISTS `files`;",
         "DROP TABLE IF EXISTS `groups`;",
+        "DROP TABLE IF EXISTS `owners`;",
         "DROP TABLE IF EXISTS `storages`;",
         "DROP TABLE IF EXISTS `storage_policy`;",
         "DROP TABLE IF EXISTS `xattr`;",
-        "DROP TABLE IF EXISTS `owners`;",
+        "DROP TABLE IF EXISTS `rules`;",
+        "DROP TABLE IF EXISTS `pending_commands`;",
+
         "CREATE TABLE `access_count_tables` (\n" +
             "  `table_name` varchar(255) NOT NULL,\n" +
             "  `start_time` bigint(20) NOT NULL,\n" +
@@ -98,6 +101,26 @@ public class Util {
             "  `namespace` varchar(255) DEFAULT NULL,\n" +
             "  `name` varchar(255) DEFAULT NULL,\n" +
             "  `value` varchar(255) DEFAULT NULL\n" +
+            ") ;",
+
+        "CREATE TABLE `rules` (\n" +
+            "  `id` INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            // TODO: may required later
+            // "  `name` varchar(255) DEFAULT NULL,\n" +
+            "  `state` tinyint(4) NOT NULL,\n" +
+            "  `rule_text` varchar(4096) NOT NULL,\n" +
+            "  `submit_time` bigint(20) NOT NULL,\n" +
+            "  `last_check_time` bigint(20) DEFAULT NULL,\n" +
+            "  `checked_count` int(11) NOT NULL,\n" +
+            "  `commands_generated` int(11) NOT NULL\n" +
+            ") ;",
+
+        "CREATE TABLE `pending_commands` (\n" +
+            "  `cid` INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "  `rid` INTEGER NOT NULL,\n" +
+            "  `cmd_id` int(11) NOT NULL,\n" +
+            "  `parameters` varchar(4096) NOT NULL,\n" +
+            "  `generate_time` bigint(20) NOT NULL\n" +
             ") ;"
     };
 

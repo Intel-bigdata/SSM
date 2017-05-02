@@ -21,21 +21,30 @@ package org.apache.hadoop.ssm.rule;
  * Contains info about a rule inside SSM.
  */
 public class RuleInfo {
-  private final long id;
-  private final long submitTime;
-  private final String ruleText;
-  private final RuleState state;
+  private long id;
+  private long submitTime;
+  private String ruleText;
+  private RuleState state;
 
   // Some static information about rule
-  private final long countConditionChecked;
-  private final long countConditionFulfilled;
+  private long countConditionChecked;
+  private long countConditionFulfilled;
+  private long lastCheckTime;
 
   public long getId() {
     return id;
   }
 
+  public void setId(long id) {
+    this.id = id;
+  }
+
   public long getSubmitTime() {
     return submitTime;
+  }
+
+  public void setSubmitTime(long submitTime) {
+    this.submitTime = submitTime;
   }
 
   public String getRuleText() {
@@ -46,22 +55,58 @@ public class RuleInfo {
     return state;
   }
 
+  public void setState(RuleState state) {
+    this.state = state;
+  }
+
   public long getCountConditionChecked() {
     return countConditionChecked;
+  }
+
+  public void setCountConditionChecked(long numChecked) {
+    this.countConditionChecked = numChecked;
+  }
+
+  public long increaseCountConditionChecked() {
+    this.countConditionChecked++;
+    return this.countConditionChecked;
   }
 
   public long getCountConditionFulfilled() {
     return countConditionFulfilled;
   }
 
+  public void setCountConditionFulfilled(long numConditionFulfilled) {
+    this.countConditionFulfilled = numConditionFulfilled;
+  }
+
+  public long increaseCountConditionFulfilled(int n) {
+    countConditionFulfilled += n;
+    return countConditionFulfilled;
+  }
+
+  public long getLastCheckTime() {
+    return lastCheckTime;
+  }
+
   public RuleInfo(long id, long submitTime, String ruleText, RuleState state,
-                  long countConditionChecked, long countConditionFulfilled) {
+      long countConditionChecked, long countConditionFulfilled,
+      long lastCheckTime) {
     this.id = id;
     this.submitTime = submitTime;
     this.ruleText = ruleText;
     this.state = state;
     this.countConditionChecked = countConditionChecked;
     this.countConditionFulfilled = countConditionFulfilled;
+    this.lastCheckTime = lastCheckTime;
+  }
+
+  public boolean equals(RuleInfo info) {
+    return info != null && id == info.id && submitTime == info.submitTime
+        && ruleText.equals(info.ruleText) && state == info.state
+        && countConditionChecked == info.countConditionChecked
+        && countConditionFulfilled == info.countConditionFulfilled
+        && lastCheckTime == info.lastCheckTime;
   }
 
   public static Builder newBuilder() {
@@ -75,6 +120,7 @@ public class RuleInfo {
     private RuleState state;
     private long countConditionChecked;
     private long countConditionFulfilled;
+    private long lastCheckTime;
 
     public static Builder create() {
       return new Builder();
@@ -110,9 +156,14 @@ public class RuleInfo {
       return this;
     }
 
+    public Builder setLastCheckTime(long lastCheckTime) {
+      this.lastCheckTime = lastCheckTime;
+      return this;
+    }
+
     public RuleInfo build() {
       return new RuleInfo(id, submitTime, ruleText, state, countConditionChecked,
-          countConditionFulfilled);
+          countConditionFulfilled, lastCheckTime);
     }
   }
 }

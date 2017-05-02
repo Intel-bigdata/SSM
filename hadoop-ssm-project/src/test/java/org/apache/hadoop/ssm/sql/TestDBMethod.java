@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hadoop.ssm.sql;
 
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -9,8 +26,6 @@ import org.junit.Test;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
-
-import static org.mockito.Matchers.anyString;
 
 public class TestDBMethod {
     @Test
@@ -26,7 +41,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetFiles() throws Exception {
+    public void testGetFiles () throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
       HdfsFileStatus hdfsFileStatus = dbAdapter.getFile(56);
@@ -50,7 +65,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetCachedFileStatus() throws Exception {
+    public void testGetCachedFileStatus () throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
       CachedFileStatus cachedFileStatus = dbAdapter.getCachedFileStatus(6);
@@ -65,10 +80,11 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetErasureCodingPolicy() throws Exception {
+    public void testGetErasureCodingPolicy () throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
-      ErasureCodingPolicy erasureCodingPolicy = dbAdapter.getErasureCodingPolicy(4);
+      ErasureCodingPolicy erasureCodingPolicy =
+          dbAdapter.getErasureCodingPolicy(4);
       Assert.assertEquals(erasureCodingPolicy.getCodecName(), "xor");
       if (conn != null) {
         conn.close();
@@ -94,7 +110,6 @@ public class TestDBMethod {
       long fileId = 312321L;
       int numChildren = 1;
       byte storagePolicy = 0;
-
       HdfsFileStatus[] files = { new HdfsFileStatus(length, isDir, blockReplication,
           blockSize, modTime, accessTime, perms, owner, group, symlink,
           path, fileId, numChildren, null, storagePolicy, null) };
