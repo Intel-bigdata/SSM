@@ -21,6 +21,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.erasurecode.ECSchema;
+import org.apache.hadoop.ssm.CommandState;
+import org.apache.hadoop.ssm.actions.ActionType;
 import org.apache.hadoop.ssm.rule.RuleInfo;
 import org.apache.hadoop.ssm.rule.RuleState;
 
@@ -28,7 +30,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -121,7 +122,6 @@ public class DBAdapter {
    */
   public synchronized void insertAccessCountData(long startTime, long endTime,
       long[] fids, int[] counts) {
-
   }
 
   /**
@@ -536,5 +536,73 @@ public class DBAdapter {
     } catch (SQLException e) {
     }
     return infos;
+  }
+
+  public synchronized void insertCommandsTable(CommandInfo[] commands) {
+    for (int i=0;i<commands.length;i++) {
+      ResultSet result;
+      String sql = "INSERT INTO commands(rid, action_id, state, parameters, " +
+            "generate_time, state_changed_time) " +
+            "VALUES('" + commands[i].getRid() + "', '" +
+            commands[i].getActionId().getValue() + "', '" +
+            commands[i].getState().getValue() + "', '" +
+            commands[i].getParameters() + "', '" +
+            commands[i].getGenerateTime() + "', '" +
+            commands[i].getStateChangedTime() + "');";
+      try {
+        executeUpdate(sql);
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public CommandInfo getCommands(String sql) {
+    ResultSet result;
+    try {
+      result = executeQuery(sql);
+    } catch (SQLException e) {
+      return null;
+    }
+    List<CommandInfo> ret = convertCommandsTableItem(result);
+    if (result != null) {
+      try {
+        result.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+    return ret.size() > 0 ? ret.get(0) : null;
+  }
+
+  private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
+    List<CommandInfo> ret = new LinkedList<>();
+    if (resultSet == null) {
+      return ret;
+    }
+    try {
+      while (resultSet.next()) {
+        CommandInfo commands = new CommandInfo(
+            resultSet.getInt("cid"),
+            resultSet.getInt("rid"),
+            ActionType.fromValue((int)resultSet.getByte("action_id")),
+            CommandState.fromValue((int)resultSet.getByte("state")),
+            resultSet.getString("parameters"),
+            resultSet.getLong("generate_time"),
+            resultSet.getLong("state_changed_time")
+        );
+        ret.add(commands);
+      }
+    } catch (SQLException e) {
+      return null;
+    }
+    if (resultSet != null) {
+      try {
+        resultSet.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+    return ret;
   }
 }

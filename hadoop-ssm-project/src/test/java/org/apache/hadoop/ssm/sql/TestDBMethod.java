@@ -21,8 +21,12 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.ssm.CommandState;
+import org.apache.hadoop.ssm.actions.ActionType;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.File;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
@@ -122,18 +126,26 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testInsertAccessCountData() throws Exception {
-      Connection conn = new TestDBUtil().getTestDBInstance();
+    public void testInsertCommandsTable() throws Exception {
+      String dbFile = TestDBUtil.getUniqueDBFilePath();
+      Connection conn = null;
+      conn = Util.createSqliteConnection(dbFile);
+      Util.initializeDataBase(conn);
       DBAdapter dbAdapter = new DBAdapter(conn);
-      long startTime = 111134566l;
-      long endTime = 123333333l;
-      long[] fids = {45l,78l,999l};
-      int[] counts = {666,356,2134};
-      dbAdapter.insertAccessCountData(startTime, endTime, fids, counts);
-      HdfsFileStatus hdfsFileStatus = dbAdapter.getFile("/tmp/testFile");
-      Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 *1024L);
+      CommandInfo command1 = new CommandInfo(0, 1, ActionType.None,
+          CommandState.EXECUTING, "test", 123123333l, 232444444l);
+      CommandInfo command2 = new CommandInfo(0, 78, ActionType.ConvertToEC,
+          CommandState.PAUSED, "tt", 123178333l, 232444994l);
+      CommandInfo[] commands = {command1, command2 };
+      dbAdapter.insertCommandsTable(commands);
+      int cid = 1;
+      String sql = "SELECT * FROM commands WHERE cid = '" + cid + "'";
+      CommandInfo com = dbAdapter.getCommands(sql);
+      Assert.assertTrue(com.getActionId() == ActionType.None);
       if (conn != null) {
         conn.close();
       }
+      File file = new File(dbFile);
+      file.deleteOnExit();
     }
 }

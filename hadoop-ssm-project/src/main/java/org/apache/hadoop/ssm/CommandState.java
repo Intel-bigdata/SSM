@@ -33,6 +33,14 @@ public enum CommandState {
   private CommandState(int value) {
     this.value = value;
   }
+  public static CommandState fromValue(int value) {
+    for (CommandState r : values()) {
+      if (value == r.getValue()) {
+        return r;
+      }
+    }
+    return null;
+  }
 
   public int getValue() {
     return value;
