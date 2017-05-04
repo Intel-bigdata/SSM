@@ -146,7 +146,7 @@
                   </fileset>
                 </copy>
                 <copy toDir="${project.build.directory}/">
-                  <fileset dir="${basedir}/src/main/bin/">
+                  <fileset dir="${basedir}/bin/">
                   </fileset>
                 </copy>
                 <replace dir="${project.build.directory}/webapps" value="${release-year}">

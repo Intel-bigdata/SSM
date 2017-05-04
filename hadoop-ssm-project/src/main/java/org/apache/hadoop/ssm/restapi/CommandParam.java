@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.web.resources;
+package org.apache.hadoop.ssm.restapi;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import java.text.MessageFormat;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
-public class UUIDParam extends StringParam {
+/** Command parameter. */
+public class CommandParam extends StringParam {
     /** Parameter name. */
-  public static final String NAME = "uuid";
+  public static final String NAME = "cmd";
   /** Default parameter value. */
   public static final String DEFAULT = "";
 
-  private static String UUID_PATTERN = "^[A-Za-z_][A-Za-z0-9._ -/]*[$]?$";
+  private static String COMMAND_PATTERN = "^[A-Za-z_][A-Za-z0-9._ -/]*[$]?$";
   private static Domain domain = new Domain(NAME,
-      Pattern.compile(UUID_PATTERN));
+      Pattern.compile(COMMAND_PATTERN));
 
   @VisibleForTesting
   public static Domain getCommandPatternDomain() {
@@ -64,7 +64,7 @@ public class UUIDParam extends StringParam {
    * Constructor.
    * @param str a string representation of the parameter value.
    */
-  public UUIDParam(final String str) {
+  public CommandParam(final String str) {
     super(domain, str == null ||
         str.equals(DEFAULT) ? null : validateLength(str));
   }
