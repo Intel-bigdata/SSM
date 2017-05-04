@@ -131,21 +131,23 @@ public class DBAdapter {
    */
   public synchronized void insertFiles(HdfsFileStatus[] files) {
     updateCache();
-    for (int i=0;i<files.length;i++) {
-      String sql = "INSERT INTO 'files' VALUES('" + files[i].getLocalName() +
-          "','" + files[i].getFileId() + "','" + files[i].getLen() + "','" +
-          files[i].getReplication() + "','" + files[i].getBlockSize() + "','"+
-          files[i].getModificationTime() + "','" + files[i].getAccessTime() +
-          "','" + booleanToInt(files[i].isDir()) + "','" + files[i].getStoragePolicy() +
-          "','" + getKey(mapOwnerIdName, files[i].getOwner()) + "','" +
-          getKey(mapGroupIdName, files[i].getGroup()) + "','" +
-          files[i].getPermission().toShort() + "','" +
-          getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
-      try {
-        executeUpdate(sql);
-      } catch (SQLException e) {
-        e.printStackTrace();
+    try {
+      Statement s = conn.createStatement();
+      for (int i = 0; i < files.length; i++) {
+        String sql = "INSERT INTO 'files' VALUES('" + files[i].getLocalName() +
+            "','" + files[i].getFileId() + "','" + files[i].getLen() + "','" +
+            files[i].getReplication() + "','" + files[i].getBlockSize() + "','" +
+            files[i].getModificationTime() + "','" + files[i].getAccessTime() +
+            "','" + booleanToInt(files[i].isDir()) + "','" + files[i].getStoragePolicy() +
+            "','" + getKey(mapOwnerIdName, files[i].getOwner()) + "','" +
+            getKey(mapGroupIdName, files[i].getGroup()) + "','" +
+            files[i].getPermission().toShort() + "','" +
+            getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
+        s.addBatch(sql);
       }
+      s.executeBatch();
+    }catch (SQLException e) {
+        e.printStackTrace();
     }
   }
 
@@ -539,9 +541,10 @@ public class DBAdapter {
   }
 
   public synchronized void insertCommandsTable(CommandInfo[] commands) {
-    for (int i=0;i<commands.length;i++) {
-      ResultSet result;
-      String sql = "INSERT INTO commands(rid, action_id, state, parameters, " +
+    try {
+      Statement s = conn.createStatement();
+      for (int i = 0; i < commands.length; i++) {
+        String sql = "INSERT INTO commands(rid, action_id, state, parameters, " +
             "generate_time, state_changed_time) " +
             "VALUES('" + commands[i].getRid() + "', '" +
             commands[i].getActionId().getValue() + "', '" +
@@ -549,12 +552,12 @@ public class DBAdapter {
             commands[i].getParameters() + "', '" +
             commands[i].getGenerateTime() + "', '" +
             commands[i].getStateChangedTime() + "');";
-      try {
-        executeUpdate(sql);
-      } catch (SQLException e) {
+        s.addBatch(sql);
+      }
+      s.executeBatch();
+    }catch (SQLException e) {
         e.printStackTrace();
       }
-    }
   }
 
   public CommandInfo getCommands(String sql) {
