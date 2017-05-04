@@ -560,7 +560,16 @@ public class DBAdapter {
       }
   }
 
-  public CommandInfo getCommands(String sql) {
+  public List<CommandInfo> getCommandsTableItem(long startCid, long rid
+      , CommandState state) {
+    String sqlFromCid = "SELECT * FROM commands WHERE cid >= " + startCid;
+    String sqlFromRid = (rid >= 0) ? " and rid = " + rid : "";
+    String sqlFromState = (state == null) ? "" : " and state = " + state;
+    String sqlFinal = sqlFromCid + sqlFromRid + sqlFromState;
+    return getCommands(sqlFinal);
+  }
+
+  private List<CommandInfo> getCommands(String sql) {
     ResultSet result;
     try {
       result = executeQuery(sql);
@@ -575,7 +584,7 @@ public class DBAdapter {
         e.printStackTrace();
       }
     }
-    return ret.size() > 0 ? ret.get(0) : null;
+    return ret;
   }
 
   private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
@@ -586,8 +595,8 @@ public class DBAdapter {
     try {
       while (resultSet.next()) {
         CommandInfo commands = new CommandInfo(
-            resultSet.getInt("cid"),
-            resultSet.getInt("rid"),
+            resultSet.getLong("cid"),
+            resultSet.getLong("rid"),
             ActionType.fromValue((int)resultSet.getByte("action_id")),
             CommandState.fromValue((int)resultSet.getByte("state")),
             resultSet.getString("parameters"),
