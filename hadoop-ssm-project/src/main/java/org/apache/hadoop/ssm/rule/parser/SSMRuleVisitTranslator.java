@@ -20,11 +20,11 @@ package org.apache.hadoop.ssm.rule.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.hadoop.ssm.rule.excepts.RuleParserException;
-import org.apache.hadoop.ssm.rule.objects.ObjectType;
 import org.apache.hadoop.ssm.rule.objects.Property;
 import org.apache.hadoop.ssm.rule.objects.PropertyRealParas;
 import org.apache.hadoop.ssm.rule.objects.SSMObject;
 import org.apache.hadoop.ssm.sql.TableMetaData;
+import org.apache.hadoop.util.Time;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -48,6 +48,8 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   private TreeNode objFilter = null;
   private TreeNode conditions = null;
   private List<PropertyRealParas> realParases = new LinkedList<>();
+
+  private TimeBasedScheduleInfo timeBasedScheduleInfo = null;
 
   private int nError = 0;
 
@@ -87,7 +89,58 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitTriTimePoint(SSMRuleParser.TriTimePointContext ctx) {
+    timeBasedScheduleInfo = new TimeBasedScheduleInfo();
+    TreeNode tr = visit(ctx.timepointexpr());
+    try {
+      long tm = (Long) (tr.eval().getValue());
+      timeBasedScheduleInfo.setStartTime(tm);
+      timeBasedScheduleInfo.setEndTime(tm);
+      return null;
+    } catch (IOException e) {
+      throw new RuleParserException("Evaluate 'AT' expression error");
+    }
+  }
+
+  @Override public TreeNode visitTriCycle(SSMRuleParser.TriCycleContext ctx) {
+    timeBasedScheduleInfo = new TimeBasedScheduleInfo();
+    TreeNode tr = visit(ctx.timeintvalexpr());
+    timeBasedScheduleInfo.setEvery(getLongConstFromTreeNode(tr));
+    if (ctx.duringexpr() != null) {
+      visit(ctx.duringexpr());
+    } else {
+      timeBasedScheduleInfo.setStartTime(getTimeNow());
+      timeBasedScheduleInfo.setEndTime(TimeBasedScheduleInfo.FOR_EVER);
+    }
+    return null;
+  }
+
+  @Override public TreeNode visitTriFileEvent(SSMRuleParser.TriFileEventContext ctx) {
     return visitChildren(ctx);
+  }
+
+  // duringexpr : FROM timepointexpr (TO timepointexpr)? ;
+  @Override public TreeNode visitDuringexpr(SSMRuleParser.DuringexprContext ctx) {
+    TreeNode trFrom = visit(ctx.timepointexpr(0));
+    timeBasedScheduleInfo.setStartTime(getLongConstFromTreeNode(trFrom));
+    if (ctx.timepointexpr().size() > 1) {
+      TreeNode trEnd = visit(ctx.timepointexpr(1));
+      timeBasedScheduleInfo.setEndTime(getLongConstFromTreeNode(trEnd));
+    } else {
+      timeBasedScheduleInfo.setEndTime(TimeBasedScheduleInfo.FOR_EVER);
+    }
+    return null;
+  }
+
+  private long getLongConstFromTreeNode(TreeNode tr) {
+    if (tr.isOperNode()) {
+      throw new RuleParserException("Should be a ValueNode");
+    }
+
+    try {
+      return (Long) (tr.eval().getValue());
+    } catch (IOException e) {
+      throw new RuleParserException("Evaluate ValueNode error:" + tr);
+    }
   }
 
   // time point
@@ -99,7 +152,11 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitTpeNow(SSMRuleParser.TpeNowContext ctx) {
-    return new ValueNode(new VisitResult(ValueType.TIMEPOINT, System.currentTimeMillis()));
+    return new ValueNode(new VisitResult(ValueType.TIMEPOINT, getTimeNow()));
+  }
+
+  private long getTimeNow() {
+    return System.currentTimeMillis();
   }
 
   @Override
@@ -529,7 +586,8 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     sqlStatements.add(ret);
 
     return new TranslateResult(sqlStatements,
-        tempTableNames, dynamicParameters, sqlStatements.size() - 1);
+        tempTableNames, dynamicParameters, sqlStatements.size() - 1,
+        timeBasedScheduleInfo);
   }
 
   private class NodeTransResult {

@@ -27,16 +27,18 @@ public class TranslateResult {
   private List<String> retColumns;
   private int retSqlIndex;
   private List<String> staticTempTables; // to be deleted after execution
-  List<String> sqlStatements;
-  Map<String, List<Object>> dynamicParameters;
+  private List<String> sqlStatements;
+  private Map<String, List<Object>> dynamicParameters;
+  private TimeBasedScheduleInfo tbScheduleInfo;
 
   public TranslateResult(List<String> sqlStatements,
       List<String> tempTableNames, Map<String, List<Object>> dynamicParameters,
-       int retSqlIndex) {
+      int retSqlIndex, TimeBasedScheduleInfo tbScheduleInfo) {
     this.sqlStatements = sqlStatements;
     this.staticTempTables = tempTableNames;
     this.dynamicParameters = dynamicParameters;
     this.retSqlIndex = retSqlIndex;
+    this.tbScheduleInfo = tbScheduleInfo;
   }
 
   public void setSqlStatements(List<String> sqlStatements) {
@@ -57,5 +59,9 @@ public class TranslateResult {
 
   public int getRetSqlIndex() {
     return retSqlIndex;
+  }
+
+  public TimeBasedScheduleInfo getTbScheduleInfo() {
+    return tbScheduleInfo;
   }
 }
