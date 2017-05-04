@@ -30,12 +30,11 @@ import org.apache.hadoop.ssm.rule.parser.SSMRuleVisitTranslator;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.ExecutionContext;
-import org.apache.hadoop.ssm.sql.RuleQueryExecutor;
+import org.apache.hadoop.ssm.rule.RuleQueryExecutor;
 import org.apache.hadoop.ssm.sql.TestDBUtil;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,7 +73,8 @@ public class TestSSMRuleParser {
         + "storage.free(\"SSD\") > 100 and not inCache | cachefile";
     String rule3 = "file : accessCount(10m) > 20 | cachefile";
     String rule4 = "file : accessCountX(10m) > 2 and length() > 3 | cachefile";
-    String rule = rule3;
+    String rule5 = "file: every 5s from now to now + 100d | length > 3 | cachefile";
+    String rule = rule5;
     InputStream input = new ByteArrayInputStream(rule.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);
     SSMRuleLexer lexer = new SSMRuleLexer(antlrInput);
@@ -99,7 +99,7 @@ public class TestSSMRuleParser {
 
     ExecutionContext ctx = new ExecutionContext();
     DBAdapter dbAdapter = new DBAdapter(TestDBUtil.getTestDBInstance());
-    RuleQueryExecutor  qe = new RuleQueryExecutor(ctx, result, dbAdapter);
+    RuleQueryExecutor qe = new RuleQueryExecutor(null, ctx, result, dbAdapter);
     List<String> paths = qe.executeFileRuleQuery();
     index = 1;
     System.out.println("\nFiles:");

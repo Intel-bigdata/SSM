@@ -509,6 +509,33 @@ public class DBAdapter {
     return false;
   }
 
+  public boolean updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
+      long checkedCount, int commandsGen) {
+    StringBuffer sb = new StringBuffer("UPDATE rules SET");
+    if (rs != null) {
+      sb.append(" state = ").append(rs.getValue()).append(",");
+    }
+    if (lastCheckTime != 0) {
+      sb.append(" last_check_time = ").append(lastCheckTime).append(",");
+    }
+    if (checkedCount != 0) {
+      sb.append(" checked_count = checked_count + ")
+          .append(checkedCount).append(",");
+    }
+    if (commandsGen != 0) {
+      sb.append(" commands_generated = commands_generated + ")
+          .append(commandsGen).append(",");
+    }
+    int idx = sb.lastIndexOf(",");
+    sb.replace(idx, idx, "");
+    sb.append(" WHERE id = ").append(ruleId).append(";");
+    try {
+      return 1 == executeUpdate(sb.toString());
+    } catch (SQLException e) {
+      return false;
+    }
+  }
+
   public RuleInfo getRuleInfo(long ruleId) {
     String sql = "SELECT * FROM rules WHERE id = " + ruleId;
     List<RuleInfo> infos = doGetRuleInfo(sql);
