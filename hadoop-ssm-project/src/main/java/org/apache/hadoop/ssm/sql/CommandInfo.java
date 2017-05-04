@@ -21,16 +21,16 @@ import org.apache.hadoop.ssm.CommandState;
 import org.apache.hadoop.ssm.actions.ActionType;
 
 public class CommandInfo {
-  private int cid;
-  private int rid;
+  private long cid;
+  private long rid;
   private ActionType actionId;
   private CommandState state;
   private String parameters;
   private long generateTime;
   private long stateChangedTime;
 
-  public CommandInfo(int cid, int rid, ActionType actionId, CommandState state
-      , String parameters, long generateTime, long stateChangedTime) {
+  public CommandInfo(long cid, long rid, ActionType actionId, CommandState state,
+      String parameters, long generateTime, long stateChangedTime) {
     this.cid = cid;
     this.rid = rid;
     this.actionId = actionId;
@@ -40,13 +40,13 @@ public class CommandInfo {
     this.stateChangedTime = stateChangedTime;
   }
 
-  public int getCid() {
+  public long getCid() {
     return cid;
   }
   public void setCid(int cid) {
     this.cid = cid;
   }
-  public int getRid() {
+  public long getRid() {
     return rid;
   }
   public void setRid(int rid) {
