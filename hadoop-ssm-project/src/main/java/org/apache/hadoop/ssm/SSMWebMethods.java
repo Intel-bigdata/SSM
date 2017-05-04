@@ -24,9 +24,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hdfs.web.ParamFilter;
 import org.apache.hadoop.http.JettyUtils;
-import org.apache.hadoop.ssm.web.resources.CommandParam;
-import org.apache.hadoop.ssm.web.resources.GetOpParam;
-import org.apache.hadoop.ssm.web.resources.PutOpParam;
+import org.apache.hadoop.ssm.restapi.CommandParam;
+import org.apache.hadoop.ssm.restapi.GetOpParam;
+import org.apache.hadoop.ssm.restapi.PutOpParam;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;

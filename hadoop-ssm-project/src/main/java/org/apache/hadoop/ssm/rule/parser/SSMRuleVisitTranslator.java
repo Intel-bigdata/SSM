@@ -19,12 +19,11 @@ package org.apache.hadoop.ssm.rule.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.apache.hadoop.ssm.rule.excepts.RuleParserException;
+import org.apache.hadoop.ssm.rule.exceptions.RuleParserException;
 import org.apache.hadoop.ssm.rule.objects.Property;
 import org.apache.hadoop.ssm.rule.objects.PropertyRealParas;
 import org.apache.hadoop.ssm.rule.objects.SSMObject;
 import org.apache.hadoop.ssm.sql.TableMetaData;
-import org.apache.hadoop.util.Time;
 
 import java.io.IOException;
 import java.text.ParseException;
