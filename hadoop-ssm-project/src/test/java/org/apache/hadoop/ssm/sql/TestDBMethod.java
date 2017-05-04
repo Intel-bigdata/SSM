@@ -99,7 +99,7 @@ public class TestDBMethod {
     public void testInsetFiles() throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
-      String pathString = "/tmp/testFile";
+      String pathString = "testFile";
       long length = 123L;
       boolean isDir = false;
       int blockReplication = 1;
@@ -114,9 +114,9 @@ public class TestDBMethod {
       long fileId = 312321L;
       int numChildren = 1;
       byte storagePolicy = 0;
-      HdfsFileStatus[] files = { new HdfsFileStatus(length, isDir, blockReplication,
+      FileStatusInternal[] files = { new FileStatusInternal(length, isDir, blockReplication,
           blockSize, modTime, accessTime, perms, owner, group, symlink,
-          path, fileId, numChildren, null, storagePolicy, null) };
+          path, "/tmp", fileId, numChildren, null, storagePolicy, null) };
       dbAdapter.insertFiles(files);
       HdfsFileStatus hdfsFileStatus = dbAdapter.getFile("/tmp/testFile");
       Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 *1024L);
