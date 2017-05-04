@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ssm.SSMServer;
 import org.apache.hadoop.ssm.rule.parser.RuleStringParser;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
+import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 
 import java.io.IOException;
@@ -93,6 +94,17 @@ public class RuleManager {
 
   public List<RuleInfo> getRuleInfo() throws IOException {
     return dbAdapter.getRuleInfo();
+  }
+
+  public void updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
+      long checkedCount, int commandsGen) {
+    dbAdapter.updateRuleInfo(ruleId, rs, lastCheckTime,
+        checkedCount, commandsGen);
+  }
+
+  //
+  public void addNewCommands(List<CommandInfo> commands) {
+    dbAdapter.insertCommandsTable((CommandInfo[])commands.toArray());
   }
 
 
