@@ -21,6 +21,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.erasurecode.ECSchema;
+import org.apache.hadoop.ssm.CommandState;
+import org.apache.hadoop.ssm.actions.ActionType;
 import org.apache.hadoop.ssm.rule.RuleInfo;
 import org.apache.hadoop.ssm.rule.RuleState;
 
@@ -120,7 +122,6 @@ public class DBAdapter {
    */
   public synchronized void insertAccessCountData(long startTime, long endTime,
       long[] fids, int[] counts) {
-
   }
 
   /**
@@ -129,6 +130,50 @@ public class DBAdapter {
    * @param files
    */
   public synchronized void insertFiles(HdfsFileStatus[] files) {
+    updateCache();
+    try {
+      Statement s = conn.createStatement();
+      for (int i = 0; i < files.length; i++) {
+        String sql = "INSERT INTO 'files' VALUES('" + files[i].getLocalName() +
+            "','" + files[i].getFileId() + "','" + files[i].getLen() + "','" +
+            files[i].getReplication() + "','" + files[i].getBlockSize() + "','" +
+            files[i].getModificationTime() + "','" + files[i].getAccessTime() +
+            "','" + booleanToInt(files[i].isDir()) + "','" + files[i].getStoragePolicy() +
+            "','" + getKey(mapOwnerIdName, files[i].getOwner()) + "','" +
+            getKey(mapGroupIdName, files[i].getGroup()) + "','" +
+            files[i].getPermission().toShort() + "','" +
+            getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
+        s.addBatch(sql);
+      }
+      s.executeBatch();
+    }catch (SQLException e) {
+        e.printStackTrace();
+    }
+  }
+
+  public int booleanToInt(boolean b) {
+    if (b == true) {
+      return 1;
+    }else {
+      return 0;
+    }
+  }
+
+  public Integer getKey(Map<Integer, String> map, String value) {
+    for (Integer key: map.keySet()) {
+      if (map.get(key).equals(value)) {
+        return key;
+      }
+    }
+    return null;
+  }
+  public Integer getKey(Map<Integer, ErasureCodingPolicy> map, ErasureCodingPolicy value) {
+    for (Integer key: map.keySet()) {
+      if (map.get(key) .equals(value)) {
+        return key;
+      }
+    }
+    return null;
   }
 
   public HdfsFileStatus getFile(long fid) {
@@ -493,5 +538,74 @@ public class DBAdapter {
     } catch (SQLException e) {
     }
     return infos;
+  }
+
+  public synchronized void insertCommandsTable(CommandInfo[] commands) {
+    try {
+      Statement s = conn.createStatement();
+      for (int i = 0; i < commands.length; i++) {
+        String sql = "INSERT INTO commands(rid, action_id, state, parameters, " +
+            "generate_time, state_changed_time) " +
+            "VALUES('" + commands[i].getRid() + "', '" +
+            commands[i].getActionId().getValue() + "', '" +
+            commands[i].getState().getValue() + "', '" +
+            commands[i].getParameters() + "', '" +
+            commands[i].getGenerateTime() + "', '" +
+            commands[i].getStateChangedTime() + "');";
+        s.addBatch(sql);
+      }
+      s.executeBatch();
+    }catch (SQLException e) {
+        e.printStackTrace();
+      }
+  }
+
+  public CommandInfo getCommands(String sql) {
+    ResultSet result;
+    try {
+      result = executeQuery(sql);
+    } catch (SQLException e) {
+      return null;
+    }
+    List<CommandInfo> ret = convertCommandsTableItem(result);
+    if (result != null) {
+      try {
+        result.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+    return ret.size() > 0 ? ret.get(0) : null;
+  }
+
+  private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
+    List<CommandInfo> ret = new LinkedList<>();
+    if (resultSet == null) {
+      return ret;
+    }
+    try {
+      while (resultSet.next()) {
+        CommandInfo commands = new CommandInfo(
+            resultSet.getInt("cid"),
+            resultSet.getInt("rid"),
+            ActionType.fromValue((int)resultSet.getByte("action_id")),
+            CommandState.fromValue((int)resultSet.getByte("state")),
+            resultSet.getString("parameters"),
+            resultSet.getLong("generate_time"),
+            resultSet.getLong("state_changed_time")
+        );
+        ret.add(commands);
+      }
+    } catch (SQLException e) {
+      return null;
+    }
+    if (resultSet != null) {
+      try {
+        resultSet.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+    return ret;
   }
 }

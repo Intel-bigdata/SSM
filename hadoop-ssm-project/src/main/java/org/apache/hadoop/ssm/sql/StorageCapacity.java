@@ -28,6 +28,7 @@ public final class StorageCapacity {
     this.free = free;
   }
 
+
   public String getType() {
     return type;
   }
