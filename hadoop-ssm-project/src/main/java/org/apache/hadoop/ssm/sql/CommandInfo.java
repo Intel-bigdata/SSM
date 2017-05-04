@@ -29,8 +29,8 @@ public class CommandInfo {
   private long generateTime;
   private long stateChangedTime;
 
-  public CommandInfo(long cid, long rid, ActionType actionId, CommandState state
-      , String parameters, long generateTime, long stateChangedTime) {
+  public CommandInfo(long cid, long rid, ActionType actionId, CommandState state,
+      String parameters, long generateTime, long stateChangedTime) {
     this.cid = cid;
     this.rid = rid;
     this.actionId = actionId;

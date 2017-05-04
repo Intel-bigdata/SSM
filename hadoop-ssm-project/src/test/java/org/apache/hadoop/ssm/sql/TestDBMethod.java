@@ -136,12 +136,12 @@ public class TestDBMethod {
           CommandState.EXECUTING, "test", 123123333l, 232444444l);
       CommandInfo command2 = new CommandInfo(0, 78, ActionType.ConvertToEC,
           CommandState.PAUSED, "tt", 123178333l, 232444994l);
-      CommandInfo[] commands = {command1, command2 };
+      CommandInfo[] commands = {command1, command2};
       dbAdapter.insertCommandsTable(commands);
-      long cid = 1;
-      long rid = 78;
+      String cidCondition = ">= 2 ";
+      String ridCondition = "= 78 ";
       CommandState state = null;
-      List<CommandInfo> com = dbAdapter.getCommandsTableItem(cid, rid, state);
+      List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, state);
       Assert.assertTrue(com.get(0).getActionId() == ActionType.ConvertToEC);
       if (conn != null) {
         conn.close();

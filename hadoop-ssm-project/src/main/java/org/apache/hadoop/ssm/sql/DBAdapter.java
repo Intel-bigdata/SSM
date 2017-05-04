@@ -587,13 +587,19 @@ public class DBAdapter {
       }
   }
 
-  public List<CommandInfo> getCommandsTableItem(long startCid, long rid
-      , CommandState state) {
-    String sqlFromCid = "SELECT * FROM commands WHERE cid >= " + startCid;
-    String sqlFromRid = (rid >= 0) ? " and rid = " + rid : "";
-    String sqlFromState = (state == null) ? "" : " and state = " + state;
-    String sqlFinal = sqlFromCid + sqlFromRid + sqlFromState;
-    return getCommands(sqlFinal);
+  public List<CommandInfo> getCommandsTableItem(String cidCondition, String ridCondition,
+      CommandState state) {
+    String sqlPrefix = "SELECT * FROM commands WHERE ";
+    String sqlFromCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
+    String sqlFromRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
+    String sqlFromState = (state == null) ? "" : "AND state = " + state;
+    String sqlFinal = "";
+    if (cidCondition != null || ridCondition != null || state != null) {
+      sqlFinal = sqlPrefix + sqlFromCid + sqlFromRid + sqlFromState;
+      sqlFinal = sqlFinal.replaceFirst("AND ", "");
+      return getCommands(sqlFinal);
+    }
+    return null;
   }
 
   private List<CommandInfo> getCommands(String sql) {
