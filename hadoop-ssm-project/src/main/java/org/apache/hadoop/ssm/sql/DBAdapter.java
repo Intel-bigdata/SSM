@@ -129,12 +129,12 @@ public class DBAdapter {
    *
    * @param files
    */
-  public synchronized void insertFiles(HdfsFileStatus[] files) {
+  public synchronized void insertFiles(FileStatusInternal[] files) {
     updateCache();
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < files.length; i++) {
-        String sql = "INSERT INTO 'files' VALUES('" + files[i].getLocalName() +
+        String sql = "INSERT INTO 'files' VALUES('" + files[i].getPath() +
             "','" + files[i].getFileId() + "','" + files[i].getLen() + "','" +
             files[i].getReplication() + "','" + files[i].getBlockSize() + "','" +
             files[i].getModificationTime() + "','" + files[i].getAccessTime() +
@@ -152,9 +152,9 @@ public class DBAdapter {
   }
 
   public int booleanToInt(boolean b) {
-    if (b == true) {
+    if (b) {
       return 1;
-    }else {
+    } else {
       return 0;
     }
   }
@@ -168,8 +168,8 @@ public class DBAdapter {
     return null;
   }
   public Integer getKey(Map<Integer, ErasureCodingPolicy> map, ErasureCodingPolicy value) {
-    for (Integer key: map.keySet()) {
-      if (map.get(key) .equals(value)) {
+    for (Integer key : map.keySet()) {
+      if (map.get(key).equals(value)) {
         return key;
       }
     }
