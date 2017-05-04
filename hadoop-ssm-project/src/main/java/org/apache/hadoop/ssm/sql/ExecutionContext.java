@@ -27,6 +27,10 @@ import java.util.Map;
 public class ExecutionContext {
   private Map<String, Object> envVariables = new HashMap<>();
 
+  public long getRuleId() {
+    return getLong("ruleid");
+  }
+
   public void setProperty(Map<String, Object> properties) {
     if (properties == null) {
       envVariables.clear();
