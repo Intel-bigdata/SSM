@@ -92,7 +92,7 @@ public class RuleManager {
     return dbAdapter.getRuleInfo(ruleID);
   }
 
-  public List<RuleInfo> getRuleInfo() throws IOException {
+  public List<RuleInfo> getAllRuleInfo() throws IOException {
     return dbAdapter.getRuleInfo();
   }
 

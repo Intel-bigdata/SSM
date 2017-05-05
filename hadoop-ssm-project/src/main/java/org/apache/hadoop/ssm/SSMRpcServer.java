@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm;
 
 import com.google.protobuf.BlockingService;
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
@@ -33,6 +34,8 @@ import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implements the rpc calls.
@@ -113,6 +116,14 @@ public class SSMRpcServer implements ClientSSMProtocol {
 
   @Override
   public RuleInfo getRuleInfo(long id) {
+    // nullpoint exeception
+    /*RuleInfo ruleInfo = null;
+    try {
+      ruleInfo = ssm.getRuleManager().getRuleInfo(id);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return ruleInfo;*/
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setId(id)
         .setSubmitTime(6)
@@ -121,5 +132,58 @@ public class SSMRpcServer implements ClientSSMProtocol {
         .setCountConditionFulfilled(8)
         .setState(RuleState.ACTIVE);
     return builder.build();
+  }
+
+  @Override
+  public List<RuleInfo> getAllRuleInfo() {
+    List<RuleInfo> list = new ArrayList<>();
+    RuleInfo.Builder builder = RuleInfo.newBuilder();
+    builder.setId(5)
+        .setSubmitTime(6)
+        .setRuleText("ruleTest")
+        .setCountConditionChecked(7)
+        .setCountConditionFulfilled(8)
+        .setState(RuleState.ACTIVE);
+    list.add(builder.build());
+    list.add(builder.build());
+    return list;
+
+/*    List<RuleInfo> list = new ArrayList<>();
+    try {
+      list = ssm.getRuleManager().getAllRuleInfo();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return list;*/
+  }
+
+  @Override
+  public long submitRule(String rule, RuleState initState) {
+    long res = 0L;
+    try {
+      res = ssm.getRuleManager().submitRule(rule, initState);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return res;
+  }
+
+  @Override
+  public void checkRule(String rule)  {
+    try {
+      ssm.getRuleManager().checkRule(rule);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Override
+  public void deleteRule(long ruleID, boolean dropPendingCommands) {
+    System.out.println("delete rule");
+  }
+
+  @Override
+  public void setRuleState(long ruleID, RuleState newState, boolean dropPendingCommands) {
+    System.out.println("setRule State");
   }
 }

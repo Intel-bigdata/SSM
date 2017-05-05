@@ -18,10 +18,14 @@
 package org.apache.hadoop.ssm.protocolPB;
 
 import com.google.protobuf.RpcController;
+import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceStates;
 import org.apache.hadoop.ssm.rule.RuleInfo;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClientSSMProtocolServerSideTranslatorPB implements
     ClientSSMProtocolPB, ClientSSMProto.protoService.BlockingInterface {
@@ -33,7 +37,7 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
 
   @Override
   public ClientSSMProto.StatusResultProto getServiceStatus(
-      RpcController controller, ClientSSMProto.StatusParaProto request) {
+      RpcController controller, ClientSSMProto.voidProto p) {
     ClientSSMProto.StatusResultProto.Builder builder =
         ClientSSMProto.StatusResultProto.newBuilder();
     SSMServiceStates SSMServiceStates = server.getServiceStatus();
@@ -42,39 +46,68 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller,
-      ClientSSMProto.RuleInfoParaProto para) {
-    ClientSSMProto.RuleInfoResultProto.Builder builder
-        = ClientSSMProto.RuleInfoResultProto.newBuilder();
+  public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller
+      , ClientSSMProto.RuleInfoParaProto para) {
     RuleInfo ruleInfo = server.getRuleInfo(para.getPara());
-    ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto ruleStateProto;
-    switch (ruleInfo.getState()) {
-      case ACTIVE:
-        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.ACTIVE;
-        break;
-      case DRYRUN:
-        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.DRYRUN;
-        break;
-      case DISABLED:
-        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.DISABLED;
-        break;
-      case FINISHED:
-        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.FINISHED;
-        break;
-      default:
-        ruleStateProto = null;
+    return PBHelperSSM.convert(ruleInfo);
+  }
+
+  @Override
+  public ClientSSMProto.AllRuleInfoResultProto getAllRuleInfo(RpcController controller
+      , ClientSSMProto.voidProto request) throws ServiceException {
+    ClientSSMProto.AllRuleInfoResultProto.Builder allRuleInfoBuilder
+        = ClientSSMProto.AllRuleInfoResultProto.newBuilder();
+
+    List<RuleInfo> ruleInfoList = server.getAllRuleInfo();
+    List<ClientSSMProto.RuleInfoResultProto> ruleInfoProtoList = new ArrayList<>();
+
+    for (RuleInfo r : ruleInfoList) {
+      ruleInfoProtoList.add(PBHelperSSM.convert(r));
     }
-    ClientSSMProto.RuleInfoResultTypeProto.Builder rtBuilder = ClientSSMProto
-        .RuleInfoResultTypeProto
-        .newBuilder()
-        .setId(ruleInfo.getId())
-        .setSubmitTime(ruleInfo.getSubmitTime())
-        .setRuleText(ruleInfo.getRuleText())
-        .setRulestateProto(ruleStateProto)
-        .setCountConditionChecked(ruleInfo.getCountConditionChecked())
-        .setCountConditionFulfilled(ruleInfo.getCountConditionFulfilled());
-    builder.setResult(rtBuilder.build());
+    for (int i = 0; i < ruleInfoProtoList.size(); ++i) {
+      allRuleInfoBuilder.addResult(ruleInfoProtoList.get(i));
+    }
+    return allRuleInfoBuilder.build();
+  }
+
+  @Override
+  public ClientSSMProto.submitRuleResProto submitRule(RpcController controller
+      , ClientSSMProto.submitRuleParaProto p) throws ServiceException {
+    ClientSSMProto.submitRuleResProto.Builder builder =
+        ClientSSMProto.submitRuleResProto.newBuilder();
+    ClientSSMProto.RuleStateProto ruleStateProto = p.getInitStateProto();
+    long res = server.submitRule(p.getRule(), PBHelperSSM.convert(ruleStateProto));
+    builder.setResult(res);
     return builder.build();
   }
+
+  @Override
+  public ClientSSMProto.voidProto checkRule(RpcController controller
+      , ClientSSMProto.checkRuleParaProto p) throws ServiceException {
+    ClientSSMProto.voidProto.Builder builder =
+        ClientSSMProto.voidProto.newBuilder();
+    server.checkRule(p.getRule());
+    return builder.build();
+  }
+
+  @Override
+  public ClientSSMProto.voidProto deleteRule(RpcController controller
+      , ClientSSMProto.deleteRuleParaProto p) throws ServiceException {
+    ClientSSMProto.voidProto.Builder builder =
+        ClientSSMProto.voidProto.newBuilder();
+    server.deleteRule(p.getRuleID(), p.getDropPendingCommands());
+    return builder.build();
+  }
+
+  @Override
+  public ClientSSMProto.voidProto setRuleState(RpcController controller
+      , ClientSSMProto.setRuleStateParaProto p) throws ServiceException {
+    ClientSSMProto.voidProto.Builder builder =
+        ClientSSMProto.voidProto.newBuilder();
+    ClientSSMProto.RuleStateProto ruleStateProto = p.getNewStateProto();
+    server.setRuleState(p.getRuleID(), PBHelperSSM.convert(ruleStateProto), p.getDropPendingCommands());
+    return builder.build();
+  }
+  
 
 }
