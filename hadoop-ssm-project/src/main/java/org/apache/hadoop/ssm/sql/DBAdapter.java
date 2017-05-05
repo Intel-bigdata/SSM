@@ -587,7 +587,22 @@ public class DBAdapter {
       }
   }
 
-  public CommandInfo getCommands(String sql) {
+  public List<CommandInfo> getCommandsTableItem(String cidCondition, String ridCondition,
+      CommandState state) {
+    String sqlPrefix = "SELECT * FROM commands WHERE ";
+    String sqlFromCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
+    String sqlFromRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
+    String sqlFromState = (state == null) ? "" : "AND state = " + state;
+    String sqlFinal = "";
+    if (cidCondition != null || ridCondition != null || state != null) {
+      sqlFinal = sqlPrefix + sqlFromCid + sqlFromRid + sqlFromState;
+      sqlFinal = sqlFinal.replaceFirst("AND ", "");
+      return getCommands(sqlFinal);
+    }
+    return null;
+  }
+
+  private List<CommandInfo> getCommands(String sql) {
     ResultSet result;
     try {
       result = executeQuery(sql);
@@ -602,7 +617,7 @@ public class DBAdapter {
         e.printStackTrace();
       }
     }
-    return ret.size() > 0 ? ret.get(0) : null;
+    return ret;
   }
 
   private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
@@ -613,8 +628,8 @@ public class DBAdapter {
     try {
       while (resultSet.next()) {
         CommandInfo commands = new CommandInfo(
-            resultSet.getInt("cid"),
-            resultSet.getInt("rid"),
+            resultSet.getLong("cid"),
+            resultSet.getLong("rid"),
             ActionType.fromValue((int)resultSet.getByte("action_id")),
             CommandState.fromValue((int)resultSet.getByte("state")),
             resultSet.getString("parameters"),
