@@ -58,6 +58,28 @@ public class TestDBMethod {
     }
 
     @Test
+    public void testInsertStorageTables() throws Exception {
+      String dbFile = TestDBUtil.getUniqueDBFilePath();
+      Connection conn = null;
+      conn = Util.createSqliteConnection(dbFile);
+      Util.initializeDataBase(conn);
+      DBAdapter dbAdapter = new DBAdapter(conn);
+      StorageCapacity storage1 = new StorageCapacity("Flash",12343333l, 2223333l);
+      StorageCapacity storage2 = new StorageCapacity("RAM",12342233l, 2223663l);
+      StorageCapacity[] storages = {storage1, storage2};
+      dbAdapter.insertStorageTables(storages);
+      StorageCapacity storageCapacity1 = dbAdapter.getStorageCapacity("Flash");
+      StorageCapacity storageCapacity2 = dbAdapter.getStorageCapacity("RAM");
+      Assert.assertTrue(storageCapacity1.getCapacity() == 12343333l);
+      Assert.assertTrue(storageCapacity2.getFree() == 2223663l);
+      if (conn != null) {
+        conn.close();
+      }
+      File file = new File(dbFile);
+      file.deleteOnExit();
+    }
+
+    @Test
     public void testGetStorageCapacity() throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
@@ -143,6 +165,26 @@ public class TestDBMethod {
       CommandState state = null;
       List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, state);
       Assert.assertTrue(com.get(0).getActionId() == ActionType.ConvertToEC);
+      if (conn != null) {
+        conn.close();
+      }
+      File file = new File(dbFile);
+      file.deleteOnExit();
+    }
+
+    @Test
+    public void testInsertStoragePolicyTable() throws Exception {
+      String dbFile = TestDBUtil.getUniqueDBFilePath();
+      Connection conn = null;
+      conn = Util.createSqliteConnection(dbFile);
+      Util.initializeDataBase(conn);
+      DBAdapter dbAdapter = new DBAdapter(conn);
+      StoragePolicy s = new StoragePolicy((byte)3,"COOL");
+      dbAdapter.insertStoragePolicyTable(s);
+      StoragePolicy storagePolicy1 = dbAdapter.getStoragePolicyTableItem((byte)3);
+      StoragePolicy storagePolicy2 = dbAdapter.getStoragePolicyTableItem("COOL");
+      Assert.assertEquals(storagePolicy1.getPolicyName(), "COOL");
+      Assert.assertTrue(storagePolicy2.getSid() == (byte)3);
       if (conn != null) {
         conn.close();
       }

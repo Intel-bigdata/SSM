@@ -48,7 +48,6 @@ public class DBAdapter {
   private Map<Integer, String> mapGroupIdName = null;
   private Map<Integer, String> mapStoragePolicyIdName = null;
   private Map<Integer, ErasureCodingPolicy> mapECPolicy = null;
-  private Map<String, StorageCapacity> mapStorageCapacity = null;
 
   public DBAdapter(Connection conn) {
     this.conn = conn;
@@ -151,7 +150,7 @@ public class DBAdapter {
     }
   }
 
-  public int booleanToInt(boolean b) {
+  private int booleanToInt(boolean b) {
     if (b) {
       return 1;
     } else {
@@ -159,7 +158,7 @@ public class DBAdapter {
     }
   }
 
-  public Integer getKey(Map<Integer, String> map, String value) {
+  private Integer getKey(Map<Integer, String> map, String value) {
     for (Integer key: map.keySet()) {
       if (map.get(key).equals(value)) {
         return key;
@@ -167,7 +166,7 @@ public class DBAdapter {
     }
     return null;
   }
-  public Integer getKey(Map<Integer, ErasureCodingPolicy> map, ErasureCodingPolicy value) {
+  private Integer getKey(Map<Integer, ErasureCodingPolicy> map, ErasureCodingPolicy value) {
     for (Integer key : map.keySet()) {
       if (map.get(key).equals(value)) {
         return key;
@@ -238,10 +237,29 @@ public class DBAdapter {
     return mapECPolicy.get(id) != null ? mapECPolicy.get(id) : null;
   }
 
+  public synchronized void insertStorageTables(StorageCapacity[] storages) {
+    try {
+      Statement s = conn.createStatement();
+      for (int i = 0; i < storages.length; i++) {
+        String sql = "INSERT INTO storages VALUES ('" + storages[i].getType() +
+            "','" + storages[i].getCapacity() + "','" + storages[i].getFree() + "')";
+        s.addBatch(sql);
+      }
+      s.executeBatch();
+    }catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
   public StorageCapacity getStorageCapacity(String type) {
-    updateCache();
-    return mapStorageCapacity.get(type) != null ?
-        mapStorageCapacity.get(type) : null;
+      String sql = "SELECT * FROM 'storages' WHERE type = '" + type + "';";
+      ResultSet rs;
+    try {
+      rs = executeQuery(sql);
+    } catch (SQLException e) {
+      return null;
+    }
+    return convertStorageTablesItem(rs);
   }
 
   /**
@@ -313,11 +331,6 @@ public class DBAdapter {
         String sql = "SELECT * FROM ecpolicys";
         mapECPolicy = convertEcPoliciesTableItem(executeQuery(sql));
       }
-
-      if (mapStorageCapacity == null) {
-        String sql = "SELECT * FROM storages";
-        mapStorageCapacity = convertStorageTablesItem(executeQuery(sql));
-      }
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -354,24 +367,22 @@ public class DBAdapter {
     return ret;
   }
 
-  private Map<String, StorageCapacity> convertStorageTablesItem(ResultSet resultSet) {
-    Map<String, StorageCapacity> map = new HashMap<>();
+  private StorageCapacity convertStorageTablesItem(ResultSet resultSet) {
+    StorageCapacity storage = null;
     if (resultSet == null) {
-      return map;
+      return storage;
     }
     try {
       while (resultSet.next()) {
-        String type = resultSet.getString(1);
-        StorageCapacity storage = new StorageCapacity(
+        storage = new StorageCapacity(
             resultSet.getString(1),
             resultSet.getLong(2),
             resultSet.getLong(3));
-        map.put(type, storage);
       }
     } catch (SQLException e) {
       return null;
     }
-    return map;
+    return storage;
   }
 
   private Map<Integer, String> convertToMap(ResultSet resultSet) {
@@ -584,7 +595,7 @@ public class DBAdapter {
       s.executeBatch();
     }catch (SQLException e) {
         e.printStackTrace();
-      }
+    }
   }
 
   public List<CommandInfo> getCommandsTableItem(String cidCondition, String ridCondition,
@@ -649,5 +660,53 @@ public class DBAdapter {
       }
     }
     return ret;
+  }
+
+  public synchronized void insertStoragePolicyTable(StoragePolicy s) {
+  String sql = "INSERT INTO 'storage_policy' VALUES('"+s.getSid() + "','" +
+      s.getPolicyName() + "');";
+    try {
+      execute(sql);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public StoragePolicy getStoragePolicyTableItem(byte sid) {
+    String sql = "SELECT * FROM storage_policy WHERE sid = '" + sid +"';";
+    ResultSet rs;
+    try {
+      rs = executeQuery(sql);
+    } catch (SQLException e) {
+      return null;
+    }
+    return convertToStoragePolicy(rs);
+  }
+
+  public StoragePolicy getStoragePolicyTableItem(String policyName) {
+    String sql = "SELECT * FROM storage_policy WHERE policy_name = '" + policyName +"';";
+    ResultSet rs;
+    try {
+      rs = executeQuery(sql);
+    } catch (SQLException e) {
+      return null;
+    }
+    return convertToStoragePolicy(rs);
+  }
+
+  private StoragePolicy convertToStoragePolicy(ResultSet rs) {
+    StoragePolicy storagePolicy = null;
+    if (rs == null) {
+      return storagePolicy;
+    }
+    try {
+      while(rs.next()) {
+        storagePolicy = new StoragePolicy(rs.getByte(1),
+            rs.getString(2));
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return storagePolicy;
   }
 }
