@@ -17,10 +17,13 @@
  */
 package org.apache.hadoop.ssm.rule;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Contains info about a rule inside SSM.
  */
-public class RuleInfo {
+public class RuleInfo implements Cloneable {
   private long id;
   private long submitTime;
   private String ruleText;
@@ -89,6 +92,22 @@ public class RuleInfo {
     return lastCheckTime;
   }
 
+  public void setLastCheckTime(long lastCheckTime) {
+    this.lastCheckTime = lastCheckTime;
+  }
+
+  public void updateRuleInfo(RuleState rs, long lastCheckTime,
+      long checkedCount, int commandsGen) {
+    if (rs != null) {
+      this.state = rs;
+    }
+    if (lastCheckTime != 0) {
+      this.lastCheckTime = lastCheckTime;
+    }
+    this.countConditionChecked += checkedCount;
+    this.countConditionFulfilled += commandsGen;
+  }
+
   public RuleInfo(long id, long submitTime, String ruleText, RuleState state,
       long countConditionChecked, long countConditionFulfilled,
       long lastCheckTime) {
@@ -107,6 +126,32 @@ public class RuleInfo {
         && countConditionChecked == info.countConditionChecked
         && countConditionFulfilled == info.countConditionFulfilled
         && lastCheckTime == info.lastCheckTime;
+  }
+
+  @Override
+  public String toString() {
+    StringBuffer sb = new StringBuffer();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    Date submitDate = new Date(submitTime);
+    String lastCheck = "Not Checked";
+    if (lastCheckTime != 0) {
+      Date lastCheckDate = new Date(lastCheckTime);
+      lastCheck = sdf.format(lastCheckDate);
+    }
+    sb.append("{ id = ").append(id)
+        .append(", submitTime = '").append(sdf.format(submitDate)).append("'")
+        .append(", State = ").append(state.toString())
+        .append(", lastCheckTime = '").append(lastCheck).append("'")
+        .append(", countConditionChecked = ").append(countConditionChecked)
+        .append(", countConditionFulfilled = ")
+        .append(countConditionFulfilled)
+        .append(" }");
+    return sb.toString();
+  }
+
+  public RuleInfo newCopy() {
+    return new RuleInfo(id, submitTime, ruleText, state, countConditionChecked,
+        countConditionFulfilled, lastCheckTime);
   }
 
   public static Builder newBuilder() {

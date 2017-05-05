@@ -55,6 +55,10 @@ public class RuleQueryExecutor implements Runnable {
     this.adapter = adapter;
   }
 
+  public TranslateResult getTranslateResult() {
+    return tr;
+  }
+
   private String unfoldSqlStatement(String sql) {
     return unfoldVariables(unfoldFunctionCalls(sql));
   }
@@ -171,12 +175,17 @@ public class RuleQueryExecutor implements Runnable {
       long startCheckTime = System.currentTimeMillis();
       RuleInfo info = ruleManager.getRuleInfo(rid);
       RuleState state = info.getState();
-      if (state == RuleState.DISABLED || state == RuleState.FINISHED) {
+      if (state == RuleState.DISABLED) {
+        return;
+      }
+      if (state == RuleState.DELETED || state == RuleState.FINISHED) {
         triggerException();
       }
       TimeBasedScheduleInfo scheduleInfo = tr.getTbScheduleInfo();
 
-      if (Math.abs(timeNow() - scheduleInfo.getStartTime()) > 3000) {
+      if (scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER
+          // TODO: tricky here, time passed
+          && startCheckTime - scheduleInfo.getEndTime() > 0) {
         // TODO: special for scheduleInfo.isOneShot()
         ruleManager.updateRuleInfo(rid, RuleState.FINISHED, timeNow(), 0, 0);
         triggerException();
@@ -197,6 +206,7 @@ public class RuleQueryExecutor implements Runnable {
 
     } catch (IOException e) {
       // TODO: log this
+      int why = 1;
     }
   }
 
@@ -207,6 +217,6 @@ public class RuleQueryExecutor implements Runnable {
   }
 
   public List<CommandInfo> generateCommands(List<String> files) {
-    return null;
+    return new ArrayList<>();
   }
 }
