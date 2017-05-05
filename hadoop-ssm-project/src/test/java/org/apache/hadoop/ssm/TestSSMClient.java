@@ -67,7 +67,7 @@ public class TestSSMClient {
 
     //test getAllRuleInfo
     Class clazz = ssmClient.getAllRuleInfo().getClass();
-    assertEquals(ArrayList.class,clazz);
+    assertEquals(ArrayList.class, clazz);
 
     //test submitRule
     long res = ssmClient.submitRule("rule", RuleState.ACTIVE);
@@ -77,10 +77,10 @@ public class TestSSMClient {
     ssmClient.checkRule("rule");
 
     //test deleteRule
-    ssmClient.deleteRule(1,true);
+    ssmClient.deleteRule(1, true);
 
     //test setRuleState
-    ssmClient.setRuleState(1, RuleState.ACTIVE,true);
+    ssmClient.setRuleState(1, RuleState.ACTIVE, true);
 
     //test single SSM
     try {

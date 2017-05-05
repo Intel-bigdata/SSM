@@ -82,8 +82,9 @@ public class SSMClient implements ClientSSMProtocol {
   }
 
   @Override
-  public void setRuleState(long ruleID, RuleState newState, boolean dropPendingCommands) {
-    ssm.setRuleState(ruleID,newState,dropPendingCommands);
+  public void setRuleState(long ruleID, RuleState newState
+      , boolean dropPendingCommands) {
+    ssm.setRuleState(ruleID, newState, dropPendingCommands);
   }
 
 }

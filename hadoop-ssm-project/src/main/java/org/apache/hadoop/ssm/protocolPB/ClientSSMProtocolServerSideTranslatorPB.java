@@ -24,7 +24,6 @@ import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceStates;
 import org.apache.hadoop.ssm.rule.RuleInfo;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ClientSSMProtocolServerSideTranslatorPB implements
@@ -46,26 +45,22 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller
-      , ClientSSMProto.RuleInfoParaProto para) {
+  public ClientSSMProto.RuleInfoResultProto getRuleInfo(
+      RpcController controller, ClientSSMProto.RuleInfoParaProto para) {
     RuleInfo ruleInfo = server.getRuleInfo(para.getPara());
     return PBHelperSSM.convert(ruleInfo);
   }
 
   @Override
-  public ClientSSMProto.AllRuleInfoResultProto getAllRuleInfo(RpcController controller
-      , ClientSSMProto.voidProto request) throws ServiceException {
+  public ClientSSMProto.AllRuleInfoResultProto getAllRuleInfo(
+      RpcController controller, ClientSSMProto.voidProto request)
+      throws ServiceException {
     ClientSSMProto.AllRuleInfoResultProto.Builder allRuleInfoBuilder
         = ClientSSMProto.AllRuleInfoResultProto.newBuilder();
 
     List<RuleInfo> ruleInfoList = server.getAllRuleInfo();
-    List<ClientSSMProto.RuleInfoResultProto> ruleInfoProtoList = new ArrayList<>();
-
     for (RuleInfo r : ruleInfoList) {
-      ruleInfoProtoList.add(PBHelperSSM.convert(r));
-    }
-    for (int i = 0; i < ruleInfoProtoList.size(); ++i) {
-      allRuleInfoBuilder.addResult(ruleInfoProtoList.get(i));
+      allRuleInfoBuilder.addResult(PBHelperSSM.convert(r));
     }
     return allRuleInfoBuilder.build();
   }
@@ -105,9 +100,9 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
     ClientSSMProto.voidProto.Builder builder =
         ClientSSMProto.voidProto.newBuilder();
     ClientSSMProto.RuleStateProto ruleStateProto = p.getNewStateProto();
-    server.setRuleState(p.getRuleID(), PBHelperSSM.convert(ruleStateProto), p.getDropPendingCommands());
+    server.setRuleState(p.getRuleID(), PBHelperSSM.convert(ruleStateProto)
+        , p.getDropPendingCommands());
     return builder.build();
   }
-  
 
 }
