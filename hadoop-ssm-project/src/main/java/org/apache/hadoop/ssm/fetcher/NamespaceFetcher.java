@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.fetcher;
 
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
@@ -27,31 +27,47 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class NamespaceFetcher {
   private static final Long DEFAULT_INTERVAL = 1000L;
+
+  private final ScheduledExecutorService scheduledExecutorService;
   private final long fetchInterval;
+  private ScheduledFuture fetchTaskFuture;
+  private ScheduledFuture consumerFuture;
   private FileStatusConsumer consumer;
   private FetchTask fetchTask;
-  private Timer timer;
 
   public NamespaceFetcher(DFSClient client, DBAdapter adapter) {
     this(client, adapter, DEFAULT_INTERVAL);
   }
 
+  public NamespaceFetcher(DFSClient client, DBAdapter adapter, ScheduledExecutorService service) {
+    this(client, adapter, DEFAULT_INTERVAL, service);
+  }
+
   public NamespaceFetcher(DFSClient client, DBAdapter adapter, long fetchInterval) {
-    this.timer = new Timer();
+    this(client, adapter, fetchInterval, Executors.newSingleThreadScheduledExecutor());
+  }
+
+  public NamespaceFetcher(DFSClient client, DBAdapter adapter, long fetchInterval,
+      ScheduledExecutorService service) {
     this.fetchTask = new FetchTask(client);
     this.consumer = new FileStatusConsumer(adapter, fetchTask);
     this.fetchInterval = fetchInterval;
+    this.scheduledExecutorService = service;
   }
 
   public void startFetch() throws IOException {
-    this.timer.schedule(fetchTask, 0, fetchInterval);
-    this.consumer.start();
+    this.fetchTaskFuture = this.scheduledExecutorService.scheduleAtFixedRate(
+        fetchTask, 0, fetchInterval, TimeUnit.MILLISECONDS);
+    this.consumerFuture = this.scheduledExecutorService.scheduleAtFixedRate(
+        consumer, 0, 100, TimeUnit.MILLISECONDS);
   }
 
   public boolean fetchFinished() {
@@ -59,11 +75,11 @@ public class NamespaceFetcher {
   }
 
   public void stop() {
-    this.timer.cancel();
-    this.consumer.interrupt();
+    this.fetchTaskFuture.cancel(false);
+    this.consumerFuture.cancel(false);
   }
 
-  private static class FetchTask extends TimerTask {
+  private static class FetchTask implements Runnable {
     private final static int DEFAULT_BATCH_SIZE = 20;
     private final static String ROOT = "/";
     private final HdfsFileStatus[] EMPTY_STATUS = new HdfsFileStatus[0];
@@ -165,7 +181,7 @@ public class NamespaceFetcher {
     }
   }
 
-  private static class FileStatusConsumer extends Thread {
+  private static class FileStatusConsumer implements Runnable {
     private final DBAdapter dbAdapter;
     private final FetchTask fetchTask;
 
@@ -176,24 +192,16 @@ public class NamespaceFetcher {
 
     @Override
     public void run() {
-      try {
-        while (!Thread.currentThread().isInterrupted()) {
-          FileStatusInternalBatch batch = fetchTask.pollBatch();
-          if (batch != null) {
-            FileStatusInternal[] statuses = batch.getFileStatuses();
-            if (statuses.length == batch.actualSize()) {
-              this.dbAdapter.insertFiles(batch.getFileStatuses());
-            } else {
-              FileStatusInternal[] actual = new FileStatusInternal[batch.actualSize()];
-              System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
-              this.dbAdapter.insertFiles(actual);
-            }
-          } else {
-            Thread.sleep(100);
-          }
+      FileStatusInternalBatch batch = fetchTask.pollBatch();
+      if (batch != null) {
+        FileStatusInternal[] statuses = batch.getFileStatuses();
+        if (statuses.length == batch.actualSize()) {
+          this.dbAdapter.insertFiles(batch.getFileStatuses());
+        } else {
+          FileStatusInternal[] actual = new FileStatusInternal[batch.actualSize()];
+          System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
+          this.dbAdapter.insertFiles(actual);
         }
-      } catch (InterruptedException e) {
-        e.printStackTrace();
       }
     }
   }

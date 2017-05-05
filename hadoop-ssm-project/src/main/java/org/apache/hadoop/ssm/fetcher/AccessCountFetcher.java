@@ -15,44 +15,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.fetcher;
 
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
 import org.apache.hadoop.ssm.sql.tables.AccessCountTableManager;
 
 import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class AccessCountFetcher {
   private static final Long DEFAULT_INTERVAL = 5 * 1000L;
+  private final ScheduledExecutorService scheduledExecutorService;
+  private final Long fetchInterval;
+  private ScheduledFuture scheduledFuture;
   private FetchTask fetchTask;
-  private Long fetchInterval;
-  private Timer timer;
 
   public AccessCountFetcher(DFSClient client, AccessCountTableManager manager) {
     this(DEFAULT_INTERVAL, client, manager);
   }
 
   public AccessCountFetcher(Long fetchInterval, DFSClient client,
-    AccessCountTableManager manager) {
-    this.timer = new Timer();
+      AccessCountTableManager manager) {
+    this(fetchInterval, client, manager, Executors.newSingleThreadScheduledExecutor());
+  }
+
+  public AccessCountFetcher(Long fetchInterval, DFSClient client,
+      AccessCountTableManager manager, ScheduledExecutorService service) {
     this.fetchInterval = fetchInterval;
     this.fetchTask = new FetchTask(client, manager);
+    this.scheduledExecutorService = service;
   }
 
   public void start() {
     Long current = System.currentTimeMillis();
     Long toWait = fetchInterval - (current % fetchInterval);
-    timer.schedule(fetchTask, toWait, fetchInterval);
+    this.scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(
+        fetchTask, toWait, fetchInterval, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
-    this.timer.cancel();
+    this.scheduledFuture.cancel(false);
   }
 
-  private static class FetchTask extends TimerTask {
+  private static class FetchTask implements Runnable {
     private final DFSClient client;
     private final AccessCountTableManager manager;
 
