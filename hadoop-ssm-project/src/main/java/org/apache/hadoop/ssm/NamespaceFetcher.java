@@ -113,7 +113,7 @@ public class NamespaceFetcher {
     }
 
     public boolean finished() {
-      return this.deque.size() == 0;
+      return this.deque.isEmpty() && this.batches.isEmpty();
     }
 
     public FileStatusInternalBatch pollBatch() {
