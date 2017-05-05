@@ -18,9 +18,23 @@
 package org.apache.hadoop.ssm.protocol;
 
 import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
+
+import java.util.List;
 
 public interface ClientSSMProtocol {
   public SSMServiceStates getServiceStatus();
 
   public RuleInfo getRuleInfo(long id);
+
+  public List<RuleInfo> getAllRuleInfo();
+
+  public long submitRule(String rule, RuleState initState);
+
+  public void checkRule(String rule);
+
+  public void deleteRule(long ruleID, boolean dropPendingCommands);
+
+  public void setRuleState(long ruleID, RuleState newState
+      , boolean dropPendingCommands);
 }

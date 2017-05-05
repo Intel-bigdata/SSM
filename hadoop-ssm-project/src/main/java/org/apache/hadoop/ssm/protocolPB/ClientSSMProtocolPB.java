@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm.protocolPB;
 
 import com.google.protobuf.RpcController;
+import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 
@@ -26,8 +27,23 @@ import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 public interface ClientSSMProtocolPB {
 
   public ClientSSMProto.StatusResultProto
-  getServiceStatus(RpcController controller, ClientSSMProto.StatusParaProto p);
+  getServiceStatus(RpcController controller, ClientSSMProto.voidProto p) throws ServiceException;
 
   public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller
-      , ClientSSMProto.RuleInfoParaProto para);
+      , ClientSSMProto.RuleInfoParaProto para) throws ServiceException;
+
+  public ClientSSMProto.AllRuleInfoResultProto getAllRuleInfo(RpcController controller
+      , ClientSSMProto.voidProto para) throws ServiceException;
+
+  public ClientSSMProto.submitRuleResProto submitRule(RpcController controller
+      , ClientSSMProto.submitRuleParaProto p) throws ServiceException;
+
+  public ClientSSMProto.voidProto checkRule(RpcController controller
+      , ClientSSMProto.checkRuleParaProto p) throws ServiceException;
+
+  public ClientSSMProto.voidProto deleteRule(RpcController controller
+      , ClientSSMProto.deleteRuleParaProto p) throws ServiceException;
+
+  public ClientSSMProto.voidProto setRuleState(RpcController controller
+      , ClientSSMProto.setRuleStateParaProto p) throws ServiceException;
 }

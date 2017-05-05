@@ -46,8 +46,8 @@ public class TestSSMClient {
     // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
     final DistributedFileSystem dfs = cluster.getFileSystem();
 
-    InetSocketAddress addr = new InetSocketAddress("localhost",
-        SSMConfigureKeys.DFS_SSM_RPC_PROT_DEFAULT);
+    InetSocketAddress addr = new InetSocketAddress("localhost"
+        , SSMConfigureKeys.DFS_SSM_RPC_PROT_DEFAULT);
 
     final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
@@ -64,6 +64,23 @@ public class TestSSMClient {
     //test getRuleInfo
     RuleInfo ruleInfo = ssmClient.getRuleInfo(5);
     assertEquals(ruleInfo.getState(), RuleState.ACTIVE);
+
+    //test getAllRuleInfo
+    Class clazz = ssmClient.getAllRuleInfo().getClass();
+    assertEquals(ArrayList.class, clazz);
+
+    //test submitRule
+    long res = ssmClient.submitRule("rule", RuleState.ACTIVE);
+    assertEquals(0L, res);
+
+    //test checkRule
+    ssmClient.checkRule("rule");
+
+    //test deleteRule
+    ssmClient.deleteRule(1, true);
+
+    //test setRuleState
+    ssmClient.setRuleState(1, RuleState.ACTIVE, true);
 
     //test single SSM
     try {

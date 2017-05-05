@@ -22,34 +22,65 @@ option java_outer_classname = "ClientSSMProto";
 option java_generic_services = true;
 option java_generate_equals_and_hash = true;
 
-message StatusParaProto {
+message voidProto {
 }
+
+enum RuleStateProto {
+  ACTIVE = 0x0;
+  DRYRUN = 0x1;
+  DISABLED = 0x2;
+  FINISHED = 0x3;
+}
+
 message StatusResultProto {
   required string SSMServiceState = 1;
 }
 
-message RuleInfoParaProto {
-  required sint64 para = 1;
+message submitRuleParaProto {
+  required string rule = 1;
+  required RuleStateProto initStateProto = 2;
 }
-message RuleInfoResultTypeProto {
-  required sint64 id = 1;
-  required sint64 submitTime = 2;
-  required sint64 countConditionChecked = 3;
-  required sint64 countConditionFulfilled = 4;
-  required string ruleText = 5;
-  required RuleStateProto rulestateProto = 6;
-  enum RuleStateProto {
-    ACTIVE = 0x0;
-    DRYRUN = 0x1;
-    DISABLED = 0x2;
-    FINISHED = 0x3;
-  }
+message submitRuleResProto {
+  required int64 result = 1;
+}
+
+message checkRuleParaProto {
+  required string rule = 1;
+}
+
+message deleteRuleParaProto {
+  required int64 ruleID = 1;
+  required bool dropPendingCommands = 2;
+}
+
+message setRuleStateParaProto {
+  required int64 ruleID = 1;
+  required RuleStateProto newStateProto = 2;
+  required bool dropPendingCommands = 3;
+}
+
+message RuleInfoParaProto {
+  required int64 para = 1;
 }
 message RuleInfoResultProto {
-  required RuleInfoResultTypeProto result = 1;
+  required int64 id = 1;
+  required int64 submitTime = 2;
+  required int64 countConditionChecked = 3;
+  required int64 countConditionFulfilled = 4;
+  required string ruleText = 5;
+  required RuleStateProto rulestateProto = 6;
+}
+
+message AllRuleInfoResultProto {
+  repeated RuleInfoResultProto result = 1;
 }
 
 service protoService {
-  rpc getServiceStatus (StatusParaProto) returns (StatusResultProto);
+  rpc getServiceStatus (voidProto) returns (StatusResultProto);
+  rpc submitRule (submitRuleParaProto) returns (submitRuleResProto);
+  rpc checkRule (checkRuleParaProto) returns (voidProto);
+  rpc deleteRule (deleteRuleParaProto) returns (voidProto);
+  rpc setRuleState (setRuleStateParaProto) returns (voidProto);
   rpc getRuleInfo (RuleInfoParaProto) returns (RuleInfoResultProto);
+  rpc getAllRuleInfo (voidProto) returns (AllRuleInfoResultProto);
 }

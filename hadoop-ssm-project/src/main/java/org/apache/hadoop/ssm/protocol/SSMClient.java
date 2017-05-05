@@ -23,11 +23,13 @@ import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolClientSideTranslatorPB;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB;
 import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 
-public class SSMClient {
+public class SSMClient implements ClientSSMProtocol {
   final static long VERSION = 1;
   Configuration conf;
   ClientSSMProtocol ssm;
@@ -49,11 +51,40 @@ public class SSMClient {
     this.ssm = clientSSMProtocol;
   }
 
+  @Override
   public SSMServiceStates getServiceStatus() {
     return ssm.getServiceStatus();
   }
 
+  @Override
   public RuleInfo getRuleInfo(long id) {
     return ssm.getRuleInfo(id);
   }
+
+  @Override
+  public List<RuleInfo> getAllRuleInfo() {
+    return ssm.getAllRuleInfo();
+  }
+
+  @Override
+  public long submitRule(String rule, RuleState initState) {
+    return ssm.submitRule(rule, initState);
+  }
+
+  @Override
+  public void checkRule(String rule) {
+    ssm.checkRule(rule);
+  }
+
+  @Override
+  public void deleteRule(long ruleID, boolean dropPendingCommands) {
+    ssm.deleteRule(ruleID, dropPendingCommands);
+  }
+
+  @Override
+  public void setRuleState(long ruleID, RuleState newState
+      , boolean dropPendingCommands) {
+    ssm.setRuleState(ruleID, newState, dropPendingCommands);
+  }
+
 }
