@@ -43,42 +43,55 @@ public class CommandInfo {
   public long getCid() {
     return cid;
   }
+
   public void setCid(int cid) {
     this.cid = cid;
   }
+
   public long getRid() {
     return rid;
   }
+
   public void setRid(int rid) {
     this.rid = rid;
   }
+
   public ActionType getActionId() {
     return actionId;
   }
+
   public void setActionId(ActionType actionId) {
     this.actionId = actionId;
   }
+
   public CommandState getState() {
     return state;
   }
+
   public void setState(CommandState state) {
     this.state = state;
   }
+
   public String getParameters() {
     return parameters;
   }
+
   public void setParameters(String parameters) {
     this.parameters = parameters;
   }
+
   public long getGenerateTime() {
     return generateTime;
   }
+
   public void setGenerateTime(long generateTime) {
     this.generateTime = generateTime;
   }
+
   public long getStateChangedTime() {
     return stateChangedTime;
   }
+
   public void setStateChangedTime(long stateChangedTime) {
     this.stateChangedTime = stateChangedTime;
   }

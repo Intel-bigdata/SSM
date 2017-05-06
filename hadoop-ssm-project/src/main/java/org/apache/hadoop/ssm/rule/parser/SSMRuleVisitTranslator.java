@@ -19,6 +19,7 @@ package org.apache.hadoop.ssm.rule.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.apache.hadoop.ssm.actions.ActionType;
 import org.apache.hadoop.ssm.rule.exceptions.RuleParserException;
 import org.apache.hadoop.ssm.rule.objects.Property;
 import org.apache.hadoop.ssm.rule.objects.PropertyRealParas;
@@ -49,6 +50,9 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   private List<PropertyRealParas> realParases = new LinkedList<>();
 
   private TimeBasedScheduleInfo timeBasedScheduleInfo = null;
+
+  Map<String, String> actionParams = new HashMap<>();
+  ActionType actionType = null;
 
   private int nError = 0;
 
@@ -543,6 +547,16 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
     return new ValueNode(new VisitResult(ValueType.LONG, ret * times));
   }
 
+  @Override
+  public TreeNode visitCommand(SSMRuleParser.CommandContext ctx) {
+    String cmd = ctx.getChild(0).getText();
+    actionType = ActionType.fromName(cmd);
+    if (actionType == ActionType.MoveFile) {
+      actionParams.put("_STORAGE_POLICY_", ctx.STRING().getText());
+    }
+    return null;
+  }
+
   public TreeNode pharseConstTimePoint(String str) {
     SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     TreeNode result;
@@ -586,7 +600,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
     return new TranslateResult(sqlStatements,
         tempTableNames, dynamicParameters, sqlStatements.size() - 1,
-        timeBasedScheduleInfo);
+        timeBasedScheduleInfo, actionType, actionParams);
   }
 
   private class NodeTransResult {

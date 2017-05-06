@@ -17,18 +17,23 @@
  */
 package org.apache.hadoop.ssm.rule;
 
+import org.apache.hadoop.ssm.CommandState;
+import org.apache.hadoop.ssm.actions.ActionType;
 import org.apache.hadoop.ssm.rule.parser.TimeBasedScheduleInfo;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.ExecutionContext;
+import org.apache.hadoop.ssm.utils.JsonUtil;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -194,7 +199,7 @@ public class RuleQueryExecutor implements Runnable {
 
       List<String> files = executeFileRuleQuery();
       long endCheckTime = System.currentTimeMillis();
-      List<CommandInfo> commands = generateCommands(files);
+      List<CommandInfo> commands = generateCommands(files, info);
       ruleManager.addNewCommands(commands);
       long endProcessTime = System.currentTimeMillis();
 
@@ -216,7 +221,21 @@ public class RuleQueryExecutor implements Runnable {
     temp[1] += "The exception is created deliberately";
   }
 
-  public List<CommandInfo> generateCommands(List<String> files) {
-    return new ArrayList<>();
+  public List<CommandInfo> generateCommands(List<String> files,
+      RuleInfo info) {
+    if (files == null || files.size() == 0) {
+      return new ArrayList<>();
+    }
+
+    long time = System.currentTimeMillis();
+    Map<String, String> parameters = tr.getActionParams();
+    List<CommandInfo> cmds = new ArrayList<>(files.size());
+    for (String file : files) {
+      parameters.put("_FILE_PATH_", file);
+      cmds.add(new CommandInfo(0L, info.getId(), tr.getActionType(),
+          CommandState.PENDING, JsonUtil.toJsonString(parameters),
+          time, time));
+    }
+    return cmds;
   }
 }
