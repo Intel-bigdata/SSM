@@ -54,16 +54,6 @@ public class DBAdapter {
     this.conn = conn;
   }
 
-  /**
-   * Insert a new rule to SSM.
-   *
-   * @param rule
-   * @return rule id if success
-   */
-  public long createRule(String rule) {
-    return 0;
-  }
-
   public Map<Long, Integer> getAccessCount(long startTime, long endTime,
       String countFilter) {
     String sqlGetTableNames = "SELECT table_name FROM access_count_tables " +
@@ -509,7 +499,7 @@ public class DBAdapter {
     return false;
   }
 
-  public boolean updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
+  public synchronized boolean updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
       long checkedCount, int commandsGen) {
     StringBuffer sb = new StringBuffer("UPDATE rules SET");
     if (rs != null) {

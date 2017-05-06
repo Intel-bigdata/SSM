@@ -64,4 +64,8 @@ public class TranslateResult {
   public TimeBasedScheduleInfo getTbScheduleInfo() {
     return tbScheduleInfo;
   }
+
+  public boolean isTimeBased() {
+    return tbScheduleInfo != null;
+  }
 }

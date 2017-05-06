@@ -81,7 +81,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitConditions(SSMRuleParser.ConditionsContext ctx) {
-    System.out.println("Condition: " + ctx.getText());
+    // System.out.println("Condition: " + ctx.getText());
     conditions = visit(ctx.boolvalue());
     return conditions;
   }
@@ -211,7 +211,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitIdAtt(SSMRuleParser.IdAttContext ctx) {
-    System.out.println("Bare ID: " + ctx.getText());
+    // System.out.println("Bare ID: " + ctx.getText());
     Property p = objects.get("Default").getProperty(ctx.getText());
     if (p == null) {
       throw new RuleParserException("Object " + objects.get("Default").toString()
