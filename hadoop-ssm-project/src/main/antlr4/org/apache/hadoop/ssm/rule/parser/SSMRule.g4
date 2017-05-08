@@ -18,9 +18,10 @@
 grammar SSMRule;
 
 ssmrule
-    : object ':' (trigger '|')? conditions '|' commands     #ruleLine
+    : object ':' (trigger '|')? conditions '|' command      #ruleLine
     | Linecomment+                                          #commentLine
     ;
+// just one command
 
 // TODO: Fix this item
 object

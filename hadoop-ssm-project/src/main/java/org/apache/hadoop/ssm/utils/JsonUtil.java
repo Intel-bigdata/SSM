@@ -15,35 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.web.resources;
+package org.apache.hadoop.ssm.utils;
 
-import org.apache.hadoop.util.StringUtils;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
-import java.util.Arrays;
+import java.util.Map;
 
-abstract class EnumParam<E extends Enum<E>>
-    extends Param<E, EnumParam.Domain<E>> {
-  EnumParam(final Domain<E> domain, final E value) {
-    super(domain, value);
+public class JsonUtil {
+
+  public static String toJsonString(Map<String, String> map) {
+    Gson gson = new Gson();
+    return gson.toJson(map);
   }
 
-  /** The domain of the parameter. */
-  static final class Domain<E extends Enum<E>> extends Param.Domain<E> {
-    private final Class<E> enumClass;
-
-    Domain(String name, final Class<E> enumClass) {
-      super(name);
-      this.enumClass = enumClass;
-    }
-
-    @Override
-    public final String getDomain() {
-      return Arrays.asList(enumClass.getEnumConstants()).toString();
-    }
-
-    @Override
-    final E parse(final String str) {
-      return Enum.valueOf(enumClass, StringUtils.toUpperCase(str));
-    }
+  public static Map<String, String> toStringStringMap(String jsonString) {
+    Gson gson = new Gson();
+    Map<String, String> res = gson.fromJson(jsonString,
+        new TypeToken<Map<String, String>>(){}.getType());
+    return res;
   }
 }

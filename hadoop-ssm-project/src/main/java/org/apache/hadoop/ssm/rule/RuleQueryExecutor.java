@@ -15,25 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.sql;
+package org.apache.hadoop.ssm.rule;
 
+import org.apache.hadoop.ssm.CommandState;
+import org.apache.hadoop.ssm.actions.ActionType;
+import org.apache.hadoop.ssm.rule.parser.TimeBasedScheduleInfo;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
+import org.apache.hadoop.ssm.sql.CommandInfo;
+import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.sql.ExecutionContext;
+import org.apache.hadoop.ssm.utils.JsonUtil;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Execute rule queries and return result.
  */
-public class RuleQueryExecutor {
+public class RuleQueryExecutor implements Runnable {
+  private RuleManager ruleManager;
   private TranslateResult tr;
   private ExecutionContext ctx;
-  private DBAdapter adapter;
+  private DBAdapter adapter; // TODO: abstract to prevent direct call
 
   private static Pattern varPattern = Pattern.compile(
       "\\$([a-zA-Z_]+[a-zA-Z0-9_]*)");
@@ -41,11 +52,16 @@ public class RuleQueryExecutor {
       "\\$@([a-zA-Z_]+[a-zA-Z0-9_]*)\\(([a-zA-Z_][a-zA-Z0-9_]*)?\\)");
 
 
-  public RuleQueryExecutor(ExecutionContext ctx, TranslateResult tr,
-      DBAdapter adapter) {
+  public RuleQueryExecutor(RuleManager ruleManager, ExecutionContext ctx,
+      TranslateResult tr, DBAdapter adapter) {
+    this.ruleManager = ruleManager;
     this.ctx = ctx;
     this.tr = tr;
     this.adapter = adapter;
+  }
+
+  public TranslateResult getTranslateResult() {
+    return tr;
   }
 
   private String unfoldSqlStatement(String sql) {
@@ -154,5 +170,72 @@ public class RuleQueryExecutor {
       long startTime, long endTime) {
     // TODO: hard code for test now
     return Arrays.asList("sec-2017-03-31-12-59-45", "sec-2017-03-31-12-59-50");
+  }
+
+
+  @Override
+  public void run() {
+    long rid = ctx.getRuleId();
+    try {
+      long startCheckTime = System.currentTimeMillis();
+      RuleInfo info = ruleManager.getRuleInfo(rid);
+      RuleState state = info.getState();
+      if (state == RuleState.DISABLED) {
+        return;
+      }
+      if (state == RuleState.DELETED || state == RuleState.FINISHED) {
+        triggerException();
+      }
+      TimeBasedScheduleInfo scheduleInfo = tr.getTbScheduleInfo();
+
+      if (scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER
+          // TODO: tricky here, time passed
+          && startCheckTime - scheduleInfo.getEndTime() > 0) {
+        // TODO: special for scheduleInfo.isOneShot()
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, timeNow(), 0, 0);
+        triggerException();
+      }
+
+
+      List<String> files = executeFileRuleQuery();
+      long endCheckTime = System.currentTimeMillis();
+      List<CommandInfo> commands = generateCommands(files, info);
+      ruleManager.addNewCommands(commands);
+      long endProcessTime = System.currentTimeMillis();
+
+      ruleManager.updateRuleInfo(rid, null, timeNow(), 1, commands.size());
+
+      if (endProcessTime - startCheckTime > 3000) {
+        // TODO: log an issue of slow processing
+      }
+
+    } catch (IOException e) {
+      // TODO: log this
+      int why = 1;
+    }
+  }
+
+  private void triggerException() {
+    // throw an exception
+    String[] temp = new String[1];
+    temp[1] += "The exception is created deliberately";
+  }
+
+  public List<CommandInfo> generateCommands(List<String> files,
+      RuleInfo info) {
+    if (files == null || files.size() == 0) {
+      return new ArrayList<>();
+    }
+
+    long time = System.currentTimeMillis();
+    Map<String, String> parameters = tr.getActionParams();
+    List<CommandInfo> cmds = new ArrayList<>(files.size());
+    for (String file : files) {
+      parameters.put("_FILE_PATH_", file);
+      cmds.add(new CommandInfo(0L, info.getId(), tr.getActionType(),
+          CommandState.PENDING, JsonUtil.toJsonString(parameters),
+          time, time));
+    }
+    return cmds;
   }
 }

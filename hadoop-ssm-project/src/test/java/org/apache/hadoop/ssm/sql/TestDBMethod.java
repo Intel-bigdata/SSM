@@ -17,10 +17,16 @@
  */
 package org.apache.hadoop.ssm.sql;
 
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.ssm.CommandState;
+import org.apache.hadoop.ssm.actions.ActionType;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.File;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +58,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetStorageCapacity () throws Exception {
+    public void testGetStorageCapacity() throws Exception {
       Connection conn = new TestDBUtil().getTestDBInstance();
       DBAdapter dbAdapter = new DBAdapter(conn);
       StorageCapacity storageCapacity = dbAdapter.getStorageCapacity("HDD");
@@ -87,5 +93,60 @@ public class TestDBMethod {
       if (conn != null) {
         conn.close();
       }
+    }
+
+    @Test
+    public void testInsetFiles() throws Exception {
+      Connection conn = new TestDBUtil().getTestDBInstance();
+      DBAdapter dbAdapter = new DBAdapter(conn);
+      String pathString = "testFile";
+      long length = 123L;
+      boolean isDir = false;
+      int blockReplication = 1;
+      long blockSize = 128 *1024L;
+      long modTime = 123123123L;
+      long accessTime = 123123120L;
+      FsPermission perms = FsPermission.getDefault();
+      String owner = "root";
+      String group = "admin";
+      byte[] symlink = null;
+      byte[] path = DFSUtil.string2Bytes(pathString);
+      long fileId = 312321L;
+      int numChildren = 1;
+      byte storagePolicy = 0;
+      FileStatusInternal[] files = { new FileStatusInternal(length, isDir, blockReplication,
+          blockSize, modTime, accessTime, perms, owner, group, symlink,
+          path, "/tmp", fileId, numChildren, null, storagePolicy, null) };
+      dbAdapter.insertFiles(files);
+      HdfsFileStatus hdfsFileStatus = dbAdapter.getFile("/tmp/testFile");
+      Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 *1024L);
+      if (conn != null) {
+        conn.close();
+      }
+    }
+
+    @Test
+    public void testInsertCommandsTable() throws Exception {
+      String dbFile = TestDBUtil.getUniqueDBFilePath();
+      Connection conn = null;
+      conn = Util.createSqliteConnection(dbFile);
+      Util.initializeDataBase(conn);
+      DBAdapter dbAdapter = new DBAdapter(conn);
+      CommandInfo command1 = new CommandInfo(0, 1, ActionType.None,
+          CommandState.EXECUTING, "test", 123123333l, 232444444l);
+      CommandInfo command2 = new CommandInfo(0, 78, ActionType.ConvertToEC,
+          CommandState.PAUSED, "tt", 123178333l, 232444994l);
+      CommandInfo[] commands = {command1, command2};
+      dbAdapter.insertCommandsTable(commands);
+      String cidCondition = ">= 2 ";
+      String ridCondition = "= 78 ";
+      CommandState state = null;
+      List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, state);
+      Assert.assertTrue(com.get(0).getActionId() == ActionType.ConvertToEC);
+      if (conn != null) {
+        conn.close();
+      }
+      File file = new File(dbFile);
+      file.deleteOnExit();
     }
 }

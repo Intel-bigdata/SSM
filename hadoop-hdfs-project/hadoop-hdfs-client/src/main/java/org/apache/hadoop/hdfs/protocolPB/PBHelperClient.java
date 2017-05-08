@@ -1157,7 +1157,7 @@ public class PBHelperClient {
     return to[from.ordinal()];
   }
 
-  static InotifyProtos.MetadataUpdateType metadataUpdateTypeConvert(
+  public static InotifyProtos.MetadataUpdateType metadataUpdateTypeConvert(
       Event.MetadataUpdateEvent.MetadataType type) {
     switch (type) {
     case TIMES:
@@ -1177,7 +1177,7 @@ public class PBHelperClient {
     }
   }
 
-  private static Event.MetadataUpdateEvent.MetadataType metadataUpdateTypeConvert(
+  public static Event.MetadataUpdateEvent.MetadataType metadataUpdateTypeConvert(
       InotifyProtos.MetadataUpdateType type) {
     switch (type) {
     case META_TYPE_TIMES:
@@ -1197,7 +1197,7 @@ public class PBHelperClient {
     }
   }
 
-  static InotifyProtos.INodeType createTypeConvert(Event.CreateEvent.INodeType
+  public static InotifyProtos.INodeType createTypeConvert(Event.CreateEvent.INodeType
       type) {
     switch (type) {
     case DIRECTORY:
@@ -1261,7 +1261,7 @@ public class PBHelperClient {
     return new FsPermissionExtension((short)p.getPerm());
   }
 
-  private static Event.CreateEvent.INodeType createTypeConvert(
+  public static Event.CreateEvent.INodeType createTypeConvert(
       InotifyProtos.INodeType type) {
     switch (type) {
     case I_TYPE_DIRECTORY:

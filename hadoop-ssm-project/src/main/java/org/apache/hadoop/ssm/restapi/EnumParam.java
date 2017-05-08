@@ -15,29 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.window;
+package org.apache.hadoop.ssm.restapi;
 
-import org.junit.Test;
-import org.junit.Assert;
+import org.apache.hadoop.util.StringUtils;
 
-public class WindowRunnerTest {
+import java.util.Arrays;
 
-  @Test
-  public void testWindowRunner() {
-    WindowAssigner windowAssigner = new SlidingWindowAssigner(15L, 5L);
-    AccessCountWindowRunner<String> windowRunner =
-      new AccessCountWindowRunner<>(windowAssigner);
-    windowRunner.process("file1", new Window(0L, 5L), 10);
-    // Window [-10, 5]
-    Assert.assertTrue(windowRunner.trigger(5L).get("file1") == 10);
+abstract class EnumParam<E extends Enum<E>>
+    extends Param<E, EnumParam.Domain<E>> {
+  EnumParam(final Domain<E> domain, final E value) {
+    super(domain, value);
+  }
 
-    windowRunner.process("file1", new Window(5L, 10L), 10);
-    // Window [-5, 10]
-    Assert.assertTrue(windowRunner.trigger(10L).get("file1") == 20);
+  /** The domain of the parameter. */
+  static final class Domain<E extends Enum<E>> extends Param.Domain<E> {
+    private final Class<E> enumClass;
 
-    windowRunner.process("file1", new Window(10L, 15L), 10);
-    // Window [0, 15]
-    Assert.assertTrue(windowRunner.trigger(15L).get("file1") == 30);
+    Domain(String name, final Class<E> enumClass) {
+      super(name);
+      this.enumClass = enumClass;
+    }
 
+    @Override
+    public final String getDomain() {
+      return Arrays.asList(enumClass.getEnumConstants()).toString();
+    }
+
+    @Override
+    final E parse(final String str) {
+      return Enum.valueOf(enumClass, StringUtils.toUpperCase(str));
+    }
   }
 }

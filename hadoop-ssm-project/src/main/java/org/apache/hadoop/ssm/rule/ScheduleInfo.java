@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.window;
+package org.apache.hadoop.ssm.rule;
 
-import java.util.Collection;
-
-public interface WindowAssigner {
-  Collection<Window> assignWindow(Window window);
-
-  Collection<Window> assignWindow(Long timestamp);
+/**
+ * Created by root on 5/4/17.
+ */
+public interface ScheduleInfo {
+  long getStartTime();
+  int getRate();
+  int getRounds();
 }

@@ -87,7 +87,8 @@ public class CommandExecutor implements Runnable {
           Command toExec = schedule();
           if (toExec != null) {
             toExec.setScheduleToExecuteTime(Time.now());
-            cmdsInState.get(CommandState.READY.getValue()).add(toExec.getId());
+            cmdsInState.get(CommandState.PENDING.getValue())
+                .add(toExec.getId());
             new Daemon(execThreadGroup, toExec).start();
           } else {
             Thread.sleep(1000);
@@ -120,7 +121,7 @@ public class CommandExecutor implements Runnable {
    */
   private synchronized Command schedule() {
     // currently FIFO
-    List<Long> cmds = cmdsInState.get(CommandState.READY.getValue());
+    List<Long> cmds = cmdsInState.get(CommandState.PENDING.getValue());
     if (cmds.size() == 0) {
       return null;
     }

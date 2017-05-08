@@ -17,6 +17,9 @@
  */
 package org.apache.hadoop.ssm.rule.parser;
 
+import org.apache.hadoop.ssm.Action;
+import org.apache.hadoop.ssm.actions.ActionType;
+
 import java.util.List;
 import java.util.Map;
 
@@ -27,16 +30,23 @@ public class TranslateResult {
   private List<String> retColumns;
   private int retSqlIndex;
   private List<String> staticTempTables; // to be deleted after execution
-  List<String> sqlStatements;
-  Map<String, List<Object>> dynamicParameters;
+  private List<String> sqlStatements;
+  private Map<String, List<Object>> dynamicParameters;
+  private TimeBasedScheduleInfo tbScheduleInfo;
+  private ActionType actionType;
+  private Map<String, String> actionParams;
 
   public TranslateResult(List<String> sqlStatements,
       List<String> tempTableNames, Map<String, List<Object>> dynamicParameters,
-       int retSqlIndex) {
+      int retSqlIndex, TimeBasedScheduleInfo tbScheduleInfo,
+      ActionType actionType, Map<String, String> actionParams) {
     this.sqlStatements = sqlStatements;
     this.staticTempTables = tempTableNames;
     this.dynamicParameters = dynamicParameters;
     this.retSqlIndex = retSqlIndex;
+    this.tbScheduleInfo = tbScheduleInfo;
+    this.actionType = actionType;
+    this.actionParams = actionParams;
   }
 
   public void setSqlStatements(List<String> sqlStatements) {
@@ -57,5 +67,21 @@ public class TranslateResult {
 
   public int getRetSqlIndex() {
     return retSqlIndex;
+  }
+
+  public TimeBasedScheduleInfo getTbScheduleInfo() {
+    return tbScheduleInfo;
+  }
+
+  public boolean isTimeBased() {
+    return tbScheduleInfo != null;
+  }
+
+  public ActionType getActionType() {
+    return actionType;
+  }
+
+  public Map<String, String> getActionParams() {
+    return actionParams;
   }
 }

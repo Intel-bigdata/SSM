@@ -129,8 +129,4 @@ public class AccessCountTableManager {
     return first / Constants.ONE_MINUTE_IN_MILLIS !=
         second / Constants.ONE_MINUTE_IN_MILLIS;
   }
-
-  private String insertAccessCountValuesSQL() {
-    return "";
-  }
 }

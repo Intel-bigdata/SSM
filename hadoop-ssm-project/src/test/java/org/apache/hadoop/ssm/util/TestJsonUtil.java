@@ -15,13 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.rule.excepts;
+package org.apache.hadoop.ssm.util;
 
-/**
- * Represent an error in rule parser.
- */
-public class RuleParserException extends RuntimeException {
-  public RuleParserException(String info) {
-    super(info);
+
+import org.apache.hadoop.ssm.utils.JsonUtil;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class TestJsonUtil {
+
+  @Test
+  public void testTransitionBetweenMapAndString() throws Exception {
+    Map<String, String> mapParams = new HashMap<>();
+    mapParams.put("id", "avcde@#$%^^&~!@#$%^&*()3,./;'[]\\<>?:\"{}|\"");
+    mapParams.put("k:[{'", "1024");
+    String jsonString = JsonUtil.toJsonString(mapParams);
+
+    Map<String, String> mapRevert = JsonUtil.toStringStringMap(jsonString);
+    Assert.assertTrue(mapParams.size() == mapRevert.size());
+    for (String key : mapRevert.keySet()) {
+      Assert.assertTrue(mapParams.get(key).equals(mapRevert.get(key)));
+    }
   }
 }

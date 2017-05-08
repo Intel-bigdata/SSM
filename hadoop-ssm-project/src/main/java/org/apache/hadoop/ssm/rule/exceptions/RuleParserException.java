@@ -15,43 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.window;
+package org.apache.hadoop.ssm.rule.exceptions;
 
-public class Window implements Comparable<Window> {
-  private final Long start;
-  private final Long end;
-
-  public Window(Long start, Long end) {
-    this.start = start;
-    this.end = end;
-  }
-
-  public Long getLength() {
-    return this.end - this.start;
-  }
-
-  public Boolean intersects(Window other) {
-    return this.start <= other.end && this.end >= other.start;
-  }
-
-  public Boolean include(Window other) {
-    return (this.end >= other.end) && (this.start <= other.start);
-  }
-
-  public Long getStart() {
-    return start;
-  }
-
-  public Long getEnd() {
-    return end;
-  }
-
-  @Override
-  public int compareTo(Window o) {
-    int ret = start.compareTo(o.start);
-    if (ret == 0) {
-      ret = end.compareTo(o.end);
-    }
-    return ret;
+/**
+ * Represent an error in rule parser.
+ */
+public class RuleParserException extends RuntimeException {
+  public RuleParserException(String info) {
+    super(info);
   }
 }
