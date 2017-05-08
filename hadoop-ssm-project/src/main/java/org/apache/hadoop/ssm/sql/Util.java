@@ -111,12 +111,13 @@ public class Util {
         "CREATE TABLE `storage_policy` (\n" +
             "  `sid` tinyint(4) NOT NULL,\n" +
             "  `policy_name` varchar(64) DEFAULT NULL\n" +
-            ") ;" +
-        "INSERT INTO `storage_policy` VALUES ('2', 'COLD');" +
-        "INSERT INTO `storage_policy` VALUES ('5', 'WARM');" +
-        "INSERT INTO `storage_policy` VALUES ('7', 'HOT');" +
-        "INSERT INTO `storage_policy` VALUES ('10', 'ONE_SSD');" +
-        "INSERT INTO `storage_policy` VALUES ('12', 'ALL_SSD');" +
+            ") ;",
+
+        "INSERT INTO `storage_policy` VALUES ('2', 'COLD');" ,
+        "INSERT INTO `storage_policy` VALUES ('5', 'WARM');" ,
+        "INSERT INTO `storage_policy` VALUES ('7', 'HOT');" ,
+        "INSERT INTO `storage_policy` VALUES ('10', 'ONE_SSD');" ,
+        "INSERT INTO `storage_policy` VALUES ('12', 'ALL_SSD');" ,
         "INSERT INTO `storage_policy` VALUES ('15', 'LAZY_PERSIST');",
 
         "CREATE TABLE `xattr` (\n" +
