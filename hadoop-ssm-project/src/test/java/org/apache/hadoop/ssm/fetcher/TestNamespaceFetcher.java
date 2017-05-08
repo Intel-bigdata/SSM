@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.fetcher;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -23,6 +23,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.inotify.MissingEventsException;
+import org.apache.hadoop.ssm.SSMConfiguration;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.FileStatusInternal;
 import org.junit.Test;
@@ -58,7 +60,7 @@ public class TestNamespaceFetcher {
   }
 
   @Test
-  public void testNamespaceFetcher() throws IOException, InterruptedException {
+  public void testNamespaceFetcher() throws IOException, InterruptedException, MissingEventsException {
     final Configuration conf = new SSMConfiguration();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(2).build();

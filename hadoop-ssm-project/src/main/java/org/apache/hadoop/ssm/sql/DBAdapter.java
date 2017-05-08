@@ -53,16 +53,6 @@ public class DBAdapter {
     this.conn = conn;
   }
 
-  /**
-   * Insert a new rule to SSM.
-   *
-   * @param rule
-   * @return rule id if success
-   */
-  public long createRule(String rule) {
-    return 0;
-  }
-
   public Map<Long, Integer> getAccessCount(long startTime, long endTime,
       String countFilter) {
     String sqlGetTableNames = "SELECT table_name FROM access_count_tables " +
@@ -520,7 +510,7 @@ public class DBAdapter {
     return false;
   }
 
-  public boolean updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
+  public synchronized boolean updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
       long checkedCount, int commandsGen) {
     StringBuffer sb = new StringBuffer("UPDATE rules SET");
     if (rs != null) {
@@ -582,31 +572,31 @@ public class DBAdapter {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < commands.length; i++) {
-        String sql = "INSERT INTO commands(rid, action_id, state, parameters, " +
-            "generate_time, state_changed_time) " +
-            "VALUES('" + commands[i].getRid() + "', '" +
-            commands[i].getActionId().getValue() + "', '" +
-            commands[i].getState().getValue() + "', '" +
-            commands[i].getParameters() + "', '" +
-            commands[i].getGenerateTime() + "', '" +
-            commands[i].getStateChangedTime() + "');";
+        String sql = "INSERT INTO commands(rid, action_id, state, "
+            + "parameters, generate_time, state_changed_time) "
+            + "VALUES('" + commands[i].getRid() + "', '"
+            + commands[i].getActionId().getValue() + "', '"
+            + commands[i].getState().getValue() + "', '"
+            + commands[i].getParameters() + "', '"
+            + commands[i].getGenerateTime() + "', '"
+            + commands[i].getStateChangedTime() + "');";
         s.addBatch(sql);
       }
       s.executeBatch();
-    }catch (SQLException e) {
-        e.printStackTrace();
+    } catch (SQLException e) {
+      e.printStackTrace();
     }
   }
 
-  public List<CommandInfo> getCommandsTableItem(String cidCondition, String ridCondition,
-      CommandState state) {
+  public List<CommandInfo> getCommandsTableItem(String cidCondition,
+      String ridCondition, CommandState state) {
     String sqlPrefix = "SELECT * FROM commands WHERE ";
-    String sqlFromCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
-    String sqlFromRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
-    String sqlFromState = (state == null) ? "" : "AND state = " + state;
+    String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
+    String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
+    String sqlState = (state == null) ? "" : "AND state = " + state;
     String sqlFinal = "";
     if (cidCondition != null || ridCondition != null || state != null) {
-      sqlFinal = sqlPrefix + sqlFromCid + sqlFromRid + sqlFromState;
+      sqlFinal = sqlPrefix + sqlCid + sqlRid + sqlState;
       sqlFinal = sqlFinal.replaceFirst("AND ", "");
       return getCommands(sqlFinal);
     }

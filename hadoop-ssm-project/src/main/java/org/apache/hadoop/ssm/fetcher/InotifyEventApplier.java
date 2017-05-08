@@ -15,34 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.fetcher;
 
-/**
- * The possible state that a command can be in.
- */
-public enum CommandState {
-  NOTINITED(0),
-  PENDING(1), // Ready for execution
-  EXECUTING(2),
-  PAUSED(3),
-  DONE(4),
-  CANCELLED(6);
+import org.apache.hadoop.hdfs.inotify.Event;
+import org.apache.hadoop.ssm.sql.DBAdapter;
 
-  private int value;
+public class InotifyEventApplier {
+  private final DBAdapter adapter;
 
-  private CommandState(int value) {
-    this.value = value;
-  }
-  public static CommandState fromValue(int value) {
-    for (CommandState r : values()) {
-      if (value == r.getValue()) {
-        return r;
-      }
-    }
-    return null;
+  public InotifyEventApplier(DBAdapter adapter) {
+    this.adapter = adapter;
   }
 
-  public int getValue() {
-    return value;
+  public void apply(Event[] events) {
+
   }
 }

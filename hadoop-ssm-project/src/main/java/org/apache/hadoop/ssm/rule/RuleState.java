@@ -24,7 +24,8 @@ public enum RuleState {
   ACTIVE(0),      // functioning
   DRYRUN(1),      // without execute the rule commands
   DISABLED(2),    // stop maintain info for the rule
-  FINISHED(3);    // for one-shot rule
+  FINISHED(3),    // for one-shot rule
+  DELETED(4);
 
   private int value;
 

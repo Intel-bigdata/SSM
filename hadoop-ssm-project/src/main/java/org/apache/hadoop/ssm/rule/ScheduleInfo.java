@@ -15,34 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.rule;
 
 /**
- * The possible state that a command can be in.
+ * Created by root on 5/4/17.
  */
-public enum CommandState {
-  NOTINITED(0),
-  PENDING(1), // Ready for execution
-  EXECUTING(2),
-  PAUSED(3),
-  DONE(4),
-  CANCELLED(6);
-
-  private int value;
-
-  private CommandState(int value) {
-    this.value = value;
-  }
-  public static CommandState fromValue(int value) {
-    for (CommandState r : values()) {
-      if (value == r.getValue()) {
-        return r;
-      }
-    }
-    return null;
-  }
-
-  public int getValue() {
-    return value;
-  }
+public interface ScheduleInfo {
+  long getStartTime();
+  int getRate();
+  int getRounds();
 }

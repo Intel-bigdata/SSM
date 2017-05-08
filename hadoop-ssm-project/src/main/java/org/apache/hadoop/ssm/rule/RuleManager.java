@@ -23,9 +23,15 @@ import org.apache.hadoop.ssm.rule.parser.RuleStringParser;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.sql.ExecutionContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Manage and execute rules.
@@ -35,6 +41,12 @@ public class RuleManager {
   private SSMServer ssm;
   private Configuration conf;
   private DBAdapter dbAdapter;
+  private boolean isClosed = false;
+
+  private Map<Long, RuleInfo> mapRules = new HashMap<>();
+
+  // TODO: configurable
+  public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
 
   public RuleManager(SSMServer ssm, Configuration conf, DBAdapter dbAdapter) {
     this.ssm = ssm;
@@ -51,6 +63,12 @@ public class RuleManager {
    */
   public long submitRule(String rule, RuleState initState)
       throws IOException {
+    if (initState != RuleState.ACTIVE && initState != RuleState.DISABLED
+        && initState != RuleState.DRYRUN) {
+      throw new IOException("Invalid initState = " + initState
+          + ", it MUST be one of [" + RuleState.ACTIVE
+          + ", " + RuleState.DRYRUN + ", " + RuleState.DISABLED + "]");
+    }
     TranslateResult tr = doCheckRule(rule);
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
@@ -58,6 +76,16 @@ public class RuleManager {
     if (!dbAdapter.insertNewRule(ruleInfo)) {
       throw new IOException("Create rule failed");
     }
+
+    mapRules.put(ruleInfo.getId(), ruleInfo);
+
+    if (initState == RuleState.ACTIVE || initState == RuleState.DRYRUN) {
+      ExecutionContext ctx = new ExecutionContext();
+      ctx.setProperty(ExecutionContext.RULE_ID, ruleInfo.getId());
+      RuleQueryExecutor qe = new RuleQueryExecutor(this, ctx, tr, dbAdapter);
+      execScheduler.addPeriodicityTask(qe);
+    }
+
     return ruleInfo.getId();
   }
 
@@ -82,31 +110,87 @@ public class RuleManager {
    */
   public void DeleteRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
+    changeRuleState(ruleID, RuleState.DELETED);
   }
 
-  public void setRuleState(long ruleID, RuleState newState,
-      boolean dropPendingCommands) throws IOException {
+  public void ActivateRule(long ruleID) throws IOException {
+    changeRuleState(ruleID, RuleState.ACTIVE);
+  }
+
+  public void DisableRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
+    changeRuleState(ruleID, RuleState.DISABLED);
+  }
+
+  public boolean changeRuleState(long ruleID, RuleState newState)
+      throws IOException {
+    boolean ret = false;
+    RuleInfo info = mapRules.get(ruleID);
+    if (info == null || info.getState() == newState) {
+      return false;
+    }
+
+    RuleState state = info.getState();
+    switch (newState) {
+      case ACTIVE:
+        if (state == RuleState.DISABLED || state == RuleState.DRYRUN) {
+          ret = true;
+        }
+        break;
+      case DISABLED:
+        if (state == RuleState.ACTIVE || state == RuleState.DRYRUN) {
+          ret = true;
+        }
+        break;
+      case DELETED:
+        ret = true;
+        break;
+      default:
+        throw new IOException("Rule state transition " + state
+            + " -> " + newState + " is not supported");  // TODO: unsupported
+    }
+
+    if (ret) {
+      info.setState(newState);
+      dbAdapter.updateRuleInfo(info.getId(), newState, 0, 0, 0);
+    }
+    return true;
   }
 
   public RuleInfo getRuleInfo(long ruleID) throws IOException {
-    return dbAdapter.getRuleInfo(ruleID);
+    RuleInfo info = mapRules.get(ruleID);
+    return info == null ? null : info.newCopy();
   }
 
   public List<RuleInfo> getRuleInfo() throws IOException {
-    return dbAdapter.getRuleInfo();
+    Collection<RuleInfo> infos = mapRules.values();
+    List<RuleInfo> retInfos = new ArrayList<>();
+    for (RuleInfo info : infos) {
+      retInfos.add(info.newCopy());
+    }
+    return retInfos;
   }
 
   public void updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
       long checkedCount, int commandsGen) {
+    RuleInfo info = mapRules.get(ruleId);
+    info.updateRuleInfo(rs, lastCheckTime, checkedCount, commandsGen);
     dbAdapter.updateRuleInfo(ruleId, rs, lastCheckTime,
         checkedCount, commandsGen);
   }
 
-  //
   public void addNewCommands(List<CommandInfo> commands) {
-    dbAdapter.insertCommandsTable((CommandInfo[])commands.toArray());
+    if (commands == null || commands.size() == 0) {
+      return;
+    }
+
+    CommandInfo[] cmds = commands.toArray(new CommandInfo[commands.size()]);
+    dbAdapter.insertCommandsTable(cmds);
   }
 
+  public boolean isClosed() {
+    return isClosed;
+  }
 
   /**
    * Init RuleManager, this includes:
@@ -115,6 +199,18 @@ public class RuleManager {
    * @throws IOException
    */
   public void init() throws IOException {
+    // Load rules table
+    List<RuleInfo> runnableRules = new LinkedList<>();
+    List<RuleInfo> rules = dbAdapter.getRuleInfo();
+    for (RuleInfo rule : rules) {
+      mapRules.put(rule.getId(), rule);
+      if (rule.getState() == RuleState.ACTIVE
+          || rule.getState() == RuleState.DRYRUN) {
+        runnableRules.add(rule);
+      }
+    }
+
+    // Submit runnable rules to scheduler
   }
 
   /**
@@ -127,6 +223,10 @@ public class RuleManager {
    * Stop services
    */
   public void stop() {
+    isClosed = true;
+    if (execScheduler != null) {
+      execScheduler.shutdown();
+    }
   }
 
   /**
