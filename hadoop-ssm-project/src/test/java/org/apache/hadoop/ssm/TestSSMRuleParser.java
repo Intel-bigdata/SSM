@@ -74,6 +74,7 @@ public class TestSSMRuleParser {
     String rule3 = "file : accessCount(10m) > 20 | cachefile";
     String rule4 = "file : accessCountX(10m) > 2 and length() > 3 | cachefile";
     String rule5 = "file: every 5s from now to now + 100d | length > 3 | cachefile";
+    String rule6 = "file: every 5s | length > 3 | movefile \"ONE_SSD\"";
     String rule = rule5;
     InputStream input = new ByteArrayInputStream(rule.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);

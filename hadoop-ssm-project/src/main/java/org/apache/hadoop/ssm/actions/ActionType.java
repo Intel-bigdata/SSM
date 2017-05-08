@@ -21,24 +21,23 @@ package org.apache.hadoop.ssm.actions;
  * Internal actions supported.
  */
 public enum ActionType {
-  None(0, "None"),           // doing nothing
-  External(1, "External"),   // execute some command lines specified
-  CacheFile(2, "CacheFile"),
-  UncacheFile(3, "UncacheFile"),
-  SetStoragePolicy(4, "SetStoragePolicy"),
-  EnforceStoragePolicy(5, "EnforceStoragePolicy"),
-  ConvertToEC(6, "ConvertToEC"),
-  ConvertToReplica(7, "ConvertToReplica"),
-  Distcp(8, "Distcp"),
-  DiskBalance(9, "DiskBalance"),
-  BalanceCluster(10, "BalanceCluster");
+  None(0),       // doing nothing
+  External(1),   // execute some command lines specified
+  CacheFile(2),
+  UncacheFile(3),
+  SetStoragePolicy(4),
+  MoveFile(5),
+  ArchiveFile(6),
+  ConvertToEC(7),
+  ConvertToReplica(8),
+  Distcp(9),
+  DiskBalance(10),
+  BalanceCluster(11);
 
   private final int value;
-  private final String displayName;
 
-  private ActionType(int value, String name) {
+  private ActionType(int value) {
     this.value = value;
-    this.displayName = name;
   }
 
   public int getValue() {
@@ -56,14 +55,10 @@ public enum ActionType {
 
   public static ActionType fromName(String name) {
     for (ActionType t : values()) {
-      if (t.getDisplayName().equalsIgnoreCase(name)) {
+      if (t.toString().equalsIgnoreCase(name)) {
         return t;
       }
     }
     return null;
-  }
-
-  public String getDisplayName() {
-    return displayName;
   }
 }

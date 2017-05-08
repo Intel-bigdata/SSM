@@ -183,7 +183,9 @@ public class RuleManager {
     if (commands == null || commands.size() == 0) {
       return;
     }
-    dbAdapter.insertCommandsTable((CommandInfo[])commands.toArray());
+
+    CommandInfo[] cmds = commands.toArray(new CommandInfo[commands.size()]);
+    dbAdapter.insertCommandsTable(cmds);
   }
 
   public boolean isClosed() {
