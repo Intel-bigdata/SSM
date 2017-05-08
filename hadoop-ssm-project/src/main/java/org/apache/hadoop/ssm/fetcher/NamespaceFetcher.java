@@ -89,6 +89,7 @@ public class NamespaceFetcher {
     // Queue for outer-consumer to fetch file status
     private LinkedBlockingDeque<FileStatusInternalBatch> batches;
     private FileStatusInternalBatch currentBatch;
+    private volatile boolean isFinished = false;
 
     public FetchTask(DFSClient client) {
       this.deque = new ArrayDeque<>();
@@ -123,13 +124,16 @@ public class NamespaceFetcher {
             }
           }
         }
+        if (this.deque.isEmpty() && this.batches.isEmpty()) {
+          this.isFinished = true;
+        }
       } catch (IOException | InterruptedException e) {
         e.printStackTrace();
       }
     }
 
     public boolean finished() {
-      return this.deque.isEmpty() && this.batches.isEmpty();
+      return this.isFinished;
     }
 
     public FileStatusInternalBatch pollBatch() {
@@ -144,7 +148,9 @@ public class NamespaceFetcher {
       }
     }
 
-    // Code copy form Hdfs.java
+    /**
+     *  Code copy form {@link org.apache.hadoop.fs.Hdfs}
+     */
     private HdfsFileStatus[] listStatus(String src) throws IOException {
       DirectoryListing thisListing = client.listPaths(
         src, HdfsFileStatus.EMPTY_NAME);
