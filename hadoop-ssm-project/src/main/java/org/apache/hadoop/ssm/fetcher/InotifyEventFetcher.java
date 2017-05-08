@@ -84,7 +84,7 @@ public class InotifyEventFetcher {
 
     public InotifyFetchTask(QueueFile queueFile, DFSClient client, long startId) throws IOException {
       this.queueFile = queueFile;
-      this.inotifyEventInputStream = client.getInotifyEventStream();
+      this.inotifyEventInputStream = client.getInotifyEventStream(startId);
     }
 
     @Override
