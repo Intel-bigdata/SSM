@@ -187,6 +187,79 @@ public class TestMover {
     }
   }
 
+  private void testParallelWithinSameNode(Configuration conf) throws Exception {
+    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+            .numDataNodes(3)
+            .storageTypes(
+                    new StorageType[] {StorageType.DISK, StorageType.ARCHIVE})
+            .build();
+    try {
+      cluster.waitActive();
+      final DistributedFileSystem dfs = cluster.getFileSystem();
+      final String file1 = "/testParallelScheduleWithinSameNode/file1";
+      final String file2 = "/testParallelScheduleWithinSameNode/file2";
+      Path dir = new Path("/testParallelScheduleWithinSameNode");
+      dfs.mkdirs(dir);
+      // write to DISK
+      dfs.setStoragePolicy(dir, "HOT");
+      final FSDataOutputStream out1 = dfs.create(new Path(file1));
+      out1.writeChars("testParallelScheduleWithinSameNode1");
+      out1.close();
+      final FSDataOutputStream out2 = dfs.create(new Path(file2));
+      out2.writeChars("testParallelScheduleWithinSameNode2");
+      out2.close();
+
+      // verify before movement
+      LocatedBlock lb = dfs.getClient().getLocatedBlocks(file1, 0).get(0);
+      StorageType[] storageTypes = lb.getStorageTypes();
+      for (StorageType storageType : storageTypes) {
+        Assert.assertTrue(StorageType.DISK == storageType);
+      }
+      lb = dfs.getClient().getLocatedBlocks(file2, 0).get(0);
+      storageTypes = lb.getStorageTypes();
+      for (StorageType storageType : storageTypes) {
+        Assert.assertTrue(StorageType.DISK == storageType);
+      }
+      // move to ARCHIVE
+      dfs.setStoragePolicy(dir, "COLD");
+      Thread moverThread1 = new MoverThread(conf, file1);
+      Thread moverThread2 = new MoverThread(conf, file2);
+      moverThread1.start();
+      moverThread2.start();
+      while(moverThread1.isAlive() || moverThread2.isAlive()) {
+        Thread.sleep(1000);
+      }
+
+      // Wait till namenode notified about the block location details
+      waitForLocatedBlockWithArchiveStorageType(dfs, file1, 3);
+      waitForLocatedBlockWithArchiveStorageType(dfs, file2, 3);
+    } finally {
+      cluster.shutdown();
+    }
+  }
+
+  class MoverThread extends Thread {
+    private Configuration conf;
+    private String dir;
+
+    public MoverThread(Configuration conf, String dir) {
+      this.conf = conf;
+      this.dir = dir;
+    }
+
+    @Override
+    public void run() {
+      try {
+        int result = ToolRunner.run(conf, new Mover.Cli(),
+                new String[] {"-p", dir});
+        System.out.println("Tim : Mover result = " + result);
+        Assert.assertEquals("Movement to ARCHIVE should be successful", 0, result);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
   private void waitForLocatedBlockWithArchiveStorageType(
           final DistributedFileSystem dfs, final String file,
           int expectedArchiveCount) throws Exception {
@@ -218,6 +291,13 @@ public class TestMover {
     final Configuration conf = new HdfsConfiguration();
     initConf(conf);
     testWithinSameNode(conf);
+  }
+
+  @Test
+  public void testParallelScheduleBlockWithinSameNode() throws Exception {
+    final Configuration conf = new HdfsConfiguration();
+    initConf(conf);
+    testParallelWithinSameNode(conf);
   }
 
   private void checkMovePaths(List<Path> actual, Path... expected) {
