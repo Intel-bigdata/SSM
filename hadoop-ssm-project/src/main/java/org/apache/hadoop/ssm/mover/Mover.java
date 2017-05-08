@@ -76,7 +76,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by root on 5/4/17.
+ * Mover tool for SSM.
  */
 public class Mover {
   static final Log LOG = LogFactory.getLog(Mover.class);

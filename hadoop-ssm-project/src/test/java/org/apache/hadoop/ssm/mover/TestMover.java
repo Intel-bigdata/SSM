@@ -79,7 +79,7 @@ import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_WEB_AUTHENTICATION_KERBER
 import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_DATA_TRANSFER_PROTECTION_KEY;
 
 /**
- * Created by root on 5/4/17.
+ * Test Mover tool in SSM.
  */
 public class TestMover {
   private static final Logger LOG = LoggerFactory.getLogger(TestMover.class);
