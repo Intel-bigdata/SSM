@@ -33,7 +33,7 @@ public class InotifyFetchAndApplyTask implements Runnable {
   public InotifyFetchAndApplyTask(DFSClient client, InotifyEventApplier applier, long startId)
       throws IOException {
     this.applier = applier;
-    this.lastId = new AtomicLong(-1);
+    this.lastId = new AtomicLong(startId);
     this.inotifyEventInputStream = client.getInotifyEventStream(startId);
   }
 

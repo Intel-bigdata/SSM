@@ -25,11 +25,12 @@ import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.utils.EventBatchSerializer;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class InotifyEventFetcher {
   private final DFSClient client;
@@ -52,17 +53,19 @@ public class InotifyEventFetcher {
   }
 
   public void start() throws IOException, InterruptedException {
-    this.inotifyFile = java.io.File.createTempFile("", ".inotify");
+    this.inotifyFile = new File("/tmp/inotify" + new Random().nextLong());
     this.queueFile = new QueueFile(inotifyFile);
+    long startId = this.client.getNamenode().getCurrentEditLogTxid();
     this.nameSpaceFetcher.startFetch();
     this.inotifyFetchFuture = scheduledExecutorService.scheduleAtFixedRate(
-        new InotifyFetchTask(queueFile, client), 0, 100, TimeUnit.MILLISECONDS);
+        new InotifyFetchTask(queueFile, client, startId), 0, 100, TimeUnit.MILLISECONDS);
     EventApplyTask eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile);
     eventApplyTask.start();
     eventApplyTask.join();
 
     long lastId = eventApplyTask.getLastId();
     this.inotifyFetchFuture.cancel(false);
+    this.nameSpaceFetcher.stop();
     this.queueFile.close();
     InotifyFetchAndApplyTask fetchAndApplyTask =
         new InotifyFetchAndApplyTask(client, applier, lastId);
@@ -71,17 +74,16 @@ public class InotifyEventFetcher {
   }
 
   public void stop() {
+    this.inotifyFile.delete();
     this.fetchAndApplyFuture.cancel(false);
   }
 
   private static class InotifyFetchTask implements Runnable {
     private final QueueFile queueFile;
-    private AtomicLong lastId;
     private DFSInotifyEventInputStream inotifyEventInputStream;
 
-    public InotifyFetchTask(QueueFile queueFile, DFSClient client) throws IOException {
+    public InotifyFetchTask(QueueFile queueFile, DFSClient client, long startId) throws IOException {
       this.queueFile = queueFile;
-      this.lastId = new AtomicLong(-1);
       this.inotifyEventInputStream = client.getInotifyEventStream();
     }
 
@@ -91,16 +93,11 @@ public class InotifyEventFetcher {
         EventBatch eventBatch = inotifyEventInputStream.poll();
         while (eventBatch != null) {
           this.queueFile.add(EventBatchSerializer.serialize(eventBatch));
-          this.lastId.getAndSet(eventBatch.getTxid());
           eventBatch = inotifyEventInputStream.poll();
         }
       } catch (IOException | MissingEventsException e) {
         e.printStackTrace();
       }
-    }
-
-    public long getLastId() {
-      return this.lastId.get();
     }
   }
 
@@ -115,6 +112,7 @@ public class InotifyEventFetcher {
       this.namespaceFetcher = namespaceFetcher;
       this.queueFile = queueFile;
       this.applier = applier;
+      this.lastId = -1;
     }
 
     @Override
@@ -126,9 +124,11 @@ public class InotifyEventFetcher {
           } else {
             while (!queueFile.isEmpty()) {
               EventBatch batch = EventBatchSerializer.deserialize(queueFile.peek());
+              queueFile.remove();
               this.applier.apply(batch.getEvents());
               this.lastId = batch.getTxid();
             }
+            break;
           }
         }
       } catch (InterruptedException | IOException e) {
