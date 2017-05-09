@@ -1,0 +1,15 @@
+language: java
+sudo: false
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+jdk:
+  - oraclejdk8
+cache:
+  directories:
+    - "$HOME/.m2"
+script:
+    mvn clean install -DskipTest;
+    cd hadoop-ssm-project;
+    mvn test
