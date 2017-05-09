@@ -23,7 +23,7 @@ import org.apache.hadoop.hdfs.DFSClient;
  * Base for actions
  */
 public abstract class ActionBase {
-  private ActionType actionType;
+  protected ActionType actionType;
   protected DFSClient dfsClient;
 
   public ActionBase(DFSClient client) {

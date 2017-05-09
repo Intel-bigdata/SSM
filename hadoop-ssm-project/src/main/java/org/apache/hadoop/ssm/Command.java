@@ -57,6 +57,10 @@ public class Command implements Runnable {
     this.id = id;
   }
 
+  public void setRuleId(long ruleId) {
+    this.ruleId = ruleId;
+  }
+
   public long getId() {
     return id;
   }

@@ -3,7 +3,7 @@ package org.apache.hadoop.ssm.actions;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by QYGong on 05/05/2017.
+ * Action Pool
  */
 public class ActionPool {
 

@@ -690,6 +690,15 @@ public class DBAdapter {
     return ret;
   }
 
+
+  private boolean updateCommand() {
+    // TODO update command status
+//    if() {
+//      return false;
+//    }
+    return true;
+  }
+
   private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
     List<CommandInfo> ret = new LinkedList<>();
     if (resultSet == null) {

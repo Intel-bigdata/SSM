@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.ssm.sql;
 
+import org.apache.hadoop.ssm.Command;
 import org.apache.hadoop.ssm.CommandState;
 import org.apache.hadoop.ssm.actions.ActionType;
 
@@ -95,4 +96,13 @@ public class CommandInfo {
   public void setStateChangedTime(long stateChangedTime) {
     this.stateChangedTime = stateChangedTime;
   }
+
+  public Command toCommand() {
+    // TODO init cmd with actionbase
+    // Command cmd = new Command();
+    cmd.setId(cid);
+    cmd.setRuleId(rid);
+    return cmd;
+  }
+
 }

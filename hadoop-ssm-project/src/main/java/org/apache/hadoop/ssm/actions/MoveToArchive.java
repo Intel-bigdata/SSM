@@ -14,7 +14,7 @@ import static org.apache.hadoop.hdfs.protocol.FilesInfo.STORAGEPOLICY;
 /**
  * Created by cc on 17-1-15.
  */
-public  class MoveToArchive extends ActionBase {
+public class MoveToArchive extends ActionBase {
   private static final Log LOG = LogFactory.getLog(MoveToArchive.class);
   private static MoveToArchive instance;
   public static final byte COLD_STORAGE_POLICY_ID = 2;

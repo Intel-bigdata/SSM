@@ -36,7 +36,7 @@ public enum ActionType {
 
   private final int value;
 
-  private ActionType(int value) {
+  ActionType(int value) {
     this.value = value;
   }
 

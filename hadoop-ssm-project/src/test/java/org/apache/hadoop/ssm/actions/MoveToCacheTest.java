@@ -1,9 +1,8 @@
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.*;
-import org.apache.hadoop.ssm.actions.MoveToCache;
 import org.junit.Test;
 
 import java.io.IOException;
