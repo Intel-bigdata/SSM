@@ -26,6 +26,20 @@ import java.sql.Statement;
  * Utilities for table operations.
  */
 public class Util {
+  public static final String SQLITE_URL_PREFIX = "jdbc:sqlite:";
+  public static final String MYSQL_URL_PREFIX = "jdbc:mysql:";
+
+  public static Connection createConnection(String url,
+      String userName, String password)
+      throws ClassNotFoundException, SQLException {
+    if (url.startsWith(SQLITE_URL_PREFIX)) {
+      Class.forName("org.sqlite.JDBC");
+    } else if (url.startsWith(MYSQL_URL_PREFIX)) {
+      Class.forName("com.mysql.jdbc.Driver");
+    }
+    Connection conn = DriverManager.getConnection(url, userName, password);
+    return conn;
+  }
 
   public static Connection createConnection(String driver, String url,
       String userName, String password) throws ClassNotFoundException, SQLException {
@@ -36,7 +50,7 @@ public class Util {
 
   public static Connection createSqliteConnection(String dbFilePath)
       throws ClassNotFoundException, SQLException {
-    return createConnection("org.sqlite.JDBC", "jdbc:sqlite:" + dbFilePath,
+    return createConnection("org.sqlite.JDBC", SQLITE_URL_PREFIX + dbFilePath,
         null, null);
   }
 

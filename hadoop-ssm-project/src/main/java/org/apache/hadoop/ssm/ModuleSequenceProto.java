@@ -17,35 +17,46 @@
  */
 package org.apache.hadoop.ssm;
 
+import org.apache.hadoop.ssm.sql.DBAdapter;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.xml.XmlConfiguration;
+import java.io.IOException;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
-/**
- * Providing RESTApi service.
- */
-public class RestApiServer {
-  private Server server;
-
-  public boolean initialize(String configFile) {
-    try {
-      server = new Server();
-      FileInputStream xmlIn = new FileInputStream(configFile);
-      XmlConfiguration conf = new XmlConfiguration(xmlIn);
-      conf.configure(server);
-      return true;
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return false;
+public interface ModuleSequenceProto {
+  enum State {
+    INITING,
+    INITED,
+    STARTING,
+    STARTED,
+    STOPPING,
+    STOPPED,
+    JOINING,
+    JOINED
   }
 
-  public void start() throws Exception {
-    server.start();
-  }
+  /**
+   * Init module using info from configuration and database.
+   * @param dbAdapter
+   * @return
+   * @throws IOException
+   */
+  boolean init(DBAdapter dbAdapter) throws IOException;
+
+  /**
+   * After start call, all services and public calls should work.
+   * @return
+   * @throws IOException
+   */
+  boolean start() throws IOException;
+
+  /**
+   * After stop call, all states in database will not be changed anymore.
+   * @throws IOException
+   */
+  void stop() throws IOException;
+
+  /**
+   * Stop threads and other cleaning jobs.
+   * @throws IOException
+   */
+  void join() throws IOException;
 }

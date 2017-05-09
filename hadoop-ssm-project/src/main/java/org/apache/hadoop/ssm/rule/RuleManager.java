@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm.rule;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ssm.ModuleSequenceProto;
 import org.apache.hadoop.ssm.SSMServer;
 import org.apache.hadoop.ssm.rule.parser.RuleStringParser;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
@@ -37,7 +38,7 @@ import java.util.Map;
  * Manage and execute rules.
  * We can have 'cache' here to decrease the needs to execute a SQL query.
  */
-public class RuleManager {
+public class RuleManager implements ModuleSequenceProto {
   private SSMServer ssm;
   private Configuration conf;
   private DBAdapter dbAdapter;
@@ -52,6 +53,11 @@ public class RuleManager {
     this.ssm = ssm;
     this.conf = conf;
     this.dbAdapter = dbAdapter;
+  }
+
+  public RuleManager(SSMServer ssm, Configuration conf) {
+    this.ssm = ssm;
+    this.conf = conf;
   }
 
   /**
@@ -198,7 +204,8 @@ public class RuleManager {
    *    2. Initial
    * @throws IOException
    */
-  public void init() throws IOException {
+  public boolean init(DBAdapter dbAdapter) throws IOException {
+    this.dbAdapter = dbAdapter;
     // Load rules table
     List<RuleInfo> runnableRules = new LinkedList<>();
     List<RuleInfo> rules = dbAdapter.getRuleInfo();
@@ -211,18 +218,21 @@ public class RuleManager {
     }
 
     // Submit runnable rules to scheduler
+
+    return true;
   }
 
   /**
    * Start services
    */
-  public void start() {
+  public boolean start() throws IOException {
+    return true;
   }
 
   /**
    * Stop services
    */
-  public void stop() {
+  public void stop() throws IOException {
     isClosed = true;
     if (execScheduler != null) {
       execScheduler.shutdown();
@@ -232,6 +242,6 @@ public class RuleManager {
   /**
    * Waiting for threads to exit.
    */
-  public void join() {
+  public void join() throws IOException {
   }
 }

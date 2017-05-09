@@ -33,15 +33,15 @@
   </property>
 
   <property>
-    <name>dfs.ssm.rpcserver</name>
+    <name>dfs.ssm.rpc-address</name>
     <value>localhost:7042</value>
     <description>rpc server of SSM</description>
   </property>
 
   <property>
-    <name>dfs.ssm.webserver</name>
+    <name>dfs.ssm.http-address</name>
     <value>0.0.0.0:7045</value>
-    <description>Web server of SSM</description>
+    <description>HTTP server of SSM</description>
   </property>
 
   <property>

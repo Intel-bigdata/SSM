@@ -19,11 +19,14 @@ package org.apache.hadoop.ssm;
 
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ssm.sql.DBAdapter;
+
+import java.io.IOException;
 
 /**
  * Polls metrics and events from NameNode
  */
-public class StatesManager {
+public class StatesManager implements ModuleSequenceProto {
   private SSMServer ssm;
   private Configuration conf;
 
@@ -36,14 +39,21 @@ public class StatesManager {
    * Load configure/data to initialize.
    * @return true if initialized successfully
    */
-  public boolean initial() {
+  public boolean init(DBAdapter dbAdapter) throws IOException {
     return true;
   }
 
   /**
    * Start daemon threads in StatesManager for function.
    */
-  public void start() {
+  public boolean start() throws IOException {
+    return true;
+  }
+
+  public void stop() throws IOException {
+  }
+
+  public void join() throws IOException {
   }
 
   /**

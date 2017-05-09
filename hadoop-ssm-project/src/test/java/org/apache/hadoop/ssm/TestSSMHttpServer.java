@@ -110,7 +110,7 @@ public class TestSSMHttpServer {
     InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9494);//port can't equal 0
     SSMHttpServer server = null;
     try {
-      server = new SSMHttpServer(conf, addr);
+      server = new SSMHttpServer(null, conf);
       server.start();
       Assert.assertTrue(implies(policy.isHttpEnabled(),
               canAccess("http", server.getHttpsAddress())));

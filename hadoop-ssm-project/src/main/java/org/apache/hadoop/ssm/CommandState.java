@@ -26,7 +26,7 @@ public enum CommandState {
   EXECUTING(2),
   PAUSED(3),
   DONE(4),
-  CANCELLED(6);
+  CANCELLED(5);
 
   private int value;
 

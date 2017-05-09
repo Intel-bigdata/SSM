@@ -49,7 +49,7 @@ public class SSMRpcServer implements ClientSSMProtocol {
     this.ssm = ssm;
     this.conf = conf;
     // TODO: implement ssm ClientSSMProtocol
-    InetSocketAddress rpcAddr = ssm.getRpcServerAddress(conf);
+    InetSocketAddress rpcAddr = getRpcServerAddress();
     RPC.setProtocolEngine(conf, ClientSSMProtocolPB.class, ProtobufRpcEngine.class);
 
     ClientSSMProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
@@ -75,6 +75,12 @@ public class SSMRpcServer implements ClientSSMProtocol {
         clientSSMPbService, clientRpcServer);
   }
 
+  private InetSocketAddress getRpcServerAddress() {
+    String[] strings = conf.get(SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY,
+        SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
+    return new InetSocketAddress(strings[strings.length - 2]
+        , Integer.parseInt(strings[strings.length - 1]));
+  }
 
   /**
    * Start SSM RPC service
