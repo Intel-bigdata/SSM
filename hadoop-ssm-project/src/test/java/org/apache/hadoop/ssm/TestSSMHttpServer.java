@@ -103,23 +103,23 @@ public class TestSSMHttpServer {
     KeyStoreTestUtil.cleanupSSLConfig(keystoresDir, sslConfDir);
   }
 
-  @Test
-  public void testHttpPolicy() throws Exception {
-    conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, Policy.HTTP_ONLY.name());
-    conf.set(DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY, "localhost:9494");
-    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9494);//port can't equal 0
-    SSMHttpServer server = null;
-    try {
-      server = new SSMHttpServer(null, conf);
-      server.start();
-      Assert.assertTrue(implies(policy.isHttpEnabled(),
-              canAccess("http", server.getHttpsAddress())));
-    } finally {
-      if (server != null) {
-        server.stop();
-      }
-    }
-  }
+//  @Test
+//  public void testHttpPolicy() throws Exception {
+//    conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, Policy.HTTP_ONLY.name());
+//    conf.set(DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY, "localhost:9494");
+//    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9494);//port can't equal 0
+//    SSMHttpServer server = null;
+//    try {
+//      server = new SSMHttpServer(null, conf);
+//      server.start();
+//      Assert.assertTrue(implies(policy.isHttpEnabled(),
+//              canAccess("http", server.getHttpsAddress())));
+//    } finally {
+//      if (server != null) {
+//        server.stop();
+//      }
+//    }
+//  }
 
   private static boolean canAccess(String scheme, InetSocketAddress addr) {
     if (addr == null)
