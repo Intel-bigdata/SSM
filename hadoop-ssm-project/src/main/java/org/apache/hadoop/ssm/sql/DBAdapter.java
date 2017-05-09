@@ -124,7 +124,10 @@ public class DBAdapter {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < files.length; i++) {
-        String sql = "INSERT INTO 'files' VALUES('" + files[i].getPath()
+        String sql = "INSERT INTO `files` (path, fid, length, block_replication,"
+            + " block_size, modification_time, access_time, is_dir, sid, oid, "
+            + "gid, permission, ec_policy_id ) "
+            + "VALUES ('" + files[i].getPath()
             + "','" + files[i].getFileId() + "','" + files[i].getLen() + "','"
             + files[i].getReplication() + "','" + files[i].getBlockSize()
             + "','" + files[i].getModificationTime() + "','"
@@ -232,11 +235,11 @@ public class DBAdapter {
     return mapECPolicy.get(id) != null ? mapECPolicy.get(id) : null;
   }
 
-  public synchronized void insertStorageTables(StorageCapacity[] storages) {
+  public synchronized void insertStoragesTable(StorageCapacity[] storages) {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < storages.length; i++) {
-        String sql = "INSERT INTO storages VALUES ('" + storages[i].getType()
+        String sql = "INSERT INTO `storages` (type, capacity, free) VALUES ('" + storages[i].getType()
             + "','" + storages[i].getCapacity() + "','"
             + storages[i].getFree() + "')";
         s.addBatch(sql);
@@ -251,7 +254,7 @@ public class DBAdapter {
   public StorageCapacity getStorageCapacity(String type) {
     updateCache();
     StorageCapacity s = mapStorageCapacity.get(type);
-    return s != null ? s : null;
+    return s;
   }
 
   public synchronized boolean updateStoragesTable(String type,
@@ -263,7 +266,7 @@ public class DBAdapter {
     String sqlSuffix = "WHERE type = '" + type + "';";
     if (capacity != null || free != null) {
       sql = sqlPrefix + sqlCapacity + sqlFree + sqlSuffix;
-      sql = sql.replace("T,","T");
+      sql = sql.replaceFirst(",", "");
     }
     try {
       mapStorageCapacity = null;
@@ -598,7 +601,7 @@ public class DBAdapter {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < commands.length; i++) {
-        String sql = "INSERT INTO commands(rid, action_id, state, "
+        String sql = "INSERT INTO commands (rid, action_id, state, "
             + "parameters, generate_time, state_changed_time) "
             + "VALUES('" + commands[i].getRid() + "', '"
             + commands[i].getActionId().getValue() + "', '"
@@ -609,7 +612,6 @@ public class DBAdapter {
         s.addBatch(sql);
       }
       s.executeBatch();
-      mapStorageCapacity = null;
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -620,7 +622,7 @@ public class DBAdapter {
     String sqlPrefix = "SELECT * FROM commands WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
-    String sqlState = (state == null) ? "" : "AND state = " + state;
+    String sqlState = (state == null) ? "" : "AND state = " + state.getValue();
     String sqlFinal = "";
     if (cidCondition != null || ridCondition != null || state != null) {
       sqlFinal = sqlPrefix + sqlCid + sqlRid + sqlState;
@@ -680,8 +682,8 @@ public class DBAdapter {
   }
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s) {
-  String sql = "INSERT INTO 'storage_policy' VALUES('" + s.getSid() + "','"
-      + s.getPolicyName() + "');";
+  String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
+      + s.getSid() + "','" + s.getPolicyName() + "');";
     try {
       execute(sql);
       mapStoragePolicyIdName = null;
@@ -693,13 +695,13 @@ public class DBAdapter {
   public String getStoragePolicyName(int sid) {
     updateCache();
     String s = mapStoragePolicyIdName.get(sid);
-    return s != null ? s : null;
+    return s;
   }
 
   public Integer getStoragePolicyID(String policyName) {
     updateCache();
     Integer s = getKey(mapStoragePolicyIdName, policyName);
-    return s != null ? s : null ;
+    return s;
   }
 
 }

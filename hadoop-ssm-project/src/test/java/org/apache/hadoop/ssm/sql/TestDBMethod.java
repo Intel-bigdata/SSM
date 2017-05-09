@@ -66,7 +66,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testInsertStorageTables() throws Exception {
+    public void testInsertStoragesTable() throws Exception {
       String dbFile = TestDBUtil.getUniqueDBFilePath();
       Connection conn = null;
       try {
@@ -78,17 +78,16 @@ public class TestDBMethod {
         StorageCapacity storage2 = new StorageCapacity("RAM",
             12342233l, 2223663l);
         StorageCapacity[] storages = {storage1, storage2};
-        dbAdapter.insertStorageTables(storages);
+        dbAdapter.insertStoragesTable(storages);
         StorageCapacity storageCapacity1 = dbAdapter
             .getStorageCapacity("Flash");
         StorageCapacity storageCapacity2 = dbAdapter
             .getStorageCapacity("RAM");
         Assert.assertTrue(storageCapacity1.getCapacity() == 12343333l);
         Assert.assertTrue(storageCapacity2.getFree() == 2223663l);
-        DBAdapter dbAdapter1 = new DBAdapter(conn);
         Assert.assertTrue(dbAdapter.updateStoragesTable("Flash",
             123456L, 4562233L));
-        Assert.assertTrue(dbAdapter1.getStorageCapacity("Flash")
+        Assert.assertTrue(dbAdapter.getStorageCapacity("Flash")
             .getCapacity() == 123456l);
       } finally {
         if (conn != null) {
@@ -175,7 +174,7 @@ public class TestDBMethod {
             path, "/tmp", fileId, numChildren, null, storagePolicy, null) };
         dbAdapter.insertFiles(files);
         HdfsFileStatus hdfsFileStatus = dbAdapter.getFile("/tmp/testFile");
-        Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 *1024L);
+        Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 * 1024L);
       } finally {
         if (conn != null) {
           conn.close();
@@ -200,8 +199,12 @@ public class TestDBMethod {
         String cidCondition = ">= 2 ";
         String ridCondition = "= 78 ";
         CommandState state = null;
+        CommandState state1 = CommandState.PAUSED;
         List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, state);
         Assert.assertTrue(com.get(0).getActionId() == ActionType.ConvertToEC);
+        Assert.assertTrue(com.get(0).getState() == CommandState.PAUSED);
+        List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(null, null, state1);
+        Assert.assertTrue(com1.get(0).getState() == CommandState.PAUSED);
       } finally {
         if (conn != null) {
           conn.close();
