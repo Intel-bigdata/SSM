@@ -45,6 +45,7 @@ public class RuleQueryExecutor implements Runnable {
   private TranslateResult tr;
   private ExecutionContext ctx;
   private DBAdapter adapter; // TODO: abstract to prevent direct call
+  private volatile boolean exited = false;
 
   private static Pattern varPattern = Pattern.compile(
       "\\$([a-zA-Z_]+[a-zA-Z0-9_]*)");
@@ -180,10 +181,8 @@ public class RuleQueryExecutor implements Runnable {
       long startCheckTime = System.currentTimeMillis();
       RuleInfo info = ruleManager.getRuleInfo(rid);
       RuleState state = info.getState();
-      if (state == RuleState.DISABLED) {
-        return;
-      }
-      if (state == RuleState.DELETED || state == RuleState.FINISHED) {
+      if (state == RuleState.DELETED || state == RuleState.FINISHED
+          || state == RuleState.DISABLED) {
         triggerException();
       }
       TimeBasedScheduleInfo scheduleInfo = tr.getTbScheduleInfo();
@@ -217,6 +216,7 @@ public class RuleQueryExecutor implements Runnable {
 
   private void triggerException() {
     // throw an exception
+    exited = true;
     String[] temp = new String[1];
     temp[1] += "The exception is created deliberately";
   }
@@ -237,5 +237,9 @@ public class RuleQueryExecutor implements Runnable {
           time, time));
     }
     return cmds;
+  }
+
+  public boolean isExited() {
+    return exited;
   }
 }

@@ -59,6 +59,15 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   private TreeNode root ;
   private Stack<TreeNode> nodes = new Stack<>();
 
+  private TranslationContext transCtx = null;
+
+  public SSMRuleVisitTranslator() {
+  }
+
+  public SSMRuleVisitTranslator(TranslationContext transCtx) {
+    this.transCtx = transCtx;
+  }
+
   @Override
   public TreeNode visitRuleLine(SSMRuleParser.RuleLineContext ctx) {
     return visitChildren(ctx);
@@ -159,6 +168,9 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
   }
 
   private long getTimeNow() {
+    if (transCtx != null) {
+      return transCtx.getSubmitTime();
+    }
     return System.currentTimeMillis();
   }
 

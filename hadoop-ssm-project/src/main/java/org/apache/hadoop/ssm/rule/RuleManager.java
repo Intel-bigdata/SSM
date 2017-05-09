@@ -22,6 +22,7 @@ import org.apache.hadoop.ssm.ModuleSequenceProto;
 import org.apache.hadoop.ssm.SSMServer;
 import org.apache.hadoop.ssm.rule.parser.RuleStringParser;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
+import org.apache.hadoop.ssm.rule.parser.TranslationContext;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.ExecutionContext;
@@ -45,6 +46,8 @@ public class RuleManager implements ModuleSequenceProto {
   private boolean isClosed = false;
 
   private Map<Long, RuleInfo> mapRules = new HashMap<>();
+
+  private Map<Long, RuleQueryExecutor> mapRuleExecutor = new HashMap<>();
 
   // TODO: configurable
   public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
@@ -75,7 +78,8 @@ public class RuleManager implements ModuleSequenceProto {
           + ", it MUST be one of [" + RuleState.ACTIVE
           + ", " + RuleState.DRYRUN + ", " + RuleState.DISABLED + "]");
     }
-    TranslateResult tr = doCheckRule(rule);
+
+    TranslateResult tr = doCheckRule(rule, null);
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
     RuleInfo ruleInfo = builder.build();
@@ -86,22 +90,20 @@ public class RuleManager implements ModuleSequenceProto {
     mapRules.put(ruleInfo.getId(), ruleInfo);
 
     if (initState == RuleState.ACTIVE || initState == RuleState.DRYRUN) {
-      ExecutionContext ctx = new ExecutionContext();
-      ctx.setProperty(ExecutionContext.RULE_ID, ruleInfo.getId());
-      RuleQueryExecutor qe = new RuleQueryExecutor(this, ctx, tr, dbAdapter);
-      execScheduler.addPeriodicityTask(qe);
+      submitRuleToScheduler(ruleInfo, tr);
     }
 
     return ruleInfo.getId();
   }
 
-  private TranslateResult doCheckRule(String rule) throws IOException {
-    RuleStringParser parser = new RuleStringParser(rule);
+  private TranslateResult doCheckRule(String rule, TranslationContext ctx)
+      throws IOException {
+    RuleStringParser parser = new RuleStringParser(rule, ctx);
     return parser.translate();
   }
 
   public void checkRule(String rule) throws IOException {
-    doCheckRule(rule);
+    doCheckRule(rule, null);
   }
 
   /**
@@ -120,7 +122,18 @@ public class RuleManager implements ModuleSequenceProto {
   }
 
   public void ActivateRule(long ruleID) throws IOException {
-    changeRuleState(ruleID, RuleState.ACTIVE);
+    RuleInfo info = mapRules.get(ruleID);
+    if (info == null) {
+      throw new IOException("Rule with ID = " + ruleID + " not found");
+    }
+    RuleState state = info.getState();
+    boolean changed = changeRuleState(ruleID, RuleState.ACTIVE);
+    if (changed && state == RuleState.DISABLED) {
+      info = mapRules.get(ruleID);
+      TranslationContext ctx = new TranslationContext(info.getId(),
+          info.getSubmitTime());
+      submitRuleToScheduler(info, ctx);
+    }
   }
 
   public void DisableRule(long ruleID, boolean dropPendingCommands)
@@ -132,7 +145,10 @@ public class RuleManager implements ModuleSequenceProto {
       throws IOException {
     boolean ret = false;
     RuleInfo info = mapRules.get(ruleID);
-    if (info == null || info.getState() == newState) {
+    if (info == null) {
+      throw new IOException("Rule with ID = " + ruleID + " not found");
+    }
+    if (info.getState() == newState) {
       return false;
     }
 
@@ -207,25 +223,49 @@ public class RuleManager implements ModuleSequenceProto {
   public boolean init(DBAdapter dbAdapter) throws IOException {
     this.dbAdapter = dbAdapter;
     // Load rules table
-    List<RuleInfo> runnableRules = new LinkedList<>();
     List<RuleInfo> rules = dbAdapter.getRuleInfo();
     for (RuleInfo rule : rules) {
       mapRules.put(rule.getId(), rule);
-      if (rule.getState() == RuleState.ACTIVE
-          || rule.getState() == RuleState.DRYRUN) {
-        runnableRules.add(rule);
+    }
+    return true;
+  }
+
+  private void submitRuleToScheduler(RuleInfo info,
+      TranslationContext transCtx) throws IOException {
+    TranslateResult tr = doCheckRule(info.getRuleText(), transCtx);
+    submitRuleToScheduler(info, tr);
+  }
+
+  private void submitRuleToScheduler(RuleInfo info, TranslateResult tr)
+      throws IOException {
+    long ruleId = info.getId();
+    if (mapRuleExecutor.containsKey(ruleId)) {
+      if (!mapRuleExecutor.get(ruleId).isExited()) {
+        return;
       }
     }
-
-    // Submit runnable rules to scheduler
-
-    return true;
+    ExecutionContext ctx = new ExecutionContext();
+    ctx.setProperty(ExecutionContext.RULE_ID, info.getId());
+    RuleQueryExecutor qe = new RuleQueryExecutor(this, ctx, tr, dbAdapter);
+    mapRuleExecutor.put(ruleId, qe);
+    execScheduler.addPeriodicityTask(qe);
   }
 
   /**
    * Start services
    */
   public boolean start() throws IOException {
+    // after StateManager be ready
+
+    // Submit runnable rules to scheduler
+    for (RuleInfo rule : mapRules.values()) {
+      if (rule.getState() == RuleState.ACTIVE
+          || rule.getState() == RuleState.DRYRUN) {
+        TranslationContext ctx = new TranslationContext(rule.getId(),
+            rule.getSubmitTime());
+        submitRuleToScheduler(rule, ctx);
+      }
+    }
     return true;
   }
 

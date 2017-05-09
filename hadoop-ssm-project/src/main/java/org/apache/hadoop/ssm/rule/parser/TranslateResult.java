@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.ssm.rule.parser;
 
-import org.apache.hadoop.ssm.Action;
 import org.apache.hadoop.ssm.actions.ActionType;
 
 import java.util.List;
