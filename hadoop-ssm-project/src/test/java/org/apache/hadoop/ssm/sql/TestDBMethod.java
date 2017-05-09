@@ -134,7 +134,8 @@ public class TestDBMethod {
         list.add(new CachedFileStatus(321l, 113334l,
             222222l, 222));
         dbAdapter.insertCachedFiles(list);
-        Assert.assertTrue(dbAdapter.getCachedFileStatus(321l).getNumAccessed() == 222);
+        Assert.assertTrue(dbAdapter.getCachedFileStatus(321l)
+            .getNumAccessed() == 222);
       } finally {
         if (conn != null) {
           conn.close();
