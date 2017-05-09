@@ -74,7 +74,7 @@ public class AccessCountFetcher {
     public void run() {
       try {
         FilesAccessInfo fileAccess = client.getFilesAccessInfo();
-        this.manager.addAccessCountInfo(fileAccess);
+        this.manager.onAccessEventsArrived(fileAccess.getFileAccessEvents());
       } catch (IOException e) {
         e.printStackTrace();
       }

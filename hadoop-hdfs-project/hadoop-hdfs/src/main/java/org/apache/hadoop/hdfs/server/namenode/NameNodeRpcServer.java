@@ -34,6 +34,7 @@ import static org.apache.hadoop.util.Time.now;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -102,6 +103,7 @@ import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.EncryptionZone;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.FSLimitException;
+import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
 import org.apache.hadoop.hdfs.protocol.FilesInfo;
 import org.apache.hadoop.hdfs.protocol.LastBlockWithStatus;
@@ -252,28 +254,15 @@ public class NameNodeRpcServer implements NamenodeProtocols {
   private final String minimumDataNodeVersion;
 
   private long accessCounterStartTime = System.currentTimeMillis();
-  private Map<String, Integer> accessCounter = new HashMap<String, Integer>();
-  private List<NNEvent> nnEvents = new LinkedList<>();
-  private Object nnEventsLock = new Object();
-
+  private List<FileAccessEvent> accessEvents = new ArrayList<>();
 
   @Override
   public FilesAccessInfo getFilesAccessInfo() throws IOException {
-    FilesAccessInfo ret = new FilesAccessInfo();
-    synchronized (accessCounter) {
-      ret.setAccessCountMap(accessCounter);
-      ret.setStartTime(accessCounterStartTime);
-      accessCounterStartTime = System.currentTimeMillis();
-      ret.setEndTime(accessCounterStartTime);
-      accessCounter = new HashMap<String, Integer>();
+    synchronized (accessEvents) {
+      FilesAccessInfo ret = new FilesAccessInfo(accessEvents);
+      this.accessEvents.clear();
+      return ret;
     }
-
-    synchronized (nnEventsLock) {
-      ret.setNnEvents(nnEvents);
-      nnEvents = new LinkedList<>();
-    }
-
-    return ret;
   }
 
   @Override
@@ -781,13 +770,8 @@ public class NameNodeRpcServer implements NamenodeProtocols {
     checkNNStartup();
     metrics.incrGetBlockLocations();
     if(offset == 0) {
-      synchronized (accessCounter) {
-        Integer count = accessCounter.get(src);
-        if (count == null) {
-          count = 0;
-        }
-        count++;
-        accessCounter.put(src, count);
+      synchronized (accessEvents) {
+        accessEvents.add(new FileAccessEvent(src, System.currentTimeMillis()));
       }
     }
     return namesystem.getBlockLocations(getClientMachine(), 

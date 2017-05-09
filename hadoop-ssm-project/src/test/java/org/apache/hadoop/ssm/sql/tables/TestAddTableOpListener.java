@@ -43,18 +43,14 @@ public class TestAddTableOpListener {
     AccessCountTable table3 = new AccessCountTable(55 * oneSec, 60 * oneSec, TimeGranularity.SECOND);
 
     secondTableDeque.add(table1);
-    Assert.assertTrue(minuteTableDeque.size() == 1);
-    AccessCountTable expected1 = new AccessCountTable(-60 * oneSec, 0L, TimeGranularity.MINUTE);
-    Assert.assertEquals(minuteTableDeque.peek(), expected1);
-
+    Assert.assertTrue(minuteTableDeque.size() == 0);
     secondTableDeque.add(table2);
-    Assert.assertTrue(minuteTableDeque.size() == 1);
+    Assert.assertTrue(minuteTableDeque.size() == 0);
 
     secondTableDeque.add(table3);
-    Assert.assertTrue(minuteTableDeque.size() == 2);
-    AccessCountTable expected2 = new AccessCountTable(0L, 60 * oneSec, TimeGranularity.MINUTE);
-    minuteTableDeque.poll();
-    Assert.assertEquals(minuteTableDeque.poll(), expected2);
+    Assert.assertTrue(minuteTableDeque.size() == 1);
+    AccessCountTable expected = new AccessCountTable(0L, 60 * oneSec, TimeGranularity.MINUTE);
+    Assert.assertEquals(minuteTableDeque.poll(), expected);
   }
 
   @Test
@@ -72,18 +68,15 @@ public class TestAddTableOpListener {
     AccessCountTable table3 = new AccessCountTable(59 * oneMin, 60 * oneMin, TimeGranularity.MINUTE);
 
     minuteTableDeque.add(table1);
-    Assert.assertTrue(hourTableDeque.size() == 1);
-    AccessCountTable expected1 = new AccessCountTable(-60 * oneMin, 0L, TimeGranularity.HOUR);
-    Assert.assertEquals(hourTableDeque.peek(), expected1);
+    Assert.assertTrue(hourTableDeque.size() == 0);
 
     minuteTableDeque.add(table2);
-    Assert.assertTrue(hourTableDeque.size() == 1);
+    Assert.assertTrue(hourTableDeque.size() == 0);
 
     minuteTableDeque.add(table3);
-    Assert.assertTrue(hourTableDeque.size() == 2);
-    AccessCountTable expected2 = new AccessCountTable(0L, 60 * oneMin, TimeGranularity.HOUR);
-    hourTableDeque.poll();
-    Assert.assertEquals(hourTableDeque.poll(), expected2);
+    Assert.assertTrue(hourTableDeque.size() == 1);
+    AccessCountTable expected = new AccessCountTable(0L, 60 * oneMin, TimeGranularity.HOUR);
+    Assert.assertEquals(hourTableDeque.poll(), expected);
   }
 
   @Test
@@ -101,17 +94,14 @@ public class TestAddTableOpListener {
     AccessCountTable table3 = new AccessCountTable(23 * oneHour, 24 * oneHour, TimeGranularity.HOUR);
 
     hourTableDeque.add(table1);
-    Assert.assertTrue(dayTableDeque.size() == 1);
-    AccessCountTable lastDay = new AccessCountTable(-24 * oneHour, 0L, TimeGranularity.DAY);
-    Assert.assertEquals(dayTableDeque.peek(), lastDay);
+    Assert.assertTrue(dayTableDeque.size() == 0);
 
     hourTableDeque.add(table2);
-    Assert.assertTrue(dayTableDeque.size() == 1);
+    Assert.assertTrue(dayTableDeque.size() == 0);
 
     hourTableDeque.add(table3);
-    Assert.assertTrue(dayTableDeque.size() == 2);
+    Assert.assertTrue(dayTableDeque.size() == 1);
     AccessCountTable today = new AccessCountTable(0L, 24 * oneHour, TimeGranularity.DAY);
-    dayTableDeque.poll();
     Assert.assertEquals(dayTableDeque.poll(), today);
   }
 }

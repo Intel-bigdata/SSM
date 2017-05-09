@@ -79,6 +79,7 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.EncryptionZone;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
 import org.apache.hadoop.hdfs.protocol.FilesInfo;
 import org.apache.hadoop.hdfs.protocol.FsPermissionExtension;
@@ -810,23 +811,18 @@ public class PBHelperClient {
 
   // FilesAccessInfoProto
   public static FilesAccessInfo convert(FilesAccessInfoProto proto) {
-    FilesAccessInfo ret = new FilesAccessInfo();
-    Map<String, Integer> accessCountMap = new HashMap<>();
-    for (HdfsProtos.StringIntMapProto mapProto : proto.getAccessCountMapList()) {
-      accessCountMap.put(mapProto.getKey(), mapProto.getValue());
-    }
-    ret.setAccessCountMap(accessCountMap);
-    ret.setStartTime(proto.getStartTime());
-    ret.setEndTime(proto.getEndTime());
-    List<NNEventProto> eventsProto = proto.getNnEventsList();
-    List<NNEvent> events = new ArrayList<>();
-    if (eventsProto != null) {
-      for (int i = 0; i < eventsProto.size(); i++) {
-        events.add(i, convert(eventsProto.get(i)));
+    List<HdfsProtos.FileAccessEventProto> protos = proto.getAccessEventsList();
+    List<FileAccessEvent> events = new ArrayList<>(protos.size());
+    for(HdfsProtos.FileAccessEventProto eventProto : protos) {
+      if (eventProto.hasUser()) {
+        events.add(new FileAccessEvent(eventProto.getPath(),
+          eventProto.getUser(), eventProto.getTimestamp()));
+      } else {
+        events.add(new FileAccessEvent(eventProto.getPath(),
+          eventProto.getTimestamp()));
       }
     }
-    ret.setNnEvents(events);
-    return ret;
+    return new FilesAccessInfo(events);
   }
 
   public static FilesAccessInfoProto convert(FilesAccessInfo info) {
@@ -834,24 +830,21 @@ public class PBHelperClient {
       return null;
     }
 
-    List<HdfsProtos.StringIntMapProto> protos =
-        new ArrayList<>(info.getAccessCountMap().size());
-    for (Map.Entry<String, Integer> entry : info.getAccessCountMap().entrySet()) {
-      HdfsProtos.StringIntMapProto proto = HdfsProtos.StringIntMapProto
-          .newBuilder().setKey(entry.getKey()).setValue(entry.getValue()).build();
-      protos.add(proto);
-    }
     FilesAccessInfoProto.Builder builder = FilesAccessInfoProto.newBuilder();
-    builder.setStartTime(info.getStartTime()).setEndTime(info.getEndTime());
-    builder.addAllAccessCountMap(protos);
-    List<NNEvent> events = info.getNnEvents();
-    List<NNEventProto> eventsProto = new ArrayList<>();
+    List<FileAccessEvent> events = info.getFileAccessEvents();
+    List<HdfsProtos.FileAccessEventProto> eventsProto = new ArrayList<>();
     if (events != null) {
-      for (int i = 0; i < events.size(); i++) {
-        eventsProto.add(i, convert(events.get(i)));
+      for (FileAccessEvent event : events) {
+        HdfsProtos.FileAccessEventProto.Builder eventBuilder =
+          HdfsProtos.FileAccessEventProto.newBuilder();
+        eventBuilder.setPath(event.getPath()).setTimestamp(event.getTimestamp());
+        if (event.getUser() != null) {
+          eventBuilder.setUser(event.getUser());
+        }
+        eventsProto.add(eventBuilder.build());
       }
     }
-    builder.addAllNnEvents(eventsProto);
+    builder.addAllAccessEvents(eventsProto);
     return builder.build();
   }
 

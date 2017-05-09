@@ -40,12 +40,14 @@ public abstract class TableAddOpListener {
       List<AccessCountTable> tablesToAggregate =
         fineGrainedTableDeque.getTables(lastCoarseGrainedTable.getStartTime(),
           lastCoarseGrainedTable.getEndTime());
-      coarseGrainedTable.add(lastCoarseGrainedTable);
-      //Todo: exception
-      try {
-        this.tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
-      } catch (SQLException e) {
-        e.printStackTrace();
+      if (tablesToAggregate.size() > 0) {
+        coarseGrainedTable.add(lastCoarseGrainedTable);
+        //Todo: exception
+        try {
+          this.tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
       }
     }
   }
