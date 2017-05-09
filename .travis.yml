@@ -6,6 +6,10 @@ before_install:
   - export M2_HOME=$PWD/apache-maven-3.5.0
   - export PATH=$M2_HOME/bin:$PATH
 
+  - wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz
+  - tar -xzvf protobuf-2.5.0.tar.gz
+  - pushd protobuf-2.5.0 && ./configure --prefix=/usr && make && sudo make install && popd
+
 addons:
   apt:
     packages:
