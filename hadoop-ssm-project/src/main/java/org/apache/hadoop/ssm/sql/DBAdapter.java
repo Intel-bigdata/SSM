@@ -56,8 +56,8 @@ public class DBAdapter {
 
   public Map<Long, Integer> getAccessCount(long startTime, long endTime,
       String countFilter) {
-    String sqlGetTableNames = "SELECT table_name FROM access_count_tables " +
-        "WHERE start_time >= " + startTime + " AND end_time <= " + endTime;
+    String sqlGetTableNames = "SELECT table_name FROM access_count_tables "
+        + "WHERE start_time >= " + startTime + " AND end_time <= " + endTime;
     try {
       ResultSet rsTableNames = executeQuery(sqlGetTableNames);
       List<String> tableNames = new LinkedList<>();
@@ -124,15 +124,20 @@ public class DBAdapter {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < files.length; i++) {
-        String sql = "INSERT INTO 'files' VALUES('" + files[i].getPath() +
-            "','" + files[i].getFileId() + "','" + files[i].getLen() + "','" +
-            files[i].getReplication() + "','" + files[i].getBlockSize() + "','" +
-            files[i].getModificationTime() + "','" + files[i].getAccessTime() +
-            "','" + booleanToInt(files[i].isDir()) + "','" + files[i].getStoragePolicy() +
-            "','" + getKey(mapOwnerIdName, files[i].getOwner()) + "','" +
-            getKey(mapGroupIdName, files[i].getGroup()) + "','" +
-            files[i].getPermission().toShort() + "','" +
-            getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
+        String sql = "INSERT INTO `files` (path, fid, length, block_replication,"
+            + " block_size, modification_time, access_time, is_dir, sid, oid, "
+            + "gid, permission, ec_policy_id ) "
+            + "VALUES ('" + files[i].getPath()
+            + "','" + files[i].getFileId() + "','" + files[i].getLen() + "','"
+            + files[i].getReplication() + "','" + files[i].getBlockSize()
+            + "','" + files[i].getModificationTime() + "','"
+            + files[i].getAccessTime()
+            + "','" + booleanToInt(files[i].isDir()) + "','"
+            + files[i].getStoragePolicy() + "','"
+            + getKey(mapOwnerIdName, files[i].getOwner()) + "','"
+            + getKey(mapGroupIdName, files[i].getGroup()) + "','"
+            + files[i].getPermission().toShort() + "','"
+            + getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
         s.addBatch(sql);
       }
       s.executeBatch();
@@ -141,7 +146,7 @@ public class DBAdapter {
     }
   }
 
-  public int booleanToInt(boolean b) {
+  private int booleanToInt(boolean b) {
     if (b) {
       return 1;
     } else {
@@ -149,7 +154,7 @@ public class DBAdapter {
     }
   }
 
-  public Integer getKey(Map<Integer, String> map, String value) {
+  private Integer getKey(Map<Integer, String> map, String value) {
     for (Integer key: map.keySet()) {
       if (map.get(key).equals(value)) {
         return key;
@@ -157,7 +162,9 @@ public class DBAdapter {
     }
     return null;
   }
-  public Integer getKey(Map<Integer, ErasureCodingPolicy> map, ErasureCodingPolicy value) {
+
+  private Integer getKey(Map<Integer, ErasureCodingPolicy> map,
+      ErasureCodingPolicy value) {
     for (Integer key : map.keySet()) {
       if (map.get(key).equals(value)) {
         return key;
@@ -228,12 +235,46 @@ public class DBAdapter {
     return mapECPolicy.get(id) != null ? mapECPolicy.get(id) : null;
   }
 
-  public StorageCapacity getStorageCapacity(String type) {
-    updateCache();
-    return mapStorageCapacity.get(type) != null ?
-        mapStorageCapacity.get(type) : null;
+  public synchronized void insertStoragesTable(StorageCapacity[] storages) {
+    try {
+      Statement s = conn.createStatement();
+      for (int i = 0; i < storages.length; i++) {
+        String sql = "INSERT INTO `storages` (type, capacity, free) VALUES ('" + storages[i].getType()
+            + "','" + storages[i].getCapacity() + "','"
+            + storages[i].getFree() + "')";
+        s.addBatch(sql);
+      }
+      s.executeBatch();
+      mapStorageCapacity = null;
+    }catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
+  public StorageCapacity getStorageCapacity(String type) {
+    updateCache();
+    StorageCapacity s = mapStorageCapacity.get(type);
+    return s;
+  }
+
+  public synchronized boolean updateStoragesTable(String type,
+      Long capacity, Long free) {
+    String sql = null;
+    String sqlPrefix = "UPDATE storages SET";
+    String sqlCapacity = (capacity != null) ? ", capacity = '" + capacity + "'" : null;
+    String sqlFree = (free != null) ? ", free = '" + free + "' " : null;
+    String sqlSuffix = "WHERE type = '" + type + "';";
+    if (capacity != null || free != null) {
+      sql = sqlPrefix + sqlCapacity + sqlFree + sqlSuffix;
+      sql = sql.replaceFirst(",", "");
+    }
+    try {
+      mapStorageCapacity = null;
+      return executeUpdate(sql) == 1;
+    } catch (SQLException e) {
+      return false;
+    }
+  }
   /**
    * Convert query result into HdfsFileStatus list.
    * Note: Some of the info in HdfsFileStatus are not the same
@@ -303,7 +344,6 @@ public class DBAdapter {
         String sql = "SELECT * FROM ecpolicys";
         mapECPolicy = convertEcPoliciesTableItem(executeQuery(sql));
       }
-
       if (mapStorageCapacity == null) {
         String sql = "SELECT * FROM storages";
         mapStorageCapacity = convertStorageTablesItem(executeQuery(sql));
@@ -561,7 +601,7 @@ public class DBAdapter {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < commands.length; i++) {
-        String sql = "INSERT INTO commands(rid, action_id, state, "
+        String sql = "INSERT INTO commands (rid, action_id, state, "
             + "parameters, generate_time, state_changed_time) "
             + "VALUES('" + commands[i].getRid() + "', '"
             + commands[i].getActionId().getValue() + "', '"
@@ -582,7 +622,7 @@ public class DBAdapter {
     String sqlPrefix = "SELECT * FROM commands WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
-    String sqlState = (state == null) ? "" : "AND state = " + state;
+    String sqlState = (state == null) ? "" : "AND state = " + state.getValue();
     String sqlFinal = "";
     if (cidCondition != null || ridCondition != null || state != null) {
       sqlFinal = sqlPrefix + sqlCid + sqlRid + sqlState;
@@ -640,4 +680,28 @@ public class DBAdapter {
     }
     return ret;
   }
+
+  public synchronized void insertStoragePolicyTable(StoragePolicy s) {
+  String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
+      + s.getSid() + "','" + s.getPolicyName() + "');";
+    try {
+      execute(sql);
+      mapStoragePolicyIdName = null;
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public String getStoragePolicyName(int sid) {
+    updateCache();
+    String s = mapStoragePolicyIdName.get(sid);
+    return s;
+  }
+
+  public Integer getStoragePolicyID(String policyName) {
+    updateCache();
+    Integer s = getKey(mapStoragePolicyIdName, policyName);
+    return s;
+  }
+
 }
