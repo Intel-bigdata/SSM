@@ -20,6 +20,6 @@ cache:
   directories:
     - "$HOME/.m2"
 script:
-    mvn clean install -DskipTest;
+    mvn clean install -DskipTests;
     cd hadoop-ssm-project;
     mvn test
