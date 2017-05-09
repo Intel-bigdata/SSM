@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +50,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetFiles () throws Exception {
+    public void testGetFiles() throws Exception {
       Connection conn = null;
       try {
         conn = new TestDBUtil().getTestDBInstance();
@@ -114,7 +115,37 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetCachedFileStatus () throws Exception {
+    public void testInsertCachedFiles() throws Exception {
+      String dbFile = TestDBUtil.getUniqueDBFilePath();
+      Connection conn = null;
+      try {
+        conn = Util.createSqliteConnection(dbFile);
+        Util.initializeDataBase(conn);
+        DBAdapter dbAdapter = new DBAdapter(conn);
+        dbAdapter.insertCachedFiles(80l, 123456l,
+            234567l, 456);
+        Assert.assertTrue(dbAdapter.getCachedFileStatus(
+            80l).getFromTime() == 123456l);
+        Assert.assertTrue(dbAdapter.updateCachedFiles(80l, 123455l,
+            234568l, 460));
+        Assert.assertTrue(dbAdapter.getCachedFileStatus().get(0)
+            .getLastAccessTime() == 234568l);
+        List<CachedFileStatus> list = new LinkedList<>();
+        list.add(new CachedFileStatus(321l, 113334l,
+            222222l, 222));
+        dbAdapter.insertCachedFiles(list);
+        Assert.assertTrue(dbAdapter.getCachedFileStatus(321l).getNumAccessed() == 222);
+      } finally {
+        if (conn != null) {
+          conn.close();
+        }
+        File file = new File(dbFile);
+        file.deleteOnExit();
+      }
+    }
+
+    @Test
+    public void testGetCachedFileStatus() throws Exception {
       Connection conn = null;
       try {
           conn = new TestDBUtil().getTestDBInstance();
@@ -133,7 +164,7 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testGetErasureCodingPolicy () throws Exception {
+    public void testGetErasureCodingPolicy() throws Exception {
       Connection conn = null;
       try {
         conn = new TestDBUtil().getTestDBInstance();
@@ -200,10 +231,12 @@ public class TestDBMethod {
         String ridCondition = "= 78 ";
         CommandState state = null;
         CommandState state1 = CommandState.PAUSED;
-        List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, state);
+        List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition,
+            ridCondition, state);
         Assert.assertTrue(com.get(0).getActionId() == ActionType.ConvertToEC);
         Assert.assertTrue(com.get(0).getState() == CommandState.PAUSED);
-        List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(null, null, state1);
+        List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(null,
+            null, state1);
         Assert.assertTrue(com1.get(0).getState() == CommandState.PAUSED);
       } finally {
         if (conn != null) {
