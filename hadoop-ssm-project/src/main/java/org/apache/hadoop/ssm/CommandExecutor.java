@@ -18,9 +18,11 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,7 +32,7 @@ import java.util.Map;
 /**
  * Schedule and execute commands passed down.
  */
-public class CommandExecutor implements Runnable {
+public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private ArrayList<List<Long>> cmdsInState = new ArrayList<>();
   private Map<Long, Command> cmdsAll = new HashMap<>();
 
@@ -49,19 +51,24 @@ public class CommandExecutor implements Runnable {
     execThreadGroup.setDaemon(true);
   }
 
+  public boolean init(DBAdapter adapter) throws IOException {
+    return true;
+  }
+
   /**
    * Start CommandExecutor.
    */
-  public synchronized void start() {
+  public boolean start() throws IOException {
     commandExecutorThread = new Daemon(this);
     commandExecutorThread.setName(this.getClass().getCanonicalName());
     commandExecutorThread.start();
+    return true;
   }
 
   /**
    * Stop CommandExecutor
    */
-  public synchronized void stop() {
+  public void stop() throws IOException {
     if (commandExecutorThread == null) {
       return;
     }
@@ -75,6 +82,9 @@ public class CommandExecutor implements Runnable {
     }
     commandExecutorThread = null;
     execThreadGroup = null;
+  }
+
+  public void join() throws IOException {
   }
 
   @Override

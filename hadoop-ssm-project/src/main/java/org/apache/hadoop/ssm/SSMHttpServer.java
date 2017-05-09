@@ -56,6 +56,8 @@ import com.google.common.annotations.VisibleForTesting;
  */
 @InterfaceAudience.Private
 public class SSMHttpServer {
+  private SSMServer ssm;
+
   private HttpServer2 httpServer;
   private final Configuration conf;
 
@@ -67,9 +69,17 @@ public class SSMHttpServer {
   public static final String FSIMAGE_ATTRIBUTE_KEY = "name.system.image";
   public static final String STARTUP_PROGRESS_ATTRIBUTE_KEY = "startup.progress";
 
-  SSMHttpServer(Configuration conf, InetSocketAddress bindAddress) {
-    this.bindAddress = bindAddress;
+  SSMHttpServer(SSMServer ssm, Configuration conf) {
+    this.ssm = ssm;
     this.conf = conf;
+    this.bindAddress = getHttpServerAddress();
+  }
+
+  private InetSocketAddress getHttpServerAddress() {
+    String[] strings = conf.get(SSMConfigureKeys.DFS_SSM_HTTP_ADDRESS_KEY,
+        SSMConfigureKeys.DFS_SSM_HTTP_ADDRESS_DEFAULT).split(":");
+    return new InetSocketAddress(strings[strings.length - 2]
+        , Integer.parseInt(strings[strings.length - 1]));
   }
 
   private void init(Configuration conf) throws IOException {

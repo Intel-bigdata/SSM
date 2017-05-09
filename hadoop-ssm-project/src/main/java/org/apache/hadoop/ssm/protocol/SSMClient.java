@@ -20,6 +20,7 @@ package org.apache.hadoop.ssm.protocol;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.ssm.SSMConfigureKeys;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolClientSideTranslatorPB;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB;
 import org.apache.hadoop.ssm.rule.RuleInfo;
@@ -38,10 +39,16 @@ public class SSMClient {
 
   volatile boolean clientRunning = true;
 
-  public SSMClient(Configuration conf, InetSocketAddress address)
+  public SSMClient(Configuration conf)
       throws IOException {
     this.conf = conf;
-    RPC.setProtocolEngine(conf, ClientSSMProtocolPB.class, ProtobufRpcEngine.class);
+    String[] strings = conf.get(SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY,
+        SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
+    InetSocketAddress address = new InetSocketAddress(
+        strings[strings.length - 2],
+        Integer.parseInt(strings[strings.length - 1]));
+    RPC.setProtocolEngine(conf, ClientSSMProtocolPB.class,
+        ProtobufRpcEngine.class);
     ClientSSMProtocolPB proxy = RPC.getProxy(
         ClientSSMProtocolPB.class, VERSION, address, conf);
     ClientSSMProtocol clientSSMProtocol =
