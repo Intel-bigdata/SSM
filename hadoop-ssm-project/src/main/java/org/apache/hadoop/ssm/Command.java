@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.ssm.actions.ActionBase;
+import org.apache.hadoop.ssm.actions.ActionExecutor;
 
 /**
  * Command is the minimum unit of execution. Different commands can be
@@ -41,6 +42,7 @@ public class Command implements Runnable {
   private long ExecutionCompleteTime;
 
   private Command() {
+
   }
 
   public Command(ActionBase[] actions) {

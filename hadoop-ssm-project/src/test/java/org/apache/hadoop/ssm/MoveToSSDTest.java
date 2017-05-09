@@ -68,7 +68,7 @@ public class MoveToSSDTest {
       for (StorageType storageType : storageTypes) {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
-      // move to ARCHIVE
+      // move to SSD
       String[] str = {file};
       MoveToSSD.getInstance(client, conf).initial(str);
       MoveToSSD.getInstance(client, conf).execute();

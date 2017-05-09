@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.ssm.actions.ActionBase;
 import org.apache.hadoop.ssm.actions.ActionType;
