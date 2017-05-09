@@ -17,22 +17,30 @@
  */
 package org.apache.hadoop.hdfs.protocol;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+public class FileAccessEvent {
+  private String path;
+  private String user;
+  private long timestamp;
 
-public class FilesAccessInfo {
-  private List<FileAccessEvent> fileAccessEvents;
-
-  public FilesAccessInfo(FileAccessEvent[] events) {
-    this(Arrays.asList(events));
+  public FileAccessEvent(String path, long timestamp) {
+    this(path, "", timestamp);
   }
 
-  public FilesAccessInfo(List<FileAccessEvent> events) {
-    this.fileAccessEvents = new ArrayList<>(events);
+  public FileAccessEvent(String path, String user, long timestamp) {
+    this.path = path;
+    this.user = user;
+    this.timestamp = timestamp;
   }
 
-  public List<FileAccessEvent> getFileAccessEvents() {
-    return fileAccessEvents;
+  public String getPath() {
+    return path;
+  }
+
+  public String getUser() {
+    return user;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
   }
 }

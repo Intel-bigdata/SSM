@@ -19,6 +19,7 @@ package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
 import org.apache.hadoop.hdfs.protocol.NNEvent;
 import org.junit.Test;
@@ -50,8 +51,8 @@ public class TestDFSGetFilesAccessInfo {
     }
     try {
       FilesAccessInfo info = fs.dfs.getFilesAccessInfo();
-      Map<String, Integer> accessMap = info.getAccessCountMap();
-      assertEquals(numOpen, accessMap.get(filePath).intValue());
+      List<FileAccessEvent> events = info.getFileAccessEvents();
+      assertEquals(numOpen, events.size());
     } finally {
       cluster.shutdown();
     }
@@ -82,9 +83,10 @@ public class TestDFSGetFilesAccessInfo {
 
     try {
       FilesAccessInfo info = fs.dfs.getFilesAccessInfo();
-      Map<String, Integer> accessMap = info.getAccessCountMap();
+      List<FileAccessEvent> events = info.getFileAccessEvents();
       for (int i = 0; i < files.length; i++) {
-        Integer acc = accessMap.get(files[i]);
+        String file = files[i];
+        Long acc = events.stream().filter(e -> e.getPath().equals(file)).count();
         assertEquals(numAccess[i], acc == null ? 0 : acc.intValue());
       }
     } finally {
@@ -116,14 +118,21 @@ public class TestDFSGetFilesAccessInfo {
     }
 
     FilesAccessInfo info;
-    Map<String, Integer> accessMap;
+    List<FileAccessEvent> events;
     try {
       info = fs.dfs.getFilesAccessInfo();
-      long startTime = info.getEndTime();
-      accessMap = info.getAccessCountMap();
+      events = info.getFileAccessEvents();
+      long startTime = events.get(0).getTimestamp();
       for (int i = 0; i < files.length; i++) {
-        Integer acc = accessMap.get(files[i]);
+        String file = files[i];
+        Long acc = events.stream().filter(e -> e.getPath().equals(file)).count();
         assertEquals(numAccess[i], acc == null ? 0 : acc.intValue());
+      }
+
+      try {
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        // ignore it
       }
 
       for (int i = 0; i < files.length; i++) {
@@ -133,98 +142,14 @@ public class TestDFSGetFilesAccessInfo {
         }
       }
 
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        // ignore it
-      }
-
       info = fs.dfs.getFilesAccessInfo();
-      long endTime = info.getEndTime();
+      events = info.getFileAccessEvents();
+      long endTime = events.get(events.size() - 1).getTimestamp();
       assertTrue(endTime - startTime > 5000);
-      accessMap = info.getAccessCountMap();
       for (int i = 0; i < files.length; i++) {
-        Integer acc = accessMap.get(files[i]);
+        String file = files[i];
+        Long acc = events.stream().filter(e -> e.getPath().equals(file)).count();
         assertEquals(numAccess[i], acc == null ? 0 : acc.intValue());
-      }
-    } finally {
-      cluster.shutdown();
-    }
-  }
-
-  @Test(timeout=60000)
-  public void testMultiFilesRename()
-      throws IOException {
-    Configuration conf = new Configuration();
-    MiniDFSCluster cluster =
-        new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
-    DistributedFileSystem fs = cluster.getFileSystem();
-    String[] files = new String[]{"/B1", "/A2", "/B2", "/A1"};
-    String[] desFiles = new String[files.length];
-    for(int i = 0; i < files.length; i++) {
-      desFiles[i] = files[i] + "-rename";
-      DFSTestUtil.createFile(fs, new Path(files[i]), 1024, (short) 3, 0);
-    }
-
-    FilesAccessInfo info;
-    try {
-      for (int i = 0; i < files.length; i++) {
-        fs.rename(new Path(files[i]), new Path(desFiles[i]));
-      }
-      info = fs.dfs.getFilesAccessInfo();
-      List<NNEvent> events = info.getNnEvents();
-
-      List<NNEvent> renameEvents = new ArrayList<>();
-      for (NNEvent event : events) {
-        if (event.getEventType() == NNEvent.EV_RENAME) {
-          renameEvents.add(event);
-        }
-      }
-
-      assertEquals(files.length, renameEvents.size());
-
-      for (int i = 0; i < files.length; i++) {
-        NNEvent event = renameEvents.get(i);
-        assertEquals(files[i], event.getArgs()[0]);
-        assertEquals(desFiles[i], event.getArgs()[1]);
-      }
-    } finally {
-      cluster.shutdown();
-    }
-  }
-
-  @Test(timeout=60000)
-  public void testMultiFilesDelete()
-      throws IOException {
-    Configuration conf = new Configuration();
-    MiniDFSCluster cluster =
-        new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
-    DistributedFileSystem fs = cluster.getFileSystem();
-    String[] files = new String[]{"/B1", "/A2", "/B2", "/A1"};
-    for(String file : files) {
-      DFSTestUtil.createFile(fs, new Path(file), 1024, (short) 3, 0);
-    }
-
-    FilesAccessInfo info;
-    try {
-      for (String file : files) {
-        fs.delete(new Path(file));
-      }
-      info = fs.dfs.getFilesAccessInfo();
-      List<NNEvent> events = info.getNnEvents();
-
-      List<NNEvent> deleteEvents = new ArrayList<>();
-      for (NNEvent event : events) {
-        if (event.getEventType() == NNEvent.EV_DELETE) {
-          deleteEvents.add(event);
-        }
-      }
-
-      assertEquals(files.length, deleteEvents.size());
-
-      for (int i = 0; i < files.length; i++) {
-        NNEvent event = deleteEvents.get(i);
-        assertEquals(files[i], event.getArgs()[0]);
       }
     } finally {
       cluster.shutdown();

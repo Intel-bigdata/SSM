@@ -17,7 +17,7 @@
  */
 package org.apache.hadoop.ssm.sql.tables;
 
-import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.DBTest;
 import org.apache.hadoop.ssm.utils.TimeGranularity;
@@ -31,7 +31,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.sql.Statement;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.mock;
@@ -91,15 +92,18 @@ public class TestAccessCountTableManager extends DBTest {
 
     DBAdapter adapter = new DBAdapter(databaseTester.getConnection().getConnection());
     AccessCountTableManager manager = new AccessCountTableManager(adapter);
-    FilesAccessInfo accessInfo = new FilesAccessInfo(0L, 5L);
-    Map<String, Integer> map = new HashMap<>();
-    map.put("file1", 5);
-    map.put("file2", 10);
-    map.put("file3", 15);
-    accessInfo.setAccessCountMap(map);
-    manager.addAccessCountInfo(accessInfo);
+    List<FileAccessEvent> accessEvents = new ArrayList<>();
+    accessEvents.add(new FileAccessEvent("file1", 0));
+    accessEvents.add(new FileAccessEvent("file2", 1));
+    accessEvents.add(new FileAccessEvent("file2", 2));
+    accessEvents.add(new FileAccessEvent("file3", 2));
+    accessEvents.add(new FileAccessEvent("file3", 3));
+    accessEvents.add(new FileAccessEvent("file3", 4));
 
-    AccessCountTable accessCountTable = new AccessCountTable(0L, 5L);
+    accessEvents.add(new FileAccessEvent("file3", 5000));
+
+    manager.onAccessEventsArrived(accessEvents);
+    AccessCountTable accessCountTable = new AccessCountTable(0L, 5000L);
     ITable actual = databaseTester.getConnection()
         .createTable(accessCountTable.getTableName());
     ITable expect = databaseTester.getDataSet().getTable("expect1");

@@ -18,15 +18,13 @@
 package org.apache.hadoop.ssm.sql.tables;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.ssm.sql.DBAdapter;
-import org.apache.hadoop.ssm.utils.Constants;
 import org.apache.hadoop.ssm.utils.TimeGranularity;
 
-import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class AccessCountTableManager {
   private static final int NUM_DAY_TABLES_TO_KEEP = 30;
@@ -37,14 +35,16 @@ public class AccessCountTableManager {
   private DBAdapter dbAdapter;
   private Map<TimeGranularity, AccessCountTableDeque> tableDeques;
   private AccessCountTableDeque secondTableDeque;
+  private AccessEventAggregator accessEventAggregator;
 
   public AccessCountTableManager(DBAdapter adapter) {
     this.dbAdapter = adapter;
     this.tableDeques = new HashMap<>();
+    this.accessEventAggregator = new AccessEventAggregator(adapter, this);
     this.initTables();
   }
 
-  private void initTables(){
+  private void initTables() {
     AccessCountTableAggregator aggregator = new AccessCountTableAggregator(dbAdapter);
     AccessCountTableDeque dayTableDeque = new AccessCountTableDeque(
         new CountEvictor(NUM_DAY_TABLES_TO_KEEP));
@@ -73,60 +73,12 @@ public class AccessCountTableManager {
     this.secondTableDeque.add(accessCountTable);
   }
 
-  public void addAccessCountInfo(FilesAccessInfo accessInfo) {
-    long start = accessInfo.getStartTime();
-    long end = accessInfo.getEndTime();
-    long length = end - start;
-    Map<String, Long> pathToFileID = dbAdapter.getFileIDs(
-        accessInfo.getAccessCountMap().keySet());
-    // Todo: span across multiple minutes?
-    if (spanAcrossTwoMinutes(start, end)) {
-      long spanPoint = end - end % Constants.ONE_MINUTE_IN_MILLIS;
-      FilesAccessInfo first = new FilesAccessInfo(start, spanPoint);
-      FilesAccessInfo second = new FilesAccessInfo(spanPoint, end);
-      Map<String, Integer> firstAccessMap = new HashMap<>();
-      Map<String, Integer> secondAccessMap = new HashMap<>();
-      for(Map.Entry<String, Integer> entry : accessInfo.getAccessCountMap().entrySet()) {
-        Long firstValue = entry.getValue() * (spanPoint - start) / length;
-        firstAccessMap.put(entry.getKey(), firstValue.intValue());
-        secondAccessMap.put(entry.getKey(), entry.getValue() - firstValue.intValue());
-      }
-      first.setAccessCountMap(firstAccessMap);
-      second.setAccessCountMap(secondAccessMap);
-      this.addAccessCountTable(first, pathToFileID);
-      this.addAccessCountTable(second, pathToFileID);
-    } else {
-      this.addAccessCountTable(accessInfo, pathToFileID);
-    }
-  }
-
-  private void addAccessCountTable(FilesAccessInfo info, Map<String, Long> pathToFileID) {
-    AccessCountTable accessCountTable =
-        new AccessCountTable(info.getStartTime(), info.getEndTime());
-    String createTable = AccessCountTable.createTableSQL(accessCountTable.getTableName());
-    String values = info.getAccessCountMap().entrySet().stream().map(entry ->
-        "(" + pathToFileID.get(entry.getKey()) + ", " + entry.getValue() + ")")
-        .collect(Collectors.joining(","));
-
-    StringBuilder builder = new StringBuilder(createTable + ";");
-    builder.append("INSERT INTO ").append(accessCountTable.getTableName()).append("(")
-        .append(AccessCountTable.FILE_FIELD).append(", ")
-        .append(AccessCountTable.ACCESSCOUNT_FIELD).append(") VALUES ").append(values);
-    // Todo: exception
-    try {
-      this.dbAdapter.execute(builder.toString());
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
+  public void onAccessEventsArrived(List<FileAccessEvent> accessEvents) {
+    this.accessEventAggregator.addAccessEvents(accessEvents);
   }
 
   @VisibleForTesting
   protected Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
     return this.tableDeques;
-  }
-
-  private boolean spanAcrossTwoMinutes(long first, long second) {
-    return first / Constants.ONE_MINUTE_IN_MILLIS !=
-        second / Constants.ONE_MINUTE_IN_MILLIS;
   }
 }
