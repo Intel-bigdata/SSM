@@ -124,7 +124,8 @@ public class DBAdapter {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < files.length; i++) {
-        String sql = "INSERT INTO `files` (path, fid, length, block_replication,"
+        String sql = "INSERT INTO `files` (path, fid, length, "
+            + "block_replication,"
             + " block_size, modification_time, access_time, is_dir, sid, oid, "
             + "gid, permission, ec_policy_id ) "
             + "VALUES ('" + files[i].getPath()
@@ -232,14 +233,15 @@ public class DBAdapter {
 
   public ErasureCodingPolicy getErasureCodingPolicy(int id) {
     updateCache();
-    return mapECPolicy.get(id) != null ? mapECPolicy.get(id) : null;
+    return mapECPolicy.get(id);
   }
 
   public synchronized void insertStoragesTable(StorageCapacity[] storages) {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < storages.length; i++) {
-        String sql = "INSERT INTO `storages` (type, capacity, free) VALUES ('" + storages[i].getType()
+        String sql = "INSERT INTO `storages` (type, capacity, free) VALUES"
+            + " ('" + storages[i].getType()
             + "','" + storages[i].getCapacity() + "','"
             + storages[i].getFree() + "')";
         s.addBatch(sql);
@@ -253,15 +255,15 @@ public class DBAdapter {
 
   public StorageCapacity getStorageCapacity(String type) {
     updateCache();
-    StorageCapacity s = mapStorageCapacity.get(type);
-    return s;
+    return mapStorageCapacity.get(type);
   }
 
   public synchronized boolean updateStoragesTable(String type,
       Long capacity, Long free) {
     String sql = null;
     String sqlPrefix = "UPDATE storages SET";
-    String sqlCapacity = (capacity != null) ? ", capacity = '" + capacity + "'" : null;
+    String sqlCapacity = (capacity != null) ? ", capacity = '"
+        + capacity + "'" : null;
     String sqlFree = (free != null) ? ", free = '" + free + "' " : null;
     String sqlSuffix = "WHERE type = '" + type + "';";
     if (capacity != null || free != null) {
@@ -384,7 +386,8 @@ public class DBAdapter {
     return ret;
   }
 
-  private Map<String, StorageCapacity> convertStorageTablesItem(ResultSet resultSet) {
+  private Map<String, StorageCapacity> convertStorageTablesItem(
+      ResultSet resultSet) {
     Map<String, StorageCapacity> map = new HashMap<>();
     if (resultSet == null) {
       return map;
@@ -420,16 +423,55 @@ public class DBAdapter {
     return ret;
   }
 
-
   public synchronized void insertCachedFiles(long fid, long fromTime,
       long lastAccessTime, int numAccessed) {
+    try {
+      String sql = "INSERT INTO cached_files (fid, from_time, "
+          + "last_access_time, num_accessed) VALUES (" + fid + ","
+          + fromTime + "," + lastAccessTime + ","
+          + numAccessed + ")";
+      executeUpdate(sql);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
   public synchronized void insertCachedFiles(List<CachedFileStatus> s) {
+    try {
+      Statement st = conn.createStatement();
+      for (CachedFileStatus c : s) {
+        String sql = "INSERT INTO cached_files (fid, from_time, "
+            + "last_access_time, num_accessed) VALUES (" + c.getFid() + ","
+            + c.getFromTime() + "," + c.getLastAccessTime() + ","
+            + c.getNumAccessed() + ")";
+        st.addBatch(sql);
+      }
+      st.executeBatch();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
-  public synchronized void updateCachedFiles(long fid,
-      long lastAccessTime, int numAccessed) {
+  public synchronized boolean updateCachedFiles(Long fid, Long fromTime,
+      Long lastAccessTime, Integer numAccessed) {
+    StringBuffer sb = new StringBuffer("UPDATE cached_files SET");
+    if (fromTime != null) {
+      sb.append(" from_time = ").append(fid).append(",");
+    }
+    if (lastAccessTime != null) {
+      sb.append(" last_access_time = ").append(lastAccessTime).append(",");
+    }
+    if (numAccessed != null) {
+      sb.append(" num_accessed = ").append(numAccessed).append(",");
+    }
+    int idx = sb.lastIndexOf(",");
+    sb.replace(idx, idx + 1, "");
+    sb.append(" WHERE fid = ").append(fid).append(";");
+    try {
+      return executeUpdate(sb.toString()) == 1;
+    } catch (SQLException e) {
+      return false;
+    }
   }
 
   public List<CachedFileStatus> getCachedFileStatus() {
@@ -474,14 +516,12 @@ public class DBAdapter {
 
   public ResultSet executeQuery(String sqlQuery) throws SQLException {
     Statement s = conn.createStatement();
-    ResultSet result = s.executeQuery(sqlQuery);
-    return result;
+    return s.executeQuery(sqlQuery);
   }
 
   public int executeUpdate(String sqlUpdate) throws SQLException {
     Statement s = conn.createStatement();
-    int result = s.executeUpdate(sqlUpdate);
-    return result;
+    return s.executeUpdate(sqlUpdate);
   }
 
   public void execute(String sql) throws SQLException {
@@ -671,12 +711,10 @@ public class DBAdapter {
     } catch (SQLException e) {
       return null;
     }
-    if (resultSet != null) {
-      try {
-        resultSet.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
+    try {
+      resultSet.close();
+    } catch (SQLException e) {
+      e.printStackTrace();
     }
     return ret;
   }
@@ -694,14 +732,12 @@ public class DBAdapter {
 
   public String getStoragePolicyName(int sid) {
     updateCache();
-    String s = mapStoragePolicyIdName.get(sid);
-    return s;
+    return mapStoragePolicyIdName.get(sid);
   }
 
   public Integer getStoragePolicyID(String policyName) {
     updateCache();
-    Integer s = getKey(mapStoragePolicyIdName, policyName);
-    return s;
+    return getKey(mapStoragePolicyIdName, policyName);
   }
 
 }
