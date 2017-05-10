@@ -18,8 +18,10 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ssm.actions.*;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.utils.JsonUtil;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
 
@@ -144,7 +146,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       // Put them into cmdsAll and cmdsInState
       List<CommandInfo> dbcmds = getCommansFromDB();
       for(CommandInfo c : dbcmds) {
-        Command cmd = c.toCommand();
+        Command cmd = getCommand(c, ssm);
         cmdsAll.put(cmd.getId(), cmd);
         cmds.add(cmd.getId());
       }
@@ -159,12 +161,43 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return ret;
   }
 
+  public Command getCommand(CommandInfo cmdinfo, SSMServer ssm) {
+    ActionBase[] actions = new ActionBase[10];
+    Map<String, String> jsonParameters = JsonUtil.toStringStringMap(cmdinfo.getParameters());
+    String[] args = {jsonParameters.get("_FILE_PATH_ ")};
+    // New action
+    int flag = 0;
+    if(cmdinfo.getActionType().getValue() == ActionType.CacheFile.getValue()) {
+      flag = 0;
+    } else if(cmdinfo.getActionType().getValue()  == ActionType.MoveFile.getValue()) {
+      flag = 1;
+    }
+    ActionBase current;
+    if(flag == 0) {
+      current = new MoveToCache(ssm.getDFSClient());
+    } else {
+      // TODO StoragePolicy in Parameters
+      if(jsonParameters.get("").contains("HOT"))
+        current = new MoveToArchive(ssm.getDFSClient(), ssm.getConf());
+      else
+        current = new MoveToSSD(ssm.getDFSClient(), ssm.getConf());
+    }
+    current.initial(args);
+    actions[0] = current;
+    // New Command
+    Command cmd = new Command(actions);
+    cmd.setParameters(jsonParameters);
+    cmd.setId(cmdinfo.getCid());
+    cmd.setRuleId(cmdinfo.getRid());
+    // Init action
+    return cmd;
+  }
+
 
   public List<CommandInfo> getCommansFromDB() {
     // Get Pending cmds from DB
-    return ret = adapter.getCommandsTableItem(null, null, CommandState.PENDING);
+    return adapter.getCommandsTableItem(null, null, CommandState.PENDING);
   }
-
 
   public Long[] getCommands(CommandState state) {
     List<Long> cmds = cmdsInState.get(state.getValue());

@@ -8,21 +8,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ActionPool {
 
     private static ActionPool instance = new ActionPool();
-    private Map<UUID, ActionBase> actionBaseMap;
 
     private ActionPool() {
-        actionBaseMap = new ConcurrentHashMap<>();
     }
 
-    pubice static ActionPool getInstance() {
+    public static ActionPool getInstance() {
         return  instance;
     }
 
-    public UUID runCommand(String ) {
-
-    }
-
-    public getActionStatus() {
+    public void getActionStatus() {
 
     }
 
