@@ -15,17 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.protocol;
+package org.apache.hadoop.ssm.protocolPB;
 
-import org.apache.hadoop.ssm.rule.RuleInfo;
+
+import com.google.protobuf.ServiceException;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.RuleStateProto;
 import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 
-public interface ClientSSMProtocol {
-  public SSMServiceStates getServiceStatus();
+public class PBHelper {
+  private PBHelper() {
+  }
 
-  public RuleInfo getRuleInfo(long id);
+  public static IOException getRemoteException(ServiceException se) {
+    Throwable e = se.getCause();
+    if (e == null) {
+      return new IOException(se);
+    }
+    return e instanceof IOException ? (IOException) e : new IOException(se);
+  }
 
-  long submitRule(String rule, RuleState initState) throws IOException;
+  public static RuleStateProto convert(RuleState state) {
+    for (RuleStateProto v : RuleStateProto.values()) {
+      if (v.getNumber() == state.getValue()) {
+        return v;
+      }
+    }
+    return null;
+  }
+
+  public static RuleState convert(RuleStateProto state) {
+    for (RuleState v : RuleState.values()) {
+      if (v.getValue() == state.getNumber()) {
+        return v;
+      }
+    }
+    return null;
+  }
 }

@@ -24,6 +24,7 @@ option java_generate_equals_and_hash = true;
 
 message StatusParaProto {
 }
+
 message StatusResultProto {
   required string SSMServiceState = 1;
 }
@@ -31,6 +32,15 @@ message StatusResultProto {
 message RuleInfoParaProto {
   required sint64 para = 1;
 }
+
+enum RuleStateProto {
+    ACTIVE = 0x0;
+    DRYRUN = 0x1;
+    DISABLED = 0x2;
+    FINISHED = 0x3;
+    DELETED = 0x4;
+}
+
 message RuleInfoResultTypeProto {
   required sint64 id = 1;
   required sint64 submitTime = 2;
@@ -38,18 +48,24 @@ message RuleInfoResultTypeProto {
   required sint64 countConditionFulfilled = 4;
   required string ruleText = 5;
   required RuleStateProto rulestateProto = 6;
-  enum RuleStateProto {
-    ACTIVE = 0x0;
-    DRYRUN = 0x1;
-    DISABLED = 0x2;
-    FINISHED = 0x3;
-  }
+
 }
+
 message RuleInfoResultProto {
   required RuleInfoResultTypeProto result = 1;
+}
+
+message SubmitRuleRequestProto {
+  required string rule = 1;
+  required RuleStateProto initState = 2;
+}
+
+message SubmitRuleResponseProto {
+  required int64 ruleId = 1;
 }
 
 service protoService {
   rpc getServiceStatus (StatusParaProto) returns (StatusResultProto);
   rpc getRuleInfo (RuleInfoParaProto) returns (RuleInfoResultProto);
+  rpc submitRule(SubmitRuleRequestProto) returns(SubmitRuleResponseProto);
 }
