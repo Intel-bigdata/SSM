@@ -123,8 +123,8 @@ public class SSMRpcServer implements ClientSSMProtocol {
     builder.setId(id)
         .setSubmitTime(6)
         .setRuleText("ruleTest")
-        .setCountConditionChecked(7)
-        .setCountConditionFulfilled(8)
+        .setNumChecked(7)
+        .setNumCmdsGen(8)
         .setState(RuleState.ACTIVE);
     return builder.build();
   }

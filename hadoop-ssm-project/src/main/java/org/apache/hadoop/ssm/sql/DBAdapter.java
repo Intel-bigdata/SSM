@@ -559,8 +559,8 @@ public class DBAdapter {
         + info.getState().getValue()
         + ", '" + info.getRuleText() + "'" // TODO: take care of '
         + ", " + info.getSubmitTime()
-        + ", " + info.getCountConditionChecked()
-        + ", " + info.getCountConditionFulfilled()
+        + ", " + info.getNumChecked()
+        + ", " + info.getNumCmdsGen()
         + (info.getLastCheckTime() == 0 ? "" : ", " + info.getLastCheckTime())
         +");";
 

@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.ssm.rule;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ssm.ModuleSequenceProto;
 import org.apache.hadoop.ssm.SSMServer;
@@ -25,15 +26,12 @@ import org.apache.hadoop.ssm.rule.parser.TranslateResult;
 import org.apache.hadoop.ssm.rule.parser.TranslationContext;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
-import org.apache.hadoop.ssm.sql.ExecutionContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manage and execute rules.
@@ -45,13 +43,13 @@ public class RuleManager implements ModuleSequenceProto {
   private DBAdapter dbAdapter;
   private boolean isClosed = false;
 
-  private Map<Long, RuleInfo> mapRules = new HashMap<>();
-
-  private Map<Long, RuleQueryExecutor> mapRuleExecutor = new HashMap<>();
+  private ConcurrentHashMap<Long, RuleContainer> mapRules =
+      new ConcurrentHashMap<>();
 
   // TODO: configurable
   public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
 
+  @VisibleForTesting
   public RuleManager(SSMServer ssm, Configuration conf, DBAdapter dbAdapter) {
     this.ssm = ssm;
     this.conf = conf;
@@ -87,16 +85,15 @@ public class RuleManager implements ModuleSequenceProto {
       throw new IOException("Create rule failed");
     }
 
-    mapRules.put(ruleInfo.getId(), ruleInfo);
+    RuleContainer container = new RuleContainer(ruleInfo, dbAdapter);
+    mapRules.put(ruleInfo.getId(), container);
 
-    if (initState == RuleState.ACTIVE || initState == RuleState.DRYRUN) {
-      submitRuleToScheduler(ruleInfo, tr);
-    }
+    submitRuleToScheduler(container.launchExecutor(this));
 
     return ruleInfo.getId();
   }
 
-  private TranslateResult doCheckRule(String rule, TranslationContext ctx)
+  public TranslateResult doCheckRule(String rule, TranslationContext ctx)
       throws IOException {
     RuleStringParser parser = new RuleStringParser(rule, ctx);
     return parser.translate();
@@ -104,6 +101,10 @@ public class RuleManager implements ModuleSequenceProto {
 
   public void checkRule(String rule) throws IOException {
     doCheckRule(rule, null);
+  }
+
+  public DBAdapter getDbAdapter() {
+    return dbAdapter;
   }
 
   /**
@@ -118,87 +119,47 @@ public class RuleManager implements ModuleSequenceProto {
    */
   public void DeleteRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
-    changeRuleState(ruleID, RuleState.DELETED);
+    RuleContainer container = checkIfExists(ruleID);
+    container.DeleteRule();
   }
 
   public void ActivateRule(long ruleID) throws IOException {
-    RuleInfo info = mapRules.get(ruleID);
-    if (info == null) {
-      throw new IOException("Rule with ID = " + ruleID + " not found");
-    }
-    RuleState state = info.getState();
-    boolean changed = changeRuleState(ruleID, RuleState.ACTIVE);
-    if (changed && state == RuleState.DISABLED) {
-      info = mapRules.get(ruleID);
-      TranslationContext ctx = new TranslationContext(info.getId(),
-          info.getSubmitTime());
-      submitRuleToScheduler(info, ctx);
-    }
+    RuleContainer container = checkIfExists(ruleID);
+    submitRuleToScheduler(container.ActivateRule(this));
   }
 
   public void DisableRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
-    changeRuleState(ruleID, RuleState.DISABLED);
+    RuleContainer container = checkIfExists(ruleID);
+    container.DisableRule();
   }
 
-  public boolean changeRuleState(long ruleID, RuleState newState)
-      throws IOException {
-    boolean ret = false;
-    RuleInfo info = mapRules.get(ruleID);
-    if (info == null) {
+  private RuleContainer checkIfExists(long ruleID) throws IOException {
+    RuleContainer container = mapRules.get(ruleID);
+    if (container == null) {
       throw new IOException("Rule with ID = " + ruleID + " not found");
     }
-    if (info.getState() == newState) {
-      return false;
-    }
-
-    RuleState state = info.getState();
-    switch (newState) {
-      case ACTIVE:
-        if (state == RuleState.DISABLED || state == RuleState.DRYRUN) {
-          ret = true;
-        }
-        break;
-      case DISABLED:
-        if (state == RuleState.ACTIVE || state == RuleState.DRYRUN) {
-          ret = true;
-        }
-        break;
-      case DELETED:
-        ret = true;
-        break;
-      default:
-        throw new IOException("Rule state transition " + state
-            + " -> " + newState + " is not supported");  // TODO: unsupported
-    }
-
-    if (ret) {
-      info.setState(newState);
-      dbAdapter.updateRuleInfo(info.getId(), newState, 0, 0, 0);
-    }
-    return true;
+    return container;
   }
 
   public RuleInfo getRuleInfo(long ruleID) throws IOException {
-    RuleInfo info = mapRules.get(ruleID);
-    return info == null ? null : info.newCopy();
+    RuleContainer container = checkIfExists(ruleID);
+    return container.getRuleInfo();
   }
 
   public List<RuleInfo> getRuleInfo() throws IOException {
-    Collection<RuleInfo> infos = mapRules.values();
+    Collection<RuleContainer> containers = mapRules.values();
     List<RuleInfo> retInfos = new ArrayList<>();
-    for (RuleInfo info : infos) {
-      retInfos.add(info.newCopy());
+    for (RuleContainer container : containers) {
+      retInfos.add(container.getRuleInfo());
     }
     return retInfos;
   }
 
   public void updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
-      long checkedCount, int commandsGen) {
-    RuleInfo info = mapRules.get(ruleId);
-    info.updateRuleInfo(rs, lastCheckTime, checkedCount, commandsGen);
-    dbAdapter.updateRuleInfo(ruleId, rs, lastCheckTime,
-        checkedCount, commandsGen);
+      long checkedCount, int commandsGen) throws IOException {
+    RuleContainer container = checkIfExists(ruleId);
+    container.updateRuleInfo(rs, lastCheckTime, checkedCount, commandsGen);
   }
 
   public void addNewCommands(List<CommandInfo> commands) {
@@ -225,30 +186,17 @@ public class RuleManager implements ModuleSequenceProto {
     // Load rules table
     List<RuleInfo> rules = dbAdapter.getRuleInfo();
     for (RuleInfo rule : rules) {
-      mapRules.put(rule.getId(), rule);
+      mapRules.put(rule.getId(), new RuleContainer(rule, dbAdapter));
     }
     return true;
   }
 
-  private void submitRuleToScheduler(RuleInfo info,
-      TranslationContext transCtx) throws IOException {
-    TranslateResult tr = doCheckRule(info.getRuleText(), transCtx);
-    submitRuleToScheduler(info, tr);
-  }
-
-  private void submitRuleToScheduler(RuleInfo info, TranslateResult tr)
+  private void submitRuleToScheduler(RuleQueryExecutor executor)
       throws IOException {
-    long ruleId = info.getId();
-    if (mapRuleExecutor.containsKey(ruleId)) {
-      if (!mapRuleExecutor.get(ruleId).isExited()) {
-        return;
-      }
+    if (executor == null || executor.isExited()) {
+      return;
     }
-    ExecutionContext ctx = new ExecutionContext();
-    ctx.setProperty(ExecutionContext.RULE_ID, info.getId());
-    RuleQueryExecutor qe = new RuleQueryExecutor(this, ctx, tr, dbAdapter);
-    mapRuleExecutor.put(ruleId, qe);
-    execScheduler.addPeriodicityTask(qe);
+    execScheduler.addPeriodicityTask(executor);
   }
 
   /**
@@ -258,12 +206,11 @@ public class RuleManager implements ModuleSequenceProto {
     // after StateManager be ready
 
     // Submit runnable rules to scheduler
-    for (RuleInfo rule : mapRules.values()) {
+    for (RuleContainer container : mapRules.values()) {
+        RuleInfo rule = container.getRuleInfoRef();
       if (rule.getState() == RuleState.ACTIVE
           || rule.getState() == RuleState.DRYRUN) {
-        TranslationContext ctx = new TranslationContext(rule.getId(),
-            rule.getSubmitTime());
-        submitRuleToScheduler(rule, ctx);
+        submitRuleToScheduler(container.launchExecutor(this));
       }
     }
     return true;
