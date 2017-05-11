@@ -232,8 +232,9 @@ public class TestDBMethod {
         String ridCondition = "= 78 ";
         CommandState state = null;
         CommandState state1 = CommandState.PAUSED;
-        List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, state);
-        Assert.assertTrue(com.get(0).getActionType() == ActionType.ConvertToEC);
+        List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition,
+            ridCondition, state);
+        Assert.assertTrue(com.get(0).getActionId() == ActionType.ConvertToEC);
         Assert.assertTrue(com.get(0).getState() == CommandState.PAUSED);
         List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(null,
             null, state1);

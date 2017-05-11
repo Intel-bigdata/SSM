@@ -21,13 +21,13 @@ package org.apache.hadoop.ssm.actions;
  * Internal actions supported.
  */
 public enum ActionType {
-  None(0),              // doing nothing
-  External(1),          // execute some command lines specified
-  CacheFile(2),         // Move to cache
-  UncacheFile(3),       // Move out of cache
-  SetStoragePolicy(4),  // Set Policy Action
-  MoveFile(5),          // Enforce storage Policy
-  ArchiveFile(6),       // Enforce Archive Policy
+  None(0),       // doing nothing
+  External(1),   // execute some command lines specified
+  CacheFile(2),
+  UncacheFile(3),
+  SetStoragePolicy(4),
+  MoveFile(5),
+  ArchiveFile(6),
   ConvertToEC(7),
   ConvertToReplica(8),
   Distcp(9),
@@ -36,7 +36,7 @@ public enum ActionType {
 
   private final int value;
 
-  ActionType(int value) {
+  private ActionType(int value) {
     this.value = value;
   }
 

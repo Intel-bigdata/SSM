@@ -20,22 +20,20 @@ package org.apache.hadoop.ssm.sql;
 import org.apache.hadoop.ssm.CommandState;
 import org.apache.hadoop.ssm.actions.ActionType;
 
-
 public class CommandInfo {
   private long cid;
   private long rid;
-  private ActionType actionType;
-  // TODO Maybe need actionID
+  private ActionType actionId;
   private CommandState state;
   private String parameters;
   private long generateTime;
   private long stateChangedTime;
 
-  public CommandInfo(long cid, long rid, ActionType actionType, CommandState state,
-                     String parameters, long generateTime, long stateChangedTime) {
+  public CommandInfo(long cid, long rid, ActionType actionId, CommandState state,
+      String parameters, long generateTime, long stateChangedTime) {
     this.cid = cid;
     this.rid = rid;
-    this.actionType = actionType;
+    this.actionId = actionId;
     this.state = state;
     this.parameters = parameters;
     this.generateTime = generateTime;
@@ -58,12 +56,12 @@ public class CommandInfo {
     this.rid = rid;
   }
 
-  public ActionType getActionType() {
-    return actionType;
+  public ActionType getActionId() {
+    return actionId;
   }
 
-  public void setActionType(ActionType actionType) {
-    this.actionType = actionType;
+  public void setActionId(ActionType actionId) {
+    this.actionId = actionId;
   }
 
   public CommandState getState() {
@@ -97,5 +95,4 @@ public class CommandInfo {
   public void setStateChangedTime(long stateChangedTime) {
     this.stateChangedTime = stateChangedTime;
   }
-
 }

@@ -23,9 +23,9 @@ package org.apache.hadoop.ssm;
 public enum CommandState {
   NOTINITED(0),
   PENDING(1), // Ready for execution
-  EXECUTING(2), // Still running
+  EXECUTING(2),
   PAUSED(3),
-  DONE(4), // Execution successful
+  DONE(4),
   CANCELLED(5);
 
   private int value;

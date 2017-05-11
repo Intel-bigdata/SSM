@@ -11,6 +11,7 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
+import org.apache.hadoop.ssm.Action;
 
 import java.util.EnumSet;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -29,7 +30,7 @@ public class MoveToCache extends ActionBase {
 
     public MoveToCache(DFSClient client) {
         super(client);
-        this.dfsClient = client;
+        this.dfsClient=client;
         this.actionEvents = new LinkedBlockingQueue<String>();
     }
 
@@ -51,7 +52,7 @@ public class MoveToCache extends ActionBase {
      * @return true if success, otherwise return false.
      */
     public  boolean execute(){
-        Action action = Action.getActionType("cache");
+        Action action =Action.getActionType("cache");
 
         //MoverExecutor.getInstance(dfsClient,conf).addActionEvent(fileName,action);
         MoveToCache.getInstance(dfsClient,conf).addActionEvent(fileName);
