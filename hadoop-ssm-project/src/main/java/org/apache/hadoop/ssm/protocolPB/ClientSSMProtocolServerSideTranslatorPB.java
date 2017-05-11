@@ -71,8 +71,8 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
         .setSubmitTime(ruleInfo.getSubmitTime())
         .setRuleText(ruleInfo.getRuleText())
         .setRulestateProto(ruleStateProto)
-        .setCountConditionChecked(ruleInfo.getCountConditionChecked())
-        .setCountConditionFulfilled(ruleInfo.getCountConditionFulfilled());
+        .setCountConditionChecked(ruleInfo.getNumChecked())
+        .setCountConditionFulfilled(ruleInfo.getNumCmdsGen());
     builder.setResult(rtBuilder.build());
     return builder.build();
   }

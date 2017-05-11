@@ -66,7 +66,7 @@ public class Util {
         "DROP TABLE IF EXISTS `storage_policy`;",
         "DROP TABLE IF EXISTS `xattr`;",
         "DROP TABLE IF EXISTS `rules`;",
-        "DROP TABLE IF EXISTS `pending_commands`;",
+        "DROP TABLE IF EXISTS `commands`;",
 
         "CREATE TABLE `access_count_tables` (\n" +
             "  `table_name` varchar(255) NOT NULL,\n" +

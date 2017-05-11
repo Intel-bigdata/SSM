@@ -74,8 +74,8 @@ public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtoco
     builder.setId(r.getId())
         .setSubmitTime(r.getSubmitTime())
         .setRuleText(r.getRuleText())
-        .setCountConditionChecked(r.getCountConditionChecked())
-        .setCountConditionFulfilled(r.getCountConditionFulfilled())
+        .setNumChecked(r.getCountConditionChecked())
+        .setNumCmdsGen(r.getCountConditionFulfilled())
         .setState(ruleState);
     return builder.build();
   }

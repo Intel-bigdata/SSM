@@ -18,7 +18,6 @@
 package org.apache.hadoop.ssm.rule;
 
 import org.apache.hadoop.ssm.CommandState;
-import org.apache.hadoop.ssm.actions.ActionType;
 import org.apache.hadoop.ssm.rule.parser.TimeBasedScheduleInfo;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
 import org.apache.hadoop.ssm.sql.CommandInfo;
@@ -31,7 +30,6 @@ import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -46,6 +44,7 @@ public class RuleQueryExecutor implements Runnable {
   private ExecutionContext ctx;
   private DBAdapter adapter; // TODO: abstract to prevent direct call
   private volatile boolean exited = false;
+  private long exitTime;
 
   private static Pattern varPattern = Pattern.compile(
       "\\$([a-zA-Z_]+[a-zA-Z0-9_]*)");
@@ -176,14 +175,22 @@ public class RuleQueryExecutor implements Runnable {
 
   @Override
   public void run() {
+    if (exited) {
+      exitSchedule();
+    }
+
     long rid = ctx.getRuleId();
     try {
       long startCheckTime = System.currentTimeMillis();
+      if (ruleManager.isClosed()) {
+        exitSchedule();
+      }
+
       RuleInfo info = ruleManager.getRuleInfo(rid);
       RuleState state = info.getState();
-      if (state == RuleState.DELETED || state == RuleState.FINISHED
+      if (exited || state == RuleState.DELETED || state == RuleState.FINISHED
           || state == RuleState.DISABLED) {
-        triggerException();
+        exitSchedule();
       }
       TimeBasedScheduleInfo scheduleInfo = tr.getTbScheduleInfo();
 
@@ -192,17 +199,20 @@ public class RuleQueryExecutor implements Runnable {
           && startCheckTime - scheduleInfo.getEndTime() > 0) {
         // TODO: special for scheduleInfo.isOneShot()
         ruleManager.updateRuleInfo(rid, RuleState.FINISHED, timeNow(), 0, 0);
-        triggerException();
+        exitSchedule();
       }
 
 
       List<String> files = executeFileRuleQuery();
       long endCheckTime = System.currentTimeMillis();
       List<CommandInfo> commands = generateCommands(files, info);
+      if (exited) {
+        exitSchedule();
+      }
       ruleManager.addNewCommands(commands);
-      long endProcessTime = System.currentTimeMillis();
-
       ruleManager.updateRuleInfo(rid, null, timeNow(), 1, commands.size());
+      //System.out.println(this + " -> " + System.currentTimeMillis());
+      long endProcessTime = System.currentTimeMillis();
 
       if (endProcessTime - startCheckTime > 3000) {
         // TODO: log an issue of slow processing
@@ -214,8 +224,9 @@ public class RuleQueryExecutor implements Runnable {
     }
   }
 
-  private void triggerException() {
+  private void exitSchedule() {
     // throw an exception
+    exitTime = System.currentTimeMillis();
     exited = true;
     String[] temp = new String[1];
     temp[1] += "The exception is created deliberately";
@@ -241,5 +252,14 @@ public class RuleQueryExecutor implements Runnable {
 
   public boolean isExited() {
     return exited;
+  }
+
+  public void setExited() {
+    exitTime = System.currentTimeMillis();
+    exited = true;
+  }
+
+  public long getExitTime() {
+    return exitTime;
   }
 }

@@ -30,8 +30,8 @@ public class RuleInfo implements Cloneable {
   private RuleState state;
 
   // Some static information about rule
-  private long countConditionChecked;
-  private long countConditionFulfilled;
+  private long numChecked;
+  private long numCmdsGen;
   private long lastCheckTime;
 
   public long getId() {
@@ -62,30 +62,30 @@ public class RuleInfo implements Cloneable {
     this.state = state;
   }
 
-  public long getCountConditionChecked() {
-    return countConditionChecked;
+  public long getNumChecked() {
+    return numChecked;
   }
 
-  public void setCountConditionChecked(long numChecked) {
-    this.countConditionChecked = numChecked;
+  public void setNumChecked(long numChecked) {
+    this.numChecked = numChecked;
   }
 
-  public long increaseCountConditionChecked() {
-    this.countConditionChecked++;
-    return this.countConditionChecked;
+  public long increaseNumChecked() {
+    this.numChecked++;
+    return this.numChecked;
   }
 
-  public long getCountConditionFulfilled() {
-    return countConditionFulfilled;
+  public long getNumCmdsGen() {
+    return numCmdsGen;
   }
 
-  public void setCountConditionFulfilled(long numConditionFulfilled) {
-    this.countConditionFulfilled = numConditionFulfilled;
+  public void setNumCmdsGen(long numCmdsGen) {
+    this.numCmdsGen = numCmdsGen;
   }
 
-  public long increaseCountConditionFulfilled(int n) {
-    countConditionFulfilled += n;
-    return countConditionFulfilled;
+  public long increaseNumCmdsGen(int n) {
+    numCmdsGen += n;
+    return numCmdsGen;
   }
 
   public long getLastCheckTime() {
@@ -104,27 +104,26 @@ public class RuleInfo implements Cloneable {
     if (lastCheckTime != 0) {
       this.lastCheckTime = lastCheckTime;
     }
-    this.countConditionChecked += checkedCount;
-    this.countConditionFulfilled += commandsGen;
+    this.numChecked += checkedCount;
+    this.numCmdsGen += commandsGen;
   }
 
   public RuleInfo(long id, long submitTime, String ruleText, RuleState state,
-      long countConditionChecked, long countConditionFulfilled,
-      long lastCheckTime) {
+      long numChecked, long numCmdsGen, long lastCheckTime) {
     this.id = id;
     this.submitTime = submitTime;
     this.ruleText = ruleText;
     this.state = state;
-    this.countConditionChecked = countConditionChecked;
-    this.countConditionFulfilled = countConditionFulfilled;
+    this.numChecked = numChecked;
+    this.numCmdsGen = numCmdsGen;
     this.lastCheckTime = lastCheckTime;
   }
 
   public boolean equals(RuleInfo info) {
     return info != null && id == info.id && submitTime == info.submitTime
         && ruleText.equals(info.ruleText) && state == info.state
-        && countConditionChecked == info.countConditionChecked
-        && countConditionFulfilled == info.countConditionFulfilled
+        && numChecked == info.numChecked
+        && numCmdsGen == info.numCmdsGen
         && lastCheckTime == info.lastCheckTime;
   }
 
@@ -142,16 +141,16 @@ public class RuleInfo implements Cloneable {
         .append(", submitTime = '").append(sdf.format(submitDate)).append("'")
         .append(", State = ").append(state.toString())
         .append(", lastCheckTime = '").append(lastCheck).append("'")
-        .append(", countConditionChecked = ").append(countConditionChecked)
-        .append(", countConditionFulfilled = ")
-        .append(countConditionFulfilled)
+        .append(", numChecked = ").append(numChecked)
+        .append(", numCmdsGen = ")
+        .append(numCmdsGen)
         .append(" }");
     return sb.toString();
   }
 
   public RuleInfo newCopy() {
-    return new RuleInfo(id, submitTime, ruleText, state, countConditionChecked,
-        countConditionFulfilled, lastCheckTime);
+    return new RuleInfo(id, submitTime, ruleText, state, numChecked,
+        numCmdsGen, lastCheckTime);
   }
 
   public static Builder newBuilder() {
@@ -163,8 +162,8 @@ public class RuleInfo implements Cloneable {
     private long submitTime;
     private String ruleText;
     private RuleState state;
-    private long countConditionChecked;
-    private long countConditionFulfilled;
+    private long numChecked;
+    private long numCmdsGen;
     private long lastCheckTime;
 
     public static Builder create() {
@@ -191,13 +190,13 @@ public class RuleInfo implements Cloneable {
       return this;
     }
 
-    public Builder setCountConditionChecked(long countConditionChecked) {
-      this.countConditionChecked = countConditionChecked;
+    public Builder setNumChecked(long numChecked) {
+      this.numChecked = numChecked;
       return this;
     }
 
-    public Builder setCountConditionFulfilled(long countConditionFulfilled) {
-      this.countConditionFulfilled = countConditionFulfilled;
+    public Builder setNumCmdsGen(long numCmdsGen) {
+      this.numCmdsGen = numCmdsGen;
       return this;
     }
 
@@ -207,8 +206,8 @@ public class RuleInfo implements Cloneable {
     }
 
     public RuleInfo build() {
-      return new RuleInfo(id, submitTime, ruleText, state, countConditionChecked,
-          countConditionFulfilled, lastCheckTime);
+      return new RuleInfo(id, submitTime, ruleText, state, numChecked,
+          numCmdsGen, lastCheckTime);
     }
   }
 }
