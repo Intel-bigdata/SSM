@@ -78,9 +78,13 @@ public class AccessEventAggregator {
         .collect(Collectors.joining(","));
 
     StringBuilder builder = new StringBuilder(createTable + ";");
-    builder.append("INSERT INTO ").append(table.getTableName()).append("(")
-        .append(AccessCountTable.FILE_FIELD).append(", ")
-        .append(AccessCountTable.ACCESSCOUNT_FIELD).append(") VALUES ").append(values);
+    builder.append(
+        String.format(
+            "INSERT INTO %s (%s, %s) VALUES %s",
+            table.getTableName(),
+            AccessCountTable.FILE_FIELD,
+            AccessCountTable.ACCESSCOUNT_FIELD,
+            values));
     try {
       this.adapter.execute(builder.toString());
     } catch (SQLException e) {

@@ -22,32 +22,43 @@ import org.apache.hadoop.ssm.utils.TimeGranularity;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 public abstract class TableAddOpListener {
-  AccessCountTableDeque coarseGrainedTable;
+  AccessCountTableDeque coarseGrainedTableDeque;
   AccessCountTableAggregator tableAggregator;
+  ExecutorService executorService;
 
-  TableAddOpListener(AccessCountTableDeque deque, AccessCountTableAggregator aggregator) {
-    this.coarseGrainedTable = deque;
+  TableAddOpListener(
+      AccessCountTableDeque deque,
+      AccessCountTableAggregator aggregator,
+      ExecutorService executorService) {
+    this.coarseGrainedTableDeque = deque;
     this.tableAggregator = aggregator;
+    this.executorService = executorService;
   }
 
   public void tableAdded(AccessCountTableDeque fineGrainedTableDeque, AccessCountTable table) {
     // Here is a critical part for handling time window like [59s, 61s)
     AccessCountTable lastCoarseGrainedTable = lastCoarseGrainedTableFor(table.getEndTime());
     // Todo: optimize contains
-    if (!coarseGrainedTable.contains(lastCoarseGrainedTable)) {
+    if (!coarseGrainedTableDeque.contains(lastCoarseGrainedTable)) {
       List<AccessCountTable> tablesToAggregate =
-        fineGrainedTableDeque.getTables(lastCoarseGrainedTable.getStartTime(),
-          lastCoarseGrainedTable.getEndTime());
+          fineGrainedTableDeque.getTables(
+              lastCoarseGrainedTable.getStartTime(), lastCoarseGrainedTable.getEndTime());
       if (tablesToAggregate.size() > 0) {
-        coarseGrainedTable.add(lastCoarseGrainedTable);
-        //Todo: exception
-        try {
-          this.tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
-        } catch (SQLException e) {
-          e.printStackTrace();
-        }
+        this.executorService.submit(
+            new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
+                  coarseGrainedTableDeque.add(lastCoarseGrainedTable);
+                } catch (SQLException e) {
+                  e.printStackTrace();
+                }
+              }
+            });
       }
     }
   }
@@ -55,8 +66,11 @@ public abstract class TableAddOpListener {
   public abstract AccessCountTable lastCoarseGrainedTableFor(Long startTime);
 
   public static class MinuteTableListener extends TableAddOpListener {
-    public MinuteTableListener(AccessCountTableDeque deque, AccessCountTableAggregator aggregator) {
-      super(deque, aggregator);
+    public MinuteTableListener(
+        AccessCountTableDeque deque,
+        AccessCountTableAggregator aggregator,
+        ExecutorService service) {
+      super(deque, aggregator, service);
     }
 
     @Override
@@ -68,8 +82,11 @@ public abstract class TableAddOpListener {
   }
 
   public static class HourTableListener extends TableAddOpListener {
-    public HourTableListener(AccessCountTableDeque deque, AccessCountTableAggregator aggregator) {
-      super(deque, aggregator);
+    public HourTableListener(
+        AccessCountTableDeque deque,
+        AccessCountTableAggregator aggregator,
+        ExecutorService service) {
+      super(deque, aggregator, service);
     }
 
     @Override
@@ -81,8 +98,11 @@ public abstract class TableAddOpListener {
   }
 
   public static class DayTableListener extends TableAddOpListener {
-    public DayTableListener(AccessCountTableDeque deque, AccessCountTableAggregator aggregator) {
-      super(deque, aggregator);
+    public DayTableListener(
+        AccessCountTableDeque deque,
+        AccessCountTableAggregator aggregator,
+        ExecutorService service) {
+      super(deque, aggregator, service);
     }
 
     @Override
