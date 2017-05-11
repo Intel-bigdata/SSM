@@ -253,7 +253,6 @@ public class NameNodeRpcServer implements NamenodeProtocols {
   
   private final String minimumDataNodeVersion;
 
-  private long accessCounterStartTime = System.currentTimeMillis();
   private List<FileAccessEvent> accessEvents = new ArrayList<>();
 
   @Override

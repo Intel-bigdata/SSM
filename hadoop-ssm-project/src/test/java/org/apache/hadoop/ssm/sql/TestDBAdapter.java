@@ -18,8 +18,12 @@
 package org.apache.hadoop.ssm.sql;
 
 import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
+import org.apache.hadoop.ssm.utils.TimeGranularity;
+import org.dbunit.Assertion;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
+import org.dbunit.dataset.ITable;
+import org.dbunit.dataset.SortedTable;
 import org.dbunit.dataset.xml.XmlDataSet;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,7 +45,7 @@ public class TestDBAdapter extends DBTest {
   }
 
   @Test
-  public void testAggregate() throws Exception {
+  public void testGetFileIds() throws Exception {
     createTables(databaseTester.getConnection());
     IDataSet dataSet = new XmlDataSet(getClass().getClassLoader()
       .getResourceAsStream("files.xml"));
@@ -54,5 +58,36 @@ public class TestDBAdapter extends DBTest {
     Assert.assertTrue(pathToID.get("file1") == 101);
     Assert.assertTrue(pathToID.get("file2") == 102);
     Assert.assertTrue(pathToID.get("file3") == 103);
+  }
+
+  @Test
+  public void testCreateProportionView() throws Exception {
+    Statement statement = databaseTester.getConnection().getConnection().createStatement();
+    statement.execute(AccessCountTable.createTableSQL("table1"));
+    statement.execute(AccessCountTable.createTableSQL("table2"));
+    statement.execute(AccessCountTable.createTableSQL("table3"));
+    statement.execute(AccessCountTable.createTableSQL("expect"));
+    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader()
+      .getResourceAsStream("accessCountTable.xml"));
+    databaseTester.setDataSet(dataSet);
+    databaseTester.onSetup();
+
+    AccessCountTable table3 = new AccessCountTable("table3",
+      0L, 10L, TimeGranularity.SECOND);
+    DBAdapter dbAdapter = new DBAdapter(databaseTester.getConnection().getConnection());
+    // 50%
+    AccessCountTable viewTable = new AccessCountTable(0L, 5L);
+    dbAdapter.createProportionView(viewTable, table3);
+    ITable actual = databaseTester.getConnection().createTable(viewTable.getTableName());
+    ITable expect = databaseTester.getConnection().createTable(table3.getTableName());
+    SortedTable sortedActual = new SortedTable(actual, new String[]{"file_id"});
+    sortedActual.setUseComparable(true);
+    Assert.assertTrue(sortedActual.getRowCount() == expect.getRowCount());
+
+    for (int i = 0; i < expect.getRowCount(); i++) {
+      Integer actualAC = (Integer) sortedActual.getValue(i, AccessCountTable.ACCESSCOUNT_FIELD);
+      Integer expectAC = (Integer) expect.getValue(i, AccessCountTable.ACCESSCOUNT_FIELD);
+      Assert.assertTrue(actualAC == expectAC / 2);
+    }
   }
 }

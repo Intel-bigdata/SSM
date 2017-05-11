@@ -39,7 +39,7 @@ public class AccessCountTableDeque extends ArrayDeque<AccessCountTable> {
   }
 
   public boolean add(AccessCountTable table) {
-    if (this.peek() != null) {
+    if (!this.isEmpty()) {
       assert table.getEndTime() > this.peekLast().getEndTime();
     }
 

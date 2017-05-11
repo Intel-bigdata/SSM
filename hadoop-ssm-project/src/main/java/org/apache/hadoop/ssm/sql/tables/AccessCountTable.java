@@ -28,6 +28,8 @@ public class AccessCountTable {
   private Long endTime;
   private TimeGranularity granularity;
 
+  private boolean isView;
+
   public AccessCountTable(Long startTime, Long endTime) {
     this(startTime, endTime, TimeGranularity.SECOND);
   }
@@ -41,6 +43,7 @@ public class AccessCountTable {
     this.endTime = endTime;
     this.granularity = granularity;
     this.tableName = name;
+    this.isView = false;
   }
 
   public String getTableName() {
@@ -86,5 +89,13 @@ public class AccessCountTable {
     return "CREATE TABLE " + tableName + " (" +
       FILE_FIELD  +" INTEGER NOT NULL, " +
       ACCESSCOUNT_FIELD + " INTEGER NOT NULL)";
+  }
+
+  public boolean isView() {
+    return isView;
+  }
+
+  public void setView(boolean view) {
+    isView = view;
   }
 }
