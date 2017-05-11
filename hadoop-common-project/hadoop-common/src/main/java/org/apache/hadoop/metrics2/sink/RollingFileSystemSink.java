@@ -824,24 +824,9 @@ public class RollingFileSystemSink implements MetricsSink, Closeable {
     synchronized (lock) {
       rollLogDirIfNeeded();
 
+
       if (currentOutStream != null) {
-        currentOutStream.printf("%d %s.%s", record.timestamp(),
-            record.context(), record.name());
-
-        String separator = ": ";
-
-        for (MetricsTag tag : record.tags()) {
-          currentOutStream.printf("%s%s=%s", separator, tag.name(),
-              tag.value());
-          separator = ", ";
-        }
-
-        for (AbstractMetric metric : record.metrics()) {
-          currentOutStream.printf("%s%s=%s", separator, metric.name(),
-              metric.value());
-        }
-
-        currentOutStream.println();
+        putMetrics(currentOutStream, record);
 
         // If we don't hflush(), the data may not be written until the file is
         // closed. The file won't be closed until the end of the interval *AND*
@@ -858,6 +843,26 @@ public class RollingFileSystemSink implements MetricsSink, Closeable {
         throwMetricsException("Unable to write to log file");
       }
     }
+  }
+
+  protected void putMetrics(PrintStream currentOutStream, MetricsRecord record) {
+    currentOutStream.printf("%d %s.%s", record.timestamp(),
+        record.context(), record.name());
+
+    String separator = ": ";
+
+    for (MetricsTag tag : record.tags()) {
+      currentOutStream.printf("%s%s=%s", separator, tag.name(),
+          tag.value());
+      separator = ", ";
+    }
+
+    for (AbstractMetric metric : record.metrics()) {
+      currentOutStream.printf("%s%s=%s", separator, metric.name(),
+          metric.value());
+    }
+
+    currentOutStream.println();
   }
 
   @Override
