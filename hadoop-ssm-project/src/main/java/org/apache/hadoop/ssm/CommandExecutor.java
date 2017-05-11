@@ -166,21 +166,16 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     Map<String, String> jsonParameters = JsonUtil.toStringStringMap(cmdinfo.getParameters());
     String[] args = {jsonParameters.get("_FILE_PATH_ ")};
     // New action
+    String storagePolicy = jsonParameters.get("_STORAGE_POLICY_");
     int flag = 0;
-    if(cmdinfo.getActionType().getValue() == ActionType.CacheFile.getValue()) {
-      flag = 0;
-    } else if(cmdinfo.getActionType().getValue()  == ActionType.MoveFile.getValue()) {
-      flag = 1;
-    }
     ActionBase current;
-    if(flag == 0) {
+    if(cmdinfo.getActionType().getValue() == ActionType.CacheFile.getValue()) {
       current = new MoveToCache(ssm.getDFSClient());
+    } else if(cmdinfo.getActionType().getValue()  == ActionType.MoveFile.getValue()) {
+      current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
     } else {
-      // TODO StoragePolicy in Parameters
-      if(jsonParameters.get("").contains("HOT"))
-        current = new MoveToArchive(ssm.getDFSClient(), ssm.getConf());
-      else
-        current = new MoveToSSD(ssm.getDFSClient(), ssm.getConf());
+      // TODO Default
+      current = new MoveToCache(ssm.getDFSClient());
     }
     current.initial(args);
     actions[0] = current;
