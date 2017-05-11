@@ -18,6 +18,13 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.ssm.actions.ActionBase;
+import org.apache.hadoop.ssm.actions.ActionExecutor;
+import org.apache.hadoop.ssm.actions.MoveToCache;
+import org.apache.hadoop.ssm.sql.CommandInfo;
+import org.apache.hadoop.ssm.actions.ActionType;
+import org.apache.hadoop.ssm.utils.JsonUtil;
+
+import java.util.Map;
 
 /**
  * Command is the minimum unit of execution. Different commands can be
@@ -35,12 +42,14 @@ public class Command implements Runnable {
   private long id;
   private CommandState state = CommandState.NOTINITED;
   private ActionBase[] actions;
+  private Map<String, String> parameters;
 
   private long createTime;
   private long scheduleToExecuteTime;
   private long ExecutionCompleteTime;
 
   private Command() {
+
   }
 
   public Command(ActionBase[] actions) {
@@ -55,8 +64,20 @@ public class Command implements Runnable {
     this.id = id;
   }
 
+  public void setRuleId(long ruleId) {
+    this.ruleId = ruleId;
+  }
+
   public long getId() {
     return id;
+  }
+
+  public Map<String, String> getParameter() {
+    return parameters;
+  }
+
+  public void setParameters(Map<String, String> parameters) {
+    this.parameters = parameters;
   }
 
   public CommandState getState() {

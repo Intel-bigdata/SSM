@@ -1,9 +1,8 @@
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.*;
-import org.apache.hadoop.ssm.actions.MoveToCache;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -34,10 +33,10 @@ public class MoveToCacheTest {
         dfs.mkdirs(dir);
 
         String[] str = {"/fileTestA"};
-        MoveToCache moveToCache= MoveToCache.getInstance(client,conf);
+        MoveToCache moveToCache = MoveToCache.getInstance(client,conf);
 
         assertEquals(false,moveToCache.isCached(str[0]));
-
+        // Move to cache
         moveToCache.initial(str);
         moveToCache.execute();
 

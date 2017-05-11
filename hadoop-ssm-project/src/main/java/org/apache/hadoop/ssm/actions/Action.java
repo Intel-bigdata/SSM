@@ -1,4 +1,4 @@
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 public enum Action {
   CACHE, ARCHIVE, SSD;

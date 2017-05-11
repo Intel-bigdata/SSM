@@ -644,7 +644,7 @@ public class DBAdapter {
         String sql = "INSERT INTO commands (rid, action_id, state, "
             + "parameters, generate_time, state_changed_time) "
             + "VALUES('" + commands[i].getRid() + "', '"
-            + commands[i].getActionId().getValue() + "', '"
+            + commands[i].getActionType().getValue() + "', '"
             + commands[i].getState().getValue() + "', '"
             + commands[i].getParameters() + "', '"
             + commands[i].getGenerateTime() + "', '"
@@ -688,6 +688,15 @@ public class DBAdapter {
       }
     }
     return ret;
+  }
+
+
+  private boolean updateCommand() {
+    // TODO update command status
+//    if() {
+//      return false;
+//    }
+    return true;
   }
 
   private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {

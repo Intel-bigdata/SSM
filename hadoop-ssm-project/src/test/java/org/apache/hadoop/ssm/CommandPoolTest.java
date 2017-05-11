@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.ssm;
 
+import org.apache.hadoop.ssm.CommandPool;
+import org.apache.hadoop.ssm.CommandStatus;
 import org.junit.Test;
 
 import java.util.UUID;
