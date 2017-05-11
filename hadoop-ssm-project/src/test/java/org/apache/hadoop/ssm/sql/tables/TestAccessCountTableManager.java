@@ -40,13 +40,15 @@ import static org.mockito.Mockito.mock;
 public class TestAccessCountTableManager extends DBTest {
 
   @Test
-  public void testAccessCountTableManager() {
+  public void testAccessCountTableManager() throws InterruptedException {
     DBAdapter adapter = mock(DBAdapter.class);
     AccessCountTableManager manager = new AccessCountTableManager(adapter);
     Long firstDayEnd = 24 * 60 * 60 * 1000L;
     AccessCountTable accessCountTable =
         new AccessCountTable(firstDayEnd - 5 * 1000, firstDayEnd, TimeGranularity.SECOND);
     manager.addTable(accessCountTable);
+
+    Thread.sleep(5000);
 
     Map<TimeGranularity, AccessCountTableDeque> map = manager.getTableDeques();
     AccessCountTableDeque second = map.get(TimeGranularity.SECOND);

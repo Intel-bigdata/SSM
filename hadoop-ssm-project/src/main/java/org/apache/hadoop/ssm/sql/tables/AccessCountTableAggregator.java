@@ -34,7 +34,6 @@ public class AccessCountTableAggregator {
       List<AccessCountTable> tablesToAggregate) throws SQLException {
     if (tablesToAggregate.size() > 0) {
       String aggregateSQ = this.aggregateSQLStatement(destinationTable, tablesToAggregate);
-      System.out.println(aggregateSQ);
       this.adapter.executeQuery(aggregateSQ);
     }
   }
