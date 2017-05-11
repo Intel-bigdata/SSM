@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.hadoop.ssm.actions.MoveToSSD;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -68,7 +67,7 @@ public class MoveToSSDTest {
       for (StorageType storageType : storageTypes) {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
-      // move to SSD
+      // move to ARCHIVE
       String[] str = {file};
       MoveToSSD.getInstance(client, conf).initial(str);
       MoveToSSD.getInstance(client, conf).execute();

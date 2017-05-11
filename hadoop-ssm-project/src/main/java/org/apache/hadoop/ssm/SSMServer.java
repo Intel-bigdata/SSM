@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
 import org.apache.hadoop.io.IOUtils;
@@ -205,6 +206,14 @@ public class SSMServer {
       throw new FileNotFoundException("No database found for SSM");
     }
     return url;
+  }
+
+  public Configuration getConf() {
+    return conf;
+  }
+
+  public DFSClient getDFSClient() {
+    return fs.getClient();
   }
 
   private OutputStream checkAndMarkRunning() throws IOException {
