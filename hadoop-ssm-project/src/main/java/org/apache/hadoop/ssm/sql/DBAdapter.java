@@ -25,6 +25,7 @@ import org.apache.hadoop.ssm.CommandState;
 import org.apache.hadoop.ssm.actions.ActionType;
 import org.apache.hadoop.ssm.rule.RuleInfo;
 import org.apache.hadoop.ssm.rule.RuleState;
+import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -485,6 +486,24 @@ public class DBAdapter {
     return s != null ? s.get(0) : null;
   }
 
+  public void createProportionView(AccessCountTable dest, AccessCountTable source)
+      throws SQLException {
+    double percentage =
+        ((double) dest.getEndTime() - dest.getStartTime())
+            / (source.getEndTime() - source.getStartTime());
+    String sql =
+        String.format(
+            "CREATE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
+            dest.getTableName(),
+            AccessCountTable.FILE_FIELD,
+            source.getTableName(),
+            AccessCountTable.ACCESSCOUNT_FIELD,
+            percentage,
+            AccessCountTable.ACCESSCOUNT_FIELD,
+            source.getTableName());
+    this.execute(sql);
+  }
+
   private List<CachedFileStatus> getCachedFileStatus(String sql) {
     ResultSet resultSet;
     List<CachedFileStatus> ret = new LinkedList<>();
@@ -748,5 +767,4 @@ public class DBAdapter {
     updateCache();
     return getKey(mapStoragePolicyIdName, policyName);
   }
-
 }

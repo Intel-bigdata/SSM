@@ -28,12 +28,14 @@ public abstract class DBTest {
   private static final String DB_PATH = "/tmp/test.db";
 
   @Before
-  public void setUp() throws ClassNotFoundException {
+  public void setUp() throws Exception {
     File db = new File(DB_PATH);
     if (db.exists()) {
       db.delete();
     }
     databaseTester = new JdbcDatabaseTester("org.sqlite.JDBC",
       "jdbc:sqlite:" + DB_PATH);
+    databaseTester.getConnection().getConfig().setProperty(
+      "http://www.dbunit.org/properties/tableType", new String[]{"TABLE", "VIEW"});
   }
 }

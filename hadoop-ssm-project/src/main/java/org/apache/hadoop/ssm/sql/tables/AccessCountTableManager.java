@@ -21,8 +21,12 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.utils.TimeGranularity;
+import org.apache.hadoop.ssm.utils.TimeUtils;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -75,6 +79,59 @@ public class AccessCountTableManager {
 
   public void onAccessEventsArrived(List<FileAccessEvent> accessEvents) {
     this.accessEventAggregator.addAccessEvents(accessEvents);
+  }
+
+  public List<AccessCountTable> getTables(long lengthInMillis) throws SQLException {
+    return AccessCountTableManager.getTables(this.tableDeques, this.dbAdapter, lengthInMillis);
+  }
+
+  public static List<AccessCountTable> getTables(
+      Map<TimeGranularity, AccessCountTableDeque> tableDeques,
+      DBAdapter adapter,
+      long lengthInMillis)
+      throws SQLException {
+    if (tableDeques.isEmpty()) {
+      return new ArrayList<>();
+    }
+    AccessCountTableDeque secondTableDeque = tableDeques.get(TimeGranularity.SECOND);
+    if (secondTableDeque == null || secondTableDeque.isEmpty()) {
+      return new ArrayList<>();
+    }
+    long now = secondTableDeque.getLast().getEndTime();
+    return getTablesDuring(tableDeques, adapter, lengthInMillis, now);
+  }
+
+  // Todo: multi-thread issue
+  private static List<AccessCountTable> getTablesDuring(
+      final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
+      DBAdapter adapter,
+      final long length,
+      final long endTime)
+      throws SQLException {
+    long startTime = endTime - length;
+    TimeGranularity timeGranularity = TimeUtils.getGranularity(length);
+    AccessCountTableDeque tables = tableDeques.get(timeGranularity);
+    List<AccessCountTable> results = new ArrayList<>();
+    for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext(); ) {
+      // Here we assume that the tables are all sorted by time.
+      AccessCountTable table = iterator.next();
+      if (table.getEndTime() > startTime) {
+        if (table.getStartTime() == startTime) {
+          results.add(table);
+        } else if (table.getStartTime() < startTime) {
+          // We got a table should be spilt here.
+          AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime());
+          splitTable.setView(true);
+          adapter.createProportionView(splitTable, table);
+          results.add(splitTable);
+        }
+        startTime = table.getEndTime();
+      }
+    }
+    if (startTime != endTime && !timeGranularity.equals(TimeGranularity.SECOND)) {
+      results.addAll(getTablesDuring(tableDeques, adapter, endTime - startTime, endTime));
+    }
+    return results;
   }
 
   @VisibleForTesting
