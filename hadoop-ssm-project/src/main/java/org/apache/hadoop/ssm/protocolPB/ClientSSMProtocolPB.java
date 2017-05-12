@@ -18,8 +18,11 @@
 package org.apache.hadoop.ssm.protocolPB;
 
 import com.google.protobuf.RpcController;
+import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleResponseProto;
 
 @ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB",
     protocolVersion = 1)
@@ -30,4 +33,7 @@ public interface ClientSSMProtocolPB {
 
   public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller
       , ClientSSMProto.RuleInfoParaProto para);
+
+  public SubmitRuleResponseProto submitRule(RpcController controller,
+      SubmitRuleRequestProto req) throws ServiceException;
 }

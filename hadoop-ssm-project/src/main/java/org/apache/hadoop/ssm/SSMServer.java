@@ -26,6 +26,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
+import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.rule.RuleManager;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.Util;
@@ -59,6 +60,8 @@ public class SSMServer {
   private List<ModuleSequenceProto> modules = new ArrayList<>();
   static final Path SSM_ID_PATH = new Path("/system/ssm.id");
   public static final Logger LOG = LoggerFactory.getLogger(SSMServer.class);
+
+  private SSMServiceState ssmServiceState = SSMServiceState.SAFEMODE;
 
   SSMServer(Configuration conf) throws IOException, URISyntaxException {
     this.conf = conf;
@@ -165,6 +168,17 @@ public class SSMServer {
     for (ModuleSequenceProto m : modules) {
       m.start();
     }
+
+    // TODO: for simple here, refine it later
+    ssmServiceState = SSMServiceState.ACTIVE;
+  }
+
+  public SSMServiceState getSSMServiceState() {
+    return ssmServiceState;
+  }
+
+  public boolean isActive() {
+    return ssmServiceState == SSMServiceState.ACTIVE;
   }
 
   private void stop() throws IOException {

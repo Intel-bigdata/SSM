@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceState;
@@ -112,9 +113,8 @@ public class SSMRpcServer implements ClientSSMProtocol {
 
   @Override
   public SSMServiceStates getServiceStatus() {
-    SSMServiceStates ssmServiceStates
-        = new SSMServiceStates(SSMServiceState.SAFEMODE);
-    return ssmServiceStates;
+    // TODO: to be changed
+    return new SSMServiceStates(ssm.getSSMServiceState());
   }
 
   @Override
@@ -127,5 +127,17 @@ public class SSMRpcServer implements ClientSSMProtocol {
         .setNumCmdsGen(8)
         .setState(RuleState.ACTIVE);
     return builder.build();
+  }
+
+  private void checkIfActive() throws IOException {
+    if (!ssm.isActive()) {
+      throw new RetriableException("SSM services not ready...");
+    }
+  }
+
+  @Override
+  public long submitRule(String rule, RuleState initState) throws IOException {
+    checkIfActive();
+    return ssm.getRuleManager().submitRule(rule, initState);
   }
 }

@@ -24,6 +24,7 @@ import org.apache.hadoop.ssm.SSMConfigureKeys;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolClientSideTranslatorPB;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB;
 import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -62,5 +63,10 @@ public class SSMClient {
 
   public RuleInfo getRuleInfo(long id) {
     return ssm.getRuleInfo(id);
+  }
+
+  public long submitRule(String rule, RuleState initState)
+      throws IOException {
+    return ssm.submitRule(rule, initState);
   }
 }

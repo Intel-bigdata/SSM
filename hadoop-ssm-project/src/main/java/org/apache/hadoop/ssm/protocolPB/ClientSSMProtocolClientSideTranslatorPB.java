@@ -17,12 +17,16 @@
  */
 package org.apache.hadoop.ssm.protocolPB;
 
+import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.protocol.SSMServiceStates;
 import org.apache.hadoop.ssm.rule.RuleInfo;
 import org.apache.hadoop.ssm.rule.RuleState;
+
+import java.io.IOException;
 
 public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtocol {
   final private ClientSSMProtocolPB rpcProxy;
@@ -52,25 +56,8 @@ public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtoco
     ClientSSMProto.RuleInfoResultTypeProto r =
         rpcProxy.getRuleInfo(null, req).getResult();
     RuleInfo.Builder builder = new RuleInfo.Builder();
-    ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto ruleStateProto =
-        r.getRulestateProto();
-    RuleState ruleState;
-    switch (ruleStateProto) {
-      case ACTIVE:
-        ruleState = RuleState.ACTIVE;
-        break;
-      case DRYRUN:
-        ruleState = RuleState.DRYRUN;
-        break;
-      case DISABLED:
-        ruleState = RuleState.DISABLED;
-        break;
-      case FINISHED:
-        ruleState = RuleState.FINISHED;
-        break;
-      default:
-        ruleState = null;
-    }
+    ClientSSMProto.RuleStateProto ruleStateProto = r.getRulestateProto();
+    RuleState ruleState = PBHelper.convert(ruleStateProto);
     builder.setId(r.getId())
         .setSubmitTime(r.getSubmitTime())
         .setRuleText(r.getRuleText())
@@ -78,5 +65,16 @@ public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtoco
         .setNumCmdsGen(r.getCountConditionFulfilled())
         .setState(ruleState);
     return builder.build();
+  }
+
+  @Override
+  public long submitRule(String rule, RuleState initState) throws IOException {
+    try {
+      SubmitRuleRequestProto req = SubmitRuleRequestProto.newBuilder()
+          .setRule(rule).setInitState(PBHelper.convert(initState)).build();
+      return rpcProxy.submitRule(null, req).getRuleId();
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
   }
 }
