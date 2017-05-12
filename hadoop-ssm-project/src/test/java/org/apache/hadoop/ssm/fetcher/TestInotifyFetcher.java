@@ -105,7 +105,7 @@ public class TestInotifyFetcher {
       };
       thread.start();
 
-      Thread.sleep(10);
+      Thread.sleep(2000);
 
 
       /**
