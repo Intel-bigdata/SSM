@@ -551,6 +551,13 @@ public class DBAdapter {
     s.executeUpdate(sql);
   }
 
+  //Todo: optimize
+  public void execute(List<String> statements) throws SQLException {
+    for (String statement : statements) {
+      this.execute(statement);
+    }
+  }
+
   public List<String> executeFilesPathQuery(String sql) throws SQLException {
     List<String> paths = new LinkedList<>();
     ResultSet res = executeQuery(sql);

@@ -58,5 +58,5 @@ public interface ModuleSequenceProto {
    * Stop threads and other cleaning jobs.
    * @throws IOException
    */
-  void join() throws IOException;
+  void join() throws IOException, InterruptedException;
 }
