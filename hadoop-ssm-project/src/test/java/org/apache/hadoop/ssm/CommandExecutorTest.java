@@ -1,8 +1,12 @@
 package org.apache.hadoop.ssm;
 
+import org.junit.Test;
+
 /**
- * Created by QYGong on 09/05/2017.
+ * CommandExecutor Unit Test
  */
 public class CommandExecutorTest {
-
+  // TODO CommandExecutor Unit Test
+  @Test
+  public
 }

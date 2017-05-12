@@ -24,8 +24,9 @@ import org.apache.hadoop.ssm.actions.ActionType;
 public class CommandInfo {
   private long cid;
   private long rid;
-  private ActionType actionType;
   // TODO Maybe need actionID
+  //private long actionId;
+  private ActionType actionType;
   private CommandState state;
   private String parameters;
   private long generateTime;

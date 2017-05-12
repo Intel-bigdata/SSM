@@ -17,12 +17,10 @@
  */
 package org.apache.hadoop.ssm;
 
+import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.ssm.actions.ActionBase;
 import org.apache.hadoop.ssm.actions.ActionExecutor;
-import org.apache.hadoop.ssm.actions.MoveToCache;
-import org.apache.hadoop.ssm.sql.CommandInfo;
-import org.apache.hadoop.ssm.actions.ActionType;
-import org.apache.hadoop.ssm.utils.JsonUtil;
+
 
 import java.util.Map;
 
@@ -37,12 +35,15 @@ import java.util.Map;
  *  1.) SetStoragePolicy
  *  2.) EnforceStoragePolicy
  */
+
+
 public class Command implements Runnable {
   private long ruleId;   // id of the rule that this Command comes from
   private long id;
   private CommandState state = CommandState.NOTINITED;
   private ActionBase[] actions;
   private Map<String, String> parameters;
+  CommandExecutor.Callback cb;
 
   private long createTime;
   private long scheduleToExecuteTime;
@@ -52,8 +53,9 @@ public class Command implements Runnable {
 
   }
 
-  public Command(ActionBase[] actions) {
+  public Command(ActionBase[] actions, CommandExecutor.Callback cb) {
     this.actions = actions.clone();
+    this.cb = cb;
   }
 
   public long getRuleId() {
@@ -107,5 +109,6 @@ public class Command implements Runnable {
         break;
       }
     }
+    cb.complete(this.id, this.ruleId, CommandState.DONE);
   }
 }
