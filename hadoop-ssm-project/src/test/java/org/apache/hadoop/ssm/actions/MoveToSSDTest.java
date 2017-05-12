@@ -46,7 +46,7 @@ public class MoveToSSDTest {
       // Move File From Archive to SSD
       testMoveFileToSSD(conf);
   }
-  private void testMoveFileToSSD(Configuration conf)throws Exception {
+  private void testMoveFileToSSD(Configuration conf) throws Exception {
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD}).build();
     try {
       cluster.waitActive();
