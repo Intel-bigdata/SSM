@@ -136,9 +136,9 @@ public class Util {
 
         "CREATE TABLE `xattr` (\n" +
             "  `fid` bigint(20) NOT NULL,\n" +
-            "  `namespace` varchar(255) DEFAULT NULL,\n" +
-            "  `name` varchar(255) DEFAULT NULL,\n" +
-            "  `value` varchar(255) DEFAULT NULL\n" +
+            "  `namespace` varchar(255) NOT NULL,\n" +
+            "  `name` varchar(255) NOT NULL,\n" +
+            "  `value` blob NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE `rules` (\n" +
