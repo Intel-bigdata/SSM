@@ -56,7 +56,6 @@ public class MoveToSSDTest {
       final DFSClient client = cluster.getFileSystem().getClient();
       dfs.mkdirs(dir);
       String[] args = {file};
-      // 1. Move to Archive
       // write to DISK
       dfs.setStoragePolicy(dir, "HOT");
       final FSDataOutputStream out = dfs.create(new Path(file),true,1024);
@@ -69,7 +68,7 @@ public class MoveToSSDTest {
       for (StorageType storageType : storageTypes) {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
-      // move to SSD
+      // move to SSD, Policy ALL_SSD
       MoveFile.getInstance(client, conf, "ALL_SSD").initial(args);
       MoveFile.getInstance(client, conf, "ALL_SSD").execute();
       // verify after movement

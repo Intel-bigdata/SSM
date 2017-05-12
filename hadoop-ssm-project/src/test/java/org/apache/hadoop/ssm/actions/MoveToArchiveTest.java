@@ -52,7 +52,7 @@ public class MoveToArchiveTest {
       for (StorageType storageType : storageTypes) {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
-      // move to Archive
+      // move to Archive, Policy CLOD
       MoveFile.getInstance(client, conf, "COLD").initial(args);
       MoveFile.getInstance(client, conf, "COLD").execute();
       // verify after movement
