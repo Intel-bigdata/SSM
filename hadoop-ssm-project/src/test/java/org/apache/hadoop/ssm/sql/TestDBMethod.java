@@ -28,9 +28,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class TestDBMethod {
     @Test
@@ -199,11 +201,12 @@ public class TestDBMethod {
         byte[] symlink = null;
         byte[] path = DFSUtil.string2Bytes(pathString);
         long fileId = 312321L;
-        int numChildren = 1;
+        int numChildren = 0;
         byte storagePolicy = 0;
-        FileStatusInternal[] files = { new FileStatusInternal(length, isDir, blockReplication,
-            blockSize, modTime, accessTime, perms, owner, group, symlink,
-            path, "/tmp", fileId, numChildren, null, storagePolicy, null) };
+        FileStatusInternal[] files = { new FileStatusInternal(
+            length, isDir, blockReplication, blockSize, modTime, accessTime,
+            perms, owner, group, symlink, path, "/tmp", fileId, numChildren,
+            null, storagePolicy, null) };
         dbAdapter.insertFiles(files);
         HdfsFileStatus hdfsFileStatus = dbAdapter.getFile("/tmp/testFile");
         Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 * 1024L);
@@ -248,41 +251,6 @@ public class TestDBMethod {
     }
 
     @Test
-    public void testUpdateCommand() throws Exception {
-      // TODO test Update Command
-      String dbFile = TestDBUtil.getUniqueDBFilePath();
-      Connection conn = null;
-      try {
-        conn = Util.createSqliteConnection(dbFile);
-        Util.initializeDataBase(conn);
-        DBAdapter dbAdapter = new DBAdapter(conn);
-        CommandInfo command1 = new CommandInfo(0, 1, ActionType.None,
-                CommandState.PENDING, "test", 123123333l, 232444444l);
-        CommandInfo command2 = new CommandInfo(0, 78, ActionType.ConvertToEC,
-                CommandState.PENDING, "tt", 123178333l, 232444994l);
-        CommandInfo[] commands = {command1, command2};
-        dbAdapter.insertCommandsTable(commands);
-        String cidCondition = ">= 1 ";
-        String ridCondition = "= 78 ";
-        List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.PENDING);
-        for(CommandInfo cmd: com) {
-          System.out.printf("Cid = %d \n", cmd.getCid());
-          dbAdapter.updateCommandStatus(cmd.getCid(), cmd.getRid(), CommandState.DONE);
-        }
-        List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.DONE);
-        Assert.assertTrue(com1.size() == 1);
-        Assert.assertTrue(com1.get(0).getState() == CommandState.DONE);
-      } finally {
-        if (conn != null) {
-          conn.close();
-        }
-        File file = new File(dbFile);
-        file.deleteOnExit();
-      }
-    }
-
-
-    @Test
     public void testInsertStoragePolicyTable() throws Exception {
       String dbFile = TestDBUtil.getUniqueDBFilePath();
       Connection conn = null;
@@ -297,6 +265,42 @@ public class TestDBMethod {
         int key = dbAdapter.getStoragePolicyID("COOL");
         Assert.assertEquals(value, "COOL");
         Assert.assertEquals(key , 3);
+      } finally {
+        if (conn != null) {
+          conn.close();
+        }
+        File file = new File(dbFile);
+        file.deleteOnExit();
+      }
+    }
+
+    @Test
+    public void testInsertXattrTable() throws Exception {
+      String dbFile = TestDBUtil.getUniqueDBFilePath();
+      Connection conn = null;
+      try {
+        conn = Util.createSqliteConnection(dbFile);
+        Util.initializeDataBase(conn);
+        DBAdapter dbAdapter = new DBAdapter(conn);
+        long fid = 567l;
+        Map<String, byte[]> xAttrMap = new HashMap<>();
+        String name1 = "user.a1";
+        String name2 = "raw.you";
+        Random random = new Random();
+        byte[] value1 = new byte[1024];
+        byte[] value2 = new byte[1024];
+        random.nextBytes(value1);
+        random.nextBytes(value2);
+        xAttrMap.put(name1, value1);
+        xAttrMap.put(name2, value2);
+        Assert.assertTrue(dbAdapter.insertXattrTable(fid, xAttrMap));
+        Map<String, byte[]> map = dbAdapter.getXattrTable(fid);
+        Assert.assertTrue(map.size() == xAttrMap.size());
+        if (map.size() == xAttrMap.size()) {
+          for (Map.Entry<String, byte[]> entry : map.entrySet()) {
+            Assert.assertArrayEquals(entry.getValue(), xAttrMap.get(entry.getKey()));
+          }
+        }
       } finally {
         if (conn != null) {
           conn.close();

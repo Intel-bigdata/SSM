@@ -17,7 +17,9 @@
  */
 package org.apache.hadoop.ssm.sql;
 
+import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.XAttrHelper;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.erasurecode.ECSchema;
@@ -28,6 +30,7 @@ import org.apache.hadoop.ssm.rule.RuleState;
 import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -709,43 +712,14 @@ public class DBAdapter {
     return ret;
   }
 
-  public boolean updateCommandStatus(long cid, long rid, CommandState state) {
-    StringBuffer sb = new StringBuffer("UPDATE commands SET");
-    if (state != null) {
-      sb.append(" state = ").append(state.getValue()).append(",");
-      sb.append(" state_changed_time = ").append(System.currentTimeMillis()).append(",");
-    }
-    int idx = sb.lastIndexOf(",");
-    sb.replace(idx, idx + 1, "");
-    sb.append(" WHERE cid = ").append(cid).append(" AND ").append("rid = ").append(rid).append(";");
-    try {
-      return executeUpdate(sb.toString()) == 1;
-    } catch (SQLException e) {
-      return false;
-    }
-  }
 
-  // TODO multiple CommandStatus update
-//  public boolean updateCommandsStatus(Map<Long, CommandState> cmdMap) {
-//    try {
-//      Statement s = conn.createStatement();
-//      for(Map.Entry<Long, CommandState> entry: cmdMap.entrySet()) {
-//        StringBuffer sb = new StringBuffer("UPDATE commands SET");
-//        if (entry.getValue() != null) {
-//          sb.append(" state = ").append(entry.getValue().getValue()).append(",");
-//          sb.append(" state_changed_time = ").append(System.currentTimeMillis()).append(",");
-//        }
-//        int idx = sb.lastIndexOf(",");
-//        sb.replace(idx, idx + 1, "");
-//        sb.append(" WHERE cid = ").append(entry.getKey()).append(";");
-//        s.addBatch(sb.toString());
-//      }
-//      s.executeBatch();
-//    } catch (SQLException e) {
-//      e.printStackTrace();
+  private boolean updateCommand() {
+    // TODO update command status
+//    if() {
+//      return false;
 //    }
-//    return true;
-//  }
+    return true;
+  }
 
   private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
     List<CommandInfo> ret = new LinkedList<>();
@@ -777,7 +751,7 @@ public class DBAdapter {
   }
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s) {
-  String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
+  String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES ('"
       + s.getSid() + "','" + s.getPolicyName() + "');";
     try {
       execute(sql);
@@ -796,4 +770,58 @@ public class DBAdapter {
     updateCache();
     return getKey(mapStoragePolicyIdName, policyName);
   }
+
+  public synchronized boolean insertXattrTable(Long fid, Map<String, byte[]> map) {
+    String sql = "INSERT INTO xattr (fid, namespace, name, value) "
+        + "VALUES (?, ?, ?, ?)";
+    PreparedStatement p = null;
+    try {
+      conn.setAutoCommit(false);
+      p = conn.prepareStatement(sql);
+      for (Map.Entry<String, byte[]> e : map.entrySet()) {
+        XAttr xa = XAttrHelper.buildXAttr(e.getKey(), e.getValue());
+        p.setLong(1, fid);
+        p.setString(2, String.valueOf(xa.getNameSpace()));
+        p.setString(3, xa.getName());
+        p.setBytes(4, xa.getValue());
+        p.addBatch();
+      }
+      int[] i = p.executeBatch();
+      p.close();
+      conn.commit();
+      conn.setAutoCommit(true);
+      if (i.length == map.size()) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (SQLException e) {
+      return false;
+    }
+  }
+
+  public Map<String, byte[]> getXattrTable(Long fid) {
+    String sql =
+        String.format("SELECT * FROM xattr WHERE fid = %s;", fid);
+    return getXattrTable(sql);
+  }
+
+  private Map<String, byte[]> getXattrTable(String sql) {
+    ResultSet rs;
+    List<XAttr> list = new LinkedList<>();
+    try {
+      rs = executeQuery(sql);
+      while(rs.next()) {
+        XAttr xAttr = new XAttr.Builder().setNameSpace(
+            XAttr.NameSpace.valueOf(rs.getString("namespace")))
+            .setName(rs.getString("name"))
+            .setValue(rs.getBytes("value")).build();
+        list.add(xAttr);
+      }
+      return XAttrHelper.buildXAttrMap(list);
+    } catch (SQLException e) {
+      return null;
+    }
+  }
+
 }
