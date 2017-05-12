@@ -147,7 +147,7 @@ public class RuleManager implements ModuleSequenceProto {
     return container.getRuleInfo();
   }
 
-  public List<RuleInfo> getRuleInfo() throws IOException {
+  public List<RuleInfo> listRulesInfo() throws IOException {
     Collection<RuleContainer> containers = mapRules.values();
     List<RuleInfo> retInfos = new ArrayList<>();
     for (RuleContainer container : containers) {

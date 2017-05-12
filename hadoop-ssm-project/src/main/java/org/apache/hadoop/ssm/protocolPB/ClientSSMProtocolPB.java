@@ -20,7 +20,14 @@ package org.apache.hadoop.ssm.protocolPB;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
-import org.apache.hadoop.ssm.protocol.ClientSSMProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.CheckRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.CheckRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetRuleInfoRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetRuleInfoResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetServiceStateRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetServiceStateResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ListRulesInfoRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ListRulesInfoResponseProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleResponseProto;
 
@@ -28,12 +35,18 @@ import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleResponseProto;
     protocolVersion = 1)
 public interface ClientSSMProtocolPB {
 
-  public ClientSSMProto.StatusResultProto
-  getServiceStatus(RpcController controller, ClientSSMProto.StatusParaProto p);
+  GetServiceStateResponseProto
+  getServiceState(RpcController controller, GetServiceStateRequestProto req);
 
-  public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller
-      , ClientSSMProto.RuleInfoParaProto para);
+  GetRuleInfoResponseProto getRuleInfo(RpcController controller,
+      GetRuleInfoRequestProto req) throws ServiceException;
 
-  public SubmitRuleResponseProto submitRule(RpcController controller,
+  SubmitRuleResponseProto submitRule(RpcController controller,
       SubmitRuleRequestProto req) throws ServiceException;
+
+  CheckRuleResponseProto checkRule(RpcController controller,
+      CheckRuleRequestProto req) throws ServiceException;
+
+  ListRulesInfoResponseProto listRulesInfo(RpcController controller,
+      ListRulesInfoRequestProto req) throws ServiceException;
 }
