@@ -248,6 +248,41 @@ public class TestDBMethod {
     }
 
     @Test
+    public void testUpdateCommand() throws Exception {
+      // TODO test Update Command
+      String dbFile = TestDBUtil.getUniqueDBFilePath();
+      Connection conn = null;
+      try {
+        conn = Util.createSqliteConnection(dbFile);
+        Util.initializeDataBase(conn);
+        DBAdapter dbAdapter = new DBAdapter(conn);
+        CommandInfo command1 = new CommandInfo(0, 1, ActionType.None,
+                CommandState.PENDING, "test", 123123333l, 232444444l);
+        CommandInfo command2 = new CommandInfo(0, 78, ActionType.ConvertToEC,
+                CommandState.PENDING, "tt", 123178333l, 232444994l);
+        CommandInfo[] commands = {command1, command2};
+        dbAdapter.insertCommandsTable(commands);
+        String cidCondition = ">= 1 ";
+        String ridCondition = "= 78 ";
+        List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.PENDING);
+        for(CommandInfo cmd: com) {
+          System.out.printf("Cid = %d \n", cmd.getCid());
+          dbAdapter.updateCommandStatus(cmd.getCid(), cmd.getRid(), CommandState.DONE);
+        }
+        List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.DONE);
+        Assert.assertTrue(com1.size() == 1);
+        Assert.assertTrue(com1.get(0).getState() == CommandState.DONE);
+      } finally {
+        if (conn != null) {
+          conn.close();
+        }
+        File file = new File(dbFile);
+        file.deleteOnExit();
+      }
+    }
+
+
+    @Test
     public void testInsertStoragePolicyTable() throws Exception {
       String dbFile = TestDBUtil.getUniqueDBFilePath();
       Connection conn = null;

@@ -709,14 +709,43 @@ public class DBAdapter {
     return ret;
   }
 
-
-  private boolean updateCommand() {
-    // TODO update command status
-//    if() {
-//      return false;
-//    }
-    return true;
+  public boolean updateCommandStatus(long cid, long rid, CommandState state) {
+    StringBuffer sb = new StringBuffer("UPDATE commands SET");
+    if (state != null) {
+      sb.append(" state = ").append(state.getValue()).append(",");
+      sb.append(" state_changed_time = ").append(System.currentTimeMillis()).append(",");
+    }
+    int idx = sb.lastIndexOf(",");
+    sb.replace(idx, idx + 1, "");
+    sb.append(" WHERE cid = ").append(cid).append(" AND ").append("rid = ").append(rid).append(";");
+    try {
+      return executeUpdate(sb.toString()) == 1;
+    } catch (SQLException e) {
+      return false;
+    }
   }
+
+  // TODO multiple CommandStatus update
+//  public boolean updateCommandsStatus(Map<Long, CommandState> cmdMap) {
+//    try {
+//      Statement s = conn.createStatement();
+//      for(Map.Entry<Long, CommandState> entry: cmdMap.entrySet()) {
+//        StringBuffer sb = new StringBuffer("UPDATE commands SET");
+//        if (entry.getValue() != null) {
+//          sb.append(" state = ").append(entry.getValue().getValue()).append(",");
+//          sb.append(" state_changed_time = ").append(System.currentTimeMillis()).append(",");
+//        }
+//        int idx = sb.lastIndexOf(",");
+//        sb.replace(idx, idx + 1, "");
+//        sb.append(" WHERE cid = ").append(entry.getKey()).append(";");
+//        s.addBatch(sb.toString());
+//      }
+//      s.executeBatch();
+//    } catch (SQLException e) {
+//      e.printStackTrace();
+//    }
+//    return true;
+//  }
 
   private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
     List<CommandInfo> ret = new LinkedList<>();

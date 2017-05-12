@@ -4,7 +4,6 @@ package org.apache.hadoop.ssm.actions;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.server.mover.Mover;
 import org.apache.hadoop.util.ToolRunner;
