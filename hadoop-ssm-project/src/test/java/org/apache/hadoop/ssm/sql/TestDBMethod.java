@@ -201,7 +201,7 @@ public class TestDBMethod {
         byte[] symlink = null;
         byte[] path = DFSUtil.string2Bytes(pathString);
         long fileId = 312321L;
-        int numChildren = 1;
+        int numChildren = 0;
         byte storagePolicy = 0;
         FileStatusInternal[] files = { new FileStatusInternal(length, isDir, blockReplication,
             blockSize, modTime, accessTime, perms, owner, group, symlink,
