@@ -83,7 +83,9 @@ public class InotifyEventFetcher {
 
   public void stop() {
     this.inotifyFile.delete();
-    this.fetchAndApplyFuture.cancel(false);
+    if (this.fetchAndApplyFuture != null ){
+      this.fetchAndApplyFuture.cancel(false);
+    }
   }
 
   private static class InotifyFetchTask implements Runnable {

@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
+
 public class TestSubmitRule {
   private Configuration conf;
   private MiniDFSCluster cluster;
@@ -48,6 +50,7 @@ public class TestSubmitRule {
 
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
+    conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
     conf.set(SSMConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
         uriList.get(0).toString());
 
@@ -61,7 +64,8 @@ public class TestSubmitRule {
   }
 
   @After
-  public void cleanUp() {
+  public void cleanUp() throws IOException {
+    ssm.stop();
     if (cluster != null) {
       cluster.shutdown();
     }
