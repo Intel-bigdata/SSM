@@ -17,7 +17,9 @@
  */
 package org.apache.hadoop.ssm.sql;
 
+import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.XAttrHelper;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.erasurecode.ECSchema;
@@ -28,6 +30,7 @@ import org.apache.hadoop.ssm.rule.RuleState;
 import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -795,5 +798,58 @@ public class DBAdapter {
   public Integer getStoragePolicyID(String policyName) {
     updateCache();
     return getKey(mapStoragePolicyIdName, policyName);
+  }
+
+  public synchronized boolean insertXattrTable(Long fid, Map<String, byte[]> map) {
+    String sql = "INSERT INTO xattr (fid, namespace, name, value) "
+        + "VALUES (?, ?, ?, ?)";
+    PreparedStatement p = null;
+    try {
+      conn.setAutoCommit(false);
+      p = conn.prepareStatement(sql);
+      for (Map.Entry<String, byte[]> e : map.entrySet()) {
+        XAttr xa = XAttrHelper.buildXAttr(e.getKey(), e.getValue());
+        p.setLong(1, fid);
+        p.setString(2, String.valueOf(xa.getNameSpace()));
+        p.setString(3, xa.getName());
+        p.setBytes(4, xa.getValue());
+        p.addBatch();
+      }
+      int[] i = p.executeBatch();
+      p.close();
+      conn.commit();
+      conn.setAutoCommit(true);
+      if (i.length == map.size()) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (SQLException e) {
+      return false;
+    }
+  }
+
+  public Map<String, byte[]> getXattrTable(Long fid) {
+    String sql =
+        String.format("SELECT * FROM xattr WHERE fid = %s;", fid);
+    return getXattrTable(sql);
+  }
+
+  private Map<String, byte[]> getXattrTable(String sql) {
+    ResultSet rs;
+    List<XAttr> list = new LinkedList<>();
+    try {
+      rs = executeQuery(sql);
+      while(rs.next()) {
+        XAttr xAttr = new XAttr.Builder().setNameSpace(
+            XAttr.NameSpace.valueOf(rs.getString("namespace")))
+            .setName(rs.getString("name"))
+            .setValue(rs.getBytes("value")).build();
+        list.add(xAttr);
+      }
+      return XAttrHelper.buildXAttrMap(list);
+    } catch (SQLException e) {
+      return null;
+    }
   }
 }

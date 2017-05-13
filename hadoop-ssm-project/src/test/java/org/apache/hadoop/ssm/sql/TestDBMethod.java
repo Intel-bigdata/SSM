@@ -28,9 +28,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class TestDBMethod {
     @Test
@@ -199,7 +201,7 @@ public class TestDBMethod {
         byte[] symlink = null;
         byte[] path = DFSUtil.string2Bytes(pathString);
         long fileId = 312321L;
-        int numChildren = 1;
+        int numChildren = 0;
         byte storagePolicy = 0;
         FileStatusInternal[] files = { new FileStatusInternal(length, isDir, blockReplication,
             blockSize, modTime, accessTime, perms, owner, group, symlink,
@@ -304,4 +306,38 @@ public class TestDBMethod {
         file.deleteOnExit();
       }
     }
+
+  @Test
+  public void testInsertXattrTable() throws Exception {
+    String dbFile = TestDBUtil.getUniqueDBFilePath();
+    Connection conn = null;
+    try {
+      conn = Util.createSqliteConnection(dbFile);
+      Util.initializeDataBase(conn);
+      DBAdapter dbAdapter = new DBAdapter(conn);
+      long fid = 567l;
+      Map<String, byte[]> xAttrMap = new HashMap<>();
+      String name1 = "user.a1";
+      String name2 = "raw.you";
+      Random random = new Random();
+      byte[] value1 = new byte[1024];
+      byte[] value2 = new byte[1024];
+      random.nextBytes(value1);
+      random.nextBytes(value2);
+      xAttrMap.put(name1, value1);
+      xAttrMap.put(name2, value2);
+      Assert.assertTrue(dbAdapter.insertXattrTable(fid, xAttrMap));
+      Map<String, byte[]> map = dbAdapter.getXattrTable(fid);
+      Assert.assertTrue(map.size() == xAttrMap.size());
+      for (String m : map.keySet()) {
+        Assert.assertArrayEquals(map.get(m), xAttrMap.get(m));
+      }
+    } finally {
+      if (conn != null) {
+        conn.close();
+      }
+      File file = new File(dbFile);
+      file.deleteOnExit();
+    }
+  }
 }
