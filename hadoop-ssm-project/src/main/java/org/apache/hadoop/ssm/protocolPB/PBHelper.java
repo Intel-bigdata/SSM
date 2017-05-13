@@ -19,7 +19,9 @@ package org.apache.hadoop.ssm.protocolPB;
 
 
 import com.google.protobuf.ServiceException;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.RuleInfoProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.RuleStateProto;
+import org.apache.hadoop.ssm.rule.RuleInfo;
 import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
@@ -52,5 +54,25 @@ public class PBHelper {
       }
     }
     return null;
+  }
+
+  public static RuleInfoProto convert(RuleInfo info) {
+    return RuleInfoProto.newBuilder().setId(info.getId())
+        .setSubmitTime(info.getSubmitTime())
+        .setLastCheckTime(info.getLastCheckTime())
+        .setRuleText(info.getRuleText())
+        .setNumChecked(info.getNumChecked())
+        .setNumCmdsGen(info.getNumCmdsGen())
+        .setRulestateProto(convert(info.getState())).build();
+  }
+
+  public static RuleInfo convert(RuleInfoProto proto) {
+    return RuleInfo.newBuilder().setId(proto.getId())
+        .setSubmitTime(proto.getSubmitTime())
+        .setLastCheckTime(proto.getLastCheckTime())
+        .setRuleText(proto.getRuleText())
+        .setNumChecked(proto.getNumChecked())
+        .setNumCmdsGen(proto.getNumCmdsGen())
+        .setState(convert(proto.getRulestateProto())).build();
   }
 }

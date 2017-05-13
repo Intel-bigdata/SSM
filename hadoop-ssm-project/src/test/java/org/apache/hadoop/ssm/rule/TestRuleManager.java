@@ -215,7 +215,7 @@ public class TestRuleManager {
     }
 
     System.out.println("\nFinal state:");
-    List<RuleInfo> allRules = ruleManager.getRuleInfo();
+    List<RuleInfo> allRules = ruleManager.listRulesInfo();
     Assert.assertTrue(allRules.size() == 2 * nRules);
     for (RuleInfo info : allRules) {
       System.out.println(info);

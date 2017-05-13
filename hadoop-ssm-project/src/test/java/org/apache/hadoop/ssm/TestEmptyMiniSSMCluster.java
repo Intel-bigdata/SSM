@@ -21,24 +21,21 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.ssm.protocol.SSMClient;
-import org.apache.hadoop.ssm.rule.RuleState;
+import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.sql.TestDBUtil;
 import org.apache.hadoop.ssm.sql.Util;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class TestSubmitRule {
-  private Configuration conf;
-  private MiniDFSCluster cluster;
-  private SSMServer ssm;
+public class TestEmptyMiniSSMCluster {
+  protected Configuration conf;
+  protected MiniDFSCluster cluster;
+  protected SSMServer ssm;
 
   @Before
   public void setUp() throws Exception {
@@ -60,47 +57,21 @@ public class TestSubmitRule {
     ssm = SSMServer.createSSM(null, conf);
   }
 
+  public void waitTillSSMExitSafeMode() throws Exception {
+    SSMClient client = new SSMClient(conf);
+    while (true) {
+      SSMServiceState state = client.getServiceState();
+      if (state != SSMServiceState.SAFEMODE) {
+        break;
+      }
+      Thread.sleep(1000);
+    }
+  }
+
   @After
   public void cleanUp() {
     if (cluster != null) {
       cluster.shutdown();
-    }
-  }
-
-  @Test
-  public void testSubmitRule() throws Exception {
-    String rule = "file: every 1s \n | length > 10 | cachefile";
-    SSMClient client = new SSMClient(conf);
-
-    long ruleId = 0l;
-    boolean wait = true;
-    while (wait) {
-      try {
-        ruleId = client.submitRule(rule, RuleState.ACTIVE);
-        wait = false;
-      } catch (IOException e) {
-        if (!e.toString().contains("not ready")) {
-          throw e;
-        }
-      }
-    }
-
-    for (int i = 0; i < 10; i++) {
-      long id = client.submitRule(rule, RuleState.ACTIVE);
-      Assert.assertTrue(ruleId + i + 1 == id);
-    }
-
-    String badRule = "something else";
-    try {
-      client.submitRule(badRule, RuleState.ACTIVE);
-      Assert.fail("Should have an exception here");
-    } catch (IOException e) {
-    }
-
-    try {
-      client.checkRule(badRule);
-      Assert.fail("Should have an exception here");
-    } catch (IOException e) {
     }
   }
 }
