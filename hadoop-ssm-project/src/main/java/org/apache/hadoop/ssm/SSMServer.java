@@ -157,7 +157,7 @@ public class SSMServer {
 
     // Init and start RPC server and REST server
     rpcServer.start();
-    httpServer.start();
+    //httpServer.start();
 
     DBAdapter dbAdapter = getDBAdapter();
 
@@ -181,10 +181,12 @@ public class SSMServer {
     return ssmServiceState == SSMServiceState.ACTIVE;
   }
 
-  private void stop() throws IOException {
+  private void stop() throws Exception {
     for (int i = modules.size() - 1 ; i >= 0; i--) {
       modules.get(i).stop();
     }
+    httpServer.stop();
+    rpcServer.stop();
   }
 
   /**
@@ -197,6 +199,15 @@ public class SSMServer {
 
     httpServer.join();
     rpcServer.join();
+  }
+
+  public void shutdown() {
+    try {
+      stop();
+      join();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   public DBAdapter getDBAdapter() throws Exception {

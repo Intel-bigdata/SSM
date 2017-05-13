@@ -26,7 +26,6 @@ import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceState;
-import org.apache.hadoop.ssm.protocol.SSMServiceStates;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolServerSideTranslatorPB;
 import org.apache.hadoop.ssm.rule.RuleInfo;
@@ -34,6 +33,7 @@ import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * Implements the rpc calls.
@@ -112,21 +112,8 @@ public class SSMRpcServer implements ClientSSMProtocol {
   }
 
   @Override
-  public SSMServiceStates getServiceStatus() {
-    // TODO: to be changed
-    return new SSMServiceStates(ssm.getSSMServiceState());
-  }
-
-  @Override
-  public RuleInfo getRuleInfo(long id) {
-    RuleInfo.Builder builder = RuleInfo.newBuilder();
-    builder.setId(id)
-        .setSubmitTime(6)
-        .setRuleText("ruleTest")
-        .setNumChecked(7)
-        .setNumCmdsGen(8)
-        .setState(RuleState.ACTIVE);
-    return builder.build();
+  public SSMServiceState getServiceState() {
+    return ssm.getSSMServiceState();
   }
 
   private void checkIfActive() throws IOException {
@@ -139,5 +126,23 @@ public class SSMRpcServer implements ClientSSMProtocol {
   public long submitRule(String rule, RuleState initState) throws IOException {
     checkIfActive();
     return ssm.getRuleManager().submitRule(rule, initState);
+  }
+
+  @Override
+  public void checkRule(String rule) throws IOException {
+    checkIfActive();
+    ssm.getRuleManager().checkRule(rule);
+  }
+
+  @Override
+  public RuleInfo getRuleInfo(long ruleId) throws IOException {
+    checkIfActive();
+    return ssm.getRuleManager().getRuleInfo(ruleId);
+  }
+
+  @Override
+  public List<RuleInfo> listRulesInfo() throws IOException {
+    checkIfActive();
+    return ssm.getRuleManager().listRulesInfo();
   }
 }

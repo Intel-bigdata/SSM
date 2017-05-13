@@ -18,21 +18,29 @@
 package org.apache.hadoop.ssm.protocol;
 
 public enum SSMServiceState {
-  SAFEMODE("safemode"),
-  ACTIVE("active");
+  SAFEMODE(0),
+  ACTIVE(1);
 
-  private String name;
+  private int value;
 
-  SSMServiceState(String name) {
-    this.name = name;
+  SSMServiceState(int value) {
+    this.value = value;
+  }
+
+  public static SSMServiceState fromValue(int v) {
+    for (SSMServiceState s : values()) {
+      if (s.getValue() == v) {
+        return s;
+      }
+    }
+    return null;
+  }
+
+  public int getValue() {
+    return value;
   }
 
   public String getName() {
-    return name;
-  }
-
-  @Override
-  public String toString() {
-    return name;
+    return toString();
   }
 }

@@ -61,13 +61,14 @@ public class TestSSMClient {
     SSMServer.createSSM(null, conf);
     SSMClient ssmClient = new SSMClient(conf);
 
-    //test getServiceStatus
-    String state = ssmClient.getServiceStatus().getState().name();
-    assertTrue("SAFEMODE".equals(state));
-
-    //test getRuleInfo
-    RuleInfo ruleInfo = ssmClient.getRuleInfo(5);
-    assertEquals(ruleInfo.getState(), RuleState.ACTIVE);
+    while (true) {
+      //test getServiceStatus
+      String state = ssmClient.getServiceState().getName();
+      if ("ACTIVE".equals(state)) {
+        break;
+      }
+      Thread.sleep(1000);
+    }
 
     //test single SSM
     boolean caughtException = false;
