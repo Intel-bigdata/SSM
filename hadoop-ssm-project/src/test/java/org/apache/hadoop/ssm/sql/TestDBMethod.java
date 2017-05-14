@@ -251,7 +251,6 @@ public class TestDBMethod {
 
     @Test
     public void testUpdateCommand() throws Exception {
-      // TODO test Update Command
       String dbFile = TestDBUtil.getUniqueDBFilePath();
       Connection conn = null;
       try {

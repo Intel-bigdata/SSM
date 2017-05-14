@@ -77,6 +77,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
    * Stop CommandExecutor
    */
   public void stop() throws IOException {
+    // TODO Command statue update
+
     if (commandExecutorThread == null) {
       return;
     }
@@ -180,7 +182,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     current.initial(args);
     actions[0] = current;
     // New Command
-    Command cmd = new Command(actions);
+    Command cmd = new Command(actions, new Callback());
     cmd.setParameters(jsonParameters);
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -197,5 +199,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   public Long[] getCommands(CommandState state) {
     List<Long> cmds = cmdsInState.get(state.getValue());
     return cmds.toArray(new Long[cmds.size()]);
+  }
+
+  public class Callback {
+    public void complete(long cid, long rid, CommandState state) {
+      adapter.updateCommandStatus(cid, rid, state);
+    }
   }
 }

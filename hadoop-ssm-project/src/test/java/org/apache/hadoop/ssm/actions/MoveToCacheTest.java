@@ -19,7 +19,7 @@ public class MoveToCacheTest {
     private static final String REPLICATION_KEY = "3";
 
     @Test
-    public void testMkdir()throws IOException {
+    public void testMkdir() throws IOException {
 
         Configuration conf = new Configuration();
         conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);

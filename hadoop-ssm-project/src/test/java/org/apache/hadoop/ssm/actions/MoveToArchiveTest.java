@@ -30,7 +30,7 @@ public class MoveToArchiveTest {
   }
 
 
-  private void testMoveFileToArchive(Configuration conf)throws Exception {
+  private void testMoveFileToArchive(Configuration conf) throws Exception {
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).storageTypes(new StorageType[] {StorageType.DISK,StorageType.ARCHIVE}).build();
     try {
       cluster.waitActive();

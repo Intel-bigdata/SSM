@@ -28,6 +28,7 @@ import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 public class SSMClient {
   final static long VERSION = 1;
@@ -57,16 +58,24 @@ public class SSMClient {
     this.ssm = clientSSMProtocol;
   }
 
-  public SSMServiceStates getServiceStatus() {
-    return ssm.getServiceStatus();
+  public SSMServiceState getServiceState() {
+    return ssm.getServiceState();
   }
 
-  public RuleInfo getRuleInfo(long id) {
-    return ssm.getRuleInfo(id);
+  public void checkRule(String rule) throws IOException {
+    ssm.checkRule(rule);
   }
 
   public long submitRule(String rule, RuleState initState)
       throws IOException {
     return ssm.submitRule(rule, initState);
+  }
+
+  public RuleInfo getRuleInfo(long id) throws IOException {
+    return ssm.getRuleInfo(id);
+  }
+
+  public List<RuleInfo> listRulesInfo() throws IOException {
+    return ssm.listRulesInfo();
   }
 }
