@@ -15,43 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.rule;
+package org.apache.hadoop.ssm.tools;
 
-/**
- * The possible state that a rule can be in.
- */
-public enum RuleState {
-  ACTIVE(0),      // functioning
-  DRYRUN(1),      // without execute the rule commands
-  DISABLED(2),    // stop maintain info for the rule
-  FINISHED(3),    // for one-shot rule
-  DELETED(4);
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.shell.Command;
+import org.apache.hadoop.fs.shell.CommandFactory;
 
-  private int value;
+import java.io.IOException;
 
-  private RuleState(int value) {
-    this.value = value;
+public class SSMCommand extends Command {
+  public static void registerCommands(CommandFactory factory) {
+    factory.registerCommands(RuleCommands.class);
   }
 
-  public static RuleState fromValue(int value) {
-    for (RuleState r : values()) {
-      if (value == r.getValue()) {
-        return r;
-      }
-    }
-    return null;
+  @Override
+  public String getCommandName() {
+    return getName();
   }
 
-  public static RuleState fromName(String name) {
-    for (RuleState r : values()) {
-      if (r.toString().equalsIgnoreCase(name)) {
-        return r;
-      }
-    }
-    return null;
-  }
-
-  public int getValue() {
-    return value;
+  @Override
+  protected void run(Path path) throws IOException {
+    throw new RuntimeException("not supposed to get here");
   }
 }
