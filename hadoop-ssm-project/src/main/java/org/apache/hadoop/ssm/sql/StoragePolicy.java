@@ -15,24 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.protocol;
+package org.apache.hadoop.ssm.sql;
 
-public class SSMServiceStates {
-  private SSMServiceState state;
+public class StoragePolicy {
+  private byte sid;
+  private String policyName;
 
-  public SSMServiceStates() {
+  public StoragePolicy(byte sid, String policyName) {
+    this.sid = sid;
+    this.policyName = policyName;
   }
 
-  public SSMServiceStates(SSMServiceState state) {
-    this.state = state;
+  public byte getSid() {
+    return sid;
   }
-
-  public SSMServiceState getState() {
-    return state;
+  public void setSid(byte sid) {
+    this.sid = sid;
   }
-
-  @Override
-  public String toString() {
-    return "state: " + state.getName();
+  public String getPolicyName() {
+    return policyName;
+  }
+  public void setPolicyName(String policyName) {
+    this.policyName = policyName;
   }
 }

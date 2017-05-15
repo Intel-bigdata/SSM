@@ -21,20 +21,27 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
+import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.rule.RuleManager;
+import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.sql.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.hadoop.util.ExitUtil.terminate;
 
@@ -47,23 +54,25 @@ public class SSMServer {
   private CommandExecutor commandExecutor;
   private SSMHttpServer httpServer;
   private SSMRpcServer rpcServer;
-  private Configuration config;
+  private Configuration conf;
   private DistributedFileSystem fs = null;
-  private OutputStream out;
+  private OutputStream outSSMIdFile;
+  private List<ModuleSequenceProto> modules = new ArrayList<>();
   static final Path SSM_ID_PATH = new Path("/system/ssm.id");
   public static final Logger LOG = LoggerFactory.getLogger(SSMServer.class);
 
+  private SSMServiceState ssmServiceState = SSMServiceState.SAFEMODE;
+
   SSMServer(Configuration conf) throws IOException, URISyntaxException {
-    String rpcAddr = conf.get("dfs.ssm.namenode.rpcserver");
-    URI rpcURL = new URI(rpcAddr);
-    this.fs = (DistributedFileSystem) FileSystem.get(rpcURL, conf);
-    config = conf;
-    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9871);
-    httpServer = new SSMHttpServer(conf, addr);
+    this.conf = conf;
+    httpServer = new SSMHttpServer(this, conf);
     rpcServer = new SSMRpcServer(this, conf);
     statesManager = new StatesManager(this, conf);
-    ruleManager = new RuleManager(this, conf, null); // TODO: to be replaced
+    ruleManager = new RuleManager(this, conf); // TODO: to be replaced
     commandExecutor = new CommandExecutor(this, conf);
+    modules.add(statesManager);
+    modules.add(ruleManager);
+    modules.add(commandExecutor);
   }
 
   public StatesManager getStatesManager() {
@@ -87,16 +96,13 @@ public class SSMServer {
    */
   public static SSMServer createSSM(String[] args, Configuration conf)
       throws Exception {
-    SSMServer ssm = new SSMServer(conf);
-    ssm.out = ssm.checkAndMarkRunning();
-    if (ssm.out == null) {
-      // Exit if there is another one running.
-      throw new IOException("Another SSMServer is running");
+    if (args != null) {
+      // TODO: handle args
     }
+    SSMServer ssm = new SSMServer(conf);
     ssm.runSSMDaemons();
     return ssm;
   }
-
 
   private static final String USAGE =
       "Usage: ssm [-help | -foo" +
@@ -134,25 +140,105 @@ public class SSMServer {
    * @throws Exception
    */
   public void runSSMDaemons() throws Exception {
-//    httpServer.start();
+    String nnRpcAddr = conf.get(
+        SSMConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+    if (nnRpcAddr == null) {
+      throw new IOException("Can not find NameNode RPC server address. "
+          + "Please configure it through '"
+          + SSMConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "'.");
+    }
+    URI rpcURL = new URI(nnRpcAddr);
+    this.fs = (DistributedFileSystem) FileSystem.get(rpcURL, conf);
+    outSSMIdFile = checkAndMarkRunning();
+    if (outSSMIdFile == null) {
+      // Exit if there is another one running.
+      throw new IOException("Another SSMServer is running");
+    }
+
+    // Init and start RPC server and REST server
     rpcServer.start();
-    commandExecutor.start();
-    statesManager.start();
-    ruleManager.start();
+    //httpServer.start();
+
+    DBAdapter dbAdapter = getDBAdapter();
+
+    for (ModuleSequenceProto m : modules) {
+      m.init(dbAdapter);
+    }
+
+    for (ModuleSequenceProto m : modules) {
+      m.start();
+    }
+
+    // TODO: for simple here, refine it later
+    ssmServiceState = SSMServiceState.ACTIVE;
+  }
+
+  public SSMServiceState getSSMServiceState() {
+    return ssmServiceState;
+  }
+
+  public boolean isActive() {
+    return ssmServiceState == SSMServiceState.ACTIVE;
+  }
+
+  public void stop() throws Exception {
+    for (int i = modules.size() - 1 ; i >= 0; i--) {
+      modules.get(i).stop();
+    }
+    httpServer.stop();
+    rpcServer.stop();
   }
 
   /**
    * Waiting services to exit.
    */
   private void join() throws Exception {
-    //httpServer.join();
+    for (int i = modules.size() - 1 ; i >= 0; i--) {
+      modules.get(i).join();
+    }
+
+    httpServer.join();
     rpcServer.join();
   }
 
-  protected InetSocketAddress getRpcServerAddress(Configuration conf) {
-    String[] strings = conf.get("dfs.ssm.rpcserver").split(":");
-    return InetSocketAddress.createUnresolved(strings[strings.length - 2]
-        , Integer.parseInt(strings[strings.length - 1]));
+  public void shutdown() {
+    try {
+      stop();
+      join();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public DBAdapter getDBAdapter() throws Exception {
+    Connection conn = getDBConnection();
+    return new DBAdapter(conn);
+  }
+
+  public Connection getDBConnection() throws Exception {
+    String dburi = getDBUri();
+    Connection conn = Util.createConnection(dburi.toString(), null, null);
+    return conn;
+  }
+
+  public String getDBUri() throws Exception {
+    // TODO: Find and verify the latest SSM DB available,
+    // this contains 3 cases:
+    //    remote checkpoint / local / create new DB
+
+    String url = conf.get(SSMConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY);
+    if (url == null) {
+      throw new FileNotFoundException("No database found for SSM");
+    }
+    return url;
+  }
+
+  public Configuration getConf() {
+    return conf;
+  }
+
+  public DFSClient getDFSClient() {
+    return fs.getClient();
   }
 
   private OutputStream checkAndMarkRunning() throws IOException {

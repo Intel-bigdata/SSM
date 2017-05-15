@@ -15,37 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.rule.parser;
 
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.xml.XmlConfiguration;
+public class TranslationContext {
+  private long ruleId;
+  private long submitTime;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
-/**
- * Providing RESTApi service.
- */
-public class RestApiServer {
-  private Server server;
-
-  public boolean initialize(String configFile) {
-    try {
-      server = new Server();
-      FileInputStream xmlIn = new FileInputStream(configFile);
-      XmlConfiguration conf = new XmlConfiguration(xmlIn);
-      conf.configure(server);
-      return true;
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return false;
+  public TranslationContext(long ruleId, long submitTime) {
+    this.ruleId = ruleId;
+    this.submitTime = submitTime;
   }
 
-  public void start() throws Exception {
-    server.start();
+  public long getRuleId() {
+    return ruleId;
+  }
+
+  public long getSubmitTime() {
+    return submitTime;
   }
 }

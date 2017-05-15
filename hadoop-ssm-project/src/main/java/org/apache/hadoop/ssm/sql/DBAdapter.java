@@ -17,7 +17,9 @@
  */
 package org.apache.hadoop.ssm.sql;
 
+import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.XAttrHelper;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.erasurecode.ECSchema;
@@ -25,8 +27,10 @@ import org.apache.hadoop.ssm.CommandState;
 import org.apache.hadoop.ssm.actions.ActionType;
 import org.apache.hadoop.ssm.rule.RuleInfo;
 import org.apache.hadoop.ssm.rule.RuleState;
+import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -56,8 +60,8 @@ public class DBAdapter {
 
   public Map<Long, Integer> getAccessCount(long startTime, long endTime,
       String countFilter) {
-    String sqlGetTableNames = "SELECT table_name FROM access_count_tables " +
-        "WHERE start_time >= " + startTime + " AND end_time <= " + endTime;
+    String sqlGetTableNames = "SELECT table_name FROM access_count_tables "
+        + "WHERE start_time >= " + startTime + " AND end_time <= " + endTime;
     try {
       ResultSet rsTableNames = executeQuery(sqlGetTableNames);
       List<String> tableNames = new LinkedList<>();
@@ -124,15 +128,21 @@ public class DBAdapter {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < files.length; i++) {
-        String sql = "INSERT INTO 'files' VALUES('" + files[i].getPath() +
-            "','" + files[i].getFileId() + "','" + files[i].getLen() + "','" +
-            files[i].getReplication() + "','" + files[i].getBlockSize() + "','" +
-            files[i].getModificationTime() + "','" + files[i].getAccessTime() +
-            "','" + booleanToInt(files[i].isDir()) + "','" + files[i].getStoragePolicy() +
-            "','" + getKey(mapOwnerIdName, files[i].getOwner()) + "','" +
-            getKey(mapGroupIdName, files[i].getGroup()) + "','" +
-            files[i].getPermission().toShort() + "','" +
-            getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
+        String sql = "INSERT INTO `files` (path, fid, length, "
+            + "block_replication,"
+            + " block_size, modification_time, access_time, is_dir, sid, oid, "
+            + "gid, permission, ec_policy_id ) "
+            + "VALUES ('" + files[i].getPath()
+            + "','" + files[i].getFileId() + "','" + files[i].getLen() + "','"
+            + files[i].getReplication() + "','" + files[i].getBlockSize()
+            + "','" + files[i].getModificationTime() + "','"
+            + files[i].getAccessTime()
+            + "','" + booleanToInt(files[i].isDir()) + "','"
+            + files[i].getStoragePolicy() + "','"
+            + getKey(mapOwnerIdName, files[i].getOwner()) + "','"
+            + getKey(mapGroupIdName, files[i].getGroup()) + "','"
+            + files[i].getPermission().toShort() + "','"
+            + getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
         s.addBatch(sql);
       }
       s.executeBatch();
@@ -141,7 +151,7 @@ public class DBAdapter {
     }
   }
 
-  public int booleanToInt(boolean b) {
+  private int booleanToInt(boolean b) {
     if (b) {
       return 1;
     } else {
@@ -149,7 +159,7 @@ public class DBAdapter {
     }
   }
 
-  public Integer getKey(Map<Integer, String> map, String value) {
+  private Integer getKey(Map<Integer, String> map, String value) {
     for (Integer key: map.keySet()) {
       if (map.get(key).equals(value)) {
         return key;
@@ -157,7 +167,9 @@ public class DBAdapter {
     }
     return null;
   }
-  public Integer getKey(Map<Integer, ErasureCodingPolicy> map, ErasureCodingPolicy value) {
+
+  private Integer getKey(Map<Integer, ErasureCodingPolicy> map,
+      ErasureCodingPolicy value) {
     for (Integer key : map.keySet()) {
       if (map.get(key).equals(value)) {
         return key;
@@ -225,15 +237,50 @@ public class DBAdapter {
 
   public ErasureCodingPolicy getErasureCodingPolicy(int id) {
     updateCache();
-    return mapECPolicy.get(id) != null ? mapECPolicy.get(id) : null;
+    return mapECPolicy.get(id);
+  }
+
+  public synchronized void insertStoragesTable(StorageCapacity[] storages) {
+    try {
+      Statement s = conn.createStatement();
+      for (int i = 0; i < storages.length; i++) {
+        String sql = "INSERT INTO `storages` (type, capacity, free) VALUES"
+            + " ('" + storages[i].getType()
+            + "','" + storages[i].getCapacity() + "','"
+            + storages[i].getFree() + "')";
+        s.addBatch(sql);
+      }
+      s.executeBatch();
+      mapStorageCapacity = null;
+    }catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
   public StorageCapacity getStorageCapacity(String type) {
     updateCache();
-    return mapStorageCapacity.get(type) != null ?
-        mapStorageCapacity.get(type) : null;
+    return mapStorageCapacity.get(type);
   }
 
+  public synchronized boolean updateStoragesTable(String type,
+      Long capacity, Long free) {
+    String sql = null;
+    String sqlPrefix = "UPDATE storages SET";
+    String sqlCapacity = (capacity != null) ? ", capacity = '"
+        + capacity + "'" : null;
+    String sqlFree = (free != null) ? ", free = '" + free + "' " : null;
+    String sqlSuffix = "WHERE type = '" + type + "';";
+    if (capacity != null || free != null) {
+      sql = sqlPrefix + sqlCapacity + sqlFree + sqlSuffix;
+      sql = sql.replaceFirst(",", "");
+    }
+    try {
+      mapStorageCapacity = null;
+      return executeUpdate(sql) == 1;
+    } catch (SQLException e) {
+      return false;
+    }
+  }
   /**
    * Convert query result into HdfsFileStatus list.
    * Note: Some of the info in HdfsFileStatus are not the same
@@ -303,7 +350,6 @@ public class DBAdapter {
         String sql = "SELECT * FROM ecpolicys";
         mapECPolicy = convertEcPoliciesTableItem(executeQuery(sql));
       }
-
       if (mapStorageCapacity == null) {
         String sql = "SELECT * FROM storages";
         mapStorageCapacity = convertStorageTablesItem(executeQuery(sql));
@@ -344,7 +390,8 @@ public class DBAdapter {
     return ret;
   }
 
-  private Map<String, StorageCapacity> convertStorageTablesItem(ResultSet resultSet) {
+  private Map<String, StorageCapacity> convertStorageTablesItem(
+      ResultSet resultSet) {
     Map<String, StorageCapacity> map = new HashMap<>();
     if (resultSet == null) {
       return map;
@@ -380,16 +427,55 @@ public class DBAdapter {
     return ret;
   }
 
-
   public synchronized void insertCachedFiles(long fid, long fromTime,
       long lastAccessTime, int numAccessed) {
+    try {
+      String sql = "INSERT INTO cached_files (fid, from_time, "
+          + "last_access_time, num_accessed) VALUES (" + fid + ","
+          + fromTime + "," + lastAccessTime + ","
+          + numAccessed + ")";
+      executeUpdate(sql);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
   public synchronized void insertCachedFiles(List<CachedFileStatus> s) {
+    try {
+      Statement st = conn.createStatement();
+      for (CachedFileStatus c : s) {
+        String sql = "INSERT INTO cached_files (fid, from_time, "
+            + "last_access_time, num_accessed) VALUES (" + c.getFid() + ","
+            + c.getFromTime() + "," + c.getLastAccessTime() + ","
+            + c.getNumAccessed() + ")";
+        st.addBatch(sql);
+      }
+      st.executeBatch();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
-  public synchronized void updateCachedFiles(long fid,
-      long lastAccessTime, int numAccessed) {
+  public synchronized boolean updateCachedFiles(Long fid, Long fromTime,
+      Long lastAccessTime, Integer numAccessed) {
+    StringBuffer sb = new StringBuffer("UPDATE cached_files SET");
+    if (fromTime != null) {
+      sb.append(" from_time = ").append(fid).append(",");
+    }
+    if (lastAccessTime != null) {
+      sb.append(" last_access_time = ").append(lastAccessTime).append(",");
+    }
+    if (numAccessed != null) {
+      sb.append(" num_accessed = ").append(numAccessed).append(",");
+    }
+    int idx = sb.lastIndexOf(",");
+    sb.replace(idx, idx + 1, "");
+    sb.append(" WHERE fid = ").append(fid).append(";");
+    try {
+      return executeUpdate(sb.toString()) == 1;
+    } catch (SQLException e) {
+      return false;
+    }
   }
 
   public List<CachedFileStatus> getCachedFileStatus() {
@@ -401,6 +487,24 @@ public class DBAdapter {
     String sql = "SELECT * FROM cached_files WHERE fid = " + fid;
     List<CachedFileStatus> s = getCachedFileStatus(sql);
     return s != null ? s.get(0) : null;
+  }
+
+  public void createProportionView(AccessCountTable dest, AccessCountTable source)
+      throws SQLException {
+    double percentage =
+        ((double) dest.getEndTime() - dest.getStartTime())
+            / (source.getEndTime() - source.getStartTime());
+    String sql =
+        String.format(
+            "CREATE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
+            dest.getTableName(),
+            AccessCountTable.FILE_FIELD,
+            source.getTableName(),
+            AccessCountTable.ACCESSCOUNT_FIELD,
+            percentage,
+            AccessCountTable.ACCESSCOUNT_FIELD,
+            source.getTableName());
+    this.execute(sql);
   }
 
   private List<CachedFileStatus> getCachedFileStatus(String sql) {
@@ -434,19 +538,24 @@ public class DBAdapter {
 
   public ResultSet executeQuery(String sqlQuery) throws SQLException {
     Statement s = conn.createStatement();
-    ResultSet result = s.executeQuery(sqlQuery);
-    return result;
+    return s.executeQuery(sqlQuery);
   }
 
   public int executeUpdate(String sqlUpdate) throws SQLException {
     Statement s = conn.createStatement();
-    int result = s.executeUpdate(sqlUpdate);
-    return result;
+    return s.executeUpdate(sqlUpdate);
   }
 
   public void execute(String sql) throws SQLException {
     Statement s = conn.createStatement();
     s.executeUpdate(sql);
+  }
+
+  //Todo: optimize
+  public void execute(List<String> statements) throws SQLException {
+    for (String statement : statements) {
+      this.execute(statement);
+    }
   }
 
   public List<String> executeFilesPathQuery(String sql) throws SQLException {
@@ -479,8 +588,8 @@ public class DBAdapter {
         + info.getState().getValue()
         + ", '" + info.getRuleText() + "'" // TODO: take care of '
         + ", " + info.getSubmitTime()
-        + ", " + info.getCountConditionChecked()
-        + ", " + info.getCountConditionFulfilled()
+        + ", " + info.getNumChecked()
+        + ", " + info.getNumCmdsGen()
         + (info.getLastCheckTime() == 0 ? "" : ", " + info.getLastCheckTime())
         +");";
 
@@ -561,10 +670,10 @@ public class DBAdapter {
     try {
       Statement s = conn.createStatement();
       for (int i = 0; i < commands.length; i++) {
-        String sql = "INSERT INTO commands(rid, action_id, state, "
+        String sql = "INSERT INTO commands (rid, action_id, state, "
             + "parameters, generate_time, state_changed_time) "
             + "VALUES('" + commands[i].getRid() + "', '"
-            + commands[i].getActionId().getValue() + "', '"
+            + commands[i].getActionType().getValue() + "', '"
             + commands[i].getState().getValue() + "', '"
             + commands[i].getParameters() + "', '"
             + commands[i].getGenerateTime() + "', '"
@@ -582,7 +691,7 @@ public class DBAdapter {
     String sqlPrefix = "SELECT * FROM commands WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
-    String sqlState = (state == null) ? "" : "AND state = " + state;
+    String sqlState = (state == null) ? "" : "AND state = " + state.getValue();
     String sqlFinal = "";
     if (cidCondition != null || ridCondition != null || state != null) {
       sqlFinal = sqlPrefix + sqlCid + sqlRid + sqlState;
@@ -610,6 +719,44 @@ public class DBAdapter {
     return ret;
   }
 
+  public boolean updateCommandStatus(long cid, long rid, CommandState state) {
+    StringBuffer sb = new StringBuffer("UPDATE commands SET");
+    if (state != null) {
+      sb.append(" state = ").append(state.getValue()).append(",");
+      sb.append(" state_changed_time = ").append(System.currentTimeMillis()).append(",");
+    }
+    int idx = sb.lastIndexOf(",");
+    sb.replace(idx, idx + 1, "");
+    sb.append(" WHERE cid = ").append(cid).append(" AND ").append("rid = ").append(rid).append(";");
+    try {
+      return executeUpdate(sb.toString()) == 1;
+    } catch (SQLException e) {
+      return false;
+    }
+  }
+
+  // TODO multiple CommandStatus update
+//  public boolean updateCommandsStatus(Map<Long, CommandState> cmdMap) {
+//    try {
+//      Statement s = conn.createStatement();
+//      for(Map.Entry<Long, CommandState> entry: cmdMap.entrySet()) {
+//        StringBuffer sb = new StringBuffer("UPDATE commands SET");
+//        if (entry.getValue() != null) {
+//          sb.append(" state = ").append(entry.getValue().getValue()).append(",");
+//          sb.append(" state_changed_time = ").append(System.currentTimeMillis()).append(",");
+//        }
+//        int idx = sb.lastIndexOf(",");
+//        sb.replace(idx, idx + 1, "");
+//        sb.append(" WHERE cid = ").append(entry.getKey()).append(";");
+//        s.addBatch(sb.toString());
+//      }
+//      s.executeBatch();
+//    } catch (SQLException e) {
+//      e.printStackTrace();
+//    }
+//    return true;
+//  }
+
   private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
     List<CommandInfo> ret = new LinkedList<>();
     if (resultSet == null) {
@@ -631,13 +778,85 @@ public class DBAdapter {
     } catch (SQLException e) {
       return null;
     }
-    if (resultSet != null) {
-      try {
-        resultSet.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
+    try {
+      resultSet.close();
+    } catch (SQLException e) {
+      e.printStackTrace();
     }
     return ret;
+  }
+
+  public synchronized void insertStoragePolicyTable(StoragePolicy s) {
+  String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
+      + s.getSid() + "','" + s.getPolicyName() + "');";
+    try {
+      execute(sql);
+      mapStoragePolicyIdName = null;
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public String getStoragePolicyName(int sid) {
+    updateCache();
+    return mapStoragePolicyIdName.get(sid);
+  }
+
+  public Integer getStoragePolicyID(String policyName) {
+    updateCache();
+    return getKey(mapStoragePolicyIdName, policyName);
+  }
+
+  public synchronized boolean insertXattrTable(Long fid, Map<String, byte[]> map) {
+    String sql = "INSERT INTO xattr (fid, namespace, name, value) "
+        + "VALUES (?, ?, ?, ?)";
+    PreparedStatement p = null;
+    try {
+      conn.setAutoCommit(false);
+      p = conn.prepareStatement(sql);
+      for (Map.Entry<String, byte[]> e : map.entrySet()) {
+        XAttr xa = XAttrHelper.buildXAttr(e.getKey(), e.getValue());
+        p.setLong(1, fid);
+        p.setString(2, String.valueOf(xa.getNameSpace()));
+        p.setString(3, xa.getName());
+        p.setBytes(4, xa.getValue());
+        p.addBatch();
+      }
+      int[] i = p.executeBatch();
+      p.close();
+      conn.commit();
+      conn.setAutoCommit(true);
+      if (i.length == map.size()) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (SQLException e) {
+      return false;
+    }
+  }
+
+  public Map<String, byte[]> getXattrTable(Long fid) {
+    String sql =
+        String.format("SELECT * FROM xattr WHERE fid = %s;", fid);
+    return getXattrTable(sql);
+  }
+
+  private Map<String, byte[]> getXattrTable(String sql) {
+    ResultSet rs;
+    List<XAttr> list = new LinkedList<>();
+    try {
+      rs = executeQuery(sql);
+      while(rs.next()) {
+        XAttr xAttr = new XAttr.Builder().setNameSpace(
+            XAttr.NameSpace.valueOf(rs.getString("namespace")))
+            .setName(rs.getString("name"))
+            .setValue(rs.getBytes("value")).build();
+        list.add(xAttr);
+      }
+      return XAttrHelper.buildXAttrMap(list);
+    } catch (SQLException e) {
+      return null;
+    }
   }
 }

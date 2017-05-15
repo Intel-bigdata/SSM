@@ -1,0 +1,24 @@
+language: java
+sudo: required
+before_install:
+  - wget https://archive.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.zip
+  - unzip -qq apache-maven-3.5.0-bin.zip
+  - export M2_HOME=$PWD/apache-maven-3.5.0
+  - export PATH=$M2_HOME/bin:$PATH
+
+  - wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz
+  - tar -xzvf protobuf-2.5.0.tar.gz > tmp.log
+  - pushd protobuf-2.5.0 && ./configure --prefix=/usr && make && sudo make install && popd
+
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+jdk:
+  - oraclejdk8
+cache:
+  directories:
+    - "$HOME/.m2"
+script:
+    cd hadoop-ssm-project;
+    mvn test

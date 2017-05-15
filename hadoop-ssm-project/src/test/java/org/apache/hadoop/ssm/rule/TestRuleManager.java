@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm.rule;
 
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.apache.hadoop.ssm.sql.FileStatusInternal;
 import org.apache.hadoop.ssm.sql.TestDBUtil;
 import org.apache.hadoop.ssm.sql.Util;
 import org.junit.Assert;
@@ -28,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Testing RuleManager service.
@@ -65,8 +67,8 @@ public class TestRuleManager {
       System.out.println(info);
     }
 
-    Assert.assertTrue(info.getCountConditionChecked()
-        - ruleInfo.getCountConditionChecked() > 3);
+    Assert.assertTrue(info.getNumChecked()
+        - ruleInfo.getNumChecked() > 3);
   }
 
   @Test
@@ -92,8 +94,8 @@ public class TestRuleManager {
       System.out.println(info);
     }
 
-    Assert.assertTrue(info.getCountConditionChecked()
-        - ruleInfo.getCountConditionChecked() == 0);
+    Assert.assertTrue(info.getNumChecked()
+        - ruleInfo.getNumChecked() == 0);
   }
 
   @Test
@@ -112,8 +114,8 @@ public class TestRuleManager {
     }
 
     Assert.assertTrue(info.getState() == RuleState.FINISHED);
-    Assert.assertTrue(info.getCountConditionChecked()
-        - ruleInfo.getCountConditionChecked() <= 3);
+    Assert.assertTrue(info.getNumChecked()
+        - ruleInfo.getNumChecked() <= 3);
   }
 
   @Test
@@ -138,8 +140,8 @@ public class TestRuleManager {
     System.out.println(endInfo);
 
     Assert.assertTrue(endInfo.getState() == RuleState.DELETED);
-    Assert.assertTrue(endInfo.getCountConditionChecked()
-        - info.getCountConditionChecked() <= 1);
+    Assert.assertTrue(endInfo.getNumChecked()
+        - info.getNumChecked() <= 1);
   }
 
   @Test
@@ -156,8 +158,8 @@ public class TestRuleManager {
       info = ruleManager.getRuleInfo(id);
       System.out.println(info);
     }
-    Assert.assertTrue(info.getCountConditionChecked()
-        > ruleInfo.getCountConditionChecked());
+    Assert.assertTrue(info.getNumChecked()
+        > ruleInfo.getNumChecked());
 
     ruleManager.DisableRule(ruleInfo.getId(), true);
     Thread.sleep(1000);
@@ -167,8 +169,8 @@ public class TestRuleManager {
       info = ruleManager.getRuleInfo(id);
       System.out.println(info);
     }
-    Assert.assertTrue(info.getCountConditionChecked()
-        == info2.getCountConditionChecked());
+    Assert.assertTrue(info.getNumChecked()
+        == info2.getNumChecked());
 
     RuleInfo info3 = info;
     ruleManager.ActivateRule(ruleInfo.getId());
@@ -177,8 +179,8 @@ public class TestRuleManager {
       info = ruleManager.getRuleInfo(id);
       System.out.println(info);
     }
-    Assert.assertTrue(info.getCountConditionChecked()
-        > info3.getCountConditionChecked());
+    Assert.assertTrue(info.getNumChecked()
+        > info3.getNumChecked());
   }
 
   @Test
@@ -213,10 +215,150 @@ public class TestRuleManager {
     }
 
     System.out.println("\nFinal state:");
-    List<RuleInfo> allRules = ruleManager.getRuleInfo();
+    List<RuleInfo> allRules = ruleManager.listRulesInfo();
     Assert.assertTrue(allRules.size() == 2 * nRules);
     for (RuleInfo info : allRules) {
       System.out.println(info);
+    }
+  }
+
+  @Test
+  public void testMultiThreadUpdate() throws Exception {
+    String rule = "file: every 1s \n | length > 10 | cachefile";
+
+    long now = System.currentTimeMillis();
+
+    long rid = ruleManager.submitRule(rule, RuleState.DISABLED);
+    ruleManager.updateRuleInfo(rid, null, now, 1, 1);
+
+    long start = System.currentTimeMillis();
+
+    Thread[] threads = new Thread[] {
+        new Thread(new RuleInfoUpdater(rid, 3)),
+        new Thread(new RuleInfoUpdater(rid, 7)),
+        new Thread(new RuleInfoUpdater(rid, 11)),
+        new Thread(new RuleInfoUpdater(rid, 17))} ;
+
+    for (Thread t : threads) {
+      t.start();
+    }
+
+    for (Thread t : threads) {
+      t.join();
+    }
+
+    long end = System.currentTimeMillis();
+    System.out.println("Time used = " + (end - start) + " ms");
+
+    RuleInfo res = ruleManager.getRuleInfo(rid);
+    System.out.println(res);
+  }
+
+  private class RuleInfoUpdater implements Runnable {
+    private long ruleid;
+    private int index;
+
+    public RuleInfoUpdater(long ruleid, int index) {
+      this.ruleid = ruleid;
+      this.index = index;
+    }
+
+    @Override
+    public void run() {
+      long lastCheckTime;
+      long checkedCount;
+      int commandsGen;
+      try {
+        for (int i = 0; i < 1000; i++) {
+          RuleInfo info = ruleManager.getRuleInfo(ruleid);
+          lastCheckTime = System.currentTimeMillis();
+          checkedCount = info.getNumChecked();
+          commandsGen = (int)info.getNumCmdsGen();
+          //System.out.println("" + index + ": " + lastCheckTime + " "
+          // + checkedCount + " " + commandsGen);
+          Assert.assertTrue(checkedCount == commandsGen);
+          ruleManager.updateRuleInfo(ruleid, null,
+              lastCheckTime, index, index);
+        }
+      } catch (Exception e) {
+        Assert.fail("Can not have exception here.");
+      }
+    }
+  }
+
+  @Test
+  public void testMultiThreadChangeState() throws Exception {
+    String rule = "file: every 1s \n | length > 10 | cachefile";
+
+    long now = System.currentTimeMillis();
+
+    long length = 100;
+    long fid = 10000;
+    FileStatusInternal[] files = { new FileStatusInternal(length, false, 3,
+        1024, now, now, null, null, null, null,
+        "testfile".getBytes(), "/tmp", fid, 0, null, (byte)3, null) };
+
+    dbAdapter.insertFiles(files);
+    long rid = ruleManager.submitRule(rule, RuleState.ACTIVE);
+
+    long start = System.currentTimeMillis();
+
+    int nThreads = 10;
+    Thread[] threads = new Thread[nThreads];
+    for (int i = 0; i< nThreads; i++) {
+      threads[i] = new Thread(new StateChangeWorker(rid));
+    }
+
+    for (Thread t : threads) {
+      t.start();
+    }
+
+    for (Thread t : threads) {
+      t.join();
+    }
+
+    long end = System.currentTimeMillis();
+    System.out.println("Time used = " + (end - start) + " ms");
+    Thread.sleep(1000); // This is needed due to async threads
+
+    RuleInfo res = ruleManager.getRuleInfo(rid);
+    System.out.println(res);
+    Thread.sleep(5000);
+    RuleInfo after = ruleManager.getRuleInfo(rid);
+    System.out.println(after);
+    if (res.getState() == RuleState.ACTIVE) {
+      Assert.assertTrue(after.getNumCmdsGen() - res.getNumCmdsGen() <= 6);
+    } else {
+      Assert.assertTrue(after.getNumCmdsGen() == res.getNumCmdsGen());
+    }
+  }
+
+  private class StateChangeWorker implements Runnable {
+    private long ruleId;
+
+    public StateChangeWorker(long ruleId) {
+      this.ruleId = ruleId;
+    }
+
+    @Override
+    public void run() {
+      Random r = new Random();
+      try {
+        for (int i = 0; i < 1000; i++) {
+          int rand = r.nextInt() % 2;
+          //System.out.println(rand == 0 ? "Active" : "Disable");
+          switch (rand) {
+            case 0:
+              ruleManager.ActivateRule(ruleId);
+              break;
+            case 1:
+              ruleManager.DisableRule(ruleId, true);
+              break;
+          }
+        }
+      } catch (Exception e) {
+        Assert.fail("Should not happen!");
+      }
     }
   }
 }

@@ -1,9 +1,8 @@
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.*;
-import org.apache.hadoop.ssm.actions.MoveToCache;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,7 +19,7 @@ public class MoveToCacheTest {
     private static final String REPLICATION_KEY = "3";
 
     @Test
-    public void testMkdir()throws IOException {
+    public void testMkdir() throws IOException {
 
         Configuration conf = new Configuration();
         conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);

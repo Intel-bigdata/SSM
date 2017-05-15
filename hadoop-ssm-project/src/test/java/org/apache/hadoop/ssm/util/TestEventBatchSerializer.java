@@ -34,28 +34,41 @@ public class TestEventBatchSerializer {
   @Test
   public void testSerializer() throws InvalidProtocolBufferException {
     Event close = new Event.CloseEvent("/user1", 1024, 0);
-    Event create = new Event.CreateEvent.Builder().iNodeType(Event.CreateEvent.INodeType.FILE)
-      .ctime(1).defaultBlockSize(1024).groupName("cg1").overwrite(true)
-      .ownerName("user1").path("/file1").perms(new FsPermission("777"))
-      .replication(3).build();
-    Event meta = new Event.MetadataUpdateEvent.Builder().path("/file2")
-      .metadataType(Event.MetadataUpdateEvent.MetadataType.OWNER)
-      .mtime(2).atime(3).replication(4).ownerName("user2")
-      .groupName("cg2").build();
-    Event rename = new Event.RenameEvent.Builder().dstPath("/file4")
-      .srcPath("/file3").timestamp(5).build();
+    Event create =
+        new Event.CreateEvent.Builder()
+            .iNodeType(Event.CreateEvent.INodeType.FILE)
+            .ctime(1)
+            .defaultBlockSize(1024)
+            .groupName("cg1")
+            .overwrite(true)
+            .ownerName("user1")
+            .path("/file1")
+            .perms(new FsPermission("777"))
+            .replication(3)
+            .build();
+    Event meta =
+        new Event.MetadataUpdateEvent.Builder()
+            .path("/file2")
+            .metadataType(Event.MetadataUpdateEvent.MetadataType.OWNER)
+            .mtime(2)
+            .atime(3)
+            .replication(4)
+            .ownerName("user2")
+            .groupName("cg2")
+            .build();
+    Event rename =
+        new Event.RenameEvent.Builder().dstPath("/file4").srcPath("/file3").timestamp(5).build();
     Event append = new Event.AppendEvent.Builder().newBlock(true).path("/file5").build();
     Event unlink = new Event.UnlinkEvent.Builder().path("/file6").timestamp(6).build();
     Event truncate = new Event.TruncateEvent("/file7", 1024, 16);
     List<Event> events = Arrays.asList(close, create, meta, rename, append, unlink, truncate);
     EventBatch batch = new EventBatch(1023, events.toArray(new Event[0]));
-    List<String> expected = events.stream().map(Object::toString)
-        .collect(Collectors.toList());
+    List<String> expected = events.stream().map(Object::toString).collect(Collectors.toList());
 
     byte[] bytes = EventBatchSerializer.serialize(batch);
     EventBatch result = EventBatchSerializer.deserialize(bytes);
-    List<String> actual = Arrays.stream(result.getEvents()).map(Object::toString)
-      .collect(Collectors.toList());
+    List<String> actual =
+        Arrays.stream(result.getEvents()).map(Object::toString).collect(Collectors.toList());
     Assert.assertEquals(batch.getTxid(), result.getTxid());
     Assert.assertEquals(expected.size(), actual.size());
     Assert.assertTrue(expected.containsAll(actual));

@@ -22,34 +22,69 @@ option java_outer_classname = "ClientSSMProto";
 option java_generic_services = true;
 option java_generate_equals_and_hash = true;
 
-message StatusParaProto {
-}
-message StatusResultProto {
-  required string SSMServiceState = 1;
+message GetServiceStateRequestProto {
 }
 
-message RuleInfoParaProto {
-  required sint64 para = 1;
+message GetServiceStateResponseProto {
+  required int32 state = 1;
 }
-message RuleInfoResultTypeProto {
-  required sint64 id = 1;
-  required sint64 submitTime = 2;
-  required sint64 countConditionChecked = 3;
-  required sint64 countConditionFulfilled = 4;
-  required string ruleText = 5;
-  required RuleStateProto rulestateProto = 6;
-  enum RuleStateProto {
+
+enum RuleStateProto {
     ACTIVE = 0x0;
     DRYRUN = 0x1;
     DISABLED = 0x2;
     FINISHED = 0x3;
-  }
-}
-message RuleInfoResultProto {
-  required RuleInfoResultTypeProto result = 1;
+    DELETED = 0x4;
 }
 
+message RuleInfoProto {
+  required sint64 id = 1;
+  required sint64 submitTime = 2;
+  required sint64 lastCheckTime = 3;
+  required sint64 numChecked = 4;
+  required sint64 numCmdsGen = 5;
+  required string ruleText = 6;
+  required RuleStateProto rulestateProto = 7;
+}
+
+message GetRuleInfoRequestProto {
+  required sint64 ruleId = 1;
+}
+
+message GetRuleInfoResponseProto {
+  required RuleInfoProto result = 1;
+}
+
+message SubmitRuleRequestProto {
+  required string rule = 1;
+  required RuleStateProto initState = 2;
+}
+
+message SubmitRuleResponseProto {
+  required int64 ruleId = 1;
+}
+
+message CheckRuleRequestProto {
+  required string rule = 1;
+}
+
+message CheckRuleResponseProto {
+}
+
+message ListRulesInfoRequestProto {
+}
+
+message ListRulesInfoResponseProto {
+  repeated RuleInfoProto rulesInfo = 1;
+}
+
+
 service protoService {
-  rpc getServiceStatus (StatusParaProto) returns (StatusResultProto);
-  rpc getRuleInfo (RuleInfoParaProto) returns (RuleInfoResultProto);
+  rpc getServiceState (GetServiceStateRequestProto)
+      returns (GetServiceStateResponseProto);
+  rpc submitRule(SubmitRuleRequestProto) returns (SubmitRuleResponseProto);
+  rpc checkRule(CheckRuleRequestProto) returns (CheckRuleResponseProto);
+  rpc getRuleInfo(GetRuleInfoRequestProto) returns (GetRuleInfoResponseProto);
+  rpc listRulesInfo(ListRulesInfoRequestProto)
+      returns (ListRulesInfoResponseProto);
 }

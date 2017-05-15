@@ -39,6 +39,7 @@ import java.util.List;
 public class RuleStringParser {
   private String rule;
   private ParseTree tree = null;
+  private TranslationContext ctx = null;
 
   List<RecognitionException> parseErrors = new ArrayList<RecognitionException>();
   String parserErrorMessage = "";
@@ -58,8 +59,9 @@ public class RuleStringParser {
     }
   }
 
-  public RuleStringParser(String rule) {
+  public RuleStringParser(String rule, TranslationContext ctx) {
     this.rule = rule;
+    this.ctx = ctx;
   }
 
   public TranslateResult translate() throws IOException {
@@ -78,7 +80,7 @@ public class RuleStringParser {
       throw new IOException(parserErrorMessage);
     }
 
-    SSMRuleVisitTranslator visitor = new SSMRuleVisitTranslator();
+    SSMRuleVisitTranslator visitor = new SSMRuleVisitTranslator(ctx);
     try {
       visitor.visit(tree);
     } catch (RuntimeException e) {

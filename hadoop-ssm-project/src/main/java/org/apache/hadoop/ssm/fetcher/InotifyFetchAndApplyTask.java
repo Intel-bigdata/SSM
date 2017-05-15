@@ -23,6 +23,7 @@ import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class InotifyFetchAndApplyTask implements Runnable {
@@ -33,7 +34,7 @@ public class InotifyFetchAndApplyTask implements Runnable {
   public InotifyFetchAndApplyTask(DFSClient client, InotifyEventApplier applier, long startId)
       throws IOException {
     this.applier = applier;
-    this.lastId = new AtomicLong(-1);
+    this.lastId = new AtomicLong(startId);
     this.inotifyEventInputStream = client.getInotifyEventStream(startId);
   }
 
@@ -46,7 +47,7 @@ public class InotifyFetchAndApplyTask implements Runnable {
         this.lastId.getAndSet(eventBatch.getTxid());
         eventBatch = inotifyEventInputStream.poll();
       }
-    } catch (IOException | MissingEventsException e) {
+    } catch (IOException | MissingEventsException | SQLException e) {
       e.printStackTrace();
     }
   }

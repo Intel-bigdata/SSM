@@ -22,10 +22,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceState;
-import org.apache.hadoop.ssm.protocol.SSMServiceStates;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB;
 import org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolServerSideTranslatorPB;
 import org.apache.hadoop.ssm.rule.RuleInfo;
@@ -33,6 +33,7 @@ import org.apache.hadoop.ssm.rule.RuleState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * Implements the rpc calls.
@@ -49,7 +50,7 @@ public class SSMRpcServer implements ClientSSMProtocol {
     this.ssm = ssm;
     this.conf = conf;
     // TODO: implement ssm ClientSSMProtocol
-    InetSocketAddress rpcAddr = ssm.getRpcServerAddress(conf);
+    InetSocketAddress rpcAddr = getRpcServerAddress();
     RPC.setProtocolEngine(conf, ClientSSMProtocolPB.class, ProtobufRpcEngine.class);
 
     ClientSSMProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
@@ -75,6 +76,12 @@ public class SSMRpcServer implements ClientSSMProtocol {
         clientSSMPbService, clientRpcServer);
   }
 
+  private InetSocketAddress getRpcServerAddress() {
+    String[] strings = conf.get(SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY,
+        SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
+    return new InetSocketAddress(strings[strings.length - 2]
+        , Integer.parseInt(strings[strings.length - 1]));
+  }
 
   /**
    * Start SSM RPC service
@@ -105,21 +112,37 @@ public class SSMRpcServer implements ClientSSMProtocol {
   }
 
   @Override
-  public SSMServiceStates getServiceStatus() {
-    SSMServiceStates ssmServiceStates
-        = new SSMServiceStates(SSMServiceState.SAFEMODE);
-    return ssmServiceStates;
+  public SSMServiceState getServiceState() {
+    return ssm.getSSMServiceState();
+  }
+
+  private void checkIfActive() throws IOException {
+    if (!ssm.isActive()) {
+      throw new RetriableException("SSM services not ready...");
+    }
   }
 
   @Override
-  public RuleInfo getRuleInfo(long id) {
-    RuleInfo.Builder builder = RuleInfo.newBuilder();
-    builder.setId(id)
-        .setSubmitTime(6)
-        .setRuleText("ruleTest")
-        .setCountConditionChecked(7)
-        .setCountConditionFulfilled(8)
-        .setState(RuleState.ACTIVE);
-    return builder.build();
+  public long submitRule(String rule, RuleState initState) throws IOException {
+    checkIfActive();
+    return ssm.getRuleManager().submitRule(rule, initState);
+  }
+
+  @Override
+  public void checkRule(String rule) throws IOException {
+    checkIfActive();
+    ssm.getRuleManager().checkRule(rule);
+  }
+
+  @Override
+  public RuleInfo getRuleInfo(long ruleId) throws IOException {
+    checkIfActive();
+    return ssm.getRuleManager().getRuleInfo(ruleId);
+  }
+
+  @Override
+  public List<RuleInfo> listRulesInfo() throws IOException {
+    checkIfActive();
+    return ssm.getRuleManager().listRulesInfo();
   }
 }

@@ -34,7 +34,6 @@ public class AccessCountTableAggregator {
       List<AccessCountTable> tablesToAggregate) throws SQLException {
     if (tablesToAggregate.size() > 0) {
       String aggregateSQ = this.aggregateSQLStatement(destinationTable, tablesToAggregate);
-      System.out.println(aggregateSQ);
       this.adapter.executeQuery(aggregateSQ);
     }
   }
@@ -42,7 +41,7 @@ public class AccessCountTableAggregator {
   protected String aggregateSQLStatement(AccessCountTable destinationTable,
       List<AccessCountTable> tablesToAggregate) {
     StringBuilder statement = new StringBuilder();
-    statement.append("CREATE TABLE " + destinationTable.getTableName() + " as ");
+    statement.append("CREATE TABLE '" + destinationTable.getTableName() + "' as ");
     statement.append("SELECT " + AccessCountTable.FILE_FIELD + ", SUM(" +
         AccessCountTable.ACCESSCOUNT_FIELD + ") as " +
         AccessCountTable.ACCESSCOUNT_FIELD + " FROM (");

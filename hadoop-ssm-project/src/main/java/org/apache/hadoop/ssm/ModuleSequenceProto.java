@@ -15,44 +15,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.protocol;
+package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.ssm.rule.RuleInfo;
-import org.apache.hadoop.ssm.rule.RuleState;
+import org.apache.hadoop.ssm.sql.DBAdapter;
 
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
 
-/**
- * SSM client can communicate with SSM through this protocol.
- */
-public interface ClientProtocol {
-
-  /**
-   * Submit a rule to SSM.
-   * @param rule rule string
-   * @return unique id for the rule
-   * @throws IOException
-   */
-  long submitRule(String rule, RuleState initState) throws IOException;
+public interface ModuleSequenceProto {
+  enum State {
+    INITING,
+    INITED,
+    STARTING,
+    STARTED,
+    STOPPING,
+    STOPPED,
+    JOINING,
+    JOINED
+  }
 
   /**
-   * List rules in the specified states in SSM.
-   * @param rulesInStates
+   * Init module using info from configuration and database.
+   * @param dbAdapter
    * @return
    * @throws IOException
    */
-  List<RuleInfo> listRules(EnumSet<RuleState> rulesInStates) throws IOException;
+  boolean init(DBAdapter dbAdapter) throws IOException;
 
   /**
-   * Execute command through SSM.
-   * TODO: Command check to avoid security issues.
-   *
-   * @param command
-   * @return unique id of the command,
-   *           can be used to query info about this command.
+   * After start call, all services and public calls should work.
+   * @return
    * @throws IOException
    */
-  long executeCommand(String command) throws IOException;
+  boolean start() throws IOException, InterruptedException;
+
+  /**
+   * After stop call, all states in database will not be changed anymore.
+   * @throws IOException
+   */
+  void stop() throws IOException;
+
+  /**
+   * Stop threads and other cleaning jobs.
+   * @throws IOException
+   */
+  void join() throws IOException;
 }

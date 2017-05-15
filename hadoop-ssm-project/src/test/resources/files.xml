@@ -20,15 +20,15 @@
         <column>access_count</column>
         <row>
             <value>101</value>
-            <value>5</value>
+            <value>1</value>
         </row>
         <row>
             <value>102</value>
-            <value>10</value>
+            <value>2</value>
         </row>
         <row>
             <value>103</value>
-            <value>15</value>
+            <value>3</value>
         </row>
     </table>
 </dataset>

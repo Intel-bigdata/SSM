@@ -17,52 +17,22 @@
  */
 package org.apache.hadoop.hdfs.protocol;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class FilesAccessInfo {
-  private long startTime;  // NN local time for statistic
-  private long endTime;
+  private List<FileAccessEvent> fileAccessEvents;
 
-  private Map<String, Integer> accessCountMap;
-  private List<NNEvent> nnEvents;  // Keep it for now
-
-  public FilesAccessInfo() {}
-
-  public FilesAccessInfo(long startTime, long endTime) {
-    this.startTime = startTime;
-    this.endTime = endTime;
+  public FilesAccessInfo(FileAccessEvent[] events) {
+    this(Arrays.asList(events));
   }
 
-  public long getStartTime() {
-    return startTime;
+  public FilesAccessInfo(List<FileAccessEvent> events) {
+    this.fileAccessEvents = new ArrayList<>(events);
   }
 
-  public long getEndTime() {
-    return endTime;
-  }
-
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
-  }
-
-  public void setEndTime(long endTime) {
-    this.endTime = endTime;
-  }
-
-  public Map<String, Integer> getAccessCountMap() {
-    return accessCountMap;
-  }
-
-  public void setAccessCountMap(Map<String, Integer> accessCountMap) {
-    this.accessCountMap = accessCountMap;
-  }
-
-  public void setNnEvents(List<NNEvent> events) {
-    this.nnEvents = events;
-  }
-
-  public List<NNEvent> getNnEvents() {
-    return nnEvents;
+  public List<FileAccessEvent> getFileAccessEvents() {
+    return fileAccessEvents;
   }
 }

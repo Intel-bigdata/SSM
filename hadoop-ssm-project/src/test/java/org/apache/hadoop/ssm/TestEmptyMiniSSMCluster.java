@@ -19,36 +19,33 @@ package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.ssm.protocol.SSMClient;
-import org.apache.hadoop.ssm.rule.RuleInfo;
-import org.apache.hadoop.ssm.rule.RuleState;
+import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.sql.TestDBUtil;
 import org.apache.hadoop.ssm.sql.Util;
-import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
-public class TestSSMClient {
+public class TestEmptyMiniSSMCluster {
+  protected Configuration conf;
+  protected MiniDFSCluster cluster;
+  protected SSMServer ssm;
 
-  @Test
-  public void test() throws Exception {
-    final Configuration conf = new SSMConfiguration();
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(4).build();
-    // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
-    final DistributedFileSystem dfs = cluster.getFileSystem();
+  @Before
+  public void setUp() throws Exception {
+    conf = new SSMConfiguration();
+    cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(3).build();
 
-    final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
+    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
     conf.set(SSMConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
@@ -60,28 +57,36 @@ public class TestSSMClient {
     conf.set(SSMConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SSMServer
-    SSMServer.createSSM(null, conf);
-    SSMClient ssmClient = new SSMClient(conf);
+    ssm = SSMServer.createSSM(null, conf);
+  }
 
+  public void waitTillSSMExitSafeMode() throws Exception {
+    SSMClient client = new SSMClient(conf);
+    int retry = 5;
     while (true) {
-      //test getServiceStatus
-      String state = ssmClient.getServiceState().getName();
-      if ("ACTIVE".equals(state)) {
-        break;
+      try {
+        SSMServiceState state = client.getServiceState();
+        if (state != SSMServiceState.SAFEMODE) {
+          break;
+        }
+        Thread.sleep(1000);
+      } catch (Exception e) {
+        if (retry <= 0) {
+          throw e;
+        }
+        retry--;
       }
-      Thread.sleep(1000);
+    }
+  }
+
+  @After
+  public void cleanUp() {
+    if (ssm != null) {
+      ssm.shutdown();
     }
 
-    //test single SSM
-    boolean caughtException = false;
-    try {
-      conf.set(SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
-      SSMServer.createSSM(null, conf);
-    } catch (IOException e) {
-      assertEquals("java.io.IOException: Another SSMServer is running",
-          e.toString());
-      caughtException = true;
+    if (cluster != null) {
+      cluster.shutdown();
     }
-    assertTrue(caughtException);
   }
 }

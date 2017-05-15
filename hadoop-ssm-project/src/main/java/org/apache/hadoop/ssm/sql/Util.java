@@ -26,6 +26,20 @@ import java.sql.Statement;
  * Utilities for table operations.
  */
 public class Util {
+  public static final String SQLITE_URL_PREFIX = "jdbc:sqlite:";
+  public static final String MYSQL_URL_PREFIX = "jdbc:mysql:";
+
+  public static Connection createConnection(String url,
+      String userName, String password)
+      throws ClassNotFoundException, SQLException {
+    if (url.startsWith(SQLITE_URL_PREFIX)) {
+      Class.forName("org.sqlite.JDBC");
+    } else if (url.startsWith(MYSQL_URL_PREFIX)) {
+      Class.forName("com.mysql.jdbc.Driver");
+    }
+    Connection conn = DriverManager.getConnection(url, userName, password);
+    return conn;
+  }
 
   public static Connection createConnection(String driver, String url,
       String userName, String password) throws ClassNotFoundException, SQLException {
@@ -36,7 +50,7 @@ public class Util {
 
   public static Connection createSqliteConnection(String dbFilePath)
       throws ClassNotFoundException, SQLException {
-    return createConnection("org.sqlite.JDBC", "jdbc:sqlite:" + dbFilePath,
+    return createConnection("org.sqlite.JDBC", SQLITE_URL_PREFIX + dbFilePath,
         null, null);
   }
 
@@ -52,12 +66,18 @@ public class Util {
         "DROP TABLE IF EXISTS `storage_policy`;",
         "DROP TABLE IF EXISTS `xattr`;",
         "DROP TABLE IF EXISTS `rules`;",
-        "DROP TABLE IF EXISTS `pending_commands`;",
+        "DROP TABLE IF EXISTS `commands`;",
+        "DROP TABLE IF EXISTS `blank_access_count_info`;",  // for special cases
 
         "CREATE TABLE `access_count_tables` (\n" +
             "  `table_name` varchar(255) NOT NULL,\n" +
             "  `start_time` bigint(20) NOT NULL,\n" +
             "  `end_time` bigint(20) NOT NULL\n" +
+            ") ;",
+
+        "CREATE TABLE `blank_access_count_info` (\n" +
+            "  `fid` bigint(20) NOT NULL,\n" +
+            "  `count` bigint(20) NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE `cached_files` (\n" +
@@ -113,11 +133,18 @@ public class Util {
             "  `policy_name` varchar(64) DEFAULT NULL\n" +
             ") ;",
 
+        "INSERT INTO `storage_policy` VALUES ('2', 'COLD');" ,
+        "INSERT INTO `storage_policy` VALUES ('5', 'WARM');" ,
+        "INSERT INTO `storage_policy` VALUES ('7', 'HOT');" ,
+        "INSERT INTO `storage_policy` VALUES ('10', 'ONE_SSD');" ,
+        "INSERT INTO `storage_policy` VALUES ('12', 'ALL_SSD');" ,
+        "INSERT INTO `storage_policy` VALUES ('15', 'LAZY_PERSIST');",
+
         "CREATE TABLE `xattr` (\n" +
             "  `fid` bigint(20) NOT NULL,\n" +
-            "  `namespace` varchar(255) DEFAULT NULL,\n" +
-            "  `name` varchar(255) DEFAULT NULL,\n" +
-            "  `value` varchar(255) DEFAULT NULL\n" +
+            "  `namespace` varchar(255) NOT NULL,\n" +
+            "  `name` varchar(255) NOT NULL,\n" +
+            "  `value` blob NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE `rules` (\n" +

@@ -1,4 +1,4 @@
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -6,7 +6,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.hadoop.ssm.actions.MoveToArchive;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,22 +22,24 @@ public class MoveToArchiveTest {
     conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY,REPLICATION_KEY);
   }
   @Test
-  public void MoveToArchive() throws Exception{
+  public void MoveToArchive() throws Exception {
     final Configuration conf = new HdfsConfiguration();
     initConf(conf);
-    testMoveToArchive(conf);
+    // Move File from SSD to Archive
+    testMoveFileToArchive(conf);
   }
 
-  private void testMoveToArchive(Configuration conf)throws Exception {
+
+  private void testMoveFileToArchive(Configuration conf) throws Exception {
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).storageTypes(new StorageType[] {StorageType.DISK,StorageType.ARCHIVE}).build();
     try {
       cluster.waitActive();
       final DistributedFileSystem dfs = cluster.getFileSystem();
-      final String file = "/testMoveToArchive/file";
-      Path dir = new Path("/testMoveToArchive");
+      final String file = "/testMoveFileToArchive/file";
+      Path dir = new Path("/testMoveFileToArchive");
       final DFSClient client = cluster.getFileSystem().getClient();
       dfs.mkdirs(dir);
-
+      String[] args = {file};
       // write to DISK
       dfs.setStoragePolicy(dir, "HOT");
       final FSDataOutputStream out = dfs.create(new Path(file),true,1024);
@@ -51,16 +52,16 @@ public class MoveToArchiveTest {
       for (StorageType storageType : storageTypes) {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
-      // move to ARCHIVE
-      String[] str = {file};
-      MoveToArchive.getInstance(client, conf).initial(str);
-      MoveToArchive.getInstance(client, conf).execute();
+      // move to Archive, Policy CLOD
+      MoveFile.getInstance(client, conf, "COLD").initial(args);
+      MoveFile.getInstance(client, conf, "COLD").execute();
       // verify after movement
       LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       StorageType[] storageTypes1 = lb1.getStorageTypes();
       for (StorageType storageType : storageTypes1) {
         Assert.assertTrue(StorageType.ARCHIVE == storageType);
       }
+
     } finally {
       cluster.shutdown();
     }

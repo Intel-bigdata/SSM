@@ -34,8 +34,9 @@ public class AccessCountFetcher {
   private ScheduledFuture scheduledFuture;
   private FetchTask fetchTask;
 
-  public AccessCountFetcher(DFSClient client, AccessCountTableManager manager) {
-    this(DEFAULT_INTERVAL, client, manager);
+  public AccessCountFetcher(
+      DFSClient client, AccessCountTableManager manager, ScheduledExecutorService service) {
+    this(DEFAULT_INTERVAL, client, manager, service);
   }
 
   public AccessCountFetcher(Long fetchInterval, DFSClient client,
@@ -74,7 +75,7 @@ public class AccessCountFetcher {
     public void run() {
       try {
         FilesAccessInfo fileAccess = client.getFilesAccessInfo();
-        this.manager.addAccessCountInfo(fileAccess);
+        this.manager.onAccessEventsArrived(fileAccess.getFileAccessEvents());
       } catch (IOException e) {
         e.printStackTrace();
       }

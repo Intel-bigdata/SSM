@@ -19,13 +19,14 @@ package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.ssm.protocol.SSMClient;
-import org.apache.hadoop.ssm.rule.RuleInfo;
 import org.apache.hadoop.ssm.rule.RuleState;
 import org.apache.hadoop.ssm.sql.TestDBUtil;
 import org.apache.hadoop.ssm.sql.Util;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -35,20 +36,19 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
-public class TestSSMClient {
+public class TestSubmitRule {
+  private Configuration conf;
+  private MiniDFSCluster cluster;
+  private SSMServer ssm;
 
-  @Test
-  public void test() throws Exception {
-    final Configuration conf = new SSMConfiguration();
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(4).build();
-    // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
-    final DistributedFileSystem dfs = cluster.getFileSystem();
+  @Before
+  public void setUp() throws Exception {
+    conf = new SSMConfiguration();
+    cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(3).build();
 
-    final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
+    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
     conf.set(SSMConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
@@ -60,28 +60,51 @@ public class TestSSMClient {
     conf.set(SSMConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SSMServer
-    SSMServer.createSSM(null, conf);
-    SSMClient ssmClient = new SSMClient(conf);
+    ssm = SSMServer.createSSM(null, conf);
+  }
 
-    while (true) {
-      //test getServiceStatus
-      String state = ssmClient.getServiceState().getName();
-      if ("ACTIVE".equals(state)) {
-        break;
+  @After
+  public void cleanUp() throws Exception {
+    ssm.stop();
+    if (cluster != null) {
+      cluster.shutdown();
+    }
+  }
+
+  @Test
+  public void testSubmitRule() throws Exception {
+    String rule = "file: every 1s \n | length > 10 | cachefile";
+    SSMClient client = new SSMClient(conf);
+
+    long ruleId = 0l;
+    boolean wait = true;
+    while (wait) {
+      try {
+        ruleId = client.submitRule(rule, RuleState.ACTIVE);
+        wait = false;
+      } catch (IOException e) {
+        if (!e.toString().contains("not ready")) {
+          throw e;
+        }
       }
-      Thread.sleep(1000);
     }
 
-    //test single SSM
-    boolean caughtException = false;
-    try {
-      conf.set(SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
-      SSMServer.createSSM(null, conf);
-    } catch (IOException e) {
-      assertEquals("java.io.IOException: Another SSMServer is running",
-          e.toString());
-      caughtException = true;
+    for (int i = 0; i < 10; i++) {
+      long id = client.submitRule(rule, RuleState.ACTIVE);
+      Assert.assertTrue(ruleId + i + 1 == id);
     }
-    assertTrue(caughtException);
+
+    String badRule = "something else";
+    try {
+      client.submitRule(badRule, RuleState.ACTIVE);
+      Assert.fail("Should have an exception here");
+    } catch (IOException e) {
+    }
+
+    try {
+      client.checkRule(badRule);
+      Assert.fail("Should have an exception here");
+    } catch (IOException e) {
+    }
   }
 }

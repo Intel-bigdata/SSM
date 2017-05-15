@@ -17,41 +17,48 @@
  */
 package org.apache.hadoop.ssm.rule;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ssm.ModuleSequenceProto;
 import org.apache.hadoop.ssm.SSMServer;
 import org.apache.hadoop.ssm.rule.parser.RuleStringParser;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
+import org.apache.hadoop.ssm.rule.parser.TranslationContext;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
-import org.apache.hadoop.ssm.sql.ExecutionContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manage and execute rules.
  * We can have 'cache' here to decrease the needs to execute a SQL query.
  */
-public class RuleManager {
+public class RuleManager implements ModuleSequenceProto {
   private SSMServer ssm;
   private Configuration conf;
   private DBAdapter dbAdapter;
   private boolean isClosed = false;
 
-  private Map<Long, RuleInfo> mapRules = new HashMap<>();
+  private ConcurrentHashMap<Long, RuleContainer> mapRules =
+      new ConcurrentHashMap<>();
 
   // TODO: configurable
   public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
 
+  @VisibleForTesting
   public RuleManager(SSMServer ssm, Configuration conf, DBAdapter dbAdapter) {
     this.ssm = ssm;
     this.conf = conf;
     this.dbAdapter = dbAdapter;
+  }
+
+  public RuleManager(SSMServer ssm, Configuration conf) {
+    this.ssm = ssm;
+    this.conf = conf;
   }
 
   /**
@@ -69,7 +76,8 @@ public class RuleManager {
           + ", it MUST be one of [" + RuleState.ACTIVE
           + ", " + RuleState.DRYRUN + ", " + RuleState.DISABLED + "]");
     }
-    TranslateResult tr = doCheckRule(rule);
+
+    TranslateResult tr = doCheckRule(rule, null);
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
     RuleInfo ruleInfo = builder.build();
@@ -77,25 +85,26 @@ public class RuleManager {
       throw new IOException("Create rule failed");
     }
 
-    mapRules.put(ruleInfo.getId(), ruleInfo);
+    RuleContainer container = new RuleContainer(ruleInfo, dbAdapter);
+    mapRules.put(ruleInfo.getId(), container);
 
-    if (initState == RuleState.ACTIVE || initState == RuleState.DRYRUN) {
-      ExecutionContext ctx = new ExecutionContext();
-      ctx.setProperty(ExecutionContext.RULE_ID, ruleInfo.getId());
-      RuleQueryExecutor qe = new RuleQueryExecutor(this, ctx, tr, dbAdapter);
-      execScheduler.addPeriodicityTask(qe);
-    }
+    submitRuleToScheduler(container.launchExecutor(this));
 
     return ruleInfo.getId();
   }
 
-  private TranslateResult doCheckRule(String rule) throws IOException {
-    RuleStringParser parser = new RuleStringParser(rule);
+  public TranslateResult doCheckRule(String rule, TranslationContext ctx)
+      throws IOException {
+    RuleStringParser parser = new RuleStringParser(rule, ctx);
     return parser.translate();
   }
 
   public void checkRule(String rule) throws IOException {
-    doCheckRule(rule);
+    doCheckRule(rule, null);
+  }
+
+  public DBAdapter getDbAdapter() {
+    return dbAdapter;
   }
 
   /**
@@ -110,73 +119,47 @@ public class RuleManager {
    */
   public void DeleteRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
-    changeRuleState(ruleID, RuleState.DELETED);
+    RuleContainer container = checkIfExists(ruleID);
+    container.DeleteRule();
   }
 
   public void ActivateRule(long ruleID) throws IOException {
-    changeRuleState(ruleID, RuleState.ACTIVE);
+    RuleContainer container = checkIfExists(ruleID);
+    submitRuleToScheduler(container.ActivateRule(this));
   }
 
   public void DisableRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
-    changeRuleState(ruleID, RuleState.DISABLED);
+    RuleContainer container = checkIfExists(ruleID);
+    container.DisableRule();
   }
 
-  public boolean changeRuleState(long ruleID, RuleState newState)
-      throws IOException {
-    boolean ret = false;
-    RuleInfo info = mapRules.get(ruleID);
-    if (info == null || info.getState() == newState) {
-      return false;
+  private RuleContainer checkIfExists(long ruleID) throws IOException {
+    RuleContainer container = mapRules.get(ruleID);
+    if (container == null) {
+      throw new IOException("Rule with ID = " + ruleID + " not found");
     }
-
-    RuleState state = info.getState();
-    switch (newState) {
-      case ACTIVE:
-        if (state == RuleState.DISABLED || state == RuleState.DRYRUN) {
-          ret = true;
-        }
-        break;
-      case DISABLED:
-        if (state == RuleState.ACTIVE || state == RuleState.DRYRUN) {
-          ret = true;
-        }
-        break;
-      case DELETED:
-        ret = true;
-        break;
-      default:
-        throw new IOException("Rule state transition " + state
-            + " -> " + newState + " is not supported");  // TODO: unsupported
-    }
-
-    if (ret) {
-      info.setState(newState);
-      dbAdapter.updateRuleInfo(info.getId(), newState, 0, 0, 0);
-    }
-    return true;
+    return container;
   }
 
   public RuleInfo getRuleInfo(long ruleID) throws IOException {
-    RuleInfo info = mapRules.get(ruleID);
-    return info == null ? null : info.newCopy();
+    RuleContainer container = checkIfExists(ruleID);
+    return container.getRuleInfo();
   }
 
-  public List<RuleInfo> getRuleInfo() throws IOException {
-    Collection<RuleInfo> infos = mapRules.values();
+  public List<RuleInfo> listRulesInfo() throws IOException {
+    Collection<RuleContainer> containers = mapRules.values();
     List<RuleInfo> retInfos = new ArrayList<>();
-    for (RuleInfo info : infos) {
-      retInfos.add(info.newCopy());
+    for (RuleContainer container : containers) {
+      retInfos.add(container.getRuleInfo());
     }
     return retInfos;
   }
 
   public void updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
-      long checkedCount, int commandsGen) {
-    RuleInfo info = mapRules.get(ruleId);
-    info.updateRuleInfo(rs, lastCheckTime, checkedCount, commandsGen);
-    dbAdapter.updateRuleInfo(ruleId, rs, lastCheckTime,
-        checkedCount, commandsGen);
+      long checkedCount, int commandsGen) throws IOException {
+    RuleContainer container = checkIfExists(ruleId);
+    container.updateRuleInfo(rs, lastCheckTime, checkedCount, commandsGen);
   }
 
   public void addNewCommands(List<CommandInfo> commands) {
@@ -198,31 +181,45 @@ public class RuleManager {
    *    2. Initial
    * @throws IOException
    */
-  public void init() throws IOException {
+  public boolean init(DBAdapter dbAdapter) throws IOException {
+    this.dbAdapter = dbAdapter;
     // Load rules table
-    List<RuleInfo> runnableRules = new LinkedList<>();
     List<RuleInfo> rules = dbAdapter.getRuleInfo();
     for (RuleInfo rule : rules) {
-      mapRules.put(rule.getId(), rule);
-      if (rule.getState() == RuleState.ACTIVE
-          || rule.getState() == RuleState.DRYRUN) {
-        runnableRules.add(rule);
-      }
+      mapRules.put(rule.getId(), new RuleContainer(rule, dbAdapter));
     }
+    return true;
+  }
 
-    // Submit runnable rules to scheduler
+  private void submitRuleToScheduler(RuleQueryExecutor executor)
+      throws IOException {
+    if (executor == null || executor.isExited()) {
+      return;
+    }
+    execScheduler.addPeriodicityTask(executor);
   }
 
   /**
    * Start services
    */
-  public void start() {
+  public boolean start() throws IOException {
+    // after StateManager be ready
+
+    // Submit runnable rules to scheduler
+    for (RuleContainer container : mapRules.values()) {
+        RuleInfo rule = container.getRuleInfoRef();
+      if (rule.getState() == RuleState.ACTIVE
+          || rule.getState() == RuleState.DRYRUN) {
+        submitRuleToScheduler(container.launchExecutor(this));
+      }
+    }
+    return true;
   }
 
   /**
    * Stop services
    */
-  public void stop() {
+  public void stop() throws IOException {
     isClosed = true;
     if (execScheduler != null) {
       execScheduler.shutdown();
@@ -232,6 +229,6 @@ public class RuleManager {
   /**
    * Waiting for threads to exit.
    */
-  public void join() {
+  public void join() throws IOException {
   }
 }

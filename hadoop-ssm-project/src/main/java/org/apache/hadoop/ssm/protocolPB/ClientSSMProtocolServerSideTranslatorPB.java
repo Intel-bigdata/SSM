@@ -18,10 +18,26 @@
 package org.apache.hadoop.ssm.protocolPB;
 
 import com.google.protobuf.RpcController;
+import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.CheckRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.CheckRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetRuleInfoRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetRuleInfoResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetServiceStateRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetServiceStateResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ListRulesInfoRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ListRulesInfoResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.RuleInfoProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleResponseProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
-import org.apache.hadoop.ssm.protocol.SSMServiceStates;
+import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.rule.RuleInfo;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClientSSMProtocolServerSideTranslatorPB implements
     ClientSSMProtocolPB, ClientSSMProto.protoService.BlockingInterface {
@@ -32,49 +48,61 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public ClientSSMProto.StatusResultProto getServiceStatus(
-      RpcController controller, ClientSSMProto.StatusParaProto request) {
-    ClientSSMProto.StatusResultProto.Builder builder =
-        ClientSSMProto.StatusResultProto.newBuilder();
-    SSMServiceStates SSMServiceStates = server.getServiceStatus();
-    builder.setSSMServiceState(SSMServiceStates.getState().name());
-    return builder.build();
+  public GetServiceStateResponseProto getServiceState(RpcController controller,
+      GetServiceStateRequestProto req) {
+    SSMServiceState s = server.getServiceState();
+    return GetServiceStateResponseProto.newBuilder()
+        .setState(s.getValue()).build();
   }
 
   @Override
-  public ClientSSMProto.RuleInfoResultProto getRuleInfo(RpcController controller,
-      ClientSSMProto.RuleInfoParaProto para) {
-    ClientSSMProto.RuleInfoResultProto.Builder builder
-        = ClientSSMProto.RuleInfoResultProto.newBuilder();
-    RuleInfo ruleInfo = server.getRuleInfo(para.getPara());
-    ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto ruleStateProto;
-    switch (ruleInfo.getState()) {
-      case ACTIVE:
-        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.ACTIVE;
-        break;
-      case DRYRUN:
-        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.DRYRUN;
-        break;
-      case DISABLED:
-        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.DISABLED;
-        break;
-      case FINISHED:
-        ruleStateProto = ClientSSMProto.RuleInfoResultTypeProto.RuleStateProto.FINISHED;
-        break;
-      default:
-        ruleStateProto = null;
+  public SubmitRuleResponseProto submitRule(RpcController controller,
+      SubmitRuleRequestProto req) throws ServiceException {
+    try {
+      long ruleId = server.submitRule(req.getRule(),
+          PBHelper.convert(req.getInitState()));
+      return SubmitRuleResponseProto.newBuilder().setRuleId(ruleId).build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
     }
-    ClientSSMProto.RuleInfoResultTypeProto.Builder rtBuilder = ClientSSMProto
-        .RuleInfoResultTypeProto
-        .newBuilder()
-        .setId(ruleInfo.getId())
-        .setSubmitTime(ruleInfo.getSubmitTime())
-        .setRuleText(ruleInfo.getRuleText())
-        .setRulestateProto(ruleStateProto)
-        .setCountConditionChecked(ruleInfo.getCountConditionChecked())
-        .setCountConditionFulfilled(ruleInfo.getCountConditionFulfilled());
-    builder.setResult(rtBuilder.build());
-    return builder.build();
   }
 
+  @Override
+  public CheckRuleResponseProto checkRule(RpcController controller,
+      CheckRuleRequestProto req) throws ServiceException {
+    try {
+      server.checkRule(req.getRule());
+      return CheckRuleResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public GetRuleInfoResponseProto getRuleInfo(RpcController controller,
+      GetRuleInfoRequestProto req) throws ServiceException {
+    try {
+      RuleInfo info = server.getRuleInfo(req.getRuleId());
+      return GetRuleInfoResponseProto.newBuilder()
+          .setResult(PBHelper.convert(info)).build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public ListRulesInfoResponseProto listRulesInfo(RpcController controller,
+      ListRulesInfoRequestProto req) throws ServiceException {
+    try {
+      List<RuleInfo> infos = server.listRulesInfo();
+      List<RuleInfoProto> infoProtos = new ArrayList<>();
+      for (RuleInfo info : infos) {
+        infoProtos.add(PBHelper.convert(info));
+      }
+      return ListRulesInfoResponseProto.newBuilder()
+          .addAllRulesInfo(infoProtos).build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
 }

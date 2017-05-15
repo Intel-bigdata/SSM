@@ -17,7 +17,12 @@
  */
 package org.apache.hadoop.ssm;
 
+import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.ssm.actions.ActionBase;
+import org.apache.hadoop.ssm.actions.ActionExecutor;
+
+
+import java.util.Map;
 
 /**
  * Command is the minimum unit of execution. Different commands can be
@@ -30,21 +35,27 @@ import org.apache.hadoop.ssm.actions.ActionBase;
  *  1.) SetStoragePolicy
  *  2.) EnforceStoragePolicy
  */
+
+
 public class Command implements Runnable {
   private long ruleId;   // id of the rule that this Command comes from
   private long id;
   private CommandState state = CommandState.NOTINITED;
   private ActionBase[] actions;
+  private Map<String, String> parameters;
+  CommandExecutor.Callback cb;
 
   private long createTime;
   private long scheduleToExecuteTime;
   private long ExecutionCompleteTime;
 
   private Command() {
+
   }
 
-  public Command(ActionBase[] actions) {
+  public Command(ActionBase[] actions, CommandExecutor.Callback cb) {
     this.actions = actions.clone();
+    this.cb = cb;
   }
 
   public long getRuleId() {
@@ -55,8 +66,20 @@ public class Command implements Runnable {
     this.id = id;
   }
 
+  public void setRuleId(long ruleId) {
+    this.ruleId = ruleId;
+  }
+
   public long getId() {
     return id;
+  }
+
+  public Map<String, String> getParameter() {
+    return parameters;
+  }
+
+  public void setParameters(Map<String, String> parameters) {
+    this.parameters = parameters;
   }
 
   public CommandState getState() {
@@ -86,5 +109,6 @@ public class Command implements Runnable {
         break;
       }
     }
+    cb.complete(this.id, this.ruleId, CommandState.DONE);
   }
 }

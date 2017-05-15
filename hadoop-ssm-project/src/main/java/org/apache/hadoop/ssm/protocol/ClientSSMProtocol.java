@@ -18,9 +18,37 @@
 package org.apache.hadoop.ssm.protocol;
 
 import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
+
+import java.io.IOException;
+import java.util.List;
 
 public interface ClientSSMProtocol {
-  public SSMServiceStates getServiceStatus();
 
-  public RuleInfo getRuleInfo(long id);
+  SSMServiceState getServiceState();
+
+  long submitRule(String rule, RuleState initState) throws IOException;
+
+  /**
+   * Check if it is a valid rule.
+   * @param rule
+   * @throws IOException if not valid
+   */
+  void checkRule(String rule) throws IOException;
+
+  /**
+   * Get information about the given rule.
+   * @param ruleID
+   * @return
+   * @throws IOException
+   */
+  RuleInfo getRuleInfo(long ruleID) throws IOException;
+
+  /**
+   * List rules in SSM.
+   * TODO: maybe we can return only info about rules in certain state.
+   * @return
+   * @throws IOException
+   */
+  List<RuleInfo> listRulesInfo() throws IOException;
 }

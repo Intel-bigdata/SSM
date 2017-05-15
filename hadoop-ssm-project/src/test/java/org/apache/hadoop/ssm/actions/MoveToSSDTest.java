@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.hadoop.ssm.actions.MoveToSSD;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -39,23 +38,24 @@ public class MoveToSSDTest {
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
     conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY,REPLICATION_KEY);
   }
-  @Test
-  public void MoveToSSD() throws Exception{
-    final Configuration conf = new HdfsConfiguration();
-    initConf(conf);
-    testMoveToSSD(conf);
-  }
 
-  private void testMoveToSSD(Configuration conf)throws Exception {
+  @Test
+  public void MoveToSSD() throws Exception {
+      final Configuration conf = new HdfsConfiguration();
+      initConf(conf);
+      // Move File From Archive to SSD
+      testMoveFileToSSD(conf);
+  }
+  private void testMoveFileToSSD(Configuration conf) throws Exception {
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD}).build();
     try {
       cluster.waitActive();
       final DistributedFileSystem dfs = cluster.getFileSystem();
-      final String file = "/testMoveToSSD/file";
-      Path dir = new Path("/testMoveToSSD");
+      final String file = "/testMoveFileToSSD/file";
+      Path dir = new Path("/testMoveFileToSSD");
       final DFSClient client = cluster.getFileSystem().getClient();
       dfs.mkdirs(dir);
-
+      String[] args = {file};
       // write to DISK
       dfs.setStoragePolicy(dir, "HOT");
       final FSDataOutputStream out = dfs.create(new Path(file),true,1024);
@@ -68,10 +68,9 @@ public class MoveToSSDTest {
       for (StorageType storageType : storageTypes) {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
-      // move to ARCHIVE
-      String[] str = {file};
-      MoveToSSD.getInstance(client, conf).initial(str);
-      MoveToSSD.getInstance(client, conf).execute();
+      // move to SSD, Policy ALL_SSD
+      MoveFile.getInstance(client, conf, "ALL_SSD").initial(args);
+      MoveFile.getInstance(client, conf, "ALL_SSD").execute();
       // verify after movement
       LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       StorageType[] storageTypes1 = lb1.getStorageTypes();

@@ -15,10 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm;
+package org.apache.hadoop.hdfs.protocol;
 
-/**
- * Tests to testing RestApiServer.
- */
-public class TestRestApiServer {
+public class FileAccessEvent {
+  private String path;
+  private String user;
+  private long timestamp;
+
+  public FileAccessEvent(String path, long timestamp) {
+    this(path, "", timestamp);
+  }
+
+  public FileAccessEvent(String path, String user, long timestamp) {
+    this.path = path;
+    this.user = user;
+    this.timestamp = timestamp;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public String getUser() {
+    return user;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
+  }
 }
