@@ -141,6 +141,9 @@ public class RuleQueryExecutor implements Runnable {
     String countFilter = "";
     List<String> tableNames =
         getAccessCountTablesBetween(now - interval, now);
+    if (tableNames.size() == 0) {
+      tableNames.add("blank_access_count_info");
+    }
     String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
     String sqlUnion = "SELECT fid, count FROM \'"
         + tableNames.get(0) + "\'\n";
@@ -164,7 +167,7 @@ public class RuleQueryExecutor implements Runnable {
    * Get access count tables within the time interval.
    * @param startTime
    * @param endTime
-   * @return
+   * @return can not be null
    */
   public static List<String> getAccessCountTablesBetween(
       long startTime, long endTime) {
@@ -220,7 +223,6 @@ public class RuleQueryExecutor implements Runnable {
 
     } catch (IOException e) {
       // TODO: log this
-      int why = 1;
     }
   }
 

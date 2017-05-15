@@ -708,7 +708,11 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
         Property p = realParas.getProperty();
         // TODO: hard code now, abstract later
         if (p.getPropertyName() == "accessCount") {
-          String virTab = "VIR_ACC_CNT_TAB_" + realParas.instId();
+          String rid = "";
+          if (transCtx != null) {
+            rid = transCtx.getRuleId() + "_";
+          }
+          String virTab = "VIR_ACC_CNT_TAB_" + rid + realParas.instId();
           tempTableNames.add(virTab);
           sqlStatements.add("DROP TABLE IF EXISTS " + virTab);
           sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");

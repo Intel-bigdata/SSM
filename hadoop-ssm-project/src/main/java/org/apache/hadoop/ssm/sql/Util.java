@@ -67,11 +67,17 @@ public class Util {
         "DROP TABLE IF EXISTS `xattr`;",
         "DROP TABLE IF EXISTS `rules`;",
         "DROP TABLE IF EXISTS `commands`;",
+        "DROP TABLE IF EXISTS `blank_access_count_info`;",  // for special cases
 
         "CREATE TABLE `access_count_tables` (\n" +
             "  `table_name` varchar(255) NOT NULL,\n" +
             "  `start_time` bigint(20) NOT NULL,\n" +
             "  `end_time` bigint(20) NOT NULL\n" +
+            ") ;",
+
+        "CREATE TABLE `blank_access_count_info` (\n" +
+            "  `fid` bigint(20) NOT NULL,\n" +
+            "  `count` bigint(20) NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE `cached_files` (\n" +
