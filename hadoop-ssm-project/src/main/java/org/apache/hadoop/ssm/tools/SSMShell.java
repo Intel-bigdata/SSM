@@ -31,6 +31,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
+import org.apache.hadoop.ssm.SSMConfiguration;
 import org.apache.hadoop.ssm.protocol.SSMClient;
 import org.apache.hadoop.tools.TableListing;
 import org.apache.hadoop.tracing.TraceUtils;
@@ -335,7 +336,7 @@ public class SSMShell extends Configured implements Tool {
    */
   public static void main(String argv[]) throws Exception {
     SSMShell shell = newShellInstance();
-    Configuration conf = new Configuration();
+    Configuration conf = new SSMConfiguration();
     conf.setQuietMode(false);
     shell.setConf(conf);
     int res;
