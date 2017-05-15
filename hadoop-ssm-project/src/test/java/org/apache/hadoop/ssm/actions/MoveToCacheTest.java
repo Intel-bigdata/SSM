@@ -33,13 +33,13 @@ public class MoveToCacheTest {
         dfs.mkdirs(dir);
 
         String[] str = {"/fileTestA"};
-        MoveToCache moveToCache= MoveToCache.getInstance(client,conf);
+        MoveToCache moveToCache = MoveToCache.getInstance(client, conf);
 
-        assertEquals(false,moveToCache.isCached(str[0]));
+        assertEquals(false, moveToCache.isCached(str[0]));
 
         moveToCache.initial(str);
         moveToCache.execute();
 
-        assertEquals(true,moveToCache.isCached(str[0]));
+        assertEquals(true, moveToCache.isCached(str[0]));
     }
 }

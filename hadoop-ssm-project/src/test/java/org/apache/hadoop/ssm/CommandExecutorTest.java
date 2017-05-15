@@ -21,25 +21,14 @@ import java.util.Map;
 /**
  * CommandExecutor Unit Test
  */
-public class CommandExecutorTest {
-  private static final int DEFAULT_BLOCK_SIZE = 100;
-  private static final String REPLICATION_KEY = "3";
-
-  private void initConf(Configuration conf) {
-    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY,REPLICATION_KEY);
-  }
+public class CommandExecutorTest extends TestEmptyMiniSSMCluster {
 
   @Test
   public void testCommandExecutor() throws  Exception {
-    final Configuration conf = new HdfsConfiguration();
-    initConf(conf);
-    testCommandExecutorHelper(conf);
+    testCommandExecutorHelper(ssm.getConf());
   }
 
   public void testCommandExecutorHelper(Configuration conf) throws Exception {
-    SSMServer ssm = SSMServer.createSSM(null, conf);
     CommandExecutor cmdexe = new CommandExecutor(ssm, conf);
     // Init Database
     String dbFile = TestDBUtil.getUniqueDBFilePath();
@@ -49,26 +38,34 @@ public class CommandExecutorTest {
       Util.initializeDataBase(conn);
       DBAdapter dbAdapter = new DBAdapter(conn);
       cmdexe.init(dbAdapter);
-      Map<String, String> smap = new HashMap<String, String>();
-      smap.put("_FILE_PATH_", "");
-      smap.put("_STORAGE_POLICY_", "ALL_SSD");
-      CommandInfo command1 = new CommandInfo(0, 1, ActionType.None,
-              CommandState.PENDING, JsonUtil.toJsonString(smap), 123123333l, 232444444l);
-      CommandInfo command2 = new CommandInfo(0, 78, ActionType.ConvertToEC,
-              CommandState.PENDING, JsonUtil.toJsonString(smap), 123178333l, 232444994l);
-      CommandInfo[] commands = {command1, command2};
+      Map<String, String> smap1 = new HashMap<String, String>();
+      smap1.put("_FILE_PATH_", "/testMoveFile/file");
+      smap1.put("_STORAGE_POLICY_", "ALL_SSD");
+      Map<String, String> smap2 = new HashMap<String, String>();
+      smap2.put("_FILE_PATH_", "/testMoveFile/file");
+      smap2.put("_STORAGE_POLICY_", "COLD");
+      Map<String, String> smap3 = new HashMap<String, String>();
+      smap3.put("_FILE_PATH_", "/testCacheFile/file");
+      CommandInfo command1 = new CommandInfo(0, 1, ActionType.MoveFile,
+              CommandState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l);
+      CommandInfo command2 = new CommandInfo(0, 1, ActionType.MoveFile,
+              CommandState.PENDING, JsonUtil.toJsonString(smap2), 123178333l, 232444994l);
+      CommandInfo command3 = new CommandInfo(0, 1, ActionType.CacheFile,
+              CommandState.PENDING, JsonUtil.toJsonString(smap3), 123178333l, 232444994l);
+      CommandInfo[] commands = {command1, command2, command3};
       dbAdapter.insertCommandsTable(commands);
       // start CommandExecutor
       cmdexe.start();
-      // Stop CommandExecutor
-      Thread.sleep(4000);
-      cmdexe.stop();
+      Thread.sleep(5000);
       // Check Status
       String cidCondition = ">= 1 ";
-      String ridCondition = "= 78 ";
-      List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.PENDING);
-      Assert.assertTrue(com.size() == 1);
+      String ridCondition = ">= 1 ";
+      List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.DONE);
+      System.out.printf("Size = %d\n", com.size());
+      Assert.assertTrue(com.size() == 3);
       Assert.assertTrue(com.get(0).getState() == CommandState.DONE);
+      // Stop CommandExecutor
+      cmdexe.stop();
 
     } finally {
       if (conn != null) {

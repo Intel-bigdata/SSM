@@ -105,6 +105,8 @@ public class Command implements Runnable {
   @Override
   public void run() {
     for (ActionBase act : actions) {
+      if(act == null)
+        continue;
       if (ActionExecutor.run(act)) {
         break;
       }
