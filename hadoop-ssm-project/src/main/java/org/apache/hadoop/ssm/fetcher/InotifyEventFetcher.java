@@ -27,6 +27,7 @@ import org.apache.hadoop.ssm.utils.EventBatchSerializer;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -34,19 +35,23 @@ import java.util.concurrent.TimeUnit;
 
 public class InotifyEventFetcher {
   private final DFSClient client;
-  private final DBAdapter adapter;
   private final NamespaceFetcher nameSpaceFetcher;
   private final ScheduledExecutorService scheduledExecutorService;
   private final InotifyEventApplier applier;
   private ScheduledFuture inotifyFetchFuture;
   private ScheduledFuture fetchAndApplyFuture;
+  private EventApplyTask eventApplyTask;
   private java.io.File inotifyFile;
   private QueueFile queueFile;
 
   public InotifyEventFetcher(DFSClient client, DBAdapter adapter,
+      ScheduledExecutorService service) {
+    this(client, adapter, service, new InotifyEventApplier(adapter));
+  }
+
+  public InotifyEventFetcher(DFSClient client, DBAdapter adapter,
       ScheduledExecutorService service, InotifyEventApplier applier) {
     this.client = client;
-    this.adapter = adapter;
     this.applier = applier;
     this.scheduledExecutorService = service;
     this.nameSpaceFetcher = new NamespaceFetcher(client, adapter, service);
@@ -59,8 +64,13 @@ public class InotifyEventFetcher {
     this.nameSpaceFetcher.startFetch();
     this.inotifyFetchFuture = scheduledExecutorService.scheduleAtFixedRate(
         new InotifyFetchTask(queueFile, client, startId), 0, 100, TimeUnit.MILLISECONDS);
-    EventApplyTask eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile);
+    this.eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile);
     eventApplyTask.start();
+
+    this.waitNameSpaceFetcherFinished();
+  }
+
+  private void waitNameSpaceFetcherFinished() throws InterruptedException, IOException {
     eventApplyTask.join();
 
     long lastId = eventApplyTask.getLastId();
@@ -68,14 +78,17 @@ public class InotifyEventFetcher {
     this.nameSpaceFetcher.stop();
     this.queueFile.close();
     InotifyFetchAndApplyTask fetchAndApplyTask =
-        new InotifyFetchAndApplyTask(client, applier, lastId);
+      new InotifyFetchAndApplyTask(client, applier, lastId);
     this.fetchAndApplyFuture = scheduledExecutorService.scheduleAtFixedRate(
-        fetchAndApplyTask, 0, 100, TimeUnit.MILLISECONDS);
+      fetchAndApplyTask, 0, 100, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
     this.inotifyFile.delete();
-    this.fetchAndApplyFuture.cancel(false);
+    this.inotifyFetchFuture.cancel(false);
+    if (this.fetchAndApplyFuture != null){
+      this.fetchAndApplyFuture.cancel(false);
+    }
   }
 
   private static class InotifyFetchTask implements Runnable {
@@ -131,7 +144,7 @@ public class InotifyEventFetcher {
             break;
           }
         }
-      } catch (InterruptedException | IOException e) {
+      } catch (InterruptedException | IOException | SQLException e) {
         e.printStackTrace();
       }
     }

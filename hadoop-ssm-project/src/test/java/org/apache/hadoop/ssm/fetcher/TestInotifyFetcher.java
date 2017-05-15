@@ -179,7 +179,6 @@ public class TestInotifyFetcher {
       Assert.assertTrue(events.get(19).getEventType() == Event.EventType.METADATA);
       Assert.assertTrue(events.get(20).getEventType() == Event.EventType.RENAME);
       Assert.assertTrue(events.get(21).getEventType() == Event.EventType.TRUNCATE);
-
       fetcher.stop();
     } finally {
       cluster.shutdown();

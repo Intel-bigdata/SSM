@@ -46,7 +46,7 @@ public interface ModuleSequenceProto {
    * @return
    * @throws IOException
    */
-  boolean start() throws IOException;
+  boolean start() throws IOException, InterruptedException;
 
   /**
    * After stop call, all states in database will not be changed anymore.
