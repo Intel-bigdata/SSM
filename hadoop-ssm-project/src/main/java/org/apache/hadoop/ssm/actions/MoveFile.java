@@ -21,6 +21,7 @@ public class MoveFile extends ActionBase {
     public MoveFile(DFSClient client, Configuration conf, String storagePolicy) {
         super(client);
         this.conf = conf;
+        this.actionType = ActionType.MoveFile;
         this.storagePolicy = storagePolicy;
     }
 
