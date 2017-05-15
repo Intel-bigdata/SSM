@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,7 +81,6 @@ public class TestSSMHttpServer {
   public void testHttpPolicy() throws Exception {
     conf.set(DFSConfigKeys.DFS_HTTP_POLICY_KEY, Policy.HTTP_ONLY.name());
     conf.set(DFSConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY, "localhost:9494");
-    InetSocketAddress addr = InetSocketAddress.createUnresolved("localhost", 9494);//port can't equal 0
     SSMHttpServer server = null;
     try {
       server = new SSMHttpServer(null, conf);
