@@ -65,7 +65,7 @@ public class StatesManager implements ModuleSequenceProto {
   /**
    * Start daemon threads in StatesManager for function.
    */
-  public boolean start() throws IOException {
+  public boolean start() throws IOException, InterruptedException {
     this.inotifyEventFetcher.start();
     this.accessCountFetcher.start();
     return true;
@@ -76,8 +76,7 @@ public class StatesManager implements ModuleSequenceProto {
     this.accessCountFetcher.stop();
   }
 
-  public void join() throws IOException, InterruptedException {
-    this.inotifyEventFetcher.waitNameSpaceFetcherFinished();
+  public void join() throws IOException {
   }
 
   public List<AccessCountTable> getTablesInLast(long timeInMills) throws SQLException {

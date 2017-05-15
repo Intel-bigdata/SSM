@@ -57,7 +57,7 @@ public class InotifyEventFetcher {
     this.nameSpaceFetcher = new NamespaceFetcher(client, adapter, service);
   }
 
-  public void start() throws IOException {
+  public void start() throws IOException, InterruptedException {
     this.inotifyFile = new File("/tmp/inotify" + new Random().nextLong());
     this.queueFile = new QueueFile(inotifyFile);
     long startId = this.client.getNamenode().getCurrentEditLogTxid();
@@ -66,9 +66,11 @@ public class InotifyEventFetcher {
         new InotifyFetchTask(queueFile, client, startId), 0, 100, TimeUnit.MILLISECONDS);
     this.eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile);
     eventApplyTask.start();
+
+    this.waitNameSpaceFetcherFinished();
   }
 
-  public void waitNameSpaceFetcherFinished() throws InterruptedException, IOException {
+  private void waitNameSpaceFetcherFinished() throws InterruptedException, IOException {
     eventApplyTask.join();
 
     long lastId = eventApplyTask.getLastId();
@@ -83,7 +85,8 @@ public class InotifyEventFetcher {
 
   public void stop() {
     this.inotifyFile.delete();
-    if (this.fetchAndApplyFuture != null ){
+    this.inotifyFetchFuture.cancel(false);
+    if (this.fetchAndApplyFuture != null){
       this.fetchAndApplyFuture.cancel(false);
     }
   }

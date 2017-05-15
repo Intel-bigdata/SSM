@@ -98,7 +98,6 @@ public class TestInotifyFetcher {
         public void run() {
           try {
             fetcher.start();
-            fetcher.waitNameSpaceFetcherFinished();
           } catch (IOException | InterruptedException e) {
             e.printStackTrace();
           }
