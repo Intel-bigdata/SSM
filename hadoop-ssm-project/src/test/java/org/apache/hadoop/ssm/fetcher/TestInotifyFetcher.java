@@ -105,8 +105,7 @@ public class TestInotifyFetcher {
       };
       thread.start();
 
-      Thread.sleep(10);
-
+      Thread.sleep(2000);
 
       /**
        * Code copy from {@link org.apache.hadoop.hdfs.TestDFSInotifyEventInputStream}
