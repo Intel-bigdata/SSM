@@ -48,9 +48,9 @@ public class TestGetRuleInfo extends TestEmptyMiniSSMCluster {
     }
     Assert.assertTrue(infoTemp.getNumChecked() >= info1.getNumChecked() + 2);
 
-    long fackRuleId = 10999999999L;
+    long fakeRuleId = 10999999999L;
     try {
-      client.getRuleInfo(fackRuleId);
+      client.getRuleInfo(fakeRuleId);
       Assert.fail("Should raise an exception when using a invalid rule id");
     } catch (IOException e) {
     }
