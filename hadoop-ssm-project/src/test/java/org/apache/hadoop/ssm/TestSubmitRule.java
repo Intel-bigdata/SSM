@@ -64,7 +64,7 @@ public class TestSubmitRule {
   }
 
   @After
-  public void cleanUp() throws IOException {
+  public void cleanUp() throws Exception {
     ssm.stop();
     if (cluster != null) {
       cluster.shutdown();

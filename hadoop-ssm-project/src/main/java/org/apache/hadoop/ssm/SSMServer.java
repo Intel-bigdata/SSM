@@ -181,7 +181,7 @@ public class SSMServer {
     return ssmServiceState == SSMServiceState.ACTIVE;
   }
 
-  private void stop() throws Exception {
+  public void stop() throws Exception {
     for (int i = modules.size() - 1 ; i >= 0; i--) {
       modules.get(i).stop();
     }
