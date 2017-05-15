@@ -23,6 +23,7 @@ import org.apache.hadoop.ssm.rule.parser.TranslateResult;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.ExecutionContext;
+import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
 import org.apache.hadoop.ssm.utils.JsonUtil;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +47,7 @@ public class RuleQueryExecutor implements Runnable {
   private DBAdapter adapter; // TODO: abstract to prevent direct call
   private volatile boolean exited = false;
   private long exitTime;
+  private Stack<String> dynamicCleanups = new Stack<>();
 
   private static Pattern varPattern = Pattern.compile(
       "\\$([a-zA-Z_]+[a-zA-Z0-9_]*)");
@@ -112,6 +115,15 @@ public class RuleQueryExecutor implements Runnable {
         return null;
       }
     }
+
+    while (!dynamicCleanups.empty()) {
+      String sql = dynamicCleanups.pop();
+      try {
+        adapter.execute(sql);
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
     return ret;
   }
 
@@ -137,10 +149,9 @@ public class RuleQueryExecutor implements Runnable {
     List<Object> paraList = (List<Object>)parameters.get(0);
     String newTable = (String) parameters.get(1);
     Long interval = (Long)paraList.get(0);
-    long now = timeNow();
     String countFilter = "";
     List<String> tableNames =
-        getAccessCountTablesBetween(now - interval, now);
+        getAccessCountTablesDuringLast(interval);
     if (tableNames.size() == 0) {
       tableNames.add("blank_access_count_info");
     }
@@ -161,6 +172,37 @@ public class RuleQueryExecutor implements Runnable {
     String sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM ("
         + sqlRe + ")";
     return sqlFinal;
+  }
+
+  /**
+   *
+   * @param lastInterval
+   * @return
+   */
+  private List<String> getAccessCountTablesDuringLast(long lastInterval) {
+    List<String> tableNames = new ArrayList<>();
+    if (ruleManager == null || ruleManager.getStatesManager() == null) {
+      return tableNames;
+    }
+
+    List<AccessCountTable> accTables = null;
+    try {
+      accTables = ruleManager.getStatesManager().getTablesInLast(lastInterval);
+    } catch (SQLException e) {
+      // TODO: handle this
+    }
+
+    if (accTables == null) {
+      return tableNames;
+    }
+
+    for (AccessCountTable t : accTables) {
+      tableNames.add(t.getTableName());
+      if (t.isView()) {
+        dynamicCleanups.push("DROP VIEW " + t.getTableName() + ";");
+      }
+    }
+    return tableNames;
   }
 
   /**
