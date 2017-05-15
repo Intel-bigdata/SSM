@@ -15,43 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.rule;
+package org.apache.hadoop.ssm.tools;
 
-/**
- * The possible state that a rule can be in.
- */
-public enum RuleState {
-  ACTIVE(0),      // functioning
-  DRYRUN(1),      // without execute the rule commands
-  DISABLED(2),    // stop maintain info for the rule
-  FINISHED(3),    // for one-shot rule
-  DELETED(4);
+import junit.framework.AssertionFailedError;
+import org.junit.Test;
 
-  private int value;
+public class TestSSMShell {
 
-  private RuleState(int value) {
-    this.value = value;
-  }
+  @Test
+  public void testWithInvalidOption() throws Throwable {
+    String[] args = new String[] {
+        "--conf=invalidFile"
+    };
 
-  public static RuleState fromValue(int value) {
-    for (RuleState r : values()) {
-      if (value == r.getValue()) {
-        return r;
-      }
+    Throwable th = null;
+    try {
+      SSMShell.main(args);
+    } catch (Exception e) {
+      th = e;
     }
-    return null;
-  }
 
-  public static RuleState fromName(String name) {
-    for (RuleState r : values()) {
-      if (r.toString().equalsIgnoreCase(name)) {
-        return r;
-      }
+    if (!(th instanceof RuntimeException)) {
+      throw new AssertionFailedError("Expected Runtime exception, got: " + th)
+          .initCause(th);
     }
-    return null;
-  }
-
-  public int getValue() {
-    return value;
   }
 }
