@@ -17,7 +17,7 @@ import java.util.EnumSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Created by hadoop on 17-1-15.
+ * Move to Cache Action
  */
 public class MoveToCache extends ActionBase {
     private static final Log LOG = LogFactory.getLog(MoveToCache.class);

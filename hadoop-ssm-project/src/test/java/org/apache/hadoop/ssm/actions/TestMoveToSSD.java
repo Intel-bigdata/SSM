@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.conf.Configuration;
@@ -10,9 +27,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Created by cc on 17-1-12.
+ * Move to SSD Unit Test
  */
-public class MoveToArchiveTest {
+public class TestMoveToSSD {
   private static final int DEFAULT_BLOCK_SIZE = 100;
   private static final String REPLICATION_KEY = "3";
 
@@ -21,22 +38,21 @@ public class MoveToArchiveTest {
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
     conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY,REPLICATION_KEY);
   }
+
   @Test
-  public void MoveToArchive() throws Exception {
-    final Configuration conf = new HdfsConfiguration();
-    initConf(conf);
-    // Move File from SSD to Archive
-    testMoveFileToArchive(conf);
+  public void MoveToSSD() throws Exception {
+      final Configuration conf = new HdfsConfiguration();
+      initConf(conf);
+      // Move File From Archive to SSD
+      testMoveFileToSSD(conf);
   }
-
-
-  private void testMoveFileToArchive(Configuration conf) throws Exception {
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).storageTypes(new StorageType[] {StorageType.DISK,StorageType.ARCHIVE}).build();
+  private void testMoveFileToSSD(Configuration conf) throws Exception {
+    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD}).build();
     try {
       cluster.waitActive();
       final DistributedFileSystem dfs = cluster.getFileSystem();
-      final String file = "/testMoveFileToArchive/file";
-      Path dir = new Path("/testMoveFileToArchive");
+      final String file = "/testMoveFileToSSD/file";
+      Path dir = new Path("/testMoveFileToSSD");
       final DFSClient client = cluster.getFileSystem().getClient();
       dfs.mkdirs(dir);
       String[] args = {file};
@@ -52,16 +68,15 @@ public class MoveToArchiveTest {
       for (StorageType storageType : storageTypes) {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
-      // move to Archive, Policy CLOD
-      MoveFile.getInstance(client, conf, "COLD").initial(args);
-      MoveFile.getInstance(client, conf, "COLD").execute();
+      // move to SSD, Policy ALL_SSD
+      MoveFile.getInstance(client, conf, "ALL_SSD").initial(args);
+      MoveFile.getInstance(client, conf, "ALL_SSD").execute();
       // verify after movement
       LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       StorageType[] storageTypes1 = lb1.getStorageTypes();
       for (StorageType storageType : storageTypes1) {
-        Assert.assertTrue(StorageType.ARCHIVE == storageType);
+        Assert.assertTrue(StorageType.SSD == storageType);
       }
-
     } finally {
       cluster.shutdown();
     }
