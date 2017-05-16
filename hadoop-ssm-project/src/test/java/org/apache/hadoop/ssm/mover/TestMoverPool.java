@@ -45,7 +45,7 @@ public class TestMoverPool {
   public void init() {
     conf = new HdfsConfiguration();
     initConf(conf);
-    MoverPool.init(conf);
+    MoverPool.getInstance().init(conf);
   }
 
   static void initConf(Configuration conf) {
