@@ -152,25 +152,31 @@ public class RuleQueryExecutor implements Runnable {
     String countFilter = "";
     List<String> tableNames =
         getAccessCountTablesDuringLast(interval);
-    if (tableNames.size() == 0) {
-      tableNames.add("blank_access_count_info");
+
+    String sqlFinal;
+    if (tableNames.size() <= 1) {
+      String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
+          tableNames.get(0);
+      sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM '"
+          + tableName + "';";
+    } else {
+      String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
+      String sqlUnion = "SELECT fid, count FROM \'"
+          + tableNames.get(0) + "\'\n";
+      for (int i = 1; i < tableNames.size(); i++) {
+        sqlUnion += "UNION ALL\n" +
+            "SELECT fid, count FROM \'" + tableNames.get(i) + "\'\n";
+      }
+      String sqlSufix = ") GROUP BY fid ";
+      // TODO: safe check
+      String sqlCountFilter =
+          (countFilter == null || countFilter.length() == 0) ?
+              "" :
+              "HAVING SUM(count) " + countFilter;
+      String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
+      sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM ("
+          + sqlRe + ");";
     }
-    String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
-    String sqlUnion = "SELECT fid, count FROM \'"
-        + tableNames.get(0) + "\'\n";
-    for (int i = 1; i < tableNames.size(); i++) {
-      sqlUnion += "UNION ALL\n" +
-          "SELECT fid, count FROM \'" + tableNames.get(i) + "\'\n";
-    }
-    String sqlSufix = ") GROUP BY fid ";
-    // TODO: safe check
-    String sqlCountFilter =
-        (countFilter == null || countFilter.length() == 0) ?
-            "" :
-            "HAVING SUM(count) " + countFilter;
-    String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-    String sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM ("
-        + sqlRe + ")";
     return sqlFinal;
   }
 
@@ -190,9 +196,10 @@ public class RuleQueryExecutor implements Runnable {
       accTables = ruleManager.getStatesManager().getTablesInLast(lastInterval);
     } catch (SQLException e) {
       // TODO: handle this
+      e.printStackTrace();
     }
 
-    if (accTables == null) {
+    if (accTables == null || accTables.size() == 0) {
       return tableNames;
     }
 

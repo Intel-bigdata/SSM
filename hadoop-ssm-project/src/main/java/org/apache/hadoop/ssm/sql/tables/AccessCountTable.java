@@ -20,8 +20,8 @@ package org.apache.hadoop.ssm.sql.tables;
 import org.apache.hadoop.ssm.utils.TimeGranularity;
 
 public class AccessCountTable {
-  public final static String FILE_FIELD = "file_id";
-  public final static String ACCESSCOUNT_FIELD = "access_count";
+  public final static String FILE_FIELD = "fid";
+  public final static String ACCESSCOUNT_FIELD = "count";
 
   private String tableName;
   private Long startTime;

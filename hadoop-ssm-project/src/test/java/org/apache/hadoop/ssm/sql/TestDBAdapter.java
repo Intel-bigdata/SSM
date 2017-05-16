@@ -80,7 +80,7 @@ public class TestDBAdapter extends DBTest {
     dbAdapter.createProportionView(viewTable, table3);
     ITable actual = databaseTester.getConnection().createTable(viewTable.getTableName());
     ITable expect = databaseTester.getConnection().createTable(table3.getTableName());
-    SortedTable sortedActual = new SortedTable(actual, new String[]{"file_id"});
+    SortedTable sortedActual = new SortedTable(actual, new String[]{"fid"});
     sortedActual.setUseComparable(true);
     Assert.assertTrue(sortedActual.getRowCount() == expect.getRowCount());
 

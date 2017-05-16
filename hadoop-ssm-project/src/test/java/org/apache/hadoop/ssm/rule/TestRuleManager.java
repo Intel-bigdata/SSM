@@ -56,7 +56,7 @@ public class TestRuleManager {
 
   @Test
   public void testSubmitNewActiveRule() throws Exception {
-    String rule = "file: every 1s \n | length > 300 | cachefile";
+    String rule = "file: every 1s \n | accessCount(5s) > 3 | cachefile";
     long id = ruleManager.submitRule(rule, RuleState.ACTIVE);
     RuleInfo ruleInfo = ruleManager.getRuleInfo(id);
     Assert.assertTrue(ruleInfo.getRuleText().equals(rule));
