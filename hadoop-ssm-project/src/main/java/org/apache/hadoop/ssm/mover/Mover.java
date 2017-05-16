@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hadoop.ssm.mover;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -636,8 +653,8 @@ public class Mover {
     }
   }
 
-  static int run(Map<URI, List<Path>> namenodes, Configuration conf)
-          throws IOException, InterruptedException {
+  static int run(Map<URI, List<Path>> namenodes, Configuration conf,
+      Status status) throws IOException, InterruptedException {
     final long sleeptime =
             conf.getTimeDuration(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
                     DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_DEFAULT,
@@ -689,6 +706,7 @@ public class Mover {
       }
       System.out.println("Mover Successful: all blocks satisfy"
               + " the specified storage policy. Exiting...");
+      status.setSucceeded();
       return ExitStatus.SUCCESS.getExitCode();
     } finally {
       for (NameNodeConnector nnc : connectors) {
@@ -702,6 +720,16 @@ public class Mover {
             + "[-p <files/dirs> | -f <local file>]"
             + "\n\t-p <files/dirs>\ta space separated list of HDFS files/dirs to migrate."
             + "\n\t-f <local file>\ta local file containing a list of HDFS files/dirs to migrate.";
+
+    private Status status;
+
+    public Cli() {
+      status = new MoverStatus();
+    }
+
+    public Cli(Status status) {
+      this.status = status;
+    }
 
     private static Options buildCliOptions() {
       Options opts = new Options();
@@ -801,11 +829,12 @@ public class Mover {
     @Override
     public int run(String[] args) throws Exception {
       final long startTime = Time.monotonicNow();
+      status.setStartTime(startTime);
       final Configuration conf = getConf();
 
       try {
         final Map<URI, List<Path>> map = getNameNodePathsToMove(conf, args);
-        return Mover.run(map, conf);
+        return Mover.run(map, conf, status);
       } catch (IOException e) {
         System.out.println(e + ".  Exiting ...");
         return ExitStatus.IO_EXCEPTION.getExitCode();
@@ -819,8 +848,10 @@ public class Mover {
         System.out.println(e + ".  Exiting ...");
         return ExitStatus.ILLEGAL_ARGUMENTS.getExitCode();
       } finally {
+        status.setIsFinished();
         System.out.format("%-24s ", DateFormat.getDateTimeInstance().format(new Date()));
         System.out.println("Mover took " + StringUtils.formatTime(Time.monotonicNow()-startTime));
+        status.setTotalDuration(Time.monotonicNow()-startTime);
       }
     }
   }
