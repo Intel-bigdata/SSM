@@ -23,8 +23,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.ssm.mover.MoverPool;
+import org.apache.hadoop.ssm.mover.Status;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.UUID;
 
 /**
  * Move to SSD Unit Test
@@ -43,11 +47,15 @@ public class TestMoveToSSD {
   public void MoveToSSD() throws Exception {
       final Configuration conf = new HdfsConfiguration();
       initConf(conf);
+      MoverPool.getInstance().init(conf);
       // Move File From Archive to SSD
       testMoveFileToSSD(conf);
   }
   private void testMoveFileToSSD(Configuration conf) throws Exception {
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD}).build();
+    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).
+            numDataNodes(3).
+            storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD}).
+            build();
     try {
       cluster.waitActive();
       final DistributedFileSystem dfs = cluster.getFileSystem();
@@ -69,9 +77,14 @@ public class TestMoveToSSD {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
       // move to SSD, Policy ALL_SSD
-      MoveFile.getInstance(client, conf, "ALL_SSD").initial(args);
-      MoveFile.getInstance(client, conf, "ALL_SSD").execute();
+      UUID id = new MoveFile(client, conf, "ALL_SSD").initial(args).execute();
+      Status status = MoverPool.getInstance().getStatus(id);
+      while (!status.getIsFinished()) {
+        Thread.sleep(3000);
+      }
+
       // verify after movement
+      Assert.assertTrue(status.getSucceeded());
       LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       StorageType[] storageTypes1 = lb1.getStorageTypes();
       for (StorageType storageType : storageTypes1) {

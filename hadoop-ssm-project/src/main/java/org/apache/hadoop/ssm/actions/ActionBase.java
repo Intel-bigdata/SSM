@@ -36,7 +36,7 @@ public abstract class ActionBase {
    * Used to initialize the action.
    * @param args Action specific
    */
-  public abstract void initial(String[] args);
+  public abstract ActionBase initial(String[] args);
 
   /**
    * Execute an action.
@@ -52,9 +52,5 @@ public abstract class ActionBase {
   public final boolean run() {
     execute();
     return true;
-  }
-
-  public static ActionBase getInstance(ActionType actionType) {
-    return null;
   }
 }

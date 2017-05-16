@@ -32,7 +32,7 @@ public class MoverPool {
   private static MoverPool instance = new MoverPool();
   private Configuration conf = new HdfsConfiguration();
 
-  public static MoverPool getInstance() {
+  synchronized public static MoverPool getInstance() {
     return instance;
   }
 
@@ -53,14 +53,14 @@ public class MoverPool {
 
   /**
    * Create a Mover event.
-   * @param dir the directory to enforce the storage policy using Mover tool.
+   * @param path the directory to enforce the storage policy using Mover tool.
    * @return the UUID of this action for user to track status
    */
-  public UUID createMoverAction(String dir) {
+  public UUID createMoverAction(String path) {
     UUID id = UUID.randomUUID();
     Status status = new MoverStatus();
     moverMap.put(id, status);
-    Thread moverThread = new MoverProcess(status, dir);
+    Thread moverThread = new MoverProcess(status, path);
     moverThread.start();
     return id;
   }
