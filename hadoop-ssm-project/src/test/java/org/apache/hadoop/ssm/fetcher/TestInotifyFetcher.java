@@ -50,8 +50,8 @@ public class TestInotifyFetcher {
   private static class EventApplierForTest extends InotifyEventApplier {
     private List<Event> events = new ArrayList<>();
 
-    public EventApplierForTest(DBAdapter adapter) {
-      super(adapter);
+    public EventApplierForTest(DBAdapter adapter, DFSClient client) {
+      super(adapter, client);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class TestInotifyFetcher {
       fs.mkdirs(new Path("/tmp"), new FsPermission("777"));
 
       DBAdapter adapter = mock(DBAdapter.class);
-      EventApplierForTest applierForTest = new EventApplierForTest(adapter);
+      EventApplierForTest applierForTest = new EventApplierForTest(adapter, client);
       InotifyEventFetcher fetcher = new InotifyEventFetcher(client, adapter,
           Executors.newScheduledThreadPool(2), applierForTest);
 

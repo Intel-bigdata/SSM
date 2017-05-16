@@ -46,7 +46,7 @@ public class InotifyEventFetcher {
 
   public InotifyEventFetcher(DFSClient client, DBAdapter adapter,
       ScheduledExecutorService service) {
-    this(client, adapter, service, new InotifyEventApplier(adapter));
+    this(client, adapter, service, new InotifyEventApplier(adapter, client));
   }
 
   public InotifyEventFetcher(DFSClient client, DBAdapter adapter,
@@ -64,7 +64,7 @@ public class InotifyEventFetcher {
     this.nameSpaceFetcher.startFetch();
     this.inotifyFetchFuture = scheduledExecutorService.scheduleAtFixedRate(
         new InotifyFetchTask(queueFile, client, startId), 0, 100, TimeUnit.MILLISECONDS);
-    this.eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile);
+    this.eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile, startId);
     eventApplyTask.start();
 
     this.waitNameSpaceFetcherFinished();
@@ -121,11 +121,11 @@ public class InotifyEventFetcher {
     private long lastId;
 
     public EventApplyTask(NamespaceFetcher namespaceFetcher, InotifyEventApplier applier,
-        QueueFile queueFile) {
+        QueueFile queueFile, long lastId) {
       this.namespaceFetcher = namespaceFetcher;
       this.queueFile = queueFile;
       this.applier = applier;
-      this.lastId = -1;
+      this.lastId = lastId;
     }
 
     @Override
