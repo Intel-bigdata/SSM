@@ -13,7 +13,9 @@ import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
 import org.omg.PortableInterceptor.ACTIVE;
 
+import java.util.Date;
 import java.util.EnumSet;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -49,15 +51,15 @@ public class MoveToCache extends ActionBase {
 
     /**
      * Execute an action.
-     * @return true if success, otherwise return false.
+     * @return null.
      */
-    public boolean execute(){
+    public UUID execute(){
 //        Action action = Action.getActionType("cache");
         //MoverExecutor.getInstance(dfsClient,conf).addActionEvent(fileName,action);
         addActionEvent(fileName);
         //MoverExecutor.getInstance(dfsClient,conf).run();
         runCache(fileName);
-        return true;
+        return null;
     }
 
     public void addActionEvent(String fileName) {
@@ -73,7 +75,8 @@ public class MoveToCache extends ActionBase {
         if (isCached(fileName)) {
             return;
         }
-        LOG.info("*" + System.currentTimeMillis() + " : " + fileName + " -> " + "cache");
+        LOG.info("Action starts at " + new Date(System.currentTimeMillis()) +
+            " : " + fileName + " -> " + "cache");
         addDirective(fileName);
     }
 

@@ -6,7 +6,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.server.mover.Mover;
+import org.apache.hadoop.ssm.mover.MoverPool;
 import org.apache.hadoop.util.ToolRunner;
+
+import java.util.Date;
+import java.util.UUID;
 
 /**
  * MoveFile Action
@@ -41,32 +45,21 @@ public class MoveFile extends ActionBase {
      *
      * @return true if success, otherwise return false.
      */
-    public boolean execute() {
-        if(runMove(fileName)){
-            return true;
-        }else{
-            return false;
-        }
+    public UUID execute() {
+        return runMove(fileName);
     }
 
-    private boolean runMove(String fileName) {
+    private UUID runMove(String fileName) {
         // TODO check if storagePolicy is the same
-        if(storagePolicy.contains("COLD"))
-            LOG.info("*" + System.currentTimeMillis() + " : " + fileName + " -> " + "archive");
-        else
-            LOG.info("*" + System.currentTimeMillis() + " : " + fileName + " -> " + "ssd");
+        LOG.info("Action starts at " + new Date(System.currentTimeMillis())
+            + " : " + fileName + " -> " + storagePolicy);
         try {
             dfsClient.setStoragePolicy(fileName, storagePolicy);
         } catch (Exception e) {
-            return false;
+            throw new RuntimeException(e);
         }
-        try {
-            ToolRunner.run(conf, new Mover.Cli(),
-                    new String[]{"-p", fileName});
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
+        MoverPool.getInstance().createMoverAction(fileName);
+        return null;
     }
 
 

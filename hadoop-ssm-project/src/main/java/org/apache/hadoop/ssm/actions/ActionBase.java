@@ -19,6 +19,8 @@ package org.apache.hadoop.ssm.actions;
 
 import org.apache.hadoop.hdfs.DFSClient;
 
+import java.util.UUID;
+
 /**
  * Base for actions
  */
@@ -38,16 +40,18 @@ public abstract class ActionBase {
 
   /**
    * Execute an action.
-   * @return true if success, otherwise return false.
+   * @return a uid to track the status of the action, or null if the action
+   * has no status.
    */
-  protected abstract boolean execute();
+  protected abstract UUID execute();
 
   public ActionType getActionType() {
     return actionType;
   }
 
   public final boolean run() {
-    return execute();
+    execute();
+    return true;
   }
 
   public static ActionBase getInstance(ActionType actionType) {
