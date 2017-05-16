@@ -243,10 +243,19 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public class Callback {
+
     public void complete(long cid, long rid, CommandState state) {
 //      adapter.updateCommandStatus(cid, rid, state);
         statusCache.add(new CmdTuple(cid, rid, state));
         removeFromExecuting(cid, rid, state);
+    }
+
+    public void fail() {
+      //TODO New Mover and status check
+    }
+
+    public void executing() {
+
     }
   }
 }

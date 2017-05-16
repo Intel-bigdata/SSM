@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by cc on 17-2-28.
+ *
  */
 public class CacheStatus {
   // the key named cachePoolName

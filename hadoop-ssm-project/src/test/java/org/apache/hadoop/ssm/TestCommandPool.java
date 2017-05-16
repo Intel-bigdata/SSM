@@ -27,9 +27,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * Created by root on 2/14/17.
+ * CommandPool Unit Test
  */
-public class CommandPoolTest {
+public class TestCommandPool {
   private void sleep(long millis) {
     try {
       Thread.sleep(millis);

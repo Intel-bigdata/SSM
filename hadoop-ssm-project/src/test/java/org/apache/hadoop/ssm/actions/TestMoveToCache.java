@@ -11,9 +11,9 @@ import static org.junit.Assert.assertEquals;
 
 
 /**
- * Created by cc on 17-1-12.
+ * Move to Cache Unit Test
  */
-public class MoveToCacheTest {
+public class TestMoveToCache {
 
     private static final int DEFAULT_BLOCK_SIZE = 100;
     private static final String REPLICATION_KEY = "3";

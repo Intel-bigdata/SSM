@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * CommandExecutor Unit Test
  */
-public class CommandExecutorTest extends TestEmptyMiniSSMCluster {
+public class TestCommandExecutor extends TestEmptyMiniSSMCluster {
 
   @Test
   public void testCommandExecutor() throws  Exception {
