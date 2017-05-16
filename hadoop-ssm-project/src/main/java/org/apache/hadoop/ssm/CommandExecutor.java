@@ -83,6 +83,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
     commandExecutorThread.interrupt();
     execThreadGroup.interrupt();
+    join();
     execThreadGroup.destroy();
     try {
       commandExecutorThread.join(1000);
@@ -93,7 +94,14 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public void join() throws IOException {
-    // TODO command join
+    try{
+      Thread[] gThread = new Thread[execThreadGroup.activeCount()];
+      execThreadGroup.enumerate(gThread);
+      for(Thread t: gThread)
+        t.join();
+    } catch (InterruptedException e) {
+      System.out.printf("Stop thread group error!");
+    }
   }
 
   @Override
@@ -164,7 +172,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     long curr = cmds.iterator().next();
     Command ret = cmdsAll.get(curr);
     cmdsAll.remove(curr);
-    cmdsInState.remove(curr);
+    cmds.remove(curr);
     cmdsExecuting.add(curr);
     return ret;
   }
@@ -191,6 +199,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     cmd.setParameters(jsonParameters);
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
+    cmd.setState(cmdinfo.getState());
     // Init action
     return cmd;
   }
