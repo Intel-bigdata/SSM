@@ -36,10 +36,6 @@ public class InotifyEventApplier {
   private final DBAdapter adapter;
   private DFSClient client;
 
-  public InotifyEventApplier(DBAdapter adapter) {
-    this.adapter = adapter;
-  }
-
   public InotifyEventApplier(DBAdapter adapter, DFSClient client) {
     this.adapter = adapter;
     this.client = client;
