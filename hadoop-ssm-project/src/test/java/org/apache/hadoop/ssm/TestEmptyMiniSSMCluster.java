@@ -62,6 +62,7 @@ public class TestEmptyMiniSSMCluster {
 
   public void waitTillSSMExitSafeMode() throws Exception {
     SSMClient client = new SSMClient(conf);
+    long start = System.currentTimeMillis();
     int retry = 5;
     while (true) {
       try {
@@ -69,6 +70,8 @@ public class TestEmptyMiniSSMCluster {
         if (state != SSMServiceState.SAFEMODE) {
           break;
         }
+        int secs = (int)(System.currentTimeMillis() - start) / 1000;
+        System.out.println("Waited for " + secs + " seconds ...");
         Thread.sleep(1000);
       } catch (Exception e) {
         if (retry <= 0) {

@@ -11,9 +11,9 @@ import static org.junit.Assert.assertEquals;
 
 
 /**
- * Created by cc on 17-1-12.
+ * Move to Cache Unit Test
  */
-public class MoveToCacheTest {
+public class TestMoveToCache {
 
     private static final int DEFAULT_BLOCK_SIZE = 100;
     private static final String REPLICATION_KEY = "3";
@@ -33,13 +33,13 @@ public class MoveToCacheTest {
         dfs.mkdirs(dir);
 
         String[] str = {"/fileTestA"};
-        MoveToCache moveToCache= MoveToCache.getInstance(client,conf);
+        MoveToCache moveToCache = MoveToCache.getInstance(client, conf);
 
-        assertEquals(false,moveToCache.isCached(str[0]));
+        assertEquals(false, moveToCache.isCached(str[0]));
 
         moveToCache.initial(str);
         moveToCache.execute();
 
-        assertEquals(true,moveToCache.isCached(str[0]));
+        assertEquals(true, moveToCache.isCached(str[0]));
     }
 }

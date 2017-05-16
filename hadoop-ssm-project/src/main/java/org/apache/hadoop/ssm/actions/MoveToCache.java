@@ -11,12 +11,13 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
+import org.omg.PortableInterceptor.ACTIVE;
 
 import java.util.EnumSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Created by hadoop on 17-1-15.
+ * Move to Cache Action
  */
 public class MoveToCache extends ActionBase {
     private static final Log LOG = LogFactory.getLog(MoveToCache.class);
@@ -27,36 +28,35 @@ public class MoveToCache extends ActionBase {
     private LinkedBlockingQueue<String> actionEvents;
     private final String SSMPOOL = "SSMPool";
 
-    public MoveToCache(DFSClient client) {
+    public MoveToCache(DFSClient client, Configuration conf) {
         super(client);
         this.dfsClient = client;
+        this.conf = conf;
+        this.actionType = ActionType.CacheFile;
         this.actionEvents = new LinkedBlockingQueue<String>();
     }
 
     public static MoveToCache getInstance(DFSClient dfsClient, Configuration conf) {
         if (instance == null) {
-            instance = new MoveToCache(dfsClient);
-            instance.conf=conf;
+            instance = new MoveToCache(dfsClient, conf);
         }
-
         return instance;
     }
 
     public  void initial(String[] args){
-        fileName=args[0];
+        fileName = args[0];
     }
 
     /**
      * Execute an action.
      * @return true if success, otherwise return false.
      */
-    public  boolean execute(){
-        Action action = Action.getActionType("cache");
-
+    public boolean execute(){
+//        Action action = Action.getActionType("cache");
         //MoverExecutor.getInstance(dfsClient,conf).addActionEvent(fileName,action);
-        MoveToCache.getInstance(dfsClient,conf).addActionEvent(fileName);
+        addActionEvent(fileName);
         //MoverExecutor.getInstance(dfsClient,conf).run();
-        MoveToCache.getInstance(dfsClient,conf).runCache(fileName);
+        runCache(fileName);
         return true;
     }
 

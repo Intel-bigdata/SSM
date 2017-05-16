@@ -86,6 +86,10 @@ public class Command implements Runnable {
     return state;
   }
 
+  public void setState(CommandState state) {
+    this.state = state;
+  }
+
   public ActionBase[] getActions() {
     return actions == null ? null : actions.clone();
   }
@@ -105,6 +109,8 @@ public class Command implements Runnable {
   @Override
   public void run() {
     for (ActionBase act : actions) {
+      if(act == null)
+        continue;
       if (ActionExecutor.run(act)) {
         break;
       }

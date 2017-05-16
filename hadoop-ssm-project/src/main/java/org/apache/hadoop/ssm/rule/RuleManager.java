@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ssm.ModuleSequenceProto;
 import org.apache.hadoop.ssm.SSMServer;
+import org.apache.hadoop.ssm.StatesManager;
 import org.apache.hadoop.ssm.rule.parser.RuleStringParser;
 import org.apache.hadoop.ssm.rule.parser.TranslateResult;
 import org.apache.hadoop.ssm.rule.parser.TranslationContext;
@@ -173,6 +174,10 @@ public class RuleManager implements ModuleSequenceProto {
 
   public boolean isClosed() {
     return isClosed;
+  }
+
+  public StatesManager getStatesManager() {
+    return ssm != null ? ssm.getStatesManager() : null;
   }
 
   /**

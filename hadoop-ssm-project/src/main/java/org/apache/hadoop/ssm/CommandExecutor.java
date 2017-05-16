@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.ssm;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ssm.actions.*;
 import org.apache.hadoop.ssm.sql.CommandInfo;
@@ -26,21 +27,18 @@ import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Schedule and execute commands passed down.
  */
 public class CommandExecutor implements Runnable, ModuleSequenceProto {
-  private ArrayList<List<Long>> cmdsInState = new ArrayList<>();
+  private ArrayList<Set<Long>> cmdsInState = new ArrayList<>();
   private Map<Long, Command> cmdsAll = new HashMap<>();
-  private DBAdapter adapter;
+  private ArrayList<CmdTuple> statusCache = new ArrayList<>();
   private Daemon commandExecutorThread;
   private ThreadGroup execThreadGroup;
+  private DBAdapter adapter;
 
   private SSMServer ssm;
 
@@ -48,7 +46,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     //ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
     this.ssm = ssm;
     for (CommandState s : CommandState.values()) {
-      cmdsInState.add(s.getValue(), new LinkedList<>());
+      cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
     execThreadGroup = new ThreadGroup("CommandExecutorWorker");
     execThreadGroup.setDaemon(true);
@@ -85,6 +83,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
     commandExecutorThread.interrupt();
     execThreadGroup.interrupt();
+    join();
     execThreadGroup.destroy();
     try {
       commandExecutorThread.join(1000);
@@ -95,7 +94,14 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public void join() throws IOException {
-    // TODO command join
+    try{
+      Thread[] gThread = new Thread[execThreadGroup.activeCount()];
+      execThreadGroup.enumerate(gThread);
+      for(Thread t: gThread)
+        t.join();
+    } catch (InterruptedException e) {
+      System.out.printf("Stop thread group error!");
+    }
   }
 
   @Override
@@ -142,12 +148,17 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private synchronized Command schedule() {
     // currently FIFO
     // List<Long> cmds = getCommands(CommandState.PENDING);
-    List<Long> cmds = cmdsInState.get(CommandState.PENDING.getValue());
+    Set<Long> cmds = cmdsInState.get(CommandState.PENDING.getValue());
+    Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
     if (cmds.size() == 0) {
       // TODO Check Status and Update
       // Put them into cmdsAll and cmdsInState
+      if(statusCache.size() != 0)
+        batchCommandStatusUpdate();
       List<CommandInfo> dbcmds = getCommansFromDB();
       for(CommandInfo c : dbcmds) {
+        if(cmdsExecuting.contains(c.getCid()))
+          continue;
         Command cmd = getCommand(c, ssm);
         cmdsAll.put(cmd.getId(), cmd);
         cmds.add(cmd.getId());
@@ -158,26 +169,28 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
     // TODO Update FIFO
     // Currently only get and run the first cmd
-    Command ret = cmdsAll.get(cmds.get(0));
-    cmds.remove(0);
+    long curr = cmds.iterator().next();
+    Command ret = cmdsAll.get(curr);
+    cmdsAll.remove(curr);
+    cmds.remove(curr);
+    cmdsExecuting.add(curr);
     return ret;
   }
 
   public Command getCommand(CommandInfo cmdinfo, SSMServer ssm) {
     ActionBase[] actions = new ActionBase[10];
     Map<String, String> jsonParameters = JsonUtil.toStringStringMap(cmdinfo.getParameters());
-    String[] args = {jsonParameters.get("_FILE_PATH_ ")};
+    String[] args = {jsonParameters.get("_FILE_PATH_")};
     // New action
     String storagePolicy = jsonParameters.get("_STORAGE_POLICY_");
-    int flag = 0;
     ActionBase current;
     if(cmdinfo.getActionType().getValue() == ActionType.CacheFile.getValue()) {
-      current = new MoveToCache(ssm.getDFSClient());
+      current = new MoveToCache(ssm.getDFSClient(), ssm.getConf());
     } else if(cmdinfo.getActionType().getValue()  == ActionType.MoveFile.getValue()) {
       current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
     } else {
       // TODO Default
-      current = new MoveToCache(ssm.getDFSClient());
+      current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
     }
     current.initial(args);
     actions[0] = current;
@@ -186,6 +199,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     cmd.setParameters(jsonParameters);
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
+    cmd.setState(cmdinfo.getState());
     // Init action
     return cmd;
   }
@@ -197,13 +211,51 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public Long[] getCommands(CommandState state) {
-    List<Long> cmds = cmdsInState.get(state.getValue());
+    Set<Long> cmds = cmdsInState.get(state.getValue());
     return cmds.toArray(new Long[cmds.size()]);
   }
 
+  public synchronized void batchCommandStatusUpdate() {
+    if(statusCache.size() == 0)
+      return;
+    for(CmdTuple ct: statusCache)
+      adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
+    statusCache.clear();
+  }
+
+  public class CmdTuple {
+    public long cid;
+    public long rid;
+    public CommandState state;
+
+    public CmdTuple(long cid, long rid, CommandState state) {
+      this.cid = cid;
+      this.rid = rid;
+      this.state = state;
+    }
+  }
+
+  public void removeFromExecuting(long cid, long rid, CommandState state) {
+    Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
+    if(cmdsExecuting.size() == 0)
+      return;
+    cmdsExecuting.remove(cid);
+  }
+
   public class Callback {
+
     public void complete(long cid, long rid, CommandState state) {
-      adapter.updateCommandStatus(cid, rid, state);
+//      adapter.updateCommandStatus(cid, rid, state);
+        statusCache.add(new CmdTuple(cid, rid, state));
+        removeFromExecuting(cid, rid, state);
+    }
+
+    public void fail() {
+      //TODO New Mover and status check
+    }
+
+    public void executing() {
+
     }
   }
 }

@@ -22,8 +22,6 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.ssm.protocol.SSMClient;
-import org.apache.hadoop.ssm.rule.RuleInfo;
-import org.apache.hadoop.ssm.rule.RuleState;
 import org.apache.hadoop.ssm.sql.TestDBUtil;
 import org.apache.hadoop.ssm.sql.Util;
 import org.junit.Test;
