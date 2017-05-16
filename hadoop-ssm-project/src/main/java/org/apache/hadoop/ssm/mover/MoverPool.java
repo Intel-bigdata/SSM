@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MoverPool {
   private static MoverPool instance = new MoverPool();
-  private static Configuration conf = new HdfsConfiguration();
+  private Configuration conf = new HdfsConfiguration();
 
   public static MoverPool getInstance() {
     return instance;
@@ -47,7 +47,7 @@ public class MoverPool {
    * the SSM service.
    * @param configuration
    */
-  public static void init(Configuration configuration) {
+  public void init(Configuration configuration) {
     conf = configuration;
   }
 
@@ -66,19 +66,19 @@ public class MoverPool {
   }
 
   class MoverProcess extends Thread {
-    private String dir;
+    private String path;
     private Mover.Cli moverClient;
 
-    public MoverProcess(Status status, String dir) {
+    public MoverProcess(Status status, String path) {
       this.moverClient = new Mover.Cli(status);
-      this.dir = dir;
+      this.path = path;
     }
 
     @Override
     public void run() {
       try {
         int result = ToolRunner.run(conf, moverClient,
-            new String[] {"-p", dir});
+            new String[] {"-p", path});
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -97,6 +97,8 @@ public class MoverPool {
   /**
    * Remove the status of a certain moving event.
    * After removing, the status of this event can no longer be tracked.
+   * User should remove the status when the event is finished and the status of
+   * it is no longer needed.
    * @param id the UUID of the event
    */
   public void removeStatus(UUID id) {
@@ -109,5 +111,9 @@ public class MoverPool {
 
   public void halt(UUID id) {
     // TODO: halt the Mover action
+  }
+
+  public void restart(UUID id) {
+    // TODO: restart the Mover action
   }
 }
