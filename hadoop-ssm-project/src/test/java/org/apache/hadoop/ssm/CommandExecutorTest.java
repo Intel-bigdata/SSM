@@ -1,8 +1,10 @@
 package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.ssm.actions.ActionType;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
@@ -38,14 +40,30 @@ public class CommandExecutorTest extends TestEmptyMiniSSMCluster {
       Util.initializeDataBase(conn);
       DBAdapter dbAdapter = new DBAdapter(conn);
       cmdexe.init(dbAdapter);
+      final DistributedFileSystem dfs = cluster.getFileSystem();
       Map<String, String> smap1 = new HashMap<String, String>();
-      smap1.put("_FILE_PATH_", "/testMoveFile/file");
+      smap1.put("_FILE_PATH_", "/testMoveFile/file1");
       smap1.put("_STORAGE_POLICY_", "ALL_SSD");
+      Path dir1 = new Path("/testMoveFile");
+      dfs.mkdirs(dir1);
+      dfs.setStoragePolicy(dir1, "HOT");
+      final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"),true,1024);
+      out1.writeChars("/testMoveFile/file1");
+      out1.close();
+
       Map<String, String> smap2 = new HashMap<String, String>();
-      smap2.put("_FILE_PATH_", "/testMoveFile/file");
+      smap2.put("_FILE_PATH_", "/testMoveFile/file2");
       smap2.put("_STORAGE_POLICY_", "COLD");
+      final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),true,1024);
+      out2.writeChars("/testMoveFile/file2");
+      out2.close();
+
+
       Map<String, String> smap3 = new HashMap<String, String>();
-      smap3.put("_FILE_PATH_", "/testCacheFile/file");
+      smap3.put("_FILE_PATH_", "/testCacheFile");
+      Path dir3 = new Path("/testCacheFile");
+      dfs.mkdirs(dir3);
+
       CommandInfo command1 = new CommandInfo(0, 1, ActionType.MoveFile,
               CommandState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l);
       CommandInfo command2 = new CommandInfo(0, 1, ActionType.MoveFile,
