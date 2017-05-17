@@ -128,10 +128,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 //                .add(toExec.getId());
             new Daemon(execThreadGroup, toExec).start();
           } else {
-            Thread.sleep(100);
+            Thread.sleep(1000);
           }
         } else {
-          Thread.sleep(100);
+          Thread.sleep(1000);
         }
       } catch (InterruptedException e) {
         if(!running)
@@ -167,6 +167,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       if(statusCache.size() != 0)
         batchCommandStatusUpdate();
       List<CommandInfo> dbcmds = getCommandsFromDB();
+      System.out.printf("INFO Number of Actions = %d\n", dbcmds.size());
       if(dbcmds == null)
         return null;
       for(CommandInfo c : dbcmds) {
