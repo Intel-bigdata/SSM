@@ -30,15 +30,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-public class SSMClient {
+public class SSMClient implements java.io.Closeable, ClientSSMProtocol {
   final static long VERSION = 1;
   Configuration conf;
   ClientSSMProtocol ssm;
-
-  public boolean isClientRunning() {
-    return clientRunning;
-  }
-
   volatile boolean clientRunning = true;
 
   public SSMClient(Configuration conf)
@@ -58,24 +53,64 @@ public class SSMClient {
     this.ssm = clientSSMProtocol;
   }
 
-  public SSMServiceState getServiceState() {
+  @Override
+  public void close() {
+    if (clientRunning) {
+      RPC.stopProxy(ssm);
+      ssm = null;
+      this.clientRunning = false;
+    }
+  }
+
+  public void checkOpen() throws IOException {
+    if (!clientRunning) {
+      throw new IOException("SSMClient closed");
+    }
+  }
+
+  public SSMServiceState getServiceState() throws IOException {
+    checkOpen();
     return ssm.getServiceState();
   }
 
   public void checkRule(String rule) throws IOException {
+    checkOpen();
     ssm.checkRule(rule);
   }
 
   public long submitRule(String rule, RuleState initState)
       throws IOException {
+    checkOpen();
     return ssm.submitRule(rule, initState);
   }
 
   public RuleInfo getRuleInfo(long id) throws IOException {
+    checkOpen();
     return ssm.getRuleInfo(id);
   }
 
   public List<RuleInfo> listRulesInfo() throws IOException {
+    checkOpen();
     return ssm.listRulesInfo();
+  }
+
+  @Override
+  public void deleteRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
+    checkOpen();
+    ssm.deleteRule(ruleID, dropPendingCommands);
+  }
+
+  @Override
+  public void activateRule(long ruleID) throws IOException {
+    checkOpen();
+    ssm.activateRule(ruleID);
+  }
+
+  @Override
+  public void disableRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
+    checkOpen();
+    ssm.disableRule(ruleID, dropPendingCommands);
   }
 }

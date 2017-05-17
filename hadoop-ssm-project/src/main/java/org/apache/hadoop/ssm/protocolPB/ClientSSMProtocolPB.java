@@ -30,13 +30,22 @@ import org.apache.hadoop.ssm.protocol.ClientSSMProto.ListRulesInfoRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.ListRulesInfoResponseProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DeleteRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ActivateRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DisableRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DeleteRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ActivateRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DisableRuleRequestProto;
+
+import java.io.IOException;
 
 @ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.ClientSSMProtocolPB",
     protocolVersion = 1)
 public interface ClientSSMProtocolPB {
 
   GetServiceStateResponseProto
-  getServiceState(RpcController controller, GetServiceStateRequestProto req);
+  getServiceState(RpcController controller,
+      GetServiceStateRequestProto req) throws ServiceException;
 
   GetRuleInfoResponseProto getRuleInfo(RpcController controller,
       GetRuleInfoRequestProto req) throws ServiceException;
@@ -49,4 +58,13 @@ public interface ClientSSMProtocolPB {
 
   ListRulesInfoResponseProto listRulesInfo(RpcController controller,
       ListRulesInfoRequestProto req) throws ServiceException;
+
+  DeleteRuleResponseProto deleteRule(RpcController controller,
+      DeleteRuleRequestProto req) throws ServiceException;
+
+  ActivateRuleResponseProto activateRule(RpcController controller,
+      ActivateRuleRequestProto req) throws ServiceException;
+
+  DisableRuleResponseProto disableRule(RpcController controller,
+      DisableRuleRequestProto req) throws ServiceException;
 }

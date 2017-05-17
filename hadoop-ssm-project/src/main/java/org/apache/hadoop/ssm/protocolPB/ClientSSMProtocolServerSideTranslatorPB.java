@@ -31,6 +31,12 @@ import org.apache.hadoop.ssm.protocol.ClientSSMProto.ListRulesInfoResponseProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.RuleInfoProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DeleteRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ActivateRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DisableRuleResponseProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DeleteRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ActivateRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DisableRuleRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.rule.RuleInfo;
@@ -49,8 +55,13 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
 
   @Override
   public GetServiceStateResponseProto getServiceState(RpcController controller,
-      GetServiceStateRequestProto req) {
-    SSMServiceState s = server.getServiceState();
+      GetServiceStateRequestProto req) throws ServiceException {
+    SSMServiceState s = null;
+    try {
+      s = server.getServiceState();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
     return GetServiceStateResponseProto.newBuilder()
         .setState(s.getValue()).build();
   }
@@ -101,6 +112,39 @@ public class ClientSSMProtocolServerSideTranslatorPB implements
       }
       return ListRulesInfoResponseProto.newBuilder()
           .addAllRulesInfo(infoProtos).build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public DeleteRuleResponseProto deleteRule(RpcController controller,
+      DeleteRuleRequestProto req) throws ServiceException {
+    try {
+      server.deleteRule(req.getRuleId(), req.getDropPendingCommands());
+      return DeleteRuleResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public ActivateRuleResponseProto activateRule(RpcController controller,
+      ActivateRuleRequestProto req) throws ServiceException {
+    try {
+      server.activateRule(req.getRuleId());
+      return ActivateRuleResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public DisableRuleResponseProto disableRule(RpcController controller,
+      DisableRuleRequestProto req) throws ServiceException {
+    try {
+      server.disableRule(req.getRuleId(), req.getDropPendingCommands());
+      return DisableRuleResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
