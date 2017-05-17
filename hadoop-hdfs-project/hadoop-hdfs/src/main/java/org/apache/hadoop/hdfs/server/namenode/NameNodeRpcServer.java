@@ -148,6 +148,7 @@ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NamenodeRole;
 import org.apache.hadoop.hdfs.server.common.HttpGetFailedException;
 import org.apache.hadoop.hdfs.server.common.IncorrectVersionException;
 import org.apache.hadoop.hdfs.server.namenode.NameNode.OperationCategory;
+import org.apache.hadoop.hdfs.server.namenode.metrics.FileAccessMetrics;
 import org.apache.hadoop.hdfs.server.namenode.metrics.NameNodeMetrics;
 import org.apache.hadoop.hdfs.server.protocol.BlockReportContext;
 import org.apache.hadoop.hdfs.server.protocol.BlocksWithLocations;
@@ -208,6 +209,7 @@ import org.apache.hadoop.tracing.SpanReceiverInfo;
 import org.apache.hadoop.tracing.TraceAdminPB.TraceAdminService;
 import org.apache.hadoop.tracing.TraceAdminProtocolPB;
 import org.apache.hadoop.tracing.TraceAdminProtocolServerSideTranslatorPB;
+import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.VersionInfo;
 import org.apache.hadoop.util.VersionUtil;
 import org.slf4j.Logger;
@@ -234,6 +236,7 @@ public class NameNodeRpcServer implements NamenodeProtocols {
   protected final FSNamesystem namesystem;
   protected final NameNode nn;
   private final NameNodeMetrics metrics;
+  private final FileAccessMetrics fileAccessMetrics;
 
   private final RetryCache retryCache;
 
@@ -310,6 +313,7 @@ public class NameNodeRpcServer implements NamenodeProtocols {
     this.namesystem = nn.getNamesystem();
     this.retryCache = namesystem.getRetryCache();
     this.metrics = NameNode.getNameNodeMetrics();
+    this.fileAccessMetrics = FileAccessMetrics.create();
     
     int handlerCount = 
       conf.getInt(DFS_NAMENODE_HANDLER_COUNT_KEY, 
@@ -768,10 +772,8 @@ public class NameNodeRpcServer implements NamenodeProtocols {
       throws IOException {
     checkNNStartup();
     metrics.incrGetBlockLocations();
-    if(offset == 0) {
-      synchronized (accessEvents) {
-        accessEvents.add(new FileAccessEvent(src, System.currentTimeMillis()));
-      }
+    if (offset == 0) {
+      fileAccessMetrics.add(src, "", Time.now());
     }
     return namesystem.getBlockLocations(getClientMachine(), 
                                         src, offset, length);
