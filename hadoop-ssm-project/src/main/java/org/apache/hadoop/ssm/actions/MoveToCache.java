@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hadoop.ssm.actions;
 
 import org.apache.commons.logging.Log;
@@ -13,7 +30,9 @@ import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
 import org.omg.PortableInterceptor.ACTIVE;
 
+import java.util.Date;
 import java.util.EnumSet;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -21,7 +40,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class MoveToCache extends ActionBase {
     private static final Log LOG = LogFactory.getLog(MoveToCache.class);
-    private static MoveToCache instance;
+
     private DFSClient dfsClient;
     private String fileName;
     private Configuration conf;
@@ -36,28 +55,22 @@ public class MoveToCache extends ActionBase {
         this.actionEvents = new LinkedBlockingQueue<String>();
     }
 
-    public static MoveToCache getInstance(DFSClient dfsClient, Configuration conf) {
-        if (instance == null) {
-            instance = new MoveToCache(dfsClient, conf);
-        }
-        return instance;
-    }
-
-    public  void initial(String[] args){
+    public ActionBase initial(String[] args){
         fileName = args[0];
+        return this;
     }
 
     /**
      * Execute an action.
-     * @return true if success, otherwise return false.
+     * @return null.
      */
-    public boolean execute(){
+    public UUID execute(){
 //        Action action = Action.getActionType("cache");
         //MoverExecutor.getInstance(dfsClient,conf).addActionEvent(fileName,action);
         addActionEvent(fileName);
         //MoverExecutor.getInstance(dfsClient,conf).run();
         runCache(fileName);
-        return true;
+        return null;
     }
 
     public void addActionEvent(String fileName) {
@@ -73,7 +86,8 @@ public class MoveToCache extends ActionBase {
         if (isCached(fileName)) {
             return;
         }
-        LOG.info("*" + System.currentTimeMillis() + " : " + fileName + " -> " + "cache");
+        LOG.info("Action starts at " + new Date(System.currentTimeMillis()) +
+            " : " + fileName + " -> " + "cache");
         addDirective(fileName);
     }
 

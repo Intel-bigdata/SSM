@@ -85,7 +85,7 @@ public class TestMoverPool {
       UUID id2 = MoverPool.getInstance().createMoverAction(file2);
       Status status1 = MoverPool.getInstance().getStatus(id1);
       Status status2 = MoverPool.getInstance().getStatus(id2);
-      while (!status1.getIsFinished()) {
+      while (!status1.getIsFinished() || !status2.getIsFinished()) {
         System.out.println("Mover 1 running time : " +
             StringUtils.formatTime(status1.getRunningTime()));
         System.out.println("Mover 2 running time : " +
