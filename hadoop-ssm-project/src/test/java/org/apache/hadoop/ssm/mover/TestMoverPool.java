@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -40,12 +41,20 @@ import static org.junit.Assert.assertTrue;
 public class TestMoverPool {
   private static final int DEFAULT_BLOCK_SIZE = 100;
   private Configuration conf;
+  MiniDFSCluster cluster;
+  DistributedFileSystem dfs;
 
   @Before
-  public void init() {
+  public void init() throws Exception {
     conf = new HdfsConfiguration();
     initConf(conf);
     MoverPool.getInstance().init(conf);
+    cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(3)
+        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE})
+        .build();
+    cluster.waitActive();
+    dfs = cluster.getFileSystem();
   }
 
   static void initConf(Configuration conf) {
@@ -57,15 +66,9 @@ public class TestMoverPool {
     conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
   }
 
-  @Test(timeout = 1000000)
-  public void testParallelMovers() throws Exception{
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3)
-        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE})
-        .build();
+  @Test(timeout = 300000)
+  public void testParallelMovers() throws Exception {
     try {
-      cluster.waitActive();
-      final DistributedFileSystem dfs = cluster.getFileSystem();
       final String file1 = "/testParallelMovers/file1";
       final String file2 = "/testParallelMovers/file2";
       Path dir = new Path("/testParallelMovers");
@@ -79,7 +82,7 @@ public class TestMoverPool {
       out2.writeChars("testParallelMovers2");
       out2.close();
 
-      // move to SSD
+      // move to ARCHIVE
       dfs.setStoragePolicy(dir, "COLD");
       UUID id1 = MoverPool.getInstance().createMoverAction(file1);
       UUID id2 = MoverPool.getInstance().createMoverAction(file2);
@@ -100,6 +103,45 @@ public class TestMoverPool {
           StringUtils.formatTime(status2.getRunningTime()));
       MoverPool.getInstance().removeStatus(id2);
       assertNull(MoverPool.getInstance().getStatus(id2));
+    } finally {
+      cluster.shutdown();
+    }
+  }
+
+  @Test(timeout = 300000)
+  public void testStopAndRestartMovers() throws Exception {
+    try {
+      final String file1 = "/testStopAndRestartMovers/file1";
+      Path dir = new Path("/testStopAndRestartMovers");
+      dfs.mkdirs(dir);
+      // write to DISK
+      dfs.setStoragePolicy(dir, "HOT");
+      final FSDataOutputStream out1 = dfs.create(new Path(file1));
+      out1.writeChars("testStopAndRestartMovers");
+      out1.close();
+
+      // move to ARCHIVE
+      dfs.setStoragePolicy(dir, "COLD");
+      UUID id1 = MoverPool.getInstance().createMoverAction(file1);
+
+      // stop mover
+      Status status1 = MoverPool.getInstance().getStatus(id1);
+      Thread.sleep(1000);
+      Boolean succeed = MoverPool.getInstance().stop(id1, 3);
+      assertTrue(succeed);
+      assertFalse(status1.getSucceeded());
+
+      // restart mover
+      succeed = MoverPool.getInstance().restart(id1);
+      assertTrue(succeed);
+      while (!status1.getIsFinished()) {
+        System.out.println("Mover running time : " +
+            StringUtils.formatTime(status1.getRunningTime()));
+        Thread.sleep(3000);
+      }
+      assertTrue(status1.getSucceeded());
+      System.out.println("Mover total running time : " +
+          StringUtils.formatTime(status1.getRunningTime()));
     } finally {
       cluster.shutdown();
     }

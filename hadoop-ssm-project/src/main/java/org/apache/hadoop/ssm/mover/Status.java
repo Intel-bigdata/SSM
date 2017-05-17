@@ -36,4 +36,6 @@ public abstract class Status {
   public abstract void setTotalDuration(long totalDuration);
 
   public abstract long getRunningTime();
+
+  public abstract void reset();
 }
