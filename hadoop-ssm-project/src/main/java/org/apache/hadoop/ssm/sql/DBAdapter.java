@@ -523,7 +523,9 @@ public class DBAdapter {
         );
         ret.add(f);
       }
+      resultSet.close();
     } catch (SQLException e) {
+      e.printStackTrace();
       return null;
     }
     if(resultSet != null) {
@@ -548,7 +550,7 @@ public class DBAdapter {
 
   public void execute(String sql) throws SQLException {
     Statement s = conn.createStatement();
-    s.executeUpdate(sql);
+    s.execute(sql);
   }
 
   //Todo: optimize
@@ -564,6 +566,7 @@ public class DBAdapter {
     while (res.next()) {
       paths.add(res.getString(1));
     }
+    res.close();
     return paths;
   }
 
@@ -599,8 +602,10 @@ public class DBAdapter {
       if (rs.next()) {
         ruleId = rs.getLong(1);
         info.setId(ruleId);
+        rs.close();
         return true;
       } else {
+        rs.close();
         return false;
       }
     } catch (SQLException e) {

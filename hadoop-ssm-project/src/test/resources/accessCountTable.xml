@@ -1,7 +1,7 @@
 <dataset>
     <table name="table1">
-        <column>file_id</column>
-        <column>access_count</column>
+        <column>fid</column>
+        <column>count</column>
         <row>
             <value>101</value>
             <value>2</value>
@@ -16,8 +16,8 @@
         </row>
     </table>
     <table name="table2">
-        <column>file_id</column>
-        <column>access_count</column>
+        <column>fid</column>
+        <column>count</column>
         <row>
             <value>102</value>
             <value>3</value>
@@ -32,8 +32,8 @@
         </row>
     </table>
     <table name="table3">
-        <column>file_id</column>
-        <column>access_count</column>
+        <column>fid</column>
+        <column>count</column>
         <row>
             <value>103</value>
             <value>2</value>
@@ -48,8 +48,8 @@
         </row>
     </table>
     <table name='expect'>
-        <column>file_id</column>
-        <column>access_count</column>
+        <column>fid</column>
+        <column>count</column>
         <row>
             <value>101</value>
             <value>2</value>

@@ -109,7 +109,7 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTable accessCountTable = new AccessCountTable(0L, 5000L);
     ITable actual = databaseTester.getConnection().createTable(accessCountTable.getTableName());
     ITable expect = databaseTester.getDataSet().getTable("expect1");
-    SortedTable sortedActual = new SortedTable(actual, new String[] {"file_id"});
+    SortedTable sortedActual = new SortedTable(actual, new String[] {"fid"});
     sortedActual.setUseComparable(true);
     Assertion.assertEquals(expect, sortedActual);
   }

@@ -605,7 +605,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
       TreeNode actRoot = r == null ? l : new OperNode(OperatorType.AND, l, r);
       TreeNode root = new OperNode(OperatorType.NONE, actRoot, null);
       // TODO: only file now
-      ret += " WHERE " + doGenerateSql(root, "files").getRet();
+      ret += " WHERE " + doGenerateSql(root, "files").getRet() + ";";
     }
 
     sqlStatements.add(ret);
@@ -685,9 +685,17 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
         return new NodeTransResult(tableName,
             op + " " + connectTables(tableName, lop));
       }
+
+      String res;
+      if (op.length() > 0) {
+        res = "(" + lop.getRet() + " " + op + " " + rop.getRet() + ")";
+      } else {
+        res = "(" + lop.getRet() + ")";
+      }
+
       return new NodeTransResult(
           lop.getTableName() != null ? lop.getTableName() : rop.getTableName(),
-          "(" + lop.getRet() + " " + op + " " + rop.getRet() + ")");
+          res);
 
     } else {
       ValueNode vNode = (ValueNode) root;
@@ -714,7 +722,7 @@ public class SSMRuleVisitTranslator extends SSMRuleBaseVisitor<TreeNode> {
           }
           String virTab = "VIR_ACC_CNT_TAB_" + rid + realParas.instId();
           tempTableNames.add(virTab);
-          sqlStatements.add("DROP TABLE IF EXISTS " + virTab);
+          sqlStatements.add("DROP TABLE IF EXISTS '" + virTab + "';");
           sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
           dynamicParameters.put(virTab,
               Arrays.asList(realParas.getValues(), virTab));

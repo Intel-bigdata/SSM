@@ -38,6 +38,8 @@ public class TestEmptyMiniSSMCluster {
   protected Configuration conf;
   protected MiniDFSCluster cluster;
   protected SSMServer ssm;
+  protected String dbFile;
+  protected String dbUrl;
 
   @Before
   public void setUp() throws Exception {
@@ -52,8 +54,8 @@ public class TestEmptyMiniSSMCluster {
         uriList.get(0).toString());
 
     // Set db used
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
+    dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+    dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
     conf.set(SSMConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SSMServer

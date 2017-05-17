@@ -77,16 +77,15 @@ public class AccessEventAggregator {
         .map(entry -> "(" + pathToIDs.get(entry.getKey()) + ", " + entry.getValue() + ")")
         .collect(Collectors.joining(","));
 
-    StringBuilder builder = new StringBuilder(createTable + ";");
-    builder.append(
-        String.format(
-            "INSERT INTO %s (%s, %s) VALUES %s",
-            table.getTableName(),
-            AccessCountTable.FILE_FIELD,
-            AccessCountTable.ACCESSCOUNT_FIELD,
-            values));
+    String insertValue = String.format(
+        "INSERT INTO %s (%s, %s) VALUES %s",
+        table.getTableName(),
+        AccessCountTable.FILE_FIELD,
+        AccessCountTable.ACCESSCOUNT_FIELD,
+        values);
     try {
-      this.adapter.execute(builder.toString());
+      this.adapter.execute(createTable);
+      this.adapter.execute(insertValue);
     } catch (SQLException e) {
       e.printStackTrace();
     }

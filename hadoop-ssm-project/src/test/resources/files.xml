@@ -16,8 +16,8 @@
         </row>
     </table>
     <table name="expect1">
-        <column>file_id</column>
-        <column>access_count</column>
+        <column>fid</column>
+        <column>count</column>
         <row>
             <value>101</value>
             <value>1</value>
