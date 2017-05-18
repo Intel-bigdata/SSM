@@ -51,7 +51,9 @@ public class TestMoverPool {
     MoverPool.getInstance().init(conf);
     cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(3)
-        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE})
+        .storagesPerDatanode(3)
+        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
+        StorageType.SSD})
         .build();
     cluster.waitActive();
     dfs = cluster.getFileSystem();
@@ -83,7 +85,8 @@ public class TestMoverPool {
       out2.close();
 
       // move to ARCHIVE
-      dfs.setStoragePolicy(dir, "COLD");
+      dfs.setStoragePolicy(new Path(file1), "COLD");
+      dfs.setStoragePolicy(new Path(file2), "ALL_SSD");
       UUID id1 = MoverPool.getInstance().createMoverAction(file1);
       UUID id2 = MoverPool.getInstance().createMoverAction(file2);
       Status status1 = MoverPool.getInstance().getStatus(id1);
