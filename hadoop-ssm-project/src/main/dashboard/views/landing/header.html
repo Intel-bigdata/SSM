@@ -24,7 +24,7 @@ under the License.
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
-    <a class="navbar-brand" href="#/">Gearpump
+    <a class="navbar-brand" href="#/">HDFS SSM
       <span class="label label-primary"
             ng-bind="version"></span>
     </a>
@@ -32,24 +32,24 @@ under the License.
   <div class="collapse navbar-collapse" id="main_nav">
     <ul class="nav navbar-nav" bs-navbar>
       <li role="placeholder"></li>
-      <li data-match-route="/cluster">
-        <a class="dropdown-toggle" data-toggle="dropdown">
-          <span class="fa fa-sitemap"></span>
-          Cluster
-          <span class="caret"></span></a>
-        <ul class="dropdown-menu">
-          <li ng-repeat="item in clusterMenuItems track by $index">
-            <a href="#/cluster/{{item.pathPatt}}" class="header-menu"
-               data-toggle="collapse" data-target=".in">
-              <span class="{{item.icon}}"></span> {{item.text}}</a>
-          </li>
-        </ul>
-      </li>
+      <!--<li data-match-route="/cluster">-->
+        <!--<a class="dropdown-toggle" data-toggle="dropdown">-->
+          <!--<span class="fa fa-sitemap"></span>-->
+          <!--Cluster-->
+          <!--<span class="caret"></span></a>-->
+        <!--<ul class="dropdown-menu">-->
+          <!--<li ng-repeat="item in clusterMenuItems track by $index">-->
+            <!--<a href="#/cluster/{{item.pathPatt}}" class="header-menu"-->
+               <!--data-toggle="collapse" data-target=".in">-->
+              <!--<span class="{{item.icon}}"></span> {{item.text}}</a>-->
+          <!--</li>-->
+        <!--</ul>-->
+      <!--</li>-->
 
       <li data-match-route="/apps">
         <a href="#/apps" data-toggle="collapse" data-target=".in">
           <span class="fa fa-code"></span>
-          Applications</a>
+          Rules</a>
       </li>
     </ul>
 

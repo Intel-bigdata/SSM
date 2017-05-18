@@ -34,8 +34,8 @@
     'ui.select',
     'cfp.loadingBarInterceptor',
     'ngFileUpload',
-    'dashing',
-    'org.apache.gearpump.models'
+    'dashing'
+    // 'org.apache.gearpump.models'
   ])
 
     // configure routes
@@ -45,15 +45,15 @@
 
         $urlRouterProvider
           .when('', '/')
-          .when('/', '/cluster')
-          .when('/cluster', '/cluster/master');
+          .when('/', '/apps');
+          // .when('/cluster', '/cluster/master');
 
-        $stateProvider
-          .state('cluster', {
-            abstract: true, // todo: we have a sidebar for cluster only
-            url: '/cluster',
-            templateUrl: 'views/cluster/overview.html'
-          });
+        // $stateProvider
+        //   .state('cluster', {
+        //     abstract: true, // todo: we have a sidebar for cluster only
+        //     url: '/cluster',
+        //     templateUrl: 'views/cluster/overview.html'
+        //   });
         // Please check every controller for corresponding state definition
       }])
 
@@ -107,33 +107,33 @@
         event.preventDefault();
         _.delay($state.go, conf.restapiQueryTimeout, toState);
       });
-    }])
-
-    /* enable a health check service */
-    .run(['$modal', 'HealthCheckService', 'conf', function ($modal, HealthCheckService, conf) {
-      'use strict';
-
-      var dialog = $modal({
-        templateUrl: 'views/service_unreachable_notice.html',
-        backdrop: 'static',
-        show: false
-      });
-
-      var showDialogFn = function () {
-        dialog.$promise.then(dialog.show);
-      };
-
-      var hideDialogFn = function () {
-        // simply refresh the page, to make sure page status is fresh
-        location.reload();
-      };
-
-      HealthCheckService.config(
-        conf.restapiRoot + 'version',
-        conf.restapiQueryInterval,
-        showDialogFn,
-        hideDialogFn
-      );
-      HealthCheckService.checkForever();
     }]);
+
+//    /* enable a health check service */
+//    .run(['$modal', 'HealthCheckService', 'conf', function ($modal, HealthCheckService, conf) {
+//      'use strict';
+//
+//      var dialog = $modal({
+//        templateUrl: 'views/service_unreachable_notice.html',
+//        backdrop: 'static',
+//        show: false
+//      });
+//
+//      var showDialogFn = function () {
+//        dialog.$promise.then(dialog.show);
+//      };
+//
+//      var hideDialogFn = function () {
+//        // simply refresh the page, to make sure page status is fresh
+//        location.reload();
+//      };
+//
+//      HealthCheckService.config(
+//        conf.restapiRoot + 'version',
+//        conf.restapiQueryInterval,
+//        showDialogFn,
+//        hideDialogFn
+//      );
+//      HealthCheckService.checkForever();
+//    }]);
 })();

@@ -27,17 +27,16 @@ angular.module('dashboard')
       replace: true,
       scope: {},
       controller: ['$scope', '$cookies', 'restapi', 'conf', function ($scope, $cookies, restapi, conf) {
-        $scope.clusterMenuItems = [
-          {text: 'Master', pathPatt: 'master', icon: 'fa fa-laptop'},
-          {text: 'Workers', pathPatt: 'workers', icon: 'fa fa-server'}
-        ];
+//        $scope.clusterMenuItems = [
+//          {text: 'Master', pathPatt: 'master', icon: 'fa fa-laptop'},
+//          {text: 'Workers', pathPatt: 'workers', icon: 'fa fa-server'}
+//        ];
 
         $scope.username = $cookies.get('username');
         $scope.userMenuItems = [
           {text: 'Sign Out', href: conf.loginUrl, icon: 'glyphicon glyphicon-off'},
           {isDivider: true},
-          {text: 'Documents', href: '//gearpump.apache.org', icon: 'fa fa-book'},
-          {text: 'GitHub', href: '//github.com/apache/incubator-gearpump', icon: 'fa fa-github'}
+          {text: 'GitHub', href: '//github.com/Intel-bigdata/SSM', icon: 'fa fa-github'}
         ];
 
         $scope.version = 'beta';
