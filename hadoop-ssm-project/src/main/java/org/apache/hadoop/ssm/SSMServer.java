@@ -43,6 +43,7 @@ import org.apache.hadoop.ssm.utils.GenericOptionsParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -167,11 +168,16 @@ public class SSMServer {
     try {
       SSMServer ssm = createSSM(args, conf);
       if (ssm != null) {
-        ssm.join();
+        //ssm.join();
+        // TODO: block now,  to be refined
+        while (true) {
+          Thread.sleep(1000);
+        }
       } else {
         errorCode = 1;
       }
     } catch (Exception e) {
+      System.out.println("\n");
       e.printStackTrace();
       System.exit(1);
     } finally {
@@ -266,6 +272,7 @@ public class SSMServer {
 
   public Connection getDBConnection() throws Exception {
     String dburi = getDBUri();
+    System.out.println("Database file URI = " + dburi);
     Connection conn = Util.createConnection(dburi.toString(), null, null);
     return conn;
   }
@@ -277,9 +284,27 @@ public class SSMServer {
 
     String url = conf.get(SSMConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY);
     if (url == null) {
-      throw new FileNotFoundException("No database found for SSM");
+      System.out.println("[Warning] No database specified for SSM, "
+          + "will use a default one instead.");
     }
-    return url;
+    return url != null ? url : getDefaultSqliteDB() ;
+  }
+
+  /**
+   * This default behavior provided here is mainly for convenience.
+   * @return
+   */
+  private String getDefaultSqliteDB() throws Exception {
+    String absFilePath = System.getProperty("user.home")
+        + "/ssm-test-default.db";
+    File file = new File(absFilePath);
+    if (file.exists()) {
+      return Util.SQLITE_URL_PREFIX + absFilePath;
+    }
+    Connection conn = Util.createSqliteConnection(absFilePath);
+    Util.initializeDataBase(conn);
+    conn.close();
+    return Util.SQLITE_URL_PREFIX + absFilePath;
   }
 
   public Configuration getConf() {

@@ -84,8 +84,12 @@ public class InotifyEventFetcher {
   }
 
   public void stop() {
-    this.inotifyFile.delete();
-    this.inotifyFetchFuture.cancel(false);
+    if (inotifyFile != null) {
+      this.inotifyFile.delete();
+    }
+    if (inotifyFetchFuture != null) {
+      this.inotifyFetchFuture.cancel(false);
+    }
     if (this.fetchAndApplyFuture != null){
       this.fetchAndApplyFuture.cancel(false);
     }
