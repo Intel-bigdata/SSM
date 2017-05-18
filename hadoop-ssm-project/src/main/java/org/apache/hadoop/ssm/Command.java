@@ -129,7 +129,7 @@ public class Command implements Runnable {
           iter.remove();
         }
       }
-      if(uuids.size() != 0)
+      if(uuids.size() == 0)
         break;
       try {
         Thread.sleep(300);
