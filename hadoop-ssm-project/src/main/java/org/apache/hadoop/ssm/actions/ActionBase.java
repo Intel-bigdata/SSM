@@ -49,8 +49,7 @@ public abstract class ActionBase {
     return actionType;
   }
 
-  public final boolean run() {
-    execute();
-    return true;
+  public UUID run() {
+    return execute();
   }
 }
