@@ -27,7 +27,7 @@ public class TestCommandExecutor extends TestEmptyMiniSSMCluster {
     testCommandExecutorHelper(ssm.getConf());
   }
 
-  public void generateTestCases() throws Exception {
+  private void generateTestCases() throws Exception {
     try {
       DBAdapter dbAdapter = ssm.getDBAdapter();
       // HDFS related
@@ -70,7 +70,7 @@ public class TestCommandExecutor extends TestEmptyMiniSSMCluster {
   }
 
 
-  public void testCommandExecutorHelper(Configuration conf) throws Exception {
+  private void testCommandExecutorHelper(Configuration conf) throws Exception {
     // Check Status
     DBAdapter dbAdapter = ssm.getDBAdapter();
     String cidCondition = ">= 1 ";
