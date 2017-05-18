@@ -29,10 +29,11 @@ class SSMHttpServer(ssmServer: SSMServer, conf: Configuration) {
     println(s"Please browse to http://${httpServerAddress.getHostString}:" +
       s"${httpServerAddress.getPort} to see the web UI")
     Await.result(bindingFuture, 15.seconds)
-    system.awaitTermination()
   }
 
   def stop(): Unit = {
+    system.shutdown()
+    system.awaitTermination()
   }
 
   def join(): Unit = {
