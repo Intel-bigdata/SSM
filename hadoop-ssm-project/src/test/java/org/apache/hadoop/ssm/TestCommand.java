@@ -30,6 +30,7 @@ public class TestCommand {
     init();
     generateTestCase();
     runHelper().runActions();
+    System.out.println("Command UT Finished!!");
   }
 
   private void init() throws Exception {
@@ -90,7 +91,6 @@ public class TestCommand {
     cmd.setState(CommandState.PENDING);
     // Init action
     return cmd;
-
   }
 
 }
