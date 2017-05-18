@@ -109,9 +109,8 @@ public class Command implements Runnable {
   public String toString() {
     return "Rule-" + ruleId + "-Cmd-" + id;
   }
-  
-  @Override
-  public void run() {
+
+  public void runActions() {
     UUID uid;
     for (ActionBase act : actions) {
       if(act == null)
@@ -139,6 +138,12 @@ public class Command implements Runnable {
         System.out.printf("Action Thread error!");
       }
     }
+  }
+
+
+  @Override
+  public void run() {
+    runActions();
     cb.complete(this.id, this.ruleId, CommandState.DONE);
   }
 }
