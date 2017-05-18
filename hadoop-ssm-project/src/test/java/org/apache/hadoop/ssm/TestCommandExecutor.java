@@ -23,6 +23,7 @@ public class TestCommandExecutor extends TestEmptyMiniSSMCluster {
 
   @Test
   public void testCommandExecutor() throws  Exception {
+    waitTillSSMExitSafeMode();
     generateTestCases();
     testCommandExecutorHelper(ssm.getConf());
   }
@@ -38,14 +39,14 @@ public class TestCommandExecutor extends TestEmptyMiniSSMCluster {
       Path dir1 = new Path("/testMoveFile");
       dfs.mkdirs(dir1);
       dfs.setStoragePolicy(dir1, "HOT");
-      final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"),true,1024);
+      final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"), true, 1024);
       out1.writeChars("/testMoveFile/file1");
       out1.close();
 
       Map<String, String> smap2 = new HashMap<String, String>();
       smap2.put("_FILE_PATH_", "/testMoveFile/file2");
       smap2.put("_STORAGE_POLICY_", "COLD");
-      final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),true,1024);
+      final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"), true, 1024);
       out2.writeChars("/testMoveFile/file2");
       out2.close();
 
@@ -62,13 +63,12 @@ public class TestCommandExecutor extends TestEmptyMiniSSMCluster {
               CommandState.PENDING, JsonUtil.toJsonString(smap3), 123178333l, 232444994l);
       CommandInfo[] commands = {command1, command2, command3};
       dbAdapter.insertCommandsTable(commands);
-      Thread.sleep(10000);
+      Thread.sleep(80000);
     } finally {
       File file = new File(dbFile);
       file.deleteOnExit();
     }
   }
-
 
   private void testCommandExecutorHelper(Configuration conf) throws Exception {
     // Check Status

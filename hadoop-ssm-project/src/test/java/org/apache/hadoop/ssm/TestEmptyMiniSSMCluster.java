@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.ssm.protocol.SSMClient;
@@ -45,8 +46,10 @@ public class TestEmptyMiniSSMCluster {
   public void setUp() throws Exception {
     conf = new SSMConfiguration();
     cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3).build();
-
+            .numDataNodes(3)
+            .storagesPerDatanode(3)
+            .storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD,StorageType.ARCHIVE})
+            .build();
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());

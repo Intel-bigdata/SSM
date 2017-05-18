@@ -19,6 +19,7 @@ package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ssm.actions.*;
+import org.apache.hadoop.ssm.mover.Mover;
 import org.apache.hadoop.ssm.mover.MoverPool;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
@@ -85,27 +86,31 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
    */
   public void stop() throws IOException {
     running = false;
-    // TODO Command statue update
-    if (commandExecutorThread == null) {
-      return;
-    }
-    commandExecutorThread.interrupt();
-    execThreadGroup.interrupt();
+    // Update Status
+    batchCommandStatusUpdate();
+    // TODO Stop MoverPool
   }
 
   public void join() throws IOException {
-    try{
-      if(execThreadGroup == null || execThreadGroup.activeCount() == 0)
-        return;
+    if(commandExecutorThread == null)
+      return;
+    if(execThreadGroup == null || execThreadGroup.activeCount() == 0)
+      return;
+    try {
       Thread[] gThread = new Thread[execThreadGroup.activeCount()];
       execThreadGroup.enumerate(gThread);
-      for(Thread t: gThread) {
-        t.interrupt();
-        t.join();
+      for (Thread t : gThread) {
+        if(!t.isAlive())
+          t.interrupt();
+        if(t.getName().contains("pool"))
+          t.join(10);
+        else
+          t.join();
       }
     } catch (InterruptedException e) {
       System.out.printf("Stop thread group error!");
     }
+    execThreadGroup.interrupt();
     execThreadGroup.destroy();
     try {
       commandExecutorThread.join(1000);
@@ -120,7 +125,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     while (running) {
       try {
         // control the commands that executed concurrently
-        if (execThreadGroup.activeCount() <= 5) {  // TODO: use configure value
+        if (execThreadGroup.activeCount() <= 15) {  // TODO: use configure value
           Command toExec = schedule();
           if (toExec != null) {
             toExec.setScheduleToExecuteTime(Time.now());
@@ -128,10 +133,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 //                .add(toExec.getId());
             new Daemon(execThreadGroup, toExec).start();
           } else {
-            Thread.sleep(100);
+            Thread.sleep(1000);
           }
         } else {
-          Thread.sleep(100);
+          Thread.sleep(1000);
         }
       } catch (InterruptedException e) {
         if(!running)
@@ -164,11 +169,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (cmds.size() == 0) {
       // TODO Check Status and Update
       // Put them into cmdsAll and cmdsInState
+      System.out.printf("INFO Number of Caches = %d\n", statusCache.size());
       if(statusCache.size() != 0)
         batchCommandStatusUpdate();
       List<CommandInfo> dbcmds = getCommandsFromDB();
       if(dbcmds == null)
         return null;
+      System.out.printf("INFO Number of Actions = %d\n", dbcmds.size());
       for(CommandInfo c : dbcmds) {
         if(cmdsExecuting.contains(c.getCid()))
           continue;
@@ -208,7 +215,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     current.initial(args);
     actions[0] = current;
     // New Command
-    Command cmd = new Command(actions, new Callback(commandExecutorThread));
+    Command cmd = new Command(actions, new Callback());
     cmd.setParameters(jsonParameters);
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -258,23 +265,15 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public class Callback {
-    private Daemon thread;
-
-    public Callback(Daemon thread) {
-      this.thread = thread;
-    }
 
     public void complete(long cid, long rid, CommandState state) {
 //      adapter.updateCommandStatus(cid, rid, state);
+        commandExecutorThread.interrupt();
         statusCache.add(new CmdTuple(cid, rid, state));
         removeFromExecuting(cid, rid, state);
     }
 
     public void weakUp() {
-      //TODO New Mover and status check
-      if(thread.isAlive())
-        return;
-      thread.interrupt();
     }
 
     public void executing() {

@@ -47,6 +47,7 @@ public class Command implements Runnable {
   private Map<String, String> parameters;
   CommandExecutor.Callback cb;
   private ArrayList<UUID> uuids;
+  private boolean running;
 
   private long createTime;
   private long scheduleToExecuteTime;
@@ -60,6 +61,7 @@ public class Command implements Runnable {
     this.actions = actions.clone();
     this.cb = cb;
     this.uuids = new ArrayList<>();
+    this.running = true;
   }
 
   public long getRuleId() {
@@ -121,7 +123,7 @@ public class Command implements Runnable {
       uuids.add(uid);
     }
     MoverPool moverPool = MoverPool.getInstance();
-    while(uuids.size() != 0) {
+    while(uuids.size() != 0 && running) {
       for (Iterator<UUID> iter = uuids.iterator(); iter.hasNext();) {
         UUID id = iter.next();
         if (moverPool.getStatus(id).getIsFinished()) {
@@ -129,7 +131,7 @@ public class Command implements Runnable {
           iter.remove();
         }
       }
-      if(uuids.size() != 0)
+      if(uuids.size() == 0 || !running)
         break;
       try {
         Thread.sleep(300);
@@ -139,7 +141,6 @@ public class Command implements Runnable {
       }
     }
   }
-
 
   @Override
   public void run() {
