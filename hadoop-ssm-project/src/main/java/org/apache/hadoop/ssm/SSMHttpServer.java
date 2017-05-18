@@ -29,7 +29,6 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
-import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
@@ -54,7 +53,6 @@ import com.google.common.annotations.VisibleForTesting;
 /**
  * Encapsulates the HTTP server started by the SSMHttpServer.
  */
-@InterfaceAudience.Private
 public class SSMHttpServer {
   private SSMServer ssm;
 
@@ -69,7 +67,7 @@ public class SSMHttpServer {
   public static final String FSIMAGE_ATTRIBUTE_KEY = "name.system.image";
   public static final String STARTUP_PROGRESS_ATTRIBUTE_KEY = "startup.progress";
 
-  SSMHttpServer(SSMServer ssm, Configuration conf) {
+  public SSMHttpServer(SSMServer ssm, Configuration conf) {
     this.ssm = ssm;
     this.conf = conf;
     this.bindAddress = getHttpServerAddress();
@@ -115,7 +113,7 @@ public class SSMHttpServer {
             pathSpec);
   }
 
-  void start() throws IOException, URISyntaxException {
+  public void start() throws IOException, URISyntaxException {
     HttpConfig.Policy policy = DFSUtil.getHttpPolicy(conf);
 
     final InetSocketAddress httpAddr = bindAddress;
@@ -168,7 +166,7 @@ public class SSMHttpServer {
   }
 
 
-  void stop() throws Exception {
+  public void stop() throws Exception {
     if (httpServer != null) {
       httpServer.stop();
     }

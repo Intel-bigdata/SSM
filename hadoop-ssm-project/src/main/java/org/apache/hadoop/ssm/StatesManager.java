@@ -72,8 +72,13 @@ public class StatesManager implements ModuleSequenceProto {
   }
 
   public void stop() throws IOException {
-    this.inotifyEventFetcher.stop();
-    this.accessCountFetcher.stop();
+    if (inotifyEventFetcher != null) {
+      this.inotifyEventFetcher.stop();
+    }
+
+    if (accessCountFetcher != null) {
+      this.accessCountFetcher.stop();
+    }
   }
 
   public void join() throws IOException {
