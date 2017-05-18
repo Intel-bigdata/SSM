@@ -22,6 +22,8 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.ssm.protocol.SSMClient;
+import org.apache.hadoop.ssm.rule.RuleInfo;
+import org.apache.hadoop.ssm.rule.RuleState;
 import org.apache.hadoop.ssm.sql.TestDBUtil;
 import org.apache.hadoop.ssm.sql.Util;
 import org.junit.Test;
@@ -34,6 +36,7 @@ import java.util.List;
 
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestSSMClient {
@@ -70,8 +73,45 @@ public class TestSSMClient {
       Thread.sleep(1000);
     }
 
-    //test single SSM
+    //test listRulesInfo and submitRule
+    List<RuleInfo> ruleInfos = ssmClient.listRulesInfo();
+    int ruleCounts0 = ruleInfos.size();
+    long ruleId = ssmClient.submitRule(
+        "file: every 5s | path matches \"/foo*\"| cachefile",
+        RuleState.DRYRUN);
+    ruleInfos = ssmClient.listRulesInfo();
+    int ruleCounts1 = ruleInfos.size();
+    assertEquals(1, ruleCounts1 - ruleCounts0);
+
+    //test checkRule
+    //if success ,no Exception throw
+    ssmClient.checkRule("file: every 5s | path matches \"/foo*\"| cachefile");
     boolean caughtException = false;
+    try {
+      ssmClient.checkRule("file.path");
+    } catch (IOException e) {
+      caughtException = true;
+    }
+    assertTrue(caughtException);
+
+    //test getRuleInfo
+    RuleInfo ruleInfo = ssmClient.getRuleInfo(ruleId);
+    assertNotEquals(null, ruleInfo);
+
+    //test disableRule
+    ssmClient.disableRule(ruleId, true);
+    assertEquals(RuleState.DISABLED, ssmClient.getRuleInfo(ruleId).getState());
+
+    //test activateRule
+    ssmClient.activateRule(ruleId);
+    assertEquals(RuleState.ACTIVE, ssmClient.getRuleInfo(ruleId).getState());
+
+    //test deleteRule
+    ssmClient.deleteRule(ruleId, true);
+    assertEquals(RuleState.DELETED, ssmClient.getRuleInfo(ruleId).getState());
+
+    //test single SSM
+    caughtException = false;
     try {
       conf.set(SSMConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
       SSMServer.createSSM(null, conf);
@@ -81,5 +121,15 @@ public class TestSSMClient {
       caughtException = true;
     }
     assertTrue(caughtException);
+
+    //test client close
+    caughtException = false;
+    ssmClient.close();
+    try {
+      ssmClient.getRuleInfo(ruleId);
+    } catch (IOException e) {
+      caughtException = true;
+    }
+    assertEquals(true, caughtException);
   }
 }
