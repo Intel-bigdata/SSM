@@ -145,4 +145,22 @@ public class SSMRpcServer implements ClientSSMProtocol {
     checkIfActive();
     return ssm.getRuleManager().listRulesInfo();
   }
+
+  @Override
+  public void deleteRule(long ruleID, boolean dropPendingCommands) throws IOException {
+    checkIfActive();
+    ssm.getRuleManager().DeleteRule(ruleID, dropPendingCommands);
+  }
+
+  @Override
+  public void activateRule(long ruleID) throws IOException {
+    checkIfActive();
+    ssm.getRuleManager().ActivateRule(ruleID);
+  }
+
+  @Override
+  public void disableRule(long ruleID, boolean dropPendingCommands) throws IOException {
+    checkIfActive();
+    ssm.getRuleManager().DisableRule(ruleID, dropPendingCommands);
+  }
 }

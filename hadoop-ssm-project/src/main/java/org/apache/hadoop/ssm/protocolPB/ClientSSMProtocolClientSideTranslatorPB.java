@@ -18,6 +18,7 @@
 package org.apache.hadoop.ssm.protocolPB;
 
 import com.google.protobuf.ServiceException;
+import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.CheckRuleRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetRuleInfoRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetRuleInfoResponseProto;
@@ -25,6 +26,9 @@ import org.apache.hadoop.ssm.protocol.ClientSSMProto.GetServiceStateRequestProto
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.ListRulesInfoRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.RuleInfoProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProto.SubmitRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DeleteRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.ActivateRuleRequestProto;
+import org.apache.hadoop.ssm.protocol.ClientSSMProto.DisableRuleRequestProto;
 import org.apache.hadoop.ssm.protocol.ClientSSMProtocol;
 import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.rule.RuleInfo;
@@ -34,19 +38,24 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtocol {
-  final private ClientSSMProtocolPB rpcProxy;
+public class ClientSSMProtocolClientSideTranslatorPB implements
+    java.io.Closeable, ClientSSMProtocol {
+  private ClientSSMProtocolPB rpcProxy;
 
   public ClientSSMProtocolClientSideTranslatorPB(ClientSSMProtocolPB proxy) {
     this.rpcProxy = proxy;
   }
-  
+
   @Override
-  public SSMServiceState getServiceState() {
+  public SSMServiceState getServiceState() throws IOException {
     GetServiceStateRequestProto req =
         GetServiceStateRequestProto.newBuilder().build();
-    int state = rpcProxy.getServiceState(null, req).getState();
-    return SSMServiceState.fromValue(state);
+    try {
+      return SSMServiceState.fromValue(
+          rpcProxy.getServiceState(null, req).getState());
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
   }
 
   @Override
@@ -101,5 +110,63 @@ public class ClientSSMProtocolClientSideTranslatorPB implements ClientSSMProtoco
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }
+  }
+
+  @Override
+  public void deleteRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
+    DeleteRuleRequestProto req = DeleteRuleRequestProto.newBuilder()
+        .setRuleId(ruleID)
+        .setDropPendingCommands(dropPendingCommands)
+        .build();
+    try {
+      rpcProxy.deleteRule(null, req);
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public void activateRule(long ruleID) throws IOException {
+    ActivateRuleRequestProto req = ActivateRuleRequestProto.newBuilder()
+        .setRuleId(ruleID).build();
+    try {
+      rpcProxy.activateRule(null, req);
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public void disableRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
+    DisableRuleRequestProto req = DisableRuleRequestProto.newBuilder()
+        .setRuleId(ruleID)
+        .setDropPendingCommands(dropPendingCommands)
+        .build();
+    try {
+      rpcProxy.disableRule(null, req);
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
+  }
+
+  /**
+   * Closes this stream and releases any system resources associated
+   * with it. If the stream is already closed then invoking this
+   * method has no effect.
+   *
+   * <p> As noted in {@link AutoCloseable#close()}, cases where the
+   * close may fail require careful attention. It is strongly advised
+   * to relinquish the underlying resources and to internally
+   * <em>mark</em> the {@code Closeable} as closed, prior to throwing
+   * the {@code IOException}.
+   *
+   * @throws IOException if an I/O error occurs
+   */
+  @Override
+  public void close() throws IOException {
+    RPC.stopProxy(rpcProxy);
+    rpcProxy = null;
   }
 }

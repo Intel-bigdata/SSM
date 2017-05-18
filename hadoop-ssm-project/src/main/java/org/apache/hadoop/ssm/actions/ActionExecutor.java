@@ -17,9 +17,7 @@
  */
 package org.apache.hadoop.ssm.actions;
 
-import org.apache.hadoop.ssm.actions.ActionBase;
-import org.apache.hadoop.ssm.actions.ActionType;
-
+import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -34,7 +32,7 @@ final public class ActionExecutor {
     semaphores[ActionType.BalanceCluster.getValue()] = new Semaphore(1);
   }
 
-  public static boolean run(ActionBase action) {
+  public static UUID run(ActionBase action) {
     int v = action.getActionType().getValue();
     boolean acquired = false;
     try {
@@ -45,7 +43,7 @@ final public class ActionExecutor {
       return action.run();
     } catch (InterruptedException e) {
       e.printStackTrace();
-      return false;
+      return null;
     } finally {
       if (acquired && semaphores[v] != null) {
         semaphores[v].release();

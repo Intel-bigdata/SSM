@@ -824,19 +824,8 @@ public class RollingFileSystemSink implements MetricsSink, Closeable {
     synchronized (lock) {
       rollLogDirIfNeeded();
 
-
       if (currentOutStream != null) {
-        putMetrics(currentOutStream, record);
-
-        // If we don't hflush(), the data may not be written until the file is
-        // closed. The file won't be closed until the end of the interval *AND*
-        // another record is received. Calling hflush() makes sure that the data
-        // is complete at the end of the interval.
-        try {
-          currentFSOutStream.hflush();
-        } catch (IOException ex) {
-          throwMetricsException("Failed flushing the stream", ex);
-        }
+        putMetrics(currentOutStream, currentFSOutStream, record);
 
         checkForErrors("Unable to write to log file");
       } else if (!ignoreError) {
@@ -845,7 +834,8 @@ public class RollingFileSystemSink implements MetricsSink, Closeable {
     }
   }
 
-  protected void putMetrics(PrintStream currentOutStream, MetricsRecord record) {
+  protected void putMetrics(PrintStream currentOutStream,
+      FSDataOutputStream currentFSOutStream, MetricsRecord record) {
     currentOutStream.printf("%d %s.%s", record.timestamp(),
         record.context(), record.name());
 
@@ -863,6 +853,16 @@ public class RollingFileSystemSink implements MetricsSink, Closeable {
     }
 
     currentOutStream.println();
+
+    // If we don't hflush(), the data may not be written until the file is
+    // closed. The file won't be closed until the end of the interval *AND*
+    // another record is received. Calling hflush() makes sure that the data
+    // is complete at the end of the interval.
+    try {
+      currentFSOutStream.hflush();
+    } catch (IOException ex) {
+      throwMetricsException("Failed flushing the stream", ex);
+    }
   }
 
   @Override

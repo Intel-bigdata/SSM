@@ -773,7 +773,11 @@ public class NameNodeRpcServer implements NamenodeProtocols {
     checkNNStartup();
     metrics.incrGetBlockLocations();
     if (offset == 0) {
-      fileAccessMetrics.add(src, "", Time.now());
+      long curTime = Time.now();
+      synchronized (accessEvents) {
+        accessEvents.add(new FileAccessEvent(src, "", curTime));
+      }
+      fileAccessMetrics.add(src, "", curTime);
     }
     return namesystem.getBlockLocations(getClientMachine(), 
                                         src, offset, length);

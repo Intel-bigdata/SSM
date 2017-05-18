@@ -17,11 +17,13 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.ssm.actions.ActionBase;
 import org.apache.hadoop.ssm.actions.ActionExecutor;
+import org.apache.hadoop.ssm.mover.MoverPool;
 
-
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.UUID;
 import java.util.Map;
 
 /**
@@ -44,6 +46,7 @@ public class Command implements Runnable {
   private ActionBase[] actions;
   private Map<String, String> parameters;
   CommandExecutor.Callback cb;
+  private ArrayList<UUID> uuids;
 
   private long createTime;
   private long scheduleToExecuteTime;
@@ -56,6 +59,7 @@ public class Command implements Runnable {
   public Command(ActionBase[] actions, CommandExecutor.Callback cb) {
     this.actions = actions.clone();
     this.cb = cb;
+    this.uuids = new ArrayList<>();
   }
 
   public long getRuleId() {
@@ -105,16 +109,41 @@ public class Command implements Runnable {
   public String toString() {
     return "Rule-" + ruleId + "-Cmd-" + id;
   }
-  
-  @Override
-  public void run() {
+
+  public void runActions() {
+    UUID uid;
     for (ActionBase act : actions) {
       if(act == null)
         continue;
-      if (ActionExecutor.run(act)) {
+      uid = ActionExecutor.run(act);
+      if(uid == null)
+        continue;
+      uuids.add(uid);
+    }
+    MoverPool moverPool = MoverPool.getInstance();
+    while(uuids.size() != 0) {
+      for (Iterator<UUID> iter = uuids.iterator(); iter.hasNext();) {
+        UUID id = iter.next();
+        if (moverPool.getStatus(id).getIsFinished()) {
+          moverPool.removeStatus(id);
+          iter.remove();
+        }
+      }
+      if(uuids.size() != 0)
         break;
+      try {
+        Thread.sleep(300);
+      }
+      catch (Exception e){
+        System.out.printf("Action Thread error!");
       }
     }
+  }
+
+
+  @Override
+  public void run() {
+    runActions();
     cb.complete(this.id, this.ruleId, CommandState.DONE);
   }
 }

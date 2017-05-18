@@ -17,17 +17,19 @@
  */
 package org.apache.hadoop.ssm;
 
-import org.apache.avro.generic.GenericData;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ssm.actions.*;
+import org.apache.hadoop.ssm.mover.MoverPool;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.utils.JsonUtil;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.io.IOException;
 import java.util.*;
+
 
 /**
  * Schedule and execute commands passed down.
@@ -35,21 +37,27 @@ import java.util.*;
 public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private ArrayList<Set<Long>> cmdsInState = new ArrayList<>();
   private Map<Long, Command> cmdsAll = new HashMap<>();
-  private ArrayList<CmdTuple> statusCache = new ArrayList<>();
+  private Set<CmdTuple> statusCache;
   private Daemon commandExecutorThread;
   private ThreadGroup execThreadGroup;
   private DBAdapter adapter;
-
+  private MoverPool moverPool;
   private SSMServer ssm;
+  private boolean running;
 
   public CommandExecutor(SSMServer ssm, Configuration conf) {
     //ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
     this.ssm = ssm;
+    moverPool = MoverPool.getInstance();
+    moverPool.init(conf);
+    statusCache = new ConcurrentHashSet<>();
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
     execThreadGroup = new ThreadGroup("CommandExecutorWorker");
     execThreadGroup.setDaemon(true);
+    running = false;
+
   }
 
   public boolean init(DBAdapter adapter) throws IOException {
@@ -68,6 +76,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     commandExecutorThread = new Daemon(this);
     commandExecutorThread.setName(this.getClass().getCanonicalName());
     commandExecutorThread.start();
+    running = true;
     return true;
   }
 
@@ -75,15 +84,28 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
    * Stop CommandExecutor
    */
   public void stop() throws IOException {
+    running = false;
     // TODO Command statue update
-
     if (commandExecutorThread == null) {
       return;
     }
-
     commandExecutorThread.interrupt();
     execThreadGroup.interrupt();
-    join();
+  }
+
+  public void join() throws IOException {
+    try{
+      if(execThreadGroup == null || execThreadGroup.activeCount() == 0)
+        return;
+      Thread[] gThread = new Thread[execThreadGroup.activeCount()];
+      execThreadGroup.enumerate(gThread);
+      for(Thread t: gThread) {
+        t.interrupt();
+        t.join();
+      }
+    } catch (InterruptedException e) {
+      System.out.printf("Stop thread group error!");
+    }
     execThreadGroup.destroy();
     try {
       commandExecutorThread.join(1000);
@@ -93,20 +115,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     execThreadGroup = null;
   }
 
-  public void join() throws IOException {
-    try{
-      Thread[] gThread = new Thread[execThreadGroup.activeCount()];
-      execThreadGroup.enumerate(gThread);
-      for(Thread t: gThread)
-        t.join();
-    } catch (InterruptedException e) {
-      System.out.printf("Stop thread group error!");
-    }
-  }
-
   @Override
   public void run() {
-    boolean running = true;
     while (running) {
       try {
         // control the commands that executed concurrently
@@ -118,13 +128,14 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 //                .add(toExec.getId());
             new Daemon(execThreadGroup, toExec).start();
           } else {
-            Thread.sleep(1000);
+            Thread.sleep(100);
           }
         } else {
-          Thread.sleep(1000);
+          Thread.sleep(100);
         }
       } catch (InterruptedException e) {
-        running = false;
+        if(!running)
+          break;
       }
     }
   }
@@ -155,7 +166,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       // Put them into cmdsAll and cmdsInState
       if(statusCache.size() != 0)
         batchCommandStatusUpdate();
-      List<CommandInfo> dbcmds = getCommansFromDB();
+      List<CommandInfo> dbcmds = getCommandsFromDB();
+      if(dbcmds == null)
+        return null;
       for(CommandInfo c : dbcmds) {
         if(cmdsExecuting.contains(c.getCid()))
           continue;
@@ -195,7 +208,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     current.initial(args);
     actions[0] = current;
     // New Command
-    Command cmd = new Command(actions, new Callback());
+    Command cmd = new Command(actions, new Callback(commandExecutorThread));
     cmd.setParameters(jsonParameters);
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -205,7 +218,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
 
-  public List<CommandInfo> getCommansFromDB() {
+  public List<CommandInfo> getCommandsFromDB() {
     // Get Pending cmds from DB
     return adapter.getCommandsTableItem(null, null, CommandState.PENDING);
   }
@@ -218,9 +231,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   public synchronized void batchCommandStatusUpdate() {
     if(statusCache.size() == 0)
       return;
-    for(CmdTuple ct: statusCache)
+    for(Iterator<CmdTuple> iter = statusCache.iterator();iter.hasNext();) {
+      CmdTuple ct = iter.next();
       adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
-    statusCache.clear();
+      iter.remove();
+    }
   }
 
   public class CmdTuple {
@@ -243,6 +258,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public class Callback {
+    private Daemon thread;
+
+    public Callback(Daemon thread) {
+      this.thread = thread;
+    }
 
     public void complete(long cid, long rid, CommandState state) {
 //      adapter.updateCommandStatus(cid, rid, state);
@@ -250,8 +270,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         removeFromExecuting(cid, rid, state);
     }
 
-    public void fail() {
+    public void weakUp() {
       //TODO New Mover and status check
+      if(thread.isAlive())
+        return;
+      thread.interrupt();
     }
 
     public void executing() {

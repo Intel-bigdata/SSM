@@ -17,6 +17,13 @@
  */
 package org.apache.hadoop.ssm;
 
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -24,6 +31,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
+import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.ssm.protocol.SSMServiceState;
@@ -31,20 +39,20 @@ import org.apache.hadoop.ssm.rule.RuleManager;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.Util;
 import org.apache.hadoop.ssm.web.SSMHttpServer;
+import org.apache.hadoop.ssm.utils.GenericOptionsParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.apache.hadoop.util.ExitUtil.terminate;
 
 /**
  * From this Smart Storage Management begins.
@@ -98,25 +106,61 @@ public class SSMServer {
   public static SSMServer createSSM(String[] args, Configuration conf)
       throws Exception {
     if (args != null) {
+      if (parseHelpArgument(args, USAGE, System.out, true)) {
+        return null;
+      }
       // TODO: handle args
+      // Parse out some generic args into Configuration.
+      GenericOptionsParser hParser = new GenericOptionsParser(conf, args);
+      args = hParser.getRemainingArgs();
+      // Parse the rest, NN specific args.
+      StartupOption startOpt = parseArguments(args);
     }
     SSMServer ssm = new SSMServer(conf);
-    ssm.runSSMDaemons();
+    try {
+      ssm.runSSMDaemons();
+    } catch (IOException e) {
+      ssm.shutdown();
+      throw e;
+    }
     return ssm;
   }
 
   private static final String USAGE =
-      "Usage: ssm [-help | -foo" +
-          " ]\n" +
-          "    -help    : Show this usage information.\n" +
-          "    -foo     : For example.\n";// TODO: to be removed
+      "Usage: ssm [options]\n"
+          + "  -h\n\tShow this usage information.\n\n"
+          + "  -D property=value\n"
+          + "\tSpecify or overwrite an configure option.\n"
+          + "\tE.g. -D dfs.ssm.namenode.rpcserver=hdfs://localhost:43543\n";
+
+  public static final Options helpOptions = new Options();
+  public static final Option helpOpt = new Option("h", "help", false,
+      "get help information");
+
+  static {
+    helpOptions.addOption(helpOpt);
+  }
+
+  public static boolean parseHelpArgument(String[] args,
+      String helpDescription, PrintStream out, boolean printGenericCommandUsage) {
+    if (args.length == 1) {
+      try {
+        CommandLineParser parser = new PosixParser();
+        CommandLine cmdLine = parser.parse(helpOptions, args);
+        if (cmdLine.hasOption(helpOpt.getOpt())
+            || cmdLine.hasOption(helpOpt.getLongOpt())) {
+          // should print out the help information
+          out.println(helpDescription + "\n");
+          return true;
+        }
+      } catch (ParseException pe) {
+        return false;
+      }
+    }
+    return false;
+  }
 
   public static void main(String[] args) {
-    if (args.length > 0 && args[0].equals("-help")) {
-      System.out.print(USAGE);
-      terminate(0);
-    }
-
     Configuration conf = new SSMConfiguration();
 
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
@@ -129,9 +173,9 @@ public class SSMServer {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      terminate(1, e);
+      System.exit(1);
     } finally {
-      terminate(errorCode);
+      System.exit(errorCode);
     }
   }
 
@@ -158,7 +202,7 @@ public class SSMServer {
 
     // Init and start RPC server and REST server
     rpcServer.start();
-    //httpServer.start();
+    httpServer.start();
 
     DBAdapter dbAdapter = getDBAdapter();
 
@@ -205,6 +249,10 @@ public class SSMServer {
   public void shutdown() {
     try {
       stop();
+      if (outSSMIdFile != null) {
+        outSSMIdFile.close();
+        outSSMIdFile = null;
+      }
       join();
     } catch (Exception e) {
       e.printStackTrace();
@@ -265,4 +313,20 @@ public class SSMServer {
     }
   }
 
+  @VisibleForTesting
+  public static StartupOption parseArguments(String args[]) {
+    int argsLen = (args == null) ? 0 : args.length;
+    StartupOption startOpt = StartupOption.REGULAR;
+    for(int i=0; i < argsLen; i++) {
+      String cmd = args[i];
+      if (StartupOption.FORMAT.getName().equalsIgnoreCase(cmd)) {
+        startOpt = StartupOption.FORMAT;
+      } else if (StartupOption.CHECKPOINT.getName().equalsIgnoreCase(cmd)) {
+        startOpt = StartupOption.CHECKPOINT;
+      } else {
+        return null;
+      }
+    }
+    return startOpt;
+  }
 }
