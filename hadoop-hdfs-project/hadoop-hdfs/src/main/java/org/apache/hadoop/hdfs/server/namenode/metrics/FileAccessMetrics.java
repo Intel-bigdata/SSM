@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hdfs.server.namenode.metrics;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.metrics2.AbstractMetric;
 import org.apache.hadoop.metrics2.MetricsCollector;
@@ -91,7 +92,8 @@ public class FileAccessMetrics implements MetricsSource {
   public static class FileAccessRollingFileSink extends RollingFileSystemSink {
 
     @Override
-    public void putMetrics(PrintStream currentOutStream, MetricsRecord record) {
+    public void putMetrics(PrintStream currentOutStream,
+        FSDataOutputStream currentFSOutStream, MetricsRecord record) {
       for (AbstractMetric metric : record.metrics()) {
         currentOutStream.printf("%s=%s", metric.name(),
             metric.value());
