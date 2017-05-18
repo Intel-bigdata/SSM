@@ -37,9 +37,11 @@ public class MoverPool {
   }
 
   private Map<UUID, Status> moverMap;
+  private Map<UUID, Thread> moverThreads;
 
   private MoverPool() {
     moverMap = new ConcurrentHashMap<>();
+    moverThreads = new ConcurrentHashMap<>();
   }
 
   /**
@@ -61,6 +63,7 @@ public class MoverPool {
     Status status = new MoverStatus();
     moverMap.put(id, status);
     Thread moverThread = new MoverProcess(status, path);
+    moverThreads.put(id, moverThread);
     moverThread.start();
     return id;
   }
@@ -72,6 +75,10 @@ public class MoverPool {
     public MoverProcess(Status status, String path) {
       this.moverClient = new Mover.Cli(status);
       this.path = path;
+    }
+
+    public String getPath() {
+      return path;
     }
 
     @Override
@@ -103,17 +110,64 @@ public class MoverPool {
    */
   public void removeStatus(UUID id) {
     moverMap.remove(id);
+    moverThreads.remove(id);
   }
 
-  public void stop(UUID id) {
-    // TODO: stop the Mover action
+  /**
+   * Stop a moving event.
+   * @param id the id of the event
+   * @param retryTimes the total retry times for the stop operation, each retry
+   * waits for 500 ms
+   * @return true if stopped or false if cannot be stopped after all retries
+   */
+  public Boolean stop(UUID id, int retryTimes) throws Exception {
+    Thread moverThread = moverThreads.get(id);
+    if (moverThread == null) {
+      return false;
+    }
+    if (moverThread.isAlive()) {
+      for (int index = 1; index < retryTimes; index ++) {
+        moverThread.interrupt();
+        Thread.sleep(500);
+        if (getStatus(id).getIsFinished()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public void halt(UUID id) {
     // TODO: halt the Mover action
   }
 
-  public void restart(UUID id) {
-    // TODO: restart the Mover action
+  /**
+   * Restart a moving event.
+   * @param id the id of the event
+   * @return true if stop or false if the id cannot be found
+   */
+  public Boolean restart(UUID id) throws Exception{
+    Thread moverThread = moverThreads.get(id);
+    if (moverThread == null) {
+      return false;
+    }
+
+    if (moverThread.isAlive()) {
+      moverThread.interrupt();
+      while (!getStatus(id).getIsFinished()) {
+        Thread.sleep(300);
+      }
+    }
+
+    getStatus(id).reset();
+    String path = null;
+    if (moverThread instanceof MoverProcess) {
+      path = ((MoverProcess) moverThread).getPath();
+    }
+    moverThread = new MoverProcess(getStatus(id), path);
+    moverThreads.remove(id);
+    moverThreads.put(id, moverThread);
+    moverThread.start();
+    return true;
   }
 }

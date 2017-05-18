@@ -93,4 +93,15 @@ public class MoverStatus extends Status {
     }
     return Time.monotonicNow() - startTime;
   }
+
+  /**
+   * Reset status to initial value.
+   */
+  @Override
+  synchronized public void reset() {
+    isFinished = false;
+    startTime = 0;
+    succeeded = false;
+    totalDuration = 0;
+  }
 }
