@@ -30,11 +30,11 @@ message GetServiceStateResponseProto {
 }
 
 enum RuleStateProto {
-    ACTIVE = 0x0;
-    DRYRUN = 0x1;
-    DISABLED = 0x2;
-    FINISHED = 0x3;
-    DELETED = 0x4;
+  ACTIVE = 0x0;
+  DRYRUN = 0x1;
+  DISABLED = 0x2;
+  FINISHED = 0x3;
+  DELETED = 0x4;
 }
 
 message RuleInfoProto {
@@ -78,13 +78,39 @@ message ListRulesInfoResponseProto {
   repeated RuleInfoProto rulesInfo = 1;
 }
 
+message DeleteRuleRequestProto {
+  required int64 ruleId = 1;
+  required bool dropPendingCommands = 2;
+}
+
+message DeleteRuleResponseProto {
+}
+
+message ActivateRuleRequestProto {
+  required int64 ruleId = 1;
+}
+
+message ActivateRuleResponseProto {
+}
+
+message DisableRuleRequestProto {
+  required int64 ruleId = 1;
+  required bool dropPendingCommands = 2;
+}
+
+message DisableRuleResponseProto {
+}
 
 service protoService {
   rpc getServiceState (GetServiceStateRequestProto)
-      returns (GetServiceStateResponseProto);
-  rpc submitRule(SubmitRuleRequestProto) returns (SubmitRuleResponseProto);
-  rpc checkRule(CheckRuleRequestProto) returns (CheckRuleResponseProto);
-  rpc getRuleInfo(GetRuleInfoRequestProto) returns (GetRuleInfoResponseProto);
-  rpc listRulesInfo(ListRulesInfoRequestProto)
-      returns (ListRulesInfoResponseProto);
+    returns (GetServiceStateResponseProto);
+  rpc submitRule (SubmitRuleRequestProto) returns (SubmitRuleResponseProto);
+  rpc checkRule (CheckRuleRequestProto) returns (CheckRuleResponseProto);
+  rpc getRuleInfo (GetRuleInfoRequestProto) returns (GetRuleInfoResponseProto);
+  rpc listRulesInfo (ListRulesInfoRequestProto)
+    returns (ListRulesInfoResponseProto);
+  rpc deleteRule (DeleteRuleRequestProto) returns (DeleteRuleResponseProto);
+  rpc activateRule (ActivateRuleRequestProto)
+    returns (ActivateRuleResponseProto);
+  rpc disableRule (DisableRuleRequestProto) returns (DisableRuleResponseProto);
 }

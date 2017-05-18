@@ -25,7 +25,7 @@ import java.util.List;
 
 public interface ClientSSMProtocol {
 
-  SSMServiceState getServiceState();
+  SSMServiceState getServiceState() throws IOException;
 
   long submitRule(String rule, RuleState initState) throws IOException;
 
@@ -51,4 +51,20 @@ public interface ClientSSMProtocol {
    * @throws IOException
    */
   List<RuleInfo> listRulesInfo() throws IOException;
+
+  /**
+   * Delete a rule in SSM. if dropPendingCommands equals false then the rule
+   * record will still be kept in Table 'rules', the record will be deleted
+   * sometime later.
+   *
+   * @param ruleID
+   * @param dropPendingCommands pending commands triggered by the rule will be
+   *                            discarded if true.
+   * @throws IOException
+   */
+  void deleteRule(long ruleID, boolean dropPendingCommands) throws IOException;
+
+  void activateRule(long ruleID) throws IOException;
+
+  void disableRule(long ruleID, boolean dropPendingCommands) throws IOException;
 }
