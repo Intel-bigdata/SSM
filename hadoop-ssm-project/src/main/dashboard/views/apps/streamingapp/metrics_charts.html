@@ -1,0 +1,95 @@
+<div class="row">
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+  <div class="col-md-12">
+    <metrics-period-switcher
+      past-hours="metricsConfig.retainHistoryDataHours"
+      view-current="isShowingCurrentMetrics">
+    </metrics-period-switcher>
+  </div>
+</div>
+
+<div class="row" style="margin-bottom: 22px">
+  <div class="{{chartGridClass}}">
+    <div class="metrics-wrapper">
+      <metrics
+        caption="{{sendThroughputMetricsCaption}}"
+        help="{{sendThroughputMetricsDescription}}"
+        value="{{currentMessageSendRate|metric}}" unit="msg/s"
+        sub-text="Total: {{totalSentMessages|metric}}">
+      </metrics>
+    </div>
+    <div>
+      <line-chart
+        options-bind="sendThroughputChart.options"
+        datasource-bind="sendThroughputChart.data">
+      </line-chart>
+    </div>
+  </div>
+
+  <div class="{{chartGridClass}}">
+    <div class="metrics-wrapper">
+      <metrics
+        caption="{{receiveThroughputMetricsCaption}}"
+        help="{{receiveThroughputMetricsDescription}}"
+        value="{{currentMessageReceiveRate|metric}}" unit="msg/s"
+        sub-text="Total: {{totalReceivedMessages|metric}}">
+      </metrics>
+    </div>
+    <div>
+      <line-chart
+        options-bind="receiveThroughputChart.options"
+        datasource-bind="receiveThroughputChart.data">
+      </line-chart>
+    </div>
+  </div>
+
+  <div class="{{chartGridClass}}">
+    <div class="metrics-wrapper">
+      <metrics
+        caption="{{messageLatencyMetricsCaption}}"
+        help="{{messageLatencyMetricsDescription}}"
+        value="{{messageReceiveLatency|metric}}" unit="ms">
+      </metrics>
+    </div>
+    <div>
+      <line-chart
+        options-bind="messageReceiveLatencyChart.options"
+        datasource-bind="messageReceiveLatencyChart.data">
+      </line-chart>
+    </div>
+  </div>
+
+  <div ng-if="processor" class="{{chartGridClass}}">
+    <div class="metrics-wrapper">
+      <metrics
+        caption="{{averageMessageProcessingTimeMetricsCaption}}"
+        help="{{averageMessageProcessingTimeMetricsDescription}}"
+        value="{{averageProcessingTime|metric}}" unit="ms">
+      </metrics>
+    </div>
+    <div>
+      <line-chart
+        options-bind="averageProcessingTimeChart.options"
+        datasource-bind="averageProcessingTimeChart.data">
+      </line-chart>
+    </div>
+  </div>
+
+</div>

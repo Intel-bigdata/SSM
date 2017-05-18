@@ -41,6 +41,139 @@
       <version>2.5.0</version>
     </dependency>
     <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-stream-experimental_2.11</artifactId>
+      <version>2.0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-http-experimental_2.11</artifactId>
+      <version>2.0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>angularjs</artifactId>
+      <version>1.4.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>angular-touch</artifactId>
+      <version>1.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>angular-ui-router</artifactId>
+      <version>0.2.15</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>bootstrap</artifactId>
+      <version>3.3.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>d3js</artifactId>
+      <version>3.5.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>momentjs</artifactId>
+      <version>2.10.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>lodash</artifactId>
+      <version>3.10.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>font-awesome</artifactId>
+      <version>4.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>jquery</artifactId>
+      <version>2.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>jquery-cookie</artifactId>
+      <version>1.4.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>angular-loading-bar</artifactId>
+      <version>0.8.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.webjars.bower</groupId>
+          <artifactId>angular</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>angular-smart-table</artifactId>
+      <version>2.1.6</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.webjars.bower</groupId>
+          <artifactId>angular</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>angular-motion</artifactId>
+      <version>0.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>bootstrap-additions</artifactId>
+      <version>0.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>angular-strap</artifactId>
+      <version>2.3.5</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.webjars.bower</groupId>
+          <artifactId>angular</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>ui-select</artifactId>
+      <version>0.14.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>ng-file-upload</artifactId>
+      <version>5.0.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>vis</artifactId>
+      <version>4.7.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>clipboard.js</artifactId>
+      <version>0.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>dashing-deps</artifactId>
+      <version>0.1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>dashing</artifactId>
+      <version>0.4.8</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs-client</artifactId>
     </dependency>
@@ -59,7 +192,6 @@
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
-
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
@@ -112,6 +244,12 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/dashboard</directory>
+        <targetPath>dashboard</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>net.alchim31.maven</groupId>
@@ -146,53 +284,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
-          <execution>
-            <id>create-web-xmls</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <copy file="${basedir}/src/main/webapps/proto-web.xml"
-                      tofile="${project.build.directory}/webapps/command/WEB-INF/web.xml"
-                      filtering="true"/>
-                <copy toDir="${project.build.directory}/webapps">
-                  <fileset dir="${basedir}/src/main/webapps">
-                    <exclude name="**/proto-web.xml"/>
-                  </fileset>
-                </copy>
-                <copy toDir="${project.build.directory}/">
-                  <fileset dir="${basedir}/bin/">
-                  </fileset>
-                </copy>
-                <replace dir="${project.build.directory}/webapps" value="${release-year}">
-                  <include name="**/*.html"/>
-                  <replacetoken>{release-year-token}</replacetoken>
-                </replace>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
-            <id>create-log-dir</id>
-            <phase>process-test-resources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <delete dir="${test.build.data}"/>
-                <mkdir dir="${test.build.data}"/>
-
-                <copy todir="${project.build.directory}/test-classes/webapps">
-                  <fileset dir="${project.build.directory}/webapps">
-                    <exclude name="proto-*-web.xml"/>
-                    <exclude name="**/proto-web.xml"/>
-                  </fileset>
-                </copy>
-              </target>
-            </configuration>
-          </execution>
           <execution>
             <phase>pre-site</phase>
             <goals>

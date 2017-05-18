@@ -30,6 +30,7 @@ import org.apache.hadoop.ssm.protocol.SSMServiceState;
 import org.apache.hadoop.ssm.rule.RuleManager;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.Util;
+import org.apache.hadoop.ssm.web.SSMHttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
