@@ -102,7 +102,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       for (Thread t : gThread) {
         if(!t.isAlive())
           t.interrupt();
-        if(t.getName().contains("Pool"))
+        if(t.getName().contains("pool"))
           t.join(10);
         else
           t.join();
