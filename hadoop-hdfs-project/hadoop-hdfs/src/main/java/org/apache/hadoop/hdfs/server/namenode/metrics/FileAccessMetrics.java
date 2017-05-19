@@ -36,14 +36,12 @@ import java.util.List;
 
 public class FileAccessMetrics implements MetricsSource {
 
+  public static final String PREFIX = "FileAccess";
   public static final String CONTEXT_VALUE ="file_access";
   private List<FileAccessInfo> infos = new LinkedList<>();
 
-  FileAccessMetrics() {
-  }
-
   public static FileAccessMetrics create() {
-    return create(DefaultMetricsSystem.instance());
+    return create(DefaultMetricsSystem.initialize(PREFIX));
   }
 
   public static FileAccessMetrics create(MetricsSystem ms) {
@@ -99,7 +97,6 @@ public class FileAccessMetrics implements MetricsSource {
             metric.value());
       }
       currentOutStream.println();
-
     }
   }
 
