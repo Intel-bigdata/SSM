@@ -48,7 +48,6 @@ public class TestCommand {
     MoverPool.getInstance().init(conf);
   }
 
-
   private void generateTestCase() throws Exception {
     final DistributedFileSystem dfs = cluster.getFileSystem();
     // New dir
@@ -75,15 +74,12 @@ public class TestCommand {
     String[] args2 = {"/testMoveFile/file2"};
     String[] args3 = {"/testCacheFile"};
     // New action
-
-
     actions[0] = new MoveFile(client, conf, "ALL_SSD");
     actions[0].initial(args1);
     actions[1] = new MoveFile(client, conf, "COLD");
     actions[1].initial(args2);
     actions[2] = new MoveToCache(client, conf);
     actions[2].initial(args3);
-
     // New Command
     Command cmd = new Command(actions, null);
     cmd.setId(1);
@@ -92,5 +88,4 @@ public class TestCommand {
     // Init action
     return cmd;
   }
-
 }

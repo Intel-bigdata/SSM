@@ -19,7 +19,6 @@ package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ssm.actions.*;
-import org.apache.hadoop.ssm.mover.Mover;
 import org.apache.hadoop.ssm.mover.MoverPool;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
@@ -27,6 +26,8 @@ import org.apache.hadoop.ssm.utils.JsonUtil;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
 import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,6 +37,8 @@ import java.util.*;
  * Schedule and execute commands passed down.
  */
 public class CommandExecutor implements Runnable, ModuleSequenceProto {
+  static final Logger LOG = LoggerFactory.getLogger(CommandExecutor.class);
+
   private ArrayList<Set<Long>> cmdsInState = new ArrayList<>();
   private Map<Long, Command> cmdsAll = new HashMap<>();
   private Set<CmdTuple> statusCache;
@@ -92,32 +95,29 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public void join() throws IOException {
-    if(commandExecutorThread == null)
-      return;
-    if(execThreadGroup == null || execThreadGroup.activeCount() == 0)
-      return;
-    try {
-      Thread[] gThread = new Thread[execThreadGroup.activeCount()];
-      execThreadGroup.enumerate(gThread);
-      for (Thread t : gThread) {
-        if(!t.isAlive())
-          t.interrupt();
-        if(t.getName().contains("pool"))
-          t.join(10);
-        else
-          t.join();
-      }
-    } catch (InterruptedException e) {
-      System.out.printf("Stop thread group error!");
-    }
-    execThreadGroup.interrupt();
-    execThreadGroup.destroy();
-    try {
-      commandExecutorThread.join(1000);
-    } catch (InterruptedException e) {
-    }
-    commandExecutorThread = null;
+//    if(commandExecutorThread == null)
+//      return;
+//    if(execThreadGroup == null || execThreadGroup.activeCount() == 0)
+//      return;
+//    try {
+//      Thread[] gThread = new Thread[execThreadGroup.activeCount()];
+//      execThreadGroup.enumerate(gThread);
+//      for (Thread t : gThread) {
+//        t.interrupt();
+//        t.join(10);
+//      }
+//    } catch (InterruptedException e) {
+//      LOG.error("Stop thread group error!");
+//    }
+//    execThreadGroup.interrupt();
+//    if(!execThreadGroup.isDestroyed())
+//      execThreadGroup.destroy();
+//    try {
+//      commandExecutorThread.join(1000);
+//    } catch (InterruptedException e) {
+//    }
     execThreadGroup = null;
+    commandExecutorThread = null;
   }
 
   @Override
@@ -169,13 +169,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (cmds.size() == 0) {
       // TODO Check Status and Update
       // Put them into cmdsAll and cmdsInState
-      System.out.printf("INFO Number of Caches = %d\n", statusCache.size());
       if(statusCache.size() != 0)
         batchCommandStatusUpdate();
       List<CommandInfo> dbcmds = getCommandsFromDB();
       if(dbcmds == null)
         return null;
-      System.out.printf("INFO Number of Actions = %d\n", dbcmds.size());
       for(CommandInfo c : dbcmds) {
         if(cmdsExecuting.contains(c.getCid()))
           continue;
@@ -236,6 +234,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public synchronized void batchCommandStatusUpdate() {
+    LOG.info("INFO Number of Caches = " + statusCache.size());
+    LOG.info("INFO Number of Actions = " + cmdsAll.size());
     if(statusCache.size() == 0)
       return;
     for(Iterator<CmdTuple> iter = statusCache.iterator();iter.hasNext();) {

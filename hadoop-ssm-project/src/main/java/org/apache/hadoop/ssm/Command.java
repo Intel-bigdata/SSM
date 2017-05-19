@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Command is the minimum unit of execution. Different commands can be
@@ -40,6 +42,8 @@ import java.util.Map;
 
 
 public class Command implements Runnable {
+  static final Logger LOG = LoggerFactory.getLogger(Command.class);
+
   private long ruleId;   // id of the rule that this Command comes from
   private long id;
   private CommandState state = CommandState.NOTINITED;
@@ -137,7 +141,7 @@ public class Command implements Runnable {
         Thread.sleep(300);
       }
       catch (Exception e){
-        System.out.printf("Action Thread error!");
+        LOG.error("Action Thread error!");
       }
     }
   }
