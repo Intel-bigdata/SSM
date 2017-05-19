@@ -24,6 +24,8 @@ import org.apache.hadoop.ssm.fetcher.InotifyEventFetcher;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
 import org.apache.hadoop.ssm.sql.tables.AccessCountTableManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -44,6 +46,7 @@ public class StatesManager implements ModuleSequenceProto {
   private AccessCountTableManager accessCountTableManager;
   private InotifyEventFetcher inotifyEventFetcher;
   private AccessCountFetcher accessCountFetcher;
+  public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
   public StatesManager(SSMServer ssm, Configuration conf) {
     this.ssm = ssm;
@@ -55,6 +58,7 @@ public class StatesManager implements ModuleSequenceProto {
    * @return true if initialized successfully
    */
   public boolean init(DBAdapter dbAdapter) throws IOException {
+    LOG.info("Initializing ...");
     String nnUri = conf.get(SSMConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
     try {
       this.client = new DFSClient(new URI(nnUri), conf);
@@ -65,6 +69,7 @@ public class StatesManager implements ModuleSequenceProto {
     this.accessCountTableManager = new AccessCountTableManager(dbAdapter, executorService);
     this.accessCountFetcher = new AccessCountFetcher(client, accessCountTableManager, executorService);
     this.inotifyEventFetcher = new InotifyEventFetcher(client, dbAdapter, executorService);
+    LOG.info("Initialized.");
     return true;
   }
 
@@ -72,12 +77,15 @@ public class StatesManager implements ModuleSequenceProto {
    * Start daemon threads in StatesManager for function.
    */
   public boolean start() throws IOException, InterruptedException {
+    LOG.info("Starting ...");
     this.inotifyEventFetcher.start();
     this.accessCountFetcher.start();
+    LOG.info("Started. ");
     return true;
   }
 
   public void stop() throws IOException {
+    LOG.info("Stopping ...");
     if (inotifyEventFetcher != null) {
       this.inotifyEventFetcher.stop();
     }
@@ -85,9 +93,12 @@ public class StatesManager implements ModuleSequenceProto {
     if (accessCountFetcher != null) {
       this.accessCountFetcher.stop();
     }
+    LOG.info("Stopped.");
   }
 
   public void join() throws IOException {
+    LOG.info("Joining ...");
+    LOG.info("Joined.");
   }
 
   public List<AccessCountTable> getTablesInLast(long timeInMills) throws SQLException {

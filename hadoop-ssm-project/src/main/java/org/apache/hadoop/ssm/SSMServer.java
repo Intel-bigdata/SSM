@@ -40,11 +40,11 @@ import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.Util;
 import org.apache.hadoop.ssm.web.SSMHttpServer;
 import org.apache.hadoop.ssm.utils.GenericOptionsParser;
+import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -106,6 +106,7 @@ public class SSMServer {
    */
   public static SSMServer createSSM(String[] args, Configuration conf)
       throws Exception {
+    StringUtils.startupShutdownMessage(SSMServer.class, args, LOG);
     if (args != null) {
       if (parseHelpArgument(args, USAGE, System.out, true)) {
         return null;
@@ -155,6 +156,7 @@ public class SSMServer {
           return true;
         }
       } catch (ParseException pe) {
+        LOG.warn("Parse help exception", pe);
         return false;
       }
     }
@@ -284,7 +286,7 @@ public class SSMServer {
 
     String url = conf.get(SSMConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY);
     if (url == null) {
-      System.out.println("[Warning] No database specified for SSM, "
+      LOG.warn("No database specified for SSM, "
           + "will use a default one instead.");
     }
     return url != null ? url : getDefaultSqliteDB() ;
