@@ -40,7 +40,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   static final Logger LOG = LoggerFactory.getLogger(CommandExecutor.class);
 
   private ArrayList<Set<Long>> cmdsInState = new ArrayList<>();
-  private Map<Long, Command> cmdsAll = new HashMap<>();
+  private Map<Long, CommandInfo> cmdsAll = new HashMap<>();
   private Set<CmdTuple> statusCache;
   private Daemon commandExecutorThread;
   private ThreadGroup execThreadGroup;
@@ -149,12 +149,67 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
    * Add a command to CommandExecutor for execution.
    * @param cmd
    */
-  public synchronized void addCommand(Command cmd) {
-    cmdsAll.put(cmd.getId(), cmd);
+  public synchronized void submitCommand(CommandInfo cmd) {
+    CommandInfo[] retInfos = {cmd};
+    adapter.insertCommandsTable(retInfos);
+    cmdsAll.put(cmd.getCid(), cmd);
   }
 
-  public Command getCommand(long id) {
-    return cmdsAll.get(id);
+  public CommandInfo getCommandInfo(long cid) throws IOException {
+    if(cmdsAll.containsKey(cid))
+      return cmdsAll.get(cid);
+    List<CommandInfo> ret = adapter.getCommandsTableItem(null, String.format("= %d", cid),null);
+    if(ret != null)
+      return ret.get(0);
+    return null;
+  }
+
+  public List<CommandInfo> listCommandsInfo() throws IOException {
+    List<CommandInfo> retInfos = new ArrayList<>();
+    retInfos.addAll(cmdsAll.values());
+    return retInfos;
+  }
+
+  public void deleteCommand(long cid) throws IOException {
+    // Remove from Cache
+    // Remove from DB
+  }
+
+  public void activateCommand(long cid) throws IOException {
+    if(cmdsAll.containsKey(cid))
+      return;
+    if(inUpdateCache(cid))
+      return;
+    CommandInfo cmdinfo = getCommandInfo(cid);
+    addToPending(cmdinfo);
+  }
+
+  private void removeFromCache(long cid) throws IOException {
+    // TODO remove from Cache
+    // TODO kill thread
+  }
+
+
+  private void addToPending(CommandInfo cmdinfo) throws IOException {
+    Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
+    cmdsAll.put(cmdinfo.getCid(), cmdinfo);
+    cmdsPending.add(cmdinfo.getCid());
+  }
+
+
+  private boolean inExecutingList(long cid) throws IOException {
+    Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
+    return cmdsExecuting.contains(cid);
+  }
+
+  private boolean inUpdateCache(long cid) throws IOException {
+    if(statusCache.size() == 0)
+      return false;
+    for(CmdTuple ct: statusCache) {
+      if(ct.cid == cid)
+        return true;
+    }
+    return false;
   }
 
   /**
@@ -164,9 +219,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private synchronized Command schedule() {
     // currently FIFO
     // List<Long> cmds = getCommands(CommandState.PENDING);
-    Set<Long> cmds = cmdsInState.get(CommandState.PENDING.getValue());
+    Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
     Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
-    if (cmds.size() == 0) {
+    if (cmdsPending.size() == 0) {
       // TODO Check Status and Update
       // Put them into cmdsAll and cmdsInState
       if(statusCache.size() != 0)
@@ -177,25 +232,22 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       for(CommandInfo c : dbcmds) {
         if(cmdsExecuting.contains(c.getCid()))
           continue;
-        Command cmd = getCommand(c, ssm);
-        cmdsAll.put(cmd.getId(), cmd);
-        cmds.add(cmd.getId());
+        cmdsAll.put(c.getCid(), c);
+        cmdsPending.add(c.getCid());
       }
-      if (cmds.size() == 0)
+      if (cmdsPending.size() == 0)
         return null;
     }
-
     // TODO Update FIFO
     // Currently only get and run the first cmd
-    long curr = cmds.iterator().next();
-    Command ret = cmdsAll.get(curr);
-    cmdsAll.remove(curr);
-    cmds.remove(curr);
+    long curr = cmdsPending.iterator().next();
+    Command ret = getCommandFromCmdInfo(cmdsAll.get(curr));
+    cmdsPending.remove(curr);
     cmdsExecuting.add(curr);
     return ret;
   }
 
-  public Command getCommand(CommandInfo cmdinfo, SSMServer ssm) {
+  private Command getCommandFromCmdInfo(CommandInfo cmdinfo) {
     ActionBase[] actions = new ActionBase[10];
     Map<String, String> jsonParameters = JsonUtil.toStringStringMap(cmdinfo.getParameters());
     String[] args = {jsonParameters.get("_FILE_PATH_")};
@@ -207,7 +259,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     } else if(cmdinfo.getActionType().getValue()  == ActionType.MoveFile.getValue()) {
       current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
     } else {
-      // TODO Default
+      // TODO Default Action
       current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
     }
     current.initial(args);
@@ -240,6 +292,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       return;
     for(Iterator<CmdTuple> iter = statusCache.iterator();iter.hasNext();) {
       CmdTuple ct = iter.next();
+      cmdsAll.remove(ct.cid);
       adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
       iter.remove();
     }
@@ -257,7 +310,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
   }
 
-  public void removeFromExecuting(long cid, long rid, CommandState state) {
+  private void removeFromExecuting(long cid, long rid, CommandState state) {
     Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
     if(cmdsExecuting.size() == 0)
       return;
@@ -267,17 +320,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   public class Callback {
 
     public void complete(long cid, long rid, CommandState state) {
-//      adapter.updateCommandStatus(cid, rid, state);
         commandExecutorThread.interrupt();
         statusCache.add(new CmdTuple(cid, rid, state));
         removeFromExecuting(cid, rid, state);
-    }
-
-    public void weakUp() {
-    }
-
-    public void executing() {
-
     }
   }
 }
