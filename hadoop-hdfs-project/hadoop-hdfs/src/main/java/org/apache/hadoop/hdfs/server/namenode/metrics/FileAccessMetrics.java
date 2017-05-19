@@ -35,18 +35,13 @@ import java.util.List;
 
 
 public class FileAccessMetrics implements MetricsSource {
-
-  public static final String PREFIX = "FileAccess";
+  public static final String NAME = "FileAccessMetrics";
+  public static final String DESC = "FileAccessMetrics";
   public static final String CONTEXT_VALUE ="file_access";
   private List<FileAccessInfo> infos = new LinkedList<>();
 
-  public static FileAccessMetrics create() {
-    return create(DefaultMetricsSystem.initialize(PREFIX));
-  }
-
   public static FileAccessMetrics create(MetricsSystem ms) {
-    return ms.register("FileAccessMetrics", "FileAccessMetrics",
-        new FileAccessMetrics());
+    return ms.register(NAME, DESC, new FileAccessMetrics());
   }
 
   public void add(String path, String user, long time) {
