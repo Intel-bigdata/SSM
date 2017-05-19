@@ -22,6 +22,8 @@ import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.utils.TimeGranularity;
 import org.apache.hadoop.ssm.utils.TimeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -43,6 +45,8 @@ public class AccessCountTableManager {
   private AccessCountTableDeque secondTableDeque;
   private AccessEventAggregator accessEventAggregator;
   private ExecutorService executorService;
+  public static final Logger LOG =
+      LoggerFactory.getLogger(AccessCountTableManager.class);
 
   public AccessCountTableManager(DBAdapter adapter) {
     this(adapter, Executors.newFixedThreadPool(4));
@@ -82,6 +86,9 @@ public class AccessCountTableManager {
   }
 
   public void addTable(AccessCountTable accessCountTable) {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(accessCountTable.toString());
+    }
     this.secondTableDeque.add(accessCountTable);
   }
 

@@ -25,6 +25,8 @@ import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.ExecutionContext;
 import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
 import org.apache.hadoop.ssm.utils.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -48,6 +50,8 @@ public class RuleQueryExecutor implements Runnable {
   private volatile boolean exited = false;
   private long exitTime;
   private Stack<String> dynamicCleanups = new Stack<>();
+  public static final Logger LOG =
+      LoggerFactory.getLogger(RuleQueryExecutor.class.getName());
 
   private static Pattern varPattern = Pattern.compile(
       "\\$([a-zA-Z_]+[a-zA-Z0-9_]*)");
@@ -103,7 +107,9 @@ public class RuleQueryExecutor implements Runnable {
     for (String sql : tr.getSqlStatements()) {
       sql = unfoldSqlStatement(sql);
       try {
-        //System.out.println("--> " + sql);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Rule " + ctx.getRuleId() + " --> " + sql);
+        }
         if (index == tr.getRetSqlIndex()) {
           ret = adapter.executeFilesPathQuery(sql);
         } else {
@@ -111,7 +117,7 @@ public class RuleQueryExecutor implements Runnable {
         }
         index++;
       } catch (SQLException e) {
-        e.printStackTrace();
+        LOG.error("Rule " + ctx.getRuleId() + " exception", e);
         return null;
       }
     }
@@ -121,7 +127,7 @@ public class RuleQueryExecutor implements Runnable {
       try {
         adapter.execute(sql);
       } catch (SQLException e) {
-        e.printStackTrace();
+        LOG.error("Rule " + ctx.getRuleId() + " exception", e);
       }
     }
     return ret;
@@ -133,6 +139,8 @@ public class RuleQueryExecutor implements Runnable {
       String ret = (String)(m.invoke(this, parameters));
       return ret;
     } catch (Exception e ) {
+      LOG.error("Rule " + ctx.getRuleId()
+          + " exception when call " + funcName, e);
       return null;
     }
   }
@@ -195,13 +203,19 @@ public class RuleQueryExecutor implements Runnable {
     try {
       accTables = ruleManager.getStatesManager().getTablesInLast(lastInterval);
     } catch (SQLException e) {
-      // TODO: handle this
-      e.printStackTrace();
+      LOG.error("Rule " + ctx.getRuleId()
+          + " get access info tables exception", e);
+    }
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Rule " + ctx.getRuleId() + " got "
+          + accTables.size() + " tables.");
     }
 
     if (accTables == null || accTables.size() == 0) {
       return tableNames;
     }
+
 
     for (AccessCountTable t : accTables) {
       tableNames.add(t.getTableName());
@@ -250,6 +264,8 @@ public class RuleQueryExecutor implements Runnable {
           // TODO: tricky here, time passed
           && startCheckTime - scheduleInfo.getEndTime() > 0) {
         // TODO: special for scheduleInfo.isOneShot()
+        LOG.info("Rule " + ctx.getRuleId()
+            + " exit rule executor due to time passed or finished");
         ruleManager.updateRuleInfo(rid, RuleState.FINISHED, timeNow(), 0, 0);
         exitSchedule();
       }
@@ -266,12 +282,13 @@ public class RuleQueryExecutor implements Runnable {
       //System.out.println(this + " -> " + System.currentTimeMillis());
       long endProcessTime = System.currentTimeMillis();
 
-      if (endProcessTime - startCheckTime > 3000) {
-        // TODO: log an issue of slow processing
+      if (endProcessTime - startCheckTime > 3000 || LOG.isDebugEnabled()) {
+        LOG.warn("Rule " + ctx.getRuleId() + " execution took "
+            + (endProcessTime - startCheckTime) + "ms.");
       }
 
     } catch (IOException e) {
-      // TODO: log this
+      LOG.error("Rule " + ctx.getRuleId() + " exception", e);
     }
   }
 
@@ -279,6 +296,9 @@ public class RuleQueryExecutor implements Runnable {
     // throw an exception
     exitTime = System.currentTimeMillis();
     exited = true;
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Rule " + ctx.getRuleId() + " exit rule executor.");
+    }
     String[] temp = new String[1];
     temp[1] += "The exception is created deliberately";
   }

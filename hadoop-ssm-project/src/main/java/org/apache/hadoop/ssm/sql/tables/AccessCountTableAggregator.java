@@ -18,6 +18,8 @@
 package org.apache.hadoop.ssm.sql.tables;
 
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -25,6 +27,8 @@ import java.util.List;
 
 public class AccessCountTableAggregator {
   private final DBAdapter adapter;
+  public static final Logger LOG =
+      LoggerFactory.getLogger(AccessCountTableAggregator.class);
 
   public AccessCountTableAggregator(DBAdapter adapter) {
     this.adapter = adapter;
@@ -35,6 +39,13 @@ public class AccessCountTableAggregator {
     if (tablesToAggregate.size() > 0) {
       String aggregateSQ = this.aggregateSQLStatement(destinationTable, tablesToAggregate);
       this.adapter.executeQuery(aggregateSQ);
+    }
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(tablesToAggregate.size() + " tables aggregated into " + destinationTable);
+      for (AccessCountTable table : tablesToAggregate) {
+        LOG.debug("\t" + table);
+      }
     }
   }
 

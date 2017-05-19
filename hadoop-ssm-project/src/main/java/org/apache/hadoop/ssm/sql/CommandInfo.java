@@ -43,6 +43,14 @@ public class CommandInfo {
     this.stateChangedTime = stateChangedTime;
   }
 
+  @Override
+  public String toString() {
+    return String.format("{cid = %d, rid = %d, genTime = %d, "
+        + "stateChangedTime = %d, actionType = %s, state = %s, params = %s}",
+        cid, rid, generateTime, stateChangedTime, actionType, state,
+        parameters);
+  }
+
   public long getCid() {
     return cid;
   }
