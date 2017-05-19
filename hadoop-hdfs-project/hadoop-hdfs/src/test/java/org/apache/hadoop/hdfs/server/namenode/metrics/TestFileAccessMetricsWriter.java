@@ -19,6 +19,7 @@ package org.apache.hadoop.hdfs.server.namenode.metrics;
 
 import org.apache.commons.configuration2.SubsetConfiguration;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,7 +34,6 @@ import org.apache.hadoop.metrics2.impl.ConfigBuilder;
 import org.apache.hadoop.metrics2.impl.MetricsSystemImpl;
 import org.apache.hadoop.metrics2.impl.TestMetricsConfig;
 import org.apache.hadoop.metrics2.lib.MutableGaugeInt;
-import org.apache.hadoop.metrics2.lib.MutableGaugeLong;
 import org.apache.hadoop.metrics2.sink.RollingFileSystemSinkTestBase;
 import org.apache.hadoop.util.Time;
 import org.junit.After;
@@ -44,15 +44,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
+public class TestFileAccessMetricsWriter extends RollingFileSystemSinkTestBase {
 
-  private static final int  NUM_DATANODES = 4;
+  private static final int NUM_DATANODES = 4;
   private MiniDFSCluster cluster;
 
   /**
@@ -81,6 +82,15 @@ public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
     }
   }
 
+  @Test
+  public void testAppend() throws Exception {
+    String path = "hdfs://" + cluster.getNameNode().getHostAndPort() + "/tmp";
+    MetricsSystem ms = initMetricsSystem(path, false, true);
+
+    preCreateLogFile(path);
+    assertExtraContents(doWriteTest(ms, path, 1));
+  }
+
   /**
    * Test writing logs to HDFS.
    *
@@ -102,7 +112,7 @@ public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
     String prefix = methodName.getMethodName().toLowerCase();
 
     ConfigBuilder builder = new ConfigBuilder().add("*.period", 10000)
-        .add(prefix + ".sink.mysink0.class", FileAccessMetrics.FileAccessRollingFileSink.class.getName())
+        .add(prefix + ".sink.mysink0.class", FileAccessMetrics.Writer.class.getName())
         .add(prefix + ".sink.mysink0.basepath", path)
         .add(prefix + ".sink.mysink0.source", FileAccessMetrics.NAME)
         .add(prefix + ".sink.mysink0.context", FileAccessMetrics.CONTEXT_VALUE)
@@ -177,6 +187,26 @@ public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
     assertTrue("No valid log directories found", found);
 
     return metrics.toString();
+  }
+
+  @Override
+  protected void preCreateLogFile(String path)
+      throws IOException, InterruptedException, URISyntaxException {
+    Calendar now = getNowNotTopOfHour();
+
+    FileSystem fs = FileSystem.get(new URI(path), new Configuration());
+    Path dir = new Path(path, DATE_FORMAT.format(now.getTime()) + "00");
+
+    fs.mkdirs(dir);
+
+    Path file = new Path(dir, FileAccessMetrics.NAME + "-" +
+        InetAddress.getLocalHost().getHostName() + ".log");
+
+    // Create the log file to force the sink to append
+    try (FSDataOutputStream out = fs.create(file)) {
+      out.write("Extra stuff\n".getBytes());
+      out.flush();
+    }
   }
 
   @Override
