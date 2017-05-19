@@ -36,7 +36,7 @@ angular.module('dashboard')
               return models.$get.worker($stateParams.workerId);
             }],
             apps0: ['models', function (models) {
-              return models.$get.apps();
+              return models.$get.rules();
             }]
           }
         });
@@ -83,8 +83,8 @@ angular.module('dashboard')
       function updateExecutorsTable() {
         $scope.executorsTable.rows = $stb.$update($scope.executorsTable.rows,
           _.map($scope.worker.executors, function (executor) {
-            if ($scope.apps.hasOwnProperty(executor.appId)) {
-              var app = $scope.apps[executor.appId];
+            if ($scope.rules.hasOwnProperty(executor.appId)) {
+              var app = $scope.rules[executor.appId];
               var executorPageUrl = locator.executor(app.appId, app.type, executor.executorId);
               var executorPath = 'app' + executor.appId + '.' +
                 (executor.executorId === -1 ?
@@ -103,8 +103,8 @@ angular.module('dashboard')
 
       $scope.metricsConfig = worker0.historyMetricsConfig;
       $scope.worker = worker0.$data();
-      $scope.apps = apps0.$data();
-      $scope.appsCount = Object.keys($scope.apps).length;
+      $scope.rules = apps0.$data();
+      $scope.appsCount = Object.keys($scope.rules).length;
 
       updateOverviewTable($scope.worker);
       updateExecutorsTable();
@@ -130,7 +130,7 @@ angular.module('dashboard')
       }
 
       apps0.$subscribe($scope, function (apps) {
-        $scope.apps = apps;
+        $scope.rules = apps;
         updateExecutorsTable();
       });
 

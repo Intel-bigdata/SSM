@@ -48,13 +48,14 @@ angular.module('dashboard')
           }
 
           // Quick and dirty way to replace breadcrumb text
-          if (breadcrumbs.length > 0 && breadcrumbs[0].text === 'apps') {
-            breadcrumbs[0].text = 'Applications';
+          if (breadcrumbs.length > 0 && breadcrumbs[0].text === 'rules') {
+            breadcrumbs[0].text = 'Rules';
+            /*
             if (breadcrumbs.length > 1) {
               if (breadcrumbs[1].text === 'compose') {
                 breadcrumbs[1].text = 'Compose DAG';
               } else {
-                var appText = 'app ';
+                var appText = 'rule ';
                 var p = breadcrumbs[1].text.indexOf(appText);
                 if (p !== -1) {
                   breadcrumbs[1].text = 'Application ' + breadcrumbs[1].text.substr(p + appText.length);
@@ -71,6 +72,7 @@ angular.module('dashboard')
                   break;
               }
             }
+            */
           }
           return breadcrumbs;
         }

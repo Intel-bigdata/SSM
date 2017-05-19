@@ -18,33 +18,18 @@
  */
 angular.module('dashboard')
 
-  .controller('AppSubmitCtrl', ['$scope', 'restapi',
+  .controller('RuleSubmitCtrl', ['$scope', 'restapi',
     function ($scope, restapi) {
       'use strict';
 
-      $scope.dialogTitle = 'Submit Gearpump Application';
-      $scope.confFileSuffix = '.conf';
+      $scope.dialogTitle = 'Submit Rule';
 
-      var submitFn = restapi.submitUserApp;
-      if ($scope.isStormApp) {
-        $scope.dialogTitle = 'Submit Storm Application';
-        $scope.confFileSuffix = '.yaml';
-        submitFn = restapi.submitStormApp;
-      }
-
-      $scope.canSubmit = function () {
-        return $scope.jar && !$scope.uploading;
-      };
+      var submitFn = restapi.submitRule;
+      $scope.canSubmit = true;
 
       $scope.submit = function () {
-        var files = [$scope.jar];
-        var fileFormNames = ['jar'];
-        if ($scope.conf) {
-          files.push($scope.conf);
-          fileFormNames.push('configfile');
-        }
         $scope.uploading = true;
-        submitFn(files, fileFormNames, $scope.executorNum, $scope.launchArgs, function (response) {
+        submitFn($scope.launchArgs, function (response) {
           $scope.shouldNoticeSubmitFailed = !response.success;
           $scope.uploading = false;
           if (response.success) {

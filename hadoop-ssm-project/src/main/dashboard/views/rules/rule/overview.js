@@ -23,18 +23,18 @@ angular.module('dashboard')
       'use strict';
 
       $stateProvider
-        .state('streamingapp.overview', {
+        .state('rule.overview', {
           url: '', /* default page */
-          templateUrl: 'views/apps/streamingapp/overview.html',
-          controller: 'StreamingAppOverviewCtrl'
+          templateUrl: 'views/rules/rule/overview.html',
+          controller: 'AppOverviewCtrl'
         });
     }])
 
-  .controller('StreamingAppOverviewCtrl', ['$scope', '$propertyTableBuilder', 'helper', 'models',
-    function ($scope, $ptb, helper, models) {
+  .controller('AppOverviewCtrl', ['$scope', 'helper', '$propertyTableBuilder', 'models',
+    function ($scope, helper, $ptb, models) {
       'use strict';
 
-      $scope.appSummary = [
+      $scope.ruleSummary = [
         $ptb.text('ID').done(),
         $ptb.text('Actor Path').done(),
         $ptb.datetime('Start Time').done(),
@@ -42,8 +42,8 @@ angular.module('dashboard')
         $ptb.button('Quick Links').done()
       ];
 
-      function updateSummaryTable(app) {
-        $ptb.$update($scope.appSummary, [
+      $scope.$watch('rule', function (app) {
+        $ptb.$update($scope.ruleSummary, [
           app.appId,
           app.actorPath,
           app.startTime,
@@ -54,14 +54,10 @@ angular.module('dashboard')
             helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, app.logFile)
           ]
         ]);
-      }
-
-      $scope.$watch('app', function (app) {
-        updateSummaryTable(app);
       });
 
       $scope.alerts = [];
-      models.$get.appAlerts($scope.app.appId)
+      models.$get.ruleAlerts($scope.rule.appId)
         .then(function (alerts0) {
           $scope.alerts = alerts0.$data();
           alerts0.$subscribe($scope, function (alerts) {

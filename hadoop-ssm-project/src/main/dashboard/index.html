@@ -47,11 +47,10 @@ under the License.
 </head>
 
 <body>
-<!-- app -->
 <div ng-app="dashboard" ng-strict-di>
   <!-- header and footer are defined in views/landing -->
   <header></header>
-  <!--<breadcrumbs></breadcrumbs>-->
+  <breadcrumbs></breadcrumbs>
   <div class="container-fluid">
     <!--<div class="col-md-2" role="sidebar"-->
     <!--ng-include src="'views/landing/sidebar.html'"></div>-->
@@ -59,7 +58,6 @@ under the License.
   </div>
   <footer></footer>
 </div>
-<!-- end of app -->
 
 <!-- Static Resources -->
 <script src="webjars/jquery/2.2.0/jquery.min.js"></script>
@@ -88,11 +86,6 @@ under the License.
 <script src="dashboard.js"></script>
 <script src="i18n.js"></script>
 <script src="services/models/models.js"></script>
-<script src="services/models/metrics.js"></script>
-<script src="services/models/metrics_provider.js"></script>
-<script src="services/models/dag.js"></script>
-<script src="services/models/streamingapp_metrics_provider.js"></script>
-<script src="services/models/streamingapp_dag.js"></script>
 <script src="services/locator.js"></script>
 <script src="services/restapi.js"></script>
 <script src="services/health_check_service.js"></script>
@@ -106,29 +99,12 @@ under the License.
 <script src="views/cluster/workers/workers_listview.js"></script>
 <script src="views/cluster/workers/worker/worker.js"></script>
 <script src="views/jvm/jvm_metrics_view.js"></script>
-<script src="views/apps/apps.js"></script>
-<script src="views/apps/compose/compose.js"></script>
-<script src="views/apps/compose/popups/choose_processor.js"></script>
-<script src="views/apps/compose/popups/choose_edge.js"></script>
-<script src="views/apps/submit/submit.js"></script>
-<script src="views/apps/app/app.js"></script>
-<script src="views/apps/app/overview.js"></script>
-<script src="views/apps/app/executors_table.js"></script>
-<script src="views/apps/app/alerts_table.js"></script>
-<script src="views/apps/streamingapp/vis/network.js"></script>
-<script src="views/apps/streamingapp/vis/network_style.js"></script>
-<script src="views/apps/streamingapp/streamingapp.js"></script>
-<script src="views/apps/streamingapp/overview.js"></script>
-<script src="views/apps/streamingapp/metrics_charts.js"></script>
-<script src="views/apps/streamingapp/metrics_table.js"></script>
-<script src="views/apps/streamingapp/metric_selector.js"></script>
-<script src="views/apps/streamingapp/dag.js"></script>
-<script src="views/apps/streamingapp/popups/dag_edit.js"></script>
-<script src="views/apps/streamingapp/processor.js"></script>
-<script src="views/apps/streamingapp/processor_task_charts.js"></script>
-<script src="views/apps/streamingapp/processor_task_table.js"></script>
-<script src="views/apps/streamingapp/processor_task_pager.js"></script>
-<script src="views/apps/streamingapp/executor.js"></script>
+<script src="views/rules/rules.js"></script>
+<script src="views/rules/submit/submit.js"></script>
+<script src="views/rules/rule/app.js"></script>
+<script src="views/rules/rule/overview.js"></script>
+<script src="views/rules/rule/executors_table.js"></script>
+<script src="views/rules/rule/alerts_table.js"></script>
 <script src="views/helper.js"></script>
 
 </body>

@@ -23,7 +23,7 @@ angular.module('dashboard')
 
     return {
       restrict: 'E',
-      templateUrl: 'views/apps/app/executors_table.html',
+      templateUrl: 'views/rules/rule/executors_table.html',
       replace: false /* true will got an error */,
       scope: {
         executors: '=executorsBind'
