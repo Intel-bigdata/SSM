@@ -43,7 +43,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Map<Long, CommandInfo> cmdsAll = new HashMap<>();
   private Set<CmdTuple> statusCache;
   private Daemon commandExecutorThread;
-  private ThreadGroup execThreadGroup;
+  private CommandPool execThreadPool;
   private DBAdapter adapter;
   private MoverPool moverPool;
   private SSMServer ssm;
@@ -58,10 +58,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
-    execThreadGroup = new ThreadGroup("CommandExecutorWorker");
-    execThreadGroup.setDaemon(true);
+    execThreadPool = CommandPool.getInstance();
     running = false;
-
   }
 
   public boolean init(DBAdapter adapter) throws IOException {
@@ -91,17 +89,16 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     running = false;
     // Update Status
     batchCommandStatusUpdate();
-    // TODO Stop MoverPool
   }
 
   public void join() throws IOException {
 //    if(commandExecutorThread == null)
 //      return;
-//    if(execThreadGroup == null || execThreadGroup.activeCount() == 0)
+//    if(execThreadPool == null || execThreadPool.activeCount() == 0)
 //      return;
 //    try {
-//      Thread[] gThread = new Thread[execThreadGroup.activeCount()];
-//      execThreadGroup.enumerate(gThread);
+//      Thread[] gThread = new Thread[execThreadPool.activeCount()];
+//      execThreadPool.enumerate(gThread);
 //      for (Thread t : gThread) {
 //        t.interrupt();
 //        t.join(10);
@@ -109,14 +106,15 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 //    } catch (InterruptedException e) {
 //      LOG.error("Stop thread group error!");
 //    }
-//    execThreadGroup.interrupt();
-//    if(!execThreadGroup.isDestroyed())
-//      execThreadGroup.destroy();
+//    execThreadPool.interrupt();
+//    if(!execThreadPool.isDestroyed())
+//      execThreadPool.destroy();
 //    try {
 //      commandExecutorThread.join(1000);
 //    } catch (InterruptedException e) {
 //    }
-    execThreadGroup = null;
+    execThreadPool.stop();
+    execThreadPool = null;
     commandExecutorThread = null;
   }
 
@@ -125,13 +123,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     while (running) {
       try {
         // control the commands that executed concurrently
-        if (execThreadGroup.activeCount() <= 15) {  // TODO: use configure value
+        if (execThreadPool.size() <= 5) {  // TODO: use configure value
           Command toExec = schedule();
           if (toExec != null) {
             toExec.setScheduleToExecuteTime(Time.now());
 //            cmdsInState.get(CommandState.PENDING.getValue())
 //                .add(toExec.getId());
-            new Daemon(execThreadGroup, toExec).start();
+            execThreadPool.execute(toExec);
           } else {
             Thread.sleep(1000);
           }
@@ -323,6 +321,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         commandExecutorThread.interrupt();
         statusCache.add(new CmdTuple(cid, rid, state));
         removeFromExecuting(cid, rid, state);
+        execThreadPool.deleteCommand(cid);
     }
   }
 }
