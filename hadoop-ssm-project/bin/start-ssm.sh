@@ -48,7 +48,7 @@ done
 script="${BASH_SOURCE-$0}"
 bin=$(cd -P -- "$(dirname -- "${script}")" >/dev/null && pwd -P)
 
-SSMPOC_HOME=${bin}
+SSMPOC_HOME=${bin}/../target
 CLASS_PATH=$SSMPOC_HOME/hadoop-ssm-project-3.0.0-alpha3-SNAPSHOT.jar:$SSMPOC_HOME/lib/*:.
 java $DEBUG -classpath "$CLASS_PATH" org.apache.hadoop.ssm.SSMServer $*
 
