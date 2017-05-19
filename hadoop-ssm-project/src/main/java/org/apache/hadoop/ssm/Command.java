@@ -116,6 +116,11 @@ public class Command implements Runnable {
     return "Rule-" + ruleId + "-Cmd-" + id;
   }
 
+  public void stop() {
+    LOG.info("Command " + id + " Stopped!");
+    running = false;
+  }
+
   public void runActions() {
     UUID uid;
     for (ActionBase act : actions) {
@@ -149,6 +154,7 @@ public class Command implements Runnable {
   @Override
   public void run() {
     runActions();
-    cb.complete(this.id, this.ruleId, CommandState.DONE);
+    if(cb != null)
+      cb.complete(this.id, this.ruleId, CommandState.DONE);
   }
 }
