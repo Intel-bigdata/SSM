@@ -17,8 +17,6 @@
  */
 package org.apache.hadoop.ssm.actions;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CacheFlag;
 import org.apache.hadoop.fs.Path;
@@ -28,8 +26,9 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
-import org.omg.PortableInterceptor.ACTIVE;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -39,7 +38,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Move to Cache Action
  */
 public class MoveToCache extends ActionBase {
-    private static final Log LOG = LogFactory.getLog(MoveToCache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MoveToCache.class);
 
     private DFSClient dfsClient;
     private String fileName;
