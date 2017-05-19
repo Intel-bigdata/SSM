@@ -104,6 +104,7 @@ public class TestMoverPool {
           StringUtils.formatTime(status1.getRunningTime()));
       System.out.println("Mover 2 total running time : " +
           StringUtils.formatTime(status2.getRunningTime()));
+
       MoverPool.getInstance().removeStatus(id2);
       assertNull(MoverPool.getInstance().getStatus(id2));
     } finally {

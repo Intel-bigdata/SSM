@@ -20,6 +20,8 @@ package org.apache.hadoop.ssm.mover;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.UUID;
@@ -29,6 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * MoverPool : A singleton class to manage all Mover actions.
  */
 public class MoverPool {
+  private static final Logger LOG = LoggerFactory.getLogger(MoverPool.class);
+
   private static MoverPool instance = new MoverPool();
   private Configuration conf = new HdfsConfiguration();
 
@@ -51,6 +55,7 @@ public class MoverPool {
    */
   public void init(Configuration configuration) {
     conf = configuration;
+    LOG.info("MoverPool is successfully started");
   }
 
   /**
@@ -60,6 +65,7 @@ public class MoverPool {
    */
   public UUID createMoverAction(String path) {
     UUID id = UUID.randomUUID();
+    LOG.info("Create a new mover action with id = {}, path = {}", id, path);
     Status status = new MoverStatus();
     moverMap.put(id, status);
     Thread moverThread = new MoverProcess(status, path);
@@ -84,8 +90,10 @@ public class MoverPool {
     @Override
     public void run() {
       try {
+        LOG.info("Start mover at {}", path);
         int result = ToolRunner.run(conf, moverClient,
             new String[] {"-p", path});
+        LOG.info("Finish mover at {}", path);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -111,13 +119,14 @@ public class MoverPool {
   public void removeStatus(UUID id) {
     moverMap.remove(id);
     moverThreads.remove(id);
+    LOG.info("Mover status of {} is removed", id);
   }
 
   /**
    * Stop a moving event.
    * @param id the id of the event
    * @param retryTimes the total retry times for the stop operation, each retry
-   * waits for 500 ms
+   * waits for 100 ms
    * @return true if stopped or false if cannot be stopped after all retries
    */
   public Boolean stop(UUID id, int retryTimes) throws Exception {
@@ -128,13 +137,23 @@ public class MoverPool {
     if (moverThread.isAlive()) {
       for (int index = 1; index < retryTimes; index ++) {
         moverThread.interrupt();
-        Thread.sleep(500);
+        Thread.sleep(100);
         if (getStatus(id).getIsFinished()) {
           return true;
         }
       }
     }
     return false;
+  }
+
+  /**
+   * Stop a moving event using default retry times of 3.
+   * @param id the id of the event
+   * @return
+   * @throws Exception
+   */
+  public Boolean stop(UUID id) throws Exception {
+    return stop(id, 3);
   }
 
   public void halt(UUID id) {
@@ -169,5 +188,11 @@ public class MoverPool {
     moverThreads.put(id, moverThread);
     moverThread.start();
     return true;
+  }
+
+  public void shutdown() throws Exception {
+    for (UUID id : moverThreads.keySet()) {
+      stop(id);
+    }
   }
 }
