@@ -19,14 +19,25 @@ under the License.
 -->
   <!-- control toolbar -->
   <div class="row">
-    <div class="col-md-6">
-      <metric-selector
-        metric-name="metricName"
-        metric-type="metricType">
-      </metric-selector>
+    <div class="col-md-6 col-sm-6">
+      <span class="table-caption-ext pull-left">Rules</span>
+      <!-- dropdown button -->
+      <div class="btn-group btn-group-after-heading">
+        <span class="btn btn-xs btn-default dropdown-toggle pull-left" data-toggle="dropdown"
+              bs-dropdown="composeMenuOptions" html="true">
+          <span class="fa fa-plus"></span>
+          Add
+          <span class="caret"></span>
+        </span>
+      </div>
     </div>
-    <div class="col-md-3 col-md-offset-3 hidden-sm hidden-xs pull-right">
-      <searchbox ng-model="search" placeholder="Search Anything"></searchbox>
+    <div class="col-md-3 col-sm-6 text-right">
+      <!--FILTER-->
+    </div>
+    <div class="col-md-3 hidden-sm hidden-xs">
+      <searchbox
+        ng-show="rulesTable.rows && rulesTable.rows.length > 0"
+        ng-model="search" placeholder="Search Rules"></searchbox>
     </div>
   </div>
   <!-- end of control toolbar -->
@@ -34,17 +45,15 @@ under the License.
 
 <div class="col-md-12">
   <sortable-table
-    ng-if="metricType == 'meter'"
+    columns-bind="rulesTable.cols"
+    records-bind="rulesTable.rows"
     search-bind="search"
-    columns-bind="meterMetricsTable.cols"
-    records-bind="meterMetricsTable.rows"
     pagination="10">
-  </sortable-table>
-  <sortable-table
-    ng-if="metricType == 'histogram'"
-    search-bind="search"
-    columns-bind="histogramMetricsTable.cols"
-    records-bind="histogramMetricsTable.rows"
-    pagination="10">
+    <div class="table-no-data">
+      <h2 class="glyphicon glyphicon-bullhorn"></h2>
+      <h4>No rule is running</h4>
+
+      <p>Please submit a rule first.</p>
+    </div>
   </sortable-table>
 </div>

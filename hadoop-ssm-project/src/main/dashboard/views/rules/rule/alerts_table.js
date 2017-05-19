@@ -23,7 +23,7 @@ angular.module('dashboard')
 
     return {
       restrict: 'E',
-      templateUrl: 'views/apps/app/alerts_table.html',
+      templateUrl: 'views/rules/rule/alerts_table.html',
       replace: false /* true will got an error */,
       scope: {
         alerts: '=alertsBind'

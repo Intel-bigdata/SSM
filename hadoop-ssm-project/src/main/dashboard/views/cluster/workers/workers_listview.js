@@ -57,7 +57,7 @@ angular.module('dashboard')
           $stb.progressbar('Slots Usage').key('slots').sortBy('slots.usage').styleClass('col-md-1').done(),
           $stb.duration('Uptime').key('aliveFor').canSort().styleClass('col-md-3 hidden-sm hidden-xs').done(),
           // group 3/3 (3-col)
-          $stb.button('Quick Links').key(['detail', 'conf', 'kill']).styleClass('col-md-3').done()
+          $stb.button('Quick Links').key(['detail', 'conf', 'Stop']).styleClass('col-md-3').done()
         ],
         rows: null
       };
@@ -83,11 +83,11 @@ angular.module('dashboard')
               executors: worker.executors.length || 0,
               detail: {href: worker.pageUrl, text: 'Details', class: 'btn-xs btn-primary'},
               conf: {href: worker.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
-              kill: {
+              Stop: {
                 text: 'Kill', class: 'btn-xs',
                 disabled: !$scope.isSupervisor,
                 click: function () {
-                  $dialogs.confirm('Are you sure to kill this worker?', function () {
+                  $dialogs.confirm('Are you sure to Stop this worker?', function () {
                     restapi.removeWorker(worker.workerId,
                       function handleResponse(response) {
                         if (response.success) {

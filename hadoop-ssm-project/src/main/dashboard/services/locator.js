@@ -27,11 +27,11 @@ angular.module('dashboard')
         return '#/cluster/workers/worker/' + workerId;
       },
       executor: function (appId, appType, executorId) {
-        return self.app(appId, appType) + '/executor/' + executorId;
+        return self.rule(appId, appType) + '/executor/' + executorId;
       },
-      app: function (appId, appType) {
+      rule: function (appId, appType) {
         var prefix = appType === 'streaming' ? 'streaming' : '';
-        return '#/apps/' + prefix + 'app/' + appId;
+        return '#/rules/' + prefix + 'rule/' + appId;
       }
     };
     return self;

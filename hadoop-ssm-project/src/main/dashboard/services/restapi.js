@@ -99,85 +99,32 @@ angular.module('dashboard')
         },
 
         /** Kill a running application */
-        killApp: function (appId) {
-          var url = restapiV1Root + 'appmaster/' + appId;
-          return $http.delete(url);
-        },
-
-        /** Restart a running application and return a promise */
-        restartAppAsync: function (appId) {
-          var url = restapiV1Root + 'appmaster/' + appId + '/restart';
+        startRule: function (ruleId) {
+          var url = restapiV1Root + 'rules/' + ruleId + "/start";
           return $http.post(url);
         },
 
-        /** Return the config link of an application */
-        appConfigLink: function (appId) {
-          return restapiV1Root + 'appmaster/' + appId + '/config';
-        },
-
-        /** Return the config link of an application */
-        appExecutorConfigLink: function (appId, executorId) {
-          return restapiV1Root + 'appmaster/' + appId + '/executor/' + executorId + '/config';
-        },
-
-        /** Return the config link of a worker */
-        workerConfigLink: function (workerId) {
-          return restapiV1Root + 'worker/' + workerId + '/config';
-        },
-
-        /** Return the config link of the master */
-        masterConfigLink: function () {
-          return restapiV1Root + 'master/config';
+        /** Kill a running application */
+        stopRule: function (ruleId) {
+          var url = restapiV1Root + 'rules/' + ruleId + "/stop";
+          return $http.delete(url);
         },
 
         /** Submit an user defined application with user configuration */
-        submitUserApp: function (files, fileFieldNames, executorNum, args, onComplete) {
-          return self._submitApp(restapiV1Root + 'master/submitapp',
-            files, fileFieldNames, executorNum, args, onComplete);
+        submitRule: function (args, onComplete) {
+          return self._submitRule(restapiV1Root + 'addrule', args, onComplete);
         },
 
-        /** Submit a Storm application */
-        submitStormApp: function (files, formFormNames, executorNum, args, onComplete) {
-          return self._submitApp(restapiV1Root + 'master/submitstormapp',
-            files, formFormNames, executorNum, args, onComplete);
-        },
-
-        _submitApp: function (url, files, fileFieldNames, executorNum, args, onComplete) {
-          var upload = Upload.upload({
-            url: url,
-            method: 'POST',
-            file: files,
-            fileFormDataName: fileFieldNames,
-            fields: {
-              "executorcount": executorNum,
-              "args": args
-            }
-          });
-
-          upload.then(function (response) {
-            if (onComplete) {
-              var data = response.data;
-              onComplete({success: data && data.success});
-            }
-          }, function (response) {
-            if (onComplete) {
-              onComplete(decodeErrorResponse(response.data));
-            }
-          });
-        },
-
-        /** Submit an user defined application with user configuration */
-        submitDag: function (args, onComplete) {
-          var url = restapiV1Root + 'master/submitdag';
-          return $http.post(url, args).then(function (response) {
-            if (onComplete) {
-              onComplete(decodeSuccessResponse(response.data));
-            }
-          }, function (response) {
-            if (onComplete) {
-              onComplete(decodeErrorResponse(response.data));
-            }
-          });
+        _submitRule: function (url, args, onComplete) {
+            return $http.post(url, args).then(function (response) {
+                if (onComplete) {
+                    onComplete(decodeSuccessResponse(response.data));
+                }
+            }, function (response) {
+                if (onComplete) {
+                    onComplete(decodeErrorResponse(response.data));
+                }
+            });
         },
 
         /** Upload a set of JAR files */
@@ -196,74 +143,6 @@ angular.module('dashboard')
           }, function (response) {
             if (onComplete) {
               onComplete(decodeErrorResponse(response.data));
-            }
-          });
-        },
-
-        /** Add a new worker */
-        addWorker: function (onComplete) {
-          var count = 1;
-          var url = restapiV1Root + 'supervisor/addworker/' + count;
-          return $http.post(url).then(function (response) {
-            if (angular.isFunction(onComplete)) {
-              onComplete(decodeSuccessResponse(response.data));
-            }
-          }, function (response) {
-            if (angular.isFunction(onComplete)) {
-              onComplete(decodeErrorResponse(response.data));
-            }
-          });
-        },
-
-        /** Remove a new worker */
-        removeWorker: function (workerId, onComplete) {
-          var url = restapiV1Root + 'supervisor/removeworker/' + workerId;
-          return $http.post(url).then(function (response) {
-            if (angular.isFunction(onComplete)) {
-              onComplete(decodeSuccessResponse(response.data));
-            }
-          }, function (response) {
-            if (angular.isFunction(onComplete)) {
-              onComplete(decodeErrorResponse(response.data));
-            }
-          });
-        },
-
-        /** Replace a dag processor at runtime */
-        replaceDagProcessor: function (files, formFormNames, appId, oldProcessorId, newProcessorDescription, inheritConf, onComplete) {
-          var url = restapiV1Root + 'appmaster/' + appId + '/dynamicdag';
-          var args = {
-            "$type": 'org.apache.gearpump.streaming.appmaster.DagManager.ReplaceProcessor',
-            oldProcessorId: oldProcessorId,
-            newProcessorDescription: angular.merge({
-              id: oldProcessorId
-            }, newProcessorDescription),
-            inheritConf: inheritConf
-          };
-          url += '?args=' + encodeURIComponent(angular.toJson(args));
-
-          var promise;
-          var filtered = _.filter(files, function (file) {
-            return file;
-          });
-          if (filtered.length) {
-            promise = Upload.upload({
-              url: url,
-              method: 'POST',
-              file: filtered,
-              fileFormDataName: formFormNames
-            });
-          } else {
-            promise = $http.post(url);
-          }
-
-          promise.then(function () {
-            if (onComplete) {
-              onComplete({success: true});
-            }
-          }, function (response) {
-            if (onComplete) {
-              onComplete({success: false, reason: response.data});
             }
           });
         },

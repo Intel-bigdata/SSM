@@ -27,10 +27,12 @@ angular.module('dashboard')
       replace: true,
       scope: {},
       controller: ['$scope', '$cookies', 'restapi', 'conf', function ($scope, $cookies, restapi, conf) {
-//        $scope.clusterMenuItems = [
-//          {text: 'Master', pathPatt: 'master', icon: 'fa fa-laptop'},
-//          {text: 'Workers', pathPatt: 'workers', icon: 'fa fa-server'}
-//        ];
+       /*
+       $scope.clusterMenuItems = [
+         {text: 'Master', pathPatt: 'master', icon: 'fa fa-laptop'},
+         {text: 'Workers', pathPatt: 'workers', icon: 'fa fa-server'}
+       ];
+       */
 
         $scope.username = $cookies.get('username');
         $scope.userMenuItems = [
@@ -39,10 +41,12 @@ angular.module('dashboard')
           {text: 'GitHub', href: '//github.com/Intel-bigdata/SSM', icon: 'fa fa-github'}
         ];
 
-        $scope.version = 'beta';
+        $scope.version = 'alpha';
+        /*
         restapi.serviceVersion(function (version) {
           $scope.version = version;
         });
+        */
       }]
     };
   })
