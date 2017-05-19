@@ -23,10 +23,17 @@ import org.apache.hadoop.util.Time;
  * Status of Mover tool.
  */
 public class MoverStatus extends Status {
-  private Boolean isFinished = false;
-  private long startTime = 0;
-  private Boolean succeeded = false;
-  private long totalDuration = 0;
+  private Boolean isFinished;
+  private long startTime;
+  private Boolean succeeded;
+  private long totalDuration;
+
+  public MoverStatus() {
+    isFinished = false;
+    startTime = Time.monotonicNow();
+    succeeded = false;
+    totalDuration = 0;
+  }
 
   /**
    * Denote whether the Mover process is finished.
@@ -100,7 +107,7 @@ public class MoverStatus extends Status {
   @Override
   synchronized public void reset() {
     isFinished = false;
-    startTime = 0;
+    startTime = Time.monotonicNow();
     succeeded = false;
     totalDuration = 0;
   }
