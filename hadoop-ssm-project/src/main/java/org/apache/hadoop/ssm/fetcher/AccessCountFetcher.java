@@ -59,7 +59,9 @@ public class AccessCountFetcher {
   }
 
   public void stop() {
-    this.scheduledFuture.cancel(false);
+    if (scheduledFuture != null) {
+      this.scheduledFuture.cancel(false);
+    }
   }
 
   private static class FetchTask implements Runnable {

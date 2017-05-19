@@ -19,7 +19,6 @@ package org.apache.hadoop.ssm;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.ssm.fetcher.AccessCountFetcher;
 import org.apache.hadoop.ssm.fetcher.InotifyEventFetcher;
 import org.apache.hadoop.ssm.sql.DBAdapter;
@@ -27,6 +26,8 @@ import org.apache.hadoop.ssm.sql.tables.AccessCountTable;
 import org.apache.hadoop.ssm.sql.tables.AccessCountTableManager;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -54,7 +55,12 @@ public class StatesManager implements ModuleSequenceProto {
    * @return true if initialized successfully
    */
   public boolean init(DBAdapter dbAdapter) throws IOException {
-    this.client = new DFSClient(NameNode.getHttpAddress(conf), conf);
+    String nnUri = conf.get(SSMConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+    try {
+      this.client = new DFSClient(new URI(nnUri), conf);
+    } catch (URISyntaxException e) {
+      throw new IOException(e);
+    }
     this.executorService = Executors.newScheduledThreadPool(4);
     this.accessCountTableManager = new AccessCountTableManager(dbAdapter, executorService);
     this.accessCountFetcher = new AccessCountFetcher(client, accessCountTableManager, executorService);

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -14,17 +15,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# === EXAMPLE ===
+#./target/start-ssm.sh -D dfs.ssm.namenode.rpcserver=hdfs://localhost:9000
+#./target/start-ssm.sh -D dfs.ssm.namenode.rpcserver=hdfs://localhost:9000 -D dfs.ssm.default.db.url=jdbc:sqlite:/root/ssm-test.db
+
+function ssm_usage
+{
+  echo "Usage: start-ssm.sh"
+}
+
+function ssm_exit_with_usage
+{
+  local exitcode=$1
+  if [[ -z $exitcode ]]; then
+    exitcode=1
+  fi
+  ssm_usage
+  exit $exitcode
+}
+
 DEBUG=
 args=
 for var in $*; do
-  if [ X"$var" = X"-D" ]; then
+  if [ X"$var" = X"-debug" ]; then
     DEBUG="-Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
   else
     args="$args $var"
   fi
 done
 
-SSMPOC_HOME=/home/jiajia/devel/plusplusjiajia/SSM
-CLASS_PATH=$SSMPOC_HOME/hadoop-ssm-project/target/hadoop-ssm-project-3.0.0-alpha2-SNAPSHOT.jar:$SSMPOC_HOME/hadoop-ssm-project/target/lib/*:.
-java $DEBUG -classpath "$CLASS_PATH" org.apache.hadoop.ssm.SSMServer
+script="${BASH_SOURCE-$0}"
+bin=$(cd -P -- "$(dirname -- "${script}")" >/dev/null && pwd -P)
+
+SSMPOC_HOME=${bin}
+CLASS_PATH=$SSMPOC_HOME/hadoop-ssm-project-3.0.0-alpha3-SNAPSHOT.jar:$SSMPOC_HOME/lib/*:.
+java $DEBUG -classpath "$CLASS_PATH" org.apache.hadoop.ssm.SSMServer $*
 
