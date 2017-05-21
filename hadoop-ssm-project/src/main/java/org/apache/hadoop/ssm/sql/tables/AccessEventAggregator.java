@@ -19,6 +19,8 @@ package org.apache.hadoop.ssm.sql.tables;
 
 import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -35,6 +37,8 @@ public class AccessEventAggregator {
   private final AccessCountTableManager accessCountTableManager;
   private Window currentWindow;
   private List<FileAccessEvent> eventBuffer;
+  public static final Logger LOG =
+      LoggerFactory.getLogger(AccessEventAggregator.class);
 
   public AccessEventAggregator(DBAdapter adapter, AccessCountTableManager manager) {
     this(adapter, manager,  5 * 1000L);
@@ -86,8 +90,11 @@ public class AccessEventAggregator {
     try {
       this.adapter.execute(createTable);
       this.adapter.execute(insertValue);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Table created: " + table);
+      }
     } catch (SQLException e) {
-      e.printStackTrace();
+      LOG.error("Create table error: " + table, e);
     }
 
     return table;

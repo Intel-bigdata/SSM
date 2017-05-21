@@ -22,6 +22,8 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.sql.FileStatusInternal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -42,6 +44,13 @@ public class NamespaceFetcher {
   private ScheduledFuture consumerFuture;
   private FileStatusConsumer consumer;
   private FetchTask fetchTask;
+
+  private static long numFilesFetched = 0L;
+  private static long numDirectoriesFetched = 0L;
+  private static long numPersisted = 0L;
+
+  public static final Logger LOG =
+      LoggerFactory.getLogger(NamespaceFetcher.class);
 
   public NamespaceFetcher(DFSClient client, DBAdapter adapter) {
     this(client, adapter, DEFAULT_INTERVAL);
@@ -68,6 +77,7 @@ public class NamespaceFetcher {
         fetchTask, 0, fetchInterval, TimeUnit.MILLISECONDS);
     this.consumerFuture = this.scheduledExecutorService.scheduleAtFixedRate(
         consumer, 0, 100, TimeUnit.MILLISECONDS);
+    LOG.info("Started.");
   }
 
   public boolean fetchFinished() {
@@ -75,8 +85,12 @@ public class NamespaceFetcher {
   }
 
   public void stop() {
-    this.fetchTaskFuture.cancel(false);
-    this.consumerFuture.cancel(false);
+    if (fetchTaskFuture != null) {
+      this.fetchTaskFuture.cancel(false);
+    }
+    if (consumerFuture != null) {
+      this.consumerFuture.cancel(false);
+    }
   }
 
   private static class FetchTask implements Runnable {
@@ -91,6 +105,9 @@ public class NamespaceFetcher {
     private FileStatusInternalBatch currentBatch;
     private volatile boolean isFinished = false;
 
+    private long lastUpdateTime = System.currentTimeMillis();
+    private long startTime = lastUpdateTime;
+
     public FetchTask(DFSClient client) {
       this.deque = new ArrayDeque<>();
       this.batches = new LinkedBlockingDeque<>();
@@ -101,34 +118,61 @@ public class NamespaceFetcher {
 
     @Override
     public void run() {
+      if (LOG.isDebugEnabled()) {
+        long curr = System.currentTimeMillis();
+        if (curr - lastUpdateTime >= 2000) {
+          LOG.debug(String.format(
+              "%d sec, numDirectories = %d, numFiles = %d, batchsInqueue = %d",
+              (curr - startTime) / 1000,
+              numDirectoriesFetched, numFilesFetched, batches.size()));
+          lastUpdateTime = curr;
+        }
+      }
+
       String parent = deque.pollFirst();
       if (parent == null) { // BFS finished
         if (currentBatch.actualSize() > 0) {
-          this.batches.add(currentBatch);
+          try {
+            this.batches.put(currentBatch);
+          } catch (InterruptedException e) {
+            LOG.error("Current batch actual size = "
+                + currentBatch.actualSize(), e);
+          }
           this.currentBatch = new FileStatusInternalBatch(DEFAULT_BATCH_SIZE);
+        }
+
+        if (this.batches.isEmpty()) {
+          this.isFinished = true;
+          long curr = System.currentTimeMillis();
+          LOG.info(String.format(
+              "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
+              (curr - startTime) / 1000,
+              numDirectoriesFetched, numFilesFetched));
         }
         return;
       }
+
       try {
         HdfsFileStatus status = client.getFileInfo(parent);
         if (status != null && status.isDir()) {
           FileStatusInternal internal = new FileStatusInternal(status);
           internal.setPath(parent);
           this.addFileStatus(internal);
+          numDirectoriesFetched++;
           HdfsFileStatus[] children = this.listStatus(parent);
           for (HdfsFileStatus child : children) {
             if (child.isDir()) {
               this.deque.add(child.getFullName(parent));
             } else {
               this.addFileStatus(new FileStatusInternal(child, parent));
+              numFilesFetched++;
             }
           }
         }
-        if (this.deque.isEmpty() && this.batches.isEmpty()) {
-          this.isFinished = true;
-        }
       } catch (IOException | InterruptedException e) {
-        e.printStackTrace();
+        LOG.error("Totally, numDirectoriesFetched = " + numDirectoriesFetched
+            + ", numFilesFetched = " + numFilesFetched
+            + ". Parent = " + parent, e);
       }
     }
 
@@ -190,6 +234,8 @@ public class NamespaceFetcher {
   private static class FileStatusConsumer implements Runnable {
     private final DBAdapter dbAdapter;
     private final FetchTask fetchTask;
+    private long startTime = System.currentTimeMillis();
+    private long lastUpdateTime = startTime;
 
     protected FileStatusConsumer(DBAdapter dbAdapter, FetchTask fetchTask) {
       this.dbAdapter = dbAdapter;
@@ -203,10 +249,33 @@ public class NamespaceFetcher {
         FileStatusInternal[] statuses = batch.getFileStatuses();
         if (statuses.length == batch.actualSize()) {
           this.dbAdapter.insertFiles(batch.getFileStatuses());
+          numPersisted += statuses.length;
         } else {
           FileStatusInternal[] actual = new FileStatusInternal[batch.actualSize()];
           System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
           this.dbAdapter.insertFiles(actual);
+          numPersisted += actual.length;
+        }
+
+        if (LOG.isDebugEnabled()) {
+          LOG.debug(batch.actualSize() + " files insert into table 'files'.");
+        }
+      }
+
+      if (LOG.isDebugEnabled()) {
+        long curr = System.currentTimeMillis();
+        if (curr - lastUpdateTime >= 2000) {
+          long total = numDirectoriesFetched + numFilesFetched;
+          if (total > 0) {
+            LOG.debug(String.format(
+                "%d sec, %%%d persisted into database",
+                (curr - startTime) / 1000, numPersisted * 100 / total));
+          } else {
+            LOG.debug(String.format(
+                "%d sec, %%0 persisted into database",
+                (curr - startTime) / 1000));
+          }
+          lastUpdateTime = curr;
         }
       }
     }

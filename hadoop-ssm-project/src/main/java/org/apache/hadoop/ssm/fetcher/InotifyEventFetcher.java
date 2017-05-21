@@ -24,6 +24,8 @@ import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.apache.hadoop.ssm.sql.DBAdapter;
 import org.apache.hadoop.ssm.utils.EventBatchSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +45,8 @@ public class InotifyEventFetcher {
   private EventApplyTask eventApplyTask;
   private java.io.File inotifyFile;
   private QueueFile queueFile;
+  public static final Logger LOG =
+      LoggerFactory.getLogger(InotifyEventFetcher.class);
 
   public InotifyEventFetcher(DFSClient client, DBAdapter adapter,
       ScheduledExecutorService service) {
@@ -61,13 +65,17 @@ public class InotifyEventFetcher {
     this.inotifyFile = new File("/tmp/inotify" + new Random().nextLong());
     this.queueFile = new QueueFile(inotifyFile);
     long startId = this.client.getNamenode().getCurrentEditLogTxid();
+    LOG.info("Start fetching namespace with current edit log txid = " + startId);
     this.nameSpaceFetcher.startFetch();
     this.inotifyFetchFuture = scheduledExecutorService.scheduleAtFixedRate(
         new InotifyFetchTask(queueFile, client, startId), 0, 100, TimeUnit.MILLISECONDS);
     this.eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile, startId);
+
+    LOG.info("Start apply iNotify events.");
     eventApplyTask.start();
 
     this.waitNameSpaceFetcherFinished();
+    LOG.info("Name space fetch finished.");
   }
 
   private void waitNameSpaceFetcherFinished() throws InterruptedException, IOException {

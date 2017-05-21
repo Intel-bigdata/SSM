@@ -27,6 +27,8 @@ import org.apache.hadoop.ssm.rule.parser.TranslateResult;
 import org.apache.hadoop.ssm.rule.parser.TranslationContext;
 import org.apache.hadoop.ssm.sql.CommandInfo;
 import org.apache.hadoop.ssm.sql.DBAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,6 +45,8 @@ public class RuleManager implements ModuleSequenceProto {
   private Configuration conf;
   private DBAdapter dbAdapter;
   private boolean isClosed = false;
+  public static final Logger LOG =
+      LoggerFactory.getLogger(RuleManager.class.getName());
 
   private ConcurrentHashMap<Long, RuleContainer> mapRules =
       new ConcurrentHashMap<>();
@@ -170,6 +174,13 @@ public class RuleManager implements ModuleSequenceProto {
 
     CommandInfo[] cmds = commands.toArray(new CommandInfo[commands.size()]);
     dbAdapter.insertCommandsTable(cmds);
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("" + commands.size() + " commands added.");
+      for (CommandInfo cmd : commands) {
+        LOG.debug("\t" + cmd);
+      }
+    }
   }
 
   public boolean isClosed() {
@@ -187,37 +198,51 @@ public class RuleManager implements ModuleSequenceProto {
    * @throws IOException
    */
   public boolean init(DBAdapter dbAdapter) throws IOException {
+    LOG.info("Initializing ...");
     this.dbAdapter = dbAdapter;
     // Load rules table
     List<RuleInfo> rules = dbAdapter.getRuleInfo();
     for (RuleInfo rule : rules) {
       mapRules.put(rule.getId(), new RuleContainer(rule, dbAdapter));
     }
+    LOG.info("Initialized. Totally " + rules.size()
+        + " rules loaded from DataBase.");
+    if (LOG.isDebugEnabled()) {
+      for (RuleInfo info : rules) {
+        LOG.debug("\t" + info);
+      }
+    }
     return true;
   }
 
-  private void submitRuleToScheduler(RuleQueryExecutor executor)
+  private boolean submitRuleToScheduler(RuleQueryExecutor executor)
       throws IOException {
     if (executor == null || executor.isExited()) {
-      return;
+      return false;
     }
     execScheduler.addPeriodicityTask(executor);
+    return true;
   }
 
   /**
    * Start services
    */
   public boolean start() throws IOException {
+    LOG.info("Starting ...");
     // after StateManager be ready
 
+    int numLaunched = 0;
     // Submit runnable rules to scheduler
     for (RuleContainer container : mapRules.values()) {
         RuleInfo rule = container.getRuleInfoRef();
       if (rule.getState() == RuleState.ACTIVE
           || rule.getState() == RuleState.DRYRUN) {
-        submitRuleToScheduler(container.launchExecutor(this));
+        boolean sub = submitRuleToScheduler(container.launchExecutor(this));
+        numLaunched += sub ? 1 : 0;
       }
     }
+    LOG.info("Started. " + numLaunched
+        + " rules launched for execution.");
     return true;
   }
 
@@ -225,15 +250,19 @@ public class RuleManager implements ModuleSequenceProto {
    * Stop services
    */
   public void stop() throws IOException {
+    LOG.info("Stopping ...");
     isClosed = true;
     if (execScheduler != null) {
       execScheduler.shutdown();
     }
+    LOG.info("Stopped.");
   }
 
   /**
    * Waiting for threads to exit.
    */
   public void join() throws IOException {
+    LOG.info("Joining ...");
+    LOG.info("Joined.");
   }
 }
