@@ -61,7 +61,8 @@ angular.module('dashboard')
           // group 1/3 (4-col)
           $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
           $stb.text('ID').key('id').canSort().done(),
-          // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
+          $stb.text('Name').key('ruleName').canSort().done(),
+            // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
           // group 2/3 (5-col)
           $stb.datetime('Submission Time').key('submitTime').canSort().sortDefaultDescent().done(),
           $stb.datetime('Last Check Time').key('lastCheckTime').canSort().sortDefaultDescent().done(),
@@ -85,6 +86,7 @@ angular.module('dashboard')
               // name: {href: pageUrl, text: rule.appName},
               state: {tooltip: rule.state, condition: rule.isRunning ? 'good' : '', shape: 'stripe'},
               //user: rule.user,
+              ruleName: 'rule1',
               submitTime: rule.submitTime,
               lastCheckTime: rule.lastCheckTime,
               numChecked: rule.numChecked,
@@ -101,7 +103,7 @@ angular.module('dashboard')
                 }
               },
               view: {
-                // href: rule.pageUrl,
+                href: rule.pageUrl,
                 text: 'Details',
                 class: 'btn-xs btn-primary',
                 disabled: !rule.isRunning

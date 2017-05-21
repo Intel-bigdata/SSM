@@ -92,6 +92,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
             isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
             isDead: !(obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
             // extra methods
+            pageUrl: locator.rule(obj.id),
             start: function () {
               return restapi.startRule(obj.id);
             },
@@ -102,7 +103,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         rule: function (obj) {
           angular.merge(obj, {
-            state: 'active',
+            status: 'Active',
+            //Todo: replace real name
+            ruleName: 'Rule1'
           });
 
           angular.merge(obj, {
@@ -136,7 +139,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('rulelist', decoder.rules);
         },
         rule: function (ruleId) {
-          return get('ruledetail/' + ruleId, decoder.rule);
+          return get('rules/' + ruleId + '/detail', decoder.rule);
         },
         ruleAlerts: function (ruleId) {
           return get('ruledetail/' + ruleId + '/errors', decoder.ruleAlerts);

@@ -19,16 +19,16 @@ under the License.
 -->
   <h4>
     <!-- todo: backend api should enforce user application has a readable name! -->
-    <span ng-bind="app.appName"></span>
-    <indicator condition="{{app.isRunning?'good':''}}" tooltip="{{app.status}}"></indicator>
+    <span ng-bind="rule.ruleName"></span>
+    <indicator condition="{{rule.isRunning?'good':''}}" tooltip="{{rule.status}}"></indicator>
   </h4>
-  <h5 ng-bind="app.description"></h5>
+  <h5 ng-bind="rule.ruleText"></h5>
 </div>
 
 <div class="col-md-12">
   <ul class="nav nav-tabs nav-tabs-underlined" bs-navbar>
-    <li data-match-route="/apps/app/\d+(/overview)?$">
-      <a href="#/apps/app/{{app.appId}}">Overview</a>
+    <li data-match-route="/rules/rule/\d+(/overview)?$">
+      <a href="#/rules/rule/{{rule.id}}">Overview</a>
     </li>
   </ul>
 </div>

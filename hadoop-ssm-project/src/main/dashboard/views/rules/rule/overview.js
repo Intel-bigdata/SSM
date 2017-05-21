@@ -26,11 +26,11 @@ angular.module('dashboard')
         .state('rule.overview', {
           url: '', /* default page */
           templateUrl: 'views/rules/rule/overview.html',
-          controller: 'AppOverviewCtrl'
+          controller: 'RuleOverviewCtrl'
         });
     }])
 
-  .controller('AppOverviewCtrl', ['$scope', 'helper', '$propertyTableBuilder', 'models',
+  .controller('RuleOverviewCtrl', ['$scope', 'helper', '$propertyTableBuilder', 'models',
     function ($scope, helper, $ptb, models) {
       'use strict';
 
@@ -57,7 +57,7 @@ angular.module('dashboard')
       });
 
       $scope.alerts = [];
-      models.$get.ruleAlerts($scope.rule.appId)
+      models.$get.ruleAlerts($scope.rule.id)
         .then(function (alerts0) {
           $scope.alerts = alerts0.$data();
           alerts0.$subscribe($scope, function (alerts) {

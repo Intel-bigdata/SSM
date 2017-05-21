@@ -29,9 +29,8 @@ angular.module('dashboard')
       executor: function (appId, appType, executorId) {
         return self.rule(appId, appType) + '/executor/' + executorId;
       },
-      rule: function (appId, appType) {
-        var prefix = appType === 'streaming' ? 'streaming' : '';
-        return '#/rules/' + prefix + 'rule/' + appId;
+      rule: function (ruleId) {
+        return '#/rules/rule/' + ruleId;
       }
     };
     return self;
