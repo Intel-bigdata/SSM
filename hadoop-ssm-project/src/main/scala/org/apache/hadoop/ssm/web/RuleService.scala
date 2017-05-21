@@ -48,6 +48,9 @@ class RuleService(ssmServer: SSMServer) extends BasicService {
           rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.DISABLED))
           complete("success")
         }
+      } ~
+      path("detail") {
+        complete(gson.toJson(rules.asScala.find(_.getId == ruleId).get))
       }
     } ~
     path("rulelist") {

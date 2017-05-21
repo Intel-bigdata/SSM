@@ -25,12 +25,12 @@ angular.module('dashboard')
       $stateProvider
         .state('rule', {
           abstract: true,
-          url: '/rules/rule/:appId',
+          url: '/rules/rule/:ruleId',
           templateUrl: 'views/rules/rule/rule.html',
-          controller: 'AppCtrl',
+          controller: 'RuleCtrl',
           resolve: {
-            app0: ['$stateParams', 'models', function ($stateParams, models) {
-              return models.$get.rule($stateParams.appId);
+            rule0: ['$stateParams', 'models', function ($stateParams, models) {
+              return models.$get.rule($stateParams.ruleId);
             }]
           }
         });
@@ -39,12 +39,12 @@ angular.module('dashboard')
 /**
  * This controller is used to obtain rule. All nested views will read status from here.
  */
-  .controller('AppCtrl', ['$scope', 'app0',
-    function ($scope, app0) {
+  .controller('RuleCtrl', ['$scope', 'rule0',
+    function ($scope, rule0) {
       'use strict';
 
-      $scope.rule = app0.$data();
-      app0.$subscribe($scope, function (app) {
+      $scope.rule = rule0.$data();
+      rule0.$subscribe($scope, function (app) {
         $scope.rule = app;
       });
     }])
