@@ -21,10 +21,35 @@ import java.util.Map;
 public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
 
   @Test
-  public void testCommandExecutor() throws  Exception {
+  public void testCommandExecutor() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
     testCommandExecutorHelper();
+  }
+
+  @Test
+  public void testGetCommand() throws Exception {
+
+  }
+
+  @Test
+  public void testListCommandInfo() throws Exception {
+
+  }
+
+  @Test
+  public void testDeleteCommand() throws Exception {
+
+  }
+
+  @Test
+  public void testActivateCommand() throws Exception {
+
+  }
+
+  @Test
+  public void testDisableCommand() throws Exception {
+
   }
 
   private void generateTestCases() throws Exception {
