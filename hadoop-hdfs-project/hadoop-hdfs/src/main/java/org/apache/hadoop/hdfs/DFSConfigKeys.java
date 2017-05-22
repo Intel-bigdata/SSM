@@ -1420,13 +1420,13 @@ public class DFSConfigKeys extends CommonConfigurationKeys {
           HdfsClientConfigKeys.DFS_SSM_HTTP_ADDRESS_KEY;
   public static final String    DFS_SSM_HTTPS_ADDRESS_KEY =
           HdfsClientConfigKeys.DFS_SSM_HTTPS_ADDRESS_KEY;
-  public static final String    DFS_SSM_KEYTAB_FILE_KEY = "dfs.ssm.keytab.file";
+  public static final String    DFS_SSM_KEYTAB_FILE_KEY = "dfs.smart.keytab.file";
 
   public static final int    DFS_SSM_HTTPS_PORT_DEFAULT =
           HdfsClientConfigKeys.DFS_SSM_HTTPS_PORT_DEFAULT;
   public static final String    DFS_SSM_HTTPS_ADDRESS_DEFAULT = "0.0.0.0:" + DFS_SSM_HTTPS_PORT_DEFAULT;
 
   @Deprecated
-  public static final String    DFS_SSM_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY = "dfs.ssm.kerberos.internal.spnego.principal";
+  public static final String    DFS_SSM_KERBEROS_INTERNAL_SPNEGO_PRINCIPAL_KEY = "dfs.smart.kerberos.internal.spnego.principal";
 
 }
