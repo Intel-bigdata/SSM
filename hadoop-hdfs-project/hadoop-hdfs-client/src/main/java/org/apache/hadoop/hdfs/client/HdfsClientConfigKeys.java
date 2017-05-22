@@ -175,10 +175,6 @@ public interface HdfsClientConfigKeys {
       "dfs.namenode.snapshot.capture.openfiles";
   boolean DFS_NAMENODE_SNAPSHOT_CAPTURE_OPENFILES_DEFAULT = false;
 
-  //ssm
-  String  DFS_SSM_HTTP_ADDRESS_KEY = "dfs.smart.http-address";
-  String  DFS_SSM_HTTPS_ADDRESS_KEY = "dfs.smart.https-address";
-  int     DFS_SSM_HTTPS_PORT_DEFAULT = 9971;
   /**
    * These are deprecated config keys to client code.
    */
