@@ -166,27 +166,27 @@ public class SmartRpcServer implements ClientSSMProtocol {
   }
 
   @Override
-  public long submitCommand(CommandInfo commandInfo) throws IOException {
-    checkIfActive();
-    return ssm.getCommandExecutor().submitCommand(commandInfo);
-  }
-
-  @Override
   public CommandInfo getCommandInfo(long commandID) throws IOException {
     checkIfActive();
     return ssm.getCommandExecutor().getCommandInfo(commandID);
   }
 
   @Override
-  public List<CommandInfo> listCommandInfo() throws IOException {
+  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState) throws IOException {
     checkIfActive();
-    return ssm.getCommandExecutor().listCommandsInfo();
+    return ssm.getCommandExecutor().listCommandsInfo(rid, commandState);
   }
 
   @Override
   public void activateCommand(long commandID) throws IOException {
     checkIfActive();
     ssm.getCommandExecutor().activateCommand(commandID);
+  }
+
+  @Override
+  public void disableCommand(long commandID) throws IOException {
+    checkIfActive();
+    ssm.getCommandExecutor().disableCommand(commandID);
   }
 
   @Override

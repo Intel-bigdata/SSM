@@ -26,7 +26,9 @@ public enum CommandState {
   EXECUTING(2), // Still running
   PAUSED(3),
   DONE(4), // Execution successful
-  CANCELLED(5);
+  CANCELLED(5),
+  DISABLED(6), // Disable this Command, kill all executing actions
+  DRYRUN(7); // TODO Don't Run, but keep status
 
   private int value;
 

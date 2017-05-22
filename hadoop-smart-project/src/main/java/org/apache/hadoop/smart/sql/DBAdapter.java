@@ -768,6 +768,15 @@ public class DBAdapter {
     }
   }
 
+  public void deleteCommand(long cid) {
+    String sql =  String.format("DELETE from commands WHERE cid = %d;", cid);
+    try {
+      execute(sql);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
   // TODO multiple CommandStatus update
 //  public boolean updateCommandsStatus(Map<Long, CommandState> cmdMap) {
 //    try {

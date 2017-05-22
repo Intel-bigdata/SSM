@@ -19,6 +19,8 @@ package org.apache.hadoop.smart.protocolPB;
 
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
+
+
 import org.apache.hadoop.smart.protocol.ClientSmartProto.CheckRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.GetRuleInfoRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.GetRuleInfoResponseProto;
@@ -33,6 +35,8 @@ import org.apache.hadoop.smart.protocol.ClientSSMProtocol;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
+import org.apache.hadoop.smart.sql.CommandInfo;
+import org.apache.hadoop.smart.CommandState;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -149,6 +153,32 @@ public class ClientSmartProtocolClientSideTranslatorPB implements
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }
+  }
+
+  // TODO Command RPC Client Interface
+  @Override
+  public CommandInfo getCommandInfo(long commandID) throws IOException {
+    return null;
+  }
+
+  @Override
+  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState) throws IOException {
+    return null;
+  }
+
+  @Override
+  public void activateCommand(long commandID) throws IOException {
+
+  }
+
+  @Override
+  public void disableCommand(long commandID) throws IOException {
+
+  }
+
+  @Override
+  public void deleteCommand(long commandID) throws IOException {
+
   }
 
   /**
