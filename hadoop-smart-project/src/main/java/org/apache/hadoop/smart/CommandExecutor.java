@@ -113,6 +113,12 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 //      commandExecutorThread.join(1000);
 //    } catch (InterruptedException e) {
 //    }
+    try {
+      MoverPool.getInstance().shutdown();
+    } catch (Exception e) {
+      LOG.error("Shutdown MoverPool Error!");
+      throw new IOException();
+    }
     execThreadPool.stop();
     execThreadPool = null;
     commandExecutorThread = null;
@@ -143,14 +149,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
   }
 
-  /**
-   * Add a command to CommandExecutor for execution.
-   * @param cmd
-   */
-  public synchronized void submitCommand(CommandInfo cmd) {
-    CommandInfo[] retInfos = {cmd};
-    adapter.insertCommandsTable(retInfos);
-    cmdsAll.put(cmd.getCid(), cmd);
+  public synchronized long submitCommand(CommandInfo cmd) {
+    if(adapter.insertCommandTable(cmd)) {
+      cmdsAll.put(cmd.getCid(), cmd);
+      cmdsInState.get(CommandState.PENDING.getValue()).add(cmd.getCid());
+      return cmd.getCid();
+    }
+    return -1;
   }
 
   public CommandInfo getCommandInfo(long cid) throws IOException {
@@ -170,7 +175,24 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   public void deleteCommand(long cid) throws IOException {
     // Remove from Cache
-    // Remove from DB
+    if(cmdsAll.containsKey(cid)) {
+      // Command is finished, then return
+      if(inUpdateCache(cid))
+        return;
+      CommandInfo cmdinfo = cmdsAll.get(cid);
+      if(inExecutingList(cid)) {
+        // Remove from Executing queue
+        removeFromExecuting(cid, cmdinfo.getRid(), cmdinfo.getState());
+        // Kill thread
+        execThreadPool.deleteCommand(cid);
+      } else {
+        // Remove from Pending queue
+        cmdsInState.get(CommandState.PENDING.getValue()).remove(cid);
+      }
+      // Mark as cancelled, this status will be update to DB
+      // in next batch update
+      statusCache.add(new CmdTuple(cid, cmdinfo.getRid(), CommandState.CANCELLED));
+    }
   }
 
   public void activateCommand(long cid) throws IOException {
@@ -182,12 +204,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     addToPending(cmdinfo);
   }
 
-  private void removeFromCache(long cid) throws IOException {
-    // TODO remove from Cache
-    // TODO kill thread
-  }
-
-
   private void addToPending(CommandInfo cmdinfo) throws IOException {
     Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
     cmdsAll.put(cmdinfo.getCid(), cmdinfo);
@@ -198,6 +214,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private boolean inExecutingList(long cid) throws IOException {
     Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
     return cmdsExecuting.contains(cid);
+  }
+
+  private boolean inPendingList(long cid) throws IOException {
+    Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
+    return cmdsPending.contains(cid);
   }
 
   private boolean inUpdateCache(long cid) throws IOException {
@@ -220,7 +241,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
     Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
     if (cmdsPending.size() == 0) {
-      // TODO Check Status and Update
       // Put them into cmdsAll and cmdsInState
       if(statusCache.size() != 0)
         batchCommandStatusUpdate();
@@ -228,7 +248,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       if(dbcmds == null)
         return null;
       for(CommandInfo c : dbcmds) {
-        if(cmdsExecuting.contains(c.getCid()))
+        // if command alread in update cache or queue then skip
+        if(cmdsAll.containsKey(c.getCid()))
           continue;
         cmdsAll.put(c.getCid(), c);
         cmdsPending.add(c.getCid());
@@ -257,7 +278,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     } else if(cmdinfo.getActionType().getValue()  == ActionType.MoveFile.getValue()) {
       current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
     } else {
-      // TODO Default Action
+      // Default Action
       current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
     }
     current.initial(args);

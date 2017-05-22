@@ -55,7 +55,7 @@ public class CommandInfo {
     return cid;
   }
 
-  public void setCid(int cid) {
+  public void setCid(long cid) {
     this.cid = cid;
   }
 

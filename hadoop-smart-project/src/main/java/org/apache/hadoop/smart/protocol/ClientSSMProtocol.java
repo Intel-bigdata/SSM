@@ -19,6 +19,7 @@ package org.apache.hadoop.smart.protocol;
 
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
+import org.apache.hadoop.smart.sql.CommandInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -67,4 +68,33 @@ public interface ClientSSMProtocol {
   void activateRule(long ruleID) throws IOException;
 
   void disableRule(long ruleID, boolean dropPendingCommands) throws IOException;
+
+  /**
+   * Add a command to CommandExecutor for execution.
+   * @param commandInfo
+   * @return commandID, if commandID == -1, then submit false
+   *
+   * @throws IOException
+   */
+  long submitCommand(CommandInfo commandInfo) throws IOException;
+
+  /**
+   * Get information about the given command.
+   * @param ruleID
+   * @return
+   * @throws IOException
+   */
+  CommandInfo getCommandInfo(long commandID) throws IOException;
+
+  /**
+   * List commands in SSM Cache.
+   * @return
+   * @throws IOException
+   */
+  List<CommandInfo> listCommandInfo() throws IOException;
+
+  void activateCommand(long commandID) throws IOException;
+
+  void deleteCommand(long commandID) throws IOException;
+
 }

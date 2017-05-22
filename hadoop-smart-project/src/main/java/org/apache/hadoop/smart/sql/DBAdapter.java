@@ -691,6 +691,34 @@ public class DBAdapter {
     }
   }
 
+  public synchronized boolean insertCommandTable(CommandInfo command) {
+    // Insert single command into commands, update command.id with latest id
+    String sql = "INSERT INTO commands (rid, action_id, state, "
+            + "parameters, generate_time, state_changed_time) "
+            + "VALUES('" + command.getRid() + "', '"
+            + command.getActionType().getValue() + "', '"
+            + command.getState().getValue() + "', '"
+            + command.getParameters() + "', '"
+            + command.getGenerateTime() + "', '"
+            + command.getStateChangedTime() + "');";
+    try {
+      execute(sql);
+      ResultSet rs = executeQuery("SELECT MAX(id) FROM commands;");
+      if (rs.next()) {
+        long cid = rs.getLong(1);
+        command.setCid(cid);
+        rs.close();
+        return true;
+      } else {
+        rs.close();
+        return false;
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+
   public List<CommandInfo> getCommandsTableItem(String cidCondition,
       String ridCondition, CommandState state) {
     String sqlPrefix = "SELECT * FROM commands WHERE ";

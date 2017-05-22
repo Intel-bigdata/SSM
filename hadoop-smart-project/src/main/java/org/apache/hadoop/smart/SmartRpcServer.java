@@ -30,6 +30,7 @@ import org.apache.hadoop.smart.protocolPB.ClientSmartProtocolPB;
 import org.apache.hadoop.smart.protocolPB.ClientSmartProtocolServerSideTranslatorPB;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
+import org.apache.hadoop.smart.sql.CommandInfo;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -162,5 +163,35 @@ public class SmartRpcServer implements ClientSSMProtocol {
   public void disableRule(long ruleID, boolean dropPendingCommands) throws IOException {
     checkIfActive();
     ssm.getRuleManager().DisableRule(ruleID, dropPendingCommands);
+  }
+
+  @Override
+  public long submitCommand(CommandInfo commandInfo) throws IOException {
+    checkIfActive();
+    return ssm.getCommandExecutor().submitCommand(commandInfo);
+  }
+
+  @Override
+  public CommandInfo getCommandInfo(long commandID) throws IOException {
+    checkIfActive();
+    return ssm.getCommandExecutor().getCommandInfo(commandID);
+  }
+
+  @Override
+  public List<CommandInfo> listCommandInfo() throws IOException {
+    checkIfActive();
+    return ssm.getCommandExecutor().listCommandsInfo();
+  }
+
+  @Override
+  public void activateCommand(long commandID) throws IOException {
+    checkIfActive();
+    ssm.getCommandExecutor().activateCommand(commandID);
+  }
+
+  @Override
+  public void deleteCommand(long commandID) throws IOException {
+    checkIfActive();
+    ssm.getCommandExecutor().deleteCommand(commandID);
   }
 }
