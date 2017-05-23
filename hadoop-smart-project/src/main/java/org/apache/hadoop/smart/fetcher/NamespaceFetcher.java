@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -245,21 +246,26 @@ public class NamespaceFetcher {
     @Override
     public void run() {
       FileStatusInternalBatch batch = fetchTask.pollBatch();
-      if (batch != null) {
-        FileStatusInternal[] statuses = batch.getFileStatuses();
-        if (statuses.length == batch.actualSize()) {
-          this.dbAdapter.insertFiles(batch.getFileStatuses());
-          numPersisted += statuses.length;
-        } else {
-          FileStatusInternal[] actual = new FileStatusInternal[batch.actualSize()];
-          System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
-          this.dbAdapter.insertFiles(actual);
-          numPersisted += actual.length;
-        }
+      try {
+        if (batch != null) {
+          FileStatusInternal[] statuses = batch.getFileStatuses();
+          if (statuses.length == batch.actualSize()) {
+            this.dbAdapter.insertFiles(batch.getFileStatuses());
+            numPersisted += statuses.length;
+          } else {
+            FileStatusInternal[] actual = new FileStatusInternal[batch.actualSize()];
+            System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
+            this.dbAdapter.insertFiles(actual);
+            numPersisted += actual.length;
+          }
 
-        if (LOG.isDebugEnabled()) {
-          LOG.debug(batch.actualSize() + " files insert into table 'files'.");
+          if (LOG.isDebugEnabled()) {
+            LOG.debug(batch.actualSize() + " files insert into table 'files'.");
+          }
         }
+      } catch (SQLException e) {
+        // TODO: handle this issue
+        LOG.error("Consumer error");
       }
 
       if (LOG.isDebugEnabled()) {

@@ -50,5 +50,5 @@ bin=$(cd -P -- "$(dirname -- "${script}")" >/dev/null && pwd -P)
 
 SMART_HOME=${bin}/../target
 CLASS_PATH=$SMART_HOME/hadoop-smart-project-3.0.0-alpha3-SNAPSHOT.jar:$SMART_HOME/lib/*:.
-java $DEBUG -classpath "$CLASS_PATH" org.apache.hadoop.smart.SmartServer $*
+java $DEBUG -classpath "$CLASS_PATH" org.apache.hadoop.smart.SmartServer $args
 

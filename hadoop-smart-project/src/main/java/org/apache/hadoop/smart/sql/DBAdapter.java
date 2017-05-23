@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.smart.sql;
 
+import org.apache.curator.shaded.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.XAttrHelper;
@@ -29,6 +30,7 @@ import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
 import org.apache.hadoop.smart.sql.tables.AccessCountTable;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -46,7 +48,8 @@ import java.util.stream.Collectors;
  */
 public class DBAdapter {
 
-  private Connection conn;
+  private Connection connProvided = null;
+  private DBPool pool = null;
 
   private Map<Integer, String> mapOwnerIdName = null;
   private Map<Integer, String> mapGroupIdName = null;
@@ -54,26 +57,109 @@ public class DBAdapter {
   private Map<Integer, ErasureCodingPolicy> mapECPolicy = null;
   private Map<String, StorageCapacity> mapStorageCapacity = null;
 
+  @VisibleForTesting
   public DBAdapter(Connection conn) {
-    this.conn = conn;
+    connProvided = conn;
+  }
+
+  public DBAdapter(DBPool pool) throws IOException {
+    this.pool = pool;
+  }
+
+  public Connection getConnection() throws SQLException {
+    return pool != null ? pool.getConnection() : connProvided;
+  }
+
+  private void closeConnection(Connection conn) throws SQLException {
+    if (pool != null) {
+      pool.closeConnection(conn);
+    }
+  }
+
+  private class QueryHelper {
+    private String query;
+    private Connection conn;
+    private boolean connProvided = false;
+    private Statement statement;
+    private ResultSet resultSet;
+    private boolean closed = false;
+
+    public QueryHelper(String query) throws SQLException {
+      this.query = query;
+      conn = getConnection();
+      if (conn== null) {
+        throw new SQLException("Invalid null connection");
+      }
+    }
+
+    public QueryHelper(String query, Connection conn) throws SQLException {
+      this.query = query;
+      this.conn = conn;
+      connProvided = true;
+      if (conn== null) {
+        throw new SQLException("Invalid null connection");
+      }
+    }
+
+    public ResultSet executeQuery() throws SQLException {
+      statement = conn.createStatement();
+      resultSet = statement.executeQuery(query);
+      return resultSet;
+    }
+
+    public int executeUpdate() throws SQLException {
+      statement = conn.createStatement();
+      return statement.executeUpdate(query);
+    }
+
+    public void execute() throws SQLException {
+      statement = conn.createStatement();
+      statement.executeUpdate(query);
+    }
+
+    public void close() throws SQLException {
+      if (closed) {
+        return;
+      }
+      closed = true;
+
+      if (resultSet != null && !resultSet.isClosed()) {
+        resultSet.close();
+      }
+
+      if (statement != null && !statement.isClosed()) {
+        statement.close();
+      }
+
+      if (conn != null && !connProvided) {
+        closeConnection(conn);
+      }
+    }
   }
 
   public Map<Long, Integer> getAccessCount(long startTime, long endTime,
-      String countFilter) {
+      String countFilter) throws SQLException {
+    Map<Long, Integer> ret = new HashMap<>();
     String sqlGetTableNames = "SELECT table_name FROM access_count_tables "
         + "WHERE start_time >= " + startTime + " AND end_time <= " + endTime;
+    Connection conn = getConnection();
+    QueryHelper qhTableName = null;
+    ResultSet rsTableNames = null;
+    QueryHelper qhValues = null;
+    ResultSet rsValues = null;
     try {
-      ResultSet rsTableNames = executeQuery(sqlGetTableNames);
+      qhTableName = new QueryHelper(sqlGetTableNames, conn);
+      rsTableNames = qhTableName.executeQuery();
       List<String> tableNames = new LinkedList<>();
       while (rsTableNames.next()) {
         tableNames.add(rsTableNames.getString(1));
       }
-      if (rsTableNames != null) {
-        rsTableNames.close();
-      }
+      qhTableName.close();
+
       if (tableNames.size() == 0) {
-        return null;
+        return ret;
       }
+
 
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
       String sqlUnion = "SELECT fid, count FROM \'"
@@ -90,32 +176,25 @@ public class DBAdapter {
           "HAVING SUM(count) " + countFilter;
       String sqlFinal = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
 
-      ResultSet rsValues = executeQuery(sqlFinal);
+      qhValues = new QueryHelper(sqlFinal, conn);
+      rsValues = qhValues.executeQuery();
 
-      Map<Long, Integer> ret = new HashMap<>();
       while (rsValues.next()) {
         ret.put(rsValues.getLong(1), rsValues.getInt(2));
       }
-      if(rsValues != null) {
-        rsValues.close();
-      }
-      return ret;
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
 
-  /**
-   * Store access count data for the given time interval.
-   *
-   * @param startTime
-   * @param endTime
-   * @param fids
-   * @param counts
-   */
-  public synchronized void insertAccessCountData(long startTime, long endTime,
-      long[] fids, int[] counts) {
+      return ret;
+    } finally {
+      if (qhTableName != null) {
+        qhTableName.close();
+      }
+
+      if (qhValues != null) {
+        qhValues.close();
+      }
+
+      closeConnection(conn);
+    }
   }
 
   /**
@@ -123,10 +202,13 @@ public class DBAdapter {
    *
    * @param files
    */
-  public synchronized void insertFiles(FileStatusInternal[] files) {
+  public synchronized void insertFiles(FileStatusInternal[] files)
+      throws SQLException {
     updateCache();
+    Connection conn = getConnection();
+    Statement s = null;
     try {
-      Statement s = conn.createStatement();
+      s = conn.createStatement();
       for (int i = 0; i < files.length; i++) {
         String sql = "INSERT INTO `files` (path, fid, length, "
             + "block_replication,"
@@ -146,17 +228,18 @@ public class DBAdapter {
         s.addBatch(sql);
       }
       s.executeBatch();
-    }catch (SQLException e) {
-        e.printStackTrace();
+    } finally {
+      if (s != null) {
+        s.close();
+      }
+      if (conn != null) {
+        closeConnection(conn);
+      }
     }
   }
 
   private int booleanToInt(boolean b) {
-    if (b) {
-      return 1;
-    } else {
-      return 0;
-    }
+    return b ? 1 : 0;
   }
 
   private Integer getKey(Map<Integer, String> map, String value) {
@@ -178,71 +261,63 @@ public class DBAdapter {
     return null;
   }
 
-  public HdfsFileStatus getFile(long fid) {
+  public HdfsFileStatus getFile(long fid) throws SQLException {
     String sql = "SELECT * FROM files WHERE fid = " + fid;
-    ResultSet result;
+    QueryHelper queryHelper = new QueryHelper(sql);
     try {
-      result = executeQuery(sql);
-    } catch (SQLException e) {
-      return null;
+      ResultSet result = queryHelper.executeQuery();
+      List<HdfsFileStatus> ret = convertFilesTableItem(result);
+      return ret.size() > 0 ? ret.get(0) : null;
+    } finally {
+      queryHelper.close();
     }
-    List<HdfsFileStatus> ret = convertFilesTableItem(result);
-    if (result != null) {
-      try {
-        result.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
-    }
-    return ret.size() > 0 ? ret.get(0) : null;
   }
 
-  public Map<String, Long> getFileIDs(Collection<String> paths) {
+  public Map<String, Long> getFileIDs(Collection<String> paths)
+      throws SQLException {
     Map<String, Long> pathToId = new HashMap<>();
     String in = paths.stream().map(s -> "'" + s +"'")
         .collect(Collectors.joining(", "));
     String sql = "SELECT fid, path FROM files WHERE path IN (" + in + ")";
+    QueryHelper queryHelper = new QueryHelper(sql);
     ResultSet result;
     try {
-      result = executeQuery(sql);
+      result = queryHelper.executeQuery();
       while (result.next()) {
         pathToId.put(result.getString("path"),
             result.getLong("fid"));
       }
-    } catch (SQLException e) {
-      e.printStackTrace();
       return pathToId;
+    } finally {
+      queryHelper.close();
     }
-    return pathToId;
   }
 
-  public HdfsFileStatus getFile(String path) {
+  public HdfsFileStatus getFile(String path) throws SQLException {
     String sql = "SELECT * FROM files WHERE path = \'" + path + "\'";
-    ResultSet result;
+    QueryHelper queryHelper = new QueryHelper(sql);
     try {
-      result = executeQuery(sql);
-    } catch (SQLException e) {
-      return null;
+      ResultSet result = queryHelper.executeQuery();
+      List<HdfsFileStatus> ret = convertFilesTableItem(result);
+      return ret.size() > 0 ? ret.get(0) : null;
+    } finally {
+      queryHelper.close();
     }
-    List<HdfsFileStatus> ret = convertFilesTableItem(result);
-    if (result != null) {
-      try {
-        result.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
-    }
-    return ret.size() > 0 ? ret.get(0) : null;
   }
 
-  public ErasureCodingPolicy getErasureCodingPolicy(int id) {
+  public ErasureCodingPolicy getErasureCodingPolicy(int id)
+      throws SQLException {
     updateCache();
     return mapECPolicy.get(id);
   }
 
-  public synchronized void insertStoragesTable(StorageCapacity[] storages) {
+  public void insertStoragesTable(StorageCapacity[] storages)
+      throws SQLException {
+    Connection conn = getConnection();
+    Statement s = null;
     try {
-      Statement s = conn.createStatement();
+      mapStorageCapacity = null;
+      s = conn.createStatement();
       for (int i = 0; i < storages.length; i++) {
         String sql = "INSERT INTO `storages` (type, capacity, free) VALUES"
             + " ('" + storages[i].getType()
@@ -251,19 +326,21 @@ public class DBAdapter {
         s.addBatch(sql);
       }
       s.executeBatch();
-      mapStorageCapacity = null;
-    }catch (SQLException e) {
-      e.printStackTrace();
+    } finally {
+      if (s != null) {
+        s.close();
+      }
+      closeConnection(conn);
     }
   }
 
-  public StorageCapacity getStorageCapacity(String type) {
+  public StorageCapacity getStorageCapacity(String type) throws SQLException {
     updateCache();
     return mapStorageCapacity.get(type);
   }
 
   public synchronized boolean updateStoragesTable(String type,
-      Long capacity, Long free) {
+      Long capacity, Long free) throws SQLException {
     String sql = null;
     String sqlPrefix = "UPDATE storages SET";
     String sqlCapacity = (capacity != null) ? ", capacity = '"
@@ -274,13 +351,15 @@ public class DBAdapter {
       sql = sqlPrefix + sqlCapacity + sqlFree + sqlSuffix;
       sql = sql.replaceFirst(",", "");
     }
+    QueryHelper queryHelper = new QueryHelper(sql);
     try {
       mapStorageCapacity = null;
-      return executeUpdate(sql) == 1;
-    } catch (SQLException e) {
-      return false;
+      return queryHelper.executeUpdate() == 1;
+    } finally {
+      queryHelper.close();
     }
   }
+
   /**
    * Convert query result into HdfsFileStatus list.
    * Note: Some of the info in HdfsFileStatus are not the same
@@ -289,160 +368,165 @@ public class DBAdapter {
    * @param resultSet
    * @return
    */
-  public List<HdfsFileStatus> convertFilesTableItem(ResultSet resultSet) {
+  public List<HdfsFileStatus> convertFilesTableItem(ResultSet resultSet)
+      throws SQLException {
     List<HdfsFileStatus> ret = new LinkedList<>();
     if (resultSet == null) {
       return ret;
     }
     updateCache();
-    try {
-      while (resultSet.next()) {
-        HdfsFileStatus status = new HdfsFileStatus(
-            resultSet.getLong("length"),
-            resultSet.getBoolean("is_dir"),
-            resultSet.getShort("block_replication"),
-            resultSet.getLong("block_size"),
-            resultSet.getLong("modification_time"),
-            resultSet.getLong("access_time"),
-            new FsPermission(resultSet.getShort("permission")),
-            mapOwnerIdName.get(resultSet.getShort("oid")),
-            mapGroupIdName.get(resultSet.getShort("gid")),
-            null, // Not tracked for now
-            resultSet.getString("path").getBytes(),
-            resultSet.getLong("fid"),
-            0,    // Not tracked for now, set to 0
-            null, // Not tracked for now, set to null
-            resultSet.getByte("sid"),
-            mapECPolicy.get(resultSet.getShort("ec_policy_id")));
-        ret.add(status);
-      }
-    } catch (SQLException e) {
-      return null;
-    }
-    if (resultSet != null) {
-      try {
-        resultSet.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
+
+    while (resultSet.next()) {
+      HdfsFileStatus status = new HdfsFileStatus(
+          resultSet.getLong("length"),
+          resultSet.getBoolean("is_dir"),
+          resultSet.getShort("block_replication"),
+          resultSet.getLong("block_size"),
+          resultSet.getLong("modification_time"),
+          resultSet.getLong("access_time"),
+          new FsPermission(resultSet.getShort("permission")),
+          mapOwnerIdName.get(resultSet.getShort("oid")),
+          mapGroupIdName.get(resultSet.getShort("gid")),
+          null, // Not tracked for now
+          resultSet.getString("path").getBytes(),
+          resultSet.getLong("fid"),
+          0,    // Not tracked for now, set to 0
+          null, // Not tracked for now, set to null
+          resultSet.getByte("sid"),
+          mapECPolicy.get(resultSet.getShort("ec_policy_id")));
+      ret.add(status);
     }
     return ret;
   }
 
-  private void updateCache() {
-    try {
-      if (mapOwnerIdName == null) {
-        String sql = "SELECT * FROM owners";
-        mapOwnerIdName = convertToMap(executeQuery(sql));
+  private void updateCache() throws SQLException {
+    if (mapOwnerIdName == null) {
+      String sql = "SELECT * FROM owners";
+      QueryHelper queryHelper = new QueryHelper(sql);
+      try {
+        mapOwnerIdName = convertToMap(queryHelper.executeQuery());
+      } finally {
+        queryHelper.close();
       }
+    }
 
-      if (mapGroupIdName == null) {
-        String sql = "SELECT * FROM groups";
-        mapGroupIdName = convertToMap(executeQuery(sql));
+    if (mapGroupIdName == null) {
+      String sql = "SELECT * FROM groups";
+      QueryHelper queryHelper = new QueryHelper(sql);
+      try {
+        mapGroupIdName = convertToMap(queryHelper.executeQuery());
+      } finally {
+        queryHelper.close();
       }
+    }
 
-      if (mapStoragePolicyIdName == null) {
-        String sql = "SELECT * FROM storage_policy";
-        mapStoragePolicyIdName = convertToMap(executeQuery(sql));
+    if (mapStoragePolicyIdName == null) {
+      String sql = "SELECT * FROM storage_policy";
+      QueryHelper queryHelper = new QueryHelper(sql);
+      try {
+        mapStoragePolicyIdName = convertToMap(queryHelper.executeQuery());
+      } finally {
+        queryHelper.close();
       }
+    }
 
-      if (mapECPolicy == null) {
-        String sql = "SELECT * FROM ecpolicys";
-        mapECPolicy = convertEcPoliciesTableItem(executeQuery(sql));
+    if (mapECPolicy == null) {
+      String sql = "SELECT * FROM ecpolicys";
+      QueryHelper queryHelper = new QueryHelper(sql);
+      try {
+        mapECPolicy = convertEcPoliciesTableItem(queryHelper.executeQuery());
+      } finally {
+        queryHelper.close();
       }
-      if (mapStorageCapacity == null) {
-        String sql = "SELECT * FROM storages";
-        mapStorageCapacity = convertStorageTablesItem(executeQuery(sql));
+    }
+
+    if (mapStorageCapacity == null) {
+      String sql = "SELECT * FROM storages";
+      QueryHelper queryHelper = new QueryHelper(sql);
+      try {
+        mapStorageCapacity =
+            convertStorageTablesItem(queryHelper.executeQuery());
+      } finally {
+        queryHelper.close();
       }
-    } catch (SQLException e) {
-      e.printStackTrace();
     }
   }
 
   private Map<Integer, ErasureCodingPolicy> convertEcPoliciesTableItem(
-      ResultSet resultSet) {
+      ResultSet resultSet) throws SQLException {
     Map<Integer, ErasureCodingPolicy> ret = new HashMap<>();
     if (resultSet == null) {
       return ret;
     }
-    try {
-      while (resultSet.next()) {
-        int id = resultSet.getInt("id");
 
-        ECSchema schema = new ECSchema(
-            resultSet.getString("codecName"),
-            resultSet.getInt("numDataUnits"),
-            resultSet.getInt("numParityUnits")
-        );
+    while (resultSet.next()) {
+      int id = resultSet.getInt("id");
 
-        ErasureCodingPolicy ec = new ErasureCodingPolicy(
-            resultSet.getString("name"),
-            schema,
-            resultSet.getInt("cellsize"),
-            (byte)id
-        );
+      ECSchema schema = new ECSchema(
+          resultSet.getString("codecName"),
+          resultSet.getInt("numDataUnits"),
+          resultSet.getInt("numParityUnits")
+      );
 
-        ret.put(id, ec);
-      }
-    } catch (SQLException e) {
-      return null;
+      ErasureCodingPolicy ec = new ErasureCodingPolicy(
+          resultSet.getString("name"),
+          schema,
+          resultSet.getInt("cellsize"),
+          (byte)id
+      );
+
+      ret.put(id, ec);
     }
     return ret;
   }
 
   private Map<String, StorageCapacity> convertStorageTablesItem(
-      ResultSet resultSet) {
+      ResultSet resultSet) throws SQLException {
     Map<String, StorageCapacity> map = new HashMap<>();
     if (resultSet == null) {
       return map;
     }
-    try {
-      while (resultSet.next()) {
-        String type = resultSet.getString(1);
-        StorageCapacity storage = new StorageCapacity(
-            resultSet.getString(1),
-            resultSet.getLong(2),
-            resultSet.getLong(3));
-        map.put(type, storage);
-      }
-    } catch (SQLException e) {
-      return null;
+
+    while (resultSet.next()) {
+      String type = resultSet.getString(1);
+      StorageCapacity storage = new StorageCapacity(
+          resultSet.getString(1),
+          resultSet.getLong(2),
+          resultSet.getLong(3));
+      map.put(type, storage);
     }
     return map;
   }
 
-  private Map<Integer, String> convertToMap(ResultSet resultSet) {
+  private Map<Integer, String> convertToMap(ResultSet resultSet)
+      throws SQLException {
     Map<Integer, String> ret = new HashMap<>();
     if (resultSet == null) {
       return ret;
     }
-    try {
-      while (resultSet.next()) {
-        // TODO: Tests for this
-        ret.put(resultSet.getInt(1), resultSet.getString(2));
-      }
-    } catch (SQLException e) {
-      return null;
+
+    while (resultSet.next()) {
+      // TODO: Tests for this
+      ret.put(resultSet.getInt(1), resultSet.getString(2));
     }
     return ret;
   }
 
   public synchronized void insertCachedFiles(long fid, long fromTime,
-      long lastAccessTime, int numAccessed) {
-    try {
-      String sql = "INSERT INTO cached_files (fid, from_time, "
-          + "last_access_time, num_accessed) VALUES (" + fid + ","
-          + fromTime + "," + lastAccessTime + ","
-          + numAccessed + ")";
-      executeUpdate(sql);
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
+      long lastAccessTime, int numAccessed) throws SQLException {
+    String sql = "INSERT INTO cached_files (fid, from_time, "
+        + "last_access_time, num_accessed) VALUES (" + fid + ","
+        + fromTime + "," + lastAccessTime + ","
+        + numAccessed + ")";
+    execute(sql);
   }
 
-  public synchronized void insertCachedFiles(List<CachedFileStatus> s) {
+  public synchronized void insertCachedFiles(List<CachedFileStatus> s)
+      throws SQLException {
+    Connection conn = getConnection();
+    Statement st = null;
     try {
-      Statement st = conn.createStatement();
+      st = conn.createStatement();
       for (CachedFileStatus c : s) {
         String sql = "INSERT INTO cached_files (fid, from_time, "
             + "last_access_time, num_accessed) VALUES (" + c.getFid() + ","
@@ -451,13 +535,16 @@ public class DBAdapter {
         st.addBatch(sql);
       }
       st.executeBatch();
-    } catch (SQLException e) {
-      e.printStackTrace();
+    } finally {
+      if (st != null) {
+        st.close();
+      }
+      closeConnection(conn);
     }
   }
 
   public synchronized boolean updateCachedFiles(Long fid, Long fromTime,
-      Long lastAccessTime, Integer numAccessed) {
+      Long lastAccessTime, Integer numAccessed) throws SQLException {
     StringBuffer sb = new StringBuffer("UPDATE cached_files SET");
     if (fromTime != null) {
       sb.append(" from_time = ").append(fid).append(",");
@@ -471,19 +558,21 @@ public class DBAdapter {
     int idx = sb.lastIndexOf(",");
     sb.replace(idx, idx + 1, "");
     sb.append(" WHERE fid = ").append(fid).append(";");
+
+    QueryHelper queryHelper = new QueryHelper(sb.toString());
     try {
-      return executeUpdate(sb.toString()) == 1;
-    } catch (SQLException e) {
-      return false;
+      return queryHelper.executeUpdate() == 1;
+    } finally {
+      queryHelper.close();
     }
   }
 
-  public List<CachedFileStatus> getCachedFileStatus() {
+  public List<CachedFileStatus> getCachedFileStatus() throws SQLException {
     String sql = "SELECT * FROM cached_files";
     return getCachedFileStatus(sql);
   }
 
-  public CachedFileStatus getCachedFileStatus(long fid) {
+  public CachedFileStatus getCachedFileStatus(long fid) throws SQLException {
     String sql = "SELECT * FROM cached_files WHERE fid = " + fid;
     List<CachedFileStatus> s = getCachedFileStatus(sql);
     return s != null ? s.get(0) : null;
@@ -504,16 +593,16 @@ public class DBAdapter {
             percentage,
             AccessCountTable.ACCESSCOUNT_FIELD,
             source.getTableName());
-    this.execute(sql);
+    execute(sql);
   }
 
-  private List<CachedFileStatus> getCachedFileStatus(String sql) {
-    ResultSet resultSet;
+  private List<CachedFileStatus> getCachedFileStatus(String sql)
+      throws SQLException {
+    QueryHelper queryHelper = new QueryHelper(sql);
     List<CachedFileStatus> ret = new LinkedList<>();
 
     try {
-      resultSet = executeQuery(sql);
-
+      ResultSet resultSet = queryHelper.executeQuery();
       while (resultSet.next()) {
         CachedFileStatus f = new CachedFileStatus(
             resultSet.getLong("fid"),
@@ -523,34 +612,28 @@ public class DBAdapter {
         );
         ret.add(f);
       }
-      resultSet.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
-      return null;
+      return ret.size() == 0 ? null : ret;
+    } finally {
+      queryHelper.close();
     }
-    if(resultSet != null) {
-      try {
-        resultSet.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
-    }
-    return ret.size() == 0 ? null : ret;
   }
 
-  public ResultSet executeQuery(String sqlQuery) throws SQLException {
-    Statement s = conn.createStatement();
-    return s.executeQuery(sqlQuery);
-  }
-
-  public int executeUpdate(String sqlUpdate) throws SQLException {
-    Statement s = conn.createStatement();
-    return s.executeUpdate(sqlUpdate);
+  public int executeUpdate(String sql) throws SQLException {
+    QueryHelper queryHelper = new QueryHelper(sql);
+    try {
+      return queryHelper.executeUpdate();
+    } finally {
+      queryHelper.close();
+    }
   }
 
   public void execute(String sql) throws SQLException {
-    Statement s = conn.createStatement();
-    s.execute(sql);
+    QueryHelper queryHelper = new QueryHelper(sql);
+    try {
+      queryHelper.execute();
+    } finally {
+      queryHelper.close();
+    }
   }
 
   //Todo: optimize
@@ -562,23 +645,20 @@ public class DBAdapter {
 
   public List<String> executeFilesPathQuery(String sql) throws SQLException {
     List<String> paths = new LinkedList<>();
-    ResultSet res = executeQuery(sql);
-    while (res.next()) {
-      paths.add(res.getString(1));
+    QueryHelper queryHelper = new QueryHelper(sql);
+    try {
+      ResultSet res = queryHelper.executeQuery();
+      while (res.next()) {
+        paths.add(res.getString(1));
+      }
+      return paths;
+    } finally {
+      queryHelper.close();
     }
-    res.close();
-    return paths;
   }
 
-  public synchronized void close() {
-  }
-
-  public List<HdfsFileStatus> executeFileRuleQuery() {
-    ResultSet resultSet = null;
-    return convertFilesTableItem(resultSet);
-  }
-
-  public synchronized boolean insertNewRule(RuleInfo info) {
+  public synchronized boolean insertNewRule(RuleInfo info)
+      throws SQLException {
     long ruleId = 0;
     if (info.getSubmitTime() == 0) {
       info.setSubmitTime(System.currentTimeMillis());
@@ -596,25 +676,31 @@ public class DBAdapter {
         + (info.getLastCheckTime() == 0 ? "" : ", " + info.getLastCheckTime())
         +");";
 
+    QueryHelper queryHelperInsert = new QueryHelper(sql);
     try {
-      execute(sql);
-      ResultSet rs = executeQuery("SELECT MAX(id) FROM rules;");
+      queryHelperInsert.execute();
+    } finally {
+      queryHelperInsert.close();
+    }
+
+    QueryHelper queryHelper = new QueryHelper("SELECT MAX(id) FROM rules;");
+    try {
+      ResultSet rs = queryHelper.executeQuery();
       if (rs.next()) {
         ruleId = rs.getLong(1);
         info.setId(ruleId);
-        rs.close();
         return true;
       } else {
-        rs.close();
         return false;
       }
-    } catch (SQLException e) {
+    } finally {
+      queryHelper.close();
     }
-    return false;
   }
 
-  public synchronized boolean updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
-      long checkedCount, int commandsGen) {
+  public synchronized boolean updateRuleInfo(long ruleId, RuleState rs,
+      long lastCheckTime, long checkedCount, int commandsGen)
+      throws SQLException {
     StringBuffer sb = new StringBuffer("UPDATE rules SET");
     if (rs != null) {
       sb.append(" state = ").append(rs.getValue()).append(",");
@@ -631,30 +717,28 @@ public class DBAdapter {
           .append(commandsGen).append(",");
     }
     int idx = sb.lastIndexOf(",");
-    sb.replace(idx, idx, "");
+    sb.replace(idx, idx + 1, "");
     sb.append(" WHERE id = ").append(ruleId).append(";");
-    try {
-      return 1 == executeUpdate(sb.toString());
-    } catch (SQLException e) {
-      return false;
-    }
+
+    return 1 == executeUpdate(sb.toString());
   }
 
-  public RuleInfo getRuleInfo(long ruleId) {
+  public RuleInfo getRuleInfo(long ruleId) throws SQLException {
     String sql = "SELECT * FROM rules WHERE id = " + ruleId;
     List<RuleInfo> infos = doGetRuleInfo(sql);
     return infos.size() == 1 ? infos.get(0) : null;
   }
 
-  public List<RuleInfo> getRuleInfo() {
+  public List<RuleInfo> getRuleInfo() throws SQLException {
     String sql = "SELECT * FROM rules";
     return doGetRuleInfo(sql);
   }
 
-  private List<RuleInfo> doGetRuleInfo(String sql) {
+  private List<RuleInfo> doGetRuleInfo(String sql) throws SQLException {
+    QueryHelper queryHelper = new QueryHelper(sql);
     List<RuleInfo> infos = new LinkedList<>();
     try {
-      ResultSet rs = executeQuery(sql);
+      ResultSet rs = queryHelper.executeQuery();
       while (rs.next()) {
         infos.add(new RuleInfo(
             rs.getLong("id"),
@@ -666,14 +750,18 @@ public class DBAdapter {
             rs.getLong("last_check_time")
         ));
       }
-    } catch (SQLException e) {
+      return infos;
+    } finally {
+      queryHelper.close();
     }
-    return infos;
   }
 
-  public synchronized void insertCommandsTable(CommandInfo[] commands) {
+  public synchronized void insertCommandsTable(CommandInfo[] commands)
+      throws SQLException {
+    Connection conn = getConnection();
+    Statement s = null;
     try {
-      Statement s = conn.createStatement();
+      s = conn.createStatement();
       for (int i = 0; i < commands.length; i++) {
         String sql = "INSERT INTO commands (rid, action_id, state, "
             + "parameters, generate_time, state_changed_time) "
@@ -686,12 +774,16 @@ public class DBAdapter {
         s.addBatch(sql);
       }
       s.executeBatch();
-    } catch (SQLException e) {
-      e.printStackTrace();
+    } finally {
+      if (s != null && !s.isClosed()) {
+        s.close();
+      }
+      closeConnection(conn);
     }
   }
 
-  public synchronized boolean insertCommandTable(CommandInfo command) {
+  public synchronized boolean insertCommandTable(CommandInfo command)
+      throws SQLException {
     // Insert single command into commands, update command.id with latest id
     String sql = "INSERT INTO commands (rid, action_id, state, "
             + "parameters, generate_time, state_changed_time) "
@@ -701,26 +793,25 @@ public class DBAdapter {
             + command.getParameters() + "', '"
             + command.getGenerateTime() + "', '"
             + command.getStateChangedTime() + "');";
+
+    execute(sql);
+    QueryHelper queryHelper = new QueryHelper("SELECT MAX(id) FROM commands;");
     try {
-      execute(sql);
-      ResultSet rs = executeQuery("SELECT MAX(id) FROM commands;");
+      ResultSet rs = queryHelper.executeQuery();
       if (rs.next()) {
         long cid = rs.getLong(1);
         command.setCid(cid);
-        rs.close();
         return true;
       } else {
-        rs.close();
         return false;
       }
-    } catch (SQLException e) {
-      e.printStackTrace();
-      return false;
+    } finally {
+      queryHelper.close();
     }
   }
 
   public List<CommandInfo> getCommandsTableItem(String cidCondition,
-      String ridCondition, CommandState state) {
+      String ridCondition, CommandState state) throws SQLException {
     String sqlPrefix = "SELECT * FROM commands WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
@@ -734,25 +825,19 @@ public class DBAdapter {
     return null;
   }
 
-  private List<CommandInfo> getCommands(String sql) {
-    ResultSet result;
+  private List<CommandInfo> getCommands(String sql) throws SQLException {
+    QueryHelper queryHelper = new QueryHelper(sql);
     try {
-      result = executeQuery(sql);
-    } catch (SQLException e) {
-      return null;
+      ResultSet result = queryHelper.executeQuery();
+      List<CommandInfo> ret = convertCommandsTableItem(result);
+      return ret;
+    } finally {
+      queryHelper.close();
     }
-    List<CommandInfo> ret = convertCommandsTableItem(result);
-    if (result != null) {
-      try {
-        result.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
-    }
-    return ret;
   }
 
-  public boolean updateCommandStatus(long cid, long rid, CommandState state) {
+  public boolean updateCommandStatus(long cid, long rid, CommandState state)
+      throws SQLException {
     StringBuffer sb = new StringBuffer("UPDATE commands SET");
     if (state != null) {
       sb.append(" state = ").append(state.getValue()).append(",");
@@ -760,98 +845,66 @@ public class DBAdapter {
     }
     int idx = sb.lastIndexOf(",");
     sb.replace(idx, idx + 1, "");
-    sb.append(" WHERE cid = ").append(cid).append(" AND ").append("rid = ").append(rid).append(";");
+    sb.append(" WHERE cid = ").append(cid).append(" AND ").append("rid = ")
+        .append(rid).append(";");
+    QueryHelper queryHelper = new QueryHelper(sb.toString());
     try {
-      return executeUpdate(sb.toString()) == 1;
-    } catch (SQLException e) {
-      return false;
+      return queryHelper.executeUpdate() == 1;
+    } finally {
+      queryHelper.close();
     }
   }
 
-  public void deleteCommand(long cid) {
+  public void deleteCommand(long cid) throws SQLException {
     String sql =  String.format("DELETE from commands WHERE cid = %d;", cid);
-    try {
-      execute(sql);
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
+    execute(sql);
   }
 
-  // TODO multiple CommandStatus update
-//  public boolean updateCommandsStatus(Map<Long, CommandState> cmdMap) {
-//    try {
-//      Statement s = conn.createStatement();
-//      for(Map.Entry<Long, CommandState> entry: cmdMap.entrySet()) {
-//        StringBuffer sb = new StringBuffer("UPDATE commands SET");
-//        if (entry.getValue() != null) {
-//          sb.append(" state = ").append(entry.getValue().getValue()).append(",");
-//          sb.append(" state_changed_time = ").append(System.currentTimeMillis()).append(",");
-//        }
-//        int idx = sb.lastIndexOf(",");
-//        sb.replace(idx, idx + 1, "");
-//        sb.append(" WHERE cid = ").append(entry.getKey()).append(";");
-//        s.addBatch(sb.toString());
-//      }
-//      s.executeBatch();
-//    } catch (SQLException e) {
-//      e.printStackTrace();
-//    }
-//    return true;
-//  }
-
-  private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet) {
+  private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet)
+      throws SQLException {
     List<CommandInfo> ret = new LinkedList<>();
     if (resultSet == null) {
       return ret;
     }
-    try {
-      while (resultSet.next()) {
-        CommandInfo commands = new CommandInfo(
-            resultSet.getLong("cid"),
-            resultSet.getLong("rid"),
-            ActionType.fromValue((int)resultSet.getByte("action_id")),
-            CommandState.fromValue((int)resultSet.getByte("state")),
-            resultSet.getString("parameters"),
-            resultSet.getLong("generate_time"),
-            resultSet.getLong("state_changed_time")
-        );
-        ret.add(commands);
-      }
-    } catch (SQLException e) {
-      return null;
-    }
-    try {
-      resultSet.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
+
+    while (resultSet.next()) {
+      CommandInfo commands = new CommandInfo(
+          resultSet.getLong("cid"),
+          resultSet.getLong("rid"),
+          ActionType.fromValue((int)resultSet.getByte("action_id")),
+          CommandState.fromValue((int)resultSet.getByte("state")),
+          resultSet.getString("parameters"),
+          resultSet.getLong("generate_time"),
+          resultSet.getLong("state_changed_time")
+      );
+      ret.add(commands);
     }
     return ret;
   }
 
-  public synchronized void insertStoragePolicyTable(StoragePolicy s) {
-  String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
+  public synchronized void insertStoragePolicyTable(StoragePolicy s)
+      throws SQLException {
+    String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
       + s.getSid() + "','" + s.getPolicyName() + "');";
-    try {
-      execute(sql);
-      mapStoragePolicyIdName = null;
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
+    mapStoragePolicyIdName = null;
+    execute(sql);
   }
 
-  public String getStoragePolicyName(int sid) {
+  public String getStoragePolicyName(int sid) throws SQLException {
     updateCache();
     return mapStoragePolicyIdName.get(sid);
   }
 
-  public Integer getStoragePolicyID(String policyName) {
+  public Integer getStoragePolicyID(String policyName) throws SQLException {
     updateCache();
     return getKey(mapStoragePolicyIdName, policyName);
   }
 
-  public synchronized boolean insertXattrTable(Long fid, Map<String, byte[]> map) {
+  public synchronized boolean insertXattrTable(Long fid, Map<String,
+      byte[]> map) throws SQLException {
     String sql = "INSERT INTO xattr (fid, namespace, name, value) "
         + "VALUES (?, ?, ?, ?)";
+    Connection conn = getConnection();
     PreparedStatement p = null;
     try {
       conn.setAutoCommit(false);
@@ -866,6 +919,7 @@ public class DBAdapter {
       }
       int[] i = p.executeBatch();
       p.close();
+      p = null;
       conn.commit();
       conn.setAutoCommit(true);
       if (i.length == map.size()) {
@@ -873,22 +927,26 @@ public class DBAdapter {
       } else {
         return false;
       }
-    } catch (SQLException e) {
-      return false;
+    } finally {
+      if (p != null && !p.isClosed()) {
+        p.close();
+      }
+      closeConnection(conn);
     }
   }
 
-  public Map<String, byte[]> getXattrTable(Long fid) {
+  public Map<String, byte[]> getXattrTable(Long fid) throws SQLException {
     String sql =
         String.format("SELECT * FROM xattr WHERE fid = %s;", fid);
     return getXattrTable(sql);
   }
 
-  private Map<String, byte[]> getXattrTable(String sql) {
+  private Map<String, byte[]> getXattrTable(String sql) throws SQLException {
+    QueryHelper queryHelper = new QueryHelper(sql);
     ResultSet rs;
     List<XAttr> list = new LinkedList<>();
     try {
-      rs = executeQuery(sql);
+      rs = queryHelper.executeQuery();
       while(rs.next()) {
         XAttr xAttr = new XAttr.Builder().setNameSpace(
             XAttr.NameSpace.valueOf(rs.getString("namespace")))
@@ -897,8 +955,19 @@ public class DBAdapter {
         list.add(xAttr);
       }
       return XAttrHelper.buildXAttrMap(list);
-    } catch (SQLException e) {
-      return null;
+    } finally {
+      queryHelper.close();
+    }
+  }
+
+  @VisibleForTesting
+  public ResultSet executeQuery(String sqlQuery) throws SQLException {
+    Connection conn = getConnection();
+    try {
+      Statement s = conn.createStatement();
+      return s.executeQuery(sqlQuery);
+    } finally {
+      closeConnection(conn);
     }
   }
 }

@@ -37,9 +37,10 @@ import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleManager;
 import org.apache.hadoop.smart.sql.DBAdapter;
+import org.apache.hadoop.smart.sql.DruidPool;
 import org.apache.hadoop.smart.sql.Util;
-import org.apache.hadoop.smart.web.SmartHttpServer;
 import org.apache.hadoop.smart.utils.GenericOptionsParser;
+import org.apache.hadoop.smart.web.SmartHttpServer;
 import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +52,11 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * From this Smart Storage Management begins.
@@ -147,7 +150,8 @@ public class SmartServer {
   }
 
   public static boolean parseHelpArgument(String[] args,
-      String helpDescription, PrintStream out, boolean printGenericCommandUsage) {
+      String helpDescription, PrintStream out,
+      boolean printGenericCommandUsage) {
     if (args.length == 1) {
       try {
         CommandLineParser parser = new PosixParser();
@@ -271,13 +275,25 @@ public class SmartServer {
   }
 
   public DBAdapter getDBAdapter() throws Exception {
+    String fileName = "druid.xml";
+    URL urlPoolConf = getClass().getResource(fileName);
+    if (urlPoolConf != null) {
+      LOG.info("Using pool configure file: " + urlPoolConf.getFile());
+      Properties p = new Properties();
+      p.loadFromXML(getClass().getResourceAsStream(fileName));
+      return new DBAdapter(new DruidPool(p));
+    } else {
+      LOG.info(fileName + " NOT found.");
+    }
+
+    // TODO: keep it now for testing, remove it later.
     Connection conn = getDBConnection();
     return new DBAdapter(conn);
   }
 
   public Connection getDBConnection() throws Exception {
     String dburi = getDBUri();
-    System.out.println("Database file URI = " + dburi);
+    LOG.info("Database file URI = " + dburi);
     Connection conn = Util.createConnection(dburi.toString(), null, null);
     return conn;
   }

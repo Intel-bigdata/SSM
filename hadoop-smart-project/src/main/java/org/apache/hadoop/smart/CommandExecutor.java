@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 
 
@@ -149,11 +150,15 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
   }
 
-  public synchronized long submitCommand(CommandInfo cmd) {
-    if(adapter.insertCommandTable(cmd)) {
-      cmdsAll.put(cmd.getCid(), cmd);
-      cmdsInState.get(CommandState.PENDING.getValue()).add(cmd.getCid());
-      return cmd.getCid();
+  public synchronized long submitCommand(CommandInfo cmd) throws IOException {
+    try {
+      if (adapter.insertCommandTable(cmd)) {
+        cmdsAll.put(cmd.getCid(), cmd);
+        cmdsInState.get(CommandState.PENDING.getValue()).add(cmd.getCid());
+        return cmd.getCid();
+      }
+    } catch (SQLException e) {
+      LOG.error(e.getMessage());
     }
     return -1;
   }
@@ -161,19 +166,30 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   public CommandInfo getCommandInfo(long cid) throws IOException {
     if(cmdsAll.containsKey(cid))
       return cmdsAll.get(cid);
-    List<CommandInfo> ret = adapter.getCommandsTableItem(String.format("= %d", cid),null,null);
+    List<CommandInfo> ret = null;
+    try {
+      adapter.getCommandsTableItem(String.format("= %d", cid),null,null);
+    } catch (SQLException e) {
+      LOG.error(e.getMessage());
+    }
     if(ret != null)
       return ret.get(0);
     return null;
   }
 
-  public List<CommandInfo> listCommandsInfo(long rid, CommandState commandState) throws IOException {
+  public List<CommandInfo> listCommandsInfo(long rid,
+      CommandState commandState) throws IOException {
     List<CommandInfo> retInfos = new ArrayList<>();
     // Get from DB
-    if(rid != -1)
-      retInfos.addAll(adapter.getCommandsTableItem(null,String.format("= %d", rid), commandState));
-    else
-      retInfos.addAll(adapter.getCommandsTableItem(null,null, commandState));
+    try {
+      if (rid != -1)
+        retInfos.addAll(adapter.getCommandsTableItem(null, String.format("= %d", rid), commandState));
+      else
+        retInfos.addAll(adapter.getCommandsTableItem(null, null, commandState));
+    } catch (SQLException e){
+      LOG.error(e.getMessage());
+      throw new IOException(e);
+    }
     // Get from Cache if commandState != CommandState.PENDING
     if(commandState != CommandState.PENDING) {
       for(CommandInfo cmdinfo : cmdsAll.values())
@@ -240,7 +256,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       // in next batch update
       cmdsAll.remove(cid);
     }
-    adapter.deleteCommand(cid);
+    try {
+      adapter.deleteCommand(cid);
+    } catch (SQLException e) {
+      throw new IOException(e);
+    }
   }
 
   private void addToPending(CommandInfo cmdinfo) throws IOException {
@@ -348,7 +368,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   public List<CommandInfo> getCommandsFromDB() {
     // Get Pending cmds from DB
-    return adapter.getCommandsTableItem(null, null, CommandState.PENDING);
+    try {
+      return adapter.getCommandsTableItem(null, null, CommandState.PENDING);
+    } catch (SQLException e) {
+      // TODO: handle this issue
+      LOG.error(e.getMessage());
+    }
+    return null;
   }
 
   public Long[] getCommands(CommandState state) {
@@ -364,7 +390,12 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     for(Iterator<CmdTuple> iter = statusCache.iterator();iter.hasNext();) {
       CmdTuple ct = iter.next();
       cmdsAll.remove(ct.cid);
-      adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
+      try {
+        adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
+      } catch (SQLException e) {
+        // TODO: handle this isssue
+        LOG.error(e.getMessage());
+      }
       iter.remove();
     }
   }

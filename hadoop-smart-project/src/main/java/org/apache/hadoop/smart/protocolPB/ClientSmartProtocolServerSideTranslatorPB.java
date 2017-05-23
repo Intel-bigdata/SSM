@@ -37,7 +37,7 @@ import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleResponseProt
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSSMProtocol;
+import org.apache.hadoop.smart.protocol.ClientSmartProtocol;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
 
@@ -47,9 +47,9 @@ import java.util.List;
 
 public class ClientSmartProtocolServerSideTranslatorPB implements
     ClientSmartProtocolPB, ClientSmartProto.protoService.BlockingInterface {
-  final private ClientSSMProtocol server;
+  final private ClientSmartProtocol server;
 
-  public ClientSmartProtocolServerSideTranslatorPB(ClientSSMProtocol server) {
+  public ClientSmartProtocolServerSideTranslatorPB(ClientSmartProtocol server) {
     this.server = server;
   }
 

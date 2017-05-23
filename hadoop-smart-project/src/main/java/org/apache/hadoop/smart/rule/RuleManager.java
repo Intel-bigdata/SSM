@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -86,8 +87,10 @@ public class RuleManager implements ModuleSequenceProto {
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
     RuleInfo ruleInfo = builder.build();
-    if (!dbAdapter.insertNewRule(ruleInfo)) {
-      throw new IOException("Create rule failed");
+    try {
+      dbAdapter.insertNewRule(ruleInfo);
+    } catch (SQLException e) {
+      throw new IOException("RuleText = " + rule, e);
     }
 
     RuleContainer container = new RuleContainer(ruleInfo, dbAdapter);
@@ -173,7 +176,13 @@ public class RuleManager implements ModuleSequenceProto {
     }
 
     CommandInfo[] cmds = commands.toArray(new CommandInfo[commands.size()]);
-    dbAdapter.insertCommandsTable(cmds);
+
+    // TODO: call commandExecutor interface to do this
+    try {
+      dbAdapter.insertCommandsTable(cmds);
+    } catch (SQLException e) {
+      LOG.error(e.getMessage());
+    }
 
     if (LOG.isDebugEnabled()) {
       LOG.debug("" + commands.size() + " commands added.");
@@ -201,7 +210,12 @@ public class RuleManager implements ModuleSequenceProto {
     LOG.info("Initializing ...");
     this.dbAdapter = dbAdapter;
     // Load rules table
-    List<RuleInfo> rules = dbAdapter.getRuleInfo();
+    List<RuleInfo> rules = null;
+    try {
+      rules = dbAdapter.getRuleInfo();
+    } catch (SQLException e) {
+      LOG.error("Can not load rules from database:\n" + e.getMessage());
+    }
     for (RuleInfo rule : rules) {
       mapRules.put(rule.getId(), new RuleContainer(rule, dbAdapter));
     }
