@@ -117,7 +117,7 @@ public class Command implements Runnable {
   }
 
   public void stop() {
-    LOG.info("Command " + id + " Stopped!");
+    LOG.info("Command {} Stopped!", toString());
     running = false;
   }
 
@@ -146,6 +146,7 @@ public class Command implements Runnable {
         Thread.sleep(300);
       }
       catch (Exception e){
+        e.printStackTrace();
         LOG.error("Action Thread error!");
       }
     }

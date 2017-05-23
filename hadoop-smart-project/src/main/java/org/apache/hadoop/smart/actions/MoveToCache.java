@@ -85,8 +85,8 @@ public class MoveToCache extends ActionBase {
         if (isCached(fileName)) {
             return;
         }
-        LOG.info("Action starts at " + new Date(System.currentTimeMillis()) +
-            " : " + fileName + " -> " + "cache");
+        LOG.info("Action starts at {} : {} -> cache",
+                new Date(System.currentTimeMillis()), fileName);
         addDirective(fileName);
     }
 
