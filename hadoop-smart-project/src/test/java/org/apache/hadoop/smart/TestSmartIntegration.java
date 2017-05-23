@@ -27,7 +27,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- *
+ * Testing the whole working flow.
  */
 public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
 

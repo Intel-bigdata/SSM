@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -60,7 +61,8 @@ public class TestNamespaceFetcher {
   }
 
   @Test
-  public void testNamespaceFetcher() throws IOException, InterruptedException, MissingEventsException {
+  public void testNamespaceFetcher() throws IOException, InterruptedException,
+      MissingEventsException, SQLException {
     final Configuration conf = new SmartConfiguration();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(2).build();

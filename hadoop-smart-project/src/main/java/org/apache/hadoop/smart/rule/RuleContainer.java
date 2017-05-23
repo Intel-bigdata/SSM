@@ -23,6 +23,7 @@ import org.apache.hadoop.smart.sql.DBAdapter;
 import org.apache.hadoop.smart.sql.ExecutionContext;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RuleContainer {
@@ -95,8 +96,12 @@ public class RuleContainer {
       changeRuleState(rs, false);
       ruleInfo.updateRuleInfo(rs, lastCheckTime, checkedCount, commandsGen);
       if (dbAdapter != null) {
-        ret = dbAdapter.updateRuleInfo(ruleInfo.getId(),
-            rs, lastCheckTime, checkedCount, commandsGen);
+        try {
+          ret = dbAdapter.updateRuleInfo(ruleInfo.getId(),
+              rs, lastCheckTime, checkedCount, commandsGen);
+        } catch (SQLException e) {
+          throw new IOException(ruleInfo.toString(), e);
+        }
       }
       return ret;
     } finally {
@@ -144,45 +149,49 @@ public class RuleContainer {
       return false;
     }
 
-    switch (newState) {
-      case ACTIVE:
-        if (oldState == RuleState.DISABLED || oldState == RuleState.DRYRUN) {
-          ruleInfo.setState(newState);
-          if (updateDb && dbAdapter != null) {
-            dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+    try {
+      switch (newState) {
+        case ACTIVE:
+          if (oldState == RuleState.DISABLED || oldState == RuleState.DRYRUN) {
+            ruleInfo.setState(newState);
+            if (updateDb && dbAdapter != null) {
+              dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+            }
+            return true;
           }
-          return true;
-        }
-        break;
+          break;
 
-      case DISABLED:
-        if (oldState == RuleState.ACTIVE || oldState == RuleState.DRYRUN) {
+        case DISABLED:
+          if (oldState == RuleState.ACTIVE || oldState == RuleState.DRYRUN) {
+            ruleInfo.setState(newState);
+            markWorkExit();
+            if (updateDb && dbAdapter != null) {
+              dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+            }
+            return true;
+          }
+          break;
+
+        case DELETED:
           ruleInfo.setState(newState);
           markWorkExit();
           if (updateDb && dbAdapter != null) {
             dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
           }
           return true;
-        }
-        break;
 
-      case DELETED:
-        ruleInfo.setState(newState);
-        markWorkExit();
-        if (updateDb && dbAdapter != null) {
-          dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
-        }
-        return true;
-
-      case FINISHED:
-        if (oldState == RuleState.ACTIVE || oldState == RuleState.DRYRUN) {
-          ruleInfo.setState(newState);
-          if (updateDb && dbAdapter != null) {
-            dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+        case FINISHED:
+          if (oldState == RuleState.ACTIVE || oldState == RuleState.DRYRUN) {
+            ruleInfo.setState(newState);
+            if (updateDb && dbAdapter != null) {
+              dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+            }
+            return true;
           }
-          return true;
-        }
-        break;
+          break;
+      }
+    } catch (SQLException e) {
+      throw new IOException(ruleInfo.toString(), e);
     }
 
     throw new IOException("Rule state transition " + oldState
