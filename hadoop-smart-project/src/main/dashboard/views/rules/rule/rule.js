@@ -44,8 +44,8 @@ angular.module('dashboard')
       'use strict';
 
       $scope.rule = rule0.$data();
-      rule0.$subscribe($scope, function (app) {
-        $scope.rule = app;
+      rule0.$subscribe($scope, function (rule) {
+        $scope.rule = rule;
       });
     }])
 ;

@@ -36,23 +36,25 @@ angular.module('dashboard')
 
       $scope.ruleSummary = [
         $ptb.text('ID').done(),
-        $ptb.text('Actor Path').done(),
-        $ptb.datetime('Start Time').done(),
+        $ptb.datetime('Start Time').done()
+        /*
         $ptb.text('User').done(),
         $ptb.button('Quick Links').done()
+        */
       ];
 
-      $scope.$watch('rule', function (app) {
+      $scope.$watch('rule', function (rule) {
         $ptb.$update($scope.ruleSummary, [
-          app.appId,
-          app.actorPath,
-          app.startTime,
-          app.user,
+          rule.id,
+          rule.submitTime
+          /*
+          rule.user,
           [
-            {href: app.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
-            helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, app.homeDirectory),
-            helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, app.logFile)
+            {href: rule.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
+            helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, rule.homeDirectory),
+            helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, rule.logFile)
           ]
+          */
         ]);
       });
 
@@ -64,5 +66,14 @@ angular.module('dashboard')
             $scope.alerts = alerts;
           });
         });
+
+      $scope.commands = [];
+      models.$get.ruleCommands($scope.rule.id)
+        .then(function (commands0) {
+          $scope.commands = commands0.$data();
+          commands0.$subscribe($scope, function (commands) {
+            $scope.commands = commands;
+          });
+      });
     }])
 ;

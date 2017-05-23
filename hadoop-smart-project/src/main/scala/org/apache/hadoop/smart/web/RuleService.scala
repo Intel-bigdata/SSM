@@ -18,16 +18,19 @@
 package org.apache.hadoop.smart.web
 
 import java.util
+import java.util.{HashMap, Map}
 
 import scala.collection.JavaConverters._
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Directives.{complete, path}
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import com.google.gson.Gson
-import org.apache.hadoop.smart.SmartServer
+import org.apache.hadoop.smart.{CommandState, SmartServer}
+import org.apache.hadoop.smart.actions.ActionType
 import org.apache.hadoop.smart.rule.{RuleInfo, RuleState}
+import org.apache.hadoop.smart.sql.CommandInfo
+import org.apache.hadoop.smart.utils.JsonUtil
 
 import scala.util.Random
 
@@ -35,35 +38,45 @@ class RuleService(ssmServer: SmartServer) extends BasicService {
   private val gson: Gson = new Gson()
   private val rules: util.Collection[RuleInfo] = new util.ArrayList[RuleInfo]()
 
-  override protected def doRoute(implicit mat: Materializer): Route = {
-    pathPrefix("rules" / IntNumber) { ruleId =>
-      path("start") {
-        post {
-          rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.ACTIVE))
-          complete("success")
-        }
-      } ~
-      path("stop") {
-        delete {
-          rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.DISABLED))
-          complete("success")
-        }
-      } ~
-      path("detail") {
-        complete(gson.toJson(rules.asScala.find(_.getId == ruleId).get))
+  override protected def doRoute(implicit mat: Materializer): Route = pathPrefix("rules" / IntNumber) { ruleId =>
+    path("start") {
+      post {
+        rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.ACTIVE))
+        complete("success")
       }
     } ~
+    path("stop") {
+      delete {
+        rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.DISABLED))
+        complete("success")
+      }
+    } ~
+    path("detail") {
+      complete(gson.toJson(rules.asScala.find(_.getId == ruleId).get))
+    } ~
+    path("errors") {
+      complete("{\"time\" : \"0\", \"error\" : \"\"}")
+    } ~
+    path("commands") {
+      val smap1 = new util.HashMap[String, String]
+      smap1.put("_FILE_PATH_", "/testCacheFile")
+      val command1 = new CommandInfo(0, 1, ActionType.MoveFile,
+        CommandState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l)
+      val command2 = new CommandInfo(1, 1, ActionType.CacheFile, CommandState.PENDING,
+        JsonUtil.toJsonString(smap1), 123178333l, 232444994l)
+      complete(gson.toJson(util.Arrays.asList(command1, command2)))
+    }
+  } ~
     path("rulelist") {
       complete(gson.toJson(rules))
-    } ~
-    path("addrule") {
-      post {
-        entity(as[String]) { request =>
-          val rule = java.net.URLDecoder.decode(request, "UTF-8")
-          System.out.println("Adding rule: " + rule)
-          addRuleInfo(rule)
-          complete("Success")
-        }
+  } ~
+  path("addrule") {
+    post {
+      entity(as[String]) { request =>
+        val rule = java.net.URLDecoder.decode(request, "UTF-8")
+        System.out.println("Adding rule: " + rule)
+        addRuleInfo(rule)
+        complete("Success")
       }
     }
   }

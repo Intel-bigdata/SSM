@@ -59,12 +59,12 @@ angular.module('dashboard')
         ]).done()
       ];
 
-      $scope.whatIsExecutor = i18n.terminology.workerExecutor;
+      $scope.whatIsCommand = i18n.terminology.workerExecutor;
       $scope.executorsTable = {
         cols: [
           $stb.indicator().key('status').canSort().styleClass('td-no-padding').done(),
           $stb.link('Application').key('id').canSort().styleClass('col-xs-4').done(),
-          $stb.link('Executor').key('executors').canSort().styleClass('col-xs-4').done(),
+          $stb.link('Executor').key('commands').canSort().styleClass('col-xs-4').done(),
           $stb.number('Slots').key('slots').canSort().sortDefaultDescent().styleClass('col-xs-4').done()
         ],
         rows: null
@@ -82,7 +82,7 @@ angular.module('dashboard')
 
       function updateExecutorsTable() {
         $scope.executorsTable.rows = $stb.$update($scope.executorsTable.rows,
-          _.map($scope.worker.executors, function (executor) {
+          _.map($scope.worker.commands, function (executor) {
             if ($scope.rules.hasOwnProperty(executor.appId)) {
               var app = $scope.rules[executor.appId];
               var executorPageUrl = locator.executor(app.appId, app.type, executor.executorId);
@@ -92,7 +92,7 @@ angular.module('dashboard')
               return {
                 status: {condition: 'good', shape: 'stripe'}, // always be good
                 id: {href: app.pageUrl, text: app.appName},
-                executors: {href: executorPageUrl, text: executorPath},
+                commands: {href: executorPageUrl, text: executorPath},
                 slots: executor.slots
               };
             } else {
@@ -116,7 +116,7 @@ angular.module('dashboard')
         var worker = angular.copy($scope.worker);
         worker.state = 'terminated';
         worker.isRunning = false;
-        _.forEach(worker.executors, function (executor) {
+        _.forEach(worker.commands, function (executor) {
           executor.status = 'terminated';
           executor.isRunning = false;
         });
