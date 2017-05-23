@@ -59,8 +59,8 @@ public class MoveFile extends ActionBase {
 
     private UUID runMove(String fileName) {
         // TODO check if storagePolicy is the same
-        LOG.info("Action starts at " + new Date(System.currentTimeMillis())
-            + " : " + fileName + " -> " + storagePolicy);
+        LOG.info("Action starts at {} : {} -> {}",
+                new Date(System.currentTimeMillis()), fileName, storagePolicy);
         try {
             dfsClient.setStoragePolicy(fileName, storagePolicy);
         } catch (Exception e) {

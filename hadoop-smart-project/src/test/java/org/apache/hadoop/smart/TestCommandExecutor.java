@@ -62,21 +62,21 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
       dfs.mkdirs(dir1);
       dfs.setStoragePolicy(dir1, "HOT");
       // Move to archive
-      Map<String, String> smap1 = new HashMap<String, String>();
+      Map<String, String> smap1 = new HashMap<>();
       smap1.put("_FILE_PATH_", "/testMoveFile/file1");
       smap1.put("_STORAGE_POLICY_", "ALL_SSD");
       final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"), true, 1024);
       out1.writeChars("/testMoveFile/file1");
       out1.close();
       // Move to SSD
-      Map<String, String> smap2 = new HashMap<String, String>();
+      Map<String, String> smap2 = new HashMap<>();
       smap2.put("_FILE_PATH_", "/testMoveFile/file2");
       smap2.put("_STORAGE_POLICY_", "COLD");
       final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"), true, 1024);
       out2.writeChars("/testMoveFile/file2");
       out2.close();
       // Move to cache
-      Map<String, String> smap3 = new HashMap<String, String>();
+      Map<String, String> smap3 = new HashMap<>();
       smap3.put("_FILE_PATH_", "/testCacheFile");
       Path dir3 = new Path("/testCacheFile");
       dfs.mkdirs(dir3);

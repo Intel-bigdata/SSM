@@ -385,8 +385,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public synchronized void batchCommandStatusUpdate() {
-    LOG.info("INFO Number of Caches = " + statusCache.size());
-    LOG.info("INFO Number of Actions = " + cmdsAll.size());
+    LOG.info("INFO Number of Caches = {}", statusCache.size());
+    LOG.info("INFO Number of Actions = {}", cmdsAll.size());
     if(statusCache.size() == 0)
       return;
     for(Iterator<CmdTuple> iter = statusCache.iterator();iter.hasNext();) {
