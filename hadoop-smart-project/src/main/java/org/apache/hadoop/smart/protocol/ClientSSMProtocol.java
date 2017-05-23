@@ -17,8 +17,10 @@
  */
 package org.apache.hadoop.smart.protocol;
 
+import org.apache.hadoop.smart.CommandState;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
+import org.apache.hadoop.smart.sql.CommandInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -67,4 +69,47 @@ public interface ClientSSMProtocol {
   void activateRule(long ruleID) throws IOException;
 
   void disableRule(long ruleID, boolean dropPendingCommands) throws IOException;
+
+  /**
+   * Get information about the given command.
+   * @param commandID
+   * @return CommandInfo
+   * @throws IOException
+   */
+  CommandInfo getCommandInfo(long commandID) throws IOException;
+
+  /**
+   * List commands in SSM.
+   * @param ruleID
+   * @param commandState
+   * @return All List<CommandInfo> commandInfos that satisfy requirement
+   * @throws IOException
+   */
+  List<CommandInfo> listCommandInfo(long ruleID, CommandState commandState) throws IOException;
+
+  /**
+   * Get information about the given command.
+   * @param commandID
+   * @return CommandInfo
+   * @throws IOException
+   */
+  void activateCommand(long commandID) throws IOException;
+
+  /**
+   * Disable Command, if command is PENDING then mark as DISABLE
+   * if command is EXECUTING then kill all actions unfinished
+   * then mark as DISABLE, if command is DONE then do nothing.
+   * @param commandID
+   * @throws IOException
+   */
+  void disableCommand(long commandID) throws IOException;
+
+  /**
+   * Delete Command from DB and Cache. If command is in Cache,
+   * then disable it.
+   * @param commandID
+   * @throws IOException
+   */
+  void deleteCommand(long commandID) throws IOException;
+
 }
