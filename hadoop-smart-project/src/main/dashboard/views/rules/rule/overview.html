@@ -19,14 +19,14 @@ under the License.
 -->
   <property-table
     caption="Summary"
-    props-bind="appSummary"
+    props-bind="ruleSummary"
     prop-name-class="col-xs-4 bold"
     prop-value-class="col-xs-8 actor-path">
   </property-table>
 
-  <executor-table
-    executors-bind="app.executors">
-  </executor-table>
+  <commands-table
+    commands-bind="commands">
+  </commands-table>
 
   <alerts-table
     alerts-bind="alerts">

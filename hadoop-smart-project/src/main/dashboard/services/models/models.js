@@ -105,19 +105,8 @@ angular.module('org.apache.hadoop.ssm.models', [])
           angular.merge(obj, {
             status: 'Active',
             //Todo: replace real name
-            ruleName: 'Rule1'
-          });
-
-          angular.merge(obj, {
-            // extra properties
-            isRunning: true, // todo: handle empty response, which is the case application is stopped
-            // extra methods
-            start: function () {
-              return restapi.startRule(obj.id);
-            },
-            terminate: function () {
-              return restapi.stopRule(obj.id);
-            }
+            ruleName: 'Rule1',
+            isRunning: true,
           });
           return obj;
         },
@@ -131,6 +120,17 @@ angular.module('org.apache.hadoop.ssm.models', [])
             }];
           }
           return [];
+        },
+        ruleCommands: function (objs) {
+          return decoder._asAssociativeArray(objs, decoder.command, 'cid');
+        },
+        command: function (obj) {
+          return angular.merge(obj, {
+            // extra properties
+            isRunning: obj.state === 'EXECUTING',
+             // extra methods
+            pageUrl: locator.command(obj.rid, obj.cid)
+          });
         }
       };
 
@@ -142,7 +142,10 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('rules/' + ruleId + '/detail', decoder.rule);
         },
         ruleAlerts: function (ruleId) {
-          return get('ruledetail/' + ruleId + '/errors', decoder.ruleAlerts);
+          return get('rules/' + ruleId + '/errors', decoder.ruleAlerts);
+        },
+        ruleCommands: function (ruleId) {
+          return get('rules/' + ruleId + '/commands', decoder.ruleCommands);
         }
       };
 

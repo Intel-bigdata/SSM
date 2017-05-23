@@ -18,50 +18,49 @@
  */
 angular.module('dashboard')
 
-  .directive('executorTable', function () {
+  .directive('commandsTable', function () {
     'use strict';
 
     return {
       restrict: 'E',
-      templateUrl: 'views/rules/rule/executors_table.html',
+      templateUrl: 'views/rules/rule/commands_table.html',
       replace: false /* true will got an error */,
       scope: {
-        executors: '=executorsBind'
+        commands: '=commandsBind'
       },
       controller: ['$scope', '$sortableTableBuilder', 'i18n',
         function ($scope, $stb, i18n) {
-          $scope.whatIsExecutor = i18n.terminology.appExecutor;
+          $scope.whatIsCommand = i18n.terminology.command;
           $scope.table = {
             cols: [
               $stb.indicator().key('status').canSort().styleClass('td-no-padding').done(),
-              $stb.link('Name').key('id').canSort().sortDefault().styleClass('col-xs-4').done(),
-              $stb.link('Worker').key('worker').canSort().styleClass('col-xs-4').done(),
-              $stb.number('Tasks').key('tasks').canSort().styleClass('col-xs-4').done()
+              $stb.link('Id').key('id').canSort().sortDefault().styleClass('col-xs-4').done(),
+              $stb.text('ActionType').key('actionType').canSort().styleClass('col-xs-4').done(),
+              $stb.datetime('Generate Time').key('generateTime').canSort().styleClass('col-xs-4').done()
             ],
             rows: null
           };
 
-          function updateTable(executors) {
+          function updateTable(commands) {
             $scope.table.rows = $stb.$update($scope.table.rows,
-              _.map(executors, function (executor) {
+              _.map(commands, function (command) {
                 return {
+                  actionType: command.actionType,
+                  generateTime: command.generateTime,
                   status: {
-                    tooltip: executor.status,
-                    condition: executor.isRunning ? 'good' : '',
+                    tooltip: command.state,
+                    condition: command.isRunning ? 'good' : '',
                     shape: 'stripe'
                   },
                   id: {
-                    href: executor.pageUrl, text: executor.executorId === -1 ?
-                      'AppMaster' : 'Executor ' + executor.executorId
-                  },
-                  worker: {href: executor.workerPageUrl, text: 'Worker ' + executor.workerId},
-                  tasks: executor.taskCount || 0
+                    href: command.pageUrl, text: 'Command ' + command.cid
+                  }
                 };
               }));
           }
 
-          $scope.$watch('executors', function (executors) {
-            updateTable(executors);
+          $scope.$watch('commands', function (commands) {
+            updateTable(commands);
           });
         }]
     };
