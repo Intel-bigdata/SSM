@@ -25,18 +25,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * CommandPool : A singleton class to manage all commandsThread
  */
 public class CommandPool {
-  private static CommandPool instance = new CommandPool();
+//  private static CommandPool instance = new CommandPool();
   private Map<Long, Command> commandMap;
   private Map<Long, Thread> commandThread;
 
-  private CommandPool() {
+  CommandPool() {
     commandMap = new ConcurrentHashMap<>();
     commandThread = new ConcurrentHashMap<>();
   }
 
-  public static CommandPool getInstance() {
-    return instance;
-  }
+//  public static CommandPool getInstance() {
+//    return instance;
+//  }
 
   public int size() {
     return commandMap.size();
@@ -46,7 +46,7 @@ public class CommandPool {
     Set<Long> cids = commandMap.keySet();
     for(Long cid: cids)
       deleteCommand(cid);
-    instance = null;
+//    instance = null;
   }
 
   // Delete a command from the pool

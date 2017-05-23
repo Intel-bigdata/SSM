@@ -57,9 +57,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     moverPool.init(conf);
     statusCache = new ConcurrentHashSet<>();
     for (CommandState s : CommandState.values()) {
-      cmdsInState.add(s.getValue(), new HashSet<Long>());
+      cmdsInState.add(s.getValue(), new HashSet<>());
     }
-    execThreadPool = CommandPool.getInstance();
+    execThreadPool = new CommandPool();
     running = false;
   }
 
@@ -130,6 +130,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     while (running) {
       try {
         // control the commands that executed concurrently
+        if(execThreadPool == null)
+          LOG.info("Test");
         if (execThreadPool.size() <= 5) {  // TODO: use configure value
           Command toExec = schedule();
           if (toExec != null) {
