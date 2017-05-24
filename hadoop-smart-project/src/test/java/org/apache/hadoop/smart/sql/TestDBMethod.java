@@ -19,7 +19,6 @@ package org.apache.hadoop.smart.sql;
 
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.smart.CommandState;
 import org.apache.hadoop.smart.actions.ActionType;
@@ -159,22 +158,6 @@ public class TestDBMethod {
         Assert.assertTrue(cachedFileList.get(0).getFid() == 6);
         Assert.assertTrue(cachedFileList.get(1).getFid() == 19);
         Assert.assertTrue(cachedFileList.get(2).getFid() == 23);
-      } finally {
-        if (conn != null) {
-          conn.close();
-        }
-      }
-    }
-
-    @Test
-    public void testGetErasureCodingPolicy() throws Exception {
-      Connection conn = null;
-      try {
-        conn = new TestDBUtil().getTestDBInstance();
-        DBAdapter dbAdapter = new DBAdapter(conn);
-        ErasureCodingPolicy erasureCodingPolicy =
-            dbAdapter.getErasureCodingPolicy(4);
-        Assert.assertEquals(erasureCodingPolicy.getCodecName(), "xor");
       } finally {
         if (conn != null) {
           conn.close();

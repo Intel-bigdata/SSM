@@ -21,9 +21,7 @@ import org.apache.curator.shaded.com.google.common.annotations.VisibleForTesting
 import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.XAttrHelper;
-import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.apache.hadoop.io.erasurecode.ECSchema;
 import org.apache.hadoop.smart.CommandState;
 import org.apache.hadoop.smart.actions.ActionType;
 import org.apache.hadoop.smart.rule.RuleInfo;
@@ -54,7 +52,6 @@ public class DBAdapter {
   private Map<Integer, String> mapOwnerIdName = null;
   private Map<Integer, String> mapGroupIdName = null;
   private Map<Integer, String> mapStoragePolicyIdName = null;
-  private Map<Integer, ErasureCodingPolicy> mapECPolicy = null;
   private Map<String, StorageCapacity> mapStorageCapacity = null;
 
   @VisibleForTesting
@@ -223,8 +220,7 @@ public class DBAdapter {
             + files[i].getStoragePolicy() + "','"
             + getKey(mapOwnerIdName, files[i].getOwner()) + "','"
             + getKey(mapGroupIdName, files[i].getGroup()) + "','"
-            + files[i].getPermission().toShort() + "','"
-            + getKey(mapECPolicy, files[i].getErasureCodingPolicy()) + "');";
+            + files[i].getPermission().toShort() + "');";
         s.addBatch(sql);
       }
       s.executeBatch();
@@ -244,16 +240,6 @@ public class DBAdapter {
 
   private Integer getKey(Map<Integer, String> map, String value) {
     for (Integer key: map.keySet()) {
-      if (map.get(key).equals(value)) {
-        return key;
-      }
-    }
-    return null;
-  }
-
-  private Integer getKey(Map<Integer, ErasureCodingPolicy> map,
-      ErasureCodingPolicy value) {
-    for (Integer key : map.keySet()) {
       if (map.get(key).equals(value)) {
         return key;
       }
@@ -303,12 +289,6 @@ public class DBAdapter {
     } finally {
       queryHelper.close();
     }
-  }
-
-  public ErasureCodingPolicy getErasureCodingPolicy(int id)
-      throws SQLException {
-    updateCache();
-    return mapECPolicy.get(id);
   }
 
   public void insertStoragesTable(StorageCapacity[] storages)
@@ -392,8 +372,7 @@ public class DBAdapter {
           resultSet.getLong("fid"),
           0,    // Not tracked for now, set to 0
           null, // Not tracked for now, set to null
-          resultSet.getByte("sid"),
-          mapECPolicy.get(resultSet.getShort("ec_policy_id")));
+          resultSet.getByte("sid"));
       ret.add(status);
     }
     return ret;
@@ -430,16 +409,6 @@ public class DBAdapter {
       }
     }
 
-    if (mapECPolicy == null) {
-      String sql = "SELECT * FROM ecpolicys";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapECPolicy = convertEcPoliciesTableItem(queryHelper.executeQuery());
-      } finally {
-        queryHelper.close();
-      }
-    }
-
     if (mapStorageCapacity == null) {
       String sql = "SELECT * FROM storages";
       QueryHelper queryHelper = new QueryHelper(sql);
@@ -450,34 +419,6 @@ public class DBAdapter {
         queryHelper.close();
       }
     }
-  }
-
-  private Map<Integer, ErasureCodingPolicy> convertEcPoliciesTableItem(
-      ResultSet resultSet) throws SQLException {
-    Map<Integer, ErasureCodingPolicy> ret = new HashMap<>();
-    if (resultSet == null) {
-      return ret;
-    }
-
-    while (resultSet.next()) {
-      int id = resultSet.getInt("id");
-
-      ECSchema schema = new ECSchema(
-          resultSet.getString("codecName"),
-          resultSet.getInt("numDataUnits"),
-          resultSet.getInt("numParityUnits")
-      );
-
-      ErasureCodingPolicy ec = new ErasureCodingPolicy(
-          resultSet.getString("name"),
-          schema,
-          resultSet.getInt("cellsize"),
-          (byte)id
-      );
-
-      ret.put(id, ec);
-    }
-    return ret;
   }
 
   private Map<String, StorageCapacity> convertStorageTablesItem(

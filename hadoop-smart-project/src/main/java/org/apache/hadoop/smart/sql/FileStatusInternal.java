@@ -19,7 +19,6 @@ package org.apache.hadoop.smart.sql;
 
 import org.apache.hadoop.fs.FileEncryptionInfo;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 
 public class FileStatusInternal extends HdfsFileStatus {
@@ -43,16 +42,15 @@ public class FileStatusInternal extends HdfsFileStatus {
    * @param childrenNum
    * @param feInfo            the file's encryption info
    * @param storagePolicy
-   * @param ecPolicy
    */
   public FileStatusInternal(long length, boolean isdir, int block_replication,
       long blocksize, long modification_time, long access_time,
       FsPermission permission, String owner, String group, byte[] symlink,
       byte[] path, String parent, long fileId, int childrenNum, FileEncryptionInfo feInfo,
-      byte storagePolicy, ErasureCodingPolicy ecPolicy) {
+      byte storagePolicy) {
     super(length, isdir, block_replication, blocksize, modification_time,
         access_time, permission, owner, group, symlink, path, fileId, childrenNum,
-        feInfo, storagePolicy, ecPolicy);
+        feInfo, storagePolicy);
     this.path = this.getFullName(parent);
   }
 
@@ -61,8 +59,7 @@ public class FileStatusInternal extends HdfsFileStatus {
         status.getBlockSize(), status.getModificationTime(), status.getAccessTime(),
         status.getPermission(), status.getOwner(), status.getGroup(), status.getSymlinkInBytes(),
         status.getLocalNameInBytes(), parent, status.getFileId(), status.getChildrenNum(),
-        status.getFileEncryptionInfo(), status.getStoragePolicy(),
-        status.getErasureCodingPolicy());
+        status.getFileEncryptionInfo(), status.getStoragePolicy());
   }
 
   public FileStatusInternal(HdfsFileStatus status) {
