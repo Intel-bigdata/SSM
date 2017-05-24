@@ -825,43 +825,38 @@ public class RollingFileSystemSink implements MetricsSink, Closeable {
       rollLogDirIfNeeded();
 
       if (currentOutStream != null) {
-        putMetrics(currentOutStream, currentFSOutStream, record);
+        currentOutStream.printf("%d %s.%s", record.timestamp(),
+            record.context(), record.name());
+
+        String separator = ": ";
+
+        for (MetricsTag tag : record.tags()) {
+          currentOutStream.printf("%s%s=%s", separator, tag.name(),
+              tag.value());
+          separator = ", ";
+        }
+
+        for (AbstractMetric metric : record.metrics()) {
+          currentOutStream.printf("%s%s=%s", separator, metric.name(),
+              metric.value());
+        }
+
+        currentOutStream.println();
+
+        // If we don't hflush(), the data may not be written until the file is
+        // closed. The file won't be closed until the end of the interval *AND*
+        // another record is received. Calling hflush() makes sure that the data
+        // is complete at the end of the interval.
+        try {
+          currentFSOutStream.hflush();
+        } catch (IOException ex) {
+          throwMetricsException("Failed flushing the stream", ex);
+        }
 
         checkForErrors("Unable to write to log file");
       } else if (!ignoreError) {
         throwMetricsException("Unable to write to log file");
       }
-    }
-  }
-
-  protected void putMetrics(PrintStream currentOutStream,
-      FSDataOutputStream currentFSOutStream, MetricsRecord record) {
-    currentOutStream.printf("%d %s.%s", record.timestamp(),
-        record.context(), record.name());
-
-    String separator = ": ";
-
-    for (MetricsTag tag : record.tags()) {
-      currentOutStream.printf("%s%s=%s", separator, tag.name(),
-          tag.value());
-      separator = ", ";
-    }
-
-    for (AbstractMetric metric : record.metrics()) {
-      currentOutStream.printf("%s%s=%s", separator, metric.name(),
-          metric.value());
-    }
-
-    currentOutStream.println();
-
-    // If we don't hflush(), the data may not be written until the file is
-    // closed. The file won't be closed until the end of the interval *AND*
-    // another record is received. Calling hflush() makes sure that the data
-    // is complete at the end of the interval.
-    try {
-      currentFSOutStream.hflush();
-    } catch (IOException ex) {
-      throwMetricsException("Failed flushing the stream", ex);
     }
   }
 
