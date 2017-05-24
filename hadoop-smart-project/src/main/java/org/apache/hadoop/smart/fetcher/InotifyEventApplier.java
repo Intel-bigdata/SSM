@@ -62,8 +62,8 @@ public class InotifyEventApplier {
         return this.getCreateSql((Event.CreateEvent)event);
       case CLOSE:
         return this.getCloseSql((Event.CloseEvent)event);
-      case TRUNCATE:
-        return this.getTruncateSql((Event.TruncateEvent)event);
+//      case TRUNCATE:
+//        return this.getTruncateSql((Event.TruncateEvent)event);
       case RENAME:
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
@@ -99,11 +99,11 @@ public class InotifyEventApplier {
   }
 
   //Todo: should update mtime? atime?
-  private String getTruncateSql(Event.TruncateEvent truncateEvent) {
-    return String.format(
-        "UPDATE files SET length = %s, modification_time = %s WHERE path = '%s';",
-        truncateEvent.getFileSize(), truncateEvent.getTimestamp(), truncateEvent.getPath());
-  }
+//  private String getTruncateSql(Event.TruncateEvent truncateEvent) {
+//    return String.format(
+//        "UPDATE files SET length = %s, modification_time = %s WHERE path = '%s';",
+//        truncateEvent.getFileSize(), truncateEvent.getTimestamp(), truncateEvent.getPath());
+//  }
 
   private String getRenameSql(Event.RenameEvent renameEvent) {
     return String.format(
