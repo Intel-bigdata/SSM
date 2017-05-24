@@ -94,34 +94,15 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public void join() throws IOException {
-//    if(commandExecutorThread == null)
-//      return;
-//    if(execThreadPool == null || execThreadPool.activeCount() == 0)
-//      return;
-//    try {
-//      Thread[] gThread = new Thread[execThreadPool.activeCount()];
-//      execThreadPool.enumerate(gThread);
-//      for (Thread t : gThread) {
-//        t.interrupt();
-//        t.join(10);
-//      }
-//    } catch (InterruptedException e) {
-//      LOG.error("Stop thread group error!");
-//    }
-//    execThreadPool.interrupt();
-//    if(!execThreadPool.isDestroyed())
-//      execThreadPool.destroy();
-//    try {
-//      commandExecutorThread.join(1000);
-//    } catch (InterruptedException e) {
-//    }
     try {
       MoverPool.getInstance().shutdown();
+      execThreadPool.stop();
     } catch (Exception e) {
-      LOG.error("Shutdown MoverPool Error!");
+      LOG.error("Shutdown MoverPool/CommandPool Error!");
       throw new IOException();
     }
-    execThreadPool.stop();
+
+    // Set all thread handle to null
     execThreadPool = null;
     commandExecutorThread = null;
   }
@@ -204,7 +185,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public void activateCommand(long cid) throws IOException {
-    if (cmdsAll.containsKey(cid))
+    if (inCache(cid))
       return;
     if (inUpdateCache(cid))
       return;
@@ -218,12 +199,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   public void disableCommand(long cid) throws IOException {
     // Remove from Cache
-    if (cmdsAll.containsKey(cid)) {
+    if (inCache(cid)) {
       LOG.info("Disable Command {}", cid);
       // Command is finished, then return
       if (inUpdateCache(cid))
         return;
       CommandInfo cmdinfo = cmdsAll.get(cid);
+      cmdinfo.setState(CommandState.DISABLED);
       // Disable this command in cache
       if (inExecutingList(cid)) {
         // Remove from Executing queue
@@ -243,7 +225,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   public void deleteCommand(long cid) throws IOException {
     // Delete from DB
     // Remove from Cache
-    if (cmdsAll.containsKey(cid)) {
+    if (inCache(cid)) {
       // Command is finished, then return
       CommandInfo cmdinfo = cmdsAll.get(cid);
       // Disable this command in cache
@@ -275,6 +257,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     cmdsPending.add(cmdinfo.getCid());
   }
 
+  public boolean inCache(long cid) throws IOException {
+    return cmdsAll.containsKey(cid);
+  }
 
   public boolean inExecutingList(long cid) throws IOException {
     Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
@@ -431,10 +416,18 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     public void complete(long cid, long rid, CommandState state) {
       commandExecutorThread.interrupt();
       // Update State in Cache
+      if (cmdsAll.get(cid) == null)
+        LOG.error("Command is null!");
+      LOG.info("Command {} finished!", cmdsAll.get(cid));
       cmdsAll.get(cid).setState(state);
       statusCache.add(new CmdTuple(cid, rid, state));
       removeFromExecuting(cid, rid, state);
-      execThreadPool.deleteCommand(cid);
+      try {
+        execThreadPool.deleteCommand(cid);
+      } catch (Exception e) {
+        LOG.error("Shutdown Command Error!");
+        e.printStackTrace();
+      }
     }
   }
 }
