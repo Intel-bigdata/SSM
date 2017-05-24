@@ -46,10 +46,15 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   public void testActivateDisableCommand() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
+    // Keep 1 out of Pending list
+    ssm.getCommandExecutor().disableCommand(1);
+    // Activate 1
     ssm.getCommandExecutor().activateCommand(1);
     Assert.assertTrue(ssm.getCommandExecutor().inPendingList(1));
+    // Disable 1
     ssm.getCommandExecutor().disableCommand(1);
-    Assert.assertFalse(ssm.getCommandExecutor().inPendingList(1));
+    if (ssm.getCommandExecutor().getCommandInfo(1).getState() != CommandState.DONE)
+      Assert.assertFalse(ssm.getCommandExecutor().inPendingList(1));
   }
 
   private void generateTestCases() throws Exception {
