@@ -24,6 +24,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.smart.protocol.SmartClient;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
+import org.apache.hadoop.smart.sql.CommandInfo;
 import org.apache.hadoop.smart.sql.TestDBUtil;
 import org.apache.hadoop.smart.sql.Util;
 import org.junit.Test;
@@ -109,6 +110,13 @@ public class TestSmartClient {
     //test deleteRule
     ssmClient.deleteRule(ruleId, true);
     assertEquals(RuleState.DELETED, ssmClient.getRuleInfo(ruleId).getState());
+
+    //test getCommandInfo
+//    CommandInfo commandInfo = ssmClient.getCommandInfo();
+    //test listCommandInfo
+    //test activateCommand
+    //test disableCommand
+    //test deleteCommand
 
     //test single SSM
     caughtException = false;

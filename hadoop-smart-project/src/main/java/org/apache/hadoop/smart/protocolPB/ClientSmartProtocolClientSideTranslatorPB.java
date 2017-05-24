@@ -19,8 +19,7 @@ package org.apache.hadoop.smart.protocolPB;
 
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
-
-
+import org.apache.hadoop.smart.CommandState;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.CheckRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.GetRuleInfoRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.GetRuleInfoResponseProto;
@@ -32,15 +31,22 @@ import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProtocol;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.GetCommandInfoRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.ListCommandInfoRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateCommandRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableCommandRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteCommandRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.CommandInfoProto;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
 import org.apache.hadoop.smart.sql.CommandInfo;
-import org.apache.hadoop.smart.CommandState;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.hadoop.smart.protocolPB.PBHelper.convert;
 
 public class ClientSmartProtocolClientSideTranslatorPB implements
     java.io.Closeable, ClientSmartProtocol {
@@ -68,7 +74,7 @@ public class ClientSmartProtocolClientSideTranslatorPB implements
       GetRuleInfoRequestProto req =
           GetRuleInfoRequestProto.newBuilder().setRuleId(id).build();
       GetRuleInfoResponseProto r = rpcProxy.getRuleInfo(null, req);
-      return PBHelper.convert(r.getResult());
+      return convert(r.getResult());
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }
@@ -78,7 +84,7 @@ public class ClientSmartProtocolClientSideTranslatorPB implements
   public long submitRule(String rule, RuleState initState) throws IOException {
     try {
       SubmitRuleRequestProto req = SubmitRuleRequestProto.newBuilder()
-          .setRule(rule).setInitState(PBHelper.convert(initState)).build();
+          .setRule(rule).setInitState(convert(initState)).build();
       return rpcProxy.submitRule(null, req).getRuleId();
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
@@ -104,11 +110,11 @@ public class ClientSmartProtocolClientSideTranslatorPB implements
       List<RuleInfoProto> infoProtos =
           rpcProxy.listRulesInfo(null, req).getRulesInfoList();
       if (infoProtos == null) {
-        return null;
+        return new ArrayList<>();
       }
       List<RuleInfo> ret = new ArrayList<>();
       for (RuleInfoProto infoProto : infoProtos) {
-        ret.add(PBHelper.convert(infoProto));
+        ret.add(convert(infoProto));
       }
       return ret;
     } catch (ServiceException e) {
@@ -158,27 +164,71 @@ public class ClientSmartProtocolClientSideTranslatorPB implements
   // TODO Command RPC Client Interface
   @Override
   public CommandInfo getCommandInfo(long commandID) throws IOException {
-    return null;
+    GetCommandInfoRequestProto req = GetCommandInfoRequestProto.newBuilder()
+        .setCommandID(commandID).build();
+    try {
+      return convert(rpcProxy.getCommandInfo(null, req).getCommandInfo());
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
   }
 
   @Override
-  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState) throws IOException {
-    return null;
+  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState)
+      throws IOException {
+    ListCommandInfoRequestProto req = ListCommandInfoRequestProto.newBuilder()
+        .setRuleID(rid).setCommandState(commandState.getValue())
+        .build();
+    try {
+      List<CommandInfoProto> protoslist =
+          rpcProxy.listCommandInfo(null, req).getCommandInfosList();
+      if (protoslist == null)
+        return new ArrayList<>();
+      List<CommandInfo> list = new ArrayList<>();
+      for (CommandInfoProto infoProto : protoslist) {
+        list.add(convert(infoProto));
+      }
+      return list;
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
   }
 
   @Override
   public void activateCommand(long commandID) throws IOException {
+    try {
+      ActivateCommandRequestProto req = ActivateCommandRequestProto.newBuilder()
+          .setCommandID(commandID)
+          .build();
+      rpcProxy.activateCommand(null, req);
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
 
   }
 
   @Override
   public void disableCommand(long commandID) throws IOException {
-
+    try {
+      DisableCommandRequestProto req = DisableCommandRequestProto.newBuilder()
+          .setCommandID(commandID)
+          .build();
+      rpcProxy.disableCommand(null, req);
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
   }
 
   @Override
   public void deleteCommand(long commandID) throws IOException {
-
+    try {
+      DeleteCommandRequestProto req = DeleteCommandRequestProto.newBuilder()
+          .setCommandID(commandID)
+          .build();
+      rpcProxy.deleteCommand(null, req);
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
   }
 
   /**

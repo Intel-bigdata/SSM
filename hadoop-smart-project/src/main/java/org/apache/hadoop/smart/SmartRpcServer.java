@@ -124,7 +124,8 @@ public class SmartRpcServer implements ClientSmartProtocol {
   }
 
   @Override
-  public long submitRule(String rule, RuleState initState) throws IOException {
+  public long submitRule(String rule, RuleState initState)
+      throws IOException {
     checkIfActive();
     return ssm.getRuleManager().submitRule(rule, initState);
   }
@@ -148,7 +149,8 @@ public class SmartRpcServer implements ClientSmartProtocol {
   }
 
   @Override
-  public void deleteRule(long ruleID, boolean dropPendingCommands) throws IOException {
+  public void deleteRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
     checkIfActive();
     ssm.getRuleManager().DeleteRule(ruleID, dropPendingCommands);
   }
@@ -160,7 +162,8 @@ public class SmartRpcServer implements ClientSmartProtocol {
   }
 
   @Override
-  public void disableRule(long ruleID, boolean dropPendingCommands) throws IOException {
+  public void disableRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
     checkIfActive();
     ssm.getRuleManager().DisableRule(ruleID, dropPendingCommands);
   }
@@ -172,7 +175,8 @@ public class SmartRpcServer implements ClientSmartProtocol {
   }
 
   @Override
-  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState) throws IOException {
+  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState)
+      throws IOException {
     checkIfActive();
     return ssm.getCommandExecutor().listCommandsInfo(rid, commandState);
   }

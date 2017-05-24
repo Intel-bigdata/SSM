@@ -107,4 +107,63 @@ public class CommandInfo {
     this.stateChangedTime = stateChangedTime;
   }
 
+  public static Builder newBuilder() {
+    return Builder.create();
+  }
+
+  public static class Builder {
+    private long cid;
+    private long rid;
+    // TODO Maybe need actionID
+    //private long actionId;
+    private ActionType actionType;
+    private CommandState state;
+    private String parameters;
+    private long generateTime;
+    private long stateChangedTime;
+
+    public static Builder create() {
+      return new Builder();
+    }
+
+    public Builder setCid(long cid) {
+      this.cid = cid;
+      return this;
+    }
+
+    public Builder setRid(long rid) {
+      this.rid = rid;
+      return this;
+    }
+
+    public Builder setActionType(ActionType actionType) {
+      this.actionType = actionType;
+      return this;
+    }
+
+    public Builder setState(CommandState state) {
+      this.state = state;
+      return this;
+    }
+
+    public Builder setParameters(String parameters) {
+      this.parameters = parameters;
+      return this;
+    }
+
+    public Builder setGenerateTime(long generateTime) {
+      this.generateTime = generateTime;
+      return this;
+    }
+
+    public Builder setStateChangedTime(long stateChangedTime) {
+      this.stateChangedTime = stateChangedTime;
+      return this;
+    }
+
+    public CommandInfo build() {
+      return new CommandInfo(cid, rid, actionType, state, parameters,
+          generateTime, stateChangedTime);
+    }
+  }
 }

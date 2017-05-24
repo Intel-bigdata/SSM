@@ -36,6 +36,16 @@ import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleResponseProt
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.GetCommandInfoResponseProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.GetCommandInfoRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.ListCommandInfoResponseProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.ListCommandInfoRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateCommandResponseProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateCommandRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableCommandResponseProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableCommandRequestProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteCommandResponseProto;
+import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteCommandRequestProto;
 
 @ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.ClientSmartProtocolPB",
     protocolVersion = 1)
@@ -65,4 +75,19 @@ public interface ClientSmartProtocolPB {
 
   DisableRuleResponseProto disableRule(RpcController controller,
       DisableRuleRequestProto req) throws ServiceException;
+
+  GetCommandInfoResponseProto getCommandInfo(RpcController controller,
+      GetCommandInfoRequestProto req) throws ServiceException;
+
+  ListCommandInfoResponseProto listCommandInfo(RpcController controller,
+      ListCommandInfoRequestProto req) throws ServiceException;
+
+  ActivateCommandResponseProto activateCommand(RpcController controller,
+      ActivateCommandRequestProto req) throws ServiceException;
+
+  DisableCommandResponseProto disableCommand(RpcController controller,
+      DisableCommandRequestProto req) throws ServiceException;
+
+  DeleteCommandResponseProto deleteCommand(RpcController controller,
+      DeleteCommandRequestProto req) throws ServiceException;
 }
