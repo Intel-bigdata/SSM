@@ -18,21 +18,44 @@
 package org.apache.hadoop.smart.mover;
 
 import org.apache.hadoop.util.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 /**
  * Status of Mover tool.
  */
 public class MoverStatus extends Status {
+  static final Logger LOG = LoggerFactory.getLogger(MoverStatus.class);
+
+  private UUID id;
   private Boolean isFinished;
   private long startTime;
   private Boolean succeeded;
   private long totalDuration;
+  private long totalBlocks;
+  private long totalSize;
+  private long movedBlocks;
 
-  public MoverStatus() {
+  private void init() {
     isFinished = false;
     startTime = Time.monotonicNow();
     succeeded = false;
     totalDuration = 0;
+    totalBlocks = 0;
+    totalSize = 0;
+    movedBlocks = 0;
+  }
+
+  public MoverStatus(UUID id ) {
+    this.id = id;
+    init();
+  }
+
+  @Override
+  synchronized public UUID getId() {
+    return id;
   }
 
   /**
@@ -40,13 +63,18 @@ public class MoverStatus extends Status {
    * @return true if the Mover process is finished
    */
   @Override
-  synchronized public Boolean getIsFinished() { return isFinished; }
+  synchronized public Boolean getIsFinished() {
+    return isFinished;
+  }
 
   /**
    * Set when the Mover process is finished.
    */
   @Override
-  synchronized public void setIsFinished() { this.isFinished = true;}
+  synchronized public void setIsFinished() {
+    this.isFinished = true;
+    LOG.info("Mover {} : Finished", id);
+  }
 
   /**
    * Get the start time for the Mover process.
@@ -77,6 +105,7 @@ public class MoverStatus extends Status {
   @Override
   synchronized public void setSucceeded() {
     this.succeeded = true;
+    LOG.info("Mover {} : Succeeded", id);
   }
 
   /**
@@ -106,9 +135,58 @@ public class MoverStatus extends Status {
    */
   @Override
   synchronized public void reset() {
-    isFinished = false;
-    startTime = Time.monotonicNow();
-    succeeded = false;
-    totalDuration = 0;
+    init();
+  }
+
+  synchronized public long getTotalBlocks() {
+    return totalBlocks;
+  }
+
+  synchronized public void setTotalBlocks(long blocks) {
+    totalBlocks = blocks;
+  }
+
+  synchronized public long increaseTotalBlocks(long blocks) {
+    totalBlocks += blocks;
+    return totalBlocks;
+  }
+
+  @Override
+  synchronized public long getTotalSize() {
+    return totalSize;
+  }
+
+  synchronized public void setTotalSize(long size) {
+    totalSize = size;
+  }
+
+  synchronized public long increaseTotalSize(long size) {
+    totalSize += size;
+    return totalSize;
+  }
+
+  synchronized public long increaseMovedBlocks(long blocks) {
+    movedBlocks += blocks;
+    return movedBlocks;
+  }
+
+  synchronized public void setMovedBlocks(long blocks) {
+    movedBlocks = blocks;
+  }
+
+  synchronized public long getMovedBlocks() {
+    return movedBlocks;
+  }
+
+  @Override
+  synchronized public float getPercentage() {
+    if (totalBlocks == 0) {
+      return 0;
+    }
+    if (isFinished) {
+      return 1;
+    }
+    return movedBlocks >= totalBlocks ? 0.99f :
+        0.99f * movedBlocks / totalBlocks;
   }
 }
