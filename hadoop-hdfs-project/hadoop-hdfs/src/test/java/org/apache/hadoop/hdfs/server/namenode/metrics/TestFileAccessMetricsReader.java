@@ -162,7 +162,7 @@ public class TestFileAccessMetricsReader {
   }
 
   private String getLogDirName(long timestamp, long interval) {
-    return FileAccessMetrics.Reader.DATE_FORMAT.format(
+    return FileAccessMetrics.DATE_FORMAT.format(
         timestamp / interval * interval) + "00";
   }
 }
