@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hdfs.server.namenode.metrics;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.metrics2.AbstractMetric;
 import org.apache.hadoop.metrics2.MetricsCollector;
@@ -34,20 +35,13 @@ import java.util.List;
 
 
 public class FileAccessMetrics implements MetricsSource {
-
+  public static final String NAME = "FileAccessMetrics";
+  public static final String DESC = "FileAccessMetrics";
   public static final String CONTEXT_VALUE ="file_access";
   private List<FileAccessInfo> infos = new LinkedList<>();
 
-  FileAccessMetrics() {
-  }
-
-  public static FileAccessMetrics create() {
-    return create(DefaultMetricsSystem.instance());
-  }
-
   public static FileAccessMetrics create(MetricsSystem ms) {
-    return ms.register("FileAccessMetrics", "FileAccessMetrics",
-        new FileAccessMetrics());
+    return ms.register(NAME, DESC, new FileAccessMetrics());
   }
 
   public void add(String path, String user, long time) {
@@ -91,13 +85,13 @@ public class FileAccessMetrics implements MetricsSource {
   public static class FileAccessRollingFileSink extends RollingFileSystemSink {
 
     @Override
-    public void putMetrics(PrintStream currentOutStream, MetricsRecord record) {
+    public void putMetrics(PrintStream currentOutStream,
+        FSDataOutputStream currentFSOutStream, MetricsRecord record) {
       for (AbstractMetric metric : record.metrics()) {
         currentOutStream.printf("%s=%s", metric.name(),
             metric.value());
       }
       currentOutStream.println();
-
     }
   }
 

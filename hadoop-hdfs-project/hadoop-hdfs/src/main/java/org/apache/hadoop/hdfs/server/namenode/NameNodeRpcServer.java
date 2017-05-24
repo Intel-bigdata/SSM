@@ -236,7 +236,6 @@ public class NameNodeRpcServer implements NamenodeProtocols {
   protected final FSNamesystem namesystem;
   protected final NameNode nn;
   private final NameNodeMetrics metrics;
-  private final FileAccessMetrics fileAccessMetrics;
 
   private final RetryCache retryCache;
 
@@ -313,8 +312,7 @@ public class NameNodeRpcServer implements NamenodeProtocols {
     this.namesystem = nn.getNamesystem();
     this.retryCache = namesystem.getRetryCache();
     this.metrics = NameNode.getNameNodeMetrics();
-    this.fileAccessMetrics = FileAccessMetrics.create();
-    
+
     int handlerCount = 
       conf.getInt(DFS_NAMENODE_HANDLER_COUNT_KEY, 
                   DFS_NAMENODE_HANDLER_COUNT_DEFAULT);
@@ -773,7 +771,11 @@ public class NameNodeRpcServer implements NamenodeProtocols {
     checkNNStartup();
     metrics.incrGetBlockLocations();
     if (offset == 0) {
-      fileAccessMetrics.add(src, "", Time.now());
+      long curTime = Time.now();
+      synchronized (accessEvents) {
+        accessEvents.add(new FileAccessEvent(src, "", curTime));
+      }
+      metrics.getFileAccessMetrics().add(src, "", curTime);
     }
     return namesystem.getBlockLocations(getClientMachine(), 
                                         src, offset, length);

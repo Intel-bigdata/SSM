@@ -17,12 +17,23 @@
  */
 package org.apache.hadoop.hdfs.server.namenode.metrics;
 
+import org.apache.commons.configuration2.SubsetConfiguration;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.metrics2.AbstractMetric;
+import org.apache.hadoop.metrics2.MetricsRecord;
+import org.apache.hadoop.metrics2.MetricsSink;
 import org.apache.hadoop.metrics2.MetricsSystem;
+import org.apache.hadoop.metrics2.annotation.Metric;
+import org.apache.hadoop.metrics2.annotation.Metrics;
 import org.apache.hadoop.metrics2.impl.ConfigBuilder;
 import org.apache.hadoop.metrics2.impl.MetricsSystemImpl;
 import org.apache.hadoop.metrics2.impl.TestMetricsConfig;
+import org.apache.hadoop.metrics2.lib.MutableGaugeInt;
+import org.apache.hadoop.metrics2.lib.MutableGaugeLong;
 import org.apache.hadoop.metrics2.sink.RollingFileSystemSinkTestBase;
 import org.apache.hadoop.util.Time;
 import org.junit.After;
@@ -30,10 +41,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.regex.Pattern;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
@@ -80,19 +94,6 @@ public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
     assertMetricsContents(doWriteTest(ms, path, 1));
   }
 
-  /**
-   * Test writing logs to HDFS if append is enabled and the log file already
-   * exists.
-   *
-   * @throws Exception thrown when things break
-   */
-  @Test
-  public void testAppend() throws Exception {
-    String path = "hdfs://" + cluster.getNameNode().getHostAndPort() + "/tmp";
-
-    assertExtraContents(doAppendTest(path, false, true, 1));
-  }
-
   @Override
   protected MetricsSystem initMetricsSystem(String path, boolean ignoreErrors,
       boolean allowAppend, boolean useSecureParams) {
@@ -103,12 +104,15 @@ public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
     ConfigBuilder builder = new ConfigBuilder().add("*.period", 10000)
         .add(prefix + ".sink.mysink0.class", FileAccessMetrics.FileAccessRollingFileSink.class.getName())
         .add(prefix + ".sink.mysink0.basepath", path)
-        .add(prefix + ".sink.mysink0.source", "testsrc")
+        .add(prefix + ".sink.mysink0.source", FileAccessMetrics.NAME)
         .add(prefix + ".sink.mysink0.context", FileAccessMetrics.CONTEXT_VALUE)
         .add(prefix + ".sink.mysink0.ignore-error", ignoreErrors)
         .add(prefix + ".sink.mysink0.allow-append", allowAppend)
         .add(prefix + ".sink.mysink0.roll-offset-interval-millis", 0)
-        .add(prefix + ".sink.mysink0.roll-interval", "1h");
+        .add(prefix + ".sink.mysink0.roll-interval", "1h")
+        .add(prefix + ".sink.mysink1.class", TestSink.class.getName())
+        .add(prefix + ".sink.mysink1.source", "testsrc")
+        .add(prefix + ".sink.mysink1.context", "test1");
 
     if (useSecureParams) {
       builder.add(prefix + ".sink.mysink0.keytab-key", SINK_KEYTAB_FILE_KEY)
@@ -133,6 +137,9 @@ public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
     metrics.add("path1", "user1", Time.now());
     metrics.add("path2", "", Time.now());
 
+    TestMetrics tm = new TestMetrics().registerWith(ms);
+    tm.testMetric1.incr();
+
     ms.publishMetricsNow(); // publish the metrics
 
     try {
@@ -142,6 +149,34 @@ public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
     }
 
     return readLogFile(path, then, count);
+  }
+
+  @Override
+  protected String readLogFile(String path, String then, int count)
+      throws IOException, URISyntaxException {
+    final String now = DATE_FORMAT.format(new Date()) + "00";
+    final String logFile = FileAccessMetrics.NAME + "-" +
+        InetAddress.getLocalHost().getHostName() + ".log";
+    FileSystem fs = FileSystem.get(new URI(path), new Configuration());
+    StringBuilder metrics = new StringBuilder();
+    boolean found = false;
+
+    for (FileStatus status : fs.listStatus(new Path(path))) {
+      Path logDir = status.getPath();
+
+      // There are only two possible valid log directory names: the time when
+      // the test started and the current time.  Anything else can be ignored.
+      if (now.equals(logDir.getName()) || then.equals(logDir.getName())) {
+        readLogData(fs, findMostRecentLogFile(fs, new Path(logDir, logFile)),
+            metrics);
+        assertFileCount(fs, logDir, count);
+        found = true;
+      }
+    }
+
+    assertTrue("No valid log directories found", found);
+
+    return metrics.toString();
   }
 
   @Override
@@ -165,6 +200,36 @@ public class TestFileAccessMetrics extends RollingFileSystemSinkTestBase {
 
     assertTrue("Sink did not produce the expected output. Actual output was: "
         + contents, expectedContentPattern.matcher(contents).matches());
+  }
+
+  @Metrics(name="testRecord1", context="test1")
+  private class TestMetrics {
+    @Metric(value={"testMetric1", "An integer gauge"}, always=true)
+    MutableGaugeInt testMetric1;
+
+    public TestMetrics registerWith(MetricsSystem ms) {
+      return ms.register(methodName.getMethodName() + "-m1", null, this);
+    }
+  }
+
+  public static class TestSink implements MetricsSink {
+
+    @Override
+    public void init(SubsetConfiguration conf) {
+    }
+
+    @Override
+    public void putMetrics(MetricsRecord record) {
+      assertEquals("test1", record.context());
+      assertEquals("testRecord1", record.name());
+      AbstractMetric metric = record.metrics().iterator().next();
+      assertEquals("testMetric1", metric.name());
+      assertEquals(1, metric.value());
+    }
+
+    @Override
+    public void flush() {
+    }
   }
 
 }

@@ -133,10 +133,13 @@ public class NameNodeMetrics {
   MutableRate putImage;
 
   JvmMetrics jvmMetrics = null;
+
+  FileAccessMetrics fileAccessMetrics = null;
   
   NameNodeMetrics(String processName, String sessionId, int[] intervals,
-      final JvmMetrics jvmMetrics) {
+      final JvmMetrics jvmMetrics, FileAccessMetrics fileAccessMetrics) {
     this.jvmMetrics = jvmMetrics;
+    this.fileAccessMetrics = fileAccessMetrics;
     registry.tag(ProcessName, processName).tag(SessionId, sessionId);
     
     final int len = intervals.length;
@@ -171,16 +174,21 @@ public class NameNodeMetrics {
     String processName = r.toString();
     MetricsSystem ms = DefaultMetricsSystem.instance();
     JvmMetrics jm = JvmMetrics.create(processName, sessionId, ms);
+    FileAccessMetrics fam = FileAccessMetrics.create(ms);
     
     // Percentile measurement is off by default, by watching no intervals
     int[] intervals = 
         conf.getInts(DFSConfigKeys.DFS_METRICS_PERCENTILES_INTERVALS_KEY);
     return ms.register(new NameNodeMetrics(processName, sessionId,
-        intervals, jm));
+        intervals, jm, fam));
   }
 
   public JvmMetrics getJvmMetrics() {
     return jvmMetrics;
+  }
+
+  public FileAccessMetrics getFileAccessMetrics() {
+    return fileAccessMetrics;
   }
   
   public void shutdown() {

@@ -495,7 +495,7 @@ public class RollingFileSystemSinkTestBase {
     int count = 0;
 
     while (i.hasNext()) {
-      i.next();
+      LocatedFileStatus s = i.next();
       count++;
     }
 
