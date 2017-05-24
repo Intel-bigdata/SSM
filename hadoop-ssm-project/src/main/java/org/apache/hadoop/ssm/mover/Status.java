@@ -17,10 +17,14 @@
  */
 package org.apache.hadoop.ssm.mover;
 
+import java.util.UUID;
+
 /**
  * Manage the status of a moving action.
  */
 public abstract class Status {
+  public abstract UUID getId();
+
   public abstract Boolean getIsFinished();
 
   public abstract void setIsFinished();
@@ -38,4 +42,8 @@ public abstract class Status {
   public abstract long getRunningTime();
 
   public abstract void reset();
+
+  public abstract long getTotalSize();
+
+  public abstract float getPercentage();
 }

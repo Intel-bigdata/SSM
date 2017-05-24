@@ -130,7 +130,7 @@ public class TestMover {
     final List<NameNodeConnector> nncs = NameNodeConnector.newNameNodeConnectors(
             nnMap, Mover.class.getSimpleName(), moverIdPath, conf,
             NameNodeConnector.DEFAULT_MAX_IDLE_ITERATIONS);
-    return new Mover(nncs.get(0), conf, new AtomicInteger(0), new HashMap<>());
+    return new Mover(nncs.get(0), conf, new AtomicInteger(0), new HashMap<>(), new MoverStatus(null));
   }
 
   @Test

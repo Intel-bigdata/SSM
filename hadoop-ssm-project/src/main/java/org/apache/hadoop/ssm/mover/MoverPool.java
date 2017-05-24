@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * MoverPool : A singleton class to manage all Mover actions.
  */
 public class MoverPool {
-  private static final Logger LOG = LoggerFactory.getLogger(MoverPool.class);
+  static final Logger LOG = LoggerFactory.getLogger(MoverPool.class);
 
   private static MoverPool instance = new MoverPool();
   private Configuration conf = new HdfsConfiguration();
@@ -66,7 +66,7 @@ public class MoverPool {
   public UUID createMoverAction(String path) {
     UUID id = UUID.randomUUID();
     LOG.info("Create a new mover action with id = {}, path = {}", id, path);
-    Status status = new MoverStatus();
+    Status status = new MoverStatus(id);
     moverMap.put(id, status);
     Thread moverThread = new MoverProcess(status, path);
     moverThreads.put(id, moverThread);
@@ -77,10 +77,12 @@ public class MoverPool {
   class MoverProcess extends Thread {
     private String path;
     private Mover.Cli moverClient;
+    private UUID id;
 
     public MoverProcess(Status status, String path) {
       this.moverClient = new Mover.Cli(status);
       this.path = path;
+      this.id = status.getId();
     }
 
     public String getPath() {
@@ -90,10 +92,10 @@ public class MoverPool {
     @Override
     public void run() {
       try {
-        LOG.info("Start mover at {}", path);
+        LOG.info("Mover {} : Start mover at {}", id, path);
         int result = ToolRunner.run(conf, moverClient,
             new String[] {"-p", path});
-        LOG.info("Finish mover at {}", path);
+        LOG.info("Mover {} : Finish mover at {}", id, path);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -119,7 +121,7 @@ public class MoverPool {
   public void removeStatus(UUID id) {
     moverMap.remove(id);
     moverThreads.remove(id);
-    LOG.info("Mover status of {} is removed", id);
+    LOG.info("Mover {} : status removed", id);
   }
 
   /**

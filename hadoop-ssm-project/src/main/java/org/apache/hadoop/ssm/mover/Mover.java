@@ -28,11 +28,12 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -68,6 +69,8 @@ import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -96,7 +99,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Mover tool for SSM.
  */
 public class Mover {
-  static final Log LOG = LogFactory.getLog(Mover.class);
+  static final Logger LOG = LoggerFactory.getLogger(Mover.class);
 
   static final String MOVER_ID_PATH = "/system/mover.id";
 
@@ -148,8 +151,10 @@ public class Mover {
 
   private final BlockStoragePolicy[] blockStoragePolicies;
 
+  private MoverStatus moverStatus;
+
   Mover(NameNodeConnector nnc, Configuration conf, AtomicInteger retryCount,
-        Map<Long, Set<DatanodeInfo>> excludedPinnedBlocks) {
+        Map<Long, Set<DatanodeInfo>> excludedPinnedBlocks, MoverStatus status) {
     final long movedWinWidth = conf.getLong(
             DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_KEY,
             DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_DEFAULT);
@@ -174,6 +179,7 @@ public class Mover {
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
             BlockStoragePolicySuite.ID_BIT_LENGTH];
     this.excludedPinnedBlocks = excludedPinnedBlocks;
+    this.moverStatus = status;
   }
 
   void init() throws IOException {
@@ -269,6 +275,7 @@ public class Mover {
   class Processor {
     private final DFSClient dfs;
     private final List<String> snapshottableDirs = new ArrayList<String>();
+    private int movedBlocks = 0;
 
     Processor() {
       dfs = dispatcher.getDistributedFileSystem().getClient();
@@ -322,6 +329,7 @@ public class Mover {
       // wait for pending move to finish and retry the failed migration
       boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.targets
               .values());
+      moverStatus.increaseMovedBlocks(movedBlocks);
       Dispatcher.checkForBlockPinningFailures(excludedPinnedBlocks,
               storages.targets.values());
       boolean hasSuccess = Dispatcher.checkForSuccess(storages.targets
@@ -450,6 +458,7 @@ public class Mover {
                 lb.getStorageTypes());
         if (!diff.removeOverlap(true)) {
           if (scheduleMoves4Block(diff, lb, ecPolicy)) {
+            movedBlocks += 1;
             result.updateHasRemaining(diff.existing.size() > 1
                     && diff.expected.size() > 1);
             // One block scheduled successfully, set noBlockMoved to false
@@ -653,8 +662,31 @@ public class Mover {
     }
   }
 
+  static private void calculateTotalSizeInPaths(FileSystem fs,
+      MoverStatus status, List<Path> paths) throws IOException {
+    for (Path path : paths) {
+      RemoteIterator<FileStatus> fileStatusIterator = fs.listStatusIterator(path);
+      while (fileStatusIterator.hasNext()) {
+        FileStatus fileStatus = fileStatusIterator.next();
+        if (fileStatus.isDirectory()) {
+          Path childPath = fileStatus.getPath();
+          calculateTotalSizeInPaths(fs, status, Arrays.asList(childPath));
+        } else {
+          final long fileLength = fileStatus.getLen();
+          final short replication = fileStatus.getReplication();
+          final long blockSize = fileStatus.getBlockSize();
+          final long totalSize = fileLength * replication;
+          final long blockNum = replication * ((fileLength % blockSize == 0) ?
+              (fileLength / blockSize) : (fileLength / blockSize + 1));
+          status.increaseTotalSize(totalSize);
+          status.increaseTotalBlocks(blockNum);
+        }
+      }
+    }
+  }
+
   static int run(Map<URI, List<Path>> namenodes, Configuration conf,
-      Status status) throws IOException, InterruptedException {
+      MoverStatus status) throws IOException, InterruptedException {
     final long sleeptime =
             conf.getTimeDuration(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
                     DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_DEFAULT,
@@ -665,6 +697,17 @@ public class Mover {
                             TimeUnit.SECONDS) * 1000;
     AtomicInteger retryCount = new AtomicInteger(0);
     // TODO: Need to limit the size of the pinned blocks to limit memory usage
+    if (namenodes.size() != 1) {
+      LOG.warn("Mover {} : Map namenodes contains more than one entry",
+          status.getId());
+    } else {
+      FileSystem fs = FileSystem.get(conf);
+      for (List<Path> paths : namenodes.values()) {
+        calculateTotalSizeInPaths(fs, status, paths);
+      }
+      LOG.info("Mover {} : total size = {} B, total blocks = {}",
+          status.getId(), status.getTotalSize(), status.getTotalBlocks());
+    }
     Map<Long, Set<DatanodeInfo>> excludedPinnedBlocks = new HashMap<>();
     LOG.info("namenodes = " + namenodes);
 
@@ -682,11 +725,11 @@ public class Mover {
         while (iter.hasNext()) {
           NameNodeConnector nnc = iter.next();
           final Mover m = new Mover(nnc, conf, retryCount,
-                  excludedPinnedBlocks);
+                  excludedPinnedBlocks, status);
           final ExitStatus r = m.run();
 
           if (r == ExitStatus.SUCCESS) {
-            IOUtils.cleanup(LOG, nnc);
+            IOUtils.cleanup(null, nnc);
             iter.remove();
           } else if (r != ExitStatus.IN_PROGRESS) {
             if (r == ExitStatus.NO_MOVE_PROGRESS) {
@@ -710,7 +753,7 @@ public class Mover {
       return ExitStatus.SUCCESS.getExitCode();
     } finally {
       for (NameNodeConnector nnc : connectors) {
-        IOUtils.cleanup(LOG, nnc);
+        IOUtils.cleanup(null, nnc);
       }
     }
   }
@@ -721,14 +764,20 @@ public class Mover {
             + "\n\t-p <files/dirs>\ta space separated list of HDFS files/dirs to migrate."
             + "\n\t-f <local file>\ta local file containing a list of HDFS files/dirs to migrate.";
 
-    private Status status;
+    private MoverStatus status;
 
     public Cli() {
-      status = new MoverStatus();
+      status = new MoverStatus(null);
     }
 
     public Cli(Status status) {
-      this.status = status;
+      if (status instanceof MoverStatus) {
+        this.status = (MoverStatus)status;
+      }
+      else {
+        throw new IllegalArgumentException("Move.Cli must use MoverStatus to" +
+            "initialize");
+      }
     }
 
     private static Options buildCliOptions() {
@@ -758,7 +807,7 @@ public class Mover {
           }
         }
       } finally {
-        IOUtils.cleanup(LOG, reader);
+        IOUtils.cleanup(null, reader);
       }
       return list.toArray(new String[list.size()]);
     }
