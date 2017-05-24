@@ -118,23 +118,32 @@ public class SmartClient implements java.io.Closeable, ClientSmartProtocol {
 
   @Override
   public CommandInfo getCommandInfo(long commandID) throws IOException {
-    return null;
+    checkOpen();
+    return ssm.getCommandInfo(commandID);
   }
 
   @Override
-  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState) throws IOException {
-    return null;
+  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState)
+      throws IOException {
+    checkOpen();
+    return ssm.listCommandInfo(rid, commandState);
   }
 
   @Override
   public void activateCommand(long commandID) throws IOException {
+    checkOpen();
+    ssm.activateCommand(commandID);
   }
 
   @Override
   public void disableCommand(long commandID) throws IOException {
+    checkOpen();
+    ssm.disableCommand(commandID);
   }
 
   @Override
   public void deleteCommand(long commandID) throws IOException {
+    checkOpen();
+    ssm.deleteCommand(commandID);
   }
 }
