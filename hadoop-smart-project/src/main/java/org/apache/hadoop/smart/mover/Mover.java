@@ -28,8 +28,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -42,38 +40,33 @@ import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
-import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
-import org.apache.hadoop.hdfs.protocol.LocatedStripedBlock;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.apache.hadoop.hdfs.server.balancer.Dispatcher;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.hdfs.server.balancer.Matcher;
 import org.apache.hadoop.hdfs.server.balancer.NameNodeConnector;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
-import org.apache.hadoop.hdfs.server.namenode.ErasureCodingPolicyManager;
 import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.net.NetworkTopology;
-import org.apache.hadoop.security.SecurityUtil;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -89,14 +82,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Mover tool for SSM.
  */
 public class Mover {
-  static final Log LOG = LogFactory.getLog(Mover.class);
+  static final Logger LOG = LoggerFactory.getLogger(Mover.class);
 
   static final String MOVER_ID_PATH = "/system/mover.id";
 
@@ -144,12 +136,10 @@ public class Mover {
   private final List<Path> targetPaths;
   private final int retryMaxAttempts;
   private final AtomicInteger retryCount;
-  private final Map<Long, Set<DatanodeInfo>> excludedPinnedBlocks;
 
   private final BlockStoragePolicy[] blockStoragePolicies;
 
-  Mover(NameNodeConnector nnc, Configuration conf, AtomicInteger retryCount,
-        Map<Long, Set<DatanodeInfo>> excludedPinnedBlocks) {
+  Mover(NameNodeConnector nnc, Configuration conf, AtomicInteger retryCount) {
     final long movedWinWidth = conf.getLong(
             DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_KEY,
             DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_DEFAULT);
@@ -159,21 +149,17 @@ public class Mover {
     final int maxConcurrentMovesPerNode = conf.getInt(
             DFSConfigKeys.DFS_DATANODE_BALANCE_MAX_NUM_CONCURRENT_MOVES_KEY,
             DFSConfigKeys.DFS_DATANODE_BALANCE_MAX_NUM_CONCURRENT_MOVES_DEFAULT);
-    final int maxNoMoveInterval = conf.getInt(
-            DFSConfigKeys.DFS_MOVER_MAX_NO_MOVE_INTERVAL_KEY,
-            DFSConfigKeys.DFS_MOVER_MAX_NO_MOVE_INTERVAL_DEFAULT);
     this.retryMaxAttempts = conf.getInt(
             DFSConfigKeys.DFS_MOVER_RETRY_MAX_ATTEMPTS_KEY,
             DFSConfigKeys.DFS_MOVER_RETRY_MAX_ATTEMPTS_DEFAULT);
     this.retryCount = retryCount;
     this.dispatcher = new Dispatcher(nnc, Collections.<String> emptySet(),
             Collections.<String> emptySet(), movedWinWidth, moverThreads, 0,
-            maxConcurrentMovesPerNode, maxNoMoveInterval, conf);
+            maxConcurrentMovesPerNode, conf);
     this.storages = new StorageMap();
     this.targetPaths = nnc.getTargetPaths();
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
             BlockStoragePolicySuite.ID_BIT_LENGTH];
-    this.excludedPinnedBlocks = excludedPinnedBlocks;
   }
 
   void init() throws IOException {
@@ -192,8 +178,8 @@ public class Mover {
   }
 
   private void initStoragePolicies() throws IOException {
-    Collection<BlockStoragePolicy> policies =
-            dispatcher.getDistributedFileSystem().getAllStoragePolicies();
+    BlockStoragePolicy[] policies =
+            dispatcher.getDistributedFileSystem().getStoragePolicies();
     for (BlockStoragePolicy policy : policies) {
       this.blockStoragePolicies[policy.getId()] = policy;
     }
@@ -214,21 +200,10 @@ public class Mover {
     }
   }
 
-  Dispatcher.DBlock newDBlock(LocatedBlock lb, List<MLocation> locations,
-                              ErasureCodingPolicy ecPolicy) {
+  Dispatcher.DBlock newDBlock(LocatedBlock lb, List<MLocation> locations) {
     Block blk = lb.getBlock().getLocalBlock();
     Dispatcher.DBlock db;
-    if (lb.isStriped()) {
-      LocatedStripedBlock lsb = (LocatedStripedBlock) lb;
-      byte[] indices = new byte[lsb.getBlockIndices().length];
-      for (int i = 0; i < indices.length; i++) {
-        indices[i] = (byte) lsb.getBlockIndices()[i];
-      }
-      db = new Dispatcher.DBlockStriped(blk, indices, (short) ecPolicy.getNumDataUnits(),
-              ecPolicy.getCellSize());
-    } else {
-      db = new Dispatcher.DBlock(blk);
-    }
+    db = new Dispatcher.DBlock(blk);
     for(MLocation ml : locations) {
       Dispatcher.DDatanode.StorageGroup source = storages.getSource(ml);
       if (source != null) {
@@ -322,11 +297,7 @@ public class Mover {
       // wait for pending move to finish and retry the failed migration
       boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.targets
               .values());
-      Dispatcher.checkForBlockPinningFailures(excludedPinnedBlocks,
-              storages.targets.values());
-      boolean hasSuccess = Dispatcher.checkForSuccess(storages.targets
-              .values());
-      if (hasFailed && !hasSuccess) {
+      if (hasFailed) {
         if (retryCount.get() == retryMaxAttempts) {
           result.setRetryFailed();
           LOG.error("Failed to move some block's after "
@@ -404,14 +375,8 @@ public class Mover {
     private void processFile(String fullPath, HdfsLocatedFileStatus status,
                              Result result) {
       byte policyId = status.getStoragePolicy();
-      if (policyId == HdfsConstants.BLOCK_STORAGE_POLICY_ID_UNSPECIFIED) {
-        try {
-          // get default policy from namenode
-          policyId = dfs.getServerDefaults().getDefaultStoragePolicyId();
-        } catch (IOException e) {
-          LOG.warn("Failed to get default policy for " + fullPath, e);
-          return;
-        }
+      if (policyId == BlockStoragePolicySuite.ID_UNSPECIFIED) {
+        return;
       }
       final BlockStoragePolicy policy = blockStoragePolicies[policyId];
       if (policy == null) {
@@ -421,7 +386,6 @@ public class Mover {
       List<StorageType> types = policy.chooseStorageTypes(
               status.getReplication());
 
-      final ErasureCodingPolicy ecPolicy = status.getErasureCodingPolicy();
       final LocatedBlocks locatedBlocks = status.getBlockLocations();
       final boolean lastBlkComplete = locatedBlocks.isLastBlockComplete();
       List<LocatedBlock> lbs = locatedBlocks.getLocatedBlocks();
@@ -431,25 +395,10 @@ public class Mover {
           continue;
         }
         LocatedBlock lb = lbs.get(i);
-        if (lb.isStriped()) {
-          if (ErasureCodingPolicyManager
-                  .checkStoragePolicySuitableForECStripedMode(policyId)) {
-            types = policy.chooseStorageTypes((short) lb.getLocations().length);
-          } else {
-            // Currently we support only limited policies (HOT, COLD, ALLSSD)
-            // for EC striped mode files.
-            // Mover tool will ignore to move the blocks if the storage policy
-            // is not in EC Striped mode supported policies
-            LOG.warn("The storage policy " + policy.getName()
-                    + " is not suitable for Striped EC files. "
-                    + "So, Ignoring to move the blocks");
-            return;
-          }
-        }
         final StorageTypeDiff diff = new StorageTypeDiff(types,
                 lb.getStorageTypes());
         if (!diff.removeOverlap(true)) {
-          if (scheduleMoves4Block(diff, lb, ecPolicy)) {
+          if (scheduleMoves4Block(diff, lb)) {
             result.updateHasRemaining(diff.existing.size() > 1
                     && diff.expected.size() > 1);
             // One block scheduled successfully, set noBlockMoved to false
@@ -461,13 +410,10 @@ public class Mover {
       }
     }
 
-    boolean scheduleMoves4Block(StorageTypeDiff diff, LocatedBlock lb,
-                                ErasureCodingPolicy ecPolicy) {
+    boolean scheduleMoves4Block(StorageTypeDiff diff, LocatedBlock lb) {
       final List<MLocation> locations = MLocation.toLocations(lb);
-      if (!(lb instanceof LocatedStripedBlock)) {
-        Collections.shuffle(locations);
-      }
-      final Dispatcher.DBlock db = newDBlock(lb, locations, ecPolicy);
+      Collections.shuffle(locations);
+      final Dispatcher.DBlock db = newDBlock(lb, locations);
 
       for (final StorageType t : diff.existing) {
         for (final MLocation ml : locations) {
@@ -496,19 +442,6 @@ public class Mover {
       // Match storage on the same node
       if (chooseTargetInSameNode(db, source, targetTypes)) {
         return true;
-      }
-
-      // Check the given block is pinned in the source datanode. A pinned block
-      // can't be moved to a different datanode. So we can skip adding these
-      // blocks to different nodes.
-      long blockId = db.getBlock().getBlockId();
-      if (excludedPinnedBlocks.containsKey(blockId)) {
-        Set<DatanodeInfo> locs = excludedPinnedBlocks.get(blockId);
-        for (DatanodeInfo dn : locs) {
-          if (source.getDatanodeInfo().equals(dn)) {
-            return false;
-          }
-        }
       }
 
       if (dispatcher.getCluster().isNodeGroupAware()) {
@@ -637,38 +570,17 @@ public class Mover {
     }
   }
 
-  private static void checkKeytabAndInit(Configuration conf)
-          throws IOException {
-    if (conf.getBoolean(DFSConfigKeys.DFS_MOVER_KEYTAB_ENABLED_KEY,
-            DFSConfigKeys.DFS_MOVER_KEYTAB_ENABLED_DEFAULT)) {
-      LOG.info("Keytab is configured, will login using keytab.");
-      UserGroupInformation.setConfiguration(conf);
-      String addr = conf.get(DFSConfigKeys.DFS_MOVER_ADDRESS_KEY,
-              DFSConfigKeys.DFS_MOVER_ADDRESS_DEFAULT);
-      InetSocketAddress socAddr = NetUtils.createSocketAddr(addr, 0,
-              DFSConfigKeys.DFS_MOVER_ADDRESS_KEY);
-      SecurityUtil.login(conf, DFSConfigKeys.DFS_MOVER_KEYTAB_FILE_KEY,
-              DFSConfigKeys.DFS_MOVER_KERBEROS_PRINCIPAL_KEY,
-              socAddr.getHostName());
-    }
-  }
-
   static int run(Map<URI, List<Path>> namenodes, Configuration conf,
       Status status) throws IOException, InterruptedException {
     final long sleeptime =
-            conf.getTimeDuration(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
-                    DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_DEFAULT,
-                    TimeUnit.SECONDS) * 2000 +
-                    conf.getTimeDuration(
-                            DFSConfigKeys.DFS_NAMENODE_REDUNDANCY_INTERVAL_SECONDS_KEY,
-                            DFSConfigKeys.DFS_NAMENODE_REDUNDANCY_INTERVAL_SECONDS_DEFAULT,
-                            TimeUnit.SECONDS) * 1000;
+        conf.getLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
+            DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_DEFAULT) * 2000 +
+        conf.getLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY,
+            DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_DEFAULT) * 1000;
     AtomicInteger retryCount = new AtomicInteger(0);
-    // TODO: Need to limit the size of the pinned blocks to limit memory usage
-    Map<Long, Set<DatanodeInfo>> excludedPinnedBlocks = new HashMap<>();
+
     LOG.info("namenodes = " + namenodes);
 
-    checkKeytabAndInit(conf);
     List<NameNodeConnector> connectors = Collections.emptyList();
     try {
       Path moverIdPath = new Path(MOVER_ID_PATH + UUID.randomUUID().toString());
@@ -681,12 +593,11 @@ public class Mover {
         Iterator<NameNodeConnector> iter = connectors.iterator();
         while (iter.hasNext()) {
           NameNodeConnector nnc = iter.next();
-          final Mover m = new Mover(nnc, conf, retryCount,
-                  excludedPinnedBlocks);
+          final Mover m = new Mover(nnc, conf, retryCount);
           final ExitStatus r = m.run();
 
           if (r == ExitStatus.SUCCESS) {
-            IOUtils.cleanup(LOG, nnc);
+            IOUtils.cleanup(null, nnc);
             iter.remove();
           } else if (r != ExitStatus.IN_PROGRESS) {
             if (r == ExitStatus.NO_MOVE_PROGRESS) {
@@ -710,7 +621,7 @@ public class Mover {
       return ExitStatus.SUCCESS.getExitCode();
     } finally {
       for (NameNodeConnector nnc : connectors) {
-        IOUtils.cleanup(LOG, nnc);
+        IOUtils.cleanup(null, nnc);
       }
     }
   }
@@ -758,7 +669,7 @@ public class Mover {
           }
         }
       } finally {
-        IOUtils.cleanup(LOG, reader);
+        IOUtils.cleanup(null, reader);
       }
       return list.toArray(new String[list.size()]);
     }
