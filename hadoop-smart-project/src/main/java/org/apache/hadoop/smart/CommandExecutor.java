@@ -25,7 +25,6 @@ import org.apache.hadoop.smart.sql.DBAdapter;
 import org.apache.hadoop.smart.utils.JsonUtil;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +54,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     this.ssm = ssm;
     moverPool = MoverPool.getInstance();
     moverPool.init(conf);
-    statusCache = new ConcurrentHashSet<>();
+    statusCache = new HashSet<>();    // TODO: to be fixed
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }

@@ -38,8 +38,6 @@ import org.apache.hadoop.tracing.TraceUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.htrace.core.TraceScope;
-import org.apache.htrace.core.Tracer;
 
 /** Provide command line access to a FileSystem. */
 @InterfaceAudience.Private
@@ -260,9 +258,6 @@ public class SmartShell extends Configured implements Tool {
   @Override
   public int run(String argv[]) throws Exception {
     init();
-    Tracer tracer = new Tracer.Builder("SmartShell").
-        conf(TraceUtils.wrapHadoopConf(SHELL_HTRACE_PREFIX, getConf())).
-        build();
     int exitCode = -1;
     if (argv.length < 1) {
       printUsage(System.err);
@@ -274,19 +269,8 @@ public class SmartShell extends Configured implements Tool {
         if (instance == null) {
           throw new UnknownCommandException();
         }
-        TraceScope scope = tracer.newScope(instance.getCommandName());
-        if (scope.getSpan() != null) {
-          String args = StringUtils.join(" ", argv);
-          if (args.length() > 2048) {
-            args = args.substring(0, 2048);
-          }
-          scope.getSpan().addKVAnnotation("args", args);
-        }
-        try {
-          exitCode = instance.run(Arrays.copyOfRange(argv, 1, argv.length));
-        } finally {
-          scope.close();
-        }
+
+        exitCode = instance.run(Arrays.copyOfRange(argv, 1, argv.length));
       } catch (IllegalArgumentException e) {
         if (e.getMessage() == null) {
           displayError(cmd, "Null exception message");
@@ -305,7 +289,6 @@ public class SmartShell extends Configured implements Tool {
         e.printStackTrace(System.err);
       }
     }
-    tracer.close();
     return exitCode;
   }
 
