@@ -17,6 +17,9 @@
  */
 package org.apache.hadoop.smart;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,7 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * CommandPool : A singleton class to manage all commandsThread
  */
 public class CommandPool {
-//  private static CommandPool instance = new CommandPool();
+  static final Logger LOG = LoggerFactory.getLogger(CommandExecutor.class);
+
   private Map<Long, Command> commandMap;
   private Map<Long, Thread> commandThread;
 
@@ -34,27 +38,24 @@ public class CommandPool {
     commandThread = new ConcurrentHashMap<>();
   }
 
-//  public static CommandPool getInstance() {
-//    return instance;
-//  }
-
   public int size() {
     return commandMap.size();
   }
 
-  public void stop() {
-    Set<Long> cids = commandMap.keySet();
-    for(Long cid: cids)
+  public void stop() throws Exception {
+    for(Long cid: commandMap.keySet())
       deleteCommand(cid);
-//    instance = null;
   }
 
   // Delete a command from the pool
-  public void deleteCommand(long cid) {
+  public void deleteCommand(long cid) throws IOException {
     if(!commandMap.containsKey(cid))
       return;
     Command cmd = commandMap.get(cid);
-    cmd.stop();
+    if (cmd != null) {
+      LOG.error("Force Terminate Command {}", cmd.toString());
+      cmd.stop();
+    }
     commandMap.remove(cid);
     commandThread.remove(cid);
   }

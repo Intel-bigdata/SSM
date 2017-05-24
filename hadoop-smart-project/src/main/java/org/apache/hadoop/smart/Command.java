@@ -21,6 +21,7 @@ import org.apache.hadoop.smart.actions.ActionBase;
 import org.apache.hadoop.smart.actions.ActionExecutor;
 import org.apache.hadoop.smart.mover.MoverPool;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
@@ -117,9 +118,22 @@ public class Command implements Runnable {
     return "Rule-" + ruleId + "-Cmd-" + id;
   }
 
-  public void stop() {
+  public void stop() throws IOException {
     LOG.info("Command {} Stopped!", toString());
     running = false;
+//    if(uuids.size() != 0) {
+//      MoverPool moverPool = MoverPool.getInstance();
+//      try {
+//        for (UUID id : uuids) {
+//          if (!moverPool.getStatus(id).getIsFinished()) {
+//              moverPool.stop(id);
+//          }
+//        }
+//      } catch (Exception e) {
+//        LOG.error("Shutdown MoverPool/CommandPool Error!");
+//        throw new IOException();
+//      }
+//    }
   }
 
   public void runActions() {
@@ -155,7 +169,7 @@ public class Command implements Runnable {
   @Override
   public void run() {
     runActions();
-    if (cb != null)
+    if (cb != null && running)
       cb.complete(this.id, this.ruleId, CommandState.DONE);
   }
 }
