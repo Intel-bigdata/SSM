@@ -25,18 +25,18 @@ The project is on Phase 1 now, it includes the following general subtasks:
 Use Cases
 ------------
 ### Optimizations when data becoming hot
-![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-hot-cases.png)
+![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/hot-cases.png)
 
 Without SSM, data will always be readed from HDD (a.). With SSM, optimizaitons can be made through rules. As showned in the figure above, data can be moved to faster storage (b.) or cached in memory (c.) to achive better performance.
 
 ### Archive cold data
 Files are less likely to be read during the ending of lifecycle, so it’s better to move these cold files into lower performance storage to decrease the cost of data storage. The following rule shows the example of archiving data that has not been read over 3 times during the last 30 days.
 
-![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-archive-rule.png)
+![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/archive-rule.png)
 
 Architecture
 ------------
-![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-architecture.png)
+![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/architecture.png)
 
 SSM polls metrics from NameNode. These metrics are analyzed by SSM as specified by rules, and if conditions of some rule are fulfilled then it will execute the corresponding actions. 
 
@@ -51,7 +51,7 @@ Hadoop HA is supported by SSM. There can be some metrics data loss (file.accessC
 Desgin
 ------------
 SSM consists of 5 chief components illustrated in the following figure:
-![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-design.png)
+![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/design.png)
 
 * StatesManager
 	* Collect metrics and events from NameNode
@@ -72,21 +72,21 @@ SSM consists of 5 chief components illustrated in the following figure:
 	
 ## Rules
 A rule is an interface between user and SSM, through which the user tells SSM how to function. A rule defines all the things for SSM to work: at what time, analysis what kind of metrics and conditions, and what actions should be taken when the conditions are true. By writing rules, a user can easily manage their cluster and adjust its behavior for certain purposes.
-![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-usage.png)
+![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/usage.png)
 
 ### Rule Syntax
 
-![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-rule-syntax.png)
+![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/rule-syntax.png)
 
 ### SSM Meta Store
 SSM uses a SQL database as MetaStore to maintain data meta infos internally. Core tables in SSM:
 
-![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-core-tables.png)
+![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/core-tables.png)
 
 #### Access Count Collection
 Below is to illustrate how to collect file access counts. As shown in the following chart:
 
-![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-access-count-tables.png)
+![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/access-count-tables.png)
 
 1. SSM polls accessCount data from NN to get file access count info generated in the time interval (for example, 5s).
 2. Create a table to store the info and insert the table name into table access_count_tables.
