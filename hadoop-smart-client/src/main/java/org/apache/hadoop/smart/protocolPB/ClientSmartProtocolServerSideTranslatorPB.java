@@ -19,8 +19,8 @@ package org.apache.hadoop.smart.protocolPB;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
-import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
-import org.apache.hadoop.smart.protocol.AdminServerProto;
+import org.apache.hadoop.smart.CommandState;
+import org.apache.hadoop.smart.protocol.AdminServerProto.protoService.BlockingInterface;
 import org.apache.hadoop.smart.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.CheckRuleResponseProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.GetRuleInfoRequestProto;
@@ -38,16 +38,31 @@ import org.apache.hadoop.smart.protocol.AdminServerProto.DisableRuleResponseProt
 import org.apache.hadoop.smart.protocol.AdminServerProto.DeleteRuleRequestProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.ActivateRuleRequestProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.DisableRuleRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.GetCommandInfoResponseProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.GetCommandInfoRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.ListCommandInfoResponseProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.ListCommandInfoRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.ActivateCommandResponseProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.ActivateCommandRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.DisableCommandResponseProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.DisableCommandRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.DeleteCommandResponseProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.DeleteCommandRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.CommandInfoProto;
+import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
+import org.apache.hadoop.smart.sql.CommandInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.hadoop.smart.protocolPB.PBHelper.convert;
+
 public class ClientSmartProtocolServerSideTranslatorPB implements
     SmartAdminProtocolPB, SmartClientProtocolPB,
-    AdminServerProto.protoService.BlockingInterface {
+    BlockingInterface {
   final private SmartAdminProtocol server;
 
   public ClientSmartProtocolServerSideTranslatorPB(SmartAdminProtocol server) {
@@ -146,6 +161,78 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
     try {
       server.disableRule(req.getRuleId(), req.getDropPendingCommands());
       return DisableRuleResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public GetCommandInfoResponseProto getCommandInfo(
+      RpcController controller, GetCommandInfoRequestProto req)
+      throws ServiceException {
+    try {
+      CommandInfo commandInfo = server.getCommandInfo(req.getCommandID());
+      return GetCommandInfoResponseProto
+          .newBuilder()
+          .setCommandInfo(convert(commandInfo))
+          .build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public ListCommandInfoResponseProto listCommandInfo(
+      RpcController controller, ListCommandInfoRequestProto req)
+      throws ServiceException {
+    try {
+      List<CommandInfo> list = server.listCommandInfo(req.getRuleID(),
+          CommandState.fromValue(req.getCommandState()));
+      if (list == null)
+        return ListCommandInfoResponseProto.newBuilder().build();
+      List<CommandInfoProto> protoList = new ArrayList<>();
+      for (CommandInfo info : list) {
+        protoList.add(convert(info));
+      }
+      return ListCommandInfoResponseProto.newBuilder()
+          .addAllCommandInfos(protoList).build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public ActivateCommandResponseProto activateCommand(
+      RpcController controller, ActivateCommandRequestProto req)
+      throws ServiceException {
+    try {
+      server.activateCommand(req.getCommandID());
+      return ActivateCommandResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public DisableCommandResponseProto disableCommand(
+      RpcController controller,
+      DisableCommandRequestProto req)
+      throws ServiceException {
+    try {
+      server.disableCommand(req.getCommandID());
+      return DisableCommandResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public DeleteCommandResponseProto deleteCommand(
+      RpcController controller, DeleteCommandRequestProto req)
+      throws ServiceException {
+    try {
+      server.deleteCommand(req.getCommandID());
+      return DeleteCommandResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
