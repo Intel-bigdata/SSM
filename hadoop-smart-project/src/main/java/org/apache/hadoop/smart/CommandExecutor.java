@@ -90,7 +90,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   /**
-   * Stop CommandExecutorimport java.util.*;
+   * Stop CommandExecutor
    */
   public void stop() throws IOException {
     running = false;
