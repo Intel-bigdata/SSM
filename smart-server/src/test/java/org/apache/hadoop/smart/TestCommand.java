@@ -9,7 +9,9 @@ import org.apache.hadoop.smart.actions.ActionBase;
 import org.apache.hadoop.smart.actions.MoveFile;
 import org.apache.hadoop.smart.actions.MoveToCache;
 import org.apache.hadoop.smart.mover.MoverPool;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.Test;
 
 
@@ -33,6 +35,7 @@ public class TestCommand {
     System.out.println("Command UT Finished!!");
   }
 
+  @Before
   public void init() throws Exception {
     conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
@@ -90,7 +93,7 @@ public class TestCommand {
     return cmd;
   }
 
-  @AfterClass
+  @After
   public void close() {
     if (cluster != null) {
       cluster.shutdown();
