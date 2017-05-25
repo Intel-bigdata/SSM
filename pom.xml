@@ -27,7 +27,8 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>hadoop-smart-project</module>
+    <module>hadoop-smart-server</module>
+    <module>hadoop-smart-client</module>
   </modules>
 
   <properties>
