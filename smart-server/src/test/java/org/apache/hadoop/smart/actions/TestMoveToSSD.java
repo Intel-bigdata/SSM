@@ -40,22 +40,23 @@ public class TestMoveToSSD {
   private void initConf(Configuration conf) {
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY,REPLICATION_KEY);
+    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
   }
 
   @Test
   public void MoveToSSD() throws Exception {
-      final Configuration conf = new HdfsConfiguration();
-      initConf(conf);
-      MoverPool.getInstance().init(conf);
-      // Move File From Archive to SSD
-      testMoveFileToSSD(conf);
+    final Configuration conf = new HdfsConfiguration();
+    initConf(conf);
+    MoverPool.getInstance().init(conf);
+    // Move File From Archive to SSD
+    testMoveFileToSSD(conf);
   }
+
   private void testMoveFileToSSD(Configuration conf) throws Exception {
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).
-            numDataNodes(3).
-            storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD}).
-            build();
+        numDataNodes(3).
+        storageTypes(new StorageType[]{StorageType.DISK, StorageType.SSD}).
+        build();
     try {
       cluster.waitActive();
       final DistributedFileSystem dfs = cluster.getFileSystem();
@@ -66,10 +67,9 @@ public class TestMoveToSSD {
       String[] args = {file};
       // write to DISK
       dfs.setStoragePolicy(dir, "HOT");
-      final FSDataOutputStream out = dfs.create(new Path(file),true,1024);
+      final FSDataOutputStream out = dfs.create(new Path(file), true, 1024);
       out.writeChars(file);
       out.close();
-
       // verify before movement
       LocatedBlock lb = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       StorageType[] storageTypes = lb.getStorageTypes();
@@ -82,7 +82,6 @@ public class TestMoveToSSD {
       while (!status.getIsFinished()) {
         Thread.sleep(3000);
       }
-
       // verify after movement
       Assert.assertTrue(status.getSucceeded());
       LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
