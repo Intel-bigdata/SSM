@@ -78,13 +78,13 @@ A rule is an interface between user and SSM, through which the user tells SSM ho
 
 ![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-rule-syntax.png)
 
-### Tables and data management
-SSM uses SQL database to maintain data internally. Core tables in SSM:
+### SSM Meta Store
+SSM uses a SQL database as MetaStore to maintain data meta infos internally. Core tables in SSM:
 
 ![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-core-tables.png)
 
-
-Take file accessCount metric for example to demonstrate how it works. As shown in the following chart:
+#### Access Count Collection
+Below is to illustrate how to collect file access counts. As shown in the following chart:
 
 ![](https://github.com/Intel-bigdata/SSM/blob/ssm/docs/ssm/ssm-access-count-tables.png)
 
