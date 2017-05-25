@@ -46,7 +46,7 @@ public class TestEmptyMiniSmartCluster {
   public void setUp() throws Exception {
     conf = new SmartConfiguration();
     cluster = new MiniDFSCluster.Builder(conf)
-            .numDataNodes(3)
+            .numDataNodes(2)
             .storagesPerDatanode(3)
             .storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD,StorageType.ARCHIVE})
             .build();

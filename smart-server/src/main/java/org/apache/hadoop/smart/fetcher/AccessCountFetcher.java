@@ -18,9 +18,13 @@
 package org.apache.hadoop.smart.fetcher;
 
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+import org.apache.hadoop.hdfs.protocol.HdfsFileAccessEvent;
 import org.apache.hadoop.smart.sql.tables.AccessCountTableManager;
+import org.apache.hadoop.smart.utils.FileAccessEvent;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -74,12 +78,18 @@ public class AccessCountFetcher {
 
     @Override
     public void run() {
-//      try {
-//        FilesAccessInfo fileAccess = client.getFilesAccessInfo();
-//        this.manager.onAccessEventsArrived(fileAccess.getFileAccessEvents());
-//      } catch (IOException e) {
-//        e.printStackTrace();
-//      }
+      try {
+        FilesAccessInfo fileAccess = client.getFilesAccessInfo();
+        if (fileAccess.getHdfsFileAccessEvents().size() > 0) {
+          ArrayList<FileAccessEvent> events = new ArrayList<>();
+          for (HdfsFileAccessEvent e : fileAccess.getHdfsFileAccessEvents()) {
+            events.add(new FileAccessEvent(e.getPath(), e.getTimestamp()));
+          }
+          this.manager.onAccessEventsArrived(events);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 }
