@@ -29,14 +29,6 @@ message GetServiceStateResponseProto {
   required int32 state = 1;
 }
 
-enum RuleStateProto {
-  ACTIVE = 0x0;
-  DRYRUN = 0x1;
-  DISABLED = 0x2;
-  FINISHED = 0x3;
-  DELETED = 0x4;
-}
-
 message RuleInfoProto {
   required sint64 id = 1;
   required sint64 submitTime = 2;
@@ -44,7 +36,7 @@ message RuleInfoProto {
   required sint64 numChecked = 4;
   required sint64 numCmdsGen = 5;
   required string ruleText = 6;
-  required RuleStateProto rulestateProto = 7;
+  required int32 rulestateProto = 7;
 }
 
 message GetRuleInfoRequestProto {
@@ -57,7 +49,7 @@ message GetRuleInfoResponseProto {
 
 message SubmitRuleRequestProto {
   required string rule = 1;
-  required RuleStateProto initState = 2;
+  required int32 initState = 2;
 }
 
 message SubmitRuleResponseProto {
@@ -101,16 +93,80 @@ message DisableRuleRequestProto {
 message DisableRuleResponseProto {
 }
 
+message CommandInfoProto {
+  required int64 cid = 1;
+  required int64 rid = 2;
+  required int64 actionId = 3;
+  required int64 generateTime = 4;
+  required int64 stateChangedTime = 5;
+  required int32 actionType = 6;
+  required int32 state = 7;
+  required string parameters = 8;
+}
+
+message GetCommandInfoRequestProto {
+  required int64 commandID = 1;
+}
+
+message GetCommandInfoResponseProto {
+  required CommandInfoProto commandInfo = 1;
+}
+
+message ListCommandInfoRequestProto {
+  required int64 ruleID = 1;
+  required int32 commandState = 2;
+}
+
+message ListCommandInfoResponseProto {
+  repeated CommandInfoProto commandInfos = 1;
+}
+
+message ActivateCommandRequestProto {
+  required int64 commandID = 1;
+}
+
+message ActivateCommandResponseProto {
+}
+
+message DisableCommandRequestProto {
+  required int64 commandID = 1;
+}
+
+message DisableCommandResponseProto {
+}
+
+message DeleteCommandRequestProto {
+  required int64 commandID = 1;
+}
+
+message DeleteCommandResponseProto {
+}
+
 service protoService {
   rpc getServiceState (GetServiceStateRequestProto)
-    returns (GetServiceStateResponseProto);
-  rpc submitRule (SubmitRuleRequestProto) returns (SubmitRuleResponseProto);
-  rpc checkRule (CheckRuleRequestProto) returns (CheckRuleResponseProto);
-  rpc getRuleInfo (GetRuleInfoRequestProto) returns (GetRuleInfoResponseProto);
+  returns (GetServiceStateResponseProto);
+  rpc submitRule (SubmitRuleRequestProto)
+  returns (SubmitRuleResponseProto);
+  rpc checkRule (CheckRuleRequestProto)
+  returns (CheckRuleResponseProto);
+  rpc getRuleInfo (GetRuleInfoRequestProto)
+  returns (GetRuleInfoResponseProto);
   rpc listRulesInfo (ListRulesInfoRequestProto)
-    returns (ListRulesInfoResponseProto);
-  rpc deleteRule (DeleteRuleRequestProto) returns (DeleteRuleResponseProto);
+  returns (ListRulesInfoResponseProto);
+  rpc deleteRule (DeleteRuleRequestProto)
+  returns (DeleteRuleResponseProto);
   rpc activateRule (ActivateRuleRequestProto)
-    returns (ActivateRuleResponseProto);
-  rpc disableRule (DisableRuleRequestProto) returns (DisableRuleResponseProto);
+  returns (ActivateRuleResponseProto);
+  rpc disableRule (DisableRuleRequestProto)
+  returns (DisableRuleResponseProto);
+  rpc getCommandInfo (GetCommandInfoRequestProto)
+  returns (GetCommandInfoResponseProto);
+  rpc listCommandInfo (ListCommandInfoRequestProto)
+  returns (ListCommandInfoResponseProto);
+  rpc activateCommand (ActivateCommandRequestProto)
+  returns (ActivateCommandResponseProto);
+  rpc disableCommand (DisableCommandRequestProto)
+  returns (DisableCommandResponseProto);
+  rpc deleteCommand (DeleteCommandRequestProto)
+  returns (DeleteCommandResponseProto);
 }

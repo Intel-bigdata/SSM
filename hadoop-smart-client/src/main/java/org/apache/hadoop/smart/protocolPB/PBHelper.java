@@ -19,10 +19,13 @@ package org.apache.hadoop.smart.protocolPB;
 
 
 import com.google.protobuf.ServiceException;
+import org.apache.hadoop.smart.CommandState;
+import org.apache.hadoop.smart.actions.ActionType;
+import org.apache.hadoop.smart.protocol.AdminServerProto.CommandInfoProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.RuleInfoProto;
-import org.apache.hadoop.smart.protocol.AdminServerProto.RuleStateProto;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
+import org.apache.hadoop.smart.sql.CommandInfo;
 
 import java.io.IOException;
 
@@ -38,22 +41,12 @@ public class PBHelper {
     return e instanceof IOException ? (IOException) e : new IOException(se);
   }
 
-  public static RuleStateProto convert(RuleState state) {
-    for (RuleStateProto v : RuleStateProto.values()) {
-      if (v.getNumber() == state.getValue()) {
-        return v;
-      }
-    }
-    return null;
+  public static int convert(RuleState state) {
+    return state.getValue();
   }
 
-  public static RuleState convert(RuleStateProto state) {
-    for (RuleState v : RuleState.values()) {
-      if (v.getValue() == state.getNumber()) {
-        return v;
-      }
-    }
-    return null;
+  public static RuleState convert(int state) {
+    return RuleState.fromValue(state);
   }
 
   public static RuleInfoProto convert(RuleInfo info) {
@@ -74,5 +67,29 @@ public class PBHelper {
         .setNumChecked(proto.getNumChecked())
         .setNumCmdsGen(proto.getNumCmdsGen())
         .setState(convert(proto.getRulestateProto())).build();
+  }
+
+  public static CommandInfo convert(CommandInfoProto proto) {
+    return CommandInfo.newBuilder()
+        .setCid(proto.getCid())
+        .setRid(proto.getRid())
+        .setActionType(ActionType.fromValue(proto.getActionType()))
+        .setState(CommandState.fromValue(proto.getState()))
+        .setParameters(proto.getParameters())
+        .setGenerateTime(proto.getGenerateTime())
+        .setStateChangedTime(proto.getStateChangedTime())
+        .build();
+  }
+
+  public static CommandInfoProto convert(CommandInfo info) {
+    return CommandInfoProto.newBuilder()
+        .setCid(info.getCid())
+        .setRid(info.getRid())
+        .setActionType(info.getActionType().getValue())
+        .setState(info.getState().getValue())
+        .setParameters(info.getParameters())
+        .setGenerateTime(info.getGenerateTime())
+        .setStateChangedTime(info.getStateChangedTime())
+        .build();
   }
 }
