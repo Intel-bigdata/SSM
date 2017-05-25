@@ -17,7 +17,7 @@
  */
 package org.apache.hadoop.smart;
 
-import org.apache.hadoop.smart.protocol.SmartClient;
+import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
 import org.junit.Assert;
@@ -33,7 +33,7 @@ public class TestGetRuleInfo extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
 
     String rule = "file: every 1s \n | length > 10 | cachefile";
-    SmartClient client = new SmartClient(conf);
+    SmartAdmin client = new SmartAdmin(conf);
 
     long ruleId = client.submitRule(rule, RuleState.ACTIVE);
     RuleInfo info1 = client.getRuleInfo(ruleId);
@@ -61,7 +61,7 @@ public class TestGetRuleInfo extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
 
     String rule = "file: every 1s \n | length > 10 | cachefile";
-    SmartClient client = new SmartClient(conf);
+    SmartAdmin client = new SmartAdmin(conf);
 
     int nRules = 100;
     for (int i = 0; i < nRules; i++) {

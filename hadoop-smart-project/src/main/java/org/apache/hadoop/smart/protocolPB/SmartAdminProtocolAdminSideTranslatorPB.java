@@ -31,7 +31,7 @@ import org.apache.hadoop.smart.protocol.ClientSmartProto.SubmitRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProtocol;
+import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
@@ -42,11 +42,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientSmartProtocolClientSideTranslatorPB implements
-    java.io.Closeable, ClientSmartProtocol {
-  private ClientSmartProtocolPB rpcProxy;
+public class SmartAdminProtocolAdminSideTranslatorPB implements
+    java.io.Closeable, SmartAdminProtocol {
+  private SmartAdminProtocolPB rpcProxy;
 
-  public ClientSmartProtocolClientSideTranslatorPB(ClientSmartProtocolPB proxy) {
+  public SmartAdminProtocolAdminSideTranslatorPB(SmartAdminProtocolPB proxy) {
     this.rpcProxy = proxy;
   }
 

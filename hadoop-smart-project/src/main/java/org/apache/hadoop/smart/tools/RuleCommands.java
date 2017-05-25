@@ -22,7 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
 import org.apache.hadoop.smart.SmartConfiguration;
-import org.apache.hadoop.smart.protocol.SmartClient;
+import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
 
@@ -37,14 +37,14 @@ public class RuleCommands {
     factory.addClass(ListRules.class, "listrules");
   }
 
-  private static SmartClient newSSMClient(Command cmd) throws IOException {
+  private static SmartAdmin newSSMClient(Command cmd) throws IOException {
     Configuration conf = cmd.getConf();
     if (conf == null) {
       conf = new SmartConfiguration();
     }
 
     //System.out.println(conf.get(SmartConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY));
-    SmartClient client = new SmartClient(conf);
+    SmartAdmin client = new SmartAdmin(conf);
     return client;
   }
 
@@ -56,7 +56,7 @@ public class RuleCommands {
         + "Default value for initial_state' is ACTIVE.";
 
     public int doSubmit(String[] args) throws IOException {
-      SmartClient client = newSSMClient(this);
+      SmartAdmin client = newSSMClient(this);
       File file = new File(args[0]);
       if (!file.exists() || file.isDirectory() || !file.canRead()) {
         throw new IOException("Invalid rule file path: " + args[0]);
@@ -110,7 +110,7 @@ public class RuleCommands {
     public static final String DESCRIPTION = "List rules in SSM";
 
     public int doList(String[] args) throws IOException {
-      SmartClient client = newSSMClient(this);
+      SmartAdmin client = newSSMClient(this);
       List<RuleInfo> infos = client.listRulesInfo();
       for (RuleInfo info : infos) {
         System.out.println(info);

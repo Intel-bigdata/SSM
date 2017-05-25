@@ -18,7 +18,7 @@
 package org.apache.hadoop.smart.tools;
 
 import org.apache.hadoop.smart.TestEmptyMiniSmartCluster;
-import org.apache.hadoop.smart.protocol.SmartClient;
+import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.sql.TestDBUtil;
 import org.junit.Assert;
@@ -42,7 +42,7 @@ public class TestSubmitRuleThroughCli extends TestEmptyMiniSmartCluster {
       os.write(rule.getBytes());
       os.close();
 
-      SmartClient client = new SmartClient(conf);
+      SmartAdmin client = new SmartAdmin(conf);
 
       String[] args = new String[] {
           "submitrule",

@@ -37,9 +37,9 @@ import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleRequestProto;
 
-@ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.ClientSmartProtocolPB",
+@ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.SmartAdminProtocolPB",
     protocolVersion = 1)
-public interface ClientSmartProtocolPB {
+public interface SmartAdminProtocolPB {
 
   GetServiceStateResponseProto
   getServiceState(RpcController controller,

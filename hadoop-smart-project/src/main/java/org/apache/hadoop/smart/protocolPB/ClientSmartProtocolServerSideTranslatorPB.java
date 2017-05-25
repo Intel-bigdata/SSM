@@ -19,6 +19,7 @@ package org.apache.hadoop.smart.protocolPB;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
+import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
 import org.apache.hadoop.smart.protocol.ClientSmartProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.CheckRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.CheckRuleResponseProto;
@@ -37,7 +38,6 @@ import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleResponseProt
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateRuleRequestProto;
 import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProtocol;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
 
@@ -46,10 +46,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientSmartProtocolServerSideTranslatorPB implements
-    ClientSmartProtocolPB, ClientSmartProto.protoService.BlockingInterface {
-  final private ClientSmartProtocol server;
+    SmartAdminProtocolPB, ClientSmartProto.protoService.BlockingInterface {
+  final private SmartAdminProtocol server;
 
-  public ClientSmartProtocolServerSideTranslatorPB(ClientSmartProtocol server) {
+  public ClientSmartProtocolServerSideTranslatorPB(SmartAdminProtocol server) {
     this.server = server;
   }
 

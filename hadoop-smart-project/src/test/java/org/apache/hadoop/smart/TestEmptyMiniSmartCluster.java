@@ -21,7 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.smart.protocol.SmartClient;
+import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.sql.TestDBUtil;
 import org.apache.hadoop.smart.sql.Util;
@@ -66,7 +66,7 @@ public class TestEmptyMiniSmartCluster {
   }
 
   public void waitTillSSMExitSafeMode() throws Exception {
-    SmartClient client = new SmartClient(conf);
+    SmartAdmin client = new SmartAdmin(conf);
     long start = System.currentTimeMillis();
     int retry = 5;
     while (true) {

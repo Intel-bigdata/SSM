@@ -20,7 +20,7 @@ package org.apache.hadoop.smart;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.smart.protocol.SmartClient;
+import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.rule.RuleState;
 import org.apache.hadoop.smart.sql.TestDBUtil;
 import org.apache.hadoop.smart.sql.Util;
@@ -74,7 +74,7 @@ public class TestSubmitRule {
   @Test
   public void testSubmitRule() throws Exception {
     String rule = "file: every 1s \n | length > 10 | cachefile";
-    SmartClient client = new SmartClient(conf);
+    SmartAdmin client = new SmartAdmin(conf);
 
     long ruleId = 0l;
     boolean wait = true;

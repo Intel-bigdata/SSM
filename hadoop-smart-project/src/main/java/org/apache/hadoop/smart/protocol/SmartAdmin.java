@@ -22,8 +22,8 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.smart.CommandState;
 import org.apache.hadoop.smart.SmartConfigureKeys;
-import org.apache.hadoop.smart.protocolPB.ClientSmartProtocolClientSideTranslatorPB;
-import org.apache.hadoop.smart.protocolPB.ClientSmartProtocolPB;
+import org.apache.hadoop.smart.protocolPB.SmartAdminProtocolAdminSideTranslatorPB;
+import org.apache.hadoop.smart.protocolPB.SmartAdminProtocolPB;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
 import org.apache.hadoop.smart.sql.CommandInfo;
@@ -32,13 +32,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-public class SmartClient implements java.io.Closeable, ClientSmartProtocol {
+public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
   final static long VERSION = 1;
   Configuration conf;
-  ClientSmartProtocol ssm;
+  SmartAdminProtocol ssm;
   volatile boolean clientRunning = true;
 
-  public SmartClient(Configuration conf)
+  public SmartAdmin(Configuration conf)
       throws IOException {
     this.conf = conf;
     String[] strings = conf.get(SmartConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY,
@@ -46,12 +46,12 @@ public class SmartClient implements java.io.Closeable, ClientSmartProtocol {
     InetSocketAddress address = new InetSocketAddress(
         strings[strings.length - 2],
         Integer.parseInt(strings[strings.length - 1]));
-    RPC.setProtocolEngine(conf, ClientSmartProtocolPB.class,
+    RPC.setProtocolEngine(conf, SmartAdminProtocolPB.class,
         ProtobufRpcEngine.class);
-    ClientSmartProtocolPB proxy = RPC.getProxy(
-        ClientSmartProtocolPB.class, VERSION, address, conf);
-    ClientSmartProtocol clientSSMProtocol =
-        new ClientSmartProtocolClientSideTranslatorPB(proxy);
+    SmartAdminProtocolPB proxy = RPC.getProxy(
+        SmartAdminProtocolPB.class, VERSION, address, conf);
+    SmartAdminProtocol clientSSMProtocol =
+        new SmartAdminProtocolAdminSideTranslatorPB(proxy);
     this.ssm = clientSSMProtocol;
   }
 
@@ -66,7 +66,7 @@ public class SmartClient implements java.io.Closeable, ClientSmartProtocol {
 
   public void checkOpen() throws IOException {
     if (!clientRunning) {
-      throw new IOException("SmartClient closed");
+      throw new IOException("SmartAdmin closed");
     }
   }
 

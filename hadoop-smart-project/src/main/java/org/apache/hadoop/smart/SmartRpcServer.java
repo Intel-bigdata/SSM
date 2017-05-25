@@ -23,10 +23,10 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
+import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
 import org.apache.hadoop.smart.protocol.ClientSmartProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProtocol;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
-import org.apache.hadoop.smart.protocolPB.ClientSmartProtocolPB;
+import org.apache.hadoop.smart.protocolPB.SmartAdminProtocolPB;
 import org.apache.hadoop.smart.protocolPB.ClientSmartProtocolServerSideTranslatorPB;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
@@ -40,7 +40,7 @@ import java.util.List;
  * Implements the rpc calls.
  * TODO: Implement statistics for SSM rpc server
  */
-public class SmartRpcServer implements ClientSmartProtocol {
+public class SmartRpcServer implements SmartAdminProtocol {
   protected SmartServer ssm;
   protected Configuration conf;
   protected final InetSocketAddress clientRpcAddress;
@@ -50,9 +50,9 @@ public class SmartRpcServer implements ClientSmartProtocol {
   public SmartRpcServer(SmartServer ssm, Configuration conf) throws IOException {
     this.ssm = ssm;
     this.conf = conf;
-    // TODO: implement ssm ClientSmartProtocol
+    // TODO: implement ssm SmartAdminProtocol
     InetSocketAddress rpcAddr = getRpcServerAddress();
-    RPC.setProtocolEngine(conf, ClientSmartProtocolPB.class, ProtobufRpcEngine.class);
+    RPC.setProtocolEngine(conf, SmartAdminProtocolPB.class, ProtobufRpcEngine.class);
 
     ClientSmartProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
         = new ClientSmartProtocolServerSideTranslatorPB(this);
@@ -61,7 +61,7 @@ public class SmartRpcServer implements ClientSmartProtocol {
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
 
     clientRpcServer = new RPC.Builder(conf)
-        .setProtocol(ClientSmartProtocolPB.class)
+        .setProtocol(SmartAdminProtocolPB.class)
         .setInstance(clientSmartPbService)
         .setBindAddress(rpcAddr.getHostName())
         .setPort(rpcAddr.getPort())
@@ -73,7 +73,7 @@ public class SmartRpcServer implements ClientSmartProtocol {
     clientRpcAddress = new InetSocketAddress(
         rpcAddr.getHostName(), listenAddr.getPort());
 
-    DFSUtil.addPBProtocol(conf, ClientSmartProtocolPB.class,
+    DFSUtil.addPBProtocol(conf, SmartAdminProtocolPB.class,
         clientSmartPbService, clientRpcServer);
   }
 

@@ -21,7 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.smart.protocol.SmartClient;
+import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
 import org.apache.hadoop.smart.sql.TestDBUtil;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestSmartClient {
+public class TestSmartAdmin {
 
   @Test
   public void test() throws Exception {
@@ -62,7 +62,7 @@ public class TestSmartClient {
 
     // rpcServer start in SmartServer
     SmartServer.createSSM(null, conf);
-    SmartClient ssmClient = new SmartClient(conf);
+    SmartAdmin ssmClient = new SmartAdmin(conf);
 
     while (true) {
       //test getServiceStatus

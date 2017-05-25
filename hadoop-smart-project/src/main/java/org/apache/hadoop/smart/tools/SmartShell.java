@@ -32,10 +32,8 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
 import org.apache.hadoop.smart.SmartConfiguration;
-import org.apache.hadoop.smart.protocol.SmartClient;
+import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.tools.TableListing;
-import org.apache.hadoop.tracing.TraceUtils;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -47,7 +45,7 @@ public class SmartShell extends Configured implements Tool {
 
   private static final int MAX_LINE_WIDTH = 80;
 
-  private SmartClient client;
+  private SmartAdmin client;
   private Help help;
   protected CommandFactory commandFactory;
 

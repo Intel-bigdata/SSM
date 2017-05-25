@@ -25,7 +25,7 @@ import org.apache.hadoop.smart.sql.CommandInfo;
 import java.io.IOException;
 import java.util.List;
 
-public interface ClientSmartProtocol {
+public interface SmartAdminProtocol {
 
   SmartServiceState getServiceState() throws IOException;
 

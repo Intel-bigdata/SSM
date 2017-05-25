@@ -20,7 +20,7 @@ package org.apache.hadoop.smart;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.smart.protocol.SmartClient;
+import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
 import org.junit.Assert;
@@ -36,7 +36,7 @@ public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
 
     // Submit a rule
-    SmartClient client = new SmartClient(conf);
+    SmartAdmin client = new SmartAdmin(conf);
     String rule = "file : every 1s | "
         + "accessCount(5s) >= 5 and length < 80 | cachefile";
     long ruleId = client.submitRule(rule, RuleState.ACTIVE);
