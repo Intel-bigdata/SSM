@@ -46,7 +46,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientSmartProtocolServerSideTranslatorPB implements
-    SmartAdminProtocolPB, ClientSmartProto.protoService.BlockingInterface {
+    SmartAdminProtocolPB, SmartClientProtocolPB,
+    ClientSmartProto.protoService.BlockingInterface {
   final private SmartAdminProtocol server;
 
   public ClientSmartProtocolServerSideTranslatorPB(SmartAdminProtocol server) {
