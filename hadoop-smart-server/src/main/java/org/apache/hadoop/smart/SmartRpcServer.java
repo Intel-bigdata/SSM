@@ -24,7 +24,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
-import org.apache.hadoop.smart.protocol.ClientSmartProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.protocolPB.SmartAdminProtocolPB;
 import org.apache.hadoop.smart.protocolPB.ClientSmartProtocolServerSideTranslatorPB;
@@ -57,7 +57,7 @@ public class SmartRpcServer implements SmartAdminProtocol {
     ClientSmartProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
         = new ClientSmartProtocolServerSideTranslatorPB(this);
 
-    BlockingService clientSmartPbService = ClientSmartProto.protoService
+    BlockingService clientSmartPbService = AdminServerProto.protoService
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
 
     clientRpcServer = new RPC.Builder(conf)

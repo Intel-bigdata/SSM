@@ -19,8 +19,8 @@ package org.apache.hadoop.smart.protocolPB;
 
 
 import com.google.protobuf.ServiceException;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.RuleInfoProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.RuleStateProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.RuleInfoProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.RuleStateProto;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
 

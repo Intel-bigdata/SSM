@@ -21,16 +21,16 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 
 
-import org.apache.hadoop.smart.protocol.ClientSmartProto.CheckRuleRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.GetRuleInfoRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.GetRuleInfoResponseProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.GetServiceStateRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.ListRulesInfoRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.RuleInfoProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.SubmitRuleRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.DeleteRuleRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.ActivateRuleRequestProto;
-import org.apache.hadoop.smart.protocol.ClientSmartProto.DisableRuleRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.CheckRuleRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.GetRuleInfoRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.GetRuleInfoResponseProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.GetServiceStateRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.ListRulesInfoRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.RuleInfoProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.SubmitRuleRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.DeleteRuleRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.ActivateRuleRequestProto;
+import org.apache.hadoop.smart.protocol.AdminServerProto.DisableRuleRequestProto;
 import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;

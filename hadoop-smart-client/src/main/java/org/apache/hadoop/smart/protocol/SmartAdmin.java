@@ -50,9 +50,7 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
         ProtobufRpcEngine.class);
     SmartAdminProtocolPB proxy = RPC.getProxy(
         SmartAdminProtocolPB.class, VERSION, address, conf);
-    SmartAdminProtocol clientSSMProtocol =
-        new SmartAdminProtocolAdminSideTranslatorPB(proxy);
-    this.ssm = clientSSMProtocol;
+    this.ssm = new SmartAdminProtocolAdminSideTranslatorPB(proxy);
   }
 
   @Override
