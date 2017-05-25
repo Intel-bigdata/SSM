@@ -12,7 +12,6 @@ import org.apache.hadoop.smart.mover.MoverPool;
 import org.junit.Test;
 
 
-
 /**
  * Command Unit Test
  */
@@ -37,12 +36,12 @@ public class TestCommand {
     conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY,REPLICATION_KEY);
+    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
     cluster = new MiniDFSCluster.Builder(conf).
-            numDataNodes(3).
-            storagesPerDatanode(4).
-            storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD,StorageType.ARCHIVE,StorageType.RAM_DISK}).
-            build();
+        numDataNodes(3).
+        storagesPerDatanode(4).
+        storageTypes(new StorageType[]{StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE, StorageType.RAM_DISK}).
+        build();
     cluster.waitActive();
     client = cluster.getFileSystem().getClient();
     MoverPool.getInstance().init(conf);
@@ -53,14 +52,15 @@ public class TestCommand {
     // New dir
     Path dir = new Path("/testMoveFile");
     dfs.mkdirs(dir);
-
     // Move to SSD
     dfs.setStoragePolicy(dir, "HOT");
-    final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"),true,1024);
+    final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"),
+        true, 1024);
     out1.writeChars("/testMoveFile/file1");
     out1.close();
     // Move to Archive
-    final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),true,1024);
+    final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),
+        true, 1024);
     out2.writeChars("/testMoveFile/file2");
     out2.close();
     // Move to Cache

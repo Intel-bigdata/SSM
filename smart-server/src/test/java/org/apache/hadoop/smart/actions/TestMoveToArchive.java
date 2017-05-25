@@ -40,8 +40,9 @@ public class TestMoveToArchive {
   private void initConf(Configuration conf) {
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY,REPLICATION_KEY);
+    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
   }
+
   @Test
   public void MoveToArchive() throws Exception {
     final Configuration conf = new HdfsConfiguration();
@@ -54,10 +55,10 @@ public class TestMoveToArchive {
 
   private void testMoveFileToArchive(Configuration conf) throws Exception {
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).
-            numDataNodes(3).
-            storageTypes(new StorageType[]
-                    {StorageType.DISK,StorageType.ARCHIVE}).
-            build();
+        numDataNodes(3).
+        storageTypes(new StorageType[]
+            {StorageType.DISK, StorageType.ARCHIVE}).
+        build();
     try {
       cluster.waitActive();
       final DistributedFileSystem dfs = cluster.getFileSystem();
@@ -68,10 +69,9 @@ public class TestMoveToArchive {
       String[] args = {file};
       // write to DISK
       dfs.setStoragePolicy(dir, "HOT");
-      final FSDataOutputStream out = dfs.create(new Path(file),true,1024);
+      final FSDataOutputStream out = dfs.create(new Path(file), true, 1024);
       out.writeChars(file);
       out.close();
-
       // verify before movement
       LocatedBlock lb = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       StorageType[] storageTypes = lb.getStorageTypes();
@@ -84,7 +84,6 @@ public class TestMoveToArchive {
       while (!status.getIsFinished()) {
         Thread.sleep(3000);
       }
-
       // verify after movement
       Assert.assertTrue(status.getSucceeded());
       LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
@@ -92,7 +91,6 @@ public class TestMoveToArchive {
       for (StorageType storageType : storageTypes1) {
         Assert.assertTrue(StorageType.ARCHIVE == storageType);
       }
-
     } finally {
       cluster.shutdown();
     }
