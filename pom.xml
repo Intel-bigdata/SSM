@@ -20,15 +20,17 @@
   </organization>
 
   <groupId>org.apache.hadoop</groupId>
-  <artifactId>hadoop-smart</artifactId>
+  <artifactId>smart-project</artifactId>
   <version>0.1-SNAPSHOT</version>
-  <description>Apache Hadoop Smart Project</description>
-  <name>Apache Hadoop Smart Project</name>
+  <description>Smart Project</description>
+  <name>Smart Project</name>
   <packaging>pom</packaging>
 
   <modules>
-    <module>hadoop-smart-server</module>
-    <module>hadoop-smart-client</module>
+    <module>smart-common</module>
+    <module>smart-client</module>
+    <module>smart-admin</module>
+    <module>smart-server</module>
   </modules>
 
   <properties>
