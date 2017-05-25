@@ -31,7 +31,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -85,7 +90,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   /**
-   * Stop CommandExecutor
+   * Stop CommandExecutorimport java.util.*;
    */
   public void stop() throws IOException {
     running = false;
@@ -151,7 +156,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       return cmdsAll.get(cid);
     List<CommandInfo> ret = null;
     try {
-      ret = adapter.getCommandsTableItem(String.format("= %d", cid), null, null);
+      ret = adapter.getCommandsTableItem(String.format("= %d", cid),
+        null, null);
     } catch (SQLException e) {
       LOG.error(e.getMessage());
     }
@@ -161,14 +167,16 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public List<CommandInfo> listCommandsInfo(long rid,
-                                            CommandState commandState) throws IOException {
+      CommandState commandState) throws IOException {
     List<CommandInfo> retInfos = new ArrayList<>();
     // Get from DB
     try {
       if (rid != -1)
-        retInfos.addAll(adapter.getCommandsTableItem(null, String.format("= %d", rid), commandState));
+        retInfos.addAll(adapter.getCommandsTableItem(null,
+            String.format("= %d", rid), commandState));
       else
-        retInfos.addAll(adapter.getCommandsTableItem(null, null, commandState));
+        retInfos.addAll(adapter.getCommandsTableItem(null,
+            null, commandState));
     } catch (SQLException e) {
       LOG.error(e.getMessage());
       throw new IOException(e);
@@ -218,7 +226,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       }
       // Mark as cancelled, this status will be update to DB
       // in next batch update
-      statusCache.add(new CmdTuple(cid, cmdinfo.getRid(), CommandState.DISABLED));
+      statusCache.add(new CmdTuple(cid, cmdinfo.getRid(),
+          CommandState.DISABLED));
     }
   }
 
@@ -262,7 +271,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public boolean inExecutingList(long cid) throws IOException {
-    Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
+    Set<Long> cmdsExecuting = cmdsInState
+            .get(CommandState.EXECUTING.getValue());
     return cmdsExecuting.contains(cid);
   }
 
@@ -301,8 +311,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private synchronized Command schedule() {
     // currently FIFO
     // List<Long> cmds = getCommands(CommandState.PENDING);
-    Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
-    Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
+    Set<Long> cmdsPending = cmdsInState
+            .get(CommandState.PENDING.getValue());
+    Set<Long> cmdsExecuting = cmdsInState
+            .get(CommandState.EXECUTING.getValue());
     if (cmdsPending.size() == 0) {
       // Put them into cmdsAll and cmdsInState
       if (statusCache.size() != 0)
@@ -332,7 +344,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   private Command getCommandFromCmdInfo(CommandInfo cmdinfo) {
     ActionBase[] actions = new ActionBase[10];
-    Map<String, String> jsonParameters = JsonUtil.toStringStringMap(cmdinfo.getParameters());
+    Map<String, String> jsonParameters =
+            JsonUtil.toStringStringMap(cmdinfo.getParameters());
     String[] args = {jsonParameters.get("_FILE_PATH_")};
     // New action
     String storagePolicy = jsonParameters.get("_STORAGE_POLICY_");
