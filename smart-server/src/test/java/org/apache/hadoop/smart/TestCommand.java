@@ -9,6 +9,7 @@ import org.apache.hadoop.smart.actions.ActionBase;
 import org.apache.hadoop.smart.actions.MoveFile;
 import org.apache.hadoop.smart.actions.MoveToCache;
 import org.apache.hadoop.smart.mover.MoverPool;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 
@@ -87,5 +88,12 @@ public class TestCommand {
     cmd.setState(CommandState.PENDING);
     // Init action
     return cmd;
+  }
+
+  @AfterClass
+  public void close() {
+    if (cluster != null) {
+      cluster.shutdown();
+    }
   }
 }
