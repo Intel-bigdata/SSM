@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class AccessEventAggregator {
   private final DBAdapter adapter;
@@ -81,19 +80,18 @@ public class AccessEventAggregator {
       return table;
     }
     Map<String, Integer> accessCount = this.getAccessCountMap(eventBuffer);
-    String values =
-      accessCount
-        .entrySet()
-        .stream()
-        .map(entry -> "(" + pathToIDs.get(entry.getKey()) + ", " + entry.getValue() + ")")
-        .collect(Collectors.joining(","));
+    List<String> values = new ArrayList<>();
+    for(Map.Entry<String, Integer> entry: accessCount.entrySet()) {
+      values.add("(" + pathToIDs.get(entry.getKey()) + ", " +
+        entry.getValue() + ")");
+    }
 
     String insertValue = String.format(
         "INSERT INTO %s (%s, %s) VALUES %s",
         table.getTableName(),
         AccessCountTable.FILE_FIELD,
         AccessCountTable.ACCESSCOUNT_FIELD,
-        values);
+        String.join(",", values));
     try {
       this.adapter.execute(createTable);
       this.adapter.execute(insertValue);
