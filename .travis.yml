@@ -20,5 +20,4 @@ cache:
   directories:
     - "$HOME/.m2"
 script:
-    cd hadoop-smart-project;
     mvn test
