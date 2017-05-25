@@ -36,6 +36,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -276,8 +277,11 @@ public class DBAdapter {
   public Map<String, Long> getFileIDs(Collection<String> paths)
       throws SQLException {
     Map<String, Long> pathToId = new HashMap<>();
-    String in = paths.stream().map(s -> "'" + s +"'")
-        .collect(Collectors.joining(", "));
+    List<String> values = new ArrayList<>();
+    for(String path: paths) {
+      values.add("'" + path + "'");
+    }
+    String in = String.join(", ", values);
     String sql = "SELECT fid, path FROM files WHERE path IN (" + in + ")";
     QueryHelper queryHelper = new QueryHelper(sql);
     ResultSet result;
