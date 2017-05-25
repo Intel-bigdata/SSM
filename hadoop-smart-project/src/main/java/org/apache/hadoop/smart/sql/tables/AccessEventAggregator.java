@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.smart.sql.tables;
 
-import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.smart.sql.DBAdapter;
+import org.apache.hadoop.smart.utils.FileAccessEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,10 +17,10 @@
  */
 package org.apache.hadoop.smart.sql.tables;
 
-import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.smart.sql.DBAdapter;
 import org.apache.hadoop.smart.sql.DBTest;
 import org.apache.hadoop.smart.utils.Constants;
+import org.apache.hadoop.smart.utils.FileAccessEvent;
 import org.apache.hadoop.smart.utils.TimeGranularity;
 import org.dbunit.Assertion;
 import org.dbunit.database.IDatabaseConnection;

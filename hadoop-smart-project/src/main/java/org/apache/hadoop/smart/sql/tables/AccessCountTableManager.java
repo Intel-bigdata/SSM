@@ -18,8 +18,8 @@
 package org.apache.hadoop.smart.sql.tables;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.hadoop.hdfs.protocol.FileAccessEvent;
 import org.apache.hadoop.smart.sql.DBAdapter;
+import org.apache.hadoop.smart.utils.FileAccessEvent;
 import org.apache.hadoop.smart.utils.TimeGranularity;
 import org.apache.hadoop.smart.utils.TimeUtils;
 import org.slf4j.Logger;

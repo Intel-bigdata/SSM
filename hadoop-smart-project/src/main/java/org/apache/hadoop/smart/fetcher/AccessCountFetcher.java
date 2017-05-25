@@ -18,7 +18,6 @@
 package org.apache.hadoop.smart.fetcher;
 
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
 import org.apache.hadoop.smart.sql.tables.AccessCountTableManager;
 
 import java.io.IOException;
@@ -75,12 +74,12 @@ public class AccessCountFetcher {
 
     @Override
     public void run() {
-      try {
-        FilesAccessInfo fileAccess = client.getFilesAccessInfo();
-        this.manager.onAccessEventsArrived(fileAccess.getFileAccessEvents());
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+//      try {
+//        FilesAccessInfo fileAccess = client.getFilesAccessInfo();
+//        this.manager.onAccessEventsArrived(fileAccess.getFileAccessEvents());
+//      } catch (IOException e) {
+//        e.printStackTrace();
+//      }
     }
   }
 }

@@ -296,7 +296,7 @@ public class TestRuleManager {
     long fid = 10000;
     FileStatusInternal[] files = { new FileStatusInternal(length, false, 3,
         1024, now, now, null, null, null, null,
-        "testfile".getBytes(), "/tmp", fid, 0, null, (byte)3, null) };
+        "testfile".getBytes(), "/tmp", fid, 0, null, (byte)3) };
 
     dbAdapter.insertFiles(files);
     long rid = ruleManager.submitRule(rule, RuleState.ACTIVE);

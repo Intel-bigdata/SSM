@@ -188,7 +188,7 @@ public class TestDBMethod {
         byte storagePolicy = 0;
         FileStatusInternal[] files = { new FileStatusInternal(length, isDir, blockReplication,
             blockSize, modTime, accessTime, perms, owner, group, symlink,
-            path, "/tmp", fileId, numChildren, null, storagePolicy, null) };
+            path, "/tmp", fileId, numChildren, null, storagePolicy) };
         dbAdapter.insertFiles(files);
         HdfsFileStatus hdfsFileStatus = dbAdapter.getFile("/tmp/testFile");
         Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 * 1024L);
