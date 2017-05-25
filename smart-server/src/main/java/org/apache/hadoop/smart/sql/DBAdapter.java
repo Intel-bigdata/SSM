@@ -210,7 +210,7 @@ public class DBAdapter {
         String sql = "INSERT INTO `files` (path, fid, length, "
             + "block_replication,"
             + " block_size, modification_time, access_time, is_dir, sid, oid, "
-            + "gid, permission, ec_policy_id ) "
+            + "gid, permission) "
             + "VALUES ('" + files[i].getPath()
             + "','" + files[i].getFileId() + "','" + files[i].getLen() + "','"
             + files[i].getReplication() + "','" + files[i].getBlockSize()

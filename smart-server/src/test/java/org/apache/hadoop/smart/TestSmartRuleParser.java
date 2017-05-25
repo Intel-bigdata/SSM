@@ -46,15 +46,13 @@ public class TestSmartRuleParser {
   public class SSMRuleErrorListener extends BaseErrorListener {
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer,
-                            Object offendingSymbol,
-                            int line, int charPositionInLine,
-                            String msg,
-                            RecognitionException e) {
+        Object offendingSymbol, int line, int charPositionInLine,
+        String msg, RecognitionException e) {
       List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
       Collections.reverse(stack);
-      System.err.println("rule stack: "+stack);
-      System.err.println("line "+line+":"+charPositionInLine+" at "+
-          offendingSymbol+": "+msg);
+      System.err.println("rule stack: " + stack);
+      System.err.println("line " + line + ":" + charPositionInLine + " at "
+          + offendingSymbol + ": " + msg);
       parseErrors.add(e);
     }
   }
@@ -99,6 +97,7 @@ public class TestSmartRuleParser {
     }
 
     ExecutionContext ctx = new ExecutionContext();
+    ctx.setProperty(ExecutionContext.RULE_ID, 2016);
     DBAdapter dbAdapter = new DBAdapter(TestDBUtil.getTestDBInstance());
     RuleQueryExecutor qe = new RuleQueryExecutor(null, ctx, result, dbAdapter);
     List<String> paths = qe.executeFileRuleQuery();
