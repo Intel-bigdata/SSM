@@ -121,19 +121,19 @@ public class Command implements Runnable {
   public void stop() throws IOException {
     LOG.info("Command {} Stopped!", toString());
     running = false;
-//    if(uuids.size() != 0) {
-//      MoverPool moverPool = MoverPool.getInstance();
-//      try {
-//        for (UUID id : uuids) {
-//          if (!moverPool.getStatus(id).getIsFinished()) {
-//              moverPool.stop(id);
-//          }
-//        }
-//      } catch (Exception e) {
-//        LOG.error("Shutdown MoverPool/CommandPool Error!");
-//        throw new IOException();
-//      }
-//    }
+    if(uuids.size() != 0) {
+      MoverPool moverPool = MoverPool.getInstance();
+      try {
+        for (UUID id : uuids) {
+          if (!moverPool.getStatus(id).getIsFinished()) {
+              moverPool.stop(id);
+          }
+        }
+      } catch (Exception e) {
+        LOG.error("Shutdown Unfinished Actions Error!");
+        throw new IOException(e);
+      }
+    }
   }
 
   public void runActions() {
@@ -160,8 +160,7 @@ public class Command implements Runnable {
       try {
         Thread.sleep(300);
       } catch (Exception e) {
-        e.printStackTrace();
-        LOG.error("Action Thread error!");
+        LOG.error("Run Action Thread error!");
       }
     }
   }

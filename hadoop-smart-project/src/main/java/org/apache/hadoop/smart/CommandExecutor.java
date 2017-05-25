@@ -99,7 +99,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       execThreadPool.stop();
     } catch (Exception e) {
       LOG.error("Shutdown MoverPool/CommandPool Error!");
-      throw new IOException();
+      throw new IOException(e);
     }
 
     // Set all thread handle to null
@@ -425,8 +425,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       try {
         execThreadPool.deleteCommand(cid);
       } catch (Exception e) {
-        LOG.error("Shutdown Command Error!");
-        e.printStackTrace();
+        LOG.error("Shutdown Command {} Error!", cid);
       }
     }
   }
