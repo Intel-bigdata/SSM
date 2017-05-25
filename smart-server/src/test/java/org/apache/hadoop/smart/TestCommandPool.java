@@ -30,8 +30,9 @@ public class TestCommandPool extends TestCommand {
     init();
     generateTestCase();
     Command cmd = runHelper();
-    CommandPool.getInstance().execute(cmd);
-    CommandPool.getInstance().getCommandThread(cmd.getId()).join();
+    CommandPool cmdpoll = new CommandPool();
+    cmdpoll.execute(cmd);
+    cmdpoll.getCommandThread(cmd.getId()).join();
   }
 
   /**
@@ -42,8 +43,9 @@ public class TestCommandPool extends TestCommand {
     init();
     generateTestCase();
     Command cmd = runHelper();
-    CommandPool.getInstance().execute(cmd);
+    CommandPool cmdpoll = new CommandPool();
+    cmdpoll.execute(cmd);
     Thread.sleep(1000);
-    CommandPool.getInstance().deleteCommand(cmd.getId());
+    cmdpoll.deleteCommand(cmd.getId());
   }
 }
