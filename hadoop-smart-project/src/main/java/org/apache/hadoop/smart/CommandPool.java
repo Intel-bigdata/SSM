@@ -43,14 +43,16 @@ public class CommandPool {
   }
 
   public void stop() throws Exception {
-    for(Long cid: commandMap.keySet())
+    for (Long cid : commandMap.keySet()) {
       deleteCommand(cid);
+    }
   }
 
   // Delete a command from the pool
   public void deleteCommand(long cid) throws IOException {
-    if(!commandMap.containsKey(cid))
+    if (!commandMap.containsKey(cid)) {
       return;
+    }
     Command cmd = commandMap.get(cid);
     if (cmd != null) {
       LOG.error("Force Terminate Command {}", cmd.toString());

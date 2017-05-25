@@ -121,12 +121,12 @@ public class Command implements Runnable {
   public void stop() throws IOException {
     LOG.info("Command {} Stopped!", toString());
     running = false;
-    if(uuids.size() != 0) {
+    if (uuids.size() != 0) {
       MoverPool moverPool = MoverPool.getInstance();
       try {
         for (UUID id : uuids) {
           if (!moverPool.getStatus(id).getIsFinished()) {
-              moverPool.stop(id);
+            moverPool.stop(id);
           }
         }
       } catch (Exception e) {
@@ -139,11 +139,13 @@ public class Command implements Runnable {
   public void runActions() {
     UUID uid;
     for (ActionBase act : actions) {
-      if (act == null)
+      if (act == null) {
         continue;
+      }
       uid = ActionExecutor.run(act);
-      if (uid == null)
+      if (uid == null) {
         continue;
+      }
       uuids.add(uid);
     }
     MoverPool moverPool = MoverPool.getInstance();
@@ -155,8 +157,9 @@ public class Command implements Runnable {
           iter.remove();
         }
       }
-      if (uuids.size() == 0 || !running)
+      if (uuids.size() == 0 || !running) {
         break;
+      }
       try {
         Thread.sleep(300);
       } catch (Exception e) {
@@ -168,7 +171,8 @@ public class Command implements Runnable {
   @Override
   public void run() {
     runActions();
-    if (cb != null && running)
+    if (cb != null && running) {
       cb.complete(this.id, this.ruleId, CommandState.DONE);
+    }
   }
 }

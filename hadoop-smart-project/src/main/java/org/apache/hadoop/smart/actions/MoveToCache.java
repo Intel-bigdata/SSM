@@ -52,7 +52,7 @@ public class MoveToCache extends ActionBase {
     this.dfsClient = client;
     this.conf = conf;
     this.actionType = ActionType.CacheFile;
-    this.actionEvents = new LinkedBlockingQueue<String>();
+    this.actionEvents = new LinkedBlockingQueue<>();
   }
 
   public ActionBase initial(String[] args) {
@@ -64,11 +64,8 @@ public class MoveToCache extends ActionBase {
    * Execute an action.
    * @return null.
    */
-  public UUID execute() {
-//        Action action = Action.getActionType("cache");
-    //MoverExecutor.getInstance(dfsClient,conf).addActionEvent(fileName,action);
+  public UUID execute() {;
     addActionEvent(fileName);
-    //MoverExecutor.getInstance(dfsClient,conf).run();
     runCache(fileName);
     return null;
   }
@@ -87,7 +84,7 @@ public class MoveToCache extends ActionBase {
       return;
     }
     LOG.info("Action starts at {} : {} -> cache",
-            new Date(System.currentTimeMillis()), fileName);
+        new Date(System.currentTimeMillis()), fileName);
     addDirective(fileName);
   }
 
@@ -101,7 +98,6 @@ public class MoveToCache extends ActionBase {
         }
       }
       dfsClient.addCachePool(new CachePoolInfo(SSMPOOL));
-
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -131,6 +127,4 @@ public class MoveToCache extends ActionBase {
       throw new RuntimeException(e);
     }
   }
-
-
 }

@@ -32,14 +32,14 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
     generateTestCases();
     Assert.assertTrue(ssm
-            .getCommandExecutor()
-            .listCommandsInfo(1, null).size() == 3);
+        .getCommandExecutor()
+        .listCommandsInfo(1, null).size() == 3);
     Assert.assertTrue(ssm
-            .getCommandExecutor().getCommandInfo(1) != null);
+        .getCommandExecutor().getCommandInfo(1) != null);
     ssm.getCommandExecutor().deleteCommand(1);
     Assert.assertTrue(ssm
-            .getCommandExecutor()
-            .listCommandsInfo(1, null).size() == 2);
+        .getCommandExecutor()
+        .listCommandsInfo(1, null).size() == 2);
   }
 
   @Test
@@ -86,11 +86,14 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     dfs.mkdirs(dir3);
     // DB related
     CommandInfo command1 = new CommandInfo(0, 1, ActionType.MoveFile,
-            CommandState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l);
+        CommandState.PENDING, JsonUtil.toJsonString(smap1),
+        123123333l, 232444444l);
     CommandInfo command2 = new CommandInfo(0, 1, ActionType.MoveFile,
-            CommandState.PENDING, JsonUtil.toJsonString(smap2), 123178333l, 232444994l);
+        CommandState.PENDING, JsonUtil.toJsonString(smap2),
+        123178333l, 232444994l);
     CommandInfo command3 = new CommandInfo(0, 1, ActionType.CacheFile,
-            CommandState.PENDING, JsonUtil.toJsonString(smap3), 123178333l, 232444994l);
+        CommandState.PENDING, JsonUtil.toJsonString(smap3),
+        123178333l, 232444994l);
     CommandInfo[] commands = {command1, command2, command3};
     dbAdapter.insertCommandsTable(commands);
   }
@@ -100,12 +103,11 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     String cidCondition = ">= 1 ";
     String ridCondition = ">= 1 ";
     Thread.sleep(80000);
-    List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.DONE);
+    List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition,
+        ridCondition, CommandState.DONE);
     System.out.printf("Size = %d\n", com.size());
     // Check Status
     Assert.assertTrue(com.size() == 3);
     Assert.assertTrue(com.get(0).getState() == CommandState.DONE);
-    // Stop CommandExecutor
-    // cmdexe.stop();
   }
 }

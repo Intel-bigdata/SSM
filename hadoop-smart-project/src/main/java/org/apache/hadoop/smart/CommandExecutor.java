@@ -132,8 +132,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
           Thread.sleep(1000);
         }
       } catch (InterruptedException e) {
-        if (!running)
+        if (!running) {
           break;
+        }
       }
     }
   }
@@ -152,31 +153,34 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public CommandInfo getCommandInfo(long cid) throws IOException {
-    if (cmdsAll.containsKey(cid))
+    if (cmdsAll.containsKey(cid)) {
       return cmdsAll.get(cid);
+    }
     List<CommandInfo> ret = null;
     try {
       ret = adapter.getCommandsTableItem(String.format("= %d", cid),
-        null, null);
+          null, null);
     } catch (SQLException e) {
       LOG.error(e.getMessage());
     }
-    if (ret != null)
+    if (ret != null) {
       return ret.get(0);
+    }
     return null;
   }
 
   public List<CommandInfo> listCommandsInfo(long rid,
-      CommandState commandState) throws IOException {
+                                            CommandState commandState) throws IOException {
     List<CommandInfo> retInfos = new ArrayList<>();
     // Get from DB
     try {
-      if (rid != -1)
+      if (rid != -1) {
         retInfos.addAll(adapter.getCommandsTableItem(null,
             String.format("= %d", rid), commandState));
-      else
+      } else {
         retInfos.addAll(adapter.getCommandsTableItem(null,
             null, commandState));
+      }
     } catch (SQLException e) {
       LOG.error(e.getMessage());
       throw new IOException(e);
@@ -185,21 +189,25 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (commandState != CommandState.PENDING) {
       for (Iterator<CommandInfo> iter = cmdsAll.values().iterator(); iter.hasNext(); ) {
         CommandInfo cmdinfo = iter.next();
-        if (cmdinfo.getState() == commandState && cmdinfo.getRid() == rid)
+        if (cmdinfo.getState() == commandState && cmdinfo.getRid() == rid) {
           retInfos.add(cmdinfo);
+        }
       }
     }
     return retInfos;
   }
 
   public void activateCommand(long cid) throws IOException {
-    if (inCache(cid))
+    if (inCache(cid)) {
       return;
-    if (inUpdateCache(cid))
+    }
+    if (inUpdateCache(cid)) {
       return;
+    }
     CommandInfo cmdinfo = getCommandInfo(cid);
-    if (cmdinfo == null || cmdinfo.getState() == CommandState.DONE)
+    if (cmdinfo == null || cmdinfo.getState() == CommandState.DONE) {
       return;
+    }
     LOG.info("Activate Command {}", cid);
     cmdinfo.setState(CommandState.PENDING);
     addToPending(cmdinfo);
@@ -210,8 +218,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (inCache(cid)) {
       LOG.info("Disable Command {}", cid);
       // Command is finished, then return
-      if (inUpdateCache(cid))
+      if (inUpdateCache(cid)) {
         return;
+      }
       CommandInfo cmdinfo = cmdsAll.get(cid);
       cmdinfo.setState(CommandState.DISABLED);
       // Disable this command in cache
@@ -272,7 +281,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   public boolean inExecutingList(long cid) throws IOException {
     Set<Long> cmdsExecuting = cmdsInState
-            .get(CommandState.EXECUTING.getValue());
+        .get(CommandState.EXECUTING.getValue());
     return cmdsExecuting.contains(cid);
   }
 
@@ -283,18 +292,21 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public boolean inUpdateCache(long cid) throws IOException {
-    if (statusCache.size() == 0)
+    if (statusCache.size() == 0) {
       return false;
+    }
     for (CmdTuple ct : statusCache) {
-      if (ct.cid == cid)
+      if (ct.cid == cid) {
         return true;
+      }
     }
     return false;
   }
 
   private void RemoveFromUpdateCache(long cid) throws IOException {
-    if (statusCache.size() == 0)
+    if (statusCache.size() == 0) {
       return;
+    }
     for (Iterator<CmdTuple> iter = statusCache.iterator(); iter.hasNext(); ) {
       CmdTuple ct = iter.next();
       if (ct.cid == cid) {
@@ -306,31 +318,36 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   /**
    * Get command to for execution.
+   *
    * @return
    */
   private synchronized Command schedule() {
     // currently FIFO
     // List<Long> cmds = getCommands(CommandState.PENDING);
     Set<Long> cmdsPending = cmdsInState
-            .get(CommandState.PENDING.getValue());
+        .get(CommandState.PENDING.getValue());
     Set<Long> cmdsExecuting = cmdsInState
-            .get(CommandState.EXECUTING.getValue());
+        .get(CommandState.EXECUTING.getValue());
     if (cmdsPending.size() == 0) {
       // Put them into cmdsAll and cmdsInState
-      if (statusCache.size() != 0)
+      if (statusCache.size() != 0) {
         batchCommandStatusUpdate();
+      }
       List<CommandInfo> dbcmds = getCommandsFromDB();
-      if (dbcmds == null)
+      if (dbcmds == null) {
         return null;
+      }
       for (CommandInfo c : dbcmds) {
         // if command alread in update cache or queue then skip
-        if (cmdsAll.containsKey(c.getCid()))
+        if (cmdsAll.containsKey(c.getCid())) {
           continue;
+        }
         cmdsAll.put(c.getCid(), c);
         cmdsPending.add(c.getCid());
       }
-      if (cmdsPending.size() == 0)
+      if (cmdsPending.size() == 0) {
         return null;
+      }
     }
     // TODO Update FIFO
     // Currently only get and run the first cmd
@@ -345,7 +362,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Command getCommandFromCmdInfo(CommandInfo cmdinfo) {
     ActionBase[] actions = new ActionBase[10];
     Map<String, String> jsonParameters =
-            JsonUtil.toStringStringMap(cmdinfo.getParameters());
+        JsonUtil.toStringStringMap(cmdinfo.getParameters());
     String[] args = {jsonParameters.get("_FILE_PATH_")};
     // New action
     String storagePolicy = jsonParameters.get("_STORAGE_POLICY_");
@@ -390,8 +407,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   public synchronized void batchCommandStatusUpdate() {
     LOG.info("INFO Number of Caches = {}", statusCache.size());
     LOG.info("INFO Number of Actions = {}", cmdsAll.size());
-    if (statusCache.size() == 0)
+    if (statusCache.size() == 0) {
       return;
+    }
     for (Iterator<CmdTuple> iter = statusCache.iterator(); iter.hasNext(); ) {
       CmdTuple ct = iter.next();
       cmdsAll.remove(ct.cid);
@@ -419,8 +437,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   private void removeFromExecuting(long cid, long rid, CommandState state) {
     Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
-    if (cmdsExecuting.size() == 0)
+    if (cmdsExecuting.size() == 0) {
       return;
+    }
     cmdsExecuting.remove(cid);
   }
 
@@ -429,8 +448,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     public void complete(long cid, long rid, CommandState state) {
       commandExecutorThread.interrupt();
       // Update State in Cache
-      if (cmdsAll.get(cid) == null)
+      if (cmdsAll.get(cid) == null) {
         LOG.error("Command is null!");
+      }
       LOG.info("Command {} finished!", cmdsAll.get(cid));
       cmdsAll.get(cid).setState(state);
       statusCache.add(new CmdTuple(cid, rid, state));
