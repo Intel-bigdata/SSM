@@ -13,39 +13,27 @@ original HDFS DFSClient. Here is the diagram.
 
 Command API
 -----------
+  
+* void **cache**(**String** filePath) **throws** IOException;
 
-/*  
-\*Cache a file<br>
-*/  
-void **cache**(**String** filePath) **throws** IOException;
+  Cache a file
 
-/*  
-\*Uncache a file<br>
-*/  
-void **uncache**(**String** filePath) **throws** IOException;
+* void **uncache**(**String** filePath) **throws** IOException;
 
-/*<br>
-\*Move a file to destination<br>
-*/  
-void **move**(**String** srcFilePath, **String** destPath) **throws**
-IOException;
+  Uncache a file
 
-/*  
-\* List all command name currently supported by the system. <br>
-\* Current supported command name are “move”, “cache”, “uncache” etc. <br>
-*/  
-String\[\] **getCommandList**() **throws** IOException;
+* void **move**(**String** srcFilePath, **String** destPath) **throws** IOException;
 
-/* <br>
-\* A synchronized generic API to execute command. <br>
-\* System will maintain an internal task to performance the action. The API will return until the task is finished.  <br>
-*/  
-void **executeCommand**(**String** cmdName, **String\[\]** cmdParams)
-**throws** IOException;
+  Move a file to destination
 
-/*  
-\* A asynchronized generic API to execute command.
-\* System will maintain an internal task to performance the action. The API will return immediately once the internal task is created.<br>
-*/  
-void **executeCommandAsync**(**String** cmdName, **String\[\]** cmdParams)
-**throws** IOException;
+* String\[\] **getCommandList**() **throws** IOException;
+
+  List all command name currently supported by the system. Current supported command name are “move”, “cache”, “uncache” etc.
+
+* void **executeCommand**(**String** cmdName, **String\[\]** cmdParams) **throws** IOException;
+
+  A synchronized generic API to execute command. System will maintain an internal task to performance the action. The API will return until the task is finished.
+  
+* void **executeCommandAsync**(**String** cmdName, **String\[\]** cmdParams) **throws** IOException;
+
+  A asynchronized generic API to execute command. System will maintain an internal task to performance the action. The API will return immediately once the internal task is created.
