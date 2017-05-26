@@ -32,8 +32,7 @@ public enum ActionType {
   ConvertToReplica(8),
   Distcp(9),
   DiskBalance(10),
-  BalanceCluster(11),
-  UserDefined(12);      // User Definied Action
+  BalanceCluster(11);
 
   private final int value;
 

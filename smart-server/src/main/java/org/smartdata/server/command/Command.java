@@ -18,9 +18,7 @@
 package org.smartdata.server.command;
 
 import org.smartdata.common.CommandState;
-import org.smartdata.server.actions.ActionBase;
-import org.smartdata.server.actions.ActionExecutor;
-import org.smartdata.server.actions.mover.MoverPool;
+import org.smartdata.server.actions.Action;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +28,8 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.server.actions.mover.MoverPool;
+
 
 /**
  * Command is the minimum unit of execution. Different commands can be
@@ -50,7 +50,7 @@ public class Command implements Runnable {
   private long ruleId;   // id of the rule that this Command comes from
   private long id;
   private CommandState state = CommandState.NOTINITED;
-  private ActionBase[] actions;
+  private Action[] actions;
   private Map<String, String> parameters;
   CommandExecutor.Callback cb;
   private ArrayList<UUID> uuids;
@@ -64,7 +64,7 @@ public class Command implements Runnable {
 
   }
 
-  public Command(ActionBase[] actions, CommandExecutor.Callback cb) {
+  public Command(Action[] actions, CommandExecutor.Callback cb) {
     this.actions = actions.clone();
     this.cb = cb;
     this.uuids = new ArrayList<>();
@@ -103,7 +103,7 @@ public class Command implements Runnable {
     this.state = state;
   }
 
-  public ActionBase[] getActions() {
+  public Action[] getActions() {
     return actions == null ? null : actions.clone();
   }
 
@@ -139,11 +139,12 @@ public class Command implements Runnable {
 
   public void runActions() {
     UUID uid;
-    for (ActionBase act : actions) {
+    for (Action act : actions) {
       if (act == null) {
         continue;
       }
-      uid = ActionExecutor.run(act);
+      // uid = ActionExecutor.run(act);
+      uid = act.run();
       if (uid == null) {
         continue;
       }

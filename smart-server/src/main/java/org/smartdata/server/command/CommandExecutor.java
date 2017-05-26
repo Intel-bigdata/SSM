@@ -23,9 +23,9 @@ import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
-import org.smartdata.server.actions.ActionBase;
+import org.smartdata.server.actions.Action;
+import org.smartdata.server.actions.CacheFile;
 import org.smartdata.server.actions.MoveFile;
-import org.smartdata.server.actions.MoveToCache;
 import org.smartdata.server.actions.mover.MoverPool;
 import org.smartdata.server.metastore.sql.DBAdapter;
 import org.smartdata.server.utils.JsonUtil;
@@ -375,20 +375,19 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   private Command getCommandFromCmdInfo(CommandInfo cmdinfo) {
-    ActionBase[] actions = new ActionBase[10];
+    Action[] actions = new Action[10];
     Map<String, String> jsonParameters =
         JsonUtil.toStringStringMap(cmdinfo.getParameters());
-    String[] args = {jsonParameters.get("_FILE_PATH_")};
+    String[] args = {jsonParameters.get("_FILE_PATH_"), jsonParameters.get("_STORAGE_POLICY_")};
     // New action
-    String storagePolicy = jsonParameters.get("_STORAGE_POLICY_");
-    ActionBase current;
+    Action current;
     if (cmdinfo.getActionType().getValue() == ActionType.CacheFile.getValue()) {
-      current = new MoveToCache(ssm.getDFSClient(), ssm.getConf());
+      current = new CacheFile(ssm.getDFSClient(), ssm.getConf());
     } else if (cmdinfo.getActionType().getValue() == ActionType.MoveFile.getValue()) {
-      current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
+      current = new MoveFile(ssm.getDFSClient(), ssm.getConf());
     } else {
       // Default Action
-      current = new MoveFile(ssm.getDFSClient(), ssm.getConf(), storagePolicy);
+      current = new MoveFile(ssm.getDFSClient(), ssm.getConf());
     }
     current.initial(args);
     actions[0] = current;

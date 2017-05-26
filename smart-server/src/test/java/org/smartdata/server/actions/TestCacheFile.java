@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Move to Cache Unit Test
  */
-public class TestMoveToCache {
+public class TestCacheFile {
 
     private static final int DEFAULT_BLOCK_SIZE = 100;
     private static final String REPLICATION_KEY = "3";
@@ -47,9 +47,9 @@ public class TestMoveToCache {
         Path dir = new Path("/fileTestA");
         dfs.mkdirs(dir);
         String[] str = {"/fileTestA"};
-        MoveToCache moveToCache = new MoveToCache(client, conf);
+        CacheFile moveToCache = new CacheFile(client, conf);
         assertEquals(false, moveToCache.isCached(str[0]));
-        moveToCache.initial(str).execute();
+        moveToCache.initial(str).run();
         assertEquals(true, moveToCache.isCached(str[0]));
         cluster.shutdown();
     }

@@ -5,15 +5,16 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
+
+import org.smartdata.common.CommandState;
+import org.smartdata.server.actions.Action;
+import org.smartdata.server.actions.CacheFile;
+import org.smartdata.server.actions.MoveFile;
+import org.smartdata.server.actions.mover.MoverPool;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.common.CommandState;
-import org.smartdata.server.command.Command;
-import org.smartdata.server.actions.ActionBase;
-import org.smartdata.server.actions.MoveFile;
-import org.smartdata.server.actions.MoveToCache;
-import org.smartdata.server.actions.mover.MoverPool;
 
 
 /**
@@ -81,16 +82,16 @@ public class TestCommand {
   }
 
   public Command runHelper() throws Exception {
-    ActionBase[] actions = new ActionBase[10];
-    String[] args1 = {"/testMoveFile/file1"};
-    String[] args2 = {"/testMoveFile/file2"};
+    Action[] actions = new Action[10];
+    String[] args1 = {"/testMoveFile/file1", "ALL_SSD"};
+    String[] args2 = {"/testMoveFile/file2", "COLD"};
     String[] args3 = {"/testCacheFile"};
     // New action
-    actions[0] = new MoveFile(client, conf, "ALL_SSD");
+    actions[0] = new MoveFile(client, conf);
     actions[0].initial(args1);
-    actions[1] = new MoveFile(client, conf, "COLD");
+    actions[1] = new MoveFile(client, conf);
     actions[1].initial(args2);
-    actions[2] = new MoveToCache(client, conf);
+    actions[2] = new CacheFile(client, conf);
     actions[2].initial(args3);
     // New Command
     Command cmd = new Command(actions, null);

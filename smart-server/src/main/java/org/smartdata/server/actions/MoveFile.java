@@ -31,22 +31,25 @@ import java.util.UUID;
 /**
  * MoveFile Action
  */
-public class MoveFile extends ActionBase {
+public class MoveFile implements Action {
   private static final Logger LOG = LoggerFactory.getLogger(MoveFile.class);
 
   public String storagePolicy;
   private String fileName;
   private Configuration conf;
+  private ActionType actionType;
+  private DFSClient dfsClient;
 
-  public MoveFile(DFSClient client, Configuration conf, String storagePolicy) {
-    super(client);
+
+  public MoveFile(DFSClient client, Configuration conf) {
+    this.dfsClient = client;
     this.conf = conf;
     this.actionType = ActionType.MoveFile;
-    this.storagePolicy = storagePolicy;
   }
 
-  public ActionBase initial(String[] args) {
+  public Action initial(String[] args) {
     this.fileName = args[0];
+    this.storagePolicy = args[1];
     return this;
   }
 
@@ -55,7 +58,7 @@ public class MoveFile extends ActionBase {
    *
    * @return true if success, otherwise return false.
    */
-  public UUID execute() {
+  public UUID run() {
     return runMove(fileName);
   }
 

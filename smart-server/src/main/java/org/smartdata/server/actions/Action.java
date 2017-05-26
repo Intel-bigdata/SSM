@@ -24,9 +24,9 @@ import java.util.UUID;
  */
 public interface Action {
 
-  void setSmartContext();
-
-  void setConf();
+//  void SetSmartContext();
+//
+//  void SetConf();
   /**
    * Covert current information to string
    * @return a printable String

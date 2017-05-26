@@ -39,24 +39,24 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Move to Cache Action
  */
-public class MoveToCache extends ActionBase {
-  private static final Logger LOG = LoggerFactory.getLogger(MoveToCache.class);
+public class CacheFile implements Action {
+  private static final Logger LOG = LoggerFactory.getLogger(CacheFile.class);
 
-  private DFSClient dfsClient;
   private String fileName;
   private Configuration conf;
   private LinkedBlockingQueue<String> actionEvents;
   private final String SSMPOOL = "SSMPool";
+  private ActionType actionType;
+  private DFSClient dfsClient;
 
-  public MoveToCache(DFSClient client, Configuration conf) {
-    super(client);
+  public CacheFile(DFSClient client, Configuration conf) {
     this.dfsClient = client;
     this.conf = conf;
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
   }
 
-  public ActionBase initial(String[] args) {
+  public Action initial(String[] args) {
     fileName = args[0];
     return this;
   }
@@ -65,7 +65,7 @@ public class MoveToCache extends ActionBase {
    * Execute an action.
    * @return null.
    */
-  public UUID execute() {;
+  public UUID run() {
     addActionEvent(fileName);
     runCache(fileName);
     return null;
