@@ -17,6 +17,9 @@
  */
 package org.smartdata.server.actions;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
+
 import java.util.UUID;
 
 /**
@@ -39,7 +42,7 @@ public interface Action {
    * Used to initialize the action.
    * @param args Action specific
    */
-  Action initial(String[] args);
+  Action initial(DFSClient client, Configuration conf, String[] args);
 
   /**
    * Execute an action.

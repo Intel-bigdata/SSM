@@ -47,9 +47,9 @@ public class TestCacheFile {
         Path dir = new Path("/fileTestA");
         dfs.mkdirs(dir);
         String[] str = {"/fileTestA"};
-        CacheFile moveToCache = new CacheFile(client, conf);
+        CacheFile moveToCache = new CacheFile();
         assertEquals(false, moveToCache.isCached(str[0]));
-        moveToCache.initial(str).run();
+        moveToCache.initial(client, conf, str).run();
         assertEquals(true, moveToCache.isCached(str[0]));
         cluster.shutdown();
     }

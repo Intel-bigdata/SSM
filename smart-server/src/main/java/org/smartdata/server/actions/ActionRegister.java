@@ -4,7 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.actions.ActionType;
 
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * Provide Action Map and Action instance
@@ -12,15 +17,23 @@ import java.util.HashMap;
 public class ActionRegister {
   static final Logger LOG = LoggerFactory.getLogger(ActionRegister.class);
 
-  static ActionRegister instance = new ActionRegister();
+  private static ActionRegister instance = new ActionRegister();
   HashMap<String, Class> actionMap;
 
-  public ActionRegister getInstance() {
+  synchronized public static ActionRegister getInstance() {
     return instance;
   }
 
   private ActionRegister() {
     actionMap = new HashMap<>();
+  }
+
+  public void initial() {
+    loadNativeAction();
+    loadUserDefinedAction();
+  }
+
+  public void loadNativeAction() {
     for (ActionType t : ActionType.values()) {
       String name = t.toString();
       try {
@@ -30,28 +43,32 @@ public class ActionRegister {
         actionMap.put(name, null);
       }
     }
-    // TODO Load Class from Path
-//    String pathToJar = "Smart/User/";
-//    try {
-//      JarFile jarFile = new JarFile(pathToJar);
-//      Enumeration<JarEntry> jarEnties = jarFile.entries();
-//      URL[] urls = {new URL("jar:file:" + pathToJar + "!/")};
-//      URLClassLoader cl = URLClassLoader.newInstance(urls);
-//      while (jarEnties.hasMoreElements()) {
-//        JarEntry je = jarEnties.nextElement();
-//        if(je.isDirectory() || !je.getName().endsWith(".class")){
-//          continue;
-//        }
-//        // -6 because of .class
-//        String className = je.getName().substring(0,je.getName().length() - 6);
-//        className = className.replace('/', '.');
-//        Class c = cl.loadClass(className);
-//        actionMap.put(className, c);
-//      }
-//    } catch (Exception e) {
-//      LOG.error(e.getMessage());
-//      LOG.error("Load from Classes JAR error!");
-//    }
+  }
+
+  public void loadUserDefinedAction() {
+    String pathToJar = "/home/intel/Develop/SSM/Smart/User/UDAction.jar";
+    try {
+      JarFile jarFile = new JarFile(pathToJar);
+      Enumeration<JarEntry> jarEnties = jarFile.entries();
+      URL[] urls = {new URL("jar:file:" + pathToJar + "!/")};
+      URLClassLoader cl = URLClassLoader.newInstance(urls);
+      while (jarEnties.hasMoreElements()) {
+        JarEntry je = jarEnties.nextElement();
+        if (je.isDirectory() || !je.getName().endsWith(".class")) {
+          continue;
+        }
+        // -6 because of .class
+        String className = je.getName().substring(0, je.getName().length() - 6);
+        LOG.info(className);
+        className = className.replace('/', '.');
+        String actionName = className.substring(className.lastIndexOf('.') + 1);
+        Class c = cl.loadClass(className);
+        actionMap.put(actionName, c);
+      }
+    } catch (Exception e) {
+      LOG.error(e.getMessage());
+      LOG.error("Load from Classes JAR error!");
+    }
   }
 
   public boolean checkAction(String name) {

@@ -77,7 +77,7 @@ public class TestMoveToSSD {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
       // move to SSD, Policy ALL_SSD
-      UUID id = new MoveFile(client, conf).initial(args).run();
+      UUID id = new MoveFile().initial(client, conf, args).run();
       Status status = MoverPool.getInstance().getStatus(id);
       while (!status.isFinished()) {
         Thread.sleep(3000);

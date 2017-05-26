@@ -42,9 +42,7 @@ public class MoveFile implements Action {
   private String name = "MoveFile";
 
 
-  public MoveFile(DFSClient client, Configuration conf) {
-    this.dfsClient = client;
-    this.conf = conf;
+  public MoveFile() {
     this.actionType = ActionType.MoveFile;
   }
 
@@ -52,7 +50,9 @@ public class MoveFile implements Action {
     return name;
   }
 
-  public Action initial(String[] args) {
+  public Action initial(DFSClient client, Configuration conf, String[] args) {
+    this.dfsClient = client;
+    this.conf = conf;
     this.fileName = args[0];
     this.storagePolicy = args[1];
     return this;

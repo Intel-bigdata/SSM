@@ -80,7 +80,7 @@ public class TestMoveToArchive {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
       // move to Archive, Policy CLOD
-      UUID id = new MoveFile(client, conf).initial(args).run();
+      UUID id = new MoveFile().initial(client, conf, args).run();
       Status status = MoverPool.getInstance().getStatus(id);
       while (!status.isFinished()) {
         Thread.sleep(3000);

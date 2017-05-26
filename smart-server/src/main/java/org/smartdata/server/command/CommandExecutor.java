@@ -383,14 +383,14 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     // New action
     Action current;
     if (cmdinfo.getActionType().getValue() == ActionType.CacheFile.getValue()) {
-      current = new CacheFile(ssm.getDFSClient(), ssm.getConf());
+      current = new CacheFile();
     } else if (cmdinfo.getActionType().getValue() == ActionType.MoveFile.getValue()) {
-      current = new MoveFile(ssm.getDFSClient(), ssm.getConf());
+      current = new MoveFile();
     } else {
       // Default Action
-      current = new MoveFile(ssm.getDFSClient(), ssm.getConf());
+      current = new MoveFile();
     }
-    current.initial(args);
+    current.initial(ssm.getDFSClient(), ssm.getConf(), args);
     actions[0] = current;
     // New Command
     Command cmd = new Command(actions, new Callback());

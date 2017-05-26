@@ -50,9 +50,7 @@ public class CacheFile implements Action {
   private DFSClient dfsClient;
   private String name = "CacheFile";
 
-  public CacheFile(DFSClient client, Configuration conf) {
-    this.dfsClient = client;
-    this.conf = conf;
+  public CacheFile() {
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
   }
@@ -61,7 +59,9 @@ public class CacheFile implements Action {
     return name;
   }
 
-  public Action initial(String[] args) {
+  public Action initial(DFSClient client, Configuration conf, String[] args) {
+    this.dfsClient = client;
+    this.conf = conf;
     fileName = args[0];
     return this;
   }

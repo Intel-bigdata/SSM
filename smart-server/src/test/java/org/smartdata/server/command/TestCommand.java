@@ -87,12 +87,12 @@ public class TestCommand {
     String[] args2 = {"/testMoveFile/file2", "COLD"};
     String[] args3 = {"/testCacheFile"};
     // New action
-    actions[0] = new MoveFile(client, conf);
-    actions[0].initial(args1);
-    actions[1] = new MoveFile(client, conf);
-    actions[1].initial(args2);
-    actions[2] = new CacheFile(client, conf);
-    actions[2].initial(args3);
+    actions[0] = new MoveFile();
+    actions[0].initial(client, conf, args1);
+    actions[1] = new MoveFile();
+    actions[1].initial(client, conf, args2);
+    actions[2] = new CacheFile();
+    actions[2].initial(client, conf, args3);
     // New Command
     Command cmd = new Command(actions, null);
     cmd.setId(1);
