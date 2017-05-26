@@ -20,13 +20,10 @@ package org.smartdata.server.command;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.actions.Action;
 import org.smartdata.server.actions.ActionRegister;
-import org.smartdata.server.actions.CacheFile;
-import org.smartdata.server.actions.MoveFile;
 import org.smartdata.server.actions.mover.MoverPool;
 import org.smartdata.server.metastore.sql.DBAdapter;
 import org.smartdata.server.utils.JsonUtil;
@@ -55,6 +52,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   private ArrayList<Set<Long>> cmdsInState = new ArrayList<>();
   private Map<Long, CommandInfo> cmdsAll = new ConcurrentHashMap<>();
+  // TODO replace with concurrentSet or MAP
   private Set<CmdTuple> statusCache;
   private Daemon commandExecutorThread;
   private CommandPool execThreadPool;
@@ -149,19 +147,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         LOG.error(e.getMessage());
       }
     }
-  }
-
-  public synchronized long submitCommand(CommandInfo cmd) throws IOException {
-    try {
-      if (adapter.insertCommandTable(cmd)) {
-        cmdsAll.put(cmd.getCid(), cmd);
-        cmdsInState.get(CommandState.PENDING.getValue()).add(cmd.getCid());
-        return cmd.getCid();
-      }
-    } catch (SQLException e) {
-      LOG.error(e.getMessage());
-    }
-    return -1;
   }
 
   public CommandInfo getCommandInfo(long cid) throws IOException {
@@ -377,28 +362,47 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return ret;
   }
 
-  private Command getCommandFromCmdInfo(CommandInfo cmdinfo) {
-    Action[] actions = new Action[10];
-    Map<String, String> jsonParameters =
-        JsonUtil.toStringStringMap(cmdinfo.getParameters());
-    String[] args = {jsonParameters.get("_FILE_PATH_"), jsonParameters.get("_STORAGE_POLICY_")};
-    // New action
+  private Action newAction(String name) {
+    return ActionRegister.getInstance().newActionFromName(name);
+  }
+
+  private Action[] newActionsFromStringJson(String jsonString) throws IOException {
+    List<Map<String, String>> actionMaps =
+            JsonUtil.toArrayListMap(jsonString);
+    List<Action> actions = new ArrayList<>();
     Action current;
-    if (cmdinfo.getActionType().getValue() == ActionType.CacheFile.getValue()) {
-      current = ActionRegister.getInstance().newActionFromName("CacheFile");
-    } else if (cmdinfo.getActionType().getValue() == ActionType.MoveFile.getValue()) {
-      current = ActionRegister.getInstance().newActionFromName("MoveFile");
-    } else {
-      // Default Action
-      current = ActionRegister.getInstance().newActionFromName("MoveFile");
+    for(Map<String, String> actionMap: actionMaps) {
+      // New action
+      String[] args = {actionMap.get("_FILE_PATH_"), actionMap.get("_STORAGE_POLICY_")};
+      current = newAction(actionMap.get("_NAME_"));
+      if (current == null) {
+        LOG.error("New Action Instance from {} error!", actionMap.get("_NAME_"));
+        throw new IOException();
+      }
+      current.initial(ssm.getDFSClient(), ssm.getConf(), args);
+      actions.add(current);
     }
-    if (current == null)
-      LOG.info("HAHA");
-    current.initial(ssm.getDFSClient(), ssm.getConf(), args);
-    actions[0] = current;
+    return actions.toArray(new Action[actionMaps.size()]);
+  }
+
+  public synchronized long submitCommand(CommandInfo cmd) throws IOException {
+    try {
+      if (adapter.insertCommandTable(cmd)) {
+        cmdsAll.put(cmd.getCid(), cmd);
+        cmdsInState.get(CommandState.PENDING.getValue()).add(cmd.getCid());
+        return cmd.getCid();
+      }
+    } catch (SQLException e) {
+      LOG.error(e.getMessage());
+    }
+    return -1;
+  }
+
+  private Command getCommandFromCmdInfo (CommandInfo cmdinfo) throws IOException {
     // New Command
-    Command cmd = new Command(actions, new Callback());
-    cmd.setParameters(jsonParameters);
+    Command cmd = new Command(newActionsFromStringJson(cmdinfo.getParameters()),
+        new Callback());
+    cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
     cmd.setState(cmdinfo.getState());
@@ -478,7 +482,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         LOG.error("Command is null!");
       }
       LOG.info("Command {} finished!", cmdsAll.get(cid));
+      // Mark commandInfo as DONE
       cmdsAll.get(cid).setState(state);
+      // Mark command as DONE
+      execThreadPool.setFinished(cid, state);
       synchronized (statusCache) {
         statusCache.add(new CmdTuple(cid, rid, state));
       }

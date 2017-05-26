@@ -17,6 +17,8 @@
  */
 package org.smartdata.server.command;
 
+import org.smartdata.common.CommandState;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -48,7 +50,15 @@ public class CommandPool {
     }
   }
 
-  // Delete a command from the pool
+  public void setFinished(long cid, CommandState status) {
+    getCommand(cid).setState(status);
+  }
+
+  /**
+   * Delete a command from the pool
+   * @param cid
+   * @throws IOException
+   */
   public void deleteCommand(long cid) throws IOException {
     if (!commandMap.containsKey(cid)) {
       return;

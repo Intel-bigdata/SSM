@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- *
+ * Test ActionRegister with native and user defined actions
  */
 public class TestActionRegister {
 

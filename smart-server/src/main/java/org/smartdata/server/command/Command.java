@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,7 @@ public class Command implements Runnable {
   private long id;
   private CommandState state = CommandState.NOTINITED;
   private Action[] actions;
-  private Map<String, String> parameters;
+  private String parameters;
   CommandExecutor.Callback cb;
   private ArrayList<UUID> uuids;
   private boolean running;
@@ -87,11 +86,11 @@ public class Command implements Runnable {
     return id;
   }
 
-  public Map<String, String> getParameter() {
+  public String getParameter() {
     return parameters;
   }
 
-  public void setParameters(Map<String, String> parameters) {
+  public void setParameters(String parameters) {
     this.parameters = parameters;
   }
 

@@ -34,7 +34,10 @@ public class ActionRegister {
   }
 
   public void loadNativeAction() {
-    String path = "org.smartdata.server.actions.";
+    // Note that native actions and ActionRegister are in the same path
+    String path = this.getClass().getCanonicalName();
+    path = path.substring(0, path.lastIndexOf('.') + 1);
+    LOG.info("Current Class Package {}", path);
     for (ActionType t : ActionType.values()) {
       String name = t.toString();
       try {
@@ -42,13 +45,12 @@ public class ActionRegister {
       } catch (ClassNotFoundException e) {
         LOG.info("Class {} not found!", name);
         continue;
-        // actionMap.put(name, null);
       }
     }
   }
 
   public void loadUserDefinedAction() {
-    // TODO Replace with Dir
+    // TODO Replace with Dir and configuration
     String pathToJar = "/home/intel/Develop/SSM/Smart/User/UDAction.jar";
     try {
       JarFile jarFile = new JarFile(pathToJar);
@@ -62,7 +64,6 @@ public class ActionRegister {
         }
         // -6 because of .class
         String className = je.getName().substring(0, je.getName().length() - 6);
-        LOG.info(className);
         className = className.replace('/', '.');
         String actionName = className.substring(className.lastIndexOf('.') + 1);
         Class c = cl.loadClass(className);
@@ -83,6 +84,9 @@ public class ActionRegister {
   }
 
   public Action newActionFromName(String name) {
+    if (!checkAction(name)) {
+      return null;
+    }
     try {
       return (Action) actionMap.get(name).newInstance();
     } catch (Exception e) {

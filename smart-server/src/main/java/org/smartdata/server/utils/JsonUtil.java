@@ -20,6 +20,7 @@ package org.smartdata.server.utils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.util.List;
 import java.util.Map;
 
 public class JsonUtil {
@@ -27,6 +28,18 @@ public class JsonUtil {
   public static String toJsonString(Map<String, String> map) {
     Gson gson = new Gson();
     return gson.toJson(map);
+  }
+
+  public static String toJsonString(List<Map<String, String>> listMap) {
+    Gson gson = new Gson();
+    return gson.toJson(listMap, new TypeToken<List<Map<String, String>>>(){}.getType());
+  }
+
+  public static List<Map<String, String>> toArrayListMap(String jsonString) {
+    Gson gson = new Gson();
+    List<Map<String, String>> listMap = gson.fromJson(jsonString,
+            new TypeToken<List<Map<String, String>>>(){}.getType());
+    return listMap;
   }
 
   public static Map<String, String> toStringStringMap(String jsonString) {
