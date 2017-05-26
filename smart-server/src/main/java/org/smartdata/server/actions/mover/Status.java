@@ -23,19 +23,20 @@ import java.util.UUID;
  * Manage the status of a moving action.
  */
 public abstract class Status {
+
   public abstract UUID getId();
 
-  public abstract Boolean getIsFinished();
+  public abstract Boolean isFinished();
 
-  public abstract void setIsFinished();
+  public abstract void setFinished();
 
   public abstract long getStartTime();
 
   public abstract void setStartTime(long startTime);
 
-  public abstract Boolean getSucceeded();
+  public abstract Boolean isSuccessful();
 
-  public abstract void setSucceeded();
+  public abstract void setSuccessful();
 
   public abstract void setTotalDuration(long totalDuration);
 

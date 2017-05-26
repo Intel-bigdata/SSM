@@ -126,7 +126,7 @@ public class Command implements Runnable {
       MoverPool moverPool = MoverPool.getInstance();
       try {
         for (UUID id : uuids) {
-          if (!moverPool.getStatus(id).getIsFinished()) {
+          if (!moverPool.getStatus(id).isFinished()) {
             moverPool.stop(id);
           }
         }
@@ -153,7 +153,7 @@ public class Command implements Runnable {
     while (uuids.size() != 0 && running) {
       for (Iterator<UUID> iter = uuids.iterator(); iter.hasNext(); ) {
         UUID id = iter.next();
-        if (moverPool.getStatus(id).getIsFinished()) {
+        if (moverPool.getStatus(id).isFinished()) {
           moverPool.removeStatus(id);
           iter.remove();
         }

@@ -60,13 +60,13 @@ public class MoverStatus extends Status {
    * @return true if the Mover process is finished
    */
   @Override
-  synchronized public Boolean getIsFinished() { return isFinished; }
+  synchronized public Boolean isFinished() { return isFinished; }
 
   /**
    * Set when the Mover process is finished.
    */
   @Override
-  synchronized public void setIsFinished() { this.isFinished = true;}
+  synchronized public void setFinished() { this.isFinished = true;}
 
   /**
    * Get the start time for the Mover process.
@@ -89,13 +89,13 @@ public class MoverStatus extends Status {
    * @return true if successful
    */
   @Override
-  synchronized public Boolean getSucceeded() { return succeeded; }
+  synchronized public Boolean isSuccessful() { return succeeded; }
 
   /**
    * Set when the Mover process succeeds.
    */
   @Override
-  synchronized public void setSucceeded() {
+  synchronized public void setSuccessful() {
     this.succeeded = true;
   }
 
