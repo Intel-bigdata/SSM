@@ -96,7 +96,7 @@ Table – 5 Commands
 | Command(case insensitive) | Description                                               |
 |---------------------------|-----------------------------------------------------------|
 | cache\_file               | Cache file in HDFS Cache                                  |
-| Uncache\_file             | Uncache file                                              |
+| uncache\_file             | Uncache file                                              |
 | one\_ssd                  | Move one copy of file to SSD                              |
 | all\_ssd                  | Move all copies of file to SSD                            |
 | all\_hdd                  | Move file to HDD                                          |
