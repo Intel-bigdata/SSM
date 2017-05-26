@@ -15,9 +15,18 @@ High Level Goals
 ### 2. Support block level erasure coding
 Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**.
 ### 3. Small files support and compaction
-Optimizing NameNode to support even larger namespace.
+Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory.
 ### 4. Cluster Disaster Recovery
 Supporting transparent fail-over for applications.
+
+High Level Considerations
+------------
+1. Supports Hadoop 3.x and Hadoop 2.x;
+2. The whole work and framework builds on top of HDFS, avoiding modifications when possible;
+3. Compatible HDFS client APIs to support existing applications, computation frameworks;
+4. Provide addition client APIs to allow new applications to benefit from SSM nice facilities;
+5. Support High Availability and reliability, trying to reuse existing infrastructures in a deployment when doing so;
+6. Security is ensured, particularly when Hadoop security is enabled.
 
 Development Phases
 ------------
