@@ -96,7 +96,6 @@ public class AccessCountFetcher {
           while (reader.hasNext()) {
             FileAccessMetrics.Info info = reader.next();
             events.add(new FileAccessEvent(info.getPath(), info.getTimestamp()));
-            System.out.println(info.getPath() + " " + info.getTimestamp());
             now = info.getTimestamp();
           }
           if(events.size() > 0) {

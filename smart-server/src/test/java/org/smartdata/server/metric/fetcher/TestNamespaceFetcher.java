@@ -81,5 +81,6 @@ public class TestNamespaceFetcher {
 
     verify(adapter).insertFiles(argThat(new FileStatusArgMatcher(expected)));
     fetcher.stop();
+    cluster.shutdown();
   }
 }

@@ -20,16 +20,46 @@ package org.smartdata.server;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.server.namenode.metrics.FileAccessMetrics;
+import org.apache.hadoop.metrics2.impl.ConfigBuilder;
+import org.apache.hadoop.metrics2.impl.TestMetricsConfig;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 
+import java.io.File;
+
 /**
  * Testing the whole working flow.
  */
 public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
+  private static String filePath = TestMetricsConfig.getTestFilename("hadoop-metrics2");
+
+  @BeforeClass
+  public static void config() {
+    ConfigBuilder builder = new ConfigBuilder().add("*.period", 1)
+      .add("namenode.sink.file_access.class", FileAccessMetrics.Writer.class.getName())
+      .add("namenode.sink.file_access.basepath", "tmp")
+      .add("namenode.sink.file_access.source", FileAccessMetrics.NAME)
+      .add("namenode.sink.file_access.context", FileAccessMetrics.CONTEXT_VALUE)
+      .add("namenode.sink.file_access.ignore-error", false)
+      .add("namenode.sink.file_access.allow-append", true)
+      .add("namenode.sink.file_access.roll-offset-interval-millis", 0)
+      .add("namenode.sink.file_access.roll-interval", "1m");
+    builder.save(filePath);
+  }
+
+  @AfterClass
+  public static void deleteConfig() {
+    File configFile = new File(filePath);
+    if (configFile.exists()) {
+      configFile.delete();
+    }
+  }
 
   @Test
   public void test() throws Exception {
