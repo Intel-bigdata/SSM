@@ -34,18 +34,21 @@ public class ActionRegister {
   }
 
   public void loadNativeAction() {
+    String path = "org.smartdata.server.actions.";
     for (ActionType t : ActionType.values()) {
       String name = t.toString();
       try {
-        actionMap.put(name, Class.forName(name));
+        actionMap.put(name, Class.forName(path + name));
       } catch (ClassNotFoundException e) {
         LOG.info("Class {} not found!", name);
-        actionMap.put(name, null);
+        continue;
+        // actionMap.put(name, null);
       }
     }
   }
 
   public void loadUserDefinedAction() {
+    // TODO Replace with Dir
     String pathToJar = "/home/intel/Develop/SSM/Smart/User/UDAction.jar";
     try {
       JarFile jarFile = new JarFile(pathToJar);
@@ -75,7 +78,7 @@ public class ActionRegister {
     return actionMap.containsKey(name);
   }
 
-  public String[] namesofAction() {
+  public String[] namesOfAction() {
     return actionMap.keySet().toArray(new String[actionMap.size()]);
   }
 
@@ -83,6 +86,7 @@ public class ActionRegister {
     try {
       return (Action) actionMap.get(name).newInstance();
     } catch (Exception e) {
+      LOG.info("New {} Action Error!", name);
       LOG.error(e.getMessage());
     }
     return null;

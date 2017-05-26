@@ -24,6 +24,7 @@ import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.actions.Action;
+import org.smartdata.server.actions.ActionRegister;
 import org.smartdata.server.actions.CacheFile;
 import org.smartdata.server.actions.MoveFile;
 import org.smartdata.server.actions.mover.MoverPool;
@@ -67,6 +68,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     this.ssm = ssm;
     moverPool = MoverPool.getInstance();
     moverPool.init(conf);
+    ActionRegister.getInstance().initial();
     statusCache = new HashSet<>();
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<>());
@@ -383,13 +385,15 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     // New action
     Action current;
     if (cmdinfo.getActionType().getValue() == ActionType.CacheFile.getValue()) {
-      current = new CacheFile();
+      current = ActionRegister.getInstance().newActionFromName("CacheFile");
     } else if (cmdinfo.getActionType().getValue() == ActionType.MoveFile.getValue()) {
-      current = new MoveFile();
+      current = ActionRegister.getInstance().newActionFromName("MoveFile");
     } else {
       // Default Action
-      current = new MoveFile();
+      current = ActionRegister.getInstance().newActionFromName("MoveFile");
     }
+    if (current == null)
+      LOG.info("HAHA");
     current.initial(ssm.getDFSClient(), ssm.getConf(), args);
     actions[0] = current;
     // New Command
