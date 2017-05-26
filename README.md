@@ -32,16 +32,17 @@ Development Phases
 ------------
 The SSM project is separated into two phases:
 
-**Phase 1.** Implement a rule-based automatic engine that can execute user-defined rules to do automation stuffs. It provides a unified interface (through rules) to manage and tune HDFS cluster.
+**Phase 1.** Implement SSM framewwork and the fundamental infrustrature:
+* Event and metrics collection from HDFS cluster;
+* Rule DSL to support high level customization and usage;
+* Support richful smart actions to adjust storage policies and options, enhancing HDFS-HSM and HDFS-Cache;
+* Client API, Admin API following Hadoop RPC and REST channels;
+* Basic web UI support.
 
-**Phase 2.** Implement a rule-generator that can be aware of all these factors, and can automatically generate comprehensive rules. It’s the advanced part and makes SSM works smartly.
-
-The project is on Phase 1 now, it includes the following general subtasks:
-* Define metrics to collect from HDFS
-* Define rule DSL regarding syntax and build-in variables used for rules.
-* Implement rule engine and different actions
-* Optimize facilities to cooperate with SSM
-* Implement UI to make SSM easy to use 
+**Phase 2.** Refine SSM framework and support user solutions:
+* Small files support and compaction;
+* Cluster Disaster Recovery;
+* To support the new desired actions, enhance the SSM framework and infrastructure.
 
 Use Cases
 ------------
