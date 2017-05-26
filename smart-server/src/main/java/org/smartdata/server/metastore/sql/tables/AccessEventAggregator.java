@@ -99,7 +99,6 @@ public class AccessEventAggregator {
         AccessCountTable.FILE_FIELD,
         AccessCountTable.ACCESSCOUNT_FIELD,
         String.join(",", values));
-      System.out.println(insertValue);
       try {
         this.adapter.execute(insertValue);
         if (LOG.isDebugEnabled()) {
