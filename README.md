@@ -48,9 +48,11 @@ Files are less likely to be read during the ending of lifecycle, so it’s bette
 
 Admin Doc
 ------------
+Cluster admininstrator takes the role of SSM rule management. A set of APIs is exposed to help administrator manage rule. This set of APIs includes create, delete, list, enable and disable SSM rule. Hadoop super user privilege is required for access the APIs. For detail information, please refer to [Admin Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md).
 
 User Doc
 ------------
+SSM will provide a SmartClient which includes both original HDFS DFSClient functions and new SSM user application APIs. Upper level application can use this SmartClient instead of original HDFS DFSClient. New SSM user application APIs include move file and archive file etc. More functions will be added later. System will execute the operation on half of application, with the privilege of the user who starts the application. For detail information, please refer to [User Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/client-user-guide.md).
 
 Acknowlegement
 ------------
