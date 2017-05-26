@@ -163,44 +163,34 @@ Here is the RPC interface definition. RESTFull HTTP interface will be
 updated later.
 
  
-1. Submit a rule
+* long **submitRule**(**String** rule) **throws** IOException;  
 
- long **submitRule**(**String** rule) **throws** IOException;  
-  
+  Submit a rule  
+
+* long **submitRule**(**String** rule, **RuleState** initState) **throws** IOException;
+
+  Submit a rule with specified initial state. The initial state can be “active” or “disabled”. If initial state is not specified, then by default rule will be of “active” state.
+
+* void **validateRule**(**String** rule) **throws** IOException;  
+
+  Verify rule
+
+* RuleInfo **getRule**(**long** ruleID) **throws** IOException;  
+
+  Get rule information
+
+* List&lt;RuleInfo&gt; **listRules**() **throws** IOException;  
+
+  List all current rules in the system, including active, disabled, finished and deleted.
+
+* void **deleteRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
+
+  Delete a rule. If dropPendingCommands is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted ultimately. Only “disabled” or “finished” rule can be deleted.  
+
+* void **enableRule**(**long** ruleID) **throws** IOException;
  
-2. Submit a rule with specified initial state
+  Enable a rule
 
- long **submitRule**(**String** rule, **RuleState** initState) **throws** IOException;
-
- The initial state can be “active” or “disabled”. If initial state is not specified, then by default rule will be of “active” state.
-  
-3. Verify rule
-
- void **validateRule**(**String** rule) **throws** IOException;  
-  
-4. Get rule information
-
- RuleInfo **getRule**(**long** ruleID) **throws** IOException;  
+* void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
  
-5. List all current rules in the system, including active, disabled, finished and deleted.
-
- List&lt;RuleInfo&gt; **listRules**() **throws** IOException;  
-  
-6. Delete a rule from SSM
-
- void **deleteRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
-
- If dropPendingCommands is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted ultimately. Only “disabled” or “finished” rule can be deleted.  
-
-7. Enable a rule
-
- void **enableRule**(**long** ruleID) **throws** IOException;
- 
- Only “disabled” rule can be enabled. Enable other state rule will throw exception. */
-
-  
-8. Disable a rule
-
- void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
- 
- If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only “active” rule can be disabled.
+  Disable a rule. Only “disabled” rule can be enabled. Enable other state rule will throw exception. If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only “active” rule can be disabled.
