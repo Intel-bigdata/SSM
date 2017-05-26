@@ -95,15 +95,15 @@ public class TestMoverPool {
       UUID id2 = MoverPool.getInstance().createMoverAction(file2);
       Status status1 = MoverPool.getInstance().getStatus(id1);
       Status status2 = MoverPool.getInstance().getStatus(id2);
-      while (!status1.getIsFinished() || !status2.getIsFinished()) {
+      while (!status1.isFinished() || !status2.isFinished()) {
         System.out.println("Mover 1 running time : " +
             StringUtils.formatTime(status1.getRunningTime()));
         System.out.println("Mover 2 running time : " +
             StringUtils.formatTime(status2.getRunningTime()));
         Thread.sleep(3000);
       }
-      assertTrue(status1.getSucceeded());
-      assertTrue(status2.getSucceeded());
+      assertTrue(status1.isSuccessful());
+      assertTrue(status2.isSuccessful());
       System.out.println("Mover 1 total running time : " +
           StringUtils.formatTime(status1.getRunningTime()));
       System.out.println("Mover 2 total running time : " +
@@ -137,17 +137,17 @@ public class TestMoverPool {
       Thread.sleep(1000);
       Boolean succeed = MoverPool.getInstance().stop(id1, 3);
       assertTrue(succeed);
-      assertFalse(status1.getSucceeded());
+      assertFalse(status1.isSuccessful());
 
       // restart mover
       succeed = MoverPool.getInstance().restart(id1);
       assertTrue(succeed);
-      while (!status1.getIsFinished()) {
+      while (!status1.isFinished()) {
         System.out.println("Mover running time : " +
             StringUtils.formatTime(status1.getRunningTime()));
         Thread.sleep(3000);
       }
-      assertTrue(status1.getSucceeded());
+      assertTrue(status1.isSuccessful());
       System.out.println("Mover total running time : " +
           StringUtils.formatTime(status1.getRunningTime()));
     } finally {

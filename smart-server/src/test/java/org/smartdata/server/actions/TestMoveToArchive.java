@@ -81,11 +81,11 @@ public class TestMoveToArchive {
       // move to Archive, Policy CLOD
       UUID id = new MoveFile(client, conf, "COLD").initial(args).execute();
       Status status = MoverPool.getInstance().getStatus(id);
-      while (!status.getIsFinished()) {
+      while (!status.isFinished()) {
         Thread.sleep(3000);
       }
       // verify after movement
-      Assert.assertTrue(status.getSucceeded());
+      Assert.assertTrue(status.isSuccessful());
       LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       StorageType[] storageTypes1 = lb1.getStorageTypes();
       for (StorageType storageType : storageTypes1) {

@@ -165,7 +165,7 @@ public class Mover {
       }
       LOG.info("Mover Successful: all blocks satisfy"
               + " the specified storage policy. Exiting...");
-      status.setSucceeded();
+      status.setSuccessful();
       return ExitStatus.SUCCESS.getExitCode();
     } finally {
       for (NameNodeConnector nnc : connectors) {

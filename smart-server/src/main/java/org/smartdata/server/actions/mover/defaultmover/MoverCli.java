@@ -174,7 +174,7 @@ public class MoverCli extends Configured implements Tool {
       LOG.info(e + ".  Exiting ...");
       return ExitStatus.ILLEGAL_ARGUMENTS.getExitCode();
     } finally {
-      status.setIsFinished();
+      status.setFinished();
       long runningTime = Time.monotonicNow() - startTime;
       Log.format("%-24s ", DateFormat.getDateTimeInstance().format(new Date()));
       LOG.info("Mover took " + StringUtils.formatTime(runningTime));
