@@ -1,4 +1,4 @@
-# HDFS-SSM architecture and design
+# HDFS-SSM Design
 
 Architecture
 ------------
