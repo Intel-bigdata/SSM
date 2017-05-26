@@ -54,17 +54,17 @@ Phase I -- Use Cases
 ### Cache hotest data
 When the files got very hot, they can be moved from fast storage into cache memory to achieve the best read performance. The following shows the example of moving data to memory cache if the data has been read over 3 times during the last 5 minutes
 
-(https://github.com/Intel-bigdata/SSM/blob/trunk/docs/cache-case.png)
+![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/cache-case.png)
 
 ### Move hot data to fast storage
-(https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssd-case.png)
+![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssd-case.png)
 
 Without SSM, data may always be readed from HDD. With SSM, optimizaitons can be made through rules. As showned in the figure above, data can be moved to faster SSD to achive better performance.
 
 ### Archive cold data
 Files are less likely to be read during the ending of lifecycle, so it’s better to move these cold files into lower performance storage to decrease the cost of data storage. The following shows the example of archiving data that has not been read over 1 times during the last 90 days.
 
-(https://github.com/Intel-bigdata/SSM/blob/trunk/docs/archive-case.png)
+![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/archive-case.png)
 
 Admin Doc
 ------------
