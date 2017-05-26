@@ -80,7 +80,6 @@ public class TestSmartServerCli {
 
     s = SmartServer.createSSM(argsHelp, conf);
     Assert.assertTrue(s == null);
-    s.shutdown();
     cluster.shutdown();
   }
 }

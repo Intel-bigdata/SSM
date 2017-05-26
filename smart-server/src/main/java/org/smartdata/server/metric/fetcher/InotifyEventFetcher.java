@@ -101,7 +101,7 @@ public class InotifyEventFetcher {
       this.inotifyFetchFuture.cancel(false);
     }
     if (this.fetchAndApplyFuture != null){
-      this.fetchAndApplyFuture.cancel(true);
+      this.fetchAndApplyFuture.cancel(false);
     }
   }
 
