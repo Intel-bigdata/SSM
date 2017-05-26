@@ -24,9 +24,9 @@ import java.util.UUID;
  */
 public interface Action {
 
-  void SetSmartContext();
+  void setSmartContext();
 
-  void SetConf();
+  void setConf();
   /**
    * Covert current information to string
    * @return a printable String
@@ -37,7 +37,7 @@ public interface Action {
    * Used to initialize the action.
    * @param args Action specific
    */
-  Action initial(String[] args);
+  Action init(String[] args);
 
   /**
    * Execute an action.

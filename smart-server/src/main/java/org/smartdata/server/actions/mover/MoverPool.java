@@ -68,7 +68,7 @@ public class MoverPool {
   public UUID createMoverAction(String path) {
     UUID id = UUID.randomUUID();
     LOG.info("Create a new mover action with id = {}, path = {}", id, path);
-    Status status = new MoverStatus();
+    Status status = new MoverStatus(id);
     moverMap.put(id, status);
     Thread moverThread = new MoverProcess(status, path);
     moverThreads.put(id, moverThread);
@@ -94,7 +94,7 @@ public class MoverPool {
       try {
         LOG.info("Start mover at {}", path);
         int result = ToolRunner.run(conf, moverClient,
-            new String[] {"-p", path});
+            new String[] {path});
         LOG.info("Finish mover at {}", path);
       } catch (Exception e) {
         throw new RuntimeException(e);
