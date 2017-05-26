@@ -45,7 +45,7 @@ HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching
 * Support block level erasure coding;
 * To support the new desired actions, enhance the SSM framework and infrastructure.
 
-Use Cases
+Phase I -- Use Cases 
 ------------
 ### Move hot data to fast storage
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssd-case.png)
