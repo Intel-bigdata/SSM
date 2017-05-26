@@ -30,7 +30,7 @@ High Level Considerations
 
 Development Phases
 ------------
-The SSM project is separated into two phases:
+HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching completion.
 
 **Phase 1.** Implement SSM framewwork and the fundamental infrustrature:
 * Event and metrics collection from HDFS cluster;
@@ -42,6 +42,7 @@ The SSM project is separated into two phases:
 **Phase 2.** Refine SSM framework and support user solutions:
 * Small files support and compaction;
 * Cluster Disaster Recovery;
+* Support block level erasure coding;
 * To support the new desired actions, enhance the SSM framework and infrastructure.
 
 Use Cases
