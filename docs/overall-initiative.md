@@ -2,7 +2,7 @@
 
 This initiative is an overall high level effort to build a storage/data optimization and management framework with data temperature
 in mind. The framework targets for better support and optimization for new storage devices like **NVMe SSD** and **Intel Optane**, high speed
-network such as 20Gb and 50Gb NICs, new computing like **Deep Learning**, and even new storage systems, not only for HDFS and files, but also
+network such as 20Gb and 50Gb NICs, new computing like **[Deep Learning](https://github.com/Intel-bigdata/HDL)**, and even new storage systems, not only for HDFS and files, but also
 considering other means like cloud and objects.
 
 At its core **data temperature** is a first citizen concept because in our view and experience, in a typical deployment it's often the **80%** computing workloads are

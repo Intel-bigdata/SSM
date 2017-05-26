@@ -1,4 +1,4 @@
-<span id="_Toc392169190" class="anchor"><span id="_Toc415575594" class="anchor"></span></span>Introduction
+<span id="_Toc392169190" class="anchor"><span id="_Toc415575594" class="anchor"></span></span>Admin API
 ==========================================================================================================
 
 This document introduces the definition of APIs exposed by Intel Smart
@@ -25,20 +25,6 @@ data (files) than the cluster administrator.
 For easily integration, APIs are exposed as both RPC call and RESTfull
 Http interface. Audience can choose the one which fit for their own
 environment.
-
-Audience 
----------
-
-This document is written for architects and engineers who are interested
-in use Intel Smart Storage Management feature to make full utilization
-of high performance storage devices in their Hadoop cluster. Familiarity
-with Hadoop HDFS architecture, HDFS erasure coding feature, HDFS
-heterogeneous storage feature and HDFS centralized cache feature is
-assumed. For basic and/or supplemental information, refer to the
-appropriate reference links.
-
-<span id="_Toc363655967" class="anchor"><span id="_Toc392169192"
-class="anchor"></span></span>
 
 Define Rule
 -----------
@@ -67,7 +53,6 @@ Table - 1 Objects to manipulate
 |---------|-------------------|------------------------------------|
 | File    | Files             | *file.path matches "/fooA/\*.dat"* |
 | Storage | HDFS storage type | SSD, HDD, Cache                    |
-|         |                   |                                    |
 
 Table - 2 Triggers
 
@@ -76,7 +61,7 @@ Table - 2 Triggers
 | At &lt;time&gt;                       | Execute the rule at the given time                      | -   At “2017-07-29 23:00:00” <br> -   At now |
 | Every &lt;time interval&gt;           | Execute the rule at the given frequency                 | Every 1min                            |
 | From &lt;time&gt; \[To &lt;time&gt;\] | Along with ‘Every’ expression to specify the time scope | -   Every 1day from now <br>  -   Every 1min from now to now + 7day  |
-|                                       |                                                         |                                       |
+
 
 Table – 3 Conditions
 
@@ -159,7 +144,7 @@ be cancelled.
 
 **Finished**:
 
-Once all the commands of a rule are executed, the rule enters
+If a rule is one time rule or has time constains, once all the commands of the rule are executed, the rule enters
 “**Finished**” state. A finished rule can be deleted permanently from
 the system when it’s in a **“Finished”** state.
 
@@ -178,44 +163,44 @@ Here is the RPC interface definition. RESTFull HTTP interface will be
 updated later.
 
  
-/* Submit a rule into the system. */ <br>
-long **submitRule**(**String** rule) **throws** IOException;  
+1. Submit a rule
+
+ long **submitRule**(**String** rule) **throws** IOException;  
   
  
-/* Submit a rule into the system with specified initial state. The initial state can be “active” or “disabled”. If initial state is not specified, then by default rule will be of “active” state. */  
-long **submitRule**(**String** rule, **RuleState** initState) **throws** IOException;  
-  
-/\*\*  
-\* Verify if it is a valid rule.  
-\*/  
-void **validateRule**(**String** rule) **throws** IOException;  
-  
-/\*\*  
-\* Get information about the rule with ruleID.  
-\*/  
-RuleInfo **getRule**(**long** ruleID) **throws** IOException;  
-  
-/\*\*  
-\* List all current rules in the system, including active, disabled, finished and deleted.  
-\*/  
-List&lt;RuleInfo&gt; **listRules**() **throws** IOException;  
-  
-/\*\*  
-\* Delete a rule from SSM. If dropPendingCommands is false then the rule  
-\* will still be kept in the system with “deleted” state. Once all the pending commands
-\* are finished then the rule will be deleted ultimately. Only “disabled” or “finished” rule
-\* can be deleted.  
-\*/  
-void **deleteRule**(**long** ruleID, **boolean** dropPendingCommands)
-**throws** IOException;
+2. Submit a rule with specified initial state
 
-/* Enable a rule. Only “disabled” rule can be enabled. Enable other state rule will throw exception. */ <br>
-void **enableRule**(**long** ruleID) **throws** IOException;
+ long **submitRule**(**String** rule, **RuleState** initState) **throws** IOException;
 
-/\*\*  
-\* Disable a rule. If dropPendingCommands is false then the rule  
-\* will still be marked as “disabled” state while all the pending commands continue to execute to finish.
-\* Only “active” rule can be disabled.  
-\*/
-void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws**
-IOException;
+ The initial state can be “active” or “disabled”. If initial state is not specified, then by default rule will be of “active” state.
+  
+3. Verify rule
+
+ void **validateRule**(**String** rule) **throws** IOException;  
+  
+4. Get rule information
+
+ RuleInfo **getRule**(**long** ruleID) **throws** IOException;  
+ 
+5. List all current rules in the system, including active, disabled, finished and deleted.
+
+ List&lt;RuleInfo&gt; **listRules**() **throws** IOException;  
+  
+6. Delete a rule from SSM
+
+ void **deleteRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
+
+ If dropPendingCommands is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted ultimately. Only “disabled” or “finished” rule can be deleted.  
+
+7. Enable a rule
+
+ void **enableRule**(**long** ruleID) **throws** IOException;
+ 
+ Only “disabled” rule can be enabled. Enable other state rule will throw exception. */
+
+  
+8. Disable a rule
+
+ void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
+ 
+ If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only “active” rule can be disabled.

@@ -15,36 +15,51 @@ High Level Goals
 ### 2. Support block level erasure coding
 Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**.
 ### 3. Small files support and compaction
-Optimizing NameNode to support even larger namespace.
+Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory.
 ### 4. Cluster Disaster Recovery
 Supporting transparent fail-over for applications.
 
+High Level Considerations
+------------
+1. Supports Hadoop 3.x and Hadoop 2.x;
+2. The whole work and framework builds on top of HDFS, avoiding modifications when possible;
+3. Compatible HDFS client APIs to support existing applications, computation frameworks;
+4. Provide addition client APIs to allow new applications to benefit from SSM nice facilities;
+5. Support High Availability and reliability, trying to reuse existing infrastructures in a deployment when doing so;
+6. Security is ensured, particularly when Hadoop security is enabled.
+
+Architecture
+------------
+The detail SSM architecture is [here](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md).
+
 Development Phases
 ------------
-The SSM project is separated into two phases:
+HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching completion.
 
-**Phase 1.** Implement a rule-based automatic engine that can execute user-defined rules to do automation stuffs. It provides a unified interface (through rules) to manage and tune HDFS cluster.
+**Phase 1.** Implement SSM framewwork and the fundamental infrustrature:
+* Event and metrics collection from HDFS cluster;
+* Rule DSL to support high level customization and usage;
+* Support richful smart actions to adjust storage policies and options, enhancing HDFS-HSM and HDFS-Cache;
+* Client API, Admin API following Hadoop RPC and REST channels;
+* Basic web UI support.
 
-**Phase 2.** Implement a rule-generator that can be aware of all these factors, and can automatically generate comprehensive rules. It’s the advanced part and makes SSM works smartly.
+**Phase 2.** Refine SSM framework and support user solutions:
+* Small files support and compaction;
+* Cluster Disaster Recovery;
+* Support block level erasure coding;
+* To support the new desired actions, enhance the SSM framework and infrastructure.
 
-The project is on Phase 1 now, it includes the following general subtasks:
-* Define metrics to collect from HDFS
-* Define rule DSL regarding syntax and build-in variables used for rules.
-* Implement rule engine and different actions
-* Optimize facilities to cooperate with SSM
-* Implement UI to make SSM easy to use 
-
-Use Cases
+Phase I -- Use Cases 
 ------------
+### Cache hotest data
+When the files got very hot, they can be moved from fast storage into cache memory to achieve the best read performance. The following shows the example of moving data to memory cache if the data has been read over 3 times during the last 5 minutes
+
+![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/cache-case.png)
+
 ### Move hot data to fast storage
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssd-case.png)
 
 Without SSM, data may always be readed from HDD. With SSM, optimizaitons can be made through rules. As showned in the figure above, data can be moved to faster SSD to achive better performance.
-
-### Cache hotest data
-When the files got more and more hot, they can be moved from fast storage into cache memory to achieve the best read performance. The following shows the example of moving data to memory cache if the data has been read over 3 times during the last 5 minutes
-
-![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/cache-case.png)
 
 ### Archive cold data
 Files are less likely to be read during the ending of lifecycle, so it’s better to move these cold files into lower performance storage to decrease the cost of data storage. The following shows the example of archiving data that has not been read over 1 times during the last 90 days.
