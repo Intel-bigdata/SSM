@@ -27,10 +27,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
-import org.smartdata.server.command.actions.CacheStatus;
-import org.smartdata.server.command.actions.CacheStatus;
-import org.smartdata.server.command.actions.CacheStatus.cacheFileInfo;
-import org.smartdata.server.command.actions.CacheStatus.nodeCacheInfo;
+import org.smartdata.server.actions.CacheStatus;
+import org.smartdata.server.actions.CacheStatus.cacheFileInfo;
+import org.smartdata.server.actions.CacheStatus.nodeCacheInfo;
 
 /**
  * Created by cc on 17-3-1.

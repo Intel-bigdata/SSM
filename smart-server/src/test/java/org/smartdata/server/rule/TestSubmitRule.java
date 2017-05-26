@@ -15,23 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server;
+package org.smartdata.server.rule;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.StorageType;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.common.SmartConfiguration;
 import org.smartdata.common.SmartConfigureKeys;
-import org.smartdata.common.SmartServiceState;
+import org.smartdata.common.rule.RuleState;
+import org.smartdata.server.SmartServer;
 import org.smartdata.server.metastore.sql.TestDBUtil;
 import org.smartdata.server.metastore.sql.Util;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,29 +40,17 @@ import java.util.List;
 
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
 
-public class TestEmptyMiniSmartCluster {
-  protected Configuration conf;
-  protected MiniDFSCluster cluster;
-  protected SmartServer ssm;
-  protected String dbFile;
-  protected String dbUrl;
-
-  private static final int DEFAULT_BLOCK_SIZE = 100;
-
-  static {
-    TestBalancer.initTestSetup();
-  }
+public class TestSubmitRule {
+  private Configuration conf;
+  private MiniDFSCluster cluster;
+  private SmartServer ssm;
 
   @Before
   public void setUp() throws Exception {
     conf = new SmartConfiguration();
-    initConf(conf);
     cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]
-            {StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE})
-        .build();
+        .numDataNodes(3).build();
+
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
@@ -69,52 +58,56 @@ public class TestEmptyMiniSmartCluster {
         uriList.get(0).toString());
 
     // Set db used
-    dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
+    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+    String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
     conf.set(SmartConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
     ssm = SmartServer.createSSM(null, conf);
   }
 
-  private void initConf(Configuration conf) {
-    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
-  }
-
-  public void waitTillSSMExitSafeMode() throws Exception {
-    SmartAdmin client = new SmartAdmin(conf);
-    long start = System.currentTimeMillis();
-    int retry = 5;
-    while (true) {
-      try {
-        SmartServiceState state = client.getServiceState();
-        if (state != SmartServiceState.SAFEMODE) {
-          break;
-        }
-        int secs = (int)(System.currentTimeMillis() - start) / 1000;
-        System.out.println("Waited for " + secs + " seconds ...");
-        Thread.sleep(1000);
-      } catch (Exception e) {
-        if (retry <= 0) {
-          throw e;
-        }
-        retry--;
-      }
-    }
-  }
-
   @After
-  public void cleanUp() {
-    if (ssm != null) {
-      ssm.shutdown();
-    }
-
+  public void cleanUp() throws Exception {
+    ssm.stop();
     if (cluster != null) {
       cluster.shutdown();
+    }
+  }
+
+  @Test
+  public void testSubmitRule() throws Exception {
+    String rule = "file: every 1s \n | length > 10 | cachefile";
+    SmartAdmin client = new SmartAdmin(conf);
+
+    long ruleId = 0l;
+    boolean wait = true;
+    while (wait) {
+      try {
+        ruleId = client.submitRule(rule, RuleState.ACTIVE);
+        wait = false;
+      } catch (IOException e) {
+        if (!e.toString().contains("not ready")) {
+          throw e;
+        }
+      }
+    }
+
+    for (int i = 0; i < 10; i++) {
+      long id = client.submitRule(rule, RuleState.ACTIVE);
+      Assert.assertTrue(ruleId + i + 1 == id);
+    }
+
+    String badRule = "something else";
+    try {
+      client.submitRule(badRule, RuleState.ACTIVE);
+      Assert.fail("Should have an exception here");
+    } catch (IOException e) {
+    }
+
+    try {
+      client.checkRule(badRule);
+      Assert.fail("Should have an exception here");
+    } catch (IOException e) {
     }
   }
 }

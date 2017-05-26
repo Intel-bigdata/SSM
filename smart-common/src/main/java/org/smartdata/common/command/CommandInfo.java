@@ -18,7 +18,7 @@
 package org.smartdata.common.command;
 
 import org.smartdata.common.CommandState;
-import org.smartdata.common.command.actions.ActionType;
+import org.smartdata.common.actions.ActionType;
 
 
 public class CommandInfo {

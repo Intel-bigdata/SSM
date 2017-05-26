@@ -31,7 +31,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
-import org.smartdata.admin.protocol.SmartAdmin;
+import org.smartdata.admin.SmartAdmin;
 import org.apache.hadoop.tools.TableListing;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;

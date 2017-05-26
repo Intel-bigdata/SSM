@@ -22,7 +22,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Test;
-import org.smartdata.admin.protocol.SmartAdmin;
+import org.smartdata.admin.SmartAdmin;
 import org.smartdata.common.SmartConfiguration;
 import org.smartdata.common.SmartConfigureKeys;
 import org.smartdata.common.rule.RuleInfo;

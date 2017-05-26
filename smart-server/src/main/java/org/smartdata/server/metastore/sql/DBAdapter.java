@@ -24,7 +24,7 @@ import org.apache.hadoop.hdfs.XAttrHelper;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
-import org.smartdata.common.command.actions.ActionType;
+import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.metastore.sql.CachedFileStatus;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;

@@ -21,7 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
-import org.smartdata.admin.protocol.SmartAdmin;
+import org.smartdata.admin.SmartAdmin;
 import org.smartdata.common.SmartConfiguration;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;

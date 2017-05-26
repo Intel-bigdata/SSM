@@ -24,7 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
-import org.smartdata.common.command.actions.ActionType;
+import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.metastore.sql.CachedFileStatus;
 
 import java.io.File;

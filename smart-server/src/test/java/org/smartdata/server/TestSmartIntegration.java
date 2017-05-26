@@ -22,7 +22,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.admin.protocol.SmartAdmin;
+import org.smartdata.admin.SmartAdmin;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 

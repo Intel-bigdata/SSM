@@ -20,7 +20,7 @@ package org.smartdata.common.protocolPB;
 
 import com.google.protobuf.ServiceException;
 import org.smartdata.common.CommandState;
-import org.smartdata.common.command.actions.ActionType;
+import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.common.rule.RuleInfo;

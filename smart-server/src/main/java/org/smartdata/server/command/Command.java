@@ -18,9 +18,9 @@
 package org.smartdata.server.command;
 
 import org.smartdata.common.CommandState;
-import org.smartdata.server.command.actions.ActionBase;
-import org.smartdata.server.command.actions.ActionExecutor;
-import org.smartdata.server.command.actions.mover.MoverPool;
+import org.smartdata.server.actions.ActionBase;
+import org.smartdata.server.actions.ActionExecutor;
+import org.smartdata.server.actions.mover.MoverPool;
 
 import java.io.IOException;
 import java.util.ArrayList;

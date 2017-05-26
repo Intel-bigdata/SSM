@@ -18,7 +18,7 @@
 package org.smartdata.server.rule.parser;
 
 
-import org.smartdata.common.command.actions.ActionType;
+import org.smartdata.common.actions.ActionType;
 
 import java.util.List;
 import java.util.Map;
