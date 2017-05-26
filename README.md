@@ -10,10 +10,14 @@ To overcome the challenge, we introduced in a comprehensive end-to-end solution,
 
 High Level Goals
 ------------
-* Enhancement for HDFS-HSM and HDFS-cache;
-* Support block EC, similar to HDFS-RAID;
-* Small files compaction and optimization;
-* Cluster Disaster Recovery and transparent fail-over
+### 1. Enhancement for HDFS-HSM and HDFS-Cache
+**Automatically** and **smartly** adjusting storage policies and options.
+### 2. Support block level erasure coding
+Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**.
+### 3. Small files support and compaction
+Optimizing NameNode to support even larger namespace.
+### 4. Cluster Disaster Recovery
+Supporting transparent fail-over for applications.
 
 Development Phases
 ------------
