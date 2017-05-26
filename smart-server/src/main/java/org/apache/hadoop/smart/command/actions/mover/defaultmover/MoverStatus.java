@@ -20,20 +20,39 @@ package org.apache.hadoop.smart.command.actions.mover.defaultmover;
 import org.apache.hadoop.smart.command.actions.mover.Status;
 import org.apache.hadoop.util.Time;
 
+import java.util.UUID;
+
 /**
  * Status of Mover tool.
  */
 public class MoverStatus extends Status {
+  private UUID id;
   private Boolean isFinished;
   private long startTime;
   private Boolean succeeded;
   private long totalDuration;
+  private long totalBlocks;
+  private long totalSize;
+  private long movedBlocks;
 
-  public MoverStatus() {
+  private void init() {
     isFinished = false;
     startTime = Time.monotonicNow();
     succeeded = false;
     totalDuration = 0;
+    totalBlocks = 0;
+    totalSize = 0;
+    movedBlocks = 0;
+  }
+
+  public MoverStatus(UUID id) {
+    this.id = id;
+    init();
+  }
+
+  @Override
+  synchronized public UUID getId() {
+    return id;
   }
 
   /**
@@ -111,5 +130,57 @@ public class MoverStatus extends Status {
     startTime = Time.monotonicNow();
     succeeded = false;
     totalDuration = 0;
+  }
+
+  @Override
+  synchronized public long getTotalSize() {
+    return totalSize;
+  }
+
+  @Override
+  synchronized public float getPercentage() {
+    if (totalBlocks == 0) {
+      return 0;
+    }
+    if (isFinished) {
+      return 1;
+    }
+    return movedBlocks >= totalBlocks ? 0.99f :
+            0.99f * movedBlocks / totalBlocks;
+  }
+
+  synchronized public long getTotalBlocks() {
+    return totalBlocks;
+  }
+
+  synchronized public void setTotalBlocks(long blocks) {
+    totalBlocks = blocks;
+  }
+
+  synchronized public long increaseTotalBlocks(long blocks) {
+    totalBlocks += blocks;
+    return totalBlocks;
+  }
+
+  synchronized public void setTotalSize(long size) {
+    totalSize = size;
+  }
+
+  synchronized public long increaseTotalSize(long size) {
+    totalSize += size;
+    return totalSize;
+  }
+
+  synchronized public long increaseMovedBlocks(long blocks) {
+    movedBlocks += blocks;
+    return movedBlocks;
+  }
+
+  synchronized public void setMovedBlocks(long blocks) {
+    movedBlocks = blocks;
+  }
+
+  synchronized public long getMovedBlocks() {
+    return movedBlocks;
   }
 }

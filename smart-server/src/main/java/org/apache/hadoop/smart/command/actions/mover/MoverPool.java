@@ -94,7 +94,7 @@ public class MoverPool {
       try {
         LOG.info("Start mover at {}", path);
         int result = ToolRunner.run(conf, moverClient,
-            new String[] {"-p", path});
+            new String[] {path});
         LOG.info("Finish mover at {}", path);
       } catch (Exception e) {
         throw new RuntimeException(e);

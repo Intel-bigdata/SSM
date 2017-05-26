@@ -21,20 +21,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.sun.tools.javac.util.Log;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.smart.command.actions.mover.Status;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
@@ -42,12 +37,10 @@ import org.apache.hadoop.util.Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -59,15 +52,10 @@ import java.util.Map;
 public class MoverCli extends Configured implements Tool {
   static final Logger LOG = LoggerFactory.getLogger(MoverCli.class);
 
-  private static final String USAGE = "Usage: hdfs mover "
-          + "[-p <files/dirs> | -f <local file>]"
-          + "\n\t-p <files/dirs>\ta space separated list of HDFS files/dirs to migrate."
-          + "\n\t-f <local file>\ta local file containing a list of HDFS files/dirs to migrate.";
-
   private MoverStatus status;
 
   public MoverCli() {
-    status = new MoverStatus();
+    status = new MoverStatus(null);
   }
 
   public MoverCli(Status status) {
@@ -80,47 +68,10 @@ public class MoverCli extends Configured implements Tool {
     }
   }
 
-  private static Options buildCliOptions() {
-    Options opts = new Options();
-    Option file = OptionBuilder.withArgName("pathsFile").hasArg()
-            .withDescription("a local file containing files/dirs to migrate")
-            .create("f");
-    Option paths = OptionBuilder.withArgName("paths").hasArgs()
-            .withDescription("specify space separated files/dirs to migrate")
-            .create("p");
-    OptionGroup group = new OptionGroup();
-    group.addOption(file);
-    group.addOption(paths);
-    opts.addOptionGroup(group);
-    return opts;
-  }
-
-  private static String[] readPathFile(String file) throws IOException {
-    List<String> list = Lists.newArrayList();
-    BufferedReader reader = new BufferedReader(
-            new InputStreamReader(new FileInputStream(file), "UTF-8"));
-    try {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        if (!line.trim().isEmpty()) {
-          list.add(line);
-        }
-      }
-    } finally {
-      IOUtils.cleanup(null, reader);
-    }
-    return list.toArray(new String[list.size()]);
-  }
-
-  private static Map<URI, List<Path>> getNameNodePaths(CommandLine line,
-      Configuration conf) throws Exception {
+  @VisibleForTesting
+  static Map<URI, List<Path>> getNameNodePathsToMove(Configuration conf,
+      String... paths) throws Exception {
     Map<URI, List<Path>> map = Maps.newHashMap();
-    String[] paths = null;
-    if (line.hasOption("f")) {
-      paths = readPathFile(line.getOptionValue("f"));
-    } else if (line.hasOption("p")) {
-      paths = line.getOptionValues("p");
-    }
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     if (paths == null || paths.length == 0) {
       for (URI namenode : namenodes) {
@@ -166,13 +117,38 @@ public class MoverCli extends Configured implements Tool {
     return map;
   }
 
+  static void calculateTotalSizeInPaths(FileSystem fs, MoverStatus status,
+      List<Path> paths) throws IOException {
+    for (Path path : paths) {
+      RemoteIterator<FileStatus> fileStatusIterator = fs.listStatusIterator(path);
+      while (fileStatusIterator.hasNext()) {
+        FileStatus fileStatus = fileStatusIterator.next();
+        if (fileStatus.isDirectory()) {
+          Path childPath = fileStatus.getPath();
+          calculateTotalSizeInPaths(fs, status, Arrays.asList(childPath));
+        } else {
+          final long fileLength = fileStatus.getLen();
+          final short replication = fileStatus.getReplication();
+          final long blockSize = fileStatus.getBlockSize();
+          final long totalSize = fileLength * replication;
+          final long blockNum = replication * ((fileLength % blockSize == 0) ?
+                  (fileLength / blockSize) : (fileLength / blockSize + 1));
+          status.increaseTotalSize(totalSize);
+          status.increaseTotalBlocks(blockNum);
+        }
+      }
+    }
+  }
+
   @VisibleForTesting
-  static Map<URI, List<Path>> getNameNodePathsToMove(Configuration conf,
-      String... args) throws Exception {
-    final Options opts = buildCliOptions();
-    CommandLineParser parser = new GnuParser();
-    CommandLine commandLine = parser.parse(opts, args, true);
-    return getNameNodePaths(commandLine, conf);
+  static void updateTotalMoverSize(Map<URI, List<Path>> namenodes, Configuration conf,
+      MoverStatus status) throws IOException {
+    for (Map.Entry<URI, List<Path>> entry : namenodes.entrySet()) {
+      URI namenodeURI = entry.getKey();
+      List<Path> paths = entry.getValue();
+      FileSystem fs = FileSystem.get(namenodeURI, conf);
+      calculateTotalSizeInPaths(fs, status, paths);
+    }
   }
 
   @Override
@@ -183,6 +159,7 @@ public class MoverCli extends Configured implements Tool {
 
     try {
       final Map<URI, List<Path>> map = getNameNodePathsToMove(conf, args);
+      updateTotalMoverSize(map, conf, status);
       return Mover.run(map, conf, status);
     } catch (IOException e) {
       LOG.info(e + ".  Exiting ...");
