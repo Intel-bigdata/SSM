@@ -19,8 +19,8 @@ package org.apache.hadoop.smart.rule;
 
 import org.apache.hadoop.smart.rule.parser.TranslateResult;
 import org.apache.hadoop.smart.rule.parser.TranslationContext;
-import org.apache.hadoop.smart.sql.DBAdapter;
-import org.apache.hadoop.smart.sql.ExecutionContext;
+import org.apache.hadoop.smart.metastore.sql.DBAdapter;
+import org.apache.hadoop.smart.metastore.sql.ExecutionContext;
 
 import java.io.IOException;
 import java.sql.SQLException;

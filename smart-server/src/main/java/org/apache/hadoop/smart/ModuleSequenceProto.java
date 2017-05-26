@@ -17,7 +17,7 @@
  */
 package org.apache.hadoop.smart;
 
-import org.apache.hadoop.smart.sql.DBAdapter;
+import org.apache.hadoop.smart.metastore.sql.DBAdapter;
 
 import java.io.IOException;
 

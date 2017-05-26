@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.hadoop</groupId>
+        <groupId>org.smartdata</groupId>
         <artifactId>smart-project</artifactId>
         <version>0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -32,7 +32,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
+            <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
             <version>0.1-SNAPSHOT</version>
             <scope>provided</scope>

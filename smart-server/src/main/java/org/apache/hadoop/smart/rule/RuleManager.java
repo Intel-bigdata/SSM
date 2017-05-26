@@ -25,8 +25,8 @@ import org.apache.hadoop.smart.StatesManager;
 import org.apache.hadoop.smart.rule.parser.RuleStringParser;
 import org.apache.hadoop.smart.rule.parser.TranslateResult;
 import org.apache.hadoop.smart.rule.parser.TranslationContext;
-import org.apache.hadoop.smart.sql.CommandInfo;
-import org.apache.hadoop.smart.sql.DBAdapter;
+import org.apache.hadoop.smart.command.CommandInfo;
+import org.apache.hadoop.smart.metastore.sql.DBAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

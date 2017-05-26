@@ -25,12 +25,11 @@ import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
 import org.apache.hadoop.smart.protocol.AdminServerProto;
-import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.protocolPB.SmartAdminProtocolPB;
 import org.apache.hadoop.smart.protocolPB.ClientSmartProtocolServerSideTranslatorPB;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
-import org.apache.hadoop.smart.sql.CommandInfo;
+import org.apache.hadoop.smart.command.CommandInfo;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

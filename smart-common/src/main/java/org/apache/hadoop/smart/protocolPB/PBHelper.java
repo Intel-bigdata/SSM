@@ -20,12 +20,12 @@ package org.apache.hadoop.smart.protocolPB;
 
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.smart.CommandState;
-import org.apache.hadoop.smart.actions.ActionType;
+import org.apache.hadoop.smart.command.actions.ActionType;
 import org.apache.hadoop.smart.protocol.AdminServerProto.CommandInfoProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.RuleInfoProto;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
-import org.apache.hadoop.smart.sql.CommandInfo;
+import org.apache.hadoop.smart.command.CommandInfo;
 
 import java.io.IOException;
 

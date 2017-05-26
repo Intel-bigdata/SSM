@@ -28,10 +28,10 @@ import org.apache.hadoop.smart.rule.parser.SmartRuleLexer;
 import org.apache.hadoop.smart.rule.parser.SmartRuleParser;
 import org.apache.hadoop.smart.rule.parser.SmartRuleVisitTranslator;
 import org.apache.hadoop.smart.rule.parser.TranslateResult;
-import org.apache.hadoop.smart.sql.DBAdapter;
-import org.apache.hadoop.smart.sql.ExecutionContext;
+import org.apache.hadoop.smart.metastore.sql.DBAdapter;
+import org.apache.hadoop.smart.metastore.sql.ExecutionContext;
 import org.apache.hadoop.smart.rule.RuleQueryExecutor;
-import org.apache.hadoop.smart.sql.TestDBUtil;
+import org.apache.hadoop.smart.metastore.sql.TestDBUtil;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;

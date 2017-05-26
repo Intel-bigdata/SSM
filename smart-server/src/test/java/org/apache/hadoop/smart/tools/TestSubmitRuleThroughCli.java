@@ -20,7 +20,7 @@ package org.apache.hadoop.smart.tools;
 import org.apache.hadoop.smart.TestEmptyMiniSmartCluster;
 import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.rule.RuleInfo;
-import org.apache.hadoop.smart.sql.TestDBUtil;
+import org.apache.hadoop.smart.metastore.sql.TestDBUtil;
 import org.junit.Assert;
 import org.junit.Test;
 

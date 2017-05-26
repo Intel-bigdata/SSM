@@ -17,7 +17,7 @@
  */
 package org.apache.hadoop.smart.rule.parser;
 
-import org.apache.hadoop.smart.actions.ActionType;
+import org.apache.hadoop.smart.command.actions.ActionType;
 
 import java.util.List;
 import java.util.Map;

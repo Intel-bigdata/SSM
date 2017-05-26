@@ -37,10 +37,10 @@ import org.apache.hadoop.smart.protocol.AdminServerProto.DeleteRuleRequestProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.ActivateRuleRequestProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.DisableRuleRequestProto;
 import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
-import org.apache.hadoop.smart.protocol.SmartServiceState;
+import org.apache.hadoop.smart.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
-import org.apache.hadoop.smart.sql.CommandInfo;
+import org.apache.hadoop.smart.command.CommandInfo;
 import org.apache.hadoop.smart.CommandState;
 
 import java.io.IOException;

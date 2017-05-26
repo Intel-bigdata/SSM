@@ -20,16 +20,17 @@ package org.apache.hadoop.smart.web
 import java.util
 import java.util.{HashMap, Map}
 
+import org.apache.hadoop.smart.command.CommandInfo
+
 import scala.collection.JavaConverters._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Directives.{complete, path}
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import com.google.gson.Gson
-import org.apache.hadoop.smart.actions.ActionType
+import org.apache.hadoop.smart.command.actions.ActionType
 import org.apache.hadoop.smart.{CommandState, SmartServer}
 import org.apache.hadoop.smart.rule.{RuleInfo, RuleState}
-import org.apache.hadoop.smart.sql.CommandInfo
 import org.apache.hadoop.smart.utils.JsonUtil
 
 import scala.util.Random

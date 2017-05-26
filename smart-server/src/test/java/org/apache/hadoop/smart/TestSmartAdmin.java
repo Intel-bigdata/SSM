@@ -24,8 +24,8 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
-import org.apache.hadoop.smart.sql.TestDBUtil;
-import org.apache.hadoop.smart.sql.Util;
+import org.apache.hadoop.smart.metastore.sql.TestDBUtil;
+import org.apache.hadoop.smart.metastore.sql.Util;
 import org.junit.Test;
 
 import java.io.IOException;

@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.smart;
 
+import org.apache.hadoop.smart.command.Command;
+import org.apache.hadoop.smart.command.CommandPool;
 import org.junit.Test;
 
 

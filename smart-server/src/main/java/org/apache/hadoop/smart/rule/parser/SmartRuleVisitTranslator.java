@@ -19,12 +19,12 @@ package org.apache.hadoop.smart.rule.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.apache.hadoop.smart.actions.ActionType;
+import org.apache.hadoop.smart.command.actions.ActionType;
 import org.apache.hadoop.smart.rule.exceptions.RuleParserException;
 import org.apache.hadoop.smart.rule.objects.Property;
 import org.apache.hadoop.smart.rule.objects.PropertyRealParas;
 import org.apache.hadoop.smart.rule.objects.SmartObject;
-import org.apache.hadoop.smart.sql.TableMetaData;
+import org.apache.hadoop.smart.metastore.sql.TableMetaData;
 
 import java.io.IOException;
 import java.text.ParseException;

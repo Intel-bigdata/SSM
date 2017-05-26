@@ -22,11 +22,12 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.smart.CommandState;
 import org.apache.hadoop.smart.SmartConfigureKeys;
+import org.apache.hadoop.smart.SmartServiceState;
 import org.apache.hadoop.smart.protocolPB.SmartAdminProtocolAdminSideTranslatorPB;
 import org.apache.hadoop.smart.protocolPB.SmartAdminProtocolPB;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
-import org.apache.hadoop.smart.sql.CommandInfo;
+import org.apache.hadoop.smart.command.CommandInfo;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

@@ -50,9 +50,9 @@ import org.apache.hadoop.smart.protocol.AdminServerProto.DeleteCommandResponsePr
 import org.apache.hadoop.smart.protocol.AdminServerProto.DeleteCommandRequestProto;
 import org.apache.hadoop.smart.protocol.AdminServerProto.CommandInfoProto;
 import org.apache.hadoop.smart.protocol.SmartAdminProtocol;
-import org.apache.hadoop.smart.protocol.SmartServiceState;
+import org.apache.hadoop.smart.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
-import org.apache.hadoop.smart.sql.CommandInfo;
+import org.apache.hadoop.smart.command.CommandInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -24,9 +24,8 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.apache.hadoop.smart.protocol.SmartAdmin;
-import org.apache.hadoop.smart.protocol.SmartServiceState;
-import org.apache.hadoop.smart.sql.TestDBUtil;
-import org.apache.hadoop.smart.sql.Util;
+import org.apache.hadoop.smart.metastore.sql.TestDBUtil;
+import org.apache.hadoop.smart.metastore.sql.Util;
 import org.junit.After;
 import org.junit.Before;
 

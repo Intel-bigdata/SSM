@@ -3,14 +3,13 @@ package org.apache.hadoop.smart;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.smart.actions.ActionType;
-import org.apache.hadoop.smart.sql.CommandInfo;
-import org.apache.hadoop.smart.sql.DBAdapter;
+import org.apache.hadoop.smart.command.actions.ActionType;
+import org.apache.hadoop.smart.command.CommandInfo;
+import org.apache.hadoop.smart.metastore.sql.DBAdapter;
 import org.apache.hadoop.smart.utils.JsonUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

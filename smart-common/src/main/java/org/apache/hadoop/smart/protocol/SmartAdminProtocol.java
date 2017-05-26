@@ -18,9 +18,10 @@
 package org.apache.hadoop.smart.protocol;
 
 import org.apache.hadoop.smart.CommandState;
+import org.apache.hadoop.smart.SmartServiceState;
 import org.apache.hadoop.smart.rule.RuleInfo;
 import org.apache.hadoop.smart.rule.RuleState;
-import org.apache.hadoop.smart.sql.CommandInfo;
+import org.apache.hadoop.smart.command.CommandInfo;
 
 import java.io.IOException;
 import java.util.List;

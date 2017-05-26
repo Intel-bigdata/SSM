@@ -19,11 +19,11 @@ package org.apache.hadoop.smart;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.smart.fetcher.AccessCountFetcher;
-import org.apache.hadoop.smart.fetcher.InotifyEventFetcher;
-import org.apache.hadoop.smart.sql.DBAdapter;
-import org.apache.hadoop.smart.sql.tables.AccessCountTable;
-import org.apache.hadoop.smart.sql.tables.AccessCountTableManager;
+import org.apache.hadoop.smart.metric.fetcher.AccessCountFetcher;
+import org.apache.hadoop.smart.metric.fetcher.InotifyEventFetcher;
+import org.apache.hadoop.smart.metastore.sql.DBAdapter;
+import org.apache.hadoop.smart.metastore.sql.tables.AccessCountTable;
+import org.apache.hadoop.smart.metastore.sql.tables.AccessCountTableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

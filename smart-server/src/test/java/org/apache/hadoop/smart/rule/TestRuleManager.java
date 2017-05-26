@@ -17,10 +17,10 @@
  */
 package org.apache.hadoop.smart.rule;
 
-import org.apache.hadoop.smart.sql.DBAdapter;
-import org.apache.hadoop.smart.sql.FileStatusInternal;
-import org.apache.hadoop.smart.sql.TestDBUtil;
-import org.apache.hadoop.smart.sql.Util;
+import org.apache.hadoop.smart.metastore.sql.DBAdapter;
+import org.apache.hadoop.smart.metastore.sql.FileStatusInternal;
+import org.apache.hadoop.smart.metastore.sql.TestDBUtil;
+import org.apache.hadoop.smart.metastore.sql.Util;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
