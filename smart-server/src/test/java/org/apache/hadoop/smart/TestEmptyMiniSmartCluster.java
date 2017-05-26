@@ -55,10 +55,11 @@ public class TestEmptyMiniSmartCluster {
     conf = new SmartConfiguration();
     initConf(conf);
     cluster = new MiniDFSCluster.Builder(conf)
-            .numDataNodes(3)
-            .storagesPerDatanode(3)
-            .storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD,StorageType.ARCHIVE})
-            .build();
+        .numDataNodes(3)
+        .storagesPerDatanode(3)
+        .storageTypes(new StorageType[]
+            {StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE})
+        .build();
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());

@@ -9,8 +9,9 @@ import org.apache.hadoop.smart.actions.ActionBase;
 import org.apache.hadoop.smart.actions.MoveFile;
 import org.apache.hadoop.smart.actions.MoveToCache;
 import org.apache.hadoop.smart.mover.MoverPool;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-
 
 
 /**
@@ -27,25 +28,33 @@ public class TestCommand {
 
   @Test
   public void testRun() throws Exception {
-    init();
     generateTestCase();
     runHelper().runActions();
     System.out.println("Command UT Finished!!");
   }
 
+  @Before
   public void init() throws Exception {
     conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY,REPLICATION_KEY);
+    conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
     cluster = new MiniDFSCluster.Builder(conf).
-            numDataNodes(3).
-            storagesPerDatanode(4).
-            storageTypes(new StorageType[] {StorageType.DISK,StorageType.SSD,StorageType.ARCHIVE,StorageType.RAM_DISK}).
-            build();
+        numDataNodes(3).
+        storagesPerDatanode(4).
+        storageTypes(new StorageType[]{StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE, StorageType.RAM_DISK}).
+        build();
     cluster.waitActive();
     client = cluster.getFileSystem().getClient();
     MoverPool.getInstance().init(conf);
+  }
+
+  @After
+  public void shutdown() throws Exception {
+    MoverPool.getInstance().shutdown();
+    if (cluster != null) {
+      cluster.shutdown();
+    }
   }
 
   public void generateTestCase() throws Exception {
@@ -53,14 +62,15 @@ public class TestCommand {
     // New dir
     Path dir = new Path("/testMoveFile");
     dfs.mkdirs(dir);
-
     // Move to SSD
     dfs.setStoragePolicy(dir, "HOT");
-    final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"),true,1024);
+    final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"),
+        true, 1024);
     out1.writeChars("/testMoveFile/file1");
     out1.close();
     // Move to Archive
-    final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),true,1024);
+    final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),
+        true, 1024);
     out2.writeChars("/testMoveFile/file2");
     out2.close();
     // Move to Cache

@@ -21,10 +21,12 @@ import org.apache.hadoop.smart.actions.ActionBase;
 import org.apache.hadoop.smart.actions.ActionExecutor;
 import org.apache.hadoop.smart.mover.MoverPool;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,37 +118,52 @@ public class Command implements Runnable {
     return "Rule-" + ruleId + "-Cmd-" + id;
   }
 
-  public void stop() {
-    LOG.info("Command " + id + " Stopped!");
+  public void stop() throws IOException {
+    LOG.info("Command {} Stopped!", toString());
     running = false;
+    if (uuids.size() != 0) {
+      MoverPool moverPool = MoverPool.getInstance();
+      try {
+        for (UUID id : uuids) {
+          if (!moverPool.getStatus(id).getIsFinished()) {
+            moverPool.stop(id);
+          }
+        }
+      } catch (Exception e) {
+        LOG.error("Shutdown Unfinished Actions Error!");
+        throw new IOException(e);
+      }
+    }
   }
 
   public void runActions() {
     UUID uid;
     for (ActionBase act : actions) {
-      if(act == null)
+      if (act == null) {
         continue;
+      }
       uid = ActionExecutor.run(act);
-      if(uid == null)
+      if (uid == null) {
         continue;
+      }
       uuids.add(uid);
     }
     MoverPool moverPool = MoverPool.getInstance();
-    while(uuids.size() != 0 && running) {
-      for (Iterator<UUID> iter = uuids.iterator(); iter.hasNext();) {
+    while (uuids.size() != 0 && running) {
+      for (Iterator<UUID> iter = uuids.iterator(); iter.hasNext(); ) {
         UUID id = iter.next();
         if (moverPool.getStatus(id).getIsFinished()) {
           moverPool.removeStatus(id);
           iter.remove();
         }
       }
-      if(uuids.size() == 0 || !running)
+      if (uuids.size() == 0 || !running) {
         break;
+      }
       try {
         Thread.sleep(300);
-      }
-      catch (Exception e){
-        LOG.error("Action Thread error!");
+      } catch (Exception e) {
+        LOG.error("Run Action Thread error!");
       }
     }
   }
@@ -154,7 +171,8 @@ public class Command implements Runnable {
   @Override
   public void run() {
     runActions();
-    if(cb != null)
+    if (cb != null && running) {
       cb.complete(this.id, this.ruleId, CommandState.DONE);
+    }
   }
 }
