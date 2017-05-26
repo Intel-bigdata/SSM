@@ -1,4 +1,4 @@
-<span id="_Toc392169190" class="anchor"><span id="_Toc415575594" class="anchor"></span></span>Introduction
+<span id="_Toc392169190" class="anchor"><span id="_Toc415575594" class="anchor"></span></span>Admin API
 ==========================================================================================================
 
 This document introduces the definition of APIs exposed by Intel Smart
@@ -25,20 +25,6 @@ data (files) than the cluster administrator.
 For easily integration, APIs are exposed as both RPC call and RESTfull
 Http interface. Audience can choose the one which fit for their own
 environment.
-
-Audience 
----------
-
-This document is written for architects and engineers who are interested
-in use Intel Smart Storage Management feature to make full utilization
-of high performance storage devices in their Hadoop cluster. Familiarity
-with Hadoop HDFS architecture, HDFS erasure coding feature, HDFS
-heterogeneous storage feature and HDFS centralized cache feature is
-assumed. For basic and/or supplemental information, refer to the
-appropriate reference links.
-
-<span id="_Toc363655967" class="anchor"><span id="_Toc392169192"
-class="anchor"></span></span>
 
 Define Rule
 -----------
@@ -67,7 +53,6 @@ Table - 1 Objects to manipulate
 |---------|-------------------|------------------------------------|
 | File    | Files             | *file.path matches "/fooA/\*.dat"* |
 | Storage | HDFS storage type | SSD, HDD, Cache                    |
-|         |                   |                                    |
 
 Table - 2 Triggers
 
@@ -76,7 +61,7 @@ Table - 2 Triggers
 | At &lt;time&gt;                       | Execute the rule at the given time                      | -   At “2017-07-29 23:00:00” <br> -   At now |
 | Every &lt;time interval&gt;           | Execute the rule at the given frequency                 | Every 1min                            |
 | From &lt;time&gt; \[To &lt;time&gt;\] | Along with ‘Every’ expression to specify the time scope | -   Every 1day from now <br>  -   Every 1min from now to now + 7day  |
-|                                       |                                                         |                                       |
+
 
 Table – 3 Conditions
 
@@ -159,7 +144,7 @@ be cancelled.
 
 **Finished**:
 
-Once all the commands of a rule are executed, the rule enters
+If a rule is one time rule or has time constains, once all the commands of the rule are executed, the rule enters
 “**Finished**” state. A finished rule can be deleted permanently from
 the system when it’s in a **“Finished”** state.
 
