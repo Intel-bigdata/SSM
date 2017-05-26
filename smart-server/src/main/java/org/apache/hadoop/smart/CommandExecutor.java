@@ -119,7 +119,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         if (execThreadPool == null) {
           LOG.error("Thread Init/Start Error!");
         }
-        if (execThreadPool.size() <= 5) {  // TODO: use configure value
+        // TODO: use configure value
+        if (execThreadPool.size() <= 5) {
           Command toExec = schedule();
           if (toExec != null) {
             toExec.setScheduleToExecuteTime(Time.now());
@@ -134,6 +135,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         if (!running) {
           break;
         }
+      } catch (IOException e) {
+        LOG.error("Schedule error!");
+        LOG.error(e.getMessage());
       }
     }
   }
@@ -161,6 +165,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
           null, null);
     } catch (SQLException e) {
       LOG.error(e.getMessage());
+      throw new IOException(e);
     }
     if (ret != null) {
       return ret.get(0);
@@ -264,6 +269,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     try {
       adapter.deleteCommand(cid);
     } catch (SQLException e) {
+      LOG.error(e.getMessage());
       throw new IOException(e);
     }
   }
@@ -320,7 +326,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
    *
    * @return
    */
-  private synchronized Command schedule() {
+  private synchronized Command schedule() throws IOException {
     // currently FIFO
     // List<Long> cmds = getCommands(CommandState.PENDING);
     Set<Long> cmdsPending = cmdsInState
@@ -332,7 +338,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       if (statusCache.size() != 0) {
         batchCommandStatusUpdate();
       }
-      List<CommandInfo> dbcmds = getCommandsFromDB();
+      List<CommandInfo> dbcmds = getPendingCommandsFromDB();
       if (dbcmds == null) {
         return null;
       }
@@ -348,7 +354,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         return null;
       }
     }
-    // TODO Update FIFO
+    // TODO Replace FIFO
     // Currently only get and run the first cmd
     long curr = cmdsPending.iterator().next();
     Command ret = getCommandFromCmdInfo(cmdsAll.get(curr));
@@ -387,15 +393,15 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
 
-  public List<CommandInfo> getCommandsFromDB() {
+  public List<CommandInfo> getPendingCommandsFromDB() throws IOException {
     // Get Pending cmds from DB
     try {
       return adapter.getCommandsTableItem(null, null, CommandState.PENDING);
     } catch (SQLException e) {
       // TODO: handle this issue
       LOG.error(e.getMessage());
+      throw new IOException(e);
     }
-    return null;
   }
 
   public Long[] getCommands(CommandState state) {
@@ -403,7 +409,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return cmds.toArray(new Long[cmds.size()]);
   }
 
-  public synchronized void batchCommandStatusUpdate() {
+  public synchronized void batchCommandStatusUpdate() throws IOException {
     LOG.info("INFO Number of Caches = {}", statusCache.size());
     LOG.info("INFO Number of Actions = {}", cmdsAll.size());
     if (statusCache.size() == 0) {
@@ -417,6 +423,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       } catch (SQLException e) {
         // TODO: handle this isssue
         LOG.error(e.getMessage());
+        throw new IOException(e);
       }
       iter.remove();
     }

@@ -9,6 +9,8 @@ import org.apache.hadoop.smart.actions.ActionBase;
 import org.apache.hadoop.smart.actions.MoveFile;
 import org.apache.hadoop.smart.actions.MoveToCache;
 import org.apache.hadoop.smart.mover.MoverPool;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 
@@ -26,12 +28,12 @@ public class TestCommand {
 
   @Test
   public void testRun() throws Exception {
-    init();
     generateTestCase();
     runHelper().runActions();
     System.out.println("Command UT Finished!!");
   }
 
+  @Before
   public void init() throws Exception {
     conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
@@ -45,6 +47,14 @@ public class TestCommand {
     cluster.waitActive();
     client = cluster.getFileSystem().getClient();
     MoverPool.getInstance().init(conf);
+  }
+
+  @After
+  public void shutdown() throws Exception {
+    MoverPool.getInstance().shutdown();
+    if (cluster != null) {
+      cluster.shutdown();
+    }
   }
 
   public void generateTestCase() throws Exception {
