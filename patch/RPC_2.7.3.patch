@@ -1,0 +1,434 @@
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/DFSClient.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/DFSClient.java
+index 58d93cdca24..0b9a04c7589 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/DFSClient.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/DFSClient.java
+@@ -159,6 +159,7 @@
+ import org.apache.hadoop.hdfs.protocol.EncryptionZone;
+ import org.apache.hadoop.hdfs.protocol.EncryptionZoneIterator;
+ import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
++import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+ import org.apache.hadoop.hdfs.protocol.HdfsBlocksMetadata;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
+@@ -862,6 +863,15 @@ boolean isFilesBeingWrittenEmpty() {
+       return filesBeingWritten.isEmpty();
+     }
+   }
++
++  /**
++   * Get file related access statistics info
++   * @return
++   * @throws IOException
++   */
++  public FilesAccessInfo getFilesAccessInfo() throws IOException {
++    return namenode.getFilesAccessInfo();
++  }
+   
+   /** @return true if the client is running */
+   boolean isClientRunning() {
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/ClientProtocol.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/ClientProtocol.java
+index 222971c7702..4b36a1ab502 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/ClientProtocol.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/ClientProtocol.java
+@@ -140,6 +140,15 @@ public LocatedBlocks getBlockLocations(String src,
+   @Idempotent
+   public FsServerDefaults getServerDefaults() throws IOException;
+ 
++
++  /**
++   *
++   * @return
++   * @throws IOException
++   */
++  @Idempotent
++  FilesAccessInfo getFilesAccessInfo() throws IOException;
++
+   /**
+    * Create a new file entry in the namespace.
+    * <p>
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/FilesAccessInfo.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/FilesAccessInfo.java
+new file mode 100644
+index 00000000000..9f343eb552c
+--- /dev/null
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/FilesAccessInfo.java
+@@ -0,0 +1,38 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.apache.hadoop.hdfs.protocol;
++
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.List;
++
++public class FilesAccessInfo {
++  private List<HdfsFileAccessEvent> hdfsFileAccessEvents;
++
++  public FilesAccessInfo(HdfsFileAccessEvent[] events) {
++    this(Arrays.asList(events));
++  }
++
++  public FilesAccessInfo(List<HdfsFileAccessEvent> events) {
++    this.hdfsFileAccessEvents = new ArrayList<>(events);
++  }
++
++  public List<HdfsFileAccessEvent> getHdfsFileAccessEvents() {
++    return hdfsFileAccessEvents;
++  }
++}
+\ No newline at end of file
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/HdfsFileAccessEvent.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/HdfsFileAccessEvent.java
+new file mode 100644
+index 00000000000..9ced3aae5a9
+--- /dev/null
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/HdfsFileAccessEvent.java
+@@ -0,0 +1,46 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.apache.hadoop.hdfs.protocol;
++
++public class HdfsFileAccessEvent {
++  private String path;
++  private String user;
++  private long timestamp;
++
++  public HdfsFileAccessEvent(String path, long timestamp) {
++    this(path, "", timestamp);
++  }
++
++  public HdfsFileAccessEvent(String path, String user, long timestamp) {
++    this.path = path;
++    this.user = user;
++    this.timestamp = timestamp;
++  }
++
++  public String getPath() {
++    return path;
++  }
++
++  public String getUser() {
++    return user;
++  }
++
++  public long getTimestamp() {
++    return timestamp;
++  }
++}
+\ No newline at end of file
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/ClientNamenodeProtocolServerSideTranslatorPB.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/ClientNamenodeProtocolServerSideTranslatorPB.java
+index ce8c3924e39..c68eb5a0111 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/ClientNamenodeProtocolServerSideTranslatorPB.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/ClientNamenodeProtocolServerSideTranslatorPB.java
+@@ -36,6 +36,7 @@
+ import org.apache.hadoop.hdfs.protocol.CorruptFileBlocks;
+ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
+ import org.apache.hadoop.hdfs.protocol.EncryptionZone;
++import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+ import org.apache.hadoop.hdfs.protocol.LastBlockWithStatus;
+ import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+@@ -55,6 +56,8 @@
+ import org.apache.hadoop.hdfs.protocol.proto.AclProtos.RemoveDefaultAclResponseProto;
+ import org.apache.hadoop.hdfs.protocol.proto.AclProtos.SetAclRequestProto;
+ import org.apache.hadoop.hdfs.protocol.proto.AclProtos.SetAclResponseProto;
++import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetFilesAccessInfoRequestProto;
++import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetFilesAccessInfoResponseProto;
+ import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.AbandonBlockRequestProto;
+ import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.AbandonBlockResponseProto;
+ import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.AddBlockRequestProto;
+@@ -358,6 +361,23 @@ public ClientNamenodeProtocolServerSideTranslatorPB(ClientProtocol server)
+   }
+ 
+   @Override
++  public GetFilesAccessInfoResponseProto getFilesAccessInfo(
++      RpcController controller, GetFilesAccessInfoRequestProto req)
++      throws ServiceException {
++    try {
++      FilesAccessInfo info = server.getFilesAccessInfo();
++      GetFilesAccessInfoResponseProto.Builder builder =
++        GetFilesAccessInfoResponseProto.newBuilder();
++      if (builder != null) {
++        return builder.setAccessInfo(PBHelper.convert(info)).build();
++      }
++      return null;
++    } catch (IOException e) {
++      throw new ServiceException(e);
++    }
++  }
++
++  @Override
+   public GetBlockLocationsResponseProto getBlockLocations(
+       RpcController controller, GetBlockLocationsRequestProto req)
+       throws ServiceException {
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/ClientNamenodeProtocolTranslatorPB.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/ClientNamenodeProtocolTranslatorPB.java
+index e970293ede1..11b5cc02de2 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/ClientNamenodeProtocolTranslatorPB.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/ClientNamenodeProtocolTranslatorPB.java
+@@ -60,6 +60,7 @@
+ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
+ import org.apache.hadoop.hdfs.protocol.EncryptionZone;
+ import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
++import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants.RollingUpgradeAction;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
+@@ -77,6 +78,8 @@
+ import org.apache.hadoop.hdfs.protocol.proto.AclProtos.RemoveAclRequestProto;
+ import org.apache.hadoop.hdfs.protocol.proto.AclProtos.RemoveDefaultAclRequestProto;
+ import org.apache.hadoop.hdfs.protocol.proto.AclProtos.SetAclRequestProto;
++import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetFilesAccessInfoRequestProto;
++import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.GetFilesAccessInfoResponseProto;
+ import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.AbandonBlockRequestProto;
+ import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.AddBlockRequestProto;
+ import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.AddCacheDirectiveRequestProto;
+@@ -317,6 +320,19 @@ public boolean truncate(String src, long newLength, String clientName)
+   }
+ 
+   @Override
++  public FilesAccessInfo getFilesAccessInfo() throws IOException {
++    GetFilesAccessInfoRequestProto req = GetFilesAccessInfoRequestProto
++      .newBuilder()
++      .build();
++    try {
++      GetFilesAccessInfoResponseProto resp = rpcProxy.getFilesAccessInfo(null, req);
++      return PBHelper.convert(resp.getAccessInfo());
++    } catch (ServiceException e) {
++      throw ProtobufHelper.getRemoteException(e);
++    }
++  }
++
++  @Override
+   public LastBlockWithStatus append(String src, String clientName,
+       EnumSetWritable<CreateFlag> flag) throws AccessControlException,
+       DSQuotaExceededException, FileNotFoundException, SafeModeException,
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/PBHelper.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/PBHelper.java
+index 4b9eadfa50e..c545526db54 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/PBHelper.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocolPB/PBHelper.java
+@@ -46,7 +46,6 @@
+ import org.apache.hadoop.fs.permission.FsAction;
+ import org.apache.hadoop.fs.permission.FsPermission;
+ import org.apache.hadoop.ha.HAServiceProtocol.HAServiceState;
+-import org.apache.hadoop.ha.proto.HAServiceProtocolProtos;
+ import org.apache.hadoop.hdfs.inotify.EventBatch;
+ import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
+ import org.apache.hadoop.hdfs.DFSUtil;
+@@ -72,6 +71,8 @@
+ import org.apache.hadoop.hdfs.protocol.EncryptionZone;
+ import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+ import org.apache.hadoop.fs.FileEncryptionInfo;
++import org.apache.hadoop.hdfs.protocol.HdfsFileAccessEvent;
++import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+ import org.apache.hadoop.hdfs.protocol.FsPermissionExtension;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants.RollingUpgradeAction;
+@@ -111,7 +112,6 @@
+ import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.SafeModeActionProto;
+ import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos.ShortCircuitShmIdProto;
+ import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos.ShortCircuitShmSlotProto;
+-import org.apache.hadoop.hdfs.protocol.proto.DatanodeProtocolProtos;
+ import org.apache.hadoop.hdfs.protocol.proto.DatanodeProtocolProtos.BalancerBandwidthCommandProto;
+ import org.apache.hadoop.hdfs.protocol.proto.DatanodeProtocolProtos.BlockCommandProto;
+ import org.apache.hadoop.hdfs.protocol.proto.DatanodeProtocolProtos.BlockIdCommandProto;
+@@ -172,6 +172,7 @@
+ import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.StorageTypeProto;
+ import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.StorageTypesProto;
+ import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.StorageUuidsProto;
++import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.FilesAccessInfoProto;
+ import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
+ import org.apache.hadoop.hdfs.protocol.proto.JournalProtocolProtos.JournalInfoProto;
+ import org.apache.hadoop.hdfs.protocol.proto.XAttrProtos.GetXAttrsResponseProto;
+@@ -188,7 +189,6 @@
+ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NamenodeRole;
+ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NodeType;
+ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.ReplicaState;
+-import org.apache.hadoop.hdfs.server.common.Storage;
+ import org.apache.hadoop.hdfs.server.common.StorageInfo;
+ import org.apache.hadoop.hdfs.server.namenode.CheckpointSignature;
+ import org.apache.hadoop.hdfs.server.namenode.INodeId;
+@@ -888,7 +888,47 @@ public static ReplicaStateProto convert(ReplicaState state) {
+       return ReplicaStateProto.FINALIZED;
+     }
+   }
+-  
++
++  // FilesAccessInfoProto
++  public static FilesAccessInfo convert(FilesAccessInfoProto proto) {
++    List<HdfsProtos.FileAccessEventProto> protos = proto.getAccessEventsList();
++    List<HdfsFileAccessEvent> events = new ArrayList<>(protos.size());
++    for(HdfsProtos.FileAccessEventProto eventProto : protos) {
++      if (eventProto.hasUser()) {
++        events.add(new HdfsFileAccessEvent(eventProto.getPath(),
++          eventProto.getUser(), eventProto.getTimestamp()));
++      } else {
++        events.add(new HdfsFileAccessEvent(eventProto.getPath(),
++          eventProto.getTimestamp()));
++      }
++    }
++    return new FilesAccessInfo(events);
++  }
++
++  public static FilesAccessInfoProto convert(FilesAccessInfo info) {
++    if (info == null) {
++      return null;
++    }
++
++    FilesAccessInfoProto.Builder builder = FilesAccessInfoProto.newBuilder();
++    List<HdfsFileAccessEvent> events = info.getHdfsFileAccessEvents();
++    List<HdfsProtos.FileAccessEventProto> eventsProto = new ArrayList<>();
++    if (events != null) {
++      for (HdfsFileAccessEvent event : events) {
++        HdfsProtos.FileAccessEventProto.Builder eventBuilder =
++          HdfsProtos.FileAccessEventProto.newBuilder();
++        eventBuilder.setPath(event.getPath()).setTimestamp(event.getTimestamp());
++        if (event.getUser() != null) {
++          eventBuilder.setUser(event.getUser());
++        }
++        eventsProto.add(eventBuilder.build());
++      }
++    }
++    builder.addAllAccessEvents(eventsProto);
++    return builder.build();
++  }
++
++
+   public static DatanodeRegistrationProto convert(
+       DatanodeRegistration registration) {
+     DatanodeRegistrationProto.Builder builder = DatanodeRegistrationProto
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNodeRpcServer.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNodeRpcServer.java
+index 582e4920b22..d1345ce2651 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNodeRpcServer.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNodeRpcServer.java
+@@ -28,6 +28,7 @@
+ import java.io.FileNotFoundException;
+ import java.io.IOException;
+ import java.net.InetSocketAddress;
++import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collection;
+ import java.util.EnumSet;
+@@ -88,6 +89,8 @@
+ import org.apache.hadoop.hdfs.protocol.EncryptionZone;
+ import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+ import org.apache.hadoop.hdfs.protocol.FSLimitException;
++import org.apache.hadoop.hdfs.protocol.HdfsFileAccessEvent;
++import org.apache.hadoop.hdfs.protocol.FilesAccessInfo;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+ import org.apache.hadoop.hdfs.protocol.LastBlockWithStatus;
+ import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
+@@ -216,6 +219,8 @@
+   
+   private final String minimumDataNodeVersion;
+ 
++  private List<HdfsFileAccessEvent> accessEvents = new ArrayList<>();
++
+   public NameNodeRpcServer(Configuration conf, NameNode nn)
+       throws IOException {
+     this.nn = nn;
+@@ -585,6 +590,13 @@ public LocatedBlocks getBlockLocations(String src,
+       throws IOException {
+     checkNNStartup();
+     metrics.incrGetBlockLocations();
++    if (offset == 0) {
++      long curTime = System.currentTimeMillis();
++      synchronized (accessEvents) {
++        accessEvents.add(new HdfsFileAccessEvent(src, "", curTime));
++      }
++    }
++
+     return namesystem.getBlockLocations(getClientMachine(), 
+                                         src, offset, length);
+   }
+@@ -662,6 +674,15 @@ public LastBlockWithStatus append(String src, String clientName,
+     return info;
+   }
+ 
++  @Override
++  public FilesAccessInfo getFilesAccessInfo() throws IOException {
++    synchronized (accessEvents) {
++      FilesAccessInfo ret = new FilesAccessInfo(accessEvents);
++      this.accessEvents.clear();
++      return ret;
++    }
++  }
++
+   @Override // ClientProtocol
+   public boolean recoverLease(String src, String clientName) throws IOException {
+     checkNNStartup();
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/proto/ClientNamenodeProtocol.proto b/hadoop-hdfs-project/hadoop-hdfs/src/main/proto/ClientNamenodeProtocol.proto
+index 82709a6d8b3..360acbf40c1 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/proto/ClientNamenodeProtocol.proto
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/proto/ClientNamenodeProtocol.proto
+@@ -61,6 +61,13 @@ message GetServerDefaultsResponseProto {
+   required FsServerDefaultsProto serverDefaults = 1;
+ }
+ 
++message GetFilesAccessInfoRequestProto { // void
++}
++
++message GetFilesAccessInfoResponseProto {
++    required FilesAccessInfoProto accessInfo = 1;
++}
++
+ enum CreateFlagProto {
+   CREATE = 0x01;    // Create a file
+   OVERWRITE = 0x02; // Truncate/overwrite a file. Same as POSIX O_TRUNC
+@@ -712,6 +719,8 @@ message GetEditsFromTxidResponseProto {
+ }
+ 
+ service ClientNamenodeProtocol {
++  rpc getFilesAccessInfo(GetFilesAccessInfoRequestProto)
++      returns(GetFilesAccessInfoResponseProto);
+   rpc getBlockLocations(GetBlockLocationsRequestProto)
+       returns(GetBlockLocationsResponseProto);
+   rpc getServerDefaults(GetServerDefaultsRequestProto)
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/proto/hdfs.proto b/hadoop-hdfs-project/hadoop-hdfs/src/main/proto/hdfs.proto
+index 86fb46297d9..eee664ee704 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/proto/hdfs.proto
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/proto/hdfs.proto
+@@ -231,6 +231,16 @@ message DataEncryptionKeyProto {
+   optional string encryptionAlgorithm = 6;
+ }
+ 
++message FileAccessEventProto {
++  required string path = 1;
++  required int64 timestamp = 2;
++  optional string user = 3;
++}
++
++message FilesAccessInfoProto {
++  repeated FileAccessEventProto accessEvents = 1;
++}
++
+ /**
+  * Cipher suite.
+  */
