@@ -33,7 +33,7 @@ public class CommandPool {
   private Map<Long, Command> commandMap;
   private Map<Long, Thread> commandThread;
 
-  CommandPool() {
+  public CommandPool() {
     commandMap = new ConcurrentHashMap<>();
     commandThread = new ConcurrentHashMap<>();
   }
