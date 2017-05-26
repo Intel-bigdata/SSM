@@ -19,6 +19,8 @@ package org.apache.hadoop.smart.mover;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
+import org.apache.hadoop.smart.mover.defaultmover.MoverCli;
+import org.apache.hadoop.smart.mover.defaultmover.MoverStatus;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,10 +78,10 @@ public class MoverPool {
 
   class MoverProcess extends Thread {
     private String path;
-    private Mover.Cli moverClient;
+    private MoverCli moverClient;
 
     public MoverProcess(Status status, String path) {
-      this.moverClient = new Mover.Cli(status);
+      this.moverClient = new MoverCli(status);
       this.path = path;
     }
 
