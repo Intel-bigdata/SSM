@@ -50,3 +50,11 @@ User Doc
 
 Acknowlegement
 ------------
+This originates from and bases on the discussions occured in Apache Hadoop JIRA [HDFS-7443](https://issues.apache.org/jira/browse/HDFS-7343). It not only thanks to all the team members of this project, but also thanks a lot to all the idea and feedback contributors. Particularly the following folks:
+* Andrew Wang;
+* Jing Zhao;
+* Eddy Xu;
+* Anu Engineer;
+* Andrew Purtell;
+* Chris Douglas;
+* Weihua Jiang
