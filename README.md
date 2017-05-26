@@ -1,6 +1,8 @@
 
-SSM - Smart Storage Management [![Build Status](https://travis-ci.org/Intel-bigdata/SSM.svg?branch=ssm)](https://travis-ci.org/Intel-bigdata/SSM?branch=ssm)
+HDFS-SSM - HDFS Smart Storage Management [![Build Status](https://travis-ci.org/Intel-bigdata/SSM.svg?branch=ssm)](https://travis-ci.org/Intel-bigdata/SSM?branch=ssm)
 =========================
+
+This is the major portion of the overall [Smart Data Management Initiative](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/overall-initiative.md).
 
 Big data has put increasing pressure on HDFS storage in recent years. The latest storage devices (3D XPoint(R) SSD, NVMe SSD, etc.) can be used to improve the storage performance. HDFS provides methodologies like HDFS Cache, Heterogeneous Storage Management and Erasure Coding to provide such support, but it still remains a big challenge for HDFS to make full utilization of these high-performance storage devices in a dynamic environment.
 
