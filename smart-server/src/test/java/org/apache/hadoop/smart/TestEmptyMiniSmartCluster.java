@@ -19,8 +19,10 @@ package org.apache.hadoop.smart;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.apache.hadoop.smart.protocol.SmartAdmin;
 import org.apache.hadoop.smart.protocol.SmartServiceState;
 import org.apache.hadoop.smart.sql.TestDBUtil;
@@ -42,9 +44,16 @@ public class TestEmptyMiniSmartCluster {
   protected String dbFile;
   protected String dbUrl;
 
+  private static final int DEFAULT_BLOCK_SIZE = 100;
+
+  static {
+    TestBalancer.initTestSetup();
+  }
+
   @Before
   public void setUp() throws Exception {
     conf = new SmartConfiguration();
+    initConf(conf);
     cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(3)
         .storagesPerDatanode(3)
@@ -64,6 +73,14 @@ public class TestEmptyMiniSmartCluster {
 
     // rpcServer start in SmartServer
     ssm = SmartServer.createSSM(null, conf);
+  }
+
+  private void initConf(Configuration conf) {
+    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
+    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
+    conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
+    conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
+    conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
   }
 
   public void waitTillSSMExitSafeMode() throws Exception {
