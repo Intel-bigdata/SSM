@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.smart.mover;
+package org.apache.hadoop.smart.mover.defaultmover;
 
+import org.apache.hadoop.smart.mover.Status;
 import org.apache.hadoop.util.Time;
 
 /**

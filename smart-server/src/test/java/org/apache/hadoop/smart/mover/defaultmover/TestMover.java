@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.smart.mover;
+package org.apache.hadoop.smart.mover.defaultmover;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
@@ -36,7 +36,6 @@ import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.hdfs.server.balancer.NameNodeConnector;
 import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.apache.hadoop.hdfs.server.namenode.ha.HATestUtil;
-import org.apache.hadoop.smart.mover.Mover.MLocation;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Assert;
@@ -44,7 +43,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -62,8 +60,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TestMover {
   private static final Logger LOG = LoggerFactory.getLogger(TestMover.class);
   private static final int DEFAULT_BLOCK_SIZE = 100;
-  private File keytabFile;
-  private String principal;
 
   static {
     TestBalancer.initTestSetup();
@@ -111,12 +107,14 @@ public class TestMover {
 
       final Mover mover = newMover(conf);
       mover.init();
-      final Mover.Processor processor = mover.new Processor();
+      final MoverProcessor processor = new MoverProcessor(mover.dispatcher,
+          mover.targetPaths, mover.retryCount,
+          mover.retryMaxAttempts, mover.storages);
 
       final LocatedBlock lb = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       final List<MLocation> locations = MLocation.toLocations(lb);
       final MLocation ml = locations.get(0);
-      final Dispatcher.DBlock db = mover.newDBlock(lb, locations);
+      final Dispatcher.DBlock db = processor.newDBlock(lb, locations);
 
       final List<StorageType> storageTypes = new ArrayList<StorageType>(
               Arrays.asList(StorageType.DEFAULT, StorageType.DEFAULT));
@@ -153,7 +151,7 @@ public class TestMover {
       }
       // move to ARCHIVE
       dfs.setStoragePolicy(dir, "COLD");
-      int rc = ToolRunner.run(conf, new Mover.Cli(),
+      int rc = ToolRunner.run(conf, new MoverCli(),
               new String[] {"-p", dir.toString()});
       Assert.assertEquals("Movement to ARCHIVE should be successful", 0, rc);
 
@@ -227,7 +225,7 @@ public class TestMover {
     @Override
     public void run() {
       try {
-        int result = ToolRunner.run(conf, new Mover.Cli(),
+        int result = ToolRunner.run(conf, new MoverCli(),
                 new String[] {"-p", dir});
         Assert.assertEquals("Movement to ARCHIVE should be successful", 0, result);
       } catch (Exception e) {
@@ -294,13 +292,13 @@ public class TestMover {
     try {
       final Configuration conf = cluster.getConfiguration(0);
       try {
-        Mover.Cli.getNameNodePathsToMove(conf, "-p", "/foo", "bar");
+        MoverCli.getNameNodePathsToMove(conf, "-p", "/foo", "bar");
         Assert.fail("Expected exception for illegal path bar");
       } catch (IllegalArgumentException e) {
         GenericTestUtils.assertExceptionContains("bar is not absolute", e);
       }
 
-      Map<URI, List<Path>> movePaths = Mover.Cli.getNameNodePathsToMove(conf);
+      Map<URI, List<Path>> movePaths = MoverCli.getNameNodePathsToMove(conf);
       Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
       Assert.assertEquals(1, namenodes.size());
       Assert.assertEquals(1, movePaths.size());
@@ -308,7 +306,7 @@ public class TestMover {
       Assert.assertTrue(movePaths.containsKey(nn));
       Assert.assertNull(movePaths.get(nn));
 
-      movePaths = Mover.Cli.getNameNodePathsToMove(conf, "-p", "/foo", "/bar");
+      movePaths = MoverCli.getNameNodePathsToMove(conf, "-p", "/foo", "/bar");
       namenodes = DFSUtil.getInternalNsRpcUris(conf);
       Assert.assertEquals(1, movePaths.size());
       nn = namenodes.iterator().next();
@@ -328,7 +326,7 @@ public class TestMover {
             .numDataNodes(0).build();
     HATestUtil.setFailoverConfigurations(cluster, conf, "MyCluster");
     try {
-      Map<URI, List<Path>> movePaths = Mover.Cli.getNameNodePathsToMove(conf,
+      Map<URI, List<Path>> movePaths = MoverCli.getNameNodePathsToMove(conf,
               "-p", "/foo", "/bar");
       Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
       Assert.assertEquals(1, namenodes.size());
@@ -342,7 +340,7 @@ public class TestMover {
     }
   }
 
-
+  @Test
   public void testMoverCliWithFederation() throws Exception {
     final MiniDFSCluster cluster = new MiniDFSCluster
             .Builder(new HdfsConfiguration())
@@ -355,7 +353,7 @@ public class TestMover {
       Assert.assertEquals(3, namenodes.size());
 
       try {
-        Mover.Cli.getNameNodePathsToMove(conf, "-p", "/foo");
+        MoverCli.getNameNodePathsToMove(conf, "-p", "/foo");
         Assert.fail("Expect exception for missing authority information");
       } catch (IllegalArgumentException e) {
         GenericTestUtils.assertExceptionContains(
@@ -363,7 +361,7 @@ public class TestMover {
       }
 
       try {
-        Mover.Cli.getNameNodePathsToMove(conf, "-p", "hdfs:///foo");
+        MoverCli.getNameNodePathsToMove(conf, "-p", "hdfs:///foo");
         Assert.fail("Expect exception for missing authority information");
       } catch (IllegalArgumentException e) {
         GenericTestUtils.assertExceptionContains(
@@ -371,7 +369,7 @@ public class TestMover {
       }
 
       try {
-        Mover.Cli.getNameNodePathsToMove(conf, "-p", "wrong-hdfs://ns1/foo");
+        MoverCli.getNameNodePathsToMove(conf, "-p", "wrong-hdfs://ns1/foo");
         Assert.fail("Expect exception for wrong scheme");
       } catch (IllegalArgumentException e) {
         GenericTestUtils.assertExceptionContains("Cannot resolve the path", e);
@@ -380,7 +378,7 @@ public class TestMover {
       Iterator<URI> iter = namenodes.iterator();
       URI nn1 = iter.next();
       URI nn2 = iter.next();
-      Map<URI, List<Path>> movePaths = Mover.Cli.getNameNodePathsToMove(conf,
+      Map<URI, List<Path>> movePaths = MoverCli.getNameNodePathsToMove(conf,
               "-p", nn1 + "/foo", nn1 + "/bar", nn2 + "/foo/bar");
       Assert.assertEquals(2, movePaths.size());
       checkMovePaths(movePaths.get(nn1), new Path("/foo"), new Path("/bar"));
@@ -406,7 +404,7 @@ public class TestMover {
       URI nn1 = iter.next();
       URI nn2 = iter.next();
       URI nn3 = iter.next();
-      Map<URI, List<Path>> movePaths = Mover.Cli.getNameNodePathsToMove(conf,
+      Map<URI, List<Path>> movePaths = MoverCli.getNameNodePathsToMove(conf,
               "-p", nn1 + "/foo", nn1 + "/bar", nn2 + "/foo/bar", nn3 + "/foobar");
       Assert.assertEquals(3, movePaths.size());
       checkMovePaths(movePaths.get(nn1), new Path("/foo"), new Path("/bar"));
@@ -445,7 +443,7 @@ public class TestMover {
       }
       // move to ARCHIVE
       dfs.setStoragePolicy(new Path(file), "COLD");
-      int rc = ToolRunner.run(conf, new Mover.Cli(),
+      int rc = ToolRunner.run(conf, new MoverCli(),
               new String[] { "-p", file.toString() });
       Assert.assertEquals("Movement to ARCHIVE should be successful", 0, rc);
 
@@ -476,7 +474,7 @@ public class TestMover {
 
       // move to ARCHIVE
       dfs.setStoragePolicy(new Path(file), "COLD");
-      int rc = ToolRunner.run(conf, new Mover.Cli(),
+      int rc = ToolRunner.run(conf, new MoverCli(),
               new String[] { "-p", file.toString() });
       int exitcode = ExitStatus.NO_MOVE_BLOCK.getExitCode();
       Assert.assertEquals("Exit code should be " + exitcode, exitcode, rc);
@@ -511,7 +509,7 @@ public class TestMover {
       cluster.corruptBlockOnDataNodesByDeletingBlockFile(lb.getBlock());
       // move to ARCHIVE
       dfs.setStoragePolicy(new Path(file), "COLD");
-      int rc = ToolRunner.run(conf, new Mover.Cli(),
+      int rc = ToolRunner.run(conf, new MoverCli(),
               new String[] {"-p", file.toString()});
       Assert.assertEquals("Movement should fail after some retry",
               ExitStatus.NO_MOVE_PROGRESS.getExitCode(), rc);

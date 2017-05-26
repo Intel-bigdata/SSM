@@ -25,6 +25,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.apache.hadoop.util.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +44,10 @@ public class TestMoverPool {
   private Configuration conf;
   MiniDFSCluster cluster;
   DistributedFileSystem dfs;
+
+  static {
+    TestBalancer.initTestSetup();
+  }
 
   @Before
   public void init() throws Exception {
