@@ -9,6 +9,7 @@ Big data has put increasing pressure on HDFS storage in recent years. The latest
 To overcome the challenge, we introduced in a comprehensive end-to-end solution, aka Smart Storage Management (SSM) in Apache Hadoop. HDFS operation data and system state information are collected from the cluster, based on the metrics collected SSM can automatically make sophisticated usage of these methodologies to optimize HDFS storage efficiency.
 
 High Level Goals
+------------
 * Enhancement for HDFS-HSM and HDFS-cache;
 * Support block EC, similar to HDFS-RAID;
 * Small files compaction and optimization;
@@ -42,8 +43,10 @@ Files are less likely to be read during the ending of lifecycle, so it’s bette
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/archive-rule.png)
 
 Admin Doc
-
+------------
 
 User Doc
+------------
 
 Acknowlegement
+------------
