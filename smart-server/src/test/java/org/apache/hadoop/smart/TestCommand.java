@@ -10,9 +10,6 @@ import org.apache.hadoop.smart.actions.MoveFile;
 import org.apache.hadoop.smart.actions.MoveToCache;
 import org.apache.hadoop.smart.mover.MoverPool;
 import org.junit.After;
-
-import org.junit.AfterClass;
-
 import org.junit.Before;
 import org.junit.Test;
 

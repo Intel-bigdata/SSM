@@ -131,6 +131,5 @@ public class TestSmartAdmin {
       caughtException = true;
     }
     assertEquals(true, caughtException);
-    cluster.shutdown();
   }
 }

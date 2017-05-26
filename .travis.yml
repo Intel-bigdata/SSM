@@ -10,7 +10,6 @@ before_install:
   - tar -xzvf protobuf-2.5.0.tar.gz > tmp.log
   - pushd protobuf-2.5.0 && ./configure --prefix=/usr && make && sudo make install && popd
 
-  - sh bin/build.sh
 addons:
   apt:
     packages:

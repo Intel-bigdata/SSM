@@ -17,8 +17,6 @@
  */
 package org.apache.hadoop.smart.sql;
 
-import com.google.common.io.Files;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;

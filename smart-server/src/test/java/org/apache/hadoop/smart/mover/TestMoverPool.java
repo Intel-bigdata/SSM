@@ -26,7 +26,6 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.util.StringUtils;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,11 +57,6 @@ public class TestMoverPool {
         .build();
     cluster.waitActive();
     dfs = cluster.getFileSystem();
-  }
-
-  @After
-  public void stop() throws Exception {
-    MoverPool.getInstance().shutdown();
   }
 
   static void initConf(Configuration conf) {
@@ -101,7 +95,7 @@ public class TestMoverPool {
             StringUtils.formatTime(status1.getRunningTime()));
         System.out.println("Mover 2 running time : " +
             StringUtils.formatTime(status2.getRunningTime()));
-        Thread.sleep(10000);
+        Thread.sleep(3000);
       }
       assertTrue(status1.getSucceeded());
       assertTrue(status2.getSucceeded());
@@ -110,8 +104,6 @@ public class TestMoverPool {
       System.out.println("Mover 2 total running time : " +
           StringUtils.formatTime(status2.getRunningTime()));
 
-      MoverPool.getInstance().removeStatus(id1);
-      assertNull(MoverPool.getInstance().getStatus(id1));
       MoverPool.getInstance().removeStatus(id2);
       assertNull(MoverPool.getInstance().getStatus(id2));
     } finally {
