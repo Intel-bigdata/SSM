@@ -29,6 +29,7 @@ final public class ActionExecutor {
 
   static {
     // TODO: make configurable
+    // TODO: Add user defined here
     semaphores[ActionType.BalanceCluster.getValue()] = new Semaphore(1);
   }
 
