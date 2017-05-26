@@ -189,8 +189,8 @@ updated later.
 
 * void **enableRule**(**long** ruleID) **throws** IOException;
  
-  Enable a rule
+  Enable a rule. Only “disabled” rule can be enabled. Enable other state rule will throw exception.
 
 * void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
  
-  Disable a rule. Only “disabled” rule can be enabled. Enable other state rule will throw exception. If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only “active” rule can be disabled.
+  Disable a rule. If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only “active” rule can be disabled.
