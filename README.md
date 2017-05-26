@@ -1,14 +1,20 @@
 
-HDFS-SSM - HDFS Smart Storage Management [![Build Status](https://travis-ci.org/Intel-bigdata/SSM.svg?branch=ssm)](https://travis-ci.org/Intel-bigdata/SSM?branch=ssm)
+HDFS Smart Storage Management [![Build Status](https://travis-ci.org/Intel-bigdata/SSM.svg?branch=ssm)](https://travis-ci.org/Intel-bigdata/SSM?branch=ssm)
 =========================
 
-This is the major portion of the overall [Smart Data Management Initiative](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/overall-initiative.md).
+**HDFS-SSM** is the major portion of the overall [Smart Data Management Initiative](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/overall-initiative.md).
 
 Big data has put increasing pressure on HDFS storage in recent years. The latest storage devices (3D XPoint(R) SSD, NVMe SSD, etc.) can be used to improve the storage performance. HDFS provides methodologies like HDFS Cache, Heterogeneous Storage Management and Erasure Coding to provide such support, but it still remains a big challenge for HDFS to make full utilization of these high-performance storage devices in a dynamic environment.
 
 To overcome the challenge, we introduced in a comprehensive end-to-end solution, aka Smart Storage Management (SSM) in Apache Hadoop. HDFS operation data and system state information are collected from the cluster, based on the metrics collected SSM can automatically make sophisticated usage of these methodologies to optimize HDFS storage efficiency.
 
-Goal
+High Level Goals
+* Enhancement for HDFS-HSM and HDFS-cache;
+* Support block EC, similar to HDFS-RAID;
+* Small files compaction and optimization;
+* Cluster Disaster Recovery and transparent fail-over
+
+Development Phases
 ------------
 The SSM project is separated into two phases:
 
@@ -23,7 +29,6 @@ The project is on Phase 1 now, it includes the following general subtasks:
 * Optimize facilities to cooperate with SSM
 * Implement UI to make SSM easy to use 
 
-
 Use Cases
 ------------
 ### Optimizations when data becoming hot
@@ -35,3 +40,10 @@ Without SSM, data will always be readed from HDD (a.). With SSM, optimizaitons c
 Files are less likely to be read during the ending of lifecycle, so it’s better to move these cold files into lower performance storage to decrease the cost of data storage. The following rule shows the example of archiving data that has not been read over 3 times during the last 30 days.
 
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/archive-rule.png)
+
+Admin Doc
+
+
+User Doc
+
+Acknowlegement
