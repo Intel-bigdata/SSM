@@ -16,7 +16,7 @@
 # limitations under the License.
 
 cd hadoop
+patch -p1 < ../patch/Metrics_2.7.3.patch
 mvn clean install -DskipTests
-// patch
-cd ..
-mvn clean install
+# Revert the change
+patch -p1 -R < ../patch/Metrics_2.7.3.patch

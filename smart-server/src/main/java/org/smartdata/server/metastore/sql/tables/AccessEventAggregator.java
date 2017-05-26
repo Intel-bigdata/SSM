@@ -57,53 +57,59 @@ public class AccessEventAggregator {
       this.currentWindow = assignWindow(eventList.get(0).getTimestamp());
     }
     for (FileAccessEvent event : eventList) {
-      if (this.currentWindow.contains(event.getTimestamp())) {
+      if (this.currentWindow.contains(event.getTimestamp()) && !event.getPath().isEmpty()) {
         this.eventBuffer.add(event);
       } else { // New Window occurs
-        AccessCountTable accessCountTable = this.createTable();
-        this.accessCountTableManager.addTable(accessCountTable);
+        this.createTable();
         this.currentWindow = assignWindow(event.getTimestamp());
         this.eventBuffer.clear();
-        this.eventBuffer.add(event);
+        if (!event.getPath().isEmpty()) {
+          this.eventBuffer.add(event);
+        }
       }
     }
   }
 
-  private AccessCountTable createTable() {
+  private void createTable() {
     AccessCountTable table = new AccessCountTable(currentWindow.start, currentWindow.end);
     String createTable = AccessCountTable.createTableSQL(table.getTableName());
-    final Map<String, Long> pathToIDs;
     try {
-      pathToIDs = adapter.getFileIDs(getPaths(eventBuffer));
+      this.adapter.execute(createTable);
     } catch (SQLException e) {
-      // TODO: dirty handle here
-      LOG.error("Create Table " + table.getTableName(), e);
-      return table;
+      LOG.error("Create table error: " + table, e);
     }
-    Map<String, Integer> accessCount = this.getAccessCountMap(eventBuffer);
-    List<String> values = new ArrayList<>();
-    for(Map.Entry<String, Integer> entry: accessCount.entrySet()) {
-      values.add("(" + pathToIDs.get(entry.getKey()) + ", " +
-        entry.getValue() + ")");
-    }
+    if (this.eventBuffer.size() > 0) {
+      final Map<String, Long> pathToIDs;
+      try {
+        pathToIDs = adapter.getFileIDs(getPaths(eventBuffer));
+      } catch (SQLException e) {
+        // TODO: dirty handle here
+        LOG.error("Create Table " + table.getTableName(), e);
+        return;
+      }
+      Map<String, Integer> accessCount = this.getAccessCountMap(eventBuffer);
+      List<String> values = new ArrayList<>();
+      for(Map.Entry<String, Integer> entry: accessCount.entrySet()) {
+        values.add("(" + pathToIDs.get(entry.getKey()) + ", " + entry.getValue() + ")");
+      }
 
-    String insertValue = String.format(
+      String insertValue = String.format(
         "INSERT INTO %s (%s, %s) VALUES %s",
         table.getTableName(),
         AccessCountTable.FILE_FIELD,
         AccessCountTable.ACCESSCOUNT_FIELD,
         String.join(",", values));
-    try {
-      this.adapter.execute(createTable);
-      this.adapter.execute(insertValue);
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Table created: " + table);
+      System.out.println(insertValue);
+      try {
+        this.adapter.execute(insertValue);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Table created: " + table);
+        }
+      } catch (SQLException e) {
+        LOG.error("Create table error: " + table, e);
       }
-    } catch (SQLException e) {
-      LOG.error("Create table error: " + table, e);
+      this.accessCountTableManager.addTable(table);
     }
-
-    return table;
   }
 
   private Set<String> getPaths(List<FileAccessEvent> events) {

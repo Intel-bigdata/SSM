@@ -69,8 +69,7 @@ public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
     for (int i = 0; i < files.length; i++) {
       readFile(dfs, files[i], readCounts[i]);
     }
-    Thread.sleep(6000);
-    readFile(dfs, files[0], 1);
+    Thread.sleep(10000);
 
     RuleInfo info3 = client.getRuleInfo(ruleId);
     RuleInfo info4 = info3;
