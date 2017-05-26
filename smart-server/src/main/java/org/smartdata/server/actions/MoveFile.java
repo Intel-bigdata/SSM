@@ -39,12 +39,17 @@ public class MoveFile implements Action {
   private Configuration conf;
   private ActionType actionType;
   private DFSClient dfsClient;
+  private String name = "MoveFile";
 
 
   public MoveFile(DFSClient client, Configuration conf) {
     this.dfsClient = client;
     this.conf = conf;
     this.actionType = ActionType.MoveFile;
+  }
+
+  public String getName() {
+    return name;
   }
 
   public Action initial(String[] args) {

@@ -29,6 +29,7 @@ import org.smartdata.server.actions.MoveFile;
 import org.smartdata.server.actions.mover.MoverPool;
 import org.smartdata.server.metastore.sql.DBAdapter;
 import org.smartdata.server.utils.JsonUtil;
+
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
@@ -449,6 +450,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       this.cid = cid;
       this.rid = rid;
       this.state = state;
+    }
+
+    public String toString() {
+      return String.format("Rule-%d-cmd-%d", cid, rid);
     }
   }
 

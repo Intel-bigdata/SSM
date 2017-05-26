@@ -27,6 +27,8 @@ public interface Action {
 //  void SetSmartContext();
 //
 //  void SetConf();
+  String getName();
+
   /**
    * Covert current information to string
    * @return a printable String
@@ -37,7 +39,7 @@ public interface Action {
    * Used to initialize the action.
    * @param args Action specific
    */
-  Action init(String[] args);
+  Action initial(String[] args);
 
   /**
    * Execute an action.

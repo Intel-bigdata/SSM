@@ -48,12 +48,17 @@ public class CacheFile implements Action {
   private final String SSMPOOL = "SSMPool";
   private ActionType actionType;
   private DFSClient dfsClient;
+  private String name = "CacheFile";
 
   public CacheFile(DFSClient client, Configuration conf) {
     this.dfsClient = client;
     this.conf = conf;
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
+  }
+
+  public String getName() {
+    return name;
   }
 
   public Action initial(String[] args) {
