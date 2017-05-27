@@ -31,6 +31,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.Matchers.anyString;
@@ -143,7 +144,7 @@ public class TestInotifyEventApplier extends DBTest {
     while (result5.next()) {
       actualPaths.add(result5.getString("path"));
     }
-    actualPaths.sort(String::compareTo);
+    Collections.sort(actualPaths);
     Assert.assertTrue(actualPaths.size() == 3);
     Assert.assertTrue(actualPaths.containsAll(expectedPaths));
 

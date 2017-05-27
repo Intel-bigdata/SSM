@@ -236,7 +236,7 @@ public class TestMover {
 
   private void waitForLocatedBlockWithArchiveStorageType(
           final DistributedFileSystem dfs, final String file,
-          int expectedArchiveCount) throws Exception {
+          final int expectedArchiveCount) throws Exception {
     GenericTestUtils.waitFor(new Supplier<Boolean>() {
       @Override
       public Boolean get() {

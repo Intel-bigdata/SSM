@@ -35,11 +35,11 @@ public class TestPropertyRealParas {
         Arrays.asList(ValueType.LONG),
         "test", "", false);
 
-    List<Object> v1 = Arrays.asList(new Long(1));
-    List<Object> v2 = Arrays.asList(new Integer(1));
-    List<Object> v3 = Arrays.asList(new String("1"));
-    List<Object> v4 = Arrays.asList(new Long(100));
-    List<Object> v5 = Arrays.asList(new Long(1));
+    List<Object> v1 = Arrays.asList((Object) new Long(1));
+    List<Object> v2 = Arrays.asList((Object) new Integer(1));
+    List<Object> v3 = Arrays.asList((Object) new String("1"));
+    List<Object> v4 = Arrays.asList((Object) new Long(100));
+    List<Object> v5 = Arrays.asList((Object) new Long(1));
 
     PropertyRealParas rp1 = new PropertyRealParas(p, v1);
     PropertyRealParas rp2 = new PropertyRealParas(p, v2);
