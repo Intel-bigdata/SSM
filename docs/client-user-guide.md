@@ -11,7 +11,7 @@ original HDFS DFSClient. Here is the diagram.
 
 <img src="./client.png" width="554" height="408" />
 
-SmartDfsClient API
+SmartDFSClient API
 ------------
   
 * void **cache**(**String** filePath) **throws** IOException;
