@@ -11,8 +11,8 @@ original HDFS DFSClient. Here is the diagram.
 
 <img src="./client.png" width="554" height="408" />
 
-Command API
------------
+SmartDfsClient API
+------------
   
 * void **cache**(**String** filePath) **throws** IOException;
 
@@ -21,19 +21,21 @@ Command API
 * void **uncache**(**String** filePath) **throws** IOException;
 
   Uncache a file
+* void **enforceStoragePolicy**(**String** filePath, **String** policyName) **throws** IOException;
 
-* void **move**(**String** srcFilePath, **String** destPath) **throws** IOException;
+  Set the storage policy on the file, then enfore the storage policy
 
-  Move a file to destination
+SmartClient API
+------------
 
-* String\[\] **getCommandList**() **throws** IOException;
+* String\[\] **getSupportedActions**() **throws** IOException;
 
-  List all command name currently supported by the system. Current supported command name are “move”, “cache”, “uncache” etc.
+  List all action names currently supported by the system. Current supported action name are “enforeStoragePolicy”, “cache”, “uncache” etc.
 
-* void **executeCommand**(**String** cmdName, **String\[\]** cmdParams) **throws** IOException;
+* void **executeAction**(**String** actionName, **String\[\]** actionParams) **throws** IOException;
 
-  A synchronized generic API to execute command. System will maintain an internal task to performance the action. The API will return until the task is finished.
+  A synchronized generic API to execute action. System will maintain an internal task to performance the action. The API will return until the task is finished.
   
-* void **executeCommandAsync**(**String** cmdName, **String\[\]** cmdParams) **throws** IOException;
+* void **executeActionAsync**(**String** actionName, **String\[\]** actionParams) **throws** IOException;
 
-  A asynchronized generic API to execute command. System will maintain an internal task to performance the action. The API will return immediately once the internal task is created.
+  A asynchronized generic API to execute action. System will maintain an internal task to performance the action. The API will return immediately once the internal task is created.
