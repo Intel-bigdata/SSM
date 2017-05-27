@@ -35,14 +35,9 @@ import java.util.Map;
 public class ActionRegister {
   static final Logger LOG = LoggerFactory.getLogger(ActionRegister.class);
 
-  private static ActionRegister instance = new ActionRegister();
-  HashMap<String, Class> actionMap;
+  private HashMap<String, Class> actionMap;
 
-  synchronized public static ActionRegister getInstance() {
-    return instance;
-  }
-
-  private ActionRegister() {
+  public ActionRegister() {
     actionMap = new HashMap<>();
   }
 
@@ -56,10 +51,6 @@ public class ActionRegister {
       LOG.error(e.getMessage());
       LOG.error("Load User Actions from Path error!");
     }
-  }
-
-  public void clear() {
-    actionMap.clear();
   }
 
   public void loadNativeAction() {

@@ -252,7 +252,7 @@ public class TestDBMethod {
         String ridCondition = "= 78 ";
         List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.PENDING);
         for(CommandInfo cmd: com) {
-          System.out.printf("Cid = %d \n", cmd.getCid());
+          // System.out.printf("Cid = %d \n", cmd.getCid());
           dbAdapter.updateCommandStatus(cmd.getCid(), cmd.getRid(), CommandState.DONE);
         }
         List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.DONE);

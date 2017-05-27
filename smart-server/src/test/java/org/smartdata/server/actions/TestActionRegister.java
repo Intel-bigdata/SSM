@@ -31,7 +31,7 @@ public class TestActionRegister {
 
   @Test
   public void testNativeClassMap() throws Exception {
-    ActionRegister ar = ActionRegister.getInstance();
+    ActionRegister ar = new ActionRegister();
     ar.loadNativeAction();
     String[] actionNames = ar.namesOfAction();
     Assert.assertTrue(actionNames.length == 2);
@@ -40,19 +40,15 @@ public class TestActionRegister {
 
  @Test
  public void testUDClassMap() throws Exception {
-   ActionRegister ar = ActionRegister.getInstance();
+   ActionRegister ar = new ActionRegister();
    String path = getClass().getClassLoader().getResource("UserAction").getPath();
    Map<String, String> actionMap = new HashMap<>();
    actionMap.put("UDAction", "org.smartdata.server.actions.UDAction");
    ar.loadUserDefinedAction(path,actionMap);
    String[] actionNames = ar.namesOfAction();
-   Assert.assertTrue(actionNames.length == 1);
+   Assert.assertTrue(actionNames.length == actionMap.size());
    Action ac = ar.newActionFromName("UDAction");
    ac.run();
  }
 
- @After
- public void clear() {
-   ActionRegister.getInstance().clear();
- }
 }

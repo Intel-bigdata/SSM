@@ -64,8 +64,8 @@ public class CommandPool {
       return;
     }
     Command cmd = commandMap.get(cid);
-    if (cmd != null) {
-      LOG.error("Force Terminate Command {}", cmd.toString());
+    if (cmd.getState() != CommandState.DONE) {
+      LOG.info("Force Terminate Command {}", cmd.toString());
       cmd.stop();
     }
     commandMap.remove(cid);

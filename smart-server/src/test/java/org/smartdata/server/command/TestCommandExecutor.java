@@ -128,7 +128,14 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     DBAdapter dbAdapter = ssm.getDBAdapter();
     String cidCondition = ">= 1 ";
     String ridCondition = ">= 1 ";
-    Thread.sleep(80000);
+    while(true) {
+      Thread.sleep(2000);
+      int current = ssm.getCommandExecutor().cacheSize();
+      System.out.printf("Cache size = %d\n ", current);
+      if (current == 0) {
+        break;
+      }
+    }
     List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition,
         ridCondition, CommandState.DONE);
     System.out.printf("Size = %d\n", com.size());
