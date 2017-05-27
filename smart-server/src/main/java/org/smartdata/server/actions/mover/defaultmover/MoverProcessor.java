@@ -36,6 +36,8 @@ import org.apache.hadoop.hdfs.server.balancer.Matcher;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.net.NetworkTopology;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,6 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A processor to do Mover action.
  */
 class MoverProcessor {
+  static final Logger LOG = LoggerFactory.getLogger(MoverProcessor.class);
+
   private final DFSClient dfs;
   private final Dispatcher dispatcher;
   private final List<Path> targetPaths;
@@ -59,9 +63,12 @@ class MoverProcessor {
   private final List<String> snapshottableDirs = new ArrayList<String>();
 
   private final BlockStoragePolicy[] blockStoragePolicies;
+  private long movedBlocks = 0;
+  private final MoverStatus moverStatus;
 
   MoverProcessor(Dispatcher dispatcher, List<Path> targetPaths,
-      AtomicInteger retryCount, int retryMaxAttempts, StorageMap storages)
+      AtomicInteger retryCount, int retryMaxAttempts, StorageMap storages,
+      MoverStatus moverStatus)
       throws IOException {
     this.dispatcher = dispatcher;
     this.dfs = dispatcher.getDistributedFileSystem().getClient();
@@ -72,6 +79,7 @@ class MoverProcessor {
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
         BlockStoragePolicySuite.ID_BIT_LENGTH];
     initStoragePolicies();
+    this.moverStatus = moverStatus;
   }
 
   private void initStoragePolicies() throws IOException {
@@ -88,7 +96,7 @@ class MoverProcessor {
     try {
       dirs = dfs.getSnapshottableDirListing();
     } catch (IOException e) {
-      Mover.LOG.warn("Failed to get snapshottable directories."
+      LOG.warn("Failed to get snapshottable directories."
               + " Ignore and continue.", e);
     }
     if (dirs != null) {
@@ -163,13 +171,14 @@ class MoverProcessor {
     if (hasFailed) {
       if (retryCount.get() == retryMaxAttempts) {
         result.setRetryFailed();
-        Mover.LOG.error("Failed to move some block's after "
+        LOG.error("Failed to move some block's after "
                 + retryMaxAttempts + " retries.");
         return result.getExitStatus();
       } else {
         retryCount.incrementAndGet();
       }
     } else {
+      moverStatus.increaseMovedBlocks(movedBlocks);
       // Reset retry count if no failure.
       retryCount.set(0);
     }
@@ -187,7 +196,7 @@ class MoverProcessor {
       try {
         children = dfs.listPaths(fullPath, lastReturnedName, true);
       } catch (IOException e) {
-        Mover.LOG.warn("Failed to list directory " + fullPath
+        LOG.warn("Failed to list directory " + fullPath
                 + ". Ignore the directory and continue.", e);
         return;
       }
@@ -230,7 +239,7 @@ class MoverProcessor {
           processFile(fullPath, (HdfsLocatedFileStatus) status, result);
         }
       } catch (IOException e) {
-        Mover.LOG.warn("Failed to check the status of " + parent
+        LOG.warn("Failed to check the moverStatus of " + parent
                 + ". Ignore it and continue.", e);
       }
     }
@@ -247,7 +256,7 @@ class MoverProcessor {
     }
     final BlockStoragePolicy policy = blockStoragePolicies[policyId];
     if (policy == null) {
-      Mover.LOG.warn("Failed to get the storage policy of file " + fullPath);
+      LOG.warn("Failed to get the storage policy of file " + fullPath);
       return;
     }
     List<StorageType> types = policy.chooseStorageTypes(
@@ -264,8 +273,12 @@ class MoverProcessor {
       LocatedBlock lb = lbs.get(i);
       final StorageTypeDiff diff = new StorageTypeDiff(types,
               lb.getStorageTypes());
-      if (!diff.removeOverlap(true)) {
+      int remainingReplications = diff.removeOverlap(true);
+      moverStatus.increaseTotalSize(lb.getBlockSize() * remainingReplications);
+      moverStatus.increaseTotalBlocks(remainingReplications);
+      if (remainingReplications != 0) {
         if (scheduleMoveBlock(diff, lb)) {
+          movedBlocks ++;
           result.updateHasRemaining(diff.existing.size() > 1
                   && diff.expected.size() > 1);
           // One block scheduled successfully, set noBlockMoved to false
@@ -435,10 +448,9 @@ class MoverProcessor {
      * @param  ignoreNonMovable ignore non-movable storage types
      *         by removing them from both expected and existing storage type list
      *         to prevent non-movable storage from being moved.
-     * @returns if the existing types or the expected types is empty after
-     *         removing the overlap.
+     * @returns the remaining number of replications to move.
      */
-    boolean removeOverlap(boolean ignoreNonMovable) {
+    int removeOverlap(boolean ignoreNonMovable) {
       for(Iterator<StorageType> i = existing.iterator(); i.hasNext(); ) {
         final StorageType t = i.next();
         if (expected.remove(t)) {
@@ -449,7 +461,7 @@ class MoverProcessor {
         removeNonMovable(existing);
         removeNonMovable(expected);
       }
-      return expected.isEmpty() || existing.isEmpty();
+      return Integer.min(existing.size(), expected.size());
     }
 
     void removeNonMovable(List<StorageType> types) {
