@@ -1,5 +1,5 @@
 
-HDFS Smart Storage Management [![Build Status](https://travis-ci.org/Intel-bigdata/SSM.svg?branch=ssm)](https://travis-ci.org/Intel-bigdata/SSM?branch=ssm)
+HDFS Smart Storage Management [![Build Status](https://travis-ci.org/Intel-bigdata/SSM.svg?branch=trunk)](https://travis-ci.org/Intel-bigdata/SSM?branch=trunk)
 =========================
 
 **HDFS-SSM** is the major portion of the overall [Smart Data Management Initiative](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/overall-initiative.md).
