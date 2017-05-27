@@ -86,7 +86,7 @@ public class TestMover {
     final List<NameNodeConnector> nncs = NameNodeConnector.newNameNodeConnectors(
             nnMap, Mover.class.getSimpleName(), moverIdPath, conf,
             NameNodeConnector.DEFAULT_MAX_IDLE_ITERATIONS);
-    return new Mover(nncs.get(0), conf, new AtomicInteger(0));
+    return new Mover(nncs.get(0), conf, new AtomicInteger(0), new MoverStatus(null));
   }
 
   @Test
@@ -109,7 +109,7 @@ public class TestMover {
       mover.init();
       final MoverProcessor processor = new MoverProcessor(mover.dispatcher,
           mover.targetPaths, mover.retryCount,
-          mover.retryMaxAttempts, mover.storages);
+          mover.retryMaxAttempts, mover.storages, new MoverStatus(null));
 
       final LocatedBlock lb = dfs.getClient().getLocatedBlocks(file, 0).get(0);
       final List<MLocation> locations = MLocation.toLocations(lb);

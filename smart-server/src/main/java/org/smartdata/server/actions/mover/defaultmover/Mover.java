@@ -53,8 +53,10 @@ public class Mover {
   final List<Path> targetPaths;
   final int retryMaxAttempts;
   final AtomicInteger retryCount;
+  private final MoverStatus status;
 
-  Mover(NameNodeConnector nnc, Configuration conf, AtomicInteger retryCount) {
+  Mover(NameNodeConnector nnc, Configuration conf, AtomicInteger retryCount,
+      MoverStatus status) {
     final long movedWinWidth = conf.getLong(
             DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_KEY,
             DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_DEFAULT);
@@ -73,6 +75,7 @@ public class Mover {
             maxConcurrentMovesPerNode, conf);
     this.storages = new StorageMap();
     this.targetPaths = nnc.getTargetPaths();
+    this.status = status;
   }
 
   @VisibleForTesting
@@ -94,7 +97,7 @@ public class Mover {
     try {
       init();
       return new MoverProcessor(dispatcher, targetPaths, retryCount,
-              retryMaxAttempts, storages).processNamespace();
+              retryMaxAttempts, storages, status).processNamespace();
     } catch (IllegalArgumentException e) {
       LOG.info(e + ".  Exiting ...");
       return ExitStatus.ILLEGAL_ARGUMENTS;
@@ -141,7 +144,7 @@ public class Mover {
         Iterator<NameNodeConnector> iter = connectors.iterator();
         while (iter.hasNext()) {
           NameNodeConnector nnc = iter.next();
-          final Mover m = new Mover(nnc, conf, retryCount);
+          final Mover m = new Mover(nnc, conf, retryCount, status);
           final ExitStatus r = m.run();
 
           if (r == ExitStatus.SUCCESS) {
@@ -161,6 +164,8 @@ public class Mover {
             return r.getExitCode();
           }
         }
+        // total values of status are completely set after the first round
+        status.completeTotalValueSet();
         Thread.sleep(sleeptime);
       }
       LOG.info("Mover Successful: all blocks satisfy"

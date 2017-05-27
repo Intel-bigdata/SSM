@@ -34,6 +34,7 @@ public class MoverStatus extends Status {
   private long totalBlocks;
   private long totalSize;
   private long movedBlocks;
+  private boolean totalValueSet;
 
   private void init() {
     isFinished = false;
@@ -43,6 +44,7 @@ public class MoverStatus extends Status {
     totalBlocks = 0;
     totalSize = 0;
     movedBlocks = 0;
+    totalValueSet = false;
   }
 
   public MoverStatus(UUID id) {
@@ -139,11 +141,11 @@ public class MoverStatus extends Status {
 
   @Override
   synchronized public float getPercentage() {
-    if (totalBlocks == 0) {
-      return 0;
-    }
     if (isFinished) {
       return 1;
+    }
+    if (!totalValueSet) {
+      return 0;
     }
     return movedBlocks >= totalBlocks ? 0.99f :
             0.99f * movedBlocks / totalBlocks;
@@ -154,19 +156,31 @@ public class MoverStatus extends Status {
   }
 
   synchronized public void setTotalBlocks(long blocks) {
+    if (totalValueSet) {
+      return;
+    }
     totalBlocks = blocks;
   }
 
   synchronized public long increaseTotalBlocks(long blocks) {
+    if (totalValueSet) {
+      return totalBlocks;
+    }
     totalBlocks += blocks;
     return totalBlocks;
   }
 
   synchronized public void setTotalSize(long size) {
+    if (totalValueSet) {
+      return;
+    }
     totalSize = size;
   }
 
   synchronized public long increaseTotalSize(long size) {
+    if (totalValueSet) {
+      return totalSize;
+    }
     totalSize += size;
     return totalSize;
   }
@@ -182,5 +196,9 @@ public class MoverStatus extends Status {
 
   synchronized public long getMovedBlocks() {
     return movedBlocks;
+  }
+
+  synchronized public void completeTotalValueSet() {
+    totalValueSet = true;
   }
 }

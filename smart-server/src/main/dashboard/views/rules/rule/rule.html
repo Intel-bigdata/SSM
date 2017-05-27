@@ -20,7 +20,7 @@ under the License.
   <h4>
     <!-- todo: backend api should enforce user application has a readable name! -->
     <span ng-bind="rule.ruleName"></span>
-    <indicator condition="{{rule.isRunning?'good':''}}" tooltip="{{rule.status}}"></indicator>
+    <indicator condition="{{rule.isRunning?'good':''}}" tooltip="{{rule.moverStatus}}"></indicator>
   </h4>
   <h5 ng-bind="rule.ruleText"></h5>
 </div>

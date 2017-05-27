@@ -24,10 +24,7 @@ import com.sun.tools.javac.util.Log;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.smartdata.server.actions.mover.Status;
@@ -40,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.text.DateFormat;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -117,40 +113,6 @@ public class MoverCli extends Configured implements Tool {
     return map;
   }
 
-  static void calculateTotalSizeInPaths(FileSystem fs, MoverStatus status,
-      List<Path> paths) throws IOException {
-    for (Path path : paths) {
-      RemoteIterator<FileStatus> fileStatusIterator = fs.listStatusIterator(path);
-      while (fileStatusIterator.hasNext()) {
-        FileStatus fileStatus = fileStatusIterator.next();
-        if (fileStatus.isDirectory()) {
-          Path childPath = fileStatus.getPath();
-          calculateTotalSizeInPaths(fs, status, Arrays.asList(childPath));
-        } else {
-          final long fileLength = fileStatus.getLen();
-          final short replication = fileStatus.getReplication();
-          final long blockSize = fileStatus.getBlockSize();
-          final long totalSize = fileLength * replication;
-          final long blockNum = replication * ((fileLength % blockSize == 0) ?
-                  (fileLength / blockSize) : (fileLength / blockSize + 1));
-          status.increaseTotalSize(totalSize);
-          status.increaseTotalBlocks(blockNum);
-        }
-      }
-    }
-  }
-
-  @VisibleForTesting
-  static void updateTotalMoverSize(Map<URI, List<Path>> namenodes, Configuration conf,
-      MoverStatus status) throws IOException {
-    for (Map.Entry<URI, List<Path>> entry : namenodes.entrySet()) {
-      URI namenodeURI = entry.getKey();
-      List<Path> paths = entry.getValue();
-      FileSystem fs = FileSystem.get(namenodeURI, conf);
-      calculateTotalSizeInPaths(fs, status, paths);
-    }
-  }
-
   @Override
   public int run(String[] args) throws Exception {
     final long startTime = Time.monotonicNow();
@@ -159,7 +121,6 @@ public class MoverCli extends Configured implements Tool {
 
     try {
       final Map<URI, List<Path>> map = getNameNodePathsToMove(conf, args);
-      updateTotalMoverSize(map, conf, status);
       return Mover.run(map, conf, status);
     } catch (IOException e) {
       LOG.info(e + ".  Exiting ...");

@@ -29,9 +29,11 @@ import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.apache.hadoop.util.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.server.actions.mover.defaultmover.MoverStatus;
 
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -40,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  * Test MoverPool.
  */
 public class TestMoverPool {
-  private static final int DEFAULT_BLOCK_SIZE = 100;
+  private static final int DEFAULT_BLOCK_SIZE = 50;
   private Configuration conf;
   MiniDFSCluster cluster;
   DistributedFileSystem dfs;
@@ -55,7 +57,7 @@ public class TestMoverPool {
     initConf(conf);
     MoverPool.getInstance().init(conf);
     cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3)
+        .numDataNodes(5)
         .storagesPerDatanode(3)
         .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
         StorageType.SSD})
@@ -88,7 +90,7 @@ public class TestMoverPool {
       out2.writeChars("testParallelMovers2");
       out2.close();
 
-      // move to ARCHIVE
+      // schedule mover to ARCHIVE or SSD
       dfs.setStoragePolicy(new Path(file1), "COLD");
       dfs.setStoragePolicy(new Path(file2), "ALL_SSD");
       UUID id1 = MoverPool.getInstance().createMoverAction(file1);
@@ -128,7 +130,7 @@ public class TestMoverPool {
       out1.writeChars("testStopAndRestartMovers");
       out1.close();
 
-      // move to ARCHIVE
+      // schedule mover to ARCHIVE
       dfs.setStoragePolicy(dir, "COLD");
       UUID id1 = MoverPool.getInstance().createMoverAction(file1);
 
@@ -152,6 +154,70 @@ public class TestMoverPool {
           StringUtils.formatTime(status1.getRunningTime()));
     } finally {
       cluster.shutdown();
+    }
+  }
+
+  @Test
+  public void testMoverPercentage() throws Exception {
+    try {
+      final String file1 = "/testParallelMovers/file1";
+      final String file2 = "/testParallelMovers/child/file2";
+      String dir = "/testParallelMovers";
+      dfs.mkdirs(new Path(dir));
+      dfs.mkdirs(new Path("/testParallelMovers/child"));
+
+      // write to DISK
+      dfs.setStoragePolicy(new Path(dir), "HOT");
+      final FSDataOutputStream out1 = dfs.create(new Path(file1), (short)5);
+      final String string1 = "testParallelMovers1";
+      out1.writeChars(string1);
+      out1.close();
+      final FSDataOutputStream out2 = dfs.create(new Path(file2));
+      final String string2 = "testParallelMovers212345678901234567890";
+      out2.writeChars(string2);
+      out2.close();
+
+      // schedule mover to ALL_SSD
+      long totalSize1 = string1.length()*2*5;
+      long blockNum1 = 1*5;
+      long totalSize2 = string2.length()*2*3;
+      long blockNum2 = 2*3;
+      scheduleMoverWithPercentage(dir, "ALL_SSD", totalSize1 + totalSize2,
+          blockNum1 + blockNum2);
+
+      // schedule mover to ONE_SSD
+      totalSize1 = string1.length()*2*4;
+      blockNum1 = 1*4;
+      totalSize2 = string2.length()*2*2;
+      blockNum2 = 2*2;
+      scheduleMoverWithPercentage(dir, "ONE_SSD", totalSize1 + totalSize2,
+          blockNum1 + blockNum2);
+    } finally {
+      cluster.shutdown();
+    }
+  }
+
+  private void scheduleMoverWithPercentage(String dir, String storageType,
+      long totalSize, long totolBlocks) throws Exception {
+    dfs.setStoragePolicy(new Path(dir), storageType);
+    UUID id = MoverPool.getInstance().createMoverAction(dir);
+    Status status = MoverPool.getInstance().getStatus(id);
+    if (status instanceof MoverStatus) {
+      MoverStatus moverStatus = (MoverStatus)status;
+      while (!moverStatus.isFinished()) {
+        System.out.println("Mover running time : " +
+                StringUtils.formatTime(moverStatus.getRunningTime()));
+        System.out.println("Moved/Total : " + moverStatus.getMovedBlocks()
+                + "/" + moverStatus.getTotalBlocks());
+        System.out.println("Move percentage : " +
+                moverStatus.getPercentage()*100 + "%");
+        assertTrue(moverStatus.getPercentage() <= 1);
+        Thread.sleep(1000);
+      }
+      System.out.println("Mover " + id + " is finished.");
+      assertEquals(1.0f, moverStatus.getPercentage(), 0.00001f);
+      assertEquals(totalSize, moverStatus.getTotalSize());
+      assertEquals(totolBlocks, moverStatus.getTotalBlocks());
     }
   }
 }
