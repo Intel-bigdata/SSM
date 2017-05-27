@@ -17,8 +17,12 @@
  */
 package org.smartdata.server.actions;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Test ActionRegister with native and user defined actions
@@ -33,14 +37,22 @@ public class TestActionRegister {
     Assert.assertTrue(actionNames.length == 2);
     Action moveFile = ar.newActionFromName("MoveFile");
   }
- //
- // @Test
- // public void testUDClassMap() throws Exception {
- //   ActionRegister ar = ActionRegister.getInstance();
- //   ar.loadUserDefinedAction(null,null);
- //   String[] actionNames = ar.namesOfAction();
- //   Assert.assertTrue(actionNames.length == 1);
- //   Action ac = ar.newActionFromName("UDAction");
- //   ac.run();
- // }
+
+ @Test
+ public void testUDClassMap() throws Exception {
+   ActionRegister ar = ActionRegister.getInstance();
+   String path = getClass().getClassLoader().getResource("UserAction").getPath();
+   Map<String, String> actionMap = new HashMap<>();
+   actionMap.put("UDAction", "org.smartdata.server.actions.UDAction");
+   ar.loadUserDefinedAction(path,actionMap);
+   String[] actionNames = ar.namesOfAction();
+   Assert.assertTrue(actionNames.length == 1);
+   Action ac = ar.newActionFromName("UDAction");
+   ac.run();
+ }
+
+ @After
+ public void clear() {
+   ActionRegister.getInstance().clear();
+ }
 }

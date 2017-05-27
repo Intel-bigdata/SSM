@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.common.actions.ActionType;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
@@ -49,7 +50,16 @@ public class ActionRegister {
     loadNativeAction();
     // TODO read from configure
     // String libPath = conf.get("libPath");
-    loadUserDefinedAction(null, null);
+    try {
+      loadUserDefinedAction(null, null);
+    } catch(IOException e) {
+      LOG.error(e.getMessage());
+      LOG.error("Load User Actions from Path error!");
+    }
+  }
+
+  public void clear() {
+    actionMap.clear();
   }
 
   public void loadNativeAction() {
@@ -68,21 +78,27 @@ public class ActionRegister {
     }
   }
 
-  public void loadUserDefinedAction(String libPath, Map<String, String> userDefinedActions) {
-    try {
-      File dependencyDirectory = new File(libPath);
-      File[] files = dependencyDirectory.listFiles();
-      for (File jarFile: files) {
+  public void loadUserDefinedAction(String libPath, Map<String, String> userDefinedActions) throws IOException {
+    File dependencyDirectory = new File(libPath);
+    File[] files = dependencyDirectory.listFiles();
+    if (files == null) {
+      return;
+    }
+    // Search this dir
+    for (File jarFile: files) {
+      if(jarFile.getName().contains("jar")) {
         URLClassLoader classLoader = new URLClassLoader(new URL[]{new URL("file:" +
-                jarFile.getAbsolutePath())}, Thread.currentThread().getContextClassLoader());
+            jarFile.getAbsolutePath())}, Thread.currentThread().getContextClassLoader());
+        // Load <name, class> pair in map
         for (Map.Entry<String, String> entry : userDefinedActions.entrySet()) {
-          Class userDefinedClass = classLoader.loadClass(entry.getValue());
-          actionMap.put(entry.getKey(), userDefinedClass);
+          try {
+            Class userDefinedClass = classLoader.loadClass(entry.getValue());
+            actionMap.put(entry.getKey(), userDefinedClass);
+          } catch (ClassNotFoundException e) {
+              LOG.info("Fail to oad User Actions {}!", entry.getValue());
+          }
         }
       }
-    } catch (Exception e) {
-      LOG.error(e.getMessage());
-      LOG.error("Load User Actions from Path error!");
     }
   }
 
