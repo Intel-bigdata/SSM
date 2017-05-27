@@ -19,6 +19,6 @@ jdk:
   - oraclejdk7
 cache:
   directories:
-    - "$HOME/.m2"
+    - $HOME/.m2
 script:
     mvn test

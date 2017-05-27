@@ -68,7 +68,7 @@ public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
     // Submit a rule
     SmartAdmin client = new SmartAdmin(conf);
     String rule = "file : every 1s | "
-        + "accessCount(5s) >= 5 and length < 80 | cachefile";
+        + "accessCount(20s) >= 5 and length < 80 | cachefile";
     long ruleId = client.submitRule(rule, RuleState.ACTIVE);
 
     RuleInfo info = client.getRuleInfo(ruleId);
@@ -89,7 +89,7 @@ public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
           lengths[i], (byte) 1, 2017);
     }
 
-    Thread.sleep(2000);
+    Thread.sleep(3000);
 
     // Make sure the rule is working
     RuleInfo info2 = client.getRuleInfo(ruleId);
