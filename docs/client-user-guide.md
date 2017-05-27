@@ -2,11 +2,11 @@ Application API
 ===============
 
 Application APIs are used by applications run on top of HDFS. This set
-of APIs include move/archive/cache file level operation etc. System will
+of APIs include cache,uncache and enfore storage policy etc. file level operations. System will
 execute the file operation on half of application, with the privilege of
-the user who starts the application. SSM will provide a SmartClient
+the user who starts the application. SSM will provide a SmartDFSClient
 which includes both HDFS DFSClient functions and new SSM Application
-APIs. Upper level application can use this SmartClient instead of
+APIs. Upper level application can use this SmartDFSClient instead of
 original HDFS DFSClient. Here is the diagram.
 
 <img src="./client.png" width="554" height="408" />
