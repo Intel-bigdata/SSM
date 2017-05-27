@@ -237,8 +237,8 @@ public class TestRuleManager {
 
     Thread[] threads = new Thread[] {
         new Thread(new RuleInfoUpdater(rid, 3)),
-        new Thread(new RuleInfoUpdater(rid, 7)),
-        new Thread(new RuleInfoUpdater(rid, 11)),
+//        new Thread(new RuleInfoUpdater(rid, 7)),
+//        new Thread(new RuleInfoUpdater(rid, 11)),
         new Thread(new RuleInfoUpdater(rid, 17))} ;
 
     for (Thread t : threads) {
@@ -271,7 +271,7 @@ public class TestRuleManager {
       long checkedCount;
       int commandsGen;
       try {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 20; i++) {
           RuleInfo info = ruleManager.getRuleInfo(ruleid);
           lastCheckTime = System.currentTimeMillis();
           checkedCount = info.getNumChecked();
@@ -305,7 +305,7 @@ public class TestRuleManager {
 
     long start = System.currentTimeMillis();
 
-    int nThreads = 10;
+    int nThreads = 2;
     Thread[] threads = new Thread[nThreads];
     for (int i = 0; i< nThreads; i++) {
       threads[i] = new Thread(new StateChangeWorker(rid));
@@ -346,7 +346,7 @@ public class TestRuleManager {
     public void run() {
       Random r = new Random();
       try {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
           int rand = r.nextInt() % 2;
           //System.out.println(rand == 0 ? "Active" : "Disable");
           switch (rand) {

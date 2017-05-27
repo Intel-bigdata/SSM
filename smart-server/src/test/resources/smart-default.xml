@@ -34,13 +34,13 @@
 
   <property>
     <name>dfs.smart.rpc-address</name>
-    <value>localhost:7042</value>
+    <value>127.0.0.1:7042</value>
     <description>rpc server of SSM</description>
   </property>
 
   <property>
     <name>dfs.smart.http-address</name>
-    <value>0.0.0.0:7045</value>
+    <value>127.0.0.1:7045</value>
     <description>HTTP server of SSM</description>
   </property>
 
