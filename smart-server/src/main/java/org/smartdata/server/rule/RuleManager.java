@@ -180,11 +180,10 @@ public class RuleManager implements ModuleSequenceProto {
     CommandInfo[] cmds = commands.toArray(new CommandInfo[commands.size()]);
 
     // TODO: call commandExecutor interface to do this
-    try {
-      dbAdapter.insertCommandsTable(cmds);
-    } catch (SQLException e) {
-      LOG.error(e.getMessage());
-    }
+    // try {
+    // } catch (SQLException e) {
+    //   LOG.error(e.getMessage());
+    // }
 
     if (LOG.isDebugEnabled()) {
       LOG.debug("" + commands.size() + " commands added.");

@@ -64,7 +64,7 @@ public class TestMoveToSSD {
       Path dir = new Path("/testMoveFileToSSD");
       final DFSClient client = cluster.getFileSystem().getClient();
       dfs.mkdirs(dir);
-      String[] args = {file};
+      String[] args = {file, "ALL_SSD"};
       // write to DISK
       dfs.setStoragePolicy(dir, "HOT");
       final FSDataOutputStream out = dfs.create(new Path(file), true, 1024);
@@ -77,7 +77,7 @@ public class TestMoveToSSD {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
       // move to SSD, Policy ALL_SSD
-      UUID id = new MoveFile(client, conf, "ALL_SSD").initial(args).execute();
+      UUID id = new MoveFile().initial(client, conf, args).run();
       Status status = MoverPool.getInstance().getStatus(id);
       while (!status.isFinished()) {
         Thread.sleep(3000);

@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.smartdata.server.command;
 
 import org.apache.hadoop.conf.Configuration;
@@ -5,15 +22,16 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
+
+import org.smartdata.common.CommandState;
+import org.smartdata.server.actions.Action;
+import org.smartdata.server.actions.CacheFile;
+import org.smartdata.server.actions.MoveFile;
+import org.smartdata.server.actions.mover.MoverPool;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.common.CommandState;
-import org.smartdata.server.command.Command;
-import org.smartdata.server.actions.ActionBase;
-import org.smartdata.server.actions.MoveFile;
-import org.smartdata.server.actions.MoveToCache;
-import org.smartdata.server.actions.mover.MoverPool;
 
 
 /**
@@ -81,17 +99,17 @@ public class TestCommand {
   }
 
   public Command runHelper() throws Exception {
-    ActionBase[] actions = new ActionBase[10];
-    String[] args1 = {"/testMoveFile/file1"};
-    String[] args2 = {"/testMoveFile/file2"};
+    Action[] actions = new Action[10];
+    String[] args1 = {"/testMoveFile/file1", "ALL_SSD"};
+    String[] args2 = {"/testMoveFile/file2", "COLD"};
     String[] args3 = {"/testCacheFile"};
     // New action
-    actions[0] = new MoveFile(client, conf, "ALL_SSD");
-    actions[0].initial(args1);
-    actions[1] = new MoveFile(client, conf, "COLD");
-    actions[1].initial(args2);
-    actions[2] = new MoveToCache(client, conf);
-    actions[2].initial(args3);
+    actions[0] = new MoveFile();
+    actions[0].initial(client, conf, args1);
+    actions[1] = new MoveFile();
+    actions[1].initial(client, conf, args2);
+    actions[2] = new CacheFile();
+    actions[2].initial(client, conf, args3);
     // New Command
     Command cmd = new Command(actions, null);
     cmd.setId(1);

@@ -17,6 +17,9 @@
  */
 package org.smartdata.server.actions;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
+
 import java.util.UUID;
 
 /**
@@ -24,9 +27,11 @@ import java.util.UUID;
  */
 public interface Action {
 
-  void setSmartContext();
+//  void SetSmartContext();
+//
+//  void SetConf();
+  String getName();
 
-  void setConf();
   /**
    * Covert current information to string
    * @return a printable String
@@ -37,7 +42,7 @@ public interface Action {
    * Used to initialize the action.
    * @param args Action specific
    */
-  Action init(String[] args);
+  Action initial(DFSClient client, Configuration conf, String[] args);
 
   /**
    * Execute an action.

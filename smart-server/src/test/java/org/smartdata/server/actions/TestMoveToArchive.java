@@ -23,11 +23,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.junit.Assert;
-import org.junit.Test;
+
 import org.smartdata.server.actions.mover.MoverPool;
 import org.smartdata.server.actions.mover.Status;
 
+import org.junit.Assert;
+import org.junit.Test;
 import java.util.UUID;
 
 /**
@@ -66,7 +67,7 @@ public class TestMoveToArchive {
       Path dir = new Path("/testMoveFileToArchive");
       final DFSClient client = cluster.getFileSystem().getClient();
       dfs.mkdirs(dir);
-      String[] args = {file};
+      String[] args = {file, "COLD"};
       // write to DISK
       dfs.setStoragePolicy(dir, "HOT");
       final FSDataOutputStream out = dfs.create(new Path(file), true, 1024);
@@ -79,7 +80,7 @@ public class TestMoveToArchive {
         Assert.assertTrue(StorageType.DISK == storageType);
       }
       // move to Archive, Policy CLOD
-      UUID id = new MoveFile(client, conf, "COLD").initial(args).execute();
+      UUID id = new MoveFile().initial(client, conf, args).run();
       Status status = MoverPool.getInstance().getStatus(id);
       while (!status.isFinished()) {
         Thread.sleep(3000);
