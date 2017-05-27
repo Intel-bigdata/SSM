@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.actions;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,30 +24,40 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Test ActionRegister with native and user defined actions
+ * Test ActionRegistry with native and user defined actions
  */
-public class TestActionRegister {
+public class TestActionRegistry {
 
-  @Test
-  public void testNativeClassMap() throws Exception {
-    ActionRegister ar = new ActionRegister();
-    ar.loadNativeAction();
-    String[] actionNames = ar.namesOfAction();
-    Assert.assertTrue(actionNames.length == 2);
-    Action moveFile = ar.newActionFromName("MoveFile");
-  }
+  // @Test
+  // public void testNativeClassMap() throws Exception {
+  //   ActionRegistry ar = new ActionRegistry();
+  //   ar.loadNativeAction();
+  //   String[] actionNames = ar.namesOfAction();
+  //   Assert.assertTrue(actionNames.length == 2);
+  //   Action moveFile = ar.newActionFromName("MoveFile");
+  // }
 
  @Test
- public void testUDClassMap() throws Exception {
-   ActionRegister ar = new ActionRegister();
-   String path = getClass().getClassLoader().getResource("UserAction").getPath();
-   Map<String, String> actionMap = new HashMap<>();
-   actionMap.put("UDAction", "org.smartdata.server.actions.UDAction");
-   ar.loadUserDefinedAction(path,actionMap);
+ public void testClassMap() throws Exception {
+   ActionRegistry ar = new ActionRegistry();
+   ar.loadActions();
    String[] actionNames = ar.namesOfAction();
-   Assert.assertTrue(actionNames.length == actionMap.size());
+   System.out.println(actionNames.length);
+   Assert.assertTrue(actionNames.length == 3);
    Action ac = ar.newActionFromName("UDAction");
    ac.run();
  }
+
+ @Test
+ public void testnewActionFromName() throws Exception {
+   ActionRegistry ar = new ActionRegistry();
+   ar.initial(null);
+   Action moveFile = ar.newActionFromName("MoveFile");
+   Assert.assertTrue(moveFile.getName().contains("MoveFile"));
+   Action UDAction = ar.newActionFromName("UDAction");
+   Assert.assertTrue(UDAction.getName().contains("UDAction"));
+ }
+
+
 
 }
