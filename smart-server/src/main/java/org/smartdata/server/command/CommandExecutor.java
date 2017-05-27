@@ -66,7 +66,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     this.ssm = ssm;
     moverPool = MoverPool.getInstance();
     moverPool.init(conf);
-    ActionRegister.getInstance().initial();
+    ActionRegister.getInstance().initial(conf);
     statusCache = new HashSet<>();
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<>());

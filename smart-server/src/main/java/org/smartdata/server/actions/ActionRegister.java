@@ -1,15 +1,32 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.smartdata.server.actions;
 
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.actions.ActionType;
 
+import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.Map;
 
 /**
  * Provide Action Map and Action instance
@@ -28,9 +45,11 @@ public class ActionRegister {
     actionMap = new HashMap<>();
   }
 
-  public void initial() {
+  public void initial(Configuration conf) {
     loadNativeAction();
-    loadUserDefinedAction();
+    // TODO read from configure
+    // String libPath = conf.get("libPath");
+    loadUserDefinedAction(null, null);
   }
 
   public void loadNativeAction() {
@@ -49,29 +68,21 @@ public class ActionRegister {
     }
   }
 
-  public void loadUserDefinedAction() {
-    // TODO Replace with Dir and configuration
-    String pathToJar = "/home/intel/Develop/SSM/Smart/User/UDAction.jar";
+  public void loadUserDefinedAction(String libPath, Map<String, String> userDefinedActions) {
     try {
-      JarFile jarFile = new JarFile(pathToJar);
-      Enumeration<JarEntry> jarEnties = jarFile.entries();
-      URL[] urls = {new URL("jar:file:" + pathToJar + "!/")};
-      URLClassLoader cl = URLClassLoader.newInstance(urls);
-      while (jarEnties.hasMoreElements()) {
-        JarEntry je = jarEnties.nextElement();
-        if (je.isDirectory() || !je.getName().endsWith(".class")) {
-          continue;
+      File dependencyDirectory = new File(libPath);
+      File[] files = dependencyDirectory.listFiles();
+      for (File jarFile: files) {
+        URLClassLoader classLoader = new URLClassLoader(new URL[]{new URL("file:" +
+                jarFile.getAbsolutePath())}, Thread.currentThread().getContextClassLoader());
+        for (Map.Entry<String, String> entry : userDefinedActions.entrySet()) {
+          Class userDefinedClass = classLoader.loadClass(entry.getValue());
+          actionMap.put(entry.getKey(), userDefinedClass);
         }
-        // -6 because of .class
-        String className = je.getName().substring(0, je.getName().length() - 6);
-        className = className.replace('/', '.');
-        String actionName = className.substring(className.lastIndexOf('.') + 1);
-        Class c = cl.loadClass(className);
-        actionMap.put(actionName, c);
       }
     } catch (Exception e) {
       LOG.error(e.getMessage());
-      LOG.error("Load from Classes JAR error!");
+      LOG.error("Load User Actions from Path error!");
     }
   }
 
