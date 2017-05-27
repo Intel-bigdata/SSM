@@ -1,5 +1,5 @@
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNodeRpcServer.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNodeRpcServer.java
-index 582e4920b2..21826d88fd 100644
+index 582e4920b22..21826d88fde 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNodeRpcServer.java
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNodeRpcServer.java
 @@ -179,6 +179,7 @@
@@ -22,10 +22,10 @@ index 582e4920b2..21826d88fd 100644
    }
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/metrics/FileAccessMetrics.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/metrics/FileAccessMetrics.java
 new file mode 100644
-index 0000000000..bc66311a13
+index 00000000000..1f39777e6fd
 --- /dev/null
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/metrics/FileAccessMetrics.java
-@@ -0,0 +1,1147 @@
+@@ -0,0 +1,1152 @@
 +/**
 + * Licensed to the Apache Software Foundation (ASF) under one
 + * or more contributor license agreements.  See the NOTICE file
@@ -1057,6 +1057,11 @@ index 0000000000..bc66311a13
 +    }
 +
 +    @Override
++    public void remove() {
++      throw new UnsupportedOperationException("remove");
++    }
++
++    @Override
 +    public void close() {
 +      try {
 +        if (reader != null) {
@@ -1174,7 +1179,7 @@ index 0000000000..bc66311a13
 +
 +}
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/metrics/NameNodeMetrics.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/metrics/NameNodeMetrics.java
-index 54b5c6ebf4..429acb56d0 100644
+index 54b5c6ebf4d..429acb56d01 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/metrics/NameNodeMetrics.java
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/metrics/NameNodeMetrics.java
 @@ -129,10 +129,13 @@ public long totalFileOps(){
@@ -1218,7 +1223,7 @@ index 54b5c6ebf4..429acb56d0 100644
      DefaultMetricsSystem.shutdown();
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/metrics/TestFileAccessMetricsReader.java b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/metrics/TestFileAccessMetricsReader.java
 new file mode 100644
-index 0000000000..429e2f3c7e
+index 00000000000..429e2f3c7ec
 --- /dev/null
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/metrics/TestFileAccessMetricsReader.java
 @@ -0,0 +1,163 @@
@@ -1387,7 +1392,7 @@ index 0000000000..429e2f3c7e
 +}
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/metrics/TestFileAccessMetricsWriter.java b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/metrics/TestFileAccessMetricsWriter.java
 new file mode 100644
-index 0000000000..be0bd5156a
+index 00000000000..be0bd5156a3
 --- /dev/null
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/metrics/TestFileAccessMetricsWriter.java
 @@ -0,0 +1,297 @@

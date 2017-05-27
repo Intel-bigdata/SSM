@@ -14,11 +14,11 @@ before_install:
 addons:
   apt:
     packages:
-      - oracle-java8-installer
+      - oracle-java7-installer
 jdk:
-  - oraclejdk8
+  - oraclejdk7
 cache:
   directories:
-    - "$HOME/.m2"
+    - $HOME/.m2
 script:
     mvn test

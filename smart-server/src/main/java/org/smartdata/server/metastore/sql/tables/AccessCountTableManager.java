@@ -135,7 +135,7 @@ public class AccessCountTableManager {
       // Here we assume that the tables are all sorted by time.
       AccessCountTable table = iterator.next();
       if (table.getEndTime() > startTime) {
-        if (table.getStartTime() == startTime) {
+        if (table.getStartTime() >= startTime) {
           results.add(table);
         } else if (table.getStartTime() < startTime) {
           // We got a table should be spilt here.

@@ -25,9 +25,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.server.utils.EventBatchSerializer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TestEventBatchSerializer {
 
@@ -63,12 +63,17 @@ public class TestEventBatchSerializer {
 //    Event truncate = new Event.TruncateEvent("/file7", 1024, 16);
     List<Event> events = Arrays.asList(close, create, meta, rename, append, unlink);
     EventBatch batch = new EventBatch(1023, events.toArray(new Event[0]));
-    List<String> expected = events.stream().map(Object::toString).collect(Collectors.toList());
+    List<String> expected = new ArrayList<>();
+    for (Event event : events) {
+      expected.add(event.toString());
+    }
 
     byte[] bytes = EventBatchSerializer.serialize(batch);
     EventBatch result = EventBatchSerializer.deserialize(bytes);
-    List<String> actual =
-        Arrays.stream(result.getEvents()).map(Object::toString).collect(Collectors.toList());
+    List<String> actual = new ArrayList<>();
+    for (Event event : result.getEvents()) {
+      actual.add(event.toString());
+    }
     Assert.assertEquals(batch.getTxid(), result.getTxid());
     Assert.assertEquals(expected.size(), actual.size());
 //    Assert.assertTrue(expected.containsAll(actual));

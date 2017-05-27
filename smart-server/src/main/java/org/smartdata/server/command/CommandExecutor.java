@@ -68,7 +68,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     moverPool.init(conf);
     statusCache = new HashSet<>();
     for (CommandState s : CommandState.values()) {
-      cmdsInState.add(s.getValue(), new HashSet<>());
+      cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
     execThreadPool = new CommandPool();
     running = false;

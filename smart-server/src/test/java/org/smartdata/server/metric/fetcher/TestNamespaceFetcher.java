@@ -32,10 +32,10 @@ import org.smartdata.server.metastore.sql.FileStatusInternal;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -53,8 +53,10 @@ public class TestNamespaceFetcher {
     @Override
     public boolean matches(Object o) {
       FileStatusInternal[] array = (FileStatusInternal[]) o;
-      List<String> paths = Arrays.stream(array).map(FileStatusInternal::getPath)
-        .collect(Collectors.toList());
+      List<String> paths = new ArrayList<>();
+      for (FileStatusInternal statusInternal : array) {
+        paths.add(statusInternal.getPath());
+      }
       Collections.sort(paths);
       return paths.size() == expected.size() && paths.containsAll(expected);
     }

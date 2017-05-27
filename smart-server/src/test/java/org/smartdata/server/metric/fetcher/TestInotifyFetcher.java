@@ -91,7 +91,7 @@ public class TestInotifyFetcher {
 
       DBAdapter adapter = mock(DBAdapter.class);
       EventApplierForTest applierForTest = new EventApplierForTest(adapter, client);
-      InotifyEventFetcher fetcher = new InotifyEventFetcher(client, adapter,
+      final InotifyEventFetcher fetcher = new InotifyEventFetcher(client, adapter,
           Executors.newScheduledThreadPool(2), applierForTest);
 
       Thread thread = new Thread() {
