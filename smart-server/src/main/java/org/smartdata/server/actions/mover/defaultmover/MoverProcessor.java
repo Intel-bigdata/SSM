@@ -461,7 +461,7 @@ class MoverProcessor {
         removeNonMovable(existing);
         removeNonMovable(expected);
       }
-      return Integer.min(existing.size(), expected.size());
+      return existing.size() < expected.size() ? existing.size() : expected.size();
     }
 
     void removeNonMovable(List<StorageType> types) {
