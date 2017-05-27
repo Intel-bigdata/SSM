@@ -26,6 +26,8 @@ For easily integration, APIs are exposed as both RPC call and RESTfull
 Http interface. Audience can choose the one which fit for their own
 environment.
 
+<img src="./api.png" width="461" height="295" />
+
 Define Rule
 -----------
 
