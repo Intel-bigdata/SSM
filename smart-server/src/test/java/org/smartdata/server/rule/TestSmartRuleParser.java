@@ -68,11 +68,11 @@ public class TestSmartRuleParser {
         + "and storage.free(\"SSD\") > 100 | cachefile";
     String rule2 = "file with length > 3 : "
         + "storage.free(\"SSD\") > 100 and not inCache | cachefile";
-    String rule3 = "file : accessCount(10m) > 20 | cachefile";
+    String rule3 = "file : accessCount(10min) > 20 | cachefile";
     String rule4 = "file : accessCountX(10m) > 2 and length() > 3 | cachefile";
     String rule5 = "file: every 5s from now to now + 100d | length > 3 | cachefile";
-    String rule6 = "file: every 5s | length > 3 | movefile \"ONE_SSD\"";
-    String rule = rule5;
+    String rule6 = "file: every 5s | length > 100mb | movefile \"ONE_SSD\"";
+    String rule = rule6;
     InputStream input = new ByteArrayInputStream(rule.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);
     SmartRuleLexer lexer = new SmartRuleLexer(antlrInput);
