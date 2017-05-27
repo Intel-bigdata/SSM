@@ -245,8 +245,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       }
       // Mark as cancelled, this status will be update to DB
       // in next batch update
-      statusCache.add(new CmdTuple(cid, cmdinfo.getRid(),
+      synchronized (statusCache) {
+        statusCache.add(new CmdTuple(cid, cmdinfo.getRid(),
           CommandState.DISABLED));
+      }
     }
   }
 
@@ -318,11 +320,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (statusCache.size() == 0) {
       return;
     }
-    for (Iterator<CmdTuple> iter = statusCache.iterator(); iter.hasNext(); ) {
-      CmdTuple ct = iter.next();
-      if (ct.cid == cid) {
-        iter.remove();
-        break;
+    synchronized (statusCache) {
+      for (Iterator<CmdTuple> iter = statusCache.iterator(); iter.hasNext(); ) {
+        CmdTuple ct = iter.next();
+        if (ct.cid == cid) {
+          iter.remove();
+          break;
+        }
       }
     }
   }
@@ -421,17 +425,19 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (statusCache.size() == 0) {
       return;
     }
-    for (Iterator<CmdTuple> iter = statusCache.iterator(); iter.hasNext(); ) {
-      CmdTuple ct = iter.next();
-      cmdsAll.remove(ct.cid);
-      try {
-        adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
-      } catch (SQLException e) {
-        // TODO: handle this isssue
-        LOG.error(e.getMessage());
-        throw new IOException(e);
+    synchronized (statusCache) {
+      for (Iterator<CmdTuple> iter = statusCache.iterator(); iter.hasNext(); ) {
+        CmdTuple ct = iter.next();
+        cmdsAll.remove(ct.cid);
+        try {
+          adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
+        } catch (SQLException e) {
+          // TODO: handle this isssue
+          LOG.error(e.getMessage());
+          throw new IOException(e);
+        }
+        iter.remove();
       }
-      iter.remove();
     }
   }
 
@@ -465,7 +471,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       }
       LOG.info("Command {} finished!", cmdsAll.get(cid));
       cmdsAll.get(cid).setState(state);
-      statusCache.add(new CmdTuple(cid, rid, state));
+      synchronized (statusCache) {
+        statusCache.add(new CmdTuple(cid, rid, state));
+      }
       removeFromExecuting(cid, rid, state);
       try {
         execThreadPool.deleteCommand(cid);

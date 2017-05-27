@@ -74,12 +74,12 @@ public class TestSmartServerCli {
     SmartServer s = SmartServer.createSSM(args, conf);
     s.shutdown();
 
-
     String[] argsHelp = new String[] {
         "-h"
     };
 
     s = SmartServer.createSSM(argsHelp, conf);
     Assert.assertTrue(s == null);
+    cluster.shutdown();
   }
 }

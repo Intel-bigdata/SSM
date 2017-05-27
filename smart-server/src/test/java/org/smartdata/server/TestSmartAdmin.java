@@ -63,7 +63,7 @@ public class TestSmartAdmin {
     conf.set(SmartConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
-    SmartServer.createSSM(null, conf);
+    SmartServer server = SmartServer.createSSM(null, conf);
     SmartAdmin ssmClient = new SmartAdmin(conf);
 
     while (true) {
@@ -133,5 +133,7 @@ public class TestSmartAdmin {
       caughtException = true;
     }
     assertEquals(true, caughtException);
+    server.shutdown();
+    cluster.shutdown();
   }
 }

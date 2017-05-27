@@ -28,6 +28,7 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.qjournal.MiniQJMHACluster;
 import org.junit.Assert;
@@ -72,16 +73,15 @@ public class TestInotifyFetcher {
     // so that we can get an atime change
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_ACCESSTIME_PRECISION_KEY, 1);
 
-    MiniQJMHACluster.Builder builder = new MiniQJMHACluster.Builder(conf);
-    builder.getDfsBuilder().numDataNodes(2);
-    MiniQJMHACluster cluster = builder.build();
+    MiniDFSCluster.Builder builder = new MiniDFSCluster.Builder(conf);
+    builder.numDataNodes(2);
+    MiniDFSCluster cluster = builder.build();
     try {
-      cluster.getDfsCluster().waitActive();
-      cluster.getDfsCluster().transitionToActive(0);
-      DFSClient client = new DFSClient(cluster.getDfsCluster().getNameNode(0)
+      cluster.waitActive();
+      DFSClient client = new DFSClient(cluster.getNameNode(0)
         .getNameNodeAddress(), conf);
 
-      FileSystem fs = cluster.getDfsCluster().getFileSystem(0);
+      FileSystem fs = cluster.getFileSystem(0);
       DFSTestUtil.createFile(fs, new Path("/file"), BLOCK_SIZE, (short) 1, 0L);
       DFSTestUtil.createFile(fs, new Path("/file3"), BLOCK_SIZE, (short) 1, 0L);
       DFSTestUtil.createFile(fs, new Path("/file5"), BLOCK_SIZE, (short) 1, 0L);

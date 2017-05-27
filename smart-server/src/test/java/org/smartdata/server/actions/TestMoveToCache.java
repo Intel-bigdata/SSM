@@ -51,5 +51,6 @@ public class TestMoveToCache {
         assertEquals(false, moveToCache.isCached(str[0]));
         moveToCache.initial(str).execute();
         assertEquals(true, moveToCache.isCached(str[0]));
+        cluster.shutdown();
     }
 }
