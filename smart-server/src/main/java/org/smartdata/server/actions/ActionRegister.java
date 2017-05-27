@@ -48,11 +48,11 @@ public class ActionRegister {
 
   public void initial(Configuration conf) {
     loadNativeAction();
-    // TODO read from configure
-    // String libPath = conf.get("libPath");
     try {
+      // TODO read path and map from configure
+      // String libPath = getClass().getClassLoader().getResource("UserAction").getPath();
       loadUserDefinedAction(null, null);
-    } catch(IOException e) {
+    } catch(Exception e) {
       LOG.error(e.getMessage());
       LOG.error("Load User Actions from Path error!");
     }
