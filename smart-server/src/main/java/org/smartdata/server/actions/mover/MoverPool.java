@@ -140,7 +140,11 @@ public class MoverPool {
       for (int index = 1; index < retryTimes; index ++) {
         moverThread.interrupt();
         Thread.sleep(100);
+        if (getStatus(id) == null) {
+          return true;
+        }
         if (getStatus(id).isFinished()) {
+          removeStatus(id);
           return true;
         }
       }

@@ -57,6 +57,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Daemon commandExecutorThread;
   private CommandPool execThreadPool;
   private DBAdapter adapter;
+  private ActionRegister actionRegister;
   private MoverPool moverPool;
   private SmartServer ssm;
   private boolean running;
@@ -66,7 +67,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     this.ssm = ssm;
     moverPool = MoverPool.getInstance();
     moverPool.init(conf);
-    ActionRegister.getInstance().initial(conf);
+    actionRegister = new ActionRegister();
+    actionRegister.initial(conf);
     statusCache = new HashSet<>();
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
@@ -276,6 +278,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     cmdsPending.add(cmdinfo.getCid());
   }
 
+  public int cacheSize() {
+    return cmdsAll.size();
+  }
+
   public boolean inCache(long cid) throws IOException {
     return cmdsAll.containsKey(cid);
   }
@@ -363,7 +369,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   private Action newAction(String name) {
-    return ActionRegister.getInstance().newActionFromName(name);
+    return actionRegister.newActionFromName(name);
   }
 
   private Action[] newActionsFromStringJson(String jsonString) throws IOException {
@@ -486,6 +492,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       cmdsAll.get(cid).setState(state);
       // Mark command as DONE
       execThreadPool.setFinished(cid, state);
+      LOG.info("Command {}", state.toString());
       synchronized (statusCache) {
         statusCache.add(new CmdTuple(cid, rid, state));
       }
