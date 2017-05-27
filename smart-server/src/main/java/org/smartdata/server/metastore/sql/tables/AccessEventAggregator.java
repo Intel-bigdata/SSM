@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.metastore.sql.tables;
 
+import org.apache.commons.lang.StringUtils;
 import org.smartdata.server.metastore.sql.DBAdapter;
 import org.smartdata.server.utils.FileAccessEvent;
 import org.slf4j.Logger;
@@ -98,7 +99,7 @@ public class AccessEventAggregator {
         table.getTableName(),
         AccessCountTable.FILE_FIELD,
         AccessCountTable.ACCESSCOUNT_FIELD,
-        String.join(",", values));
+        StringUtils.join(values, ", "));
       try {
         this.adapter.execute(insertValue);
         if (LOG.isDebugEnabled()) {

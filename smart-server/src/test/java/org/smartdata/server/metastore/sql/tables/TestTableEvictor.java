@@ -20,8 +20,6 @@ package org.smartdata.server.metastore.sql.tables;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.time.Duration;
-
 public class TestTableEvictor {
 
   @Test
@@ -46,7 +44,7 @@ public class TestTableEvictor {
 
   @Test
   public void testDurationEvictor() {
-    TableEvictor evictor = new DurationEvictor(Duration.ofMillis(10));
+    TableEvictor evictor = new DurationEvictor(10);
     AccessCountTableDeque deque = new AccessCountTableDeque(evictor);
     AccessCountTable first = new AccessCountTable(0L, 3L);
     deque.add(first);

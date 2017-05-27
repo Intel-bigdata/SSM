@@ -18,6 +18,7 @@
 package org.smartdata.server.metastore.sql;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.XAttrHelper;
@@ -268,7 +269,7 @@ public class DBAdapter {
     for(String path: paths) {
       values.add("'" + path + "'");
     }
-    String in = String.join(", ", values);
+    String in = StringUtils.join(values, ", ");
     String sql = "SELECT fid, path FROM files WHERE path IN (" + in + ")";
     QueryHelper queryHelper = new QueryHelper(sql);
     ResultSet result;
