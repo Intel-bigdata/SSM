@@ -15,22 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common;
+package org.smartdata.actions.hdfs;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 /**
- * This class contains the configure keys needed by SSM.
+ * An action to do one-ssd for a file.
  */
-public class SmartConfigureKeys {
-  public final static String DFS_SSM_ENABLED_KEY = "dfs.smart.enabled";
+public class OneSsdFileAction extends MoveFileAction {
+  private static final Logger LOG = LoggerFactory.getLogger(OneSsdFileAction.class);
 
-  public final static String DFS_SSM_NAMENODE_RPCSERVER_KEY = "dfs.smart.namenode.rpcserver";
 
-  //ssm
-  public final static String DFS_SSM_RPC_ADDRESS_KEY = "dfs.smart.rpc-address";
-  public final static String DFS_SSM_RPC_ADDRESS_DEFAULT = "localhost:7042";
-  public final static String DFS_SSM_HTTP_ADDRESS_KEY = "dfs.smart.http-address";
-  public final static String DFS_SSM_HTTP_ADDRESS_DEFAULT = "localhost:7045";
-  public final static String DFS_SSM_HTTPS_ADDRESS_KEY = "dfs.smart.https-address";
-
-  public final static String DFS_SSM_DEFAULT_DB_URL_KEY = "dfs.smart.default.db.url";
+  @Override
+  protected UUID execute() {
+    return null;
+  }
 }

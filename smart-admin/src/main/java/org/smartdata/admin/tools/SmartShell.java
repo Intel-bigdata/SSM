@@ -35,7 +35,7 @@ import org.smartdata.admin.SmartAdmin;
 import org.apache.hadoop.tools.TableListing;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.smartdata.common.SmartConfiguration;
+import org.smartdata.conf.SmartConf;
 
 /** Provide command line access to a FileSystem. */
 @InterfaceAudience.Private
@@ -317,7 +317,7 @@ public class SmartShell extends Configured implements Tool {
    */
   public static void main(String argv[]) throws Exception {
     SmartShell shell = newShellInstance();
-    Configuration conf = new SmartConfiguration();
+    Configuration conf = new SmartConf();
     conf.setQuietMode(false);
     shell.setConf(conf);
     int res;

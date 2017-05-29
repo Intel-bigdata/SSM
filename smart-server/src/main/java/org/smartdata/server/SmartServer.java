@@ -34,8 +34,8 @@ import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
-import org.smartdata.common.SmartConfiguration;
-import org.smartdata.common.SmartConfigureKeys;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.server.command.CommandExecutor;
 import org.smartdata.server.rule.RuleManager;
@@ -174,7 +174,7 @@ public class SmartServer {
   }
 
   public static void main(String[] args) {
-    Configuration conf = new SmartConfiguration();
+    Configuration conf = new SmartConf();
 
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {
@@ -204,11 +204,11 @@ public class SmartServer {
    */
   public void runSSMDaemons() throws Exception {
     String nnRpcAddr = conf.get(
-        SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
     if (nnRpcAddr == null) {
       throw new IOException("Can not find NameNode RPC server address. "
           + "Please configure it through '"
-          + SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "'.");
+          + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "'.");
     }
     URI rpcURL = new URI(nnRpcAddr);
     this.fs = (DistributedFileSystem) FileSystem.get(rpcURL, conf);
@@ -306,7 +306,7 @@ public class SmartServer {
     // this contains 3 cases:
     //    remote checkpoint / local / create new DB
 
-    String url = conf.get(SmartConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY);
+    String url = conf.get(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY);
     if (url == null) {
       LOG.warn("No database specified for SSM, "
           + "will use a default one instead.");

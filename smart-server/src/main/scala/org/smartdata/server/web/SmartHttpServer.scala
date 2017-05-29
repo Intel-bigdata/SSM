@@ -23,7 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import org.apache.hadoop.conf.Configuration
-import org.smartdata.common.SmartConfigureKeys
+import org.smartdata.common.SmartConfKeys
 import org.smartdata.server.SmartServer
 
 import scala.concurrent.Await

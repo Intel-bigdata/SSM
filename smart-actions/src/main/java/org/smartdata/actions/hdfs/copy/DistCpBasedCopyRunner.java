@@ -15,29 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common;
+package org.smartdata.actions.hdfs.copy;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
-
-import java.io.Console;
 import java.io.IOException;
 
 /**
- * SSM related configurations as well as HDFS configurations.
+ * DistCp based copy runner.
  */
-public class SmartConfiguration extends HdfsConfiguration {
-  public SmartConfiguration() {
-    Configuration.addDefaultResource("smart-default.xml");
-    Configuration.addDefaultResource("smart-site.xml");
+public class DistCpBasedCopyRunner extends CopyRunner {
+
+
+  @Override
+  public void copy(String srcFile, String destFile) throws IOException {
+
   }
 
-  public static void main(String[] args) {
-    Console console = System.console();
-    try {
-      Configuration.dumpConfiguration(new SmartConfiguration(), console.writer());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+  @Override
+  public void copy(String[] srcFiles, String destDirectory) throws IOException {
+
   }
 }

@@ -26,7 +26,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
-import org.smartdata.common.SmartConfiguration;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.server.metastore.sql.DBAdapter;
 import org.smartdata.server.metastore.sql.FileStatusInternal;
 
@@ -65,7 +65,7 @@ public class TestNamespaceFetcher {
   @Test
   public void testNamespaceFetcher() throws IOException, InterruptedException,
       MissingEventsException, SQLException {
-    final Configuration conf = new SmartConfiguration();
+    final Configuration conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(2).build();
     final DistributedFileSystem dfs = cluster.getFileSystem();

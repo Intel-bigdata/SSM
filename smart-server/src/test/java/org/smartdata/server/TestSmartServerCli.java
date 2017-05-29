@@ -23,8 +23,8 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.common.SmartConfiguration;
-import org.smartdata.common.SmartConfigureKeys;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.common.SmartConfKeys;
 import org.smartdata.server.metastore.sql.TestDBUtil;
 import org.smartdata.server.metastore.sql.Util;
 
@@ -39,7 +39,7 @@ public class TestSmartServerCli {
 
   @Test
   public void testConfNameNodeRPCAddr() throws Exception {
-    Configuration conf = new SmartConfiguration();
+    Configuration conf = new SmartConf();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(3).build();
 
@@ -50,24 +50,24 @@ public class TestSmartServerCli {
     // Set db used
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
+    conf.set(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
     try {
       SmartServer.createSSM(null, conf);
       Assert.fail("Should not work without specifying "
-          + SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+          + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
     } catch (Exception e) {
       Assert.assertTrue(e.getMessage().contains(
-          SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY));
+          SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY));
     }
 
 
-    conf.set(SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
         uriList.get(0).toString());
     String[] args = new String[] {
         "-D",
-        SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "="
+        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "="
             + uriList.get(0).toString()
     };
 

@@ -23,8 +23,8 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
-import org.smartdata.common.SmartConfiguration;
-import org.smartdata.common.SmartConfigureKeys;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.common.SmartConfKeys;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.metastore.sql.TestDBUtil;
@@ -45,7 +45,7 @@ public class TestSmartAdmin {
 
   @Test
   public void test() throws Exception {
-    final Configuration conf = new SmartConfiguration();
+    final Configuration conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(4).build();
     // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
@@ -54,13 +54,13 @@ public class TestSmartAdmin {
     final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
-    conf.set(SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
         uriList.get(0).toString());
 
     // Set db used
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
+    conf.set(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
     SmartServer server = SmartServer.createSSM(null, conf);
@@ -115,7 +115,7 @@ public class TestSmartAdmin {
     //test single SSM
     caughtException = false;
     try {
-      conf.set(SmartConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
+      conf.set(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
       SmartServer.createSSM(null, conf);
     } catch (IOException e) {
       assertEquals("java.io.IOException: Another SmartServer is running",
