@@ -77,10 +77,10 @@ public class MoverPool {
 
   class MoverProcess extends Thread {
     private String path;
-    private MoverBasedMoveRunner moverClient;
+    private MoverCli moverClient;
 
     public MoverProcess(ActionStatus status, String path) {
-      this.moverClient = new MoverBasedMoveRunner(status);
+      this.moverClient = new MoverCli(status);
       this.path = path;
     }
 

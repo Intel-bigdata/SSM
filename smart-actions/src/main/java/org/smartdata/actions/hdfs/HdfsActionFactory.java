@@ -31,13 +31,13 @@ public abstract class HdfsActionFactory extends AbstractActionFactory {
     addAction("stripec", StripErasureCodeFileAction.class);
     addAction("blockec", BlockErasureCodeFileAction.class);
     addAction("cache", CacheFileAction.class);
-    addAction("uncache", CacheFileAction.class);
+    addAction("uncache", UncacheFileAction.class);
     addAction("read", ReadFileAction.class);
     addAction("write", WriteFileAction.class);
     addAction("copy", CopyFileAction.class);
     addAction("list", ListFileAction.class);
-    addAction("fsck", ListFileAction.class);
-    addAction("diskbalance", ListFileAction.class);
-    addAction("clusterbalance", ListFileAction.class);
+    addAction("fsck", FsckAction.class);
+    addAction("diskbalance", DiskBalanceAction.class);
+    addAction("clusterbalance", ClusterBalanceAction.class);
   }
 }

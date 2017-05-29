@@ -22,7 +22,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.admin.protocolPB.SmartAdminProtocolAdminSideTranslatorPB;
 import org.smartdata.common.CommandState;
-import org.smartdata.common.SmartConfKeys;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.protocol.SmartAdminProtocol;

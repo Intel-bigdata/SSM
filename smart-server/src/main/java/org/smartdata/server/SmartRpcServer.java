@@ -24,7 +24,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
 import org.smartdata.common.CommandState;
-import org.smartdata.common.SmartConfKeys;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.protocol.SmartAdminProtocol;
 import org.smartdata.common.protocol.AdminServerProto;

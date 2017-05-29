@@ -27,7 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.common.SmartConfKeys;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.server.metastore.sql.TestDBUtil;
 import org.smartdata.server.metastore.sql.Util;
@@ -40,7 +40,7 @@ import java.util.List;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
 
 public class TestEmptyMiniSmartCluster {
-  protected Configuration conf;
+  protected SmartConf conf;
   protected MiniDFSCluster cluster;
   protected SmartServer ssm;
   protected String dbFile;

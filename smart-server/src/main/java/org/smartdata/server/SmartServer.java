@@ -70,7 +70,7 @@ public class SmartServer {
   private CommandExecutor commandExecutor;
   private SmartHttpServer httpServer;
   private SmartRpcServer rpcServer;
-  private Configuration conf;
+  private SmartConf conf;
   private DistributedFileSystem fs = null;
   private OutputStream outSSMIdFile;
   private List<ModuleSequenceProto> modules = new ArrayList<>();
@@ -79,7 +79,7 @@ public class SmartServer {
 
   private SmartServiceState ssmServiceState = SmartServiceState.SAFEMODE;
 
-  SmartServer(Configuration conf) throws IOException, URISyntaxException {
+  SmartServer(SmartConf conf) throws IOException, URISyntaxException {
     this.conf = conf;
     httpServer = new SmartHttpServer(this, conf);
     rpcServer = new SmartRpcServer(this, conf);
@@ -174,7 +174,7 @@ public class SmartServer {
   }
 
   public static void main(String[] args) {
-    Configuration conf = new SmartConf();
+    SmartConf conf = new SmartConf();
 
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {

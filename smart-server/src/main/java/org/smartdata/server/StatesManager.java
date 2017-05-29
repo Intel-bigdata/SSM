@@ -19,7 +19,7 @@ package org.smartdata.server;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.smartdata.common.SmartConfKeys;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.metric.fetcher.AccessCountFetcher;
 import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.server.metastore.sql.DBAdapter;
