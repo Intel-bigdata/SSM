@@ -17,7 +17,6 @@
  */
 package org.smartdata.server;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -45,7 +44,7 @@ public class TestSmartAdmin {
 
   @Test
   public void test() throws Exception {
-    final Configuration conf = new SmartConf();
+    final SmartConf conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(4).build();
     // dfs not used , but datanode.ReplicaNotFoundException throws without dfs

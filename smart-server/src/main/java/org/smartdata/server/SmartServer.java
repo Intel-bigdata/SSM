@@ -110,7 +110,7 @@ public class SmartServer {
    * @param conf
    * @return
    */
-  public static SmartServer createSSM(String[] args, Configuration conf)
+  public static SmartServer createSSM(String[] args, SmartConf conf)
       throws Exception {
     if (args == null) {
       args = new String[0];

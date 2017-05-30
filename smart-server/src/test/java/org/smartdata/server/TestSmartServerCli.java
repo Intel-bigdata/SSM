@@ -24,7 +24,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.common.SmartConfKeys;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.metastore.sql.TestDBUtil;
 import org.smartdata.server.metastore.sql.Util;
 
@@ -39,7 +39,7 @@ public class TestSmartServerCli {
 
   @Test
   public void testConfNameNodeRPCAddr() throws Exception {
-    Configuration conf = new SmartConf();
+    SmartConf conf = new SmartConf();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(3).build();
 

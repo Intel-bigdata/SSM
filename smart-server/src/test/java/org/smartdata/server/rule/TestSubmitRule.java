@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.rule;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.After;
@@ -41,7 +40,7 @@ import java.util.List;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
 
 public class TestSubmitRule {
-  private Configuration conf;
+  private SmartConf conf;
   private MiniDFSCluster cluster;
   private SmartServer ssm;
 
