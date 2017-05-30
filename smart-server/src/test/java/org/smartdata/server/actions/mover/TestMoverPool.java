@@ -90,7 +90,7 @@ public class TestMoverPool {
       out2.writeChars("testParallelMovers2");
       out2.close();
 
-      // schedule mover to ARCHIVE or SSD
+      // schedule move to ARCHIVE or SSD
       dfs.setStoragePolicy(new Path(file1), "COLD");
       dfs.setStoragePolicy(new Path(file2), "ALL_SSD");
       UUID id1 = MoverPool.getInstance().createMoverAction(file1);
@@ -130,18 +130,18 @@ public class TestMoverPool {
       out1.writeChars("testStopAndRestartMovers");
       out1.close();
 
-      // schedule mover to ARCHIVE
+      // schedule move to ARCHIVE
       dfs.setStoragePolicy(dir, "COLD");
       UUID id1 = MoverPool.getInstance().createMoverAction(file1);
 
-      // stop mover
+      // stop move
       Status status1 = MoverPool.getInstance().getStatus(id1);
       Thread.sleep(1000);
       Boolean succeed = MoverPool.getInstance().stop(id1, 3);
       assertTrue(succeed);
       assertFalse(status1.isSuccessful());
 
-      // restart mover
+      // restart move
       succeed = MoverPool.getInstance().restart(id1);
       assertTrue(succeed);
       while (!status1.isFinished()) {
@@ -177,7 +177,7 @@ public class TestMoverPool {
       out2.writeChars(string2);
       out2.close();
 
-      // schedule mover to ALL_SSD
+      // schedule move to ALL_SSD
       long totalSize1 = string1.length()*2*5;
       long blockNum1 = 1*5;
       long totalSize2 = string2.length()*2*3;
@@ -185,7 +185,7 @@ public class TestMoverPool {
       scheduleMoverWithPercentage(dir, "ALL_SSD", totalSize1 + totalSize2,
           blockNum1 + blockNum2);
 
-      // schedule mover to ONE_SSD
+      // schedule move to ONE_SSD
       totalSize1 = string1.length()*2*4;
       blockNum1 = 1*4;
       totalSize2 = string2.length()*2*2;

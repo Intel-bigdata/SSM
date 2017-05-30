@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.smartdata.server.metastore.sql.DBAdapter;
 import org.smartdata.server.metastore.sql.ExecutionContext;
 import org.smartdata.server.metastore.sql.TestDBUtil;
-import org.smartdata.server.rule.RuleQueryExecutor;
 import org.smartdata.server.rule.parser.SmartRuleLexer;
 import org.smartdata.server.rule.parser.SmartRuleParser;
 import org.smartdata.server.rule.parser.SmartRuleVisitTranslator;

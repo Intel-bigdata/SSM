@@ -19,7 +19,7 @@ package org.smartdata.server;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.smartdata.common.SmartConfigureKeys;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.metric.fetcher.AccessCountFetcher;
 import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.server.metastore.sql.DBAdapter;
@@ -60,7 +60,7 @@ public class StatesManager implements ModuleSequenceProto {
    */
   public boolean init(DBAdapter dbAdapter) throws IOException {
     LOG.info("Initializing ...");
-    String nnUri = conf.get(SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+    String nnUri = conf.get(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
     try {
       this.client = new DFSClient(new URI(nnUri), conf);
     } catch (URISyntaxException e) {

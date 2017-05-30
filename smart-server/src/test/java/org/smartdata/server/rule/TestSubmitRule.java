@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.rule;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.After;
@@ -25,8 +24,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
-import org.smartdata.common.SmartConfiguration;
-import org.smartdata.common.SmartConfigureKeys;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.metastore.sql.TestDBUtil;
@@ -41,26 +40,26 @@ import java.util.List;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
 
 public class TestSubmitRule {
-  private Configuration conf;
+  private SmartConf conf;
   private MiniDFSCluster cluster;
   private SmartServer ssm;
 
   @Before
   public void setUp() throws Exception {
-    conf = new SmartConfiguration();
+    conf = new SmartConf();
     cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(3).build();
 
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
-    conf.set(SmartConfigureKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
         uriList.get(0).toString());
 
     // Set db used
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfigureKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
+    conf.set(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
     ssm = SmartServer.createSSM(null, conf);

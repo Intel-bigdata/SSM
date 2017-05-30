@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Mover {
   static final Logger LOG = LoggerFactory.getLogger(Mover.class);
 
-  static final String MOVER_ID_PATH = "/system/mover.id";
+  static final String MOVER_ID_PATH = "/system/move.id";
 
   final Dispatcher dispatcher;
   final StorageMap storages;

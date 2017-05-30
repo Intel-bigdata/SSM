@@ -24,7 +24,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
 import org.smartdata.common.CommandState;
-import org.smartdata.common.SmartConfigureKeys;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.protocol.SmartAdminProtocol;
 import org.smartdata.common.protocol.AdminServerProto;
@@ -80,8 +80,8 @@ public class SmartRpcServer implements SmartAdminProtocol {
   }
 
   private InetSocketAddress getRpcServerAddress() {
-    String[] strings = conf.get(SmartConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY,
-        SmartConfigureKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
+    String[] strings = conf.get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
+        SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
     return new InetSocketAddress(strings[strings.length - 2]
         , Integer.parseInt(strings[strings.length - 1]));
   }

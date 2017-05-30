@@ -23,7 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import org.apache.hadoop.conf.Configuration
-import org.smartdata.common.SmartConfigureKeys
+import org.smartdata.conf.SmartConfKeys
 import org.smartdata.server.SmartServer
 
 import scala.concurrent.Await
@@ -35,8 +35,8 @@ class SmartHttpServer(ssmServer: SmartServer, conf: Configuration) {
   implicit val ec = system.dispatcher
 
   val httpServerAddress: InetSocketAddress = {
-    val strings = conf.get(SmartConfigureKeys.DFS_SSM_HTTP_ADDRESS_KEY,
-        SmartConfigureKeys.DFS_SSM_HTTP_ADDRESS_DEFAULT).split(":")
+    val strings = conf.get(SmartConfKeys.DFS_SSM_HTTP_ADDRESS_KEY,
+      SmartConfKeys.DFS_SSM_HTTP_ADDRESS_DEFAULT).split(":")
     new InetSocketAddress(strings(strings.length - 2), strings(strings.length - 1).toInt)
   }
 

@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A mover client to run Mover.
+ * A move client to run Mover.
  */
 public class MoverCli extends Configured implements Tool {
   static final Logger LOG = LoggerFactory.getLogger(MoverCli.class);

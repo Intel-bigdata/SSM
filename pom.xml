@@ -18,11 +18,13 @@
   <artifactId>smartdata-project</artifactId>
   <version>0.1-SNAPSHOT</version>
   <description>Smart Data Project</description>
-  <name>Smart Data Project</name>
+  <name>SmartData Project</name>
   <packaging>pom</packaging>
 
   <modules>
     <module>smart-common</module>
+    <module>smart-metrics</module>
+    <module>smart-actions</module>
     <module>smart-client</module>
     <module>smart-admin</module>
     <module>smart-server</module>

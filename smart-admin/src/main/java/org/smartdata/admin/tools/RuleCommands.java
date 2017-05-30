@@ -22,7 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
 import org.smartdata.admin.SmartAdmin;
-import org.smartdata.common.SmartConfiguration;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 
@@ -40,7 +40,7 @@ public class RuleCommands {
   private static SmartAdmin newSSMClient(Command cmd) throws IOException {
     Configuration conf = cmd.getConf();
     if (conf == null) {
-      conf = new SmartConfiguration();
+      conf = new SmartConf();
     }
 
     //System.out.println(conf.get(SmartConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY));
