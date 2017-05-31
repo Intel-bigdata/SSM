@@ -70,7 +70,8 @@ public class MoveFileAction extends HdfsAction {
       throw new RuntimeException(e);
     }
     Thread moverProcess = new MoverProcess(getActionStatus(), fileName);
-    return MoverPool.getInstance().createMoverAction(fileName);
+    moverProcess.start();
+    return getActionStatus().getId();
   }
 
   class MoverProcess extends Thread {
