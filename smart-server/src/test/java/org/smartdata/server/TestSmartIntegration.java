@@ -99,7 +99,7 @@ public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
     for (int i = 0; i < files.length; i++) {
       readFile(dfs, files[i], readCounts[i]);
     }
-    Thread.sleep(20000);
+    Thread.sleep(10000);
 
     RuleInfo info3 = client.getRuleInfo(ruleId);
     RuleInfo info4 = info3;
@@ -113,7 +113,8 @@ public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
       }
     }
     long numCmdsGen = info4.getNumCmdsGen() - info3.getNumCmdsGen();
-    Assert.assertTrue(numCmdsGen > 0 && numCmdsGen <= indexChange + 2);
+    Assert.assertTrue(numCmdsGen > 0);
+    Assert.assertTrue(numCmdsGen <= indexChange + 2);
 
     ssm.shutdown();
     ssm = null;
