@@ -47,6 +47,10 @@ public abstract class SmartAction {
     logOut = actionStatus.getLogPrintStream();
   }
 
+  public ActionStatus getActionStatus() {
+    return actionStatus;
+  }
+
   /**
    * Used to initialize the action.
    * @param args Action specific
