@@ -166,36 +166,6 @@ public class MoverPool {
     // TODO: halt the Mover action
   }
 
-  /**
-   * Restart a moving event.
-   * @param id the id of the event
-   * @return true if stop or false if the id cannot be found
-   */
-  public Boolean restart(UUID id) throws Exception{
-    Thread moverThread = moverThreads.get(id);
-    if (moverThread == null) {
-      return false;
-    }
-
-    if (moverThread.isAlive()) {
-      moverThread.interrupt();
-      while (!getStatus(id).isFinished()) {
-        Thread.sleep(300);
-      }
-    }
-
-    getStatus(id).reset();
-    String path = null;
-    if (moverThread instanceof MoverProcess) {
-      path = ((MoverProcess) moverThread).getPath();
-    }
-    moverThread = new MoverProcess(getStatus(id), path);
-    moverThreads.remove(id);
-    moverThreads.put(id, moverThread);
-    moverThread.start();
-    return true;
-  }
-
   public void shutdown() throws Exception {
     for (UUID id : moverThreads.keySet()) {
       stop(id);
