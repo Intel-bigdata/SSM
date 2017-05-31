@@ -23,7 +23,7 @@ import org.smartdata.common.command.CommandInfo;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.actions.Action;
-import org.smartdata.server.actions.ActionRegister;
+import org.smartdata.server.actions.ActionRegistry;
 import org.smartdata.server.actions.mover.MoverPool;
 import org.smartdata.server.metastore.sql.DBAdapter;
 import org.smartdata.server.utils.JsonUtil;
@@ -57,7 +57,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Daemon commandExecutorThread;
   private CommandPool execThreadPool;
   private DBAdapter adapter;
-  private ActionRegister actionRegister;
+  private ActionRegistry actionRegistry;
   private MoverPool moverPool;
   private SmartServer ssm;
   private boolean running;
@@ -67,8 +67,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     this.ssm = ssm;
     moverPool = MoverPool.getInstance();
     moverPool.init(conf);
-    actionRegister = new ActionRegister();
-    actionRegister.initial(conf);
+    actionRegistry = new ActionRegistry();
+    actionRegistry.initial(conf);
     statusCache = new HashSet<>();
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
@@ -369,7 +369,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   private Action newAction(String name) {
-    return actionRegister.newActionFromName(name);
+    return actionRegistry.newActionFromName(name);
   }
 
   private Action[] newActionsFromStringJson(String jsonString) throws IOException {

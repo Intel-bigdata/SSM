@@ -44,6 +44,13 @@
             <version>0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>UserActions</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/UserActions/UDAction.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>

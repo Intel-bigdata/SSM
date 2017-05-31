@@ -144,7 +144,7 @@ public class MoverPool {
           return true;
         }
         if (getStatus(id).isFinished()) {
-          removeStatus(id);
+          // removeStatus(id);
           return true;
         }
       }
@@ -169,6 +169,7 @@ public class MoverPool {
   public void shutdown() throws Exception {
     for (UUID id : moverThreads.keySet()) {
       stop(id);
+      removeStatus(id);
     }
   }
 }

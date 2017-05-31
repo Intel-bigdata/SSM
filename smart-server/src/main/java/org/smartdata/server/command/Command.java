@@ -129,7 +129,10 @@ public class Command implements Runnable {
             continue;
           }
           if (!moverPool.getStatus(id).isFinished()) {
+            // Stop Mover
             moverPool.stop(id);
+            // Remove statue
+            moverPool.removeStatus(id);
           }
         }
       } catch (Exception e) {
