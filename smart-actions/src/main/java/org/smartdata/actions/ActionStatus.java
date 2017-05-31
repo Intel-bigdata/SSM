@@ -17,8 +17,10 @@
  */
 package org.smartdata.actions;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.util.Time;
 
+import java.io.PrintStream;
 import java.util.UUID;
 
 /**
@@ -26,20 +28,25 @@ import java.util.UUID;
  */
 public abstract class ActionStatus {
   private UUID id;
-  private Boolean finished;
   private long startTime;
+  private Boolean finished;
+  private long finishTime;
   private Boolean successful;
   private long totalDuration;
-  private long totalBlocks;
-  private long totalSize;
+  private ByteArrayOutputStream resultOs;
+  private PrintStream psResultOs;
+  private ByteArrayOutputStream logOs;
+  private PrintStream psLogOs;
 
   public void init() {
     finished = false;
     startTime = Time.monotonicNow();
     successful = false;
     totalDuration = 0;
-    totalBlocks = 0;
-    totalSize = 0;
+    resultOs = new ByteArrayOutputStream(64 * 1024);
+    psResultOs = new PrintStream(resultOs, false);
+    logOs = new ByteArrayOutputStream(64 * 1024);
+    psLogOs = new PrintStream(logOs, false);
   }
 
   public ActionStatus(UUID id) {
@@ -57,6 +64,7 @@ public abstract class ActionStatus {
 
   public void setFinished(boolean finished) {
     this.finished = finished;
+    finishTime = System.currentTimeMillis();
   }
 
   public long getStartTime() {
@@ -75,10 +83,6 @@ public abstract class ActionStatus {
     this.successful = successful;
   }
 
-  public void setTotalDuration(long totalDuration) {
-    this.totalDuration = totalDuration;
-  }
-
   public long getRunningTime() {
     if (totalDuration != 0) {
       return totalDuration;
@@ -86,15 +90,19 @@ public abstract class ActionStatus {
     return Time.monotonicNow() - startTime;
   }
 
+  public PrintStream getResultPrintStream() {
+    return psResultOs;
+  }
+
+  public PrintStream getLogPrintStream() {
+    return psResultOs;
+  }
+
   public void reset() {
     finished = false;
     startTime = Time.monotonicNow();
     successful = false;
     totalDuration = 0;
-  }
-
-  public long getTotalSize() {
-    return totalSize;
   }
 
   public float getPercentage() {

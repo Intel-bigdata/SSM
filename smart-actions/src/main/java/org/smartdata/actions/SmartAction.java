@@ -19,6 +19,7 @@ package org.smartdata.actions;
 
 import org.smartdata.SmartContext;
 
+import java.io.PrintStream;
 import java.util.UUID;
 
 /**
@@ -28,6 +29,9 @@ import java.util.UUID;
 public abstract class SmartAction {
   private String[] actionArgs;
   private SmartContext context;
+  private ActionStatus actionStatus;
+  private PrintStream resultOut;
+  private PrintStream logOut;
 
   public SmartContext getContext() {
     return context;
@@ -35,6 +39,12 @@ public abstract class SmartAction {
 
   public void setContext(SmartContext context) {
     this.context = context;
+  }
+
+  public void setActionStatus(ActionStatus actionStatus) {
+    this.actionStatus = actionStatus;
+    resultOut = actionStatus.getResultPrintStream();
+    logOut = actionStatus.getLogPrintStream();
   }
 
   /**

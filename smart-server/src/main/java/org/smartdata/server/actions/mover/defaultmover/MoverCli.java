@@ -139,7 +139,6 @@ public class MoverCli extends Configured implements Tool {
       long runningTime = Time.monotonicNow() - startTime;
       Log.format("%-24s ", DateFormat.getDateTimeInstance().format(new Date()));
       LOG.info("Mover took " + StringUtils.formatTime(runningTime));
-      status.setTotalDuration(runningTime);
     }
   }
 }

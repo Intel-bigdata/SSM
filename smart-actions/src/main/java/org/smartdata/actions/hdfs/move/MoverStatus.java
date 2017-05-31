@@ -52,11 +52,6 @@ public class MoverStatus extends ActionStatus {
   }
 
   @Override
-  synchronized public long getTotalSize() {
-    return totalSize;
-  }
-
-  @Override
   synchronized public float getPercentage() {
     if (isSuccessful()) {
       return 1;
