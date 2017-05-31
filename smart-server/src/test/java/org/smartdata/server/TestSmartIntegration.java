@@ -113,7 +113,8 @@ public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
       }
     }
     long numCmdsGen = info4.getNumCmdsGen() - info3.getNumCmdsGen();
-    Assert.assertTrue(numCmdsGen > 0 && numCmdsGen <= indexChange + 2);
+    Assert.assertTrue(numCmdsGen > 0);
+    Assert.assertTrue(numCmdsGen <= indexChange + 2);
 
     ssm.shutdown();
     ssm = null;

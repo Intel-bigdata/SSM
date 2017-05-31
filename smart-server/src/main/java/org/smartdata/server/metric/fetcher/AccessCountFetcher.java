@@ -101,6 +101,11 @@ public class AccessCountFetcher {
           if(events.size() > 0) {
             this.manager.onAccessEventsArrived(events);
           }
+        } else if (reader.exists(now + reader.getRollingIntervalMillis())) {
+          // This is the corner case that AccessCountFetcher starts a little bit ahead of Namenode
+          // and then Namenode begins log access event for the current rolling file, while
+          // AccessCountFetch is seeking for the last one, which will never exist.
+          now = now + reader.getRollingIntervalMillis() - now % reader.getRollingIntervalMillis();
         }
       } catch (IOException | URISyntaxException e) {
         e.printStackTrace();
