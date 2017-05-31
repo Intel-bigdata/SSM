@@ -19,7 +19,10 @@ package org.smartdata.server.actions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -34,16 +37,35 @@ public class TestCacheFile {
 
   private static final int DEFAULT_BLOCK_SIZE = 100;
   private static final String REPLICATION_KEY = "3";
+  private MiniDFSCluster cluster;
+  private DFSClient client;
+  private DistributedFileSystem dfs;
+  private Configuration conf = new Configuration();
 
-  @Test
-  public void testMkdir() throws IOException {
-    Configuration conf = new Configuration();
+  @Before
+  public void newCluster()  throws IOException {
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
     conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
-    final DFSClient client = cluster.getFileSystem().getClient();
-    final DistributedFileSystem dfs = cluster.getFileSystem();
+    cluster = new MiniDFSCluster.Builder(conf).
+        numDataNodes(3).
+        storageTypes(new StorageType[]
+            {StorageType.DISK, StorageType.ARCHIVE}).
+        build();
+    client = cluster.getFileSystem().getClient();
+    dfs = cluster.getFileSystem();
+    cluster.waitActive();
+  }
+
+  @After
+  public void shutdown() throws IOException {
+    if (cluster != null) {
+      cluster.shutdown();
+    }
+  }
+
+  @Test
+  public void testMkdir() throws IOException {
     Path dir = new Path("/fileTestA");
     dfs.mkdirs(dir);
     String[] str = {"/fileTestA"};
@@ -52,6 +74,5 @@ public class TestCacheFile {
     assertEquals(false, moveToCache.isCached(str[0]));
     moveToCache.run();
     assertEquals(true, moveToCache.isCached(str[0]));
-    cluster.shutdown();
   }
 }
