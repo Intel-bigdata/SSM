@@ -28,6 +28,8 @@ import java.util.UUID;
  * 1. storage policy;
  * 2. stripping erasure coded file;
  * 3. small file.
+ *
+ * Arguments: file_path length [buffer_size, default=64k]
  */
 public class WriteFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(WriteFileAction.class);

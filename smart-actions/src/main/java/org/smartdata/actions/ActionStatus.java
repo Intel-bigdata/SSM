@@ -95,7 +95,7 @@ public abstract class ActionStatus {
   }
 
   public PrintStream getLogPrintStream() {
-    return psResultOs;
+    return psLogOs;
   }
 
   public void reset() {
