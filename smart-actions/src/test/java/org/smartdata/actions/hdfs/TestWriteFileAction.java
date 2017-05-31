@@ -75,5 +75,4 @@ public class TestWriteFileAction {
     HdfsFileStatus fileStatus = dfs.getClient().getFileInfo(filePath);
     Assert.assertTrue(fileStatus.getLen() == size);
   }
-
 }

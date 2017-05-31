@@ -43,5 +43,4 @@ public class TestReadFileAction extends TestWriteFileAction {
     readFileAction.init(args);
     readFileAction.execute();
   }
-
 }
