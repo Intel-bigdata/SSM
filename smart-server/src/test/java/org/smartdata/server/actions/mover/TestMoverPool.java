@@ -119,7 +119,7 @@ public class TestMoverPool {
   }
 
   @Test(timeout = 300000)
-  public void testStopAndRestartMovers() throws Exception {
+  public void testStopMovers() throws Exception {
     try {
       final String file1 = "/testStopAndRestartMovers/file1";
       Path dir = new Path("/testStopAndRestartMovers");
@@ -140,18 +140,6 @@ public class TestMoverPool {
       Boolean succeed = MoverPool.getInstance().stop(id1, 3);
       assertTrue(succeed);
       assertFalse(status1.isSuccessful());
-
-      // restart move
-      succeed = MoverPool.getInstance().restart(id1);
-      assertTrue(succeed);
-      while (!status1.isFinished()) {
-        System.out.println("Mover running time : " +
-            StringUtils.formatTime(status1.getRunningTime()));
-        Thread.sleep(3000);
-      }
-      assertTrue(status1.isSuccessful());
-      System.out.println("Mover total running time : " +
-          StringUtils.formatTime(status1.getRunningTime()));
     } finally {
       cluster.shutdown();
     }
