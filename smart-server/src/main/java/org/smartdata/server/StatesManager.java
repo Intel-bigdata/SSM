@@ -103,7 +103,9 @@ public class StatesManager implements ModuleSequenceProto {
     if (accessEventFetcher != null) {
       this.accessEventFetcher.stop();
     }
-    this.fileAccessEventSource.close();
+    if (this.fileAccessEventSource != null) {
+      this.fileAccessEventSource.close();
+    }
     LOG.info("Stopped.");
   }
 
