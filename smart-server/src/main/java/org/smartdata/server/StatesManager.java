@@ -20,7 +20,6 @@ package org.smartdata.server;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metrics.FileAccessEventCollector;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.metric.fetcher.AccessEventFetcher;
@@ -119,6 +118,7 @@ public class StatesManager implements ModuleSequenceProto {
   }
 
   public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
+    event.setTimeStamp(System.currentTimeMillis());
     this.fileAccessEventSource.insertEventFromSmartClient(event);
   }
 

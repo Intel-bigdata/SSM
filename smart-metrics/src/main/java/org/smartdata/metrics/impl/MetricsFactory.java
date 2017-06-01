@@ -25,7 +25,7 @@ import org.smartdata.metrics.impl.hdfs.NNMetricsAccessEventSource;
 
 public class MetricsFactory {
   private static final String ACCESS_EVENT_SOURCE = "smart.data.file.event.source";
-  private static final String DEFAULT_ACCESS_EVENT_SOURCE = NNMetricsAccessEventSource.class.getName();
+  private static final String DEFAULT_ACCESS_EVENT_SOURCE = SmartServerAccessEventSource.class.getName();
   // Todo:
   public static FileAccessEventSource createAccessEventSource(Configuration conf) {
     String source = conf.get(ACCESS_EVENT_SOURCE, DEFAULT_ACCESS_EVENT_SOURCE);

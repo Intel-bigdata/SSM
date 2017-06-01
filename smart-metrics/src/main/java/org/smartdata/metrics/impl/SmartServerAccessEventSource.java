@@ -20,7 +20,6 @@ package org.smartdata.metrics.impl;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
 import org.smartdata.metrics.FileAccessEventSource;
-import org.smartdata.metrics.HDFSFileAccessEvent;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -69,7 +68,7 @@ public class SmartServerAccessEventSource implements FileAccessEventSource {
     public void run() {
       try {
         //Todo: do not use HDFSFileAccessEvent
-        this.outerQueue.put(new HDFSFileAccessEvent("", System.currentTimeMillis()));
+        this.outerQueue.put(new FileAccessEvent("", System.currentTimeMillis()));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }

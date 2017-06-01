@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
-import org.smartdata.metrics.HDFSFileAccessEvent;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -73,7 +72,7 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
         List<FileAccessEvent> events = new ArrayList<>();
         while (reader.hasNext()) {
           Info info = reader.next();
-          events.add(new HDFSFileAccessEvent(info.getPath(), info.getTimestamp()));
+          events.add(new FileAccessEvent(info.getPath(), info.getTimestamp()));
           now = info.getTimestamp();
         }
         return events;
