@@ -15,26 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.actions;
+package org.smartdata.actions;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
 
-/**
- * Test ActionRegister with native and user defined actions
- */
-public class TestActionRegister {
+public class TestActionRegistry {
 
   @Test
-  public void testNativeClassMap() throws Exception {
-    ActionRegister ar = new ActionRegister();
-    ar.loadNativeAction();
-    String[] actionNames = ar.namesOfAction();
-    Assert.assertTrue(actionNames.length == 2);
-    Action moveFile = ar.newActionFromName("MoveFile");
+  public void testInit() throws Exception {
+    ActionRegistry ar = ActionRegistry.instance();
+    Set<String> actionNames = ar.namesOfAction();
+    System.out.print(actionNames.size());
+    // Assert.assertTrue(actionNames.size() == 2);
+    SmartAction moveFile = ar.createAction("archive");
   }
 
 //  @Test

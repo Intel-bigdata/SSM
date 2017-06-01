@@ -42,7 +42,6 @@ public class ActionRegistry {
         theInstance.loadActions();
       }
     }
-
     return theInstance;
   }
 
