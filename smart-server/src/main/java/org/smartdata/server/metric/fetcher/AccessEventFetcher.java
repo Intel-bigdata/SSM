@@ -85,7 +85,6 @@ public class AccessEventFetcher {
       this.conf = conf;
       this.manager = manager;
       this.collector = collector;
-      this.collector.init(conf);
     }
 
     @Override

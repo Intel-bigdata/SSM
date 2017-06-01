@@ -104,26 +104,6 @@ public class PBHelper {
   }
 
   public static FileAccessEvent convert(final ReportFileAccessEventRequestProto event) {
-    return new FileAccessEvent() {
-      @Override
-      public String getPath() {
-        return event.getFilePath();
-      }
-
-      @Override
-      public long getFileId() {
-        return event.getFileId();
-      }
-
-      @Override
-      public String getAccessedBy() {
-        return event.getAccessedBy();
-      }
-
-      @Override
-      public long getTimestamp() {
-        return 0;
-      }
-    };
+    return new FileAccessEvent(event.getFilePath(), 0, event.getAccessedBy());
   }
 }

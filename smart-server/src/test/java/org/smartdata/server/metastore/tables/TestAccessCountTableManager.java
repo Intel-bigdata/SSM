@@ -26,7 +26,6 @@ import org.dbunit.dataset.xml.XmlDataSet;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.metrics.HDFSFileAccessEvent;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.DBTest;
 import org.smartdata.server.utils.Constants;
@@ -97,14 +96,14 @@ public class TestAccessCountTableManager extends DBTest {
     DBAdapter adapter = new DBAdapter(databaseTester.getConnection().getConnection());
     AccessCountTableManager manager = new AccessCountTableManager(adapter);
     List<FileAccessEvent> accessEvents = new ArrayList<>();
-    accessEvents.add(new HDFSFileAccessEvent("file1", 0));
-    accessEvents.add(new HDFSFileAccessEvent("file2", 1));
-    accessEvents.add(new HDFSFileAccessEvent("file2", 2));
-    accessEvents.add(new HDFSFileAccessEvent("file3", 2));
-    accessEvents.add(new HDFSFileAccessEvent("file3", 3));
-    accessEvents.add(new HDFSFileAccessEvent("file3", 4));
+    accessEvents.add(new FileAccessEvent("file1", 0));
+    accessEvents.add(new FileAccessEvent("file2", 1));
+    accessEvents.add(new FileAccessEvent("file2", 2));
+    accessEvents.add(new FileAccessEvent("file3", 2));
+    accessEvents.add(new FileAccessEvent("file3", 3));
+    accessEvents.add(new FileAccessEvent("file3", 4));
 
-    accessEvents.add(new HDFSFileAccessEvent("file3", 5000));
+    accessEvents.add(new FileAccessEvent("file3", 5000));
 
     manager.onAccessEventsArrived(accessEvents);
     AccessCountTable accessCountTable = new AccessCountTable(0L, 5000L);
