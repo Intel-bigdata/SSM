@@ -18,11 +18,10 @@
 package org.smartdata.server.metastore.sql.tables;
 
 import org.apache.commons.lang.StringUtils;
+import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.utils.FileAccessEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.server.metastore.sql.DBAdapter;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

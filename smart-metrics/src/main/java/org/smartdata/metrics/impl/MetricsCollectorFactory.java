@@ -15,32 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.utils;
+package org.smartdata.metrics.impl;
 
-public class FileAccessEvent {
-  private long timestamp;
-  private String path;
-  private String user;
+import org.apache.hadoop.conf.Configuration;
+import org.smartdata.metrics.FileAccessEventCollector;
 
-  public FileAccessEvent(String path, long timestamp) {
-    this(path, timestamp, "");
-  }
+public class MetricsCollectorFactory {
 
-  public FileAccessEvent(String path, long timestamp, String user) {
-    this.path = path;
-    this.timestamp = timestamp;
-    this.user = user;
-  }
-
-  public long getTimestamp() {
-    return timestamp;
-  }
-
-  public String getPath() {
-    return path;
-  }
-
-  public String getUser() {
-    return user;
+  // Todo:
+  public static FileAccessEventCollector createAccessEventCollector(Configuration conf) {
+    return new NNMetricsAccessEventCollector();
   }
 }

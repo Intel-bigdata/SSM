@@ -21,20 +21,26 @@ package org.smartdata.metrics;
  * An HDFS file access event.
  */
 public class HDFSFileAccessEvent implements FileAccessEvent {
-  // DFSClient has no info about the file id, except have another rpc call
-  // to Namenode, SmartServer can get this value from Namespace, so not
-  // provide id info here.
-  private String fileName;
+  private final String path;
+  private final long timeStamp;
 
-  public HDFSFileAccessEvent(String fileName) {
-    this.fileName = fileName;
+  public HDFSFileAccessEvent(String path) {
+    this(path, -1);
+  }
+
+  public HDFSFileAccessEvent(String path, long timestamp) {
+    this.path = path;
+    this.timeStamp = timestamp;
   }
 
   @Override
-  public String getFileName() {
-    return fileName;
+  public String getPath() {
+    return this.path;
   }
 
+  // DFSClient has no info about the file id, except have another rpc call
+  // to Namenode, SmartServer can get this value from Namespace, so not
+  // provide id info here.
   @Override
   public long getFileId() {
     return 0;
@@ -46,7 +52,7 @@ public class HDFSFileAccessEvent implements FileAccessEvent {
   }
 
   @Override
-  public long getAccessedTime() {
-    return 0;
+  public long getTimestamp() {
+    return this.timeStamp;
   }
 }

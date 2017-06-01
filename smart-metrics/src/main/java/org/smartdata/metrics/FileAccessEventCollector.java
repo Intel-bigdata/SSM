@@ -17,6 +17,8 @@
  */
 package org.smartdata.metrics;
 
+import org.apache.hadoop.conf.Configuration;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -24,6 +26,11 @@ import java.util.List;
  * An interface for file access event collecting.
  */
 public interface FileAccessEventCollector {
+
+  /**
+   * Init the collector using passed configuration.
+   */
+  void init(Configuration conf);
 
   /**
    * Collect file access events occured since last calling of this method.
