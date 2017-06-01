@@ -18,13 +18,6 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
          xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-    <dependencies>
-        <dependency>
-            <groupId>org.smartdata</groupId>
-            <artifactId>smart-metrics</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
 
     <parent>
         <groupId>org.smartdata</groupId>
@@ -33,9 +26,36 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>smart-common</artifactId>
+    <artifactId>smart-dfsclient</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-common</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-metrics</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>2.7.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-client</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -52,6 +72,20 @@
                         <configuration>
                             <outputDirectory>target/lib</outputDirectory>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <configuration>
+                    <visitor>true</visitor>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

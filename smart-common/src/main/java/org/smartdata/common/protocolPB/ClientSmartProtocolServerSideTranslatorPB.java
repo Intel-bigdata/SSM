@@ -20,7 +20,7 @@ package org.smartdata.common.protocolPB;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.smartdata.common.CommandState;
-import org.smartdata.common.protocol.AdminServerProto.protoService.BlockingInterface;
+import org.smartdata.common.protocol.AdminServerProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.GetRuleInfoRequestProto;
@@ -49,8 +49,11 @@ import org.smartdata.common.protocol.AdminServerProto.DisableCommandRequestProto
 import org.smartdata.common.protocol.AdminServerProto.DeleteCommandResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.DeleteCommandRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
-import org.smartdata.common.protocol.SmartAdminProtocol;
+import org.smartdata.common.protocol.ClientServerProto;
+import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.common.SmartServiceState;
+import org.smartdata.common.protocol.SmartServerProtocols;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.command.CommandInfo;
 
@@ -58,14 +61,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.smartdata.common.protocolPB.PBHelper.convert;
-
 public class ClientSmartProtocolServerSideTranslatorPB implements
-    SmartAdminProtocolPB, SmartClientProtocolPB,
-    BlockingInterface {
-  final private SmartAdminProtocol server;
+    SmartServerProtocolPBs,
+    AdminServerProto.protoService.BlockingInterface,
+    ClientServerProto.protoService.BlockingInterface {
+  final private SmartServerProtocols server;
 
-  public ClientSmartProtocolServerSideTranslatorPB(SmartAdminProtocol server) {
+  public ClientSmartProtocolServerSideTranslatorPB(SmartServerProtocols server) {
     this.server = server;
   }
 
@@ -233,6 +235,18 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
     try {
       server.deleteCommand(req.getCommandID());
       return DeleteCommandResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public ReportFileAccessEventResponseProto reportFileAccessEvent(
+      RpcController controller, ReportFileAccessEventRequestProto req)
+      throws ServiceException {
+    try {
+      server.reportFileAccessEvent(PBHelper.convert(req));
+      return ReportFileAccessEventResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }

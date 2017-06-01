@@ -21,3 +21,17 @@ option java_package = "org.smartdata.common.protocol";
 option java_outer_classname = "ClientServerProto";
 option java_generic_services = true;
 option java_generate_equals_and_hash = true;
+
+message ReportFileAccessEventRequestProto {
+  required string fileName = 1;
+  required int64 fileId = 2;
+  required string accessedBy = 3;
+}
+
+message ReportFileAccessEventResponseProto {
+}
+
+service protoService {
+  rpc reportFileAccessEvent (ReportFileAccessEventRequestProto)
+  returns (ReportFileAccessEventResponseProto);
+}

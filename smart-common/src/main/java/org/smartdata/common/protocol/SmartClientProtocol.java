@@ -17,8 +17,14 @@
  */
 package org.smartdata.common.protocol;
 
+import org.smartdata.metrics.FileAccessEvent;
+
+import java.io.IOException;
+
 /**
  * Interface between SmartClient and SmartServer.
  */
 public interface  SmartClientProtocol {
+  void reportFileAccessEvent(FileAccessEvent event) throws IOException;
+
 }

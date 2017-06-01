@@ -20,6 +20,7 @@ package org.smartdata.server;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metric.fetcher.AccessCountFetcher;
 import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.server.metastore.sql.DBAdapter;
@@ -104,6 +105,9 @@ public class StatesManager implements ModuleSequenceProto {
 
   public List<AccessCountTable> getTablesInLast(long timeInMills) throws SQLException {
     return this.accessCountTableManager.getTables(timeInMills);
+  }
+
+  public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
   }
 
   /**

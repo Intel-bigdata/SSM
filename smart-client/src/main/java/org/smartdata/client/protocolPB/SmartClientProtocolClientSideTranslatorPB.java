@@ -17,18 +17,39 @@
  */
 package org.smartdata.client.protocolPB;
 
+import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
+import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.common.protocol.SmartClientProtocol;
+import org.smartdata.common.protocolPB.PBHelper;
 import org.smartdata.common.protocolPB.SmartClientProtocolPB;
+import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 
 public class SmartClientProtocolClientSideTranslatorPB implements
-    java.io.Closeable {
+    java.io.Closeable, SmartClientProtocol {
   private SmartClientProtocolPB rpcProxy;
+
+  public SmartClientProtocolClientSideTranslatorPB(
+      SmartClientProtocolPB proxy) {
+    rpcProxy = proxy;
+  }
 
   @Override
   public void close() throws IOException {
     RPC.stopProxy(rpcProxy);
     rpcProxy = null;
+  }
+
+  @Override
+  public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
+    ReportFileAccessEventRequestProto req =
+        ReportFileAccessEventRequestProto.newBuilder().build();
+    try {
+      rpcProxy.reportFileAccessEvent(null, req);
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
   }
 }
