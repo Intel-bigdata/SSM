@@ -45,7 +45,11 @@ public class SmartClientProtocolClientSideTranslatorPB implements
   @Override
   public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
     ReportFileAccessEventRequestProto req =
-        ReportFileAccessEventRequestProto.newBuilder().build();
+        ReportFileAccessEventRequestProto.newBuilder()
+            .setFilePath(event.getPath())
+            .setFileId(0)
+            .setAccessedBy(event.getAccessedBy())
+            .build();
     try {
       rpcProxy.reportFileAccessEvent(null, req);
     } catch (ServiceException e) {

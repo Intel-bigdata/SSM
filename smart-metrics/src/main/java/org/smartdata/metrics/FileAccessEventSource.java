@@ -17,42 +17,21 @@
  */
 package org.smartdata.metrics;
 
-/**
- * An HDFS file access event.
- */
-public class HDFSFileAccessEvent implements FileAccessEvent {
-  private final String path;
-  private final long timeStamp;
+public interface FileAccessEventSource {
+  /**
+   * Get a collector what will produce events from this file access event source.
+   */
+  FileAccessEventCollector getCollector();
 
-  public HDFSFileAccessEvent(String path) {
-    this(path, -1);
-  }
+  /**
+   * Insert events generated from the Smart client so that the collector can consume.
+   * The actual implementation of FileAccessEventSource doesn't have to support this.
+   * @param event The event that generated from Smart client
+   */
+  void insertEventFromSmartClient(FileAccessEvent event);
 
-  public HDFSFileAccessEvent(String path, long timestamp) {
-    this.path = path;
-    this.timeStamp = timestamp;
-  }
-
-  @Override
-  public String getPath() {
-    return this.path;
-  }
-
-  // DFSClient has no info about the file id, except have another rpc call
-  // to Namenode, SmartServer can get this value from Namespace, so not
-  // provide id info here.
-  @Override
-  public long getFileId() {
-    return 0;
-  }
-
-  @Override
-  public String getAccessedBy() {
-    return null;
-  }
-
-  @Override
-  public long getTimestamp() {
-    return this.timeStamp;
-  }
+  /**
+   * Close the source, release resources if necessary.
+   */
+  void close();
 }

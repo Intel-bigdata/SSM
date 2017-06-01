@@ -22,7 +22,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
-import org.smartdata.metrics.HDFSFileAccessEvent;
+import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -90,7 +90,6 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
     DFSInputStream is = super.open(src);
-    reportFileAccessEvent(src);
     return is;
   }
 
@@ -109,13 +108,12 @@ public class SmartDFSClient extends DFSClient {
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException, UnresolvedLinkException {
     DFSInputStream is = super.open(src, buffersize, verifyChecksum, stats);
-    reportFileAccessEvent(src);
     return is;
   }
 
   private void reportFileAccessEvent(String src) {
     try {
-      smartClient.reportFileAccessEvent(new HDFSFileAccessEvent(src));
+      smartClient.reportFileAccessEvent(new FileAccessEvent(src));
     } catch (IOException e) {  // Here just ignores that failed to report
       LOG.error("Can not report file access event to SmartServer: " + src);
     }
