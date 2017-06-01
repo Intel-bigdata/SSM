@@ -33,5 +33,5 @@ public interface DataAccessEvent {
    * Get the access time.
    * @return access time
    */
-  long getAccessedTime();
+  long getTimestamp();
 }

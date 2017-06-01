@@ -20,7 +20,7 @@ package org.smartdata.server;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.metric.fetcher.AccessCountFetcher;
+import org.smartdata.server.metric.fetcher.AccessEventFetcher;
 import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.server.metastore.sql.DBAdapter;
 import org.smartdata.server.metastore.sql.tables.AccessCountTable;
@@ -46,7 +46,7 @@ public class StatesManager implements ModuleSequenceProto {
   private ScheduledExecutorService executorService;
   private AccessCountTableManager accessCountTableManager;
   private InotifyEventFetcher inotifyEventFetcher;
-  private AccessCountFetcher accessCountFetcher;
+  private AccessEventFetcher accessEventFetcher;
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
   public StatesManager(SmartServer ssm, Configuration conf) {
@@ -68,7 +68,7 @@ public class StatesManager implements ModuleSequenceProto {
     }
     this.executorService = Executors.newScheduledThreadPool(4);
     this.accessCountTableManager = new AccessCountTableManager(dbAdapter, executorService);
-    this.accessCountFetcher = new AccessCountFetcher(client, accessCountTableManager, executorService);
+    this.accessEventFetcher = new AccessEventFetcher(conf, accessCountTableManager, executorService);
     this.inotifyEventFetcher = new InotifyEventFetcher(client, dbAdapter, executorService);
     LOG.info("Initialized.");
     return true;
@@ -80,7 +80,7 @@ public class StatesManager implements ModuleSequenceProto {
   public boolean start() throws IOException, InterruptedException {
     LOG.info("Starting ...");
     this.inotifyEventFetcher.start();
-    this.accessCountFetcher.start();
+    this.accessEventFetcher.start();
     LOG.info("Started. ");
     return true;
   }
@@ -91,8 +91,8 @@ public class StatesManager implements ModuleSequenceProto {
       this.inotifyEventFetcher.stop();
     }
 
-    if (accessCountFetcher != null) {
-      this.accessCountFetcher.stop();
+    if (accessEventFetcher != null) {
+      this.accessEventFetcher.stop();
     }
     LOG.info("Stopped.");
   }

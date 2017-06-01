@@ -17,42 +17,40 @@
  */
 package org.smartdata.server.metric.fetcher;
 
-import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.server.namenode.metrics.FileAccessMetrics;
-import org.apache.hadoop.util.Time;
+import org.apache.hadoop.conf.Configuration;
+import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.metrics.FileAccessEventCollector;
+import org.smartdata.metrics.impl.MetricsCollectorFactory;
 import org.smartdata.server.metastore.sql.tables.AccessCountTableManager;
-import org.smartdata.server.utils.FileAccessEvent;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class AccessCountFetcher {
+public class AccessEventFetcher {
   private static final Long DEFAULT_INTERVAL = 5 * 1000L;
   private final ScheduledExecutorService scheduledExecutorService;
   private final Long fetchInterval;
   private ScheduledFuture scheduledFuture;
   private FetchTask fetchTask;
 
-  public AccessCountFetcher(
-      DFSClient client, AccessCountTableManager manager, ScheduledExecutorService service) {
-    this(DEFAULT_INTERVAL, client, manager, service);
+  public AccessEventFetcher(
+      Configuration conf, AccessCountTableManager manager, ScheduledExecutorService service) {
+    this(DEFAULT_INTERVAL, conf, manager, service);
   }
 
-  public AccessCountFetcher(Long fetchInterval, DFSClient client,
+  public AccessEventFetcher(Long fetchInterval, Configuration conf,
       AccessCountTableManager manager) {
-    this(fetchInterval, client, manager, Executors.newSingleThreadScheduledExecutor());
+    this(fetchInterval, conf, manager, Executors.newSingleThreadScheduledExecutor());
   }
 
-  public AccessCountFetcher(Long fetchInterval, DFSClient client,
+  public AccessEventFetcher(Long fetchInterval, Configuration conf,
       AccessCountTableManager manager, ScheduledExecutorService service) {
     this.fetchInterval = fetchInterval;
-    this.fetchTask = new FetchTask(client, manager);
+    this.fetchTask = new FetchTask(conf, manager);
     this.scheduledExecutorService = service;
   }
 
@@ -70,46 +68,26 @@ public class AccessCountFetcher {
   }
 
   private static class FetchTask implements Runnable {
-    private final DFSClient client;
+    private final Configuration conf;
     private final AccessCountTableManager manager;
-    private FileAccessMetrics.Reader reader;
-    private long now;
+    private FileAccessEventCollector collector;
 
-    public FetchTask(DFSClient client, AccessCountTableManager manager) {
-      this.client = client;
+    public FetchTask(Configuration conf, AccessCountTableManager manager) {
+      this.conf = conf;
       this.manager = manager;
-      try {
-        this.reader = FileAccessMetrics.Reader.create();
-      } catch (IOException | URISyntaxException e) {
-        e.printStackTrace();
-      }
-      now = Time.now();
+      this.collector = MetricsCollectorFactory.createAccessEventCollector(conf);
+      this.collector.init(conf);
     }
 
     @Override
     public void run() {
       try {
-        if (reader.exists(now)) {
-          reader.seekTo(now, false);
-
-          List<FileAccessEvent> events = new ArrayList<>();
-          while (reader.hasNext()) {
-            FileAccessMetrics.Info info = reader.next();
-            events.add(new FileAccessEvent(info.getPath(), info.getTimestamp()));
-            now = info.getTimestamp();
-          }
-          if(events.size() > 0) {
-            this.manager.onAccessEventsArrived(events);
-          }
-        } else if (reader.exists(now + reader.getRollingIntervalMillis())) {
-          // This is the corner case that AccessCountFetcher starts a little bit ahead of Namenode
-          // and then Namenode begins log access event for the current rolling file, while
-          // AccessCountFetch is seeking for the last one, which will never exist.
-          now = now + reader.getRollingIntervalMillis() - now % reader.getRollingIntervalMillis();
+        List<FileAccessEvent> events = this.collector.collect();
+        if (events.size() > 0) {
+          this.manager.onAccessEventsArrived(events);
         }
-      } catch (IOException | URISyntaxException e) {
+      } catch (IOException e) {
         e.printStackTrace();
-        throw new RuntimeException(e);
       }
     }
   }

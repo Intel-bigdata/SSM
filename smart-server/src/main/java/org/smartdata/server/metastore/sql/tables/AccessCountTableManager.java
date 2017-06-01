@@ -18,16 +18,12 @@
 package org.smartdata.server.metastore.sql.tables;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.utils.FileAccessEvent;
 import org.smartdata.server.utils.TimeGranularity;
 import org.smartdata.server.utils.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.utils.FileAccessEvent;
-import org.smartdata.server.utils.TimeGranularity;
-import org.smartdata.server.utils.TimeUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

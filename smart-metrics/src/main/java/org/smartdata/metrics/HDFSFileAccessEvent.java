@@ -17,16 +17,21 @@
  */
 package org.smartdata.metrics;
 
-import org.smartdata.metrics.FileAccessEvent;
-
 /**
  * An HDFS file access event.
  */
 public class HDFSFileAccessEvent implements FileAccessEvent {
+  private final String path;
+  private final long timeStamp;
+
+  public HDFSFileAccessEvent(String path, long timestamp) {
+    this.path = path;
+    this.timeStamp = timestamp;
+  }
 
   @Override
-  public String getFileName() {
-    return null;
+  public String getPath() {
+    return this.path;
   }
 
   @Override
@@ -40,7 +45,7 @@ public class HDFSFileAccessEvent implements FileAccessEvent {
   }
 
   @Override
-  public long getAccessedTime() {
-    return 0;
+  public long getTimestamp() {
+    return this.timeStamp;
   }
 }

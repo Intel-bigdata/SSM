@@ -23,10 +23,10 @@ package org.smartdata.metrics;
 public interface FileAccessEvent extends DataAccessEvent {
 
   /**
-   * Get the accessed file name.
-   * @return file name
+   * Get the accessed file path.
+   * @return file path
    */
-  String getFileName();
+  String getPath();
 
   /**
    * Get the accessed file id if any.
