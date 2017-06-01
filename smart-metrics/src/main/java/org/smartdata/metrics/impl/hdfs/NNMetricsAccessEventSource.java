@@ -35,8 +35,7 @@ public class NNMetricsAccessEventSource implements FileAccessEventSource {
 
   @Override
   public void insertEventFromSmartClient(FileAccessEvent event) {
-    throw new UnsupportedOperationException(
-        "NNMetricsAccessEventSource does not support insert events from Smart Server");
+    // Do nothing.
   }
 
   @Override
