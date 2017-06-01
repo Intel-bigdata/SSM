@@ -24,6 +24,7 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.ExecutionContext;
@@ -34,9 +35,12 @@ import org.smartdata.server.rule.parser.SmartRuleVisitTranslator;
 import org.smartdata.server.rule.parser.TranslateResult;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOError;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 public class TestSmartRuleParser {
@@ -57,22 +61,51 @@ public class TestSmartRuleParser {
   }
 
   @Test
-  public void parseRule() throws Exception {
-    String rule0 = "file with path matches \"/a/b*.dat\"  : "
-        + "on FileCreate from \"2013-07-09 19:21:34\" to now + (7d + 4s ) | "
-        + "isincache and accessCount(10m) > 10 and x == y and "
-        + "x matches \"hello\" and \"/file/*.db\" matches file.path "
-        + "and true or c > 10 and 100 > d or 10d > 20s | cachefile";
-    String rule1 = "file with length > 1GB :  "
+  public void testValidRule() throws Exception {
+    List<String> rules = new LinkedList<>();
+    rules.add("file : accessCount(10m) > 10 and accessCount(10m) < 20 "
+        + "| cachefile");
+    rules.add("file with path matches \"/a/b*.dat\"  : "
+        + "every 5s from \"2013-07-09 19:21:34\" to now + (7d + 4s ) | "
+        + "inCache or accessCount(10m) > 10 and 10d > 20s | cachefile");
+    rules.add("file with length > 1GB :  "
         + "blocksize > 1 + 3 and accessCount(30s) > 3 "
-        + "and storage.free(\"SSD\") > 100 | cachefile";
-    String rule2 = "file with length > 3 : "
-        + "storage.free(\"SSD\") > 100 and not inCache | cachefile";
-    String rule3 = "file : accessCount(10min) > 20 | cachefile";
-    String rule4 = "file : accessCountX(10m) > 2 and length() > 3 | cachefile";
-    String rule5 = "file: every 5s from now to now + 100d | length > 3 | cachefile";
-    String rule6 = "file: every 5s | length > 100mb | movefile \"ONE_SSD\"";
-    String rule = rule6;
+        + "and storage.free(\"SSD\") > 100 | cachefile");
+    rules.add("file with length > 3 : "
+        + "storage.free(\"SSD\") > 100 and not inCache | cachefile");
+    rules.add("file : accessCount(10min) > 20 | cachefile");
+    rules.add("file: every 5s from now to now + 10d | length > 3 | cachefile");
+    rules.add("file: every 5s | length > 100mb | movefile \"ONE_SSD\"");
+    rules.add("file : every 1s | age > 100day | cachefile");
+    rules.add("file : every 1s | mtime > \"2016-09-13 12:05:06\" | cachefile");
+    rules.add("file : every 1s | mtime > now - 70day | cachefile");
+
+    for (String rule : rules) {
+      parseAndExecuteRule(rule);
+    }
+  }
+
+  @Test
+  public void testInvalidRule() throws Exception {
+    List<String> rules = new LinkedList<>();
+    rules.add("someobject: length > 3mb | cachefile");
+    rules.add("file : length > 3day | cachefile");
+    rules.add("file : length() > 3tb | cachefile");
+    rules.add("file : accessCountX(10m) > 2 and length() > 3 | cachefile");
+    rules.add("file : every 1s | mtime > 100s | cachefile");
+
+    for (String rule : rules) {
+      try {
+        parseAndExecuteRule(rule);
+        Assert.fail("Should have exception here!");
+      } catch (Exception e) {
+        // ignore
+      }
+    }
+  }
+
+  private void parseAndExecuteRule(String rule) throws Exception {
+    System.out.println("--> " + rule);
     InputStream input = new ByteArrayInputStream(rule.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);
     SmartRuleLexer lexer = new SmartRuleLexer(antlrInput);
@@ -93,6 +126,10 @@ public class TestSmartRuleParser {
     for (String sql : result.getSqlStatements()) {
       System.out.println("" + index + ". " + sql);
       index++;
+    }
+
+    if (parseErrors.size() > 0) {
+      throw new IOException("Error while parse rule");
     }
 
     ExecutionContext ctx = new ExecutionContext();
