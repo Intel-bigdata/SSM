@@ -22,9 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.ActionType;
+import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoverCli;
 import org.smartdata.actions.hdfs.move.MoverStatus;
 
+import java.io.IOException;
 import java.util.Date;
 
 /**
@@ -69,34 +71,13 @@ public class MoveFileAction extends HdfsAction {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    // setActionStatus(new MoverStatus(MoverPool.getInstance().createMoverAction(fileName)));
-    Thread moverProcess = new MoverProcess(getActionStatus(), fileName);
-    moverProcess.start();
-  }
 
-  class MoverProcess extends Thread {
-    private String path;
-    private MoverCli moverClient;
-
-    public MoverProcess(ActionStatus status, String path) {
-      this.moverClient = new MoverCli(status);
-      this.path = path;
-    }
-
-    public String getPath() {
-      return path;
-    }
-
-    @Override
-    public void run() {
-      try {
-        LOG.info("Start move at {}", path);
-        int result = ToolRunner.run(getContext().getConf(), moverClient,
-            new String[]{path});
-        LOG.info("Finish move at {}", path);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
+    MoverBasedMoveRunner moverRunner = new MoverBasedMoveRunner(
+        getContext().getConf(), getActionStatus());
+    try {
+      moverRunner.move(fileName);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 }
