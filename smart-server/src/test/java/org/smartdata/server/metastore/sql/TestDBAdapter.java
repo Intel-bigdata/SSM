@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql;
+package org.smartdata.server.metastore;
 
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
@@ -24,7 +24,8 @@ import org.dbunit.dataset.SortedTable;
 import org.dbunit.dataset.xml.XmlDataSet;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.sql.tables.AccessCountTable;
+import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.tables.AccessCountTable;
 import org.smartdata.server.utils.TimeGranularity;
 
 import java.sql.Statement;

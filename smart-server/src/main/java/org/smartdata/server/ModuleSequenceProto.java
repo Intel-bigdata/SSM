@@ -17,7 +17,7 @@
  */
 package org.smartdata.server;
 
-import org.smartdata.server.metastore.sql.DBAdapter;
+import org.smartdata.server.metastore.DBAdapter;
 
 import java.io.IOException;
 

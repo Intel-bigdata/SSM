@@ -23,7 +23,7 @@ option java_generic_services = true;
 option java_generate_equals_and_hash = true;
 
 message ReportFileAccessEventRequestProto {
-  required string fileName = 1;
+  required string filePath = 1;
   required int64 fileId = 2;
   required string accessedBy = 3;
 }

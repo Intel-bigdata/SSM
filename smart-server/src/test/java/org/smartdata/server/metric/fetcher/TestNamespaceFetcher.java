@@ -27,8 +27,8 @@ import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.metastore.sql.FileStatusInternal;
+import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.FileStatusInternal;
 
 import java.io.IOException;
 import java.sql.SQLException;

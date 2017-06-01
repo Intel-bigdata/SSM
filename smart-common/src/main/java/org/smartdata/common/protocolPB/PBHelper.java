@@ -97,7 +97,7 @@ public class PBHelper {
 
   public static ReportFileAccessEventRequestProto convert(FileAccessEvent event) {
     return ReportFileAccessEventRequestProto.newBuilder()
-        .setFileName(event.getFileName())
+        .setFilePath(event.getPath())
         .setAccessedBy(event.getAccessedBy())
         .setFileId(event.getFileId())
         .build();
@@ -106,8 +106,8 @@ public class PBHelper {
   public static FileAccessEvent convert(final ReportFileAccessEventRequestProto event) {
     return new FileAccessEvent() {
       @Override
-      public String getFileName() {
-        return event.getFileName();
+      public String getPath() {
+        return event.getFilePath();
       }
 
       @Override
@@ -121,7 +121,7 @@ public class PBHelper {
       }
 
       @Override
-      public long getAccessedTime() {
+      public long getTimestamp() {
         return 0;
       }
     };
