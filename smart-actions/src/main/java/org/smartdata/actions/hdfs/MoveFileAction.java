@@ -92,7 +92,7 @@ public class MoveFileAction extends HdfsAction {
       try {
         LOG.info("Start move at {}", path);
         int result = ToolRunner.run(getContext().getConf(), moverClient,
-                new String[] {path});
+            new String[]{path});
         LOG.info("Finish move at {}", path);
       } catch (Exception e) {
         throw new RuntimeException(e);

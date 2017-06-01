@@ -53,6 +53,7 @@ public abstract class SmartAction {
 
   /**
    * Used to initialize the action.
+   *
    * @param args Action specific
    */
   public void init(String[] args) {
@@ -61,6 +62,7 @@ public abstract class SmartAction {
 
   /**
    * Get action arguments.
+   *
    * @return
    */
   public String[] getArguments() {
@@ -69,13 +71,13 @@ public abstract class SmartAction {
 
   /**
    * Execute an action.
+   *
    * @return a uid to track the status of the action, or null if the action
    * has no status.
    */
   protected abstract void execute();
 
-  public UUID run() {
+  public void run() {
     execute();
-    return actionStatus.getId();
   }
 }
