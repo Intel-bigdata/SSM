@@ -24,7 +24,7 @@ import org.smartdata.server.rule.exceptions.RuleParserException;
 import org.smartdata.server.rule.objects.Property;
 import org.smartdata.server.rule.objects.PropertyRealParas;
 import org.smartdata.server.rule.objects.SmartObject;
-import org.smartdata.server.metastore.sql.TableMetaData;
+import org.smartdata.server.metastore.TableMetaData;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -588,6 +588,14 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     return result;
   }
 
+  private void setDefaultTimeBasedScheduleInfo() {
+    // TODO: using a more sophisticated way
+    if (timeBasedScheduleInfo == null) {
+      timeBasedScheduleInfo = new TimeBasedScheduleInfo(getTimeNow(),
+          TimeBasedScheduleInfo.FOR_EVER, 5000);
+    }
+  }
+
   List<String> sqlStatements = new LinkedList<>();
   List<String> tempTableNames = new LinkedList<>();
   Map<String, List<Object>> dynamicParameters = new HashMap<>();
@@ -614,6 +622,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     }
 
     sqlStatements.add(ret);
+    setDefaultTimeBasedScheduleInfo();
 
     return new TranslateResult(sqlStatements,
         tempTableNames, dynamicParameters, sqlStatements.size() - 1,

@@ -26,9 +26,9 @@ import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.metric.fetcher.AccessEventFetcher;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
-import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.metastore.sql.tables.AccessCountTable;
-import org.smartdata.server.metastore.sql.tables.AccessCountTableManager;
+import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.tables.AccessCountTable;
+import org.smartdata.server.metastore.tables.AccessCountTableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

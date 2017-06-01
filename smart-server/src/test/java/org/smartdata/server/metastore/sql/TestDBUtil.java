@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql;
+package org.smartdata.server.metastore;
+
+import org.smartdata.server.metastore.Util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

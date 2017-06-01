@@ -15,31 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql;
+package org.smartdata.common.metastore;
 
-import com.alibaba.druid.pool.DruidDataSource;
-import com.alibaba.druid.pool.DruidDataSourceFactory;
+/**
+ * Information maintained for a file cached in hdfs.
+ */
+public class CachedFileStatus {
+  private long fid;
+  private long fromTime;
+  private long lastAccessTime;
+  private int numAccessed;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Properties;
-
-public class DruidPool implements DBPool {
-  private final DruidDataSource ds;
-
-  public DruidPool(Properties properties) throws Exception {
-    ds = (DruidDataSource) DruidDataSourceFactory.createDataSource(properties);
+  public CachedFileStatus(long fid,
+                          long fromTime,
+                          long lastAccessTime,
+                          int numAccessed) {
+    this.fid = fid;
+    this.fromTime = fromTime;
+    this.lastAccessTime = lastAccessTime;
+    this.numAccessed = numAccessed;
   }
 
-  public Connection getConnection() throws SQLException {
-    return ds.getConnection();
+  public long getFid() {
+    return fid;
   }
 
-  public void closeConnection(Connection conn) throws SQLException {
-    conn.close();
+  public long getFromTime() {
+    return fromTime;
   }
 
-  public void close() {
-    ds.close();
+  public long getLastAccessTime() {
+    return lastAccessTime;
+  }
+
+  public int getNumAccessed() {
+    return numAccessed;
   }
 }
