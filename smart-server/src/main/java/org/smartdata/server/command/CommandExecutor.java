@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.ModuleSequenceProto;
@@ -421,6 +422,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return cmd;
   }
 
+  public List<ActionInfo> listActions() throws IOException {
+    // TODO list actioninfo
+    return null;
+  }
 
   public List<CommandInfo> getPendingCommandsFromDB() throws IOException {
     // Get Pending cmds from DB
