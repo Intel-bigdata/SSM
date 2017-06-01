@@ -69,10 +69,9 @@ public class CacheFileAction extends HdfsAction {
    * Execute an action.
    * @return null.
    */
-  protected UUID execute() {
+  protected void execute() {
     addActionEvent(fileName);
     runCache(fileName);
-    return null;
   }
 
   public void addActionEvent(String fileName) {

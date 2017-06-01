@@ -28,9 +28,7 @@ import java.util.UUID;
 public class ListFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ListFileAction.class);
 
-
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

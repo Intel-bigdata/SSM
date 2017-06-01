@@ -48,7 +48,7 @@ public class MoverCli extends Configured implements Tool {
   private MoverStatus status;
 
   public MoverCli() {
-    status = new MoverStatus(null);
+    status = new MoverStatus();
   }
 
   public MoverCli(ActionStatus status) {

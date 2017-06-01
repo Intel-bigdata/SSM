@@ -28,9 +28,7 @@ import java.util.UUID;
 public class FsckAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(FsckAction.class);
 
-
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

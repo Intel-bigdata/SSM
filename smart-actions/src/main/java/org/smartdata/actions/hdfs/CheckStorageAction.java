@@ -30,7 +30,7 @@ public class CheckStorageAction extends HdfsAction {
   }
 
   @Override
-  protected UUID execute() {
+  protected void execute() {
     ActionStatus actionStatus = getActionStatus();
     actionStatus.setStartTime(Time.monotonicNow());
     try {
@@ -54,6 +54,5 @@ public class CheckStorageAction extends HdfsAction {
       actionStatus.setFinished(true);
     }
     actionStatus.setSuccessful(true);
-    return actionStatus.getId();
   }
 }

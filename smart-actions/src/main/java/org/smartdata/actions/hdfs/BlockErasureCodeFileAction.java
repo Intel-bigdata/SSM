@@ -28,9 +28,7 @@ import java.util.UUID;
 public class BlockErasureCodeFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(BlockErasureCodeFileAction.class);
 
-
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

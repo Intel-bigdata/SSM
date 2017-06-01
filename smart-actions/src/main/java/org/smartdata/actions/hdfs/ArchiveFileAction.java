@@ -28,9 +28,7 @@ import java.util.UUID;
 public class ArchiveFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(ArchiveFileAction.class);
 
-
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

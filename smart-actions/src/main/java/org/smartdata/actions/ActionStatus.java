@@ -48,13 +48,16 @@ public abstract class ActionStatus {
     psLogOs = new PrintStream(logOs, false);
   }
 
-  public ActionStatus(UUID id) {
-    this.id = id;
+  public ActionStatus() {
     init();
   }
 
   public UUID getId() {
     return id;
+  }
+
+  public void setId(UUID id) {
+    this.id = id;
   }
 
   public Boolean isFinished() {

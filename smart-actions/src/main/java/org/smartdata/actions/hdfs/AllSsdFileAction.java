@@ -29,7 +29,6 @@ public class AllSsdFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(AllSsdFileAction.class);
 
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

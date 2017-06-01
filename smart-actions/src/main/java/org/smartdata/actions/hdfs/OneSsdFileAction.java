@@ -28,9 +28,7 @@ import java.util.UUID;
 public class OneSsdFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(OneSsdFileAction.class);
 
-
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }
