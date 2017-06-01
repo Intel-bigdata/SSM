@@ -18,20 +18,22 @@
 package org.smartdata.server.command;
 
 import org.apache.hadoop.conf.Configuration;
+import org.smartdata.SmartContext;
+import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
-import org.smartdata.server.actions.Action;
-import org.smartdata.server.actions.ActionRegister;
-import org.smartdata.server.actions.mover.MoverPool;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.utils.JsonUtil;
+import org.smartdata.actions.ActionRegistry;
 
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.server.utils.JsonUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -57,22 +59,24 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Daemon commandExecutorThread;
   private CommandPool execThreadPool;
   private DBAdapter adapter;
-  private ActionRegister actionRegister;
-  private MoverPool moverPool;
+  private ActionRegistry actionRegistry;
   private SmartServer ssm;
+  private SmartContext smartContext;
   private boolean running;
 
   public CommandExecutor(SmartServer ssm, Configuration conf) {
-    //ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
     this.ssm = ssm;
-    moverPool = MoverPool.getInstance();
-    moverPool.init(conf);
-    actionRegister = new ActionRegister();
-    actionRegister.initial(conf);
+    actionRegistry = ActionRegistry.instance();
     statusCache = new HashSet<>();
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
+    smartContext = new SmartContext() {
+      @Override
+      public void setConf(SmartConf conf) {
+        super.setConf(conf);
+      }
+    };
     execThreadPool = new CommandPool();
     running = false;
   }
@@ -108,7 +112,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   public void join() throws IOException {
     try {
-      MoverPool.getInstance().shutdown();
       if (execThreadPool != null) {
         execThreadPool.stop();
       }
@@ -116,7 +119,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       LOG.error("Shutdown MoverPool/CommandPool Error!");
       throw new IOException(e);
     }
-
     // Set all thread handle to null
     execThreadPool = null;
     commandExecutorThread = null;
@@ -239,7 +241,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       // in next batch update
       synchronized (statusCache) {
         statusCache.add(new CmdTuple(cid, cmdinfo.getRid(),
-          CommandState.DISABLED));
+            CommandState.DISABLED));
       }
     }
   }
@@ -370,27 +372,28 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return ret;
   }
 
-  private Action newAction(String name) {
-    return actionRegister.newActionFromName(name);
+  private SmartAction createAction(String name) {
+    return actionRegistry.createAction(name);
   }
 
-  private Action[] newActionsFromStringJson(String jsonString) throws IOException {
+  private SmartAction[] createActionsFromStringJson(String jsonString) throws IOException {
     List<Map<String, String>> actionMaps =
             JsonUtil.toArrayListMap(jsonString);
-    List<Action> actions = new ArrayList<>();
-    Action current;
+    List<SmartAction> actions = new ArrayList<>();
+    SmartAction current;
     for(Map<String, String> actionMap: actionMaps) {
       // New action
       String[] args = {actionMap.get("_FILE_PATH_"), actionMap.get("_STORAGE_POLICY_")};
-      current = newAction(actionMap.get("_NAME_"));
+      current = createAction(actionMap.get("_NAME_"));
       if (current == null) {
         LOG.error("New Action Instance from {} error!", actionMap.get("_NAME_"));
         throw new IOException();
       }
-      current.initial(ssm.getDFSClient(), ssm.getConf(), args);
+      current.setContext(smartContext);
+      current.init(args);
       actions.add(current);
     }
-    return actions.toArray(new Action[actionMaps.size()]);
+    return actions.toArray(new SmartAction[actionMaps.size()]);
   }
 
   public synchronized long submitCommand(CommandInfo cmd) throws IOException {
@@ -406,9 +409,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return -1;
   }
 
-  private Command getCommandFromCmdInfo (CommandInfo cmdinfo) throws IOException {
+  private Command getCommandFromCmdInfo(CommandInfo cmdinfo) throws IOException {
     // New Command
-    Command cmd = new Command(newActionsFromStringJson(cmdinfo.getParameters()),
+    Command cmd = new Command(createActionsFromStringJson(cmdinfo.getParameters()),
         new Callback());
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());

@@ -18,26 +18,27 @@
 package org.smartdata.server.command;
 
 import org.smartdata.common.CommandState;
-import org.smartdata.server.actions.Action;
+import org.smartdata.actions.SmartAction;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.server.actions.mover.MoverPool;
 
 
 /**
  * Command is the minimum unit of execution. Different commands can be
- * executed at the same time, but actions belongs to an action can only be
+ * executed at the same time, but smartActions belongs to an SmartAction can only be
  * executed in serial.
  *
  * The command get executed when rule conditions fulfilled.
- * A command can have many actions, for example:
- * Command 'archive' contains the following two actions:
+ * A command can have many smartActions, for example:
+ * Command 'archive' contains the following two smartActions:
  *  1.) SetStoragePolicy
  *  2.) EnforceStoragePolicy
  */
@@ -49,10 +50,10 @@ public class Command implements Runnable {
   private long ruleId;   // id of the rule that this Command comes from
   private long id;
   private CommandState state = CommandState.NOTINITED;
-  private Action[] actions;
+  private SmartAction[] smartActions;
   private String parameters;
   CommandExecutor.Callback cb;
-  private ArrayList<UUID> uuids;
+  private Set<UUID> uuids;
   private boolean running;
 
   private long createTime;
@@ -63,10 +64,10 @@ public class Command implements Runnable {
 
   }
 
-  public Command(Action[] actions, CommandExecutor.Callback cb) {
-    this.actions = actions.clone();
+  public Command(SmartAction[] smartActions, CommandExecutor.Callback cb) {
+    this.smartActions = smartActions.clone();
     this.cb = cb;
-    this.uuids = new ArrayList<>();
+    this.uuids = new HashSet<>();
     this.running = true;
   }
 
@@ -102,8 +103,8 @@ public class Command implements Runnable {
     this.state = state;
   }
 
-  public Action[] getActions() {
-    return actions == null ? null : actions.clone();
+  public SmartAction[] getSmartActions() {
+    return smartActions == null ? null : smartActions.clone();
   }
 
   public long getScheduleToExecuteTime() {
@@ -120,47 +121,37 @@ public class Command implements Runnable {
 
   public void stop() throws IOException {
     LOG.info("Command {} Stopped!", toString());
-    running = false;
-    if (uuids.size() != 0) {
-      MoverPool moverPool = MoverPool.getInstance();
-      try {
-        for (UUID id : uuids) {
-          if (moverPool.getStatus(id) == null) {
-            continue;
-          }
-          if (!moverPool.getStatus(id).isFinished()) {
-            moverPool.stop(id);
-          }
-        }
-      } catch (Exception e) {
-        LOG.error("Shutdown Unfinished Actions Error!");
-        throw new IOException(e);
-      }
-    }
+    // running = false;
+    // if (uuids.size() != 0) {
+    //   MoverPool moverPool = MoverPool.getInstance();
+    //   try {
+    //     for (UUID id : uuids) {
+    //       if (moverPool.getStatus(id) == null) {
+    //         continue;
+    //       }
+    //       if (!moverPool.getStatus(id).isFinished()) {
+    //         moverPool.stop(id);
+    //       }
+    //     }
+    //   } catch (Exception e) {
+    //     LOG.error("Shutdown Unfinished smartActions Error!");
+    //     throw new IOException(e);
+    //   }
+    // }
   }
 
-  public void runActions() {
-    UUID uid;
-    for (Action act : actions) {
+  public void runSmartActions() {
+    for (SmartAction act : smartActions) {
       if (act == null) {
         continue;
       }
-      // uid = ActionExecutor.run(act);
-      uid = act.run();
-      if (uid == null) {
-        continue;
-      }
-      uuids.add(uid);
+      uuids.add(act.getActionStatus().getId());
+      act.run();
     }
-    MoverPool moverPool = MoverPool.getInstance();
     while (uuids.size() != 0 && running) {
-      for (Iterator<UUID> iter = uuids.iterator(); iter.hasNext(); ) {
-        UUID id = iter.next();
-        if (moverPool.getStatus(id) == null)
-          continue;
-        if (moverPool.getStatus(id).isFinished()) {
-          moverPool.removeStatus(id);
-          iter.remove();
+      for (SmartAction act: smartActions) {
+        if (act.getActionStatus().isFinished()) {
+          uuids.remove(act.getActionStatus().getId());
         }
       }
       if (uuids.size() == 0 || !running) {
@@ -169,14 +160,14 @@ public class Command implements Runnable {
       try {
         Thread.sleep(300);
       } catch (Exception e) {
-        LOG.error("Run Action Thread error!");
+        LOG.error("Run SmartAction Thread error!");
       }
     }
   }
 
   @Override
   public void run() {
-    runActions();
+    runSmartActions();
     if (cb != null && running) {
       cb.complete(this.id, this.ruleId, CommandState.DONE);
     }
