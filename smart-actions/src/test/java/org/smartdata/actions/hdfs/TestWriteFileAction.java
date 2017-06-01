@@ -47,9 +47,16 @@ public class TestWriteFileAction {
     }
   }
 
+  protected void writeFile(String filePath, int length) throws IOException {
+    String[] args = {filePath, String.valueOf(length)};
+    WriteFileAction writeFileAction = new WriteFileAction();
+    writeFileAction.setDfsClient(client);
+    writeFileAction.init(args);
+    writeFileAction.execute();
+  }
+
   @Test
   public void testInit() throws IOException {
-    // String[] args = {"Test", "10", "1024"};
     ArrayList<String> args = new ArrayList<>();
     args.add("Test");
     args.add("10");
@@ -57,14 +64,6 @@ public class TestWriteFileAction {
     writeFileAction.init(args.toArray(new String[args.size()]));
     args.add("1024");
     writeFileAction.init(args.toArray(new String[args.size()]));
-  }
-
-  protected void writeFile(String filePath, int size) throws IOException {
-    String[] args = {filePath, String.valueOf(size)};
-    WriteFileAction writeFileAction = new WriteFileAction();
-    writeFileAction.setDfsClient(client);
-    writeFileAction.init(args);
-    writeFileAction.execute();
   }
 
   @Test

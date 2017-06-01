@@ -30,8 +30,8 @@ public abstract class SmartAction {
   private String[] actionArgs;
   private SmartContext context;
   private ActionStatus actionStatus;
-  private PrintStream resultOut;
-  private PrintStream logOut;
+  protected PrintStream resultOut;
+  protected PrintStream logOut;
 
   public SmartContext getContext() {
     return context;

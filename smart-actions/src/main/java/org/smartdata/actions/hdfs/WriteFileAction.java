@@ -53,23 +53,19 @@ public class WriteFileAction extends HdfsAction {
   @Override
   protected UUID execute() {
     try {
-      // mkdir with default permission
-      // dfsClient.mkdirs(filePath, null, true);
       final OutputStream out = dfsClient.create(filePath,true);
       // generate random data with given length
-      byte[] buffer = new byte[length];
+      byte[] buffer = new byte[bufferSize];
       new Random().nextBytes(buffer);
-      // write to HDFS//
+      // write to HDFS
       for (int pos = 0; pos < length; pos += bufferSize) {
         int writeLength = pos + bufferSize < length ? bufferSize : length - pos;
-        out.write(buffer, pos, writeLength);
+        out.write(buffer, 0, writeLength);
       }
       out.close();
     } catch (IOException e) {
-      LOG.error("WriteFile Action fails!");
-      e.printStackTrace();
+      resultOut.println("WriteFile Action fails!\n" + e.getMessage());
     }
-    // dfs.setStoragePolicy(dir, "HOT");
     return null;
   }
 }
