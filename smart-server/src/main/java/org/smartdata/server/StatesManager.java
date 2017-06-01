@@ -20,6 +20,8 @@ package org.smartdata.server;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metrics.FileAccessEventCollector;
+import org.smartdata.metrics.impl.MetricsCollectorFactory;
 import org.smartdata.server.metric.fetcher.AccessEventFetcher;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
@@ -69,7 +71,8 @@ public class StatesManager implements ModuleSequenceProto {
     }
     this.executorService = Executors.newScheduledThreadPool(4);
     this.accessCountTableManager = new AccessCountTableManager(dbAdapter, executorService);
-    this.accessEventFetcher = new AccessEventFetcher(conf, accessCountTableManager, executorService);
+    FileAccessEventCollector collector = MetricsCollectorFactory.createAccessEventCollector(conf);
+    this.accessEventFetcher = new AccessEventFetcher(conf, accessCountTableManager, executorService, collector);
     this.inotifyEventFetcher = new InotifyEventFetcher(client, dbAdapter, executorService);
     LOG.info("Initialized.");
     return true;

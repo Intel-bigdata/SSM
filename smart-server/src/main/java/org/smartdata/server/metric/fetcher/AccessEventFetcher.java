@@ -38,19 +38,29 @@ public class AccessEventFetcher {
   private FetchTask fetchTask;
 
   public AccessEventFetcher(
-      Configuration conf, AccessCountTableManager manager, ScheduledExecutorService service) {
-    this(DEFAULT_INTERVAL, conf, manager, service);
+      Configuration conf,
+      AccessCountTableManager manager,
+      ScheduledExecutorService service,
+      FileAccessEventCollector collector) {
+    this(DEFAULT_INTERVAL, conf, manager, service, collector);
   }
 
-  public AccessEventFetcher(Long fetchInterval, Configuration conf,
-      AccessCountTableManager manager) {
-    this(fetchInterval, conf, manager, Executors.newSingleThreadScheduledExecutor());
+  public AccessEventFetcher(
+      Long fetchInterval,
+      Configuration conf,
+      AccessCountTableManager manager,
+      FileAccessEventCollector collector) {
+    this(fetchInterval, conf, manager, Executors.newSingleThreadScheduledExecutor(), collector);
   }
 
-  public AccessEventFetcher(Long fetchInterval, Configuration conf,
-      AccessCountTableManager manager, ScheduledExecutorService service) {
+  public AccessEventFetcher(
+      Long fetchInterval,
+      Configuration conf,
+      AccessCountTableManager manager,
+      ScheduledExecutorService service,
+      FileAccessEventCollector collector) {
     this.fetchInterval = fetchInterval;
-    this.fetchTask = new FetchTask(conf, manager);
+    this.fetchTask = new FetchTask(conf, manager, collector);
     this.scheduledExecutorService = service;
   }
 
@@ -70,12 +80,12 @@ public class AccessEventFetcher {
   private static class FetchTask implements Runnable {
     private final Configuration conf;
     private final AccessCountTableManager manager;
-    private FileAccessEventCollector collector;
+    private final FileAccessEventCollector collector;
 
-    public FetchTask(Configuration conf, AccessCountTableManager manager) {
+    public FetchTask(Configuration conf, AccessCountTableManager manager, FileAccessEventCollector collector) {
       this.conf = conf;
       this.manager = manager;
-      this.collector = MetricsCollectorFactory.createAccessEventCollector(conf);
+      this.collector = collector;
       this.collector.init(conf);
     }
 
