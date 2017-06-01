@@ -15,8 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql.tables;
+package org.smartdata.server.metastore.tables;
 
-public interface TableEvictor {
-  void evictTables(AccessCountTableDeque tables, int size);
+import java.util.Iterator;
+
+public class DurationEvictor implements TableEvictor {
+  private final long duration;
+
+  public DurationEvictor(long duration) {
+    this.duration = duration;
+  }
+
+  @Override
+  public void evictTables(AccessCountTableDeque tables, int size) {
+    if (tables.peek() != null ){
+      AccessCountTable latestTable = tables.peekLast();
+      Long threshHold = latestTable.getEndTime() - duration;
+      for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext();) {
+        AccessCountTable table = iterator.next();
+        if (table.getStartTime() < threshHold) {
+          iterator.remove();
+        } else {
+          break;
+        }
+      }
+    }
+  }
 }

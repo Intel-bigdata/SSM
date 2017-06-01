@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql.tables;
+package org.smartdata.server.metastore.tables;
 
 import com.google.common.collect.Lists;
 import org.dbunit.Assertion;
@@ -24,7 +24,7 @@ import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.xml.XmlDataSet;
 import org.junit.Test;
-import org.smartdata.server.metastore.sql.DBTest;
+import org.smartdata.server.metastore.DBTest;
 import org.smartdata.server.utils.TimeGranularity;
 
 import java.sql.Statement;

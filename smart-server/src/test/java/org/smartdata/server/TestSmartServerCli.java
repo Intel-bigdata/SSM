@@ -18,15 +18,14 @@
 package org.smartdata.server;
 
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.metastore.sql.TestDBUtil;
-import org.smartdata.server.metastore.sql.Util;
+import org.smartdata.server.metastore.TestDBUtil;
+import org.smartdata.server.metastore.Util;
 
 import java.net.URI;
 import java.util.ArrayList;

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql;
+package org.smartdata.server.metastore;
 
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtil;
@@ -25,7 +25,8 @@ import org.junit.Test;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
-import org.smartdata.common.metastore.sql.CachedFileStatus;
+import org.smartdata.common.metastore.CachedFileStatus;
+import org.smartdata.server.metastore.*;
 
 import java.io.File;
 import java.sql.Connection;

@@ -26,7 +26,7 @@ import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
-import org.smartdata.server.metastore.sql.DBAdapter;
+import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.utils.JsonUtil;
 
 import java.util.ArrayList;
