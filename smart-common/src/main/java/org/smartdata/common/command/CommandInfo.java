@@ -26,7 +26,7 @@ public class CommandInfo {
   private long rid;
   // TODO Maybe need actionID
   //private long actionId;
-  private ActionType actionType;
+  private ActionType actionType; // TODO: delete
   private CommandState state;
   private String parameters;
   private long generateTime;
