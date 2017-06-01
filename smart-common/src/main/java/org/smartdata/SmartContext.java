@@ -26,6 +26,10 @@ public class SmartContext {
 
   private SmartConf conf;
 
+  public SmartContext() {
+    this.conf = new SmartConf();
+  }
+
   public SmartContext(SmartConf conf) {
     this.conf = conf;
   }
