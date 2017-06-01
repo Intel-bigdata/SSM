@@ -22,7 +22,7 @@ import org.smartdata.actions.AbstractActionFactory;
 /**
  * Built-in smart actions for HDFS system.
  */
-public abstract class HdfsActionFactory extends AbstractActionFactory {
+public class HdfsActionFactory extends AbstractActionFactory {
 
   static {
     addAction("allssd", AllSsdFileAction.class);
