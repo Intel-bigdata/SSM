@@ -19,6 +19,7 @@ package org.smartdata.actions;
 
 import org.smartdata.SmartContext;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.UUID;
 

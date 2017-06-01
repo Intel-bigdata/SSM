@@ -27,7 +27,7 @@ import java.util.UUID;
 /**
  * Smart action status base.
  */
-public abstract class ActionStatus {
+public class ActionStatus {
   private UUID id;
   private long startTime;
   private Boolean finished;
@@ -66,7 +66,7 @@ public abstract class ActionStatus {
 
   public void setFinished(boolean finished) {
     this.finished = finished;
-    finishTime = System.currentTimeMillis();
+    finishTime = Time.monotonicNow();
   }
 
   public long getStartTime() {
@@ -100,18 +100,20 @@ public abstract class ActionStatus {
     return psLogOs;
   }
 
-  public void writeResultStream(String result) throws IOException {
-    resultOs.write(result.getBytes());
+  public ByteArrayOutputStream getResultStream() {
+    return resultOs;
   }
 
-  public void writeLogStream(String log) throws IOException {
-    logOs.write(log.getBytes());
+  public ByteArrayOutputStream getLogStream() {
+    return logOs;
   }
 
   public void reset() {
     finished = false;
     startTime = Time.monotonicNow();
     successful = false;
+    resultOs.reset();
+    logOs.reset();
   }
 
   public float getPercentage() {
