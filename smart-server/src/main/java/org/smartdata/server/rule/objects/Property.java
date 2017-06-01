@@ -148,6 +148,10 @@ public class Property {
       return tableItemName;
     }
 
+    if (values == null) {
+      return formatTemplate;
+    }
+
     String ret = formatTemplate;
 
     // TODO: need more checks to ensure replace correctly
