@@ -97,12 +97,12 @@ public abstract class ActionStatus {
     return psLogOs;
   }
 
-  public void writeResultStream(byte[] bytes) throws IOException {
-    resultOs.write(bytes);
+  public void writeResultStream(String result) throws IOException {
+    resultOs.write(result.getBytes());
   }
 
-  public void writeLogStream(byte[] bytes) throws IOException {
-    logOs.write(bytes);
+  public void writeLogStream(String log) throws IOException {
+    logOs.write(log.getBytes());
   }
 
   public void reset() {

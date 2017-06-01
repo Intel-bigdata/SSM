@@ -45,7 +45,7 @@ public class CheckStorageAction extends HdfsAction {
           hosts.concat(host + " ");
         }
         hosts.concat("}");
-        actionStatus.writeResultStream(hosts.getBytes());
+        actionStatus.writeResultStream(hosts);
       }
     } catch (Exception e) {
       actionStatus.setSuccessful(false);
