@@ -1,0 +1,95 @@
+<div class="col-md-12">
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<!-- todo: create a header directive -->
+  <div class="row">
+    <div class="col-md-6 col-sm-4">
+      <h4>
+        Worker {{worker.workerId}}
+        <indicator condition="{{worker.isRunning ? 'good' : ''}}"
+                   tooltip="{{worker.state}}"></indicator>
+      </h4>
+    </div>
+    <div class="col-md-2 col-sm-3 col-xs-4">
+      <metrics
+        caption="Uptime"
+        help="Running for {{worker.aliveFor|duration}}" remark-type="info"
+        value="{{uptimeCompact.value}}" unit="{{uptimeCompact.unit}}"></metrics>
+    </div>
+    <div class="col-md-2 col-sm-3 col-xs-4">
+      <metrics
+        caption="Slots Usage"
+        help="Slot is a minimal compute unit. The usage indicates the computation capacity."
+        value="{{worker.slots.usage|number:1}}" unit="%"></metrics>
+    </div>
+    <div class="col-sm-2 col-xs-4">
+      <metrics value="{{worker.executors.length}}" unit="executor"
+               unit-plural="executors"></metrics>
+      <metrics value="{{appsCount}}" unit="application" unit-plural="applications"></metrics>
+    </div>
+  </div>
+  <hr/>
+</div>
+
+<div class="col-md-6">
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+  <property-table
+    caption="Overview"
+    caption-tooltip="{{whatIsWorker}}"
+    props-bind="overviewTable"
+    prop-name-class="col-xs-4 bold"
+    prop-value-class="col-xs-8 actor-path">
+  </property-table>
+
+  <sortable-table
+    caption="Executors"
+    caption-tooltip="{{whatIsExecutor}}"
+    columns-bind="executorsTable.cols"
+    records-bind="executorsTable.rows"
+    pagination="4">
+    <div class="table-no-data-sm">
+      <h5><span class="glyphicon glyphicon-bullhorn"></span>
+        No application is running on this worker</h5>
+    </div>
+  </sortable-table>
+</div>
+
+<div class="col-md-6">
+  <jvm-metrics-view
+    sampling-config="metricsConfig"
+    query-metrics-fn-ref="queryMetricsFnRef">
+  </jvm-metrics-view>
+</div>

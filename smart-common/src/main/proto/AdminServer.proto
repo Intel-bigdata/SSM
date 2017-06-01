@@ -1,0 +1,172 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.hadoop.ssm.protocol;
+
+option java_package = "org.smartdata.common.protocol";
+option java_outer_classname = "AdminServerProto";
+option java_generic_services = true;
+option java_generate_equals_and_hash = true;
+
+message GetServiceStateRequestProto {
+}
+
+message GetServiceStateResponseProto {
+  required int32 state = 1;
+}
+
+message RuleInfoProto {
+  required sint64 id = 1;
+  required sint64 submitTime = 2;
+  required sint64 lastCheckTime = 3;
+  required sint64 numChecked = 4;
+  required sint64 numCmdsGen = 5;
+  required string ruleText = 6;
+  required int32 rulestateProto = 7;
+}
+
+message GetRuleInfoRequestProto {
+  required sint64 ruleId = 1;
+}
+
+message GetRuleInfoResponseProto {
+  required RuleInfoProto result = 1;
+}
+
+message SubmitRuleRequestProto {
+  required string rule = 1;
+  required int32 initState = 2;
+}
+
+message SubmitRuleResponseProto {
+  required int64 ruleId = 1;
+}
+
+message CheckRuleRequestProto {
+  required string rule = 1;
+}
+
+message CheckRuleResponseProto {
+}
+
+message ListRulesInfoRequestProto {
+}
+
+message ListRulesInfoResponseProto {
+  repeated RuleInfoProto rulesInfo = 1;
+}
+
+message DeleteRuleRequestProto {
+  required int64 ruleId = 1;
+  required bool dropPendingCommands = 2;
+}
+
+message DeleteRuleResponseProto {
+}
+
+message ActivateRuleRequestProto {
+  required int64 ruleId = 1;
+}
+
+message ActivateRuleResponseProto {
+}
+
+message DisableRuleRequestProto {
+  required int64 ruleId = 1;
+  required bool dropPendingCommands = 2;
+}
+
+message DisableRuleResponseProto {
+}
+
+message CommandInfoProto {
+  required int64 cid = 1;
+  required int64 rid = 2;
+  required int64 actionId = 3;
+  required int64 generateTime = 4;
+  required int64 stateChangedTime = 5;
+  required int32 actionType = 6;
+  required int32 state = 7;
+  required string parameters = 8;
+}
+
+message GetCommandInfoRequestProto {
+  required int64 commandID = 1;
+}
+
+message GetCommandInfoResponseProto {
+  required CommandInfoProto commandInfo = 1;
+}
+
+message ListCommandInfoRequestProto {
+  required int64 ruleID = 1;
+  required int32 commandState = 2;
+}
+
+message ListCommandInfoResponseProto {
+  repeated CommandInfoProto commandInfos = 1;
+}
+
+message ActivateCommandRequestProto {
+  required int64 commandID = 1;
+}
+
+message ActivateCommandResponseProto {
+}
+
+message DisableCommandRequestProto {
+  required int64 commandID = 1;
+}
+
+message DisableCommandResponseProto {
+}
+
+message DeleteCommandRequestProto {
+  required int64 commandID = 1;
+}
+
+message DeleteCommandResponseProto {
+}
+
+service protoService {
+  rpc getServiceState (GetServiceStateRequestProto)
+  returns (GetServiceStateResponseProto);
+  rpc submitRule (SubmitRuleRequestProto)
+  returns (SubmitRuleResponseProto);
+  rpc checkRule (CheckRuleRequestProto)
+  returns (CheckRuleResponseProto);
+  rpc getRuleInfo (GetRuleInfoRequestProto)
+  returns (GetRuleInfoResponseProto);
+  rpc listRulesInfo (ListRulesInfoRequestProto)
+  returns (ListRulesInfoResponseProto);
+  rpc deleteRule (DeleteRuleRequestProto)
+  returns (DeleteRuleResponseProto);
+  rpc activateRule (ActivateRuleRequestProto)
+  returns (ActivateRuleResponseProto);
+  rpc disableRule (DisableRuleRequestProto)
+  returns (DisableRuleResponseProto);
+  rpc getCommandInfo (GetCommandInfoRequestProto)
+  returns (GetCommandInfoResponseProto);
+  rpc listCommandInfo (ListCommandInfoRequestProto)
+  returns (ListCommandInfoResponseProto);
+  rpc activateCommand (ActivateCommandRequestProto)
+  returns (ActivateCommandResponseProto);
+  rpc disableCommand (DisableCommandRequestProto)
+  returns (DisableCommandResponseProto);
+  rpc deleteCommand (DeleteCommandRequestProto)
+  returns (DeleteCommandResponseProto);
+}
