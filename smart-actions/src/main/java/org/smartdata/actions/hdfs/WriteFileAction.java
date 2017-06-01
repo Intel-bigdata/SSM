@@ -53,7 +53,7 @@ public class WriteFileAction extends HdfsAction {
   @Override
   protected UUID execute() {
     try {
-      final OutputStream out = dfsClient.create(filePath,true);
+      final OutputStream out = dfsClient.create(filePath, true);
       // generate random data with given length
       byte[] buffer = new byte[bufferSize];
       new Random().nextBytes(buffer);

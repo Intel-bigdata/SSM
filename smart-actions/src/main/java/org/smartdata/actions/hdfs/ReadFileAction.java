@@ -58,7 +58,7 @@ public class ReadFileAction extends HdfsAction {
       DFSInputStream dfsInputStream = dfsClient.open(filePath);
       byte[] buffer = new byte[bufferSize];
       // read from HDFS
-      while(dfsInputStream.read(buffer, 0, bufferSize) != -1) {
+      while (dfsInputStream.read(buffer, 0, bufferSize) != -1) {
       }
       dfsInputStream.close();
     } catch (IOException e) {

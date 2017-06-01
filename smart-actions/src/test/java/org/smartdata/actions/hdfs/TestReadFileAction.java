@@ -24,7 +24,7 @@ public class TestReadFileAction {
   private Configuration conf = new Configuration();
 
   @Before
-  public void newCluster()  throws IOException {
+  public void newCluster() throws IOException {
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
     conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
@@ -48,7 +48,7 @@ public class TestReadFileAction {
   protected void writeFile(String filePath, int length) throws IOException {
     try {
       int bufferSize = 64 * 1024;
-      final OutputStream out = client.create(filePath,true);
+      final OutputStream out = client.create(filePath, true);
       // generate random data with given length
       byte[] buffer = new byte[bufferSize];
       new Random().nextBytes(buffer);
