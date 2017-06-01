@@ -23,9 +23,13 @@
 // import org.apache.hadoop.fs.StorageType;
 // import org.apache.hadoop.hdfs.*;
 // import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+// import org.junit.After;
 // import org.junit.Assert;
+// import org.junit.Before;
 // import org.junit.Test;
+// import org.smartdata.conf.SmartConf;
 //
+// import java.io.IOException;
 // import java.util.UUID;
 //
 // /**
@@ -34,61 +38,63 @@
 // public class TestMoveToSSD {
 //   private static final int DEFAULT_BLOCK_SIZE = 100;
 //   private static final String REPLICATION_KEY = "3";
+//   private MiniDFSCluster cluster;
+//   protected DFSClient client;
+//   private DistributedFileSystem dfs;
+//   private Configuration conf = new Configuration();
+//   private SmartConf smartConf = new SmartConf();
 //
-//   private void initConf(Configuration conf) {
+//   @Before
+//   public void createCluster() throws IOException {
 //     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
 //     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
 //     conf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
+//     cluster = new MiniDFSCluster.Builder(conf).
+//         numDataNodes(3).
+//         storageTypes(new StorageType[]
+//             {StorageType.DISK, StorageType.ARCHIVE}).
+//         build();
+//     client = cluster.getFileSystem().getClient();
+//     dfs = cluster.getFileSystem();
+//     cluster.waitActive();
+//   }
+//
+//   @After
+//   public void shutdown() throws IOException {
+//     if (cluster != null) {
+//       cluster.shutdown();
+//     }
 //   }
 //
 //   @Test
 //   public void MoveToSSD() throws Exception {
-//     final Configuration conf = new HdfsConfiguration();
-//     initConf(conf);
-//     MoverPool.getInstance().init(conf);
-//     // Move File From Archive to SSD
-//     testMoveFileToSSD(conf);
-//   }
-//
-//   private void testMoveFileToSSD(Configuration conf) throws Exception {
-//     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).
-//         numDataNodes(3).
-//         storageTypes(new StorageType[]{StorageType.DISK, StorageType.SSD}).
-//         build();
-//     try {
-//       cluster.waitActive();
-//       final DistributedFileSystem dfs = cluster.getFileSystem();
-//       final String file = "/testMoveFileToSSD/file";
-//       Path dir = new Path("/testMoveFileToSSD");
-//       final DFSClient client = cluster.getFileSystem().getClient();
-//       dfs.mkdirs(dir);
-//       String[] args = {file, "ALL_SSD"};
-//       // write to DISK
-//       dfs.setStoragePolicy(dir, "HOT");
-//       final FSDataOutputStream out = dfs.create(new Path(file), true, 1024);
-//       out.writeChars(file);
-//       out.close();
-//       // verify before movement
-//       LocatedBlock lb = dfs.getClient().getLocatedBlocks(file, 0).get(0);
-//       StorageType[] storageTypes = lb.getStorageTypes();
-//       for (StorageType storageType : storageTypes) {
-//         Assert.assertTrue(StorageType.DISK == storageType);
-//       }
-//       // move to SSD, Policy ALL_SSD
-//       UUID id = new MoveFile().initial(client, conf, args).run();
-//       Status status = MoverPool.getInstance().getStatus(id);
-//       while (!status.isFinished()) {
-//         Thread.sleep(3000);
-//       }
-//       // verify after movement
-//       Assert.assertTrue(status.isSuccessful());
-//       LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
-//       StorageType[] storageTypes1 = lb1.getStorageTypes();
-//       for (StorageType storageType : storageTypes1) {
-//         Assert.assertTrue(StorageType.SSD == storageType);
-//       }
-//     } finally {
-//       cluster.shutdown();
+//     Path dir = new Path("/testMoveFileToSSD");
+//     final DFSClient client = cluster.getFileSystem().getClient();
+//     dfs.mkdirs(dir);
+//     String[] args = {file, "ALL_SSD"};
+//     // write to DISK
+//     dfs.setStoragePolicy(dir, "HOT");
+//     final FSDataOutputStream out = dfs.create(new Path(file), true, 1024);
+//     out.writeChars(file);
+//     out.close();
+//     // verify before movement
+//     LocatedBlock lb = dfs.getClient().getLocatedBlocks(file, 0).get(0);
+//     StorageType[] storageTypes = lb.getStorageTypes();
+//     for (StorageType storageType : storageTypes) {
+//       Assert.assertTrue(StorageType.DISK == storageType);
+//     }
+//     // move to SSD, Policy ALL_SSD
+//     UUID id = new MoveFile().initial(client, conf, args).run();
+//     Status status = MoverPool.getInstance().getStatus(id);
+//     while (!status.isFinished()) {
+//       Thread.sleep(3000);
+//     }
+//     // verify after movement
+//     Assert.assertTrue(status.isSuccessful());
+//     LocatedBlock lb1 = dfs.getClient().getLocatedBlocks(file, 0).get(0);
+//     StorageType[] storageTypes1 = lb1.getStorageTypes();
+//     for (StorageType storageType : storageTypes1) {
+//       Assert.assertTrue(StorageType.SSD == storageType);
 //     }
 //   }
 // }
