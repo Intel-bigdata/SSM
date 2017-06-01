@@ -100,14 +100,6 @@ public class ActionStatus {
     return psLogOs;
   }
 
-  public void writeResultStream(String result) throws IOException {
-    resultOs.write(result.getBytes());
-  }
-
-  public void writeLogStream(String log) throws IOException {
-    logOs.write(log.getBytes());
-  }
-
   public ByteArrayOutputStream getResultStream() {
     return resultOs;
   }
