@@ -20,30 +20,23 @@ package org.smartdata.actions;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Set;
 
 public class TestActionRegistry {
 
   @Test
-  public void testInit() throws Exception {
+  public void testInit() throws IOException {
     ActionRegistry ar = ActionRegistry.instance();
     Set<String> actionNames = ar.namesOfAction();
-    System.out.print(actionNames.size());
-    // Assert.assertTrue(actionNames.size() == 2);
-    SmartAction moveFile = ar.createAction("archive");
+    // System.out.print(actionNames.size());
+    Assert.assertTrue(actionNames.size() == 14);
   }
 
-//  @Test
-//  public void testUDClassMap() throws Exception {
-//    ActionRegister ar = new ActionRegister();
-//    String path = getClass().getClassLoader().getResource("UserAction").getPath();
-//    Map<String, String> actionMap = new HashMap<>();
-//    actionMap.put("UDAction", "org.smartdata.server.actions.UDAction");
-//    ar.loadUserDefinedAction(path, actionMap);
-//    String[] actionNames = ar.namesOfAction();
-//    Assert.assertTrue(actionNames.length == actionMap.size());
-//    Action ac = ar.newActionFromName("UDAction");
-//    ac.run();
-//  }
-
+  @Test
+  public void testCreateAction() throws IOException {
+    ActionRegistry ar = ActionRegistry.instance();
+    SmartAction moveFile = ar.createAction("archive");
+    Assert.assertTrue(moveFile.getClass().toString().contains("ArchiveFileAction"));
+  }
 }
