@@ -23,9 +23,11 @@ import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
+import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.command.CommandInfo;
+import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 
@@ -91,5 +93,37 @@ public class PBHelper {
         .setGenerateTime(info.getGenerateTime())
         .setStateChangedTime(info.getStateChangedTime())
         .build();
+  }
+
+  public static ReportFileAccessEventRequestProto convert(FileAccessEvent event) {
+    return ReportFileAccessEventRequestProto.newBuilder()
+        .setFilePath(event.getPath())
+        .setAccessedBy(event.getAccessedBy())
+        .setFileId(event.getFileId())
+        .build();
+  }
+
+  public static FileAccessEvent convert(final ReportFileAccessEventRequestProto event) {
+    return new FileAccessEvent() {
+      @Override
+      public String getPath() {
+        return event.getFilePath();
+      }
+
+      @Override
+      public long getFileId() {
+        return event.getFileId();
+      }
+
+      @Override
+      public String getAccessedBy() {
+        return event.getAccessedBy();
+      }
+
+      @Override
+      public long getTimestamp() {
+        return 0;
+      }
+    };
   }
 }

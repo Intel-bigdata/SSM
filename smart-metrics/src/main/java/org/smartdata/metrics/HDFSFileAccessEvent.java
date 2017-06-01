@@ -24,6 +24,10 @@ public class HDFSFileAccessEvent implements FileAccessEvent {
   private final String path;
   private final long timeStamp;
 
+  public HDFSFileAccessEvent(String path) {
+    this(path, -1);
+  }
+
   public HDFSFileAccessEvent(String path, long timestamp) {
     this.path = path;
     this.timeStamp = timestamp;
@@ -34,6 +38,9 @@ public class HDFSFileAccessEvent implements FileAccessEvent {
     return this.path;
   }
 
+  // DFSClient has no info about the file id, except have another rpc call
+  // to Namenode, SmartServer can get this value from Namespace, so not
+  // provide id info here.
   @Override
   public long getFileId() {
     return 0;

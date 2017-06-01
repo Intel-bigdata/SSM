@@ -20,6 +20,7 @@ package org.smartdata.actions;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.util.Time;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.UUID;
 
@@ -32,7 +33,6 @@ public abstract class ActionStatus {
   private Boolean finished;
   private long finishTime;
   private Boolean successful;
-  private long totalDuration;
   private ByteArrayOutputStream resultOs;
   private PrintStream psResultOs;
   private ByteArrayOutputStream logOs;
@@ -42,7 +42,6 @@ public abstract class ActionStatus {
     finished = false;
     startTime = Time.monotonicNow();
     successful = false;
-    totalDuration = 0;
     resultOs = new ByteArrayOutputStream(64 * 1024);
     psResultOs = new PrintStream(resultOs, false);
     logOs = new ByteArrayOutputStream(64 * 1024);
@@ -84,8 +83,8 @@ public abstract class ActionStatus {
   }
 
   public long getRunningTime() {
-    if (totalDuration != 0) {
-      return totalDuration;
+    if (finished) {
+      return finishTime - startTime;
     }
     return Time.monotonicNow() - startTime;
   }
@@ -98,14 +97,24 @@ public abstract class ActionStatus {
     return psLogOs;
   }
 
+  public void writeResultStream(byte[] bytes) throws IOException {
+    resultOs.write(bytes);
+  }
+
+  public void writeLogStream(byte[] bytes) throws IOException {
+    logOs.write(bytes);
+  }
+
   public void reset() {
     finished = false;
     startTime = Time.monotonicNow();
     successful = false;
-    totalDuration = 0;
   }
 
   public float getPercentage() {
+    if (finished) {
+      return 1.0f;
+    }
     return 0.0f;//todo
   }
 }
