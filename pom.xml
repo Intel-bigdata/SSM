@@ -28,6 +28,7 @@
     <module>smart-client</module>
     <module>smart-admin</module>
     <module>smart-server</module>
+    <module>smart-dist</module>
   </modules>
 
   <properties>
@@ -303,6 +304,7 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>3.0.0</version>
       </plugin>
+
     </plugins>
     </pluginManagement>
 
@@ -325,6 +327,14 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eluder.coveralls</groupId>
+        <artifactId>coveralls-maven-plugin</artifactId>
+        <version>4.3.0</version>
+        <configuration>
+          <sourceEncoding>UTF8</sourceEncoding>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

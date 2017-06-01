@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.actions;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,17 +37,17 @@ public class TestActionRegister {
     Action moveFile = ar.newActionFromName("MoveFile");
   }
 
- @Test
- public void testUDClassMap() throws Exception {
-   ActionRegister ar = new ActionRegister();
-   String path = getClass().getClassLoader().getResource("UserAction").getPath();
-   Map<String, String> actionMap = new HashMap<>();
-   actionMap.put("UDAction", "org.smartdata.server.actions.UDAction");
-   ar.loadUserDefinedAction(path,actionMap);
-   String[] actionNames = ar.namesOfAction();
-   Assert.assertTrue(actionNames.length == actionMap.size());
-   Action ac = ar.newActionFromName("UDAction");
-   ac.run();
- }
+//  @Test
+//  public void testUDClassMap() throws Exception {
+//    ActionRegister ar = new ActionRegister();
+//    String path = getClass().getClassLoader().getResource("UserAction").getPath();
+//    Map<String, String> actionMap = new HashMap<>();
+//    actionMap.put("UDAction", "org.smartdata.server.actions.UDAction");
+//    ar.loadUserDefinedAction(path, actionMap);
+//    String[] actionNames = ar.namesOfAction();
+//    Assert.assertTrue(actionNames.length == actionMap.size());
+//    Action ac = ar.newActionFromName("UDAction");
+//    ac.run();
+//  }
 
 }
