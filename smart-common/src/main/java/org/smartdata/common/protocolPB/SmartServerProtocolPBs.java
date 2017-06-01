@@ -17,16 +17,6 @@
  */
 package org.smartdata.common.protocolPB;
 
-import com.google.protobuf.RpcController;
-import com.google.protobuf.ServiceException;
-import org.apache.hadoop.ipc.ProtocolInfo;
-import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
-import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
-
-@ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.SmartClientProtocolPB",
-    protocolVersion = 1)
-public interface SmartClientProtocolPB {
-  ReportFileAccessEventResponseProto
-  reportFileAccessEvent(RpcController controller,
-      ReportFileAccessEventRequestProto req) throws ServiceException;
+public interface SmartServerProtocolPBs extends SmartClientProtocolPB,
+    SmartAdminProtocolPB {
 }

@@ -24,15 +24,18 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.protocol.ClientServerProto;
+import org.smartdata.common.protocol.SmartServerProtocols;
+import org.smartdata.common.protocolPB.SmartClientProtocolPB;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
-import org.smartdata.common.protocol.SmartAdminProtocol;
 import org.smartdata.common.protocol.AdminServerProto;
 import org.smartdata.common.protocolPB.SmartAdminProtocolPB;
 import org.smartdata.common.protocolPB.ClientSmartProtocolServerSideTranslatorPB;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.command.CommandInfo;
+import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -42,7 +45,7 @@ import java.util.List;
  * Implements the rpc calls.
  * TODO: Implement statistics for SSM rpc server
  */
-public class SmartRpcServer implements SmartAdminProtocol {
+public class SmartRpcServer implements SmartServerProtocols {
   protected SmartServer ssm;
   protected Configuration conf;
   protected final InetSocketAddress clientRpcAddress;
@@ -59,12 +62,16 @@ public class SmartRpcServer implements SmartAdminProtocol {
     ClientSmartProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
         = new ClientSmartProtocolServerSideTranslatorPB(this);
 
-    BlockingService clientSmartPbService = AdminServerProto.protoService
+    BlockingService adminSmartPbService = AdminServerProto.protoService
+        .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
+    BlockingService clientSmartPbService = ClientServerProto.protoService
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
 
+    // TODO: provide service for SmartClientProtocol and SmartAdminProtocol
+    // TODO: in different port and server
     clientRpcServer = new RPC.Builder(conf)
         .setProtocol(SmartAdminProtocolPB.class)
-        .setInstance(clientSmartPbService)
+        .setInstance(adminSmartPbService)
         .setBindAddress(rpcAddr.getHostName())
         .setPort(rpcAddr.getPort())
         .setNumHandlers(serviceHandlerCount)
@@ -76,6 +83,8 @@ public class SmartRpcServer implements SmartAdminProtocol {
         rpcAddr.getHostName(), listenAddr.getPort());
 
     DFSUtil.addPBProtocol(conf, SmartAdminProtocolPB.class,
+        adminSmartPbService, clientRpcServer);
+    DFSUtil.addPBProtocol(conf, SmartClientProtocolPB.class,
         clientSmartPbService, clientRpcServer);
   }
 
@@ -150,7 +159,8 @@ public class SmartRpcServer implements SmartAdminProtocol {
   }
 
   @Override
-  public void deleteRule(long ruleID, boolean dropPendingCommands) throws IOException {
+  public void deleteRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
     checkIfActive();
     ssm.getRuleManager().DeleteRule(ruleID, dropPendingCommands);
   }
@@ -162,7 +172,8 @@ public class SmartRpcServer implements SmartAdminProtocol {
   }
 
   @Override
-  public void disableRule(long ruleID, boolean dropPendingCommands) throws IOException {
+  public void disableRule(long ruleID, boolean dropPendingCommands)
+      throws IOException {
     checkIfActive();
     ssm.getRuleManager().DisableRule(ruleID, dropPendingCommands);
   }
@@ -174,7 +185,8 @@ public class SmartRpcServer implements SmartAdminProtocol {
   }
 
   @Override
-  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState) throws IOException {
+  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState)
+      throws IOException {
     checkIfActive();
     return ssm.getCommandExecutor().listCommandsInfo(rid, commandState);
   }
@@ -195,5 +207,11 @@ public class SmartRpcServer implements SmartAdminProtocol {
   public void deleteCommand(long commandID) throws IOException {
     checkIfActive();
     ssm.getCommandExecutor().deleteCommand(commandID);
+  }
+
+  @Override
+  public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
+    checkIfActive();
+    ssm.getStatesManager().reportFileAccessEvent(event);
   }
 }
