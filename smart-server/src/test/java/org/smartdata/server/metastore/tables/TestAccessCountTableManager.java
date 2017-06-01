@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql.tables;
+package org.smartdata.server.metastore.tables;
 
 import org.dbunit.Assertion;
 import org.dbunit.database.IDatabaseConnection;
@@ -27,8 +27,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.HDFSFileAccessEvent;
-import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.metastore.sql.DBTest;
+import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.DBTest;
 import org.smartdata.server.utils.Constants;
 import org.smartdata.server.utils.TimeGranularity;
 

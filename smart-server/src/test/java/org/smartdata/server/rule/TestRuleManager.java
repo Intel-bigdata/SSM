@@ -22,10 +22,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.metastore.sql.FileStatusInternal;
-import org.smartdata.server.metastore.sql.TestDBUtil;
-import org.smartdata.server.metastore.sql.Util;
+import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.FileStatusInternal;
+import org.smartdata.server.metastore.TestDBUtil;
+import org.smartdata.server.metastore.Util;
 
 import java.io.File;
 import java.io.IOException;

@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql.tables;
+package org.smartdata.server.metastore.tables;
 
-import org.smartdata.server.utils.TimeGranularity;
 import org.smartdata.server.utils.TimeGranularity;
 
 public class AccessCountTable {

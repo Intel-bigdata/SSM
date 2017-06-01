@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql;
+package org.smartdata.server.metastore;
 
 import org.junit.Test;
+import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.Util;
 
 import java.io.File;
 import java.sql.Connection;

@@ -23,9 +23,9 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.metastore.sql.DBTest;
-import org.smartdata.server.metastore.sql.Util;
+import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.DBTest;
+import org.smartdata.server.metastore.Util;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
