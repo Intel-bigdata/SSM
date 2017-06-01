@@ -29,7 +29,6 @@ public class ClusterBalanceAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(ClusterBalanceAction.class);
 
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

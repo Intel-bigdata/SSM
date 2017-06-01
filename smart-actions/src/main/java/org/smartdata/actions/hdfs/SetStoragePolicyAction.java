@@ -11,9 +11,7 @@ import java.util.UUID;
 public class SetStoragePolicyAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(WriteFileAction.class);
 
-
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

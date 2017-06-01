@@ -29,7 +29,6 @@ public class DiskBalanceAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(DiskBalanceAction.class);
 
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

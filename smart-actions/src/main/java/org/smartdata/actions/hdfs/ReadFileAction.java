@@ -49,7 +49,7 @@ public class ReadFileAction extends HdfsAction {
   }
 
   @Override
-  protected UUID execute() {
+  protected void execute() {
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
       if (fileStatus == null) {
@@ -64,6 +64,5 @@ public class ReadFileAction extends HdfsAction {
     } catch (IOException e) {
       resultOut.println("ReadFile Action fails!\n" + e.getMessage());
     }
-    return null;
   }
 }

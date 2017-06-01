@@ -23,10 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.ActionType;
 import org.smartdata.actions.hdfs.move.MoverCli;
-import org.smartdata.actions.hdfs.move.MoverPool;
+import org.smartdata.actions.hdfs.move.MoverStatus;
 
 import java.util.Date;
-import java.util.UUID;
 
 /**
  * An action to set and enforce storage policy for a file.
@@ -41,6 +40,7 @@ public class MoveFileAction extends HdfsAction {
 
   public MoveFileAction() {
     this.actionType = ActionType.MoveFile;
+    this.setActionStatus(new MoverStatus());
   }
 
   public String getName() {
@@ -50,7 +50,6 @@ public class MoveFileAction extends HdfsAction {
   @Override
   public void init(String[] args) {
     super.init(args);
-
     this.fileName = args[0];
     this.storagePolicy = args[1];
   }
@@ -60,18 +59,19 @@ public class MoveFileAction extends HdfsAction {
    *
    * @return true if success, otherwise return false.
    */
-  protected UUID execute() {
+  protected void execute() {
     // TODO check if storagePolicy is the same
-    LOG.info("Action starts at {} : {} -> {}",
-        new Date(System.currentTimeMillis()), fileName, storagePolicy);
+    logOut.println("Action starts at "
+        + (new Date(System.currentTimeMillis())).toString() + " : "
+        + fileName + " -> " + storagePolicy.toString());
     try {
       dfsClient.setStoragePolicy(fileName, storagePolicy);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+    // setActionStatus(new MoverStatus(MoverPool.getInstance().createMoverAction(fileName)));
     Thread moverProcess = new MoverProcess(getActionStatus(), fileName);
     moverProcess.start();
-    return getActionStatus().getId();
   }
 
   class MoverProcess extends Thread {

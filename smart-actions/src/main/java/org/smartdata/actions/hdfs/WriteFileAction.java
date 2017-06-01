@@ -51,7 +51,7 @@ public class WriteFileAction extends HdfsAction {
   }
 
   @Override
-  protected UUID execute() {
+  protected void execute() {
     try {
       final OutputStream out = dfsClient.create(filePath, true);
       // generate random data with given length
@@ -66,6 +66,5 @@ public class WriteFileAction extends HdfsAction {
     } catch (IOException e) {
       resultOut.println("WriteFile Action fails!\n" + e.getMessage());
     }
-    return null;
   }
 }

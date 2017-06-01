@@ -28,9 +28,7 @@ import java.util.UUID;
 public class StripErasureCodeFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(StripErasureCodeFileAction.class);
 
-
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

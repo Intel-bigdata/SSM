@@ -30,7 +30,6 @@ public class UncacheFileAction extends HdfsAction {
 
 
   @Override
-  protected UUID execute() {
-    return null;
+  protected void execute() {
   }
 }

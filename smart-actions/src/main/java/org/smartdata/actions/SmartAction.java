@@ -72,9 +72,10 @@ public abstract class SmartAction {
    * @return a uid to track the status of the action, or null if the action
    * has no status.
    */
-  protected abstract UUID execute();
+  protected abstract void execute();
 
   public UUID run() {
-    return execute();
+    execute();
+    return actionStatus.getId();
   }
 }

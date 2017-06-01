@@ -38,8 +38,7 @@ public class MoverStatus extends ActionStatus {
     totalValueSet = false;
   }
 
-  public MoverStatus(UUID id) {
-    super(id);
+  public MoverStatus() {
   }
 
 
