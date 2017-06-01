@@ -15,30 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql.tables;
+package org.smartdata.server.metastore;
 
-import java.util.Iterator;
+import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.druid.pool.DruidDataSourceFactory;
 
-public class DurationEvictor implements TableEvictor {
-  private final long duration;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Properties;
 
-  public DurationEvictor(long duration) {
-    this.duration = duration;
+public class DruidPool implements DBPool {
+  private final DruidDataSource ds;
+
+  public DruidPool(Properties properties) throws Exception {
+    ds = (DruidDataSource) DruidDataSourceFactory.createDataSource(properties);
   }
 
-  @Override
-  public void evictTables(AccessCountTableDeque tables, int size) {
-    if (tables.peek() != null ){
-      AccessCountTable latestTable = tables.peekLast();
-      Long threshHold = latestTable.getEndTime() - duration;
-      for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext();) {
-        AccessCountTable table = iterator.next();
-        if (table.getStartTime() < threshHold) {
-          iterator.remove();
-        } else {
-          break;
-        }
-      }
-    }
+  public Connection getConnection() throws SQLException {
+    return ds.getConnection();
+  }
+
+  public void closeConnection(Connection conn) throws SQLException {
+    conn.close();
+  }
+
+  public void close() {
+    ds.close();
   }
 }

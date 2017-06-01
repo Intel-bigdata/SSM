@@ -15,30 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql.tables;
+package org.smartdata.server.metastore;
 
-import java.util.Iterator;
+public final class StorageCapacity {
+  private final String type;
+  private final Long capacity;
+  private final Long free;
 
-public class CountEvictor implements TableEvictor {
-  private final int maxCount;
-
-  public CountEvictor(int count) {
-    this.maxCount = count;
+  public StorageCapacity(String type, Long capacity, Long free) {
+    this.type = type;
+    this.capacity = capacity;
+    this.free = free;
   }
 
-  @Override
-  public void evictTables(AccessCountTableDeque tables, int size) {
-    if (size > maxCount) {
-      int evictedCount = 0;
-      for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext();) {
-        iterator.next();
-        evictedCount++;
-        if (evictedCount > size - maxCount) {
-          break;
-        } else {
-          iterator.remove();
-        }
-      }
-    }
+
+  public String getType() {
+    return type;
   }
+
+  public Long getCapacity() {
+    return capacity;
+  }
+
+  public Long getFree() {
+    return free;
+  }
+
 }

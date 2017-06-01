@@ -25,7 +25,7 @@ import org.smartdata.server.SmartServer;
 import org.smartdata.server.actions.Action;
 import org.smartdata.server.actions.ActionRegister;
 import org.smartdata.server.actions.mover.MoverPool;
-import org.smartdata.server.metastore.sql.DBAdapter;
+import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.utils.JsonUtil;
 
 import org.apache.hadoop.util.Daemon;

@@ -30,10 +30,9 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.inotify.Event;
-import org.apache.hadoop.hdfs.qjournal.MiniQJMHACluster;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.sql.DBAdapter;
+import org.smartdata.server.metastore.DBAdapter;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -28,7 +28,7 @@ import org.smartdata.server.StatesManager;
 import org.smartdata.server.rule.parser.RuleStringParser;
 import org.smartdata.server.rule.parser.TranslateResult;
 import org.smartdata.server.rule.parser.TranslationContext;
-import org.smartdata.server.metastore.sql.DBAdapter;
+import org.smartdata.server.metastore.DBAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -15,40 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common.metastore.sql;
+package org.smartdata.server.metastore;
 
-/**
- * Information maintained for a file cached in hdfs.
- */
-public class CachedFileStatus {
-  private long fid;
-  private long fromTime;
-  private long lastAccessTime;
-  private int numAccessed;
+public class StoragePolicy {
+  private byte sid;
+  private String policyName;
 
-  public CachedFileStatus(long fid,
-                          long fromTime,
-                          long lastAccessTime,
-                          int numAccessed) {
-    this.fid = fid;
-    this.fromTime = fromTime;
-    this.lastAccessTime = lastAccessTime;
-    this.numAccessed = numAccessed;
+  public StoragePolicy(byte sid, String policyName) {
+    this.sid = sid;
+    this.policyName = policyName;
   }
 
-  public long getFid() {
-    return fid;
+  public byte getSid() {
+    return sid;
   }
-
-  public long getFromTime() {
-    return fromTime;
+  public void setSid(byte sid) {
+    this.sid = sid;
   }
-
-  public long getLastAccessTime() {
-    return lastAccessTime;
+  public String getPolicyName() {
+    return policyName;
   }
-
-  public int getNumAccessed() {
-    return numAccessed;
+  public void setPolicyName(String policyName) {
+    this.policyName = policyName;
   }
 }

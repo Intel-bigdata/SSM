@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore.sql;
+package org.smartdata.server.metastore;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.StringUtils;
@@ -26,10 +26,10 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
-import org.smartdata.common.metastore.sql.CachedFileStatus;
+import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.server.metastore.sql.tables.AccessCountTable;
+import org.smartdata.server.metastore.tables.AccessCountTable;
 
 import java.io.IOException;
 import java.sql.Connection;

@@ -24,7 +24,7 @@ import org.smartdata.server.rule.exceptions.RuleParserException;
 import org.smartdata.server.rule.objects.Property;
 import org.smartdata.server.rule.objects.PropertyRealParas;
 import org.smartdata.server.rule.objects.SmartObject;
-import org.smartdata.server.metastore.sql.TableMetaData;
+import org.smartdata.server.metastore.TableMetaData;
 
 import java.io.IOException;
 import java.text.ParseException;
