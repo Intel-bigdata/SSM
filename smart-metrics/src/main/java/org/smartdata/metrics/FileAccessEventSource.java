@@ -17,17 +17,21 @@
  */
 package org.smartdata.metrics;
 
-import java.io.IOException;
-import java.util.List;
-
-/**
- * An interface for file access event collecting.
- */
-public interface FileAccessEventCollector {
+public interface FileAccessEventSource {
   /**
-   * Collect file access events occured since last calling of this method.
-   * @return access events
-   * @throws IOException
+   * Get a collector what will produce events from this file access event source.
    */
-  List<FileAccessEvent> collect() throws IOException;
+  FileAccessEventCollector getCollector();
+
+  /**
+   * Insert events generated from the Smart client so that the collector can consume.
+   * The actual implementation of FileAccessEventSource doesn't have to support this.
+   * @param event The event that generated from Smart client
+   */
+  void insertEventFromSmartClient(FileAccessEvent event);
+
+  /**
+   * Close the source, release resources if necessary.
+   */
+  void close();
 }

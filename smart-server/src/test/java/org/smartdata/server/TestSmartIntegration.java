@@ -20,7 +20,6 @@ package org.smartdata.server;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.server.namenode.metrics.FileAccessMetrics;
 import org.apache.hadoop.metrics2.impl.ConfigBuilder;
 import org.apache.hadoop.metrics2.impl.TestMetricsConfig;
 import org.junit.AfterClass;
@@ -42,10 +41,10 @@ public class TestSmartIntegration extends TestEmptyMiniSmartCluster {
   @BeforeClass
   public static void config() {
     ConfigBuilder builder = new ConfigBuilder().add("*.period", 1)
-      .add("namenode.sink.file_access.class", FileAccessMetrics.Writer.class.getName())
+      .add("namenode.sink.file_access.class", "org.apache.hadoop.hdfs.server.namenode.metrics.FileAccessMetrics$Writer")
       .add("namenode.sink.file_access.basepath", "tmp")
-      .add("namenode.sink.file_access.source", FileAccessMetrics.NAME)
-      .add("namenode.sink.file_access.context", FileAccessMetrics.CONTEXT_VALUE)
+      .add("namenode.sink.file_access.source", "FileAccessMetrics")
+      .add("namenode.sink.file_access.context", "file_access")
       .add("namenode.sink.file_access.ignore-error", false)
       .add("namenode.sink.file_access.allow-append", true)
       .add("namenode.sink.file_access.roll-offset-interval-millis", 0)

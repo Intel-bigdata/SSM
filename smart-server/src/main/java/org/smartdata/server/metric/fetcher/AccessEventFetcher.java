@@ -20,7 +20,6 @@ package org.smartdata.server.metric.fetcher;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
-import org.smartdata.metrics.impl.MetricsCollectorFactory;
 import org.smartdata.server.metastore.sql.tables.AccessCountTableManager;
 
 import java.io.IOException;
@@ -86,7 +85,6 @@ public class AccessEventFetcher {
       this.conf = conf;
       this.manager = manager;
       this.collector = collector;
-      this.collector.init(conf);
     }
 
     @Override

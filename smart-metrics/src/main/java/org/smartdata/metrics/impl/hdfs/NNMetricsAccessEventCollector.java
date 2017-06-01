@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metrics.impl;
+package org.smartdata.metrics.impl.hdfs;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.configuration.ConfigurationException;
@@ -55,8 +55,7 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
   private Reader reader;
   private long now;
 
-  @Override
-  public void init(Configuration conf) {
+  public NNMetricsAccessEventCollector() {
     try {
       this.reader = Reader.create();
     } catch (IOException | URISyntaxException e) {
@@ -88,6 +87,10 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
       e.printStackTrace();
     }
     return EMPTY_RESULT;
+  }
+
+  public void close() {
+    this.reader.close();
   }
 
   public static final FastDateFormat DATE_FORMAT =

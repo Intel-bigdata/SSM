@@ -19,11 +19,22 @@ package org.smartdata.metrics.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.metrics.FileAccessEventCollector;
+import org.smartdata.metrics.FileAccessEventSource;
+import org.smartdata.metrics.impl.hdfs.NNMetricsAccessEventCollector;
+import org.smartdata.metrics.impl.hdfs.NNMetricsAccessEventSource;
 
-public class MetricsCollectorFactory {
-
+public class MetricsFactory {
+  private static final String ACCESS_EVENT_SOURCE = "smart.data.file.event.source";
+  private static final String DEFAULT_ACCESS_EVENT_SOURCE = NNMetricsAccessEventSource.class.getName();
   // Todo:
-  public static FileAccessEventCollector createAccessEventCollector(Configuration conf) {
-    return new NNMetricsAccessEventCollector();
+  public static FileAccessEventSource createAccessEventSource(Configuration conf) {
+    String source = conf.get(ACCESS_EVENT_SOURCE, DEFAULT_ACCESS_EVENT_SOURCE);
+    try {
+      Class clazz = Class.forName(source);
+      return (FileAccessEventSource) clazz.newInstance();
+    } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+      e.printStackTrace();
+    }
+    return new NNMetricsAccessEventSource();
   }
 }
