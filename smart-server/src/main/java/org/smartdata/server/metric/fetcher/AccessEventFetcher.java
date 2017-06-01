@@ -20,8 +20,7 @@ package org.smartdata.server.metric.fetcher;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
-import org.smartdata.metrics.impl.MetricsCollectorFactory;
-import org.smartdata.server.metastore.sql.tables.AccessCountTableManager;
+import org.smartdata.server.metastore.tables.AccessCountTableManager;
 
 import java.io.IOException;
 import java.util.List;

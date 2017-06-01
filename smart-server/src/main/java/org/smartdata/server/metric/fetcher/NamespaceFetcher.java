@@ -20,8 +20,8 @@ package org.smartdata.server.metric.fetcher;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.metastore.sql.FileStatusInternal;
+import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.FileStatusInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

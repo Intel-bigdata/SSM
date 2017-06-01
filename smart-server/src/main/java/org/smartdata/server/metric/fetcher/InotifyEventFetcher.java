@@ -22,12 +22,10 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
-import org.smartdata.server.metastore.sql.DBAdapter;
+import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.utils.EventBatchSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.server.metastore.sql.DBAdapter;
-import org.smartdata.server.utils.EventBatchSerializer;
 
 import java.io.File;
 import java.io.IOException;
