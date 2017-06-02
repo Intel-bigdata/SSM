@@ -41,6 +41,7 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
     .setResult("this is result")
     .setLog("this is log")
     .setArgs(Array("abd", "def"))
+      .setProgress(0.5f)
     .setResult("objc[41272]: Class JavaLaunchHelper is implemented in both /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/bin/java (0x1075fd4c0) and /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/libinstrument.dylib (0x1076d94e0). One of the two will be used. Which one is undefined.")
     .setLog("objc[41272]: Class JavaLaunchHelper is implemented in both /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/bin/java (0x1075fd4c0) and /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/libinstrument.dylib (0x1076d94e0). One of the two will be used. Which one is undefined.")
   actions.add(builder.build())
