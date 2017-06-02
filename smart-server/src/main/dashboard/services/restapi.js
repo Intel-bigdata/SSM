@@ -127,6 +127,24 @@ angular.module('dashboard')
             });
         },
 
+        /** Submit an user defined application with user configuration */
+        submitAction: function (action, args, onComplete) {
+          return self._submitAction(restapiV1Root + 'submitaction/' + action, args, onComplete);
+        },
+
+        _submitAction: function (url, args, onComplete) {
+          url += '?args=' + encodeURIComponent(angular.toJson(args));
+          return $http.post(url).then(function (response) {
+            if (onComplete) {
+              onComplete(decodeSuccessResponse(response.data));
+            }
+          }, function (response) {
+            if (onComplete) {
+              onComplete(decodeErrorResponse(response.data));
+            }
+          });
+        },
+
         /** Upload a set of JAR files */
         uploadJars: function (files, onComplete) {
           var upload = Upload.upload({
