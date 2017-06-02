@@ -56,6 +56,7 @@ public class CommandPool {
 
   /**
    * Delete a command from the pool
+   *
    * @param cid
    * @throws IOException
    */
