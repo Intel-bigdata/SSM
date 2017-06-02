@@ -41,10 +41,6 @@ public class WriteFileAction extends HdfsAction {
   private int length;
   private int bufferSize = 64 * 1024;
 
-  public WriteFileAction() {
-    setActionStatus(new ActionStatus());
-  }
-
   @Override
   public void init(String[] args) {
     this.filePath = args[0];

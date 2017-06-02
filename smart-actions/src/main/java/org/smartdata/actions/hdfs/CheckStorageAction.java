@@ -31,10 +31,6 @@ public class CheckStorageAction extends HdfsAction {
 
   private String fileName;
 
-  public CheckStorageAction() {
-    this.setActionStatus(new ActionStatus());
-  }
-
   @Override
   public void init(String[] args) {
     super.init(args);

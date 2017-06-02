@@ -40,10 +40,6 @@ public class ReadFileAction extends HdfsAction {
   private String filePath;
   private int bufferSize = 64 * 1024;
 
-  public ReadFileAction() {
-    setActionStatus(new ActionStatus());
-  }
-
   @Override
   public void init(String[] args) {
     this.filePath = args[0];

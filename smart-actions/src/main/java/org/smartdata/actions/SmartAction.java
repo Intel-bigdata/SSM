@@ -34,6 +34,10 @@ public abstract class SmartAction {
   protected PrintStream resultOut;
   protected PrintStream logOut;
 
+  public SmartAction() {
+    setActionStatus(new ActionStatus());
+  }
+
   public SmartContext getContext() {
     return context;
   }

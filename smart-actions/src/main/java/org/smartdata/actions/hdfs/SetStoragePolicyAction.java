@@ -31,10 +31,6 @@ public class SetStoragePolicyAction extends HdfsAction {
   private String fileName;
   private String storagePolicy;
 
-  public SetStoragePolicyAction() {
-    this.setActionStatus(new ActionStatus());
-  }
-
   @Override
   public void init(String[] args) {
     super.init(args);

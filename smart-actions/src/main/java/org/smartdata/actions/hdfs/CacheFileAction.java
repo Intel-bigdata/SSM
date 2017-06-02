@@ -18,7 +18,6 @@
 
 package org.smartdata.actions.hdfs;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CacheFlag;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -42,7 +41,6 @@ public class CacheFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(CacheFileAction.class);
 
   private String fileName;
-  private Configuration conf;
   private LinkedBlockingQueue<String> actionEvents;
   private final String SSMPOOL = "SSMPool";
   private ActionType actionType;
