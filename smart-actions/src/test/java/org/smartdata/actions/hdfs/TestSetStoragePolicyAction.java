@@ -104,7 +104,7 @@ public class TestSetStoragePolicyAction {
       cluster.shutdown();
     }
   }
-  
+
   private byte setStoragePolicy(String file, String storagePolicy)
       throws IOException {
     SetStoragePolicyAction action = new SetStoragePolicyAction();
