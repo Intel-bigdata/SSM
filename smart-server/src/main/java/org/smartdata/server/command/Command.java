@@ -131,7 +131,7 @@ public class Command implements Runnable {
       }
       act.run();
       // Run actions sequentially!
-      while(!act.getActionStatus().isFinished()) {
+      while (!act.getActionStatus().isFinished()) {
         try {
           Thread.sleep(1000);
         } catch (InterruptedException e) {

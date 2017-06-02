@@ -51,9 +51,7 @@ public class CacheFileAction extends HdfsAction {
   public CacheFileAction() {
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
-    CacheStatus cacheStatus = new CacheStatus();
-    cacheStatus.setFinished(true);
-    this.setActionStatus(cacheStatus);
+    this.setActionStatus(new CacheStatus());
   }
 
   @Override
