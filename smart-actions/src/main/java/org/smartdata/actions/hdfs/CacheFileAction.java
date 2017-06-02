@@ -67,6 +67,7 @@ public class CacheFileAction extends HdfsAction {
   protected void execute() {
     addActionEvent(fileName);
     runCache(fileName);
+    getActionStatus().setFinished(true);
   }
 
   public void addActionEvent(String fileName) {
