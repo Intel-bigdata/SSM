@@ -32,9 +32,10 @@ import java.util.Date;
 public class MoveFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(MoveFileAction.class);
 
-  public String storagePolicy;
-  private String fileName;
-  private ActionType actionType;
+  protected String storagePolicy;
+  protected String fileName;
+  protected ActionType actionType;
+  protected MoveRunner moveRunner = null;
 
   public MoveFileAction() {
     this.actionType = ActionType.MoveFile;
@@ -42,14 +43,13 @@ public class MoveFileAction extends HdfsAction {
   }
 
   @Override
-  public void init(String[] args) {
+  public void init(String... args) {
     super.init(args);
     this.fileName = args[0];
     this.storagePolicy = args[1];
   }
 
   protected void execute() {
-    // TODO check if storagePolicy is the same
     logOut.println("Action starts at "
         + (new Date(System.currentTimeMillis())).toString() + " : "
         + fileName + " -> " + storagePolicy.toString());
@@ -59,10 +59,12 @@ public class MoveFileAction extends HdfsAction {
       throw new RuntimeException(e);
     }
 
-    MoveRunner moverRunner = new MoverBasedMoveRunner(
+    // TODO : make MoveRunner configurable
+    moveRunner = new MoverBasedMoveRunner(
         getContext().getConf(), getActionStatus());
+
     try {
-      moverRunner.move(fileName);
+      moveRunner.move(fileName);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
