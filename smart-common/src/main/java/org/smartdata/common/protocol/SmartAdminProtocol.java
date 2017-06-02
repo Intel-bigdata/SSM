@@ -19,6 +19,7 @@ package org.smartdata.common.protocol;
 
 import org.smartdata.common.CommandState;
 import org.smartdata.common.SmartServiceState;
+import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.command.CommandInfo;
@@ -113,4 +114,8 @@ public interface SmartAdminProtocol {
    */
   void deleteCommand(long commandID) throws IOException;
 
+  ActionInfo getActionInfo(long actionID) throws IOException;
+
+  List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
+      throws IOException;
 }

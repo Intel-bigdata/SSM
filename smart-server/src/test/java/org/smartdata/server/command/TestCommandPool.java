@@ -25,27 +25,27 @@ import org.junit.Test;
  */
 public class TestCommandPool extends TestCommand {
 
-  @Test
-  public void addCommand() throws Exception {
-    init();
-    generateTestCase();
-    Command cmd = runHelper();
-    CommandPool cmdPool = new CommandPool();
-    cmdPool.execute(cmd);
-    cmdPool.getCommandThread(cmd.getId()).join();
-  }
-
-  /**
-   * Delete a command
-   */
-  @Test
-  public void deleteCommand() throws Exception {
-    init();
-    generateTestCase();
-    Command cmd = runHelper();
-    CommandPool cmdPool = new CommandPool();
-    cmdPool.execute(cmd);
-    Thread.sleep(1000);
-    cmdPool.deleteCommand(cmd.getId());
-  }
+  // @Test
+  // public void addCommand() throws Exception {
+  //   init();
+  //   generateTestCase();
+  //   Command cmd = runHelper();
+  //   CommandPool cmdPool = new CommandPool();
+  //   cmdPool.execute(cmd);
+  //   cmdPool.getCommandThread(cmd.getId()).join();
+  // }
+  //
+  // /**
+  //  * Delete a command
+  //  */
+  // @Test
+  // public void deleteCommand() throws Exception {
+  //   init();
+  //   generateTestCase();
+  //   Command cmd = runHelper();
+  //   CommandPool cmdPool = new CommandPool();
+  //   cmdPool.execute(cmd);
+  //   Thread.sleep(1000);
+  //   cmdPool.deleteCommand(cmd.getId());
+  // }
 }
