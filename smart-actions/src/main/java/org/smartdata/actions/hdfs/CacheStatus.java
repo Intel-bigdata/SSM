@@ -17,13 +17,15 @@
  */
 package org.smartdata.actions.hdfs;
 
+import org.smartdata.actions.ActionStatus;
+
 import java.util.List;
 import java.util.Map;
 
 /**
  *
  */
-public class CacheStatus {
+public class CacheStatus extends ActionStatus{
   // the key named cachePoolName
   private Map<String, List<cacheFileInfo>> cacheStatusMap;
   //cache for each node information,the key means Datanote host name

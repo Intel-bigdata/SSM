@@ -39,42 +39,42 @@ import java.util.Map;
  */
 public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
 
-  @Test
-  public void testCommandExecutor() throws Exception {
-    waitTillSSMExitSafeMode();
-    generateTestCases();
-    testCommandExecutorHelper();
-  }
-
-  @Test
-  public void testGetListDeleteCommand() throws Exception {
-    waitTillSSMExitSafeMode();
-    generateTestCases();
-    Assert.assertTrue(ssm
-        .getCommandExecutor()
-        .listCommandsInfo(1, null).size() == 2);
-    Assert.assertTrue(ssm
-        .getCommandExecutor().getCommandInfo(1) != null);
-    ssm.getCommandExecutor().deleteCommand(1);
-    Assert.assertTrue(ssm
-        .getCommandExecutor()
-        .listCommandsInfo(1, null).size() == 1);
-  }
-
-  @Test
-  public void testActivateDisableCommand() throws Exception {
-    waitTillSSMExitSafeMode();
-    generateTestCases();
-    // Activate 1
-    ssm.getCommandExecutor().activateCommand(1);
-    Assert.assertTrue(ssm.getCommandExecutor().inCache(1));
-    // Disable 1
-    CommandInfo cmdinfo = ssm.getCommandExecutor().getCommandInfo(1);
-    if (cmdinfo.getState() != CommandState.DONE) {
-      ssm.getCommandExecutor().disableCommand(1);
-      Assert.assertTrue(cmdinfo.getState() == CommandState.DISABLED);
-    }
-  }
+  // @Test
+  // public void testCommandExecutor() throws Exception {
+  //   waitTillSSMExitSafeMode();
+  //   generateTestCases();
+  //   testCommandExecutorHelper();
+  // }
+  //
+  // @Test
+  // public void testGetListDeleteCommand() throws Exception {
+  //   waitTillSSMExitSafeMode();
+  //   generateTestCases();
+  //   Assert.assertTrue(ssm
+  //       .getCommandExecutor()
+  //       .listCommandsInfo(1, null).size() == 2);
+  //   Assert.assertTrue(ssm
+  //       .getCommandExecutor().getCommandInfo(1) != null);
+  //   ssm.getCommandExecutor().deleteCommand(1);
+  //   Assert.assertTrue(ssm
+  //       .getCommandExecutor()
+  //       .listCommandsInfo(1, null).size() == 1);
+  // }
+  //
+  // @Test
+  // public void testActivateDisableCommand() throws Exception {
+  //   waitTillSSMExitSafeMode();
+  //   generateTestCases();
+  //   // Activate 1
+  //   ssm.getCommandExecutor().activateCommand(1);
+  //   Assert.assertTrue(ssm.getCommandExecutor().inCache(1));
+  //   // Disable 1
+  //   CommandInfo cmdinfo = ssm.getCommandExecutor().getCommandInfo(1);
+  //   if (cmdinfo.getState() != CommandState.DONE) {
+  //     ssm.getCommandExecutor().disableCommand(1);
+  //     Assert.assertTrue(cmdinfo.getState() == CommandState.DISABLED);
+  //   }
+  // }
 
   private void generateTestCases() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
