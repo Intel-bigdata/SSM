@@ -34,6 +34,7 @@ public class TestCheckStorageAction extends ActionMiniCluster {
   public void testCheckStorageAction() throws IOException {
     CheckStorageAction checkStorageAction = new CheckStorageAction();
     checkStorageAction.setDfsClient(dfsClient);
+    checkStorageAction.setContext(smartContext);
     final String file = "/testParallelMovers/file1";
     dfsClient.mkdirs("/testParallelMovers");
 

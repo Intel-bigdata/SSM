@@ -30,9 +30,19 @@ import java.util.UUID;
 public abstract class SmartAction {
   private String[] actionArgs;
   private SmartContext context;
-  private ActionStatus actionStatus;
+  protected ActionStatus actionStatus;
   protected PrintStream resultOut;
   protected PrintStream logOut;
+
+  public SmartAction() {
+    createActionStatus();
+  }
+
+  protected void createActionStatus() {
+    this.actionStatus = new ActionStatus();
+    resultOut = actionStatus.getResultPrintStream();
+    logOut = actionStatus.getLogPrintStream();
+  }
 
   public SmartContext getContext() {
     return context;
@@ -40,12 +50,6 @@ public abstract class SmartAction {
 
   public void setContext(SmartContext context) {
     this.context = context;
-  }
-
-  public void setActionStatus(ActionStatus actionStatus) {
-    this.actionStatus = actionStatus;
-    resultOut = actionStatus.getResultPrintStream();
-    logOut = actionStatus.getLogPrintStream();
   }
 
   public ActionStatus getActionStatus() {

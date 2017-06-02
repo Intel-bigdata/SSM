@@ -113,7 +113,7 @@ public class MoverCli extends Configured implements Tool {
   @Override
   public int run(String[] args) throws Exception {
     final long startTime = Time.monotonicNow();
-    status.setStartTime(startTime);
+    status.setStartTime();
     final Configuration conf = getConf();
 
     try {
