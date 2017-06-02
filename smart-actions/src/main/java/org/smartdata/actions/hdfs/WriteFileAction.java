@@ -20,11 +20,11 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Random;
-import java.util.UUID;
 
 /**
  * An action to write a file with generated content.
@@ -41,6 +41,10 @@ public class WriteFileAction extends HdfsAction {
   private int length;
   private int bufferSize = 64 * 1024;
 
+  public WriteFileAction() {
+    setActionStatus(new ActionStatus());
+  }
+
   @Override
   public void init(String[] args) {
     this.filePath = args[0];
@@ -52,6 +56,8 @@ public class WriteFileAction extends HdfsAction {
 
   @Override
   protected void execute() {
+    ActionStatus actionStatus = getActionStatus();
+    actionStatus.setStartTime();
     try {
       final OutputStream out = dfsClient.create(filePath, true);
       // generate random data with given length
@@ -63,8 +69,12 @@ public class WriteFileAction extends HdfsAction {
         out.write(buffer, 0, writeLength);
       }
       out.close();
+      actionStatus.setSuccessful(true);
     } catch (IOException e) {
+      actionStatus.setSuccessful(false);
       resultOut.println("WriteFile Action fails!\n" + e.getMessage());
+    } finally {
+      actionStatus.setFinished(true);
     }
   }
 }

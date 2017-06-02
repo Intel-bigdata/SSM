@@ -20,7 +20,6 @@ package org.smartdata.actions;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.util.Time;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.UUID;
 
@@ -73,8 +72,8 @@ public class ActionStatus {
     return startTime;
   }
 
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
+  public void setStartTime() {
+    this.startTime = Time.monotonicNow();
   }
 
   public boolean isSuccessful() {
