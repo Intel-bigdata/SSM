@@ -24,6 +24,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.ClientServerProto;
 import org.smartdata.common.protocol.SmartServerProtocols;
 import org.smartdata.common.protocolPB.SmartClientProtocolPB;
@@ -207,6 +208,19 @@ public class SmartRpcServer implements SmartServerProtocols {
   public void deleteCommand(long commandID) throws IOException {
     checkIfActive();
     ssm.getCommandExecutor().deleteCommand(commandID);
+  }
+
+  @Override
+  public ActionInfo getActionInfo(long actionID) throws IOException {
+    checkIfActive();
+    return null;
+  }
+
+  @Override
+  public List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
+      throws IOException {
+    checkIfActive();
+    return null;
   }
 
   @Override

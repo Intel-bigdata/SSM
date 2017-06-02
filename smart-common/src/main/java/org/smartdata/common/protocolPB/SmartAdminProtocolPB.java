@@ -46,6 +46,10 @@ import org.smartdata.common.protocol.AdminServerProto.DisableCommandResponseProt
 import org.smartdata.common.protocol.AdminServerProto.DisableCommandRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.DeleteCommandResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.DeleteCommandRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.GetActionInfoResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.GetActionInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
 
 @ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.SmartAdminProtocolPB",
     protocolVersion = 1)
@@ -90,4 +94,11 @@ public interface SmartAdminProtocolPB {
 
   DeleteCommandResponseProto deleteCommand(RpcController controller,
       DeleteCommandRequestProto req) throws ServiceException;
+
+  GetActionInfoResponseProto getActionInfo(RpcController controller,
+      GetActionInfoRequestProto req) throws ServiceException;
+
+  ListActionInfoOfLastActionsResponseProto listActionInfoOfLastActions(
+      RpcController controller, ListActionInfoOfLastActionsRequestProto req)
+      throws ServiceException;
 }
