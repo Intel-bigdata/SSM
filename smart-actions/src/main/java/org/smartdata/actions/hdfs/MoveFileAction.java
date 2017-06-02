@@ -20,6 +20,7 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionType;
+import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoverStatus;
 
@@ -34,6 +35,7 @@ public class MoveFileAction extends HdfsAction {
   public String storagePolicy;
   private String fileName;
   private ActionType actionType;
+  private MoveRunner moveRunner = null;
   private String name = "MoveFileAction";
 
   public MoveFileAction() {
@@ -52,6 +54,16 @@ public class MoveFileAction extends HdfsAction {
     this.storagePolicy = args[1];
   }
 
+  public MoveFileAction setMoverBasedMoveRunner() {
+    moveRunner = new MoverBasedMoveRunner(
+        getContext().getConf(), getActionStatus());
+    return this;
+  }
+
+  public MoveFileAction setMapReduceBasedMoveRunner() {
+
+  }
+  
   /**
    * Execute an action.
    *
