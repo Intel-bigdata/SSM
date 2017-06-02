@@ -20,12 +20,9 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionType;
-import org.smartdata.actions.hdfs.move.AgentBasedMoveRunner;
-import org.smartdata.actions.hdfs.move.MapReduceBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoverStatus;
-import org.smartdata.actions.hdfs.move.SPSBasedMoveRunner;
 
 import java.util.Date;
 
@@ -52,30 +49,6 @@ public class MoveFileAction extends HdfsAction {
     this.storagePolicy = args[1];
   }
 
-  public MoveFileAction setMoverBasedRunner() {
-    moveRunner = new MoverBasedMoveRunner(
-        getContext().getConf(), getActionStatus());
-    return this;
-  }
-
-  public MoveFileAction setMapReduceBasedRunner() {
-    // TODO : depend on the implementation of MapReduceBasedMoveRunner
-    moveRunner = new MapReduceBasedMoveRunner();
-    return this;
-  }
-
-  public MoveFileAction setAgentBasedRunner() {
-    // TODO : depend on the implementation of AgentBasedMoveRunner
-    moveRunner = new AgentBasedMoveRunner();
-    return this;
-  }
-
-  public MoveFileAction setSPSBasedRunner() {
-    // TODO : depend on the implementation of SPSBasedMoveRunner
-    moveRunner = new SPSBasedMoveRunner();
-    return this;
-  }
-
   protected void execute() {
     logOut.println("Action starts at "
         + (new Date(System.currentTimeMillis())).toString() + " : "
@@ -86,10 +59,9 @@ public class MoveFileAction extends HdfsAction {
       throw new RuntimeException(e);
     }
 
-    // if moveRunner is not set, use MoverBasedMoveRunner as default runner
-    if(moveRunner == null) {
-      setMoverBasedRunner();
-    }
+    // TODO : make MoveRunner configurable
+    moveRunner = new MoverBasedMoveRunner(
+        getContext().getConf(), getActionStatus());
 
     try {
       moveRunner.move(fileName);
