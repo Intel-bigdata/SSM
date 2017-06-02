@@ -36,7 +36,7 @@
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
             <version>0.1-SNAPSHOT</version>
-            <scope>provided</scope>
+            <!--<scope>provided</scope>-->
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
