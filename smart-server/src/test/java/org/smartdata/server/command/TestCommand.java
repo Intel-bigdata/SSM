@@ -17,24 +17,23 @@
  */
 package org.smartdata.server.command;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.smartdata.SmartContext;
-import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.actions.hdfs.MoveFileAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.conf.SmartConf;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
+import java.io.IOException;
 import java.util.UUID;
 
 
@@ -43,46 +42,48 @@ import java.util.UUID;
  */
 public class TestCommand {
 
-  private static final int DEFAULT_BLOCK_SIZE = 100;
-  private static final String REPLICATION_KEY = "3";
-
-  private SmartContext smartContext;
+  private static final int DEFAULT_BLOCK_SIZE = 50;
   private MiniDFSCluster cluster;
   private DFSClient client;
-  private SmartConf smartConf;
-
-  // @Test
-  // public void testRun() throws Exception {
-  //   generateTestCase();
-  //   runHelper().runSmartActions();
-  //   System.out.println("Command UT Finished!!");
-  // }
+  private DistributedFileSystem dfs;
+  private SmartConf smartConf = new SmartConf();
 
   @Before
-  public void init() throws Exception {
-    smartConf = new SmartConf();
+  public void createCluster() throws IOException {
     smartConf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
     smartConf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    smartConf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
-    cluster = new MiniDFSCluster.Builder(smartConf).
-        numDataNodes(3).
-        storagesPerDatanode(4).
-        storageTypes(new StorageType[]{StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE, StorageType.RAM_DISK}).
-        build();
-    smartContext = new SmartContext(smartConf);
-    cluster.waitActive();
+    smartConf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
+    smartConf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
+    smartConf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
+    cluster = new MiniDFSCluster.Builder(smartConf)
+        .numDataNodes(5)
+        .storagesPerDatanode(3)
+        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
+            StorageType.SSD})
+        .build();
     client = cluster.getFileSystem().getClient();
+    dfs = cluster.getFileSystem();
+    cluster.waitActive();
   }
 
   @After
-  public void shutdown() throws Exception {
+  public void shutdown() throws IOException {
     if (cluster != null) {
       cluster.shutdown();
     }
   }
 
-  public void generateTestCase() throws Exception {
-    final DistributedFileSystem dfs = cluster.getFileSystem();
+  @Test
+  public void testRunCommand() throws Exception {
+    generateTestCase();
+    Command cmd = runHelper();
+    cmd.runSmartActions();
+    while (!cmd.isFinished()) {
+      Thread.sleep(1000);
+    }
+  }
+
+  private void generateTestCase() throws IOException {
     // New dir
     Path dir = new Path("/testMoveFile");
     dfs.mkdirs(dir);
@@ -102,30 +103,29 @@ public class TestCommand {
     dfs.mkdirs(dir3);
   }
 
-  public Command runHelper() throws Exception {
-    HdfsAction[] actions = new HdfsAction[10];
+  private Command runHelper() throws IOException {
+    HdfsAction[] actions = new HdfsAction[4];
     // New action
     actions[0] = new MoveFileAction();
     actions[0].setDfsClient(client);
-    actions[0].setContext(smartContext);
-    actions[0].init(new String[] {"/testMoveFile/file1", "ALL_SSD"});
+    actions[0].setContext(new SmartContext(smartConf));
+    actions[0].init(new String[]{"/testMoveFile/file1", "ALL_SSD"});
     actions[0].getActionStatus().setId(UUID.randomUUID());
     actions[1] = new MoveFileAction();
     actions[1].setDfsClient(client);
-    actions[1].setContext(smartContext);
-    actions[1].init(new String[] {"/testMoveFile/file2", "COLD"});
+    actions[1].setContext(new SmartContext(smartConf));
+    actions[1].init(new String[]{"/testMoveFile/file2", "COLD"});
     actions[1].getActionStatus().setId(UUID.randomUUID());
-    // actions[2] = new CacheFileAction();
-    // actions[2].setDfsClient(client);
-    // actions[2].setContext(smartContext);
-    // actions[2].init(new String[] {"/testCacheFile"});
-    // actions[2].getActionStatus().setId(UUID.randomUUID());
+    actions[2] = new CacheFileAction();
+    actions[2].setDfsClient(client);
+    actions[2].setContext(new SmartContext(smartConf));
+    actions[2].init(new String[]{"/testCacheFile"});
+    actions[2].getActionStatus().setId(UUID.randomUUID());
     // New Command
     Command cmd = new Command(actions, null);
     cmd.setId(1);
     cmd.setRuleId(1);
     cmd.setState(CommandState.PENDING);
-    // Init action
     return cmd;
   }
 }

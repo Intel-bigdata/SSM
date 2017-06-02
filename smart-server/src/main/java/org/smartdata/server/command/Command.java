@@ -40,8 +40,6 @@ import org.slf4j.LoggerFactory;
  *  1.) SetStoragePolicy
  *  2.) EnforceStoragePolicy
  */
-
-
 public class Command implements Runnable {
   static final Logger LOG = LoggerFactory.getLogger(Command.class);
 
@@ -138,6 +136,10 @@ public class Command implements Runnable {
     // }
   }
 
+  public boolean isFinished() {
+    return (uuids.size() == 0 || running == false);
+  }
+
   public void runSmartActions() {
     for (SmartAction act : smartActions) {
       if (act == null) {
@@ -147,7 +149,10 @@ public class Command implements Runnable {
       act.run();
     }
     while (uuids.size() != 0 && running) {
-      for (SmartAction act: smartActions) {
+      for (SmartAction act : smartActions) {
+        if (act == null) {
+          continue;
+        }
         if (act.getActionStatus().isFinished()) {
           if (uuids.contains(act.getActionStatus().getId())) {
             uuids.remove(act.getActionStatus().getId());
