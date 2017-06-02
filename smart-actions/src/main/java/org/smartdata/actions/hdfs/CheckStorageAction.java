@@ -30,15 +30,10 @@ import org.smartdata.actions.ActionStatus;
 public class CheckStorageAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(WriteFileAction.class);
 
-  private String name = "CheckStorageAction";
   private String fileName;
 
   public CheckStorageAction() {
     this.setActionStatus(new ActionStatus());
-  }
-
-  public String getName() {
-    return name;
   }
 
   @Override

@@ -39,5 +39,7 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction("fsck", FsckAction.class);
     addAction("diskbalance", DiskBalanceAction.class);
     addAction("clusterbalance", ClusterBalanceAction.class);
+    addAction("checkstorage", CheckStorageAction.class);
+    addAction("setstoragepolicy", SetStoragePolicyAction.class);
   }
 }
