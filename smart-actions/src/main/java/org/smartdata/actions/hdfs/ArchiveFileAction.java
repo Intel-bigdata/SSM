@@ -29,6 +29,12 @@ public class ArchiveFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(ArchiveFileAction.class);
 
   @Override
+  public void init(String... args) {
+    super.init(args[0], "COLD");
+  }
+
+  @Override
   protected void execute() {
+    super.execute();
   }
 }

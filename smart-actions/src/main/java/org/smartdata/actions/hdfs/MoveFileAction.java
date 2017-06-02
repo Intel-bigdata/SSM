@@ -20,9 +20,12 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionType;
+import org.smartdata.actions.hdfs.move.AgentBasedMoveRunner;
+import org.smartdata.actions.hdfs.move.MapReduceBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoverStatus;
+import org.smartdata.actions.hdfs.move.SPSBasedMoveRunner;
 
 import java.util.Date;
 
@@ -32,45 +35,48 @@ import java.util.Date;
 public class MoveFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(MoveFileAction.class);
 
-  public String storagePolicy;
-  private String fileName;
-  private ActionType actionType;
-  private MoveRunner moveRunner = null;
-  private String name = "MoveFileAction";
+  protected String storagePolicy;
+  protected String fileName;
+  protected ActionType actionType;
+  protected MoveRunner moveRunner = null;
 
   public MoveFileAction() {
     this.actionType = ActionType.MoveFile;
     this.setActionStatus(new MoverStatus());
   }
 
-  public String getName() {
-    return name;
-  }
-
   @Override
-  public void init(String[] args) {
+  public void init(String... args) {
     super.init(args);
     this.fileName = args[0];
     this.storagePolicy = args[1];
   }
 
-  public MoveFileAction setMoverBasedMoveRunner() {
+  public MoveFileAction setMoverBasedRunner() {
     moveRunner = new MoverBasedMoveRunner(
         getContext().getConf(), getActionStatus());
     return this;
   }
 
-  public MoveFileAction setMapReduceBasedMoveRunner() {
-
+  public MoveFileAction setMapReduceBasedRunner() {
+    // TODO : depend on the implementation of MapReduceBasedMoveRunner
+    moveRunner = new MapReduceBasedMoveRunner();
+    return this;
   }
-  
-  /**
-   * Execute an action.
-   *
-   * @return true if success, otherwise return false.
-   */
+
+  public MoveFileAction setAgentBasedRunner() {
+    // TODO : depend on the implementation of AgentBasedMoveRunner
+    moveRunner = new AgentBasedMoveRunner();
+    return this;
+  }
+
+  public MoveFileAction setSPSBasedRunner() {
+    // TODO : depend on the implementation of SPSBasedMoveRunner
+    moveRunner = new SPSBasedMoveRunner();
+    return this;
+  }
+
   protected void execute() {
-    // TODO check if storagePolicy is the same
     logOut.println("Action starts at "
         + (new Date(System.currentTimeMillis())).toString() + " : "
         + fileName + " -> " + storagePolicy.toString());
@@ -80,10 +86,13 @@ public class MoveFileAction extends HdfsAction {
       throw new RuntimeException(e);
     }
 
-    MoverBasedMoveRunner moverRunner = new MoverBasedMoveRunner(
-        getContext().getConf(), getActionStatus());
+    // if moveRunner is not set, use MoverBasedMoveRunner as default runner
+    if(moveRunner == null) {
+      setMoverBasedRunner();
+    }
+
     try {
-      moverRunner.move(fileName);
+      moveRunner.move(fileName);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

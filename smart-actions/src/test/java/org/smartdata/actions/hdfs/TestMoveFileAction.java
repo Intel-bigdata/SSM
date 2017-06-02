@@ -48,11 +48,11 @@ public class TestMoveFileAction extends ActionMiniCluster {
     MoveFileAction action1 = new MoveFileAction();
     action1.setDfsClient(dfsClient);
     action1.setContext(smartContext);
-    action1.init(new String[] {file1, "COLD"});
+    action1.init(file1, "COLD");
     MoveFileAction action2 = new MoveFileAction();
     action2.setDfsClient(dfsClient);
     action2.setContext(smartContext);
-    action2.init(new String[] {file2, "ALL_SSD"});
+    action2.init(file2, "ALL_SSD");
     ActionStatus status1 = action1.getActionStatus();
     ActionStatus status2 = action2.getActionStatus();
 
@@ -115,7 +115,7 @@ public class TestMoveFileAction extends ActionMiniCluster {
     MoveFileAction moveFileAction = new MoveFileAction();
     moveFileAction.setDfsClient(dfsClient);
     moveFileAction.setContext(smartContext);
-    moveFileAction.init(new String[] {dir, storageType});
+    moveFileAction.init(dir, storageType);
     ActionStatus status = moveFileAction.getActionStatus();
     moveFileAction.run();
 
