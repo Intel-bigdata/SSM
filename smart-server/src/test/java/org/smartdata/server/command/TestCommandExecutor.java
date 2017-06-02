@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
@@ -29,6 +30,7 @@ import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.utils.JsonUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,8 +42,19 @@ import java.util.Map;
 public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
 
   @Test
+  public void testCreateFromDescriptor() throws Exception {
+    waitTillSSMExitSafeMode();
+    generateTestCases();
+    CommandDescriptor commandDescriptor = generateCommandDescriptor();
+    SmartAction[] actions = ssm.getCommandExecutor().createActionsFromParameters(commandDescriptor);
+    Assert.assertTrue(commandDescriptor.size() == actions.length);
+  }
+
+
+  /*@Test
   public void testCommandExecutor() throws Exception {
     waitTillSSMExitSafeMode();
+    generateTestFiles();
     generateTestCases();
     testCommandExecutorHelper();
   }
@@ -59,11 +72,12 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(ssm
         .getCommandExecutor()
         .listCommandsInfo(1, null).size() == 1);
-  }*/
+  }
 
   @Test
   public void testActivateDisableCommand() throws Exception {
     waitTillSSMExitSafeMode();
+    generateTestFiles();
     generateTestCases();
     // Activate 1
     ssm.getCommandExecutor().activateCommand(1);
@@ -74,53 +88,44 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
       ssm.getCommandExecutor().disableCommand(1);
       Assert.assertTrue(cmdinfo.getState() == CommandState.DISABLED);
     }
+  }*/
+
+  private void generateTestFiles() throws IOException {
+    final DistributedFileSystem dfs = cluster.getFileSystem();
+    // New dir
+    Path dir = new Path("/testMoveFile");
+    dfs.mkdirs(dir);
+    // Move to SSD
+    dfs.setStoragePolicy(dir, "HOT");
+    final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"),
+        true, 1024);
+    out1.writeChars("/testMoveFile/file1");
+    out1.close();
+    // Move to Archive
+    final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),
+        true, 1024);
+    out2.writeChars("/testMoveFile/file2");
+    out2.close();
+    // Move to Cache
+    Path dir3 = new Path("/testCacheFile");
+    dfs.mkdirs(dir3);
+  }
+
+  private CommandDescriptor generateCommandDescriptor() {
+    CommandDescriptor commandDescriptor = new CommandDescriptor();
+    commandDescriptor.setRuleId(1);
+    commandDescriptor.addAction("allssd", new String[]{"/testMoveFile/file1"});
+    commandDescriptor.addAction("cache", new String[]{"/testCacheFile"});
+    return commandDescriptor;
   }
 
   private void generateTestCases() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
-    // HDFS related
-    final DistributedFileSystem dfs = cluster.getFileSystem();
-    // mkdir
-    Path dir1 = new Path("/testMoveFile");
-    dfs.mkdirs(dir1);
-    dfs.setStoragePolicy(dir1, "HOT");
-    // Move to archive
-    // Map<String, String> smap1 = new HashMap<>();
-    // smap1.put("_NAME_", "MoveFile");
-    // smap1.put("_FILE_PATH_", "/testMoveFile/file1");
-    // smap1.put("_STORAGE_POLICY_", "ALL_SSD");
-    // final FSDataOutputStream out1 = dfs.create(new Path("/testMoveFile/file1"), true, 1024);
-    // out1.writeChars("/testMoveFile/file1");
-    // out1.close();
-    // Move to SSD
-    // Map<String, String> smap2 = new HashMap<>();
-    // smap2.put("_NAME_", "MoveFile");
-    // smap2.put("_FILE_PATH_", "/testMoveFile/file2");
-    // smap2.put("_STORAGE_POLICY_", "COLD");
-    List<Map<String, String>> listMap = new ArrayList<>();
-    // final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"), true, 1024);
-    // out2.writeChars("/testMoveFile/file2");
-    // out2.close();
-    // Move to cache
-    Map<String, String> smap3 = new HashMap<>();
-    smap3.put("_NAME_", "cache");
-    smap3.put("_FILE_PATH_", "/testCacheFile");
-    // listMap.add(smap1);
-    // listMap.add(smap2);
-    listMap.add(smap3);
-    Path dir3 = new Path("/testCacheFile");
-    dfs.mkdirs(dir3);
-    // DB related
-    // CommandInfo command1 = new CommandInfo(0, 1, ActionType.MoveFile,
-    //     CommandState.PENDING, JsonUtil.toJsonString(listMap.subList(0, 1)),
-    //     123123333l, 232444444l);
-    // CommandInfo command2 = new CommandInfo(0, 1, ActionType.MoveFile,
-    //     CommandState.PENDING, JsonUtil.toJsonString(listMap.subList(1, 3)),
-    //     123178333l, 232444994l);
-   CommandInfo command3 = new CommandInfo(0, 1, ActionType.CacheFile,
-       CommandState.PENDING, JsonUtil.toJsonString(listMap.subList(0, 1)),
-       123178333l, 232444994l);
-    CommandInfo[] commands = {command3};
+    CommandDescriptor commandDescriptor = generateCommandDescriptor();
+    CommandInfo commandInfo = new CommandInfo(0, 1, ActionType.CacheFile,
+        CommandState.PENDING, commandDescriptor.toString(),
+        123178333l, 232444994l);
+    CommandInfo[] commands = {commandInfo};
     dbAdapter.insertCommandsTable(commands);
   }
 
