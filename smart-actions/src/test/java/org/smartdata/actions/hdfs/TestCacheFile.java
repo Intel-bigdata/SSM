@@ -69,15 +69,14 @@ public class TestCacheFile {
 
   @Test
   public void testCacheFile() throws IOException {
-    Path dir = new Path("/fileTestA");
-    dfs.mkdirs(dir);
-    String[] str = {"/fileTestA"};
+    dfs.mkdirs(new Path("/fileTestA"));
+    String[] args = {"/fileTestA"};
     CacheFileAction cacheAction = new CacheFileAction();
     cacheAction.setContext(new SmartContext(smartConf));
     cacheAction.setDfsClient(client);
-    cacheAction.init(str);
-    Assert.assertEquals(false, cacheAction.isCached(str[0]));
+    cacheAction.init(args);
+    Assert.assertEquals(false, cacheAction.isCached(args[0]));
     cacheAction.run();
-    Assert.assertEquals(true, cacheAction.isCached(str[0]));
+    Assert.assertEquals(true, cacheAction.isCached(args[0]));
   }
 }
