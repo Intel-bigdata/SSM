@@ -72,6 +72,7 @@ angular.module('dashboard')
           // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),
           // group 3/3 (4-col)
           $stb.text('Succeed').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+          $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
           $stb.button('Actions').key(['view']).styleClass('col-md-3').done()
         ],
         rows: null
@@ -97,6 +98,11 @@ angular.module('dashboard')
                 text: 'Show Result',
                 class: 'btn-xs btn-primary',
                 disabled: !action.finished
+              },
+              progress: {
+                  current: action.progress,
+                  max: 1,
+                  usage: action.progress * 100
               }
             };
           }));
