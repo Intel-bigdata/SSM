@@ -50,10 +50,10 @@ import org.smartdata.common.protocol.AdminServerProto.DisableCommandRequestProto
 import org.smartdata.common.protocol.AdminServerProto.DeleteCommandResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.DeleteCommandRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
-import org.smartdata.common.protocol.AdminServerProto.getActionInfoResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.getActionInfoRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.listActionInfoOfLastActionsResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.listActionInfoOfLastActionsRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.GetActionInfoResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.GetActionInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
 
 import org.smartdata.common.protocol.ClientServerProto;
@@ -248,11 +248,11 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public getActionInfoResponseProto getActionInfo(RpcController controller,
-      getActionInfoRequestProto request) throws ServiceException {
+  public GetActionInfoResponseProto getActionInfo(RpcController controller,
+      GetActionInfoRequestProto request) throws ServiceException {
     try {
       ActionInfo aI = server.getActionInfo(request.getActionID());
-      return getActionInfoResponseProto.newBuilder()
+      return GetActionInfoResponseProto.newBuilder()
           .setActionInfo(PBHelper.convert(aI)).build();
     } catch (IOException e) {
       throw new ServiceException(e);
@@ -260,19 +260,20 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public listActionInfoOfLastActionsResponseProto listActionInfoOfLastActions(
-      RpcController controller, listActionInfoOfLastActionsRequestProto request)
+  public ListActionInfoOfLastActionsResponseProto listActionInfoOfLastActions(
+      RpcController controller, ListActionInfoOfLastActionsRequestProto request)
       throws ServiceException {
     try {
       List<ActionInfo> list =
           server.listActionInfoOfLastActions(request.getMaxNumActions());
-      if (list==null)
-        return listActionInfoOfLastActionsResponseProto.newBuilder().build();
+      if (list==null) {
+        return ListActionInfoOfLastActionsResponseProto.newBuilder().build();
+      }
       List<ActionInfoProto> protoList = new ArrayList<>();
       for (ActionInfo a:list){
         protoList.add(PBHelper.convert(a));
       }
-      return listActionInfoOfLastActionsResponseProto.newBuilder()
+      return ListActionInfoOfLastActionsResponseProto.newBuilder()
           .addAllActionInfoList(protoList).build();
     } catch (IOException e) {
       throw new ServiceException(e);

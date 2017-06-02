@@ -38,8 +38,8 @@ import org.smartdata.common.protocol.AdminServerProto.DeleteRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActivateRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.DisableRuleRequestProto;
 import org.smartdata.common.protocol.SmartAdminProtocol;
-import org.smartdata.common.protocol.AdminServerProto.getActionInfoRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.listActionInfoOfLastActionsRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.GetActionInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.protocolPB.PBHelper;
@@ -238,7 +238,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
 
   @Override
   public ActionInfo getActionInfo(long actionID) throws IOException {
-    getActionInfoRequestProto req = getActionInfoRequestProto.newBuilder()
+    GetActionInfoRequestProto req = GetActionInfoRequestProto.newBuilder()
         .setActionID(actionID)
         .build();
     try {
@@ -251,14 +251,15 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
   @Override
   public List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
       throws IOException {
-    listActionInfoOfLastActionsRequestProto req =
-        listActionInfoOfLastActionsRequestProto.newBuilder()
+    ListActionInfoOfLastActionsRequestProto req =
+        ListActionInfoOfLastActionsRequestProto.newBuilder()
         .setMaxNumActions(maxNumActions).build();
     try {
       List<ActionInfoProto> protoslist =
       rpcProxy.listActionInfoOfLastActions(null,req).getActionInfoListList();
-      if (protoslist == null)
+      if (protoslist == null) {
         return new ArrayList<>();
+      }
       List<ActionInfo> list = new ArrayList<>();
       for (ActionInfoProto infoProto : protoslist) {
         list.add(PBHelper.convert(infoProto));

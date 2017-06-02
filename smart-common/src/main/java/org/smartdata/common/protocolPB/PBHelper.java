@@ -116,7 +116,9 @@ public class PBHelper {
         .setCreateTime(actionInfo.getCreateTime())
         .setFinished(actionInfo.isFinished())
         .setFinishTime(actionInfo.getFinishTime())
-        .setProgress(actionInfo.getProgress());
+        .setProgress(actionInfo.getProgress())
+        .setActionId(actionInfo.getActionId())
+        .setCommandId(actionInfo.getCommandId());
     String[] strings = actionInfo.getArgs();
     for (int i = 0; i < strings.length; i++) {
       builder.setArgs(i, strings[i]);
@@ -132,7 +134,9 @@ public class PBHelper {
         .setSuccessful(infoProto.getSuccessful())
         .setCreateTime(infoProto.getCreateTime())
         .setFinished(infoProto.getFinished())
-        .setFinishTime(infoProto.getFinishTime());
+        .setFinishTime(infoProto.getFinishTime())
+        .setActionId(infoProto.getActionId())
+        .setCommandId(infoProto.getCommandId());
     List<String> list = infoProto.getArgsList();
     String[] strings = (String[]) list.toArray();
     builder.setArgs(strings);
