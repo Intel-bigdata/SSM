@@ -47,16 +47,11 @@ public class CacheFileAction extends HdfsAction {
   private LinkedBlockingQueue<String> actionEvents;
   private final String SSMPOOL = "SSMPool";
   private ActionType actionType;
-  private String name = "CacheFileAction";
 
   public CacheFileAction() {
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
     this.setActionStatus(new CacheStatus());
-  }
-
-  public String getName() {
-    return name;
   }
 
   @Override
@@ -72,6 +67,7 @@ public class CacheFileAction extends HdfsAction {
   protected void execute() {
     addActionEvent(fileName);
     runCache(fileName);
+    getActionStatus().setFinished(true);
   }
 
   public void addActionEvent(String fileName) {

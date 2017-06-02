@@ -31,6 +31,9 @@ angular.module('dashboard')
       },
       rule: function (ruleId) {
         return '#/rules/rule/' + ruleId;
+      },
+      action: function (actionId) {
+        return '#/actions/action/' + actionId;
       }
     };
     return self;
