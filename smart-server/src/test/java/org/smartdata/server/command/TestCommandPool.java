@@ -56,7 +56,7 @@ public class TestCommandPool {
     smartConf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
     smartConf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
     cluster = new MiniDFSCluster.Builder(smartConf)
-        .numDataNodes(5)
+        .numDataNodes(3)
         .storagesPerDatanode(3)
         .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
             StorageType.SSD})
@@ -119,16 +119,16 @@ public class TestCommandPool {
   private Command runHelper() throws IOException {
     HdfsAction[] actions = new HdfsAction[4];
     // New action
-    actions[0] = new MoveFileAction();
-    actions[0].setDfsClient(client);
-    actions[0].setContext(new SmartContext(smartConf));
-    actions[0].init(new String[]{"/testMoveFile/file1", "ALL_SSD"});
-    actions[0].getActionStatus().setId(UUID.randomUUID());
-    actions[1] = new MoveFileAction();
-    actions[1].setDfsClient(client);
-    actions[1].setContext(new SmartContext(smartConf));
-    actions[1].init(new String[]{"/testMoveFile/file2", "COLD"});
-    actions[1].getActionStatus().setId(UUID.randomUUID());
+    // actions[0] = new MoveFileAction();
+    // actions[0].setDfsClient(client);
+    // actions[0].setContext(new SmartContext(smartConf));
+    // actions[0].init(new String[]{"/testMoveFile/file1", "ALL_SSD"});
+    // actions[0].getActionStatus().setId(UUID.randomUUID());
+    // actions[1] = new MoveFileAction();
+    // actions[1].setDfsClient(client);
+    // actions[1].setContext(new SmartContext(smartConf));
+    // actions[1].init(new String[]{"/testMoveFile/file2", "COLD"});
+    // actions[1].getActionStatus().setId(UUID.randomUUID());
     actions[2] = new CacheFileAction();
     actions[2].setDfsClient(client);
     actions[2].setContext(new SmartContext(smartConf));

@@ -21,9 +21,6 @@ import org.smartdata.common.CommandState;
 import org.smartdata.actions.SmartAction;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +45,8 @@ public class Command implements Runnable {
   private CommandState state = CommandState.NOTINITED;
   private SmartAction[] smartActions;
   private String parameters;
+  private int currentActionIndex;
   CommandExecutor.Callback cb;
-  private Set<UUID> uuids;
   private boolean running;
 
   private long createTime;
@@ -62,8 +59,8 @@ public class Command implements Runnable {
 
   public Command(SmartAction[] smartActions, CommandExecutor.Callback cb) {
     this.smartActions = smartActions.clone();
+    this.currentActionIndex = 0;
     this.cb = cb;
-    this.uuids = new HashSet<>();
     this.running = true;
   }
 
@@ -117,55 +114,30 @@ public class Command implements Runnable {
 
   public void stop() throws IOException {
     LOG.info("Command {} Stopped!", toString());
-    // running = false;
-    // if (uuids.size() != 0) {
-    //   MoverPool moverPool = MoverPool.getInstance();
-    //   try {
-    //     for (UUID id : uuids) {
-    //       if (moverPool.getStatus(id) == null) {
-    //         continue;
-    //       }
-    //       if (!moverPool.getStatus(id).isFinished()) {
-    //         moverPool.stop(id);
-    //       }
-    //     }
-    //   } catch (Exception e) {
-    //     LOG.error("Shutdown Unfinished smartActions Error!");
-    //     throw new IOException(e);
-    //   }
-    // }
+    //TODO Force Stop Command
+    running = false;
   }
 
   public boolean isFinished() {
-    return (uuids.size() == 0 || running == false);
+    return (currentActionIndex == smartActions.length || !running);
   }
 
   public void runSmartActions() {
     for (SmartAction act : smartActions) {
-      if (act == null) {
+      currentActionIndex++;
+      if (act == null || !running) {
         continue;
       }
-      uuids.add(act.getActionStatus().getId());
       act.run();
-    }
-    while (uuids.size() != 0 && running) {
-      for (SmartAction act : smartActions) {
-        if (act == null) {
-          continue;
-        }
-        if (act.getActionStatus().isFinished()) {
-          if (uuids.contains(act.getActionStatus().getId())) {
-            uuids.remove(act.getActionStatus().getId());
+      // Run actions sequentially!
+      while(!act.getActionStatus().isFinished()) {
+        try {
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          if (!running) {
+            break;
           }
         }
-      }
-      if (uuids.size() == 0 || !running) {
-        break;
-      }
-      try {
-        Thread.sleep(300);
-      } catch (Exception e) {
-        LOG.error("Run SmartAction Thread error!");
       }
     }
   }
@@ -173,7 +145,8 @@ public class Command implements Runnable {
   @Override
   public void run() {
     runSmartActions();
-    if (cb != null && running) {
+    running = false;
+    if (cb != null) {
       cb.complete(this.id, this.ruleId, CommandState.DONE);
     }
   }
