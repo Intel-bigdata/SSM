@@ -111,11 +111,9 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     dfs.mkdirs(dir3);
   }
 
-  private CommandDescriptor generateCommandDescriptor() {
-    CommandDescriptor commandDescriptor = new CommandDescriptor();
-    commandDescriptor.setRuleId(1);
-    commandDescriptor.addAction("allssd", new String[]{"/testMoveFile/file1"});
-    commandDescriptor.addAction("cache", new String[]{"/testCacheFile"});
+  private CommandDescriptor generateCommandDescriptor() throws Exception {
+    String cmd = "allssd /testMoveFile/file1; cache /testCacheFile";
+    CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
     return commandDescriptor;
   }
 
