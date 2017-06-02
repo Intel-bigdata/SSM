@@ -32,9 +32,4 @@ public class AllSsdFileAction extends MoveFileAction {
   public void init(String... args) {
     super.init(args[0], "ALL_SSD");
   }
-
-  @Override
-  protected void execute() {
-    super.execute();
-  }
 }

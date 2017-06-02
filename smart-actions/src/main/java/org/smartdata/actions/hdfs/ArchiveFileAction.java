@@ -32,9 +32,4 @@ public class ArchiveFileAction extends MoveFileAction {
   public void init(String... args) {
     super.init(args[0], "COLD");
   }
-
-  @Override
-  protected void execute() {
-    super.execute();
-  }
 }
