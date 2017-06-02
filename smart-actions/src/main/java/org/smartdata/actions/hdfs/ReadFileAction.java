@@ -22,9 +22,9 @@ import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * An action to read a file. The read content will be discarded immediately, not storing onto disk.
@@ -50,6 +50,8 @@ public class ReadFileAction extends HdfsAction {
 
   @Override
   protected void execute() {
+    ActionStatus actionStatus = getActionStatus();
+    actionStatus.setStartTime();
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
       if (fileStatus == null) {
@@ -61,8 +63,12 @@ public class ReadFileAction extends HdfsAction {
       while (dfsInputStream.read(buffer, 0, bufferSize) != -1) {
       }
       dfsInputStream.close();
+      actionStatus.setSuccessful(true);
     } catch (IOException e) {
+      actionStatus.setSuccessful(false);
       resultOut.println("ReadFile Action fails!\n" + e.getMessage());
+    } finally {
+      actionStatus.setFinished(true);
     }
   }
 }

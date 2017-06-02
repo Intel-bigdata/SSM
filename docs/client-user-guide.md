@@ -21,9 +21,9 @@ SmartDFSClient API
 * void **uncache**(**String** filePath) **throws** IOException;
 
   Uncache a file
-* void **enforceStoragePolicy**(**String** filePath, **String** policyName) **throws** IOException;
+* void **applyStoragePolicy**(**String** filePath, **String** policyName) **throws** IOException;
 
-  Set the storage policy on the file, then enfore the storage policy
+  Set the storage policy on the file and enfore the storage policy
 
 SmartClient API
 ------------
