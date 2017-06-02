@@ -20,6 +20,7 @@ package org.smartdata.admin.protocolPB;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 
+import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.AdminServerProto.GetCommandInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListCommandInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActivateCommandRequestProto;
@@ -37,6 +38,9 @@ import org.smartdata.common.protocol.AdminServerProto.DeleteRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActivateRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.DisableRuleRequestProto;
 import org.smartdata.common.protocol.SmartAdminProtocol;
+import org.smartdata.common.protocol.AdminServerProto.getActionInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.listActionInfoOfLastActionsRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.protocolPB.PBHelper;
 import org.smartdata.common.protocolPB.SmartAdminProtocolPB;
@@ -227,6 +231,39 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
           .setCommandID(commandID)
           .build();
       rpcProxy.deleteCommand(null, req);
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public ActionInfo getActionInfo(long actionID) throws IOException {
+    getActionInfoRequestProto req = getActionInfoRequestProto.newBuilder()
+        .setActionID(actionID)
+        .build();
+    try {
+      return PBHelper.convert(rpcProxy.getActionInfo(null,req).getActionInfo());
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
+      throws IOException {
+    listActionInfoOfLastActionsRequestProto req =
+        listActionInfoOfLastActionsRequestProto.newBuilder()
+        .setMaxNumActions(maxNumActions).build();
+    try {
+      List<ActionInfoProto> protoslist =
+      rpcProxy.listActionInfoOfLastActions(null,req).getActionInfoListList();
+      if (protoslist == null)
+        return new ArrayList<>();
+      List<ActionInfo> list = new ArrayList<>();
+      for (ActionInfoProto infoProto : protoslist) {
+        list.add(PBHelper.convert(infoProto));
+      }
+      return list;
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }

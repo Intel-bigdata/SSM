@@ -20,6 +20,7 @@ package org.smartdata.common.protocolPB;
 
 import com.google.protobuf.ServiceException;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
@@ -28,8 +29,11 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
+import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto.Builder;
 
 import java.io.IOException;
+import java.util.List;
 
 public class PBHelper {
   private PBHelper() {
@@ -102,6 +106,39 @@ public class PBHelper {
         .setFileId(event.getFileId())
         .build();
   }
+
+  public static ActionInfoProto convert(ActionInfo actionInfo) {
+    Builder builder = ActionInfoProto.newBuilder();
+    builder.setActionName(actionInfo.getActionName())
+        .setResult(actionInfo.getResult())
+        .setLog(actionInfo.getLog())
+        .setSuccessful(actionInfo.isSuccessful())
+        .setCreateTime(actionInfo.getCreateTime())
+        .setFinished(actionInfo.isFinished())
+        .setFinishTime(actionInfo.getFinishTime())
+        .setProgress(actionInfo.getProgress());
+    String[] strings = actionInfo.getArgs();
+    for (int i = 0; i < strings.length; i++) {
+      builder.setArgs(i, strings[i]);
+    }
+    return builder.build();
+  }
+
+  public static ActionInfo convert(ActionInfoProto infoProto) {
+    ActionInfo.Builder builder = ActionInfo.newBuilder();
+    builder.setActionName(infoProto.getActionName())
+        .setResult(infoProto.getResult())
+        .setLog(infoProto.getLog())
+        .setSuccessful(infoProto.getSuccessful())
+        .setCreateTime(infoProto.getCreateTime())
+        .setFinished(infoProto.getFinished())
+        .setFinishTime(infoProto.getFinishTime());
+    List<String> list = infoProto.getArgsList();
+    String[] strings = (String[]) list.toArray();
+    builder.setArgs(strings);
+    return builder.build();
+  }
+
 
   public static FileAccessEvent convert(final ReportFileAccessEventRequestProto event) {
     return new FileAccessEvent(event.getFilePath(), 0, event.getAccessedBy());
