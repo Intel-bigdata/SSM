@@ -20,6 +20,7 @@ package org.smartdata.server.command;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.SmartAction;
+import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
@@ -34,7 +35,6 @@ import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.server.utils.JsonUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -65,21 +65,21 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private SmartContext smartContext;
   private boolean running;
 
-  public CommandExecutor(SmartServer ssm, Configuration conf) {
+  public CommandExecutor(SmartServer ssm) {
     this.ssm = ssm;
     actionRegistry = ActionRegistry.instance();
     statusCache = new HashSet<>();
     for (CommandState s : CommandState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
-    smartContext = new SmartContext() {
-      @Override
-      public void setConf(SmartConf conf) {
-        super.setConf(conf);
-      }
-    };
+    smartContext = new SmartContext();
     execThreadPool = new CommandPool();
     running = false;
+  }
+
+  public CommandExecutor(SmartServer ssm, SmartConf conf) {
+    this(ssm);
+    smartContext = new SmartContext(conf);
   }
 
   public boolean init(DBAdapter adapter) throws IOException {
@@ -374,7 +374,12 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   private SmartAction createAction(String name) {
-    return actionRegistry.createAction(name);
+    SmartAction smartAction = actionRegistry.createAction(name);
+    smartAction.setContext(smartContext);
+    if (smartAction instanceof HdfsAction) {
+      ((HdfsAction) smartAction).setDfsClient(ssm.getDFSClient());
+    }
+    return smartAction;
   }
 
   private SmartAction[] createActionsFromStringJson(String jsonString) throws IOException {

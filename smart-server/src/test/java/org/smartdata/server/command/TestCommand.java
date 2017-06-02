@@ -106,11 +106,11 @@ public class TestCommand {
   private Command runHelper() throws IOException {
     HdfsAction[] actions = new HdfsAction[4];
     // New action
-    actions[0] = new MoveFileAction();
-    actions[0].setDfsClient(client);
-    actions[0].setContext(new SmartContext(smartConf));
-    actions[0].init(new String[]{"/testMoveFile/file1", "ALL_SSD"});
-    actions[0].getActionStatus().setId(UUID.randomUUID());
+    // actions[0] = new MoveFileAction();
+    // actions[0].setDfsClient(client);
+    // actions[0].setContext(new SmartContext(smartConf));
+    // actions[0].init(new String[]{"/testMoveFile/file1", "ALL_SSD"});
+    // actions[0].getActionStatus().setId(UUID.randomUUID());
     // actions[1] = new MoveFileAction();
     // actions[1].setDfsClient(client);
     // actions[1].setContext(new SmartContext(smartConf));
