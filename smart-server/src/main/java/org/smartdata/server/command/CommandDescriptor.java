@@ -25,6 +25,17 @@ public class CommandDescriptor {
   private long ruleId;
   private List<String> actionNames = new ArrayList<>();
   private List<String[]> actionArgs = new ArrayList<>();
+  private String commandString;
+
+  public void setCommandString(String commandString) {
+    this.commandString = commandString;
+  }
+
+  public String getCommandString() {
+    return commandString;
+  }
+
+
 
   public CommandDescriptor() {
   }
@@ -50,7 +61,7 @@ public class CommandDescriptor {
     return actionArgs.get(index);
   }
 
-  public int getNumActions() {
+  public int size() {
     return actionNames.size();
   }
 

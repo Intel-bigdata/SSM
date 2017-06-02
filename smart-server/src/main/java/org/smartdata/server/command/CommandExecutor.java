@@ -17,8 +17,9 @@
  */
 package org.smartdata.server.command;
 
-import org.apache.hadoop.conf.Configuration;
+import com.google.common.annotations.VisibleForTesting;
 import org.smartdata.SmartContext;
+import org.smartdata.common.actions.ActionType;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.common.CommandState;
@@ -28,7 +29,6 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.utils.JsonUtil;
 import org.smartdata.actions.ActionRegistry;
 
 import org.apache.hadoop.util.Daemon;
@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -382,7 +383,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return smartAction;
   }
 
-  private SmartAction[] createActionsFromStringJson(String jsonString) throws IOException {
+/*  private SmartAction[] createActionsFromStringJson(String jsonString) throws IOException {
     List<Map<String, String>> actionMaps =
             JsonUtil.toArrayListMap(jsonString);
     List<SmartAction> actions = new ArrayList<>();
@@ -400,6 +401,57 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       actions.add(current);
     }
     return actions.toArray(new SmartAction[actionMaps.size()]);
+  }*/
+
+  private SmartAction[] createActionsFromParameters(String commandDescriptorString) throws IOException {
+    CommandDescriptor commandDescriptor = null;
+    try {
+      commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
+    } catch (ParseException e) {
+      LOG.error("Command Descriptor String Wrong format! ", e.getMessage());
+    }
+    return createActionsFromParameters(commandDescriptor);
+  }
+
+  @VisibleForTesting
+  SmartAction[] createActionsFromParameters(CommandDescriptor commandDescriptor) throws IOException {
+    if (commandDescriptor == null) {
+      return null;
+    }
+    // commandDescriptor.();
+    List<SmartAction> actions = new ArrayList<>();
+    SmartAction current;
+    for(int index = 0; index < commandDescriptor.size(); index++) {
+      current = createAction(commandDescriptor.getActionName(index));
+      if (current == null) {
+        LOG.error("New Action Instance from {} error!", commandDescriptor.getActionName(index));
+      }
+      current.setContext(smartContext);
+      current.init(commandDescriptor.getActionArgs(index));
+      actions.add(current);
+    }
+    return actions.toArray(new SmartAction[commandDescriptor.size()]);
+  }
+
+  public synchronized void submitCommand(String commandDescriptorString) throws IOException {
+    CommandDescriptor commandDescriptor = null;
+    try {
+      commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
+    } catch (ParseException e) {
+      LOG.error("Command Descriptor String Wrong format! ", e.getMessage());
+    }
+    submitCommand(commandDescriptor);
+  }
+
+  public synchronized void submitCommand(CommandDescriptor commandDescriptor) throws IOException {
+    if (commandDescriptor == null) {
+      return;
+    }
+    long submitTime = System.currentTimeMillis();
+    CommandInfo cmdinfo = new CommandInfo(0, commandDescriptor.getRuleId(),
+        ActionType.ArchiveFile, CommandState.PENDING,
+        commandDescriptor.getCommandString(), submitTime, submitTime);
+    submitCommand(cmdinfo);
   }
 
   public synchronized long submitCommand(CommandInfo cmd) throws IOException {
@@ -417,7 +469,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   private Command getCommandFromCmdInfo(CommandInfo cmdinfo) throws IOException {
     // New Command
-    Command cmd = new Command(createActionsFromStringJson(cmdinfo.getParameters()),
+    Command cmd = new Command(createActionsFromParameters(cmdinfo.getParameters()),
         new Callback());
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
