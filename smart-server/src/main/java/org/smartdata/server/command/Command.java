@@ -122,6 +122,7 @@ public class Command implements Runnable {
     return (currentActionIndex == smartActions.length || !running);
   }
 
+
   public void runSmartActions() {
     for (SmartAction act : smartActions) {
       currentActionIndex++;
@@ -130,7 +131,7 @@ public class Command implements Runnable {
       }
       act.run();
       // Run actions sequentially!
-      while(!act.getActionStatus().isFinished()) {
+      while (!act.getActionStatus().isFinished()) {
         try {
           Thread.sleep(1000);
         } catch (InterruptedException e) {
