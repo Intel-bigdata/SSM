@@ -15,19 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metrics;
+package org.smartdata.metrics.impl;
+
+import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.metrics.FileAccessEventCollector;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- * An interface for file access event collecting.
- */
-public interface FileAccessEventCollector {
-  /**
-   * Collect file access events occured since last calling of this method.
-   * @return access events
-   * @throws IOException
-   */
-  List<FileAccessEvent> collect() throws IOException;
+public class SmartServerAccessEventCollector implements FileAccessEventCollector {
+  private final LinkedBlockingQueue<FileAccessEvent> outerQueue;
+
+  public SmartServerAccessEventCollector(LinkedBlockingQueue<FileAccessEvent> queue) {
+    this.outerQueue = queue;
+  }
+
+  @Override
+  public List<FileAccessEvent> collect() throws IOException {
+    FileAccessEvent[] events = new FileAccessEvent[outerQueue.size()];
+    this.outerQueue.toArray(events);
+    this.outerQueue.clear();
+    return Arrays.asList(events);
+  }
 }

@@ -37,7 +37,7 @@ public class Storage extends SmartObject {
     properties.put("free", new Property("free", ValueType.LONG,
         Arrays.asList(ValueType.STRING), "storages", "free", true,
         "type = $0 AND free"));
-    properties.put("usedRatio", new Property("usedRatio", ValueType.LONG,
+    properties.put("utilization", new Property("utilization", ValueType.LONG,
         Arrays.asList(ValueType.STRING), "storages", "free", true,
         "type = $0 AND (capacity - free) * 100.0 / capacity"));
   }

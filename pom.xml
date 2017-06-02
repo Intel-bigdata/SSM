@@ -305,7 +305,6 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>3.0.0</version>
       </plugin>
-
     </plugins>
     </pluginManagement>
 
@@ -326,6 +325,18 @@
                 <mkdir dir="${test.build.dir}"/>
               </target>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

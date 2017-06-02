@@ -17,20 +17,61 @@
  */
 package org.smartdata.actions.hdfs.move;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionStatus;
+
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * HDFS move based move runner.
  */
 public class MoverBasedMoveRunner extends MoveRunner {
+  private static final Logger LOG = LoggerFactory.getLogger(
+      MoverBasedMoveRunner.class);
+  private Configuration conf;
+  private ActionStatus actionStatus;
+
+  public MoverBasedMoveRunner(Configuration conf, ActionStatus actionStatus) {
+    this.conf = conf;
+    this.actionStatus = actionStatus;
+  }
 
   @Override
   public void move(String file) throws IOException {
-
+    Thread moverProcess = new MoverProcess(actionStatus, new String[] {file});
+    moverProcess.start();
   }
 
   @Override
   public void move(String[] files) throws IOException {
+    Thread moverProcess = new MoverProcess(actionStatus, files);
+    moverProcess.start();
+  }
 
+  class MoverProcess extends Thread {
+    private String[] paths;
+    private MoverCli moverClient;
+    private UUID id;
+
+    public MoverProcess(ActionStatus status, String[] paths) {
+      this.moverClient = new MoverCli(status);
+      id = status.getId();
+      this.paths = paths;
+    }
+
+    @Override
+    public void run() {
+      try {
+        LOG.info("Start move : id = {}", id);
+        int result = ToolRunner.run(conf, moverClient, paths);
+        LOG.info("Finish move : id = {}", id);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 }

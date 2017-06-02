@@ -176,7 +176,9 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitTpeTimeConst(SmartRuleParser.TpeTimeConstContext ctx) {
-    return pharseConstTimePoint(ctx.getText());
+    String text = ctx.getText();
+    String tc = text.substring(1, text.length() - 1);
+    return pharseConstTimePoint(tc);
   }
 
   // | timepointexpr ('+' | '-') timeintvalexpr              #tpeTimeExpr
@@ -184,6 +186,18 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   public TreeNode visitTpeTimeExpr(SmartRuleParser.TpeTimeExprContext ctx) {
     return generalExprOpExpr(ctx);
     //return evalLongExpr(ctx, ValueType.TIMEPOINT);
+  }
+
+  @Override
+  public TreeNode visitTpeTimeId(SmartRuleParser.TpeTimeIdContext ctx) {
+    TreeNode node = visitChildren(ctx);
+    if (!node.isOperNode()) {
+      if (((ValueNode)node).getValueType() == ValueType.TIMEPOINT) {
+        return node;
+      }
+    }
+    throw new RuleParserException("Invalid attribute type in expression for '"
+        + ctx.getText() + "'");
   }
 
 
@@ -211,6 +225,18 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   public TreeNode visitTieTiExpr(SmartRuleParser.TieTiExprContext ctx) {
     return generalExprOpExpr(ctx);
     //return evalLongExpr(ctx, ValueType.TIMEINTVAL);
+  }
+
+  @Override
+  public TreeNode visitTieTiIdExpr(SmartRuleParser.TieTiIdExprContext ctx) {
+    TreeNode node = visitChildren(ctx);
+    if (!node.isOperNode()) {
+      if (((ValueNode)node).getValueType() == ValueType.TIMEINTVAL) {
+        return node;
+      }
+    }
+    throw new RuleParserException("Invalid attribute type in expression for '"
+        + ctx.getText() + "'");
   }
 
 
@@ -372,7 +398,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   }
 
   private TreeNode generalHandleExpr(String operator, TreeNode left, TreeNode right) {
-    TreeNode ret = null;
+    TreeNode ret;
     try {
       if (left.isOperNode() ||  right.isOperNode()) {
         ret = new OperNode(OperatorType.fromString(operator), left, right);
@@ -382,7 +408,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         ret = new OperNode(OperatorType.fromString(operator), left, right);
       }
     } catch (IOException e) {
-      // Error handle
+      throw new RuleParserException(e.getMessage());
     }
     return ret;
   }
@@ -686,11 +712,13 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
       if (optype == OperatorType.AND || optype == OperatorType.OR
           || optype == OperatorType.NONE) {
-        if (!lop.getTableName().equals(tableName)) {
+        String lopTable = lop.getTableName();
+        if (lopTable != null && !lopTable.equals(tableName)) {
           lop = new NodeTransResult(tableName, connectTables(tableName, lop));
         }
 
-        if (!rop.getTableName().equals(tableName)) {
+        String ropTable = rop.getTableName();
+        if (ropTable != null && !ropTable.equals(tableName)) {
           rop = new NodeTransResult(tableName, connectTables(tableName, rop));
         }
       }
@@ -716,11 +744,19 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       VisitResult vr = vNode.eval();
       if (vr.isConst()) {
         switch (vr.getValueType()) {
+          case TIMEINTVAL:
+          case TIMEPOINT:
           case LONG:
             return new NodeTransResult(null, "" + ((Long) vr.getValue()));
           case STRING:
             return new NodeTransResult(null,
                 "'" + ((String) vr.getValue()) + "'");
+          case BOOLEAN:
+            if ((Boolean)vr.getValue()) {
+              return new NodeTransResult(null, "1");
+            } else {
+              return new NodeTransResult(null, "0");
+            }
           // TODO: for other types
           default:
             throw new IOException("Type = " + vr.getValueType().toString());
@@ -735,11 +771,13 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
             rid = transCtx.getRuleId() + "_";
           }
           String virTab = "VIR_ACC_CNT_TAB_" + rid + realParas.instId();
-          tempTableNames.add(virTab);
-          sqlStatements.add("DROP TABLE IF EXISTS '" + virTab + "';");
-          sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
-          dynamicParameters.put(virTab,
-              Arrays.asList(realParas.getValues(), virTab));
+          if (!tempTableNames.contains(virTab)) {
+            tempTableNames.add(virTab);
+            sqlStatements.add("DROP TABLE IF EXISTS '" + virTab + "';");
+            sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
+            dynamicParameters.put(virTab,
+                Arrays.asList(realParas.getValues(), virTab));
+          }
           return new NodeTransResult(virTab,
               realParas.formatParameters());
         }

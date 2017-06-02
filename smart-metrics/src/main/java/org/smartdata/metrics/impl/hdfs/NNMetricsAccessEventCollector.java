@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metrics.impl;
+package org.smartdata.metrics.impl.hdfs;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.configuration.ConfigurationException;
@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
-import org.smartdata.metrics.HDFSFileAccessEvent;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -55,8 +54,7 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
   private Reader reader;
   private long now;
 
-  @Override
-  public void init(Configuration conf) {
+  public NNMetricsAccessEventCollector() {
     try {
       this.reader = Reader.create();
     } catch (IOException | URISyntaxException e) {
@@ -74,7 +72,7 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
         List<FileAccessEvent> events = new ArrayList<>();
         while (reader.hasNext()) {
           Info info = reader.next();
-          events.add(new HDFSFileAccessEvent(info.getPath(), info.getTimestamp()));
+          events.add(new FileAccessEvent(info.getPath(), info.getTimestamp()));
           now = info.getTimestamp();
         }
         return events;
@@ -88,6 +86,10 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
       e.printStackTrace();
     }
     return EMPTY_RESULT;
+  }
+
+  public void close() {
+    this.reader.close();
   }
 
   public static final FastDateFormat DATE_FORMAT =

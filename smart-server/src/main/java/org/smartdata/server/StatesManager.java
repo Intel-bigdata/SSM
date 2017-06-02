@@ -20,8 +20,8 @@ package org.smartdata.server;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metrics.FileAccessEventCollector;
-import org.smartdata.metrics.impl.MetricsCollectorFactory;
+import org.smartdata.metrics.FileAccessEventSource;
+import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.metric.fetcher.AccessEventFetcher;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
@@ -50,6 +50,7 @@ public class StatesManager implements ModuleSequenceProto {
   private AccessCountTableManager accessCountTableManager;
   private InotifyEventFetcher inotifyEventFetcher;
   private AccessEventFetcher accessEventFetcher;
+  private FileAccessEventSource fileAccessEventSource;
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
   public StatesManager(SmartServer ssm, Configuration conf) {
@@ -59,6 +60,7 @@ public class StatesManager implements ModuleSequenceProto {
 
   /**
    * Load configure/data to initialize.
+   *
    * @return true if initialized successfully
    */
   public boolean init(DBAdapter dbAdapter) throws IOException {
@@ -71,8 +73,10 @@ public class StatesManager implements ModuleSequenceProto {
     }
     this.executorService = Executors.newScheduledThreadPool(4);
     this.accessCountTableManager = new AccessCountTableManager(dbAdapter, executorService);
-    FileAccessEventCollector collector = MetricsCollectorFactory.createAccessEventCollector(conf);
-    this.accessEventFetcher = new AccessEventFetcher(conf, accessCountTableManager, executorService, collector);
+    this.fileAccessEventSource = MetricsFactory.createAccessEventSource(conf);
+    this.accessEventFetcher =
+        new AccessEventFetcher(
+            conf, accessCountTableManager, executorService, fileAccessEventSource.getCollector());
     this.inotifyEventFetcher = new InotifyEventFetcher(client, dbAdapter, executorService);
     LOG.info("Initialized.");
     return true;
@@ -98,6 +102,9 @@ public class StatesManager implements ModuleSequenceProto {
     if (accessEventFetcher != null) {
       this.accessEventFetcher.stop();
     }
+    if (this.fileAccessEventSource != null) {
+      this.fileAccessEventSource.close();
+    }
     LOG.info("Stopped.");
   }
 
@@ -111,7 +118,8 @@ public class StatesManager implements ModuleSequenceProto {
   }
 
   public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
-
+    event.setTimeStamp(System.currentTimeMillis());
+    this.fileAccessEventSource.insertEventFromSmartClient(event);
   }
 
   /**

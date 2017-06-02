@@ -20,17 +20,51 @@ package org.smartdata.metrics;
 /**
  * A file access event.
  */
-public interface FileAccessEvent extends DataAccessEvent {
+public class FileAccessEvent implements DataAccessEvent {
+  private final String path;
+  private final String user;
+  private long timeStamp;
+
+  public FileAccessEvent(String path) {
+    this(path, -1);
+  }
+
+  public FileAccessEvent(String path, long timestamp) {
+    this(path, timestamp, "");
+  }
+
+  public FileAccessEvent(String path, long timeStamp, String user) {
+    this.path = path;
+    this.timeStamp = timeStamp;
+    this.user = user;
+  }
 
   /**
    * Get the accessed file path.
    * @return file path
    */
-  String getPath();
+  public String getPath() {
+    return this.path;
+  }
 
-  /**
-   * Get the accessed file id if any.
-   * @return file id
-   */
-  long getFileId();
+  // DFSClient has no info about the file id, except have another rpc call
+  // to Namenode, SmartServer can get this value from Namespace, so not
+  // provide id info here.
+  public long getFileId() {
+    return 0;
+  }
+
+  @Override
+  public String getAccessedBy() {
+    return this.user;
+  }
+
+  @Override
+  public long getTimestamp() {
+    return this.timeStamp;
+  }
+
+  public void setTimeStamp(long timeStamp) {
+    this.timeStamp = timeStamp;
+  }
 }

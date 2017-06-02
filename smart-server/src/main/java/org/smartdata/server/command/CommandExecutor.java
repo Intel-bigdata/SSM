@@ -109,7 +109,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   public void join() throws IOException {
     try {
       MoverPool.getInstance().shutdown();
-      execThreadPool.stop();
+      if (execThreadPool != null) {
+        execThreadPool.stop();
+      }
     } catch (Exception e) {
       LOG.error("Shutdown MoverPool/CommandPool Error!");
       throw new IOException(e);

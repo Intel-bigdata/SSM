@@ -61,7 +61,6 @@ public class CacheFileAction extends HdfsAction {
   @Override
   public void init(String[] args) {
     super.init(args);
-
     fileName = args[0];
   }
 
