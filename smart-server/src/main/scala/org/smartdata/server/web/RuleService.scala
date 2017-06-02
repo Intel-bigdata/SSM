@@ -18,7 +18,6 @@
 package org.smartdata.server.web
 
 import java.util
-import java.util.{HashMap, Map}
 
 import org.smartdata.common.command.CommandInfo
 import org.smartdata.server.SmartServer
