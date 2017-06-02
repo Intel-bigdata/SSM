@@ -66,6 +66,7 @@ timeintvalexpr
     | TIMEINTVALCONST                                       #tieConst
     | timepointexpr '-' timepointexpr                       #tieTpExpr
     | timeintvalexpr ('-' | '+') timeintvalexpr             #tieTiExpr
+    | id                                                    #tieTiIdExpr
     ;
 
 
@@ -74,6 +75,7 @@ timepointexpr
     | NOW                                                   #tpeNow
     | TIMEPOINTCONST                                        #tpeTimeConst
     | timepointexpr ('+' | '-') timeintvalexpr              #tpeTimeExpr
+    | id                                                    #tpeTimeId
     ;
 
 commonexpr

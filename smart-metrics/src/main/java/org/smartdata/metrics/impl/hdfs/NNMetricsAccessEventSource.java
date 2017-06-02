@@ -15,19 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metrics;
+package org.smartdata.metrics.impl.hdfs;
 
-import java.io.IOException;
-import java.util.List;
+import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.metrics.FileAccessEventCollector;
+import org.smartdata.metrics.FileAccessEventSource;
 
-/**
- * An interface for file access event collecting.
- */
-public interface FileAccessEventCollector {
-  /**
-   * Collect file access events occured since last calling of this method.
-   * @return access events
-   * @throws IOException
-   */
-  List<FileAccessEvent> collect() throws IOException;
+public class NNMetricsAccessEventSource implements FileAccessEventSource {
+  private final NNMetricsAccessEventCollector collector;
+
+  public NNMetricsAccessEventSource() {
+    this.collector = new NNMetricsAccessEventCollector();
+  }
+
+  @Override
+  public FileAccessEventCollector getCollector() {
+    return this.collector;
+  }
+
+  @Override
+  public void insertEventFromSmartClient(FileAccessEvent event) {
+    // Do nothing.
+  }
+
+  @Override
+  public void close() {
+    this.collector.close();
+  }
 }

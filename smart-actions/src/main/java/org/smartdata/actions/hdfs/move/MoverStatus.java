@@ -32,6 +32,7 @@ public class MoverStatus extends ActionStatus {
 
   @Override
   public void init() {
+    super.init();
     totalBlocks = 0;
     totalSize = 0;
     movedBlocks = 0;
@@ -39,15 +40,15 @@ public class MoverStatus extends ActionStatus {
   }
 
   public MoverStatus() {
+    init();
   }
-
 
   /**
    * Reset status to initial value.
    */
   @Override
   synchronized public void reset() {
-    super.reset();
+    init();
   }
 
   @Override
@@ -60,6 +61,10 @@ public class MoverStatus extends ActionStatus {
     }
     return movedBlocks >= totalBlocks ? 0.99f :
             0.99f * movedBlocks / totalBlocks;
+  }
+
+  synchronized public long getTotalSize() {
+    return totalSize;
   }
 
   synchronized public long getTotalBlocks() {

@@ -48,6 +48,16 @@ public class File extends SmartObject {
     properties.put("inCache",
         new Property("inCache", ValueType.BOOLEAN,
             null, "cached_files", null, false));
+    properties.put("age",
+        new Property("age", ValueType.TIMEINTVAL,
+            null, "files", null, false,
+            "(strftime('%s','now') * 1000 - modification_time)"));
+    properties.put("mtime",
+        new Property("mtime", ValueType.TIMEPOINT,
+            null, "files", "modification_time", false));
+    properties.put("atime",
+        new Property("atime", ValueType.TIMEPOINT,
+            null, "files", "access_time", false));
   }
 
   public File() {

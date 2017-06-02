@@ -15,37 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.actions.mover;
+package org.smartdata.actions.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.apache.hadoop.util.StringUtils;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.server.actions.mover.defaultmover.MoverStatus;
-
-import java.util.UUID;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.smartdata.SmartContext;
+import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.hdfs.move.MoverStatus;
+import org.smartdata.conf.SmartConf;
 
 /**
- * Test MoverPool.
+ * Test for MoveFileAction.
  */
-public class TestMoverPool {
+public class TestMoveFileAction {
   private static final int DEFAULT_BLOCK_SIZE = 50;
-  private Configuration conf;
   MiniDFSCluster cluster;
   DistributedFileSystem dfs;
+  DFSClient dfsClient;
+  SmartContext smartContext;
 
   static {
     TestBalancer.initTestSetup();
@@ -53,17 +51,18 @@ public class TestMoverPool {
 
   @Before
   public void init() throws Exception {
-    conf = new HdfsConfiguration();
+    SmartConf conf = new SmartConf();
     initConf(conf);
-    MoverPool.getInstance().init(conf);
     cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(5)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
-        StorageType.SSD})
-        .build();
+            .numDataNodes(5)
+            .storagesPerDatanode(3)
+            .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
+                    StorageType.SSD})
+            .build();
     cluster.waitActive();
     dfs = cluster.getFileSystem();
+    dfsClient = dfs.getClient();
+    smartContext = new SmartContext(conf);
   }
 
   static void initConf(Configuration conf) {
@@ -91,55 +90,33 @@ public class TestMoverPool {
       out2.close();
 
       // schedule move to ARCHIVE or SSD
-      dfs.setStoragePolicy(new Path(file1), "COLD");
-      dfs.setStoragePolicy(new Path(file2), "ALL_SSD");
-      UUID id1 = MoverPool.getInstance().createMoverAction(file1);
-      UUID id2 = MoverPool.getInstance().createMoverAction(file2);
-      Status status1 = MoverPool.getInstance().getStatus(id1);
-      Status status2 = MoverPool.getInstance().getStatus(id2);
+      MoveFileAction action1 = new MoveFileAction();
+      action1.setDfsClient(dfsClient);
+      action1.setContext(smartContext);
+      action1.init(new String[] {file1, "COLD"});
+      MoveFileAction action2 = new MoveFileAction();
+      action2.setDfsClient(dfsClient);
+      action2.setContext(smartContext);
+      action2.init(new String[] {file2, "ALL_SSD"});
+      ActionStatus status1 = action1.getActionStatus();
+      ActionStatus status2 = action2.getActionStatus();
+
+      action1.run();
+      action2.run();
+
       while (!status1.isFinished() || !status2.isFinished()) {
         System.out.println("Mover 1 running time : " +
-            StringUtils.formatTime(status1.getRunningTime()));
+                StringUtils.formatTime(status1.getRunningTime()));
         System.out.println("Mover 2 running time : " +
-            StringUtils.formatTime(status2.getRunningTime()));
+                StringUtils.formatTime(status2.getRunningTime()));
         Thread.sleep(3000);
       }
-      assertTrue(status1.isSuccessful());
-      assertTrue(status2.isSuccessful());
+      Assert.assertTrue(status1.isSuccessful());
+      Assert.assertTrue(status2.isSuccessful());
       System.out.println("Mover 1 total running time : " +
-          StringUtils.formatTime(status1.getRunningTime()));
+              StringUtils.formatTime(status1.getRunningTime()));
       System.out.println("Mover 2 total running time : " +
-          StringUtils.formatTime(status2.getRunningTime()));
-
-      MoverPool.getInstance().removeStatus(id2);
-      assertNull(MoverPool.getInstance().getStatus(id2));
-    } finally {
-      cluster.shutdown();
-    }
-  }
-
-  @Test(timeout = 300000)
-  public void testStopMovers() throws Exception {
-    try {
-      final String file1 = "/testStopAndRestartMovers/file1";
-      Path dir = new Path("/testStopAndRestartMovers");
-      dfs.mkdirs(dir);
-      // write to DISK
-      dfs.setStoragePolicy(dir, "HOT");
-      final FSDataOutputStream out1 = dfs.create(new Path(file1));
-      out1.writeChars("testStopAndRestartMovers");
-      out1.close();
-
-      // schedule move to ARCHIVE
-      dfs.setStoragePolicy(dir, "COLD");
-      UUID id1 = MoverPool.getInstance().createMoverAction(file1);
-
-      // stop move
-      Status status1 = MoverPool.getInstance().getStatus(id1);
-      Thread.sleep(1000);
-      Boolean succeed = MoverPool.getInstance().stop(id1, 3);
-      assertTrue(succeed);
-      assertFalse(status1.isSuccessful());
+              StringUtils.formatTime(status2.getRunningTime()));
     } finally {
       cluster.shutdown();
     }
@@ -171,7 +148,7 @@ public class TestMoverPool {
       long totalSize2 = string2.length()*2*3;
       long blockNum2 = 2*3;
       scheduleMoverWithPercentage(dir, "ALL_SSD", totalSize1 + totalSize2,
-          blockNum1 + blockNum2);
+              blockNum1 + blockNum2);
 
       // schedule move to ONE_SSD
       totalSize1 = string1.length()*2*4;
@@ -179,7 +156,7 @@ public class TestMoverPool {
       totalSize2 = string2.length()*2*2;
       blockNum2 = 2*2;
       scheduleMoverWithPercentage(dir, "ONE_SSD", totalSize1 + totalSize2,
-          blockNum1 + blockNum2);
+              blockNum1 + blockNum2);
     } finally {
       cluster.shutdown();
     }
@@ -187,9 +164,13 @@ public class TestMoverPool {
 
   private void scheduleMoverWithPercentage(String dir, String storageType,
       long totalSize, long totolBlocks) throws Exception {
-    dfs.setStoragePolicy(new Path(dir), storageType);
-    UUID id = MoverPool.getInstance().createMoverAction(dir);
-    Status status = MoverPool.getInstance().getStatus(id);
+    MoveFileAction moveFileAction = new MoveFileAction();
+    moveFileAction.setDfsClient(dfsClient);
+    moveFileAction.setContext(smartContext);
+    moveFileAction.init(new String[] {dir, storageType});
+    ActionStatus status = moveFileAction.getActionStatus();
+    moveFileAction.run();
+
     if (status instanceof MoverStatus) {
       MoverStatus moverStatus = (MoverStatus)status;
       while (!moverStatus.isFinished()) {
@@ -199,13 +180,13 @@ public class TestMoverPool {
                 + "/" + moverStatus.getTotalBlocks());
         System.out.println("Move percentage : " +
                 moverStatus.getPercentage()*100 + "%");
-        assertTrue(moverStatus.getPercentage() <= 1);
+        Assert.assertTrue(moverStatus.getPercentage() <= 1);
         Thread.sleep(1000);
       }
-      System.out.println("Mover " + id + " is finished.");
-      assertEquals(1.0f, moverStatus.getPercentage(), 0.00001f);
-      assertEquals(totalSize, moverStatus.getTotalSize());
-      assertEquals(totolBlocks, moverStatus.getTotalBlocks());
+      System.out.println("Mover is finished.");
+      Assert.assertEquals(1.0f, moverStatus.getPercentage(), 0.00001f);
+      Assert.assertEquals(totalSize, moverStatus.getTotalSize());
+      Assert.assertEquals(totolBlocks, moverStatus.getTotalBlocks());
     }
   }
 }

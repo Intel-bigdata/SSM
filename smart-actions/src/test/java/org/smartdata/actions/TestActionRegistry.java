@@ -15,19 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metrics;
+package org.smartdata.actions;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.smartdata.actions.hdfs.HdfsActionFactory;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
-/**
- * An interface for file access event collecting.
- */
-public interface FileAccessEventCollector {
-  /**
-   * Collect file access events occured since last calling of this method.
-   * @return access events
-   * @throws IOException
-   */
-  List<FileAccessEvent> collect() throws IOException;
+public class TestActionRegistry {
+
+  @Test
+  public void testInit() throws IOException {
+    ActionRegistry ar = ActionRegistry.instance();
+    Set<String> actionNames = ar.namesOfAction();
+    // System.out.print(actionNames.size());
+    Assert.assertTrue(actionNames.size() > 0);
+  }
+
+  @Test
+  public void testCreateAction() throws IOException {
+    ActionRegistry ar = ActionRegistry.instance();
+    Assert.assertTrue(ar
+        .createAction("archive")
+        .getClass().toString().contains("ArchiveFileAction"));
+    Set<String> actionNames = ar.namesOfAction();
+    // create all kinds of actions
+    for (String name: actionNames) {
+      ar.createAction(name);
+    }
+  }
 }

@@ -22,9 +22,17 @@ import org.smartdata.conf.SmartConf;
 /**
  * SSM context for running an action.
  */
-public abstract class SmartContext {
+public class SmartContext {
 
   private SmartConf conf;
+
+  public SmartContext() {
+    this.conf = new SmartConf();
+  }
+
+  public SmartContext(SmartConf conf) {
+    this.conf = conf;
+  }
 
   public SmartConf getConf() {
     return conf;

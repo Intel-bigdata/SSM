@@ -18,6 +18,8 @@
 package org.smartdata.common.actions;
 
 public class ActionInfo {
+  private long actionId;
+  private long commandId;
   private String actionName;
   private String[] args;
   private String result;
@@ -29,6 +31,22 @@ public class ActionInfo {
   private long finishTime;
 
   private float progress;
+
+  public long getActionId() {
+    return actionId;
+  }
+
+  public void setActionId(long actionId) {
+    this.actionId = actionId;
+  }
+
+  public long getCommandId() {
+    return commandId;
+  }
+
+  public void setCommandId(long commandId) {
+    this.commandId = commandId;
+  }
 
   public String getActionName() {
     return actionName;
