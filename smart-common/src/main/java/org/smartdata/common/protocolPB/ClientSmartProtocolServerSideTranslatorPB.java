@@ -19,6 +19,7 @@ package org.smartdata.common.protocolPB;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
+import org.smartdata.actions.ActionDescriptor;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.AdminServerProto;
@@ -55,6 +56,11 @@ import org.smartdata.common.protocol.AdminServerProto.GetActionInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCommandResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCommandRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
 
 import org.smartdata.common.protocol.ClientServerProto;
 import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
@@ -275,6 +281,36 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
       }
       return ListActionInfoOfLastActionsResponseProto.newBuilder()
           .addAllActionInfoList(protoList).build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public SubmitCommandResponseProto submitCommand(RpcController controller
+      , SubmitCommandRequestProto req) throws ServiceException {
+    try {
+      long id = server.submitCommand(req.getCmd());
+      return SubmitCommandResponseProto.newBuilder()
+          .setRes(id).build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public ListActionsSupportedResponseProto listActionsSupported(
+      RpcController controller, ListActionsSupportedRequestProto req)
+      throws ServiceException {
+    try {
+      List<ActionDescriptor> adList = server.listActionsSupported();
+      List<ActionDescriptorProto> prolist = new ArrayList<>();
+      for (ActionDescriptor a : adList) {
+        prolist.add(PBHelper.convert(a));
+      }
+      return ListActionsSupportedResponseProto.newBuilder()
+          .addAllActDesList(prolist)
+          .build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
