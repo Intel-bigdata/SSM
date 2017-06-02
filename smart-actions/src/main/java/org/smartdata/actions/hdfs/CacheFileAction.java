@@ -48,11 +48,11 @@ public class CacheFileAction extends HdfsAction {
   public CacheFileAction() {
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
-    createActionStatus();
+    createStatus();
   }
 
   @Override
-  protected void createActionStatus() {
+  protected void createStatus() {
     this.actionStatus = new CacheStatus();
     resultOut = actionStatus.getResultPrintStream();
     logOut = actionStatus.getLogPrintStream();
@@ -66,7 +66,7 @@ public class CacheFileAction extends HdfsAction {
 
   protected void execute() {
     ActionStatus actionStatus = getActionStatus();
-    actionStatus.setStartTime();
+    actionStatus.begin();
     try {
       addActionEvent(fileName);
       executeCacheAction(fileName);
@@ -75,7 +75,7 @@ public class CacheFileAction extends HdfsAction {
       actionStatus.setSuccessful(false);
       throw new RuntimeException(e);
     } finally {
-      actionStatus.setFinished(true);
+      actionStatus.end();
     }
   }
 

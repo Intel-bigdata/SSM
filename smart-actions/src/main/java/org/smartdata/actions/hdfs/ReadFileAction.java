@@ -51,7 +51,7 @@ public class ReadFileAction extends HdfsAction {
   @Override
   protected void execute() {
     ActionStatus actionStatus = getActionStatus();
-    actionStatus.setStartTime();
+    actionStatus.begin();
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
       if (fileStatus == null) {
@@ -68,7 +68,7 @@ public class ReadFileAction extends HdfsAction {
       actionStatus.setSuccessful(false);
       resultOut.println("ReadFile Action fails!\n" + e.getMessage());
     } finally {
-      actionStatus.setFinished(true);
+      actionStatus.end();
     }
   }
 }

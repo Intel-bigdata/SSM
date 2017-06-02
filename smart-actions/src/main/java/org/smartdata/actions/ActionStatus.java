@@ -63,8 +63,8 @@ public class ActionStatus {
     return finished;
   }
 
-  public void setFinished(boolean finished) {
-    this.finished = finished;
+  public void end() {
+    this.finished = true;
     finishTime = Time.monotonicNow();
   }
 
@@ -72,7 +72,7 @@ public class ActionStatus {
     return startTime;
   }
 
-  public void setStartTime() {
+  public void begin() {
     this.startTime = Time.monotonicNow();
   }
 

@@ -41,7 +41,7 @@ public class SetStoragePolicyAction extends HdfsAction {
   @Override
   protected void execute() {
     ActionStatus actionStatus = getActionStatus();
-    actionStatus.setStartTime();
+    actionStatus.begin();
     try {
       dfsClient.setStoragePolicy(fileName, storagePolicy);
       actionStatus.setSuccessful(true);
@@ -49,7 +49,7 @@ public class SetStoragePolicyAction extends HdfsAction {
       actionStatus.setSuccessful(false);
       throw new RuntimeException(e);
     } finally {
-      actionStatus.setFinished(true);
+      actionStatus.end();
     }
   }
 }

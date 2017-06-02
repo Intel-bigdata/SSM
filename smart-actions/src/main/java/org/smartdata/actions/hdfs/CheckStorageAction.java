@@ -40,7 +40,7 @@ public class CheckStorageAction extends HdfsAction {
   @Override
   protected void execute() {
     ActionStatus actionStatus = getActionStatus();
-    actionStatus.setStartTime();
+    actionStatus.begin();
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
       long length = fileStatus.getLen();
@@ -60,7 +60,7 @@ public class CheckStorageAction extends HdfsAction {
       actionStatus.setSuccessful(false);
       throw new RuntimeException(e);
     } finally {
-      actionStatus.setFinished(true);
+      actionStatus.end();
     }
   }
 }

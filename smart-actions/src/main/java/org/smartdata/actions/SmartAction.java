@@ -19,13 +19,12 @@ package org.smartdata.actions;
 
 import org.smartdata.SmartContext;
 
-import java.io.IOException;
 import java.io.PrintStream;
-import java.util.UUID;
 
 /**
- * Smart action, the base class. All actions should inherit this. All actions should be able to run in a command line
- * or web console. User defined actions are also meant to extend this.
+ * Smart action, the base class. All actions should inherit this. All actions
+ * should be able to run in a command line or web console. User defined actions
+ * are also meant to extend this.
  */
 public abstract class SmartAction {
   private String[] actionArgs;
@@ -35,10 +34,10 @@ public abstract class SmartAction {
   protected PrintStream logOut;
 
   public SmartAction() {
-    createActionStatus();
+    createStatus();
   }
 
-  protected void createActionStatus() {
+  protected void createStatus() {
     this.actionStatus = new ActionStatus();
     resultOut = actionStatus.getResultPrintStream();
     logOut = actionStatus.getLogPrintStream();
@@ -74,12 +73,6 @@ public abstract class SmartAction {
     return actionArgs;
   }
 
-  /**
-   * Execute an action.
-   *
-   * @return a uid to track the status of the action, or null if the action
-   * has no status.
-   */
   protected abstract void execute();
 
   public void run() {
