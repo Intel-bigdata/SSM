@@ -29,6 +29,12 @@ public class OneSsdFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(OneSsdFileAction.class);
 
   @Override
+  public void init(String... args) {
+    super.init(args[0], "ONE_SSD");
+  }
+
+  @Override
   protected void execute() {
+    super.execute();
   }
 }
