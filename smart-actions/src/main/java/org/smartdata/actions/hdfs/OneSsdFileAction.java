@@ -32,9 +32,4 @@ public class OneSsdFileAction extends MoveFileAction {
   public void init(String... args) {
     super.init(args[0], "ONE_SSD");
   }
-
-  @Override
-  protected void execute() {
-    super.execute();
-  }
 }
