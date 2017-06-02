@@ -19,7 +19,6 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.ActionType;
 import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
@@ -40,11 +39,11 @@ public class MoveFileAction extends HdfsAction {
 
   public MoveFileAction() {
     this.actionType = ActionType.MoveFile;
-    createActionStatus();
+    createStatus();
   }
 
   @Override
-  protected void createActionStatus() {
+  protected void createStatus() {
     this.actionStatus = new MoverStatus();
     resultOut = actionStatus.getResultPrintStream();
     logOut = actionStatus.getLogPrintStream();
