@@ -48,7 +48,14 @@ public class CacheFileAction extends HdfsAction {
   public CacheFileAction() {
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
-    this.setActionStatus(new CacheStatus());
+    createActionStatus();
+  }
+
+  @Override
+  protected void createActionStatus() {
+    this.actionStatus = new CacheStatus();
+    resultOut = actionStatus.getResultPrintStream();
+    logOut = actionStatus.getLogPrintStream();
   }
 
   @Override
@@ -57,16 +64,12 @@ public class CacheFileAction extends HdfsAction {
     fileName = args[0];
   }
 
-  /**
-   * Execute an action.
-   * @return null.
-   */
   protected void execute() {
     ActionStatus actionStatus = getActionStatus();
     actionStatus.setStartTime();
     try {
       addActionEvent(fileName);
-      runCache(fileName);
+      executeCacheAction(fileName);
       actionStatus.setSuccessful(true);
     } catch (Exception e) {
       actionStatus.setSuccessful(false);
@@ -80,8 +83,8 @@ public class CacheFileAction extends HdfsAction {
     actionEvents.put(fileName);
   }
 
-  private void runCache(String fileName) throws Exception {
-    createPool();
+  private void executeCacheAction(String fileName) throws Exception {
+    createCachePool();
     if (isCached(fileName)) {
       return;
     }
@@ -90,7 +93,7 @@ public class CacheFileAction extends HdfsAction {
     addDirective(fileName);
   }
 
-  private void createPool() throws Exception {
+  private void createCachePool() throws Exception {
     RemoteIterator<CachePoolEntry> poolEntries = dfsClient.listCachePools();
     while (poolEntries.hasNext()) {
       CachePoolEntry poolEntry = poolEntries.next();
