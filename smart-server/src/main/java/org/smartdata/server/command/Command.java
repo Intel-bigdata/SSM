@@ -21,11 +21,7 @@ import org.smartdata.common.CommandState;
 import org.smartdata.actions.SmartAction;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -55,7 +51,7 @@ public class Command implements Runnable {
   private SmartAction[] smartActions;
   private String parameters;
   CommandExecutor.Callback cb;
-  private Map<UUID, Integer> uuids;
+  private Set<UUID> uuids;
   private boolean running;
 
   private long createTime;
@@ -69,7 +65,7 @@ public class Command implements Runnable {
   public Command(SmartAction[] smartActions, CommandExecutor.Callback cb) {
     this.smartActions = smartActions.clone();
     this.cb = cb;
-    this.uuids = new HashMap<>();
+    this.uuids = new HashSet<>();
     this.running = true;
   }
 
