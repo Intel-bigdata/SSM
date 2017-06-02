@@ -20,6 +20,7 @@ package org.smartdata.common.protocolPB;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.AdminServerProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleResponseProto;
@@ -49,6 +50,12 @@ import org.smartdata.common.protocol.AdminServerProto.DisableCommandRequestProto
 import org.smartdata.common.protocol.AdminServerProto.DeleteCommandResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.DeleteCommandRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
+import org.smartdata.common.protocol.AdminServerProto.GetActionInfoResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.GetActionInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
+
 import org.smartdata.common.protocol.ClientServerProto;
 import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
@@ -235,6 +242,39 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
     try {
       server.deleteCommand(req.getCommandID());
       return DeleteCommandResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public GetActionInfoResponseProto getActionInfo(RpcController controller,
+      GetActionInfoRequestProto request) throws ServiceException {
+    try {
+      ActionInfo aI = server.getActionInfo(request.getActionID());
+      return GetActionInfoResponseProto.newBuilder()
+          .setActionInfo(PBHelper.convert(aI)).build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public ListActionInfoOfLastActionsResponseProto listActionInfoOfLastActions(
+      RpcController controller, ListActionInfoOfLastActionsRequestProto request)
+      throws ServiceException {
+    try {
+      List<ActionInfo> list =
+          server.listActionInfoOfLastActions(request.getMaxNumActions());
+      if (list==null) {
+        return ListActionInfoOfLastActionsResponseProto.newBuilder().build();
+      }
+      List<ActionInfoProto> protoList = new ArrayList<>();
+      for (ActionInfo a:list){
+        protoList.add(PBHelper.convert(a));
+      }
+      return ListActionInfoOfLastActionsResponseProto.newBuilder()
+          .addAllActionInfoList(protoList).build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }

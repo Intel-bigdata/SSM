@@ -142,6 +142,36 @@ message DeleteCommandRequestProto {
 message DeleteCommandResponseProto {
 }
 
+message ActionInfoProto {
+  required int64 actionId = 1;
+  required int64 commandId = 2;
+  required string actionName = 3;
+  repeated string args = 4;
+  required string result = 5;
+  required string log = 6;
+  required bool successful = 7;
+  required int64 createTime = 8;
+  required bool finished = 9;
+  required int64 finishTime = 10;
+  required float progress = 11;
+}
+
+message GetActionInfoRequestProto {
+  required int64 actionID = 1;
+}
+
+message GetActionInfoResponseProto {
+  required ActionInfoProto actionInfo = 1;
+}
+
+message ListActionInfoOfLastActionsRequestProto {
+  required int32 maxNumActions = 1;
+}
+
+message ListActionInfoOfLastActionsResponseProto {
+  repeated ActionInfoProto actionInfoList = 1;
+}
+
 service protoService {
   rpc getServiceState (GetServiceStateRequestProto)
   returns (GetServiceStateResponseProto);
@@ -169,4 +199,8 @@ service protoService {
   returns (DisableCommandResponseProto);
   rpc deleteCommand (DeleteCommandRequestProto)
   returns (DeleteCommandResponseProto);
+  rpc getActionInfo (GetActionInfoRequestProto)
+  returns (GetActionInfoResponseProto);
+  rpc listActionInfoOfLastActions (ListActionInfoOfLastActionsRequestProto)
+  returns (ListActionInfoOfLastActionsResponseProto);
 }
