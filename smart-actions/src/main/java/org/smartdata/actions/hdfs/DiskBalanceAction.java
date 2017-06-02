@@ -25,7 +25,7 @@ import java.util.UUID;
 /**
  * An action to do disk balance for a data node.
  */
-public class DiskBalanceAction extends MoveFileAction {
+public class DiskBalanceAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(DiskBalanceAction.class);
 
   @Override

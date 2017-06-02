@@ -25,7 +25,7 @@ import java.util.UUID;
 /**
  * An action to do balance for a cluster.
  */
-public class ClusterBalanceAction extends MoveFileAction {
+public class ClusterBalanceAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ClusterBalanceAction.class);
 
   @Override
