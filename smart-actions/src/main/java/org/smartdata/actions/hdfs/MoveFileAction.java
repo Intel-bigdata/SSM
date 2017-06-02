@@ -20,6 +20,7 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionType;
+import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoverStatus;
 
@@ -31,34 +32,24 @@ import java.util.Date;
 public class MoveFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(MoveFileAction.class);
 
-  public String storagePolicy;
-  private String fileName;
-  private ActionType actionType;
-  private String name = "MoveFileAction";
+  protected String storagePolicy;
+  protected String fileName;
+  protected ActionType actionType;
+  protected MoveRunner moveRunner = null;
 
   public MoveFileAction() {
     this.actionType = ActionType.MoveFile;
     this.setActionStatus(new MoverStatus());
   }
 
-  public String getName() {
-    return name;
-  }
-
   @Override
-  public void init(String[] args) {
+  public void init(String... args) {
     super.init(args);
     this.fileName = args[0];
     this.storagePolicy = args[1];
   }
 
-  /**
-   * Execute an action.
-   *
-   * @return true if success, otherwise return false.
-   */
   protected void execute() {
-    // TODO check if storagePolicy is the same
     logOut.println("Action starts at "
         + (new Date(System.currentTimeMillis())).toString() + " : "
         + fileName + " -> " + storagePolicy.toString());
@@ -68,10 +59,12 @@ public class MoveFileAction extends HdfsAction {
       throw new RuntimeException(e);
     }
 
-    MoverBasedMoveRunner moverRunner = new MoverBasedMoveRunner(
+    // TODO : make MoveRunner configurable
+    moveRunner = new MoverBasedMoveRunner(
         getContext().getConf(), getActionStatus());
+
     try {
-      moverRunner.move(fileName);
+      moveRunner.move(fileName);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

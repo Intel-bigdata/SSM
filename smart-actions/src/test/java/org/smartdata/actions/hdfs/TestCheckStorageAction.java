@@ -45,7 +45,6 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     out.close();
 
     // do CheckStorageAction
-    Assert.assertEquals("CheckStorageAction", checkStorageAction.getName());
     checkStorageAction.init(new String[] {file});
     checkStorageAction.run();
     ActionStatus actionStatus = checkStorageAction.getActionStatus();

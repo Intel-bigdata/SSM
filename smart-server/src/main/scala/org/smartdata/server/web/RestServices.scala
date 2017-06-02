@@ -25,8 +25,9 @@ class RestServices(ssmServer: SmartServer) {
 
   private val static = new StaticRestService().route
   private val rule = new RuleService(ssmServer).route
+  private val action = new ActionService(ssmServer).route
 
   def route: Route = {
-    static ~ rule
+    static ~ rule ~ action
   }
 }
