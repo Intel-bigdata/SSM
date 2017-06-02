@@ -17,16 +17,12 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.ActionType;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
-import org.smartdata.actions.hdfs.move.MoverCli;
 import org.smartdata.actions.hdfs.move.MoverStatus;
 
-import java.io.IOException;
 import java.util.Date;
 
 /**
