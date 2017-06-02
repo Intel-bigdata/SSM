@@ -122,6 +122,7 @@ public class Command implements Runnable {
     return (currentActionIndex == smartActions.length || !running);
   }
 
+
   public void runSmartActions() {
     for (SmartAction act : smartActions) {
       currentActionIndex++;
