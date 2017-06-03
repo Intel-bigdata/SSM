@@ -19,6 +19,7 @@ package org.smartdata.server.rule.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.apache.commons.lang.StringUtils;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.command.CommandDescriptor;
 import org.smartdata.server.rule.exceptions.RuleParserException;
@@ -32,6 +33,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -594,7 +596,11 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitCommand(SmartRuleParser.CommandContext ctx) {
-    String cmd = ctx.getText();
+    List<String> vs = new ArrayList<>();
+    for (int i = 0; i < ctx.getChildCount(); i++) {
+      vs.add(ctx.getChild(i).getText());
+    }
+    String cmd = StringUtils.join(vs, " ");
     try {
       cmdDescriptor = CommandDescriptor.fromCommandString(cmd);
     } catch (ParseException e) {
