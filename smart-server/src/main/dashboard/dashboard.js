@@ -109,9 +109,9 @@
         event.preventDefault();
         _.delay($state.go, conf.restapiQueryTimeout, toState);
       });
-    }]);
+    }])
 
-   /* enable a health check service
+   //enable a health check service
    .run(['$modal', 'HealthCheckService', 'conf', function ($modal, HealthCheckService, conf) {
      'use strict';
 
@@ -131,12 +131,11 @@
      };
 
      HealthCheckService.config(
-       conf.restapiRoot + 'version',
+       conf.restapiRoot + 'ping',
        conf.restapiQueryInterval,
        showDialogFn,
        hideDialogFn
      );
      HealthCheckService.checkForever();
    }]);
-   */
 })();
