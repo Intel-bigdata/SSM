@@ -28,13 +28,11 @@ import org.junit.Test;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.HdfsAction;
-import org.smartdata.actions.hdfs.MoveFileAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.conf.SmartConf;
 
 
 import java.io.IOException;
-import java.util.UUID;
 
 
 /**
@@ -75,7 +73,7 @@ public class TestCommand {
 
   @Test
   public void testRunCommand() throws Exception {
-    generateTestCase();
+    generateTestFiles();
     Command cmd = runHelper();
     cmd.runSmartActions();
     while (!cmd.isFinished()) {
@@ -83,7 +81,7 @@ public class TestCommand {
     }
   }
 
-  private void generateTestCase() throws IOException {
+  private void generateTestFiles() throws IOException {
     // New dir
     Path dir = new Path("/testMoveFile");
     dfs.mkdirs(dir);
@@ -106,10 +104,10 @@ public class TestCommand {
   private Command runHelper() throws IOException {
     HdfsAction[] actions = new HdfsAction[4];
     // New action
-    // actions[0] = new MoveFileAction();
+    // actions[0] = new AllSsdFileAction();
     // actions[0].setDfsClient(client);
     // actions[0].setContext(new SmartContext(smartConf));
-    // actions[0].init(new String[]{"/testMoveFile/file1", "ALL_SSD"});
+    // actions[0].init(new String[]{"/testMoveFile/file1"});
     // actions[0].getActionStatus().setId(UUID.randomUUID());
     // actions[1] = new MoveFileAction();
     // actions[1].setDfsClient(client);
@@ -120,7 +118,7 @@ public class TestCommand {
     actions[2].setDfsClient(client);
     actions[2].setContext(new SmartContext(smartConf));
     actions[2].init(new String[]{"/testCacheFile"});
-    actions[2].getActionStatus().setId(UUID.randomUUID());
+    // actions[2].getActionStatus().setId(UUID.randomUUID());
     // New Command
     Command cmd = new Command(actions, null);
     cmd.setId(1);

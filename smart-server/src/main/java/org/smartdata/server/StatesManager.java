@@ -65,6 +65,7 @@ public class StatesManager implements ModuleSequenceProto {
    */
   public boolean init(DBAdapter dbAdapter) throws IOException {
     LOG.info("Initializing ...");
+    this.cleanFileTableContents(dbAdapter);
     String nnUri = conf.get(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
     try {
       this.client = new DFSClient(new URI(nnUri), conf);
@@ -136,5 +137,13 @@ public class StatesManager implements ModuleSequenceProto {
    * event happened.
    */
   public void unsubscribeEvent() {
+  }
+
+  private void cleanFileTableContents(DBAdapter adapter) {
+    try {
+      adapter.execute("DELETE FROM files");
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 }

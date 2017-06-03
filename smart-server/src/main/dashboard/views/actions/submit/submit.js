@@ -18,8 +18,8 @@
  */
 angular.module('dashboard')
 
-  .controller('ActionSubmitCtrl', ['$scope', 'restapi',
-    function ($scope, restapi) {
+  .controller('ActionSubmitCtrl', ['$scope', 'restapi', 'actionTypes',
+    function ($scope, restapi, actionTypes) {
       'use strict';
 
       $scope.dialogTitle = 'Submit Action';
@@ -29,11 +29,7 @@ angular.module('dashboard')
 
       $scope.data = {
         model: null,
-        actions: [
-            {description: 'List files', command: 'ls'},
-            {description: 'Read file', command: 'read'},
-            {description: 'Write file', command: 'write'}
-        ]
+        actions: actionTypes
       };
 
       $scope.submit = function () {

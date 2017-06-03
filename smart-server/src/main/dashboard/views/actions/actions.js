@@ -30,13 +30,16 @@ angular.module('dashboard')
           resolve: {
             actions0: ['models', function (models) {
               return models.$get.actions();
+            }],
+            actionTypes: ['models', function (models) {
+              return models.$get.actionTypes();
             }]
           }
         });
     }])
 
-  .controller('ActionsCtrl', ['$scope', '$modal', '$state', '$sortableTableBuilder', '$dialogs', 'actions0',
-    function ($scope, $modal, $state, $stb, $dialogs, actions0) {
+  .controller('ActionsCtrl', ['$scope', '$modal', '$state', '$sortableTableBuilder', '$dialogs', 'actions0', 'actionTypes',
+    function ($scope, $modal, $state, $stb, $dialogs, actions0, actionTypes) {
       'use strict';
 
       var submitWindow = $modal({
@@ -44,7 +47,12 @@ angular.module('dashboard')
         controller: 'ActionSubmitCtrl',
         backdrop: 'static',
         keyboard: true,
-        show: false
+        show: false,
+        resolve: {
+          actionTypes: function () {
+            return actionTypes;
+          }
+        }
       });
 
       $scope.openSubmitActionDialog = function () {
@@ -72,6 +80,7 @@ angular.module('dashboard')
           // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),
           // group 3/3 (4-col)
           $stb.text('Succeed').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+          $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
           $stb.button('Actions').key(['view']).styleClass('col-md-3').done()
         ],
         rows: null
@@ -88,15 +97,19 @@ angular.module('dashboard')
               //user: rule.user,
               actionName: action.actionName,
               createTime: action.createTime,
-              finishTime: action.finishTime === 0 ? "" : action.finishTime,
+              finishTime: action.finished ? action.finishTime : "",
               // startTime: rule.startTime,
               // stopTime: rule.finishTime || '-',
               succeed: action.successful,
               view: {
                 href: action.pageUrl,
                 text: 'Show Result',
-                class: 'btn-xs btn-primary',
-                disabled: !action.finished
+                class: 'btn-xs btn-primary'
+              },
+              progress: {
+                  current: action.progress,
+                  max: 1,
+                  usage: action.progress * 100
               }
             };
           }));

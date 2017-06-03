@@ -38,6 +38,7 @@ angular.module('dashboard')
         $ptb.text('ID').done(),
         $ptb.datetime('Create Time').done(),
         $ptb.datetime('Finish Time').done(),
+        $ptb.duration("Running Time").done(),
         $ptb.text('Result').done(),
         $ptb.text('Log').done()
           /*
@@ -50,7 +51,8 @@ angular.module('dashboard')
         $ptb.$update($scope.actionSummary, [
           action.actionId,
           action.createTime,
-          action.finishTime,
+          action.finished ? action.finishTime : "",
+          action.uptime,
           action.result,
           action.log
           /*
@@ -63,14 +65,5 @@ angular.module('dashboard')
           */
         ]);
       });
-
-      // $scope.alerts = [];
-      // models.$get.ruleAlerts($scope.rule.id)
-      //   .then(function (alerts0) {
-      //     $scope.alerts = alerts0.$data();
-      //     alerts0.$subscribe($scope, function (alerts) {
-      //       $scope.alerts = alerts;
-      //     });
-      //   });
     }])
 ;
