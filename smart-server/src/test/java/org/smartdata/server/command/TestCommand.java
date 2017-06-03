@@ -75,7 +75,7 @@ public class TestCommand {
   public void testRunCommand() throws Exception {
     generateTestFiles();
     Command cmd = runHelper();
-    cmd.runSmartActions();
+    cmd.runActions();
     while (!cmd.isFinished()) {
       Thread.sleep(1000);
     }
