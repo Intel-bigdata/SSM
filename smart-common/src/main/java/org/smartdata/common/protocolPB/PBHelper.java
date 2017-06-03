@@ -19,9 +19,12 @@ package org.smartdata.common.protocolPB;
 
 
 import com.google.protobuf.ServiceException;
+import org.smartdata.actions.ActionDescriptor;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.actions.ActionType;
+import org.smartdata.common.protocol.AdminServerProto;
+import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
@@ -146,5 +149,23 @@ public class PBHelper {
 
   public static FileAccessEvent convert(final ReportFileAccessEventRequestProto event) {
     return new FileAccessEvent(event.getFilePath(), 0, event.getAccessedBy());
+  }
+
+  public static ActionDescriptor convert(ActionDescriptorProto proto) {
+    return ActionDescriptor.newBuilder()
+        .setActionName(proto.getActionName())
+        .setComment(proto.getComment())
+        .setDisplayName(proto.getDisplayName())
+        .setUsage(proto.getUsage())
+        .build();
+  }
+
+  public static ActionDescriptorProto convert(ActionDescriptor ac) {
+    return ActionDescriptorProto.newBuilder()
+        .setActionName(ac.getActionName())
+        .setComment(ac.getComment())
+        .setDisplayName(ac.getDisplayName())
+        .setUsage(ac.getUsage())
+        .build();
   }
 }

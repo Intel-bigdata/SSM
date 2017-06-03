@@ -20,7 +20,9 @@ package org.smartdata.admin.protocolPB;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 
+import org.smartdata.actions.ActionDescriptor;
 import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.protocol.AdminServerProto;
 import org.smartdata.common.protocol.AdminServerProto.GetCommandInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListCommandInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActivateCommandRequestProto;
@@ -48,6 +50,10 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCommandRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedRequestProto;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -263,6 +269,34 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
       List<ActionInfo> list = new ArrayList<>();
       for (ActionInfoProto infoProto : protoslist) {
         list.add(PBHelper.convert(infoProto));
+      }
+      return list;
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public long submitCommand(String cmd) throws IOException {
+    SubmitCommandRequestProto req = SubmitCommandRequestProto.newBuilder()
+        .setCmd(cmd).build();
+    try {
+     return rpcProxy.submitCommand(null,req).getRes();
+    } catch (ServiceException e) {
+      throw PBHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public List<ActionDescriptor> listActionsSupported() throws IOException {
+    ListActionsSupportedRequestProto req = ListActionsSupportedRequestProto
+        .newBuilder().build();
+    try {
+      List<ActionDescriptorProto> prolist = rpcProxy
+          .listActionsSupported(null,req).getActDesListList();
+      List<ActionDescriptor> list = new ArrayList<>();
+      for(ActionDescriptorProto a:prolist){
+        list.add(PBHelper.convert(a));
       }
       return list;
     } catch (ServiceException e) {

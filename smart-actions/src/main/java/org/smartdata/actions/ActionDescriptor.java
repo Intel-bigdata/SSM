@@ -27,11 +27,15 @@ public class ActionDescriptor {
   private String comment;   // Provide detailed info if any
 
   public ActionDescriptor(String actionName, String displayName,
-      String usage, String comment) {
+                          String usage, String comment) {
     this.actionName = actionName;
     this.displayName = displayName;
     this.usage = usage;
     this.comment = comment;
+  }
+
+  public static Builder newBuilder() {
+    return Builder.create();
   }
 
   public String getActionName() {
@@ -65,4 +69,40 @@ public class ActionDescriptor {
   public void setComment(String comment) {
     this.comment = comment;
   }
+
+  public static class Builder {
+    private String actionName;
+    private String displayName; // if not provided, use actionName instead
+    private String usage;     // Info about usage/arguments if any
+    private String comment;   // Provide detailed info if any
+
+    public Builder setActionName(String actionName) {
+      this.actionName = actionName;
+      return this;
+    }
+
+    public Builder setDisplayName(String displayName) {
+      this.displayName = displayName;
+      return this;
+    }
+
+    public Builder setUsage(String usage) {
+      this.usage = usage;
+      return this;
+    }
+
+    public Builder setComment(String comment) {
+      this.comment = comment;
+      return this;
+    }
+
+    public static Builder create() {
+      return new Builder();
+    }
+
+    public ActionDescriptor build() {
+      return new ActionDescriptor(actionName, displayName, usage, comment);
+    }
+  }
+
 }
