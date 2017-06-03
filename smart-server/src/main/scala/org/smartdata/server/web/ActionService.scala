@@ -25,8 +25,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.ParameterDirectives.ParamMagnet
 import akka.stream.Materializer
 import com.google.gson.Gson
-import org.smartdata.actions.ActionDescriptor
-import org.smartdata.common.actions.ActionInfo
+import org.smartdata.common.actions.{ActionDescriptor, ActionInfo}
 import org.smartdata.server.SmartServer
 
 import scala.util.Random
@@ -52,7 +51,7 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
   actionTypes.add(new ActionDescriptor("write", "Write files", "Comment", "Usage"))
 
   override protected def doRoute(implicit mat: Materializer): Route =
-    pathPrefix("actions" / IntNumber) { actionId =>
+    pathPrefix("actions" / LongNumber) { actionId =>
       path("detail") {
         complete(gson.toJson(actions.asScala.find(_.getActionId == actionId).get))
       }
@@ -68,8 +67,8 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
           parameters(ParamMagnet("args")) { args: String =>
             val rule = java.net.URLDecoder.decode(args, "UTF-8")
             val action = new ActionInfo.Builder().setActionName(actionType)
-              .setActionId(Random.nextInt())
-              .setArgs(actionType.split(" "))
+              .setActionId(Math.abs(Random.nextInt()))
+              .setArgs(args.split(" "))
               .setCreateTime(System.currentTimeMillis())
               .setFinished(false)
               .setSuccessful(false).build()

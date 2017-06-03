@@ -97,15 +97,14 @@ angular.module('dashboard')
               //user: rule.user,
               actionName: action.actionName,
               createTime: action.createTime,
-              finishTime: action.finishTime === 0 ? "" : action.finishTime,
+              finishTime: action.finished ? action.finishTime : "",
               // startTime: rule.startTime,
               // stopTime: rule.finishTime || '-',
               succeed: action.successful,
               view: {
                 href: action.pageUrl,
                 text: 'Show Result',
-                class: 'btn-xs btn-primary',
-                disabled: !action.finished
+                class: 'btn-xs btn-primary'
               },
               progress: {
                   current: action.progress,
