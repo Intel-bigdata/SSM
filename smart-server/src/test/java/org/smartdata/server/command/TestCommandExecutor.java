@@ -28,13 +28,9 @@ import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.utils.JsonUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * CommandExecutor Unit Test
@@ -50,16 +46,27 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(commandDescriptor.size() == actions.length);
   }
 
-
-  /*@Test
+ /* @Test
   public void testCommandExecutor() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
     generateTestCases();
     testCommandExecutorHelper();
+  }*/
+
+  @Test
+  public void testAPI() throws Exception {
+    waitTillSSMExitSafeMode();
+    generateTestFiles();
+    Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
+    CommandDescriptor commandDescriptor = generateCommandDescriptor();
+    ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    Thread.sleep(1200);
+    Assert.assertTrue(ssm.getCommandExecutor().listNewCreatedActions(10).size() > 0);
+    testCommandExecutorHelper();
   }
 
-  /*@Test
+  @Test
   public void testGetListDeleteCommand() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
@@ -71,7 +78,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     ssm.getCommandExecutor().deleteCommand(1);
     Assert.assertTrue(ssm
         .getCommandExecutor()
-        .listCommandsInfo(1, null).size() == 1);
+        .listCommandsInfo(1, null).size() == 0);
   }
 
   @Test
@@ -88,7 +95,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
       ssm.getCommandExecutor().disableCommand(1);
       Assert.assertTrue(cmdinfo.getState() == CommandState.DISABLED);
     }
-  }*/
+  }
 
   private void generateTestFiles() throws IOException {
     final DistributedFileSystem dfs = cluster.getFileSystem();
@@ -102,26 +109,27 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     out1.writeChars("/testMoveFile/file1");
     out1.close();
     // Move to Archive
-    final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),
-        true, 1024);
-    out2.writeChars("/testMoveFile/file2");
-    out2.close();
+    // final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),
+    //     true, 1024);
+    // out2.writeChars("/testMoveFile/file2");
+    // out2.close();
     // Move to Cache
     Path dir3 = new Path("/testCacheFile");
     dfs.mkdirs(dir3);
   }
 
   private CommandDescriptor generateCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1; cache /testCacheFile";
+    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
+    commandDescriptor.setRuleId(1);
     return commandDescriptor;
   }
 
   private void generateTestCases() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
-    CommandInfo commandInfo = new CommandInfo(0, 1, ActionType.CacheFile,
-        CommandState.PENDING, commandDescriptor.toString(),
+    CommandInfo commandInfo = new CommandInfo(0, commandDescriptor.getRuleId(), ActionType.CacheFile,
+        CommandState.PENDING, commandDescriptor.getCommandString(),
         123178333l, 232444994l);
     CommandInfo[] commands = {commandInfo};
     dbAdapter.insertCommandsTable(commands);
@@ -131,7 +139,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     DBAdapter dbAdapter = ssm.getDBAdapter();
     String cidCondition = ">= 1 ";
     String ridCondition = ">= 1 ";
-    while(true) {
+    while (true) {
       Thread.sleep(2000);
       int current = ssm.getCommandExecutor().cacheSize();
       System.out.printf("Command Cache size = %d\n ", current);

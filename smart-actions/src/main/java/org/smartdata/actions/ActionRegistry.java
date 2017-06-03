@@ -69,7 +69,9 @@ public class ActionRegistry {
       return null;
     }
     try {
-      return (SmartAction) allActions.get(name).newInstance();
+      SmartAction smartAction = (SmartAction) allActions.get(name).newInstance();
+      smartAction.setName(name);
+      return smartAction;
     } catch (Exception e) {
       LOG.error("Create {} action failed", name, e);
       throw new RuntimeException("Create action failed", e);

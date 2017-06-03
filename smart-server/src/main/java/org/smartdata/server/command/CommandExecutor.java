@@ -19,6 +19,9 @@ package org.smartdata.server.command;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.smartdata.SmartContext;
+import org.smartdata.common.actions.ActionDescriptor;
+import org.smartdata.actions.ActionStatus;
+import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
@@ -40,11 +43,14 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -59,7 +65,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   // TODO replace with concurrentSet or MAP
   private Set<CmdTuple> statusCache;
   private Daemon commandExecutorThread;
-  private CommandPool execThreadPool;
+  private CommandPool commandPool;
+  private Map<UUID, SmartAction> actionPool;
   private DBAdapter adapter;
   private ActionRegistry actionRegistry;
   private SmartServer ssm;
@@ -74,7 +81,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
     smartContext = new SmartContext();
-    execThreadPool = new CommandPool();
+    actionPool = new HashMap<>();
+    commandPool = new CommandPool();
     running = false;
   }
 
@@ -114,15 +122,15 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   public void join() throws IOException {
     try {
-      if (execThreadPool != null) {
-        execThreadPool.stop();
+      if (commandPool != null) {
+        commandPool.stop();
       }
     } catch (Exception e) {
       LOG.error("Shutdown MoverPool/CommandPool Error!");
       throw new IOException(e);
     }
     // Set all thread handle to null
-    execThreadPool = null;
+    commandPool = null;
     commandExecutorThread = null;
   }
 
@@ -131,15 +139,15 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     while (running) {
       try {
         // control the commands that executed concurrently
-        if (execThreadPool == null) {
+        if (commandPool == null) {
           LOG.error("Thread Init/Start Error!");
         }
         // TODO: use configure value
-        if (execThreadPool.size() <= 5) {
+        if (commandPool.size() <= 5) {
           Command toExec = schedule();
           if (toExec != null) {
             toExec.setScheduleToExecuteTime(Time.now());
-            execThreadPool.execute(toExec);
+            commandPool.execute(toExec);
           } else {
             Thread.sleep(1000);
           }
@@ -234,7 +242,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         // Remove from Executing queue
         removeFromExecuting(cid, cmdinfo.getRid(), cmdinfo.getState());
         // Kill thread
-        execThreadPool.deleteCommand(cid);
+        commandPool.deleteCommand(cid);
       } else {
         // Remove from Pending queue
         cmdsInState.get(CommandState.PENDING.getValue()).remove(cid);
@@ -259,7 +267,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         // Remove from Executing queue
         removeFromExecuting(cid, cmdinfo.getRid(), cmdinfo.getState());
         // Kill thread
-        execThreadPool.deleteCommand(cid);
+        commandPool.deleteCommand(cid);
       } else if (inUpdateCache(cid)) {
         removeFromUpdateCache(cid);
       } else {
@@ -276,6 +284,21 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       LOG.error(e.getMessage());
       throw new IOException(e);
     }
+  }
+
+  /**
+   * List actions supported in SmartServer.
+   *
+   * @return
+   * @throws IOException
+   */
+  List<ActionDescriptor> listActionsSupported() throws IOException {
+    //TODO add more information for list ActionDescriptor
+    ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
+    for (String name : ActionRegistry.instance().namesOfAction()) {
+      actionDescriptors.add(new ActionDescriptor(name, name, "", ""));
+    }
+    return actionDescriptors;
   }
 
   private void addToPending(CommandInfo cmdinfo) throws IOException {
@@ -421,8 +444,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     // commandDescriptor.();
     List<SmartAction> actions = new ArrayList<>();
     SmartAction current;
-    for(int index = 0; index < commandDescriptor.size(); index++) {
+    for (int index = 0; index < commandDescriptor.size(); index++) {
       current = createAction(commandDescriptor.getActionName(index));
+      actionPool.put(current.getActionStatus().getId(), current);
       if (current == null) {
         LOG.error("New Action Instance from {} error!", commandDescriptor.getActionName(index));
       }
@@ -433,25 +457,28 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return actions.toArray(new SmartAction[commandDescriptor.size()]);
   }
 
-  public synchronized void submitCommand(String commandDescriptorString) throws IOException {
-    CommandDescriptor commandDescriptor = null;
+  public synchronized long submitCommand(String commandDescriptorString) throws IOException {
+    CommandDescriptor commandDescriptor;
     try {
       commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
     } catch (ParseException e) {
       LOG.error("Command Descriptor String Wrong format! ", e.getMessage());
+      throw new IOException(e);
     }
-    submitCommand(commandDescriptor);
+    return submitCommand(commandDescriptor);
   }
 
-  public synchronized void submitCommand(CommandDescriptor commandDescriptor) throws IOException {
+  public synchronized long submitCommand(CommandDescriptor commandDescriptor) throws IOException {
     if (commandDescriptor == null) {
-      return;
+      LOG.error("Command Descriptor!");
+      throw new IOException();
+      // return -1;
     }
     long submitTime = System.currentTimeMillis();
     CommandInfo cmdinfo = new CommandInfo(0, commandDescriptor.getRuleId(),
         ActionType.ArchiveFile, CommandState.PENDING,
         commandDescriptor.getCommandString(), submitTime, submitTime);
-    submitCommand(cmdinfo);
+    return submitCommand(cmdinfo);
   }
 
   public synchronized long submitCommand(CommandInfo cmd) throws IOException {
@@ -461,8 +488,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         cmdsInState.get(CommandState.PENDING.getValue()).add(cmd.getCid());
         return cmd.getCid();
       }
-    } catch (SQLException e) {
+    } catch (Exception e) {
       LOG.error(e.getMessage());
+      throw new IOException();
     }
     return -1;
   }
@@ -479,9 +507,26 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return cmd;
   }
 
-  public List<ActionInfo> listActions() throws IOException {
-    // TODO list actioninfo
-    return null;
+  public List<ActionInfo> listNewCreatedActions(int maxNumActions) throws IOException {
+    ArrayList<ActionInfo> actionInfos = new ArrayList<>();
+    boolean flag = true;
+    for (Command cmd : commandPool.getcommands()) {
+      long cmdId = cmd.getId();
+      for (SmartAction smartAction : cmd.getSmartActions()) {
+        ActionStatus status = smartAction.getActionStatus();
+        actionInfos.add(new ActionInfo(cmdId, status.getId(),
+            cmdId, smartAction.getName(), smartAction.getArguments(), status.getResultPrintStream().toString(),
+            status.getLogPrintStream().toString(), status.isSuccessful(), status.getStartTime(),
+            status.isSuccessful(), status.getRunningTime(), status.getPercentage()));
+      }
+    }
+    // Sort and get top maxNumActions
+    Collections.sort(actionInfos, new ActionInfoComparator());
+    if (maxNumActions >= actionInfos.size()) {
+      return actionInfos;
+    } else {
+      return actionInfos.subList(0, maxNumActions);
+    }
   }
 
   public List<CommandInfo> getPendingCommandsFromDB() throws IOException {
@@ -558,14 +603,14 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       // Mark commandInfo as DONE
       cmdsAll.get(cid).setState(state);
       // Mark command as DONE
-      execThreadPool.setFinished(cid, state);
+      commandPool.setFinished(cid, state);
       LOG.info("Command {}", state.toString());
       synchronized (statusCache) {
         statusCache.add(new CmdTuple(cid, rid, state));
       }
       removeFromExecuting(cid, rid, state);
       try {
-        execThreadPool.deleteCommand(cid);
+        commandPool.deleteCommand(cid);
       } catch (Exception e) {
         LOG.error("Shutdown Command {} Error!", cid);
       }
