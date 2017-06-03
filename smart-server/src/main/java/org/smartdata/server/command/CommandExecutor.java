@@ -512,7 +512,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     boolean flag = true;
     for (Command cmd : commandPool.getcommands()) {
       long cmdId = cmd.getId();
-      for (SmartAction smartAction : cmd.getSmartActions()) {
+      for (SmartAction smartAction : cmd.getActions()) {
         ActionStatus status = smartAction.getActionStatus();
         actionInfos.add(new ActionInfo(cmdId, status.getId(),
             cmdId, smartAction.getName(), smartAction.getArguments(), status.getResultPrintStream().toString(),
