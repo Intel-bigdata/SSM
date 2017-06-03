@@ -66,12 +66,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Set<CmdTuple> statusCache;
   private Daemon commandExecutorThread;
   private CommandPool commandPool;
-  private Map<UUID, SmartAction> actionPool;
+  private Map<Long, SmartAction> actionPool;
   private DBAdapter adapter;
   private ActionRegistry actionRegistry;
   private SmartServer ssm;
   private SmartContext smartContext;
   private boolean running;
+  private long currentActionId;
 
   public CommandExecutor(SmartServer ssm) {
     this.ssm = ssm;
@@ -84,6 +85,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     actionPool = new HashMap<>();
     commandPool = new CommandPool();
     running = false;
+    // TODO recovery ActionID
+    currentActionId = 0;
   }
 
   public CommandExecutor(SmartServer ssm, SmartConf conf) {
@@ -286,13 +289,22 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
   }
 
+  public ActionInfo getActionInfo(long actionID) {
+    SmartAction smartAction =  actionPool.get(actionID);
+    ActionStatus status = smartAction.getActionStatus();
+    return new ActionInfo(status.getId(),
+        0, smartAction.getName(), smartAction.getArguments(), status.getResultPrintStream().toString(),
+        status.getLogPrintStream().toString(), status.isSuccessful(), status.getStartTime(),
+        status.isSuccessful(), status.getRunningTime(), status.getPercentage());
+  }
+
   /**
    * List actions supported in SmartServer.
    *
    * @return
    * @throws IOException
    */
-  List<ActionDescriptor> listActionsSupported() throws IOException {
+  public List<ActionDescriptor> listActionsSupported() throws IOException {
     //TODO add more information for list ActionDescriptor
     ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
     for (String name : ActionRegistry.instance().namesOfAction()) {
@@ -403,6 +415,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (smartAction instanceof HdfsAction) {
       ((HdfsAction) smartAction).setDfsClient(ssm.getDFSClient());
     }
+    smartAction.getActionStatus().setId(currentActionId);
+    currentActionId++;
     return smartAction;
   }
 
@@ -514,7 +528,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       long cmdId = cmd.getId();
       for (SmartAction smartAction : cmd.getActions()) {
         ActionStatus status = smartAction.getActionStatus();
-        actionInfos.add(new ActionInfo(cmdId, status.getId(),
+        actionInfos.add(new ActionInfo(status.getId(),
             cmdId, smartAction.getName(), smartAction.getArguments(), status.getResultPrintStream().toString(),
             status.getLogPrintStream().toString(), status.isSuccessful(), status.getStartTime(),
             status.isSuccessful(), status.getRunningTime(), status.getPercentage()));

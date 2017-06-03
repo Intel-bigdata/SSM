@@ -43,17 +43,31 @@ class RuleService(ssmServer: SmartServer) extends BasicService {
     path("start") {
       post {
         rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.ACTIVE))
-        complete("success")
+        try {
+          ssmServer.getRuleManager.activateRule(ruleId)
+          complete("success")
+        } catch {
+          case e: Exception => failWith(e)
+        }
       }
     } ~
     path("stop") {
       delete {
         rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.DISABLED))
-        complete("success")
+        try {
+          ssmServer.getRuleManager.disableRule(ruleId, true)
+          complete("success")
+        } catch {
+          case e: Exception => failWith(e)
+        }
       }
     } ~
     path("detail") {
-      complete(gson.toJson(rules.asScala.find(_.getId == ruleId).get))
+      try {
+        complete(gson.toJson(ssmServer.getRuleManager.getRuleInfo(ruleId)))
+      } catch {
+        case e: Exception => failWith(e)
+      }
     } ~
     path("errors") {
       complete("{\"time\" : \"0\", \"error\" : \"\"}")
@@ -65,19 +79,32 @@ class RuleService(ssmServer: SmartServer) extends BasicService {
         CommandState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l)
       val command2 = new CommandInfo(1, 1, ActionType.CacheFile, CommandState.PENDING,
         JsonUtil.toJsonString(smap1), 123178333l, 232444994l)
-      complete(gson.toJson(util.Arrays.asList(command1, command2)))
+      try {
+        complete(gson.toJson(ssmServer.getCommandExecutor.listCommandsInfo(ruleId, null))))
+      } catch {
+        case e: Exception => failWith(e)
+      }
     }
   } ~
     path("rulelist") {
-      complete(gson.toJson(rules))
+      try {
+        complete(gson.toJson(ssmServer.getRuleManager.listRulesInfo()))
+      } catch {
+        case e: Exception => failWith(e)
+      }
   } ~
   path("addrule") {
     post {
       entity(as[String]) { request =>
         val rule = java.net.URLDecoder.decode(request, "UTF-8")
-        System.out.println("Adding rule: " + rule)
-        addRuleInfo(rule)
-        complete("Success")
+        //System.out.println("Adding rule: " + rule)
+        //addRuleInfo(rule)
+        try {
+          ssmServer.getRuleManager.submitRule(rule, RuleState.DISABLED)
+          complete("Success")
+        } catch {
+          case e: Exception => failWith(e)
+        }
       }
     }
   }
