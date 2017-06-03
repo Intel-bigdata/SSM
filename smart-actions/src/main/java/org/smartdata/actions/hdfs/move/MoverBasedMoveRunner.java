@@ -55,7 +55,7 @@ public class MoverBasedMoveRunner extends MoveRunner {
   class MoverProcess extends Thread {
     private String[] paths;
     private MoverCli moverClient;
-    private UUID id;
+    private long id;
 
     public MoverProcess(ActionStatus status, String[] paths) {
       this.moverClient = new MoverCli(status);
