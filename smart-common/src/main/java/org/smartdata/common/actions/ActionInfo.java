@@ -17,12 +17,9 @@
  */
 package org.smartdata.common.actions;
 
-import java.util.UUID;
 
 public class ActionInfo {
   private long actionId;
-  // TODO remove after refactor
-  private UUID uuid;
   private long commandId;
   private String actionName;
   private String[] args;
@@ -51,15 +48,6 @@ public class ActionInfo {
     this.finished = finished;
     this.finishTime = finishTime;
     this.progress = progress;
-  }
-
-  public ActionInfo(long actionId, UUID uuid, long commandId, String actionName,
-                    String[] args, String result, String log,
-                    boolean successful, long createTime, boolean finished,
-                    long finishTime, float progress) {
-    this(actionId, commandId, actionName, args, result,
-        log, successful, createTime, finished, finishTime, progress);
-    this.uuid = uuid;
   }
 
   public long getActionId() {

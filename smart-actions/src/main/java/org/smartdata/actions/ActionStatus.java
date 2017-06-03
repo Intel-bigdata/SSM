@@ -21,13 +21,12 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.util.Time;
 
 import java.io.PrintStream;
-import java.util.UUID;
 
 /**
  * Smart action status base.
  */
 public class ActionStatus {
-  private UUID id;
+  private long id;
   private long startTime;
   private Boolean finished;
   private long finishTime;
@@ -51,11 +50,11 @@ public class ActionStatus {
     init();
   }
 
-  public UUID getId() {
+  public long getId() {
     return id;
   }
 
-  public void setId(UUID id) {
+  public void setId(long id) {
     this.id = id;
   }
 
