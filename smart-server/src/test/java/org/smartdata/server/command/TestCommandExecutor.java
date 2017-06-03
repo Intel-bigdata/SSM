@@ -50,16 +50,26 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(commandDescriptor.size() == actions.length);
   }
 
-
-  /*@Test
+ /* @Test
   public void testCommandExecutor() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
     generateTestCases();
     testCommandExecutorHelper();
+  }*/
+
+  @Test
+  public void testAPI() throws Exception {
+    waitTillSSMExitSafeMode();
+    Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
+    CommandDescriptor commandDescriptor = generateCommandDescriptor();
+    ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    Thread.sleep(1200);
+    Assert.assertTrue(ssm.getCommandExecutor().listActions(10).size() > 0);
+    testCommandExecutorHelper();
   }
 
-  /*@Test
+  @Test
   public void testGetListDeleteCommand() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
@@ -71,7 +81,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     ssm.getCommandExecutor().deleteCommand(1);
     Assert.assertTrue(ssm
         .getCommandExecutor()
-        .listCommandsInfo(1, null).size() == 1);
+        .listCommandsInfo(1, null).size() == 0);
   }
 
   @Test
@@ -88,7 +98,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
       ssm.getCommandExecutor().disableCommand(1);
       Assert.assertTrue(cmdinfo.getState() == CommandState.DISABLED);
     }
-  }*/
+  }
 
   private void generateTestFiles() throws IOException {
     final DistributedFileSystem dfs = cluster.getFileSystem();
@@ -102,10 +112,10 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     out1.writeChars("/testMoveFile/file1");
     out1.close();
     // Move to Archive
-    final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),
-        true, 1024);
-    out2.writeChars("/testMoveFile/file2");
-    out2.close();
+    // final FSDataOutputStream out2 = dfs.create(new Path("/testMoveFile/file2"),
+    //     true, 1024);
+    // out2.writeChars("/testMoveFile/file2");
+    // out2.close();
     // Move to Cache
     Path dir3 = new Path("/testCacheFile");
     dfs.mkdirs(dir3);
@@ -121,7 +131,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     DBAdapter dbAdapter = ssm.getDBAdapter();
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
     CommandInfo commandInfo = new CommandInfo(0, 1, ActionType.CacheFile,
-        CommandState.PENDING, commandDescriptor.toString(),
+        CommandState.PENDING, commandDescriptor.getCommandString(),
         123178333l, 232444994l);
     CommandInfo[] commands = {commandInfo};
     dbAdapter.insertCommandsTable(commands);

@@ -19,7 +19,7 @@ package org.smartdata.server.command;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.smartdata.SmartContext;
-import org.smartdata.actions.ActionDescriptor;
+import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.actions.SmartAction;
@@ -456,7 +456,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public synchronized long submitCommand(String commandDescriptorString) throws IOException {
-    CommandDescriptor commandDescriptor = null;
+    CommandDescriptor commandDescriptor;
     try {
       commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
     } catch (ParseException e) {
@@ -468,7 +468,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   public synchronized long submitCommand(CommandDescriptor commandDescriptor) throws IOException {
     if (commandDescriptor == null) {
-      return -1;
+      LOG.error("Command Descriptor!");
+      throw new IOException();
+      // return -1;
     }
     long submitTime = System.currentTimeMillis();
     CommandInfo cmdinfo = new CommandInfo(0, commandDescriptor.getRuleId(),
@@ -484,8 +486,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         cmdsInState.get(CommandState.PENDING.getValue()).add(cmd.getCid());
         return cmd.getCid();
       }
-    } catch (SQLException e) {
+    } catch (Exception e) {
       LOG.error(e.getMessage());
+      throw new IOException();
     }
     return -1;
   }
