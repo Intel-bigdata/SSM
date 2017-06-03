@@ -165,20 +165,20 @@ public class SmartRpcServer implements SmartServerProtocols {
   public void deleteRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
     checkIfActive();
-    ssm.getRuleManager().DeleteRule(ruleID, dropPendingCommands);
+    ssm.getRuleManager().deleteRule(ruleID, dropPendingCommands);
   }
 
   @Override
   public void activateRule(long ruleID) throws IOException {
     checkIfActive();
-    ssm.getRuleManager().ActivateRule(ruleID);
+    ssm.getRuleManager().activateRule(ruleID);
   }
 
   @Override
   public void disableRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
     checkIfActive();
-    ssm.getRuleManager().DisableRule(ruleID, dropPendingCommands);
+    ssm.getRuleManager().disableRule(ruleID, dropPendingCommands);
   }
 
   @Override

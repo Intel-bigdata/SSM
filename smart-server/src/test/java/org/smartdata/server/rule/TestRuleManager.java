@@ -135,7 +135,7 @@ public class TestRuleManager {
       System.out.println(info);
     }
 
-    ruleManager.DeleteRule(ruleInfo.getId(), true);
+    ruleManager.deleteRule(ruleInfo.getId(), true);
     Thread.sleep(3000);
 
     RuleInfo endInfo = ruleManager.getRuleInfo(info.getId());
@@ -163,7 +163,7 @@ public class TestRuleManager {
     Assert.assertTrue(info.getNumChecked()
         > ruleInfo.getNumChecked());
 
-    ruleManager.DisableRule(ruleInfo.getId(), true);
+    ruleManager.disableRule(ruleInfo.getId(), true);
     Thread.sleep(1000);
     RuleInfo info2 = ruleManager.getRuleInfo(id);
     for (int i = 0; i < 3; i++) {
@@ -175,7 +175,7 @@ public class TestRuleManager {
         == info2.getNumChecked());
 
     RuleInfo info3 = info;
-    ruleManager.ActivateRule(ruleInfo.getId());
+    ruleManager.activateRule(ruleInfo.getId());
     for (int i = 0; i < 3; i++) {
       Thread.sleep(1000);
       info = ruleManager.getRuleInfo(id);
@@ -201,7 +201,7 @@ public class TestRuleManager {
     }
 
     for (int i = 0; i < nRules; i++) {
-      ruleManager.DeleteRule(ids[i], true);
+      ruleManager.deleteRule(ids[i], true);
       RuleInfo info = ruleManager.getRuleInfo(ids[i]);
       Assert.assertTrue(info.getState() == RuleState.DELETED);
     }
@@ -351,10 +351,10 @@ public class TestRuleManager {
           //System.out.println(rand == 0 ? "Active" : "Disable");
           switch (rand) {
             case 0:
-              ruleManager.ActivateRule(ruleId);
+              ruleManager.activateRule(ruleId);
               break;
             case 1:
-              ruleManager.DisableRule(ruleId, true);
+              ruleManager.disableRule(ruleId, true);
               break;
           }
         }

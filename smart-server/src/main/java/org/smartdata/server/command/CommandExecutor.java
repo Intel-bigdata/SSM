@@ -304,7 +304,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
    * @return
    * @throws IOException
    */
-  List<ActionDescriptor> listActionsSupported() throws IOException {
+  public List<ActionDescriptor> listActionsSupported() throws IOException {
     //TODO add more information for list ActionDescriptor
     ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
     for (String name : ActionRegistry.instance().namesOfAction()) {
