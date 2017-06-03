@@ -51,7 +51,8 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     initialize(address);
   }
 
-  public SmartClient(InetSocketAddress address) throws IOException {
+  public SmartClient(Configuration conf, InetSocketAddress address) throws IOException {
+    this.conf = conf;
     initialize(address);
   }
 
