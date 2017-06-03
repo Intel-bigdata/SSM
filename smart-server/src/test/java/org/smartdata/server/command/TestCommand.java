@@ -108,17 +108,14 @@ public class TestCommand {
     // actions[0].setDfsClient(client);
     // actions[0].setContext(new SmartContext(smartConf));
     // actions[0].init(new String[]{"/testMoveFile/file1"});
-    // actions[0].getActionStatus().setId(UUID.randomUUID());
     // actions[1] = new MoveFileAction();
     // actions[1].setDfsClient(client);
     // actions[1].setContext(new SmartContext(smartConf));
     // actions[1].init(new String[]{"/testMoveFile/file2", "COLD"});
-    // actions[1].getActionStatus().setId(UUID.randomUUID());
     actions[2] = new CacheFileAction();
     actions[2].setDfsClient(client);
     actions[2].setContext(new SmartContext(smartConf));
     actions[2].init(new String[]{"/testCacheFile"});
-    // actions[2].getActionStatus().setId(UUID.randomUUID());
     // New Command
     Command cmd = new Command(actions, null);
     cmd.setId(1);
