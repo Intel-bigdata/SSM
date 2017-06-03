@@ -60,14 +60,14 @@ The basis of this solution is to have one primary Hadoop cluster, one or more se
 
 The following are the flow of synchronous data writing,
 
-1. (1)To achieve synchronous data writing, the SmartDFSClient we provided will first write data to the primary cluster.
-2. (2)SmartDFSClient then write data to Secondary cluster. To satisfy the real synchronous data replication and control the latency, SmartDFSClient will return once 1 replica (configurable) is saved in Secondary cluster.
+1. To achieve synchronous data writing, the SmartDFSClient we provided will first write data to the primary cluster.
+2. SmartDFSClient then write data to Secondary cluster. To satisfy the real synchronous data replication and control the latency, SmartDFSClient will return once 1 replica (configurable) is saved in Secondary cluster.
 
 If both (1) and (2) are finished, SmartDFSClient then will return as success.  If step (1) fails, then the operation will return with failure. If step (2) fails, there are two choices for user,
 
-1. Retry the action a few times(configurable), if still fail, rollback step (1), operation return with failure
-2. Tell Smart Server to start a &quot;replicate data to Secondary cluster&quot; asynchronous action, return the operation with success. This is Step (3). Once the replication action is recorded, SmartDFSClient will return immediately.
+  - Retry the action a few times(configurable), if still fail, rollback step (1), operation return with failure
+  - Tell Smart Server to start a &quot;replicate data to Secondary cluster&quot; asynchronous action, return the operation with success. This is Step (3). Once the replication action is recorded, SmartDFSClient will return immediately.
 
-1. (4)SSM sever will schedule the replication action to &quot;SSM Agent&quot; which is near the Datanode who has the blocks of the source file.
-2. (5)SSM agent pull the data from primary HDFS cluster
-3. (6)SSM agent write the data to secondary HDFS cluster
+4. SSM sever will schedule the replication action to &quot;SSM Agent&quot; which is near the Datanode who has the blocks of the source file.
+5. SSM agent pull the data from primary HDFS cluster
+6. SSM agent write the data to secondary HDFS cluster
