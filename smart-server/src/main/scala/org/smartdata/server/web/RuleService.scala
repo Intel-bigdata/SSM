@@ -97,7 +97,7 @@ class RuleService(ssmServer: SmartServer) extends BasicService {
     post {
       entity(as[String]) { request =>
         val rule = java.net.URLDecoder.decode(request, "UTF-8")
-        //System.out.println("Adding rule: " + rule)
+        System.out.println("Adding rule: " + rule)
         //addRuleInfo(rule)
         try {
           ssmServer.getRuleManager.submitRule(rule, RuleState.DISABLED)

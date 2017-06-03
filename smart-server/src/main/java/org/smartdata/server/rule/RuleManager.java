@@ -79,6 +79,7 @@ public class RuleManager implements ModuleSequenceProto {
    */
   public long submitRule(String rule, RuleState initState)
       throws IOException {
+    LOG.error("Received Rule -> [" + rule + "]");
     if (initState != RuleState.ACTIVE && initState != RuleState.DISABLED
         && initState != RuleState.DRYRUN) {
       throw new IOException("Invalid initState = " + initState

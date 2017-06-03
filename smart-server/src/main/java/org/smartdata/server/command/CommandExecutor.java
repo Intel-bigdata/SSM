@@ -18,6 +18,7 @@
 package org.smartdata.server.command;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.conf.Configuration;
 import org.smartdata.SmartContext;
 import org.smartdata.client.SmartClient;
 import org.smartdata.client.SmartDFSClient;
@@ -31,6 +32,7 @@ import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.metastore.DBAdapter;
@@ -42,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -52,7 +55,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -75,6 +77,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private SmartContext smartContext;
   private boolean running;
   private long currentActionId;
+  private Configuration conf;
 
   public CommandExecutor(SmartServer ssm) {
     this.ssm = ssm;
@@ -94,6 +97,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   public CommandExecutor(SmartServer ssm, SmartConf conf) {
     this(ssm);
     smartContext = new SmartContext(conf);
+    this.conf = conf;
   }
 
   public boolean init(DBAdapter adapter) throws IOException {
@@ -415,11 +419,20 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     SmartAction smartAction = actionRegistry.createAction(name);
     smartAction.setContext(smartContext);
     if (smartAction instanceof HdfsAction) {
-      ((HdfsAction) smartAction).setDfsClient(new SmartDFSClient(smartContext.getConf()));
+      ((HdfsAction) smartAction).setDfsClient(
+          new SmartDFSClient(ssm.getNamenodeURI(),
+          smartContext.getConf(), getRpcServerAddress()));
     }
     smartAction.getActionStatus().setId(currentActionId);
     currentActionId++;
     return smartAction;
+  }
+
+  private InetSocketAddress getRpcServerAddress() {
+    String[] strings = conf.get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
+        SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
+    return new InetSocketAddress(strings[strings.length - 2]
+        , Integer.parseInt(strings[strings.length - 1]));
   }
 
 /*  private SmartAction[] createActionsFromStringJson(String jsonString) throws IOException {
@@ -474,6 +487,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public synchronized long submitCommand(String commandDescriptorString) throws IOException {
+    LOG.error("Received Command -> [" + commandDescriptorString + "]");
     CommandDescriptor commandDescriptor;
     try {
       commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
