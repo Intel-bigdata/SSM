@@ -28,13 +28,9 @@ import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.utils.JsonUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * CommandExecutor Unit Test
@@ -61,6 +57,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   @Test
   public void testAPI() throws Exception {
     waitTillSSMExitSafeMode();
+    generateTestFiles();
     Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
     ssm.getCommandExecutor().submitCommand(commandDescriptor);
@@ -122,15 +119,16 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private CommandDescriptor generateCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1; cache /testCacheFile";
+    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
+    commandDescriptor.setRuleId(1);
     return commandDescriptor;
   }
 
   private void generateTestCases() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
-    CommandInfo commandInfo = new CommandInfo(0, 1, ActionType.CacheFile,
+    CommandInfo commandInfo = new CommandInfo(0, commandDescriptor.getRuleId(), ActionType.CacheFile,
         CommandState.PENDING, commandDescriptor.getCommandString(),
         123178333l, 232444994l);
     CommandInfo[] commands = {commandInfo};
