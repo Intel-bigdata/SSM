@@ -19,6 +19,8 @@ package org.smartdata.server.command;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.smartdata.SmartContext;
+import org.smartdata.client.SmartClient;
+import org.smartdata.client.SmartDFSClient;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.common.actions.ActionInfoComparator;
@@ -409,11 +411,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return ret;
   }
 
-  private SmartAction createAction(String name) {
+  private SmartAction createAction(String name) throws IOException {
     SmartAction smartAction = actionRegistry.createAction(name);
     smartAction.setContext(smartContext);
     if (smartAction instanceof HdfsAction) {
-      ((HdfsAction) smartAction).setDfsClient(ssm.getDFSClient());
+      ((HdfsAction) smartAction).setDfsClient(new SmartDFSClient(smartContext.getConf()));
     }
     smartAction.getActionStatus().setId(currentActionId);
     currentActionId++;
