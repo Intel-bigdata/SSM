@@ -80,7 +80,7 @@ class RuleService(ssmServer: SmartServer) extends BasicService {
       val command2 = new CommandInfo(1, 1, ActionType.CacheFile, CommandState.PENDING,
         JsonUtil.toJsonString(smap1), 123178333l, 232444994l)
       try {
-        complete(gson.toJson(ssmServer.getCommandExecutor.listCommandsInfo(ruleId, null))))
+        complete(gson.toJson(ssmServer.getCommandExecutor.listCommandsInfo(ruleId, null)))
       } catch {
         case e: Exception => failWith(e)
       }
