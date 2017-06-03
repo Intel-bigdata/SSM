@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions;
+package org.smartdata.common.actions;
 
 /**
  * Provide info to action user.
@@ -32,6 +32,10 @@ public class ActionDescriptor {
     this.displayName = displayName;
     this.usage = usage;
     this.comment = comment;
+  }
+
+  public static Builder newBuilder() {
+    return Builder.create();
   }
 
   public String getActionName() {
@@ -65,4 +69,40 @@ public class ActionDescriptor {
   public void setComment(String comment) {
     this.comment = comment;
   }
+
+  public static class Builder {
+    private String actionName;
+    private String displayName; // if not provided, use actionName instead
+    private String usage;     // Info about usage/arguments if any
+    private String comment;   // Provide detailed info if any
+
+    public Builder setActionName(String actionName) {
+      this.actionName = actionName;
+      return this;
+    }
+
+    public Builder setDisplayName(String displayName) {
+      this.displayName = displayName;
+      return this;
+    }
+
+    public Builder setUsage(String usage) {
+      this.usage = usage;
+      return this;
+    }
+
+    public Builder setComment(String comment) {
+      this.comment = comment;
+      return this;
+    }
+
+    public static Builder create() {
+      return new Builder();
+    }
+
+    public ActionDescriptor build() {
+      return new ActionDescriptor(actionName, displayName, usage, comment);
+    }
+  }
+
 }

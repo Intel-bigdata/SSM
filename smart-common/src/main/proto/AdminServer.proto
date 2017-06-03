@@ -172,6 +172,28 @@ message ListActionInfoOfLastActionsResponseProto {
   repeated ActionInfoProto actionInfoList = 1;
 }
 
+message ActionDescriptorProto {
+  required string actionName = 1;
+  required string displayName = 2;
+  required string usage = 3;
+  required string comment = 4;
+}
+
+message SubmitCommandRequestProto {
+  required string cmd = 1;
+}
+
+message SubmitCommandResponseProto {
+  required int64 res = 10;
+}
+
+message ListActionsSupportedRequestProto {
+}
+
+message ListActionsSupportedResponseProto {
+  repeated ActionDescriptorProto actDesList = 1;
+}
+
 service protoService {
   rpc getServiceState (GetServiceStateRequestProto)
   returns (GetServiceStateResponseProto);
@@ -203,4 +225,10 @@ service protoService {
   returns (GetActionInfoResponseProto);
   rpc listActionInfoOfLastActions (ListActionInfoOfLastActionsRequestProto)
   returns (ListActionInfoOfLastActionsResponseProto);
+  rpc submitCommand (SubmitCommandRequestProto)
+  returns (SubmitCommandResponseProto);
+  rpc listActionsSupported (ListActionsSupportedRequestProto)
+  returns (ListActionsSupportedResponseProto);
+
+
 }

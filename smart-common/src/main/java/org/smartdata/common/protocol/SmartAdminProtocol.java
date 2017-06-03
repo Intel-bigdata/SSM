@@ -17,6 +17,7 @@
  */
 package org.smartdata.common.protocol;
 
+import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.actions.ActionInfo;
@@ -118,4 +119,9 @@ public interface SmartAdminProtocol {
 
   List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
       throws IOException;
+
+  long submitCommand(String cmd) throws IOException;
+
+  List<ActionDescriptor> listActionsSupported() throws IOException;
+
 }

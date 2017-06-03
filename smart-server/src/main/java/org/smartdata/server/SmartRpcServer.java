@@ -23,6 +23,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
+import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.ClientServerProto;
@@ -219,6 +220,18 @@ public class SmartRpcServer implements SmartServerProtocols {
   @Override
   public List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
       throws IOException {
+    checkIfActive();
+    return null;
+  }
+
+  @Override
+  public long submitCommand(String cmd) throws IOException {
+    checkIfActive();
+    return 0;
+  }
+
+  @Override
+  public List<ActionDescriptor> listActionsSupported() throws IOException {
     checkIfActive();
     return null;
   }
