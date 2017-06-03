@@ -30,12 +30,11 @@ public class CommandDescriptor {
   private long ruleId;
   private List<String> actionNames = new ArrayList<>();
   private List<String[]> actionArgs = new ArrayList<>();
-  private String commandString;
+  private String commandString = null;
 
   private static final String REG_ACTION_NAME = "^[a-zA-Z]+[a-zA-Z0-9_]*";
 
-  public String getCommandString() {
-    return commandString;
+  public CommandDescriptor() {
   }
 
   public CommandDescriptor(String commandString) throws ParseException {
@@ -43,8 +42,18 @@ public class CommandDescriptor {
   }
 
   public CommandDescriptor(String commandString, long ruleId) throws ParseException {
-    this.commandString = commandString;
     this.ruleId = ruleId;
+    setCommandString(commandString);
+  }
+
+  public String getCommandString() {
+    return commandString == null ? toCommandString() : commandString;
+  }
+
+  public void setCommandString(String commandString) throws ParseException {
+    actionNames.clear();
+    actionArgs.clear();
+    this.commandString = commandString;
     parseCommandString(commandString);
   }
 
@@ -73,6 +82,8 @@ public class CommandDescriptor {
     return actionNames.size();
   }
 
+  // TODO: descriptor --> String
+
   /**
    * Construct an CommandDescriptor from command string.
    * @param cmdString
@@ -83,6 +94,42 @@ public class CommandDescriptor {
       throws ParseException {
     CommandDescriptor des = new CommandDescriptor(cmdString);
     return des;
+  }
+
+  public String toCommandString() {
+    if (size() == 0) {
+      return "";
+    }
+
+    String cmds = getActionName(0) + " "
+        + formatActionArguments(getActionArgs(0));
+    for (int i = 1; i < size(); i++) {
+      cmds += " ; " + getActionName(i) + " "
+          + formatActionArguments(getActionArgs(i));
+    }
+    return cmds;
+  }
+
+  public boolean equals(CommandDescriptor des) {
+    if (des == null || this.size() != des.size()) {
+      return false;
+    }
+
+    for (int i = 0; i < this.size(); i++) {
+      if (!actionNames.get(i).equals(des.getActionName(i))
+          || actionArgs.get(i).length != des.getActionArgs(i).length) {
+        return false;
+      }
+
+      String[] srcArgs = actionArgs.get(i);
+      String[] destArgs = des.getActionArgs(i);
+      for (int j = 0; j < actionArgs.get(i).length; j++) {
+        if (!srcArgs[j].equals(destArgs[j])) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   private void parseCommandString(String command)
@@ -99,6 +146,7 @@ public class CommandDescriptor {
     boolean sucing = false;
     boolean string = false;
     for (int idx = 0; idx < chars.length; idx++) {
+      String tokenString = String.valueOf(token, 0, tokenlen);
       c = chars[idx];
       if (c == ' ' || c == '\t') {
         if (string) {
@@ -122,11 +170,13 @@ public class CommandDescriptor {
 
         verify(blocks, idx);
       } else if (c == '\\') {
+        boolean tempAdded = false;
         if (sucing || string) {
           token[tokenlen++] = chars[++idx];
+          tempAdded = true;
         }
 
-        if (!sucing) {
+        if (!tempAdded && !sucing) {
           sucing = true;
           token[tokenlen++] = chars[++idx];
         }
@@ -157,8 +207,12 @@ public class CommandDescriptor {
           throw new ParseException("String cannot in more than one line", idx);
         }
       } else {
-        sucing = true;
-        token[tokenlen++] = chars[idx];
+        if (string) {
+          token[tokenlen++] = chars[idx];
+        } else {
+          sucing = true;
+          token[tokenlen++] = chars[idx];
+        }
       }
     }
 
@@ -185,5 +239,24 @@ public class CommandDescriptor {
     String[] args = blocks.toArray(new String[blocks.size()]);
     addAction(name, args);
     blocks.clear();
+  }
+
+  private String formatActionArguments(String[] args) {
+    // TODO: check more cases / using another way
+    if (args == null || args.length == 0) {
+      return "";
+    }
+
+    String ret = "";
+    for (String arg : args) {
+      String rep = arg.replace("\\", "\\\\");
+      rep = rep.replace("\"", "\\\"");
+      if (rep.matches(".*\\s+.*")) {
+        ret += " \"" + rep + "\"";
+      } else {
+        ret += " " + rep;
+      }
+    }
+    return ret.trim();
   }
 }
