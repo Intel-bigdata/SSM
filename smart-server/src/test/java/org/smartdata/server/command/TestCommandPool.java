@@ -132,7 +132,6 @@ public class TestCommandPool {
     actions[2].setDfsClient(client);
     actions[2].setContext(new SmartContext(smartConf));
     actions[2].init(new String[]{"/testCacheFile"});
-    actions[2].getActionStatus().setId(UUID.randomUUID());
     // New Command
     Command cmd = new Command(actions, null);
     cmd.setId(1);
