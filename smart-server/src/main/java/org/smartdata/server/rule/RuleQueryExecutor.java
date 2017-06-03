@@ -21,6 +21,7 @@ import org.smartdata.common.CommandState;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.server.command.CommandDescriptor;
 import org.smartdata.server.rule.parser.TimeBasedScheduleInfo;
 import org.smartdata.server.rule.parser.TranslateResult;
 import org.smartdata.server.metastore.DBAdapter;
@@ -275,18 +276,19 @@ public class RuleQueryExecutor implements Runnable {
 
       List<String> files = executeFileRuleQuery();
       long endCheckTime = System.currentTimeMillis();
-      List<CommandInfo> commands = generateCommands(files, info);
+      int numCmdSubmitted = submitCommands(files, rid);
+      ruleManager.updateRuleInfo(rid, null, timeNow(), 1, numCmdSubmitted);
       if (exited) {
         exitSchedule();
       }
-      ruleManager.addNewCommands(commands);
-      ruleManager.updateRuleInfo(rid, null, timeNow(), 1, commands.size());
       //System.out.println(this + " -> " + System.currentTimeMillis());
       long endProcessTime = System.currentTimeMillis();
 
       if (endProcessTime - startCheckTime > 3000 || LOG.isDebugEnabled()) {
         LOG.warn("Rule " + ctx.getRuleId() + " execution took "
-            + (endProcessTime - startCheckTime) + "ms.");
+            + (endProcessTime - startCheckTime) + "ms. QueryTime = "
+            + (endCheckTime - startCheckTime) + "ms, SubmitTime = "
+            + (endProcessTime - endCheckTime) + "ms.");
       }
 
     } catch (IOException e) {
@@ -305,22 +307,36 @@ public class RuleQueryExecutor implements Runnable {
     temp[1] += "The exception is created deliberately";
   }
 
-  public List<CommandInfo> generateCommands(List<String> files,
-      RuleInfo info) {
-    if (files == null || files.size() == 0) {
-      return new ArrayList<>();
+  private int submitCommands(List<String> files, long ruleId) {
+    if (ruleManager.getCommandExecutor() == null) {
+      return 0;
     }
-
-    long time = System.currentTimeMillis();
-    Map<String, String> parameters = tr.getActionParams();
-    List<CommandInfo> cmds = new ArrayList<>(files.size());
+    int nSubmitted = 0;
+    CommandDescriptor template = tr.getCmdDescriptor();
+    int actions = template.size();
     for (String file : files) {
-      parameters.put("_FILE_PATH_", file);
-      cmds.add(new CommandInfo(0L, info.getId(), tr.getActionType(),
-          CommandState.PENDING, JsonUtil.toJsonString(parameters),
-          time, time));
+      if (!exited) {
+        try {
+          CommandDescriptor cmd = new CommandDescriptor();
+          for (int actId = 0; actId < actions; actId++) {
+            String[] argOrg = template.getActionArgs(actId);
+            if (argOrg.length == 0) {
+              cmd.addAction(template.getActionName(actId), new String[] {file});
+            } else {
+              cmd.addAction(template.getActionName(actId), argOrg.clone());
+            }
+          }
+          cmd.setRuleId(ruleId);
+          ruleManager.getCommandExecutor().submitCommand(cmd);
+        } catch (IOException e) {
+          // ignore this and continue submit
+          LOG.error("Failed to submit command ");
+        }
+      } else {
+        break;
+      }
     }
-    return cmds;
+    return nSubmitted;
   }
 
   public boolean isExited() {
