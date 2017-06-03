@@ -17,8 +17,7 @@
  */
 package org.smartdata.server.rule.parser;
 
-
-import org.smartdata.common.actions.ActionType;
+import org.smartdata.server.command.CommandDescriptor;
 
 import java.util.List;
 import java.util.Map;
@@ -33,20 +32,27 @@ public class TranslateResult {
   private List<String> sqlStatements;
   private Map<String, List<Object>> dynamicParameters;
   private TimeBasedScheduleInfo tbScheduleInfo;
-  private ActionType actionType;
-  private Map<String, String> actionParams;
+  private CommandDescriptor cmdDescriptor;
+
 
   public TranslateResult(List<String> sqlStatements,
       List<String> tempTableNames, Map<String, List<Object>> dynamicParameters,
       int retSqlIndex, TimeBasedScheduleInfo tbScheduleInfo,
-      ActionType actionType, Map<String, String> actionParams) {
+      CommandDescriptor cmdDescriptor) {
     this.sqlStatements = sqlStatements;
     this.staticTempTables = tempTableNames;
     this.dynamicParameters = dynamicParameters;
     this.retSqlIndex = retSqlIndex;
     this.tbScheduleInfo = tbScheduleInfo;
-    this.actionType = actionType;
-    this.actionParams = actionParams;
+    this.cmdDescriptor = cmdDescriptor;
+  }
+
+  public CommandDescriptor getCmdDescriptor() {
+    return cmdDescriptor;
+  }
+
+  public void setCmdDescriptor(CommandDescriptor cmdDescriptor) {
+    this.cmdDescriptor = cmdDescriptor;
   }
 
   public void setSqlStatements(List<String> sqlStatements) {
@@ -75,13 +81,5 @@ public class TranslateResult {
 
   public boolean isTimeBased() {
     return tbScheduleInfo != null;
-  }
-
-  public ActionType getActionType() {
-    return actionType;
-  }
-
-  public Map<String, String> getActionParams() {
-    return actionParams;
   }
 }
