@@ -20,6 +20,7 @@ package org.smartdata.common.protocolPB;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
+import org.smartdata.common.protocol.AdminServerProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.GetRuleInfoRequestProto;
@@ -50,6 +51,10 @@ import org.smartdata.common.protocol.AdminServerProto.GetActionInfoResponseProto
 import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.GetActionInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCommandResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCommandRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedRequestProto;
 
 @ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.SmartAdminProtocolPB",
     protocolVersion = 1)
@@ -101,4 +106,13 @@ public interface SmartAdminProtocolPB {
   ListActionInfoOfLastActionsResponseProto listActionInfoOfLastActions(
       RpcController controller, ListActionInfoOfLastActionsRequestProto req)
       throws ServiceException;
+
+  SubmitCommandResponseProto submitCommand(
+      RpcController controller, SubmitCommandRequestProto req)
+      throws ServiceException;
+
+  ListActionsSupportedResponseProto listActionsSupported(
+      RpcController controller, ListActionsSupportedRequestProto req)
+      throws ServiceException;
+
 }

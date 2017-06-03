@@ -45,13 +45,19 @@ HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching
 
 **Phase 2.** Refine SSM framework and support user solutions:
 * Small files support and compaction;
-* Cluster Disaster Recovery;
+* Cluster disaster recovery;
 * Support block level erasure coding;
 * To support the new desired actions, enhance the SSM framework and infrastructure.
 
+**Phase 3.** Optimize further for computing frameworks and workloads:
+* Hive on SSM;
+* HBase on SSM;
+* Spark on SSM;
+* Deep Learning on SSM.
+
 Phase I -- Use Cases 
 ------------
-### 1. Cache hotest data
+### 1. Cache most hot data
 When the files got very hot, they can be moved from fast storage into cache memory to achieve the best read performance. The following shows the example of moving data to memory cache if the data has been read over 3 times during the last 5 minutes
 
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/cache-case.png)

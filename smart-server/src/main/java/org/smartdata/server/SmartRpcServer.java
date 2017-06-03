@@ -23,6 +23,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
+import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.ClientServerProto;
@@ -40,6 +41,7 @@ import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -227,5 +229,19 @@ public class SmartRpcServer implements SmartServerProtocols {
   public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
     checkIfActive();
     ssm.getStatesManager().reportFileAccessEvent(event);
+  }
+
+  @Override
+  public long submitCommand(String cmd) throws IOException {
+    checkIfActive();
+    // TODO: to be implemented
+    return 0;
+  }
+
+  @Override
+  public List<ActionDescriptor> listActionsSupported() throws IOException {
+    checkIfActive();
+    // TODO: to be implemented
+    return new ArrayList<>();
   }
 }

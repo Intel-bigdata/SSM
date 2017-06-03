@@ -53,7 +53,7 @@ under the License.
               </label>
               <div class="col-sm-9">
                 <select id="actionList" class="form-control" ng-model="data.model">
-                  <option ng-repeat="action in data.actions" value="{{action.command}}">{{action.description}}</option>
+                  <option ng-repeat="action in data.actions" value="{{action.actionName}}">{{action.displayName}}</option>
                 </select>
               </div>
             </div>
