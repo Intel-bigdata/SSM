@@ -128,18 +128,18 @@ public class RuleManager implements ModuleSequenceProto {
    *                            discarded if true.
    * @throws IOException
    */
-  public void DeleteRule(long ruleID, boolean dropPendingCommands)
+  public void deleteRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
     RuleContainer container = checkIfExists(ruleID);
     container.DeleteRule();
   }
 
-  public void ActivateRule(long ruleID) throws IOException {
+  public void activateRule(long ruleID) throws IOException {
     RuleContainer container = checkIfExists(ruleID);
     submitRuleToScheduler(container.ActivateRule(this));
   }
 
-  public void DisableRule(long ruleID, boolean dropPendingCommands)
+  public void disableRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
     RuleContainer container = checkIfExists(ruleID);
     container.DisableRule();
