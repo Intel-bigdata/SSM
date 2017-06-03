@@ -110,10 +110,7 @@ commands
     ;
 
 command
-    : 'cachefile'
-    | 'uncachefile'
-    | 'movefile' STRING
-    | 'archive'
+    : ID .*?
     ;
 
 id

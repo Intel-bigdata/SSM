@@ -26,11 +26,25 @@ import org.junit.Test;
 public class TestCommandDescriptor {
 
   @Test
-  public void testTrans() throws Exception {
+  public void testStringToDescriptor() throws Exception {
     String cmd = "someaction arg1 -arg2 /dir/foo ; cache /testFile; action3";
     CommandDescriptor des = CommandDescriptor.fromCommandString(cmd);
     Assert.assertTrue(des.size() == 3);
     Assert.assertTrue(des.getActionName(2).equals("action3"));
     Assert.assertTrue(des.getActionArgs(2).length == 0);
+  }
+
+  @Test
+  public void testTrans() throws Exception {
+    CommandDescriptor des = new CommandDescriptor();
+    des.addAction("action1", new String[] {"-filepath ", "/dir/foo x\""});
+    des.addAction("action2", new String[] {"1", "2", "3"});
+    des.addAction("action3", new String[] {"ONE_SSD", "\"2016-03-19 19:42:00\""});
+    des.addAction("action4", new String[] {"-len", "123", "C:\\windows\\some.txt"});
+
+    String cmdString = des.getCommandString();
+    CommandDescriptor transDes = new CommandDescriptor(cmdString);
+    Assert.assertTrue(des.size() == transDes.size());
+    Assert.assertTrue(transDes.equals(des));
   }
 }
