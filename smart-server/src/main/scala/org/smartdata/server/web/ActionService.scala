@@ -53,14 +53,14 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
   override protected def doRoute(implicit mat: Materializer): Route =
     pathPrefix("actions" / LongNumber) { actionId =>
       path("detail") {
-        complete(gson.toJson(actions.asScala.find(_.getActionId == actionId).get))
+        complete(gson.toJson(ssmServer.getCommandExecutor.getActionInfo(actionId)))
       }
     } ~
       path("actiontypes") {
-        complete(gson.toJson(actionTypes))
+        complete(gson.toJson(ssmServer.getCommandExecutor.listActionsSupported()))
       } ~
       path("actionlist") {
-        complete(gson.toJson(actions))
+        complete(gson.toJson(ssmServer.getCommandExecutor.listNewCreatedActions(20)))
       } ~
       path("submitaction" / Segment) { actionType =>
         post {
@@ -73,7 +73,12 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
               .setFinished(false)
               .setSuccessful(false).build()
             actions.add(action)
-            complete("Success")
+            try {
+              ssmServer.getCommandExecutor.submitCommand(actionType + " " + args)
+              complete("Success")
+            } catch {
+              case e: Exception => failWith(e)
+            }
           }
         }
       }
