@@ -30,6 +30,8 @@ High Level Considerations
 
 Architecture
 ------------
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/high-level-architecture.png" width="461" height="295" />
+
 The detail SSM architecture is [here](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md).
 
 Development Phases
