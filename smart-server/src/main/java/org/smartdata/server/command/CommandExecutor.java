@@ -261,7 +261,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         // Kill thread
         execThreadPool.deleteCommand(cid);
       } else if (inUpdateCache(cid)) {
-        RemoveFromUpdateCache(cid);
+        removeFromUpdateCache(cid);
       } else {
         // Remove from Pending queue
         cmdsInState.get(CommandState.PENDING.getValue()).remove(cid);
@@ -316,7 +316,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return false;
   }
 
-  private void RemoveFromUpdateCache(long cid) throws IOException {
+  private void removeFromUpdateCache(long cid) throws IOException {
     if (statusCache.size() == 0) {
       return;
     }

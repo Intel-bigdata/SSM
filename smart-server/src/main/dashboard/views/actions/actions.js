@@ -30,13 +30,16 @@ angular.module('dashboard')
           resolve: {
             actions0: ['models', function (models) {
               return models.$get.actions();
+            }],
+            actionTypes: ['models', function (models) {
+              return models.$get.actionTypes();
             }]
           }
         });
     }])
 
-  .controller('ActionsCtrl', ['$scope', '$modal', '$state', '$sortableTableBuilder', '$dialogs', 'actions0',
-    function ($scope, $modal, $state, $stb, $dialogs, actions0) {
+  .controller('ActionsCtrl', ['$scope', '$modal', '$state', '$sortableTableBuilder', '$dialogs', 'actions0', 'actionTypes',
+    function ($scope, $modal, $state, $stb, $dialogs, actions0, actionTypes) {
       'use strict';
 
       var submitWindow = $modal({
@@ -44,7 +47,12 @@ angular.module('dashboard')
         controller: 'ActionSubmitCtrl',
         backdrop: 'static',
         keyboard: true,
-        show: false
+        show: false,
+        resolve: {
+          actionTypes: function () {
+            return actionTypes;
+          }
+        }
       });
 
       $scope.openSubmitActionDialog = function () {
