@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.smartdata.SmartContext;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.actions.ActionStatus;
+import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
@@ -42,6 +43,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -293,7 +295,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   List<ActionDescriptor> listActionsSupported() throws IOException {
     //TODO add more information for list ActionDescriptor
     ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
-    for (String name: ActionRegistry.instance().namesOfAction()) {
+    for (String name : ActionRegistry.instance().namesOfAction()) {
       actionDescriptors.add(new ActionDescriptor(name, name, "", ""));
     }
     return actionDescriptors;
@@ -442,7 +444,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     // commandDescriptor.();
     List<SmartAction> actions = new ArrayList<>();
     SmartAction current;
-    for(int index = 0; index < commandDescriptor.size(); index++) {
+    for (int index = 0; index < commandDescriptor.size(); index++) {
       current = createAction(commandDescriptor.getActionName(index));
       actionPool.put(current.getActionStatus().getId(), current);
       if (current == null) {
@@ -505,20 +507,12 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return cmd;
   }
 
-  public List<ActionInfo> listActions(int maxNumActions) throws IOException {
+  public List<ActionInfo> listNewCreatedActions(int maxNumActions) throws IOException {
     ArrayList<ActionInfo> actionInfos = new ArrayList<>();
-    int count = 0;
     boolean flag = true;
-    for (Command cmd: commandPool.getcommands()) {
-      if (!flag) {
-        break;
-      }
+    for (Command cmd : commandPool.getcommands()) {
       long cmdId = cmd.getId();
-      for (SmartAction smartAction: cmd.getSmartActions()) {
-        if (count >= maxNumActions) {
-          flag = false;
-          break;
-        }
+      for (SmartAction smartAction : cmd.getSmartActions()) {
         ActionStatus status = smartAction.getActionStatus();
         actionInfos.add(new ActionInfo(cmdId, status.getId(),
             cmdId, smartAction.getName(), smartAction.getArguments(), status.getResultPrintStream().toString(),
@@ -526,7 +520,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
             status.isSuccessful(), status.getRunningTime(), status.getPercentage()));
       }
     }
-    return actionInfos;
+    // Sort and get top maxNumActions
+    Collections.sort(actionInfos, new ActionInfoComparator());
+    if (maxNumActions >= actionInfos.size()) {
+      return actionInfos;
+    } else {
+      return actionInfos.subList(0, maxNumActions);
+    }
   }
 
   public List<CommandInfo> getPendingCommandsFromDB() throws IOException {

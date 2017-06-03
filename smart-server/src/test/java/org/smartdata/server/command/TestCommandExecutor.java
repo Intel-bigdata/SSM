@@ -62,7 +62,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
     ssm.getCommandExecutor().submitCommand(commandDescriptor);
     Thread.sleep(1200);
-    Assert.assertTrue(ssm.getCommandExecutor().listActions(10).size() > 0);
+    Assert.assertTrue(ssm.getCommandExecutor().listNewCreatedActions(10).size() > 0);
     testCommandExecutorHelper();
   }
 
@@ -139,7 +139,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     DBAdapter dbAdapter = ssm.getDBAdapter();
     String cidCondition = ">= 1 ";
     String ridCondition = ">= 1 ";
-    while(true) {
+    while (true) {
       Thread.sleep(2000);
       int current = ssm.getCommandExecutor().cacheSize();
       System.out.printf("Command Cache size = %d\n ", current);
