@@ -22,6 +22,7 @@ import org.smartdata.common.CommandState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -75,6 +76,10 @@ public class CommandPool {
 
   public Command getCommand(long cid) {
     return commandMap.get(cid);
+  }
+
+  public List<Command> getcommands() {
+    return (List<Command>)commandMap.values();
   }
 
   public Thread getCommandThread(long cid) {

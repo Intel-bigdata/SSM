@@ -29,6 +29,7 @@ import java.io.PrintStream;
 public abstract class SmartAction {
   private String[] actionArgs;
   private SmartContext context;
+  protected String name;
   protected ActionStatus actionStatus;
   protected PrintStream resultOut;
   protected PrintStream logOut;
@@ -41,6 +42,14 @@ public abstract class SmartAction {
     this.actionStatus = new ActionStatus();
     resultOut = actionStatus.getResultPrintStream();
     logOut = actionStatus.getLogPrintStream();
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public SmartContext getContext() {
