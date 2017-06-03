@@ -22,6 +22,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.admin.protocolPB.SmartAdminProtocolAdminSideTranslatorPB;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
@@ -158,5 +159,17 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
   public List<ActionInfo> listActionInfoOfLastActions(int maxNumActions) throws IOException {
     checkOpen();
     return ssm.listActionInfoOfLastActions(maxNumActions);
+  }
+
+  @Override
+  public long submitCommand(String cmd) throws IOException {
+    checkOpen();
+    return ssm.submitCommand(cmd);
+  }
+
+  @Override
+  public List<ActionDescriptor> listActionsSupported() throws IOException {
+    checkOpen();
+    return ssm.listActionsSupported();
   }
 }
