@@ -83,6 +83,11 @@
         <version>${akka.http.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.xerial</groupId>
+        <artifactId>sqlite-jdbc</artifactId>
+        <version>3.16.1</version>
+      </dependency>
+      <dependency>
         <groupId>com.alibaba</groupId>
         <artifactId>druid</artifactId>
         <version>${druid.version}</version>
@@ -220,11 +225,6 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-hdfs</artifactId>
         <version>${hadoop.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xerial</groupId>
-        <artifactId>sqlite-jdbc</artifactId>
-        <version>3.16.1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
