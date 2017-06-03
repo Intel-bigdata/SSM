@@ -90,7 +90,7 @@
       <dependency>
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-runtime</artifactId>
-        <version>${druid.version}</version>
+        <version>${antlr4.version}</version>
       </dependency>
       <dependency>
         <groupId>org.webjars</groupId>
