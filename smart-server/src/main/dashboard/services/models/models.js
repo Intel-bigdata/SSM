@@ -136,7 +136,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
           });
         },
         actions: function (objs) {
-          return decoder._asAssociativeArray(objs, decoder.action, 'actionName');
+          return decoder._asAssociativeArray(objs, decoder.action, 'actionId');
         },
         action: function (obj) {
           var current = Date.now();
