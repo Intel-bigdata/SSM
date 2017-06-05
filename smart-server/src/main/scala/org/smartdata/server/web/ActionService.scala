@@ -19,6 +19,7 @@ package org.smartdata.server.web
 
 import java.util
 
+import scala.collection.JavaConverters._
 import akka.http.scaladsl.server.Directives.{complete, path, pathPrefix, _}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.ParameterDirectives.ParamMagnet
@@ -56,7 +57,8 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
   override protected def doRoute(implicit mat: Materializer): Route =
     pathPrefix("actions" / LongNumber) { actionId =>
       path("detail") {
-        complete(gson.toJson(ssmServer.getCmdletManager.getActionInfo(actionId)))
+        complete(gson.toJson(actions.asScala.find(_.getActionId == actionId).get))
+//        complete(gson.toJson(ssmServer.getCommandExecutor.getActionInfo(actionId)))
       }
     } ~
       path("cachedfiles") {
@@ -70,7 +72,8 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
         complete(gson.toJson(ActionRegistry.supportedActions()))
       } ~
       path("actionlist") {
-        complete(gson.toJson(ssmServer.getCmdletManager.listNewCreatedActions(20)))
+        complete(gson.toJson(actions))
+        //        complete(gson.toJson(ssmServer.getCommandExecutor.listNewCreatedActions(20)))
       } ~
       path("submitaction" / Segment) { actionType =>
         post {
@@ -84,7 +87,7 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
               .setSuccessful(false).build()
             actions.add(action)
             try {
-              ssmServer.getCmdletManager.submitCmdlet(actionType + " " + args)
+//              ssmServer.getCommandExecutor.submitCommand(actionType + " " + args)
               complete("Success")
             } catch {
               case e: Exception => failWith(e)

@@ -39,9 +39,9 @@ class RuleService(ssmServer: SmartEngine) extends BasicService {
   override protected def doRoute(implicit mat: Materializer): Route = pathPrefix("rules" / IntNumber) { ruleId =>
     path("start") {
       post {
-        rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.ACTIVE))
         try {
-          ssmServer.getRuleManager.activateRule(ruleId)
+          //          ssmServer.getRuleManager.activateRule(ruleId)
+          rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.ACTIVE))
           complete("success")
         } catch {
           case e: Exception => failWith(e)
@@ -50,9 +50,9 @@ class RuleService(ssmServer: SmartEngine) extends BasicService {
     } ~
     path("stop") {
       delete {
-        rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.DISABLED))
         try {
-          ssmServer.getRuleManager.disableRule(ruleId, true)
+          //          ssmServer.getRuleManager.disableRule(ruleId, true)
+          rules.asScala.filter(_.getId == ruleId).foreach(_.setState(RuleState.DISABLED))
           complete("success")
         } catch {
           case e: Exception => failWith(e)
@@ -61,7 +61,8 @@ class RuleService(ssmServer: SmartEngine) extends BasicService {
     } ~
     path("detail") {
       try {
-        complete(gson.toJson(ssmServer.getRuleManager.getRuleInfo(ruleId)))
+        complete(gson.toJson(rules.asScala.find(_.getId == ruleId).get))
+//        complete(gson.toJson(ssmServer.getRuleManager.getRuleInfo(ruleId)))
       } catch {
         case e: Exception => failWith(e)
       }
@@ -77,7 +78,8 @@ class RuleService(ssmServer: SmartEngine) extends BasicService {
       val cmdlet2 = new CmdletInfo(1, 1, CmdletState.PENDING,
         JsonUtil.toJsonString(smap1), 123178333l, 232444994l)
       try {
-        complete(gson.toJson(ssmServer.getCmdletManager.listCmdletsInfo(ruleId, null)))
+        complete(gson.toJson(util.Arrays.asList(cmdlet1, cmdlet2)))
+//        complete(gson.toJson(ssmServer.getCommandExecutor.listCommandsInfo(ruleId, null)))
       } catch {
         case e: Exception => failWith(e)
       }
@@ -85,7 +87,8 @@ class RuleService(ssmServer: SmartEngine) extends BasicService {
   } ~
     path("rulelist") {
       try {
-        complete(gson.toJson(ssmServer.getRuleManager.listRulesInfo()))
+        complete(gson.toJson(rules))
+//        complete(gson.toJson(ssmServer.getRuleManager.listRulesInfo()))
       } catch {
         case e: Exception => failWith(e)
       }
@@ -95,9 +98,9 @@ class RuleService(ssmServer: SmartEngine) extends BasicService {
       entity(as[String]) { request =>
         val rule = java.net.URLDecoder.decode(request, "UTF-8")
         System.out.println("Adding rule: " + rule)
-        //addRuleInfo(rule)
         try {
-          ssmServer.getRuleManager.submitRule(rule, RuleState.DISABLED)
+          addRuleInfo(rule)
+//          ssmServer.getRuleManager.submitRule(rule, RuleState.DISABLED)
           complete("Success")
         } catch {
           case e: Exception => failWith(e)
