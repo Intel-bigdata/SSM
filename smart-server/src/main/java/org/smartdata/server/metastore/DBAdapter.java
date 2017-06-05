@@ -1031,6 +1031,54 @@ public class DBAdapter {
     }
   }
 
+  public void dropAllTables() throws SQLException {
+        Connection conn = getConnection();
+        try {
+            String url = conn.getMetaData().getURL();
+            if (url.startsWith("jdbc:sqlite:")){
+                dropAllTablesSqlite(conn);
+              }else if (url.startsWith("jdbc:mysql:")){
+                dropAllTablesMysql(conn,url);
+              }
+          }finally {
+            closeConnection(conn);
+          }
+      }
+
+       public void dropAllTablesSqlite(Connection conn) throws SQLException {
+        try {
+            Statement s = conn.createStatement();
+            ResultSet rs = s.executeQuery("select tbl_name from sqlite_master;");
+            List<String> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(rs.getString(1));
+              }
+            for (String tb : list) {
+                if (!"sqlite_sequence".equals(tb))
+                    s.execute("DROP TABLE IF EXISTS '" + tb + "';");
+              }
+          } finally {
+            closeConnection(conn);
+          }
+      }
+
+       public void dropAllTablesMysql(Connection conn,String url) throws SQLException {
+        Statement stat = conn.createStatement();
+        if(false==url.contains("?")){
+            throw new SQLException("invalid url without db_name");
+          }
+        String dbName = url.substring(url.indexOf("/",13) + 1, url.indexOf("?"));
+        ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM " +
+                "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
+        List<String> list = new ArrayList<>();
+        while (rs.next()) {
+            list.add(rs.getString(1));
+          }
+        for (String tb : list) {
+            stat.execute("drop table if exists " + tb + ";");
+          }
+      }
+
   @VisibleForTesting
   public ResultSet executeQuery(String sqlQuery) throws SQLException {
     Connection conn = getConnection();
