@@ -116,15 +116,14 @@ If both (1) and (2) are finished, SmartDFSClient then will return as
 success. If step (1) fails, then the operation will return with failure.
 If step (2) fails, there are two choices for user,
 
-	* Retry the action a few times(configurable), if still fail, rollback
-    step (1), operation return with failure
+* Retry the action a few times(configurable), if still fail, rollback
+  step (1), operation return with failure
+* Tell Smart Server to start a “replicate data to Secondary cluster”
+  asynchronous action, return the operation with success. This is
+  Step (3). Once the replication action is recorded, SmartDFSClient
+  will return immediately.
 
-	* Tell Smart Server to start a “replicate data to Secondary cluster”
-    asynchronous action, return the operation with success. This is
-    Step (3). Once the replication action is recorded, SmartDFSClient
-    will return immediately.
-
-4  SSM sever will schedule the replication action to “SSM Agent” which
+4.  SSM sever will schedule the replication action to “SSM Agent” which
     is near the Datanode who has the blocks of the source file.
 
 5.  SSM agent pull the data from primary HDFS cluster
