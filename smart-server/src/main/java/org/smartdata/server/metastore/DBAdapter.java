@@ -876,7 +876,7 @@ public class DBAdapter {
 
   public List<ActionInfo> getNewCreatedActionsTableItem(int size) throws SQLException {
     if (size <= 0) {
-      return null;
+      return new ArrayList<>();
     }
     String sqlFinal = "SELECT * FROM actions "
         + String.format("ORDER by create_time limit %d", size);
@@ -916,7 +916,7 @@ public class DBAdapter {
 
   private List<ActionInfo> getActions(String sql) throws SQLException {
     QueryHelper queryHelper = new QueryHelper(sql);
-    List<ActionInfo> ret;
+    List<ActionInfo> ret = new ArrayList<>();
     try {
       ResultSet result = queryHelper.executeQuery();
       ret = convertActionsTableItem(result);
