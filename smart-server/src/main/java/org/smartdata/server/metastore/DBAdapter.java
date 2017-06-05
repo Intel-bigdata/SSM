@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.XAttrHelper;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.metastore.CachedFileStatus;
@@ -31,6 +32,7 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,6 +40,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -87,7 +90,7 @@ public class DBAdapter {
     public QueryHelper(String query) throws SQLException {
       this.query = query;
       conn = getConnection();
-      if (conn== null) {
+      if (conn == null) {
         throw new SQLException("Invalid null connection");
       }
     }
@@ -96,7 +99,7 @@ public class DBAdapter {
       this.query = query;
       this.conn = conn;
       connProvided = true;
-      if (conn== null) {
+      if (conn == null) {
         throw new SQLException("Invalid null connection");
       }
     }
@@ -172,8 +175,8 @@ public class DBAdapter {
       // TODO: safe check
       String sqlCountFilter =
           (countFilter == null || countFilter.length() == 0) ?
-          "" :
-          "HAVING SUM(count) " + countFilter;
+              "" :
+              "HAVING SUM(count) " + countFilter;
       String sqlFinal = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
 
       qhValues = new QueryHelper(sqlFinal, conn);
@@ -242,7 +245,7 @@ public class DBAdapter {
   }
 
   private Integer getKey(Map<Integer, String> map, String value) {
-    for (Integer key: map.keySet()) {
+    for (Integer key : map.keySet()) {
       if (map.get(key).equals(value)) {
         return key;
       }
@@ -266,7 +269,7 @@ public class DBAdapter {
       throws SQLException {
     Map<String, Long> pathToId = new HashMap<>();
     List<String> values = new ArrayList<>();
-    for(String path: paths) {
+    for (String path : paths) {
       values.add("'" + path + "'");
     }
     String in = StringUtils.join(values, ", ");
@@ -349,7 +352,7 @@ public class DBAdapter {
   /**
    * Convert query result into HdfsFileStatus list.
    * Note: Some of the info in HdfsFileStatus are not the same
-   *       as stored in NN.
+   * as stored in NN.
    *
    * @param resultSet
    * @return
@@ -621,7 +624,7 @@ public class DBAdapter {
         + ", " + info.getNumChecked()
         + ", " + info.getNumCmdsGen()
         + (info.getLastCheckTime() == 0 ? "" : ", " + info.getLastCheckTime())
-        +");";
+        + ");";
 
     QueryHelper queryHelperInsert = new QueryHelper(sql);
     try {
@@ -691,7 +694,7 @@ public class DBAdapter {
             rs.getLong("id"),
             rs.getLong("submit_time"),
             rs.getString("rule_text"),
-            RuleState.fromValue((int)rs.getByte("state")),
+            RuleState.fromValue((int) rs.getByte("state")),
             rs.getLong("checked_count"),
             rs.getLong("commands_generated"),
             rs.getLong("last_check_time")
@@ -733,13 +736,13 @@ public class DBAdapter {
       throws SQLException {
     // Insert single command into commands, update command.id with latest id
     String sql = "INSERT INTO commands (rid, action_id, state, "
-            + "parameters, generate_time, state_changed_time) "
-            + "VALUES('" + command.getRid() + "', '"
-            + command.getActionType().getValue() + "', '"
-            + command.getState().getValue() + "', '"
-            + command.getParameters() + "', '"
-            + command.getGenerateTime() + "', '"
-            + command.getStateChangedTime() + "');";
+        + "parameters, generate_time, state_changed_time) "
+        + "VALUES('" + command.getRid() + "', '"
+        + command.getActionType().getValue() + "', '"
+        + command.getState().getValue() + "', '"
+        + command.getParameters() + "', '"
+        + command.getGenerateTime() + "', '"
+        + command.getStateChangedTime() + "');";
     execute(sql);
     QueryHelper queryHelper = new QueryHelper("SELECT MAX(cid) FROM commands;");
     try {
@@ -766,9 +769,10 @@ public class DBAdapter {
     if (cidCondition != null || ridCondition != null || state != null) {
       sqlFinal = sqlPrefix + sqlCid + sqlRid + sqlState;
       sqlFinal = sqlFinal.replaceFirst("AND ", "");
-      return getCommands(sqlFinal);
+    } else {
+      sqlFinal = sqlPrefix.replaceFirst("WHERE ", "");
     }
-    return null;
+    return getCommands(sqlFinal);
   }
 
   private List<CommandInfo> getCommands(String sql) throws SQLException {
@@ -802,7 +806,7 @@ public class DBAdapter {
   }
 
   public void deleteCommand(long cid) throws SQLException {
-    String sql =  String.format("DELETE from commands WHERE cid = %d;", cid);
+    String sql = String.format("DELETE from commands WHERE cid = %d;", cid);
     execute(sql);
   }
 
@@ -817,8 +821,8 @@ public class DBAdapter {
       CommandInfo commands = new CommandInfo(
           resultSet.getLong("cid"),
           resultSet.getLong("rid"),
-          ActionType.fromValue((int)resultSet.getByte("action_id")),
-          CommandState.fromValue((int)resultSet.getByte("state")),
+          ActionType.fromValue((int) resultSet.getByte("action_id")),
+          CommandState.fromValue((int) resultSet.getByte("state")),
           resultSet.getString("parameters"),
           resultSet.getLong("generate_time"),
           resultSet.getLong("state_changed_time")
@@ -828,10 +832,131 @@ public class DBAdapter {
     return ret;
   }
 
+  private String generateActionSQL(ActionInfo actionInfo) {
+    String sql = "INSERT INTO actions (aid, cid, action_name, args, "
+        + "result, log, successful, create_time, finished, finish_time, progress) "
+        + "VALUES('" + actionInfo.getActionId() + "', '"
+        + actionInfo.getActionName() + "', '"
+        + actionInfo.getCommandId() + "', '"
+        + StringUtils.join(actionInfo.getArgs(), ",") + "', '"
+        + actionInfo.getResult() + "', '"
+        + actionInfo.getLog() + "', '"
+        + actionInfo.isSuccessful() + "', '"
+        + actionInfo.getCreateTime() + "', '"
+        + actionInfo.isFinished() + "', '"
+        + actionInfo.getFinishTime() + "', '"
+        + String.valueOf(actionInfo.getProgress()) + "');";
+    return sql;
+  }
+
+
+  public synchronized void insertActionsTable(ActionInfo[] actionInfos)
+      throws SQLException {
+    Connection conn = getConnection();
+    Statement s = null;
+    try {
+      s = conn.createStatement();
+      for (int i = 0; i < actionInfos.length; i++) {
+        s.addBatch(generateActionSQL(actionInfos[i]));
+      }
+      s.executeBatch();
+    } finally {
+      if (s != null && !s.isClosed()) {
+        s.close();
+      }
+      closeConnection(conn);
+    }
+  }
+
+  public synchronized void insertActionTable(ActionInfo actionInfo)
+      throws SQLException {
+    String sql = generateActionSQL(actionInfo);
+    execute(sql);
+  }
+
+  public List<ActionInfo> getNewCreatedActionsTableItem(int size) throws SQLException {
+    if (size <= 0) {
+      return null;
+    }
+    String sqlFinal = "SELECT * FROM actions "
+        + String.format("ORDER by create_time limit %d", size);
+    return getActions(sqlFinal);
+  }
+
+  public List<ActionInfo> getActionsTableItem(String aidCondition,
+      String cidCondition) throws SQLException {
+    String sqlPrefix = "SELECT * FROM actions WHERE ";
+    String sqlAid = (aidCondition == null) ? "" : "AND aid " + aidCondition;
+    String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
+    String sqlFinal = "";
+    if (aidCondition != null || cidCondition != null) {
+      sqlFinal = sqlPrefix + sqlAid + sqlCid;
+      sqlFinal = sqlFinal.replaceFirst("AND ", "");
+    } else {
+      sqlFinal = sqlPrefix.replaceFirst("WHERE ", "");
+    }
+    return getActions(sqlFinal);
+  }
+
+  public long getMaxActionId() throws SQLException {
+    QueryHelper queryHelper = new QueryHelper("SELECT MAX(aid) FROM actions;");
+    long maxId = 0;
+    try {
+      ResultSet rs = queryHelper.executeQuery();
+      if (rs.next()) {
+        maxId = rs.getLong(1);
+      }
+    } catch (NullPointerException e) {
+      maxId = 0;
+    } finally {
+      queryHelper.close();
+    }
+    return maxId;
+  }
+
+  private List<ActionInfo> getActions(String sql) throws SQLException {
+    QueryHelper queryHelper = new QueryHelper(sql);
+    List<ActionInfo> ret;
+    try {
+      ResultSet result = queryHelper.executeQuery();
+      ret = convertActionsTableItem(result);
+    } finally {
+      queryHelper.close();
+    }
+    return ret;
+  }
+
+  private List<ActionInfo> convertActionsTableItem(ResultSet resultSet)
+      throws SQLException {
+    List<ActionInfo> ret = new LinkedList<>();
+    if (resultSet == null) {
+      return ret;
+    }
+
+    while (resultSet.next()) {
+      ActionInfo actionInfo;
+      actionInfo = new ActionInfo(
+          resultSet.getLong("aid"),
+          resultSet.getLong("cid"),
+          resultSet.getString("action_name"),
+          resultSet.getString("args").split(","),
+          resultSet.getString("result"),
+          resultSet.getString("log"),
+          resultSet.getBoolean("successful"),
+          resultSet.getLong("create_time"),
+          resultSet.getBoolean("finished"),
+          resultSet.getLong("finish_time"),
+          resultSet.getFloat("progress")
+      );
+      ret.add(actionInfo);
+    }
+    return ret;
+  }
+
   public synchronized void insertStoragePolicyTable(StoragePolicy s)
       throws SQLException {
     String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
-      + s.getSid() + "','" + s.getPolicyName() + "');";
+        + s.getSid() + "','" + s.getPolicyName() + "');";
     mapStoragePolicyIdName = null;
     execute(sql);
   }
@@ -893,7 +1018,7 @@ public class DBAdapter {
     List<XAttr> list = new LinkedList<>();
     try {
       rs = queryHelper.executeQuery();
-      while(rs.next()) {
+      while (rs.next()) {
         XAttr xAttr = new XAttr.Builder().setNameSpace(
             XAttr.NameSpace.valueOf(rs.getString("namespace")))
             .setName(rs.getString("name"))
