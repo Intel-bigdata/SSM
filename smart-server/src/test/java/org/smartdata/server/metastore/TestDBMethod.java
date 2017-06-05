@@ -118,7 +118,7 @@ public class TestDBMethod {
   @Test
   public void testInsertCachedFiles() throws Exception {
     reInit();
-    dbAdapter.insertCachedFiles(80l, 123456l,
+    dbAdapter.insertCachedFiles(80l, "testPath", 123456l,
         234567l, 456);
     Assert.assertTrue(dbAdapter.getCachedFileStatus(
         80l).getFromTime() == 123456l);
@@ -127,7 +127,7 @@ public class TestDBMethod {
     Assert.assertTrue(dbAdapter.getCachedFileStatus().get(0)
         .getLastAccessTime() == 234568l);
     List<CachedFileStatus> list = new LinkedList<>();
-    list.add(new CachedFileStatus(321l, 113334l,
+    list.add(new CachedFileStatus(321l, "testPath", 113334l,
         222222l, 222));
     dbAdapter.insertCachedFiles(list);
     Assert.assertTrue(dbAdapter.getCachedFileStatus(321l)

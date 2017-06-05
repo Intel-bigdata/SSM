@@ -462,11 +462,11 @@ public class DBAdapter {
     return ret;
   }
 
-  public synchronized void insertCachedFiles(long fid, long fromTime,
+  public synchronized void insertCachedFiles(long fid, String path, long fromTime,
       long lastAccessTime, int numAccessed) throws SQLException {
-    String sql = "INSERT INTO cached_files (fid, from_time, "
+    String sql = "INSERT INTO cached_files (fid, path, from_time, "
         + "last_access_time, num_accessed) VALUES (" + fid + ","
-        + fromTime + "," + lastAccessTime + ","
+        + path  + "," + fromTime + "," + lastAccessTime + ","
         + numAccessed + ")";
     execute(sql);
   }
@@ -478,10 +478,10 @@ public class DBAdapter {
     try {
       st = conn.createStatement();
       for (CachedFileStatus c : s) {
-        String sql = "INSERT INTO cached_files (fid, from_time, "
+        String sql = "INSERT INTO cached_files (fid, path, from_time, "
             + "last_access_time, num_accessed) VALUES (" + c.getFid() + ","
-            + c.getFromTime() + "," + c.getLastAccessTime() + ","
-            + c.getNumAccessed() + ")";
+            + c.getPath() + "," + c.getFromTime() + ","
+            + c.getLastAccessTime() + "," + c.getNumAccessed() + ")";
         st.addBatch(sql);
       }
       st.executeBatch();
