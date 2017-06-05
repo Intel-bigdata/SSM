@@ -904,7 +904,7 @@ public class DBAdapter {
     try {
       ResultSet rs = queryHelper.executeQuery();
       if (rs.next()) {
-        maxId = rs.getLong(1);
+        maxId = rs.getLong(1) + 1;
       }
     } catch (NullPointerException e) {
       maxId = 0;

@@ -246,14 +246,21 @@ public class TestDBMethod {
   public void testGetMaxActionId() throws Exception {
     reInit();
     long currentId = dbAdapter.getMaxActionId();
-    Assert.assertTrue(currentId == 0);
-    ActionInfo actionInfo = new ActionInfo(1,1,
+    Assert.assertTrue(currentId == 1);
+    ActionInfo actionInfo = new ActionInfo(currentId,1,
         "cache", new String[] {"/test/file"}, "Test",
         "Test",true, 123213213l, true, 123123l,
         100);
     dbAdapter.insertActionsTable(new ActionInfo[] {actionInfo});
     currentId = dbAdapter.getMaxActionId();
-    Assert.assertTrue(currentId == 1);
+    Assert.assertTrue(currentId == 2);
+    actionInfo = new ActionInfo(currentId,1,
+        "cache", new String[] {"/test/file"}, "Test",
+        "Test",true, 123213213l, true, 123123l,
+        100);
+    dbAdapter.insertActionsTable(new ActionInfo[] {actionInfo});
+    currentId = dbAdapter.getMaxActionId();
+    Assert.assertTrue(currentId == 3);
   }
 
   @Test

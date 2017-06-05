@@ -104,7 +104,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       try {
         currentActionId = adapter.getMaxActionId();
       } catch (Exception e) {
-        currentActionId = 0;
+        currentActionId = 1;
         LOG.error("DB Connection error! Get Max ActionId fail!", e.getMessage());
         throw new IOException(e);
       }
