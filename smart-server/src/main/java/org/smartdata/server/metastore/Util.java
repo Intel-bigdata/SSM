@@ -67,6 +67,7 @@ public class Util {
         "DROP TABLE IF EXISTS `xattr`;",
         "DROP TABLE IF EXISTS `rules`;",
         "DROP TABLE IF EXISTS `commands`;",
+        "DROP TABLE IF EXISTS `actions`;",
         "DROP TABLE IF EXISTS `blank_access_count_info`;",  // for special cases
 
         "CREATE TABLE `access_count_tables` (\n" +
@@ -167,6 +168,20 @@ public class Util {
             "  `parameters` varchar(4096) NOT NULL,\n" +
             "  `generate_time` bigint(20) NOT NULL,\n" +
             "  `state_changed_time` bigint(20) NOT NULL\n" +
+            ") ;",
+
+        "CREATE TABLE `actions` (\n" +
+            "  `aid` INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "  `cid` INTEGER NOT NULL,\n" +
+            "  `action_name` varchar(4096) NOT NULL,\n" +
+            "  `args` varchar(4096) NOT NULL,\n" +
+            "  `result` varchar(4096) NOT NULL,\n" +
+            "  `log` tinyint(4) NOT NULL,\n" +
+            "  `successful` tinyint(4) NOT NULL,\n" +
+            "  `create_time` bigint(20) NOT NULL,\n" +
+            "  `finished` tinyint(4) NOT NULL,\n" +
+            "  `finish_time` bigint(20) NOT NULL,\n" +
+            "  `progress` INTEGER NOT NULL\n" +
             ") ;"
     };
 

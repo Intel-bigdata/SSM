@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CommandState;
+import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
@@ -149,9 +150,12 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     }
     List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition,
         ridCondition, CommandState.DONE);
-    System.out.printf("Size = %d\n", com.size());
+    System.out.printf("CommandInfos Size = %d\n", com.size());
     // Check Status
     Assert.assertTrue(com.size() == 1);
     Assert.assertTrue(com.get(0).getState() == CommandState.DONE);
+    List<ActionInfo> actionInfos = dbAdapter.getActionsTableItem(">= 0 ", ">= 1 ");
+    System.out.printf("ActionInfos Size = %d\n", actionInfos.size());
+    Assert.assertTrue(actionInfos.size() == 2);
   }
 }
