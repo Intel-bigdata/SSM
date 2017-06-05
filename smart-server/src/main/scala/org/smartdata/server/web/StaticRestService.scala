@@ -28,6 +28,9 @@ class StaticRestService extends BasicService {
   protected override def prefix = Neutral
 
   protected override def doRoute(implicit mat: Materializer) = {
+    path("ping") {
+      complete("pong")
+    } ~
     pathEndOrSingleSlash {
       getFromResource("dashboard/index.html")
     } ~

@@ -25,6 +25,7 @@ import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.StatesManager;
+import org.smartdata.server.command.CommandExecutor;
 import org.smartdata.server.rule.parser.RuleStringParser;
 import org.smartdata.server.rule.parser.TranslateResult;
 import org.smartdata.server.rule.parser.TranslationContext;
@@ -78,6 +79,7 @@ public class RuleManager implements ModuleSequenceProto {
    */
   public long submitRule(String rule, RuleState initState)
       throws IOException {
+    LOG.error("Received Rule -> [" + rule + "]");
     if (initState != RuleState.ACTIVE && initState != RuleState.DISABLED
         && initState != RuleState.DRYRUN) {
       throw new IOException("Invalid initState = " + initState
@@ -127,18 +129,18 @@ public class RuleManager implements ModuleSequenceProto {
    *                            discarded if true.
    * @throws IOException
    */
-  public void DeleteRule(long ruleID, boolean dropPendingCommands)
+  public void deleteRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
     RuleContainer container = checkIfExists(ruleID);
     container.DeleteRule();
   }
 
-  public void ActivateRule(long ruleID) throws IOException {
+  public void activateRule(long ruleID) throws IOException {
     RuleContainer container = checkIfExists(ruleID);
     submitRuleToScheduler(container.ActivateRule(this));
   }
 
-  public void DisableRule(long ruleID, boolean dropPendingCommands)
+  public void disableRule(long ruleID, boolean dropPendingCommands)
       throws IOException {
     RuleContainer container = checkIfExists(ruleID);
     container.DisableRule();
@@ -199,6 +201,10 @@ public class RuleManager implements ModuleSequenceProto {
 
   public StatesManager getStatesManager() {
     return ssm != null ? ssm.getStatesManager() : null;
+  }
+
+  public CommandExecutor getCommandExecutor() {
+    return ssm != null ? ssm.getCommandExecutor() : null;
   }
 
   /**

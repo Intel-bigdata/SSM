@@ -18,22 +18,20 @@
 
 package org.smartdata.actions.hdfs;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CacheFlag;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.ActionType;
 
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -43,7 +41,6 @@ public class CacheFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(CacheFileAction.class);
 
   private String fileName;
-  private Configuration conf;
   private LinkedBlockingQueue<String> actionEvents;
   private final String SSMPOOL = "SSMPool";
   private ActionType actionType;
@@ -51,7 +48,14 @@ public class CacheFileAction extends HdfsAction {
   public CacheFileAction() {
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
-    this.setActionStatus(new CacheStatus());
+    createStatus();
+  }
+
+  @Override
+  protected void createStatus() {
+    this.actionStatus = new CacheStatus();
+    resultOut = actionStatus.getResultPrintStream();
+    logOut = actionStatus.getLogPrintStream();
   }
 
   @Override
@@ -60,26 +64,27 @@ public class CacheFileAction extends HdfsAction {
     fileName = args[0];
   }
 
-  /**
-   * Execute an action.
-   * @return null.
-   */
   protected void execute() {
-    addActionEvent(fileName);
-    runCache(fileName);
-    getActionStatus().setFinished(true);
-  }
-
-  public void addActionEvent(String fileName) {
+    ActionStatus actionStatus = getActionStatus();
+    actionStatus.begin();
     try {
-      actionEvents.put(fileName);
+      addActionEvent(fileName);
+      executeCacheAction(fileName);
+      actionStatus.setSuccessful(true);
     } catch (Exception e) {
+      actionStatus.setSuccessful(false);
       throw new RuntimeException(e);
+    } finally {
+      actionStatus.end();
     }
   }
 
-  private void runCache(String fileName) {
-    createPool();
+  public void addActionEvent(String fileName) throws Exception {
+    actionEvents.put(fileName);
+  }
+
+  private void executeCacheAction(String fileName) throws Exception {
+    createCachePool();
     if (isCached(fileName)) {
       return;
     }
@@ -88,43 +93,31 @@ public class CacheFileAction extends HdfsAction {
     addDirective(fileName);
   }
 
-  private void createPool() {
-    try {
-      RemoteIterator<CachePoolEntry> poolEntries = dfsClient.listCachePools();
-      while (poolEntries.hasNext()) {
-        CachePoolEntry poolEntry = poolEntries.next();
-        if (poolEntry.getInfo().getPoolName().equals(SSMPOOL)) {
-          return;
-        }
+  private void createCachePool() throws Exception {
+    RemoteIterator<CachePoolEntry> poolEntries = dfsClient.listCachePools();
+    while (poolEntries.hasNext()) {
+      CachePoolEntry poolEntry = poolEntries.next();
+      if (poolEntry.getInfo().getPoolName().equals(SSMPOOL)) {
+        return;
       }
-      dfsClient.addCachePool(new CachePoolInfo(SSMPOOL));
-    } catch (Exception e) {
-      throw new RuntimeException(e);
     }
+    dfsClient.addCachePool(new CachePoolInfo(SSMPOOL));
   }
 
-  public boolean isCached(String fileName) {
+  public boolean isCached(String fileName) throws Exception {
     CacheDirectiveInfo.Builder filterBuilder = new CacheDirectiveInfo.Builder();
     filterBuilder.setPath(new Path(fileName));
     CacheDirectiveInfo filter = filterBuilder.build();
-    try {
-      RemoteIterator<CacheDirectiveEntry> directiveEntries = dfsClient.listCacheDirectives(filter);
-      return directiveEntries.hasNext();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    RemoteIterator<CacheDirectiveEntry> directiveEntries = dfsClient.listCacheDirectives(filter);
+    return directiveEntries.hasNext();
   }
 
-  private void addDirective(String fileName) {
+  private void addDirective(String fileName) throws Exception {
     CacheDirectiveInfo.Builder filterBuilder = new CacheDirectiveInfo.Builder();
     filterBuilder.setPath(new Path(fileName));
     filterBuilder.setPool(SSMPOOL);
     CacheDirectiveInfo filter = filterBuilder.build();
     EnumSet<CacheFlag> flags = EnumSet.noneOf(CacheFlag.class);
-    try {
-      dfsClient.addCacheDirective(filter, flags);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    dfsClient.addCacheDirective(filter, flags);
   }
 }

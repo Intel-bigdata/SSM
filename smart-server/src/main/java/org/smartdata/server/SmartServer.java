@@ -75,6 +75,7 @@ public class SmartServer {
   private OutputStream outSSMIdFile;
   private List<ModuleSequenceProto> modules = new ArrayList<>();
   static final Path SSM_ID_PATH = new Path("/system/ssm.id");
+  private URI namenodeURI;
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
   private SmartServiceState ssmServiceState = SmartServiceState.SAFEMODE;
@@ -210,8 +211,8 @@ public class SmartServer {
           + "Please configure it through '"
           + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "'.");
     }
-    URI rpcURL = new URI(nnRpcAddr);
-    this.fs = (DistributedFileSystem) FileSystem.get(rpcURL, conf);
+    namenodeURI = new URI(nnRpcAddr);
+    this.fs = (DistributedFileSystem) FileSystem.get(namenodeURI, conf);
     outSSMIdFile = checkAndMarkRunning();
     if (outSSMIdFile == null) {
       // Exit if there is another one running.
@@ -234,6 +235,10 @@ public class SmartServer {
 
     // TODO: for simple here, refine it later
     ssmServiceState = SmartServiceState.ACTIVE;
+  }
+
+  public URI getNamenodeURI() {
+    return namenodeURI;
   }
 
   public SmartServiceState getSSMServiceState() {

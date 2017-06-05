@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.HdfsAction;
-import org.smartdata.actions.hdfs.MoveFileAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.conf.SmartConf;
 
@@ -75,7 +74,7 @@ public class TestCommandPool {
 
   @Test
   public void addCommand() throws Exception {
-    generateTestCase();
+    generateTestFiles();
     Command cmd = runHelper();
     CommandPool cmdPool = new CommandPool();
     cmdPool.execute(cmd);
@@ -87,7 +86,7 @@ public class TestCommandPool {
    */
   @Test
   public void deleteCommand() throws Exception {
-    generateTestCase();
+    generateTestFiles();
     Command cmd = runHelper();
     CommandPool cmdPool = new CommandPool();
     cmdPool.execute(cmd);
@@ -95,7 +94,7 @@ public class TestCommandPool {
     cmdPool.deleteCommand(cmd.getId());
   }
 
-  private void generateTestCase() throws IOException {
+  private void generateTestFiles() throws IOException {
     final DistributedFileSystem dfs = cluster.getFileSystem();
     // New dir
     Path dir = new Path("/testMoveFile");
@@ -133,7 +132,6 @@ public class TestCommandPool {
     actions[2].setDfsClient(client);
     actions[2].setContext(new SmartContext(smartConf));
     actions[2].init(new String[]{"/testCacheFile"});
-    actions[2].getActionStatus().setId(UUID.randomUUID());
     // New Command
     Command cmd = new Command(actions, null);
     cmd.setId(1);

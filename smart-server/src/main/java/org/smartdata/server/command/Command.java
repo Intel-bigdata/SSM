@@ -25,28 +25,23 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * Command is the minimum unit of execution. Different commands can be
- * executed at the same time, but smartActions belongs to an SmartAction can only be
- * executed in serial.
+ * Action is the minimum unit of execution. A command can contain more than one
+ * actions. Different commands can be executed at the same time, but actions
+ * belonging to a command can only be executed in sequence.
  *
- * The command get executed when rule conditions fulfilled.
- * A command can have many smartActions, for example:
- * Command 'archive' contains the following two smartActions:
- *  1.) SetStoragePolicy
- *  2.) EnforceStoragePolicy
+ * The command get executed when rule conditions fulfills.
  */
 public class Command implements Runnable {
   static final Logger LOG = LoggerFactory.getLogger(Command.class);
 
-  private long ruleId;   // id of the rule that this Command comes from
+  private long ruleId;   // id of the rule that this command comes from
   private long id;
   private CommandState state = CommandState.NOTINITED;
-  private SmartAction[] smartActions;
+  private SmartAction[] actions;
   private String parameters;
   private int currentActionIndex;
-  CommandExecutor.Callback cb;
+  private CommandExecutor.Callback cb;
   private boolean running;
 
   private long createTime;
@@ -57,8 +52,8 @@ public class Command implements Runnable {
 
   }
 
-  public Command(SmartAction[] smartActions, CommandExecutor.Callback cb) {
-    this.smartActions = smartActions.clone();
+  public Command(SmartAction[] actions, CommandExecutor.Callback cb) {
+    this.actions = actions.clone();
     this.currentActionIndex = 0;
     this.cb = cb;
     this.running = true;
@@ -96,8 +91,8 @@ public class Command implements Runnable {
     this.state = state;
   }
 
-  public SmartAction[] getSmartActions() {
-    return smartActions == null ? null : smartActions.clone();
+  public SmartAction[] getActions() {
+    return actions == null ? null : actions.clone();
   }
 
   public long getScheduleToExecuteTime() {
@@ -119,18 +114,19 @@ public class Command implements Runnable {
   }
 
   public boolean isFinished() {
-    return (currentActionIndex == smartActions.length || !running);
+    return (currentActionIndex == actions.length || !running);
   }
 
-  public void runSmartActions() {
-    for (SmartAction act : smartActions) {
+
+  public void runActions() {
+    for (SmartAction act : actions) {
       currentActionIndex++;
       if (act == null || !running) {
         continue;
       }
       act.run();
       // Run actions sequentially!
-      while(!act.getActionStatus().isFinished()) {
+      while (!act.getActionStatus().isFinished()) {
         try {
           Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -144,7 +140,7 @@ public class Command implements Runnable {
 
   @Override
   public void run() {
-    runSmartActions();
+    runActions();
     running = false;
     if (cb != null) {
       cb.complete(this.id, this.ruleId, CommandState.DONE);

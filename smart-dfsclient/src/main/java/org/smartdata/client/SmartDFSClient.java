@@ -35,7 +35,7 @@ public class SmartDFSClient extends DFSClient {
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeAddress, conf);
     try {
-      smartClient = new SmartClient(smartServerAddress);
+      smartClient = new SmartClient(conf, smartServerAddress);
     } catch (IOException e) {
       super.close();
       throw e;
@@ -46,7 +46,7 @@ public class SmartDFSClient extends DFSClient {
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeUri, conf);
     try {
-      smartClient = new SmartClient(smartServerAddress);
+      smartClient = new SmartClient(conf, smartServerAddress);
     } catch (IOException e) {
       super.close();
       throw e;
@@ -58,7 +58,7 @@ public class SmartDFSClient extends DFSClient {
       throws IOException {
     super(nameNodeUri, conf, stats);
     try {
-      smartClient = new SmartClient(smartServerAddress);
+      smartClient = new SmartClient(conf, smartServerAddress);
     } catch (IOException e) {
       super.close();
       throw e;
@@ -69,7 +69,7 @@ public class SmartDFSClient extends DFSClient {
       InetSocketAddress smartServerAddress) throws IOException {
     super(conf);
     try {
-      smartClient = new SmartClient(smartServerAddress);
+      smartClient = new SmartClient(conf, smartServerAddress);
     } catch (IOException e) {
       super.close();
       throw e;

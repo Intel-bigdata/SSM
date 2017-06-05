@@ -17,66 +17,38 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
-import org.apache.hadoop.hdfs.*;
-import org.junit.After;
+import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.SmartContext;
-import org.smartdata.conf.SmartConf;
+import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-
 
 /**
  * Move to Cache Unit Test
  */
-public class TestCacheFile {
-
-  private static final int DEFAULT_BLOCK_SIZE = 100;
-  private static final String REPLICATION_KEY = "3";
-  private MiniDFSCluster cluster;
-  private DFSClient client;
-  private DistributedFileSystem dfs;
-  private SmartConf smartConf = new SmartConf();
-
-  @Before
-  public void createCluster()  throws IOException {
-    smartConf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    smartConf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    smartConf.setStrings(DFSConfigKeys.DFS_REPLICATION_KEY, REPLICATION_KEY);
-    cluster = new MiniDFSCluster.Builder(smartConf).
-        numDataNodes(3).
-        storageTypes(new StorageType[]
-            {StorageType.DISK, StorageType.ARCHIVE}).
-        build();
-    client = cluster.getFileSystem().getClient();
-    dfs = cluster.getFileSystem();
-    cluster.waitActive();
-  }
-
-  @After
-  public void shutdown() throws IOException {
-    if (cluster != null) {
-      cluster.shutdown();
-    }
-  }
-
+public class TestCacheFile extends ActionMiniCluster {
   @Test
   public void testCacheFile() throws IOException {
     dfs.mkdirs(new Path("/fileTestA"));
     String[] args = {"/fileTestA"};
     CacheFileAction cacheAction = new CacheFileAction();
-    cacheAction.setContext(new SmartContext(smartConf));
-    cacheAction.setDfsClient(client);
+    cacheAction.setContext(smartContext);
+    cacheAction.setDfsClient(dfsClient);
     cacheAction.init(args);
-    Assert.assertEquals(false, cacheAction.isCached(args[0]));
-    cacheAction.run();
-    Assert.assertEquals(true, cacheAction.isCached(args[0]));
+    ActionStatus actionStatus = cacheAction.getActionStatus();
+    try {
+      Assert.assertEquals(false, cacheAction.isCached(args[0]));
+      cacheAction.run();
+      Assert.assertEquals(true, cacheAction.isCached(args[0]));
+      Assert.assertTrue(actionStatus.isFinished());
+      Assert.assertTrue(actionStatus.isSuccessful());
+      System.out.println("Cache action running time : " +
+          StringUtils.formatTime(actionStatus.getRunningTime()));
+      Assert.assertEquals(1.0f, actionStatus.getPercentage(), 0.00001f);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 }

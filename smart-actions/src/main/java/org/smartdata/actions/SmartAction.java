@@ -19,20 +19,38 @@ package org.smartdata.actions;
 
 import org.smartdata.SmartContext;
 
-import java.io.IOException;
 import java.io.PrintStream;
-import java.util.UUID;
 
 /**
- * Smart action, the base class. All actions should inherit this. All actions should be able to run in a command line
- * or web console. User defined actions are also meant to extend this.
+ * Smart action, the base class. All actions should inherit this. All actions
+ * should be able to run in a command line or web console. User defined actions
+ * are also meant to extend this.
  */
 public abstract class SmartAction {
   private String[] actionArgs;
   private SmartContext context;
-  private ActionStatus actionStatus;
+  protected String name;
+  protected ActionStatus actionStatus;
   protected PrintStream resultOut;
   protected PrintStream logOut;
+
+  public SmartAction() {
+    createStatus();
+  }
+
+  protected void createStatus() {
+    this.actionStatus = new ActionStatus();
+    resultOut = actionStatus.getResultPrintStream();
+    logOut = actionStatus.getLogPrintStream();
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
 
   public SmartContext getContext() {
     return context;
@@ -40,12 +58,6 @@ public abstract class SmartAction {
 
   public void setContext(SmartContext context) {
     this.context = context;
-  }
-
-  public void setActionStatus(ActionStatus actionStatus) {
-    this.actionStatus = actionStatus;
-    resultOut = actionStatus.getResultPrintStream();
-    logOut = actionStatus.getLogPrintStream();
   }
 
   public ActionStatus getActionStatus() {
@@ -70,12 +82,6 @@ public abstract class SmartAction {
     return actionArgs;
   }
 
-  /**
-   * Execute an action.
-   *
-   * @return a uid to track the status of the action, or null if the action
-   * has no status.
-   */
   protected abstract void execute();
 
   public void run() {

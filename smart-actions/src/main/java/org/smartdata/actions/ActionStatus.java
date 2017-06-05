@@ -20,15 +20,13 @@ package org.smartdata.actions;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.util.Time;
 
-import java.io.IOException;
 import java.io.PrintStream;
-import java.util.UUID;
 
 /**
  * Smart action status base.
  */
 public class ActionStatus {
-  private UUID id;
+  private long id;
   private long startTime;
   private Boolean finished;
   private long finishTime;
@@ -52,11 +50,11 @@ public class ActionStatus {
     init();
   }
 
-  public UUID getId() {
+  public long getId() {
     return id;
   }
 
-  public void setId(UUID id) {
+  public void setId(long id) {
     this.id = id;
   }
 
@@ -64,8 +62,8 @@ public class ActionStatus {
     return finished;
   }
 
-  public void setFinished(boolean finished) {
-    this.finished = finished;
+  public void end() {
+    this.finished = true;
     finishTime = Time.monotonicNow();
   }
 
@@ -73,8 +71,8 @@ public class ActionStatus {
     return startTime;
   }
 
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
+  public void begin() {
+    this.startTime = Time.monotonicNow();
   }
 
   public boolean isSuccessful() {

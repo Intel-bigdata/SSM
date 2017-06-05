@@ -39,7 +39,14 @@ public class MoveFileAction extends HdfsAction {
 
   public MoveFileAction() {
     this.actionType = ActionType.MoveFile;
-    this.setActionStatus(new MoverStatus());
+    createStatus();
+  }
+
+  @Override
+  protected void createStatus() {
+    this.actionStatus = new MoverStatus();
+    resultOut = actionStatus.getResultPrintStream();
+    logOut = actionStatus.getLogPrintStream();
   }
 
   @Override

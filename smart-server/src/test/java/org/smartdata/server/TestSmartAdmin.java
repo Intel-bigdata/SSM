@@ -135,4 +135,27 @@ public class TestSmartAdmin {
     server.shutdown();
     cluster.shutdown();
   }
+
+//  @Test
+//  public void testReal() throws Exception {
+//    final SmartConf conf = new SmartConf();
+//
+//    String[] args = new String[] {
+//        "-D",
+//        "dfs.smart.namenode.rpcserver=hdfs://localhost:9000"
+//    };
+//
+//    // rpcServer start in SmartServer
+//    SmartServer server = SmartServer.createSSM(args, conf);
+//
+//    Thread.sleep(6000);
+//
+//    SmartAdmin admin = new SmartAdmin(conf);
+//    String rule = "file : every 1s | mtime > now - 70day | cache";
+//    String cmd = "read /hadoopdbg";
+//    long id = admin.submitCommand(cmd);
+//
+//    Thread.sleep(1000);
+//    Thread.sleep(100000);
+//  }
 }

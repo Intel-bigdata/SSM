@@ -83,6 +83,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
           });
           return result;
         },
+        default: function (obj) {
+          return obj;
+        },
         rules: function (objs) {
           return decoder._asAssociativeArray(objs, decoder.ruleSummary, 'id');
         },
@@ -136,7 +139,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return decoder._asAssociativeArray(objs, decoder.action, 'actionName');
         },
         action: function (obj) {
+          var current = Date.now();
           return angular.merge(obj, {
+            uptime: obj.finished ? obj.finishTime - obj.createTime : current - obj.createTime,
             status: obj.finished ? 'Finished' : 'Running',
             pageUrl: locator.action(obj.actionId),
             argument: obj.args.join(' ')
@@ -162,6 +167,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         action: function (actionId) {
           return get('actions/' + actionId + '/detail', decoder.action);
+        },
+        actionTypes: function () {
+          return get('actiontypes', decoder.default)
         }
       };
 

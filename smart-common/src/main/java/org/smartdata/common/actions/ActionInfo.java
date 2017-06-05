@@ -17,6 +17,7 @@
  */
 package org.smartdata.common.actions;
 
+
 public class ActionInfo {
   private long actionId;
   private long commandId;

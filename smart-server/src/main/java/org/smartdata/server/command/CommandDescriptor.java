@@ -21,12 +21,40 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * CommandDescriptor describes a command by parsing out action names and their
+ * parameters like shell format. It does not including verifications like
+ * whether the action name is supported or the parameters are valid or not.
+ */
 public class CommandDescriptor {
   private long ruleId;
   private List<String> actionNames = new ArrayList<>();
   private List<String[]> actionArgs = new ArrayList<>();
+  private String commandString = null;
+
+  private static final String REG_ACTION_NAME = "^[a-zA-Z]+[a-zA-Z0-9_]*";
 
   public CommandDescriptor() {
+  }
+
+  public CommandDescriptor(String commandString) throws ParseException {
+    this(commandString, 0);
+  }
+
+  public CommandDescriptor(String commandString, long ruleId) throws ParseException {
+    this.ruleId = ruleId;
+    setCommandString(commandString);
+  }
+
+  public String getCommandString() {
+    return commandString == null ? toCommandString() : commandString;
+  }
+
+  public void setCommandString(String commandString) throws ParseException {
+    actionNames.clear();
+    actionArgs.clear();
+    this.commandString = commandString;
+    parseCommandString(commandString);
   }
 
   public long getRuleId() {
@@ -50,11 +78,12 @@ public class CommandDescriptor {
     return actionArgs.get(index);
   }
 
-  public int getNumActions() {
+  public int size() {
     return actionNames.size();
   }
 
-  // TODO: to be implemented
+  // TODO: descriptor --> String
+
   /**
    * Construct an CommandDescriptor from command string.
    * @param cmdString
@@ -63,6 +92,171 @@ public class CommandDescriptor {
    */
   public static CommandDescriptor fromCommandString(String cmdString)
       throws ParseException {
-    return new CommandDescriptor();
+    CommandDescriptor des = new CommandDescriptor(cmdString);
+    return des;
+  }
+
+  public String toCommandString() {
+    if (size() == 0) {
+      return "";
+    }
+
+    String cmds = getActionName(0) + " "
+        + formatActionArguments(getActionArgs(0));
+    for (int i = 1; i < size(); i++) {
+      cmds += " ; " + getActionName(i) + " "
+          + formatActionArguments(getActionArgs(i));
+    }
+    return cmds;
+  }
+
+  public boolean equals(CommandDescriptor des) {
+    if (des == null || this.size() != des.size()) {
+      return false;
+    }
+
+    for (int i = 0; i < this.size(); i++) {
+      if (!actionNames.get(i).equals(des.getActionName(i))
+          || actionArgs.get(i).length != des.getActionArgs(i).length) {
+        return false;
+      }
+
+      String[] srcArgs = actionArgs.get(i);
+      String[] destArgs = des.getActionArgs(i);
+      for (int j = 0; j < actionArgs.get(i).length; j++) {
+        if (!srcArgs[j].equals(destArgs[j])) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private void parseCommandString(String command)
+      throws ParseException {
+    if (command == null || command.length() == 0) {
+      return;
+    }
+
+    char[] chars = (command + " ").toCharArray();
+    List<String> blocks = new ArrayList<String>();
+    char c;
+    char[] token = new char[chars.length];
+    int tokenlen = 0;
+    boolean sucing = false;
+    boolean string = false;
+    for (int idx = 0; idx < chars.length; idx++) {
+      String tokenString = String.valueOf(token, 0, tokenlen);
+      c = chars[idx];
+      if (c == ' ' || c == '\t') {
+        if (string) {
+          token[tokenlen++] = c;
+        }
+        if (sucing) {
+          blocks.add(String.valueOf(token, 0, tokenlen));
+          tokenlen = 0;
+          sucing = false;
+        }
+      } else if (c == ';') {
+        if (string) {
+          throw new ParseException("Unexpected break of string", idx);
+        }
+
+        if (sucing) {
+          blocks.add(String.valueOf(token, 0, tokenlen));
+          tokenlen = 0;
+          sucing = false;
+        }
+
+        verify(blocks, idx);
+      } else if (c == '\\') {
+        boolean tempAdded = false;
+        if (sucing || string) {
+          token[tokenlen++] = chars[++idx];
+          tempAdded = true;
+        }
+
+        if (!tempAdded && !sucing) {
+          sucing = true;
+          token[tokenlen++] = chars[++idx];
+        }
+      } else if (c == '"') {
+        if (sucing) {
+          throw new ParseException("Unexpected \"", idx);
+        }
+
+        if (string) {
+          if (chars[idx + 1] != '"') {
+            string = false;
+            blocks.add(String.valueOf(token, 0, tokenlen));
+            tokenlen = 0;
+          } else {
+            idx++;
+          }
+        } else {
+          string = true;
+        }
+      } else if (c == '\r' || c == '\n') {
+        if (sucing) {
+          sucing = false;
+          blocks.add(String.valueOf(token, 0, tokenlen));
+          tokenlen = 0;
+        }
+
+        if (string) {
+          throw new ParseException("String cannot in more than one line", idx);
+        }
+      } else {
+        if (string) {
+          token[tokenlen++] = chars[idx];
+        } else {
+          sucing = true;
+          token[tokenlen++] = chars[idx];
+        }
+      }
+    }
+
+    if (string) {
+      throw new ParseException("Unexpect tail of string", chars.length);
+    }
+
+    if (blocks.size() > 0) {
+      verify(blocks, chars.length);
+    }
+  }
+
+  private void verify(List<String> blocks, int offset) throws ParseException {
+    if (blocks.size() == 0) {
+      throw new ParseException("Contains NULL action", offset);
+    }
+
+    boolean matched = blocks.get(0).matches(REG_ACTION_NAME);
+    if (!matched) {
+      throw new ParseException("Invalid action name: " + blocks.get(0), offset);
+    }
+    String name = blocks.get(0);
+    blocks.remove(0);
+    String[] args = blocks.toArray(new String[blocks.size()]);
+    addAction(name, args);
+    blocks.clear();
+  }
+
+  private String formatActionArguments(String[] args) {
+    // TODO: check more cases / using another way
+    if (args == null || args.length == 0) {
+      return "";
+    }
+
+    String ret = "";
+    for (String arg : args) {
+      String rep = arg.replace("\\", "\\\\");
+      rep = rep.replace("\"", "\\\"");
+      if (rep.matches(".*\\s+.*")) {
+        ret += " \"" + rep + "\"";
+      } else {
+        ret += " " + rep;
+      }
+    }
+    return ret.trim();
   }
 }

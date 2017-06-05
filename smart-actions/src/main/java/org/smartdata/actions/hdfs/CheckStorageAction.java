@@ -19,7 +19,6 @@ package org.smartdata.actions.hdfs;
 
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
@@ -32,10 +31,6 @@ public class CheckStorageAction extends HdfsAction {
 
   private String fileName;
 
-  public CheckStorageAction() {
-    this.setActionStatus(new ActionStatus());
-  }
-
   @Override
   public void init(String[] args) {
     super.init(args);
@@ -45,7 +40,7 @@ public class CheckStorageAction extends HdfsAction {
   @Override
   protected void execute() {
     ActionStatus actionStatus = getActionStatus();
-    actionStatus.setStartTime(Time.monotonicNow());
+    actionStatus.begin();
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
       long length = fileStatus.getLen();
@@ -65,7 +60,7 @@ public class CheckStorageAction extends HdfsAction {
       actionStatus.setSuccessful(false);
       throw new RuntimeException(e);
     } finally {
-      actionStatus.setFinished(true);
+      actionStatus.end();
     }
   }
 }

@@ -740,9 +740,8 @@ public class DBAdapter {
             + command.getParameters() + "', '"
             + command.getGenerateTime() + "', '"
             + command.getStateChangedTime() + "');";
-
     execute(sql);
-    QueryHelper queryHelper = new QueryHelper("SELECT MAX(id) FROM commands;");
+    QueryHelper queryHelper = new QueryHelper("SELECT MAX(cid) FROM commands;");
     try {
       ResultSet rs = queryHelper.executeQuery();
       if (rs.next()) {
