@@ -595,7 +595,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         new String(status.getResultStream().toByteArray(), StandardCharsets.UTF_8),
         new String(status.getLogStream().toByteArray(), StandardCharsets.UTF_8),
         status.isSuccessful(), status.getStartTime(),
-        status.isFinished(), status.getRunningTime(),
+        status.isFinished(), status.getFinishTime(),
         status.getPercentage());
   }
 

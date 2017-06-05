@@ -90,6 +90,14 @@ public class ActionStatus {
     return Time.now() - startTime;
   }
 
+  public long getFinishTime() {
+    if (finished) {
+      return finishTime;
+    }
+    return Time.now();
+  }
+
+
   public PrintStream getResultPrintStream() {
     return psResultOs;
   }
