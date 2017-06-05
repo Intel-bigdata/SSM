@@ -47,6 +47,9 @@ public class CheckStorageAction extends HdfsAction {
     actionStatus.begin();
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+      if (fileStatus == null) {
+        throw new IllegalArgumentException("File does not exit.");
+      }
       long length = fileStatus.getLen();
       List<LocatedBlock> locatedBlocks = dfsClient.getLocatedBlocks(
           fileName, 0, length).getLocatedBlocks();
@@ -71,7 +74,7 @@ public class CheckStorageAction extends HdfsAction {
       actionStatus.setSuccessful(true);
     } catch (Exception e) {
       actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
+      LOG.error("CheckStorageAction failed", e);
     } finally {
       actionStatus.end();
     }

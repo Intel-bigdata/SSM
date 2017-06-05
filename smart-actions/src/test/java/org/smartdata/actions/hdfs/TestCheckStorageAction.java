@@ -35,9 +35,9 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     CheckStorageAction checkStorageAction = new CheckStorageAction();
     checkStorageAction.setDfsClient(dfsClient);
     checkStorageAction.setContext(smartContext);
-    final String file = "/testParallelMovers/file1";
-    dfsClient.mkdirs("/testParallelMovers");
-    dfsClient.setStoragePolicy("/testParallelMovers", "ONE_SSD");
+    final String file = "/testPath/file1";
+    dfsClient.mkdirs("/testPath");
+    dfsClient.setStoragePolicy("/testPath", "ONE_SSD");
 
     // write to HDFS
     final OutputStream out = dfsClient.create(file, true);
@@ -57,5 +57,21 @@ public class TestCheckStorageAction extends ActionMiniCluster {
 
     ByteArrayOutputStream resultStream = actionStatus.getResultStream();
     System.out.println(resultStream);
+  }
+
+  @Test
+  public void testCheckStorageActionWithWrongFileName() throws IOException {
+    CheckStorageAction checkStorageAction = new CheckStorageAction();
+    checkStorageAction.setDfsClient(dfsClient);
+    checkStorageAction.setContext(smartContext);
+    final String file = "/testPath/wrongfile";
+    dfsClient.mkdirs("/testPath");
+
+    // do CheckStorageAction
+    checkStorageAction.init(new String[] {file});
+    checkStorageAction.run();
+    ActionStatus actionStatus = checkStorageAction.getActionStatus();
+    Assert.assertTrue(actionStatus.isFinished());
+    Assert.assertFalse(actionStatus.isSuccessful());
   }
 }
