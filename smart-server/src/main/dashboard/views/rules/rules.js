@@ -51,11 +51,6 @@ angular.module('dashboard')
         submitWindow.$promise.then(submitWindow.show);
       };
 
-      $scope.composeMenuOptions = [{
-        text: '<i class="glyphicon glyphicon-none"></i> <b>Submit Rule...</b>',
-        click: $scope.openSubmitRuleDialog
-      }];
-
       $scope.rulesTable = {
         cols: [
           // group 1/3 (4-col)
