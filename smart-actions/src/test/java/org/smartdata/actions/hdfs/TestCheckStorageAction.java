@@ -37,6 +37,7 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     checkStorageAction.setContext(smartContext);
     final String file = "/testParallelMovers/file1";
     dfsClient.mkdirs("/testParallelMovers");
+    dfsClient.setStoragePolicy("/testParallelMovers", "ONE_SSD");
 
     // write to HDFS
     final OutputStream out = dfsClient.create(file, true);
