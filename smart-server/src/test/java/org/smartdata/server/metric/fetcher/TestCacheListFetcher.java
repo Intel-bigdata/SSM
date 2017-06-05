@@ -75,6 +75,7 @@ public class TestCacheListFetcher {
 
   @After
   public void shutdown() throws Exception {
+    cacheListFetcher.stop();
     if (cluster != null) {
       cluster.shutdown();
     }
@@ -89,6 +90,7 @@ public class TestCacheListFetcher {
 
   @Test
   public void testFetcher() throws Exception {
+    cacheListFetcher.start();
     String pathPrefix = "/fileTest";
     String[] index = {"1", "2", "3", "4"};
     for (int i = 0; i < index.length; i++) {
