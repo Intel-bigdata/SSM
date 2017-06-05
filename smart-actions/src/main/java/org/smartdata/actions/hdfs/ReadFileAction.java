@@ -42,6 +42,7 @@ public class ReadFileAction extends HdfsAction {
 
   @Override
   public void init(String[] args) {
+    super.init(args);
     this.filePath = args[0];
     if (args.length >= 2) {
       bufferSize = Integer.valueOf(args[1]);

@@ -43,6 +43,7 @@ public class WriteFileAction extends HdfsAction {
 
   @Override
   public void init(String[] args) {
+    super.init(args);
     this.filePath = args[0];
     this.length = Integer.valueOf(args[1]);
     if (args.length >= 3) {
