@@ -58,7 +58,7 @@ public class TestRuleManager {
 
   @Test
   public void testSubmitNewActiveRule() throws Exception {
-    String rule = "file: every 1s \n | accessCount(5s) > 3 | cachefile";
+    String rule = "file: every 1s \n | accessCount(5s) > 3 | cache";
     long id = ruleManager.submitRule(rule, RuleState.ACTIVE);
     RuleInfo ruleInfo = ruleManager.getRuleInfo(id);
     Assert.assertTrue(ruleInfo.getRuleText().equals(rule));
@@ -75,7 +75,7 @@ public class TestRuleManager {
 
   @Test
   public void testSubmitDeletedRule() throws Exception {
-    String rule = "file: every 1s \n | length > 300 | cachefile";
+    String rule = "file: every 1s \n | length > 300 | cache";
     try {
       long id = ruleManager.submitRule(rule, RuleState.DELETED);
     } catch (IOException e) {
@@ -85,7 +85,7 @@ public class TestRuleManager {
 
   @Test
   public void testSubmitNewDisabledRule() throws Exception {
-    String rule = "file: every 1s \n | length > 300 | cachefile";
+    String rule = "file: every 1s \n | length > 300 | cache";
     long id = ruleManager.submitRule(rule, RuleState.DISABLED);
     RuleInfo ruleInfo = ruleManager.getRuleInfo(id);
     Assert.assertTrue(ruleInfo.getRuleText().equals(rule));
@@ -103,7 +103,7 @@ public class TestRuleManager {
   @Test
   public void testSubmitAutoEndsRule() throws Exception {
     String rule = "file: every 1s from now to now + 2s \n | "
-        + "length > 300 | cachefile";
+        + "length > 300 | cache";
 
     long id = ruleManager.submitRule(rule, RuleState.ACTIVE);
     RuleInfo ruleInfo = ruleManager.getRuleInfo(id);
@@ -123,7 +123,7 @@ public class TestRuleManager {
   @Test
   public void testStopRule() throws Exception {
     String rule = "file: every 1s from now to now + 100s \n | "
-        + "length > 300 | cachefile";
+        + "length > 300 | cache";
 
     long id = ruleManager.submitRule(rule, RuleState.ACTIVE);
     RuleInfo ruleInfo = ruleManager.getRuleInfo(id);
@@ -149,7 +149,7 @@ public class TestRuleManager {
   @Test
   public void testResumeRule() throws Exception {
     String rule = "file: every 1s from now to now + 100s \n | "
-        + "length > 300 | cachefile";
+        + "length > 300 | cache";
 
     long id = ruleManager.submitRule(rule, RuleState.ACTIVE);
     RuleInfo ruleInfo = ruleManager.getRuleInfo(id);
@@ -187,7 +187,7 @@ public class TestRuleManager {
 
   @Test
   public void testSubmitNewMultiRules() throws Exception {
-    String rule = "file: every 1s \n | length > 300 | cachefile";
+    String rule = "file: every 1s \n | length > 300 | cache";
 
     // id increasing
     int nRules =  3;
@@ -226,7 +226,7 @@ public class TestRuleManager {
 
   @Test
   public void testMultiThreadUpdate() throws Exception {
-    String rule = "file: every 1s \n | length > 10 | cachefile";
+    String rule = "file: every 1s \n | length > 10 | cache";
 
     long now = System.currentTimeMillis();
 
@@ -290,7 +290,7 @@ public class TestRuleManager {
 
   @Test
   public void testMultiThreadChangeState() throws Exception {
-    String rule = "file: every 1s \n | length > 10 | cachefile";
+    String rule = "file: every 1s \n | length > 10 | cache";
 
     long now = System.currentTimeMillis();
 

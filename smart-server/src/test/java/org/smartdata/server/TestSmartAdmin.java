@@ -47,93 +47,103 @@ public class TestSmartAdmin {
     final SmartConf conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(4).build();
-    // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
-    final DistributedFileSystem dfs = cluster.getFileSystem();
+    SmartServer server = null;
 
-    final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
-    List<URI> uriList = new ArrayList<>(namenodes);
-    conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
-    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
-        uriList.get(0).toString());
+    try {
+      // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
+      final DistributedFileSystem dfs = cluster.getFileSystem();
 
-    // Set db used
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
+      final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
+      List<URI> uriList = new ArrayList<>(namenodes);
+      conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
+      conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+          uriList.get(0).toString());
 
-    // rpcServer start in SmartServer
-    SmartServer server = SmartServer.createSSM(null, conf);
-    SmartAdmin ssmClient = new SmartAdmin(conf);
+      // Set db used
+      String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+      String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
+      conf.set(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
 
-    while (true) {
-      //test getServiceStatus
-      String state = ssmClient.getServiceState().getName();
-      if ("ACTIVE".equals(state)) {
-        break;
+      // rpcServer start in SmartServer
+      server = SmartServer.createSSM(null, conf);
+      SmartAdmin ssmClient = new SmartAdmin(conf);
+
+      while (true) {
+        //test getServiceStatus
+        String state = ssmClient.getServiceState().getName();
+        if ("ACTIVE".equals(state)) {
+          break;
+        }
+        Thread.sleep(1000);
       }
-      Thread.sleep(1000);
+
+      //test listRulesInfo and submitRule
+      List<RuleInfo> ruleInfos = ssmClient.listRulesInfo();
+      int ruleCounts0 = ruleInfos.size();
+      long ruleId = ssmClient.submitRule(
+          "file: every 5s | path matches \"/foo*\"| cache",
+          RuleState.DRYRUN);
+      ruleInfos = ssmClient.listRulesInfo();
+      int ruleCounts1 = ruleInfos.size();
+      assertEquals(1, ruleCounts1 - ruleCounts0);
+
+      //test checkRule
+      //if success ,no Exception throw
+      ssmClient.checkRule("file: every 5s | path matches \"/foo*\"| cache");
+      boolean caughtException = false;
+      try {
+        ssmClient.checkRule("file.path");
+      } catch (IOException e) {
+        caughtException = true;
+      }
+      assertTrue(caughtException);
+
+      //test getRuleInfo
+      RuleInfo ruleInfo = ssmClient.getRuleInfo(ruleId);
+      assertNotEquals(null, ruleInfo);
+
+      //test disableRule
+      ssmClient.disableRule(ruleId, true);
+      assertEquals(RuleState.DISABLED, ssmClient.getRuleInfo(ruleId).getState());
+
+      //test activateRule
+      ssmClient.activateRule(ruleId);
+      assertEquals(RuleState.ACTIVE, ssmClient.getRuleInfo(ruleId).getState());
+
+      //test deleteRule
+      ssmClient.deleteRule(ruleId, true);
+      assertEquals(RuleState.DELETED, ssmClient.getRuleInfo(ruleId).getState());
+
+      //test single SSM
+      caughtException = false;
+      try {
+        conf.set(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
+        SmartServer.createSSM(null, conf);
+      } catch (IOException e) {
+        assertEquals("java.io.IOException: Another SmartServer is running",
+            e.toString());
+        caughtException = true;
+      }
+      assertTrue(caughtException);
+
+      //test client close
+      caughtException = false;
+      ssmClient.close();
+      try {
+        ssmClient.getRuleInfo(ruleId);
+      } catch (IOException e) {
+        caughtException = true;
+      }
+      assertEquals(true, caughtException);
+      server.shutdown();
+      cluster.shutdown();
+    } finally {
+      if (server != null) {
+        server.shutdown();
+      }
+
+      cluster.shutdown();
     }
-
-    //test listRulesInfo and submitRule
-    List<RuleInfo> ruleInfos = ssmClient.listRulesInfo();
-    int ruleCounts0 = ruleInfos.size();
-    long ruleId = ssmClient.submitRule(
-        "file: every 5s | path matches \"/foo*\"| cachefile",
-        RuleState.DRYRUN);
-    ruleInfos = ssmClient.listRulesInfo();
-    int ruleCounts1 = ruleInfos.size();
-    assertEquals(1, ruleCounts1 - ruleCounts0);
-
-    //test checkRule
-    //if success ,no Exception throw
-    ssmClient.checkRule("file: every 5s | path matches \"/foo*\"| cachefile");
-    boolean caughtException = false;
-    try {
-      ssmClient.checkRule("file.path");
-    } catch (IOException e) {
-      caughtException = true;
-    }
-    assertTrue(caughtException);
-
-    //test getRuleInfo
-    RuleInfo ruleInfo = ssmClient.getRuleInfo(ruleId);
-    assertNotEquals(null, ruleInfo);
-
-    //test disableRule
-    ssmClient.disableRule(ruleId, true);
-    assertEquals(RuleState.DISABLED, ssmClient.getRuleInfo(ruleId).getState());
-
-    //test activateRule
-    ssmClient.activateRule(ruleId);
-    assertEquals(RuleState.ACTIVE, ssmClient.getRuleInfo(ruleId).getState());
-
-    //test deleteRule
-    ssmClient.deleteRule(ruleId, true);
-    assertEquals(RuleState.DELETED, ssmClient.getRuleInfo(ruleId).getState());
-
-    //test single SSM
-    caughtException = false;
-    try {
-      conf.set(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
-      SmartServer.createSSM(null, conf);
-    } catch (IOException e) {
-      assertEquals("java.io.IOException: Another SmartServer is running",
-          e.toString());
-      caughtException = true;
-    }
-    assertTrue(caughtException);
-
-    //test client close
-    caughtException = false;
-    ssmClient.close();
-    try {
-      ssmClient.getRuleInfo(ruleId);
-    } catch (IOException e) {
-      caughtException = true;
-    }
-    assertEquals(true, caughtException);
-    server.shutdown();
-    cluster.shutdown();
   }
 
 //  @Test

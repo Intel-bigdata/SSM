@@ -64,21 +64,21 @@ public class TestSmartRuleParser {
   public void testValidRule() throws Exception {
     List<String> rules = new LinkedList<>();
     rules.add("file : accessCount(10m) > 10 and accessCount(10m) < 20 "
-        + "| cachefile");
+        + "| cache");
     rules.add("file with path matches \"/a/b*.dat\"  : "
         + "every 5s from \"2013-07-09 19:21:34\" to now + (7d + 4s ) | "
-        + "inCache or accessCount(10m) > 10 and 10d > 20s | cachefile");
+        + "inCache or accessCount(10m) > 10 and 10d > 20s | cache");
     rules.add("file with length > 1GB :  "
         + "blocksize > 1 + 3 and accessCount(30s) > 3 "
-        + "and storage.free(\"SSD\") > 100 | cachefile");
+        + "and storage.free(\"SSD\") > 100 | cache");
     rules.add("file with length > 3 : "
-        + "storage.free(\"SSD\") > 100 and not inCache | cachefile");
-    rules.add("file : accessCount(10min) > 20 | cachefile");
-    rules.add("file: every 5s from now to now + 10d | length > 3 | cachefile");
+        + "storage.free(\"SSD\") > 100 and not inCache | cache");
+    rules.add("file : accessCount(10min) > 20 | cache");
+    rules.add("file: every 5s from now to now + 10d | length > 3 | cache");
     rules.add("file: every 5s | length > 100mb | movefile \"ONE_SSD\"");
-    rules.add("file : every 1s | age > 100day | cachefile");
-    rules.add("file : every 1s | mtime > \"2016-09-13 12:05:06\" | cachefile");
-    rules.add("file : every 1s | mtime > now - 70day | cachefile");
+    rules.add("file : every 1s | age > 100day | cache");
+    rules.add("file : every 1s | mtime > \"2016-09-13 12:05:06\" | cache");
+    rules.add("file : every 1s | mtime > now - 70day | cache");
 
     for (String rule : rules) {
       parseAndExecuteRule(rule);
@@ -88,11 +88,11 @@ public class TestSmartRuleParser {
   @Test
   public void testInvalidRule() throws Exception {
     List<String> rules = new LinkedList<>();
-    rules.add("someobject: length > 3mb | cachefile");
-    rules.add("file : length > 3day | cachefile");
-    rules.add("file : length() > 3tb | cachefile");
-    rules.add("file : accessCountX(10m) > 2 and length() > 3 | cachefile");
-    rules.add("file : every 1s | mtime > 100s | cachefile");
+    rules.add("someobject: length > 3mb | cache");
+    rules.add("file : length > 3day | cache");
+    rules.add("file : length() > 3tb | cache");
+    rules.add("file : accessCountX(10m) > 2 and length() > 3 | cache");
+    rules.add("file : every 1s | mtime > 100s | cache");
 
     for (String rule : rules) {
       try {
