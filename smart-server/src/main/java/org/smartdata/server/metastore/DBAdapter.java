@@ -32,6 +32,7 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -831,6 +832,24 @@ public class DBAdapter {
     return ret;
   }
 
+  private String generateActionSQL(ActionInfo actionInfo) {
+    String sql = "INSERT INTO actions (aid, cid, action_name, args, "
+        + "result, log, successful, create_time, finished, finish_time, progress) "
+        + "VALUES('" + actionInfo.getActionId() + "', '"
+        + actionInfo.getActionName() + "', '"
+        + actionInfo.getCommandId() + "', '"
+        + StringUtils.join(actionInfo.getArgs(), ",") + "', '"
+        + actionInfo.getResult() + "', '"
+        + actionInfo.getLog() + "', '"
+        + actionInfo.isSuccessful() + "', '"
+        + actionInfo.getCreateTime() + "', '"
+        + actionInfo.isFinished() + "', '"
+        + actionInfo.getFinishTime() + "', '"
+        + String.valueOf(actionInfo.getProgress()) + "');";
+    return sql;
+  }
+
+
   public synchronized void insertActionsTable(ActionInfo[] actionInfos)
       throws SQLException {
     Connection conn = getConnection();
@@ -838,20 +857,7 @@ public class DBAdapter {
     try {
       s = conn.createStatement();
       for (int i = 0; i < actionInfos.length; i++) {
-        String sql = "INSERT INTO actions (aid, cid, action_name, args, "
-            + "result, log, successful, create_time, finished, finish_time, progress) "
-            + "VALUES('" + actionInfos[i].getActionId() + "', '"
-            + actionInfos[i].getActionName() + "', '"
-            + actionInfos[i].getCommandId() + "', '"
-            + Arrays.toString(actionInfos[i].getArgs()) + "', '"
-            + actionInfos[i].getResult() + "', '"
-            + actionInfos[i].getLog() + "', '"
-            + actionInfos[i].isSuccessful() + "', '"
-            + actionInfos[i].getCreateTime() + "', '"
-            + actionInfos[i].isFinished() + "', '"
-            + actionInfos[i].getFinishTime() + "', '"
-            + String.valueOf(actionInfos[i].getProgress()) + "');";
-        s.addBatch(sql);
+        s.addBatch(generateActionSQL(actionInfos[i]));
       }
       s.executeBatch();
     } finally {
@@ -864,19 +870,7 @@ public class DBAdapter {
 
   public synchronized void insertActionTable(ActionInfo actionInfo)
       throws SQLException {
-    String sql = "INSERT INTO actions (aid, cid, action_name, args, "
-        + "result, log, successful, create_time, finished, finish_time, progress) "
-        + "VALUES('" + actionInfo.getActionId() + "', '"
-        + actionInfo.getActionName() + "', '"
-        + actionInfo.getCommandId() + "', '"
-        + Arrays.toString(actionInfo.getArgs()) + "', '"
-        + actionInfo.getResult() + "', '"
-        + actionInfo.getLog() + "', '"
-        + actionInfo.isSuccessful() + "', '"
-        + actionInfo.getCreateTime() + "', '"
-        + actionInfo.isFinished() + "', '"
-        + actionInfo.getFinishTime() + "', '"
-        + String.valueOf(actionInfo.getProgress()) + "');";
+    String sql = generateActionSQL(actionInfo);
     execute(sql);
   }
 

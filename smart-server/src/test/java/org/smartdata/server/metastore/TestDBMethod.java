@@ -230,7 +230,7 @@ public class TestDBMethod {
     reInit();
     List<ActionInfo> actionInfos;
     ActionInfo actionInfo = new ActionInfo(1,1,
-        "cache", new String[] {"/test/file"}, "Test",
+        "cache", new String[] {"/test/file", "TTT", "fs"}, "Test",
         "Test",true, 123213213l, true, 123123l,
         100);
     dbAdapter.insertActionsTable(new ActionInfo[] {actionInfo});
