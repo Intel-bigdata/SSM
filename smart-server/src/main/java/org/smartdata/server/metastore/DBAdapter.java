@@ -464,10 +464,10 @@ public class DBAdapter {
 
   public synchronized void insertCachedFiles(long fid, String path, long fromTime,
       long lastAccessTime, int numAccessed) throws SQLException {
-    String sql = "INSERT INTO cached_files (fid, path, from_time, "
-        + "last_access_time, num_accessed) VALUES (" + fid + ","
-        + path  + "," + fromTime + "," + lastAccessTime + ","
-        + numAccessed + ")";
+    String sql = "INSERT INTO `cached_files` (fid, path, from_time, "
+        + "last_access_time, num_accessed) VALUES ('" + fid + "','"
+        + path  + "','" + fromTime + "','" + lastAccessTime + "','"
+        + numAccessed + "')";
     execute(sql);
   }
 
@@ -478,10 +478,10 @@ public class DBAdapter {
     try {
       st = conn.createStatement();
       for (CachedFileStatus c : s) {
-        String sql = "INSERT INTO cached_files (fid, path, from_time, "
-            + "last_access_time, num_accessed) VALUES (" + c.getFid() + ","
-            + c.getPath() + "," + c.getFromTime() + ","
-            + c.getLastAccessTime() + "," + c.getNumAccessed() + ")";
+        String sql = "INSERT INTO `cached_files` (fid, path, from_time, "
+            + "last_access_time, num_accessed) VALUES ('" + c.getFid() + "','"
+            + c.getPath() + "','" + c.getFromTime() + "','"
+            + c.getLastAccessTime() + "','" + c.getNumAccessed() + "')";
         st.addBatch(sql);
       }
       st.executeBatch();
@@ -556,6 +556,7 @@ public class DBAdapter {
       while (resultSet.next()) {
         CachedFileStatus f = new CachedFileStatus(
             resultSet.getLong("fid"),
+            resultSet.getString("path"),
             resultSet.getLong("from_time"),
             resultSet.getLong("last_access_time"),
             resultSet.getInt("num_accessed")

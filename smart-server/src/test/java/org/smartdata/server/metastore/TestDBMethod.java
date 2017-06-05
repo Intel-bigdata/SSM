@@ -51,11 +51,13 @@ public class TestDBMethod {
   }
 
   private void reInit() throws Exception {
+    // Clear DB and create new tables
     Util.initializeDataBase(conn);
     dbAdapter = new DBAdapter(conn);
   }
 
   private void init() throws Exception {
+    // Use existing records in db
     dbAdapter = new DBAdapter(conn);
   }
 
@@ -136,7 +138,13 @@ public class TestDBMethod {
 
   @Test
   public void testGetCachedFileStatus() throws Exception {
-    init();
+    reInit();
+    dbAdapter.insertCachedFiles(6l, "testPath", 1490918400000l,
+        234567l, 456);
+    dbAdapter.insertCachedFiles(19l, "testPath", 1490918400000l,
+        234567l, 456);
+    dbAdapter.insertCachedFiles(23l, "testPath", 1490918400000l,
+        234567l, 456);
     CachedFileStatus cachedFileStatus = dbAdapter.getCachedFileStatus(6);
     Assert.assertTrue(cachedFileStatus.getFromTime() == 1490918400000l);
     List<CachedFileStatus> cachedFileList = dbAdapter.getCachedFileStatus();
