@@ -841,9 +841,9 @@ public class DBAdapter {
         + StringUtils.join(actionInfo.getArgs(), ",") + "', '"
         + actionInfo.getResult() + "', '"
         + actionInfo.getLog() + "', '"
-        + actionInfo.isSuccessful() + "', '"
+        + booleanToInt(actionInfo.isSuccessful()) + "', '"
         + actionInfo.getCreateTime() + "', '"
-        + actionInfo.isFinished() + "', '"
+        + booleanToInt(actionInfo.isFinished()) + "', '"
         + actionInfo.getFinishTime() + "', '"
         + String.valueOf(actionInfo.getProgress()) + "');";
     return sql;

@@ -38,7 +38,7 @@ public class ActionStatus {
 
   public void init() {
     finished = false;
-    startTime = Time.monotonicNow();
+    startTime = Time.now();
     successful = false;
     resultOs = new ByteArrayOutputStream(64 * 1024);
     psResultOs = new PrintStream(resultOs, false);
@@ -64,7 +64,7 @@ public class ActionStatus {
 
   public void end() {
     this.finished = true;
-    finishTime = Time.monotonicNow();
+    finishTime = Time.now();
   }
 
   public long getStartTime() {
@@ -72,7 +72,7 @@ public class ActionStatus {
   }
 
   public void begin() {
-    this.startTime = Time.monotonicNow();
+    this.startTime = Time.now();
   }
 
   public boolean isSuccessful() {
@@ -87,7 +87,7 @@ public class ActionStatus {
     if (finished) {
       return finishTime - startTime;
     }
-    return Time.monotonicNow() - startTime;
+    return Time.now() - startTime;
   }
 
   public PrintStream getResultPrintStream() {
@@ -108,7 +108,7 @@ public class ActionStatus {
 
   public void reset() {
     finished = false;
-    startTime = Time.monotonicNow();
+    startTime = Time.now();
     successful = false;
     resultOs.reset();
     logOs.reset();
