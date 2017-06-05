@@ -17,11 +17,15 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfoWithStorage;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
+
+import java.util.List;
 
 /**
  * Check and return file blocks storage location.
@@ -43,22 +47,34 @@ public class CheckStorageAction extends HdfsAction {
     actionStatus.begin();
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+      if (fileStatus == null) {
+        throw new IllegalArgumentException("File does not exit.");
+      }
       long length = fileStatus.getLen();
-      BlockLocation[] blockLocations = dfsClient.getBlockLocations(fileName,
-          0, length);
-      for (BlockLocation blockLocation : blockLocations) {
-        StringBuilder hosts = new StringBuilder();
-        hosts.append("{");
-        for (String host : blockLocation.getHosts()) {
-          hosts.append(host + " ");
+      List<LocatedBlock> locatedBlocks = dfsClient.getLocatedBlocks(
+          fileName, 0, length).getLocatedBlocks();
+      for (LocatedBlock locatedBlock : locatedBlocks) {
+        StringBuilder blockInfo = new StringBuilder();
+        blockInfo.append("File offset = ")
+            .append(locatedBlock.getStartOffset())
+            .append(", ");
+        blockInfo.append("Block locations = {");
+        for (DatanodeInfo datanodeInfo : locatedBlock.getLocations()) {
+          blockInfo.append(datanodeInfo.getName());
+          if (datanodeInfo instanceof DatanodeInfoWithStorage) {
+            blockInfo.append("[")
+                .append(((DatanodeInfoWithStorage)datanodeInfo).getStorageType())
+                .append("]");
+          }
+          blockInfo.append(" ");
         }
-        hosts.append("}");
-        this.resultOut.println(hosts);
+        blockInfo.append("}");
+        this.resultOut.println(blockInfo);
       }
       actionStatus.setSuccessful(true);
     } catch (Exception e) {
       actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
+      LOG.error("CheckStorageAction failed", e);
     } finally {
       actionStatus.end();
     }
