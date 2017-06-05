@@ -25,6 +25,7 @@ import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.ModuleSequenceProto;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.StatesManager;
+import org.smartdata.server.command.CommandDescriptor;
 import org.smartdata.server.command.CommandExecutor;
 import org.smartdata.server.rule.parser.RuleStringParser;
 import org.smartdata.server.rule.parser.TranslateResult;
@@ -79,7 +80,7 @@ public class RuleManager implements ModuleSequenceProto {
    */
   public long submitRule(String rule, RuleState initState)
       throws IOException {
-    LOG.error("Received Rule -> [" + rule + "]");
+    LOG.debug("Received Rule -> [" + rule + "]");
     if (initState != RuleState.ACTIVE && initState != RuleState.DISABLED
         && initState != RuleState.DRYRUN) {
       throw new IOException("Invalid initState = " + initState
@@ -88,6 +89,18 @@ public class RuleManager implements ModuleSequenceProto {
     }
 
     TranslateResult tr = doCheckRule(rule, null);
+    CommandDescriptor cd = tr.getCmdDescriptor();
+    if (getCommandExecutor() != null) {
+      String error = "";
+      for (int i = 0; i < cd.size(); i++) {
+        if (!getCommandExecutor().isActionSupported(cd.getActionName(i))) {
+          error += "Action '" + cd.getActionName(i) + "' not supported.\n";
+        }
+      }
+      if (error.length() > 0) {
+        throw new IOException(error);
+      }
+    }
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
     RuleInfo ruleInfo = builder.build();
