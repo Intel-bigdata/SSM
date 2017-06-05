@@ -32,7 +32,7 @@ Architecture
 ------------
 <img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/high-level-architecture.png" width="461" height="295" />
 
-The detail SSM architecture is [here](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md).
+Above illustrated how to position SSM in big data ecosystem. Ref. [SSM architecture](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
 
 Development Phases
 ------------
@@ -51,7 +51,7 @@ HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching
 * Support block level erasure coding;
 * To support the new desired actions, enhance the SSM framework and infrastructure.
 
-**Phase 3.** Optimize further for computing frameworks and workloads:
+**Phase 3.** Optimize further for computing frameworks and workloads benefiting from SSM facilities:
 * Hive on SSM;
 * HBase on SSM;
 * Spark on SSM;
