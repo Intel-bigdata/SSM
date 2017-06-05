@@ -493,6 +493,12 @@ public class DBAdapter {
     }
   }
 
+  public void deleteCachedFile(long fid) throws SQLException {
+    String sql = "DELETE from `cached_files` WHERE fid = '" +
+        + fid + "'";
+    execute(sql);
+  }
+
   public synchronized boolean updateCachedFiles(Long fid, Long fromTime,
       Long lastAccessTime, Integer numAccessed) throws SQLException {
     StringBuffer sb = new StringBuffer("UPDATE cached_files SET");

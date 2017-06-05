@@ -93,6 +93,7 @@ public class CacheListFetcher {
         RemoteIterator<CacheDirectiveEntry> cacheDirectives = dfsClient.listCacheDirectives(filter);
         Set<Long> newFileSet = new HashSet<>();
         List<CachedFileStatus> cachedFileStatuses = new ArrayList<>();
+        // Add new cache files to DB
         while(cacheDirectives.hasNext()) {
           CacheDirectiveInfo currentInfo = cacheDirectives.next().getInfo();
           Long fid = currentInfo.getId();
@@ -103,6 +104,12 @@ public class CacheListFetcher {
           }
         }
         dbAdapter.insertCachedFiles(cachedFileStatuses);
+        // Remove uncached files from DB
+        for (Long fid: fileSet) {
+          if (!newFileSet.contains(fid)) {
+            dbAdapter.deleteCachedFile(fid);
+          }
+        }
         fileSet = newFileSet;
       } catch (IOException e) {
         e.printStackTrace();
