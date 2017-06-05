@@ -28,10 +28,9 @@ import org.apache.hadoop.hdfs.server.balancer.NameNodeConnector;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,7 +39,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Mover tool for SSM.
  */
 public class Mover {
-  static final Logger LOG = LoggerFactory.getLogger(Mover.class);
 
   static final String MOVER_ID_PATH = "/system/move.id";
 
@@ -50,6 +48,7 @@ public class Mover {
   final int retryMaxAttempts;
   final AtomicInteger retryCount;
   private final MoverStatus status;
+  private final PrintStream log;
 
   Mover(NameNodeConnector nnc, Configuration conf, AtomicInteger retryCount,
       MoverStatus status) {
@@ -72,6 +71,7 @@ public class Mover {
     this.storages = new StorageMap();
     this.targetPaths = nnc.getTargetPaths();
     this.status = status;
+    this.log = status.getLogPrintStream();
   }
 
   @VisibleForTesting
@@ -95,10 +95,10 @@ public class Mover {
       return new MoverProcessor(dispatcher, targetPaths, retryCount,
               retryMaxAttempts, storages, status).processNamespace();
     } catch (IllegalArgumentException e) {
-      LOG.info(e + ".  Exiting ...");
+      log.println(e + ".  Exiting ...");
       return ExitStatus.ILLEGAL_ARGUMENTS;
     } catch (IOException e) {
-      LOG.info(e + ".  Exiting ...");
+      log.println(e + ".  Exiting ...");
       return ExitStatus.IO_EXCEPTION;
     } finally {
       dispatcher.shutdownNow();
@@ -126,7 +126,8 @@ public class Mover {
                             DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_DEFAULT) * 1000;
     AtomicInteger retryCount = new AtomicInteger(0);
 
-    LOG.info("namenodes = " + namenodes);
+    final PrintStream log = status.getLogPrintStream();
+    log.println("namenodes = " + namenodes);
 
     List<NameNodeConnector> connectors = Collections.emptyList();
     try {
@@ -148,12 +149,12 @@ public class Mover {
             iter.remove();
           } else if (r != ExitStatus.IN_PROGRESS) {
             if (r == ExitStatus.NO_MOVE_PROGRESS) {
-              LOG.error("Failed to move some blocks after "
+              log.println("Failed to move some blocks after "
                       + m.retryMaxAttempts + " retries. Exiting...");
             } else if (r == ExitStatus.NO_MOVE_BLOCK) {
-              LOG.error("Some blocks can't be moved. Exiting...");
+              log.println("Some blocks can't be moved. Exiting...");
             } else {
-              LOG.error("Mover failed. Exiting with status " + r
+              log.println("Mover failed. Exiting with status " + r
                       + "... ");
             }
             // must be an error statue, return
@@ -164,7 +165,7 @@ public class Mover {
         status.completeTotalValueSet();
         Thread.sleep(sleeptime);
       }
-      LOG.info("Mover Successful: all blocks satisfy"
+      log.println("Mover Successful: all blocks satisfy"
               + " the specified storage policy. Exiting...");
       status.setSuccessful(true);
       return ExitStatus.SUCCESS.getExitCode();

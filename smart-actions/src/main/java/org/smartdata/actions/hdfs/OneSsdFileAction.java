@@ -17,16 +17,10 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
-
 /**
  * An action to do one-ssd for a file.
  */
 public class OneSsdFileAction extends MoveFileAction {
-  private static final Logger LOG = LoggerFactory.getLogger(OneSsdFileAction.class);
 
   @Override
   public void init(String... args) {

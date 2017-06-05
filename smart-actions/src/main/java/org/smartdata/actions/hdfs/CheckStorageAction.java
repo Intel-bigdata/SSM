@@ -19,15 +19,12 @@ package org.smartdata.actions.hdfs;
 
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
 /**
  * Check and return file blocks storage location.
  */
 public class CheckStorageAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(WriteFileAction.class);
 
   private String fileName;
 

@@ -17,8 +17,6 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionType;
 import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
@@ -30,7 +28,6 @@ import java.util.Date;
  * An action to set and enforce storage policy for a file.
  */
 public class MoveFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(MoveFileAction.class);
 
   protected String storagePolicy;
   protected String fileName;

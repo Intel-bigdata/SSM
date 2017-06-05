@@ -18,8 +18,6 @@
 
 package org.smartdata.actions.hdfs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
@@ -36,11 +34,10 @@ import java.util.Random;
  * Arguments: file_path length [buffer_size, default=64k]
  */
 public class WriteFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(WriteFileAction.class);
   private String filePath;
   private int length;
   private int bufferSize = 64 * 1024;
-
+  
   @Override
   public void init(String[] args) {
     this.filePath = args[0];

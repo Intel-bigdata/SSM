@@ -17,16 +17,10 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
-
 /**
  * An action to do block level erasure code a file, for both Hadoop 2.x and Hadoop 3.x.
  */
 public class BlockErasureCodeFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(BlockErasureCodeFileAction.class);
 
   @Override
   protected void execute() {
