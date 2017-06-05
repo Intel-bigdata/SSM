@@ -57,7 +57,7 @@ public class TestSqliteDB {
       String[] presqls = new String[] {
           "INSERT INTO rules (state, rule_text, submit_time, checked_count, "
               + "commands_generated) VALUES (0, 'file: every 1s \n" + " | "
-              + "accessCount(5s) > 3 | cachefile', 1494903787619, 0, 0);"
+              + "accessCount(5s) > 3 | cache', 1494903787619, 0, 0);"
       };
 
       for (int i = 0; i< presqls.length; i++) {

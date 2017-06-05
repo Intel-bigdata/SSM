@@ -21,9 +21,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.metastore.DruidPool;
-import org.smartdata.server.metastore.Util;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -45,7 +42,7 @@ public class TestDruid {
     DBAdapter adapter = new DBAdapter(druidPool);
 
     String rule = "file : accessCountX(10m) > 20 \n\n"
-        + "and length() > 3 | cachefile";
+        + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
     RuleInfo info1 = new RuleInfo(0, submitTime,
         rule, RuleState.ACTIVE, 0, 0, 0);

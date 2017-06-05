@@ -38,7 +38,7 @@ public class TestSubmitRuleThroughCli extends TestEmptyMiniSmartCluster {
     String ruleFile = TestDBUtil.getUniqueFilePath();
     try {
 
-      String rule = "file: every 1s \n | length > 10 | cachefile";
+      String rule = "file: every 1s \n | length > 10 | cache";
       FileOutputStream os = new FileOutputStream(ruleFile);
       os.write(rule.getBytes());
       os.close();

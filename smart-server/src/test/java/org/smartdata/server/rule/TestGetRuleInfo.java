@@ -33,7 +33,7 @@ public class TestGetRuleInfo extends TestEmptyMiniSmartCluster {
   public void testGetSingleRuleInfo() throws Exception {
     waitTillSSMExitSafeMode();
 
-    String rule = "file: every 1s \n | length > 10 | cachefile";
+    String rule = "file: every 1s \n | length > 10 | cache";
     SmartAdmin client = new SmartAdmin(conf);
 
     long ruleId = client.submitRule(rule, RuleState.ACTIVE);
@@ -61,7 +61,7 @@ public class TestGetRuleInfo extends TestEmptyMiniSmartCluster {
   public void testMultiRules() throws Exception {
     waitTillSSMExitSafeMode();
 
-    String rule = "file: every 1s \n | length > 10 | cachefile";
+    String rule = "file: every 1s \n | length > 10 | cache";
     SmartAdmin client = new SmartAdmin(conf);
 
     int nRules = 100;

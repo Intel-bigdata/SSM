@@ -45,7 +45,7 @@ public class TestRulesTable {
       conn = Util.createSqliteConnection(dbFile);
       Util.initializeDataBase(conn);
       String rule = "file : accessCountX(10m) > 20 \n\n"
-          + "and length() > 3 | cachefile";
+          + "and length() > 3 | cache";
       long submitTime = System.currentTimeMillis();
       RuleInfo info1 = new RuleInfo(0, submitTime,
           rule, RuleState.ACTIVE, 0, 0, 0);
