@@ -57,8 +57,11 @@ public class AccessEventAggregator {
       this.currentWindow = assignWindow(eventList.get(0).getTimestamp());
     }
     for (FileAccessEvent event : eventList) {
-      if (this.currentWindow.contains(event.getTimestamp()) && !event.getPath().isEmpty()) {
-        this.eventBuffer.add(event);
+      if (this.currentWindow.contains(event.getTimestamp())) {
+        // Exclude watermark event
+        if (!event.getPath().isEmpty()) {
+          this.eventBuffer.add(event);
+        }
       } else { // New Window occurs
         this.createTable();
         this.currentWindow = assignWindow(event.getTimestamp());

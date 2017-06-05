@@ -29,4 +29,22 @@ public class TimeUtils {
       return TimeGranularity.SECOND;
     }
   }
+
+  public static TimeGranularity getFineGarinedGranularity(TimeGranularity granularity) {
+    switch (granularity) {
+      case YEAR:
+        return TimeGranularity.MONTH;
+      case MONTH:
+        return TimeGranularity.WEEK;
+      case WEEK:
+        return TimeGranularity.DAY;
+      case DAY:
+        return TimeGranularity.HOUR;
+      case HOUR:
+        return TimeGranularity.MINUTE;
+      case MINUTE:
+        return TimeGranularity.SECOND;
+    }
+    return TimeGranularity.SECOND;
+  }
 }
