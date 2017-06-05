@@ -20,8 +20,6 @@ package org.smartdata.actions.hdfs;
 
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
@@ -35,7 +33,6 @@ import java.io.IOException;
  * Arguments: file_path [buffer_size, default=64k]
  */
 public class ReadFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(ReadFileAction.class);
 
   private String filePath;
   private int bufferSize = 64 * 1024;

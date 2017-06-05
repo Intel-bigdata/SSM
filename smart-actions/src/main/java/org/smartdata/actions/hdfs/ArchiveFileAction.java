@@ -17,8 +17,6 @@
  */
 package org.smartdata.actions.hdfs;
 
-import java.util.UUID;
-
 /**
  * An action to archive a file.
  */

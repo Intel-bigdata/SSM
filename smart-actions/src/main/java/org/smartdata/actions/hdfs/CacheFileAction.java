@@ -25,8 +25,6 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.ActionType;
 
@@ -38,7 +36,6 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Move to Cache Action
  */
 public class CacheFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(CacheFileAction.class);
 
   private String fileName;
   private LinkedBlockingQueue<String> actionEvents;
@@ -88,8 +85,8 @@ public class CacheFileAction extends HdfsAction {
     if (isCached(fileName)) {
       return;
     }
-    LOG.info("Action starts at {} : {} -> cache",
-        new Date(System.currentTimeMillis()), fileName);
+    logOut.println("Action starts at " + new Date(System.currentTimeMillis())
+        + " : " + fileName + " -> cache");
     addDirective(fileName);
   }
 

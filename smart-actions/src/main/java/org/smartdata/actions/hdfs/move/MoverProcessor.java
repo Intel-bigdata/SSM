@@ -28,10 +28,9 @@ import org.apache.hadoop.hdfs.server.balancer.Matcher;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.net.NetworkTopology;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,7 +38,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A processor to do Mover action.
  */
 class MoverProcessor {
-  static final Logger LOG = LoggerFactory.getLogger(MoverProcessor.class);
 
   private final DFSClient dfs;
   private final Dispatcher dispatcher;
@@ -52,6 +50,7 @@ class MoverProcessor {
   private final BlockStoragePolicy[] blockStoragePolicies;
   private long movedBlocks = 0;
   private final MoverStatus moverStatus;
+  private final PrintStream log;
 
   MoverProcessor(Dispatcher dispatcher, List<Path> targetPaths,
       AtomicInteger retryCount, int retryMaxAttempts, StorageMap storages,
@@ -67,6 +66,7 @@ class MoverProcessor {
         BlockStoragePolicySuite.ID_BIT_LENGTH];
     initStoragePolicies();
     this.moverStatus = moverStatus;
+    this.log = moverStatus.getLogPrintStream();
   }
 
   private void initStoragePolicies() throws IOException {
@@ -83,8 +83,8 @@ class MoverProcessor {
     try {
       dirs = dfs.getSnapshottableDirListing();
     } catch (IOException e) {
-      LOG.warn("Failed to get snapshottable directories."
-              + " Ignore and continue.", e);
+      log.println("Failed to get snapshottable directories."
+              + " Ignore and continue. " + e);
     }
     if (dirs != null) {
       for (SnapshottableDirectoryStatus dir : dirs) {
@@ -158,7 +158,7 @@ class MoverProcessor {
     if (hasFailed) {
       if (retryCount.get() == retryMaxAttempts) {
         result.setRetryFailed();
-        LOG.error("Failed to move some block's after "
+        log.println("Failed to move some block's after "
                 + retryMaxAttempts + " retries.");
         return result.getExitStatus();
       } else {
@@ -183,8 +183,8 @@ class MoverProcessor {
       try {
         children = dfs.listPaths(fullPath, lastReturnedName, true);
       } catch (IOException e) {
-        LOG.warn("Failed to list directory " + fullPath
-                + ". Ignore the directory and continue.", e);
+        log.println("Failed to list directory " + fullPath
+                + ". Ignore the directory and continue. " + e);
         return;
       }
       if (children == null) {
@@ -226,8 +226,8 @@ class MoverProcessor {
           processFile(fullPath, (HdfsLocatedFileStatus) status, result);
         }
       } catch (IOException e) {
-        LOG.warn("Failed to check the moverStatus of " + parent
-                + ". Ignore it and continue.", e);
+        log.println("Failed to check the moverStatus of " + parent
+                + ". Ignore it and continue." + e);
       }
     }
   }
@@ -243,7 +243,7 @@ class MoverProcessor {
     }
     final BlockStoragePolicy policy = blockStoragePolicies[policyId];
     if (policy == null) {
-      LOG.warn("Failed to get the storage policy of file " + fullPath);
+      log.println("Failed to get the storage policy of file " + fullPath);
       return;
     }
     List<StorageType> types = policy.chooseStorageTypes(
