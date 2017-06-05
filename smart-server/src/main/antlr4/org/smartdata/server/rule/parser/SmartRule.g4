@@ -105,12 +105,8 @@ stringexpr
    | stringexpr '+' stringexpr                              #strPlus
    ;
 
-commands
-    : command (';' command)*
-    ;
-
 command
-    : ID .*?
+    : .*
     ;
 
 id
@@ -137,7 +133,6 @@ opr
    | '-'
    | '%'
    ;
-
 
 fileEvent
    : FILECREATE
@@ -176,10 +171,10 @@ TO : 'to' ;
 WITH : 'with' ;
 MATCHES : 'matches' ;
 
-FILE : 'file' ;
-DIRECTORY : 'directory' ;
-STORAGE : 'storage' ;
-CACHE : 'cache' ;
+fragment FILE : 'file' ;
+fragment DIRECTORY : 'directory' ;
+fragment STORAGE : 'storage' ;
+fragment CACHE : 'cache' ;
 
 FILECREATE: 'FileCreate' ;
 FILECLOSE: 'FileClose' ;
@@ -198,9 +193,6 @@ TIMEPOINTCONST
     ;
 
 ID : [a-zA-Z_] [a-zA-Z0-9_]* ;
-
-
-OPTION: '-' [a-zA-Z0-9]+ ;
 
 Linecomment : '#' .*? '\r'? '\n' -> skip ;
 

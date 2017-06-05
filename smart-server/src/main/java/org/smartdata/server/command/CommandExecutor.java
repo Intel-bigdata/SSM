@@ -319,6 +319,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return actionDescriptors;
   }
 
+  public boolean isActionSupported(String actionName) {
+    return actionRegistry.checkAction(actionName);
+  }
+
   private void addToPending(CommandInfo cmdinfo) throws IOException {
     Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
     cmdsAll.put(cmdinfo.getCid(), cmdinfo);
@@ -487,7 +491,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public synchronized long submitCommand(String commandDescriptorString) throws IOException {
-    LOG.error("Received Command -> [" + commandDescriptorString + "]");
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Received Command -> [" + commandDescriptorString + "]");
+    }
     CommandDescriptor commandDescriptor;
     try {
       commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
