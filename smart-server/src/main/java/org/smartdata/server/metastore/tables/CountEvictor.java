@@ -17,12 +17,15 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.smartdata.server.metastore.DBAdapter;
+
 import java.util.Iterator;
 
-public class CountEvictor implements TableEvictor {
+public class CountEvictor extends TableEvictor {
   private final int maxCount;
 
-  public CountEvictor(int count) {
+  public CountEvictor(DBAdapter adapter, int count) {
+    super(adapter);
     this.maxCount = count;
   }
 
@@ -31,11 +34,12 @@ public class CountEvictor implements TableEvictor {
     if (size > maxCount) {
       int evictedCount = 0;
       for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext();) {
-        iterator.next();
+        AccessCountTable table = iterator.next();
         evictedCount++;
         if (evictedCount > size - maxCount) {
           break;
         } else {
+          this.dropTable(table);
           iterator.remove();
         }
       }

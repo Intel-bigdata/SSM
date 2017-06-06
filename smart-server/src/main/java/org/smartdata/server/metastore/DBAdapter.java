@@ -546,6 +546,10 @@ public class DBAdapter {
     execute(sql);
   }
 
+  public void dropTable(String tableName) throws SQLException {
+    execute("DROP TABLE " + tableName);
+  }
+
   private List<CachedFileStatus> getCachedFileStatus(String sql)
       throws SQLException {
     QueryHelper queryHelper = new QueryHelper(sql);
