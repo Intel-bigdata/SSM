@@ -17,7 +17,7 @@ Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not on
 ### 3. Small files support and compaction
 Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory.
 ### 4. Cluster Disaster Recovery
-Supporting transparent fail-over for applications.
+Supporting transparent fail-over for applications. [Here](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/disaster-recovery.md) is the high level design document. 
 
 High Level Considerations
 ------------
