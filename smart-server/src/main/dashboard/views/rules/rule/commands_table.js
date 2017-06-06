@@ -53,7 +53,7 @@ angular.module('dashboard')
                     shape: 'stripe'
                   },
                   id: {
-                    href: command.pageUrl, text: 'Command ' + command.cid
+                    href: command.pageUrl, text: command.cid
                   }
                 };
               }));
