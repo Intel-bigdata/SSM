@@ -212,7 +212,12 @@ public class RuleQueryExecutor implements Runnable {
 
     if (LOG.isDebugEnabled()) {
       LOG.debug("Rule " + ctx.getRuleId() + " got "
-          + accTables.size() + " tables.");
+          + accTables.size() + " tables:");
+      int idx = 1;
+      for (AccessCountTable t : accTables) {
+        LOG.debug(idx + ".  " + (t.isView() ? " [VIEW] " : "        ")
+            + t.getTableName() + " ");
+      }
     }
 
     if (accTables == null || accTables.size() == 0) {
@@ -328,6 +333,7 @@ public class RuleQueryExecutor implements Runnable {
           }
           cmd.setRuleId(ruleId);
           ruleManager.getCommandExecutor().submitCommand(cmd);
+          nSubmitted++;
         } catch (IOException e) {
           // ignore this and continue submit
           LOG.error("Failed to submit command ");
