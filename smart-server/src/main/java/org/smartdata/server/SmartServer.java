@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
@@ -204,13 +205,33 @@ public class SmartServer {
    * @throws Exception
    */
   public void runSSMDaemons() throws Exception {
-    String nnRpcAddr = conf.get(
-        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+    String nnRpcAddr = null;
+
+    String[] rpcAddrKeys = {
+        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY, // Keep it first
+        DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY,
+        DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY
+    };
+
+    String[] nnRpcAddrs = new String[rpcAddrKeys.length];
+
+    int lastNotNullIdx = 0;
+    for (int index = 0; index < rpcAddrKeys.length; index++) {
+      nnRpcAddrs[index] = conf.get(rpcAddrKeys[index]);
+      lastNotNullIdx = nnRpcAddrs[index] == null ? lastNotNullIdx : index;
+      nnRpcAddr = nnRpcAddr == null ? nnRpcAddrs[index] : nnRpcAddr;
+    }
+
     if (nnRpcAddr == null) {
       throw new IOException("Can not find NameNode RPC server address. "
           + "Please configure it through '"
           + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "'.");
     }
+
+    if (lastNotNullIdx == 0 && rpcAddrKeys.length > 1) {
+      conf.set(rpcAddrKeys[1], nnRpcAddr);
+    }
+
     namenodeURI = new URI(nnRpcAddr);
     this.fs = (DistributedFileSystem) FileSystem.get(namenodeURI, conf);
     outSSMIdFile = checkAndMarkRunning();
