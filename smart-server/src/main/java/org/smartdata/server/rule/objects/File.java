@@ -58,6 +58,10 @@ public class File extends SmartObject {
     properties.put("atime",
         new Property("atime", ValueType.TIMEPOINT,
             null, "files", "access_time", false));
+    properties.put("storagePolicy",
+        new Property("storagePolicy", ValueType.STRING,
+            null, "files", null, false,
+            "(SELECT policy_name FROM storage_policy WHERE sid == files.sid)"));
   }
 
   public File() {
