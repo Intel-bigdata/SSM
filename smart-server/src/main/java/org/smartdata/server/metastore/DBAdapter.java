@@ -895,8 +895,9 @@ public class DBAdapter {
     if (size <= 0) {
       return new ArrayList<>();
     }
+    // In DESC order
     String sqlFinal = "SELECT * FROM actions "
-        + String.format("ORDER by create_time limit %d", size);
+        + String.format("ORDER by create_time DESC limit %d", size);
     return getActions(sqlFinal);
   }
 
