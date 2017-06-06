@@ -83,6 +83,7 @@ public class Util {
 
         "CREATE TABLE `cached_files` (\n" +
             "  `fid` bigint(20) NOT NULL,\n" +
+            "  `path` varchar(4096) NOT NULL,\n" +
             "  `from_time` bigint(20) NOT NULL,\n" +
             "  `last_access_time` bigint(20) NOT NULL,\n" +
             "  `num_accessed` int(11) NOT NULL\n" +
