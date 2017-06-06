@@ -110,8 +110,8 @@ public class AccessEventAggregator {
       } catch (SQLException e) {
         LOG.error("Create table error: " + table, e);
       }
-      this.accessCountTableManager.addTable(table);
     }
+    this.accessCountTableManager.addTable(table);
   }
 
   private Set<String> getPaths(List<FileAccessEvent> events) {
