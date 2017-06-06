@@ -41,7 +41,7 @@ public class TestAccessEventAggregator {
 
     aggregator.addAccessEvents(Lists.newArrayList(new FileAccessEvent("", 6000)));
     verify(adapter, times(1)).execute(anyString());
-    verify(manager, never()).addTable(any(AccessCountTable.class));
+    verify(manager, times(1)).addTable(any(AccessCountTable.class));
 
     aggregator.addAccessEvents(
         Lists.newArrayList(
@@ -50,6 +50,6 @@ public class TestAccessEventAggregator {
             new FileAccessEvent("", 18000)));
 
     verify(adapter, times(5)).execute(anyString());
-    verify(manager, times(2)).addTable(any(AccessCountTable.class));
+    verify(manager, times(3)).addTable(any(AccessCountTable.class));
   }
 }
