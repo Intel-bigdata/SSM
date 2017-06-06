@@ -124,6 +124,7 @@ public class TestDBMethod {
         234567l, 456);
     Assert.assertTrue(dbAdapter.getCachedFileStatus(
         80l).getFromTime() == 123456l);
+    // Update record with 80l id
     Assert.assertTrue(dbAdapter.updateCachedFiles(80l, 123455l,
         234568l, 460));
     Assert.assertTrue(dbAdapter.getCachedFileStatus().get(0)
@@ -135,8 +136,14 @@ public class TestDBMethod {
     Assert.assertTrue(dbAdapter.getCachedFileStatus(321l)
         .getNumAccessed() == 222);
     Assert.assertTrue(dbAdapter.getCachedFileStatus().size() == 2);
+    // Delete one record
     dbAdapter.deleteCachedFile(321l);
     Assert.assertTrue(dbAdapter.getCachedFileStatus().size() == 1);
+    // Clear all records
+    dbAdapter.deleteAllCachedFile();
+    Assert.assertTrue(dbAdapter.getCachedFileStatus() == null);
+    dbAdapter.insertCachedFiles(80l, "testPath", 123456l,
+        234567l, 456);
   }
 
   @Test
@@ -227,11 +234,11 @@ public class TestDBMethod {
   @Test
   public void testInsertListActions() throws Exception {
     reInit();
-    ActionInfo actionInfo = new ActionInfo(1,1,
-        "cache", new String[] {"/test/file"}, "Test",
-        "Test",true, 123213213l, true, 123123l,
+    ActionInfo actionInfo = new ActionInfo(1, 1,
+        "cache", new String[]{"/test/file"}, "Test",
+        "Test", true, 123213213l, true, 123123l,
         100);
-    dbAdapter.insertActionsTable(new ActionInfo[] {actionInfo});
+    dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     List<ActionInfo> actionInfos = dbAdapter.getActionsTableItem(null, null);
     Assert.assertTrue(actionInfos.size() == 1);
   }
@@ -240,13 +247,13 @@ public class TestDBMethod {
   public void testGetNewCreatedActions() throws Exception {
     reInit();
     List<ActionInfo> actionInfos;
-    ActionInfo actionInfo = new ActionInfo(1,1,
-        "cache", new String[] {"/test/file", "TTT", "fs"}, "Test",
-        "Test",true, 123213213l, true, 123123l,
+    ActionInfo actionInfo = new ActionInfo(1, 1,
+        "cache", new String[]{"/test/file", "TTT", "fs"}, "Test",
+        "Test", true, 123213213l, true, 123123l,
         100);
-    dbAdapter.insertActionsTable(new ActionInfo[] {actionInfo});
+    dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     actionInfo.setActionId(2);
-    dbAdapter.insertActionsTable(new ActionInfo[] {actionInfo});
+    dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     actionInfos = dbAdapter.getNewCreatedActionsTableItem(1);
     Assert.assertTrue(actionInfos.size() == 1);
     actionInfos = dbAdapter.getNewCreatedActionsTableItem(2);
@@ -258,18 +265,18 @@ public class TestDBMethod {
     reInit();
     long currentId = dbAdapter.getMaxActionId();
     Assert.assertTrue(currentId == 1);
-    ActionInfo actionInfo = new ActionInfo(currentId,1,
-        "cache", new String[] {"/test/file"}, "Test",
-        "Test",true, 123213213l, true, 123123l,
+    ActionInfo actionInfo = new ActionInfo(currentId, 1,
+        "cache", new String[]{"/test/file"}, "Test",
+        "Test", true, 123213213l, true, 123123l,
         100);
-    dbAdapter.insertActionsTable(new ActionInfo[] {actionInfo});
+    dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     currentId = dbAdapter.getMaxActionId();
     Assert.assertTrue(currentId == 2);
-    actionInfo = new ActionInfo(currentId,1,
-        "cache", new String[] {"/test/file"}, "Test",
-        "Test",true, 123213213l, true, 123123l,
+    actionInfo = new ActionInfo(currentId, 1,
+        "cache", new String[]{"/test/file"}, "Test",
+        "Test", true, 123213213l, true, 123123l,
         100);
-    dbAdapter.insertActionsTable(new ActionInfo[] {actionInfo});
+    dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     currentId = dbAdapter.getMaxActionId();
     Assert.assertTrue(currentId == 3);
   }

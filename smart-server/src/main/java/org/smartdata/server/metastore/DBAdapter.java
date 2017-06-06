@@ -493,6 +493,12 @@ public class DBAdapter {
     }
   }
 
+  public void deleteAllCachedFile() throws SQLException {
+    String sql = "DELETE from `cached_files`";
+    execute(sql);
+  }
+
+
   public void deleteCachedFile(long fid) throws SQLException {
     String sql = "DELETE from `cached_files` WHERE fid = '" +
         + fid + "'";
