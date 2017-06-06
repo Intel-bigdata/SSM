@@ -33,18 +33,20 @@ public class TranslateResult {
   private Map<String, List<Object>> dynamicParameters;
   private TimeBasedScheduleInfo tbScheduleInfo;
   private CommandDescriptor cmdDescriptor;
+  private int[] condPosition;
 
 
   public TranslateResult(List<String> sqlStatements,
       List<String> tempTableNames, Map<String, List<Object>> dynamicParameters,
       int retSqlIndex, TimeBasedScheduleInfo tbScheduleInfo,
-      CommandDescriptor cmdDescriptor) {
+      CommandDescriptor cmdDescriptor, int[] condPosition) {
     this.sqlStatements = sqlStatements;
     this.staticTempTables = tempTableNames;
     this.dynamicParameters = dynamicParameters;
     this.retSqlIndex = retSqlIndex;
     this.tbScheduleInfo = tbScheduleInfo;
     this.cmdDescriptor = cmdDescriptor;
+    this.condPosition = condPosition;
   }
 
   public CommandDescriptor getCmdDescriptor() {
@@ -81,5 +83,13 @@ public class TranslateResult {
 
   public boolean isTimeBased() {
     return tbScheduleInfo != null;
+  }
+
+  public int[] getCondPosition() {
+    return condPosition;
+  }
+
+  public void setCondPosition(int[] condPosition) {
+    this.condPosition = condPosition;
   }
 }
