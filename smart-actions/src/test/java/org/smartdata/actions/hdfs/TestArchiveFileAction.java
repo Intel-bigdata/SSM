@@ -31,7 +31,7 @@ import org.smartdata.actions.ActionStatus;
  */
 public class TestArchiveFileAction extends ActionMiniCluster {
   @Test
-  public void testAllSsd() throws Exception {
+  public void testArchive() throws Exception {
     final String file = "/testArchive/file";
     Path dir = new Path("/testArchive");
     dfs.mkdirs(dir);
