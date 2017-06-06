@@ -54,16 +54,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   private TimeBasedScheduleInfo timeBasedScheduleInfo = null;
   private CommandDescriptor cmdDescriptor = null;
-
-  Map<String, String> actionParams = new HashMap<>();
-  ActionType actionType = null;
-
-  private int nError = 0;
-
-  private TreeNode root ;
-  private Stack<TreeNode> nodes = new Stack<>();
-
   private TranslationContext transCtx = null;
+  private int[] condPostion;
 
   public SmartRuleVisitTranslator() {
   }
@@ -99,6 +91,9 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   @Override
   public TreeNode visitConditions(SmartRuleParser.ConditionsContext ctx) {
     // System.out.println("Condition: " + ctx.getText());
+    condPostion = new int[2];
+    condPostion[0] = ctx.getStart().getStartIndex();
+    condPostion[1] = ctx.getStop().getStopIndex();
     conditions = visit(ctx.boolvalue());
     return conditions;
   }
@@ -661,7 +656,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
     return new TranslateResult(sqlStatements,
         tempTableNames, dynamicParameters, sqlStatements.size() - 1,
-        timeBasedScheduleInfo, cmdDescriptor);
+        timeBasedScheduleInfo, cmdDescriptor, condPostion);
   }
 
   private class NodeTransResult {
