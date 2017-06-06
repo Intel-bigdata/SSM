@@ -17,6 +17,24 @@
  */
 package org.smartdata.server.metastore.tables;
 
-public interface TableEvictor {
-  void evictTables(AccessCountTableDeque tables, int size);
+import org.smartdata.server.metastore.DBAdapter;
+
+import java.sql.SQLException;
+
+public abstract class TableEvictor {
+  private DBAdapter adapter;
+
+  public TableEvictor(DBAdapter adapter) {
+    this.adapter = adapter;
+  }
+
+  public void dropTable(AccessCountTable accessCountTable) {
+    try {
+      this.adapter.dropTable(accessCountTable.getTableName());
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  abstract void evictTables(AccessCountTableDeque tables, int size);
 }

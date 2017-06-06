@@ -17,12 +17,15 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.smartdata.server.metastore.DBAdapter;
+
 import java.util.Iterator;
 
-public class DurationEvictor implements TableEvictor {
+public class DurationEvictor extends TableEvictor {
   private final long duration;
 
-  public DurationEvictor(long duration) {
+  public DurationEvictor(DBAdapter adapter, long duration) {
+    super(adapter);
     this.duration = duration;
   }
 
@@ -34,6 +37,7 @@ public class DurationEvictor implements TableEvictor {
       for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext();) {
         AccessCountTable table = iterator.next();
         if (table.getStartTime() < threshHold) {
+          this.dropTable(table);
           iterator.remove();
         } else {
           break;
