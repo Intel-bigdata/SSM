@@ -8,9 +8,8 @@ spanning multiple datacenters, replicating data from one location to
 another is common practice for disaster recovery and global service
 availability.
 
-We’d like to provide a fully distributed, low latency and high
-throughput HDFS data replication solution for multiple datacenters
-backup.
+There are a lot of ideas contributed to the community in the past, especially [HDFS-5442](https://issues.apache.org/jira/browse/HDFS-5442). Ideas in HDFS-5442 enlight us to propose an new solution, which provides a fully distributed, low latency and high
+throughput HDFS data replication method for multiple datacenters backup.
 
 Limitations of DistCp
 =====================
@@ -30,39 +29,26 @@ batch operation. But at the same time, it has certain disadvantages.
     need to be copied. MapReduce will introduce a lot of execution
     overhead when only one file or a several files involved
 
-Rule Definition
-===============
+Compared with DistCp, this solution builds on top SSM infrastructure, is more smart and has higher file backup 
+throughput. 
+* Smarter - Administrator specify backup requirement through applying SSM rule to directories and files. Once the rule is set, SSM server will automatically and periodically scan directories and files, as long as content is changed, SSM server will schedule task to backup the data immediatelly. 
+* Higher throughput - The backup task scheduled by SSM server doesn't depends on MapReduce. It will be a direct HDFS Client applicaiton. 
 
-For disaster recovery solution, the ideal is the performance impact to
-primary cluster minimization and the replication throughput to Secondary
-cluster maximization. But there is a trade-off between the impaction of
-primary and the best RPO (Recovery Point Object) of disaster recovery.
-We should Administrator the capability to make trade-offs between
-latency and data availability through SSM rule.
-
-Administrator can use following pseudo rules.
-
-1.  For critical file & directory, enforce synchronous data writing
-
-	*file.path matches "/fooA/\*.meta": true | sync\_backup*
-
-1.  For none critical file & directory, apply asynchronous data writing
-
-    *file.path matches "/fooA/\*.dat": every 1h | async\_backup*
-
-Use Case – Synchronous Writing
+Use Cases
 ==============================
+## 1.  Synchronous Writing
 
 For critical file & directory, apply the synchronous writing rule to the
 files, enforce synchronous data writing. In this case, SmartDFSClient
 will replace the existing HDFS Client, be responsible to save the data
-to both primary cluster and secondary cluster.
+to both primary cluster and secondary cluster. With synchronous writing, data
+is avaiable in both primary cluster and secondary cluster. The drawbacks is 
+longer write latency.
 
 <img src="./sync-backup.png" width="681" height="158" />
  
 
-Use Case – Asynchronous Replication
-===================================
+## 2. Asynchronous Replication
 
 For those none-critical files, apply the asynchronous backup rule to the
 files. With the correct rule set, SSM server will regularly scan the
@@ -72,22 +58,34 @@ action at the time when the workload of primary cluster is relatively
 low. Data compression can be also considered before transfer the data
 between two clusters to improve the throughput.
 
-<img src="./async-backup.png" width="681" height="188" />
+<img src="./async-backup.png" width="681" height="158" />
+
+## 3. Read data
+
+When above application reads data content, by default, data will be read from primary cluster to gurantee that the up-to-data data is returned. But if data accuracy can be lowered down a bit or Administrator know the two copies of data in primary and secondary cluster are the same, read operation can be optimized by appling rule to files and directories. Here is an example of direct read from backup cluster, 
+
+<img src="./dr-read-direct.png" width="681" height="158" />
+
+or read from either primary cluster or secondary cluster is acceptable,
+
+<img src="./dr-read-balance.png" width="681" height="158" />
+
+## 4. Replication between federation namespaces
+
+There is also need to backup files between different namespaces under a HDFS federation cluster, or migrate files drom one namespace to another namespace. With the help of SSM, we can also achieve this process efficiently. The ideas in [HDFS-2139](https://issues.apache.org/jira/browse/HDFS-2139) will be referenced during the implementation. 
+
+<img src="./dr-backup-between-namespace.png" width="681" height="158" />
 
 Design Targets 
 ===============
 
 The following list the targets of this design:
 
-1. Support both synchronous writing and asynchronous replication for
-data and namespace.
+1. Support both synchronous writing and asynchronous replication for data and namespace.
 
-2. Configuring and managing of the disaster recovery feature should be
-simple.
+2. Configuring and managing of the disaster recovery feature should be simple.
 
-3. Decouple all the core disaster recovery functionalities with exiting
-HDFS as much as possible, so that the solution can work with many HDFS
-versions without redeploy HDFS.
+3. Decouple all the core disaster recovery functionalities with exiting HDFS as much as possible, so that the solution can work with many HDFS versions without redeploy HDFS.
 
 Architecture
 ============
