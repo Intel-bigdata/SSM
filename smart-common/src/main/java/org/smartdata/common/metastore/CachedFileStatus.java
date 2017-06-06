@@ -22,22 +22,30 @@ package org.smartdata.common.metastore;
  */
 public class CachedFileStatus {
   private long fid;
+  private String path;
   private long fromTime;
   private long lastAccessTime;
   private int numAccessed;
 
   public CachedFileStatus(long fid,
+                          String path,
                           long fromTime,
                           long lastAccessTime,
                           int numAccessed) {
     this.fid = fid;
+    this.path = path;
     this.fromTime = fromTime;
     this.lastAccessTime = lastAccessTime;
     this.numAccessed = numAccessed;
   }
 
+
   public long getFid() {
     return fid;
+  }
+
+  public String getPath() {
+    return path;
   }
 
   public long getFromTime() {

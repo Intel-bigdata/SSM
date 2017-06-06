@@ -19,11 +19,13 @@ package org.smartdata.server;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.metric.fetcher.AccessEventFetcher;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.server.metric.fetcher.CachedListFetcher;
 import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.tables.AccessCountTable;
@@ -50,6 +52,7 @@ public class StatesManager implements ModuleSequenceProto {
   private AccessCountTableManager accessCountTableManager;
   private InotifyEventFetcher inotifyEventFetcher;
   private AccessEventFetcher accessEventFetcher;
+  private CachedListFetcher cachedListFetcher;
   private FileAccessEventSource fileAccessEventSource;
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
@@ -75,6 +78,7 @@ public class StatesManager implements ModuleSequenceProto {
     this.executorService = Executors.newScheduledThreadPool(4);
     this.accessCountTableManager = new AccessCountTableManager(dbAdapter, executorService);
     this.fileAccessEventSource = MetricsFactory.createAccessEventSource(conf);
+    this.cachedListFetcher = new CachedListFetcher(client, dbAdapter);
     this.accessEventFetcher =
         new AccessEventFetcher(
             conf, accessCountTableManager, executorService, fileAccessEventSource.getCollector());
@@ -90,6 +94,7 @@ public class StatesManager implements ModuleSequenceProto {
     LOG.info("Starting ...");
     this.inotifyEventFetcher.start();
     this.accessEventFetcher.start();
+    this.cachedListFetcher.start();
     LOG.info("Started. ");
     return true;
   }
@@ -106,12 +111,19 @@ public class StatesManager implements ModuleSequenceProto {
     if (this.fileAccessEventSource != null) {
       this.fileAccessEventSource.close();
     }
+    if (this.cachedListFetcher != null) {
+      this.cachedListFetcher.stop();
+    }
     LOG.info("Stopped.");
   }
 
   public void join() throws IOException {
     LOG.info("Joining ...");
     LOG.info("Joined.");
+  }
+
+  public List<CachedFileStatus> getCachedList() throws SQLException {
+    return this.cachedListFetcher.getCachedList();
   }
 
   public List<AccessCountTable> getTablesInLast(long timeInMills) throws SQLException {
