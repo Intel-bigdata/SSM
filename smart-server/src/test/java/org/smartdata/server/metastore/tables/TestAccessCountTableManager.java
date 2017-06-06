@@ -117,7 +117,7 @@ public class TestAccessCountTableManager extends DBTest {
   @Test
   public void testGetTables() throws SQLException {
     DBAdapter adapter = mock(DBAdapter.class);
-    TableEvictor tableEvictor = new CountEvictor(20);
+    TableEvictor tableEvictor = new CountEvictor(adapter, 20);
     Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
     AccessCountTableDeque dayDeque = new AccessCountTableDeque(tableEvictor);
     AccessCountTable firstDay = new AccessCountTable(0L, Constants.ONE_DAY_IN_MILLIS);
@@ -195,7 +195,7 @@ public class TestAccessCountTableManager extends DBTest {
   @Test
   public void testGetTablesCornerCase() throws SQLException {
     DBAdapter adapter = mock(DBAdapter.class);
-    TableEvictor tableEvictor = new CountEvictor(20);
+    TableEvictor tableEvictor = new CountEvictor(adapter, 20);
     Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
     AccessCountTableDeque minute = new AccessCountTableDeque(tableEvictor);
     map.put(TimeGranularity.MINUTE, minute);

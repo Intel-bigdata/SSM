@@ -19,12 +19,16 @@ package org.smartdata.server.metastore.tables;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.server.metastore.DBAdapter;
+
+import static org.mockito.Mockito.mock;
 
 public class TestTableEvictor {
+  DBAdapter adapter = mock(DBAdapter.class);
 
   @Test
   public void testCountEvictor() {
-    TableEvictor evictor = new CountEvictor(3);
+    TableEvictor evictor = new CountEvictor(adapter, 3);
     AccessCountTableDeque deque = new AccessCountTableDeque(evictor);
     AccessCountTable first = new AccessCountTable(0L, 1L);
     deque.add(first);
@@ -44,7 +48,7 @@ public class TestTableEvictor {
 
   @Test
   public void testDurationEvictor() {
-    TableEvictor evictor = new DurationEvictor(10);
+    TableEvictor evictor = new DurationEvictor(adapter, 10);
     AccessCountTableDeque deque = new AccessCountTableDeque(evictor);
     AccessCountTable first = new AccessCountTable(0L, 3L);
     deque.add(first);

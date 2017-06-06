@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import static org.mockito.Mockito.mock;
 
 public class TestAddTableOpListener {
+  DBAdapter adapter = mock(DBAdapter.class);
   ExecutorService executorService = Executors.newFixedThreadPool(4);
   AccessCountTableAggregator aggregator = new AccessCountTableAggregator(
       mock(DBAdapter.class));
@@ -35,7 +36,7 @@ public class TestAddTableOpListener {
   @Test
   public void testMinuteTableListener() throws InterruptedException {
     Long oneSec = 1000L;
-    TableEvictor tableEvictor = new CountEvictor(10);
+    TableEvictor tableEvictor = new CountEvictor(adapter, 10);
     AccessCountTableDeque minuteTableDeque = new AccessCountTableDeque(tableEvictor);
     TableAddOpListener minuteTableListener =
         new TableAddOpListener.MinuteTableListener(minuteTableDeque, aggregator, executorService);
@@ -65,7 +66,7 @@ public class TestAddTableOpListener {
   @Test
   public void testHourTableListener() throws InterruptedException {
     Long oneMin = 60 * 1000L;
-    TableEvictor tableEvictor = new CountEvictor(10);
+    TableEvictor tableEvictor = new CountEvictor(adapter, 10);
     AccessCountTableDeque hourTableDeque = new AccessCountTableDeque(tableEvictor);
     TableAddOpListener hourTableListener =
         new TableAddOpListener.HourTableListener(hourTableDeque, aggregator, executorService);
@@ -96,7 +97,7 @@ public class TestAddTableOpListener {
   @Test
   public void testDayTableListener() throws InterruptedException {
     Long oneHour = 60 * 60 * 1000L;
-    TableEvictor tableEvictor = new CountEvictor(10);
+    TableEvictor tableEvictor = new CountEvictor(adapter, 10);
     AccessCountTableDeque dayTableDeque = new AccessCountTableDeque(tableEvictor);
     TableAddOpListener dayTableListener =
         new TableAddOpListener.DayTableListener(dayTableDeque, aggregator, executorService);
