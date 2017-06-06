@@ -38,14 +38,14 @@ public class TestSmartServerCli {
 
   @Test
   public void testConfNameNodeRPCAddr() throws Exception {
-    SmartConf conf = new SmartConf();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    SmartConf config = new SmartConf();
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(config)
         .numDataNodes(3).build();
 
-    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
+    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(config);
     List<URI> uriList = new ArrayList<>(namenodes);
-    conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
 
+    SmartConf conf = new SmartConf();
     // Set db used
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
