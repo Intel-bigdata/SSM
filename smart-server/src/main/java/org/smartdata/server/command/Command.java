@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.rmi.runtime.Log;
 
 /**
  * Action is the minimum unit of execution. A command can contain more than one
@@ -124,7 +125,14 @@ public class Command implements Runnable {
       if (act == null || !running) {
         continue;
       }
-      act.run();
+      try {
+        act.run();
+      } catch (Exception e) {
+        LOG.error("Action {} running error! {}", act.getActionStatus().getId(), e);
+        act.getActionStatus().end();
+        this.setState(CommandState.FAILED);
+        break;
+      }
       // Run actions sequentially!
       while (!act.getActionStatus().isFinished()) {
         try {
@@ -135,6 +143,7 @@ public class Command implements Runnable {
           }
         }
       }
+      this.setState(CommandState.DONE);
     }
   }
 
@@ -143,7 +152,7 @@ public class Command implements Runnable {
     runActions();
     running = false;
     if (cb != null) {
-      cb.complete(this.id, this.ruleId, CommandState.DONE);
+      cb.complete(this.id, this.ruleId, state);
     }
   }
 }
