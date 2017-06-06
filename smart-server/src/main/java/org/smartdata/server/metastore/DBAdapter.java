@@ -573,8 +573,23 @@ public class DBAdapter {
   }
 
   public List<CachedFileStatus> getCachedFileStatus() throws SQLException {
-    String sql = "SELECT * FROM cached_files";
+    String sql = "SELECT * FROM `cached_files`";
     return getCachedFileStatus(sql);
+  }
+
+  public List<Long> getCachedFid() throws SQLException {
+    String sql = "SELECT fid FROM `cached_files`";
+    QueryHelper queryHelper = new QueryHelper(sql);
+    List<Long> ret = new LinkedList<>();
+    try {
+      ResultSet resultSet = queryHelper.executeQuery();
+      while (resultSet.next()) {
+        ret.add(resultSet.getLong("fid"));
+      }
+      return ret;
+    } finally {
+      queryHelper.close();
+    }
   }
 
   public CachedFileStatus getCachedFileStatus(long fid) throws SQLException {

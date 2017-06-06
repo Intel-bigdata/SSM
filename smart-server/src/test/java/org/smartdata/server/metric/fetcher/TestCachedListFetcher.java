@@ -79,7 +79,7 @@ public class TestCachedListFetcher {
     conn = TestDBUtil.getTestDBInstance();
     Util.initializeDataBase(conn);
     adapter = new DBAdapter(conn);
-    cachedListFetcher = new CachedListFetcher(800l, dfsClient, adapter);
+    cachedListFetcher = new CachedListFetcher(600l, dfsClient, adapter);
   }
 
   static void initConf(Configuration conf) {
@@ -109,11 +109,13 @@ public class TestCachedListFetcher {
   public void testFetcher() throws Exception {
     cachedListFetcher.start();
     String pathPrefix = "/fileTest/cache/";
-    String[] index = {"1", "2", "3", "4"};
-    for (int i = 0; i < index.length; i++) {
+    String[] fids = {"5", "7", "9", "10"};
+    for (int i = 0; i < fids.length; i++) {
       CacheFileAction cacheAction = new CacheFileAction();
-      String path = pathPrefix + index[i];
+      String path = pathPrefix + fids[i];
       dfs.mkdirs(new Path(path));
+      adapter.insertCachedFiles(Integer.valueOf(fids[i]), path,
+          0l, 0l, 0);
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
       cacheAction.init(new String[] {path});
@@ -122,9 +124,5 @@ public class TestCachedListFetcher {
     Thread.sleep(1000);
     List<CachedFileStatus> cachedFileStatuses = cachedListFetcher.getCachedList();
     Assert.assertTrue(cachedFileStatuses.size() == 4);
-    // Uncache files
-    // for (int i = 0; i < 2; i++) {
-    //   dfs.list
-    // }
   }
 }
