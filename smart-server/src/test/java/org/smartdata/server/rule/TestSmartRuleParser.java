@@ -79,6 +79,7 @@ public class TestSmartRuleParser {
     rules.add("file : every 1s | age > 100day | cache");
     rules.add("file : every 1s | mtime > \"2016-09-13 12:05:06\" | cache");
     rules.add("file : every 1s | mtime > now - 70day | cache");
+    rules.add("file : every 1s | storagePolicy == \"ALL_SSD\" | cache");
 
     for (String rule : rules) {
       parseAndExecuteRule(rule);
