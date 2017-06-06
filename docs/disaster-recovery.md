@@ -72,7 +72,7 @@ or read from either primary cluster or secondary cluster is acceptable,
 
 ## 4. Replication between federation namespaces
 
-There is also need to backup files between different namespaces under a HDFS federation cluster, or migrate files drom one namespace to another namespace. With the help of SSM, we can also achieve this process efficiently. The ideas in [HDFS-2139](https://issues.apache.org/jira/browse/HDFS-2139) will be referenced during the implementation. 
+There is also need to backup files between different namespaces under a HDFS federation cluster, or migrate files drom one namespace to another namespace. With the help of SSM, we can also achieve this process efficiently. The fast copy idea in [HDFS-2139](https://issues.apache.org/jira/browse/HDFS-2139) will be referenced during the implementation. 
 
 <img src="./dr-backup-between-namespace.png" width="681" height="158" />
 
