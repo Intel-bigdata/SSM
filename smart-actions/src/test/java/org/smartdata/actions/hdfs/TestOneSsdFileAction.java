@@ -31,14 +31,14 @@ import org.smartdata.actions.ActionStatus;
  */
 public class TestOneSsdFileAction extends ActionMiniCluster {
   @Test
-  public void testAllSsd() throws Exception {
-    final String file = "/testArchive/file";
-    Path dir = new Path("/testArchive");
+  public void testOneSsd() throws Exception {
+    final String file = "/testOneSsd/file";
+    Path dir = new Path("/testOneSsd");
     dfs.mkdirs(dir);
     // write to DISK
     dfs.setStoragePolicy(dir, "HOT");
     final FSDataOutputStream out = dfs.create(new Path(file));
-    out.writeChars("testArchive");
+    out.writeChars("testOneSsd");
     out.close();
 
     // schedule move to Archive

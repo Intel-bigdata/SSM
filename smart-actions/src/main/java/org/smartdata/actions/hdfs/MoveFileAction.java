@@ -63,6 +63,8 @@ public class MoveFileAction extends HdfsAction {
     try {
       dfsClient.setStoragePolicy(fileName, storagePolicy);
     } catch (Exception e) {
+      actionStatus.end();
+      actionStatus.setSuccessful(false);
       throw new RuntimeException(e);
     }
 
