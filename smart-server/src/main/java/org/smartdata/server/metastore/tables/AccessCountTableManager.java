@@ -63,22 +63,24 @@ public class AccessCountTableManager {
   private void initTables() {
     AccessCountTableAggregator aggregator = new AccessCountTableAggregator(dbAdapter);
     AccessCountTableDeque dayTableDeque =
-        new AccessCountTableDeque(new CountEvictor(NUM_DAY_TABLES_TO_KEEP));
+        new AccessCountTableDeque(new CountEvictor(dbAdapter, NUM_DAY_TABLES_TO_KEEP));
     TableAddOpListener dayTableListener =
         new TableAddOpListener.DayTableListener(dayTableDeque, aggregator, executorService);
 
     AccessCountTableDeque hourTableDeque =
-        new AccessCountTableDeque(new CountEvictor(NUM_HOUR_TABLES_TO_KEEP), dayTableListener);
+        new AccessCountTableDeque(
+            new CountEvictor(dbAdapter, NUM_HOUR_TABLES_TO_KEEP), dayTableListener);
     TableAddOpListener hourTableListener =
         new TableAddOpListener.HourTableListener(hourTableDeque, aggregator, executorService);
 
     AccessCountTableDeque minuteTableDeque =
-        new AccessCountTableDeque(new CountEvictor(NUM_MINUTE_TABLES_TO_KEEP), hourTableListener);
+        new AccessCountTableDeque(
+            new CountEvictor(dbAdapter, NUM_MINUTE_TABLES_TO_KEEP), hourTableListener);
     TableAddOpListener minuteTableListener =
         new TableAddOpListener.MinuteTableListener(minuteTableDeque, aggregator, executorService);
 
     this.secondTableDeque =
-        new AccessCountTableDeque(new CountEvictor(NUM_SECOND_TABLES_TO_KEEP), minuteTableListener);
+        new AccessCountTableDeque(new CountEvictor(dbAdapter, NUM_SECOND_TABLES_TO_KEEP), minuteTableListener);
     this.tableDeques.put(TimeGranularity.SECOND, this.secondTableDeque);
     this.tableDeques.put(TimeGranularity.MINUTE, minuteTableDeque);
     this.tableDeques.put(TimeGranularity.HOUR, hourTableDeque);

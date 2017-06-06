@@ -23,17 +23,23 @@ import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.SortedTable;
 import org.dbunit.dataset.xml.XmlDataSet;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 import org.smartdata.server.utils.TimeGranularity;
 
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class TestDBAdapter extends DBTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
   private void createTables(IDatabaseConnection connection) throws Exception {
     Statement statement = connection.getConnection().createStatement();
     statement.execute(AccessCountTable.createTableSQL("expect1"));
@@ -89,5 +95,19 @@ public class TestDBAdapter extends DBTest {
       Integer expectAC = (Integer) expect.getValue(i, AccessCountTable.ACCESSCOUNT_FIELD);
       Assert.assertTrue(actualAC == expectAC / 2);
     }
+  }
+
+  @Test
+  public void testDropTable() throws Exception {
+    Statement statement = databaseTester.getConnection().getConnection().createStatement();
+    statement.execute(AccessCountTable.createTableSQL("table1"));
+    ITable actual = databaseTester.getConnection().createTable("table1");
+    Assert.assertNotNull(actual);
+
+    DBAdapter dbAdapter = new DBAdapter(databaseTester.getConnection().getConnection());
+    dbAdapter.dropTable("table1");
+
+    thrown.expect(SQLException.class);
+    databaseTester.getConnection().createTable("table1");
   }
 }
