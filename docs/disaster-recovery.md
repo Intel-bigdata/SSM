@@ -45,7 +45,7 @@ to both primary cluster and secondary cluster. With synchronous writing, data
 is avaiable in both primary cluster and secondary cluster. The drawbacks is 
 longer write latency.
 
-<img src="./sync-backup.png" width="681" height="158" />
+<img src="./dr-sync-backup.png" width="681" height="138" />
  
 
 ## 2. Asynchronous Replication
@@ -58,7 +58,7 @@ action at the time when the workload of primary cluster is relatively
 low. Data compression can be also considered before transfer the data
 between two clusters to improve the throughput.
 
-<img src="./async-backup.png" width="681" height="158" />
+<img src="./dr-async-backup.png" width="681" height="158" />
 
 ## 3. Read data
 
