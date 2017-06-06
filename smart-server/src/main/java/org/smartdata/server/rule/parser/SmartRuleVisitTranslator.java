@@ -739,7 +739,12 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
       String res;
       if (op.length() > 0) {
-        res = "(" + lop.getRet() + " " + op + " " + rop.getRet() + ")";
+        // TODO: define more formal spec
+        String ropStr = rop.getRet();
+        if (optype == OperatorType.MATCHES) {
+          ropStr = ropStr.replace("*", "%");
+        }
+        res = "(" + lop.getRet() + " " + op + " " + ropStr + ")";
       } else {
         res = "(" + lop.getRet() + ")";
       }
