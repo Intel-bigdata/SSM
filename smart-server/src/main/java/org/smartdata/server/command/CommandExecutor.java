@@ -105,7 +105,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         currentActionId = adapter.getMaxActionId();
       } catch (Exception e) {
         currentActionId = 1;
-        LOG.error("DB Connection error! Get Max ActionId fail!", e.getMessage());
+        LOG.error("DB Connection error! Get Max ActionId fail!", e);
         throw new IOException(e);
       }
       return true;
@@ -173,8 +173,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
           break;
         }
       } catch (IOException e) {
-        LOG.error("Schedule error!");
-        LOG.error(e.getMessage());
+        LOG.error("Schedule error!", e);
       }
     }
   }
@@ -188,7 +187,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       ret = adapter.getCommandsTableItem(String.format("= %d", cid),
           null, null);
     } catch (SQLException e) {
-      LOG.error(e.getMessage());
+      LOG.error("Get CommandInfo with ID {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
     if (ret != null) {
@@ -210,7 +209,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
             null, commandState));
       }
     } catch (SQLException e) {
-      LOG.error(e.getMessage());
+      LOG.error("List CommandInfo from DB error! Conditions rid {}, {}", rid, e);
       throw new IOException(e);
     }
     // Get from Cache if commandState != CommandState.PENDING
@@ -254,7 +253,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       // Disable this command in cache
       if (inExecutingList(cid)) {
         // Remove from Executing queue
-        removeFromExecuting(cid, cmdinfo.getRid(), cmdinfo.getState());
+        removeFromExecuting(cid, cmdinfo.getRid());
         // Kill thread
         commandPool.deleteCommand(cid);
       } else {
@@ -279,7 +278,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       // Disable this command in cache
       if (inExecutingList(cid)) {
         // Remove from Executing queue
-        removeFromExecuting(cid, cmdinfo.getRid(), cmdinfo.getState());
+        removeFromExecuting(cid, cmdinfo.getRid());
         // Kill thread
         commandPool.deleteCommand(cid);
       } else if (inUpdateCache(cid)) {
@@ -295,7 +294,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     try {
       adapter.deleteCommand(cid);
     } catch (SQLException e) {
-      LOG.error(e.getMessage());
+      LOG.error("Delete Command {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
   }
@@ -311,7 +310,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
           String.format("== %d ", actionID), null).get(0);
     } catch (SQLException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}",
-          actionID, e.getMessage());
+          actionID, e);
       throw new IOException(e);
     }
     return actioninfo;
@@ -426,8 +425,14 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     // TODO Replace FIFO
     // Currently only get and run the first cmd
     long curr = cmdsPending.iterator().next();
-    Command ret = getCommandFromCmdInfo(cmdsAll.get(curr));
+    CommandInfo commandInfo = cmdsAll.get(curr);
+    Command ret = getCommandFromCmdInfo(commandInfo);
     cmdsPending.remove(curr);
+    if (ret == null) {
+      // Create Command from CommandInfo Fail
+      statusCache.add(new CmdTuple(commandInfo.getCid(), commandInfo.getRid(), CommandState.DISABLED));
+      return null;
+    }
     cmdsExecuting.add(curr);
     ret.setState(CommandState.EXECUTING);
     return ret;
@@ -435,6 +440,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   private SmartAction createAction(String name) throws IOException {
     SmartAction smartAction = actionRegistry.createAction(name);
+    if (smartAction == null) {
+      return null;
+    }
     smartAction.setContext(smartContext);
     if (smartAction instanceof HdfsAction) {
       ((HdfsAction) smartAction).setDfsClient(
@@ -460,7 +468,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     try {
       commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
     } catch (ParseException e) {
-      LOG.error("Command Descriptor String Wrong format! ", e.getMessage());
+      LOG.error("Command Descriptor {} String Wrong format! {}", commandDescriptorString, e);
     }
     return createActionsFromParameters(commandDescriptor);
   }
@@ -471,19 +479,24 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (commandDescriptor == null) {
       return null;
     }
-    // commandDescriptor.();
     List<SmartAction> actions = new ArrayList<>();
     SmartAction current;
-    for (int index = 0; index < commandDescriptor.size(); index++) {
-      current = createAction(commandDescriptor.getActionName(index));
-      actionPool.put(current.getActionStatus().getId(), current);
-      if (current == null) {
-        LOG.error("New Action Instance from {} error!",
-            commandDescriptor.getActionName(index));
+    try {
+      for (int index = 0; index < commandDescriptor.size(); index++) {
+        current = createAction(commandDescriptor.getActionName(index));
+        if (current == null) {
+          LOG.error("New Action Instance from {} error!",
+              commandDescriptor.getActionName(index));
+          throw new IOException();
+        }
+        actionPool.put(current.getActionStatus().getId(), current);
+        current.setContext(smartContext);
+        current.init(commandDescriptor.getActionArgs(index));
+        actions.add(current);
       }
-      current.setContext(smartContext);
-      current.init(commandDescriptor.getActionArgs(index));
-      actions.add(current);
+    } catch (Exception e) {
+      LOG.error("Create Command from CommandDescriptor {} fail! {}", commandDescriptor, e);
+      return null;
     }
     return actions.toArray(new SmartAction[commandDescriptor.size()]);
   }
@@ -497,7 +510,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     try {
       commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
     } catch (ParseException e) {
-      LOG.error("Command Descriptor String Wrong format! ", e.getMessage());
+      LOG.error("Command Descriptor {} Wrong format! {}", commandDescriptorString, e);
       throw new IOException(e);
     }
     return submitCommand(commandDescriptor);
@@ -525,8 +538,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         return cmd.getCid();
       }
     } catch (Exception e) {
-      LOG.error(e.getMessage());
-      throw new IOException();
+      LOG.error("Submit Command {} error! {}", cmd, e);
+      throw new IOException(e);
     }
     return -1;
   }
@@ -536,6 +549,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     // New Command
     Command cmd = new Command(createActionsFromParameters(cmdinfo.getParameters()),
         new Callback());
+    if (cmd == null) {
+      return null;
+    }
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -563,7 +579,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     try {
       actionInfos.addAll(adapter.getNewCreatedActionsTableItem(remainsAction));
     } catch (SQLException e) {
-      LOG.error("Get Finished Actions from DB error", e.getMessage());
+      LOG.error("Get Finished Actions from DB error", e);
       throw new IOException(e);
     }
     return actionInfos;
@@ -576,7 +592,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
           null, CommandState.PENDING);
     } catch (SQLException e) {
       // TODO: handle this issue
-      LOG.error(e.getMessage());
+      LOG.error("Get Pending Commands From DB error!", e);
       throw new IOException(e);
     }
   }
@@ -602,6 +618,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private List<ActionInfo> getActionInfoFromCommand(long cid) throws IOException {
     ArrayList<ActionInfo> actionInfos = new ArrayList<>();
     Command cmd = commandPool.getCommand(cid);
+    if (cmd == null) {
+      return actionInfos;
+    }
     for (SmartAction smartAction : cmd.getActions()) {
       actionInfos.add(createActionInfoFromAction(smartAction, cid));
     }
@@ -624,7 +643,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         try {
           adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
         } catch (SQLException e) {
-          LOG.error(e.getMessage());
+          LOG.error("Batch Command Status Update error!", e);
           throw new IOException(e);
         }
         iter.remove();
@@ -638,7 +657,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       try {
         adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
       } catch (SQLException e) {
-        LOG.error(e.getMessage());
+        LOG.error("Write Cache to DB error!", e);
         throw new IOException(e);
       }
     }
@@ -660,7 +679,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
   }
 
-  private void removeFromExecuting(long cid, long rid, CommandState state) {
+  private void addToStatusCache(long cid, long rid, CommandState state) {
+    statusCache.add(new CmdTuple(cid, rid, state));
+  }
+
+  private void removeFromExecuting(long cid, long rid) {
     Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
     if (cmdsExecuting.size() == 0) {
       return;
@@ -683,9 +706,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       commandPool.setFinished(cid, state);
       LOG.info("Command {}", state.toString());
       synchronized (statusCache) {
-        statusCache.add(new CmdTuple(cid, rid, state));
+        addToStatusCache(cid, rid, state);
       }
-      removeFromExecuting(cid, rid, state);
+      removeFromExecuting(cid, rid);
     }
   }
 }
