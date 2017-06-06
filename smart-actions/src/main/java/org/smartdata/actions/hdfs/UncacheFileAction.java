@@ -17,10 +17,16 @@
  */
 package org.smartdata.actions.hdfs;
 
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
+import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionStatus;
 
-import java.util.UUID;
+import java.util.Date;
 
 /**
  * An action to un-cache a file.
@@ -28,8 +34,64 @@ import java.util.UUID;
 public class UncacheFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(UncacheFileAction.class);
 
+  private String fileName;
+
+  public UncacheFileAction() {
+    createStatus();
+  }
+
+  @Override
+  protected void createStatus() {
+    this.actionStatus = new CacheStatus();
+    resultOut = actionStatus.getResultPrintStream();
+    logOut = actionStatus.getLogPrintStream();
+  }
+
+  @Override
+  public void init(String[] args) {
+    super.init(args);
+    fileName = args[0];
+  }
 
   @Override
   protected void execute() {
+    ActionStatus actionStatus = getActionStatus();
+    actionStatus.begin();
+    try {
+      executeUncacheAction();
+      actionStatus.setSuccessful(true);
+    } catch (Exception e) {
+      actionStatus.setSuccessful(false);
+      throw new RuntimeException(e);
+    } finally {
+      actionStatus.end();
+    }
+  }
+
+  private void executeUncacheAction() throws Exception {
+    LOG.info("Action starts at {} : {} -> uncache",
+        new Date(System.currentTimeMillis()), fileName);
+    removeDirective(fileName);
+  }
+
+  @VisibleForTesting
+  Long getCacheId(String fileName) throws Exception {
+    CacheDirectiveInfo.Builder filterBuilder = new CacheDirectiveInfo.Builder();
+    filterBuilder.setPath(new Path(fileName));
+    CacheDirectiveInfo filter = filterBuilder.build();
+    RemoteIterator<CacheDirectiveEntry> directiveEntries = dfsClient.listCacheDirectives(filter);
+    if (!directiveEntries.hasNext()) {
+      return null;
+    }
+    return directiveEntries.next().getInfo().getId();
+  }
+
+  private void removeDirective(String fileName) throws Exception {
+    Long id = getCacheId(fileName);
+    if (id == null) {
+      LOG.info("File {} is already cached. No action taken.", fileName);
+      return;
+    }
+    dfsClient.removeCacheDirective(id);
   }
 }
