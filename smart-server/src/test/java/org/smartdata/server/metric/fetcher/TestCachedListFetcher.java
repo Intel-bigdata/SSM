@@ -26,13 +26,13 @@ import java.sql.Connection;
 import java.util.List;
 
 
-public class TestCacheListFetcher {
+public class TestCachedListFetcher {
 
   private DBAdapter adapter;
   private String dbFile;
   private Connection conn;
 
-  private CacheListFetcher cacheListFetcher;
+  private CachedListFetcher cachedListFetcher;
 
   private static final int DEFAULT_BLOCK_SIZE = 50;
   protected MiniDFSCluster cluster;
@@ -62,7 +62,7 @@ public class TestCacheListFetcher {
     conn = TestDBUtil.getTestDBInstance();
     Util.initializeDataBase(conn);
     adapter = new DBAdapter(conn);
-    cacheListFetcher = new CacheListFetcher(800l, dfsClient, adapter);
+    cachedListFetcher = new CachedListFetcher(800l, dfsClient, adapter);
   }
 
   static void initConf(Configuration conf) {
@@ -75,7 +75,7 @@ public class TestCacheListFetcher {
 
   @After
   public void shutdown() throws Exception {
-    cacheListFetcher.stop();
+    cachedListFetcher.stop();
     if (cluster != null) {
       cluster.shutdown();
     }
@@ -90,7 +90,7 @@ public class TestCacheListFetcher {
 
   @Test
   public void testFetcher() throws Exception {
-    cacheListFetcher.start();
+    cachedListFetcher.start();
     String pathPrefix = "/fileTest";
     String[] index = {"1", "2", "3", "4"};
     for (int i = 0; i < index.length; i++) {
@@ -103,7 +103,7 @@ public class TestCacheListFetcher {
       cacheAction.run();
     }
     Thread.sleep(1000);
-    List<CachedFileStatus> cachedFileStatuses = adapter.getCachedFileStatus();
+    List<CachedFileStatus> cachedFileStatuses = cachedListFetcher.getCachedList();
     Assert.assertTrue(cachedFileStatuses.size() == 4);
     // Uncache files
     // for (int i = 0; i < 2; i++) {

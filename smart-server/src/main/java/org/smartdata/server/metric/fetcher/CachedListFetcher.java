@@ -1,18 +1,13 @@
 package org.smartdata.server.metric.fetcher;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.smartdata.common.metastore.CachedFileStatus;
+import org.smartdata.server.metastore.DBAdapter;
+import org.apache.hadoop.util.Time;
+
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
-import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
-import org.smartdata.actions.hdfs.CacheFileAction;
-import org.smartdata.actions.hdfs.CacheStatus;
-
-import org.smartdata.common.metastore.CachedFileStatus;
-import org.smartdata.server.metastore.DBAdapter;
-import org.apache.hadoop.util.Time;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -25,36 +20,38 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class CacheListFetcher {
+public class CachedListFetcher {
 
   private static final Long DEFAULT_INTERVAL = 5 * 1000L;
   private final ScheduledExecutorService scheduledExecutorService;
   private final Long fetchInterval;
   private FetchTask fetchTask;
   private ScheduledFuture scheduledFuture;
+  private DBAdapter dbAdapter;
 
 
-  public CacheListFetcher(
+  public CachedListFetcher(
       Long fetchInterval,
       DFSClient dfsClient, DBAdapter dbAdapter,
       ScheduledExecutorService service) {
     this.fetchInterval = fetchInterval;
+    this.dbAdapter = dbAdapter;
     this.fetchTask = new FetchTask(dfsClient, dbAdapter);
     this.scheduledExecutorService = service;
   }
 
-  public CacheListFetcher(
+  public CachedListFetcher(
       Long fetchInterval,
       DFSClient dfsClient, DBAdapter dbAdapter) {
     this(fetchInterval, dfsClient, dbAdapter, Executors.newSingleThreadScheduledExecutor());
   }
 
-  public CacheListFetcher(
+  public CachedListFetcher(
       DFSClient dfsClient, DBAdapter dbAdapter) {
     this(DEFAULT_INTERVAL, dfsClient, dbAdapter, Executors.newSingleThreadScheduledExecutor());
   }
 
-  public CacheListFetcher(
+  public CachedListFetcher(
       DFSClient dfsClient, DBAdapter dbAdapter,
       ScheduledExecutorService service) {
     this(DEFAULT_INTERVAL, dfsClient, dbAdapter, service);
@@ -71,6 +68,10 @@ public class CacheListFetcher {
     if (scheduledFuture != null) {
       this.scheduledFuture.cancel(false);
     }
+  }
+
+  public List<CachedFileStatus> getCachedList() throws SQLException {
+    return this.dbAdapter.getCachedFileStatus();
   }
 
   private static class FetchTask extends Thread {

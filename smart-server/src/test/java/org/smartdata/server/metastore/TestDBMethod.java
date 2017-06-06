@@ -118,7 +118,7 @@ public class TestDBMethod {
   }
 
   @Test
-  public void testInsertCachedFiles() throws Exception {
+  public void testInsertDeleteCachedFiles() throws Exception {
     reInit();
     dbAdapter.insertCachedFiles(80l, "testPath", 123456l,
         234567l, 456);
@@ -134,6 +134,9 @@ public class TestDBMethod {
     dbAdapter.insertCachedFiles(list);
     Assert.assertTrue(dbAdapter.getCachedFileStatus(321l)
         .getNumAccessed() == 222);
+    Assert.assertTrue(dbAdapter.getCachedFileStatus().size() == 2);
+    dbAdapter.deleteCachedFile(321l);
+    Assert.assertTrue(dbAdapter.getCachedFileStatus().size() == 1);
   }
 
   @Test
