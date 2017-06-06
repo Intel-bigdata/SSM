@@ -158,6 +158,8 @@ public class TestDBMethod {
     CachedFileStatus cachedFileStatus = dbAdapter.getCachedFileStatus(6);
     Assert.assertTrue(cachedFileStatus.getFromTime() == 1490918400000l);
     List<CachedFileStatus> cachedFileList = dbAdapter.getCachedFileStatus();
+    List<Long> fids = dbAdapter.getCachedFid();
+    Assert.assertTrue(fids.size() == 3);
     Assert.assertTrue(cachedFileList.get(0).getFid() == 6);
     Assert.assertTrue(cachedFileList.get(1).getFid() == 19);
     Assert.assertTrue(cachedFileList.get(2).getFid() == 23);
