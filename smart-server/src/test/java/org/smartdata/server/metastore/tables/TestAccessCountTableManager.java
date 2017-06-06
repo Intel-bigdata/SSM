@@ -191,4 +191,29 @@ public class TestAccessCountTableManager extends DBTest {
     Assert.assertTrue(fourthResult.size() == 3);
     Assert.assertEquals(fourthResult.get(0), secondHour);
   }
+
+  @Test
+  public void testGetTablesCornerCase() throws SQLException {
+    DBAdapter adapter = mock(DBAdapter.class);
+    TableEvictor tableEvictor = new CountEvictor(20);
+    Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
+    AccessCountTableDeque minute = new AccessCountTableDeque(tableEvictor);
+    map.put(TimeGranularity.MINUTE, minute);
+
+    AccessCountTableDeque secondDeque = new AccessCountTableDeque(tableEvictor);
+    AccessCountTable firstFiveSeconds =
+      new AccessCountTable(0L, 5 * Constants.ONE_SECOND_IN_MILLIS);
+    AccessCountTable secondFiveSeconds =
+      new AccessCountTable(5 * Constants.ONE_SECOND_IN_MILLIS,
+        10 * Constants.ONE_SECOND_IN_MILLIS);
+    secondDeque.add(firstFiveSeconds);
+    secondDeque.add(secondFiveSeconds);
+    map.put(TimeGranularity.SECOND, secondDeque);
+
+    List<AccessCountTable> result = AccessCountTableManager.getTables(map, adapter,
+    2 * Constants.ONE_MINUTE_IN_MILLIS);
+    Assert.assertTrue(result.size() == 2);
+    Assert.assertTrue(result.get(0).equals(firstFiveSeconds));
+    Assert.assertTrue(result.get(1).equals(secondFiveSeconds));
+  }
 }
