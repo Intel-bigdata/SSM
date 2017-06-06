@@ -118,7 +118,7 @@ public class CachedListFetcher {
           newFileSet.add(fid);
           if (!fileSet.contains(fid)) {
             cachedFileStatuses.add(new CachedFileStatus(currentInfo.getId(),
-                currentInfo.getPath().getName(), Time.now(), Time.now(), 0));
+                currentInfo.getPath().toString(), Time.now(), Time.now(), 0));
           }
         }
         if (cachedFileStatuses.size() != 0) {
@@ -128,11 +128,11 @@ public class CachedListFetcher {
           dbAdapter.insertCachedFiles(cachedFileStatuses);
         }
         // Remove uncached files from DB
-        for (Long fid : fileSet) {
-          if (!newFileSet.contains(fid)) {
-            dbAdapter.deleteCachedFile(fid);
-          }
-        }
+        // for (Long fid : fileSet) {
+        //   if (!newFileSet.contains(fid)) {
+        //     dbAdapter.deleteCachedFile(fid);
+        //   }
+        // }
         fileSet = newFileSet;
       } catch (IOException e) {
         e.printStackTrace();

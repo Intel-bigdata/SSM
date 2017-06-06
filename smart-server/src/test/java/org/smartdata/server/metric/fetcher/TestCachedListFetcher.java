@@ -108,7 +108,7 @@ public class TestCachedListFetcher {
   @Test
   public void testFetcher() throws Exception {
     cachedListFetcher.start();
-    String pathPrefix = "/fileTest";
+    String pathPrefix = "/fileTest/cache/";
     String[] index = {"1", "2", "3", "4"};
     for (int i = 0; i < index.length; i++) {
       CacheFileAction cacheAction = new CacheFileAction();
