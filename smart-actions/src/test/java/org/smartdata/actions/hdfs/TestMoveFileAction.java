@@ -137,4 +137,24 @@ public class TestMoveFileAction extends ActionMiniCluster {
       Assert.assertEquals(totolBlocks, moverStatus.getTotalBlocks());
     }
   }
+
+  @Test(timeout = 300000)
+  public void testMoveNonexitedFile() throws Exception {
+    String dir = "/testParallelMovers";
+
+    // schedule move to ALL_SSD
+    MoveFileAction moveFileAction = new MoveFileAction();
+    moveFileAction.setDfsClient(dfsClient);
+    moveFileAction.setContext(smartContext);
+    moveFileAction.init(dir, "ALL_SSD");
+    ActionStatus status = moveFileAction.getActionStatus();
+    try {
+      moveFileAction.run();
+    } catch (Exception e) {
+      e.printStackTrace();
+      Assert.assertTrue(status.isFinished());
+      Assert.assertFalse(status.isSuccessful());
+      Assert.assertEquals(1.0f, status.getPercentage(), 0.0000001f);
+    }
+  }
 }
