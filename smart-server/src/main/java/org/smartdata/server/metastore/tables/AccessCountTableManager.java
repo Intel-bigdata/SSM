@@ -113,7 +113,7 @@ public class AccessCountTableManager {
       return new ArrayList<>();
     }
     long now = secondTableDeque.getLast().getEndTime();
-    return getTablesDuring(tableDeques, adapter, lengthInMillis, now);
+    return getTablesDuring(tableDeques, adapter, lengthInMillis, now, null);
   }
 
   // Todo: multi-thread issue
@@ -121,11 +121,17 @@ public class AccessCountTableManager {
       final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
       DBAdapter adapter,
       final long length,
-      final long endTime)
+      final long endTime,
+      final TimeGranularity timeGranularityHint)
       throws SQLException {
     long startTime = endTime - length;
-    TimeGranularity timeGranularity = TimeUtils.getGranularity(length);
+    TimeGranularity timeGranularity =
+        timeGranularityHint == null ? TimeUtils.getGranularity(length) : timeGranularityHint;
     AccessCountTableDeque tables = tableDeques.get(timeGranularity);
+    if (tables.isEmpty()) {
+      TimeGranularity fineGrained = TimeUtils.getFineGarinedGranularity(timeGranularity);
+      return getTablesDuring(tableDeques, adapter, length, endTime, fineGrained);
+    }
     List<AccessCountTable> results = new ArrayList<>();
     for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext(); ) {
       // Here we assume that the tables are all sorted by time.
@@ -144,7 +150,7 @@ public class AccessCountTableManager {
       }
     }
     if (startTime != endTime && !timeGranularity.equals(TimeGranularity.SECOND)) {
-      results.addAll(getTablesDuring(tableDeques, adapter, endTime - startTime, endTime));
+      results.addAll(getTablesDuring(tableDeques, adapter, endTime - startTime, endTime, null));
     }
     return results;
   }
