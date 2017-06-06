@@ -115,12 +115,12 @@ public class Util {
             ") ;",
 
         "CREATE TABLE `groups` (\n" +
-            "  `gid` smallint(6) NOT NULL,\n" +
+            "  `gid` INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  `group_name` varchar(255) DEFAULT NULL\n" +
             ") ;",
 
         "CREATE TABLE `owners` (\n" +
-            "  `oid` smallint(6) NOT NULL,\n" +
+            "  `oid` INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  `owner_name` varchar(255) DEFAULT NULL\n" +
             ") ;",
 
