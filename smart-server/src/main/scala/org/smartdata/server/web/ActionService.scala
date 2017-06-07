@@ -26,6 +26,7 @@ import akka.http.scaladsl.server.directives.ParameterDirectives.ParamMagnet
 import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.common.actions.{ActionDescriptor, ActionInfo}
+import org.smartdata.common.metastore.CachedFileStatus
 import org.smartdata.server.SmartServer
 
 import scala.util.Random
@@ -56,6 +57,12 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
         complete(gson.toJson(ssmServer.getCommandExecutor.getActionInfo(actionId)))
       }
     } ~
+      path("cachedfiles") {
+        val status = new util.ArrayList[CachedFileStatus]()
+        status.add(new CachedFileStatus(1, "file1", 1023, 2048, 5))
+        status.add(new CachedFileStatus(2, "file2", 1023000, 2048000, 4))
+        complete(gson.toJson(status))
+      } ~
       path("actiontypes") {
         complete(gson.toJson(ssmServer.getCommandExecutor.listActionsSupported()))
       } ~
