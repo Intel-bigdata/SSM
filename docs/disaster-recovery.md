@@ -1,4 +1,4 @@
-Introduction 
+Transparent Cross Datacenter File Replication
 =============
 
 Apache Hadoop is architected to operate efficiently at scale for normal
