@@ -214,15 +214,22 @@ public class TestDBMethod {
   @Test
   public void testUpdateCommand() throws Exception {
     reInit();
+    long commandId = 0;
+    commandId = dbAdapter.getMaxCommandId();
+    System.out.printf("CommandID = %d\n", commandId);
     CommandInfo command1 = new CommandInfo(0, 1,
         CommandState.PENDING, "test", 123123333l, 232444444l);
-    CommandInfo command2 = new CommandInfo(0, 78,
+    CommandInfo command2 = new CommandInfo(1, 78,
         CommandState.PENDING, "tt", 123178333l, 232444994l);
     CommandInfo[] commands = {command1, command2};
     dbAdapter.insertCommandsTable(commands);
+    commandId = dbAdapter.getMaxCommandId();
+    System.out.printf("CommandID = %d\n", commandId);
     String cidCondition = ">= 1 ";
     String ridCondition = "= 78 ";
     List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.PENDING);
+    commandId = dbAdapter.getMaxCommandId();
+    Assert.assertTrue(commandId == commands.length + 1);
     for (CommandInfo cmd : com) {
       // System.out.printf("Cid = %d \n", cmd.getCid());
       dbAdapter.updateCommandStatus(cmd.getCid(), cmd.getRid(), CommandState.DONE);
@@ -265,6 +272,7 @@ public class TestDBMethod {
   public void testGetMaxActionId() throws Exception {
     reInit();
     long currentId = dbAdapter.getMaxActionId();
+    System.out.printf("ActionID = %d\n", currentId);
     Assert.assertTrue(currentId == 1);
     ActionInfo actionInfo = new ActionInfo(currentId, 1,
         "cache", new String[]{"/test/file"}, "Test",
@@ -272,6 +280,7 @@ public class TestDBMethod {
         100);
     dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     currentId = dbAdapter.getMaxActionId();
+    System.out.printf("ActionID = %d\n", currentId);
     Assert.assertTrue(currentId == 2);
     actionInfo = new ActionInfo(currentId, 1,
         "cache", new String[]{"/test/file"}, "Test",
@@ -279,6 +288,7 @@ public class TestDBMethod {
         100);
     dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     currentId = dbAdapter.getMaxActionId();
+    System.out.printf("ActionID = %d\n", currentId);
     Assert.assertTrue(currentId == 3);
   }
 
