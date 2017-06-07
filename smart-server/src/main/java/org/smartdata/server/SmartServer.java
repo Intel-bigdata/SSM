@@ -43,9 +43,7 @@ import org.smartdata.server.rule.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.DruidPool;
 import org.smartdata.server.metastore.Util;
-import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.server.web.SmartHttpServer;
-import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,15 +80,29 @@ public class SmartServer {
   private SmartServiceState ssmServiceState = SmartServiceState.SAFEMODE;
 
   SmartServer(SmartConf conf) throws IOException, URISyntaxException {
+    this(conf, StartupOption.REGULAR);
+  }
+
+  // TODO: will not share the definition
+  SmartServer(SmartConf conf, StartupOption startupOption)
+      throws IOException, URISyntaxException {
     this.conf = conf;
-    httpServer = new SmartHttpServer(this, conf);
-    rpcServer = new SmartRpcServer(this, conf);
-    statesManager = new StatesManager(this, conf);
-    ruleManager = new RuleManager(this, conf); // TODO: to be replaced
-    commandExecutor = new CommandExecutor(this, conf);
-    modules.add(statesManager);
-    modules.add(ruleManager);
-    modules.add(commandExecutor);
+    switch (startupOption) {
+      case REGULAR:
+        httpServer = new SmartHttpServer(this, conf);
+        rpcServer = new SmartRpcServer(this, conf);
+        statesManager = new StatesManager(this, conf);
+        ruleManager = new RuleManager(this, conf); // TODO: to be replaced
+        commandExecutor = new CommandExecutor(this, conf);
+        modules.add(statesManager);
+        modules.add(ruleManager);
+        modules.add(commandExecutor);
+        break;
+
+      // No module started by default
+      default:
+        break;
+    }
   }
 
   public StatesManager getStatesManager() {
@@ -117,26 +129,40 @@ public class SmartServer {
     if (args == null) {
       args = new String[0];
     }
-    StringUtils.startupShutdownMessage(SmartServer.class, args, LOG);
-    if (args != null) {
-      if (parseHelpArgument(args, USAGE, System.out, true)) {
+    // TODO: bring back after remove dependency
+    //StringUtils.startupShutdownMessage(SmartServer.class, args, LOG);
+
+    if (parseHelpArgument(args, USAGE, System.out, true)) {
+      return null;
+    }
+    // TODO: handle args
+    // Parse out some generic args into Configuration.
+    //GenericOptionsParser hParser = new GenericOptionsParser(conf, args);
+    //args = hParser.getRemainingArgs();
+    // Parse the rest, NN specific args.
+    StartupOption startOpt = parseArguments(args);
+
+    SmartServer ssm = new SmartServer(conf, startOpt);
+    switch (startOpt) {
+      case REGULAR:
+        try {
+          ssm.runSSMDaemons();
+        } catch (IOException e) {
+          ssm.shutdown();
+          throw e;
+        }
+        return ssm;
+
+      case FORMAT:
+        LOG.info("Formatting DataBase ...");
+        DBAdapter adapter = ssm.getDBAdapter();
+        adapter.formatDataBase();
+        LOG.info("Formatting DataBase finished successfully!");
         return null;
-      }
-      // TODO: handle args
-      // Parse out some generic args into Configuration.
-      GenericOptionsParser hParser = new GenericOptionsParser(conf, args);
-      args = hParser.getRemainingArgs();
-      // Parse the rest, NN specific args.
-      StartupOption startOpt = parseArguments(args);
+
+      default:
+        throw new IOException("Not supported start option: " + startOpt);
     }
-    SmartServer ssm = new SmartServer(conf);
-    try {
-      ssm.runSSMDaemons();
-    } catch (IOException e) {
-      ssm.shutdown();
-      throw e;
-    }
-    return ssm;
   }
 
   private static final String USAGE =
@@ -168,7 +194,7 @@ public class SmartServer {
           return true;
         }
       } catch (ParseException pe) {
-        LOG.warn("Parse help exception", pe);
+        //LOG.warn("Parse help exception", pe);
         return false;
       }
     }
@@ -187,12 +213,9 @@ public class SmartServer {
         while (true) {
           Thread.sleep(1000);
         }
-      } else {
-        errorCode = 1;
       }
     } catch (Exception e) {
-      System.out.println("\n");
-      e.printStackTrace();
+      LOG.error("Failed to create SmartServer", e);
       System.exit(1);
     } finally {
       System.exit(errorCode);
@@ -398,8 +421,8 @@ public class SmartServer {
         startOpt = StartupOption.FORMAT;
       } else if (StartupOption.CHECKPOINT.getName().equalsIgnoreCase(cmd)) {
         startOpt = StartupOption.CHECKPOINT;
-      } else {
-        return null;
+      } else if (StartupOption.REGULAR.getName().equalsIgnoreCase(cmd)) {
+        startOpt = StartupOption.REGULAR;
       }
     }
     return startOpt;
