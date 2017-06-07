@@ -34,6 +34,8 @@ import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto.Builder;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class PBHelper {
@@ -78,26 +80,29 @@ public class PBHelper {
 
   public static CommandInfo convert(CommandInfoProto proto) {
     // TODO replace actionType with aids
-    return CommandInfo.newBuilder()
-        .setCid(proto.getCid())
+    CommandInfo.Builder builder = CommandInfo.newBuilder();
+    builder.setCid(proto.getCid())
         .setRid(proto.getRid())
         .setState(CommandState.fromValue(proto.getState()))
         .setParameters(proto.getParameters())
         .setGenerateTime(proto.getGenerateTime())
-        .setStateChangedTime(proto.getStateChangedTime())
-        .build();
+        .setStateChangedTime(proto.getStateChangedTime());
+    List<Long> list = proto.getAidsList();
+    builder.setAids(list);
+    return builder.build();
   }
 
   public static CommandInfoProto convert(CommandInfo info) {
     // TODO replace actionType with aids
-    return CommandInfoProto.newBuilder()
-        .setCid(info.getCid())
+    CommandInfoProto.Builder builder = CommandInfoProto.newBuilder();
+    builder.setCid(info.getCid())
         .setRid(info.getRid())
         .setState(info.getState().getValue())
         .setParameters(info.getParameters())
         .setGenerateTime(info.getGenerateTime())
-        .setStateChangedTime(info.getStateChangedTime())
-        .build();
+        .setStateChangedTime(info.getStateChangedTime());
+    builder.addAllAids(info.getAids());
+    return builder.build();
   }
 
   public static ReportFileAccessEventRequestProto convert(FileAccessEvent event) {
@@ -120,10 +125,7 @@ public class PBHelper {
         .setProgress(actionInfo.getProgress())
         .setActionId(actionInfo.getActionId())
         .setCommandId(actionInfo.getCommandId());
-    String[] strings = actionInfo.getArgs();
-    for (int i = 0; i < strings.length; i++) {
-      builder.setArgs(i, strings[i]);
-    }
+    builder.addAllArgs(Arrays.asList(actionInfo.getArgs()));
     return builder.build();
   }
 

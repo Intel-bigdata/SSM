@@ -126,6 +126,10 @@ public class TestSmartAdmin {
       }
       assertTrue(caughtException);
 
+      //test commandInfo
+      long id = ssmClient.submitCommand("cache /foo*");
+      assertTrue("cache /foo*".equals(ssmClient.getCommandInfo(id).getParameters()));
+
       //test client close
       caughtException = false;
       ssmClient.close();
