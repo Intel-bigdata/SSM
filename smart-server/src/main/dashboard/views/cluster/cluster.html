@@ -1,4 +1,4 @@
-<div ui-view>
+<div class="col-md-12">
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -17,4 +17,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+    <sortable-table
+            caption="Files in cache"
+            columns-bind="filesTable.cols"
+            records-bind="filesTable.rows"
+            search-bind="search"
+            pagination="10">
+        <div class="table-no-data">
+            <h2 class="glyphicon glyphicon-bullhorn"></h2>
+            <h4>No file is in cache</h4>
+        </div>
+    </sortable-table>
 </div>
