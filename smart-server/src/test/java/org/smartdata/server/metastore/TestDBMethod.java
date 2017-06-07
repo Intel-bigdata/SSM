@@ -194,9 +194,9 @@ public class TestDBMethod {
   @Test
   public void testInsertCommandsTable() throws Exception {
     reInit();
-    CommandInfo command1 = new CommandInfo(0, 1, ActionType.None,
+    CommandInfo command1 = new CommandInfo(0, 1,
         CommandState.EXECUTING, "test", 123123333l, 232444444l);
-    CommandInfo command2 = new CommandInfo(0, 78, ActionType.ConvertToEC,
+    CommandInfo command2 = new CommandInfo(0, 78,
         CommandState.PAUSED, "tt", 123178333l, 232444994l);
     CommandInfo[] commands = {command1, command2};
     dbAdapter.insertCommandsTable(commands);
@@ -205,7 +205,6 @@ public class TestDBMethod {
     CommandState state = null;
     CommandState state1 = CommandState.PAUSED;
     List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, state);
-    Assert.assertTrue(com.get(0).getActionType() == ActionType.ConvertToEC);
     Assert.assertTrue(com.get(0).getState() == CommandState.PAUSED);
     List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(null,
         null, state1);
@@ -215,9 +214,9 @@ public class TestDBMethod {
   @Test
   public void testUpdateCommand() throws Exception {
     reInit();
-    CommandInfo command1 = new CommandInfo(0, 1, ActionType.None,
+    CommandInfo command1 = new CommandInfo(0, 1,
         CommandState.PENDING, "test", 123123333l, 232444444l);
-    CommandInfo command2 = new CommandInfo(0, 78, ActionType.ConvertToEC,
+    CommandInfo command2 = new CommandInfo(0, 78,
         CommandState.PENDING, "tt", 123178333l, 232444994l);
     CommandInfo[] commands = {command1, command2};
     dbAdapter.insertCommandsTable(commands);

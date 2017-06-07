@@ -75,9 +75,9 @@ class RuleService(ssmServer: SmartServer) extends BasicService {
     path("commands") {
       val smap1 = new util.HashMap[String, String]
       smap1.put("_FILE_PATH_", "/testCacheFile")
-      val command1 = new CommandInfo(0, 1, ActionType.MoveFile,
+      val command1 = new CommandInfo(0, 1,
         CommandState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l)
-      val command2 = new CommandInfo(1, 1, ActionType.CacheFile, CommandState.PENDING,
+      val command2 = new CommandInfo(1, 1, CommandState.PENDING,
         JsonUtil.toJsonString(smap1), 123178333l, 232444994l)
       try {
         complete(gson.toJson(ssmServer.getCommandExecutor.listCommandsInfo(ruleId, null)))

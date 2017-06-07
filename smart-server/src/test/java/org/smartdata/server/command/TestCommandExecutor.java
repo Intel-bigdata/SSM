@@ -152,7 +152,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   private void generateTestCases() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
-    CommandInfo commandInfo = new CommandInfo(0, commandDescriptor.getRuleId(), ActionType.CacheFile,
+    CommandInfo commandInfo = new CommandInfo(0, commandDescriptor.getRuleId(),
         CommandState.PENDING, commandDescriptor.getCommandString(),
         123178333l, 232444994l);
     CommandInfo[] commands = {commandInfo};
