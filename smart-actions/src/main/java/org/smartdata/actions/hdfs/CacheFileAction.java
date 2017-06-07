@@ -25,6 +25,7 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
@@ -73,7 +74,8 @@ public class CacheFileAction extends HdfsAction {
     try {
       // set cache replication as the replication number of the file if not set
       if (replication == 0) {
-        replication = dfsClient.getFileInfo(fileName).getReplication();
+        HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+        replication = fileStatus.isDir() ? 1 : fileStatus.getReplication();
       }
       addActionEvent(fileName);
       executeCacheAction(fileName);
