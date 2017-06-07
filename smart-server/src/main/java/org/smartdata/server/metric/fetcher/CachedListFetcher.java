@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.metric.fetcher;
 
+import org.apache.hadoop.fs.Path;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.server.metastore.DBAdapter;
 import org.apache.hadoop.util.Time;
@@ -126,8 +127,8 @@ public class CachedListFetcher {
         RemoteIterator<CacheDirectiveEntry> cacheDirectives =
             dfsClient.listCacheDirectives(filter);
         // Add new cache files to DB
-        if (cachedFileStatuses.size() == 0) {
-          LOG.info("Cache list size {}", cachedFileStatuses.size());
+        if (!cacheDirectives.hasNext()) {
+          LOG.info("Cache list size = 0");
           return;
         }
         List<String> paths = new ArrayList<>();
@@ -138,6 +139,7 @@ public class CachedListFetcher {
         // Delete all records to avoid conflict
         // dbAdapter.deleteAllCachedFile();
         // Insert new records into DB
+        LOG.info("Current Paths", paths);
         Map<String, Long> pathFid = dbAdapter.getFileIDs(paths);
         if (pathFid == null || pathFid.size() == 0) {
           LOG.error("Cannot find fids!");
