@@ -18,11 +18,15 @@
 package org.smartdata.server.metric.fetcher;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.junit.Assert;
 import org.smartdata.SmartContext;
@@ -30,6 +34,7 @@ import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.server.metastore.Util;
 
@@ -40,6 +45,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -48,6 +54,7 @@ public class TestCachedListFetcher {
   private DBAdapter adapter;
   private String dbFile;
   private Connection conn;
+  private long fid;
 
   private CachedListFetcher cachedListFetcher;
 
@@ -65,6 +72,7 @@ public class TestCachedListFetcher {
   public void init() throws Exception {
     SmartConf conf = new SmartConf();
     initConf(conf);
+    fid = 0l;
     cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(5)
         .storagesPerDatanode(3)
@@ -105,24 +113,55 @@ public class TestCachedListFetcher {
     }
   }
 
+  private FileStatusInternal createFileStatus(String pathSting) {
+    long length = 123L;
+    boolean isDir = false;
+    int blockReplication = 1;
+    long blockSize = 128 * 1024L;
+    long modTime = 123123123L;
+    long accessTime = 123123120L;
+    FsPermission perms = FsPermission.getDefault();
+    String owner = "root";
+    String group = "admin";
+    byte[] symlink = null;
+    byte[] path = DFSUtil.string2Bytes(pathSting);
+    long fileId = fid;
+    fid++;
+    int numChildren = 0;
+    byte storagePolicy = 0;
+    return new FileStatusInternal(length, isDir, blockReplication,
+        blockSize, modTime, accessTime, perms, owner, group, symlink,
+        path, "", fileId, numChildren, null, storagePolicy);
+  }
+
   @Test
   public void testFetcher() throws Exception {
-    cachedListFetcher.start();
     String pathPrefix = "/fileTest/cache/";
     String[] fids = {"5", "7", "9", "10"};
+    Path dir = new Path(pathPrefix);
+    dfs.mkdirs(dir);
+    dfs.setStoragePolicy(dir, "HOT");
+    List<FileStatusInternal> fileStatusInternals = new ArrayList<>();
     for (int i = 0; i < fids.length; i++) {
       CacheFileAction cacheAction = new CacheFileAction();
       String path = pathPrefix + fids[i];
-      dfs.mkdirs(new Path(path));
-      adapter.insertCachedFiles(Integer.valueOf(fids[i]), path,
-          0l, 0l, 0);
+      FSDataOutputStream out = dfs.create(new Path(path));
+      out.writeChars("testUncache");
+      out.close();
+      fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
       cacheAction.init(new String[] {path});
       cacheAction.run();
+      System.out.println(cacheAction.isCached(path));
     }
-    Thread.sleep(1000);
+    adapter.insertFiles(fileStatusInternals
+        .toArray(new FileStatusInternal[fileStatusInternals.size()]));
+    List<HdfsFileStatus> ret = adapter.getFile();
+    Assert.assertTrue(ret.size() == fids.length);
+    cachedListFetcher.start();
+    Thread.sleep(10000);
     List<CachedFileStatus> cachedFileStatuses = cachedListFetcher.getCachedList();
-    Assert.assertTrue(cachedFileStatuses.size() == 4);
+    Assert.assertTrue(cachedFileStatuses.size() == fids.length);
   }
 }

@@ -295,6 +295,18 @@ public class DBAdapter {
     return null;
   }
 
+  public List<HdfsFileStatus> getFile() throws SQLException {
+    String sql = "SELECT * FROM files";
+    QueryHelper queryHelper = new QueryHelper(sql);
+    try {
+      ResultSet result = queryHelper.executeQuery();
+      List<HdfsFileStatus> ret = convertFilesTableItem(result);
+      return ret.size() > 0 ? ret : null;
+    } finally {
+      queryHelper.close();
+    }
+  }
+
   public HdfsFileStatus getFile(long fid) throws SQLException {
     String sql = "SELECT * FROM files WHERE fid = " + fid;
     QueryHelper queryHelper = new QueryHelper(sql);
