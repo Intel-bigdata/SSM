@@ -109,7 +109,7 @@ public class CachedListFetcher {
       this.dbAdapter = dbAdapter;
       fileSet = new HashSet<>();
       try {
-        fileSet.addAll(dbAdapter.getCachedFid());
+        fileSet.addAll(dbAdapter.getCachedFids());
       } catch (SQLException e) {
         LOG.error("Read fids from DB error!", e);
       }
