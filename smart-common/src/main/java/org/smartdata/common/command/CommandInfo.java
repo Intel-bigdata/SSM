@@ -34,7 +34,7 @@ public class CommandInfo {
   private long stateChangedTime;
 
   public CommandInfo(long cid, long rid, CommandState state,
-                     String parameters, long generateTime, long stateChangedTime) {
+      String parameters, long generateTime, long stateChangedTime) {
     this.cid = cid;
     this.rid = rid;
     this.state = state;
@@ -45,7 +45,7 @@ public class CommandInfo {
   }
 
   public CommandInfo(long cid, long rid, List<Long> aids, CommandState state,
-                     String parameters, long generateTime, long stateChangedTime) {
+      String parameters, long generateTime, long stateChangedTime) {
     this(cid, rid, state, parameters, generateTime, stateChangedTime);
     this.aids = aids;
   }
@@ -53,8 +53,9 @@ public class CommandInfo {
   @Override
   public String toString() {
     return String.format("{cid = %d, rid = %d, aids = %s, genTime = %d, "
-            + "stateChangedTime = %d, state = %s, params = %s}",
-        cid, rid, StringUtils.join(getAidsString(), ","), generateTime, stateChangedTime, state,
+        + "stateChangedTime = %d, state = %s, params = %s}",
+        cid, rid, StringUtils.join(getAidsString(), ","),
+        generateTime, stateChangedTime, state,
         parameters);
   }
 
@@ -88,6 +89,10 @@ public class CommandInfo {
 
   public void setRid(int rid) {
     this.rid = rid;
+  }
+
+  public void setAids(List<Long> aids) {
+    this.aids = aids;
   }
 
   public CommandState getState() {

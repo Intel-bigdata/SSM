@@ -235,7 +235,7 @@ public class SmartRpcServer implements SmartServerProtocols {
   public long submitCommand(String cmd) throws IOException {
     checkIfActive();
     // TODO: to be implemented
-    return 0;
+    return ssm.getCommandExecutor().submitCommand(cmd);
   }
 
   @Override
