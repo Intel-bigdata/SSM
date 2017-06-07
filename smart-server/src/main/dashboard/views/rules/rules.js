@@ -55,12 +55,12 @@ angular.module('dashboard')
         cols: [
           // group 1/3 (4-col)
           $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
-          $stb.text('ID').key('id').canSort().done(),
+          $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
           $stb.text('Name').key('ruleName').canSort().done(),
             // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
           // group 2/3 (5-col)
-          $stb.datetime('Submission Time').key('submitTime').canSort().sortDefaultDescent().done(),
-          $stb.datetime('Last Check Time').key('lastCheckTime').canSort().sortDefaultDescent().done(),
+          $stb.datetime('Submission Time').key('submitTime').canSort().done(),
+          $stb.datetime('Last Check Time').key('lastCheckTime').canSort().done(),
           $stb.text('Checked Number').key('numChecked').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
           $stb.text('Commands Generated').key('numCmdsGen').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
           // $stb.datetime('Start Time').key('startTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
@@ -81,7 +81,7 @@ angular.module('dashboard')
               // name: {href: pageUrl, text: rule.appName},
               state: {tooltip: rule.state, condition: rule.isRunning ? 'good' : '', shape: 'stripe'},
               //user: rule.user,
-              ruleName: 'rule1',
+              ruleName: rule.ruleName,
               submitTime: rule.submitTime,
               lastCheckTime: rule.lastCheckTime,
               numChecked: rule.numChecked,
