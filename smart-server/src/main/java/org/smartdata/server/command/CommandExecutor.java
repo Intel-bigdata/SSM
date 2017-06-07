@@ -303,20 +303,28 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public ActionInfo getActionInfo(long actionID) throws IOException {
-    SmartAction smartAction = actionPool.get(actionID);
-    if (smartAction != null) {
-      return createActionInfoFromAction(smartAction, 0);
-    }
-    ActionInfo actioninfo;
+    ActionInfo actionInfo = null;
+    ActionInfo dbActionInfo = null;
     try {
-      actioninfo = adapter.getActionsTableItem(
+      dbActionInfo = adapter.getActionsTableItem(
           String.format("== %d ", actionID), null).get(0);
     } catch (SQLException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}",
           actionID, e);
       throw new IOException(e);
     }
-    return actioninfo;
+    if (dbActionInfo.isFinished()) {
+      return dbActionInfo;
+    }
+    SmartAction smartAction = actionPool.get(actionID);
+    if (smartAction != null) {
+      actionInfo = createActionInfoFromAction(smartAction, 0);
+    }
+    if (actionInfo == null) {
+      return dbActionInfo;
+    }
+    actionInfo.setCommandId(dbActionInfo.getCommandId());
+    return actionInfo;
   }
 
   /**
