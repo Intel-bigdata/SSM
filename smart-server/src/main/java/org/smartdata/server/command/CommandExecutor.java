@@ -735,7 +735,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         }
       }
       try {
-        adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+        adapter.updateActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
       } catch (SQLException e) {
         LOG.error("Write Cache to DB error!", e);
         throw new IOException(e);

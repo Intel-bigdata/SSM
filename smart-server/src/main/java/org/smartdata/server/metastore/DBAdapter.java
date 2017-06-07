@@ -962,13 +962,47 @@ public class DBAdapter {
     execute(sql);
   }
 
+  public synchronized void updateActionsTable(ActionInfo[] actionInfos)
+      throws SQLException {
+    Connection conn = getConnection();
+    Statement s = null;
+    // Update result, log, successful, create_time, finished, finish_time, progress
+    try {
+      s = conn.createStatement();
+      for (int i = 0; i < actionInfos.length; i++) {
+        StringBuffer sb = new StringBuffer("UPDATE actions SET");
+        if (actionInfos[i].getResult().length() != 0) {
+          sb.append(" result = '").append(actionInfos[i].getResult()).append("',");
+        }
+        if (actionInfos[i].getLog().length() != 0) {
+          sb.append(" log = '").append(actionInfos[i].getLog()).append("',");
+        }
+        sb.append(" successful = ").append(booleanToInt(actionInfos[i].isSuccessful())).append(",");
+        sb.append(" create_time = ").append(actionInfos[i].getCreateTime()).append(",");
+        sb.append(" finished = ").append(booleanToInt(actionInfos[i].isFinished())).append(",");
+        sb.append(" finish_time = ").append(actionInfos[i].getFinishTime()).append(",");
+        sb.append(" progress = ").append(String.valueOf(actionInfos[i].getProgress()));
+        sb.append(" WHERE aid = ").append(actionInfos[i].getActionId()).append(";");
+        s.addBatch(sb.toString());
+        System.out.println(sb.toString());
+      }
+      s.executeBatch();
+    } finally {
+      if (s != null && !s.isClosed()) {
+        s.close();
+      }
+      closeConnection(conn);
+    }
+  }
+
   public List<ActionInfo> getNewCreatedActionsTableItem(int size) throws SQLException {
     if (size <= 0) {
       return new ArrayList<>();
     }
     // In DESC order
-    String sqlFinal = "SELECT * FROM actions "
-        + String.format("ORDER by create_time DESC limit %d", size);
+    // Only list finished actions
+    String sqlFinal = "SELECT * FROM actions WHERE finished = 1"
+        + String.format(" ORDER by create_time DESC limit %d", size);
     return getActions(sqlFinal);
   }
 

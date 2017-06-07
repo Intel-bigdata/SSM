@@ -38,7 +38,6 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Move to Cache Action
  */
 public class CacheFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(CacheFileAction.class);
 
   private String fileName;
   private LinkedBlockingQueue<String> actionEvents;
@@ -88,8 +87,9 @@ public class CacheFileAction extends HdfsAction {
     if (isCached(fileName)) {
       return;
     }
-    LOG.info("Action starts at {} : {} -> cache",
-        new Date(System.currentTimeMillis()), fileName);
+    logOut.println("Action starts at "
+        + (new Date(System.currentTimeMillis())).toString() + " : "
+        + " cache -> " + fileName);
     addDirective(fileName);
   }
 

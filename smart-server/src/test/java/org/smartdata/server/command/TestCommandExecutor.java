@@ -82,7 +82,6 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     }
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = ssm.getCommandExecutor().listNewCreatedActions(10);
-    // TODO create actions and write to DB
     Assert.assertTrue(actionInfos.size() == 0);
     // testCommandExecutorHelper();
   }
