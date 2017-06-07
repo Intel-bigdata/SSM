@@ -26,13 +26,11 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,7 +38,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -788,10 +785,10 @@ public class DBAdapter {
     try {
       s = conn.createStatement();
       for (int i = 0; i < commands.length; i++) {
-        String sql = "INSERT INTO commands (rid, action_id, state, "
+        String sql = "INSERT INTO commands (rid, aids, state, "
             + "parameters, generate_time, state_changed_time) "
             + "VALUES('" + commands[i].getRid() + "', '"
-            + commands[i].getActionType().getValue() + "', '"
+            + StringUtils.join(commands[i].getAidsString(), ",") + "', '"
             + commands[i].getState().getValue() + "', '"
             + commands[i].getParameters() + "', '"
             + commands[i].getGenerateTime() + "', '"
@@ -807,31 +804,34 @@ public class DBAdapter {
     }
   }
 
-  public synchronized boolean insertCommandTable(CommandInfo command)
+  public synchronized void insertCommandTable(CommandInfo command)
       throws SQLException {
     // Insert single command into commands, update command.id with latest id
-    String sql = "INSERT INTO commands (rid, action_id, state, "
+    String sql = "INSERT INTO commands (rid, aids, state, "
         + "parameters, generate_time, state_changed_time) "
         + "VALUES('" + command.getRid() + "', '"
-        + command.getActionType().getValue() + "', '"
+        + StringUtils.join(command.getAidsString(), ",") + "', '"
         + command.getState().getValue() + "', '"
         + command.getParameters() + "', '"
         + command.getGenerateTime() + "', '"
         + command.getStateChangedTime() + "');";
     execute(sql);
+  }
+
+  public long getMaxCommandId() throws SQLException {
     QueryHelper queryHelper = new QueryHelper("SELECT MAX(cid) FROM commands;");
+    long maxId = 0;
     try {
       ResultSet rs = queryHelper.executeQuery();
       if (rs.next()) {
-        long cid = rs.getLong(1);
-        command.setCid(cid);
-        return true;
-      } else {
-        return false;
+        maxId = rs.getLong(1) + 1;
       }
+    } catch (NullPointerException e) {
+      maxId = 0;
     } finally {
       queryHelper.close();
     }
+    return maxId;
   }
 
   public List<CommandInfo> getCommandsTableItem(String cidCondition,
@@ -896,13 +896,26 @@ public class DBAdapter {
       CommandInfo commands = new CommandInfo(
           resultSet.getLong("cid"),
           resultSet.getLong("rid"),
-          ActionType.fromValue((int) resultSet.getByte("action_id")),
+          convertStringListToLong(resultSet.getString("aids").split(",")),
           CommandState.fromValue((int) resultSet.getByte("state")),
           resultSet.getString("parameters"),
           resultSet.getLong("generate_time"),
           resultSet.getLong("state_changed_time")
       );
       ret.add(commands);
+    }
+    return ret;
+  }
+
+  private List<Long> convertStringListToLong(String[] strings) {
+    List<Long> ret = new ArrayList<>();
+    try {
+      for (String s : strings) {
+        ret.add(Long.valueOf(s));
+      }
+    } catch (NumberFormatException e) {
+      // Return empty
+      ret.clear();
     }
     return ret;
   }
@@ -949,14 +962,61 @@ public class DBAdapter {
     execute(sql);
   }
 
+  public synchronized void updateActionsTable(ActionInfo[] actionInfos)
+      throws SQLException {
+    Connection conn = getConnection();
+    Statement s = null;
+    // Update result, log, successful, create_time, finished, finish_time, progress
+    try {
+      s = conn.createStatement();
+      for (int i = 0; i < actionInfos.length; i++) {
+        StringBuffer sb = new StringBuffer("UPDATE actions SET");
+        if (actionInfos[i].getResult().length() != 0) {
+          sb.append(" result = '").append(actionInfos[i].getResult()).append("',");
+        }
+        if (actionInfos[i].getLog().length() != 0) {
+          sb.append(" log = '").append(actionInfos[i].getLog()).append("',");
+        }
+        sb.append(" successful = ").append(booleanToInt(actionInfos[i].isSuccessful())).append(",");
+        sb.append(" create_time = ").append(actionInfos[i].getCreateTime()).append(",");
+        sb.append(" finished = ").append(booleanToInt(actionInfos[i].isFinished())).append(",");
+        sb.append(" finish_time = ").append(actionInfos[i].getFinishTime()).append(",");
+        sb.append(" progress = ").append(String.valueOf(actionInfos[i].getProgress()));
+        sb.append(" WHERE aid = ").append(actionInfos[i].getActionId()).append(";");
+        s.addBatch(sb.toString());
+        System.out.println(sb.toString());
+      }
+      s.executeBatch();
+    } finally {
+      if (s != null && !s.isClosed()) {
+        s.close();
+      }
+      closeConnection(conn);
+    }
+  }
+
   public List<ActionInfo> getNewCreatedActionsTableItem(int size) throws SQLException {
     if (size <= 0) {
       return new ArrayList<>();
     }
     // In DESC order
-    String sqlFinal = "SELECT * FROM actions "
-        + String.format("ORDER by create_time DESC limit %d", size);
+    // Only list finished actions
+    String sqlFinal = "SELECT * FROM actions WHERE finished = 1"
+        + String.format(" ORDER by create_time DESC limit %d", size);
     return getActions(sqlFinal);
+  }
+
+  public List<ActionInfo> getActionsTableItem(List<Long> aids) throws SQLException {
+    if (aids == null || aids.size() == 0){
+      return null;
+    }
+    String sql = "SELECT * FROM actions WHERE aid IN (";
+    List<String> ret = new ArrayList<>();
+    for (Long aid:aids) {
+      ret.add(String.valueOf(aid));
+    }
+    sql = sql + StringUtils.join(ret, ",") + ")";
+    return getActions(sql);
   }
 
   public List<ActionInfo> getActionsTableItem(String aidCondition,
@@ -1105,6 +1165,71 @@ public class DBAdapter {
     } finally {
       queryHelper.close();
     }
+  }
+
+  public void dropAllTables() throws SQLException {
+    Connection conn = getConnection();
+    try {
+      String url = conn.getMetaData().getURL();
+      if (url.startsWith(Util.SQLITE_URL_PREFIX)) {
+        dropAllTablesSqlite(conn);
+      } else if (url.startsWith(Util.MYSQL_URL_PREFIX)) {
+        dropAllTablesMysql(conn, url);
+      } else {
+        throw new SQLException("Unsupported database");
+      }
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  public void dropAllTablesSqlite(Connection conn) throws SQLException {
+    try {
+      Statement s = conn.createStatement();
+      ResultSet rs = s.executeQuery("SELECT tbl_name FROM sqlite_master;");
+      List<String> list = new ArrayList<>();
+      while (rs.next()) {
+        list.add(rs.getString(1));
+      }
+      for (String tb : list) {
+        if (!"sqlite_sequence".equals(tb)) {
+          s.execute("DROP TABLE IF EXISTS '" + tb + "';");
+        }
+      }
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  public void dropAllTablesMysql(Connection conn, String url) throws SQLException {
+    Statement stat = conn.createStatement();
+    if(!url.contains("?")) {
+      throw new SQLException("Invalid MySQL url without db_name");
+    }
+    String dbName = url.substring(url.indexOf("/", 13) + 1, url.indexOf("?"));
+    ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
+        + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
+    List<String> list = new ArrayList<>();
+    while (rs.next()) {
+      list.add(rs.getString(1));
+    }
+    for (String tb : list) {
+      stat.execute("DROP TABLE IF EXISTS '" + tb + "';");
+    }
+  }
+
+  public synchronized void initializeDataBase() throws SQLException {
+    Connection conn = getConnection();
+    try {
+      Util.initializeDataBase(conn);
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  public synchronized void formatDataBase() throws SQLException {
+    dropAllTables();
+    initializeDataBase();
   }
 
   @VisibleForTesting

@@ -164,7 +164,7 @@ public class Util {
         "CREATE TABLE `commands` (\n" +
             "  `cid` INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  `rid` INTEGER NOT NULL,\n" +
-            "  `action_id` tinyint(4) NOT NULL,\n" +
+            "  `aids` varchar(4096) NOT NULL,\n" +
             "  `state` tinyint(4) NOT NULL,\n" +
             "  `parameters` varchar(4096) NOT NULL,\n" +
             "  `generate_time` bigint(20) NOT NULL,\n" +

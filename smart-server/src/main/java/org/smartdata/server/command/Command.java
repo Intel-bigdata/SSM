@@ -126,6 +126,8 @@ public class Command implements Runnable {
         continue;
       }
       try {
+        // Init Action
+        act.init(act.getArguments());
         act.run();
       } catch (Exception e) {
         LOG.error("Action {} running error! {}", act.getActionStatus().getId(), e);

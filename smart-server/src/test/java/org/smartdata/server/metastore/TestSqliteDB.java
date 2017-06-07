@@ -17,12 +17,22 @@
  */
 package org.smartdata.server.metastore;
 
+
 import org.junit.Test;
 import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.server.metastore.Util;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.DriverManager;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test operations with sqlite database.
@@ -44,6 +54,86 @@ public class TestSqliteDB {
       file.deleteOnExit();
     }
   }
+
+  @Test
+  public void testDropTablesSqlite() throws SQLException, ClassNotFoundException {
+    String dbFile = TestDBUtil.getUniqueDBFilePath();
+    Connection conn = null;
+    try {
+      conn = Util.createSqliteConnection(dbFile);
+      Util.initializeDataBase(conn);
+      DBAdapter adapter = new DBAdapter(conn);
+      Statement s = conn.createStatement();
+      adapter.dropAllTables();
+      for (int i = 0; i < 10; i++) {
+        adapter.execute("DROP TABLE IF EXISTS tb_"+i+";");
+        adapter.execute("CREATE TABLE tb_"+i+" (a INT(11));");
+      }
+      ResultSet rs = s.executeQuery("select tbl_name from sqlite_master;");
+      List<String> list = new ArrayList<>();
+      while (rs.next()) {
+        list.add(rs.getString(1));
+      }
+      adapter.dropAllTables();
+      rs = s.executeQuery("select tbl_name from sqlite_master;");
+      List<String> list1 = new ArrayList<>();
+      while (rs.next()) {
+        list1.add(rs.getString(1));
+      }
+      assertEquals(10,list.size()-list1.size());
+    } finally {
+      if (conn != null) {
+        conn.close();
+      }
+      File file = new File(dbFile);
+      file.deleteOnExit();
+    }
+  }
+
+  /*@Test
+  public void testDropAllTablesMysql() throws SQLException {
+    Connection conn = null;
+    try {
+      String url = "jdbc:mysql://localhost:3306/";
+      conn = DriverManager.getConnection(url, "root", "linux123");
+      Statement s = conn.createStatement();
+      String db = "abcd";
+      s.executeUpdate("DROP DATABASE IF EXISTS "+db+";");
+      s.executeUpdate("CREATE DATABASE "+db+";");
+      s.execute("use "+db+";");
+      conn = Util.createConnection(url+db+"?","root","linux123");
+      DBAdapter adapter = new DBAdapter(conn);
+      adapter.dropAllTables();
+
+      for (int i = 0; i < 10; i++) {
+        adapter.execute("DROP TABLE IF EXISTS tb_"+i+";");
+        adapter.execute("CREATE TABLE tb_"+i+" (a INT(11));");
+      }
+      List<String> list = new ArrayList<>();
+      ResultSet rs = adapter.executeQuery("SELECT TABLE_NAME FROM " +
+          "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + db + "';");
+      while (rs.next()) {
+        list.add(rs.getString(1));
+      }
+
+      adapter.dropAllTables();
+
+      List<String> list1 = new ArrayList<>();
+      rs = adapter.executeQuery("SELECT TABLE_NAME FROM " +
+          "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + db + "';");
+      while (rs.next()) {
+        list1.add(rs.getString(1));
+      }
+      assertEquals(10,list.size()-list1.size());
+      adapter.executeUpdate("DROP DATABASE IF EXISTS abc");
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    } finally {
+      if (conn != null) {
+        conn.close();
+      }
+    }
+  }*/
 
   @Test
   public void testSqliteDBBlankStatements() throws Exception {
