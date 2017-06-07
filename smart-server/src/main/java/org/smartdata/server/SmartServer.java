@@ -43,6 +43,7 @@ import org.smartdata.server.rule.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.DruidPool;
 import org.smartdata.server.metastore.Util;
+import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.server.web.SmartHttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,8 +138,8 @@ public class SmartServer {
     }
     // TODO: handle args
     // Parse out some generic args into Configuration.
-    //GenericOptionsParser hParser = new GenericOptionsParser(conf, args);
-    //args = hParser.getRemainingArgs();
+    GenericOptionsParser hParser = new GenericOptionsParser(conf, args);
+    args = hParser.getRemainingArgs();
     // Parse the rest, NN specific args.
     StartupOption startOpt = parseArguments(args);
 
