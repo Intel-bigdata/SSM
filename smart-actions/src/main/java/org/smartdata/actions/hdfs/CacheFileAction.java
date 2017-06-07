@@ -43,6 +43,7 @@ public class CacheFileAction extends HdfsAction {
   private LinkedBlockingQueue<String> actionEvents;
   private final String SSMPOOL = "SSMPool";
   private ActionType actionType;
+  private short replication = 0;
 
   public CacheFileAction() {
     this.actionType = ActionType.CacheFile;
@@ -61,12 +62,19 @@ public class CacheFileAction extends HdfsAction {
   public void init(String[] args) {
     super.init(args);
     fileName = args[0];
+    if (args.length > 1) {
+      replication = (short)Integer.parseInt(args[1]);
+    }
   }
 
   protected void execute() {
     ActionStatus actionStatus = getActionStatus();
     actionStatus.begin();
     try {
+      // set cache replication as the replication number of the file if not set
+      if (replication == 0) {
+        replication = dfsClient.getFileInfo(fileName).getReplication();
+      }
       addActionEvent(fileName);
       executeCacheAction(fileName);
       actionStatus.setSuccessful(true);
@@ -114,8 +122,9 @@ public class CacheFileAction extends HdfsAction {
 
   private void addDirective(String fileName) throws Exception {
     CacheDirectiveInfo.Builder filterBuilder = new CacheDirectiveInfo.Builder();
-    filterBuilder.setPath(new Path(fileName));
-    filterBuilder.setPool(SSMPOOL);
+    filterBuilder.setPath(new Path(fileName))
+        .setPool(SSMPOOL)
+        .setReplication(replication);
     CacheDirectiveInfo filter = filterBuilder.build();
     EnumSet<CacheFlag> flags = EnumSet.noneOf(CacheFlag.class);
     dfsClient.addCacheDirective(filter, flags);
