@@ -17,6 +17,7 @@
  */
 package org.smartdata.actions.hdfs;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
@@ -31,17 +32,24 @@ import java.io.IOException;
 public class TestCacheFile extends ActionMiniCluster {
   @Test
   public void testCacheFile() throws IOException {
-    dfs.mkdirs(new Path("/fileTestA"));
-    String[] args = {"/fileTestA"};
+    final String file = "/testCache/file";
+    Path dir = new Path("/testCache");
+    dfs.mkdirs(dir);
+    // write to DISK
+    dfs.setStoragePolicy(dir, "HOT");
+    final FSDataOutputStream out = dfs.create(new Path(file));
+    out.writeChars("testCache");
+    out.close();
+
     CacheFileAction cacheAction = new CacheFileAction();
     cacheAction.setContext(smartContext);
     cacheAction.setDfsClient(dfsClient);
-    cacheAction.init(args);
+    cacheAction.init(new String[] {file});
     ActionStatus actionStatus = cacheAction.getActionStatus();
     try {
-      Assert.assertEquals(false, cacheAction.isCached(args[0]));
+      Assert.assertEquals(false, cacheAction.isCached(file));
       cacheAction.run();
-      Assert.assertEquals(true, cacheAction.isCached(args[0]));
+      Assert.assertEquals(true, cacheAction.isCached(file));
       Assert.assertTrue(actionStatus.isFinished());
       Assert.assertTrue(actionStatus.isSuccessful());
       System.out.println("Cache action running time : " +
