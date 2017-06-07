@@ -22,6 +22,8 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
+import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.command.CommandInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.rule.RuleInfo;
@@ -128,7 +130,17 @@ public class TestSmartAdmin {
 
       //test commandInfo
       long id = ssmClient.submitCommand("cache /foo*");
-      assertTrue("cache /foo*".equals(ssmClient.getCommandInfo(id).getParameters()));
+      CommandInfo commandInfo = ssmClient.getCommandInfo(id);
+      assertTrue("cache /foo*".equals(commandInfo.getParameters()));
+
+      //test actioninfo
+      List<Long> aidlist = commandInfo.getAids();
+      assertNotEquals(0,aidlist.size());
+      ActionInfo actionInfo = ssmClient.getActionInfo(aidlist.get(0));
+      assertEquals(id,actionInfo.getCommandId());
+
+      //test listActionInfoOfLastActions
+      ssmClient.listActionInfoOfLastActions(2);
 
       //test client close
       caughtException = false;
