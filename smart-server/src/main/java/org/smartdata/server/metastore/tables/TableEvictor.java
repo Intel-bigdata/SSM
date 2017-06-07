@@ -29,11 +29,11 @@ public abstract class TableEvictor {
   }
 
   public void dropTable(AccessCountTable accessCountTable) {
-    try {
-      this.adapter.dropTable(accessCountTable.getTableName());
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
+//    try {
+//      this.adapter.dropTable(accessCountTable.getTableName());
+//    } catch (SQLException e) {
+//      e.printStackTrace();
+//    }
   }
 
   abstract void evictTables(AccessCountTableDeque tables, int size);
