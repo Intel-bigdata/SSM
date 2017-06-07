@@ -24,7 +24,6 @@ import org.smartdata.client.SmartDFSClient;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.common.actions.ActionInfoComparator;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.common.CommandState;
@@ -525,8 +524,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
     long submitTime = System.currentTimeMillis();
     CommandInfo cmdinfo = new CommandInfo(0, commandDescriptor.getRuleId(),
-        ActionType.ArchiveFile, CommandState.PENDING,
-        commandDescriptor.getCommandString(), submitTime, submitTime);
+        CommandState.PENDING, commandDescriptor.getCommandString(),
+        submitTime, submitTime);
     return submitCommand(cmdinfo);
   }
 

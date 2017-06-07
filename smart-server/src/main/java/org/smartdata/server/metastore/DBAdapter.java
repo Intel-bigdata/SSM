@@ -788,10 +788,10 @@ public class DBAdapter {
     try {
       s = conn.createStatement();
       for (int i = 0; i < commands.length; i++) {
-        String sql = "INSERT INTO commands (rid, action_id, state, "
+        String sql = "INSERT INTO commands (rid, aids, state, "
             + "parameters, generate_time, state_changed_time) "
             + "VALUES('" + commands[i].getRid() + "', '"
-            + commands[i].getActionType().getValue() + "', '"
+            + StringUtils.join(commands[i].getAidsString(), ",") + "', '"
             + commands[i].getState().getValue() + "', '"
             + commands[i].getParameters() + "', '"
             + commands[i].getGenerateTime() + "', '"
@@ -810,10 +810,10 @@ public class DBAdapter {
   public synchronized boolean insertCommandTable(CommandInfo command)
       throws SQLException {
     // Insert single command into commands, update command.id with latest id
-    String sql = "INSERT INTO commands (rid, action_id, state, "
+    String sql = "INSERT INTO commands (rid, aids, state, "
         + "parameters, generate_time, state_changed_time) "
         + "VALUES('" + command.getRid() + "', '"
-        + command.getActionType().getValue() + "', '"
+        + StringUtils.join(command.getAidsString(), ",") + "', '"
         + command.getState().getValue() + "', '"
         + command.getParameters() + "', '"
         + command.getGenerateTime() + "', '"
@@ -896,13 +896,26 @@ public class DBAdapter {
       CommandInfo commands = new CommandInfo(
           resultSet.getLong("cid"),
           resultSet.getLong("rid"),
-          ActionType.fromValue((int) resultSet.getByte("action_id")),
+          convertStringListToLong(resultSet.getString("aids").split(",")),
           CommandState.fromValue((int) resultSet.getByte("state")),
           resultSet.getString("parameters"),
           resultSet.getLong("generate_time"),
           resultSet.getLong("state_changed_time")
       );
       ret.add(commands);
+    }
+    return ret;
+  }
+
+  private List<Long> convertStringListToLong(String[] strings) {
+    List<Long> ret = new ArrayList<>();
+    try {
+      for (String s : strings) {
+        ret.add(Long.valueOf(s));
+      }
+    } catch (NumberFormatException e) {
+      // Return empty
+      ret.clear();
     }
     return ret;
   }

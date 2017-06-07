@@ -17,38 +17,61 @@
  */
 package org.smartdata.common.command;
 
+import org.apache.commons.lang.StringUtils;
 import org.smartdata.common.CommandState;
-import org.smartdata.common.actions.ActionType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class CommandInfo {
   private long cid;
   private long rid;
-  // TODO Maybe need actionID
-  //private long actionId;
-  private ActionType actionType; // TODO: delete
+  private List<Long> aids;
   private CommandState state;
   private String parameters;
   private long generateTime;
   private long stateChangedTime;
 
-  public CommandInfo(long cid, long rid, ActionType actionType, CommandState state,
+  public CommandInfo(long cid, long rid, CommandState state,
                      String parameters, long generateTime, long stateChangedTime) {
     this.cid = cid;
     this.rid = rid;
-    this.actionType = actionType;
     this.state = state;
     this.parameters = parameters;
     this.generateTime = generateTime;
     this.stateChangedTime = stateChangedTime;
+    this.aids = new ArrayList<>();
+  }
+
+  public CommandInfo(long cid, long rid, List<Long> aids, CommandState state,
+                     String parameters, long generateTime, long stateChangedTime) {
+    this(cid, rid, state, parameters, generateTime, stateChangedTime);
+    this.aids = aids;
   }
 
   @Override
   public String toString() {
-    return String.format("{cid = %d, rid = %d, genTime = %d, "
-            + "stateChangedTime = %d, actionType = %s, state = %s, params = %s}",
-        cid, rid, generateTime, stateChangedTime, actionType, state,
+    return String.format("{cid = %d, rid = %d, aids = %s, genTime = %d, "
+            + "stateChangedTime = %d, state = %s, params = %s}",
+        cid, rid, StringUtils.join(getAidsString(), ","), generateTime, stateChangedTime, state,
         parameters);
+  }
+
+  public void addAction(long aid) {
+    aids.add(aid);
+  }
+
+  public List<Long> getAids() {
+    return aids;
+  }
+
+  public List<String> getAidsString() {
+    List<String> ret = new ArrayList<>();
+    for (Long aid:aids) {
+      ret.add(String.valueOf(aid));
+    }
+    return ret;
   }
 
   public long getCid() {
@@ -65,14 +88,6 @@ public class CommandInfo {
 
   public void setRid(int rid) {
     this.rid = rid;
-  }
-
-  public ActionType getActionType() {
-    return actionType;
-  }
-
-  public void setActionType(ActionType actionType) {
-    this.actionType = actionType;
   }
 
   public CommandState getState() {
@@ -114,9 +129,7 @@ public class CommandInfo {
   public static class Builder {
     private long cid;
     private long rid;
-    // TODO Maybe need actionID
-    //private long actionId;
-    private ActionType actionType;
+    private List<Long> aids;
     private CommandState state;
     private String parameters;
     private long generateTime;
@@ -136,10 +149,11 @@ public class CommandInfo {
       return this;
     }
 
-    public Builder setActionType(ActionType actionType) {
-      this.actionType = actionType;
+    public Builder setAids(List<Long> aids) {
+      this.aids = aids;
       return this;
     }
+
 
     public Builder setState(CommandState state) {
       this.state = state;
@@ -162,7 +176,7 @@ public class CommandInfo {
     }
 
     public CommandInfo build() {
-      return new CommandInfo(cid, rid, actionType, state, parameters,
+      return new CommandInfo(cid, rid, aids, state, parameters,
           generateTime, stateChangedTime);
     }
   }

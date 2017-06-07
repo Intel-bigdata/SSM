@@ -22,7 +22,6 @@ import com.google.protobuf.ServiceException;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
@@ -78,10 +77,10 @@ public class PBHelper {
   }
 
   public static CommandInfo convert(CommandInfoProto proto) {
+    // TODO replace actionType with aids
     return CommandInfo.newBuilder()
         .setCid(proto.getCid())
         .setRid(proto.getRid())
-        .setActionType(ActionType.fromValue(proto.getActionType()))
         .setState(CommandState.fromValue(proto.getState()))
         .setParameters(proto.getParameters())
         .setGenerateTime(proto.getGenerateTime())
@@ -90,10 +89,10 @@ public class PBHelper {
   }
 
   public static CommandInfoProto convert(CommandInfo info) {
+    // TODO replace actionType with aids
     return CommandInfoProto.newBuilder()
         .setCid(info.getCid())
         .setRid(info.getRid())
-        .setActionType(info.getActionType().getValue())
         .setState(info.getState().getValue())
         .setParameters(info.getParameters())
         .setGenerateTime(info.getGenerateTime())
