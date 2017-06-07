@@ -45,7 +45,7 @@
 
         $urlRouterProvider
           .when('', '/')
-          .when('/', '/rules');
+          .when('/', '/cluster');
           // .when('/cluster', '/cluster/master');
 
         /*

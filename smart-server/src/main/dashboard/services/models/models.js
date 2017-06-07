@@ -169,6 +169,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         actionTypes: function () {
           return get('actiontypes', decoder.default)
+        },
+        cachedfiles: function () {
+          return get('cachedfiles', decoder.default)
         }
       };
 
