@@ -34,7 +34,7 @@
 
   <property>
     <name>dfs.smart.rpc-address</name>
-    <value>localhost:7042</value>
+    <value>0.0.0.0:7042</value>
     <description>rpc server of SSM</description>
   </property>
 

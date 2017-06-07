@@ -27,9 +27,9 @@ public class SmartConfKeys {
 
   //ssm
   public final static String DFS_SSM_RPC_ADDRESS_KEY = "dfs.smart.rpc-address";
-  public final static String DFS_SSM_RPC_ADDRESS_DEFAULT = "localhost:7042";
+  public final static String DFS_SSM_RPC_ADDRESS_DEFAULT = "0.0.0.0:7042";
   public final static String DFS_SSM_HTTP_ADDRESS_KEY = "dfs.smart.http-address";
-  public final static String DFS_SSM_HTTP_ADDRESS_DEFAULT = "localhost:7045";
+  public final static String DFS_SSM_HTTP_ADDRESS_DEFAULT = "0.0.0.0:7045";
   public final static String DFS_SSM_HTTPS_ADDRESS_KEY = "dfs.smart.https-address";
 
   public final static String DFS_SSM_DEFAULT_DB_URL_KEY = "dfs.smart.default.db.url";
