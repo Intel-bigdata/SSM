@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * An action to read a file. The read content will be discarded immediately, not storing onto disk.
@@ -35,7 +36,6 @@ import java.io.IOException;
  * Arguments: file_path [buffer_size, default=64k]
  */
 public class ReadFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(ReadFileAction.class);
 
   private String filePath;
   private int bufferSize = 64 * 1024;
@@ -51,6 +51,9 @@ public class ReadFileAction extends HdfsAction {
 
   @Override
   protected void execute() {
+    logOut.println("Action starts at "
+        + (new Date(System.currentTimeMillis())).toString() + " : Read "
+        + filePath);
     ActionStatus actionStatus = getActionStatus();
     actionStatus.begin();
     try {

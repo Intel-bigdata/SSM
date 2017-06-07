@@ -24,6 +24,7 @@ import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.Random;
 
 /**
@@ -36,23 +37,27 @@ import java.util.Random;
  * Arguments: file_path length [buffer_size, default=64k]
  */
 public class WriteFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(WriteFileAction.class);
   private String filePath;
-  private int length;
+  private int length = 64 * 102;
   private int bufferSize = 64 * 1024;
 
   @Override
   public void init(String[] args) {
     super.init(args);
     this.filePath = args[0];
-    this.length = Integer.valueOf(args[1]);
+    if (args.length >= 2) {
+      this.length = Integer.valueOf(args[1]);
+    }
     if (args.length >= 3) {
-      bufferSize = Integer.valueOf(args[2]);
+      this.bufferSize = Integer.valueOf(args[2]);
     }
   }
 
   @Override
   protected void execute() {
+    logOut.println("Action starts at "
+        + (new Date(System.currentTimeMillis())).toString() + " : Write "
+        + filePath + String.format(" with length %d", length));
     ActionStatus actionStatus = getActionStatus();
     actionStatus.begin();
     try {
@@ -60,16 +65,18 @@ public class WriteFileAction extends HdfsAction {
       // generate random data with given length
       byte[] buffer = new byte[bufferSize];
       new Random().nextBytes(buffer);
+      logOut.println(String.format("Generate random data with length %d", length));
       // write to HDFS
       for (int pos = 0; pos < length; pos += bufferSize) {
         int writeLength = pos + bufferSize < length ? bufferSize : length - pos;
         out.write(buffer, 0, writeLength);
       }
       out.close();
+      logOut.println("Write Successfully!");
       actionStatus.setSuccessful(true);
     } catch (IOException e) {
       actionStatus.setSuccessful(false);
-      resultOut.println("WriteFile Action fails!\n" + e.getMessage());
+      resultOut.println("WriteFile Action fails!\n" + e);
     } finally {
       actionStatus.end();
     }
