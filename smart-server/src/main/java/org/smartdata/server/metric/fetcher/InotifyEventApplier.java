@@ -114,11 +114,25 @@ public class InotifyEventApplier {
   private String getMetaDataUpdateSql(Event.MetadataUpdateEvent metadataUpdateEvent) {
     switch (metadataUpdateEvent.getMetadataType()) {
       case TIMES:
-        return String.format(
+        if (metadataUpdateEvent.getMtime() > 0 && metadataUpdateEvent.getAtime() > 0) {
+          return String.format(
             "UPDATE files SET modification_time = %s, access_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getMtime(),
             metadataUpdateEvent.getAtime(),
             metadataUpdateEvent.getPath());
+        } else if (metadataUpdateEvent.getMtime() > 0) {
+          return String.format(
+            "UPDATE files SET modification_time = %s WHERE path = '%s';",
+            metadataUpdateEvent.getMtime(),
+            metadataUpdateEvent.getPath());
+        } else if (metadataUpdateEvent.getAtime() > 0) {
+          return String.format(
+            "UPDATE files SET access_time = %s WHERE path = '%s';",
+            metadataUpdateEvent.getAtime(),
+            metadataUpdateEvent.getPath());
+        } else {
+          return "";
+        }
       case OWNER:
         //Todo
         break;
