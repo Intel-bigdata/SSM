@@ -18,6 +18,7 @@
 package org.smartdata.server.command;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.SmartContext;
 import org.smartdata.client.SmartDFSClient;
@@ -654,11 +655,12 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private ActionInfo createActionInfoFromAction(SmartAction smartAction,
       long cid) throws IOException {
     ActionStatus status = smartAction.getActionStatus();
+    // Replace special character with
     return new ActionInfo(status.getId(),
         cid, smartAction.getName(),
         smartAction.getArguments(),
-        new String(status.getResultStream().toByteArray(), StandardCharsets.UTF_8),
-        new String(status.getLogStream().toByteArray(), StandardCharsets.UTF_8),
+        StringEscapeUtils.escapeJava(status.getResultStream().toString("UTF-8")),
+        StringEscapeUtils.escapeJava(status.getLogStream().toString("UTF-8")),
         status.isSuccessful(), status.getStartTime(),
         status.isFinished(), status.getFinishTime(),
         status.getPercentage());
