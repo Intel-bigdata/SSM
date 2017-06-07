@@ -62,6 +62,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
     ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    // ssm.getCommandExecutor().submitCommand(commandDescriptor);
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = ssm.getCommandExecutor().listNewCreatedActions(10);
     Assert.assertTrue(actionInfos.size() > 0);
