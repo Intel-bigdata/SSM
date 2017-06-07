@@ -47,7 +47,7 @@ public class TestWriteFileAction extends ActionMiniCluster {
   @Test
   public void testInit() throws IOException {
     ArrayList<String> args = new ArrayList<>();
-    args.add("Test");
+    args.add("/Test");
     args.add("10");
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.init(args.toArray(new String[args.size()]));
@@ -57,8 +57,8 @@ public class TestWriteFileAction extends ActionMiniCluster {
 
   @Test
   public void testExecute() throws Exception {
-    String filePath = "/testWriteFile/file";
-    int size = 66560;
+    String filePath = "/testWriteFile/fadsfa/213";
+    int size = 1000;
     writeFile(filePath, size);
     HdfsFileStatus fileStatus = dfs.getClient().getFileInfo(filePath);
     Assert.assertTrue(fileStatus.getLen() == size);
