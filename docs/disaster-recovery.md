@@ -1,4 +1,4 @@
-Transparent Cross Datacenter File Replication
+Transparent Cluster Disaster Recovery
 =============
 
 Apache Hadoop is architected to operate efficiently at scale for normal
@@ -8,24 +8,22 @@ spanning multiple datacenters, replicating data from one location to
 another is common practice for disaster recovery and global service
 availability.
 
-There are a lot of ideas contributed to the community in the past, especially [HDFS-5442](https://issues.apache.org/jira/browse/HDFS-5442). Ideas in HDFS-5442 enlight us to propose an new solution, which provides a fully distributed, low latency and high
-throughput HDFS data replication method for multiple datacenters backup.
+There are lots of ideas contributed to the community in the past about how to solve the notable problem, like in the issue [HDFS-5442](https://issues.apache.org/jira/browse/HDFS-5442). Ideas in HDFS-5442 enlight us to propose a new solution, which aims to provide a practical, low latency and high throughput HDFS data sync up between clusters for disaster recovery.
 
 Limitations of DistCp
 =====================
 
-Current available solution for data replication is using distcp. DistCp
-provides a robust and reliable backup capability for HDFS data through
-batch operation. But at the same time, it has certain disadvantages.
+Current an available solution in open source Hadoop for data sync up between clusters is using DistCp. DistCp
+provides a robust and reliable backup capability for HDFS data through batch operations. But at the same time, it has certain disadvantages.
 
-1.  First, it requires administrators’ intervene to specify the backup
+1.  It requires administrators’ intervene to specify the backup
     target and when to start the backup process.
 
-2.  Second, it’s not a real-time backup or even not near real-time
+2.  It’s not a real-time backup or even not near real-time
     backup solution, for those who require critical data real-time
     backup, DistCp can’t meet their requirements.
 
-3.  Third, DistCp relies on the heavy MapReduce even only a few files
+3.  DistCp relies on the heavy MapReduce even only a few files
     need to be copied. MapReduce will introduce a lot of execution
     overhead when only one file or a several files involved
 
