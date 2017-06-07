@@ -58,10 +58,7 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
       }
     } ~
       path("cachedfiles") {
-        val status = new util.ArrayList[CachedFileStatus]()
-        status.add(new CachedFileStatus(1, "file1", 1023, 2048, 5))
-        status.add(new CachedFileStatus(2, "file2", 1023000, 2048000, 4))
-        complete(gson.toJson(status))
+        complete(gson.toJson(ssmServer.getDBAdapter.getCachedFileStatus))
       } ~
       path("actiontypes") {
         complete(gson.toJson(ssmServer.getCommandExecutor.listActionsSupported()))
