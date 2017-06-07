@@ -139,7 +139,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private CommandDescriptor generateCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile";
+    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 12321";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
     commandDescriptor.setRuleId(1);
     return commandDescriptor;
@@ -182,6 +182,6 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(com.get(0).getState() == CommandState.DONE);
     List<ActionInfo> actionInfos = dbAdapter.getActionsTableItem(">= 0 ", ">= 1 ");
     System.out.printf("ActionInfos Size = %d\n", actionInfos.size());
-    Assert.assertTrue(actionInfos.size() == 2);
+    Assert.assertTrue(actionInfos.size() == 3);
   }
 }
