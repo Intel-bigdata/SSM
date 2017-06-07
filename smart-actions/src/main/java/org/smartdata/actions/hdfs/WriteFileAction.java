@@ -63,7 +63,7 @@ public class WriteFileAction extends HdfsAction {
     actionStatus.begin();
     try {
       if (length == -1) {
-        resultOut.println("Write Action doesn't provide length!");
+        resultOut.println("Write Action provides wrong length!");
         throw new IOException();
       }
       final OutputStream out = dfsClient.create(filePath, true);

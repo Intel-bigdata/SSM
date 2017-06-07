@@ -139,7 +139,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private CommandDescriptor generateCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 12321";
+    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test ";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
     commandDescriptor.setRuleId(1);
     return commandDescriptor;
