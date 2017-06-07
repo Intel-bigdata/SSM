@@ -96,12 +96,11 @@ message DisableRuleResponseProto {
 message CommandInfoProto {
   required int64 cid = 1;
   required int64 rid = 2;
-  required int64 actionId = 3;
+  repeated int64 aids = 3;
   required int64 generateTime = 4;
   required int64 stateChangedTime = 5;
-  required int32 actionType = 6;
-  required int32 state = 7;
-  required string parameters = 8;
+  required int32 state = 6;
+  required string parameters = 7;
 }
 
 message GetCommandInfoRequestProto {

@@ -22,7 +22,6 @@ import com.google.protobuf.ServiceException;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
@@ -35,6 +34,8 @@ import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto.Builder;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class PBHelper {
@@ -78,27 +79,30 @@ public class PBHelper {
   }
 
   public static CommandInfo convert(CommandInfoProto proto) {
-    return CommandInfo.newBuilder()
-        .setCid(proto.getCid())
+    // TODO replace actionType with aids
+    CommandInfo.Builder builder = CommandInfo.newBuilder();
+    builder.setCid(proto.getCid())
         .setRid(proto.getRid())
-        .setActionType(ActionType.fromValue(proto.getActionType()))
         .setState(CommandState.fromValue(proto.getState()))
         .setParameters(proto.getParameters())
         .setGenerateTime(proto.getGenerateTime())
-        .setStateChangedTime(proto.getStateChangedTime())
-        .build();
+        .setStateChangedTime(proto.getStateChangedTime());
+    List<Long> list = proto.getAidsList();
+    builder.setAids(list);
+    return builder.build();
   }
 
   public static CommandInfoProto convert(CommandInfo info) {
-    return CommandInfoProto.newBuilder()
-        .setCid(info.getCid())
+    // TODO replace actionType with aids
+    CommandInfoProto.Builder builder = CommandInfoProto.newBuilder();
+    builder.setCid(info.getCid())
         .setRid(info.getRid())
-        .setActionType(info.getActionType().getValue())
         .setState(info.getState().getValue())
         .setParameters(info.getParameters())
         .setGenerateTime(info.getGenerateTime())
-        .setStateChangedTime(info.getStateChangedTime())
-        .build();
+        .setStateChangedTime(info.getStateChangedTime());
+    builder.addAllAids(info.getAids());
+    return builder.build();
   }
 
   public static ReportFileAccessEventRequestProto convert(FileAccessEvent event) {
@@ -121,10 +125,7 @@ public class PBHelper {
         .setProgress(actionInfo.getProgress())
         .setActionId(actionInfo.getActionId())
         .setCommandId(actionInfo.getCommandId());
-    String[] strings = actionInfo.getArgs();
-    for (int i = 0; i < strings.length; i++) {
-      builder.setArgs(i, strings[i]);
-    }
+    builder.addAllArgs(Arrays.asList(actionInfo.getArgs()));
     return builder.build();
   }
 
@@ -140,7 +141,8 @@ public class PBHelper {
         .setActionId(infoProto.getActionId())
         .setCommandId(infoProto.getCommandId());
     List<String> list = infoProto.getArgsList();
-    String[] strings = (String[]) list.toArray();
+    int size = list.size();
+    String[] strings = list.toArray(new String[size]);
     builder.setArgs(strings);
     return builder.build();
   }
