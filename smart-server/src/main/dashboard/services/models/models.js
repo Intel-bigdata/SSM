@@ -92,6 +92,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
         ruleSummary: function (obj) {
           return angular.merge(obj, {
             // extra properties
+            ruleName: 'Rule ' + obj.id,
             isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
             isDead: !(obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
             // extra methods
@@ -107,8 +108,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
         rule: function (obj) {
           angular.merge(obj, {
             status: 'Active',
-            //Todo: replace real name
-            ruleName: 'Rule1',
+            ruleName: 'Rule ' + obj.id,
             isRunning: true,
           });
           return obj;
