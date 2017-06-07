@@ -139,9 +139,8 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return decoder._asAssociativeArray(objs, decoder.action, 'actionId');
         },
         action: function (obj) {
-          var current = Date.now();
           return angular.merge(obj, {
-            uptime: obj.finished ? obj.finishTime - obj.createTime : current - obj.createTime,
+            uptime: obj.finishTime - obj.createTime,
             status: obj.finished ? 'Finished' : 'Running',
             pageUrl: locator.action(obj.actionId),
             argument: obj.args.join(' ')
