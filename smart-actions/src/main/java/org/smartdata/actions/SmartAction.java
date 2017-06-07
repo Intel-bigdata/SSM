@@ -82,6 +82,10 @@ public abstract class SmartAction {
     return actionArgs;
   }
 
+  public String[] setArguments(String[] args) {
+    return actionArgs = args.clone();
+  }
+
   protected abstract void execute();
 
   public void run() {

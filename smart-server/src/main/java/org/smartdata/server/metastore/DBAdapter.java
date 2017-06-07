@@ -26,13 +26,11 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,7 +38,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -807,7 +804,7 @@ public class DBAdapter {
     }
   }
 
-  public synchronized boolean insertCommandTable(CommandInfo command)
+  public synchronized void insertCommandTable(CommandInfo command)
       throws SQLException {
     // Insert single command into commands, update command.id with latest id
     String sql = "INSERT INTO commands (rid, aids, state, "
@@ -819,19 +816,22 @@ public class DBAdapter {
         + command.getGenerateTime() + "', '"
         + command.getStateChangedTime() + "');";
     execute(sql);
+  }
+
+  public long getMaxCommandId() throws SQLException {
     QueryHelper queryHelper = new QueryHelper("SELECT MAX(cid) FROM commands;");
+    long maxId = 0;
     try {
       ResultSet rs = queryHelper.executeQuery();
       if (rs.next()) {
-        long cid = rs.getLong(1);
-        command.setCid(cid);
-        return true;
-      } else {
-        return false;
+        maxId = rs.getLong(1) + 1;
       }
+    } catch (NullPointerException e) {
+      maxId = 0;
     } finally {
       queryHelper.close();
     }
+    return maxId;
   }
 
   public List<CommandInfo> getCommandsTableItem(String cidCondition,
@@ -970,6 +970,19 @@ public class DBAdapter {
     String sqlFinal = "SELECT * FROM actions "
         + String.format("ORDER by create_time DESC limit %d", size);
     return getActions(sqlFinal);
+  }
+
+  public List<ActionInfo> getActionsTableItem(List<Long> aids) throws SQLException {
+    if (aids == null || aids.size() == 0){
+      return null;
+    }
+    String sql = "SELECT * FROM actions WHERE aid IN (";
+    List<String> ret = new ArrayList<>();
+    for (Long aid:aids) {
+      ret.add(String.valueOf(aid));
+    }
+    sql = sql + StringUtils.join(ret, ",") + ")";
+    return getActions(sql);
   }
 
   public List<ActionInfo> getActionsTableItem(String aidCondition,
