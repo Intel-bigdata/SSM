@@ -24,13 +24,16 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.smartdata.server.command.CommandDescriptor;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Parser a rule string and translate it.
@@ -38,8 +41,16 @@ import java.util.List;
  */
 public class RuleStringParser {
   private String rule;
-  private ParseTree tree = null;
   private TranslationContext ctx = null;
+
+  private static Map<String, String> optCond = new HashMap<>();
+  static {
+    optCond.put("allssd", "storagePolicy != \"ALL_SSD\"");
+    optCond.put("onessd", "storagePolicy != \"ONE_SSD\"");
+    optCond.put("archive", "storagePolicy != \"COLD\"");
+    optCond.put("cache", "not inCache");
+    optCond.put("uncache", "inCache");
+  }
 
   List<RecognitionException> parseErrors = new ArrayList<RecognitionException>();
   String parserErrorMessage = "";
@@ -65,6 +76,25 @@ public class RuleStringParser {
   }
 
   public TranslateResult translate() throws IOException {
+    TranslateResult tr = doTranslate(rule);
+    CommandDescriptor cmdDes = tr.getCmdDescriptor();
+    if (cmdDes.size() == 0) {
+      throw new IOException("No command specified in Rule");
+    }
+    String actName = cmdDes.getActionName(0);
+    if (cmdDes.size() != 1 || optCond.get(actName) == null) {
+      return tr;
+    }
+    int[] condPosition = tr.getCondPosition();
+    String cond = rule.substring(condPosition[0], condPosition[1]);
+    String optRule = rule.replace(cond, optCond.get(actName) + " and " + cond);
+    return doTranslate(optRule);
+  }
+
+  private TranslateResult doTranslate(String rule) throws IOException {
+    parseErrors.clear();
+    parserErrorMessage = "";
+
     InputStream input = new ByteArrayInputStream(rule.getBytes());
     ANTLRInputStream antlrInput = new ANTLRInputStream(input);
     SmartRuleLexer lexer = new SmartRuleLexer(antlrInput);
@@ -72,7 +102,7 @@ public class RuleStringParser {
     SmartRuleParser parser = new SmartRuleParser(tokens);
     parser.removeErrorListeners();
     parser.addErrorListener(new SSMRuleErrorListener());
-    tree = parser.ssmrule();
+    ParseTree tree = parser.ssmrule();
 
     // TODO: return errors as much as possible
 

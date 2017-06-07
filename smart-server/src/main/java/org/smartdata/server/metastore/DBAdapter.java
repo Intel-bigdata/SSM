@@ -200,6 +200,36 @@ public class DBAdapter {
     }
   }
 
+  private synchronized void addUser(String userName) throws SQLException {
+    String sql = String.format("INSERT INTO `owners` (owner_name) VALUES ('%s')", userName);
+    this.execute(sql);
+  }
+
+  private synchronized void addGroup(String groupName) throws SQLException {
+    String sql = String.format("INSERT INTO `groups` (group_name) VALUES ('%s')", groupName);
+    this.execute(sql);
+  }
+
+  private void updateUsersMap() throws SQLException {
+    String sql = "SELECT * FROM owners";
+    QueryHelper queryHelper = new QueryHelper(sql);
+    try {
+      mapOwnerIdName = convertToMap(queryHelper.executeQuery(), "oid", "owner_name");
+    } finally {
+      queryHelper.close();
+    }
+  }
+
+  private void updateGroupsMap() throws SQLException {
+    String sql = "SELECT * FROM groups";
+    QueryHelper queryHelper = new QueryHelper(sql);
+    try {
+      mapGroupIdName = convertToMap(queryHelper.executeQuery(), "gid", "group_name");
+    } finally {
+      queryHelper.close();
+    }
+  }
+
   /**
    * Store files info into database.
    *
@@ -212,22 +242,35 @@ public class DBAdapter {
     Statement s = null;
     try {
       s = conn.createStatement();
-      for (int i = 0; i < files.length; i++) {
-        String sql = "INSERT INTO `files` (path, fid, length, "
-            + "block_replication,"
-            + " block_size, modification_time, access_time, is_dir, sid, oid, "
-            + "gid, permission) "
-            + "VALUES ('" + files[i].getPath()
-            + "','" + files[i].getFileId() + "','" + files[i].getLen() + "','"
-            + files[i].getReplication() + "','" + files[i].getBlockSize()
-            + "','" + files[i].getModificationTime() + "','"
-            + files[i].getAccessTime()
-            + "','" + booleanToInt(files[i].isDir()) + "','"
-            + files[i].getStoragePolicy() + "','"
-            + getKey(mapOwnerIdName, files[i].getOwner()) + "','"
-            + getKey(mapGroupIdName, files[i].getGroup()) + "','"
-            + files[i].getPermission().toShort() + "');";
-        s.addBatch(sql);
+      for (FileStatusInternal file: files) {
+        String owner = file.getOwner();
+        String group = file.getGroup();
+        if (!this.mapOwnerIdName.values().contains(owner)) {
+          this.addUser(owner);
+          this.updateUsersMap();
+        }
+        if (!this.mapGroupIdName.values().contains(group)) {
+          this.addGroup(group);
+          this.updateGroupsMap();
+        }
+        String statement =
+            String.format(
+                "INSERT INTO `files` (path, fid, length, block_replication, block_size,"
+                    + " modification_time, access_time, is_dir, sid, oid, gid, permission)"
+                    + " VALUES ('%s', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+                file.getPath(),
+                file.getFileId(),
+                file.getLen(),
+                file.getReplication(),
+                file.getBlockSize(),
+                file.getModificationTime(),
+                file.getAccessTime(),
+                booleanToInt(file.isDir()),
+                file.getStoragePolicy(),
+                getKey(mapOwnerIdName, file.getOwner()),
+                getKey(mapGroupIdName, file.getGroup()),
+                file.getPermission().toShort());
+        s.addBatch(statement);
       }
       s.executeBatch();
     } finally {
@@ -392,7 +435,7 @@ public class DBAdapter {
       String sql = "SELECT * FROM owners";
       QueryHelper queryHelper = new QueryHelper(sql);
       try {
-        mapOwnerIdName = convertToMap(queryHelper.executeQuery());
+        mapOwnerIdName = convertToMap(queryHelper.executeQuery(), "oid", "owner_name");
       } finally {
         queryHelper.close();
       }
@@ -402,7 +445,7 @@ public class DBAdapter {
       String sql = "SELECT * FROM groups";
       QueryHelper queryHelper = new QueryHelper(sql);
       try {
-        mapGroupIdName = convertToMap(queryHelper.executeQuery());
+        mapGroupIdName = convertToMap(queryHelper.executeQuery(), "gid", "group_name");
       } finally {
         queryHelper.close();
       }
@@ -412,7 +455,7 @@ public class DBAdapter {
       String sql = "SELECT * FROM storage_policy";
       QueryHelper queryHelper = new QueryHelper(sql);
       try {
-        mapStoragePolicyIdName = convertToMap(queryHelper.executeQuery());
+        mapStoragePolicyIdName = convertToMap(queryHelper.executeQuery(), "sid", "policy_name");
       } finally {
         queryHelper.close();
       }
@@ -448,7 +491,7 @@ public class DBAdapter {
     return map;
   }
 
-  private Map<Integer, String> convertToMap(ResultSet resultSet)
+  private Map<Integer, String> convertToMap(ResultSet resultSet, String keyIndex, String valueIndex)
       throws SQLException {
     Map<Integer, String> ret = new HashMap<>();
     if (resultSet == null) {
@@ -457,7 +500,7 @@ public class DBAdapter {
 
     while (resultSet.next()) {
       // TODO: Tests for this
-      ret.put(resultSet.getInt(1), resultSet.getString(2));
+      ret.put(resultSet.getInt(keyIndex), resultSet.getString(valueIndex));
     }
     return ret;
   }
@@ -530,8 +573,23 @@ public class DBAdapter {
   }
 
   public List<CachedFileStatus> getCachedFileStatus() throws SQLException {
-    String sql = "SELECT * FROM cached_files";
+    String sql = "SELECT * FROM `cached_files`";
     return getCachedFileStatus(sql);
+  }
+
+  public List<Long> getCachedFid() throws SQLException {
+    String sql = "SELECT fid FROM `cached_files`";
+    QueryHelper queryHelper = new QueryHelper(sql);
+    List<Long> ret = new LinkedList<>();
+    try {
+      ResultSet resultSet = queryHelper.executeQuery();
+      while (resultSet.next()) {
+        ret.add(resultSet.getLong("fid"));
+      }
+      return ret;
+    } finally {
+      queryHelper.close();
+    }
   }
 
   public CachedFileStatus getCachedFileStatus(long fid) throws SQLException {

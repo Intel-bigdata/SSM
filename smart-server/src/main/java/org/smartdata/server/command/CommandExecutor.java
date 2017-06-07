@@ -547,11 +547,12 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Command getCommandFromCmdInfo(CommandInfo cmdinfo)
       throws IOException {
     // New Command
-    Command cmd = new Command(createActionsFromParameters(cmdinfo.getParameters()),
-        new Callback());
-    if (cmd == null) {
+    Command cmd;
+    SmartAction[] smartActions = createActionsFromParameters(cmdinfo.getParameters());
+    if (smartActions == null || smartActions.length == 0) {
       return null;
     }
+    cmd = new Command(smartActions, new Callback());
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());

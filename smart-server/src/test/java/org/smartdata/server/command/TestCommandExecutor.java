@@ -69,6 +69,21 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   }
 
   @Test
+  public void wrongCommand() throws Exception {
+    waitTillSSMExitSafeMode();
+    generateTestFiles();
+    Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
+    CommandDescriptor commandDescriptor = generateWrongCommandDescriptor();
+    // TODO kill when submit
+    ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    Thread.sleep(1200);
+    List<ActionInfo> actionInfos = ssm.getCommandExecutor().listNewCreatedActions(10);
+    // TODO create actions and write to DB
+    Assert.assertTrue(actionInfos.size() == 0);
+    // testCommandExecutorHelper();
+  }
+
+  @Test
   public void testGetListDeleteCommand() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
@@ -122,6 +137,13 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
 
   private CommandDescriptor generateCommandDescriptor() throws Exception {
     String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile";
+    CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
+    commandDescriptor.setRuleId(1);
+    return commandDescriptor;
+  }
+
+  private CommandDescriptor generateWrongCommandDescriptor() throws Exception {
+    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
     commandDescriptor.setRuleId(1);
     return commandDescriptor;
