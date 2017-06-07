@@ -24,7 +24,6 @@ import org.smartdata.client.SmartDFSClient;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.common.actions.ActionInfoComparator;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.common.CommandState;
@@ -49,7 +48,6 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -76,7 +74,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private SmartServer ssm;
   private SmartContext smartContext;
   private boolean running;
-  private long currentActionId;
+  private long maxActionId;
+  private long maxCommandId;
   private Configuration conf;
 
   public CommandExecutor(SmartServer ssm) {
@@ -87,8 +86,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
     smartContext = new SmartContext();
-    actionPool = new HashMap<>();
     commandPool = new CommandPool();
+    actionPool = new ConcurrentHashMap<>();
     running = false;
   }
 
@@ -102,10 +101,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (adapter != null) {
       this.adapter = adapter;
       try {
-        currentActionId = adapter.getMaxActionId();
+        maxActionId = adapter.getMaxActionId();
+        maxCommandId = adapter.getMaxCommandId();
       } catch (Exception e) {
-        currentActionId = 1;
-        LOG.error("DB Connection error! Get Max ActionId fail!", e);
+        maxActionId = 1;
+        LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
         throw new IOException(e);
       }
       return true;
@@ -146,6 +146,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     // Set all thread handle to null
     commandPool = null;
     commandExecutorThread = null;
+    adapter = null;
+    ssm = null;
+    smartContext = null;
   }
 
   @Override
@@ -430,6 +433,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     cmdsPending.remove(curr);
     if (ret == null) {
       // Create Command from CommandInfo Fail
+      LOG.error("Create Command from CommandInfo {}", commandInfo);
       statusCache.add(new CmdTuple(commandInfo.getCid(), commandInfo.getRid(), CommandState.DISABLED));
       return null;
     }
@@ -438,7 +442,23 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     return ret;
   }
 
-  private SmartAction createAction(String name) throws IOException {
+  private SmartAction createSmartAction(ActionInfo actionInfo) throws IOException {
+    SmartAction smartAction = actionRegistry.createAction(actionInfo.getActionName());
+    if (smartAction == null) {
+      return null;
+    }
+    smartAction.setContext(smartContext);
+    smartAction.setArguments(actionInfo.getArgs());
+    if (smartAction instanceof HdfsAction) {
+      ((HdfsAction) smartAction).setDfsClient(
+          new SmartDFSClient(ssm.getNamenodeURI(),
+              smartContext.getConf(), getRpcServerAddress()));
+    }
+    smartAction.getActionStatus().setId(actionInfo.getActionId());
+    return smartAction;
+  }
+
+  private SmartAction createSmartAction(String name) throws IOException {
     SmartAction smartAction = actionRegistry.createAction(name);
     if (smartAction == null) {
       return null;
@@ -449,8 +469,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
           new SmartDFSClient(ssm.getNamenodeURI(),
               smartContext.getConf(), getRpcServerAddress()));
     }
-    smartAction.getActionStatus().setId(currentActionId);
-    currentActionId++;
+    smartAction.getActionStatus().setId(maxActionId);
+    maxActionId++;
     return smartAction;
   }
 
@@ -461,44 +481,38 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         , Integer.parseInt(strings[strings.length - 1]));
   }
 
-
-  private SmartAction[] createActionsFromParameters(String commandDescriptorString)
-      throws IOException {
+  private List<ActionInfo> createActionInfos(String commandDescriptorString, long cid) throws IOException {
     CommandDescriptor commandDescriptor = null;
     try {
       commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
     } catch (ParseException e) {
       LOG.error("Command Descriptor {} String Wrong format! {}", commandDescriptorString, e);
     }
-    return createActionsFromParameters(commandDescriptor);
+    return createActionInfos(commandDescriptor, cid);
   }
 
+
   @VisibleForTesting
-  SmartAction[] createActionsFromParameters(CommandDescriptor commandDescriptor)
-      throws IOException {
+  List<ActionInfo> createActionInfos(CommandDescriptor commandDescriptor, long cid) throws IOException {
     if (commandDescriptor == null) {
-      return null;
+          return null;
     }
-    List<SmartAction> actions = new ArrayList<>();
-    SmartAction current;
+    List<ActionInfo> actionInfos = new ArrayList<>();
+    ActionInfo current;
     try {
       for (int index = 0; index < commandDescriptor.size(); index++) {
-        current = createAction(commandDescriptor.getActionName(index));
-        if (current == null) {
-          LOG.error("New Action Instance from {} error!",
-              commandDescriptor.getActionName(index));
-          throw new IOException();
-        }
-        actionPool.put(current.getActionStatus().getId(), current);
-        current.setContext(smartContext);
-        current.init(commandDescriptor.getActionArgs(index));
-        actions.add(current);
+        current = new ActionInfo(maxActionId, cid,
+            commandDescriptor.getActionName(index),
+            commandDescriptor.getActionArgs(index), "","",
+            false,0,false, 0, 0);
+        maxActionId++;
+        actionInfos.add(current);
       }
     } catch (Exception e) {
-      LOG.error("Create Command from CommandDescriptor {} fail! {}", commandDescriptor, e);
+      LOG.error("Create ActionInfos from CommandDescriptor {} fail! {}", commandDescriptor, e);
       return null;
     }
-    return actions.toArray(new SmartAction[commandDescriptor.size()]);
+    return actionInfos;
   }
 
   public synchronized long submitCommand(String commandDescriptorString)
@@ -524,35 +538,62 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       // return -1;
     }
     long submitTime = System.currentTimeMillis();
-    CommandInfo cmdinfo = new CommandInfo(0, commandDescriptor.getRuleId(),
-        ActionType.ArchiveFile, CommandState.PENDING,
-        commandDescriptor.getCommandString(), submitTime, submitTime);
+    CommandInfo cmdinfo = new CommandInfo(maxCommandId, commandDescriptor.getRuleId(),
+        CommandState.PENDING, commandDescriptor.getCommandString(),
+        submitTime, submitTime);
+    maxCommandId ++;
+    for (int index = 0; index < commandDescriptor.size(); index++) {
+      if (!actionRegistry.checkAction(commandDescriptor.getActionName(index))) {
+        LOG.error("Submit Command {} error! Action names are not correct!", cmdinfo);
+        throw new IOException();
+      }
+    }
     return submitCommand(cmdinfo);
   }
 
-  public synchronized long submitCommand(CommandInfo cmd) throws IOException {
+  public synchronized long submitCommand(CommandInfo cmdinfo) throws IOException {
+    long cid = cmdinfo.getCid();
+    List<ActionInfo> actionInfos = createActionInfos(cmdinfo.getParameters(), cid);
+    for (ActionInfo actionInfo: actionInfos) {
+      cmdinfo.addAction(actionInfo.getActionId());
+    }
     try {
-      if (adapter.insertCommandTable(cmd)) {
-        cmdsAll.put(cmd.getCid(), cmd);
-        cmdsInState.get(CommandState.PENDING.getValue()).add(cmd.getCid());
-        return cmd.getCid();
-      }
-    } catch (Exception e) {
-      LOG.error("Submit Command {} error! {}", cmd, e);
+      // Insert Command into DB
+      adapter.insertCommandTable(cmdinfo);
+      // Insert Action into DB
+      adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+    } catch (SQLException e) {
+      LOG.error("Submit Command {} to DB error! {}", cmdinfo, e);
       throw new IOException(e);
     }
-    return -1;
+    return cid;
   }
 
   private Command getCommandFromCmdInfo(CommandInfo cmdinfo)
       throws IOException {
     // New Command
     Command cmd;
-    SmartAction[] smartActions = createActionsFromParameters(cmdinfo.getParameters());
-    if (smartActions == null || smartActions.length == 0) {
+    List<ActionInfo> actionInfos;
+    try {
+      actionInfos = adapter.getActionsTableItem(cmdinfo.getAids());
+    } catch (SQLException e) {
+      LOG.error("Get Actions from DB with IDs {} error!", cmdinfo.getAids());
+      throw new IOException(e);
+    }
+    if (actionInfos == null || actionInfos.size() == 0){
       return null;
     }
-    cmd = new Command(smartActions, new Callback());
+    List<SmartAction> smartActions = new ArrayList<>();
+    for (ActionInfo actionInfo: actionInfos) {
+      SmartAction smartAction = createSmartAction(actionInfo);
+      smartActions.add(smartAction);
+      actionPool.put(actionInfo.getActionId(), smartAction);
+    }
+    if (smartActions.size() == 0) {
+      return null;
+    }
+    cmd = new Command(smartActions.toArray(new SmartAction[smartActions.size()]),
+        new Callback());
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -592,7 +633,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       return adapter.getCommandsTableItem(null,
           null, CommandState.PENDING);
     } catch (SQLException e) {
-      // TODO: handle this issue
       LOG.error("Get Pending Commands From DB error!", e);
       throw new IOException(e);
     }
@@ -629,6 +669,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public synchronized void batchCommandStatusUpdate() throws IOException {
+    if (commandPool == null || adapter == null) {
+      return;
+    }
     LOG.info("INFO Number of Caches = {}", statusCache.size());
     LOG.info("INFO Number of Actions = {}", cmdsAll.size());
     if (statusCache.size() == 0) {
@@ -650,13 +693,13 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         iter.remove();
       }
       for (ActionInfo actionInfo : actionInfos) {
-        if (actionInfos.contains(actionInfo.getActionId())) {
+        if (actionPool.containsKey(actionInfo.getActionId())) {
           // Remove from actionPool
           actionPool.remove(actionInfo.getActionId());
         }
       }
       try {
-        adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+        adapter.updateActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
       } catch (SQLException e) {
         LOG.error("Write Cache to DB error!", e);
         throw new IOException(e);

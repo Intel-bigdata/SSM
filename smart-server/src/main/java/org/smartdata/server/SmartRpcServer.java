@@ -215,14 +215,14 @@ public class SmartRpcServer implements SmartServerProtocols {
   @Override
   public ActionInfo getActionInfo(long actionID) throws IOException {
     checkIfActive();
-    return null;
+    return ssm.getCommandExecutor().getActionInfo(actionID);
   }
 
   @Override
   public List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
       throws IOException {
     checkIfActive();
-    return null;
+    return ssm.getCommandExecutor().listNewCreatedActions(maxNumActions);
   }
 
   @Override
@@ -235,7 +235,7 @@ public class SmartRpcServer implements SmartServerProtocols {
   public long submitCommand(String cmd) throws IOException {
     checkIfActive();
     // TODO: to be implemented
-    return 0;
+    return ssm.getCommandExecutor().submitCommand(cmd);
   }
 
   @Override
