@@ -1158,6 +1158,20 @@ public class DBAdapter {
     }
   }
 
+  public synchronized void initializeDataBase() throws SQLException {
+    Connection conn = getConnection();
+    try {
+      Util.initializeDataBase(conn);
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  public synchronized void formatDataBase() throws SQLException {
+    dropAllTables();
+    initializeDataBase();
+  }
+
   @VisibleForTesting
   public ResultSet executeQuery(String sqlQuery) throws SQLException {
     Connection conn = getConnection();
