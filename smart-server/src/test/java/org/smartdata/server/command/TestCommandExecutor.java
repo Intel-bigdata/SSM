@@ -101,7 +101,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
         .listCommandsInfo(1, null).size() == 0);
   }
 
-  @Test
+/*  @Test
   public void testActivateDisableCommand() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
@@ -115,7 +115,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
       ssm.getCommandExecutor().disableCommand(1);
       Assert.assertTrue(cmdinfo.getState() == CommandState.DISABLED);
     }
-  }
+  }*/
 
   private void generateTestFiles() throws IOException {
     final DistributedFileSystem dfs = cluster.getFileSystem();

@@ -41,7 +41,6 @@ import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -147,6 +146,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     // Set all thread handle to null
     commandPool = null;
     commandExecutorThread = null;
+    adapter = null;
+    ssm = null;
+    smartContext = null;
   }
 
   @Override
@@ -479,46 +481,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         , Integer.parseInt(strings[strings.length - 1]));
   }
 
-
-  // private SmartAction[] createActionsFromParameters(String commandDescriptorString)
-  //     throws IOException {
-  //   CommandDescriptor commandDescriptor = null;
-  //   try {
-  //     commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
-  //   } catch (ParseException e) {
-  //     LOG.error("Command Descriptor {} String Wrong format! {}", commandDescriptorString, e);
-  //   }
-  //   return createActionsFromParameters(commandDescriptor);
-  // }
-  //
-  // @VisibleForTesting
-  // SmartAction[] createActionsFromParameters(CommandDescriptor commandDescriptor)
-  //     throws IOException {
-  //   if (commandDescriptor == null) {
-  //     return null;
-  //   }
-  //   List<SmartAction> actions = new ArrayList<>();
-  //   SmartAction current;
-  //   try {
-  //     for (int index = 0; index < commandDescriptor.size(); index++) {
-  //       current = createAction(commandDescriptor.getActionName(index));
-  //       if (current == null) {
-  //         LOG.error("New Action Instance from {} error!",
-  //             commandDescriptor.getActionName(index));
-  //         throw new IOException();
-  //       }
-  //       current.setContext(smartContext);
-  //       // current.init(commandDescriptor.getActionArgs(index));
-  //       current.setArguments(commandDescriptor.getActionArgs(index));
-  //       actions.add(current);
-  //     }
-  //   } catch (Exception e) {
-  //     LOG.error("Create Command from CommandDescriptor {} fail! {}", commandDescriptor, e);
-  //     return null;
-  //   }
-  //   return actions.toArray(new SmartAction[commandDescriptor.size()]);
-  // }
-
   private List<ActionInfo> createActionInfos(String commandDescriptorString, long cid) throws IOException {
     CommandDescriptor commandDescriptor = null;
     try {
@@ -671,7 +633,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       return adapter.getCommandsTableItem(null,
           null, CommandState.PENDING);
     } catch (SQLException e) {
-      // TODO: handle this issue
       LOG.error("Get Pending Commands From DB error!", e);
       throw new IOException(e);
     }
@@ -708,6 +669,9 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public synchronized void batchCommandStatusUpdate() throws IOException {
+    if (commandPool == null || adapter == null) {
+      return;
+    }
     LOG.info("INFO Number of Caches = {}", statusCache.size());
     LOG.info("INFO Number of Actions = {}", cmdsAll.size());
     if (statusCache.size() == 0) {
