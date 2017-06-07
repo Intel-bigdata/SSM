@@ -141,7 +141,8 @@ public class PBHelper {
         .setActionId(infoProto.getActionId())
         .setCommandId(infoProto.getCommandId());
     List<String> list = infoProto.getArgsList();
-    String[] strings = (String[]) list.toArray();
+    int size = list.size();
+    String[] strings = list.toArray(new String[size]);
     builder.setArgs(strings);
     return builder.build();
   }
