@@ -34,8 +34,8 @@ angular.module('dashboard')
           $scope.table = {
             cols: [
               $stb.indicator().key('status').canSort().styleClass('td-no-padding').done(),
-              $stb.link('Id').key('id').canSort().sortDefault().styleClass('col-xs-4').done(),
-              $stb.text('ActionType').key('actionType').canSort().styleClass('col-xs-4').done(),
+              $stb.link('Id').key('id').canSort().sortDefault().styleClass('col-xs-2').done(),
+              $stb.text('Arguments').key('arguments').canSort().styleClass('col-xs-6').done(),
               $stb.datetime('Generate Time').key('generateTime').canSort().styleClass('col-xs-4').done()
             ],
             rows: null
@@ -45,7 +45,7 @@ angular.module('dashboard')
             $scope.table.rows = $stb.$update($scope.table.rows,
               _.map(commands, function (command) {
                 return {
-                  actionType: command.actionType,
+                  arguments: command.parameters,
                   generateTime: command.generateTime,
                   status: {
                     tooltip: command.state,

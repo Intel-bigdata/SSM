@@ -71,6 +71,11 @@ html, body {
   padding-right: 7px;
 }
 
+.table-inverse {
+  color: #fff;
+  background-color: #292b2c;
+}
+
 /* Increase the distance of table footer and table body */
 .table tfoot > tr > td {
   padding: 14px 0 0;
