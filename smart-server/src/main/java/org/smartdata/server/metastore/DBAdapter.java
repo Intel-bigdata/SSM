@@ -18,6 +18,7 @@
 package org.smartdata.server.metastore;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -29,6 +30,7 @@ import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 
 import java.io.IOException;
@@ -504,10 +506,11 @@ public class DBAdapter {
 
   public synchronized void insertCachedFiles(long fid, String path, long fromTime,
       long lastAccessTime, int numAccessed) throws SQLException {
-    String sql = "INSERT INTO `cached_files` (fid, path, from_time, "
-        + "last_access_time, num_accessed) VALUES ('" + fid + "','"
-        + path  + "','" + fromTime + "','" + lastAccessTime + "','"
-        + numAccessed + "')";
+    String sql =
+        String.format(
+            "INSERT INTO `cached_files` (fid, path, from_time, last_access_time,"
+                + " num_accessed) VALUES (%s, '%s', %s, %s, %s);",
+            fid, path, fromTime, lastAccessTime, numAccessed);
     execute(sql);
   }
 
@@ -518,10 +521,15 @@ public class DBAdapter {
     try {
       st = conn.createStatement();
       for (CachedFileStatus c : s) {
-        String sql = "INSERT INTO `cached_files` (fid, path, from_time, "
-            + "last_access_time, num_accessed) VALUES ('" + c.getFid() + "','"
-            + c.getPath() + "','" + c.getFromTime() + "','"
-            + c.getLastAccessTime() + "','" + c.getNumAccessed() + "')";
+        String sql =
+            String.format(
+                "INSERT INTO `cached_files` (fid, path, from_time, last_access_time, "
+                    + "num_accessed) VALUES (%s, '%s', %s, %s, %s);",
+                c.getFid(),
+                c.getPath(),
+                c.getFromTime(),
+                c.getLastAccessTime(),
+                c.getNumAccessed());
         st.addBatch(sql);
       }
       st.executeBatch();
@@ -538,10 +546,40 @@ public class DBAdapter {
     execute(sql);
   }
 
+  public void updateCachedFiles(Map<String, Long> pathToIds, List<FileAccessEvent> events)
+      throws SQLException {
+    Map<Long, CachedFileStatus> idToStatus = new HashMap<>();
+    List<CachedFileStatus> cachedFileStatuses = this.getCachedFileStatus();
+    for (CachedFileStatus status : cachedFileStatuses) {
+      idToStatus.put(status.getFid(), status);
+    }
+    Collection<Long> cachedIds = idToStatus.keySet();
+    Collection<Long> needToUpdate = CollectionUtils.intersection(cachedIds, pathToIds.values());
+    if (!needToUpdate.isEmpty()) {
+      Map<Long, Integer> idToCount = new HashMap<>();
+      Map<Long, Long> idToLastTime = new HashMap<>();
+      for (FileAccessEvent event : events) {
+        Long fid = pathToIds.get(event.getPath());
+        if (needToUpdate.contains(fid)) {
+          if (!idToCount.containsKey(fid)) {
+            idToCount.put(fid, 0);
+          }
+          idToCount.put(fid, idToCount.get(fid) + 1);
+          if (!idToLastTime.containsKey(fid)) {
+            idToLastTime.put(fid, event.getTimestamp());
+          }
+          idToLastTime.put(fid, Math.max(event.getTimestamp(), idToLastTime.get(fid)));
+        }
+      }
+      for (Long fid : needToUpdate) {
+        Integer newAccessCount = idToStatus.get(fid).getNumAccessed() + idToCount.get(fid);
+        this.updateCachedFiles(fid, null, idToLastTime.get(fid), newAccessCount);
+      }
+    }
+  }
 
   public void deleteCachedFile(long fid) throws SQLException {
-    String sql = "DELETE from `cached_files` WHERE fid = '" +
-        + fid + "'";
+    String sql = String.format("DELETE from `cached_files` WHERE fid = '%s'", fid);
     execute(sql);
   }
 
@@ -574,7 +612,7 @@ public class DBAdapter {
     return getCachedFileStatus(sql);
   }
 
-  public List<Long> getCachedFid() throws SQLException {
+  public List<Long> getCachedFids() throws SQLException {
     String sql = "SELECT fid FROM `cached_files`";
     QueryHelper queryHelper = new QueryHelper(sql);
     List<Long> ret = new LinkedList<>();

@@ -104,6 +104,7 @@ public class AccessEventAggregator {
         StringUtils.join(values, ", "));
       try {
         this.adapter.execute(insertValue);
+        this.adapter.updateCachedFiles(pathToIDs, eventBuffer);
         if (LOG.isDebugEnabled()) {
           LOG.debug("Table created: " + table);
         }
