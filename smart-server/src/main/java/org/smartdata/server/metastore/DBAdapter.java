@@ -1107,6 +1107,57 @@ public class DBAdapter {
     }
   }
 
+  public void dropAllTables() throws SQLException {
+    Connection conn = getConnection();
+    try {
+      String url = conn.getMetaData().getURL();
+      if (url.startsWith(Util.SQLITE_URL_PREFIX)) {
+        dropAllTablesSqlite(conn);
+      } else if (url.startsWith(Util.MYSQL_URL_PREFIX)) {
+        dropAllTablesMysql(conn, url);
+      } else {
+        throw new SQLException("Unsupported database");
+      }
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  public void dropAllTablesSqlite(Connection conn) throws SQLException {
+    try {
+      Statement s = conn.createStatement();
+      ResultSet rs = s.executeQuery("SELECT tbl_name FROM sqlite_master;");
+      List<String> list = new ArrayList<>();
+      while (rs.next()) {
+        list.add(rs.getString(1));
+      }
+      for (String tb : list) {
+        if (!"sqlite_sequence".equals(tb)) {
+          s.execute("DROP TABLE IF EXISTS '" + tb + "';");
+        }
+      }
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  public void dropAllTablesMysql(Connection conn, String url) throws SQLException {
+    Statement stat = conn.createStatement();
+    if(!url.contains("?")) {
+      throw new SQLException("Invalid MySQL url without db_name");
+    }
+    String dbName = url.substring(url.indexOf("/", 13) + 1, url.indexOf("?"));
+    ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
+        + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
+    List<String> list = new ArrayList<>();
+    while (rs.next()) {
+      list.add(rs.getString(1));
+    }
+    for (String tb : list) {
+      stat.execute("DROP TABLE IF EXISTS '" + tb + "';");
+    }
+  }
+
   @VisibleForTesting
   public ResultSet executeQuery(String sqlQuery) throws SQLException {
     Connection conn = getConnection();
