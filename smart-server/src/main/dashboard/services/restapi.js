@@ -133,7 +133,7 @@ angular.module('dashboard')
         },
 
         _submitAction: function (url, args, onComplete) {
-          url += '?args=' + encodeURIComponent(angular.toJson(args));
+          url += '?args=' + encodeURIComponent(args);
           return $http.post(url).then(function (response) {
             if (onComplete) {
               onComplete(decodeSuccessResponse(response.data));
