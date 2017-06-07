@@ -29,9 +29,11 @@ import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.metastore.CachedFileStatus;
+import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -118,6 +120,44 @@ public class TestDBMethod {
   }
 
   @Test
+  public void testUpdateCachedFiles() throws Exception {
+    reInit();
+    dbAdapter.insertCachedFiles(80L, "testPath", 1000L,
+      2000L, 100);
+    dbAdapter.insertCachedFiles(90L, "testPath2", 2000L,
+      3000L, 200);
+    Map<String, Long> pathToId = new HashMap<>();
+    pathToId.put("testPath", 80L);
+    pathToId.put("testPath2", 90L);
+    pathToId.put("testPath3", 100L);
+    List<FileAccessEvent> events = new ArrayList<>();
+    events.add(new FileAccessEvent("testPath", 3000L));
+    events.add(new FileAccessEvent("testPath", 4000L));
+    events.add(new FileAccessEvent("testPath2", 4000L));
+    events.add(new FileAccessEvent("testPath2", 5000L));
+
+    events.add(new FileAccessEvent("testPath3", 8000L));
+    events.add(new FileAccessEvent("testPath3", 9000L));
+
+    dbAdapter.updateCachedFiles(pathToId, events);
+    List<CachedFileStatus> statuses = dbAdapter.getCachedFileStatus();
+    Assert.assertTrue(statuses.size() == 2);
+    Map<Long, CachedFileStatus> statusMap = new HashMap<>();
+    for (CachedFileStatus status : statuses) {
+      statusMap.put(status.getFid(), status);
+    }
+    Assert.assertTrue(statusMap.containsKey(80L));
+    CachedFileStatus first = statusMap.get(80L);
+    Assert.assertTrue(first.getLastAccessTime() == 4000L);
+    Assert.assertTrue(first.getNumAccessed() == 102);
+
+    Assert.assertTrue(statusMap.containsKey(90L));
+    CachedFileStatus second = statusMap.get(90L);
+    Assert.assertTrue(second.getLastAccessTime() == 5000L);
+    Assert.assertTrue(second.getNumAccessed() == 202);
+  }
+
+  @Test
   public void testInsertDeleteCachedFiles() throws Exception {
     reInit();
     dbAdapter.insertCachedFiles(80l, "testPath", 123456l,
@@ -158,7 +198,7 @@ public class TestDBMethod {
     CachedFileStatus cachedFileStatus = dbAdapter.getCachedFileStatus(6);
     Assert.assertTrue(cachedFileStatus.getFromTime() == 1490918400000l);
     List<CachedFileStatus> cachedFileList = dbAdapter.getCachedFileStatus();
-    List<Long> fids = dbAdapter.getCachedFid();
+    List<Long> fids = dbAdapter.getCachedFids();
     Assert.assertTrue(fids.size() == 3);
     Assert.assertTrue(cachedFileList.get(0).getFid() == 6);
     Assert.assertTrue(cachedFileList.get(1).getFid() == 19);
