@@ -30,9 +30,11 @@ High Level Considerations
 
 Architecture
 ------------
-<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/high-level-architecture.png" width="461" height="295" />
+The following picture depicts SSM system behaviours.
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-lifecycle.png" />
 
-Above illustrated how to position SSM in big data ecosystem. Ref. [SSM architecture](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
+Below figure illustrates how to position SSM in big data ecosystem. Ref. [SSM architecture](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/high-level-architecture.png" />
 
 Development Phases
 ------------
