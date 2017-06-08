@@ -1,4 +1,4 @@
-Small File Solution 
+HDFS Small Files Solution 
 ====================
 
 A small file can be defined as a file that is significantly smaller than
@@ -51,7 +51,7 @@ small file content into the container file.
 
 <img src="./small-file-write.png" width="624" height="122" />
 
-Use Case – Read small file
+Read small file
 --------------------------
 
 To read small files, apply the small file read rule to the files. With
@@ -60,7 +60,7 @@ the container file, offset into the container file and length of the
 small file, passes all these information to the Smart agent to read the
 content from the DataNode.
 
-<img src="./small-file-read.png" width="624" height="126" />
+<img src="./small-file-read.png" />
 
 Performance Consideration
 =========================
@@ -101,7 +101,7 @@ Architecture
 The following architecture diagram shows the small file write flow and
 read flow.
 
-<img src="./small-file-write-arch.png" width="337" height="218" />
+<img src="./small-file-write-arch.png" />
 
 The following are the flow of file writing,
 
@@ -129,4 +129,4 @@ The following are the flow of file writing,
 The small file read path is very similar to write path, except the data
 content flow direction.
 
-<img src="./small-file-read-arch.png" width="344" height="223" />
+<img src="./small-file-read-arch.png" />
