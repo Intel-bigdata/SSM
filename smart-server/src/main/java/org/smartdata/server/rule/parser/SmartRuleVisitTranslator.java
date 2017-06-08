@@ -686,12 +686,20 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           + (curr.getRet() != null ? " WHERE (" + curr.getRet() + ")" : "")
           + ") <> 0";
     } else {
-      return key[0] + " IN "
+      String con = "";
+      if (procAccLt) {
+        procAccLt = false;
+        con = " NOT";
+      }
+      return key[0] + con + " IN "
           + "(SELECT " + key[1] + " FROM " + curr.getTableName()
           + (curr.getRet() != null ? " WHERE (" + curr.getRet() + ")" : "")
           + ")";
     }
   }
+
+  private boolean procAcc = false;
+  private boolean procAccLt = false;
 
   public NodeTransResult doGenerateSql(TreeNode root, String tableName)
       throws IOException {
@@ -738,6 +746,26 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         String ropStr = rop.getRet();
         if (optype == OperatorType.MATCHES) {
           ropStr = ropStr.replace("*", "%");
+        }
+        if (procAcc) {
+          switch (optype) {
+            case LT:
+              op = ">=";
+              procAccLt = true;
+              break;
+            case LE:
+              op = ">";
+              procAccLt = true;
+              break;
+            case EQ:
+              if (ropStr.equals("0")) {
+                ropStr = "1";
+                op = ">=";
+                procAccLt = true;
+              }
+              break;
+          }
+          procAcc = false;
         }
         res = "(" + lop.getRet() + " " + op + " " + ropStr + ")";
       } else {
@@ -787,6 +815,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
             dynamicParameters.put(virTab,
                 Arrays.asList(realParas.getValues(), virTab));
           }
+          procAcc = true;
           return new NodeTransResult(virTab,
               realParas.formatParameters());
         }
