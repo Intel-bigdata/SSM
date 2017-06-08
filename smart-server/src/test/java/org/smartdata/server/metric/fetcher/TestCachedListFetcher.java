@@ -31,6 +31,7 @@ import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.junit.Assert;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.hdfs.CacheFileAction;
+import org.smartdata.actions.hdfs.UncacheFileAction;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.metastore.DBAdapter;
@@ -151,17 +152,31 @@ public class TestCachedListFetcher {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
-      cacheAction.init(new String[] {path});
+      cacheAction.init(new String[]{path});
       cacheAction.run();
-      System.out.println(cacheAction.isCached(path));
+      // System.out.println(cacheAction.isCached(path));
     }
     adapter.insertFiles(fileStatusInternals
         .toArray(new FileStatusInternal[fileStatusInternals.size()]));
     List<HdfsFileStatus> ret = adapter.getFile();
     Assert.assertTrue(ret.size() == fids.length);
     cachedListFetcher.start();
-    Thread.sleep(10000);
+    Thread.sleep(1000);
     List<CachedFileStatus> cachedFileStatuses = cachedListFetcher.getCachedList();
     Assert.assertTrue(cachedFileStatuses.size() == fids.length);
+    int unCachedSize = 2;
+    for (int i = 0; i < unCachedSize; i++) {
+      UncacheFileAction uncacheFileAction = new UncacheFileAction();
+      String path = pathPrefix + fids[i];
+      fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
+      uncacheFileAction.setContext(smartContext);
+      uncacheFileAction.setDfsClient(dfsClient);
+      uncacheFileAction.init(new String[]{path});
+      uncacheFileAction.run();
+    }
+    // System.out.println(uncacheFileAction .isCached(path));
+    Thread.sleep(2000);
+    cachedFileStatuses = cachedListFetcher.getCachedList();
+    Assert.assertTrue(cachedFileStatuses.size() == fids.length - unCachedSize);
   }
 }

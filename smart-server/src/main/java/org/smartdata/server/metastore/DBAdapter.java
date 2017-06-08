@@ -705,7 +705,7 @@ public class DBAdapter {
         );
         ret.add(f);
       }
-      return ret.size() == 0 ? null : ret;
+      return ret;
     } finally {
       queryHelper.close();
     }

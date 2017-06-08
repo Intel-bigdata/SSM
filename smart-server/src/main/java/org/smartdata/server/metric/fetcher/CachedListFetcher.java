@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.metric.fetcher;
 
-import org.apache.hadoop.fs.Path;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.server.metastore.DBAdapter;
 import org.apache.hadoop.util.Time;
@@ -104,20 +103,39 @@ public class CachedListFetcher {
     private DFSClient dfsClient;
     private DBAdapter dbAdapter;
     private Set<Long> fileSet;
+    private boolean reInit;
 
     public FetchTask(DFSClient dfsClient, DBAdapter dbAdapter) {
       this.dfsClient = dfsClient;
       this.dbAdapter = dbAdapter;
+      reInit = true;
+    }
+
+    private void syncFromDB() {
       fileSet = new HashSet<>();
       try {
+        LOG.debug("Sync Cache list from DB!");
         fileSet.addAll(dbAdapter.getCachedFids());
+        reInit = false;
       } catch (SQLException e) {
         LOG.error("Read fids from DB error!", e);
+        reInit = true;
+      }
+    }
+
+    private void clearAll() throws SQLException {
+      LOG.debug("Cache List empty!");
+      if (fileSet.size() > 0) {
+        dbAdapter.deleteAllCachedFile();
+        fileSet.clear();
       }
     }
 
     @Override
     public void run() {
+      if (reInit) {
+        syncFromDB();
+      }
       Set<Long> newFileSet = new HashSet<>();
       List<CachedFileStatus> cachedFileStatuses = new ArrayList<>();
       try {
@@ -128,7 +146,7 @@ public class CachedListFetcher {
             dfsClient.listCacheDirectives(filter);
         // Add new cache files to DB
         if (!cacheDirectives.hasNext()) {
-          LOG.info("Cache list size = 0");
+          clearAll();
           return;
         }
         List<String> paths = new ArrayList<>();
@@ -142,8 +160,8 @@ public class CachedListFetcher {
         LOG.info("Current Paths", paths);
         Map<String, Long> pathFid = dbAdapter.getFileIDs(paths);
         if (pathFid == null || pathFid.size() == 0) {
-          LOG.error("Cannot find fids!");
-          throw new IOException();
+          clearAll();
+          return;
         }
         for (int i = 0; i < pathFid.size(); i++) {
           long fid = pathFid.get(paths.get(i));
@@ -164,8 +182,10 @@ public class CachedListFetcher {
         }
       } catch (SQLException e) {
         LOG.error("Sync cached file list SQL error!", e);
+        reInit = true;
       } catch (IOException e) {
         LOG.error("Sync cached file list HDFS error!", e);
+        reInit = true;
       }
       fileSet = newFileSet;
     }
