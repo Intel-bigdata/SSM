@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class TestWriteFileAction extends ActionMiniCluster {
-  protected void writeFile(String filePath, int length) throws IOException {
+  protected void writeFile(String filePath, long length) throws IOException {
     String[] args = {filePath, String.valueOf(length)};
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.setDfsClient(dfsClient);
@@ -48,7 +48,7 @@ public class TestWriteFileAction extends ActionMiniCluster {
   public void testInit() throws IOException {
     ArrayList<String> args = new ArrayList<>();
     args.add("/Test");
-    args.add("10");
+    args.add("100000000000000");
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.init(args.toArray(new String[args.size()]));
     args.add("1024");
@@ -58,7 +58,7 @@ public class TestWriteFileAction extends ActionMiniCluster {
   @Test
   public void testExecute() throws Exception {
     String filePath = "/testWriteFile/fadsfa/213";
-    int size = 1000;
+    long size = 10000;
     writeFile(filePath, size);
     HdfsFileStatus fileStatus = dfs.getClient().getFileInfo(filePath);
     Assert.assertTrue(fileStatus.getLen() == size);

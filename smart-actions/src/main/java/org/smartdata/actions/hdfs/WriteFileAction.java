@@ -38,7 +38,7 @@ import java.util.Random;
  */
 public class WriteFileAction extends HdfsAction {
   private String filePath;
-  private int length = -1;
+  private long length = -1;
   private int bufferSize = 64 * 1024;
 
   @Override
@@ -48,7 +48,7 @@ public class WriteFileAction extends HdfsAction {
     if (args.length < 2) {
       return;
     }
-    this.length = Integer.valueOf(args[1]);
+    this.length = Long.valueOf(args[1]);
     if (args.length >= 3) {
       this.bufferSize = Integer.valueOf(args[2]);
     }
@@ -73,8 +73,8 @@ public class WriteFileAction extends HdfsAction {
       logOut.println(String.format("Generate random data with length %d", length));
       // write to HDFS
       for (int pos = 0; pos < length; pos += bufferSize) {
-        int writeLength = pos + bufferSize < length ? bufferSize : length - pos;
-        out.write(buffer, 0, writeLength);
+        long writeLength = pos + bufferSize < length ? bufferSize : length - pos;
+        out.write(buffer, 0, (int)writeLength);
       }
       out.close();
       logOut.println("Write Successfully!");
