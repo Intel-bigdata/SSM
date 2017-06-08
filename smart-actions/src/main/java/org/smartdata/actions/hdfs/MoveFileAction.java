@@ -74,6 +74,7 @@ public class MoveFileAction extends HdfsAction {
 
     try {
       moveRunner.move(fileName);
+      actionStatus.setSuccessful(true);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
