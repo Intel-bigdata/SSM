@@ -662,10 +662,17 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   private class NodeTransResult {
     private String tableName;
     private String ret;
+    private boolean invert;
 
     public NodeTransResult(String tableName, String ret) {
       this.tableName = tableName;
       this.ret = ret;
+    }
+
+    public NodeTransResult(String tableName, String ret, boolean invert) {
+      this.tableName = tableName;
+      this.ret = ret;
+      this.invert = invert;
     }
 
     public String getTableName() {
@@ -674,6 +681,10 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
     public String getRet() {
       return ret;
+    }
+
+    public boolean isInvert() {
+      return invert;
     }
   }
 
@@ -687,8 +698,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           + ") <> 0";
     } else {
       String con = "";
-      if (procAccLt) {
-        procAccLt = false;
+      if (curr.isInvert()
+          && curr.getTableName().startsWith("VIR_ACC_CNT_TAB_")) {
         con = " NOT";
       }
       return key[0] + con + " IN "
@@ -699,7 +710,6 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   }
 
   private boolean procAcc = false;
-  private boolean procAccLt = false;
 
   public NodeTransResult doGenerateSql(TreeNode root, String tableName)
       throws IOException {
@@ -740,6 +750,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
             op + " " + connectTables(tableName, lop));
       }
 
+      boolean procAccLt = false;
       String res;
       if (op.length() > 0) {
         // TODO: define more formal spec
@@ -774,7 +785,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
       return new NodeTransResult(
           lop.getTableName() != null ? lop.getTableName() : rop.getTableName(),
-          res);
+          res, procAccLt);
 
     } else {
       ValueNode vNode = (ValueNode) root;
