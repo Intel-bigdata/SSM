@@ -15,9 +15,9 @@ High Level Goals
 ### 2. Support block level erasure coding
 Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**.
 ### 3. Small files support and compaction
-Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory.
+Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory. Support both write and read. Ref. the [HDFS small files support design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/small-file-solution.md).
 ### 4. Cluster Disaster Recovery
-Supporting transparent fail-over for applications. Here is the [High Level Design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/disaster-recovery.md) document. 
+Supporting transparent fail-over for applications. Here is the [HDFS disaster recovery design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/disaster-recovery.md) document. 
 
 High Level Considerations
 ------------
