@@ -181,7 +181,7 @@ public class TestDBMethod {
     Assert.assertTrue(dbAdapter.getCachedFileStatus().size() == 1);
     // Clear all records
     dbAdapter.deleteAllCachedFile();
-    Assert.assertTrue(dbAdapter.getCachedFileStatus() == null);
+    Assert.assertTrue(dbAdapter.getCachedFileStatus().size() == 0);
     dbAdapter.insertCachedFiles(80l, "testPath", 123456l,
         234567l, 456);
   }
