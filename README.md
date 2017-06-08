@@ -38,7 +38,7 @@ Below figure illustrates how to position SSM in big data ecosystem. Ref. [SSM ar
 
 Development Phases
 ------------
-HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching completion.
+HDFS-SSM development is separated into 3 major phases. Currently the Phase 1 work is approaching completion.
 
 **Phase 1.** Implement SSM framewwork and the fundamental infrustrature:
 * Event and metrics collection from HDFS cluster;
@@ -53,7 +53,7 @@ HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching
 * Support block level erasure coding;
 * To support the new desired actions, enhance the SSM framework and infrastructure.
 
-**Phase 3.** Optimize further for computing frameworks and workloads benefiting from SSM facilities:
+**Phase 3.** Optimize further for computing frameworks and workloads benefiting from SSM offerings and facilities:
 * Hive on SSM;
 * HBase on SSM;
 * Spark on SSM;
