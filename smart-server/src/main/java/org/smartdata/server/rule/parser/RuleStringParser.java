@@ -86,8 +86,9 @@ public class RuleStringParser {
       return tr;
     }
     int[] condPosition = tr.getCondPosition();
-    String cond = rule.substring(condPosition[0], condPosition[1]);
-    String optRule = rule.replace(cond, optCond.get(actName) + " and " + cond);
+    String cond = rule.substring(condPosition[0], condPosition[1] + 1);
+    String optRule = rule.replace(cond,
+        optCond.get(actName) + " and (" + cond + ")");
     return doTranslate(optRule);
   }
 

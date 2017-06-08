@@ -62,6 +62,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
     ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    // ssm.getCommandExecutor().submitCommand(commandDescriptor);
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = ssm.getCommandExecutor().listNewCreatedActions(10);
     Assert.assertTrue(actionInfos.size() > 0);
@@ -139,7 +140,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private CommandDescriptor generateCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 12321";
+    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test ";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
     commandDescriptor.setRuleId(1);
     return commandDescriptor;

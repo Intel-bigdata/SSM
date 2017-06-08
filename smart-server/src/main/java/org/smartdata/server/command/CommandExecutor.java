@@ -18,6 +18,7 @@
 package org.smartdata.server.command;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.SmartContext;
 import org.smartdata.client.SmartDFSClient;
@@ -68,6 +69,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Set<CmdTuple> statusCache;
   private Daemon commandExecutorThread;
   private CommandPool commandPool;
+  private Map<String, Long> commandHashSet;
   private Map<Long, SmartAction> actionPool;
   private DBAdapter adapter;
   private ActionRegistry actionRegistry;
@@ -88,6 +90,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     smartContext = new SmartContext();
     commandPool = new CommandPool();
     actionPool = new ConcurrentHashMap<>();
+    commandHashSet = new ConcurrentHashMap<>();
     running = false;
   }
 
@@ -407,7 +410,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
    */
   private synchronized Command schedule() throws IOException {
     // currently FIFO
-    // List<Long> cmds = getCommands(CommandState.PENDING);
     Set<Long> cmdsPending = cmdsInState
         .get(CommandState.PENDING.getValue());
     Set<Long> cmdsExecuting = cmdsInState
@@ -528,6 +530,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     if (LOG.isDebugEnabled()) {
       LOG.debug("Received Command -> [" + commandDescriptorString + "]");
     }
+    if (commandHashSet.containsKey(commandDescriptorString)) {
+      LOG.debug("Duplicate Command found, submit canceled!");
+      throw new IOException();
+      // return -1;
+    }
     CommandDescriptor commandDescriptor;
     try {
       commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
@@ -542,6 +549,11 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       throws IOException {
     if (commandDescriptor == null) {
       LOG.error("Command Descriptor!");
+      throw new IOException();
+      // return -1;
+    }
+    if (commandHashSet.containsKey(commandDescriptor.getCommandString())) {
+      LOG.debug("Duplicate Command found, submit canceled!");
       throw new IOException();
       // return -1;
     }
@@ -567,6 +579,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
     try {
       // Insert Command into DB
+      commandHashSet.put(cmdinfo.getParameters(), cmdinfo.getCid());
       adapter.insertCommandTable(cmdinfo);
       // Insert Action into DB
       adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
@@ -601,7 +614,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       return null;
     }
     cmd = new Command(smartActions.toArray(new SmartAction[smartActions.size()]),
-        new Callback());
+        new Callback(), adapter);
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -654,11 +667,12 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private ActionInfo createActionInfoFromAction(SmartAction smartAction,
       long cid) throws IOException {
     ActionStatus status = smartAction.getActionStatus();
+    // Replace special character with
     return new ActionInfo(status.getId(),
         cid, smartAction.getName(),
         smartAction.getArguments(),
-        new String(status.getResultStream().toByteArray(), StandardCharsets.UTF_8),
-        new String(status.getLogStream().toByteArray(), StandardCharsets.UTF_8),
+        StringEscapeUtils.escapeJava(status.getResultStream().toString("UTF-8")),
+        StringEscapeUtils.escapeJava(status.getLogStream().toString("UTF-8")),
         status.isSuccessful(), status.getStartTime(),
         status.isFinished(), status.getFinishTime(),
         status.getPercentage());
@@ -690,6 +704,8 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       for (Iterator<CmdTuple> iter = statusCache.iterator(); iter.hasNext(); ) {
         CmdTuple ct = iter.next();
         actionInfos.addAll(getActionInfoFromCommand(ct.cid));
+        CommandInfo cmdinfo = cmdsAll.get(ct.cid);
+        commandHashSet.remove(cmdinfo.getParameters());
         cmdsAll.remove(ct.cid);
         commandPool.deleteCommand(ct.cid);
         try {
