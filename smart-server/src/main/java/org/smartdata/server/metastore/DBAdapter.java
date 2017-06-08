@@ -57,6 +57,7 @@ public class DBAdapter {
   private Map<Integer, String> mapOwnerIdName = null;
   private Map<Integer, String> mapGroupIdName = null;
   private Map<Integer, String> mapStoragePolicyIdName = null;
+  private Map<String, Integer> mapStoragePolicyNameId = null;
   private Map<String, StorageCapacity> mapStorageCapacity = null;
 
   @VisibleForTesting
@@ -282,6 +283,21 @@ public class DBAdapter {
     }
   }
 
+  public int updateFileStoragePolicy(String path, String policyName)
+      throws SQLException {
+    if (mapStoragePolicyIdName == null) {
+      updateCache();
+    }
+    if (!mapStoragePolicyNameId.containsKey(policyName)) {
+      throw new SQLException("Unknown storage policy name '"
+          + policyName + "'");
+    }
+    String sql = String.format(
+        "UPDATE files SET sid = %d WHERE path = '%s';",
+        mapStoragePolicyNameId.get(policyName), path);
+    return executeUpdate(sql);
+  }
+
   private int booleanToInt(boolean b) {
     return b ? 1 : 0;
   }
@@ -463,10 +479,15 @@ public class DBAdapter {
     }
 
     if (mapStoragePolicyIdName == null) {
+      mapStoragePolicyNameId = null;
       String sql = "SELECT * FROM storage_policy";
       QueryHelper queryHelper = new QueryHelper(sql);
       try {
         mapStoragePolicyIdName = convertToMap(queryHelper.executeQuery(), "sid", "policy_name");
+        mapStoragePolicyNameId = new HashMap<>();
+        for (Integer key : mapStoragePolicyIdName.keySet()) {
+          mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
+        }
       } finally {
         queryHelper.close();
       }

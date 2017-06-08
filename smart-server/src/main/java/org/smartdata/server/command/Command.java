@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.command;
 
+import org.smartdata.actions.hdfs.MoveFileAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.actions.SmartAction;
 
@@ -24,6 +25,7 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.server.metastore.DBAdapter;
 import sun.rmi.runtime.Log;
 
 /**
@@ -48,16 +50,23 @@ public class Command implements Runnable {
   private long createTime;
   private long scheduleToExecuteTime;
   private long ExecutionCompleteTime;
+  private DBAdapter adapter;
 
   private Command() {
 
   }
 
   public Command(SmartAction[] actions, CommandExecutor.Callback cb) {
+    this(actions, cb, null);
+  }
+
+  public Command(SmartAction[] actions, CommandExecutor.Callback cb,
+      DBAdapter adapter) {
     this.actions = actions.clone();
     this.currentActionIndex = 0;
     this.cb = cb;
     this.running = true;
+    this.adapter = adapter;
   }
 
   public long getRuleId() {
@@ -129,6 +138,13 @@ public class Command implements Runnable {
         // Init Action
         act.init(act.getArguments());
         act.run();
+        if (act instanceof MoveFileAction
+            && act.getActionStatus().isSuccessful() && adapter != null) {
+          String[] args = act.getArguments();
+          if (args.length >= 2) {
+            adapter.updateFileStoragePolicy(args[0], args[1]);
+          }
+        }
       } catch (Exception e) {
         LOG.error("Action {} running error! {}", act.getActionStatus().getId(), e);
         act.getActionStatus().end();

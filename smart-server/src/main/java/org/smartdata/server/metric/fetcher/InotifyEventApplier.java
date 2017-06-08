@@ -17,9 +17,12 @@
  */
 package org.smartdata.server.metric.fetcher;
 
+import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.server.metastore.DBAdapter;
 
 import java.io.IOException;
@@ -35,6 +38,8 @@ import java.util.List;
 public class InotifyEventApplier {
   private final DBAdapter adapter;
   private DFSClient client;
+  private static final Logger LOG =
+      LoggerFactory.getLogger(InotifyEventFetcher.class);
 
   public InotifyEventApplier(DBAdapter adapter, DFSClient client) {
     this.adapter = adapter;
@@ -146,6 +151,13 @@ public class InotifyEventApplier {
             metadataUpdateEvent.getReplication(), metadataUpdateEvent.getPath());
       case XATTRS:
         //Todo
+        if (LOG.isDebugEnabled()) {
+          String message = "\n";
+          for (XAttr xAttr : metadataUpdateEvent.getxAttrs()) {
+            message += xAttr.toString() + "\n";
+          }
+          LOG.debug(message);
+        }
         break;
       case ACLS:
         return "";
