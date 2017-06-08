@@ -614,7 +614,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       return null;
     }
     cmd = new Command(smartActions.toArray(new SmartAction[smartActions.size()]),
-        new Callback());
+        new Callback(), adapter);
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
