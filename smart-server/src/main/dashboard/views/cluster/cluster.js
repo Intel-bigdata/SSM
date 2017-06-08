@@ -30,6 +30,9 @@ angular.module('dashboard')
                     resolve: {
                         cached0: ['models', function (models) {
                             return models.$get.cachedfiles();
+                        }],
+                        hotfiles0: ['models', function (models) {
+                            return models.$get.hotFiles();
                         }]
                     }
                 });
@@ -38,8 +41,8 @@ angular.module('dashboard')
     /**
      * This controller is used to obtain app. All nested views will read status from here.
      */
-    .controller('ClusterCtrl', ['$scope', '$state', '$sortableTableBuilder', 'i18n', 'helper', 'models', 'cached0',
-        function ($scope, $state, $stb, i18n, helper, models, cached0) {
+    .controller('ClusterCtrl', ['$scope', '$state', '$sortableTableBuilder', 'i18n', 'helper', 'models', 'cached0', 'hotfiles0',
+        function ($scope, $state, $stb, i18n, helper, models, cached0, hotfiles0) {
             'use strict';
 
             $scope.filesTable = {
@@ -66,9 +69,34 @@ angular.module('dashboard')
                     }));
             }
 
+            $scope.hotfilesTable = {
+                cols: [
+                    $stb.text('File ID').key('id').styleClass('col-md-2').done(),
+                    $stb.text('File Path').key('filePath').styleClass('col-md-2').done(),
+                    $stb.text('Access Count').key('accessCountNum').canSort().sortDefaultDescent().styleClass('col-md-2').done()
+                ],
+                rows: null
+            };
+
+            function updateHotTable(hotFiles) {
+                $scope.hotfilesTable.rows = $stb.$update($scope.hotfilesTable.rows,
+                    _.map(hotFiles, function (file) {
+                        return {
+                            id: file.fid,
+                            filePath: file.path,
+                            accessCountNum: file.accessCount
+                        };
+                    }));
+            }
+
             updateTable(cached0.$data());
-            cached0.$subscribe($scope, function (cachedFiles) {
-                updateTable(cachedFiles);
+            cached0.$subscribe($scope, function (cachedfiles) {
+                updateTable(cachedfiles);
+            });
+
+            updateHotTable(hotfiles0.$data());
+            hotfiles0.$subscribe($scope, function (hotfiles) {
+                updateHotTable(hotfiles);
             });
         }])
 ;

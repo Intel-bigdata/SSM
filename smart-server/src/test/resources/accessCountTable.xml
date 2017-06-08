@@ -1,4 +1,28 @@
 <dataset>
+    <table name="files">
+        <column>path</column>
+        <column>fid</column>
+        <row>
+            <value>file1</value>
+            <value>101</value>
+        </row>
+        <row>
+            <value>file2</value>
+            <value>102</value>
+        </row>
+        <row>
+            <value>file3</value>
+            <value>103</value>
+        </row>
+        <row>
+            <value>file4</value>
+            <value>104</value>
+        </row>
+        <row>
+            <value>file5</value>
+            <value>105</value>
+        </row>
+    </table>
     <table name="table1">
         <column>fid</column>
         <column>count</column>
