@@ -28,6 +28,8 @@ import com.google.gson.Gson
 import org.smartdata.common.actions.{ActionDescriptor, ActionInfo}
 import org.smartdata.common.metastore.CachedFileStatus
 import org.smartdata.server.SmartServer
+import org.smartdata.server.metastore.FileAccessInfo
+import org.smartdata.server.utils.Constants
 
 import scala.util.Random
 
@@ -59,6 +61,10 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
     } ~
       path("cachedfiles") {
         complete(gson.toJson(ssmServer.getDBAdapter.getCachedFileStatus))
+      } ~
+      path("hotfiles") {
+        val tables = ssmServer.getStatesManager.getTablesInLast(Constants.ONE_HOUR_IN_MILLIS)
+        complete(gson.toJson(ssmServer.getDBAdapter.getHotFiles(tables, 20)))
       } ~
       path("actiontypes") {
         complete(gson.toJson(ssmServer.getCommandExecutor.listActionsSupported()))
