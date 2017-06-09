@@ -18,6 +18,18 @@ specific language governing permissions and limitations
 under the License.
 -->
     <sortable-table
+            caption="Hottest files in last hour"
+            columns-bind="hotfilesTable.cols"
+            records-bind="hotfilesTable.rows"
+            search-bind="search"
+            pagination="10">
+        <div class="table-no-data">
+            <h2 class="glyphicon glyphicon-bullhorn"></h2>
+            <h4>No file is read in last hour</h4>
+        </div>
+    </sortable-table>
+
+    <sortable-table
             caption="Files in cache"
             columns-bind="filesTable.cols"
             records-bind="filesTable.rows"

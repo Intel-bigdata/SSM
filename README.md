@@ -15,9 +15,9 @@ High Level Goals
 ### 2. Support block level erasure coding
 Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**.
 ### 3. Small files support and compaction
-Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory.
+Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory. Support both write and read. Ref. the [HDFS small files support design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/small-file-solution.md).
 ### 4. Cluster Disaster Recovery
-Supporting transparent fail-over for applications. Here is the [High Level Design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/disaster-recovery.md) document. 
+Supporting transparent fail-over for applications. Here is the [HDFS disaster recovery design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/disaster-recovery.md) document. 
 
 High Level Considerations
 ------------
@@ -30,13 +30,15 @@ High Level Considerations
 
 Architecture
 ------------
-<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/high-level-architecture.png" width="461" height="295" />
+The following picture depicts SSM system behaviours.
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-lifecycle.png" />
 
-Above illustrated how to position SSM in big data ecosystem. Ref. [SSM architecture](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
+Below figure illustrates how to position SSM in big data ecosystem. Ref. [SSM architecture](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/high-level-architecture.png" />
 
 Development Phases
 ------------
-HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching completion.
+HDFS-SSM development is separated into 3 major phases. Currently the Phase 1 work is approaching completion.
 
 **Phase 1.** Implement SSM framewwork and the fundamental infrustrature:
 * Event and metrics collection from HDFS cluster;
@@ -51,7 +53,7 @@ HDFS-SSM is separated into two phases. Currently the Phase 1 work is approaching
 * Support block level erasure coding;
 * To support the new desired actions, enhance the SSM framework and infrastructure.
 
-**Phase 3.** Optimize further for computing frameworks and workloads benefiting from SSM facilities:
+**Phase 3.** Optimize further for computing frameworks and workloads benefiting from SSM offerings and facilities:
 * Hive on SSM;
 * HBase on SSM;
 * Spark on SSM;

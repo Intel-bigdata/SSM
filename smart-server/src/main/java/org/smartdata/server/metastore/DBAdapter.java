@@ -42,6 +42,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -355,6 +356,72 @@ public class DBAdapter {
       return pathToId;
     } finally {
       queryHelper.close();
+    }
+  }
+
+  public Map<Long, String> getFilePaths(Collection<Long> ids)
+     throws SQLException {
+    Map<Long, String> idToPath = new HashMap<>();
+    List<String> values = new ArrayList<>();
+    for (Long id : ids) {
+      values.add("'" + id + "'");
+    }
+    String in = StringUtils.join(values, ", ");
+    String sql = "SELECT fid, path FROM files WHERE fid IN (" + in + ")";
+    QueryHelper queryHelper = new QueryHelper(sql);
+    ResultSet result;
+    try {
+      result = queryHelper.executeQuery();
+      while (result.next()) {
+        idToPath.put(result.getLong("fid"),
+          result.getString("path"));
+      }
+      return idToPath;
+    } finally {
+      queryHelper.close();
+    }
+  }
+
+  public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables, int topNum) throws Exception {
+    Iterator<AccessCountTable> tableIterator = tables.iterator();
+    if (tableIterator.hasNext()) {
+      StringBuilder unioned = new StringBuilder();
+      while (tableIterator.hasNext()) {
+        AccessCountTable table = tableIterator.next();
+        if (tableIterator.hasNext()) {
+          unioned.append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
+        } else {
+          unioned.append("SELECT * FROM " + table.getTableName());
+        }
+      }
+      String statement =
+        String.format(
+          "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
+          AccessCountTable.FILE_FIELD,
+          AccessCountTable.ACCESSCOUNT_FIELD,
+          AccessCountTable.ACCESSCOUNT_FIELD,
+          unioned,
+          AccessCountTable.FILE_FIELD,
+          AccessCountTable.ACCESSCOUNT_FIELD,
+          topNum);
+      ResultSet resultSet = this.executeQuery(statement);
+      Map<Long, Integer> accessCounts = new HashMap<>();
+      while (resultSet.next()) {
+        accessCounts.put(
+          resultSet.getLong(AccessCountTable.FILE_FIELD),
+          resultSet.getInt(AccessCountTable.ACCESSCOUNT_FIELD));
+      }
+      Map<Long, String> idToPath = this.getFilePaths(accessCounts.keySet());
+      List<FileAccessInfo> result = new ArrayList<>();
+      for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
+        Long fid = entry.getKey();
+        if (idToPath.containsKey(fid)) {
+          result.add(new FileAccessInfo(fid, idToPath.get(fid), accessCounts.get(fid)));
+        }
+      }
+      return result;
+    } else {
+      return new ArrayList<>();
     }
   }
 
@@ -705,7 +772,7 @@ public class DBAdapter {
         );
         ret.add(f);
       }
-      return ret.size() == 0 ? null : ret;
+      return ret;
     } finally {
       queryHelper.close();
     }
@@ -1007,7 +1074,6 @@ public class DBAdapter {
         + String.valueOf(actionInfo.getProgress()) + "');";
     return sql;
   }
-
 
   public synchronized void insertActionsTable(ActionInfo[] actionInfos)
       throws SQLException {
