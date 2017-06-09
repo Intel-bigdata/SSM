@@ -67,8 +67,12 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
         complete(gson.toJson(status))
       } ~
       path("hotfiles") {
-        val tables = ssmServer.getStatesManager.getTablesInLast(Constants.ONE_HOUR_IN_MILLIS)
-        complete(gson.toJson(ssmServer.getDBAdapter.getHotFiles(tables, 20)))
+//        val tables = ssmServer.getStatesManager.getTablesInLast(Constants.ONE_HOUR_IN_MILLIS)
+//        complete(gson.toJson(ssmServer.getDBAdapter.getHotFiles(tables, 20)))
+        val status = new util.ArrayList[FileAccessInfo]()
+        status.add(new FileAccessInfo(101, "file1", 10))
+        status.add(new FileAccessInfo(102, "file2", 20))
+        complete(gson.toJson(status))
       } ~
       path("actiontypes") {
         complete(gson.toJson(actionTypes))
