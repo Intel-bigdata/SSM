@@ -69,6 +69,7 @@ public class TestDBAdapter extends DBTest {
   @Test
   public void testCreateProportionView() throws Exception {
     Statement statement = databaseTester.getConnection().getConnection().createStatement();
+    createTables(databaseTester.getConnection());
     statement.execute(AccessCountTable.createTableSQL("table1"));
     statement.execute(AccessCountTable.createTableSQL("table2"));
     statement.execute(AccessCountTable.createTableSQL("table3"));
