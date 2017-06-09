@@ -8,7 +8,8 @@ impacts if Hadoop has a small file problem, one is NameNode memory
 management and another is small file read performance.
 
 There are several existing solutions to handle this small file problem,
-such as Hadoop HAR file, sequence file, save small files into HBase etc.
+such as Hadoop HAR file, sequence file, save small files into HBase etc. For reference, please go to [Cloudera blog](http://blog.cloudera.com/blog/2009/02/the-small-files-problem/).
+
 Most existing solution can resolve NameNode memory management problem
 well, but not the read performance problem. We’d like to like to
 propose a fully solution to solve the both NameNode memory issue and
@@ -20,12 +21,12 @@ Design Targets
 
 The following list the targets of this design:
 
-1. Transparent small file read/write from application
+1. Better read performance than current HDFS small file reading
 
-2. At least equivalent if no better small file write performance than
-current HDFS small file writing
+2. At least equivalent if no better small file write performance than current HDFS small file writing
 
-3. Better read performance than current HDFS small file reading
+3. Transparent small file read/write from application
+
 
 Use Cases
 =========
@@ -54,13 +55,22 @@ small file content into the container file.
 Read small file
 --------------------------
 
-To read small files, apply the small file read rule to the files. With
-the correct rule set, SmartDFSClient will first query SSM server to find
+SSM server has the knowledge that which file is written as special small file.
+At each time read data, SmartDFSClient will first query SSM server to find
 the container file, offset into the container file and length of the
 small file, passes all these information to the Smart agent to read the
 content from the DataNode.
 
 <img src="./small-file-read.png" />
+
+
+Compact small file
+--------------------------
+
+Some application may want to use the exsiting HDFS DFSClient instead of SmartDFSClient while writing datas. The consequence is there would be many small files written into HDFS directly. At some later point, user want to compact all these small files automcailly. To achieve this goal, apply the small file compact rule to the files. With the rule set, SSM server will scan the files and directoirs, schedule tasks to compact small files into big file, and then delete the original small files if preferred. 
+
+<img src="./small-file-compact.png" />
+
 
 Performance Consideration
 =========================
@@ -90,10 +100,10 @@ Security Consideration
 =======================
 
 When access small files, SSM server should check whether SmartDFSClient
-has the authorization to write to the directory or read the file. For
+has the authorization to write to the directory or read the file. To
 prevent SmartDFSClient from reading contents which it has no privilege,
 all container files will be owned by a special user created for SSM
-Agent. Only SSM Agent can read and write container files.
+Agent. Only SSM Agent can read and write container file.
 
 Architecture
 ============
