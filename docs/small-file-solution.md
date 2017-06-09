@@ -5,14 +5,14 @@ A small file can be defined as a file that is significantly smaller than
 the Hadoop block size. Apache Hadoop is designed for handle large files.
 It doesn’t works well with lot of small files. There are two primary
 impacts if Hadoop has a small file problem, one is NameNode memory
-management and another is MapReduce performance.
+management and another is small file read performance.
 
 There are several existing solutions to handle this small file problem,
-such as Hadoop HAR file, sequence fie, save small files into HBase etc.
+such as Hadoop HAR file, sequence file, save small files into HBase etc.
 Most existing solution can resolve NameNode memory management problem
-well, but not the MapReduce performance problem. We’d like to like to
+well, but not the read performance problem. We’d like to like to
 propose a fully solution to solve the both NameNode memory issue and
-MapReduce performance issue based on the inspirations from all existing
+read performance issue based on the inspirations from all existing
 approaches.
 
 Design Targets 
