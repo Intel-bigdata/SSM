@@ -27,6 +27,8 @@ The following list the targets of this design:
 
 3. Transparent small file read/write from application
 
+4. Optimize NameNode memory usage 
+
 
 Use Cases
 =========
@@ -47,19 +49,18 @@ In this case, SmartDFSClient will replace the existing HDFS Client, be
 responsible to save the data to HDFS. SmartDFSClient will not direct
 create small file in NameNode. Instead, it will query SSM server for
 which container file will the small file be saved to, then
-SmartDFSClient will talk to SSM agent which is responsible to save the
+SmartDFSClient will talk to SSM agent who is responsible to save the
 small file content into the container file.
 
-<img src="./small-file-write.png" width="624" height="122" />
+<img src="./small-file-write.png"/>
 
 Read small file
 --------------------------
 
-SSM server has the knowledge that which file is written as special small file.
-At each time read data, SmartDFSClient will first query SSM server to find
-the container file, offset into the container file and length of the
-small file, passes all these information to the Smart agent to read the
-content from the DataNode.
+SSM server has the knowledge about which file is written as special small file.
+When access data, SmartDFSClient will first query SSM server to find the corresponding
+container file, offset into the container file and length of the
+small file, then passes all these information to the Smart Agent to read the data content from the DataNode.
 
 <img src="./small-file-read.png" />
 
@@ -67,7 +68,7 @@ content from the DataNode.
 Compact small file
 --------------------------
 
-Some application may want to use the exsiting HDFS DFSClient instead of SmartDFSClient while writing datas. The consequence is there would be many small files written into HDFS directly. At some later point, user want to compact all these small files automcailly. To achieve this goal, apply the small file compact rule to the files. With the rule set, SSM server will scan the files and directoirs, schedule tasks to compact small files into big file, and then delete the original small files if preferred. 
+Some application may want to use the exsiting HDFS DFSClient instead of SmartDFSClient while writing datas. The consequence is there can be many small files written into HDFS directly. At some later point, user want to compact all these small files automcailly. To achieve this goal, apply the small file compact rule to the files. With the rule set, SSM server will scan the files and directoirs, schedule tasks to compact small files into big file, and then delete the original small files if preferred. 
 
 <img src="./small-file-compact.png" />
 
@@ -99,21 +100,19 @@ to upper level application.
 Security Consideration 
 =======================
 
-When access small files, SSM server should check whether SmartDFSClient
-has the authorization to write to the directory or read the file. To
-prevent SmartDFSClient from reading contents which it has no privilege,
-all container files will be owned by a special user created for SSM
-Agent. Only SSM Agent can read and write container file.
+When access small files, SSM server will check whether SmartDFSClient
+has the authorization to write to or read from the file. To
+prevent SmartDFSClient from reading contents execceds its privilege,
+all container files will be owned by a special user created for SSM. Only SSM can read and write container file.
 
 Architecture
 ============
 
-The following architecture diagram shows the small file write flow and
-read flow.
+The following diagram shows the small file write and read flow.
 
 <img src="./small-file-write-arch.png" />
 
-The following are the flow of file writing,
+Here is the writing flow,
 
 1.  SmartDFSClient will communicate with SSM server once it wants to
     create a new file. SSM server will check if the file goes to
@@ -136,7 +135,7 @@ The following are the flow of file writing,
 4.  By through SSM Agent, small file is written into the container
     file effectively.
 
-The small file read path is very similar to write path, except the data
-content flow direction.
+The small file read flow path is very similar to write flow path, except the data
+content flow direction is different.
 
 <img src="./small-file-read-arch.png" />
