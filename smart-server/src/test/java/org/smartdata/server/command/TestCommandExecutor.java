@@ -17,19 +17,19 @@
  */
 package org.smartdata.server.command;
 
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.junit.Assert;
-import org.junit.Test;
-import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.metastore.DBAdapter;
 
+
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+
+import org.junit.Assert;
+import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 
@@ -45,6 +45,21 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     CommandDescriptor commandDescriptor = generateCommandDescriptor();
     List<ActionInfo> actionInfos = ssm.getCommandExecutor().createActionInfos(commandDescriptor, 0);
     Assert.assertTrue(commandDescriptor.size() == actionInfos.size());
+  }
+
+  @Test
+  public void testfileLock() throws Exception {
+    waitTillSSMExitSafeMode();
+    generateTestCases();
+    CommandDescriptor commandDescriptor = generateCommandDescriptor("allssd /testMoveFile/file1 ; cache /testCacheFile");
+    ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    // Cause Exception with the same files
+    commandDescriptor = generateCommandDescriptor("onessd /testMoveFile/file1 ; uncache /testCacheFile");
+    try {
+      ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    } catch (IOException e) {
+      Assert.assertTrue(true);
+    }
   }
 
  /* @Test
@@ -142,6 +157,12 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   private CommandDescriptor generateCommandDescriptor() throws Exception {
     String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test ";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
+    commandDescriptor.setRuleId(1);
+    return commandDescriptor;
+  }
+
+  private CommandDescriptor generateCommandDescriptor(String cmdString) throws Exception {
+    CommandDescriptor commandDescriptor = new CommandDescriptor(cmdString);
     commandDescriptor.setRuleId(1);
     return commandDescriptor;
   }
