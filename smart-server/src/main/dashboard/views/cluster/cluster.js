@@ -18,85 +18,20 @@
  */
 angular.module('dashboard')
 
-    .config(['$stateProvider',
-        function ($stateProvider) {
+    .config(['$stateProvider','$urlRouterProvider',
+        function ($stateProvider, $urlRouterProvider) {
             'use strict';
+
+            $urlRouterProvider
+                .when('/cluster/','/cluster/hottestFiles')
+                .when('/cluster', '/cluster/hottestFiles');
 
             $stateProvider
                 .state('cluster', {
                     url: '/cluster',
-                    templateUrl: 'views/cluster/cluster.html',
-                    controller: 'ClusterCtrl',
-                    resolve: {
-                        cached0: ['models', function (models) {
-                            return models.$get.cachedfiles();
-                        }],
-                        hotfiles0: ['models', function (models) {
-                            return models.$get.hotFiles();
-                        }]
-                    }
-                });
-        }])
-
-    /**
-     * This controller is used to obtain app. All nested views will read status from here.
-     */
-    .controller('ClusterCtrl', ['$scope', '$state', '$sortableTableBuilder', 'i18n', 'helper', 'models', 'cached0', 'hotfiles0',
-        function ($scope, $state, $stb, i18n, helper, models, cached0, hotfiles0) {
-            'use strict';
-
-            $scope.filesTable = {
-                cols: [
-                    $stb.text('ID').key('id').canSort().sortDefaultDescent().styleClass('col-md-2').done(),
-                    $stb.text('File Path').key('filePath').canSort().styleClass('col-md-2').done(),
-                    $stb.datetime('Cached Time').key('cachedTime').canSort().styleClass('col-md-3').done(),
-                    $stb.datetime('Last Accessed Time').key('lastTime').canSort().styleClass('col-md-3').done(),
-                    $stb.text('Accessed Times').key('num').canSort().styleClass('col-md-2').done()
-                ],
-                rows: null
-            };
-
-            function updateTable(cachedFiles) {
-                $scope.filesTable.rows = $stb.$update($scope.filesTable.rows,
-                    _.map(cachedFiles, function (file) {
-                        return {
-                            id: file.fid,
-                            filePath: file.path,
-                            cachedTime: file.fromTime,
-                            lastTime: file.lastAccessTime,
-                            num: file.numAccessed
-                        };
-                    }));
-            }
-
-            $scope.hotfilesTable = {
-                cols: [
-                    $stb.text('File ID').key('id').styleClass('col-md-2').done(),
-                    $stb.text('File Path').key('filePath').styleClass('col-md-2').done(),
-                    $stb.text('Access Count').key('accessCountNum').canSort().sortDefaultDescent().styleClass('col-md-2').done()
-                ],
-                rows: null
-            };
-
-            function updateHotTable(hotFiles) {
-                $scope.hotfilesTable.rows = $stb.$update($scope.hotfilesTable.rows,
-                    _.map(hotFiles, function (file) {
-                        return {
-                            id: file.fid,
-                            filePath: file.path,
-                            accessCountNum: file.accessCount
-                        };
-                    }));
-            }
-
-            updateTable(cached0.$data());
-            cached0.$subscribe($scope, function (cachedfiles) {
-                updateTable(cachedfiles);
-            });
-
-            updateHotTable(hotfiles0.$data());
-            hotfiles0.$subscribe($scope, function (hotfiles) {
-                updateHotTable(hotfiles);
-            });
-        }])
+                    templateUrl: 'views/cluster/cluster.html'
+                })
+            ;
+        }]
+    )
 ;
