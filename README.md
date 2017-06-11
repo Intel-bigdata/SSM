@@ -4,9 +4,9 @@ HDFS Smart Storage Management [![Build Status](https://travis-ci.org/Intel-bigda
 
 **HDFS-SSM** is the major portion of the overall [Smart Data Management Initiative](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/overall-initiative.md).
 
-Big data has put increasing pressure on HDFS storage in recent years. The latest storage devices (3D XPoint(R) SSD, NVMe SSD, etc.) can be used to improve the storage performance. HDFS provides methodologies like HDFS Cache, Heterogeneous Storage Management and Erasure Coding to provide such support, but it still remains a big challenge for HDFS to make full utilization of these high-performance storage devices in a dynamic environment.
+Big data is putting increasing pressure on HDFS storage in recent years with varous of workloads and demanding performance. The latest storage devices (Optane Memory, Optane SSD, NVMe SSD, etc.) can be used to improve the storage performance. Meanwhile HDFS provides all kinds of nice methodologies like HDFS Cache, Heterogeneous Storage Management (HSM) and Erasure Coding (EC), but it remains a big challenge for users to make full utilization of these high-performance storage devices and HDFS storage options in a dynamic environment.
 
-To overcome the challenge, we introduced in a comprehensive end-to-end solution, aka Smart Storage Management (SSM) in Apache Hadoop. HDFS operation data and system state information are collected from the cluster, based on the metrics collected SSM can automatically make sophisticated usage of these methodologies to optimize HDFS storage efficiency.
+To overcome the challenge, we introduced a comprehensive end-to-end solution, aka Smart Storage Management (SSM) in Apache Hadoop. HDFS operation data and system state information are collected, based on the collected metrics SSM can automatically make sophisticated usage of these methodologies to optimize HDFS storage efficiency.
 
 High Level Goals
 ------------
@@ -31,6 +31,7 @@ High Level Considerations
 Architecture
 ------------
 The following picture depicts SSM system behaviours.
+
 <img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-lifecycle.png" />
 
 Below figure illustrates how to position SSM in big data ecosystem. Ref. [SSM architecture](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
@@ -78,19 +79,16 @@ Files are less likely to be read during the ending of lifecycle, so it’s bette
 
 Admin Doc
 ------------
-Cluster admininstrator takes the role of SSM rule management. A set of APIs is exposed to help administrator manage rule. This set of APIs includes create, delete, list, enable and disable SSM rule. Hadoop super user privilege is required for access the APIs. For detail information, please refer to [Admin Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md).
+Cluster admininstrator takes the role of SSM rule management. A set of APIs is exposed to help administrator manage rule. This set of APIs includes create, delete, list, enable and disable SSM rule. Hadoop admin privilege is required for access the APIs. For detailed information, please refer to [Admin Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md).
 
 User Doc
 ------------
-SSM will provide a SmartClient which includes both original HDFS DFSClient functions and new SSM user application APIs. Upper level application can use this SmartClient instead of original HDFS DFSClient. New SSM user application APIs include move file and archive file etc. More functions will be added later. System will execute the operation on half of application, with the privilege of the user who starts the application. For detail information, please refer to [User Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/client-user-guide.md).
+SSM will provide a SmartDFSClient that includes both original HDFS DFSClient APIs and new SSM APIs. Applications can use this SmartDFSClient to benefit from the provided SSM facilities. New SSM APIs include cache file and archive file etc. More APIs will be added later. For detailed information, please refer to [User Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/client-user-guide.md).
+
+How to Contribute
+------------
+We welcome your feedback and contributions. Please feel free to fire issues or push PRs, we'll respond soon. Note the project is evolving very fast. 
 
 Acknowlegement
 ------------
-This originates from and bases on the discussions occured in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). It not only thanks to all the team members of this project, but also thanks a lot to all the idea and feedback contributors. Particularly the following folks from various parties across Hadoop community and big data industry:
-* Andrew Wang;
-* Jing Zhao;
-* Eddy Xu;
-* Anu Engineer;
-* Andrew Purtell;
-* Chris Douglas;
-* Weihua Jiang
+This originates from and bases on the discussions occured in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). It not only thanks to all the team members of this project, but also thanks a lot to all the idea and feedback contributors.
