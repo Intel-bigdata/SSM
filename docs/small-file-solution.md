@@ -18,9 +18,9 @@ The following list the targets of this design:
 
 2. At least equivalent if no better small file write performance than current HDFS small file write.
 
-3. Optimize NameNode memory usage and compact namespace
+3. Optimize NameNode memory usage and compact namespace.
 
-4. Transparent small file read/write for applications
+4. Transparent small file read/write for applications.
 
 Use Cases
 =========
@@ -48,7 +48,7 @@ There can be many small files written into HDFS already in an existing deploymen
 Architecture
 ============
 
-The following diagram shows the small file write and read flow.
+The following diagram shows the small file write flow.
 
 <img src="./small-file-write-arch.png" width="550" height="350"/>
 
@@ -81,7 +81,7 @@ The small file read flow path is very similar to write flow path, except the dat
 
 <img src="./small-file-read-arch.png"  width="550" height="350"/>
 
-In additon to write and read, we also provide HDFS compatabile operations as follows. We don't support append and truncate small files, we can consider such later in future.
+In additon to write and read, we also provide HDFS compatabile operations as follows. Note all these operations will be done against SSM metastore instead of NameNode since small files meta are kept in the metastore. We don't support append and truncate small files, we can consider such later in future.
 * rename small file
 * delete small file
 * query small file status
