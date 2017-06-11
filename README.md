@@ -11,9 +11,9 @@ To overcome the challenge, we introduced a comprehensive end-to-end solution, ak
 High Level Goals
 ------------
 ### 1. Enhancement for HDFS-HSM and HDFS-Cache
-**Automatically** and **smartly** adjusting storage policies and options.
+**Automatically** and **smartly** adjusting storage policies and options in favor of data temperature. Note this is approaching completion.
 ### 2. Support block level erasure coding
-Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**.
+Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**. The design doc for this will be coming soon.
 ### 3. Small files support and compaction
 Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory. Support both write and read. Ref. the [HDFS small files support design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/small-file-solution.md).
 ### 4. Cluster Disaster Recovery
