@@ -1,5 +1,7 @@
 # HDFS-SSM Design
 
+**Note:** This design doc needs to be updated to reflect latest design change, for example, the adding of SSM agents.
+
 Architecture
 ------------
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/architecture.png)
