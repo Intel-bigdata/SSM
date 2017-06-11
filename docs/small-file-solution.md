@@ -5,41 +5,36 @@ A small file can be defined as a file that is significantly smaller than the Had
 
 There are several existing solutions to handle this small file problem, such as Hadoop HAR file, sequence file, saving small files into HBase etc. A good read about this is [HDFS small files problem](http://blog.cloudera.com/blog/2009/02/the-small-files-problem/). Additionally, there was an attempt to solve this problem in [HDFS-8998](https://issues.apache.org/jira/browse/HDFS-8998). A large handle related to small files problem on-going in Apache Hadoop community is [OZone effort](https://issues.apache.org/jira/browse/HDFS-7240).
 
-Most existing solutions may solve the problem well, but maybe not transparently to applications, or introducing non-trivial modification into HDFS. We’d like to propose a full solution to solve these HDFS small files problems in the framework of SSM based on the ideas from all existing approaches and discussions with industry experts. 
+Most existing solutions may solve some of the problems well, but maybe not transparently to applications, or introducing non-trivial modification into HDFS. We’d like to propose a solution to solve these HDFS small files problems in the framework of SSM on top of HDFS based on the ideas from existing approaches and discussions with industry experts. 
 
-In this solution, we introduce a concept of container file. A container file is a normal big HDFS file with configurable threshold size, say 1G. A container file can contains hundreds or thousands of small files. The mapping between small files and container file are maintained by SSM metastore. As the format of container file, we may consider existing Hadoop file format. SSM metastore holds the mapping information between small files and container file. Below are the mapping properties considered: 
-* small file ID
-* container file ID
-* length
-* offset into container file 
+In this solution, we introduce a concept of container file. A container file is a normal big HDFS file with configurable threshold size, say 1G. A container file can contains hundreds or thousands of small files. The mapping between small files and container file are maintained by SSM metastore. As the format of container file, we may consider existing Hadoop file format. SSM metastore holds the mapping information between small files and container file. The mapping maintains small file id, container file id and index info.
 
 Design Targets 
 ===============
 
 The following list the targets of this design:
 
-1. Better read performance than current HDFS small file reading
+1. Better read performance than current HDFS small file read in average.
 
-2. At least equivalent if no better small file write performance than current HDFS small file writing
+2. At least equivalent if no better small file write performance than current HDFS small file write.
 
-3. Transparent small file read/write for applications
+3. Optimize NameNode memory usage and compact namespace
 
-4. Optimize NameNode memory usage and compact namespace
-
+4. Transparent small file read/write for applications
 
 Use Cases
 =========
 
-Generally, people are complaining about performance penalty of reading small files, they are not complaining write small files. Some existing approach is that there will be a routine which compacts all these small files at some point. We’d like to design our solution from a different angel. The point is, we want to eliminate the small files at the point of its writing.
+We want to optimize and solve the small files problem in 3 cases, not only for read, but also for write. For existing small files in an HDFS cluster, we also support compaction.
 
-Write small file
+1. Write new small file
 ----------------
 
 In SSM infrastructure, all user preferences are represented by rules. For foreseeable small files, apply the small file write rule to the files. In this case, SmartDFSClient will replace the existing HDFS Client, be responsible to save the data to HDFS. SmartDFSClient will not directly create small file in NameNode. Instead, it will query SSM server for which container file (a normal HDFS file used for small fiels bucket) will the small file be saved to, then SmartDFSClient will talk to SSM agent who is responsible to save the small file content into the container file.
 
 <img src="./small-file-write.png"/>
 
-Read small file
+2. Read small file
 --------------------------
 
 To read a small file, SSM server has the knowledge about which container file the small file is stored into, when read the small data, SmartDFSClient will first query SSM server to find the corresponding container file, offset into the container file and length of the small file, then passes all these information to the Smart Agent to read the data content from the DataNode.
@@ -47,7 +42,7 @@ To read a small file, SSM server has the knowledge about which container file th
 <img src="./small-file-read.png" />
 
 
-Compact small file
+3. Compact existing small files
 --------------------------
 
 There can be many small files written into HDFS already in an existing deployment and users may want to compact all these small files. To achieve this goal, apply the small file compact rule to the files. With the rule set, SSM server will scan the files and directories, schedule tasks to compact small files into big container file, and then delete the original small files. 
@@ -95,6 +90,7 @@ In additon to write and read, we also provide HDFS compatabile operations, inclu
 * delete small file
 * query small file status
 * list small files
+We don't support append and truncate small files, we can consider such later in future.
 
 Performance Consideration
 =========================
