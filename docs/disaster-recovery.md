@@ -14,11 +14,9 @@ Current an available solution in open source Hadoop for data sync up between clu
 
 2. It’s not a real-time backup or even not near real-time backup solution, for those who require critical data real-time backup, DistCp can’t meet their requirements.
 
-3. DistCp relies on the heavy MapReduce even only a few files need to be copied. MapReduce will introduce a lot of execution overhead when only one file or a several files involved
+3. DistCp relies on the heavy MapReduce even only a few files need to be copied. MapReduce will introduce a lot of execution overhead when only one file or a several files involved.
 
-Compared with DistCp, this solution builds on top SSM infrastructure, is more smart and has higher file backup throughput. 
-* Smarter - Administrator specify backup requirement through applying SSM rule to directories and files. Once the rule is set, SSM server will automatically and periodically scan directories and files, as long as content is changed, SSM server will schedule task to backup the data immediatelly. 
-* Higher throughput - The backup task scheduled by SSM server doesn't depends on MapReduce. It will be a direct HDFS Client applicaiton. 
+Compared with DistCp, this solution builds on top of SSM infrastructure, could be smart and incur lower latency in sync up, as we are aware of user rules and data temperature. 
 
 Use Cases
 ==============================
