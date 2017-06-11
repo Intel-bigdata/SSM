@@ -10,11 +10,8 @@ SSM polls metrics from NameNode. These metrics are analyzed by SSM as specified 
 
 SSM uses SQL database to maintain data polled as well as other internal data. Some of the data are required for SSM states recovery, so SSM will checkpoint them into HDFS in time.
 
-### Compatibility
-SSM is being developed based on Hadoop trunk, but it can be ported/integrated to lower Hadoop versions or even custom private Hadoop versions easily.
-
 ### HA Support
-Hadoop HA is supported by SSM. There can be some metrics data loss (file.accessCount) for a short time interval when NN deactivate happens. SSM can stand this data loss and won't cause disaster.
+HA is supported. The design will be coming soon.
 
 Desgin
 ------------
