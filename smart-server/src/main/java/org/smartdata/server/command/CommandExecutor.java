@@ -504,27 +504,32 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
 
   @VisibleForTesting
-  List<ActionInfo> createActionInfos(CommandDescriptor commandDescriptor, long cid) throws IOException {
+  synchronized List<ActionInfo> createActionInfos(CommandDescriptor commandDescriptor, long cid) throws IOException {
     if (commandDescriptor == null) {
           return null;
     }
     List<ActionInfo> actionInfos = new ArrayList<>();
     ActionInfo current;
+    // Check if any files are in fileLock
     for (int index = 0; index < commandDescriptor.size(); index++) {
       String[] args = commandDescriptor.getActionArgs(index);
-      current = new ActionInfo(maxActionId, cid,
-          commandDescriptor.getActionName(index),
-          args, "","",
-          false,0,false, 0, 0);
-      maxActionId++;
-      actionInfos.add(current);
       if (args != null && args.length >= 1) {
         if (fileLock.containsKey(args[0])) {
           LOG.warn("Warning: Other actions are processing {}!", args[0]);
           throw new IOException();
         }
-        fileLock.put(args[0], current.getActionId());
       }
+    }
+    // Create actioninfos and add file to file locks
+    for (int index = 0; index < commandDescriptor.size(); index++) {
+      String[] args = commandDescriptor.getActionArgs(index);
+      current = new ActionInfo(maxActionId, cid,
+          commandDescriptor.getActionName(index),
+          args, "", "",
+          false, 0, false, 0, 0);
+      maxActionId++;
+      actionInfos.add(current);
+      fileLock.put(args[0], current.getActionId());
     }
     return actionInfos;
   }

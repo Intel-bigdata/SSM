@@ -51,12 +51,12 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   public void testfileLock() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
-    CommandDescriptor commandDescriptor = generateCommandDescriptor("allssd /testMoveFile/file1 ; cache /testCacheFile");
-    ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    ssm.getCommandExecutor()
+        .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile");
     // Cause Exception with the same files
-    commandDescriptor = generateCommandDescriptor("onessd /testMoveFile/file1 ; uncache /testCacheFile");
     try {
-      ssm.getCommandExecutor().submitCommand(commandDescriptor);
+      ssm.getCommandExecutor()
+          .submitCommand("onessd /testMoveFile/file1 ; uncache /testCacheFile");
     } catch (IOException e) {
       Assert.assertTrue(true);
     }
@@ -75,8 +75,8 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
     generateTestFiles();
     Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
-    CommandDescriptor commandDescriptor = generateCommandDescriptor();
-    ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    ssm.getCommandExecutor()
+        .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024");
     // ssm.getCommandExecutor().submitCommand(commandDescriptor);
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = ssm.getCommandExecutor().listNewCreatedActions(10);
@@ -89,9 +89,9 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
     generateTestFiles();
     Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
-    CommandDescriptor commandDescriptor = generateWrongCommandDescriptor();
     try {
-      ssm.getCommandExecutor().submitCommand(commandDescriptor);
+      ssm.getCommandExecutor()
+          .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug");
     } catch (IOException e) {
       System.out.println("Wrong command is detected!");
       Assert.assertTrue(true);
@@ -155,20 +155,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private CommandDescriptor generateCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test ";
-    CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
-    commandDescriptor.setRuleId(1);
-    return commandDescriptor;
-  }
-
-  private CommandDescriptor generateCommandDescriptor(String cmdString) throws Exception {
-    CommandDescriptor commandDescriptor = new CommandDescriptor(cmdString);
-    commandDescriptor.setRuleId(1);
-    return commandDescriptor;
-  }
-
-  private CommandDescriptor generateWrongCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug";
+    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
     commandDescriptor.setRuleId(1);
     return commandDescriptor;
@@ -186,8 +173,6 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
 
   private void testCommandExecutorHelper() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
-    String cidCondition = ">= 1 ";
-    String ridCondition = ">= 1 ";
     while (true) {
       Thread.sleep(2000);
       int current = ssm.getCommandExecutor().cacheSize();
@@ -196,13 +181,14 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
         break;
       }
     }
-    List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition,
-        ridCondition, CommandState.DONE);
+    List<CommandInfo> com = dbAdapter.getCommandsTableItem(null,
+        null, CommandState.DONE);
     System.out.printf("CommandInfos Size = %d\n", com.size());
     // Check Status
     Assert.assertTrue(com.size() == 1);
     Assert.assertTrue(com.get(0).getState() == CommandState.DONE);
-    List<ActionInfo> actionInfos = dbAdapter.getActionsTableItem(">= 0 ", ">= 1 ");
+    List<ActionInfo> actionInfos = dbAdapter
+        .getActionsTableItem(null, null);
     System.out.printf("ActionInfos Size = %d\n", actionInfos.size());
     Assert.assertTrue(actionInfos.size() == 3);
   }
