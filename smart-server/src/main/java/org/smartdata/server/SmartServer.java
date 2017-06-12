@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -328,15 +329,32 @@ public class SmartServer {
   }
 
   public DBAdapter getDBAdapter() throws Exception {
+    // TODO: move to etc directory
+    URL pathUrl = getClass().getClassLoader().getResource("");
+    String path = pathUrl.getPath();
+
     String fileName = "druid.xml";
-    URL urlPoolConf = getClass().getResource(fileName);
-    if (urlPoolConf != null) {
-      LOG.info("Using pool configure file: " + urlPoolConf.getFile());
+    String expectedCpPath = path + fileName;
+    LOG.info("Expected DB connection pool configuration path = "
+        + expectedCpPath);
+    File cpConfigFile = new File(expectedCpPath);
+    if (cpConfigFile.exists()) {
+      LOG.info("Using pool configure file: " + expectedCpPath);
       Properties p = new Properties();
-      p.loadFromXML(getClass().getResourceAsStream(fileName));
+      p.loadFromXML(new FileInputStream(cpConfigFile));
+
+      String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
+      if (url != null) {
+        p.setProperty("url", url);
+      }
+
+      for (String key : p.stringPropertyNames()) {
+        LOG.info("\t" + key + " = " + p.getProperty(key));
+      }
       return new DBAdapter(new DruidPool(p));
     } else {
-      LOG.info(fileName + " NOT found.");
+      LOG.info("DB connection pool config file " + expectedCpPath
+          + " NOT found.");
     }
 
     // TODO: keep it now for testing, remove it later.
@@ -356,7 +374,7 @@ public class SmartServer {
     // this contains 3 cases:
     //    remote checkpoint / local / create new DB
 
-    String url = conf.get(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY);
+    String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
     if (url == null) {
       LOG.warn("No database specified for SSM, "
           + "will use a default one instead.");
