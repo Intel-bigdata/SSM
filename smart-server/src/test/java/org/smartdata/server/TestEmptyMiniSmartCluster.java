@@ -71,7 +71,7 @@ public class TestEmptyMiniSmartCluster {
     // Set db used
     dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
+    conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
     ssm = SmartServer.createSSM(null, conf);

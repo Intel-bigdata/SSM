@@ -157,11 +157,11 @@ public class StatesManager implements ModuleSequenceProto {
   public void unsubscribeEvent() {
   }
 
-  private void cleanFileTableContents(DBAdapter adapter) {
+  private void cleanFileTableContents(DBAdapter adapter) throws IOException {
     try {
       adapter.execute("DELETE FROM files");
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new IOException("Error while 'DELETE FROM files'", e);
     }
   }
 }
