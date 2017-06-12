@@ -32,5 +32,5 @@ public class SmartConfKeys {
   public final static String DFS_SSM_HTTP_ADDRESS_DEFAULT = "0.0.0.0:7045";
   public final static String DFS_SSM_HTTPS_ADDRESS_KEY = "dfs.smart.https-address";
 
-  public final static String DFS_SSM_DEFAULT_DB_URL_KEY = "dfs.smart.default.db.url";
+  public final static String DFS_SSM_DB_URL_KEY = "dfs.smart.db.url";
 }
