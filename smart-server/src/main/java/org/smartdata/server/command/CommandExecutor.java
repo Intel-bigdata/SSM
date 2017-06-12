@@ -529,7 +529,6 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
           false, 0, false, 0, 0);
       maxActionId++;
       actionInfos.add(current);
-      fileLock.put(args[0], current.getActionId());
     }
     return actionInfos;
   }
@@ -588,13 +587,27 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
     try {
       // Insert Command into DB
-      commandHashSet.put(cmdinfo.getParameters(), cmdinfo.getCid());
       adapter.insertCommandTable(cmdinfo);
-      // Insert Action into DB
-      adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (SQLException e) {
       LOG.error("Submit Command {} to DB error! {}", cmdinfo, e);
       throw new IOException(e);
+    }
+    try {
+      // Insert Action into DB
+      adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+    } catch (SQLException e) {
+      LOG.error("Submit Actions {} to DB error! {}", actionInfos, e);
+      try {
+        adapter.deleteCommand(cmdinfo.getCid());
+      } catch (SQLException e1) {
+        LOG.error("Recover/Delete Command {} rom DB error! {}", cmdinfo, e);
+      }
+      throw new IOException(e);
+    }
+    commandHashSet.put(cmdinfo.getParameters(), cmdinfo.getCid());
+    for (ActionInfo actionInfo: actionInfos) {
+      String[] args = actionInfo.getArgs();
+      fileLock.put(args[0], actionInfo.getActionId());
     }
     return cid;
   }
