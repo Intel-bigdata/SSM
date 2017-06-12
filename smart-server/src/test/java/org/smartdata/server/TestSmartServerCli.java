@@ -32,8 +32,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
-
 public class TestSmartServerCli {
 
   @Test
@@ -49,7 +47,7 @@ public class TestSmartServerCli {
     // Set db used
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.DFS_SSM_DEFAULT_DB_URL_KEY, dbUrl);
+    conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
     try {
