@@ -17,9 +17,6 @@
  */
 package org.smartdata.server.command;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.smartdata.SmartContext;
 import org.smartdata.client.SmartDFSClient;
 import org.smartdata.common.actions.ActionDescriptor;
@@ -39,12 +36,14 @@ import org.smartdata.actions.ActionRegistry;
 
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.hadoop.conf.Configuration;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -70,6 +69,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   private Daemon commandExecutorThread;
   private CommandPool commandPool;
   private Map<String, Long> commandHashSet;
+  private Map<String, Long> fileLock;
   private Map<Long, SmartAction> actionPool;
   private DBAdapter adapter;
   private ActionRegistry actionRegistry;
@@ -91,6 +91,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     commandPool = new CommandPool();
     actionPool = new ConcurrentHashMap<>();
     commandHashSet = new ConcurrentHashMap<>();
+    fileLock = new ConcurrentHashMap<>();
     running = false;
   }
 
@@ -503,24 +504,31 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
 
   @VisibleForTesting
-  List<ActionInfo> createActionInfos(CommandDescriptor commandDescriptor, long cid) throws IOException {
+  synchronized List<ActionInfo> createActionInfos(CommandDescriptor commandDescriptor, long cid) throws IOException {
     if (commandDescriptor == null) {
           return null;
     }
     List<ActionInfo> actionInfos = new ArrayList<>();
     ActionInfo current;
-    try {
-      for (int index = 0; index < commandDescriptor.size(); index++) {
-        current = new ActionInfo(maxActionId, cid,
-            commandDescriptor.getActionName(index),
-            commandDescriptor.getActionArgs(index), "","",
-            false,0,false, 0, 0);
-        maxActionId++;
-        actionInfos.add(current);
+    // Check if any files are in fileLock
+    for (int index = 0; index < commandDescriptor.size(); index++) {
+      String[] args = commandDescriptor.getActionArgs(index);
+      if (args != null && args.length >= 1) {
+        if (fileLock.containsKey(args[0])) {
+          LOG.warn("Warning: Other actions are processing {}!", args[0]);
+          throw new IOException();
+        }
       }
-    } catch (Exception e) {
-      LOG.error("Create ActionInfos from CommandDescriptor {} fail! {}", commandDescriptor, e);
-      return null;
+    }
+    // Create actioninfos and add file to file locks
+    for (int index = 0; index < commandDescriptor.size(); index++) {
+      String[] args = commandDescriptor.getActionArgs(index);
+      current = new ActionInfo(maxActionId, cid,
+          commandDescriptor.getActionName(index),
+          args, "", "",
+          false, 0, false, 0, 0);
+      maxActionId++;
+      actionInfos.add(current);
     }
     return actionInfos;
   }
@@ -579,13 +587,27 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
     }
     try {
       // Insert Command into DB
-      commandHashSet.put(cmdinfo.getParameters(), cmdinfo.getCid());
       adapter.insertCommandTable(cmdinfo);
-      // Insert Action into DB
-      adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (SQLException e) {
       LOG.error("Submit Command {} to DB error! {}", cmdinfo, e);
       throw new IOException(e);
+    }
+    try {
+      // Insert Action into DB
+      adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+    } catch (SQLException e) {
+      LOG.error("Submit Actions {} to DB error! {}", actionInfos, e);
+      try {
+        adapter.deleteCommand(cmdinfo.getCid());
+      } catch (SQLException e1) {
+        LOG.error("Recover/Delete Command {} rom DB error! {}", cmdinfo, e);
+      }
+      throw new IOException(e);
+    }
+    commandHashSet.put(cmdinfo.getParameters(), cmdinfo.getCid());
+    for (ActionInfo actionInfo: actionInfos) {
+      String[] args = actionInfo.getArgs();
+      fileLock.put(args[0], actionInfo.getActionId());
     }
     return cid;
   }
@@ -720,6 +742,10 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
         if (actionPool.containsKey(actionInfo.getActionId())) {
           // Remove from actionPool
           actionPool.remove(actionInfo.getActionId());
+          String[] args = actionInfo.getArgs();
+          if (args != null && args.length >= 1 && fileLock.containsKey(args[0])) {
+            fileLock.remove(args[0]);
+          }
         }
       }
       try {

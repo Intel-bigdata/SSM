@@ -17,19 +17,19 @@
  */
 package org.smartdata.server.command;
 
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.junit.Assert;
-import org.junit.Test;
-import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.metastore.DBAdapter;
 
+
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+
+import org.junit.Assert;
+import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 
@@ -47,6 +47,21 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(commandDescriptor.size() == actionInfos.size());
   }
 
+  @Test
+  public void testfileLock() throws Exception {
+    waitTillSSMExitSafeMode();
+    generateTestCases();
+    ssm.getCommandExecutor()
+        .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile");
+    // Cause Exception with the same files
+    try {
+      ssm.getCommandExecutor()
+          .submitCommand("onessd /testMoveFile/file1 ; uncache /testCacheFile");
+    } catch (IOException e) {
+      Assert.assertTrue(true);
+    }
+  }
+
  /* @Test
   public void testCommandExecutor() throws Exception {
     waitTillSSMExitSafeMode();
@@ -60,8 +75,8 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
     generateTestFiles();
     Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
-    CommandDescriptor commandDescriptor = generateCommandDescriptor();
-    ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    ssm.getCommandExecutor()
+        .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024");
     // ssm.getCommandExecutor().submitCommand(commandDescriptor);
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = ssm.getCommandExecutor().listNewCreatedActions(10);
@@ -74,9 +89,9 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
     generateTestFiles();
     Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
-    CommandDescriptor commandDescriptor = generateWrongCommandDescriptor();
     try {
-      ssm.getCommandExecutor().submitCommand(commandDescriptor);
+      ssm.getCommandExecutor()
+          .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug");
     } catch (IOException e) {
       System.out.println("Wrong command is detected!");
       Assert.assertTrue(true);
@@ -140,14 +155,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private CommandDescriptor generateCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test ";
-    CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
-    commandDescriptor.setRuleId(1);
-    return commandDescriptor;
-  }
-
-  private CommandDescriptor generateWrongCommandDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug";
+    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024";
     CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
     commandDescriptor.setRuleId(1);
     return commandDescriptor;
@@ -165,8 +173,6 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
 
   private void testCommandExecutorHelper() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
-    String cidCondition = ">= 1 ";
-    String ridCondition = ">= 1 ";
     while (true) {
       Thread.sleep(2000);
       int current = ssm.getCommandExecutor().cacheSize();
@@ -175,13 +181,14 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
         break;
       }
     }
-    List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition,
-        ridCondition, CommandState.DONE);
+    List<CommandInfo> com = dbAdapter.getCommandsTableItem(null,
+        null, CommandState.DONE);
     System.out.printf("CommandInfos Size = %d\n", com.size());
     // Check Status
     Assert.assertTrue(com.size() == 1);
     Assert.assertTrue(com.get(0).getState() == CommandState.DONE);
-    List<ActionInfo> actionInfos = dbAdapter.getActionsTableItem(">= 0 ", ">= 1 ");
+    List<ActionInfo> actionInfos = dbAdapter
+        .getActionsTableItem(null, null);
     System.out.printf("ActionInfos Size = %d\n", actionInfos.size());
     Assert.assertTrue(actionInfos.size() == 3);
   }
