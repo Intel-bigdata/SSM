@@ -1,4 +1,0 @@
-[submodule "hadoop"]
-	path = hadoop
-	url = https://github.com/apache/hadoop.git
-	branch = branch-2.7.3
