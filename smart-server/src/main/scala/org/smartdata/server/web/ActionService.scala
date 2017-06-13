@@ -19,16 +19,13 @@ package org.smartdata.server.web
 
 import java.util
 
-import scala.collection.JavaConverters._
 import akka.http.scaladsl.server.Directives.{complete, path, pathPrefix, _}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.ParameterDirectives.ParamMagnet
 import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.common.actions.{ActionDescriptor, ActionInfo}
-import org.smartdata.common.metastore.CachedFileStatus
 import org.smartdata.server.SmartServer
-import org.smartdata.server.metastore.FileAccessInfo
 import org.smartdata.server.utils.Constants
 
 import scala.util.Random

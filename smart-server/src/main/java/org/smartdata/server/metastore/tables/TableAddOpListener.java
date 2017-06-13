@@ -39,7 +39,6 @@ public abstract class TableAddOpListener {
   }
 
   public void tableAdded(AccessCountTableDeque fineGrainedTableDeque, AccessCountTable table) {
-    // Here is a critical part for handling time window like [59s, 61s)
     final AccessCountTable lastCoarseGrainedTable = lastCoarseGrainedTableFor(table.getEndTime());
     // Todo: optimize contains
     if (!coarseGrainedTableDeque.contains(lastCoarseGrainedTable)) {
