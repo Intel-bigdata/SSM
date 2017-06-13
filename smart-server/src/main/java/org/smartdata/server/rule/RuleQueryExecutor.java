@@ -17,19 +17,16 @@
  */
 package org.smartdata.server.rule;
 
-import org.smartdata.common.CommandState;
-import org.smartdata.common.command.CommandInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.command.CommandDescriptor;
-import org.smartdata.server.rule.parser.TimeBasedScheduleInfo;
-import org.smartdata.server.rule.parser.TranslateResult;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.ExecutionContext;
 import org.smartdata.server.metastore.tables.AccessCountTable;
-import org.smartdata.server.utils.JsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.smartdata.server.rule.parser.TimeBasedScheduleInfo;
+import org.smartdata.server.rule.parser.TranslateResult;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -37,7 +34,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
