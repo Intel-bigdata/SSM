@@ -26,10 +26,7 @@ import akka.http.scaladsl.server.directives.ParameterDirectives.ParamMagnet
 import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.actions.ActionRegistry
-import org.smartdata.model.ActionDescriptor
-import org.smartdata.model.CmdletDescriptor
-import org.smartdata.model.ActionInfo
-import org.smartdata.metastore.utils.Constants
+import org.smartdata.model._
 import org.smartdata.server.SmartEngine
 
 import scala.util.Random
@@ -62,11 +59,19 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
       }
     } ~
       path("cachedfiles") {
-        complete(gson.toJson(ssmServer.getStatesManager.getCachedFileStatus))
+        val status = new util.ArrayList[CachedFileStatus]()
+        status.add(new CachedFileStatus(1, "file1", 1023, 2048, 5))
+        status.add(new CachedFileStatus(2, "file2", 1023000, 2048000, 4))
+        complete(gson.toJson(status))
+//        complete(gson.toJson(ssmServer.getDBAdapter.getCachedFileStatus))
       } ~
       path("hotfiles") {
-        val tables = ssmServer.getStatesManager.getTablesInLast(Constants.ONE_HOUR_IN_MILLIS)
-        complete(gson.toJson(ssmServer.getStatesManager.getHotFiles(tables, 20)))
+//        val tables = ssmServer.getStatesManager.getTablesInLast(Constants.ONE_HOUR_IN_MILLIS)
+//        complete(gson.toJson(ssmServer.getDBAdapter.getHotFiles(tables, 20)))
+        val status = new util.ArrayList[FileAccessInfo]()
+        status.add(new FileAccessInfo(101L, "file1", 10))
+        status.add(new FileAccessInfo(102L, "file2", 20))
+        complete(gson.toJson(status))
       } ~
       path("actiontypes") {
         complete(gson.toJson(ActionRegistry.supportedActions()))
