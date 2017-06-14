@@ -69,11 +69,32 @@ public class ActionDao {
   }
 
   public int[] batchUpdate(final List<ActionInfo> actionInfos) {
-    String sql = "update actions set result = ?, " +
-        "log = ?, successful = ?, create_time = ?, finished = ?, " +
-        "finish_time = ?, progress = ?, where aid = ?";
+    String sql = "update actions set " +
+        "result = ?, " +
+        "log = ?, " +
+        "successful = ?, " +
+        "create_time = ?, " +
+        "finished = ?, " +
+        "finish_time = ?, " +
+        "progress = ?, " +
+        "where aid = ?";
     return jdbcTemplate.batchUpdate(sql,
-        new ActionStatementSetter(actionInfos));
+        new BatchPreparedStatementSetter() {
+          public void setValues(PreparedStatement ps, int i) throws SQLException {
+            ps.setString(1, actionInfos.get(i).getResult());
+            ps.setString(2, actionInfos.get(i).getLog());
+            ps.setBoolean(3, actionInfos.get(i).isSuccessful());
+            ps.setLong(4, actionInfos.get(i).getCreateTime());
+            ps.setBoolean(5, actionInfos.get(i).isFinished());
+            ps.setLong(6, actionInfos.get(i).getFinishTime());
+            ps.setFloat(7, actionInfos.get(i).getProgress());
+            ps.setLong(8, actionInfos.get(i).getActionId());
+          }
+
+          public int getBatchSize() {
+            return actionInfos.size();
+          }
+        });
   }
 
   private Map<String, Object> toMap(ActionInfo actionInfo) {
@@ -94,31 +115,6 @@ public class ActionDao {
 
 }
 
-class ActionStatementSetter implements BatchPreparedStatementSetter {
-
-  private List<ActionInfo> actionInfos;
-
-  public ActionStatementSetter(List<ActionInfo> actionInfos) {
-    this.actionInfos = actionInfos;
-  }
-
-  @Override
-  public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
-    preparedStatement.setString(1, actionInfos.get(i).getResult());
-    preparedStatement.setString(2, actionInfos.get(i).getLog());
-    preparedStatement.setBoolean(3, actionInfos.get(i).isSuccessful());
-    preparedStatement.setLong(4, actionInfos.get(i).getCreateTime());
-    preparedStatement.setBoolean(5, actionInfos.get(i).isFinished());
-    preparedStatement.setLong(6, actionInfos.get(i).getFinishTime());
-    preparedStatement.setFloat(7, actionInfos.get(i).getProgress());
-    preparedStatement.setLong(8, actionInfos.get(i).getActionId());
-  }
-
-  @Override
-  public int getBatchSize() {
-    return actionInfos.size();
-  }
-}
 
 class ActionRowMapper implements RowMapper<ActionInfo> {
 
