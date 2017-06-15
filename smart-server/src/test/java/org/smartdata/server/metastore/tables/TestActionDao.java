@@ -95,9 +95,9 @@ public class TestActionDao {
         "cache", new String[]{"/test/file"}, "Test",
         "Test", false, 123213213l, true, 123123l,
         100);
-    System.out.println(actionDao.getMaxId());
+    Assert.assertTrue(actionDao.getMaxId() == 0);
     actionDao.insert(actionInfo);
-    System.out.println(actionDao.getMaxId());
+    Assert.assertTrue(actionDao.getMaxId() == 2);
   }
 
 
