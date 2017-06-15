@@ -26,10 +26,11 @@ import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.command.CommandDescriptor;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.ModuleSequenceProto;
+import org.smartdata.server.Service;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.actions.ActionRegistry;
@@ -59,7 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Schedule and execute commands passed down.
  */
-public class CommandExecutor implements Runnable, ModuleSequenceProto {
+public class CommandExecutor implements Runnable, Service {
   static final Logger LOG = LoggerFactory.getLogger(CommandExecutor.class);
 
   private ArrayList<Set<Long>> cmdsInState = new ArrayList<>();
@@ -219,7 +220,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       LOG.error("List CommandInfo from DB error! Conditions rid {}, {}", rid, e);
       throw new IOException(e);
     }
-    // Get from Cache if commandState != CommandState.PENDING
+    // Get from CacheObject if commandState != CommandState.PENDING
     if (commandState != CommandState.PENDING) {
       for (Iterator<CommandInfo> iter = cmdsAll.values().iterator(); iter.hasNext(); ) {
         CommandInfo cmdinfo = iter.next();
@@ -248,7 +249,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
   }
 
   public void disableCommand(long cid) throws IOException {
-    // Remove from Cache
+    // Remove from CacheObject
     if (inCache(cid)) {
       LOG.info("Disable Command {}", cid);
       // Command is finished, then return
@@ -278,7 +279,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
   public void deleteCommand(long cid) throws IOException {
     // Delete from DB
-    // Remove from Cache
+    // Remove from CacheObject
     if (inCache(cid)) {
       // Command is finished, then return
       CommandInfo cmdinfo = cmdsAll.get(cid);
@@ -751,7 +752,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
       try {
         adapter.updateActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
       } catch (SQLException e) {
-        LOG.error("Write Cache to DB error!", e);
+        LOG.error("Write CacheObject to DB error!", e);
         throw new IOException(e);
       }
     }
@@ -789,7 +790,7 @@ public class CommandExecutor implements Runnable, ModuleSequenceProto {
 
     public void complete(long cid, long rid, CommandState state) {
       commandExecutorThread.interrupt();
-      // Update State in Cache
+      // Update State in CacheObject
       if (cmdsAll.get(cid) == null) {
         LOG.error("Command is null!");
       }

@@ -19,6 +19,7 @@ package org.smartdata.server.command;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.common.command.CommandDescriptor;
 
 /**
  * The tests is only about the command string translation.

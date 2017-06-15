@@ -19,6 +19,7 @@ package org.smartdata.server.command;
 
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.command.CommandDescriptor;
 import org.smartdata.common.command.CommandInfo;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.metastore.DBAdapter;
@@ -149,7 +150,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     //     true, 1024);
     // out2.writeChars("/testMoveFile/file2");
     // out2.close();
-    // Move to Cache
+    // Move to CacheObject
     Path dir3 = new Path("/testCacheFile");
     dfs.mkdirs(dir3);
   }
@@ -176,7 +177,7 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     while (true) {
       Thread.sleep(2000);
       int current = ssm.getCommandExecutor().cacheSize();
-      System.out.printf("Command Cache size = %d\n ", current);
+      System.out.printf("Command CacheObject size = %d\n ", current);
       if (current == 0) {
         break;
       }

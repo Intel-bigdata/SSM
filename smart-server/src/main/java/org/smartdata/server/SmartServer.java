@@ -39,7 +39,6 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.server.command.CommandExecutor;
-import org.smartdata.server.rule.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.DruidPool;
 import org.smartdata.server.metastore.Util;
@@ -63,7 +62,7 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * From this Smart Storage Management begins.
+ * From this Smart StorageObject Management begins.
  */
 public class SmartServer {
   private StatesManager statesManager;
@@ -74,7 +73,7 @@ public class SmartServer {
   private SmartConf conf;
   private DistributedFileSystem fs = null;
   private OutputStream outSSMIdFile;
-  private List<ModuleSequenceProto> modules = new ArrayList<>();
+  private List<Service> modules = new ArrayList<>();
   static final Path SSM_ID_PATH = new Path("/system/ssm.id");
   private URI namenodeURI;
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
@@ -271,11 +270,11 @@ public class SmartServer {
 
     DBAdapter dbAdapter = getDBAdapter();
 
-    for (ModuleSequenceProto m : modules) {
+    for (Service m : modules) {
       m.init(dbAdapter);
     }
 
-    for (ModuleSequenceProto m : modules) {
+    for (Service m : modules) {
       m.start();
     }
 

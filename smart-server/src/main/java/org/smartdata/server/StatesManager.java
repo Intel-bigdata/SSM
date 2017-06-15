@@ -23,7 +23,6 @@ import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
-import org.smartdata.server.metastore.FileAccessInfo;
 import org.smartdata.server.metric.fetcher.AccessEventFetcher;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metric.fetcher.CachedListFetcher;
@@ -37,20 +36,15 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Polls metrics and events from NameNode
  */
-public class StatesManager implements ModuleSequenceProto {
+public class StatesManager implements Service {
   private SmartServer ssm;
   private Configuration conf;
   private DFSClient client;

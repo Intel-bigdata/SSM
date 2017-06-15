@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.server.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.TestDBUtil;

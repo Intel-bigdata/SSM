@@ -18,8 +18,8 @@
 package org.smartdata.server.rule;
 
 
-import org.smartdata.server.rule.parser.TimeBasedScheduleInfo;
-import org.smartdata.server.rule.parser.TimeBasedScheduleInfo;
+import org.smartdata.rule.ScheduleInfo;
+import org.smartdata.rule.parser.TimeBasedScheduleInfo;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -35,7 +35,7 @@ public class ExecutorScheduler {
     service = Executors.newScheduledThreadPool(numThreads);
   }
 
-  public void addPeriodicityTask(RuleQueryExecutor re) {
+  public void addPeriodicityTask(RuleExecutor re) {
     TimeBasedScheduleInfo si = re.getTranslateResult().getTbScheduleInfo();
     long now = System.currentTimeMillis();
     service.scheduleAtFixedRate(re, si.getStartTime() - now,
