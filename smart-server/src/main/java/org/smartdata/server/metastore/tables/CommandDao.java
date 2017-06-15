@@ -88,16 +88,6 @@ public class CommandDao {
     return batchUpdate(CommandInfos)[0];
   }
 
-  public long getMaxId() {
-    Long ret = this.jdbcTemplate
-        .queryForObject("select MAX(cid) from commands", Long.class);
-    if (ret == null) {
-      return 0;
-    } else {
-      return ret + 1;
-    }
-  }
-
   public int[] batchUpdate(final List<CommandInfo> CommandInfos) {
     String sql = "update commands set " +
         "state = ?, " +
@@ -117,6 +107,16 @@ public class CommandDao {
         });
   }
 
+  public long getMaxId() {
+    Long ret = this.jdbcTemplate
+        .queryForObject("select MAX(cid) from commands", Long.class);
+    if (ret == null) {
+      return 0;
+    } else {
+      return ret + 1;
+    }
+  }
+
   private Map<String, Object> toMap(CommandInfo CommandInfo) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cid", CommandInfo.getCid());
@@ -128,34 +128,36 @@ public class CommandDao {
     parameters.put("state_changed_time", CommandInfo.getStateChangedTime());
     return parameters;
   }
-}
 
+  class CommandRowMapper implements RowMapper<CommandInfo> {
 
-class CommandRowMapper implements RowMapper<CommandInfo> {
-
-  @Override
-  public CommandInfo mapRow(ResultSet resultSet, int i) throws SQLException {
-    CommandInfo CommandInfo = new CommandInfo();
-    CommandInfo.setCid(resultSet.getLong("cid"));
-    CommandInfo.setRid(resultSet.getLong("rid"));
-    CommandInfo.setAids(convertStringListToLong(resultSet.getString("aids").split(",")));
-    CommandInfo.setState(CommandState.fromValue((int) resultSet.getByte("state")));
-    CommandInfo.setParameters(resultSet.getString("parameters"));
-    CommandInfo.setGenerateTime(resultSet.getLong("generate_time"));
-    CommandInfo.setStateChangedTime(resultSet.getLong("state_changed_time"));
-    return CommandInfo;
-  }
-
-  private List<Long> convertStringListToLong(String[] strings) {
-    List<Long> ret = new ArrayList<>();
-    try {
-      for (String s : strings) {
-        ret.add(Long.valueOf(s));
-      }
-    } catch (NumberFormatException e) {
-      // Return empty
-      ret.clear();
+    @Override
+    public CommandInfo mapRow(ResultSet resultSet, int i) throws SQLException {
+      CommandInfo CommandInfo = new CommandInfo();
+      CommandInfo.setCid(resultSet.getLong("cid"));
+      CommandInfo.setRid(resultSet.getLong("rid"));
+      CommandInfo.setAids(convertStringListToLong(resultSet.getString("aids").split(",")));
+      CommandInfo.setState(CommandState.fromValue((int) resultSet.getByte("state")));
+      CommandInfo.setParameters(resultSet.getString("parameters"));
+      CommandInfo.setGenerateTime(resultSet.getLong("generate_time"));
+      CommandInfo.setStateChangedTime(resultSet.getLong("state_changed_time"));
+      return CommandInfo;
     }
-    return ret;
+
+    private List<Long> convertStringListToLong(String[] strings) {
+      List<Long> ret = new ArrayList<>();
+      try {
+        for (String s : strings) {
+          ret.add(Long.valueOf(s));
+        }
+      } catch (NumberFormatException e) {
+        // Return empty
+        ret.clear();
+      }
+      return ret;
+    }
   }
+
 }
+
+

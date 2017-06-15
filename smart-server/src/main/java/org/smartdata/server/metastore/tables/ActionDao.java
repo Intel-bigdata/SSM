@@ -95,16 +95,6 @@ public class ActionDao {
     return batchUpdate(actionInfos)[0];
   }
 
-  public long getMaxId() {
-    Long ret = this.jdbcTemplate
-        .queryForObject("select MAX(aid) from actions", Long.class);
-    if (ret == null) {
-      return 0;
-    } else {
-      return ret + 1;
-    }
-  }
-
   public int[] batchUpdate(final List<ActionInfo> actionInfos) {
     String sql = "update actions set " +
         "result = ?, " +
@@ -134,6 +124,16 @@ public class ActionDao {
         });
   }
 
+  public long getMaxId() {
+    Long ret = this.jdbcTemplate
+        .queryForObject("select MAX(aid) from actions", Long.class);
+    if (ret == null) {
+      return 0;
+    } else {
+      return ret + 1;
+    }
+  }
+
   private Map<String, Object> toMap(ActionInfo actionInfo) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("aid", actionInfo.getActionId());
@@ -150,25 +150,24 @@ public class ActionDao {
     return parameters;
   }
 
-}
+  class ActionRowMapper implements RowMapper<ActionInfo> {
 
-
-class ActionRowMapper implements RowMapper<ActionInfo> {
-
-  @Override
-  public ActionInfo mapRow(ResultSet resultSet, int i) throws SQLException {
-    ActionInfo actionInfo = new ActionInfo();
-    actionInfo.setActionId(resultSet.getLong("aid"));
-    actionInfo.setCommandId(resultSet.getLong("cid"));
-    actionInfo.setActionName(resultSet.getString("action_name"));
-    actionInfo.setArgs(resultSet.getString("args").split(","));
-    actionInfo.setResult(resultSet.getString("result"));
-    actionInfo.setLog(resultSet.getString("log"));
-    actionInfo.setSuccessful(resultSet.getBoolean("successful"));
-    actionInfo.setCreateTime(resultSet.getLong("create_time"));
-    actionInfo.setFinished(resultSet.getBoolean("finished"));
-    actionInfo.setFinishTime(resultSet.getLong("finish_time"));
-    actionInfo.setProgress(resultSet.getFloat("progress"));
-    return actionInfo;
+    @Override
+    public ActionInfo mapRow(ResultSet resultSet, int i) throws SQLException {
+      ActionInfo actionInfo = new ActionInfo();
+      actionInfo.setActionId(resultSet.getLong("aid"));
+      actionInfo.setCommandId(resultSet.getLong("cid"));
+      actionInfo.setActionName(resultSet.getString("action_name"));
+      actionInfo.setArgs(resultSet.getString("args").split(","));
+      actionInfo.setResult(resultSet.getString("result"));
+      actionInfo.setLog(resultSet.getString("log"));
+      actionInfo.setSuccessful(resultSet.getBoolean("successful"));
+      actionInfo.setCreateTime(resultSet.getLong("create_time"));
+      actionInfo.setFinished(resultSet.getBoolean("finished"));
+      actionInfo.setFinishTime(resultSet.getLong("finish_time"));
+      actionInfo.setProgress(resultSet.getFloat("progress"));
+      return actionInfo;
+    }
   }
+
 }
