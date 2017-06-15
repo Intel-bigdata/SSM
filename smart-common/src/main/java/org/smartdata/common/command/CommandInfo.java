@@ -33,6 +33,10 @@ public class CommandInfo {
   private long generateTime;
   private long stateChangedTime;
 
+  public CommandInfo() {
+
+  }
+
   public CommandInfo(long cid, long rid, CommandState state,
       String parameters, long generateTime, long stateChangedTime) {
     this.cid = cid;
@@ -87,7 +91,7 @@ public class CommandInfo {
     return rid;
   }
 
-  public void setRid(int rid) {
+  public void setRid(long rid) {
     this.rid = rid;
   }
 
