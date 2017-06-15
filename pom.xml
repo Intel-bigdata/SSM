@@ -30,6 +30,7 @@
     <module>smart-admin</module>
     <module>smart-server</module>
     <module>smart-alluxio</module>
+    <module>smart-rule</module>
     <module>smart-dist</module>
   </modules>
 

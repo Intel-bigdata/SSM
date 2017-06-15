@@ -96,7 +96,7 @@ public class TestCommand {
         true, 1024);
     out2.writeChars("/testMoveFile/file2");
     out2.close();
-    // Move to Cache
+    // Move to CacheObject
     Path dir3 = new Path("/testCacheFile");
     dfs.mkdirs(dir3);
   }

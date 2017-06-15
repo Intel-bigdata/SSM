@@ -114,7 +114,7 @@ public class CachedListFetcher {
     private void syncFromDB() {
       fileSet = new HashSet<>();
       try {
-        LOG.debug("Sync Cache list from DB!");
+        LOG.debug("Sync CacheObject list from DB!");
         fileSet.addAll(dbAdapter.getCachedFids());
         reInit = false;
       } catch (SQLException e) {
@@ -124,7 +124,7 @@ public class CachedListFetcher {
     }
 
     private void clearAll() throws SQLException {
-      LOG.debug("Cache List empty!");
+      LOG.debug("CacheObject List empty!");
       if (fileSet.size() > 0) {
         dbAdapter.deleteAllCachedFile();
         fileSet.clear();

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.rule;
+package org.smartdata.rule;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -26,9 +26,6 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.metastore.ExecutionContext;
-import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.rule.parser.SmartRuleLexer;
 import org.smartdata.rule.parser.SmartRuleParser;
 import org.smartdata.rule.parser.SmartRuleVisitTranslator;
@@ -74,7 +71,7 @@ public class TestSmartRuleParser {
         + "storage.free(\"SSD\") > 100 and not inCache | cache");
     rules.add("file : accessCount(10min) > 20 | cache");
     rules.add("file: every 5s from now to now + 10d | length > 3 | cache");
-    rules.add("file: every 5s | length > 100mb | movefile \"ONE_SSD\"");
+    rules.add("file: every 5s | length > 100mb | onessd");
     rules.add("file : every 1s | age > 100day | cache");
     rules.add("file : every 1s | mtime > \"2016-09-13 12:05:06\" | cache");
     rules.add("file : every 1s | mtime > now - 70day | cache");
@@ -133,18 +130,6 @@ public class TestSmartRuleParser {
 
     if (parseErrors.size() > 0) {
       throw new IOException("Error while parse rule");
-    }
-
-    ExecutionContext ctx = new ExecutionContext();
-    ctx.setProperty(ExecutionContext.RULE_ID, 2016);
-    DBAdapter dbAdapter = new DBAdapter(TestDBUtil.getTestDBInstance());
-    RuleExecutor qe = new RuleExecutor(null, ctx, result, dbAdapter);
-    List<String> paths = qe.executeFileRuleQuery();
-    index = 1;
-    System.out.println("\nFiles:");
-    for (String path : paths) {
-      System.out.println("" + index + ". " + path);
-      index++;
     }
   }
 }
