@@ -20,6 +20,7 @@ package org.smartdata.server.metastore;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -29,6 +30,10 @@ public class DruidPool implements DBPool {
 
   public DruidPool(Properties properties) throws Exception {
     ds = (DruidDataSource) DruidDataSourceFactory.createDataSource(properties);
+  }
+
+  public DataSource getDataSource() {
+    return ds;
   }
 
   public Connection getConnection() throws SQLException {

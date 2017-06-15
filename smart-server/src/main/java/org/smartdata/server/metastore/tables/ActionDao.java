@@ -1,11 +1,13 @@
 package org.smartdata.server.metastore.tables;
 
+import org.apache.commons.lang.StringUtils;
 import org.smartdata.common.actions.ActionInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
@@ -22,28 +24,33 @@ public class ActionDao {
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
 
-  public void init(DataSource dataSource) {
-    this.jdbcTemplate = new JdbcTemplate(dataSource);
+  public ActionDao(DataSource dataSource) {
+    jdbcTemplate = new JdbcTemplate(dataSource);
+    simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("actions");
   }
 
-  @Transactional(readOnly = true)
   public List<ActionInfo> getAllAction() {
-    return jdbcTemplate.query("select * from actions", new ActionRowMapper());
+    return jdbcTemplate.query("select * from actions",
+        new ActionRowMapper());
   }
 
-  @Transactional(readOnly = true)
   public ActionInfo getActionById(long aid) {
     return jdbcTemplate.queryForObject("select * from actions where aid = ?",
         new Object[]{aid}, new ActionRowMapper());
   }
 
-  @Transactional(readOnly = true)
-  public ActionInfo getActionByParameter(long aid) {
-    return jdbcTemplate.queryForObject("select * from actions where aid = ?",
-        new Object[]{aid}, new ActionRowMapper());
+  public List<ActionInfo> getActionsByIds(List<Long> aids) {
+    return jdbcTemplate.query("select * from actions WHERE aid IN (?)",
+        new Object[]{StringUtils.join(aids, ",")},
+        new ActionRowMapper());
   }
 
-  @Transactional(readOnly = true)
+  public List<ActionInfo> getActionsByCid(long cid) {
+    return jdbcTemplate.query("select * from actions where cid = ?",
+        new Object[]{cid}, new ActionRowMapper());
+  }
+
   public List<ActionInfo> getLatestActions(int size) {
     String sql = "select * from actions WHERE finished = 1" +
         " ORDER by create_time DESC limit ?";
@@ -51,21 +58,35 @@ public class ActionDao {
         new ActionRowMapper());
   }
 
-  @Transactional
   public void delete(long aid) {
     final String sql = "delete from actions where aid = ?";
-    jdbcTemplate.update(sql, new Object[] {aid}, new long[] {Types.BIGINT});
+    jdbcTemplate.update(sql, aid);
   }
 
   public void insert(ActionInfo actionInfo) {
-    simpleJdbcInsert.withTableName("actions");
     simpleJdbcInsert.execute(toMap(actionInfo));
+  }
+
+  public void insert(ActionInfo[] actionInfos) {
+    SqlParameterSource[] batch = SqlParameterSourceUtils
+        .createBatch(actionInfos);
+    simpleJdbcInsert.executeBatch(batch);
   }
 
   public int update(final ActionInfo actionInfo) {
     List<ActionInfo> actionInfos = new ArrayList<>();
     actionInfos.add(actionInfo);
     return batchUpdate(actionInfos)[0];
+  }
+
+  public long getMaxId() {
+    Long ret = this.jdbcTemplate
+        .queryForObject("select MAX(aid) from actions", Long.class);
+    if (ret == null) {
+      return 0;
+    } else {
+      return ret + 1;
+    }
   }
 
   public int[] batchUpdate(final List<ActionInfo> actionInfos) {
@@ -76,7 +97,7 @@ public class ActionDao {
         "create_time = ?, " +
         "finished = ?, " +
         "finish_time = ?, " +
-        "progress = ?, " +
+        "progress = ? " +
         "where aid = ?";
     return jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
