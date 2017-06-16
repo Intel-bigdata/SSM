@@ -15,29 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions;
+package org.smartdata.server.utils;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.Member;
 
-/**
- * A common action factory for action providers to use.
- */
-public abstract class AbstractActionFactory implements ActionFactory {
-
-  private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
-
-  static {
-    addAction("print", PrintAction.class);
+public class HazelcastUtil {
+  //Todo: find a better way to determine whether instance is the master node
+  public static boolean isMaster(HazelcastInstance instance) {
+    Member master = getMasterMember(instance);
+    return master.getSocketAddress().equals(instance.getLocalEndpoint().getSocketAddress());
   }
 
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
-  }
-
-  @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    return Collections.unmodifiableMap(supportedActions);
+  public static Member getMasterMember(HazelcastInstance instance) {
+    return instance.getCluster().getMembers().iterator().next();
   }
 }

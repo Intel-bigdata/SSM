@@ -108,7 +108,7 @@ public class CmdletDescriptor {
     return map;
   }
 
-  public int size() {
+  public int actionSize() {
     return actionNames.size();
   }
 
@@ -127,13 +127,13 @@ public class CmdletDescriptor {
   }
 
   public String toCmdletString() {
-    if (size() == 0) {
+    if (actionSize() == 0) {
       return "";
     }
 
     String cmds = getActionName(0) + " "
         + formatActionArguments(getActionArgs(0));
-    for (int i = 1; i < size(); i++) {
+    for (int i = 1; i < actionSize(); i++) {
       cmds += " ; " + getActionName(i) + " "
           + formatActionArguments(getActionArgs(i));
     }
@@ -141,11 +141,11 @@ public class CmdletDescriptor {
   }
 
   public boolean equals(CmdletDescriptor des) {
-    if (des == null || this.size() != des.size()) {
+    if (des == null || this.actionSize() != des.actionSize()) {
       return false;
     }
 
-    for (int i = 0; i < this.size(); i++) {
+    for (int i = 0; i < this.actionSize(); i++) {
       if (!actionNames.get(i).equals(des.getActionName(i))) {
         return false;
       }

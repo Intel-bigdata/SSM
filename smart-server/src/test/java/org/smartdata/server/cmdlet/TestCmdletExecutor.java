@@ -45,7 +45,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     generateTestCases();
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
     List<ActionInfo> actionInfos = ssm.getCmdletExecutor().createActionInfos(cmdletDescriptor, 0);
-    Assert.assertTrue(cmdletDescriptor.size() == actionInfos.size());
+    Assert.assertTrue(cmdletDescriptor.actionSize() == actionInfos.size());
   }
 
   @Test

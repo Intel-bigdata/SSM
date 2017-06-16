@@ -17,27 +17,11 @@
  */
 package org.smartdata.actions;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * A common action factory for action providers to use.
- */
-public abstract class AbstractActionFactory implements ActionFactory {
-
-  private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
-
-  static {
-    addAction("print", PrintAction.class);
-  }
-
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
-  }
+public class PrintAction extends SmartAction {
+  public static final String PRINT_MESSAGE = "print_message";
 
   @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    return Collections.unmodifiableMap(supportedActions);
+  protected void execute() {
+    System.out.println(getArguments().get(PRINT_MESSAGE));
   }
 }

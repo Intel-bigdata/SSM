@@ -15,29 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions;
+package org.smartdata.server.cmdlet.message;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.io.Serializable;
 import java.util.Map;
 
-/**
- * A common action factory for action providers to use.
- */
-public abstract class AbstractActionFactory implements ActionFactory {
+public class LaunchAction implements Serializable {
+  private long actionId;
+  private String actionType;
+  private Map<String, String> args;
 
-  private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
-
-  static {
-    addAction("print", PrintAction.class);
+  public LaunchAction(long actionId, String actionType, Map<String, String> args) {
+    this.actionId = actionId;
+    this.actionType = actionType;
+    this.args = args;
   }
 
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
+  public long getActionId() {
+    return actionId;
   }
 
-  @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    return Collections.unmodifiableMap(supportedActions);
+  public void setActionId(long actionId) {
+    this.actionId = actionId;
+  }
+
+  public String getActionType() {
+    return actionType;
+  }
+
+  public void setActionType(String actionType) {
+    this.actionType = actionType;
+  }
+
+  public Map<String, String> getArgs() {
+    return args;
+  }
+
+  public void setArgs(Map<String, String> args) {
+    this.args = args;
   }
 }

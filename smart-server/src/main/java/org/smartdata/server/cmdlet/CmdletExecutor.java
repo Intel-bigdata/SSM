@@ -512,7 +512,7 @@ public class CmdletExecutor implements Runnable, Service {
     List<ActionInfo> actionInfos = new ArrayList<>();
     ActionInfo current;
     // Check if any files are in fileLock
-    for (int index = 0; index < cmdletDescriptor.size(); index++) {
+    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
       Map<String, String> args = cmdletDescriptor.getActionArgs(index);
       if (args != null && args.size() >= 1) {
         String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
@@ -523,7 +523,7 @@ public class CmdletExecutor implements Runnable, Service {
       }
     }
     // Create actioninfos and add file to file locks
-    for (int index = 0; index < cmdletDescriptor.size(); index++) {
+    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
       Map<String, String> args = cmdletDescriptor.getActionArgs(index);
       current = new ActionInfo(maxActionId, cid,
           cmdletDescriptor.getActionName(index),
@@ -572,7 +572,7 @@ public class CmdletExecutor implements Runnable, Service {
         CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
         submitTime, submitTime);
     maxCmdletId ++;
-    for (int index = 0; index < cmdletDescriptor.size(); index++) {
+    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
       if (!actionRegistry.checkAction(cmdletDescriptor.getActionName(index))) {
         LOG.error("Submit Cmdlet {} error! Action names are not correct!", cmdinfo);
         throw new IOException();
