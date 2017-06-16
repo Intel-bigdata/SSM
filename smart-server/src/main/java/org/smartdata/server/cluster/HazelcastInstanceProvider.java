@@ -15,29 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions;
+package org.smartdata.server.cluster;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
 
-/**
- * A common action factory for action providers to use.
- */
-public abstract class AbstractActionFactory implements ActionFactory {
+public class HazelcastInstanceProvider {
+  private static HazelcastInstance instance;
 
-  private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
+  private HazelcastInstanceProvider() {}
 
-  static {
-    addAction("print", PrintAction.class);
-  }
-
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
-  }
-
-  @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    return Collections.unmodifiableMap(supportedActions);
+  public static HazelcastInstance getInstance() {
+    if (instance == null) {
+      instance = Hazelcast.newHazelcastInstance(new Config());
+    }
+    return instance;
   }
 }

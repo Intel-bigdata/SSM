@@ -15,29 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions;
+package org.smartdata.server.cluster;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import com.hazelcast.core.MemberAttributeEvent;
+import com.hazelcast.core.MembershipEvent;
+import com.hazelcast.core.MembershipListener;
+import org.smartdata.server.utils.HazelcastUtil;
 
-/**
- * A common action factory for action providers to use.
- */
-public abstract class AbstractActionFactory implements ActionFactory {
+public class ClusterMembershipListener implements MembershipListener {
+  private final SmartServerDaemon daemon;
 
-  private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
-
-  static {
-    addAction("print", PrintAction.class);
-  }
-
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
+  public ClusterMembershipListener(SmartServerDaemon daemon) {
+    this.daemon = daemon;
   }
 
   @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    return Collections.unmodifiableMap(supportedActions);
+  public void memberAdded(MembershipEvent membershipEvent) {
+  }
+
+  @Override
+  public void memberRemoved(MembershipEvent membershipEvent) {
+    if (HazelcastUtil.isMaster(HazelcastInstanceProvider.getInstance())) {
+      this.daemon.becomeActive();
+    }
+  }
+
+  @Override
+  public void memberAttributeChanged(MemberAttributeEvent memberAttributeEvent) {
   }
 }

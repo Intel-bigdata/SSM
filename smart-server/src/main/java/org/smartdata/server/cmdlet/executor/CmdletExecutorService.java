@@ -15,29 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions;
+package org.smartdata.server.cmdlet.executor;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import org.smartdata.server.cmdlet.CmdletFactory;
+import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 
-/**
- * A common action factory for action providers to use.
- */
-public abstract class AbstractActionFactory implements ActionFactory {
+public abstract class CmdletExecutorService {
+  protected CmdletFactory cmdletFactory;
 
-  private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
-
-  static {
-    addAction("print", PrintAction.class);
+  public CmdletExecutorService(CmdletFactory cmdletFactory) {
+    this.cmdletFactory = cmdletFactory;
   }
 
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
-  }
+  public abstract boolean isLocalService();
 
-  @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    return Collections.unmodifiableMap(supportedActions);
-  }
+  public abstract boolean canAcceptMore();
+
+  public abstract void execute(LaunchCmdlet cmdlet);
 }

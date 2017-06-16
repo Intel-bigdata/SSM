@@ -15,29 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions;
+package org.smartdata.server.cmdlet.message;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.Serializable;
 
-/**
- * A common action factory for action providers to use.
- */
-public abstract class AbstractActionFactory implements ActionFactory {
+public class ActionStatusReport implements Serializable {
 
-  private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
-
-  static {
-    addAction("print", PrintAction.class);
-  }
-
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
-  }
-
-  @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    return Collections.unmodifiableMap(supportedActions);
-  }
 }

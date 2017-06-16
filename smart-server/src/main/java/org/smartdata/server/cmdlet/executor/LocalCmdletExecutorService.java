@@ -15,29 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions;
+package org.smartdata.server.cmdlet.executor;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import org.smartdata.server.cmdlet.CmdletFactory;
+import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 
-/**
- * A common action factory for action providers to use.
- */
-public abstract class AbstractActionFactory implements ActionFactory {
+public class LocalCmdletExecutorService extends CmdletExecutorService implements CmdletStatusReporter {
+  private CmdletExecutor cmdletExecutor;
 
-  private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
-
-  static {
-    addAction("print", PrintAction.class);
-  }
-
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
+  public LocalCmdletExecutorService(CmdletFactory cmdletFactory) {
+    super(cmdletFactory);
+    this.cmdletExecutor = new CmdletExecutor(this);
   }
 
   @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    return Collections.unmodifiableMap(supportedActions);
+  public boolean isLocalService() {
+    return true;
+  }
+
+  @Override
+  public boolean canAcceptMore() {
+    return true;
+  }
+
+  @Override
+  public void execute(LaunchCmdlet cmdlet) {
+    System.out.println(getClass().getCanonicalName() + " got command" + cmdlet);
+    this.cmdletExecutor.execute(cmdletFactory.createCmdlet(cmdlet));
+  }
+
+  @Override
+  public void report(Object status) {
+    //
   }
 }

@@ -23,7 +23,6 @@ import org.smartdata.common.CmdletState;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class CmdletInfo {
   private long cid;
   private long rid;
