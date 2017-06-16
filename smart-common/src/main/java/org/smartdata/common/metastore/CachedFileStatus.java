@@ -27,6 +27,11 @@ public class CachedFileStatus {
   private long lastAccessTime;
   private int numAccessed;
 
+  public CachedFileStatus() {
+
+  }
+
+
   public CachedFileStatus(long fid,
                           String path,
                           long fromTime,
@@ -39,24 +44,43 @@ public class CachedFileStatus {
     this.numAccessed = numAccessed;
   }
 
-
   public long getFid() {
     return fid;
+  }
+
+  public void setFid(long fid) {
+    this.fid = fid;
   }
 
   public String getPath() {
     return path;
   }
 
+  public void setPath(String path) {
+    this.path = path;
+  }
+
   public long getFromTime() {
     return fromTime;
+  }
+
+  public void setFromTime(long fromTime) {
+    this.fromTime = fromTime;
   }
 
   public long getLastAccessTime() {
     return lastAccessTime;
   }
 
+  public void setLastAccessTime(long lastAccessTime) {
+    this.lastAccessTime = lastAccessTime;
+  }
+
   public int getNumAccessed() {
     return numAccessed;
+  }
+
+  public void setNumAccessed(int numAccessed) {
+    this.numAccessed = numAccessed;
   }
 }
