@@ -17,15 +17,20 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,42 +45,102 @@ public class CacheFileDao {
     simpleJdbcInsert.setTableName("cached_files");
   }
 
-  public List<CachedFileStatus> getAllCachedFileStatus() {
+  public List<CachedFileStatus> getAll() {
     return jdbcTemplate.query("select * from cached_files",
         new CacheFileRowMapper());
   }
 
   public CachedFileStatus getCachedFileStatusById(long fid) {
-    return jdbcTemplate.queryForObject("select * from actions where fid = ?",
+    return jdbcTemplate.queryForObject("select * from cached_files where fid = ?",
         new Object[]{fid}, new CacheFileRowMapper());
   }
 
   public List<Long> getCachedFids() {
-
+    String sql = "SELECT fid FROM cached_files";
+    List<Long> fids = jdbcTemplate.query(sql,
+        new RowMapper<Long>() {
+          public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return rs.getLong("fid");
+          }
+        });
+    return fids;
   }
 
-  public void insertCacheFile(CachedFileStatus) {
-
+  public void insertCacheFile(CachedFileStatus cachedFileStatus) {
+    simpleJdbcInsert.execute(toMap(cachedFileStatus));
   }
 
-  public void insertCacheFiles(List<CachedFileStatus> cachedFileStatusList) {
+  public void insertCacheFile(long fid, String path, long fromTime,
+      long lastAccessTime, int numAccessed) {
+    simpleJdbcInsert.execute(toMap(new CachedFileStatus(fid, path,
+        fromTime, lastAccessTime, numAccessed)));
+  }
 
+  public void insertCacheFiles(CachedFileStatus[] cachedFileStatusList) {
+    SqlParameterSource[] batch = SqlParameterSourceUtils
+                                     .createBatch(cachedFileStatusList);
+    simpleJdbcInsert.executeBatch(batch);
+  }
+
+  public int updateCachedFiles(Long fid, Long lastAccessTime,
+      Integer numAccessed) {
+    String sql = "update cached_files set last_access_time = ?, "  +
+                     "num_accessed = ? where fid = ?";
+    return this.jdbcTemplate.update(sql, lastAccessTime, numAccessed, fid);
   }
 
   public void updateCacheFiles(Map<String, Long> pathToIds,
       List<FileAccessEvent> events) {
-
+    Map<Long, CachedFileStatus> idToStatus = new HashMap<>();
+    List<CachedFileStatus> cachedFileStatuses = getAll();
+    for (CachedFileStatus status : cachedFileStatuses) {
+      idToStatus.put(status.getFid(), status);
+    }
+    Collection<Long> cachedIds = idToStatus.keySet();
+    Collection<Long> needToUpdate = CollectionUtils.intersection(cachedIds, pathToIds.values());
+    if (!needToUpdate.isEmpty()) {
+      Map<Long, Integer> idToCount = new HashMap<>();
+      Map<Long, Long> idToLastTime = new HashMap<>();
+      for (FileAccessEvent event : events) {
+        Long fid = pathToIds.get(event.getPath());
+        if (needToUpdate.contains(fid)) {
+          if (!idToCount.containsKey(fid)) {
+            idToCount.put(fid, 0);
+          }
+          idToCount.put(fid, idToCount.get(fid) + 1);
+          if (!idToLastTime.containsKey(fid)) {
+            idToLastTime.put(fid, event.getTimestamp());
+          }
+          idToLastTime.put(fid, Math.max(event.getTimestamp(), idToLastTime.get(fid)));
+        }
+      }
+      for (Long fid : needToUpdate) {
+        Integer newAccessCount = idToStatus.get(fid).getNumAccessed() + idToCount.get(fid);
+        this.updateCachedFiles(fid, idToLastTime.get(fid), newAccessCount);
+      }
+    }
   }
 
-  public void deleteCachedFile(long fid) {
+  public void deleteCachedFileById(long fid) {
     final String sql = "delete from cached_files where fid = ?";
     jdbcTemplate.update(sql, fid);
   }
 
   public void deleteAll() {
-    String sql = "DELETE from `cached_files`";
+    String sql = "DELETE from cached_files";
     jdbcTemplate.execute(sql);
   }
+
+  private Map<String, Object> toMap(CachedFileStatus cachedFileStatus) {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("fid", cachedFileStatus.getFid());
+    parameters.put("path", cachedFileStatus.getPath());
+    parameters.put("from_time", cachedFileStatus.getFromTime());
+    parameters.put("last_access_time", cachedFileStatus.getLastAccessTime());
+    parameters.put("num_accessed", cachedFileStatus.getNumAccessed());
+    return parameters;
+  }
+
 
   class CacheFileRowMapper implements RowMapper<CachedFileStatus> {
 
