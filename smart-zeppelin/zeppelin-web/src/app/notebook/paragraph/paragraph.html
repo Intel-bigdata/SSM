@@ -1,0 +1,81 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div id="{{paragraph.id}}_container"
+     ng-class="{'paragraph': !asIframe, 'paragraphAsIframe': asIframe}">
+
+  <div ng-if="paragraph.config.title"
+       id="{{paragraph.id}}_title"
+       ng-controller="ElasticInputCtrl as input"
+       class="title">
+    <input type="text"
+           pu-elastic-input
+           style="min-width: 400px; max-width: 80%;"
+           placeholder="Untitled"
+           ng-model="paragraph.title"
+           ng-if="input.showEditor"
+           ng-escape="input.showEditor = false; paragraph.title = oldTitle;"
+           ng-blur="setTitle(paragraph); input.showEditor = false"
+           ng-enter="setTitle(paragraph); input.showEditor = false"
+           focus-if="input.showEditor" />
+    <div ng-click="input.showEditor = !asIframe && !viewOnly && !revisionView; oldTitle = paragraph.title;"
+         ng-show="!input.showEditor"
+         ng-bind-html="paragraph.title || 'Untitled'">
+    </div>
+  </div>
+
+  <div>
+    <div ng-if="!paragraph.config.editorHide && !viewOnly" style="margin-bottom:3px;">
+      <code-editor
+        paragraph-id="paragraph.id"
+        paragraph-context="paragraph"
+        dirty-text="dirtyText"
+        original-text="originalText"
+        on-load="aceLoaded"
+        revision-view="revisionView"
+      ></code-editor>
+    </div>
+
+    <div ng-include src="'app/notebook/paragraph/paragraph-progressBar.html'"></div>
+    <div ng-include src="'app/notebook/paragraph/paragraph-parameterizedQueryForm.html'"></div>
+
+    <!-- Rendering -->
+    <div class="tableDisplay"
+         ng-show="!paragraph.config.tableHide"
+         ng-controller="ResultCtrl"
+         ng-repeat="result in paragraph.results.msg track by $index"
+         ng-init="init(result, paragraph.config.results[$index], paragraph, $index)"
+         ng-include src="'app/notebook/paragraph/result/result.html'">
+    </div>
+    <div id="{{paragraph.id}}_error"
+         class="error text"
+         ng-if="paragraph.status == 'ERROR'"
+         ng-bind="paragraph.errorMessage">
+    </div>
+  </div>
+
+  <div ng-include src="'app/notebook/paragraph/paragraph-control.html'"></div>
+
+  <div ng-if="!asIframe" class="paragraphFooter">
+    <div ng-show="!paragraph.config.tableHide && !viewOnly"
+         id="{{paragraph.id}}_executionTime"
+         class="executionTime" ng-bind-html="getExecutionTime(paragraph)">
+    </div>
+    <div ng-if = "paragraph.status === 'RUNNING'" class = "paragraphFooterElapsed">
+      <div id="{{paragraph.id}}_elapsedTime"
+           class="elapsedTime" ng-bind-html="getElapsedTime(paragraph)">
+      </div>
+    </div>
+  </div>
+</div>
