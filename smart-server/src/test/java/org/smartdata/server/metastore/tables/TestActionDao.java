@@ -49,6 +49,13 @@ public class TestActionDao {
     actionDao = new ActionDao(druidPool.getDataSource());
   }
 
+  @After
+  public void shutdown() throws Exception {
+    if (druidPool != null) {
+      druidPool.close();
+    }
+  }
+
   @Test
   public void testInsertGetAction() throws Exception {
     ActionInfo actionInfo = new ActionInfo(1, 1,
@@ -56,7 +63,7 @@ public class TestActionDao {
         "Test", false, 123213213l, true, 123123l,
         100);
     actionDao.insert(actionInfo);
-    actionInfo = actionDao.getActionById(1l);
+    actionInfo = actionDao.getById(1l);
     Assert.assertTrue(actionInfo.getCommandId() == 1);
   }
 
@@ -69,7 +76,7 @@ public class TestActionDao {
     actionDao.insert(actionInfo);
     actionInfo.setSuccessful(true);
     actionDao.update(actionInfo);
-    actionInfo = actionDao.getActionById(actionInfo.getActionId());
+    actionInfo = actionDao.getById(actionInfo.getActionId());
     Assert.assertTrue(actionInfo.isFinished());
   }
 
@@ -85,7 +92,7 @@ public class TestActionDao {
     List<ActionInfo> actionInfoList = actionDao.getLatestActions(10);
     Assert.assertTrue(actionInfoList.size() == 2);
     actionDao.delete(actionInfo.getActionId());
-    actionInfoList = actionDao.getAllAction();
+    actionInfoList = actionDao.getAll();
     Assert.assertTrue(actionInfoList.size() == 1);
   }
 
@@ -98,13 +105,5 @@ public class TestActionDao {
     Assert.assertTrue(actionDao.getMaxId() == 0);
     actionDao.insert(actionInfo);
     Assert.assertTrue(actionDao.getMaxId() == 2);
-  }
-
-
-  @After
-  public void shutdown() throws Exception {
-    if (druidPool != null) {
-      druidPool.close();
-    }
   }
 }

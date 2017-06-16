@@ -57,7 +57,7 @@ public class TestCommandDao {
     CommandInfo command2 = new CommandInfo(1, 78,
         CommandState.PAUSED, "tt", 123178333l, 232444994l);
     commandDao.insert(new CommandInfo[]{command1, command2});
-    List<CommandInfo> commands = commandDao.getAllCommand();
+    List<CommandInfo> commands = commandDao.getAll();
     Assert.assertTrue(commands.size() == 2);
   }
 
@@ -70,7 +70,7 @@ public class TestCommandDao {
     commandDao.insert(new CommandInfo[]{command1, command2});
     command1.setState(CommandState.DONE);
     commandDao.update(command1);
-    command1 = commandDao.getCommandById(command1.getCid());
+    command1 = commandDao.getById(command1.getCid());
     Assert.assertTrue(command1.getState() == CommandState.DONE);
   }
 
@@ -82,7 +82,7 @@ public class TestCommandDao {
         CommandState.PAUSED, "tt", 123178333l, 232444994l);
     commandDao.insert(new CommandInfo[]{command1, command2});
     commandDao.delete(1);
-    List<CommandInfo> commands = commandDao.getAllCommand();
+    List<CommandInfo> commands = commandDao.getAll();
     Assert.assertTrue(commands.size() == 1);
   }
 

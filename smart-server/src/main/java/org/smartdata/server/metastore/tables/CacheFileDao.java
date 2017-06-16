@@ -50,12 +50,12 @@ public class CacheFileDao {
         new CacheFileRowMapper());
   }
 
-  public CachedFileStatus getCachedFileStatusById(long fid) {
+  public CachedFileStatus getById(long fid) {
     return jdbcTemplate.queryForObject("select * from cached_files where fid = ?",
         new Object[]{fid}, new CacheFileRowMapper());
   }
 
-  public List<Long> getCachedFids() {
+  public List<Long> getFids() {
     String sql = "SELECT fid FROM cached_files";
     List<Long> fids = jdbcTemplate.query(sql,
         new RowMapper<Long>() {
@@ -66,31 +66,31 @@ public class CacheFileDao {
     return fids;
   }
 
-  public void insertCacheFile(CachedFileStatus cachedFileStatus) {
+  public void insert(CachedFileStatus cachedFileStatus) {
     simpleJdbcInsert.execute(toMap(cachedFileStatus));
   }
 
-  public void insertCacheFile(long fid, String path, long fromTime,
-      long lastAccessTime, int numAccessed) {
+  public void insert(long fid, String path, long fromTime,
+                     long lastAccessTime, int numAccessed) {
     simpleJdbcInsert.execute(toMap(new CachedFileStatus(fid, path,
         fromTime, lastAccessTime, numAccessed)));
   }
 
-  public void insertCacheFiles(CachedFileStatus[] cachedFileStatusList) {
+  public void insert(CachedFileStatus[] cachedFileStatusList) {
     SqlParameterSource[] batch = SqlParameterSourceUtils
                                      .createBatch(cachedFileStatusList);
     simpleJdbcInsert.executeBatch(batch);
   }
 
-  public int updateCachedFiles(Long fid, Long lastAccessTime,
-      Integer numAccessed) {
+  public int update(Long fid, Long lastAccessTime,
+                    Integer numAccessed) {
     String sql = "update cached_files set last_access_time = ?, "  +
                      "num_accessed = ? where fid = ?";
     return this.jdbcTemplate.update(sql, lastAccessTime, numAccessed, fid);
   }
 
-  public void updateCacheFiles(Map<String, Long> pathToIds,
-      List<FileAccessEvent> events) {
+  public void update(Map<String, Long> pathToIds,
+                     List<FileAccessEvent> events) {
     Map<Long, CachedFileStatus> idToStatus = new HashMap<>();
     List<CachedFileStatus> cachedFileStatuses = getAll();
     for (CachedFileStatus status : cachedFileStatuses) {
@@ -116,12 +116,12 @@ public class CacheFileDao {
       }
       for (Long fid : needToUpdate) {
         Integer newAccessCount = idToStatus.get(fid).getNumAccessed() + idToCount.get(fid);
-        this.updateCachedFiles(fid, idToLastTime.get(fid), newAccessCount);
+        this.update(fid, idToLastTime.get(fid), newAccessCount);
       }
     }
   }
 
-  public void deleteCachedFileById(long fid) {
+  public void deleteById(long fid) {
     final String sql = "delete from cached_files where fid = ?";
     jdbcTemplate.update(sql, fid);
   }

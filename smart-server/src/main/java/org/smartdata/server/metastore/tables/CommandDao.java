@@ -46,18 +46,18 @@ public class CommandDao {
     simpleJdbcInsert.withTableName("commands");
   }
 
-  public List<CommandInfo> getAllCommand() {
+  public List<CommandInfo> getAll() {
     return jdbcTemplate.query("select * from commands",
         new CommandRowMapper());
   }
 
-  public List<CommandInfo> getCommandsByIds(List<Long> aids) {
+  public List<CommandInfo> getByIds(List<Long> aids) {
     return jdbcTemplate.query("select * from commands WHERE aid IN (?)",
         new Object[]{StringUtils.join(aids, ",")},
         new CommandRowMapper());
   }
 
-  public CommandInfo getCommandById(long cid) {
+  public CommandInfo getById(long cid) {
     return jdbcTemplate.queryForObject("select * from commands where cid = ?",
         new Object[]{cid}, new CommandRowMapper());
   }
@@ -85,10 +85,10 @@ public class CommandDao {
   public int update(final CommandInfo CommandInfo) {
     List<CommandInfo> CommandInfos = new ArrayList<>();
     CommandInfos.add(CommandInfo);
-    return batchUpdate(CommandInfos)[0];
+    return update(CommandInfos)[0];
   }
 
-  public int[] batchUpdate(final List<CommandInfo> CommandInfos) {
+  public int[] update(final List<CommandInfo> CommandInfos) {
     String sql = "update commands set " +
         "state = ?, " +
         "state_changed_time = ? " +

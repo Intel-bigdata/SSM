@@ -46,23 +46,23 @@ public class ActionDao {
     simpleJdbcInsert.setTableName("actions");
   }
 
-  public List<ActionInfo> getAllAction() {
+  public List<ActionInfo> getAll() {
     return jdbcTemplate.query("select * from actions",
         new ActionRowMapper());
   }
 
-  public ActionInfo getActionById(long aid) {
+  public ActionInfo getById(long aid) {
     return jdbcTemplate.queryForObject("select * from actions where aid = ?",
         new Object[]{aid}, new ActionRowMapper());
   }
 
-  public List<ActionInfo> getActionsByIds(List<Long> aids) {
+  public List<ActionInfo> getByIds(List<Long> aids) {
     return jdbcTemplate.query("select * from actions WHERE aid IN (?)",
         new Object[]{StringUtils.join(aids, ",")},
         new ActionRowMapper());
   }
 
-  public List<ActionInfo> getActionsByCid(long cid) {
+  public List<ActionInfo> getByCid(long cid) {
     return jdbcTemplate.query("select * from actions where cid = ?",
         new Object[]{cid}, new ActionRowMapper());
   }
@@ -92,10 +92,10 @@ public class ActionDao {
   public int update(final ActionInfo actionInfo) {
     List<ActionInfo> actionInfos = new ArrayList<>();
     actionInfos.add(actionInfo);
-    return batchUpdate(actionInfos)[0];
+    return update(actionInfos)[0];
   }
 
-  public int[] batchUpdate(final List<ActionInfo> actionInfos) {
+  public int[] update(final List<ActionInfo> actionInfos) {
     String sql = "update actions set " +
         "result = ?, " +
         "log = ?, " +
