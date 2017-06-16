@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class TestCommandDao {
+
   private DruidPool druidPool;
   private CommandDao commandDao;
 

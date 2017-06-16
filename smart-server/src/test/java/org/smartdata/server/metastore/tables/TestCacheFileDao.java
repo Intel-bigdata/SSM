@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class TestCacheFileDao {
+
   private DruidPool druidPool;
   private CacheFileDao cacheFileDao;
 

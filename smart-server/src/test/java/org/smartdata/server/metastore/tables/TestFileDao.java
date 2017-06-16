@@ -33,7 +33,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
-public class TestFileDao {  private DruidPool druidPool;
+public class TestFileDao {
+
+  private DruidPool druidPool;
   private FileDao fileDao;
 
   @Before

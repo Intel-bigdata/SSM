@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class TestActionDao {
+
   private DruidPool druidPool;
   private ActionDao actionDao;
 
