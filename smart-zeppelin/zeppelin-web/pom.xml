@@ -108,7 +108,6 @@
               <version>${plugin.frontned.version}</version>
               <executions>
 
-                <!--
                 <execution>
                   <id>install node and yarn</id>
                   <goals>
@@ -129,10 +128,9 @@
                     <goal>yarn</goal>
                   </goals>
                   <configuration>
-                    <arguments>install no-lockfile</arguments>
+                    <arguments>install --no-lockfile</arguments>
                   </configuration>
                 </execution>
-                -->
 
                 <execution>
                   <id>yarn build</id>

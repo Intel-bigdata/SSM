@@ -25,3 +25,24 @@ azure-auth-keys.xml
 */.externalToolBuilders
 */maven-eclipse.xml
 
+smart-zeppelin/.flattened-pom.xml
+smart-zeppelin/conf/interpreter.json
+smart-zeppelin/interpreter/spark
+smart-zeppelin/local-repo
+smart-zeppelin/logs
+smart-zeppelin/spark/.flattened-pom.xml
+smart-zeppelin/yarn.lock
+smart-zeppelin/zeppelin-display/.flattened-pom.xml
+smart-zeppelin/zeppelin-interpreter/.flattened-pom.xml
+smart-zeppelin/zeppelin-server/.flattened-pom.xml
+smart-zeppelin/zeppelin-web/.flattened-pom.xml
+smart-zeppelin/zeppelin-web/.tmp
+smart-zeppelin/zeppelin-web/bower_components
+smart-zeppelin/zeppelin-web/dist
+smart-zeppelin/zeppelin-web/node
+smart-zeppelin/zeppelin-web/node_modules
+smart-zeppelin/zeppelin-web/reports
+smart-zeppelin/zeppelin-web/src/fonts
+smart-zeppelin/zeppelin-web/yarn-error.log
+smart-zeppelin/zeppelin-web/yarn.lock
+smart-zeppelin/zeppelin-zengine/.flattened-pom.xml
