@@ -17,52 +17,28 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.metastore.DruidPool;
-import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.metastore.TestDaoUtil;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
-public class TestCacheFileDao {
+public class TestCacheFileDao extends TestDaoUtil {
 
-  private DruidPool druidPool;
   private CacheFileDao cacheFileDao;
 
-  @Before
-  public void init() throws Exception {
-    InputStream in = getClass().getClassLoader()
-                         .getResourceAsStream("druid-template.xml");
-    Properties p = new Properties();
-    p.loadFromXML(in);
-
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = Util.SQLITE_URL_PREFIX + dbFile;
-    p.setProperty("url", url);
-
-    druidPool = new DruidPool(p);
+  private void daoInit() {
     cacheFileDao = new CacheFileDao(druidPool.getDataSource());
-  }
-
-  @After
-  public void shutdown() throws Exception {
-    if (druidPool != null) {
-      druidPool.close();
-    }
   }
 
   @Test
   public void testUpdateCachedFiles() throws Exception {
+    daoInit();
     cacheFileDao.insert(80L,
         "testPath", 1000L, 2000L, 100);
     cacheFileDao.insert(new CachedFileStatus(90L,
@@ -97,6 +73,7 @@ public class TestCacheFileDao {
 
   @Test
   public void testInsertDeleteCachedFiles() throws Exception {
+    daoInit();
     cacheFileDao
         .insert(80l,
             "testPath", 123456l, 234567l, 456);
@@ -125,6 +102,7 @@ public class TestCacheFileDao {
 
   @Test
   public void testGetCachedFileStatus() throws Exception {
+    daoInit();
     cacheFileDao.insert(6l, "testPath", 1490918400000l,
         234567l, 456);
     cacheFileDao.insert(19l, "testPath", 1490918400000l,

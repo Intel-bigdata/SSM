@@ -24,41 +24,24 @@ import org.junit.Test;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.server.metastore.DruidPool;
 import org.smartdata.server.metastore.TestDBUtil;
+import org.smartdata.server.metastore.TestDaoUtil;
 import org.smartdata.server.metastore.Util;
 
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
-public class TestActionDao {
+public class TestActionDao extends TestDaoUtil {
 
-  private DruidPool druidPool;
   private ActionDao actionDao;
 
-  @Before
-  public void init() throws Exception {
-    InputStream in = getClass().getClassLoader()
-        .getResourceAsStream("druid-template.xml");
-    Properties p = new Properties();
-    p.loadFromXML(in);
-
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = Util.SQLITE_URL_PREFIX + dbFile;
-    p.setProperty("url", url);
-
-    druidPool = new DruidPool(p);
+  private void daoInit() {
     actionDao = new ActionDao(druidPool.getDataSource());
-  }
-
-  @After
-  public void shutdown() throws Exception {
-    if (druidPool != null) {
-      druidPool.close();
-    }
   }
 
   @Test
   public void testInsertGetAction() throws Exception {
+    daoInit();
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", new String[]{"/test/file"}, "Test",
         "Test", false, 123213213l, true, 123123l,
@@ -70,6 +53,7 @@ public class TestActionDao {
 
   @Test
   public void testUpdateAction() throws Exception {
+    daoInit();
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", new String[]{"/test/file"}, "Test",
         "Test", false, 123213213l, true, 123123l,
@@ -83,6 +67,7 @@ public class TestActionDao {
 
   @Test
   public void testGetNewDeleteAction() throws Exception {
+    daoInit();
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", new String[]{"/test/file"}, "Test",
         "Test", false, 123213213l, true, 123123l,
@@ -99,6 +84,7 @@ public class TestActionDao {
 
   @Test
   public void testMaxId() throws Exception {
+    daoInit();
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", new String[]{"/test/file"}, "Test",
         "Test", false, 123213213l, true, 123123l,
