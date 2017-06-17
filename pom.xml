@@ -31,6 +31,7 @@
     <module>smart-server</module>
     <module>smart-alluxio</module>
     <module>smart-rule</module>
+    <module>smart-zeppelin</module>
     <module>smart-dist</module>
   </modules>
 

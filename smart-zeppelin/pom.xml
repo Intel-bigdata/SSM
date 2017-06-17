@@ -56,9 +56,7 @@
     <module>zeppelin-zengine</module>
     <module>zeppelin-display</module>
     <module>spark</module>
-    <module>zeppelin-web</module>
     <module>zeppelin-server</module>
-    <module>zeppelin-distribution</module>
   </modules>
 
   <properties>
@@ -667,6 +665,14 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>build-web</id>
+      <modules>
+        <module>zeppelin-web</module>
+        <module>zeppelin-distribution</module>
+      </modules>
+    </profile>
+
     <profile>
       <id>scala-2.10</id>
       <activation>
