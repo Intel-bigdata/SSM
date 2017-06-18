@@ -35,6 +35,7 @@ import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
+import org.smartdata.common.security.SmartJaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
@@ -48,6 +49,7 @@ import org.smartdata.server.web.SmartHttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.auth.Subject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -105,6 +107,7 @@ public class SmartServer {
       default:
         break;
     }
+    loginAsSmartServer();
   }
 
   public StatesManager getStatesManager() {
@@ -201,6 +204,31 @@ public class SmartServer {
       }
     }
     return false;
+  }
+
+  private boolean isSecurityEnabled() {
+    return conf.getBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, false);
+  }
+
+  public void loginAsSmartServer() throws IOException {
+    if (!isSecurityEnabled()) {
+      return;
+    }
+    String keytabFilename = conf.get(SmartConfKeys.DFS_SSM_KEYTAB_FILE_KEY);
+    if (keytabFilename == null || keytabFilename.length() == 0) {
+      throw new IOException("Running in secure mode, but config doesn't have a keytab");
+    }
+    File keytabPath = new File(keytabFilename);
+    String principal = conf.get(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY,
+        System.getProperty("user.name"));
+    Subject subject = null;
+    try {
+      subject = SmartJaasLoginUtil.loginUsingKeytab(principal, keytabPath);
+    } catch (IOException e) {
+      LOG.error("Fail to login using keytab. " + e);
+    }
+    LOG.info("Login successful for user: "
+        + subject.getPrincipals().iterator().next());
   }
 
   public static void main(String[] args) {
