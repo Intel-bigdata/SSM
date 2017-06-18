@@ -46,7 +46,7 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
   public SmartAdmin(Configuration conf)
       throws IOException {
     this.conf = conf;
-    loginAsSmartAdmin();
+    checkSecurityAndLogin();
     String[] strings = conf.get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
         SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
     InetSocketAddress address = new InetSocketAddress(
@@ -63,12 +63,11 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
     return conf.getBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, false);
   }
 
-  public void loginAsSmartAdmin() throws IOException {
+  private void checkSecurityAndLogin() throws IOException {
     if (!isSecurityEnabled()) {
       return;
     }
-    String principal = conf.get(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY,
-        System.getProperty("user.name"));
+    String principal = conf.get(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY);
     JaasLoginUtil.loginUsingTicketCache(principal);
   }
 

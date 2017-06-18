@@ -64,7 +64,7 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * From this Smart StorageObject Management begins.
+ * From this Smart Storage Management begins.
  */
 public class SmartServer {
   private StatesManager statesManager;
@@ -90,6 +90,9 @@ public class SmartServer {
   SmartServer(SmartConf conf, StartupOption startupOption)
       throws IOException, URISyntaxException {
     this.conf = conf;
+
+    checkSecurityAndLogin();
+
     switch (startupOption) {
       case REGULAR:
         httpServer = new SmartHttpServer(this, conf);
@@ -106,7 +109,6 @@ public class SmartServer {
       default:
         break;
     }
-    loginAsSmartServer();
   }
 
   public StatesManager getStatesManager() {
@@ -209,7 +211,7 @@ public class SmartServer {
     return conf.getBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, false);
   }
 
-  public void loginAsSmartServer() throws IOException {
+  private void checkSecurityAndLogin() throws IOException {
     if (!isSecurityEnabled()) {
       return;
     }
@@ -218,8 +220,7 @@ public class SmartServer {
       throw new IOException("Running in secure mode, but config doesn't have a keytab");
     }
     File keytabPath = new File(keytabFilename);
-    String principal = conf.get(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY,
-        System.getProperty("user.name"));
+    String principal = conf.get(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY);
     Subject subject = null;
     try {
       subject = JaasLoginUtil.loginUsingKeytab(principal, keytabPath);
