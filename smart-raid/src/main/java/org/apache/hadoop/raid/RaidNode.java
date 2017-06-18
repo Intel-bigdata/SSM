@@ -2096,7 +2096,7 @@ public abstract class RaidNode implements RaidProtocol, RaidNodeStatusMBean {
   }
 
   /**
-   * Convert cmdlet line options to configuration parameters
+   * Convert command line options to configuration parameters
    */
   private static void setStartupOption(Configuration conf, StartupOption opt) {
     conf.set("fs.raidnode.startup", opt.toString());

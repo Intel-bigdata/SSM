@@ -294,7 +294,7 @@ public class RaidShell extends Configured implements Tool {
     int i = 0;
     String cmd = argv[i++];
     //
-    // verify that we have enough cmdlet line parameters
+    // verify that we have enough command line parameters
     //
     if ("-showConfig".equals(cmd)) {
       if (argv.length < 1) {
@@ -380,7 +380,7 @@ public class RaidShell extends Configured implements Tool {
         }
       } else {
         exitCode = -1;
-        System.err.println(cmd.substring(1) + ": Unknown cmdlet");
+        System.err.println(cmd.substring(1) + ": Unknown command");
         printUsage("");
       }
     } catch (IllegalArgumentException arge) {
@@ -1519,11 +1519,11 @@ public class RaidShell extends Configured implements Tool {
       System.exit(res);
     } catch (RPC.VersionMismatch v) {
       System.err.println("Version Mismatch between client and server" +
-                         "... cmdlet aborted.");
+                         "... command aborted.");
       System.exit(-1);
     } catch (IOException e) {
       System.err.
-        println("Bad connection to RaidNode or NameNode. cmdlet aborted.");
+        println("Bad connection to RaidNode or NameNode. command aborted.");
       System.err.println(e.getMessage());
       System.exit(-1);
     } finally {
