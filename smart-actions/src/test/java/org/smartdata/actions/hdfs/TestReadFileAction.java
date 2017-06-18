@@ -7,7 +7,8 @@ import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class TestReadFileAction extends ActionMiniCluster {
@@ -31,12 +32,12 @@ public class TestReadFileAction extends ActionMiniCluster {
 
   @Test
   public void testInit() throws IOException {
-    ArrayList<String> args = new ArrayList<>();
-    args.add("Test");
     ReadFileAction readFileAction = new ReadFileAction();
-    readFileAction.init(args.toArray(new String[args.size()]));
-    args.add("1024");
-    readFileAction.init(args.toArray(new String[args.size()]));
+    Map<String, String> args = new HashMap();
+    args.put(ReadFileAction.FILE_PATH, "Test");
+    readFileAction.init(args);
+    args.put(ReadFileAction.BUF_SIZE, "4096");
+    readFileAction.init(args);
   }
 
   @Test
@@ -44,10 +45,11 @@ public class TestReadFileAction extends ActionMiniCluster {
     String filePath = "/testWriteFile/file";
     int size = 66560;
     writeFile(filePath, size);
-    String[] args = {filePath};
     ReadFileAction readFileAction = new ReadFileAction();
     readFileAction.setDfsClient(dfsClient);
     readFileAction.setContext(smartContext);
+    Map<String, String> args = new HashMap();
+    args.put(ReadFileAction.FILE_PATH, filePath);
     readFileAction.init(args);
     readFileAction.run();
 

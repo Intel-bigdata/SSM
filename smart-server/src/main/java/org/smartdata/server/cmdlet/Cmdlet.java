@@ -22,11 +22,11 @@ import org.smartdata.common.CmdletState;
 import org.smartdata.actions.SmartAction;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.metastore.DBAdapter;
-import sun.rmi.runtime.Log;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one
@@ -140,9 +140,10 @@ public class Cmdlet implements Runnable {
         act.run();
         if (act instanceof MoveFileAction
             && act.getActionStatus().isSuccessful() && adapter != null) {
-          String[] args = act.getArguments();
-          if (args.length >= 2) {
-            adapter.updateFileStoragePolicy(args[0], args[1]);
+          Map<String, String> args = act.getArguments();
+          if (args.containsKey(MoveFileAction.STORAGE_POLICY)) {
+            adapter.updateFileStoragePolicy(args.get(MoveFileAction.FILE_PATH),
+                args.get(MoveFileAction.STORAGE_POLICY));
           }
         }
       } catch (Exception e) {

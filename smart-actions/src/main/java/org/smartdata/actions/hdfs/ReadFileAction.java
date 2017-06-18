@@ -26,6 +26,7 @@ import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * An action to read a file. The read content will be discarded immediately, not storing onto disk.
@@ -36,16 +37,16 @@ import java.util.Date;
  * Arguments: file_path [buffer_size, default=64k]
  */
 public class ReadFileAction extends HdfsAction {
-
+  public static final String BUF_SIZE = "-bufSize";
   private String filePath;
   private int bufferSize = 64 * 1024;
 
   @Override
-  public void init(String[] args) {
+  public void init(Map<String, String> args) {
     super.init(args);
-    this.filePath = args[0];
-    if (args.length >= 2) {
-      bufferSize = Integer.valueOf(args[1]);
+    this.filePath = args.get(FILE_PATH);
+    if (args.containsKey(BUF_SIZE)) {
+      bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
   }
 

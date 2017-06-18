@@ -21,21 +21,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
+import java.util.Map;
+
 /**
  * Set storage policy
  */
 public class SetStoragePolicyAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(
       SetStoragePolicyAction.class);
+  public static final String STORAGE_POLICY = "-storagePolicy";
 
   private String fileName;
   private String storagePolicy;
 
   @Override
-  public void init(String[] args) {
+  public void init(Map<String, String> args) {
     super.init(args);
-    this.fileName = args[0];
-    this.storagePolicy = args[1];
+    this.fileName = args.get(FILE_PATH);
+    this.storagePolicy = args.get(STORAGE_POLICY);
   }
 
   @Override

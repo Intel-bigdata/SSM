@@ -34,6 +34,8 @@ import org.smartdata.common.CmdletState;
 import org.smartdata.conf.SmartConf;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -131,7 +133,9 @@ public class TestCmdletPool {
     actions[2] = new CacheFileAction();
     actions[2].setDfsClient(client);
     actions[2].setContext(new SmartContext(smartConf));
-    actions[2].init(new String[]{"/testCacheFile"});
+    Map<String, String> args = new HashMap();
+    args.put(CacheFileAction.FILE_PATH, "/testCacheFile");
+    actions[2].init(args);
     // New Cmdlet
     Cmdlet cmd = new Cmdlet(actions, null);
     cmd.setId(1);

@@ -139,7 +139,7 @@ public class ActionDao {
     parameters.put("aid", actionInfo.getActionId());
     parameters.put("cid", actionInfo.getCmdletId());
     parameters.put("action_name", actionInfo.getActionName());
-    parameters.put("args", actionInfo.getArgs());
+    parameters.put("args", actionInfo.getArgsJsonString());
     parameters.put("result", actionInfo.getResult());
     parameters.put("log", actionInfo.getLog());
     parameters.put("successful", actionInfo.isSuccessful());
@@ -158,7 +158,7 @@ public class ActionDao {
       actionInfo.setActionId(resultSet.getLong("aid"));
       actionInfo.setCmdletId(resultSet.getLong("cid"));
       actionInfo.setActionName(resultSet.getString("action_name"));
-      actionInfo.setArgs(resultSet.getString("args").split(","));
+      actionInfo.setArgsFromJsonString(resultSet.getString("args"));
       actionInfo.setResult(resultSet.getString("result"));
       actionInfo.setLog(resultSet.getString("log"));
       actionInfo.setSuccessful(resultSet.getBoolean("successful"));

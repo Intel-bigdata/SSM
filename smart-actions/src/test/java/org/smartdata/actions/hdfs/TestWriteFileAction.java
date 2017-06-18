@@ -24,14 +24,17 @@ import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestWriteFileAction extends ActionMiniCluster {
   protected void writeFile(String filePath, long length) throws IOException {
-    String[] args = {filePath, String.valueOf(length)};
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.setDfsClient(dfsClient);
     writeFileAction.setContext(smartContext);
+    Map<String, String> args = new HashMap();
+    args.put(WriteFileAction.FILE_PATH, filePath);
+    args.put(WriteFileAction.LENGTH, "" + length);
     writeFileAction.init(args);
     writeFileAction.run();
 
@@ -46,13 +49,13 @@ public class TestWriteFileAction extends ActionMiniCluster {
 
   @Test
   public void testInit() throws IOException {
-    ArrayList<String> args = new ArrayList<>();
-    args.add("/Test");
-    args.add("100000000000000");
+    Map<String, String> args = new HashMap();
+    args.put(WriteFileAction.FILE_PATH, "/Test");
+    args.put(WriteFileAction.LENGTH, "100000000000000");
     WriteFileAction writeFileAction = new WriteFileAction();
-    writeFileAction.init(args.toArray(new String[args.size()]));
-    args.add("1024");
-    writeFileAction.init(args.toArray(new String[args.size()]));
+    writeFileAction.init(args);
+    args.put(WriteFileAction.BUF_SIZE, "1024");
+    writeFileAction.init(args);
   }
 
   @Test

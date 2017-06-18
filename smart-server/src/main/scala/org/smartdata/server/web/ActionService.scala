@@ -25,6 +25,7 @@ import akka.http.scaladsl.server.directives.ParameterDirectives.ParamMagnet
 import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.common.actions.{ActionDescriptor, ActionInfo}
+import org.smartdata.common.cmdlet.CmdletDescriptor
 import org.smartdata.server.SmartServer
 import org.smartdata.server.utils.Constants
 
@@ -40,8 +41,8 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
     .setFinishTime(2048)
     .setResult("this is result")
     .setLog("this is log")
-    .setArgs(Array("abd", "def"))
-      .setProgress(0.5f)
+    .setArgs(CmdletDescriptor.fromCmdletString("test -opt1 val1").getActionArgs(0))
+    .setProgress(0.5f)
     .setResult("objc[41272]: Class JavaLaunchHelper is implemented in both /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/bin/java (0x1075fd4c0) and /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/libinstrument.dylib (0x1076d94e0). One of the two will be used. Which one is undefined.")
     .setLog("objc[41272]: Class JavaLaunchHelper is implemented in both /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/bin/java (0x1075fd4c0) and /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/libinstrument.dylib (0x1076d94e0). One of the two will be used. Which one is undefined.")
   actions.add(builder.build())
@@ -75,7 +76,7 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
             val rule = java.net.URLDecoder.decode(args, "UTF-8")
             val action = new ActionInfo.Builder().setActionName(actionType)
               .setActionId(Math.abs(Random.nextInt()))
-              .setArgs(args.split(" "))
+              .setArgs(CmdletDescriptor.fromCmdletString(actionType + " " + args).getActionArgs(0))
               .setCreateTime(System.currentTimeMillis())
               .setFinished(false)
               .setSuccessful(false).build()

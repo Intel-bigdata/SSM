@@ -25,6 +25,8 @@ import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Test for CheckStorageAction.
@@ -46,8 +48,10 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     out.write(content);
     out.close();
 
+    Map<String, String> args = new HashMap();
+    args.put(CheckStorageAction.FILE_PATH, file);
     // do CheckStorageAction
-    checkStorageAction.init(new String[] {file});
+    checkStorageAction.init(args);
     checkStorageAction.run();
     ActionStatus actionStatus = checkStorageAction.getActionStatus();
     System.out.println(StringUtils.formatTime(actionStatus.getRunningTime()));
@@ -67,8 +71,10 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     final String file = "/testPath/wrongfile";
     dfsClient.mkdirs("/testPath");
 
+    Map<String, String> args = new HashMap();
+    args.put(CheckStorageAction.FILE_PATH, file);
     // do CheckStorageAction
-    checkStorageAction.init(new String[] {file});
+    checkStorageAction.init(args);
     checkStorageAction.run();
     ActionStatus actionStatus = checkStorageAction.getActionStatus();
     Assert.assertTrue(actionStatus.isFinished());

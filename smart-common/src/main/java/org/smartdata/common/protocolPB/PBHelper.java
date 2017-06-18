@@ -22,6 +22,7 @@ import com.google.protobuf.ServiceException;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.common.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
@@ -34,6 +35,7 @@ import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto.Builder;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -125,7 +127,7 @@ public class PBHelper {
         .setProgress(actionInfo.getProgress())
         .setActionId(actionInfo.getActionId())
         .setCmdletId(actionInfo.getCmdletId());
-    builder.addAllArgs(Arrays.asList(actionInfo.getArgs()));
+    builder.addAllArgs(CmdletDescriptor.toArgList(actionInfo.getArgs()));
     return builder.build();
   }
 
@@ -141,9 +143,11 @@ public class PBHelper {
         .setActionId(infoProto.getActionId())
         .setCmdletId(infoProto.getCmdletId());
     List<String> list = infoProto.getArgsList();
-    int size = list.size();
-    String[] strings = list.toArray(new String[size]);
-    builder.setArgs(strings);
+    try {
+      builder.setArgs(CmdletDescriptor.toArgMap(list));
+    } catch (ParseException e) {
+      return null;
+    }
     return builder.build();
   }
 

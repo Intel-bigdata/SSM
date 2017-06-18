@@ -20,6 +20,7 @@ package org.smartdata.actions;
 import org.smartdata.SmartContext;
 
 import java.io.PrintStream;
+import java.util.Map;
 
 /**
  * Smart action, the base class. All actions should inherit this. All actions
@@ -27,7 +28,7 @@ import java.io.PrintStream;
  * are also meant to extend this.
  */
 public abstract class SmartAction {
-  private String[] actionArgs;
+  private Map<String, String> actionArgs;
   private SmartContext context;
   protected String name;
   protected ActionStatus actionStatus;
@@ -69,7 +70,7 @@ public abstract class SmartAction {
    *
    * @param args Action specific
    */
-  public void init(String[] args) {
+  public void init(Map<String, String> args) {
     this.actionArgs = args;
   }
 
@@ -78,12 +79,12 @@ public abstract class SmartAction {
    *
    * @return
    */
-  public String[] getArguments() {
+  public Map<String, String> getArguments() {
     return actionArgs;
   }
 
-  public String[] setArguments(String[] args) {
-    return actionArgs = args.clone();
+  public void setArguments(Map<String, String> args) {
+    actionArgs = args;
   }
 
   protected abstract void execute();

@@ -20,8 +20,6 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.UUID;
-
 /**
  * An action to do strip level erasure code a file. Only for Hadoop 3.x.
  */

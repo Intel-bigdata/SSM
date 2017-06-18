@@ -32,6 +32,7 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metastore.tables.AccessCountTable;
+import org.smartdata.server.utils.JsonUtil;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -1064,7 +1065,7 @@ public class DBAdapter {
         + "VALUES('" + actionInfo.getActionId() + "', '"
         + actionInfo.getCmdletId() + "', '"
         + actionInfo.getActionName() + "', '"
-        + StringUtils.join(actionInfo.getArgs(), ",") + "', '"
+        + JsonUtil.toJsonString(actionInfo.getArgs()) + "', '"
         + actionInfo.getResult() + "', '"
         + actionInfo.getLog() + "', '"
         + booleanToInt(actionInfo.isSuccessful()) + "', '"
@@ -1212,7 +1213,8 @@ public class DBAdapter {
           resultSet.getLong("aid"),
           resultSet.getLong("cid"),
           resultSet.getString("action_name"),
-          resultSet.getString("args").split(","),
+          JsonUtil.toStringStringMap(
+              resultSet.getString("args")),
           resultSet.getString("result"),
           resultSet.getString("log"),
           resultSet.getBoolean("successful"),
