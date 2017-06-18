@@ -26,6 +26,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Test for AllSsdFileAction.
  */
@@ -45,7 +48,9 @@ public class TestAllSsdFileAction extends ActionMiniCluster {
     AllSsdFileAction action = new AllSsdFileAction();
     action.setDfsClient(dfsClient);
     action.setContext(smartContext);
-    action.init(file);
+    Map<String, String> args = new HashMap();
+    args.put(AllSsdFileAction.FILE_PATH, file);
+    action.init(args);
     ActionStatus status = action.getActionStatus();
     action.run();
 

@@ -21,6 +21,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.common.command.CommandDescriptor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * The tests is only about the command string translation.
  */
@@ -28,20 +31,30 @@ public class TestCommandDescriptor {
 
   @Test
   public void testStringToDescriptor() throws Exception {
-    String cmd = "someaction arg1 -arg2 /dir/foo ; cache /testFile; action3";
+    String cmd = "someaction -arg1 -arg2 /dir/foo ; cache -file /testFile; action3";
     CommandDescriptor des = CommandDescriptor.fromCommandString(cmd);
     Assert.assertTrue(des.size() == 3);
     Assert.assertTrue(des.getActionName(2).equals("action3"));
-    Assert.assertTrue(des.getActionArgs(2).length == 0);
+    Assert.assertTrue(des.getActionArgs(2).size() == 0);
   }
 
   @Test
   public void testTrans() throws Exception {
     CommandDescriptor des = new CommandDescriptor();
-    des.addAction("action1", new String[] {"-filepath ", "/dir/foo x\""});
-    des.addAction("action2", new String[] {"1", "2", "3"});
-    des.addAction("action3", new String[] {"ONE_SSD", "\"2016-03-19 19:42:00\""});
-    des.addAction("action4", new String[] {"-len", "123", "C:\\windows\\some.txt"});
+    Map<String, String> args1 = new HashMap<>();
+    args1.put("-filePath", "/dir/foo x");
+    args1.put("-len", "100");
+
+    Map<String, String> args2 = new HashMap<>();
+    args2.put("-version", "");
+
+    Map<String, String> args3 = new HashMap<>();
+    args3.put("-storage", "ONE_SSD");
+    args3.put("-time", "2016-03-19 19:42:00");
+
+    des.addAction("action1", args1);
+    des.addAction("action2", args2);
+    des.addAction("action3", args3);
 
     String cmdString = des.getCommandString();
     CommandDescriptor transDes = new CommandDescriptor(cmdString);

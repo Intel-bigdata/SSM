@@ -32,6 +32,7 @@ import org.smartdata.rule.parser.TranslateResult;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -314,26 +315,17 @@ public class RuleExecutor implements Runnable {
       return 0;
     }
     int nSubmitted = 0;
-    CommandDescriptor template = tr.getCmdDescriptor();
-    int actions = template.size();
+    String template = tr.getCmdDescriptor().toCommandString();
     for (String file : files) {
       if (!exited) {
         try {
-          CommandDescriptor cmd = new CommandDescriptor();
-          for (int actId = 0; actId < actions; actId++) {
-            String[] argOrg = template.getActionArgs(actId);
-            if (argOrg.length == 0) {
-              cmd.addAction(template.getActionName(actId), new String[] {file});
-            } else {
-              cmd.addAction(template.getActionName(actId), argOrg.clone());
-            }
-          }
-          cmd.setRuleId(ruleId);
+          CommandDescriptor cmd = new CommandDescriptor(template, ruleId);
+          cmd.setCommandParameter(CommandDescriptor.HDFS_FILE_PATH, file);
           ruleManager.getCommandExecutor().submitCommand(cmd);
           nSubmitted++;
-        } catch (IOException e) {
+        } catch (IOException | ParseException e) {
           // ignore this and continue submit
-          LOG.error("Failed to submit command ");
+          LOG.error("Failed to submit command for file: " + file, e);
         }
       } else {
         break;

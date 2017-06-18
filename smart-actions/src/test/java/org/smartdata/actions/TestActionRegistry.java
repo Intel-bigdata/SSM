@@ -19,7 +19,6 @@ package org.smartdata.actions;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.actions.hdfs.HdfsActionFactory;
 
 import java.io.IOException;
 import java.util.Set;

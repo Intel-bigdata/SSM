@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Move to Cache Unit Test
@@ -44,7 +46,9 @@ public class TestCacheFile extends ActionMiniCluster {
     CacheFileAction cacheAction = new CacheFileAction();
     cacheAction.setContext(smartContext);
     cacheAction.setDfsClient(dfsClient);
-    cacheAction.init(new String[] {file});
+    Map<String, String> args = new HashMap();
+    args.put(CacheFileAction.FILE_PATH, file);
+    cacheAction.init(args);
     ActionStatus actionStatus = cacheAction.getActionStatus();
     try {
       Assert.assertEquals(false, cacheAction.isCached(file));

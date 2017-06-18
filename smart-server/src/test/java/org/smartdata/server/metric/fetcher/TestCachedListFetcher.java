@@ -47,7 +47,9 @@ import org.junit.Test;
 import java.io.File;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class TestCachedListFetcher {
@@ -152,7 +154,9 @@ public class TestCachedListFetcher {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
-      cacheAction.init(new String[]{path});
+      Map<String, String> args = new HashMap();
+      args.put(CacheFileAction.FILE_PATH, path);
+      cacheAction.init(args);
       cacheAction.run();
       // System.out.println(cacheAction.isCached(path));
     }
@@ -171,7 +175,9 @@ public class TestCachedListFetcher {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       uncacheFileAction.setContext(smartContext);
       uncacheFileAction.setDfsClient(dfsClient);
-      uncacheFileAction.init(new String[]{path});
+      Map<String, String> args = new HashMap();
+      args.put(UncacheFileAction.FILE_PATH, path);
+      uncacheFileAction.init(args);
       uncacheFileAction.run();
     }
     // System.out.println(uncacheFileAction .isCached(path));

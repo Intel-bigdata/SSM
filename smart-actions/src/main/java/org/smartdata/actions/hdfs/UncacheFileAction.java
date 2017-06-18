@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * An action to un-cache a file.
@@ -48,9 +49,9 @@ public class UncacheFileAction extends HdfsAction {
   }
 
   @Override
-  public void init(String[] args) {
+  public void init(Map<String, String> args) {
     super.init(args);
-    fileName = args[0];
+    fileName = args.get(FILE_PATH);
   }
 
   @Override

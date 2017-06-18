@@ -25,6 +25,9 @@ import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.hdfs.move.MoverStatus;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Test for MoveFileAction.
  */
@@ -45,14 +48,19 @@ public class TestMoveFileAction extends ActionMiniCluster {
     out2.close();
 
     // schedule move to ARCHIVE or SSD
-    MoveFileAction action1 = new MoveFileAction();
+    ArchiveFileAction action1 = new ArchiveFileAction();
     action1.setDfsClient(dfsClient);
     action1.setContext(smartContext);
-    action1.init(file1, "COLD");
-    MoveFileAction action2 = new MoveFileAction();
+    Map<String, String> args1 = new HashMap();
+    args1.put(ArchiveFileAction.FILE_PATH, file1);
+    action1.init(args1);
+
+    AllSsdFileAction action2 = new AllSsdFileAction();
     action2.setDfsClient(dfsClient);
     action2.setContext(smartContext);
-    action2.init(file2, "ALL_SSD");
+    Map<String, String> args2 = new HashMap();
+    args2.put(AllSsdFileAction.FILE_PATH, file2);
+    action2.init(args2);
     ActionStatus status1 = action1.getActionStatus();
     ActionStatus status2 = action2.getActionStatus();
 
@@ -115,7 +123,10 @@ public class TestMoveFileAction extends ActionMiniCluster {
     MoveFileAction moveFileAction = new MoveFileAction();
     moveFileAction.setDfsClient(dfsClient);
     moveFileAction.setContext(smartContext);
-    moveFileAction.init(dir, storageType);
+    Map<String, String> args = new HashMap();
+    args.put(MoveFileAction.FILE_PATH, dir);
+    args.put(MoveFileAction.STORAGE_POLICY, storageType);
+    moveFileAction.init(args);
     ActionStatus status = moveFileAction.getActionStatus();
     moveFileAction.run();
 
@@ -146,7 +157,10 @@ public class TestMoveFileAction extends ActionMiniCluster {
     MoveFileAction moveFileAction = new MoveFileAction();
     moveFileAction.setDfsClient(dfsClient);
     moveFileAction.setContext(smartContext);
-    moveFileAction.init(dir, "ALL_SSD");
+    Map<String, String> args = new HashMap();
+    args.put(MoveFileAction.FILE_PATH, dir);
+    args.put(MoveFileAction.STORAGE_POLICY, "ALL_SSD");
+    moveFileAction.init(args);
     ActionStatus status = moveFileAction.getActionStatus();
     try {
       moveFileAction.run();

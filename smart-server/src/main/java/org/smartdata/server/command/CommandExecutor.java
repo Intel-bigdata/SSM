@@ -513,17 +513,18 @@ public class CommandExecutor implements Runnable, Service {
     ActionInfo current;
     // Check if any files are in fileLock
     for (int index = 0; index < commandDescriptor.size(); index++) {
-      String[] args = commandDescriptor.getActionArgs(index);
-      if (args != null && args.length >= 1) {
-        if (fileLock.containsKey(args[0])) {
-          LOG.warn("Warning: Other actions are processing {}!", args[0]);
+      Map<String, String> args = commandDescriptor.getActionArgs(index);
+      if (args != null && args.size() >= 1) {
+        String file = args.get(CommandDescriptor.HDFS_FILE_PATH);
+        if (file != null && fileLock.containsKey(file)) {
+          LOG.warn("Warning: Other actions are processing {}!", file);
           throw new IOException();
         }
       }
     }
     // Create actioninfos and add file to file locks
     for (int index = 0; index < commandDescriptor.size(); index++) {
-      String[] args = commandDescriptor.getActionArgs(index);
+      Map<String, String> args = commandDescriptor.getActionArgs(index);
       current = new ActionInfo(maxActionId, cid,
           commandDescriptor.getActionName(index),
           args, "", "",
@@ -607,8 +608,11 @@ public class CommandExecutor implements Runnable, Service {
     }
     commandHashSet.put(cmdinfo.getParameters(), cmdinfo.getCid());
     for (ActionInfo actionInfo: actionInfos) {
-      String[] args = actionInfo.getArgs();
-      fileLock.put(args[0], actionInfo.getActionId());
+      Map<String, String> args = actionInfo.getArgs();
+      String file = args.get(CommandDescriptor.HDFS_FILE_PATH);
+      if (file != null) {
+        fileLock.put(file, actionInfo.getActionId());
+      }
     }
     return cid;
   }
@@ -743,9 +747,12 @@ public class CommandExecutor implements Runnable, Service {
         if (actionPool.containsKey(actionInfo.getActionId())) {
           // Remove from actionPool
           actionPool.remove(actionInfo.getActionId());
-          String[] args = actionInfo.getArgs();
-          if (args != null && args.length >= 1 && fileLock.containsKey(args[0])) {
-            fileLock.remove(args[0]);
+          Map<String, String> args = actionInfo.getArgs();
+          if (args != null && args.size() >= 1) {
+            String file = args.get(CommandDescriptor.HDFS_FILE_PATH);
+            if (file != null && fileLock.containsKey(file)) {
+              fileLock.remove(file);
+            }
           }
         }
       }
