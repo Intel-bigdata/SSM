@@ -92,16 +92,16 @@ public class RuleInfoRepo {
   }
 
   public boolean updateRuleInfo(RuleState rs, long lastCheckTime,
-      long checkedCount, int commandsGen) throws IOException {
+      long checkedCount, int cmdletsGen) throws IOException {
     lockWrite();
     try {
       boolean ret = true;
       changeRuleState(rs, false);
-      ruleInfo.updateRuleInfo(rs, lastCheckTime, checkedCount, commandsGen);
+      ruleInfo.updateRuleInfo(rs, lastCheckTime, checkedCount, cmdletsGen);
       if (dbAdapter != null) {
         try {
           ret = dbAdapter.updateRuleInfo(ruleInfo.getId(),
-              rs, lastCheckTime, checkedCount, commandsGen);
+              rs, lastCheckTime, checkedCount, cmdletsGen);
         } catch (SQLException e) {
           throw new IOException(ruleInfo.toString(), e);
         }

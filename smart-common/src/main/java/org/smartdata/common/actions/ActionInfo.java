@@ -20,7 +20,7 @@ package org.smartdata.common.actions;
 
 public class ActionInfo {
   private long actionId;
-  private long commandId;
+  private long cmdletId;
   private String actionName;
   private String[] args;
   private String result;
@@ -37,12 +37,12 @@ public class ActionInfo {
 
   }
 
-  public ActionInfo(long actionId, long commandId, String actionName,
+  public ActionInfo(long actionId, long cmdletId, String actionName,
                     String[] args, String result, String log,
                     boolean successful, long createTime, boolean finished,
                     long finishTime, float progress) {
     this.actionId = actionId;
-    this.commandId = commandId;
+    this.cmdletId = cmdletId;
     this.actionName = actionName;
     this.args = args;
     this.result = result;
@@ -62,12 +62,12 @@ public class ActionInfo {
     this.actionId = actionId;
   }
 
-  public long getCommandId() {
-    return commandId;
+  public long getCmdletId() {
+    return cmdletId;
   }
 
-  public void setCommandId(long commandId) {
-    this.commandId = commandId;
+  public void setCmdletId(long cmdletId) {
+    this.cmdletId = cmdletId;
   }
 
   public String getActionName() {
@@ -148,7 +148,7 @@ public class ActionInfo {
 
   public static class Builder {
     private long actionId;
-    private long commandId;
+    private long cmdletId;
     private String actionName;
     private String[] args;
     private String result;
@@ -167,8 +167,8 @@ public class ActionInfo {
       return this;
     }
 
-    public Builder setCommandId(long commandId) {
-      this.commandId = commandId;
+    public Builder setCmdletId(long cmdletId) {
+      this.cmdletId = cmdletId;
       return this;
     }
 
@@ -222,7 +222,7 @@ public class ActionInfo {
     }
 
     public ActionInfo build() {
-      return new ActionInfo(actionId,commandId,actionName, args, result,
+      return new ActionInfo(actionId,cmdletId,actionName, args, result,
           log, successful, createTime, finished, finishTime, progress);
     }
   }

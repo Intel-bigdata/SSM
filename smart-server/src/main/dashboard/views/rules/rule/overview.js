@@ -67,12 +67,12 @@ angular.module('dashboard')
           });
         });
 
-      $scope.commands = [];
-      models.$get.ruleCommands($scope.rule.id)
-        .then(function (commands0) {
-          $scope.commands = commands0.$data();
-          commands0.$subscribe($scope, function (commands) {
-            $scope.commands = commands;
+      $scope.cmdlets = [];
+      models.$get.ruleCmdlets($scope.rule.id)
+        .then(function (cmdlets0) {
+          $scope.cmdlets = cmdlets0.$data();
+          cmdlets0.$subscribe($scope, function (cmdlets) {
+            $scope.cmdlets = cmdlets;
           });
       });
     }])

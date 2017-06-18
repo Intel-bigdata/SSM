@@ -19,7 +19,7 @@ package org.smartdata.actions.alluxio;
 
 public enum AlluxioActionType {
   None(0), // doing nothing
-  External(1), // execute some command lines specified
+  External(1), // execute some cmdlet lines specified
   LOAD(2), // Load file to Alluxio Cache
   FREE(3), // Free file from alluxio
   PERSIST(4), // Persist file to under file system

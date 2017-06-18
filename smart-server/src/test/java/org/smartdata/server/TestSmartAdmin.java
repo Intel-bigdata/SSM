@@ -23,7 +23,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.rule.RuleInfo;
@@ -128,16 +128,16 @@ public class TestSmartAdmin {
       }
       assertTrue(caughtException);
 
-      //test commandInfo
-      long id = ssmClient.submitCommand("cache /foo*");
-      CommandInfo commandInfo = ssmClient.getCommandInfo(id);
-      assertTrue("cache /foo*".equals(commandInfo.getParameters()));
+      //test cmdletInfo
+      long id = ssmClient.submitCmdlet("cache /foo*");
+      CmdletInfo cmdletInfo = ssmClient.getCmdletInfo(id);
+      assertTrue("cache /foo*".equals(cmdletInfo.getParameters()));
 
       //test actioninfo
-      List<Long> aidlist = commandInfo.getAids();
+      List<Long> aidlist = cmdletInfo.getAids();
       assertNotEquals(0,aidlist.size());
       ActionInfo actionInfo = ssmClient.getActionInfo(aidlist.get(0));
-      assertEquals(id,actionInfo.getCommandId());
+      assertEquals(id,actionInfo.getCmdletId());
 
       //test listActionInfoOfLastActions
       ssmClient.listActionInfoOfLastActions(2);
@@ -179,7 +179,7 @@ public class TestSmartAdmin {
 //    SmartAdmin admin = new SmartAdmin(conf);
 //    String rule = "file : every 1s | mtime > now - 70day | cache";
 //    String cmd = "read /hadoopdbg";
-//    long id = admin.submitCommand(cmd);
+//    long id = admin.submitCmdlet(cmd);
 //
 //    Thread.sleep(1000);
 //    Thread.sleep(100000);

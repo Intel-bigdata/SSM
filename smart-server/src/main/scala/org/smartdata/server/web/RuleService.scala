@@ -19,7 +19,7 @@ package org.smartdata.server.web
 
 import java.util
 
-import org.smartdata.common.command.CommandInfo
+import org.smartdata.common.cmdlet.CmdletInfo
 import org.smartdata.server.SmartServer
 
 import scala.collection.JavaConverters._
@@ -29,7 +29,7 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.common.actions.ActionType
-import org.smartdata.common.CommandState
+import org.smartdata.common.CmdletState
 import org.smartdata.common.rule.{RuleInfo, RuleState}
 import org.smartdata.server.utils.JsonUtil
 
@@ -72,15 +72,15 @@ class RuleService(ssmServer: SmartServer) extends BasicService {
     path("errors") {
       complete("{\"time\" : \"0\", \"error\" : \"\"}")
     } ~
-    path("commands") {
+    path("cmdlets") {
       val smap1 = new util.HashMap[String, String]
       smap1.put("_FILE_PATH_", "/testCacheFile")
-      val command1 = new CommandInfo(0, 1,
-        CommandState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l)
-      val command2 = new CommandInfo(1, 1, CommandState.PENDING,
+      val cmdlet1 = new CmdletInfo(0, 1,
+        CmdletState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l)
+      val cmdlet2 = new CmdletInfo(1, 1, CmdletState.PENDING,
         JsonUtil.toJsonString(smap1), 123178333l, 232444994l)
       try {
-        complete(gson.toJson(ssmServer.getCommandExecutor.listCommandsInfo(ruleId, null)))
+        complete(gson.toJson(ssmServer.getCmdletExecutor.listCmdletsInfo(ruleId, null)))
       } catch {
         case e: Exception => failWith(e)
       }

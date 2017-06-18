@@ -20,15 +20,15 @@ package org.smartdata.common.protocolPB;
 
 import com.google.protobuf.ServiceException;
 import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
-import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
+import org.smartdata.common.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto.Builder;
@@ -78,12 +78,12 @@ public class PBHelper {
         .setState(convert(proto.getRulestateProto())).build();
   }
 
-  public static CommandInfo convert(CommandInfoProto proto) {
+  public static CmdletInfo convert(CmdletInfoProto proto) {
     // TODO replace actionType with aids
-    CommandInfo.Builder builder = CommandInfo.newBuilder();
+    CmdletInfo.Builder builder = CmdletInfo.newBuilder();
     builder.setCid(proto.getCid())
         .setRid(proto.getRid())
-        .setState(CommandState.fromValue(proto.getState()))
+        .setState(CmdletState.fromValue(proto.getState()))
         .setParameters(proto.getParameters())
         .setGenerateTime(proto.getGenerateTime())
         .setStateChangedTime(proto.getStateChangedTime());
@@ -92,9 +92,9 @@ public class PBHelper {
     return builder.build();
   }
 
-  public static CommandInfoProto convert(CommandInfo info) {
+  public static CmdletInfoProto convert(CmdletInfo info) {
     // TODO replace actionType with aids
-    CommandInfoProto.Builder builder = CommandInfoProto.newBuilder();
+    CmdletInfoProto.Builder builder = CmdletInfoProto.newBuilder();
     builder.setCid(info.getCid())
         .setRid(info.getRid())
         .setState(info.getState().getValue())
@@ -124,7 +124,7 @@ public class PBHelper {
         .setFinishTime(actionInfo.getFinishTime())
         .setProgress(actionInfo.getProgress())
         .setActionId(actionInfo.getActionId())
-        .setCommandId(actionInfo.getCommandId());
+        .setCmdletId(actionInfo.getCmdletId());
     builder.addAllArgs(Arrays.asList(actionInfo.getArgs()));
     return builder.build();
   }
@@ -139,7 +139,7 @@ public class PBHelper {
         .setFinished(infoProto.getFinished())
         .setFinishTime(infoProto.getFinishTime())
         .setActionId(infoProto.getActionId())
-        .setCommandId(infoProto.getCommandId());
+        .setCmdletId(infoProto.getCmdletId());
     List<String> list = infoProto.getArgsList();
     int size = list.size();
     String[] strings = list.toArray(new String[size]);

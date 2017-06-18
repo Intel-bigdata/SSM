@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.command;
+package org.smartdata.server.cmdlet;
 
 import org.smartdata.actions.hdfs.MoveFileAction;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.actions.SmartAction;
 
 import java.io.IOException;
@@ -29,22 +29,22 @@ import org.smartdata.server.metastore.DBAdapter;
 import sun.rmi.runtime.Log;
 
 /**
- * Action is the minimum unit of execution. A command can contain more than one
- * actions. Different commands can be executed at the same time, but actions
- * belonging to a command can only be executed in sequence.
+ * Action is the minimum unit of execution. A cmdlet can contain more than one
+ * actions. Different cmdlets can be executed at the same time, but actions
+ * belonging to a cmdlet can only be executed in sequence.
  *
- * The command get executed when rule conditions fulfills.
+ * The cmdlet get executed when rule conditions fulfills.
  */
-public class Command implements Runnable {
-  static final Logger LOG = LoggerFactory.getLogger(Command.class);
+public class Cmdlet implements Runnable {
+  static final Logger LOG = LoggerFactory.getLogger(Cmdlet.class);
 
-  private long ruleId;   // id of the rule that this command comes from
+  private long ruleId;   // id of the rule that this cmdlet comes from
   private long id;
-  private CommandState state = CommandState.NOTINITED;
+  private CmdletState state = CmdletState.NOTINITED;
   private SmartAction[] actions;
   private String parameters;
   private int currentActionIndex;
-  private CommandExecutor.Callback cb;
+  private CmdletExecutor.Callback cb;
   private boolean running;
 
   private long createTime;
@@ -52,15 +52,15 @@ public class Command implements Runnable {
   private long ExecutionCompleteTime;
   private DBAdapter adapter;
 
-  private Command() {
+  private Cmdlet() {
 
   }
 
-  public Command(SmartAction[] actions, CommandExecutor.Callback cb) {
+  public Cmdlet(SmartAction[] actions, CmdletExecutor.Callback cb) {
     this(actions, cb, null);
   }
 
-  public Command(SmartAction[] actions, CommandExecutor.Callback cb,
+  public Cmdlet(SmartAction[] actions, CmdletExecutor.Callback cb,
       DBAdapter adapter) {
     this.actions = actions.clone();
     this.currentActionIndex = 0;
@@ -93,11 +93,11 @@ public class Command implements Runnable {
     this.parameters = parameters;
   }
 
-  public CommandState getState() {
+  public CmdletState getState() {
     return state;
   }
 
-  public void setState(CommandState state) {
+  public void setState(CmdletState state) {
     this.state = state;
   }
 
@@ -118,8 +118,8 @@ public class Command implements Runnable {
   }
 
   public void stop() throws IOException {
-    LOG.info("Command {} Stopped!", toString());
-    //TODO Force Stop Command
+    LOG.info("Cmdlet {} Stopped!", toString());
+    //TODO Force Stop Cmdlet
     running = false;
   }
 
@@ -148,7 +148,7 @@ public class Command implements Runnable {
       } catch (Exception e) {
         LOG.error("Action {} running error! {}", act.getActionStatus().getId(), e);
         act.getActionStatus().end();
-        this.setState(CommandState.FAILED);
+        this.setState(CmdletState.FAILED);
         break;
       }
       // Run actions sequentially!
@@ -161,7 +161,7 @@ public class Command implements Runnable {
           }
         }
       }
-      this.setState(CommandState.DONE);
+      this.setState(CmdletState.DONE);
     }
   }
 

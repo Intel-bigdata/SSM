@@ -15,20 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.command;
+package org.smartdata.server.cmdlet;
 
 
 /**
  * CommanStatus : the return type of GETCOMMANDSTATUS.
  */
-public class CommandStatus {
-  // Percentage of the execution percentage of the command, ranging from 0 to 100
+public class CmdletStatus {
+  // Percentage of the execution percentage of the cmdlet, ranging from 0 to 100
   private Integer percentage;
-  // Exit code for the command
+  // Exit code for the cmdlet
   private Integer exitCode;
-  // Denote whether the command has been finished, true for finished, false for unfinished
+  // Denote whether the cmdlet has been finished, true for finished, false for unfinished
   private Boolean isFinished;
-  // Output of the command
+  // Output of the cmdlet
   private OutPutType output;
 
   class OutPutType {
@@ -57,7 +57,7 @@ public class CommandStatus {
     }
   }
 
-  public CommandStatus() {
+  public CmdletStatus() {
     percentage = null;
     exitCode = null;
     isFinished = null;

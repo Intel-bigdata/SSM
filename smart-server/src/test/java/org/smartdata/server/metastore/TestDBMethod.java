@@ -24,9 +24,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.metrics.FileAccessEvent;
@@ -232,51 +232,51 @@ public class TestDBMethod {
   }
 
   @Test
-  public void testInsertCommandsTable() throws Exception {
+  public void testInsertCmdletsTable() throws Exception {
     reInit();
-    CommandInfo command1 = new CommandInfo(0, 1,
-        CommandState.EXECUTING, "test", 123123333l, 232444444l);
-    CommandInfo command2 = new CommandInfo(0, 78,
-        CommandState.PAUSED, "tt", 123178333l, 232444994l);
-    CommandInfo[] commands = {command1, command2};
-    dbAdapter.insertCommandsTable(commands);
+    CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
+        CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+    CmdletInfo cmdlet2 = new CmdletInfo(0, 78,
+        CmdletState.PAUSED, "tt", 123178333l, 232444994l);
+    CmdletInfo[] cmdlets = {cmdlet1, cmdlet2};
+    dbAdapter.insertCmdletsTable(cmdlets);
     String cidCondition = ">= 2 ";
     String ridCondition = "= 78 ";
-    CommandState state = null;
-    CommandState state1 = CommandState.PAUSED;
-    List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, state);
-    Assert.assertTrue(com.get(0).getState() == CommandState.PAUSED);
-    List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(null,
+    CmdletState state = null;
+    CmdletState state1 = CmdletState.PAUSED;
+    List<CmdletInfo> com = dbAdapter.getCmdletsTableItem(cidCondition, ridCondition, state);
+    Assert.assertTrue(com.get(0).getState() == CmdletState.PAUSED);
+    List<CmdletInfo> com1 = dbAdapter.getCmdletsTableItem(null,
         null, state1);
-    Assert.assertTrue(com1.get(0).getState() == CommandState.PAUSED);
+    Assert.assertTrue(com1.get(0).getState() == CmdletState.PAUSED);
   }
 
   @Test
-  public void testUpdateCommand() throws Exception {
+  public void testUpdateCmdlet() throws Exception {
     reInit();
-    long commandId = 0;
-    commandId = dbAdapter.getMaxCommandId();
-    System.out.printf("CommandID = %d\n", commandId);
-    CommandInfo command1 = new CommandInfo(0, 1,
-        CommandState.PENDING, "test", 123123333l, 232444444l);
-    CommandInfo command2 = new CommandInfo(1, 78,
-        CommandState.PENDING, "tt", 123178333l, 232444994l);
-    CommandInfo[] commands = {command1, command2};
-    dbAdapter.insertCommandsTable(commands);
-    commandId = dbAdapter.getMaxCommandId();
-    System.out.printf("CommandID = %d\n", commandId);
+    long cmdletId = 0;
+    cmdletId = dbAdapter.getMaxCmdletId();
+    System.out.printf("CmdletID = %d\n", cmdletId);
+    CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
+        CmdletState.PENDING, "test", 123123333l, 232444444l);
+    CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
+        CmdletState.PENDING, "tt", 123178333l, 232444994l);
+    CmdletInfo[] cmdlets = {cmdlet1, cmdlet2};
+    dbAdapter.insertCmdletsTable(cmdlets);
+    cmdletId = dbAdapter.getMaxCmdletId();
+    System.out.printf("CmdletID = %d\n", cmdletId);
     String cidCondition = ">= 1 ";
     String ridCondition = "= 78 ";
-    List<CommandInfo> com = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.PENDING);
-    commandId = dbAdapter.getMaxCommandId();
-    Assert.assertTrue(commandId == commands.length + 1);
-    for (CommandInfo cmd : com) {
+    List<CmdletInfo> com = dbAdapter.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.PENDING);
+    cmdletId = dbAdapter.getMaxCmdletId();
+    Assert.assertTrue(cmdletId == cmdlets.length + 1);
+    for (CmdletInfo cmd : com) {
       // System.out.printf("Cid = %d \n", cmd.getCid());
-      dbAdapter.updateCommandStatus(cmd.getCid(), cmd.getRid(), CommandState.DONE);
+      dbAdapter.updateCmdletStatus(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
     }
-    List<CommandInfo> com1 = dbAdapter.getCommandsTableItem(cidCondition, ridCondition, CommandState.DONE);
+    List<CmdletInfo> com1 = dbAdapter.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 1);
-    Assert.assertTrue(com1.get(0).getState() == CommandState.DONE);
+    Assert.assertTrue(com1.get(0).getState() == CmdletState.DONE);
   }
 
   @Test

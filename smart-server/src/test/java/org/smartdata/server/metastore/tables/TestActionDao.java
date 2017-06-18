@@ -48,7 +48,7 @@ public class TestActionDao extends TestDaoUtil {
         100);
     actionDao.insert(actionInfo);
     actionInfo = actionDao.getById(1l);
-    Assert.assertTrue(actionInfo.getCommandId() == 1);
+    Assert.assertTrue(actionInfo.getCmdletId() == 1);
   }
 
   @Test

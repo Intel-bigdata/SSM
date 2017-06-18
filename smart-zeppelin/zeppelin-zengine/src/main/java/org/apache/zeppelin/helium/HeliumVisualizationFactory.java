@@ -278,7 +278,7 @@ public class HeliumVisualizationFactory {
     if (visualizationModulePath != null) {
       if (visModuleInstallPath.exists()) {
         // when zeppelin-vis and zeppelin-table package is published to npm repository
-        // we don't need to remove module because npm install command will take care
+        // we don't need to remove module because npm install cmdlet will take care
         // dependency version change. However, when two dependencies are copied manually
         // into node_modules directory, changing vis package version results inconsistent npm
         // install behavior.

@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.command;
+package org.smartdata.server.cmdlet;
 
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.command.CommandDescriptor;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.metastore.DBAdapter;
 
@@ -35,102 +35,102 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * CommandExecutor Unit Test
+ * CmdletExecutor Unit Test
  */
-public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
+public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
 
   @Test
   public void testCreateFromDescriptor() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
-    CommandDescriptor commandDescriptor = generateCommandDescriptor();
-    List<ActionInfo> actionInfos = ssm.getCommandExecutor().createActionInfos(commandDescriptor, 0);
-    Assert.assertTrue(commandDescriptor.size() == actionInfos.size());
+    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
+    List<ActionInfo> actionInfos = ssm.getCmdletExecutor().createActionInfos(cmdletDescriptor, 0);
+    Assert.assertTrue(cmdletDescriptor.size() == actionInfos.size());
   }
 
   @Test
   public void testfileLock() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
-    ssm.getCommandExecutor()
-        .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile");
+    ssm.getCmdletExecutor()
+        .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile");
     // Cause Exception with the same files
     try {
-      ssm.getCommandExecutor()
-          .submitCommand("onessd /testMoveFile/file1 ; uncache /testCacheFile");
+      ssm.getCmdletExecutor()
+          .submitCmdlet("onessd /testMoveFile/file1 ; uncache /testCacheFile");
     } catch (IOException e) {
       Assert.assertTrue(true);
     }
   }
 
  /* @Test
-  public void testCommandExecutor() throws Exception {
+  public void testCmdletExecutor() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
     generateTestCases();
-    testCommandExecutorHelper();
+    testCmdletExecutorHelper();
   }*/
 
   @Test
   public void testAPI() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
-    Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
-    ssm.getCommandExecutor()
-        .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024");
-    // ssm.getCommandExecutor().submitCommand(commandDescriptor);
+    Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
+    ssm.getCmdletExecutor()
+        .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024");
+    // ssm.getCmdletExecutor().submitCmdlet(cmdletDescriptor);
     Thread.sleep(1200);
-    List<ActionInfo> actionInfos = ssm.getCommandExecutor().listNewCreatedActions(10);
+    List<ActionInfo> actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
     Assert.assertTrue(actionInfos.size() > 0);
-    testCommandExecutorHelper();
+    testCmdletExecutorHelper();
   }
 
   @Test
-  public void wrongCommand() throws Exception {
+  public void wrongCmdlet() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
-    Assert.assertTrue(ssm.getCommandExecutor().listActionsSupported().size() > 0);
+    Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
     try {
-      ssm.getCommandExecutor()
-          .submitCommand("allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug");
+      ssm.getCmdletExecutor()
+          .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug");
     } catch (IOException e) {
-      System.out.println("Wrong command is detected!");
+      System.out.println("Wrong cmdlet is detected!");
       Assert.assertTrue(true);
     }
     Thread.sleep(1200);
-    List<ActionInfo> actionInfos = ssm.getCommandExecutor().listNewCreatedActions(10);
+    List<ActionInfo> actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
     Assert.assertTrue(actionInfos.size() == 0);
-    // testCommandExecutorHelper();
+    // testCmdletExecutorHelper();
   }
 
   @Test
-  public void testGetListDeleteCommand() throws Exception {
+  public void testGetListDeleteCmdlet() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestCases();
     Assert.assertTrue(ssm
-        .getCommandExecutor()
-        .listCommandsInfo(1, null).size() == 1);
+        .getCmdletExecutor()
+        .listCmdletsInfo(1, null).size() == 1);
     Assert.assertTrue(ssm
-        .getCommandExecutor().getCommandInfo(1) != null);
-    ssm.getCommandExecutor().deleteCommand(1);
+        .getCmdletExecutor().getCmdletInfo(1) != null);
+    ssm.getCmdletExecutor().deleteCmdlet(1);
     Assert.assertTrue(ssm
-        .getCommandExecutor()
-        .listCommandsInfo(1, null).size() == 0);
+        .getCmdletExecutor()
+        .listCmdletsInfo(1, null).size() == 0);
   }
 
 /*  @Test
-  public void testActivateDisableCommand() throws Exception {
+  public void testActivateDisableCmdlet() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
     generateTestCases();
     // Activate 1
-    ssm.getCommandExecutor().activateCommand(1);
-    Assert.assertTrue(ssm.getCommandExecutor().inCache(1));
+    ssm.getCmdletExecutor().activateCmdlet(1);
+    Assert.assertTrue(ssm.getCmdletExecutor().inCache(1));
     // Disable 1
-    CommandInfo cmdinfo = ssm.getCommandExecutor().getCommandInfo(1);
-    if (cmdinfo.getState() != CommandState.DONE) {
-      ssm.getCommandExecutor().disableCommand(1);
-      Assert.assertTrue(cmdinfo.getState() == CommandState.DISABLED);
+    CmdletInfo cmdinfo = ssm.getCmdletExecutor().getCmdletInfo(1);
+    if (cmdinfo.getState() != CmdletState.DONE) {
+      ssm.getCmdletExecutor().disableCmdlet(1);
+      Assert.assertTrue(cmdinfo.getState() == CmdletState.DISABLED);
     }
   }*/
 
@@ -155,39 +155,39 @@ public class TestCommandExecutor extends TestEmptyMiniSmartCluster {
     dfs.mkdirs(dir3);
   }
 
-  private CommandDescriptor generateCommandDescriptor() throws Exception {
+  private CmdletDescriptor generateCmdletDescriptor() throws Exception {
     String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024";
-    CommandDescriptor commandDescriptor = new CommandDescriptor(cmd);
-    commandDescriptor.setRuleId(1);
-    return commandDescriptor;
+    CmdletDescriptor cmdletDescriptor = new CmdletDescriptor(cmd);
+    cmdletDescriptor.setRuleId(1);
+    return cmdletDescriptor;
   }
 
   private void generateTestCases() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
-    CommandDescriptor commandDescriptor = generateCommandDescriptor();
-    CommandInfo commandInfo = new CommandInfo(0, commandDescriptor.getRuleId(),
-        CommandState.PENDING, commandDescriptor.getCommandString(),
+    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
+    CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
+        CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
         123178333l, 232444994l);
-    CommandInfo[] commands = {commandInfo};
-    dbAdapter.insertCommandsTable(commands);
+    CmdletInfo[] cmdlets = {cmdletInfo};
+    dbAdapter.insertCmdletsTable(cmdlets);
   }
 
-  private void testCommandExecutorHelper() throws Exception {
+  private void testCmdletExecutorHelper() throws Exception {
     DBAdapter dbAdapter = ssm.getDBAdapter();
     while (true) {
       Thread.sleep(2000);
-      int current = ssm.getCommandExecutor().cacheSize();
-      System.out.printf("Command CacheObject size = %d\n ", current);
+      int current = ssm.getCmdletExecutor().cacheSize();
+      System.out.printf("Cmdlet CacheObject size = %d\n ", current);
       if (current == 0) {
         break;
       }
     }
-    List<CommandInfo> com = dbAdapter.getCommandsTableItem(null,
-        null, CommandState.DONE);
-    System.out.printf("CommandInfos Size = %d\n", com.size());
+    List<CmdletInfo> com = dbAdapter.getCmdletsTableItem(null,
+        null, CmdletState.DONE);
+    System.out.printf("CmdletInfos Size = %d\n", com.size());
     // Check Status
     Assert.assertTrue(com.size() == 1);
-    Assert.assertTrue(com.get(0).getState() == CommandState.DONE);
+    Assert.assertTrue(com.get(0).getState() == CmdletState.DONE);
     List<ActionInfo> actionInfos = dbAdapter
         .getActionsTableItem(null, null);
     System.out.printf("ActionInfos Size = %d\n", actionInfos.size());

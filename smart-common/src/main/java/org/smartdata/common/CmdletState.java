@@ -15,26 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.admin.tools;
+package org.smartdata.common;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.shell.Command;
-import org.apache.hadoop.fs.shell.CommandFactory;
+/**
+ * The possible state that a cmdlet can be in.
+ */
+public enum CmdletState {
+  NOTINITED(0),
+  PENDING(1), // Ready for execution
+  EXECUTING(2), // Still running
+  PAUSED(3),
+  DONE(4), // Execution successful
+  CANCELLED(5),
+  DISABLED(6), // Disable this Cmdlet, kill all executing actions
+  DRYRUN(7), // TODO Don't Run, but keep status
+  FAILED(8);  // Running cmdlet failed
 
-import java.io.IOException;
+  private int value;
 
-public class SmartCommand extends Command {
-  public static void registerCommands(CommandFactory factory) {
-    factory.registerCommands(RuleCommands.class);
+  private CmdletState(int value) {
+    this.value = value;
+  }
+  public static CmdletState fromValue(int value) {
+    for (CmdletState r : values()) {
+      if (value == r.getValue()) {
+        return r;
+      }
+    }
+    return null;
   }
 
-  @Override
-  public String getCommandName() {
-    return getName();
-  }
-
-  @Override
-  protected void run(Path path) throws IOException {
-    throw new RuntimeException("not supposed to get here");
+  public int getValue() {
+    return value;
   }
 }

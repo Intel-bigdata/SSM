@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.command.CommandDescriptor;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.server.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.ExecutionContext;
@@ -278,7 +278,7 @@ public class RuleExecutor implements Runnable {
 
       List<String> files = executeFileRuleQuery();
       long endCheckTime = System.currentTimeMillis();
-      int numCmdSubmitted = submitCommands(files, rid);
+      int numCmdSubmitted = submitCmdlets(files, rid);
       ruleManager.updateRuleInfo(rid, null, timeNow(), 1, numCmdSubmitted);
       if (exited) {
         exitSchedule();
@@ -309,17 +309,17 @@ public class RuleExecutor implements Runnable {
     temp[1] += "The exception is created deliberately";
   }
 
-  private int submitCommands(List<String> files, long ruleId) {
-    if (ruleManager.getCommandExecutor() == null) {
+  private int submitCmdlets(List<String> files, long ruleId) {
+    if (ruleManager.getCmdletExecutor() == null) {
       return 0;
     }
     int nSubmitted = 0;
-    CommandDescriptor template = tr.getCmdDescriptor();
+    CmdletDescriptor template = tr.getCmdDescriptor();
     int actions = template.size();
     for (String file : files) {
       if (!exited) {
         try {
-          CommandDescriptor cmd = new CommandDescriptor();
+          CmdletDescriptor cmd = new CmdletDescriptor();
           for (int actId = 0; actId < actions; actId++) {
             String[] argOrg = template.getActionArgs(actId);
             if (argOrg.length == 0) {
@@ -329,11 +329,11 @@ public class RuleExecutor implements Runnable {
             }
           }
           cmd.setRuleId(ruleId);
-          ruleManager.getCommandExecutor().submitCommand(cmd);
+          ruleManager.getCmdletExecutor().submitCmdlet(cmd);
           nSubmitted++;
         } catch (IOException e) {
           // ignore this and continue submit
-          LOG.error("Failed to submit command ");
+          LOG.error("Failed to submit cmdlet ");
         }
       } else {
         break;

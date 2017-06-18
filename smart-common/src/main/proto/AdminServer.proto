@@ -72,7 +72,7 @@ message ListRulesInfoResponseProto {
 
 message DeleteRuleRequestProto {
   required int64 ruleId = 1;
-  required bool dropPendingCommands = 2;
+  required bool dropPendingCmdlets = 2;
 }
 
 message DeleteRuleResponseProto {
@@ -87,13 +87,13 @@ message ActivateRuleResponseProto {
 
 message DisableRuleRequestProto {
   required int64 ruleId = 1;
-  required bool dropPendingCommands = 2;
+  required bool dropPendingCmdlets = 2;
 }
 
 message DisableRuleResponseProto {
 }
 
-message CommandInfoProto {
+message CmdletInfoProto {
   required int64 cid = 1;
   required int64 rid = 2;
   repeated int64 aids = 3;
@@ -103,47 +103,47 @@ message CommandInfoProto {
   required string parameters = 7;
 }
 
-message GetCommandInfoRequestProto {
-  required int64 commandID = 1;
+message GetCmdletInfoRequestProto {
+  required int64 cmdletID = 1;
 }
 
-message GetCommandInfoResponseProto {
-  required CommandInfoProto commandInfo = 1;
+message GetCmdletInfoResponseProto {
+  required CmdletInfoProto cmdletInfo = 1;
 }
 
-message ListCommandInfoRequestProto {
+message ListCmdletInfoRequestProto {
   required int64 ruleID = 1;
-  required int32 commandState = 2;
+  required int32 cmdletState = 2;
 }
 
-message ListCommandInfoResponseProto {
-  repeated CommandInfoProto commandInfos = 1;
+message ListCmdletInfoResponseProto {
+  repeated CmdletInfoProto cmdletInfos = 1;
 }
 
-message ActivateCommandRequestProto {
-  required int64 commandID = 1;
+message ActivateCmdletRequestProto {
+  required int64 cmdletID = 1;
 }
 
-message ActivateCommandResponseProto {
+message ActivateCmdletResponseProto {
 }
 
-message DisableCommandRequestProto {
-  required int64 commandID = 1;
+message DisableCmdletRequestProto {
+  required int64 cmdletID = 1;
 }
 
-message DisableCommandResponseProto {
+message DisableCmdletResponseProto {
 }
 
-message DeleteCommandRequestProto {
-  required int64 commandID = 1;
+message DeleteCmdletRequestProto {
+  required int64 cmdletID = 1;
 }
 
-message DeleteCommandResponseProto {
+message DeleteCmdletResponseProto {
 }
 
 message ActionInfoProto {
   required int64 actionId = 1;
-  required int64 commandId = 2;
+  required int64 cmdletId = 2;
   required string actionName = 3;
   repeated string args = 4;
   required string result = 5;
@@ -178,11 +178,11 @@ message ActionDescriptorProto {
   required string comment = 4;
 }
 
-message SubmitCommandRequestProto {
+message SubmitCmdletRequestProto {
   required string cmd = 1;
 }
 
-message SubmitCommandResponseProto {
+message SubmitCmdletResponseProto {
   required int64 res = 10;
 }
 
@@ -210,22 +210,22 @@ service protoService {
   returns (ActivateRuleResponseProto);
   rpc disableRule (DisableRuleRequestProto)
   returns (DisableRuleResponseProto);
-  rpc getCommandInfo (GetCommandInfoRequestProto)
-  returns (GetCommandInfoResponseProto);
-  rpc listCommandInfo (ListCommandInfoRequestProto)
-  returns (ListCommandInfoResponseProto);
-  rpc activateCommand (ActivateCommandRequestProto)
-  returns (ActivateCommandResponseProto);
-  rpc disableCommand (DisableCommandRequestProto)
-  returns (DisableCommandResponseProto);
-  rpc deleteCommand (DeleteCommandRequestProto)
-  returns (DeleteCommandResponseProto);
+  rpc getCmdletInfo (GetCmdletInfoRequestProto)
+  returns (GetCmdletInfoResponseProto);
+  rpc listCmdletInfo (ListCmdletInfoRequestProto)
+  returns (ListCmdletInfoResponseProto);
+  rpc activateCmdlet (ActivateCmdletRequestProto)
+  returns (ActivateCmdletResponseProto);
+  rpc disableCmdlet (DisableCmdletRequestProto)
+  returns (DisableCmdletResponseProto);
+  rpc deleteCmdlet (DeleteCmdletRequestProto)
+  returns (DeleteCmdletResponseProto);
   rpc getActionInfo (GetActionInfoRequestProto)
   returns (GetActionInfoResponseProto);
   rpc listActionInfoOfLastActions (ListActionInfoOfLastActionsRequestProto)
   returns (ListActionInfoOfLastActionsResponseProto);
-  rpc submitCommand (SubmitCommandRequestProto)
-  returns (SubmitCommandResponseProto);
+  rpc submitCmdlet (SubmitCmdletRequestProto)
+  returns (SubmitCmdletResponseProto);
   rpc listActionsSupported (ListActionsSupportedRequestProto)
   returns (ListActionsSupportedResponseProto);
 }

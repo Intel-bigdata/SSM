@@ -39,7 +39,7 @@ import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
-import org.smartdata.server.command.CommandExecutor;
+import org.smartdata.server.cmdlet.CmdletExecutor;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.DruidPool;
 import org.smartdata.server.metastore.Util;
@@ -69,7 +69,7 @@ import java.util.Properties;
 public class SmartServer {
   private StatesManager statesManager;
   private RuleManager ruleManager;
-  private CommandExecutor commandExecutor;
+  private CmdletExecutor cmdletExecutor;
   private SmartHttpServer httpServer;
   private SmartRpcServer rpcServer;
   private SmartConf conf;
@@ -96,10 +96,10 @@ public class SmartServer {
         rpcServer = new SmartRpcServer(this, conf);
         statesManager = new StatesManager(this, conf);
         ruleManager = new RuleManager(this, conf); // TODO: to be replaced
-        commandExecutor = new CommandExecutor(this, conf);
+        cmdletExecutor = new CmdletExecutor(this, conf);
         modules.add(statesManager);
         modules.add(ruleManager);
-        modules.add(commandExecutor);
+        modules.add(cmdletExecutor);
         break;
 
       // No module started by default
@@ -117,8 +117,8 @@ public class SmartServer {
     return ruleManager;
   }
 
-  public CommandExecutor getCommandExecutor() {
-    return commandExecutor;
+  public CmdletExecutor getCmdletExecutor() {
+    return cmdletExecutor;
   }
 
   /**
@@ -186,7 +186,7 @@ public class SmartServer {
 
   public static boolean parseHelpArgument(String[] args,
       String helpDescription, PrintStream out,
-      boolean printGenericCommandUsage) {
+      boolean printGenericCmdletUsage) {
     if (args.length == 1) {
       try {
         CommandLineParser parser = new PosixParser();

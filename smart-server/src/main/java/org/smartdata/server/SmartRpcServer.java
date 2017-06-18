@@ -24,7 +24,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
 import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.ClientServerProto;
 import org.smartdata.common.protocol.SmartServerProtocols;
@@ -36,7 +36,7 @@ import org.smartdata.common.protocolPB.SmartAdminProtocolPB;
 import org.smartdata.common.protocolPB.ClientSmartProtocolServerSideTranslatorPB;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
@@ -162,10 +162,10 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   @Override
-  public void deleteRule(long ruleID, boolean dropPendingCommands)
+  public void deleteRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     checkIfActive();
-    ssm.getRuleManager().deleteRule(ruleID, dropPendingCommands);
+    ssm.getRuleManager().deleteRule(ruleID, dropPendingCmdlets);
   }
 
   @Override
@@ -175,54 +175,54 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   @Override
-  public void disableRule(long ruleID, boolean dropPendingCommands)
+  public void disableRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     checkIfActive();
-    ssm.getRuleManager().disableRule(ruleID, dropPendingCommands);
+    ssm.getRuleManager().disableRule(ruleID, dropPendingCmdlets);
   }
 
   @Override
-  public CommandInfo getCommandInfo(long commandID) throws IOException {
+  public CmdletInfo getCmdletInfo(long cmdletID) throws IOException {
     checkIfActive();
-    return ssm.getCommandExecutor().getCommandInfo(commandID);
+    return ssm.getCmdletExecutor().getCmdletInfo(cmdletID);
   }
 
   @Override
-  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState)
+  public List<CmdletInfo> listCmdletInfo(long rid, CmdletState cmdletState)
       throws IOException {
     checkIfActive();
-    return ssm.getCommandExecutor().listCommandsInfo(rid, commandState);
+    return ssm.getCmdletExecutor().listCmdletsInfo(rid, cmdletState);
   }
 
   @Override
-  public void activateCommand(long commandID) throws IOException {
+  public void activateCmdlet(long cmdletID) throws IOException {
     checkIfActive();
-    ssm.getCommandExecutor().activateCommand(commandID);
+    ssm.getCmdletExecutor().activateCmdlet(cmdletID);
   }
 
   @Override
-  public void disableCommand(long commandID) throws IOException {
+  public void disableCmdlet(long cmdletID) throws IOException {
     checkIfActive();
-    ssm.getCommandExecutor().disableCommand(commandID);
+    ssm.getCmdletExecutor().disableCmdlet(cmdletID);
   }
 
   @Override
-  public void deleteCommand(long commandID) throws IOException {
+  public void deleteCmdlet(long cmdletID) throws IOException {
     checkIfActive();
-    ssm.getCommandExecutor().deleteCommand(commandID);
+    ssm.getCmdletExecutor().deleteCmdlet(cmdletID);
   }
 
   @Override
   public ActionInfo getActionInfo(long actionID) throws IOException {
     checkIfActive();
-    return ssm.getCommandExecutor().getActionInfo(actionID);
+    return ssm.getCmdletExecutor().getActionInfo(actionID);
   }
 
   @Override
   public List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
       throws IOException {
     checkIfActive();
-    return ssm.getCommandExecutor().listNewCreatedActions(maxNumActions);
+    return ssm.getCmdletExecutor().listNewCreatedActions(maxNumActions);
   }
 
   @Override
@@ -232,10 +232,10 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   @Override
-  public long submitCommand(String cmd) throws IOException {
+  public long submitCmdlet(String cmd) throws IOException {
     checkIfActive();
     // TODO: to be implemented
-    return ssm.getCommandExecutor().submitCommand(cmd);
+    return ssm.getCmdletExecutor().submitCmdlet(cmd);
   }
 
   @Override

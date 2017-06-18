@@ -101,7 +101,7 @@ public class RuleInfo implements Cloneable {
   }
 
   public void updateRuleInfo(RuleState rs, long lastCheckTime,
-      long checkedCount, int commandsGen) {
+      long checkedCount, int cmdletsGen) {
     if (rs != null) {
       this.state = rs;
     }
@@ -109,7 +109,7 @@ public class RuleInfo implements Cloneable {
       this.lastCheckTime = lastCheckTime;
     }
     this.numChecked += checkedCount;
-    this.numCmdsGen += commandsGen;
+    this.numCmdsGen += cmdletsGen;
   }
 
   public RuleInfo() {

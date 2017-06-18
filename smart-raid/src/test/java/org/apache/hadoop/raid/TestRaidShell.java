@@ -131,7 +131,7 @@ public class TestRaidShell extends TestCase {
   }
 
   /**
-   * Test distRaid command
+   * Test distRaid cmdlet
    * @throws Exception
    */
   public void testDistRaid() throws Exception {

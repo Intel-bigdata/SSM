@@ -22,7 +22,7 @@ package org.smartdata.common.actions;
  */
 public enum ActionType {
   None(0),              // doing nothing
-  External(1),          // execute some command lines specified
+  External(1),          // execute some cmdlet lines specified
   CacheFile(2),         // Move to cache
   UncacheFile(3),       // Move out of cache
   SetStoragePolicy(4),  // Set Policy Action

@@ -26,8 +26,8 @@ angular.module('dashboard')
       worker: function (workerId) {
         return '#/cluster/workers/worker/' + workerId;
       },
-      command: function (ruleId, commandID) {
-        return self.rule(ruleId) + '/command/' + commandID;
+      cmdlet: function (ruleId, cmdletID) {
+        return self.rule(ruleId) + '/cmdlet/' + cmdletID;
       },
       rule: function (ruleId) {
         return '#/rules/rule/' + ruleId;

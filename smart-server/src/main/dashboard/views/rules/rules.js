@@ -62,7 +62,7 @@ angular.module('dashboard')
           $stb.datetime('Submission Time').key('submitTime').canSort().done(),
           $stb.datetime('Last Check Time').key('lastCheckTime').canSort().done(),
           $stb.text('Checked Number').key('numChecked').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-          $stb.text('Commands Generated').key('numCmdsGen').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+          $stb.text('Cmdlets Generated').key('numCmdsGen').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
           // $stb.datetime('Start Time').key('startTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
           // $stb.datetime('Stop Time').key('stopTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
           // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),

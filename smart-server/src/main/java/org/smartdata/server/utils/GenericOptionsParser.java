@@ -34,7 +34,7 @@ import java.util.List;
 
 public class GenericOptionsParser {
   private Configuration conf;
-  private CommandLine commandLine;
+  private CommandLine cmdLine;
 
   public GenericOptionsParser(Configuration conf, String[] args)
       throws IOException {
@@ -49,7 +49,7 @@ public class GenericOptionsParser {
 
 
   public String[] getRemainingArgs() {
-    return (commandLine == null) ? new String[]{} : commandLine.getArgs();
+    return (cmdLine == null) ? new String[]{} : cmdLine.getArgs();
   }
 
   public Configuration getConfiguration() {
@@ -57,7 +57,7 @@ public class GenericOptionsParser {
   }
 
   public CommandLine getCommandLine() {
-    return commandLine;
+    return cmdLine;
   }
 
   private Options buildGeneralOptions(Options opts) {
@@ -76,7 +76,7 @@ public class GenericOptionsParser {
       for(String prop : property) {
         String[] keyval = prop.split("=", 2);
         if (keyval.length == 2) {
-          conf.set(keyval[0], keyval[1], "from command line");
+          conf.set(keyval[0], keyval[1], "from cmdlet line");
         }
       }
     }
@@ -122,8 +122,8 @@ public class GenericOptionsParser {
     opts = buildGeneralOptions(opts);
     CommandLineParser parser = new GnuParser();
     try {
-      commandLine = parser.parse(opts, preProcessForWindows(args), true);
-      processGeneralOptions(commandLine);
+      cmdLine = parser.parse(opts, preProcessForWindows(args), true);
+      processGeneralOptions(cmdLine);
     } catch(ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("general options are: ", opts);

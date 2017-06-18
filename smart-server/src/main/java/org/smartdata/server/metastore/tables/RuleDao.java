@@ -57,13 +57,13 @@ public class RuleDao {
   }
 
   public void update(long ruleId, RuleState rs,
-                     long lastCheckTime, long checkedCount, int commandsGen) {
+                     long lastCheckTime, long checkedCount, int cmdletsGen) {
     String sql = "update rules set " +
         "state = ?, " +
         "last_check_time = ?, " +
         "checked_count = ?, " +
-        "commands_generated = ? where id = ?";
-    jdbcTemplate.update(sql, rs.getValue(), lastCheckTime, checkedCount, commandsGen, ruleId);
+        "cmdlets_generated = ? where id = ?";
+    jdbcTemplate.update(sql, rs.getValue(), lastCheckTime, checkedCount, cmdletsGen, ruleId);
   }
 
   public void delete(long id) {
@@ -83,7 +83,7 @@ public class RuleDao {
     parameters.put("rule_text", ruleInfo.getRuleText());
     parameters.put("state", ruleInfo.getState().getValue());
     parameters.put("checked_count", ruleInfo.getNumChecked());
-    parameters.put("commands_generated", ruleInfo.getNumCmdsGen());
+    parameters.put("cmdlets_generated", ruleInfo.getNumCmdsGen());
     parameters.put("last_check_time", ruleInfo.getLastCheckTime());
     return parameters;
   }
@@ -98,7 +98,7 @@ public class RuleDao {
       ruleInfo.setRuleText(resultSet.getString("rule_text"));
       ruleInfo.setState(RuleState.fromValue((int) resultSet.getByte("state")));
       ruleInfo.setNumChecked(resultSet.getLong("checked_count"));
-      ruleInfo.setNumCmdsGen(resultSet.getLong("commands_generated"));
+      ruleInfo.setNumCmdsGen(resultSet.getLong("cmdlets_generated"));
       ruleInfo.setLastCheckTime(resultSet.getLong("last_check_time"));
       return ruleInfo;
     }

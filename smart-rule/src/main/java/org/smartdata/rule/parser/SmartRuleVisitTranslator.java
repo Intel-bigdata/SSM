@@ -21,7 +21,7 @@ package org.smartdata.rule.parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.common.actions.ActionType;
-import org.smartdata.common.command.CommandDescriptor;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;
 import org.smartdata.rule.objects.PropertyRealParas;
@@ -50,7 +50,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   private List<PropertyRealParas> realParases = new LinkedList<>();
 
   private TimeBasedScheduleInfo timeBasedScheduleInfo = null;
-  private CommandDescriptor cmdDescriptor = null;
+  private CmdletDescriptor cmdDescriptor = null;
   private TranslationContext transCtx = null;
   private int[] condPostion;
 
@@ -587,14 +587,14 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   }
 
   @Override
-  public TreeNode visitCommand(SmartRuleParser.CommandContext ctx) {
+  public TreeNode visitCmdlet(SmartRuleParser.CmdletContext ctx) {
     List<String> vs = new ArrayList<>();
     for (int i = 0; i < ctx.getChildCount(); i++) {
       vs.add(ctx.getChild(i).getText());
     }
     String cmd = StringUtils.join(vs, " ");
     try {
-      cmdDescriptor = CommandDescriptor.fromCommandString(cmd);
+      cmdDescriptor = CmdletDescriptor.fromCmdletString(cmd);
     } catch (ParseException e) {
       throw new RuleParserException(e.getMessage());
     }

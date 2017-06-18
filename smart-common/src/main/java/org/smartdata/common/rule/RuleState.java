@@ -22,7 +22,7 @@ package org.smartdata.common.rule;
  */
 public enum RuleState {
   ACTIVE(0),      // functioning
-  DRYRUN(1),      // without execute the rule commands
+  DRYRUN(1),      // without execute the rule cmdlets
   DISABLED(2),    // stop maintain info for the rule
   FINISHED(3),    // for one-shot rule
   DELETED(4);

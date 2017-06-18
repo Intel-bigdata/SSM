@@ -165,7 +165,7 @@ public class ProcessData {
       BufferedReader inReaderErrors = new BufferedReader(new InputStreamReader(inErrors));
       LOG.trace("Started retrieving data from streams of attached process: " + this.checked_process);
 
-      long lastStreamDataTime = System.currentTimeMillis();   //Store start time to be able to finish method if command hangs
+      long lastStreamDataTime = System.currentTimeMillis();   //Store start time to be able to finish method if cmdlet hangs
       long unconditionalExitTime = System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(unconditionalExitDelayMinutes, TimeUnit.MINUTES); // Stop after 'unconditionalExitDelayMinutes' even if process is alive and sending output
       final int BUFFER_LEN = 300;
       char charBuffer[] = new char[BUFFER_LEN];     //Use char buffer to read output, size can be tuned.

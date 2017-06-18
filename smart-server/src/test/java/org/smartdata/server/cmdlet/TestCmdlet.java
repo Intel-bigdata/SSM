@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.command;
+package org.smartdata.server.cmdlet;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.HdfsAction;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.conf.SmartConf;
 
 
@@ -36,9 +36,9 @@ import java.io.IOException;
 
 
 /**
- * Command Unit Test
+ * Cmdlet Unit Test
  */
-public class TestCommand {
+public class TestCmdlet {
 
   private static final int DEFAULT_BLOCK_SIZE = 50;
   private MiniDFSCluster cluster;
@@ -72,9 +72,9 @@ public class TestCommand {
   }
 
   @Test
-  public void testRunCommand() throws Exception {
+  public void testRunCmdlet() throws Exception {
     generateTestFiles();
-    Command cmd = runHelper();
+    Cmdlet cmd = runHelper();
     cmd.runActions();
     while (!cmd.isFinished()) {
       Thread.sleep(1000);
@@ -101,7 +101,7 @@ public class TestCommand {
     dfs.mkdirs(dir3);
   }
 
-  private Command runHelper() throws IOException {
+  private Cmdlet runHelper() throws IOException {
     HdfsAction[] actions = new HdfsAction[4];
     // New action
     // actions[0] = new AllSsdFileAction();
@@ -116,11 +116,11 @@ public class TestCommand {
     actions[2].setDfsClient(client);
     actions[2].setContext(new SmartContext(smartConf));
     actions[2].init(new String[]{"/testCacheFile"});
-    // New Command
-    Command cmd = new Command(actions, null);
+    // New Cmdlet
+    Cmdlet cmd = new Cmdlet(actions, null);
     cmd.setId(1);
     cmd.setRuleId(1);
-    cmd.setState(CommandState.PENDING);
+    cmd.setState(CmdletState.PENDING);
     return cmd;
   }
 }

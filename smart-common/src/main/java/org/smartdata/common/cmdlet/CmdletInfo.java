@@ -15,29 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common.command;
+package org.smartdata.common.cmdlet;
 
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class CommandInfo {
+public class CmdletInfo {
   private long cid;
   private long rid;
   private List<Long> aids;
-  private CommandState state;
+  private CmdletState state;
   private String parameters;
   private long generateTime;
   private long stateChangedTime;
 
-  public CommandInfo() {
+  public CmdletInfo() {
 
   }
 
-  public CommandInfo(long cid, long rid, CommandState state,
+  public CmdletInfo(long cid, long rid, CmdletState state,
       String parameters, long generateTime, long stateChangedTime) {
     this.cid = cid;
     this.rid = rid;
@@ -48,7 +48,7 @@ public class CommandInfo {
     this.aids = new ArrayList<>();
   }
 
-  public CommandInfo(long cid, long rid, List<Long> aids, CommandState state,
+  public CmdletInfo(long cid, long rid, List<Long> aids, CmdletState state,
       String parameters, long generateTime, long stateChangedTime) {
     this(cid, rid, state, parameters, generateTime, stateChangedTime);
     this.aids = aids;
@@ -99,11 +99,11 @@ public class CommandInfo {
     this.aids = aids;
   }
 
-  public CommandState getState() {
+  public CmdletState getState() {
     return state;
   }
 
-  public void setState(CommandState state) {
+  public void setState(CmdletState state) {
     this.state = state;
   }
 
@@ -139,7 +139,7 @@ public class CommandInfo {
     private long cid;
     private long rid;
     private List<Long> aids;
-    private CommandState state;
+    private CmdletState state;
     private String parameters;
     private long generateTime;
     private long stateChangedTime;
@@ -164,7 +164,7 @@ public class CommandInfo {
     }
 
 
-    public Builder setState(CommandState state) {
+    public Builder setState(CmdletState state) {
       this.state = state;
       return this;
     }
@@ -184,8 +184,8 @@ public class CommandInfo {
       return this;
     }
 
-    public CommandInfo build() {
-      return new CommandInfo(cid, rid, aids, state, parameters,
+    public CmdletInfo build() {
+      return new CmdletInfo(cid, rid, aids, state, parameters,
           generateTime, stateChangedTime);
     }
   }

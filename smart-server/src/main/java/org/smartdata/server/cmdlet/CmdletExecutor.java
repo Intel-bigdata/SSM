@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.command;
+package org.smartdata.server.cmdlet;
 
 import org.smartdata.SmartContext;
 import org.smartdata.client.SmartDFSClient;
@@ -24,10 +24,10 @@ import org.smartdata.actions.ActionStatus;
 import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.command.CommandDescriptor;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.Service;
@@ -58,18 +58,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
- * Schedule and execute commands passed down.
+ * Schedule and execute cmdlets passed down.
  */
-public class CommandExecutor implements Runnable, Service {
-  static final Logger LOG = LoggerFactory.getLogger(CommandExecutor.class);
+public class CmdletExecutor implements Runnable, Service {
+  static final Logger LOG = LoggerFactory.getLogger(CmdletExecutor.class);
 
   private ArrayList<Set<Long>> cmdsInState = new ArrayList<>();
-  private Map<Long, CommandInfo> cmdsAll = new ConcurrentHashMap<>();
+  private Map<Long, CmdletInfo> cmdsAll = new ConcurrentHashMap<>();
   // TODO replace with concurrentSet or MAP
   private Set<CmdTuple> statusCache;
-  private Daemon commandExecutorThread;
-  private CommandPool commandPool;
-  private Map<String, Long> commandHashSet;
+  private Daemon cmdletExecutorThread;
+  private CmdletPool cmdletPool;
+  private Map<String, Long> cmdletHashSet;
   private Map<String, Long> fileLock;
   private Map<Long, SmartAction> actionPool;
   private DBAdapter adapter;
@@ -78,25 +78,25 @@ public class CommandExecutor implements Runnable, Service {
   private SmartContext smartContext;
   private boolean running;
   private long maxActionId;
-  private long maxCommandId;
+  private long maxCmdletId;
   private Configuration conf;
 
-  public CommandExecutor(SmartServer ssm) {
+  public CmdletExecutor(SmartServer ssm) {
     this.ssm = ssm;
     actionRegistry = ActionRegistry.instance();
     statusCache = new HashSet<>();
-    for (CommandState s : CommandState.values()) {
+    for (CmdletState s : CmdletState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
     smartContext = new SmartContext();
-    commandPool = new CommandPool();
+    cmdletPool = new CmdletPool();
     actionPool = new ConcurrentHashMap<>();
-    commandHashSet = new ConcurrentHashMap<>();
+    cmdletHashSet = new ConcurrentHashMap<>();
     fileLock = new ConcurrentHashMap<>();
     running = false;
   }
 
-  public CommandExecutor(SmartServer ssm, SmartConf conf) {
+  public CmdletExecutor(SmartServer ssm, SmartConf conf) {
     this(ssm);
     smartContext = new SmartContext(conf);
     this.conf = conf;
@@ -107,10 +107,10 @@ public class CommandExecutor implements Runnable, Service {
       this.adapter = adapter;
       try {
         maxActionId = adapter.getMaxActionId();
-        maxCommandId = adapter.getMaxCommandId();
+        maxCmdletId = adapter.getMaxCmdletId();
       } catch (Exception e) {
         maxActionId = 1;
-        LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
+        LOG.error("DB Connection error! Get Max CmdletId/ActionId fail!", e);
         throw new IOException(e);
       }
       return true;
@@ -119,38 +119,38 @@ public class CommandExecutor implements Runnable, Service {
   }
 
   /**
-   * Start CommandExecutor.
+   * Start CmdletExecutor.
    */
   public boolean start() throws IOException {
     // TODO add recovery code
-    commandExecutorThread = new Daemon(this);
-    commandExecutorThread.setName(this.getClass().getCanonicalName());
-    commandExecutorThread.start();
+    cmdletExecutorThread = new Daemon(this);
+    cmdletExecutorThread.setName(this.getClass().getCanonicalName());
+    cmdletExecutorThread.start();
     running = true;
     return true;
   }
 
   /**
-   * Stop CommandExecutor
+   * Stop CmdletExecutor
    */
   public void stop() throws IOException {
     running = false;
     // Update Status
-    batchCommandStatusUpdate();
+    batchCmdletStatusUpdate();
   }
 
   public void join() throws IOException {
     try {
-      if (commandPool != null) {
-        commandPool.stop();
+      if (cmdletPool != null) {
+        cmdletPool.stop();
       }
     } catch (Exception e) {
-      LOG.error("Shutdown MoverPool/CommandPool Error!");
+      LOG.error("Shutdown MoverPool/CmdletPool Error!");
       throw new IOException(e);
     }
     // Set all thread handle to null
-    commandPool = null;
-    commandExecutorThread = null;
+    cmdletPool = null;
+    cmdletExecutorThread = null;
     adapter = null;
     ssm = null;
     smartContext = null;
@@ -160,16 +160,16 @@ public class CommandExecutor implements Runnable, Service {
   public void run() {
     while (running) {
       try {
-        // control the commands that executed concurrently
-        if (commandPool == null) {
+        // control the cmdlets that executed concurrently
+        if (cmdletPool == null) {
           LOG.error("Thread Init/Start Error!");
         }
         // TODO: use configure value
-        if (commandPool.size() <= 5) {
-          Command toExec = schedule();
+        if (cmdletPool.size() <= 5) {
+          Cmdlet toExec = schedule();
           if (toExec != null) {
             toExec.setScheduleToExecuteTime(Time.now());
-            commandPool.execute(toExec);
+            cmdletPool.execute(toExec);
           } else {
             Thread.sleep(1000);
           }
@@ -186,16 +186,16 @@ public class CommandExecutor implements Runnable, Service {
     }
   }
 
-  public CommandInfo getCommandInfo(long cid) throws IOException {
+  public CmdletInfo getCmdletInfo(long cid) throws IOException {
     if (cmdsAll.containsKey(cid)) {
       return cmdsAll.get(cid);
     }
-    List<CommandInfo> ret = null;
+    List<CmdletInfo> ret = null;
     try {
-      ret = adapter.getCommandsTableItem(String.format("= %d", cid),
+      ret = adapter.getCmdletsTableItem(String.format("= %d", cid),
           null, null);
     } catch (SQLException e) {
-      LOG.error("Get CommandInfo with ID {} from DB error! {}", cid, e);
+      LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
     if (ret != null) {
@@ -204,27 +204,27 @@ public class CommandExecutor implements Runnable, Service {
     return null;
   }
 
-  public List<CommandInfo> listCommandsInfo(long rid,
-      CommandState commandState) throws IOException {
-    List<CommandInfo> retInfos = new ArrayList<>();
+  public List<CmdletInfo> listCmdletsInfo(long rid,
+      CmdletState cmdletState) throws IOException {
+    List<CmdletInfo> retInfos = new ArrayList<>();
     // Get from DB
     try {
       if (rid != -1) {
-        retInfos.addAll(adapter.getCommandsTableItem(null,
-            String.format("= %d", rid), commandState));
+        retInfos.addAll(adapter.getCmdletsTableItem(null,
+            String.format("= %d", rid), cmdletState));
       } else {
-        retInfos.addAll(adapter.getCommandsTableItem(null,
-            null, commandState));
+        retInfos.addAll(adapter.getCmdletsTableItem(null,
+            null, cmdletState));
       }
     } catch (SQLException e) {
-      LOG.error("List CommandInfo from DB error! Conditions rid {}, {}", rid, e);
+      LOG.error("List CmdletInfo from DB error! Conditions rid {}, {}", rid, e);
       throw new IOException(e);
     }
-    // Get from CacheObject if commandState != CommandState.PENDING
-    if (commandState != CommandState.PENDING) {
-      for (Iterator<CommandInfo> iter = cmdsAll.values().iterator(); iter.hasNext(); ) {
-        CommandInfo cmdinfo = iter.next();
-        if (cmdinfo.getState() == commandState && cmdinfo.getRid() == rid) {
+    // Get from CacheObject if cmdletState != CmdletState.PENDING
+    if (cmdletState != CmdletState.PENDING) {
+      for (Iterator<CmdletInfo> iter = cmdsAll.values().iterator(); iter.hasNext(); ) {
+        CmdletInfo cmdinfo = iter.next();
+        if (cmdinfo.getState() == cmdletState && cmdinfo.getRid() == rid) {
           retInfos.add(cmdinfo);
         }
       }
@@ -232,77 +232,77 @@ public class CommandExecutor implements Runnable, Service {
     return retInfos;
   }
 
-  public void activateCommand(long cid) throws IOException {
+  public void activateCmdlet(long cid) throws IOException {
     if (inCache(cid)) {
       return;
     }
     if (inUpdateCache(cid)) {
       return;
     }
-    CommandInfo cmdinfo = getCommandInfo(cid);
-    if (cmdinfo == null || cmdinfo.getState() == CommandState.DONE) {
+    CmdletInfo cmdinfo = getCmdletInfo(cid);
+    if (cmdinfo == null || cmdinfo.getState() == CmdletState.DONE) {
       return;
     }
-    LOG.info("Activate Command {}", cid);
-    cmdinfo.setState(CommandState.PENDING);
+    LOG.info("Activate Cmdlet {}", cid);
+    cmdinfo.setState(CmdletState.PENDING);
     addToPending(cmdinfo);
   }
 
-  public void disableCommand(long cid) throws IOException {
+  public void disableCmdlet(long cid) throws IOException {
     // Remove from CacheObject
     if (inCache(cid)) {
-      LOG.info("Disable Command {}", cid);
-      // Command is finished, then return
+      LOG.info("Disable Cmdlet {}", cid);
+      // Cmdlet is finished, then return
       if (inUpdateCache(cid)) {
         return;
       }
-      CommandInfo cmdinfo = cmdsAll.get(cid);
-      cmdinfo.setState(CommandState.DISABLED);
-      // Disable this command in cache
+      CmdletInfo cmdinfo = cmdsAll.get(cid);
+      cmdinfo.setState(CmdletState.DISABLED);
+      // Disable this cmdlet in cache
       if (inExecutingList(cid)) {
         // Remove from Executing queue
         removeFromExecuting(cid, cmdinfo.getRid());
         // Kill thread
-        commandPool.deleteCommand(cid);
+        cmdletPool.deleteCmdlet(cid);
       } else {
         // Remove from Pending queue
-        cmdsInState.get(CommandState.PENDING.getValue()).remove(cid);
+        cmdsInState.get(CmdletState.PENDING.getValue()).remove(cid);
       }
       // Mark as cancelled, this status will be update to DB
       // in next batch update
       synchronized (statusCache) {
         statusCache.add(new CmdTuple(cid, cmdinfo.getRid(),
-            CommandState.DISABLED));
+            CmdletState.DISABLED));
       }
     }
   }
 
-  public void deleteCommand(long cid) throws IOException {
+  public void deleteCmdlet(long cid) throws IOException {
     // Delete from DB
     // Remove from CacheObject
     if (inCache(cid)) {
-      // Command is finished, then return
-      CommandInfo cmdinfo = cmdsAll.get(cid);
-      // Disable this command in cache
+      // Cmdlet is finished, then return
+      CmdletInfo cmdinfo = cmdsAll.get(cid);
+      // Disable this cmdlet in cache
       if (inExecutingList(cid)) {
         // Remove from Executing queue
         removeFromExecuting(cid, cmdinfo.getRid());
         // Kill thread
-        commandPool.deleteCommand(cid);
+        cmdletPool.deleteCmdlet(cid);
       } else if (inUpdateCache(cid)) {
         removeFromUpdateCache(cid);
       } else {
         // Remove from Pending queue
-        cmdsInState.get(CommandState.PENDING.getValue()).remove(cid);
+        cmdsInState.get(CmdletState.PENDING.getValue()).remove(cid);
       }
       // Mark as cancelled, this status will be update to DB
       // in next batch update
       cmdsAll.remove(cid);
     }
     try {
-      adapter.deleteCommand(cid);
+      adapter.deleteCmdlet(cid);
     } catch (SQLException e) {
-      LOG.error("Delete Command {} from DB error! {}", cid, e);
+      LOG.error("Delete Cmdlet {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
   }
@@ -328,7 +328,7 @@ public class CommandExecutor implements Runnable, Service {
     if (actionInfo == null) {
       return dbActionInfo;
     }
-    actionInfo.setCommandId(dbActionInfo.getCommandId());
+    actionInfo.setCmdletId(dbActionInfo.getCmdletId());
     return actionInfo;
   }
 
@@ -352,8 +352,8 @@ public class CommandExecutor implements Runnable, Service {
     return actionRegistry.checkAction(actionName);
   }
 
-  private void addToPending(CommandInfo cmdinfo) throws IOException {
-    Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
+  private void addToPending(CmdletInfo cmdinfo) throws IOException {
+    Set<Long> cmdsPending = cmdsInState.get(CmdletState.PENDING.getValue());
     cmdsAll.put(cmdinfo.getCid(), cmdinfo);
     cmdsPending.add(cmdinfo.getCid());
   }
@@ -368,12 +368,12 @@ public class CommandExecutor implements Runnable, Service {
 
   public boolean inExecutingList(long cid) throws IOException {
     Set<Long> cmdsExecuting = cmdsInState
-        .get(CommandState.EXECUTING.getValue());
+        .get(CmdletState.EXECUTING.getValue());
     return cmdsExecuting.contains(cid);
   }
 
   public boolean inPendingList(long cid) throws IOException {
-    Set<Long> cmdsPending = cmdsInState.get(CommandState.PENDING.getValue());
+    Set<Long> cmdsPending = cmdsInState.get(CmdletState.PENDING.getValue());
     LOG.info("Size of Pending = {}", cmdsPending.size());
     return cmdsPending.contains(cid);
   }
@@ -406,27 +406,27 @@ public class CommandExecutor implements Runnable, Service {
   }
 
   /**
-   * Get command to for execution.
+   * Get cmdlet to for execution.
    *
    * @return
    */
-  private synchronized Command schedule() throws IOException {
+  private synchronized Cmdlet schedule() throws IOException {
     // currently FIFO
     Set<Long> cmdsPending = cmdsInState
-        .get(CommandState.PENDING.getValue());
+        .get(CmdletState.PENDING.getValue());
     Set<Long> cmdsExecuting = cmdsInState
-        .get(CommandState.EXECUTING.getValue());
+        .get(CmdletState.EXECUTING.getValue());
     if (cmdsPending.size() == 0) {
       // Put them into cmdsAll and cmdsInState
       if (statusCache.size() != 0) {
-        batchCommandStatusUpdate();
+        batchCmdletStatusUpdate();
       }
-      List<CommandInfo> dbcmds = getPendingCommandsFromDB();
+      List<CmdletInfo> dbcmds = getPendingCmdletsFromDB();
       if (dbcmds == null) {
         return null;
       }
-      for (CommandInfo c : dbcmds) {
-        // if command alread in update cache or queue then skip
+      for (CmdletInfo c : dbcmds) {
+        // if cmdlet alread in update cache or queue then skip
         if (cmdsAll.containsKey(c.getCid())) {
           continue;
         }
@@ -440,17 +440,17 @@ public class CommandExecutor implements Runnable, Service {
     // TODO Replace FIFO
     // Currently only get and run the first cmd
     long curr = cmdsPending.iterator().next();
-    CommandInfo commandInfo = cmdsAll.get(curr);
-    Command ret = getCommandFromCmdInfo(commandInfo);
+    CmdletInfo cmdletInfo = cmdsAll.get(curr);
+    Cmdlet ret = getCmdletFromCmdInfo(cmdletInfo);
     cmdsPending.remove(curr);
     if (ret == null) {
-      // Create Command from CommandInfo Fail
-      LOG.error("Create Command from CommandInfo {}", commandInfo);
-      statusCache.add(new CmdTuple(commandInfo.getCid(), commandInfo.getRid(), CommandState.DISABLED));
+      // Create Cmdlet from CmdletInfo Fail
+      LOG.error("Create Cmdlet from CmdletInfo {}", cmdletInfo);
+      statusCache.add(new CmdTuple(cmdletInfo.getCid(), cmdletInfo.getRid(), CmdletState.DISABLED));
       return null;
     }
     cmdsExecuting.add(curr);
-    ret.setState(CommandState.EXECUTING);
+    ret.setState(CmdletState.EXECUTING);
     return ret;
   }
 
@@ -493,27 +493,27 @@ public class CommandExecutor implements Runnable, Service {
         , Integer.parseInt(strings[strings.length - 1]));
   }
 
-  private List<ActionInfo> createActionInfos(String commandDescriptorString, long cid) throws IOException {
-    CommandDescriptor commandDescriptor = null;
+  private List<ActionInfo> createActionInfos(String cmdletDescriptorString, long cid) throws IOException {
+    CmdletDescriptor cmdletDescriptor = null;
     try {
-      commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
+      cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdletDescriptorString);
     } catch (ParseException e) {
-      LOG.error("Command Descriptor {} String Wrong format! {}", commandDescriptorString, e);
+      LOG.error("Cmdlet Descriptor {} String Wrong format! {}", cmdletDescriptorString, e);
     }
-    return createActionInfos(commandDescriptor, cid);
+    return createActionInfos(cmdletDescriptor, cid);
   }
 
 
   @VisibleForTesting
-  synchronized List<ActionInfo> createActionInfos(CommandDescriptor commandDescriptor, long cid) throws IOException {
-    if (commandDescriptor == null) {
+  synchronized List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
+    if (cmdletDescriptor == null) {
           return null;
     }
     List<ActionInfo> actionInfos = new ArrayList<>();
     ActionInfo current;
     // Check if any files are in fileLock
-    for (int index = 0; index < commandDescriptor.size(); index++) {
-      String[] args = commandDescriptor.getActionArgs(index);
+    for (int index = 0; index < cmdletDescriptor.size(); index++) {
+      String[] args = cmdletDescriptor.getActionArgs(index);
       if (args != null && args.length >= 1) {
         if (fileLock.containsKey(args[0])) {
           LOG.warn("Warning: Other actions are processing {}!", args[0]);
@@ -522,10 +522,10 @@ public class CommandExecutor implements Runnable, Service {
       }
     }
     // Create actioninfos and add file to file locks
-    for (int index = 0; index < commandDescriptor.size(); index++) {
-      String[] args = commandDescriptor.getActionArgs(index);
+    for (int index = 0; index < cmdletDescriptor.size(); index++) {
+      String[] args = cmdletDescriptor.getActionArgs(index);
       current = new ActionInfo(maxActionId, cid,
-          commandDescriptor.getActionName(index),
+          cmdletDescriptor.getActionName(index),
           args, "", "",
           false, 0, false, 0, 0);
       maxActionId++;
@@ -534,63 +534,63 @@ public class CommandExecutor implements Runnable, Service {
     return actionInfos;
   }
 
-  public synchronized long submitCommand(String commandDescriptorString)
+  public synchronized long submitCmdlet(String cmdletDescriptorString)
       throws IOException {
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Received Command -> [" + commandDescriptorString + "]");
+      LOG.debug("Received Cmdlet -> [" + cmdletDescriptorString + "]");
     }
-    if (commandHashSet.containsKey(commandDescriptorString)) {
-      LOG.debug("Duplicate Command found, submit canceled!");
+    if (cmdletHashSet.containsKey(cmdletDescriptorString)) {
+      LOG.debug("Duplicate Cmdlet found, submit canceled!");
       throw new IOException();
       // return -1;
     }
-    CommandDescriptor commandDescriptor;
+    CmdletDescriptor cmdletDescriptor;
     try {
-      commandDescriptor = CommandDescriptor.fromCommandString(commandDescriptorString);
+      cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdletDescriptorString);
     } catch (ParseException e) {
-      LOG.error("Command Descriptor {} Wrong format! {}", commandDescriptorString, e);
+      LOG.error("Cmdlet Descriptor {} Wrong format! {}", cmdletDescriptorString, e);
       throw new IOException(e);
     }
-    return submitCommand(commandDescriptor);
+    return submitCmdlet(cmdletDescriptor);
   }
 
-  public synchronized long submitCommand(CommandDescriptor commandDescriptor)
+  public synchronized long submitCmdlet(CmdletDescriptor cmdletDescriptor)
       throws IOException {
-    if (commandDescriptor == null) {
-      LOG.error("Command Descriptor!");
+    if (cmdletDescriptor == null) {
+      LOG.error("Cmdlet Descriptor!");
       throw new IOException();
       // return -1;
     }
-    if (commandHashSet.containsKey(commandDescriptor.getCommandString())) {
-      LOG.debug("Duplicate Command found, submit canceled!");
+    if (cmdletHashSet.containsKey(cmdletDescriptor.getCmdletString())) {
+      LOG.debug("Duplicate Cmdlet found, submit canceled!");
       throw new IOException();
       // return -1;
     }
     long submitTime = System.currentTimeMillis();
-    CommandInfo cmdinfo = new CommandInfo(maxCommandId, commandDescriptor.getRuleId(),
-        CommandState.PENDING, commandDescriptor.getCommandString(),
+    CmdletInfo cmdinfo = new CmdletInfo(maxCmdletId, cmdletDescriptor.getRuleId(),
+        CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
         submitTime, submitTime);
-    maxCommandId ++;
-    for (int index = 0; index < commandDescriptor.size(); index++) {
-      if (!actionRegistry.checkAction(commandDescriptor.getActionName(index))) {
-        LOG.error("Submit Command {} error! Action names are not correct!", cmdinfo);
+    maxCmdletId ++;
+    for (int index = 0; index < cmdletDescriptor.size(); index++) {
+      if (!actionRegistry.checkAction(cmdletDescriptor.getActionName(index))) {
+        LOG.error("Submit Cmdlet {} error! Action names are not correct!", cmdinfo);
         throw new IOException();
       }
     }
-    return submitCommand(cmdinfo);
+    return submitCmdlet(cmdinfo);
   }
 
-  public synchronized long submitCommand(CommandInfo cmdinfo) throws IOException {
+  public synchronized long submitCmdlet(CmdletInfo cmdinfo) throws IOException {
     long cid = cmdinfo.getCid();
     List<ActionInfo> actionInfos = createActionInfos(cmdinfo.getParameters(), cid);
     for (ActionInfo actionInfo: actionInfos) {
       cmdinfo.addAction(actionInfo.getActionId());
     }
     try {
-      // Insert Command into DB
-      adapter.insertCommandTable(cmdinfo);
+      // Insert Cmdlet into DB
+      adapter.insertCmdletTable(cmdinfo);
     } catch (SQLException e) {
-      LOG.error("Submit Command {} to DB error! {}", cmdinfo, e);
+      LOG.error("Submit Cmdlet {} to DB error! {}", cmdinfo, e);
       throw new IOException(e);
     }
     try {
@@ -599,13 +599,13 @@ public class CommandExecutor implements Runnable, Service {
     } catch (SQLException e) {
       LOG.error("Submit Actions {} to DB error! {}", actionInfos, e);
       try {
-        adapter.deleteCommand(cmdinfo.getCid());
+        adapter.deleteCmdlet(cmdinfo.getCid());
       } catch (SQLException e1) {
-        LOG.error("Recover/Delete Command {} rom DB error! {}", cmdinfo, e);
+        LOG.error("Recover/Delete Cmdlet {} rom DB error! {}", cmdinfo, e);
       }
       throw new IOException(e);
     }
-    commandHashSet.put(cmdinfo.getParameters(), cmdinfo.getCid());
+    cmdletHashSet.put(cmdinfo.getParameters(), cmdinfo.getCid());
     for (ActionInfo actionInfo: actionInfos) {
       String[] args = actionInfo.getArgs();
       fileLock.put(args[0], actionInfo.getActionId());
@@ -613,10 +613,10 @@ public class CommandExecutor implements Runnable, Service {
     return cid;
   }
 
-  private Command getCommandFromCmdInfo(CommandInfo cmdinfo)
+  private Cmdlet getCmdletFromCmdInfo(CmdletInfo cmdinfo)
       throws IOException {
-    // New Command
-    Command cmd;
+    // New Cmdlet
+    Cmdlet cmd;
     List<ActionInfo> actionInfos;
     try {
       actionInfos = adapter.getActionsTableItem(cmdinfo.getAids());
@@ -636,7 +636,7 @@ public class CommandExecutor implements Runnable, Service {
     if (smartActions.size() == 0) {
       return null;
     }
-    cmd = new Command(smartActions.toArray(new SmartAction[smartActions.size()]),
+    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]),
         new Callback(), adapter);
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
@@ -649,7 +649,7 @@ public class CommandExecutor implements Runnable, Service {
   public List<ActionInfo> listNewCreatedActions(int maxNumActions)
       throws IOException {
     ArrayList<ActionInfo> actionInfos = new ArrayList<>();
-    for (Command cmd : commandPool.getcommands()) {
+    for (Cmdlet cmd : cmdletPool.getcmdlets()) {
       long cmdId = cmd.getId();
       for (SmartAction smartAction : cmd.getActions()) {
         actionInfos.add(createActionInfoFromAction(smartAction, cmdId));
@@ -671,18 +671,18 @@ public class CommandExecutor implements Runnable, Service {
     return actionInfos;
   }
 
-  public List<CommandInfo> getPendingCommandsFromDB() throws IOException {
+  public List<CmdletInfo> getPendingCmdletsFromDB() throws IOException {
     // Get Pending cmds from DB
     try {
-      return adapter.getCommandsTableItem(null,
-          null, CommandState.PENDING);
+      return adapter.getCmdletsTableItem(null,
+          null, CmdletState.PENDING);
     } catch (SQLException e) {
-      LOG.error("Get Pending Commands From DB error!", e);
+      LOG.error("Get Pending Cmdlets From DB error!", e);
       throw new IOException(e);
     }
   }
 
-  public Long[] getCommands(CommandState state) {
+  public Long[] getCmdlets(CmdletState state) {
     Set<Long> cmds = cmdsInState.get(state.getValue());
     return cmds.toArray(new Long[cmds.size()]);
   }
@@ -701,9 +701,9 @@ public class CommandExecutor implements Runnable, Service {
         status.getPercentage());
   }
 
-  private List<ActionInfo> getActionInfoFromCommand(long cid) throws IOException {
+  private List<ActionInfo> getActionInfoFromCmdlet(long cid) throws IOException {
     ArrayList<ActionInfo> actionInfos = new ArrayList<>();
-    Command cmd = commandPool.getCommand(cid);
+    Cmdlet cmd = cmdletPool.getCmdlet(cid);
     if (cmd == null) {
       return actionInfos;
     }
@@ -713,8 +713,8 @@ public class CommandExecutor implements Runnable, Service {
     return actionInfos;
   }
 
-  public synchronized void batchCommandStatusUpdate() throws IOException {
-    if (commandPool == null || adapter == null) {
+  public synchronized void batchCmdletStatusUpdate() throws IOException {
+    if (cmdletPool == null || adapter == null) {
       return;
     }
     LOG.info("INFO Number of Caches = {}", statusCache.size());
@@ -726,15 +726,15 @@ public class CommandExecutor implements Runnable, Service {
       ArrayList<ActionInfo> actionInfos = new ArrayList<>();
       for (Iterator<CmdTuple> iter = statusCache.iterator(); iter.hasNext(); ) {
         CmdTuple ct = iter.next();
-        actionInfos.addAll(getActionInfoFromCommand(ct.cid));
-        CommandInfo cmdinfo = cmdsAll.get(ct.cid);
-        commandHashSet.remove(cmdinfo.getParameters());
+        actionInfos.addAll(getActionInfoFromCmdlet(ct.cid));
+        CmdletInfo cmdinfo = cmdsAll.get(ct.cid);
+        cmdletHashSet.remove(cmdinfo.getParameters());
         cmdsAll.remove(ct.cid);
-        commandPool.deleteCommand(ct.cid);
+        cmdletPool.deleteCmdlet(ct.cid);
         try {
-          adapter.updateCommandStatus(ct.cid, ct.rid, ct.state);
+          adapter.updateCmdletStatus(ct.cid, ct.rid, ct.state);
         } catch (SQLException e) {
-          LOG.error("Batch Command Status Update error!", e);
+          LOG.error("Batch Cmdlet Status Update error!", e);
           throw new IOException(e);
         }
         iter.remove();
@@ -761,9 +761,9 @@ public class CommandExecutor implements Runnable, Service {
   public class CmdTuple {
     public long cid;
     public long rid;
-    public CommandState state;
+    public CmdletState state;
 
-    public CmdTuple(long cid, long rid, CommandState state) {
+    public CmdTuple(long cid, long rid, CmdletState state) {
       this.cid = cid;
       this.rid = rid;
       this.state = state;
@@ -774,12 +774,12 @@ public class CommandExecutor implements Runnable, Service {
     }
   }
 
-  private void addToStatusCache(long cid, long rid, CommandState state) {
+  private void addToStatusCache(long cid, long rid, CmdletState state) {
     statusCache.add(new CmdTuple(cid, rid, state));
   }
 
   private void removeFromExecuting(long cid, long rid) {
-    Set<Long> cmdsExecuting = cmdsInState.get(CommandState.EXECUTING.getValue());
+    Set<Long> cmdsExecuting = cmdsInState.get(CmdletState.EXECUTING.getValue());
     if (cmdsExecuting.size() == 0) {
       return;
     }
@@ -788,18 +788,18 @@ public class CommandExecutor implements Runnable, Service {
 
   public class Callback {
 
-    public void complete(long cid, long rid, CommandState state) {
-      commandExecutorThread.interrupt();
+    public void complete(long cid, long rid, CmdletState state) {
+      cmdletExecutorThread.interrupt();
       // Update State in CacheObject
       if (cmdsAll.get(cid) == null) {
-        LOG.error("Command is null!");
+        LOG.error("Cmdlet is null!");
       }
-      LOG.info("Command {} finished!", cmdsAll.get(cid));
-      // Mark commandInfo as DONE
+      LOG.info("Cmdlet {} finished!", cmdsAll.get(cid));
+      // Mark cmdletInfo as DONE
       cmdsAll.get(cid).setState(state);
-      // Mark command as DONE
-      commandPool.setFinished(cid, state);
-      LOG.info("Command {}", state.toString());
+      // Mark cmdlet as DONE
+      cmdletPool.setFinished(cid, state);
+      LOG.info("Cmdlet {}", state.toString());
       synchronized (statusCache) {
         addToStatusCache(cid, rid, state);
       }

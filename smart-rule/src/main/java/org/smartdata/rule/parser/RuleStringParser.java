@@ -24,7 +24,7 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.smartdata.common.command.CommandDescriptor;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -77,9 +77,9 @@ public class RuleStringParser {
 
   public TranslateResult translate() throws IOException {
     TranslateResult tr = doTranslate(rule);
-    CommandDescriptor cmdDes = tr.getCmdDescriptor();
+    CmdletDescriptor cmdDes = tr.getCmdDescriptor();
     if (cmdDes.size() == 0) {
-      throw new IOException("No command specified in Rule");
+      throw new IOException("No cmdlet specified in Rule");
     }
     String actName = cmdDes.getActionName(0);
     if (cmdDes.size() != 1 || optCond.get(actName) == null) {

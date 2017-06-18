@@ -124,15 +124,15 @@ angular.module('org.apache.hadoop.ssm.models', [])
           }
           return [];
         },
-        ruleCommands: function (objs) {
-          return decoder._asAssociativeArray(objs, decoder.command, 'cid');
+        ruleCmdlets: function (objs) {
+          return decoder._asAssociativeArray(objs, decoder.cmdlet, 'cid');
         },
-        command: function (obj) {
+        cmdlet: function (obj) {
           return angular.merge(obj, {
             // extra properties
             isRunning: obj.state === 'EXECUTING',
              // extra methods
-            pageUrl: locator.command(obj.rid, obj.cid)
+            pageUrl: locator.cmdlet(obj.rid, obj.cid)
           });
         },
         actions: function (objs) {
@@ -158,8 +158,8 @@ angular.module('org.apache.hadoop.ssm.models', [])
         ruleAlerts: function (ruleId) {
           return get('rules/' + ruleId + '/errors', decoder.ruleAlerts);
         },
-        ruleCommands: function (ruleId) {
-          return get('rules/' + ruleId + '/commands', decoder.ruleCommands);
+        ruleCmdlets: function (ruleId) {
+          return get('rules/' + ruleId + '/cmdlets', decoder.ruleCmdlets);
         },
         actions: function () {
           return get('actionlist', decoder.actions);

@@ -31,8 +31,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
-public class RuleCommands {
-  public static void registerCommands(CommandFactory factory) {
+public class RuleCmdlets {
+  public static void registerCmdlets(CommandFactory factory) {
     factory.addClass(SubmitRule.class, "submitrule");
     factory.addClass(ListRules.class, "listrules");
   }
@@ -85,6 +85,7 @@ public class RuleCommands {
       return 0;
     }
 
+    @Override
     public String getCommandName() {
       return NAME;
     }
@@ -119,6 +120,7 @@ public class RuleCommands {
       return 0;
     }
 
+    @Override
     public String getCommandName() {
       return NAME;
     }

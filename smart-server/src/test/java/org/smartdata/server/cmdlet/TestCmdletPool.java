@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.command;
+package org.smartdata.server.cmdlet;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.HdfsAction;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.conf.SmartConf;
 
 import java.io.IOException;
@@ -38,9 +38,9 @@ import java.util.UUID;
 
 
 /**
- * CommandPool Unit Test
+ * CmdletPool Unit Test
  */
-public class TestCommandPool {
+public class TestCmdletPool {
   private static final int DEFAULT_BLOCK_SIZE = 50;
   private MiniDFSCluster cluster;
   private DFSClient client;
@@ -73,25 +73,25 @@ public class TestCommandPool {
   }
 
   @Test
-  public void addCommand() throws Exception {
+  public void addCmdlet() throws Exception {
     generateTestFiles();
-    Command cmd = runHelper();
-    CommandPool cmdPool = new CommandPool();
+    Cmdlet cmd = runHelper();
+    CmdletPool cmdPool = new CmdletPool();
     cmdPool.execute(cmd);
-    cmdPool.getCommandThread(cmd.getId()).join();
+    cmdPool.getCmdletThread(cmd.getId()).join();
   }
 
   /**
-   * Delete a command
+   * Delete a cmdlet
    */
   @Test
-  public void deleteCommand() throws Exception {
+  public void deleteCmdlet() throws Exception {
     generateTestFiles();
-    Command cmd = runHelper();
-    CommandPool cmdPool = new CommandPool();
+    Cmdlet cmd = runHelper();
+    CmdletPool cmdPool = new CmdletPool();
     cmdPool.execute(cmd);
     Thread.sleep(1000);
-    cmdPool.deleteCommand(cmd.getId());
+    cmdPool.deleteCmdlet(cmd.getId());
   }
 
   private void generateTestFiles() throws IOException {
@@ -115,7 +115,7 @@ public class TestCommandPool {
     dfs.mkdirs(dir3);
   }
 
-  private Command runHelper() throws IOException {
+  private Cmdlet runHelper() throws IOException {
     HdfsAction[] actions = new HdfsAction[4];
     // New action
     // actions[0] = new MoveFileAction();
@@ -132,11 +132,11 @@ public class TestCommandPool {
     actions[2].setDfsClient(client);
     actions[2].setContext(new SmartContext(smartConf));
     actions[2].init(new String[]{"/testCacheFile"});
-    // New Command
-    Command cmd = new Command(actions, null);
+    // New Cmdlet
+    Cmdlet cmd = new Cmdlet(actions, null);
     cmd.setId(1);
     cmd.setRuleId(1);
-    cmd.setState(CommandState.PENDING);
+    cmd.setState(CmdletState.PENDING);
     return cmd;
   }
 }

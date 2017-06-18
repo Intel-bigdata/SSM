@@ -17,7 +17,7 @@
  */
 package org.smartdata.rule.parser;
 
-import org.smartdata.common.command.CommandDescriptor;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
 
 import java.util.List;
 import java.util.Map;
@@ -32,14 +32,14 @@ public class TranslateResult {
   private List<String> sqlStatements;
   private Map<String, List<Object>> dynamicParameters;
   private TimeBasedScheduleInfo tbScheduleInfo;
-  private CommandDescriptor cmdDescriptor;
+  private CmdletDescriptor cmdDescriptor;
   private int[] condPosition;
 
 
   public TranslateResult(List<String> sqlStatements,
       List<String> tempTableNames, Map<String, List<Object>> dynamicParameters,
       int retSqlIndex, TimeBasedScheduleInfo tbScheduleInfo,
-      CommandDescriptor cmdDescriptor, int[] condPosition) {
+      CmdletDescriptor cmdDescriptor, int[] condPosition) {
     this.sqlStatements = sqlStatements;
     this.staticTempTables = tempTableNames;
     this.dynamicParameters = dynamicParameters;
@@ -49,11 +49,11 @@ public class TranslateResult {
     this.condPosition = condPosition;
   }
 
-  public CommandDescriptor getCmdDescriptor() {
+  public CmdletDescriptor getCmdDescriptor() {
     return cmdDescriptor;
   }
 
-  public void setCmdDescriptor(CommandDescriptor cmdDescriptor) {
+  public void setCmdDescriptor(CmdletDescriptor cmdDescriptor) {
     this.cmdDescriptor = cmdDescriptor;
   }
 

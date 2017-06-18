@@ -18,10 +18,10 @@
 grammar SmartRule;
 
 ssmrule
-    : object ':' (trigger '|')? conditions '|' command      #ruleLine
+    : object ':' (trigger '|')? conditions '|' cmdlet      #ruleLine
     | Linecomment+                                          #commentLine
     ;
-// just one command
+// just one cmdlet
 
 // TODO: Fix this item
 object
@@ -105,7 +105,7 @@ stringexpr
    | stringexpr '+' stringexpr                              #strPlus
    ;
 
-command
+cmdlet
     : .*
     ;
 

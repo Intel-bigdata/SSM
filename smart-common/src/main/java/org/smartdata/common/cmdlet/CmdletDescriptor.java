@@ -15,46 +15,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common.command;
+package org.smartdata.common.cmdlet;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * CommandDescriptor describes a command by parsing out action names and their
+ * CmdletDescriptor describes a cmdlet by parsing out action names and their
  * parameters like shell format. It does not including verifications like
  * whether the action name is supported or the parameters are valid or not.
  */
-public class CommandDescriptor {
+public class CmdletDescriptor {
   private long ruleId;
   private List<String> actionNames = new ArrayList<>();
   private List<String[]> actionArgs = new ArrayList<>();
-  private String commandString = null;
+  private String cmdletString = null;
 
   private static final String REG_ACTION_NAME = "^[a-zA-Z]+[a-zA-Z0-9_]*";
 
-  public CommandDescriptor() {
+  public CmdletDescriptor() {
   }
 
-  public CommandDescriptor(String commandString) throws ParseException {
-    this(commandString, 0);
+  public CmdletDescriptor(String cmdletString) throws ParseException {
+    this(cmdletString, 0);
   }
 
-  public CommandDescriptor(String commandString, long ruleId) throws ParseException {
+  public CmdletDescriptor(String cmdletString, long ruleId) throws ParseException {
     this.ruleId = ruleId;
-    setCommandString(commandString);
+    setCmdletString(cmdletString);
   }
 
-  public String getCommandString() {
-    return commandString == null ? toCommandString() : commandString;
+  public String getCmdletString() {
+    return cmdletString == null ? toCmdletString() : cmdletString;
   }
 
-  public void setCommandString(String commandString) throws ParseException {
+  public void setCmdletString(String cmdletString) throws ParseException {
     actionNames.clear();
     actionArgs.clear();
-    this.commandString = commandString;
-    parseCommandString(commandString);
+    this.cmdletString = cmdletString;
+    parseCmdletString(cmdletString);
   }
 
   public long getRuleId() {
@@ -85,18 +85,18 @@ public class CommandDescriptor {
   // TODO: descriptor --> String
 
   /**
-   * Construct an CommandDescriptor from command string.
+   * Construct an CmdletDescriptor from cmdlet string.
    * @param cmdString
    * @return
    * @throws ParseException
    */
-  public static CommandDescriptor fromCommandString(String cmdString)
+  public static CmdletDescriptor fromCmdletString(String cmdString)
       throws ParseException {
-    CommandDescriptor des = new CommandDescriptor(cmdString);
+    CmdletDescriptor des = new CmdletDescriptor(cmdString);
     return des;
   }
 
-  public String toCommandString() {
+  public String toCmdletString() {
     if (size() == 0) {
       return "";
     }
@@ -110,7 +110,7 @@ public class CommandDescriptor {
     return cmds;
   }
 
-  public boolean equals(CommandDescriptor des) {
+  public boolean equals(CmdletDescriptor des) {
     if (des == null || this.size() != des.size()) {
       return false;
     }
@@ -132,13 +132,13 @@ public class CommandDescriptor {
     return true;
   }
 
-  private void parseCommandString(String command)
+  private void parseCmdletString(String cmdlet)
       throws ParseException {
-    if (command == null || command.length() == 0) {
+    if (cmdlet == null || cmdlet.length() == 0) {
       return;
     }
 
-    char[] chars = (command + " ").toCharArray();
+    char[] chars = (cmdlet + " ").toCharArray();
     List<String> blocks = new ArrayList<String>();
     char c;
     char[] token = new char[chars.length];

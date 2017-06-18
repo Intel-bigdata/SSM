@@ -18,19 +18,19 @@
  */
 angular.module('dashboard')
 
-  .directive('commandsTable', function () {
+  .directive('cmdletsTable', function () {
     'use strict';
 
     return {
       restrict: 'E',
-      templateUrl: 'views/rules/rule/commands_table.html',
+      templateUrl: 'views/rules/rule/cmdlets_table.html',
       replace: false /* true will got an error */,
       scope: {
-        commands: '=commandsBind'
+        cmdlets: '=cmdletsBind'
       },
       controller: ['$scope', '$sortableTableBuilder', 'i18n',
         function ($scope, $stb, i18n) {
-          $scope.whatIsCommand = i18n.terminology.command;
+          $scope.whatIsCmdlet = i18n.terminology.cmdlet;
           $scope.table = {
             cols: [
               $stb.indicator().key('status').canSort().styleClass('td-no-padding').done(),
@@ -41,26 +41,26 @@ angular.module('dashboard')
             rows: null
           };
 
-          function updateTable(commands) {
+          function updateTable(cmdlets) {
             $scope.table.rows = $stb.$update($scope.table.rows,
-              _.map(commands, function (command) {
+              _.map(cmdlets, function (cmdlet) {
                 return {
-                  arguments: command.parameters,
-                  generateTime: command.generateTime,
+                  arguments: cmdlet.parameters,
+                  generateTime: cmdlet.generateTime,
                   status: {
-                    tooltip: command.state,
-                    condition: command.isRunning ? 'good' : '',
+                    tooltip: cmdlet.state,
+                    condition: cmdlet.isRunning ? 'good' : '',
                     shape: 'stripe'
                   },
                   id: {
-                    href: command.pageUrl, text: command.cid
+                    href: cmdlet.pageUrl, text: cmdlet.cid
                   }
                 };
               }));
           }
 
-          $scope.$watch('commands', function (commands) {
-            updateTable(commands);
+          $scope.$watch('cmdlets', function (cmdlets) {
+            updateTable(cmdlets);
           });
         }]
     };

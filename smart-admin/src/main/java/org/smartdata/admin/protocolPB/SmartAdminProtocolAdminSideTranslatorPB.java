@@ -22,12 +22,12 @@ import org.apache.hadoop.ipc.RPC;
 
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.protocol.AdminServerProto.GetCommandInfoRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.ListCommandInfoRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.ActivateCommandRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.DisableCommandRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.DeleteCommandRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
+import org.smartdata.common.protocol.AdminServerProto.GetCmdletInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListCmdletInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ActivateCmdletRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.DisableCmdletRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.DeleteCmdletRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.GetRuleInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.GetRuleInfoResponseProto;
@@ -47,10 +47,10 @@ import org.smartdata.common.protocolPB.PBHelper;
 import org.smartdata.common.protocolPB.SmartAdminProtocolPB;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.command.CommandInfo;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
-import org.smartdata.common.protocol.AdminServerProto.SubmitCommandRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCmdletRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedRequestProto;
 
 import java.io.IOException;
@@ -132,11 +132,11 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
   }
 
   @Override
-  public void deleteRule(long ruleID, boolean dropPendingCommands)
+  public void deleteRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     DeleteRuleRequestProto req = DeleteRuleRequestProto.newBuilder()
         .setRuleId(ruleID)
-        .setDropPendingCommands(dropPendingCommands)
+        .setDropPendingCmdlets(dropPendingCmdlets)
         .build();
     try {
       rpcProxy.deleteRule(null, req);
@@ -157,11 +157,11 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
   }
 
   @Override
-  public void disableRule(long ruleID, boolean dropPendingCommands)
+  public void disableRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     DisableRuleRequestProto req = DisableRuleRequestProto.newBuilder()
         .setRuleId(ruleID)
-        .setDropPendingCommands(dropPendingCommands)
+        .setDropPendingCmdlets(dropPendingCmdlets)
         .build();
     try {
       rpcProxy.disableRule(null, req);
@@ -170,31 +170,31 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
     }
   }
 
-  // TODO Command RPC Client Interface
+  // TODO Cmdlet RPC Client Interface
   @Override
-  public CommandInfo getCommandInfo(long commandID) throws IOException {
-    GetCommandInfoRequestProto req = GetCommandInfoRequestProto.newBuilder()
-        .setCommandID(commandID).build();
+  public CmdletInfo getCmdletInfo(long cmdletID) throws IOException {
+    GetCmdletInfoRequestProto req = GetCmdletInfoRequestProto.newBuilder()
+        .setCmdletID(cmdletID).build();
     try {
-      return PBHelper.convert(rpcProxy.getCommandInfo(null, req).getCommandInfo());
+      return PBHelper.convert(rpcProxy.getCmdletInfo(null, req).getCmdletInfo());
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }
   }
 
   @Override
-  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState)
+  public List<CmdletInfo> listCmdletInfo(long rid, CmdletState cmdletState)
       throws IOException {
-    ListCommandInfoRequestProto req = ListCommandInfoRequestProto.newBuilder()
-        .setRuleID(rid).setCommandState(commandState.getValue())
+    ListCmdletInfoRequestProto req = ListCmdletInfoRequestProto.newBuilder()
+        .setRuleID(rid).setCmdletState(cmdletState.getValue())
         .build();
     try {
-      List<CommandInfoProto> protoslist =
-          rpcProxy.listCommandInfo(null, req).getCommandInfosList();
+      List<CmdletInfoProto> protoslist =
+          rpcProxy.listCmdletInfo(null, req).getCmdletInfosList();
       if (protoslist == null)
         return new ArrayList<>();
-      List<CommandInfo> list = new ArrayList<>();
-      for (CommandInfoProto infoProto : protoslist) {
+      List<CmdletInfo> list = new ArrayList<>();
+      for (CmdletInfoProto infoProto : protoslist) {
         list.add(PBHelper.convert(infoProto));
       }
       return list;
@@ -204,12 +204,12 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
   }
 
   @Override
-  public void activateCommand(long commandID) throws IOException {
+  public void activateCmdlet(long cmdletID) throws IOException {
     try {
-      ActivateCommandRequestProto req = ActivateCommandRequestProto.newBuilder()
-          .setCommandID(commandID)
+      ActivateCmdletRequestProto req = ActivateCmdletRequestProto.newBuilder()
+          .setCmdletID(cmdletID)
           .build();
-      rpcProxy.activateCommand(null, req);
+      rpcProxy.activateCmdlet(null, req);
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }
@@ -217,24 +217,24 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
   }
 
   @Override
-  public void disableCommand(long commandID) throws IOException {
+  public void disableCmdlet(long cmdletID) throws IOException {
     try {
-      DisableCommandRequestProto req = DisableCommandRequestProto.newBuilder()
-          .setCommandID(commandID)
+      DisableCmdletRequestProto req = DisableCmdletRequestProto.newBuilder()
+          .setCmdletID(cmdletID)
           .build();
-      rpcProxy.disableCommand(null, req);
+      rpcProxy.disableCmdlet(null, req);
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }
   }
 
   @Override
-  public void deleteCommand(long commandID) throws IOException {
+  public void deleteCmdlet(long cmdletID) throws IOException {
     try {
-      DeleteCommandRequestProto req = DeleteCommandRequestProto.newBuilder()
-          .setCommandID(commandID)
+      DeleteCmdletRequestProto req = DeleteCmdletRequestProto.newBuilder()
+          .setCmdletID(cmdletID)
           .build();
-      rpcProxy.deleteCommand(null, req);
+      rpcProxy.deleteCmdlet(null, req);
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }
@@ -275,11 +275,11 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
   }
 
   @Override
-  public long submitCommand(String cmd) throws IOException {
-    SubmitCommandRequestProto req = SubmitCommandRequestProto.newBuilder()
+  public long submitCmdlet(String cmd) throws IOException {
+    SubmitCmdletRequestProto req = SubmitCmdletRequestProto.newBuilder()
         .setCmd(cmd).build();
     try {
-     return rpcProxy.submitCommand(null,req).getRes();
+     return rpcProxy.submitCmdlet(null,req).getRes();
     } catch (ServiceException e) {
       throw PBHelper.getRemoteException(e);
     }

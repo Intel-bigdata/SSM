@@ -53,7 +53,7 @@ angular.module('dashboard')
           $stb.text('JVM Info').key('jvm').styleClass('col-md-1').done(),
           $stb.text('Address').key('akkaAddr').canSort().styleClass('col-md-3 hidden-xs').done(),
           // group 2/3 (5-col)
-          $stb.number('Executors').key('commands').canSort().styleClass('col-md-1 hidden-xs').done(),
+          $stb.number('Executors').key('cmdlets').canSort().styleClass('col-md-1 hidden-xs').done(),
           $stb.progressbar('Slots Usage').key('slots').sortBy('slots.usage').styleClass('col-md-1').done(),
           $stb.duration('Uptime').key('aliveFor').canSort().styleClass('col-md-3 hidden-sm hidden-xs').done(),
           // group 3/3 (3-col)
@@ -80,7 +80,7 @@ angular.module('dashboard')
                 max: worker.slots.total,
                 usage: worker.slots.usage
               },
-              commands: worker.commands.length || 0,
+              cmdlets: worker.cmdlets.length || 0,
               detail: {href: worker.pageUrl, text: 'Details', class: 'btn-xs btn-primary'},
               conf: {href: worker.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
               Stop: {

@@ -21,13 +21,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.admin.protocolPB.SmartAdminProtocolAdminSideTranslatorPB;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.common.protocol.SmartAdminProtocol;
 import org.smartdata.common.protocolPB.SmartAdminProtocolPB;
 import org.smartdata.common.rule.RuleInfo;
@@ -114,10 +114,10 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
   }
 
   @Override
-  public void deleteRule(long ruleID, boolean dropPendingCommands)
+  public void deleteRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     checkOpen();
-    ssm.deleteRule(ruleID, dropPendingCommands);
+    ssm.deleteRule(ruleID, dropPendingCmdlets);
   }
 
   @Override
@@ -127,41 +127,41 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
   }
 
   @Override
-  public void disableRule(long ruleID, boolean dropPendingCommands)
+  public void disableRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     checkOpen();
-    ssm.disableRule(ruleID, dropPendingCommands);
+    ssm.disableRule(ruleID, dropPendingCmdlets);
   }
 
   @Override
-  public CommandInfo getCommandInfo(long commandID) throws IOException {
+  public CmdletInfo getCmdletInfo(long cmdletID) throws IOException {
     checkOpen();
-    return ssm.getCommandInfo(commandID);
+    return ssm.getCmdletInfo(cmdletID);
   }
 
   @Override
-  public List<CommandInfo> listCommandInfo(long rid, CommandState commandState)
+  public List<CmdletInfo> listCmdletInfo(long rid, CmdletState cmdletState)
       throws IOException {
     checkOpen();
-    return ssm.listCommandInfo(rid, commandState);
+    return ssm.listCmdletInfo(rid, cmdletState);
   }
 
   @Override
-  public void activateCommand(long commandID) throws IOException {
+  public void activateCmdlet(long cmdletID) throws IOException {
     checkOpen();
-    ssm.activateCommand(commandID);
+    ssm.activateCmdlet(cmdletID);
   }
 
   @Override
-  public void disableCommand(long commandID) throws IOException {
+  public void disableCmdlet(long cmdletID) throws IOException {
     checkOpen();
-    ssm.disableCommand(commandID);
+    ssm.disableCmdlet(cmdletID);
   }
 
   @Override
-  public void deleteCommand(long commandID) throws IOException {
+  public void deleteCmdlet(long cmdletID) throws IOException {
     checkOpen();
-    ssm.deleteCommand(commandID);
+    ssm.deleteCmdlet(cmdletID);
   }
 
   @Override
@@ -177,9 +177,9 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
   }
 
   @Override
-  public long submitCommand(String cmd) throws IOException {
+  public long submitCmdlet(String cmd) throws IOException {
     checkOpen();
-    return ssm.submitCommand(cmd);
+    return ssm.submitCmdlet(cmd);
   }
 
   @Override

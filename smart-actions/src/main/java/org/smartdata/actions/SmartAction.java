@@ -23,7 +23,7 @@ import java.io.PrintStream;
 
 /**
  * Smart action, the base class. All actions should inherit this. All actions
- * should be able to run in a command line or web console. User defined actions
+ * should be able to run in a cmdlet line or web console. User defined actions
  * are also meant to extend this.
  */
 public abstract class SmartAction {

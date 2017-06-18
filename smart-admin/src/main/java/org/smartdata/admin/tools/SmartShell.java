@@ -22,6 +22,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.lang.WordUtils;
 import org.apache.commons.logging.Log;
@@ -37,7 +38,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.smartdata.conf.SmartConf;
 
-/** Provide command line access to a FileSystem. */
+/** Provide cmdlet line access to a FileSystem. */
 @InterfaceAudience.Private
 public class SmartShell extends Configured implements Tool {
 
@@ -47,7 +48,7 @@ public class SmartShell extends Configured implements Tool {
 
   private SmartAdmin client;
   private Help help;
-  protected CommandFactory commandFactory;
+  protected CommandFactory cmdletFactory;
 
   private final String usagePrefix = "Usage: ssm [generic options]";
 
@@ -56,14 +57,14 @@ public class SmartShell extends Configured implements Tool {
   /**
    * Default ctor with no configuration.  Be sure to invoke
    * {@link #setConf(Configuration)} with a valid configuration prior
-   * to running commands.
+   * to running cmdlets.
    */
   public SmartShell() {
     this(null);
   }
 
   /**
-   * Construct a FsShell with the given configuration.  Commands can be
+   * Construct a FsShell with the given configuration.  Cmdlets can be
    * executed via {@link #run(String[])}
    * @param conf the hadoop configuration
    */
@@ -80,16 +81,16 @@ public class SmartShell extends Configured implements Tool {
 
   protected void init() throws IOException {
     getConf().setQuietMode(true);
-    if (commandFactory == null) {
-      commandFactory = new CommandFactory(getConf());
-      commandFactory.addObject(new Help(), "-help");
-      commandFactory.addObject(new Usage(), "-usage");
-      registerCommands(commandFactory);
+    if (cmdletFactory == null) {
+      cmdletFactory = new CommandFactory(getConf());
+      cmdletFactory.addObject(new Help(), "-help");
+      cmdletFactory.addObject(new Usage(), "-usage");
+      registerCmdlets(cmdletFactory);
     }
   }
 
-  protected void registerCommands(CommandFactory factory) {
-    factory.registerCommands(SmartCommand.class);
+  protected void registerCmdlets(CommandFactory factory) {
+    factory.registerCommands(SmartCmdlet.class);
   }
 
   protected String getUsagePrefix() {
@@ -97,16 +98,16 @@ public class SmartShell extends Configured implements Tool {
   }
 
   // NOTE: Usage/Help are inner classes to allow access to outer methods
-  // that access commandFactory
+  // that access cmdletFactory
 
   /**
-   *  Display help for commands with their short usage and long description.
+   *  Display help for cmdlets with their short usage and long description.
    */
-  protected class Usage extends SmartCommand {
+  protected class Usage extends SmartCmdlet {
     public static final String NAME = "usage";
     public static final String USAGE = "[cmd ...]";
     public static final String DESCRIPTION =
-        "Displays the usage for given command or all commands if none " +
+        "Displays the usage for given cmdlet or all cmdlets if none " +
             "is specified.";
 
     @Override
@@ -120,13 +121,13 @@ public class SmartShell extends Configured implements Tool {
   }
 
   /**
-   * Displays short usage of commands sans the long description
+   * Displays short usage of cmdlets sans the long description
    */
-  protected class Help extends SmartCommand {
+  protected class Help extends SmartCmdlet {
     public static final String NAME = "help";
     public static final String USAGE = "[cmd ...]";
     public static final String DESCRIPTION =
-        "Displays help for given command or all commands if none " +
+        "Displays help for given cmdlet or all cmdlets if none " +
             "is specified.";
 
     @Override
@@ -167,10 +168,10 @@ public class SmartShell extends Configured implements Tool {
 
   private void printInfo(PrintStream out, String cmd, boolean showHelp) {
     if (cmd != null) {
-      // display help or usage for one command
-      Command instance = commandFactory.getInstance("-" + cmd);
+      // display help or usage for one cmdlet
+      Command instance = cmdletFactory.getInstance("-" + cmd);
       if (instance == null) {
-        throw new UnknownCommandException(cmd);
+        throw new UnknownCmdletException(cmd);
       }
       if (showHelp) {
         printInstanceHelp(out, instance);
@@ -178,19 +179,19 @@ public class SmartShell extends Configured implements Tool {
         printInstanceUsage(out, instance);
       }
     } else {
-      // display help or usage for all commands
+      // display help or usage for all cmdlets
       out.println(getUsagePrefix());
 
       // display list of short usages
-      ArrayList<Command> instances = new ArrayList<Command>();
-      for (String name : commandFactory.getNames()) {
-        Command instance = commandFactory.getInstance(name);
+      List<Command> instances = new ArrayList<>();
+      for (String name : cmdletFactory.getNames()) {
+        Command instance = cmdletFactory.getInstance(name);
         if (!instance.isDeprecated()) {
           out.println("\t[" + instance.getUsage() + "]");
           instances.add(instance);
         }
       }
-      // display long descriptions for each command
+      // display long descriptions for each cmdlet
       if (showHelp) {
         for (Command instance : instances) {
           out.println();
@@ -243,7 +244,7 @@ public class SmartShell extends Configured implements Tool {
     }
   }
 
-  // Creates a two-row table, the first row is for the command line option,
+  // Creates a two-row table, the first row is for the cmdlet line option,
   // the second row is for the option description.
   private TableListing createOptionTableListing() {
     return new TableListing.Builder().addField("").addField("", true)
@@ -263,9 +264,9 @@ public class SmartShell extends Configured implements Tool {
       String cmd = argv[0];
       Command instance = null;
       try {
-        instance = commandFactory.getInstance(cmd);
+        instance = cmdletFactory.getInstance(cmd);
         if (instance == null) {
-          throw new UnknownCommandException();
+          throw new UnknownCmdletException();
         }
 
         exitCode = instance.run(Arrays.copyOfRange(argv, 1, argv.length));
@@ -295,9 +296,9 @@ public class SmartShell extends Configured implements Tool {
       System.err.println(cmd + ": " + line);
       if (cmd.charAt(0) != '-') {
         Command instance = null;
-        instance = commandFactory.getInstance("-" + cmd);
+        instance = cmdletFactory.getInstance("-" + cmd);
         if (instance != null) {
-          System.err.println("Did you mean -" + cmd + "?  This command " +
+          System.err.println("Did you mean -" + cmd + "?  This cmdlet " +
               "begins with a dash.");
         }
       }
@@ -312,7 +313,7 @@ public class SmartShell extends Configured implements Tool {
 
   /**
    * main() has some simple utility methods
-   * @param argv the command and its arguments
+   * @param argv the cmdlet and its arguments
    * @throws Exception upon error
    */
   public static void main(String argv[]) throws Exception {
@@ -335,19 +336,19 @@ public class SmartShell extends Configured implements Tool {
   }
 
   /**
-   * The default ctor signals that the command being executed does not exist,
-   * while other ctor signals that a specific command does not exist.  The
-   * latter is used by commands that process other commands, ex. -usage/-help
+   * The default ctor signals that the cmdlet being executed does not exist,
+   * while other ctor signals that a specific cmdlet does not exist.  The
+   * latter is used by cmdlets that process other cmdlets, ex. -usage/-help
    */
   @SuppressWarnings("serial")
-  static class UnknownCommandException extends IllegalArgumentException {
+  static class UnknownCmdletException extends IllegalArgumentException {
     private final String cmd;
-    UnknownCommandException() { this(null); }
-    UnknownCommandException(String cmd) { this.cmd = cmd; }
+    UnknownCmdletException() { this(null); }
+    UnknownCmdletException(String cmd) { this.cmd = cmd; }
 
     @Override
     public String getMessage() {
-      return ((cmd != null) ? "`"+cmd+"': " : "") + "Unknown command";
+      return ((cmd != null) ? "`"+cmd+"': " : "") + "Unknown cmdlet";
     }
   }
 }

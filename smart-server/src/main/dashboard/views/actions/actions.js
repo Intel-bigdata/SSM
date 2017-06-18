@@ -64,7 +64,7 @@ angular.module('dashboard')
           // group 1/3 (4-col)
           $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
           $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-          $stb.text('Command ID').key('cid').canSort().done(),
+          $stb.text('Cmdlet ID').key('cid').canSort().done(),
           $stb.text('Name').key('actionName').canSort().done(),
             // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
           // group 2/3 (5-col)
@@ -88,7 +88,7 @@ angular.module('dashboard')
           _.map(actions, function (action) {
             return {
               id: action.actionId,
-              cid: action.commandId,
+              cid: action.cmdletId,
               // name: {href: pageUrl, text: rule.appName},
               state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
               //user: rule.user,

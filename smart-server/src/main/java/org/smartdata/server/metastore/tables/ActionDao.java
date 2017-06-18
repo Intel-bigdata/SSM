@@ -137,7 +137,7 @@ public class ActionDao {
   private Map<String, Object> toMap(ActionInfo actionInfo) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("aid", actionInfo.getActionId());
-    parameters.put("cid", actionInfo.getCommandId());
+    parameters.put("cid", actionInfo.getCmdletId());
     parameters.put("action_name", actionInfo.getActionName());
     parameters.put("args", actionInfo.getArgs());
     parameters.put("result", actionInfo.getResult());
@@ -156,7 +156,7 @@ public class ActionDao {
     public ActionInfo mapRow(ResultSet resultSet, int i) throws SQLException {
       ActionInfo actionInfo = new ActionInfo();
       actionInfo.setActionId(resultSet.getLong("aid"));
-      actionInfo.setCommandId(resultSet.getLong("cid"));
+      actionInfo.setCmdletId(resultSet.getLong("cid"));
       actionInfo.setActionName(resultSet.getString("action_name"));
       actionInfo.setArgs(resultSet.getString("args").split(","));
       actionInfo.setResult(resultSet.getString("result"));

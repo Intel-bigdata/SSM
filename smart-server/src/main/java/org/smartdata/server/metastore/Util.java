@@ -66,7 +66,7 @@ public class Util {
         "DROP TABLE IF EXISTS `storage_policy`;",
         "DROP TABLE IF EXISTS `xattr`;",
         "DROP TABLE IF EXISTS `rules`;",
-        "DROP TABLE IF EXISTS `commands`;",
+        "DROP TABLE IF EXISTS `cmdlets`;",
         "DROP TABLE IF EXISTS `actions`;",
         "DROP TABLE IF EXISTS `blank_access_count_info`;",  // for special cases
 
@@ -159,10 +159,10 @@ public class Util {
             "  `submit_time` bigint(20) NOT NULL,\n" +
             "  `last_check_time` bigint(20) DEFAULT NULL,\n" +
             "  `checked_count` int(11) NOT NULL,\n" +
-            "  `commands_generated` int(11) NOT NULL\n" +
+            "  `cmdlets_generated` int(11) NOT NULL\n" +
             ") ;",
 
-        "CREATE TABLE `commands` (\n" +
+        "CREATE TABLE `cmdlets` (\n" +
             "  `cid` INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  `rid` INTEGER NOT NULL,\n" +
             "  `aids` varchar(4096) NOT NULL,\n" +

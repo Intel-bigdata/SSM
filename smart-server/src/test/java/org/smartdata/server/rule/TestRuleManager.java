@@ -270,16 +270,16 @@ public class TestRuleManager {
     public void run() {
       long lastCheckTime;
       long checkedCount;
-      int commandsGen;
+      int cmdletsGen;
       try {
         for (int i = 0; i < 1000; i++) {
           RuleInfo info = ruleManager.getRuleInfo(ruleid);
           lastCheckTime = System.currentTimeMillis();
           checkedCount = info.getNumChecked();
-          commandsGen = (int)info.getNumCmdsGen();
+          cmdletsGen = (int)info.getNumCmdsGen();
           //System.out.println("" + index + ": " + lastCheckTime + " "
-          // + checkedCount + " " + commandsGen);
-          Assert.assertTrue(checkedCount == commandsGen);
+          // + checkedCount + " " + cmdletsGen);
+          Assert.assertTrue(checkedCount == cmdletsGen);
           ruleManager.updateRuleInfo(ruleid, null,
               lastCheckTime, index, index);
         }

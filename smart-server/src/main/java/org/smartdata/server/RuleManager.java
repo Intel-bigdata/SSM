@@ -19,11 +19,11 @@ package org.smartdata.server;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.command.CommandDescriptor;
-import org.smartdata.server.command.CommandExecutor;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.server.cmdlet.CmdletExecutor;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
@@ -89,11 +89,11 @@ public class RuleManager implements Service {
     }
 
     TranslateResult tr = doCheckRule(rule, null);
-    CommandDescriptor cd = tr.getCmdDescriptor();
-    if (getCommandExecutor() != null) {
+    CmdletDescriptor cd = tr.getCmdDescriptor();
+    if (getCmdletExecutor() != null) {
       String error = "";
       for (int i = 0; i < cd.size(); i++) {
-        if (!getCommandExecutor().isActionSupported(cd.getActionName(i))) {
+        if (!getCmdletExecutor().isActionSupported(cd.getActionName(i))) {
           error += "Action '" + cd.getActionName(i) + "' not supported.\n";
         }
       }
@@ -133,16 +133,16 @@ public class RuleManager implements Service {
   }
 
   /**
-   * Delete a rule in SSM. if dropPendingCommands equals false then the rule
+   * Delete a rule in SSM. if dropPendingCmdlets equals false then the rule
    * record will still be kept in Table 'rules', the record will be deleted
    * sometime later.
    *
    * @param ruleID
-   * @param dropPendingCommands pending commands triggered by the rule will be
+   * @param dropPendingCmdlets pending cmdlets triggered by the rule will be
    *                            discarded if true.
    * @throws IOException
    */
-  public void deleteRule(long ruleID, boolean dropPendingCommands)
+  public void deleteRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     infoRepo.delete();
@@ -153,7 +153,7 @@ public class RuleManager implements Service {
     submitRuleToScheduler(infoRepo.activate(this));
   }
 
-  public void disableRule(long ruleID, boolean dropPendingCommands)
+  public void disableRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     infoRepo.disable();
@@ -182,27 +182,27 @@ public class RuleManager implements Service {
   }
 
   public void updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
-      long checkedCount, int commandsGen) throws IOException {
+      long checkedCount, int cmdletsGen) throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleId);
-    infoRepo.updateRuleInfo(rs, lastCheckTime, checkedCount, commandsGen);
+    infoRepo.updateRuleInfo(rs, lastCheckTime, checkedCount, cmdletsGen);
   }
 
-  public void addNewCommands(List<CommandInfo> commands) {
-    if (commands == null || commands.size() == 0) {
+  public void addNewCmdlets(List<CmdletInfo> cmdlets) {
+    if (cmdlets == null || cmdlets.size() == 0) {
       return;
     }
 
-    CommandInfo[] cmds = commands.toArray(new CommandInfo[commands.size()]);
+    CmdletInfo[] cmds = cmdlets.toArray(new CmdletInfo[cmdlets.size()]);
 
-    // TODO: call commandExecutor interface to do this
+    // TODO: call cmdletExecutor interface to do this
     // try {
     // } catch (SQLException e) {
     //   LOG.error(e.getMessage());
     // }
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("" + commands.size() + " commands added.");
-      for (CommandInfo cmd : commands) {
+      LOG.debug("" + cmdlets.size() + " cmdlets added.");
+      for (CmdletInfo cmd : cmdlets) {
         LOG.debug("\t" + cmd);
       }
     }
@@ -216,8 +216,8 @@ public class RuleManager implements Service {
     return ssm != null ? ssm.getStatesManager() : null;
   }
 
-  public CommandExecutor getCommandExecutor() {
-    return ssm != null ? ssm.getCommandExecutor() : null;
+  public CmdletExecutor getCmdletExecutor() {
+    return ssm != null ? ssm.getCmdletExecutor() : null;
   }
 
   /**

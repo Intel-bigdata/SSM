@@ -20,7 +20,7 @@ package org.smartdata.common.protocolPB;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.protocol.AdminServerProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleRequestProto;
@@ -40,24 +40,24 @@ import org.smartdata.common.protocol.AdminServerProto.DisableRuleResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.DeleteRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActivateRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.DisableRuleRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.GetCommandInfoResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.GetCommandInfoRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.ListCommandInfoResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.ListCommandInfoRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.ActivateCommandResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.ActivateCommandRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.DisableCommandResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.DisableCommandRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.DeleteCommandResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.DeleteCommandRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.CommandInfoProto;
+import org.smartdata.common.protocol.AdminServerProto.GetCmdletInfoResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.GetCmdletInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListCmdletInfoResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ListCmdletInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ActivateCmdletResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ActivateCmdletRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.DisableCmdletResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.DisableCmdletRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.DeleteCmdletResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.DeleteCmdletRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.GetActionInfoResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.GetActionInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
-import org.smartdata.common.protocol.AdminServerProto.SubmitCommandResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.SubmitCommandRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCmdletResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCmdletRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
@@ -68,7 +68,7 @@ import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventResp
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.protocol.SmartServerProtocols;
 import org.smartdata.common.rule.RuleInfo;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -152,7 +152,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
   public DeleteRuleResponseProto deleteRule(RpcController controller,
       DeleteRuleRequestProto req) throws ServiceException {
     try {
-      server.deleteRule(req.getRuleId(), req.getDropPendingCommands());
+      server.deleteRule(req.getRuleId(), req.getDropPendingCmdlets());
       return DeleteRuleResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
@@ -174,7 +174,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
   public DisableRuleResponseProto disableRule(RpcController controller,
       DisableRuleRequestProto req) throws ServiceException {
     try {
-      server.disableRule(req.getRuleId(), req.getDropPendingCommands());
+      server.disableRule(req.getRuleId(), req.getDropPendingCmdlets());
       return DisableRuleResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
@@ -182,14 +182,14 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public GetCommandInfoResponseProto getCommandInfo(
-      RpcController controller, GetCommandInfoRequestProto req)
+  public GetCmdletInfoResponseProto getCmdletInfo(
+      RpcController controller, GetCmdletInfoRequestProto req)
       throws ServiceException {
     try {
-      CommandInfo commandInfo = server.getCommandInfo(req.getCommandID());
-      return GetCommandInfoResponseProto
+      CmdletInfo cmdletInfo = server.getCmdletInfo(req.getCmdletID());
+      return GetCmdletInfoResponseProto
           .newBuilder()
-          .setCommandInfo(PBHelper.convert(commandInfo))
+          .setCmdletInfo(PBHelper.convert(cmdletInfo))
           .build();
     } catch (IOException e) {
       throw new ServiceException(e);
@@ -197,57 +197,57 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public ListCommandInfoResponseProto listCommandInfo(
-      RpcController controller, ListCommandInfoRequestProto req)
+  public ListCmdletInfoResponseProto listCmdletInfo(
+      RpcController controller, ListCmdletInfoRequestProto req)
       throws ServiceException {
     try {
-      List<CommandInfo> list = server.listCommandInfo(req.getRuleID(),
-          CommandState.fromValue(req.getCommandState()));
+      List<CmdletInfo> list = server.listCmdletInfo(req.getRuleID(),
+          CmdletState.fromValue(req.getCmdletState()));
       if (list == null)
-        return ListCommandInfoResponseProto.newBuilder().build();
-      List<CommandInfoProto> protoList = new ArrayList<>();
-      for (CommandInfo info : list) {
+        return ListCmdletInfoResponseProto.newBuilder().build();
+      List<CmdletInfoProto> protoList = new ArrayList<>();
+      for (CmdletInfo info : list) {
         protoList.add(PBHelper.convert(info));
       }
-      return ListCommandInfoResponseProto.newBuilder()
-          .addAllCommandInfos(protoList).build();
+      return ListCmdletInfoResponseProto.newBuilder()
+          .addAllCmdletInfos(protoList).build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
   }
 
   @Override
-  public ActivateCommandResponseProto activateCommand(
-      RpcController controller, ActivateCommandRequestProto req)
+  public ActivateCmdletResponseProto activateCmdlet(
+      RpcController controller, ActivateCmdletRequestProto req)
       throws ServiceException {
     try {
-      server.activateCommand(req.getCommandID());
-      return ActivateCommandResponseProto.newBuilder().build();
+      server.activateCmdlet(req.getCmdletID());
+      return ActivateCmdletResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
   }
 
   @Override
-  public DisableCommandResponseProto disableCommand(
+  public DisableCmdletResponseProto disableCmdlet(
       RpcController controller,
-      DisableCommandRequestProto req)
+      DisableCmdletRequestProto req)
       throws ServiceException {
     try {
-      server.disableCommand(req.getCommandID());
-      return DisableCommandResponseProto.newBuilder().build();
+      server.disableCmdlet(req.getCmdletID());
+      return DisableCmdletResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
   }
 
   @Override
-  public DeleteCommandResponseProto deleteCommand(
-      RpcController controller, DeleteCommandRequestProto req)
+  public DeleteCmdletResponseProto deleteCmdlet(
+      RpcController controller, DeleteCmdletRequestProto req)
       throws ServiceException {
     try {
-      server.deleteCommand(req.getCommandID());
-      return DeleteCommandResponseProto.newBuilder().build();
+      server.deleteCmdlet(req.getCmdletID());
+      return DeleteCmdletResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
@@ -287,11 +287,11 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
   }
 
   @Override
-  public SubmitCommandResponseProto submitCommand(RpcController controller,
-      SubmitCommandRequestProto req) throws ServiceException {
+  public SubmitCmdletResponseProto submitCmdlet(RpcController controller,
+      SubmitCmdletRequestProto req) throws ServiceException {
     try {
-      long id = server.submitCommand(req.getCmd());
-      return SubmitCommandResponseProto.newBuilder()
+      long id = server.submitCmdlet(req.getCmd());
+      return SubmitCmdletResponseProto.newBuilder()
           .setRes(id).build();
     } catch (IOException e) {
       throw new ServiceException(e);

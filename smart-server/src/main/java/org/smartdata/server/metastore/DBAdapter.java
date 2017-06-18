@@ -24,9 +24,9 @@ import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.XAttrHelper;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
@@ -825,7 +825,7 @@ public class DBAdapter {
     }
 
     String sql = "INSERT INTO rules (state, rule_text, submit_time, "
-        + "checked_count, commands_generated"
+        + "checked_count, cmdlets_generated"
         + (info.getLastCheckTime() == 0 ? "" : ", last_check_time")
         + ") VALUES ("
         + info.getState().getValue()
@@ -859,7 +859,7 @@ public class DBAdapter {
   }
 
   public synchronized boolean updateRuleInfo(long ruleId, RuleState rs,
-      long lastCheckTime, long checkedCount, int commandsGen)
+      long lastCheckTime, long checkedCount, int cmdletsGen)
       throws SQLException {
     StringBuffer sb = new StringBuffer("UPDATE rules SET");
     if (rs != null) {
@@ -872,9 +872,9 @@ public class DBAdapter {
       sb.append(" checked_count = checked_count + ")
           .append(checkedCount).append(",");
     }
-    if (commandsGen != 0) {
-      sb.append(" commands_generated = commands_generated + ")
-          .append(commandsGen).append(",");
+    if (cmdletsGen != 0) {
+      sb.append(" cmdlets_generated = cmdlets_generated + ")
+          .append(cmdletsGen).append(",");
     }
     int idx = sb.lastIndexOf(",");
     sb.replace(idx, idx + 1, "");
@@ -906,7 +906,7 @@ public class DBAdapter {
             rs.getString("rule_text"),
             RuleState.fromValue((int) rs.getByte("state")),
             rs.getLong("checked_count"),
-            rs.getLong("commands_generated"),
+            rs.getLong("cmdlets_generated"),
             rs.getLong("last_check_time")
         ));
       }
@@ -916,21 +916,21 @@ public class DBAdapter {
     }
   }
 
-  public synchronized void insertCommandsTable(CommandInfo[] commands)
+  public synchronized void insertCmdletsTable(CmdletInfo[] cmdlets)
       throws SQLException {
     Connection conn = getConnection();
     Statement s = null;
     try {
       s = conn.createStatement();
-      for (int i = 0; i < commands.length; i++) {
-        String sql = "INSERT INTO commands (rid, aids, state, "
+      for (int i = 0; i < cmdlets.length; i++) {
+        String sql = "INSERT INTO cmdlets (rid, aids, state, "
             + "parameters, generate_time, state_changed_time) "
-            + "VALUES('" + commands[i].getRid() + "', '"
-            + StringUtils.join(commands[i].getAidsString(), ",") + "', '"
-            + commands[i].getState().getValue() + "', '"
-            + commands[i].getParameters() + "', '"
-            + commands[i].getGenerateTime() + "', '"
-            + commands[i].getStateChangedTime() + "');";
+            + "VALUES('" + cmdlets[i].getRid() + "', '"
+            + StringUtils.join(cmdlets[i].getAidsString(), ",") + "', '"
+            + cmdlets[i].getState().getValue() + "', '"
+            + cmdlets[i].getParameters() + "', '"
+            + cmdlets[i].getGenerateTime() + "', '"
+            + cmdlets[i].getStateChangedTime() + "');";
         s.addBatch(sql);
       }
       s.executeBatch();
@@ -942,22 +942,22 @@ public class DBAdapter {
     }
   }
 
-  public synchronized void insertCommandTable(CommandInfo command)
+  public synchronized void insertCmdletTable(CmdletInfo cmdlet)
       throws SQLException {
-    // Insert single command into commands, update command.id with latest id
-    String sql = "INSERT INTO commands (rid, aids, state, "
+    // Insert single cmdlet into cmdlets, update cmdlet.id with latest id
+    String sql = "INSERT INTO cmdlets (rid, aids, state, "
         + "parameters, generate_time, state_changed_time) "
-        + "VALUES('" + command.getRid() + "', '"
-        + StringUtils.join(command.getAidsString(), ",") + "', '"
-        + command.getState().getValue() + "', '"
-        + command.getParameters() + "', '"
-        + command.getGenerateTime() + "', '"
-        + command.getStateChangedTime() + "');";
+        + "VALUES('" + cmdlet.getRid() + "', '"
+        + StringUtils.join(cmdlet.getAidsString(), ",") + "', '"
+        + cmdlet.getState().getValue() + "', '"
+        + cmdlet.getParameters() + "', '"
+        + cmdlet.getGenerateTime() + "', '"
+        + cmdlet.getStateChangedTime() + "');";
     execute(sql);
   }
 
-  public long getMaxCommandId() throws SQLException {
-    QueryHelper queryHelper = new QueryHelper("SELECT MAX(cid) FROM commands;");
+  public long getMaxCmdletId() throws SQLException {
+    QueryHelper queryHelper = new QueryHelper("SELECT MAX(cid) FROM cmdlets;");
     long maxId = 0;
     try {
       ResultSet rs = queryHelper.executeQuery();
@@ -972,9 +972,9 @@ public class DBAdapter {
     return maxId;
   }
 
-  public List<CommandInfo> getCommandsTableItem(String cidCondition,
-      String ridCondition, CommandState state) throws SQLException {
-    String sqlPrefix = "SELECT * FROM commands WHERE ";
+  public List<CmdletInfo> getCmdletsTableItem(String cidCondition,
+      String ridCondition, CmdletState state) throws SQLException {
+    String sqlPrefix = "SELECT * FROM cmdlets WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
     String sqlState = (state == null) ? "" : "AND state = " + state.getValue();
@@ -985,23 +985,23 @@ public class DBAdapter {
     } else {
       sqlFinal = sqlPrefix.replaceFirst("WHERE ", "");
     }
-    return getCommands(sqlFinal);
+    return getCmdlets(sqlFinal);
   }
 
-  private List<CommandInfo> getCommands(String sql) throws SQLException {
+  private List<CmdletInfo> getCmdlets(String sql) throws SQLException {
     QueryHelper queryHelper = new QueryHelper(sql);
     try {
       ResultSet result = queryHelper.executeQuery();
-      List<CommandInfo> ret = convertCommandsTableItem(result);
+      List<CmdletInfo> ret = convertCmdletsTableItem(result);
       return ret;
     } finally {
       queryHelper.close();
     }
   }
 
-  public boolean updateCommandStatus(long cid, long rid, CommandState state)
+  public boolean updateCmdletStatus(long cid, long rid, CmdletState state)
       throws SQLException {
-    StringBuffer sb = new StringBuffer("UPDATE commands SET");
+    StringBuffer sb = new StringBuffer("UPDATE cmdlets SET");
     if (state != null) {
       sb.append(" state = ").append(state.getValue()).append(",");
       sb.append(" state_changed_time = ").append(System.currentTimeMillis()).append(",");
@@ -1018,29 +1018,29 @@ public class DBAdapter {
     }
   }
 
-  public void deleteCommand(long cid) throws SQLException {
-    String sql = String.format("DELETE from commands WHERE cid = %d;", cid);
+  public void deleteCmdlet(long cid) throws SQLException {
+    String sql = String.format("DELETE from cmdlets WHERE cid = %d;", cid);
     execute(sql);
   }
 
-  private List<CommandInfo> convertCommandsTableItem(ResultSet resultSet)
+  private List<CmdletInfo> convertCmdletsTableItem(ResultSet resultSet)
       throws SQLException {
-    List<CommandInfo> ret = new LinkedList<>();
+    List<CmdletInfo> ret = new LinkedList<>();
     if (resultSet == null) {
       return ret;
     }
 
     while (resultSet.next()) {
-      CommandInfo commands = new CommandInfo(
+      CmdletInfo cmdlets = new CmdletInfo(
           resultSet.getLong("cid"),
           resultSet.getLong("rid"),
           convertStringListToLong(resultSet.getString("aids").split(",")),
-          CommandState.fromValue((int) resultSet.getByte("state")),
+          CmdletState.fromValue((int) resultSet.getByte("state")),
           resultSet.getString("parameters"),
           resultSet.getLong("generate_time"),
           resultSet.getLong("state_changed_time")
       );
-      ret.add(commands);
+      ret.add(cmdlets);
     }
     return ret;
   }
@@ -1062,7 +1062,7 @@ public class DBAdapter {
     String sql = "INSERT INTO actions (aid, cid, action_name, args, "
         + "result, log, successful, create_time, finished, finish_time, progress) "
         + "VALUES('" + actionInfo.getActionId() + "', '"
-        + actionInfo.getCommandId() + "', '"
+        + actionInfo.getCmdletId() + "', '"
         + actionInfo.getActionName() + "', '"
         + StringUtils.join(actionInfo.getArgs(), ",") + "', '"
         + actionInfo.getResult() + "', '"

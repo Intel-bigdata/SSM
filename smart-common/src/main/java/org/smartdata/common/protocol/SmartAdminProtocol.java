@@ -18,12 +18,12 @@
 package org.smartdata.common.protocol;
 
 import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.CommandState;
+import org.smartdata.common.CmdletState;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.command.CommandInfo;
+import org.smartdata.common.cmdlet.CmdletInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -58,62 +58,62 @@ public interface SmartAdminProtocol {
   List<RuleInfo> listRulesInfo() throws IOException;
 
   /**
-   * Delete a rule in SSM. if dropPendingCommands equals false then the rule
+   * Delete a rule in SSM. if dropPendingCmdlets equals false then the rule
    * record will still be kept in Table 'rules', the record will be deleted
    * sometime later.
    *
    * @param ruleID
-   * @param dropPendingCommands pending commands triggered by the rule will be
+   * @param dropPendingCmdlets pending cmdlets triggered by the rule will be
    *                            discarded if true.
    * @throws IOException
    */
-  void deleteRule(long ruleID, boolean dropPendingCommands) throws IOException;
+  void deleteRule(long ruleID, boolean dropPendingCmdlets) throws IOException;
 
   void activateRule(long ruleID) throws IOException;
 
-  void disableRule(long ruleID, boolean dropPendingCommands) throws IOException;
+  void disableRule(long ruleID, boolean dropPendingCmdlets) throws IOException;
 
   /**
-   * Get information about the given command.
-   * @param commandID
-   * @return CommandInfo
+   * Get information about the given cmdlet.
+   * @param cmdletID
+   * @return CmdletInfo
    * @throws IOException
    */
-  CommandInfo getCommandInfo(long commandID) throws IOException;
+  CmdletInfo getCmdletInfo(long cmdletID) throws IOException;
 
   /**
-   * List commands in SSM.
+   * List cmdlets in SSM.
    * @param ruleID
-   * @param commandState
-   * @return All List<CommandInfo> commandInfos that satisfy requirement
+   * @param cmdletState
+   * @return All List<CmdletInfo> cmdletInfos that satisfy requirement
    * @throws IOException
    */
-  List<CommandInfo> listCommandInfo(long ruleID, CommandState commandState) throws IOException;
+  List<CmdletInfo> listCmdletInfo(long ruleID, CmdletState cmdletState) throws IOException;
 
   /**
-   * Get information about the given command.
-   * @param commandID
-   * @return CommandInfo
+   * Get information about the given cmdlet.
+   * @param cmdletID
+   * @return CmdletInfo
    * @throws IOException
    */
-  void activateCommand(long commandID) throws IOException;
+  void activateCmdlet(long cmdletID) throws IOException;
 
   /**
-   * Disable Command, if command is PENDING then mark as DISABLE
-   * if command is EXECUTING then kill all actions unfinished
-   * then mark as DISABLE, if command is DONE then do nothing.
-   * @param commandID
+   * Disable Cmdlet, if cmdlet is PENDING then mark as DISABLE
+   * if cmdlet is EXECUTING then kill all actions unfinished
+   * then mark as DISABLE, if cmdlet is DONE then do nothing.
+   * @param cmdletID
    * @throws IOException
    */
-  void disableCommand(long commandID) throws IOException;
+  void disableCmdlet(long cmdletID) throws IOException;
 
   /**
-   * Delete Command from DB and Cache. If command is in Cache,
+   * Delete Cmdlet from DB and Cache. If cmdlet is in Cache,
    * then disable it.
-   * @param commandID
+   * @param cmdletID
    * @throws IOException
    */
-  void deleteCommand(long commandID) throws IOException;
+  void deleteCmdlet(long cmdletID) throws IOException;
 
   /**
    * Query action info using action id.
@@ -133,12 +133,12 @@ public interface SmartAdminProtocol {
       throws IOException;
 
   /**
-   * Submit a command to server.
+   * Submit a cmdlet to server.
    * @param cmd separate actions with ';'
-   * @return command id if success
+   * @return cmdlet id if success
    * @throws IOException
    */
-  long submitCommand(String cmd) throws IOException;
+  long submitCmdlet(String cmd) throws IOException;
 
   /**
    * List actions supported in SmartServer.

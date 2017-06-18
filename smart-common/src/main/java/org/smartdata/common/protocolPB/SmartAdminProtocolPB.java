@@ -37,22 +37,22 @@ import org.smartdata.common.protocol.AdminServerProto.DisableRuleResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.DeleteRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ActivateRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.DisableRuleRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.GetCommandInfoResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.GetCommandInfoRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.ListCommandInfoResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.ListCommandInfoRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.ActivateCommandResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.ActivateCommandRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.DisableCommandResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.DisableCommandRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.DeleteCommandResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.DeleteCommandRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.GetCmdletInfoResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.GetCmdletInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ListCmdletInfoResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ListCmdletInfoRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.ActivateCmdletResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.ActivateCmdletRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.DisableCmdletResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.DisableCmdletRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.DeleteCmdletResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.DeleteCmdletRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.GetActionInfoResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.GetActionInfoRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
-import org.smartdata.common.protocol.AdminServerProto.SubmitCommandResponseProto;
-import org.smartdata.common.protocol.AdminServerProto.SubmitCommandRequestProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCmdletResponseProto;
+import org.smartdata.common.protocol.AdminServerProto.SubmitCmdletRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedResponseProto;
 import org.smartdata.common.protocol.AdminServerProto.ListActionsSupportedRequestProto;
 
@@ -85,20 +85,20 @@ public interface SmartAdminProtocolPB {
   DisableRuleResponseProto disableRule(RpcController controller,
       DisableRuleRequestProto req) throws ServiceException;
   
-  GetCommandInfoResponseProto getCommandInfo(RpcController controller,
-      GetCommandInfoRequestProto req) throws ServiceException;
+  GetCmdletInfoResponseProto getCmdletInfo(RpcController controller,
+      GetCmdletInfoRequestProto req) throws ServiceException;
 
-  ListCommandInfoResponseProto listCommandInfo(RpcController controller,
-      ListCommandInfoRequestProto req) throws ServiceException;
+  ListCmdletInfoResponseProto listCmdletInfo(RpcController controller,
+      ListCmdletInfoRequestProto req) throws ServiceException;
 
-  ActivateCommandResponseProto activateCommand(RpcController controller,
-      ActivateCommandRequestProto req) throws ServiceException;
+  ActivateCmdletResponseProto activateCmdlet(RpcController controller,
+      ActivateCmdletRequestProto req) throws ServiceException;
 
-  DisableCommandResponseProto disableCommand(RpcController controller,
-      DisableCommandRequestProto req) throws ServiceException;
+  DisableCmdletResponseProto disableCmdlet(RpcController controller,
+      DisableCmdletRequestProto req) throws ServiceException;
 
-  DeleteCommandResponseProto deleteCommand(RpcController controller,
-      DeleteCommandRequestProto req) throws ServiceException;
+  DeleteCmdletResponseProto deleteCmdlet(RpcController controller,
+      DeleteCmdletRequestProto req) throws ServiceException;
 
   GetActionInfoResponseProto getActionInfo(RpcController controller,
       GetActionInfoRequestProto req) throws ServiceException;
@@ -107,8 +107,8 @@ public interface SmartAdminProtocolPB {
       RpcController controller, ListActionInfoOfLastActionsRequestProto req)
       throws ServiceException;
 
-  SubmitCommandResponseProto submitCommand(
-      RpcController controller, SubmitCommandRequestProto req)
+  SubmitCmdletResponseProto submitCmdlet(
+      RpcController controller, SubmitCmdletRequestProto req)
       throws ServiceException;
 
   ListActionsSupportedResponseProto listActionsSupported(
