@@ -20,6 +20,7 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -29,7 +30,8 @@ public class AllSsdFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(AllSsdFileAction.class);
 
   @Override
-  public void init(String... args) {
-    super.init(args[0], "ALL_SSD");
+  public void init(Map<String, String> args) {
+    args.put(STORAGE_POLICY, "ALL_SSD");
+    super.init(args);
   }
 }

@@ -25,6 +25,8 @@ import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Test for SetStoragePolicyAction.
@@ -68,7 +70,10 @@ public class TestSetStoragePolicyAction extends ActionMiniCluster {
     SetStoragePolicyAction action = new SetStoragePolicyAction();
     action.setDfsClient(dfsClient);
     action.setContext(smartContext);
-    action.init(new String[] {file, storagePolicy});
+    Map<String, String> args = new HashMap();
+    args.put(SetStoragePolicyAction.FILE_PATH, file);
+    args.put(SetStoragePolicyAction.STORAGE_POLICY, storagePolicy);
+    action.init(args);
     action.run();
     ActionStatus status = action.getActionStatus();
 

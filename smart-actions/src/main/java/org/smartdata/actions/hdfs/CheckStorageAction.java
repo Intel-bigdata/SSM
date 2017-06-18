@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Check and return file blocks storage location.
@@ -36,9 +37,9 @@ public class CheckStorageAction extends HdfsAction {
   private String fileName;
 
   @Override
-  public void init(String[] args) {
+  public void init(Map<String, String> args) {
     super.init(args);
-    fileName = args[0];
+    fileName = args.get(FILE_PATH);
   }
 
   @Override

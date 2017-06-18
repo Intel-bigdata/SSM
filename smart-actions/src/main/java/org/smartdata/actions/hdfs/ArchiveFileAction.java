@@ -20,7 +20,7 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.UUID;
+import java.util.Map;
 
 /**
  * An action to archive a file.
@@ -29,7 +29,8 @@ public class ArchiveFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(ArchiveFileAction.class);
 
   @Override
-  public void init(String... args) {
-    super.init(args[0], "COLD");
+  public void init(Map<String, String> args) {
+    args.put(STORAGE_POLICY, "COLD");
+    super.init(args);
   }
 }

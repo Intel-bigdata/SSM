@@ -25,6 +25,7 @@ import org.smartdata.actions.ActionStatus;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -37,20 +38,21 @@ import java.util.Random;
  * Arguments: file_path length [buffer_size, default=64k]
  */
 public class WriteFileAction extends HdfsAction {
+  public static final String LENGTH = "-length";
+  public static final String BUF_SIZE = "-bufSize";
   private String filePath;
   private long length = -1;
   private int bufferSize = 64 * 1024;
 
   @Override
-  public void init(String[] args) {
+  public void init(Map<String, String> args) {
     super.init(args);
-    this.filePath = args[0];
-    if (args.length < 2) {
-      return;
+    this.filePath = args.get(FILE_PATH);
+    if (args.containsKey(LENGTH)) {
+      length = Long.valueOf(args.get(LENGTH));
     }
-    this.length = Long.valueOf(args[1]);
-    if (args.length >= 3) {
-      this.bufferSize = Integer.valueOf(args[2]);
+    if (args.containsKey(BUF_SIZE)) {
+      this.bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
   }
 

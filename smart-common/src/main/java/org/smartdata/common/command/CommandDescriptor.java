@@ -19,17 +19,25 @@ package org.smartdata.common.command;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * CommandDescriptor describes a command by parsing out action names and their
  * parameters like shell format. It does not including verifications like
- * whether the action name is supported or the parameters are valid or not.
+ * whether the action is supported or the parameters are valid or not.
+ *
+ * Command string should have the following format:
+ *    action1 [-option [value]] ... [; action2 [-option [value]] ...]
  */
 public class CommandDescriptor {
-  private long ruleId;
+  public static final String RULE_ID = "-ruleId";
+  public static final String HDFS_FILE_PATH = "-file";
+
+  private Map<String, String> actionCommon = new HashMap<>();
   private List<String> actionNames = new ArrayList<>();
-  private List<String[]> actionArgs = new ArrayList<>();
+  private List<Map<String, String>> actionArgs = new ArrayList<>();
   private String commandString = null;
 
   private static final String REG_ACTION_NAME = "^[a-zA-Z]+[a-zA-Z0-9_]*";
@@ -38,11 +46,12 @@ public class CommandDescriptor {
   }
 
   public CommandDescriptor(String commandString) throws ParseException {
-    this(commandString, 0);
+    setCommandString(commandString);
   }
 
-  public CommandDescriptor(String commandString, long ruleId) throws ParseException {
-    this.ruleId = ruleId;
+  public CommandDescriptor(String commandString, long ruleId)
+      throws ParseException {
+    setRuleId(ruleId);
     setCommandString(commandString);
   }
 
@@ -57,15 +66,28 @@ public class CommandDescriptor {
     parseCommandString(commandString);
   }
 
+  public void setCommandParameter(String key, String value) {
+    actionCommon.put(key, value);
+  }
+
+  public String getCommandParameter(String key) {
+    return actionCommon.get(key);
+  }
+
   public long getRuleId() {
-    return ruleId;
+    String idStr = actionCommon.get(RULE_ID);
+    try {
+      return idStr == null ? 0 : Long.valueOf(idStr);
+    } catch (Exception e) {
+      return 0;
+    }
   }
 
   public void setRuleId(long ruleId) {
-    this.ruleId = ruleId;
+    actionCommon.put(RULE_ID, "" + ruleId);
   }
 
-  public void addAction(String actionName, String[] args) {
+  public void addAction(String actionName, Map<String, String> args) {
     actionNames.add(actionName);
     actionArgs.add(args);
   }
@@ -74,8 +96,16 @@ public class CommandDescriptor {
     return actionNames.get(index);
   }
 
-  public String[] getActionArgs(int index) {
-    return actionArgs.get(index);
+  /**
+   * Get a complete set of arguments including command common part.
+   * @param index
+   * @return
+   */
+  public Map<String, String> getActionArgs(int index) {
+    Map<String, String> map = new HashMap<>();
+    map.putAll(actionCommon);
+    map.putAll(actionArgs.get(index));
+    return map;
   }
 
   public int size() {
@@ -116,15 +146,19 @@ public class CommandDescriptor {
     }
 
     for (int i = 0; i < this.size(); i++) {
-      if (!actionNames.get(i).equals(des.getActionName(i))
-          || actionArgs.get(i).length != des.getActionArgs(i).length) {
+      if (!actionNames.get(i).equals(des.getActionName(i))) {
         return false;
       }
 
-      String[] srcArgs = actionArgs.get(i);
-      String[] destArgs = des.getActionArgs(i);
-      for (int j = 0; j < actionArgs.get(i).length; j++) {
-        if (!srcArgs[j].equals(destArgs[j])) {
+      Map<String, String> srcArgs = getActionArgs(i);
+      Map<String, String> destArgs = des.getActionArgs(i);
+
+      if (srcArgs.size() != destArgs.size()) {
+        return false;
+      }
+
+      for (String key : srcArgs.keySet()) {
+        if (!srcArgs.get(key).equals(destArgs.get(key))) {
           return false;
         }
       }
@@ -146,7 +180,6 @@ public class CommandDescriptor {
     boolean sucing = false;
     boolean string = false;
     for (int idx = 0; idx < chars.length; idx++) {
-      String tokenString = String.valueOf(token, 0, tokenlen);
       c = chars[idx];
       if (c == ' ' || c == '\t') {
         if (string) {
@@ -232,17 +265,55 @@ public class CommandDescriptor {
 
     boolean matched = blocks.get(0).matches(REG_ACTION_NAME);
     if (!matched) {
-      throw new ParseException("Invalid action name: " + blocks.get(0), offset);
+      throw new ParseException("Invalid action name: "
+          + blocks.get(0), offset);
     }
     String name = blocks.get(0);
     blocks.remove(0);
-    String[] args = blocks.toArray(new String[blocks.size()]);
+    Map<String, String> args = toArgMap(blocks);
     addAction(name, args);
     blocks.clear();
   }
 
+  public static List<String> toArgList(Map<String, String> args) {
+    List<String> ret = new ArrayList<>();
+    for (String key : args.keySet()) {
+      ret.add(key);
+      ret.add(args.get(key));
+    }
+    return ret;
+  }
+
+  public static Map<String, String> toArgMap(List<String> args)
+      throws ParseException {
+    Map<String, String> ret = new HashMap<>();
+    String opt = null;
+    for (int i = 0; i < args.size(); i++) {
+      String arg = args.get(i);
+      if (arg.startsWith("-")) {
+        if (opt == null) {
+          opt = arg;
+        } else {
+          ret.put(opt, "");
+          opt = arg;
+        }
+      } else {
+        if (opt == null) {
+          throw new ParseException("Unknown action option name for value '"
+              + arg + "'", 0);
+        } else {
+          ret.put(opt, arg);
+          opt = null;
+        }
+      }
+    }
+    if (opt != null) {
+      ret.put(opt, "");
+    }
+    return ret;
+  }
+
   private String formatActionArguments(String[] args) {
-    // TODO: check more cases / using another way
     if (args == null || args.length == 0) {
       return "";
     }
@@ -258,5 +329,27 @@ public class CommandDescriptor {
       }
     }
     return ret.trim();
+  }
+
+  private String formatActionArguments(Map<String, String> args) {
+    if (args == null || args.size() == 0) {
+      return "";
+    }
+
+    String ret = "";
+    for (String key : args.keySet()) {
+      ret += " " + formatItems(key) + " " + formatItems(args.get(key));
+    }
+    return ret.trim();
+  }
+
+  private String formatItems(String arg) {
+    String rep = arg.replace("\\", "\\\\");
+    rep = rep.replace("\"", "\\\"");
+    if (rep.matches(".*\\s+.*")) {
+      return "\"" + rep + "\"";
+    } else {
+      return rep;
+    }
   }
 }

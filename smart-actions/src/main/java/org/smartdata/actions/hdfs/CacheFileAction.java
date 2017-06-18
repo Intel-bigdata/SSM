@@ -26,13 +26,12 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.ActionType;
 
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -60,11 +59,11 @@ public class CacheFileAction extends HdfsAction {
   }
 
   @Override
-  public void init(String[] args) {
+  public void init(Map<String, String> args) {
     super.init(args);
-    fileName = args[0];
-    if (args.length > 1) {
-      replication = (short)Integer.parseInt(args[1]);
+    fileName = args.get(FILE_PATH);
+    if (args.containsKey("-replica")) {
+      replication = (short) Integer.parseInt(args.get("-replica"));
     }
   }
 

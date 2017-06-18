@@ -18,11 +18,16 @@
 package org.smartdata.common.actions;
 
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.Map;
+
 public class ActionInfo {
   private long actionId;
   private long commandId;
   private String actionName;
-  private String[] args;
+  private Map<String, String> args;
   private String result;
   private String log;
 
@@ -38,7 +43,7 @@ public class ActionInfo {
   }
 
   public ActionInfo(long actionId, long commandId, String actionName,
-                    String[] args, String result, String log,
+                    Map<String, String> args, String result, String log,
                     boolean successful, long createTime, boolean finished,
                     long finishTime, float progress) {
     this.actionId = actionId;
@@ -78,12 +83,23 @@ public class ActionInfo {
     this.actionName = actionName;
   }
 
-  public String[] getArgs() {
+  public Map<String, String> getArgs() {
     return args;
   }
 
-  public void setArgs(String[] args) {
+  public void setArgs(Map<String, String> args) {
     this.args = args;
+  }
+
+  public String getArgsJsonString() {
+    Gson gson = new Gson();
+    return gson.toJson(args);
+  }
+
+  public void setArgsFromJsonString(String jsonArgs) {
+    Gson gson = new Gson();
+    args = gson.fromJson(jsonArgs,
+        new TypeToken<Map<String, String>>(){}.getType());
   }
 
   public String getResult() {
@@ -150,7 +166,7 @@ public class ActionInfo {
     private long actionId;
     private long commandId;
     private String actionName;
-    private String[] args;
+    private Map<String, String> args;
     private String result;
     private String log;
 
@@ -177,7 +193,7 @@ public class ActionInfo {
       return this;
     }
 
-    public Builder setArgs(String[] args) {
+    public Builder setArgs(Map<String, String> args) {
       this.args = args;
       return this;
     }

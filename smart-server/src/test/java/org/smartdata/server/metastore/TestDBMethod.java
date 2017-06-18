@@ -24,6 +24,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.command.CommandInfo;
@@ -283,8 +284,13 @@ public class TestDBMethod {
   public void testInsertListActions() throws Exception {
     reInit();
     ActionInfo actionInfo = new ActionInfo(1, 1,
-        "cache", new String[]{"/test/file"}, "Test",
-        "Test", true, 123213213l, true, 123123l,
+        "cache",
+        new HashMap<String, String>() {
+          {
+            this.put(CacheFileAction.FILE_PATH, "/test/file");
+          }
+        },
+        "Test", "Test log", true, 123213213l, true, 123123l,
         100);
     dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     List<ActionInfo> actionInfos = dbAdapter.getActionsTableItem(null, null);
@@ -295,9 +301,10 @@ public class TestDBMethod {
   public void testGetNewCreatedActions() throws Exception {
     reInit();
     List<ActionInfo> actionInfos;
+    Map<String, String> args = new HashMap();
+    args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
-        "cache", new String[]{"/test/file", "TTT", "fs"}, "Test",
-        "Test", true, 123213213l, true, 123123l,
+        "cache", args, "Test", "Test log", true, 123213213l, true, 123123l,
         100);
     dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
     actionInfo.setActionId(2);
@@ -314,8 +321,10 @@ public class TestDBMethod {
     long currentId = dbAdapter.getMaxActionId();
     System.out.printf("ActionID = %d\n", currentId);
     Assert.assertTrue(currentId == 1);
+    Map<String, String> args = new HashMap();
+    args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(currentId, 1,
-        "cache", new String[]{"/test/file"}, "Test",
+        "cache", args, "Test",
         "Test", true, 123213213l, true, 123123l,
         100);
     dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});
@@ -323,7 +332,7 @@ public class TestDBMethod {
     System.out.printf("ActionID = %d\n", currentId);
     Assert.assertTrue(currentId == 2);
     actionInfo = new ActionInfo(currentId, 1,
-        "cache", new String[]{"/test/file"}, "Test",
+        "cache", args, "Test",
         "Test", true, 123213213l, true, 123123l,
         100);
     dbAdapter.insertActionsTable(new ActionInfo[]{actionInfo});

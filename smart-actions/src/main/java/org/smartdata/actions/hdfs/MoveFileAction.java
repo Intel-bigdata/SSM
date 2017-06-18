@@ -25,11 +25,13 @@ import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoverStatus;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * An action to set and enforce storage policy for a file.
  */
 public class MoveFileAction extends HdfsAction {
+  public static final String STORAGE_POLICY = "-storagePolicy";
   private static final Logger LOG = LoggerFactory.getLogger(MoveFileAction.class);
 
   protected String storagePolicy;
@@ -50,10 +52,10 @@ public class MoveFileAction extends HdfsAction {
   }
 
   @Override
-  public void init(String... args) {
+  public void init(Map<String, String> args) {
     super.init(args);
-    this.fileName = args[0];
-    this.storagePolicy = args[1];
+    this.fileName = args.get(FILE_PATH);
+    this.storagePolicy = args.get(STORAGE_POLICY);
   }
 
   protected void execute() {

@@ -23,6 +23,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Test for UncacheFileAction.
  */
@@ -41,12 +44,16 @@ public class TestUncacheFileAction extends ActionMiniCluster {
     CacheFileAction cacheFileAction = new CacheFileAction();
     cacheFileAction.setDfsClient(dfsClient);
     cacheFileAction.setContext(smartContext);
-    cacheFileAction.init(new String[] {file});
+    Map<String, String> argsCache = new HashMap();
+    argsCache.put(CacheFileAction.FILE_PATH, file);
+    cacheFileAction.init(argsCache);
 
     UncacheFileAction uncacheFileAction = new UncacheFileAction();
     uncacheFileAction.setDfsClient(dfsClient);
     uncacheFileAction.setContext(smartContext);
-    uncacheFileAction.init(new String[] {file});
+    Map<String, String> argsUncache = new HashMap();
+    argsUncache.put(UncacheFileAction.FILE_PATH, file);
+    uncacheFileAction.init(argsUncache);
     ActionStatus actionStatus = uncacheFileAction.getActionStatus();
 
     cacheFileAction.run();
@@ -73,7 +80,9 @@ public class TestUncacheFileAction extends ActionMiniCluster {
     UncacheFileAction uncacheFileAction = new UncacheFileAction();
     uncacheFileAction.setDfsClient(dfsClient);
     uncacheFileAction.setContext(smartContext);
-    uncacheFileAction.init(new String[] {file});
+    Map<String, String> argsUncache = new HashMap();
+    argsUncache.put(UncacheFileAction.FILE_PATH, file);
+    uncacheFileAction.init(argsUncache);
     ActionStatus actionStatus = uncacheFileAction.getActionStatus();
 
     uncacheFileAction.run();
