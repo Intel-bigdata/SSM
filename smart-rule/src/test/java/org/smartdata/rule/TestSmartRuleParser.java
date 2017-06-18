@@ -91,7 +91,7 @@ public class TestSmartRuleParser {
     rules.add("someobject: length > 3mb | cache");
     rules.add("file : length > 3day | cache");
     rules.add("file : length() > 3tb | cache");
-    rules.add("file : accessCountX(10m) > 2 and length() > 3 | cache");
+    rules.add("file : accessCount(10m) > 2 and length() > 3 | cache");
     rules.add("file : every 1s | mtime > 100s | cache");
 
     for (String rule : rules) {

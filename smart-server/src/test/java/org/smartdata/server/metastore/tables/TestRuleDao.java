@@ -36,7 +36,7 @@ public class TestRuleDao extends TestDaoUtil {
   @Test
   public void testInsertGetRule() throws Exception {
     daoInit();
-    String rule = "file : accessCountX(10m) > 20 \n\n"
+    String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
     RuleInfo info1 = new RuleInfo(0, submitTime,
@@ -63,7 +63,7 @@ public class TestRuleDao extends TestDaoUtil {
   @Test
   public void testUpdateRule() throws Exception {
     daoInit();
-    String rule = "file : accessCountX(10m) > 20 \n\n"
+    String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
     RuleInfo info1 = new RuleInfo(0, submitTime,

@@ -41,7 +41,7 @@ public class TestDruid {
     DruidPool druidPool = new DruidPool(p);
     DBAdapter adapter = new DBAdapter(druidPool);
 
-    String rule = "file : accessCountX(10m) > 20 \n\n"
+    String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
     RuleInfo info1 = new RuleInfo(0, submitTime,

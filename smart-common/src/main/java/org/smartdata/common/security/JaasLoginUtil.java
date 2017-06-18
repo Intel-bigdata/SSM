@@ -40,8 +40,8 @@ import java.util.Set;
 /**
  * Jaas utilities for Smart login.
  */
-public class SmartJaasLoginUtil {
-  public static final Logger LOG = LoggerFactory.getLogger(SmartJaasLoginUtil.class);
+public class JaasLoginUtil {
+  public static final Logger LOG = LoggerFactory.getLogger(JaasLoginUtil.class);
 
   public static final boolean ENABLE_DEBUG = true;
 

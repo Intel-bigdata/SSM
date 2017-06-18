@@ -35,7 +35,7 @@ import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
-import org.smartdata.common.security.SmartJaasLoginUtil;
+import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
@@ -222,7 +222,7 @@ public class SmartServer {
         System.getProperty("user.name"));
     Subject subject = null;
     try {
-      subject = SmartJaasLoginUtil.loginUsingKeytab(principal, keytabPath);
+      subject = JaasLoginUtil.loginUsingKeytab(principal, keytabPath);
     } catch (IOException e) {
       LOG.error("Fail to login using keytab. " + e);
     }

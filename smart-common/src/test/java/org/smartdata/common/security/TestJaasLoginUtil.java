@@ -12,9 +12,9 @@ import javax.security.auth.Subject;
 import java.io.File;
 
 /**
- * Test for SmartJaasLoginUtil.
+ * Test for JaasLoginUtil.
  */
-public class TestSmartJaasLoginUtil {
+public class TestJaasLoginUtil {
   private SimpleKdcServer kdcServer;
   private String serverHost = "localhost";
   private int serverPort = -1;
@@ -44,7 +44,7 @@ public class TestSmartJaasLoginUtil {
   @Test
   public void loginUsingKeytab() throws Exception {
     File keytabFile = generateKeytab(keytabFileName, principal);
-    Subject subject = SmartJaasLoginUtil.loginUsingKeytab(principal, keytabFile);
+    Subject subject = JaasLoginUtil.loginUsingKeytab(principal, keytabFile);
     Assert.assertEquals(principal, subject.getPrincipals().iterator().next().getName());
     System.out.println("Login successful for user: "
         + subject.getPrincipals().iterator().next());
@@ -56,7 +56,7 @@ public class TestSmartJaasLoginUtil {
     TgtTicket tgtTicket = kdcServer.getKrbClient().requestTgt(principal, keytabFile);
     File ticketCacheFile = new File(ticketCacheFileName);
     kdcServer.getKrbClient().storeTicket(tgtTicket, ticketCacheFile);
-    Subject subject = SmartJaasLoginUtil.loginUsingTicketCache(principal, ticketCacheFileName);
+    Subject subject = JaasLoginUtil.loginUsingTicketCache(principal, ticketCacheFileName);
     Assert.assertEquals(principal, subject.getPrincipals().iterator().next().getName());
     System.out.println("Login successful for user: "
         + subject.getPrincipals().iterator().next());

@@ -24,7 +24,7 @@ import org.smartdata.admin.protocolPB.SmartAdminProtocolAdminSideTranslatorPB;
 import org.smartdata.common.CommandState;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.security.SmartJaasLoginUtil;
+import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.command.CommandInfo;
@@ -33,7 +33,6 @@ import org.smartdata.common.protocolPB.SmartAdminProtocolPB;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 
-import javax.security.auth.Subject;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -70,7 +69,7 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
     }
     String principal = conf.get(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY,
         System.getProperty("user.name"));
-    SmartJaasLoginUtil.loginUsingTicketCache(principal);
+    JaasLoginUtil.loginUsingTicketCache(principal);
   }
 
   @Override
