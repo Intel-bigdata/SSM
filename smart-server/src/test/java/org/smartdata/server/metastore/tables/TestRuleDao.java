@@ -17,49 +17,25 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.server.metastore.DruidPool;
-import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.metastore.TestDaoUtil;
 
-import java.io.InputStream;
 import java.util.List;
-import java.util.Properties;
 
-public class TestRuleDao {
+public class TestRuleDao extends TestDaoUtil {
 
-  private DruidPool druidPool;
   private RuleDao ruleDao;
 
-  @Before
-  public void init() throws Exception {
-    InputStream in = getClass().getClassLoader()
-        .getResourceAsStream("druid-template.xml");
-    Properties p = new Properties();
-    p.loadFromXML(in);
-
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = Util.SQLITE_URL_PREFIX + dbFile;
-    p.setProperty("url", url);
-
-    druidPool = new DruidPool(p);
+  private void daoInit() {
     ruleDao = new RuleDao(druidPool.getDataSource());
-  }
-
-  @After
-  public void shutdown() throws Exception {
-    if (druidPool != null) {
-      druidPool.close();
-    }
   }
 
   @Test
   public void testInsertGetRule() throws Exception {
+    daoInit();
     String rule = "file : accessCountX(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
@@ -86,6 +62,7 @@ public class TestRuleDao {
 
   @Test
   public void testUpdateRule() throws Exception {
+    daoInit();
     String rule = "file : accessCountX(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();

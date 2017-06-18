@@ -17,39 +17,21 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.server.metastore.DruidPool;
-import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.metastore.TestDaoUtil;
 
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 
-public class TestOtherDao {
-  private DruidPool druidPool;
+public class TestOtherDao extends TestDaoUtil {
   private GroupsDao groupsDao;
   private UserDao userDao;
   private XattrDao xattrDao;
 
-  @Before
-  public void init() throws Exception {
-    InputStream in = getClass().getClassLoader()
-        .getResourceAsStream("druid-template.xml");
-    Properties p = new Properties();
-    p.loadFromXML(in);
-
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = Util.SQLITE_URL_PREFIX + dbFile;
-    p.setProperty("url", url);
-
-    druidPool = new DruidPool(p);
+  private void daoInit() {
     groupsDao = new GroupsDao(druidPool.getDataSource());
     userDao = new UserDao(druidPool.getDataSource());
     xattrDao = new XattrDao(druidPool.getDataSource());
@@ -57,6 +39,7 @@ public class TestOtherDao {
 
   @Test
   public void testGroup() throws SQLException {
+    daoInit();
     groupsDao.addGroup("groupname111");
     groupsDao.addGroup("groupname112");
     groupsDao.updateGroupsMap();
@@ -64,6 +47,7 @@ public class TestOtherDao {
 
   @Test
   public void testUser() throws SQLException {
+    daoInit();
     userDao.addUser("username1");
     userDao.addUser("username2");
     userDao.updateUsersMap();
@@ -71,6 +55,7 @@ public class TestOtherDao {
 
   @Test
   public void testXattr() throws SQLException {
+    daoInit();
     long fid = 567l;
     Map<String, byte[]> xAttrMap = new HashMap<>();
     String name1 = "user.a1";
@@ -94,10 +79,4 @@ public class TestOtherDao {
   public void testStorage(){
   }
 
-  @After
-  public void shutdown() throws Exception {
-    if (druidPool != null) {
-      druidPool.close();
-    }
-  }
 }

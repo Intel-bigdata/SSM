@@ -27,41 +27,23 @@ import org.junit.Test;
 import org.smartdata.server.metastore.DruidPool;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.TestDBUtil;
+import org.smartdata.server.metastore.TestDaoUtil;
 import org.smartdata.server.metastore.Util;
 
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
-public class TestFileDao {
-
-  private DruidPool druidPool;
+public class TestFileDao extends TestDaoUtil {
   private FileDao fileDao;
 
-  @Before
-  public void init() throws Exception {
-    InputStream in = getClass().getClassLoader()
-                         .getResourceAsStream("druid-template.xml");
-    Properties p = new Properties();
-    p.loadFromXML(in);
-
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = Util.SQLITE_URL_PREFIX + dbFile;
-    p.setProperty("url", url);
-
-    druidPool = new DruidPool(p);
+  private void daoInit() {
     fileDao = new FileDao(druidPool.getDataSource());
-  }
-
-  @After
-  public void shutdown() throws Exception {
-    if (druidPool != null) {
-      druidPool.close();
-    }
   }
 
   @Test
   public void testInsetGetFiles() throws Exception {
+    daoInit();
     String pathString = "testFile";
     long length = 123L;
     boolean isDir = false;
@@ -93,6 +75,7 @@ public class TestFileDao {
 
   @Test
   public void testInseDeleteFiles() throws Exception {
+    daoInit();
     String pathString = "testFile";
     long length = 123L;
     boolean isDir = false;
@@ -127,6 +110,7 @@ public class TestFileDao {
 
   @Test
   public void testInseUpdateFiles() throws Exception {
+    daoInit();
     String pathString = "testFile";
     long length = 123L;
     boolean isDir = false;
