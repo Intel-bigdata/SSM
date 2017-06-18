@@ -17,34 +17,34 @@
  */
 package org.smartdata.server.metastore;
 
-import com.alibaba.druid.pool.DruidDataSource;
-import com.alibaba.druid.pool.DruidDataSourceFactory;
+import org.junit.After;
+import org.junit.Before;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.io.InputStream;
 import java.util.Properties;
 
-public class DruidPool implements DBPool {
-  private final DruidDataSource ds;
 
-  public DruidPool(Properties properties) throws Exception {
-    ds = (DruidDataSource) DruidDataSourceFactory.createDataSource(properties);
+public class TestDaoUtil {
+  protected DruidPool druidPool;
+
+  @Before
+  public void init() throws Exception {
+    InputStream in = getClass().getClassLoader()
+        .getResourceAsStream("druid-template.xml");
+    Properties p = new Properties();
+    p.loadFromXML(in);
+
+    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+    String url = Util.SQLITE_URL_PREFIX + dbFile;
+    p.setProperty("url", url);
+
+    druidPool = new DruidPool(p);
   }
 
-  public DataSource getDataSource() {
-    return ds;
-  }
-
-  public Connection getConnection() throws SQLException {
-    return ds.getConnection();
-  }
-
-  public void closeConnection(Connection conn) throws SQLException {
-    conn.close();
-  }
-
-  public void close() {
-    ds.close();
+  @After
+  public void shutdown() throws Exception {
+    if (druidPool != null) {
+      druidPool.close();
+    }
   }
 }

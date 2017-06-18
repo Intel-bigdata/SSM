@@ -33,6 +33,10 @@ public class ActionInfo {
 
   private float progress;
 
+  public ActionInfo() {
+
+  }
+
   public ActionInfo(long actionId, long commandId, String actionName,
                     String[] args, String result, String log,
                     boolean successful, long createTime, boolean finished,

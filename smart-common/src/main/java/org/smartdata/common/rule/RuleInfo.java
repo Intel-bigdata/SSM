@@ -54,6 +54,10 @@ public class RuleInfo implements Cloneable {
     return ruleText;
   }
 
+  public void setRuleText(String ruleText) {
+    this.ruleText = ruleText;
+  }
+
   public RuleState getState() {
     return state;
   }
@@ -106,6 +110,10 @@ public class RuleInfo implements Cloneable {
     }
     this.numChecked += checkedCount;
     this.numCmdsGen += commandsGen;
+  }
+
+  public RuleInfo() {
+
   }
 
   public RuleInfo(long id, long submitTime, String ruleText, RuleState state,

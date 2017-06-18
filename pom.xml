@@ -49,6 +49,7 @@
     <akka.config.version>1.2.1</akka.config.version>
     <akka.http.version>2.0.4</akka.http.version>
     <druid.version>1.0.31</druid.version>
+    <spring.version>4.3.9.RELEASE</spring.version>
     <antlr4.version>4.6</antlr4.version>
     <test.build.dir>${project.build.directory}/test-dir</test.build.dir>
   </properties>
@@ -95,6 +96,16 @@
         <groupId>com.alibaba</groupId>
         <artifactId>druid</artifactId>
         <version>${druid.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>${spring.version}</version>
       </dependency>
       <dependency>
         <groupId>org.antlr</groupId>
