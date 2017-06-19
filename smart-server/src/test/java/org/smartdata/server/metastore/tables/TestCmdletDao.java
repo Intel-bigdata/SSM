@@ -60,6 +60,22 @@ public class TestCmdletDao extends TestDaoUtil {
   }
 
   @Test
+  public void testGetByCondition() throws Exception {
+    daoInit();
+    CmdletInfo command1 = new CmdletInfo(0, 1,
+        CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+    CmdletInfo command2 = new CmdletInfo(1, 78,
+        CmdletState.PAUSED, "tt", 123178333l, 232444994l);
+    cmdletDao.insert(new CmdletInfo[]{command1, command2});
+    List<CmdletInfo> commandInfos = cmdletDao
+        .getByCondition(null, null, null);
+    Assert.assertTrue(commandInfos.size() == 2);
+    commandInfos = cmdletDao
+        .getByCondition(null, null, CmdletState.PAUSED);
+    Assert.assertTrue(commandInfos.size() == 1);
+  }
+
+  @Test
   public void testDeleteACmdlet() throws Exception {
     daoInit();
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,

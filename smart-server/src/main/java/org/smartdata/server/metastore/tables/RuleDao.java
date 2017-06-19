@@ -39,6 +39,7 @@ public class RuleDao {
     jdbcTemplate = new JdbcTemplate(dataSource);
     simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("rules");
+    simpleJdbcInsert.usingGeneratedKeyColumns("id");
   }
 
   public List<RuleInfo> getAll() {
@@ -52,18 +53,20 @@ public class RuleDao {
   }
 
 
-  public int insert(RuleInfo ruleInfo) {
-    return simpleJdbcInsert.execute(toMap(ruleInfo));
+  public long insert(RuleInfo ruleInfo) {
+    long id = simpleJdbcInsert.executeAndReturnKey(toMap(ruleInfo)).longValue();
+    ruleInfo.setId(id);
+    return id;
   }
 
-  public void update(long ruleId, RuleState rs,
-                     long lastCheckTime, long checkedCount, int cmdletsGen) {
+  public int update(long ruleId, int rs,
+      long lastCheckTime, long checkedCount, int cmdletsGen) {
     String sql = "update rules set " +
         "state = ?, " +
         "last_check_time = ?, " +
         "checked_count = ?, " +
         "cmdlets_generated = ? where id = ?";
-    jdbcTemplate.update(sql, rs.getValue(), lastCheckTime, checkedCount, cmdletsGen, ruleId);
+    return jdbcTemplate.update(sql, rs, lastCheckTime, checkedCount, cmdletsGen, ruleId);
   }
 
   public void delete(long id) {
@@ -78,7 +81,6 @@ public class RuleDao {
 
   private Map<String, Object> toMap(RuleInfo ruleInfo) {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("id", ruleInfo.getId());
     parameters.put("submit_time", ruleInfo.getSubmitTime());
     parameters.put("rule_text", ruleInfo.getRuleText());
     parameters.put("state", ruleInfo.getState().getValue());

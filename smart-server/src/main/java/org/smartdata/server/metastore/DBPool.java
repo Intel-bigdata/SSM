@@ -17,12 +17,14 @@
  */
 package org.smartdata.server.metastore;
 
-
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 public interface DBPool {
   Connection getConnection() throws SQLException;
+
+  DataSource getDataSource();
 
   void closeConnection(Connection conn) throws SQLException;
 

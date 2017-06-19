@@ -51,7 +51,7 @@ public class TestActionDao extends TestDaoUtil {
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
         100);
-    actionDao.insert(actionInfo);
+    actionDao.insert(new ActionInfo[] {actionInfo});
     actionInfo = actionDao.getById(1l);
     Assert.assertTrue(actionInfo.getCmdletId() == 1);
   }

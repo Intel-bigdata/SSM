@@ -23,8 +23,6 @@ import org.smartdata.common.cmdlet.CmdletInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
@@ -62,9 +60,25 @@ public class CmdletDao {
         new Object[]{cid}, new CmdletRowMapper());
   }
 
-  public List<CmdletInfo> getCmdletsByRid(long rid) {
+  public List<CmdletInfo> getByRid(long rid) {
     return jdbcTemplate.query("select * from cmdlets where rid = ?",
         new Object[]{rid}, new CmdletRowMapper());
+  }
+
+  public List<CmdletInfo> getByCondition(String cidCondition,
+                                          String ridCondition, CmdletState state) {
+    String sqlPrefix = "SELECT * FROM cmdlets WHERE ";
+    String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
+    String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
+    String sqlState = (state == null) ? "" : "AND state = " + state.getValue();
+    String sqlFinal = "";
+    if (cidCondition != null || ridCondition != null || state != null) {
+      sqlFinal = sqlPrefix + sqlCid + sqlRid + sqlState;
+      sqlFinal = sqlFinal.replaceFirst("AND ", "");
+    } else {
+      sqlFinal = sqlPrefix.replaceFirst("WHERE ", "");
+    }
+    return jdbcTemplate.query(sqlFinal, new CmdletRowMapper());
   }
 
   public void delete(long cid) {
@@ -77,9 +91,20 @@ public class CmdletDao {
   }
 
   public void insert(CmdletInfo[] CmdletInfos) {
-    SqlParameterSource[] batch = SqlParameterSourceUtils
-        .createBatch(CmdletInfos);
-    simpleJdbcInsert.executeBatch(batch);
+    // TODO need upgrade
+    // SqlParameterSource[] batch = SqlParameterSourceUtils
+    //     .createBatch(CmdletInfos);
+    // simpleJdbcInsert.executeBatch(batch);
+    for (CmdletInfo CmdletInfo : CmdletInfos) {
+      insert(CmdletInfo);
+    }
+  }
+
+  public int update(long cid, long rid, int state) {
+    String sql = "update cmdlets set " +
+                     "state = ?, " +
+                     "state_changed_time = ? where cid = ? AND rid = ?";
+    return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid, rid);
   }
 
   public int update(final CmdletInfo CmdletInfo) {
@@ -90,9 +115,9 @@ public class CmdletDao {
 
   public int[] update(final List<CmdletInfo> CmdletInfos) {
     String sql = "update cmdlets set " +
-        "state = ?, " +
-        "state_changed_time = ? " +
-        "where cid = ?";
+                     "state = ?, " +
+                     "state_changed_time = ? " +
+                     "where cid = ?";
     return jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
           public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -121,8 +146,8 @@ public class CmdletDao {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cid", CmdletInfo.getCid());
     parameters.put("rid", CmdletInfo.getRid());
-    parameters.put("aids", CmdletInfo.getAids());
-    parameters.put("state", CmdletInfo.getState());
+    parameters.put("aids", StringUtils.join(CmdletInfo.getAidsString(), ","));
+    parameters.put("state", CmdletInfo.getState().getValue());
     parameters.put("parameters", CmdletInfo.getParameters());
     parameters.put("generate_time", CmdletInfo.getGenerateTime());
     parameters.put("state_changed_time", CmdletInfo.getStateChangedTime());

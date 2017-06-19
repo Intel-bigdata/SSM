@@ -69,8 +69,8 @@ public class TestRuleDao extends TestDaoUtil {
     RuleInfo info1 = new RuleInfo(0, submitTime,
         rule, RuleState.ACTIVE, 0, 0, 0);
     ruleDao.insert(info1);
-    ruleDao.update(0, RuleState.DISABLED, 12l, 12l, 12);
-    info1 = ruleDao.getById(0);
+    ruleDao.update(info1.getId(), RuleState.DISABLED.getValue(), 12l, 12l, 12);
+    info1 = ruleDao.getById(info1.getId());
     Assert.assertTrue(info1.getLastCheckTime() == 12l);
   }
 }
