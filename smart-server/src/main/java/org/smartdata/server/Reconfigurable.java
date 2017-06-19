@@ -19,7 +19,7 @@ package org.smartdata.server;
 
 import org.smartdata.conf.ReconfigureException;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by root on 6/19/17.
@@ -38,5 +38,5 @@ public interface Reconfigurable {
    * Return the reconfigurable properties that supported.
    * @return
    */
-  Collection<String> getReconfigurableProperties();
+  List<String> getReconfigurableProperties();
 }

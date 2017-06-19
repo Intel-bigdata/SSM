@@ -17,56 +17,14 @@
  */
 package org.smartdata.server;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import org.smartdata.conf.ReconfigureException;
-
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
-public abstract class ReconfigurableBase {
-  private static ListMultimap<String, ReconfigurableBase> reconfMap =
-      ArrayListMultimap.create();
+public abstract class ReconfigurableBase implements Reconfigurable {
 
   public ReconfigurableBase() {
-    Collection<String> properties = getReconfigurableProperties();
+    List<String> properties = getReconfigurableProperties();
     if (properties != null) {
-      for (String p : properties) {
-        reconfMap.put(p, this);
-      }
+      ReconfigurableRegistry.registReconfigurableProperty(properties, this);
     }
-  }
-
-  /**
-   * Called when the property's value is reconfigured.
-   * @param property
-   * @param newVal
-   * @throws ReconfigureException
-   */
-  protected abstract void reconfigureProperty(String property, String newVal)
-      throws ReconfigureException;
-
-  /**
-   * Return the reconfigurable properties that supported.
-   * @return
-   */
-  public abstract Collection<String> getReconfigurableProperties();
-
-  /**
-   * Return modules interest in the property.
-   * @param property
-   * @return
-   */
-  public static List<ReconfigurableBase> getReconfigurables(String property) {
-    return reconfMap.get(property);
-  }
-
-  /**
-   * Return configurable properties in system.
-   * @return
-   */
-  public static Set<String> getAllReconfigurableProperties() {
-    return reconfMap.keySet();
   }
 }
