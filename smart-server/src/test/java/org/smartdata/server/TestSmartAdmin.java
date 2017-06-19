@@ -28,8 +28,8 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
 
 import java.io.IOException;
 import java.net.URI;
@@ -63,7 +63,7 @@ public class TestSmartAdmin {
 
       // Set db used
       String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-      String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
+      String dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
       conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
       // rpcServer start in SmartServer

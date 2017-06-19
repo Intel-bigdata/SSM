@@ -17,8 +17,6 @@
  */
 package org.smartdata.server.metastore;
 
-import org.smartdata.server.metastore.Util;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -48,7 +46,7 @@ public class TestDBUtil {
     String srcPath = srcdir + "/data-schema.db";
     String destPath = getUniqueDBFilePath();
     copyFile(srcPath, destPath);
-    Connection conn = Util.createSqliteConnection(destPath);
+    Connection conn = MetaUtil.createSqliteConnection(destPath);
     return conn;
   }
 
@@ -68,7 +66,7 @@ public class TestDBUtil {
 
   public static Connection getUniqueEmptySqliteDBInstance()
       throws IOException, SQLException, ClassNotFoundException {
-      return Util.createSqliteConnection(getUniqueEmptySqliteDBFile());
+      return MetaUtil.createSqliteConnection(getUniqueEmptySqliteDBFile());
   }
 
   /**
@@ -84,8 +82,8 @@ public class TestDBUtil {
     String dbFile = getUniqueDBFilePath();
     Connection conn = null;
     try {
-      conn = Util.createSqliteConnection(dbFile);
-      Util.initializeDataBase(conn);
+      conn = MetaUtil.createSqliteConnection(dbFile);
+      MetaUtil.initializeDataBase(conn);
       return dbFile;
     } finally {
       if (conn != null) {

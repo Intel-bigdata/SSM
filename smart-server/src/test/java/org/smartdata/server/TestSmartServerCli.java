@@ -24,8 +24,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ public class TestSmartServerCli {
     SmartConf conf = new SmartConf();
     // Set db used
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
+    String dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
     conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer

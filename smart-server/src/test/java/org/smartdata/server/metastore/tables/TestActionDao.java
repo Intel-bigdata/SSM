@@ -17,22 +17,15 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.server.metastore.DruidPool;
-import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.server.metastore.TestDaoUtil;
-import org.smartdata.server.metastore.Util;
 
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 public class TestActionDao extends TestDaoUtil {
 

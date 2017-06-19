@@ -15,36 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.metastore;
+package org.smartdata.conf;
 
-import org.junit.After;
-import org.junit.Before;
+import org.apache.hadoop.conf.ReconfigurationException;
 
-import java.io.InputStream;
-import java.util.Properties;
-
-
-public class TestDaoUtil {
-  protected DruidPool druidPool;
-
-  @Before
-  public void init() throws Exception {
-    InputStream in = getClass().getClassLoader()
-        .getResourceAsStream("druid-template.xml");
-    Properties p = new Properties();
-    p.loadFromXML(in);
-
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = MetaUtil.SQLITE_URL_PREFIX + dbFile;
-    p.setProperty("url", url);
-
-    druidPool = new DruidPool(p);
-  }
-
-  @After
-  public void shutdown() throws Exception {
-    if (druidPool != null) {
-      druidPool.close();
-    }
-  }
+public class ReconfigureException extends ReconfigurationException {
 }

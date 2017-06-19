@@ -35,7 +35,7 @@ public class TestDruid {
     p.loadFromXML(in);
 
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = Util.SQLITE_URL_PREFIX + dbFile;
+    String url = MetaUtil.SQLITE_URL_PREFIX + dbFile;
     p.setProperty("url", url);
 
     DruidPool druidPool = new DruidPool(p);

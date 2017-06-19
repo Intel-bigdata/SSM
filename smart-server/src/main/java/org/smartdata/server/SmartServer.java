@@ -25,24 +25,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
-import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
-import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.ipc.RemoteException;
 import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.server.cmdlet.CmdletExecutor;
 import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.metastore.DruidPool;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.server.web.SmartHttpServer;
 import org.slf4j.Logger;
@@ -50,18 +39,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * From this Smart Storage Management begins.
@@ -73,11 +56,8 @@ public class SmartServer {
   private SmartHttpServer httpServer;
   private SmartRpcServer rpcServer;
   private SmartConf conf;
-  private DistributedFileSystem fs = null;
   private OutputStream outSSMIdFile;
   private List<Service> modules = new ArrayList<>();
-  static final Path SSM_ID_PATH = new Path("/system/ssm.id");
-  private URI namenodeURI;
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
   private SmartServiceState ssmServiceState = SmartServiceState.SAFEMODE;
@@ -98,7 +78,7 @@ public class SmartServer {
         httpServer = new SmartHttpServer(this, conf);
         rpcServer = new SmartRpcServer(this, conf);
         statesManager = new StatesManager(this, conf);
-        ruleManager = new RuleManager(this, conf); // TODO: to be replaced
+        ruleManager = new RuleManager(this, conf);
         cmdletExecutor = new CmdletExecutor(this, conf);
         modules.add(statesManager);
         modules.add(ruleManager);
@@ -148,20 +128,23 @@ public class SmartServer {
     // Parse the rest, NN specific args.
     StartupOption startOpt = parseArguments(args);
 
-    SmartServer ssm = new SmartServer(conf, startOpt);
     switch (startOpt) {
       case REGULAR:
+        SmartServer ssm = null;
         try {
+          ssm = new SmartServer(conf, startOpt);
           ssm.runSSMDaemons();
         } catch (IOException e) {
-          ssm.shutdown();
+          if (ssm != null) {
+            ssm.shutdown();
+          }
           throw e;
         }
         return ssm;
 
       case FORMAT:
         LOG.info("Formatting DataBase ...");
-        DBAdapter adapter = ssm.getDBAdapter();
+        DBAdapter adapter = MetaUtil.getDBAdapter(conf);
         adapter.formatDataBase();
         LOG.info("Formatting DataBase finished successfully!");
         return null;
@@ -258,46 +241,13 @@ public class SmartServer {
    * @throws Exception
    */
   public void runSSMDaemons() throws Exception {
-    String nnRpcAddr = null;
 
-    String[] rpcAddrKeys = {
-        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY, // Keep it first
-        DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY,
-        DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY
-    };
-
-    String[] nnRpcAddrs = new String[rpcAddrKeys.length];
-
-    int lastNotNullIdx = 0;
-    for (int index = 0; index < rpcAddrKeys.length; index++) {
-      nnRpcAddrs[index] = conf.get(rpcAddrKeys[index]);
-      lastNotNullIdx = nnRpcAddrs[index] == null ? lastNotNullIdx : index;
-      nnRpcAddr = nnRpcAddr == null ? nnRpcAddrs[index] : nnRpcAddr;
-    }
-
-    if (nnRpcAddr == null) {
-      throw new IOException("Can not find NameNode RPC server address. "
-          + "Please configure it through '"
-          + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "'.");
-    }
-
-    if (lastNotNullIdx == 0 && rpcAddrKeys.length > 1) {
-      conf.set(rpcAddrKeys[1], nnRpcAddr);
-    }
-
-    namenodeURI = new URI(nnRpcAddr);
-    this.fs = (DistributedFileSystem) FileSystem.get(namenodeURI, conf);
-    outSSMIdFile = checkAndMarkRunning();
-    if (outSSMIdFile == null) {
-      // Exit if there is another one running.
-      throw new IOException("Another SmartServer is running");
-    }
 
     // Init and start RPC server and REST server
     rpcServer.start();
     httpServer.start();
 
-    DBAdapter dbAdapter = getDBAdapter();
+    DBAdapter dbAdapter = MetaUtil.getDBAdapter(conf);
 
     for (Service m : modules) {
       m.init(dbAdapter);
@@ -309,10 +259,6 @@ public class SmartServer {
 
     // TODO: for simple here, refine it later
     ssmServiceState = SmartServiceState.ACTIVE;
-  }
-
-  public URI getNamenodeURI() {
-    return namenodeURI;
   }
 
   public SmartServiceState getSSMServiceState() {
@@ -356,105 +302,22 @@ public class SmartServer {
     }
   }
 
-  public DBAdapter getDBAdapter() throws Exception {
-    // TODO: move to etc directory
-    URL pathUrl = getClass().getClassLoader().getResource("");
-    String path = pathUrl.getPath();
-
-    String fileName = "druid.xml";
-    String expectedCpPath = path + fileName;
-    LOG.info("Expected DB connection pool configuration path = "
-        + expectedCpPath);
-    File cpConfigFile = new File(expectedCpPath);
-    if (cpConfigFile.exists()) {
-      LOG.info("Using pool configure file: " + expectedCpPath);
-      Properties p = new Properties();
-      p.loadFromXML(new FileInputStream(cpConfigFile));
-
-      String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
-      if (url != null) {
-        p.setProperty("url", url);
-      }
-
-      for (String key : p.stringPropertyNames()) {
-        LOG.info("\t" + key + " = " + p.getProperty(key));
-      }
-      return new DBAdapter(new DruidPool(p));
-    } else {
-      LOG.info("DB connection pool config file " + expectedCpPath
-          + " NOT found.");
-    }
-
-    // TODO: keep it now for testing, remove it later.
-    Connection conn = getDBConnection();
-    return new DBAdapter(conn);
-  }
-
-  public Connection getDBConnection() throws Exception {
-    String dburi = getDBUri();
-    LOG.info("Database file URI = " + dburi);
-    Connection conn = Util.createConnection(dburi.toString(), null, null);
-    return conn;
-  }
-
-  public String getDBUri() throws Exception {
-    // TODO: Find and verify the latest SSM DB available,
-    // this contains 3 cases:
-    //    remote checkpoint / local / create new DB
-
-    String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
-    if (url == null) {
-      LOG.warn("No database specified for SSM, "
-          + "will use a default one instead.");
-    }
-    return url != null ? url : getDefaultSqliteDB() ;
-  }
-
-  /**
-   * This default behavior provided here is mainly for convenience.
-   * @return
-   */
-  private String getDefaultSqliteDB() throws Exception {
-    String absFilePath = System.getProperty("user.home")
-        + "/smart-test-default.db";
-    File file = new File(absFilePath);
-    if (file.exists()) {
-      return Util.SQLITE_URL_PREFIX + absFilePath;
-    }
-    Connection conn = Util.createSqliteConnection(absFilePath);
-    Util.initializeDataBase(conn);
-    conn.close();
-    return Util.SQLITE_URL_PREFIX + absFilePath;
-  }
-
   public Configuration getConf() {
     return conf;
   }
 
-  public DFSClient getDFSClient() {
-    return fs.getClient();
-  }
+  private enum StartupOption {
+    FORMAT("-format"),
+    REGULAR("-regular");
 
-  private OutputStream checkAndMarkRunning() throws IOException {
-    try {
-      if (fs.exists(SSM_ID_PATH)) {
-        // try appending to it so that it will fail fast if another balancer is
-        // running.
-        IOUtils.closeStream(fs.append(SSM_ID_PATH));
-        fs.delete(SSM_ID_PATH, true);
-      }
-      final FSDataOutputStream fsout = fs.create(SSM_ID_PATH, false);
-      // mark balancer idPath to be deleted during filesystem closure
-      fs.deleteOnExit(SSM_ID_PATH);
-      fsout.writeBytes(InetAddress.getLocalHost().getHostName());
-      fsout.hflush();
-      return fsout;
-    } catch (RemoteException e) {
-      if (AlreadyBeingCreatedException.class.getName().equals(e.getClassName())) {
-        return null;
-      } else {
-        throw e;
-      }
+    private String name;
+
+    StartupOption(String arg) {
+      this.name = arg;
+    }
+
+    public String getName() {
+      return name;
     }
   }
 
@@ -466,8 +329,6 @@ public class SmartServer {
       String cmd = args[i];
       if (StartupOption.FORMAT.getName().equalsIgnoreCase(cmd)) {
         startOpt = StartupOption.FORMAT;
-      } else if (StartupOption.CHECKPOINT.getName().equalsIgnoreCase(cmd)) {
-        startOpt = StartupOption.CHECKPOINT;
       } else if (StartupOption.REGULAR.getName().equalsIgnoreCase(cmd)) {
         startOpt = StartupOption.REGULAR;
       }

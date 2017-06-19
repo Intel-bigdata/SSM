@@ -25,7 +25,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.DBTest;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.metastore.MetaUtil;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -44,7 +44,7 @@ public class TestInotifyEventApplier extends DBTest {
   public void testApplier() throws Exception {
     DFSClient client = mock(DFSClient.class);
     Connection connection = databaseTester.getConnection().getConnection();
-    Util.initializeDataBase(connection);
+    MetaUtil.initializeDataBase(connection);
     DBAdapter adapter = new DBAdapter(connection);
     InotifyEventApplier applier = new InotifyEventApplier(adapter, client);
 
