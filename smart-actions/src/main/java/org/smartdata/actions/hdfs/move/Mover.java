@@ -120,10 +120,10 @@ public class Mover {
   static int run(Map<URI, List<Path>> namenodes, Configuration conf,
         MoverStatus status) throws IOException, InterruptedException {
     final long sleeptime =
-            conf.getLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
-                    DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_DEFAULT) * 2000 +
-                    conf.getLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY,
-                            DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_DEFAULT) * 1000;
+        conf.getLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
+        DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_DEFAULT) * 2000 +
+        conf.getLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY,
+        DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_DEFAULT) * 1000;
     AtomicInteger retryCount = new AtomicInteger(0);
 
     LOG.info("namenodes = " + namenodes);
@@ -144,6 +144,7 @@ public class Mover {
           final ExitStatus r = m.run();
 
           if (r == ExitStatus.SUCCESS) {
+            //status.setMovedBlocks(status.getTotalBlocks());
             IOUtils.cleanup(null, nnc);
             iter.remove();
           } else if (r != ExitStatus.IN_PROGRESS) {
