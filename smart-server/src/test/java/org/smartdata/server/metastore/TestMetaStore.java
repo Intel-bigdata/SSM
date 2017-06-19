@@ -37,7 +37,7 @@ public class TestMetaStore extends TestDaoUtil {
   }
 */
 
-  @Test
+  /*@Test
   public void testGetFiles() throws Exception {
     reInit();
     String pathString = "des";
@@ -63,9 +63,9 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(hdfsFileStatus.getLen() == 20484l);
     hdfsFileStatus = metaStore.getFile("/tmp/des");
     Assert.assertTrue(hdfsFileStatus.getAccessTime() == 1490936390000l);
-  }
+  }*/
 
-  @Test
+/*  @Test
   public void testInsertStoragesTable() throws Exception {
     reInit();
     StorageCapacity storage1 = new StorageCapacity("Flash",
@@ -84,10 +84,10 @@ public class TestMetaStore extends TestDaoUtil {
         123456L, 4562233L));
     Assert.assertTrue(metaStore.getStorageCapacity("Flash")
         .getCapacity() == 12343333l);
-  }
+  }*/
 
 
-  @Test
+/*  @Test
   public void testGetStorageCapacity() throws Exception {
     reInit();
     StorageCapacity storage1 = new StorageCapacity("HDD",
@@ -98,7 +98,7 @@ public class TestMetaStore extends TestDaoUtil {
     metaStore.insertStoragesTable(storages);
     StorageCapacity storageCapacity = metaStore.getStorageCapacity("HDD");
     Assert.assertTrue(storageCapacity.getCapacity() == 12343333l);
-  }
+  }*/
 
   @Test
   public void testUpdateCachedFiles() throws Exception {
@@ -187,7 +187,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(cachedFileList.get(2).getFid() == 23);
   }
 
-  @Test
+/*  @Test
   public void testInsetFiles() throws Exception {
     reInit();
     String pathString = "testFile";
@@ -211,7 +211,7 @@ public class TestMetaStore extends TestDaoUtil {
     metaStore.insertFiles(files);
     HdfsFileStatus hdfsFileStatus = metaStore.getFile("/tmp/testFile");
     Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 * 1024L);
-  }
+  }*/
 
   @Test
   public void testInsertCommandsTable() throws Exception {
@@ -321,7 +321,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(currentId == 2);
   }
 
-  @Test
+/*  @Test
   public void testInsertStoragePolicyTable() throws Exception {
     reInit();
     StoragePolicy s = new StoragePolicy((byte) 3, "COOL");
@@ -331,7 +331,7 @@ public class TestMetaStore extends TestDaoUtil {
     int key = metaStore.getStoragePolicyID("COOL");
     Assert.assertEquals(value, "COOL");
     Assert.assertEquals(key, 3);
-  }
+  }*/
 
   @Test
   public void testInsertXattrTable() throws Exception {

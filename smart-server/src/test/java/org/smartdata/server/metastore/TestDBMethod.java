@@ -28,7 +28,6 @@ import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletInfo;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.metrics.FileAccessEvent;
 

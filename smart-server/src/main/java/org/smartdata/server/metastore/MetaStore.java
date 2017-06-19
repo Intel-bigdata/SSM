@@ -232,24 +232,12 @@ public class MetaStore {
 
   private void updateUsersMap() throws SQLException {
     // TODO map
-    String sql = "SELECT * FROM owners";
-    QueryHelper queryHelper = new QueryHelper(sql);
-    try {
-      mapOwnerIdName = convertToMap(queryHelper.executeQuery(), "oid", "owner_name");
-    } finally {
-      queryHelper.close();
-    }
+    userDao.updateUsersMap();
   }
 
   private void updateGroupsMap() throws SQLException {
     // TODO map
-    String sql = "SELECT * FROM groups";
-    QueryHelper queryHelper = new QueryHelper(sql);
-    try {
-      mapGroupIdName = convertToMap(queryHelper.executeQuery(), "gid", "group_name");
-    } finally {
-      queryHelper.close();
-    }
+    groupsDao.updateGroupsMap();
   }
 
   /**
@@ -385,83 +373,28 @@ public class MetaStore {
 
   private void updateCache() throws SQLException {
     // TODO map
+    /*
     if (mapOwnerIdName == null) {
-      String sql = "SELECT * FROM owners";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapOwnerIdName = convertToMap(queryHelper.executeQuery(), "oid", "owner_name");
-      } finally {
-        queryHelper.close();
-      }
+      userDao.updateUsersMap();
     }
 
     if (mapGroupIdName == null) {
-      String sql = "SELECT * FROM groups";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapGroupIdName = convertToMap(queryHelper.executeQuery(), "gid", "group_name");
-      } finally {
-        queryHelper.close();
-      }
+      groupsDao.updateGroupsMap();
     }
 
     if (mapStoragePolicyIdName == null) {
       mapStoragePolicyNameId = null;
-      String sql = "SELECT * FROM storage_policy";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapStoragePolicyIdName = convertToMap(queryHelper.executeQuery(), "sid", "policy_name");
-        mapStoragePolicyNameId = new HashMap<>();
-        for (Integer key : mapStoragePolicyIdName.keySet()) {
-          mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
-        }
-      } finally {
-        queryHelper.close();
+      // storageDao.updateFileStoragePolicy();
+      mapStoragePolicyNameId = new HashMap<>();
+      for (Integer key : mapStoragePolicyIdName.keySet()) {
+        mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
       }
     }
 
     if (mapStorageCapacity == null) {
-      String sql = "SELECT * FROM storages";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapStorageCapacity =
-            convertStorageTablesItem(queryHelper.executeQuery());
-      } finally {
-        queryHelper.close();
-      }
+      // storageDao.updateFileStoragePolicy();
     }
-  }
-
-  private Map<String, StorageCapacity> convertStorageTablesItem(
-      ResultSet resultSet) throws SQLException {
-    Map<String, StorageCapacity> map = new HashMap<>();
-    if (resultSet == null) {
-      return map;
-    }
-
-    while (resultSet.next()) {
-      String type = resultSet.getString(1);
-      StorageCapacity storage = new StorageCapacity(
-          resultSet.getString(1),
-          resultSet.getLong(2),
-          resultSet.getLong(3));
-      map.put(type, storage);
-    }
-    return map;
-  }
-
-  private Map<Integer, String> convertToMap(ResultSet resultSet, String keyIndex, String valueIndex)
-      throws SQLException {
-    Map<Integer, String> ret = new HashMap<>();
-    if (resultSet == null) {
-      return ret;
-    }
-
-    while (resultSet.next()) {
-      // TODO: Tests for this
-      ret.put(resultSet.getInt(keyIndex), resultSet.getString(valueIndex));
-    }
-    return ret;
+    */
   }
 
   public synchronized void insertCachedFiles(long fid, String path, long fromTime,
@@ -657,10 +590,7 @@ public class MetaStore {
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s)
       throws SQLException {
-    String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
-        + s.getSid() + "','" + s.getPolicyName() + "');";
-    mapStoragePolicyIdName = null;
-    execute(sql);
+    storageDao.insertStoragePolicyTable(s);
   }
 
   public String getStoragePolicyName(int sid) throws SQLException {
