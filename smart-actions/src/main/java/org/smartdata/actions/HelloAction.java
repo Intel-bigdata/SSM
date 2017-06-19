@@ -17,7 +17,7 @@
  */
 package org.smartdata.actions;
 
-public class PrintAction extends SmartAction {
+public class HelloAction extends SmartAction {
   public static final String PRINT_MESSAGE = "print_message";
 
   @Override

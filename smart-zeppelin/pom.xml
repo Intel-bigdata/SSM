@@ -525,6 +525,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${plugin.surefire.version}</version>
           <configuration combine.children="append">
+            <skipTests>true</skipTests>
             <argLine>-Xmx2g -Xms1g -Dfile.encoding=UTF-8</argLine>
           </configuration>
           <!-- <excludes> <exclude>**/itest/**</exclude> </excludes> <executions>

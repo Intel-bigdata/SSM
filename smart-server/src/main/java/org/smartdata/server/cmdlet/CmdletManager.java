@@ -20,7 +20,7 @@ package org.smartdata.server.cmdlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionRegistry;
-import org.smartdata.actions.PrintAction;
+import org.smartdata.actions.HelloAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
@@ -51,15 +51,15 @@ public class CmdletManager implements Service {
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
   private Queue<CmdletInfo> pendingCmdlet;
-  private Map<String, Long> submittedCommand;
+  private Map<String, Long> submittedCmdlets;
   private DBAdapter adapter;
   private AtomicLong maxActionId;
-  private AtomicLong maxCommandId;
+  private AtomicLong maxCmdletId;
 
   public CmdletManager() {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.dispatcher = new CmdletDispatcher();
-    this.submittedCommand = new ConcurrentHashMap<>();
+    this.submittedCmdlets = new ConcurrentHashMap<>();
     this.pendingCmdlet = new LinkedBlockingQueue<>();
   }
 
@@ -69,7 +69,7 @@ public class CmdletManager implements Service {
       this.adapter = adapter;
       try {
         maxActionId = new AtomicLong(adapter.getMaxActionId());
-        maxCommandId = new AtomicLong(adapter.getMaxCmdletId());
+        maxCmdletId = new AtomicLong(adapter.getMaxCmdletId());
       } catch (Exception e) {
         LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
         throw new IOException(e);
@@ -96,40 +96,40 @@ public class CmdletManager implements Service {
 
   }
 
-  public long submitCommand(String command) throws IOException {
-    LOG.debug(String.format("Received Command -> [ %s ]", command));
-    if (this.submittedCommand.containsKey(command)) {
-      throw new IOException("Duplicate Command found, submit canceled!");
+  public long submitCmdlet(String cmdlet) throws IOException {
+    LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdlet));
+    if (this.submittedCmdlets.containsKey(cmdlet)) {
+      throw new IOException("Duplicate Cmdlet found, submit canceled!");
     }
     try {
-      CmdletDescriptor commandDescriptor = CmdletDescriptor.fromCmdletString(command);
-      return submitCommand(commandDescriptor);
+      CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdlet);
+      return submitCmdlet(cmdletDescriptor);
     } catch (ParseException e) {
       e.printStackTrace();
       throw new IOException(e);
     }
   }
 
-  public long submitCommand(CmdletDescriptor commandDescriptor) throws IOException {
-    LOG.debug(String.format("Received Command -> [ %s ]", commandDescriptor.getCmdletString()));
-    if (this.submittedCommand.containsKey(commandDescriptor.getCmdletString())) {
-      throw new IOException("Duplicate Command found, submit canceled!");
+  public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
+    LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
+    if (this.submittedCmdlets.containsKey(cmdletDescriptor.getCmdletString())) {
+      throw new IOException("Duplicate Cmdlet found, submit canceled!");
     }
     long submitTime = System.currentTimeMillis();
     CmdletInfo cmdletInfo =
       new CmdletInfo(
-        maxCommandId.getAndIncrement(),
-        commandDescriptor.getRuleId(),
+        maxCmdletId.getAndIncrement(),
+        cmdletDescriptor.getRuleId(),
         CmdletState.PENDING,
-        commandDescriptor.getCmdletString(),
+        cmdletDescriptor.getCmdletString(),
         submitTime,
         submitTime);
-    List<ActionInfo> actionInfos = createActionInfos(commandDescriptor, cmdletInfo.getCid());
+    List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     for (ActionInfo actionInfo : actionInfos) {
       cmdletInfo.addAction(actionInfo.getActionId());
     }
-    for (int index = 0; index < commandDescriptor.actionSize(); index++) {
-      if (!ActionRegistry.instance().checkAction(commandDescriptor.getActionName(index))) {
+    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
+      if (!ActionRegistry.instance().checkAction(cmdletDescriptor.getActionName(index))) {
         throw new IOException(
           String.format("Submit Command %s error! Action names are not correct!", cmdletInfo));
       }
@@ -146,19 +146,19 @@ public class CmdletManager implements Service {
       }
       throw new IOException(e);
     }
-    this.submittedCommand.put(commandDescriptor.getCmdletString(), cmdletInfo.getCid());
+    this.submittedCmdlets.put(cmdletDescriptor.getCmdletString(), cmdletInfo.getCid());
     return cmdletInfo.getCid();
   }
 
-  private synchronized List<ActionInfo> createActionInfos(CmdletDescriptor commandDescriptor, long cid) throws IOException {
+  private synchronized List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
     List<ActionInfo> actionInfos = new ArrayList<>();
-    for (int index = 0; index < commandDescriptor.actionSize(); index++) {
-      Map<String, String> args = commandDescriptor.getActionArgs(index);
+    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
+      Map<String, String> args = cmdletDescriptor.getActionArgs(index);
       ActionInfo actionInfo =
           new ActionInfo(
               maxActionId.getAndIncrement(),
               cid,
-              commandDescriptor.getActionName(index),
+              cmdletDescriptor.getActionName(index),
               args,
               "",
               "",
@@ -174,12 +174,12 @@ public class CmdletManager implements Service {
 
   int num = 0;
 
-  public LaunchCmdlet getNextCommandToRun() throws IOException {
+  public LaunchCmdlet getNextCmdletToRun() throws IOException {
     num +=1;
     List<LaunchAction> actions = new ArrayList<>();
     Map<String, String> args = new HashMap<>();
-    args.put(PrintAction.PRINT_MESSAGE, "this is the message " + num);
-    actions.add(new LaunchAction(101L, "print", args));
+    args.put(HelloAction.PRINT_MESSAGE, "this is the message " + num);
+    actions.add(new LaunchAction(101L, "hello", args));
     LaunchCmdlet cmdlet = new LaunchCmdlet(0, actions);
     if (num < 10) {
       return cmdlet;
@@ -199,11 +199,11 @@ public class CmdletManager implements Service {
     public void run() {
       while (this.dispatcher.canDispatchMore()) {
         try {
-          LaunchCmdlet commandInfo = getNextCommandToRun();
-          if (commandInfo == null) {
+          LaunchCmdlet launchCmdlet = getNextCmdletToRun();
+          if (launchCmdlet == null) {
             break;
           } else {
-            this.dispatcher.dispatch(commandInfo);
+            this.dispatcher.dispatch(launchCmdlet);
           }
         } catch (IOException e) {
           e.printStackTrace();

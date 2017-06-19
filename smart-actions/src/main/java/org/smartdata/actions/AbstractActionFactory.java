@@ -29,7 +29,7 @@ public abstract class AbstractActionFactory implements ActionFactory {
   private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
 
   static {
-    addAction("print", PrintAction.class);
+    addAction("hello", HelloAction.class);
   }
 
   protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
