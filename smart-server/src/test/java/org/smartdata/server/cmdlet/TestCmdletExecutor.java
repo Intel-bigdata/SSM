@@ -53,11 +53,11 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
     generateTestCases();
     ssm.getCmdletExecutor()
-        .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile");
+        .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile");
     // Cause Exception with the same files
     try {
       ssm.getCmdletExecutor()
-          .submitCmdlet("onessd /testMoveFile/file1 ; uncache /testCacheFile");
+          .submitCmdlet("onessd -file /testMoveFile/file1 ; uncache -file /testCacheFile");
     } catch (IOException e) {
       Assert.assertTrue(true);
     }
@@ -77,7 +77,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     generateTestFiles();
     Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
     ssm.getCmdletExecutor()
-        .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024");
+        .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
     // ssm.getCmdletExecutor().submitCmdlet(cmdletDescriptor);
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
@@ -92,7 +92,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
     try {
       ssm.getCmdletExecutor()
-          .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug");
+          .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; bug /bug bug bug");
     } catch (IOException e) {
       System.out.println("Wrong cmdlet is detected!");
       Assert.assertTrue(true);
@@ -156,7 +156,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private CmdletDescriptor generateCmdletDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024";
+    String cmd = "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024";
     CmdletDescriptor cmdletDescriptor = new CmdletDescriptor(cmd);
     cmdletDescriptor.setRuleId(1);
     return cmdletDescriptor;

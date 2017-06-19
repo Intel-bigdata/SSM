@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class RuleCmdlets {
-  public static void registerCmdlets(CommandFactory factory) {
+  public static void registerCommands(CommandFactory factory) {
     factory.addClass(SubmitRule.class, "submitrule");
     factory.addClass(ListRules.class, "listrules");
   }
