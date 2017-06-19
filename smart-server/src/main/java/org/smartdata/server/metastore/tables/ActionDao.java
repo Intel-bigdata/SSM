@@ -22,15 +22,12 @@ import org.smartdata.common.actions.ActionInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +64,21 @@ public class ActionDao {
         new Object[]{cid}, new ActionRowMapper());
   }
 
+  public List<ActionInfo> getByCondition(String aidCondition,
+      String cidCondition) {
+    String sqlPrefix = "SELECT * FROM actions WHERE ";
+    String sqlAid = (aidCondition == null) ? "" : "AND aid " + aidCondition;
+    String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
+    String sqlFinal = "";
+    if (aidCondition != null || cidCondition != null) {
+      sqlFinal = sqlPrefix + sqlAid + sqlCid;
+      sqlFinal = sqlFinal.replaceFirst("AND ", "");
+    } else {
+      sqlFinal = sqlPrefix.replaceFirst("WHERE ", "");
+    }
+    return jdbcTemplate.query(sqlFinal, new ActionRowMapper());
+  }
+
   public List<ActionInfo> getLatestActions(int size) {
     String sql = "select * from actions WHERE finished = 1" +
         " ORDER by create_time DESC limit ?";
@@ -84,18 +96,20 @@ public class ActionDao {
   }
 
   public void insert(ActionInfo[] actionInfos) {
-    SqlParameterSource[] batch = SqlParameterSourceUtils
-        .createBatch(actionInfos);
-    simpleJdbcInsert.executeBatch(batch);
+    // TODO need upgrade
+    // SqlParameterSource[] batch = SqlParameterSourceUtils
+    //     .createBatch(actionInfos);
+    // simpleJdbcInsert.executeBatch(batch);
+    for (ActionInfo actionInfo : actionInfos) {
+      insert(actionInfo);
+    }
   }
 
   public int update(final ActionInfo actionInfo) {
-    List<ActionInfo> actionInfos = new ArrayList<>();
-    actionInfos.add(actionInfo);
-    return update(actionInfos)[0];
+    return update(new ActionInfo[]{actionInfo})[0];
   }
 
-  public int[] update(final List<ActionInfo> actionInfos) {
+  public int[] update(final ActionInfo[] actionInfos) {
     String sql = "update actions set " +
         "result = ?, " +
         "log = ?, " +
@@ -107,19 +121,20 @@ public class ActionDao {
         "where aid = ?";
     return jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
-          public void setValues(PreparedStatement ps, int i) throws SQLException {
-            ps.setString(1, actionInfos.get(i).getResult());
-            ps.setString(2, actionInfos.get(i).getLog());
-            ps.setBoolean(3, actionInfos.get(i).isSuccessful());
-            ps.setLong(4, actionInfos.get(i).getCreateTime());
-            ps.setBoolean(5, actionInfos.get(i).isFinished());
-            ps.setLong(6, actionInfos.get(i).getFinishTime());
-            ps.setFloat(7, actionInfos.get(i).getProgress());
-            ps.setLong(8, actionInfos.get(i).getActionId());
+          public void setValues(PreparedStatement ps,
+              int i) throws SQLException {
+            ps.setString(1, actionInfos[i].getResult());
+            ps.setString(2, actionInfos[i].getLog());
+            ps.setBoolean(3, actionInfos[i].isSuccessful());
+            ps.setLong(4, actionInfos[i].getCreateTime());
+            ps.setBoolean(5, actionInfos[i].isFinished());
+            ps.setLong(6, actionInfos[i].getFinishTime());
+            ps.setFloat(7, actionInfos[i].getProgress());
+            ps.setLong(8, actionInfos[i].getActionId());
           }
 
           public int getBatchSize() {
-            return actionInfos.size();
+            return actionInfos.length;
           }
         });
   }
