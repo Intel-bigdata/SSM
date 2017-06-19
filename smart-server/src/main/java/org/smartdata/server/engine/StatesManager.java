@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server;
+package org.smartdata.server.engine;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -23,6 +23,8 @@ import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
+import org.smartdata.server.SmartServer;
+import org.smartdata.server.metastore.FileAccessInfo;
 import org.smartdata.server.metric.fetcher.AccessEventFetcher;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.server.metric.fetcher.CachedListFetcher;
@@ -54,6 +56,7 @@ public class StatesManager implements Service {
   private AccessEventFetcher accessEventFetcher;
   private CachedListFetcher cachedListFetcher;
   private FileAccessEventSource fileAccessEventSource;
+  private DBAdapter dbAdapter;
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
   public StatesManager(SmartServer ssm, Configuration conf) {
@@ -68,6 +71,7 @@ public class StatesManager implements Service {
    */
   public boolean init(DBAdapter dbAdapter) throws IOException {
     LOG.info("Initializing ...");
+    this.dbAdapter = dbAdapter;
     this.cleanFileTableContents(dbAdapter);
     String nnUri = conf.get(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
     try {
@@ -156,6 +160,23 @@ public class StatesManager implements Service {
       adapter.execute("DELETE FROM files");
     } catch (SQLException e) {
       throw new IOException("Error while 'DELETE FROM files'", e);
+    }
+  }
+
+  public List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
+      int topNum) throws IOException {
+    try {
+      return dbAdapter.getHotFiles(tables, topNum);
+    } catch (SQLException e) {
+      throw new IOException(e);
+    }
+  }
+
+  public List<CachedFileStatus> getCachedFileStatus() throws IOException {
+    try {
+      return dbAdapter.getCachedFileStatus();
+    } catch (SQLException e) {
+      throw new IOException(e);
     }
   }
 }

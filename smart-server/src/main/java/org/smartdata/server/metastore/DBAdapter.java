@@ -383,7 +383,8 @@ public class DBAdapter {
     }
   }
 
-  public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables, int topNum) throws Exception {
+  public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
+      int topNum) throws SQLException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
       StringBuilder unioned = new StringBuilder();

@@ -19,9 +19,10 @@ package org.smartdata.server.rule;
 
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
-import org.smartdata.server.RuleManager;
+import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.ExecutionContext;
 
@@ -125,7 +126,7 @@ public class RuleInfoRepo {
       TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
           ruleInfo.getSubmitTime());
       TranslateResult tr = executor != null ? executor.getTranslateResult() :
-          ruleManager.doCheckRule(ruleInfo.getRuleText(), transCtx);
+          new RuleStringParser(ruleInfo.getRuleText(), transCtx).translate();
       executor = new RuleExecutor(
           ruleManager, ctx, tr, ruleManager.getDbAdapter());
       return executor;

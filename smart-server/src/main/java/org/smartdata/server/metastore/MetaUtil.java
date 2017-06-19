@@ -216,6 +216,10 @@ public class MetaUtil {
     }
   }
 
+  public static void formatDatabase(SmartConf conf) throws Exception {
+    getDBAdapter(conf).formatDataBase();
+  }
+
   public static DBAdapter getDBAdapter(SmartConf conf) throws Exception {
     // TODO: move to etc directory
     URL pathUrl = ClassLoader.getSystemResource("");

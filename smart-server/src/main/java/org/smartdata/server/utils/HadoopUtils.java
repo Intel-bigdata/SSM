@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.utils;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
@@ -30,8 +31,8 @@ import java.net.URISyntaxException;
  */
 public class HadoopUtils {
 
-  public static URI getNameNodeUri(SmartConf conf)
-      throws IOException, URISyntaxException {
+  public static URI getNameNodeUri(Configuration conf)
+      throws IOException {
     String nnRpcAddr = null;
 
     String[] rpcAddrKeys = {
@@ -59,6 +60,10 @@ public class HadoopUtils {
       conf.set(rpcAddrKeys[1], nnRpcAddr);
     }
 
-    return new URI(nnRpcAddr);
+    try {
+      return new URI(nnRpcAddr);
+    } catch (URISyntaxException e) {
+      throw new IOException("Invalid URI Syntax: " + nnRpcAddr, e);
+    }
   }
 }

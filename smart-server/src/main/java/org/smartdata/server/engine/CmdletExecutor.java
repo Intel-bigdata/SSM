@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.cmdlet;
+package org.smartdata.server.engine;
 
 import org.smartdata.SmartContext;
 import org.smartdata.client.SmartDFSClient;
@@ -30,8 +30,9 @@ import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.Service;
 import org.smartdata.server.SmartServer;
+import org.smartdata.server.cmdlet.Cmdlet;
+import org.smartdata.server.cmdlet.CmdletPool;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.actions.ActionRegistry;
 
@@ -42,6 +43,7 @@ import org.apache.hadoop.conf.Configuration;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.server.utils.HadoopUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -463,7 +465,7 @@ public class CmdletExecutor implements Runnable, Service {
     smartAction.setArguments(actionInfo.getArgs());
     if (smartAction instanceof HdfsAction) {
       ((HdfsAction) smartAction).setDfsClient(
-          new SmartDFSClient(ssm.getNamenodeURI(),
+          new SmartDFSClient(HadoopUtils.getNameNodeUri(conf),
               smartContext.getConf(), getRpcServerAddress()));
     }
     smartAction.getActionStatus().setId(actionInfo.getActionId());
@@ -478,7 +480,7 @@ public class CmdletExecutor implements Runnable, Service {
     smartAction.setContext(smartContext);
     if (smartAction instanceof HdfsAction) {
       ((HdfsAction) smartAction).setDfsClient(
-          new SmartDFSClient(ssm.getNamenodeURI(),
+          new SmartDFSClient(HadoopUtils.getNameNodeUri(conf),
               smartContext.getConf(), getRpcServerAddress()));
     }
     smartAction.getActionStatus().setId(maxActionId);
@@ -505,7 +507,7 @@ public class CmdletExecutor implements Runnable, Service {
 
 
   @VisibleForTesting
-  synchronized List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
+  public synchronized List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
     if (cmdletDescriptor == null) {
           return null;
     }

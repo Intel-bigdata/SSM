@@ -31,6 +31,8 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.server.metastore.MetaUtil;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -163,7 +165,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private void generateTestCases() throws Exception {
-    DBAdapter dbAdapter = ssm.getDBAdapter();
+    DBAdapter dbAdapter = MetaUtil.getDBAdapter(conf);
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
     CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
         CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
@@ -173,7 +175,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private void testCmdletExecutorHelper() throws Exception {
-    DBAdapter dbAdapter = ssm.getDBAdapter();
+    DBAdapter dbAdapter = MetaUtil.getDBAdapter(conf);
     while (true) {
       Thread.sleep(2000);
       int current = ssm.getCmdletExecutor().cacheSize();
