@@ -66,7 +66,7 @@ public class CmdletDao {
   }
 
   public List<CmdletInfo> getByCondition(String cidCondition,
-                                          String ridCondition, CmdletState state) {
+      String ridCondition, CmdletState state) {
     String sqlPrefix = "SELECT * FROM cmdlets WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
@@ -102,8 +102,8 @@ public class CmdletDao {
 
   public int update(long cid, long rid, int state) {
     String sql = "update cmdlets set " +
-                     "state = ?, " +
-                     "state_changed_time = ? where cid = ? AND rid = ?";
+        "state = ?, " +
+        "state_changed_time = ? where cid = ? AND rid = ?";
     return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid, rid);
   }
 
@@ -115,12 +115,13 @@ public class CmdletDao {
 
   public int[] update(final List<CmdletInfo> CmdletInfos) {
     String sql = "update cmdlets set " +
-                     "state = ?, " +
-                     "state_changed_time = ? " +
-                     "where cid = ?";
+        "state = ?, " +
+        "state_changed_time = ? " +
+        "where cid = ?";
     return jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
-          public void setValues(PreparedStatement ps, int i) throws SQLException {
+          public void setValues(PreparedStatement ps,
+              int i) throws SQLException {
             ps.setInt(1, CmdletInfos.get(i).getState().getValue());
             ps.setLong(2, CmdletInfos.get(i).getStateChangedTime());
             ps.setLong(3, CmdletInfos.get(i).getCid());

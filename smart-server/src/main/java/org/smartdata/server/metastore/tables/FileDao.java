@@ -23,8 +23,6 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
@@ -73,7 +71,7 @@ public class FileDao {
     List<HdfsFileStatus> files = jdbcTemplate.query(sql,
         new FileRowMapper());
     for (HdfsFileStatus file : files) {
-      pathToId.put(((FileStatusInternal)file).getPath(), file.getFileId());
+      pathToId.put(((FileStatusInternal) file).getPath(), file.getFileId());
     }
     return pathToId;
   }
@@ -90,7 +88,7 @@ public class FileDao {
     List<HdfsFileStatus> files = jdbcTemplate.query(sql,
         new FileRowMapper());
     for (HdfsFileStatus file : files) {
-      idToPath.put(file.getFileId(), ((FileStatusInternal)file).getPath());
+      idToPath.put(file.getFileId(), ((FileStatusInternal) file).getPath());
     }
     return idToPath;
   }
@@ -141,7 +139,8 @@ public class FileDao {
   class FileRowMapper implements RowMapper<HdfsFileStatus> {
 
     @Override
-    public HdfsFileStatus mapRow(ResultSet resultSet, int i) throws SQLException {
+    public HdfsFileStatus mapRow(ResultSet resultSet,
+        int i) throws SQLException {
       FileStatusInternal status = new FileStatusInternal(resultSet.getLong("length"),
           resultSet.getBoolean("is_dir"),
           resultSet.getInt("block_replication"),

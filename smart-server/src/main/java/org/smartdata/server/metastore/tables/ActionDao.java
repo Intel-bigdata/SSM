@@ -65,7 +65,7 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getByCondition(String aidCondition,
-                                         String cidCondition) {
+      String cidCondition) {
     String sqlPrefix = "SELECT * FROM actions WHERE ";
     String sqlAid = (aidCondition == null) ? "" : "AND aid " + aidCondition;
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
@@ -106,7 +106,7 @@ public class ActionDao {
   }
 
   public int update(final ActionInfo actionInfo) {
-    return update(new ActionInfo[] {actionInfo})[0];
+    return update(new ActionInfo[]{actionInfo})[0];
   }
 
   public int[] update(final ActionInfo[] actionInfos) {
@@ -121,7 +121,8 @@ public class ActionDao {
         "where aid = ?";
     return jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
-          public void setValues(PreparedStatement ps, int i) throws SQLException {
+          public void setValues(PreparedStatement ps,
+              int i) throws SQLException {
             ps.setString(1, actionInfos[i].getResult());
             ps.setString(2, actionInfos[i].getLog());
             ps.setBoolean(3, actionInfos[i].isSuccessful());
