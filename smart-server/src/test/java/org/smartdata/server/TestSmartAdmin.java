@@ -129,9 +129,9 @@ public class TestSmartAdmin {
       assertTrue(caughtException);
 
       //test cmdletInfo
-      long id = ssmClient.submitCmdlet("cache /foo*");
+      long id = ssmClient.submitCmdlet("cache -file /foo*");
       CmdletInfo cmdletInfo = ssmClient.getCmdletInfo(id);
-      assertTrue("cache /foo*".equals(cmdletInfo.getParameters()));
+      assertTrue("cache -file /foo*".equals(cmdletInfo.getParameters()));
 
       //test actioninfo
       List<Long> aidlist = cmdletInfo.getAids();
