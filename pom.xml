@@ -32,6 +32,7 @@
     <module>smart-alluxio</module>
     <module>smart-rule</module>
     <module>smart-zeppelin</module>
+    <module>smart-agent</module>
     <module>smart-dist</module>
   </modules>
 
@@ -46,6 +47,7 @@
     <bouncycastle.version>1.46</bouncycastle.version>
     <protobuf.version>2.5.0</protobuf.version>
     <dbunitVersion>2.5.3</dbunitVersion>
+    <akka.version>2.3.12</akka.version>
     <akka.config.version>1.2.1</akka.config.version>
     <akka.http.version>2.0.4</akka.http.version>
     <druid.version>1.0.31</druid.version>
@@ -76,6 +78,27 @@
         <groupId>com.squareup</groupId>
         <artifactId>tape</artifactId>
         <version>1.2.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-actor_2.11</artifactId>
+        <version>${akka.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-remote_2.11</artifactId>
+        <version>${akka.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-slf4j_2.11</artifactId>
+        <version>${akka.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-testkit_2.11</artifactId>
+        <version>${akka.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.typesafe.akka</groupId>

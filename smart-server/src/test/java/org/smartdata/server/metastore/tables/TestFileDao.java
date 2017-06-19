@@ -98,7 +98,7 @@ public class TestFileDao extends TestDaoUtil {
                                                    blockSize, modTime, accessTime, perms, owner, group, symlink,
                                                    path, "/tmp2", fileId + 1, numChildren, null, storagePolicy);
     fileDao.insert(new FileStatusInternal[] {fileStatusInternal1, fileStatusInternal2});
-    List<FileStatusInternal> files = fileDao.getAll();
+    List<HdfsFileStatus> files = fileDao.getAll();
     Assert.assertTrue(files.size() == 2);
     fileDao.deleteById(fileStatusInternal1.getFileId());
     files = fileDao.getAll();
@@ -131,7 +131,7 @@ public class TestFileDao extends TestDaoUtil {
                                                                        path, "/tmp", fileId, numChildren, null, storagePolicy);
     fileDao.insert(fileStatusInternal);
     fileDao.update("/tmp/testFile", 10);
-    fileStatusInternal = fileDao.getById(312321L);
+    fileStatusInternal = (FileStatusInternal)(fileDao.getById(312321L));
     Assert.assertTrue(fileStatusInternal.getStoragePolicy() == 10);
   }
 
