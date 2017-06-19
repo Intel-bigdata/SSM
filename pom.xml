@@ -54,7 +54,7 @@
     <spring.version>4.3.9.RELEASE</spring.version>
     <antlr4.version>4.6</antlr4.version>
     <hazelcast.version>3.7.8</hazelcast.version>
-    <guava.version>22.0</guava.version>
+    <guava.version>11.0.2</guava.version>
     <test.build.dir>${project.build.directory}/test-dir</test.build.dir>
   </properties>
 
