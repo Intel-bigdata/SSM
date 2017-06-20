@@ -15,48 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server;
+package org.smartdata.conf;
 
-import org.smartdata.server.metastore.DBAdapter;
+import java.util.List;
 
-import java.io.IOException;
-
-public interface Service {
-  enum State {
-    INITING,
-    INITED,
-    STARTING,
-    STARTED,
-    STOPPING,
-    STOPPED,
-    JOINING,
-    JOINED
-  }
+/**
+ * Properties that can be reconfigured at runtime.
+ * Note: ReconfigurableRegistry should be used to register
+ * the reconfigurable properties, otherwise won't get chance
+ * to reconfigure.
+ */
+public interface Reconfigurable {
+  /**
+   * Called when the property's value is reconfigured.
+   * @param property
+   * @param newVal
+   * @throws ReconfigureException
+   */
+  void reconfigureProperty(String property, String newVal)
+      throws ReconfigureException;
 
   /**
-   * Init module using info from configuration and database.
-   * @param dbAdapter
+   * Return the reconfigurable properties that supported.
    * @return
-   * @throws IOException
    */
-  boolean init(DBAdapter dbAdapter) throws IOException;
-
-  /**
-   * After start call, all services and public calls should work.
-   * @return
-   * @throws IOException
-   */
-  boolean start() throws IOException, InterruptedException;
-
-  /**
-   * After stop call, all states in database will not be changed anymore.
-   * @throws IOException
-   */
-  void stop() throws IOException;
-
-  /**
-   * Stop threads and other cleaning jobs.
-   * @throws IOException
-   */
-  void join() throws IOException;
+  List<String> getReconfigurableProperties();
 }

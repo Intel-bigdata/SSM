@@ -28,8 +28,8 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
 
 import java.io.IOException;
 import java.net.URI;
@@ -63,7 +63,7 @@ public class TestSmartAdmin {
 
       // Set db used
       String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-      String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
+      String dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
       conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
       // rpcServer start in SmartServer
@@ -116,22 +116,10 @@ public class TestSmartAdmin {
       ssmClient.deleteRule(ruleId, true);
       assertEquals(RuleState.DELETED, ssmClient.getRuleInfo(ruleId).getState());
 
-      //test single SSM
-      caughtException = false;
-      try {
-        conf.set(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
-        SmartServer.createSSM(null, conf);
-      } catch (IOException e) {
-        assertEquals("java.io.IOException: Another SmartServer is running",
-            e.toString());
-        caughtException = true;
-      }
-      assertTrue(caughtException);
-
       //test cmdletInfo
-      long id = ssmClient.submitCmdlet("cache /foo*");
+      long id = ssmClient.submitCmdlet("cache -file /foo*");
       CmdletInfo cmdletInfo = ssmClient.getCmdletInfo(id);
-      assertTrue("cache /foo*".equals(cmdletInfo.getParameters()));
+      assertTrue("cache -file /foo*".equals(cmdletInfo.getParameters()));
 
       //test actioninfo
       List<Long> aidlist = cmdletInfo.getAids();

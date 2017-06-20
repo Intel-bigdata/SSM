@@ -31,6 +31,8 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.server.metastore.MetaUtil;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -45,7 +47,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     generateTestCases();
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
     List<ActionInfo> actionInfos = ssm.getCmdletExecutor().createActionInfos(cmdletDescriptor, 0);
-    Assert.assertTrue(cmdletDescriptor.size() == actionInfos.size());
+    Assert.assertTrue(cmdletDescriptor.actionSize() == actionInfos.size());
   }
 
   @Test
@@ -53,11 +55,11 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
     generateTestCases();
     ssm.getCmdletExecutor()
-        .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile");
+        .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile");
     // Cause Exception with the same files
     try {
       ssm.getCmdletExecutor()
-          .submitCmdlet("onessd /testMoveFile/file1 ; uncache /testCacheFile");
+          .submitCmdlet("onessd -file /testMoveFile/file1 ; uncache -file /testCacheFile");
     } catch (IOException e) {
       Assert.assertTrue(true);
     }
@@ -77,7 +79,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     generateTestFiles();
     Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
     ssm.getCmdletExecutor()
-        .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024");
+        .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
     // ssm.getCmdletExecutor().submitCmdlet(cmdletDescriptor);
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
@@ -92,7 +94,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
     try {
       ssm.getCmdletExecutor()
-          .submitCmdlet("allssd /testMoveFile/file1 ; cache /testCacheFile ; bug /bug bug bug");
+          .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; bug /bug bug bug");
     } catch (IOException e) {
       System.out.println("Wrong cmdlet is detected!");
       Assert.assertTrue(true);
@@ -156,14 +158,14 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private CmdletDescriptor generateCmdletDescriptor() throws Exception {
-    String cmd = "allssd /testMoveFile/file1 ; cache /testCacheFile ; write /test 1024";
+    String cmd = "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024";
     CmdletDescriptor cmdletDescriptor = new CmdletDescriptor(cmd);
     cmdletDescriptor.setRuleId(1);
     return cmdletDescriptor;
   }
 
   private void generateTestCases() throws Exception {
-    DBAdapter dbAdapter = ssm.getDBAdapter();
+    DBAdapter dbAdapter = MetaUtil.getDBAdapter(conf);
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
     CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
         CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
@@ -173,7 +175,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private void testCmdletExecutorHelper() throws Exception {
-    DBAdapter dbAdapter = ssm.getDBAdapter();
+    DBAdapter dbAdapter = MetaUtil.getDBAdapter(conf);
     while (true) {
       Thread.sleep(2000);
       int current = ssm.getCmdletExecutor().cacheSize();

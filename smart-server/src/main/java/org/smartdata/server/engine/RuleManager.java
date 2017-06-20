@@ -15,15 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server;
+package org.smartdata.server.engine;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
-import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.server.cmdlet.CmdletExecutor;
+import org.smartdata.server.SmartServer;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
@@ -92,7 +91,7 @@ public class RuleManager implements Service {
     CmdletDescriptor cd = tr.getCmdDescriptor();
     if (getCmdletExecutor() != null) {
       String error = "";
-      for (int i = 0; i < cd.size(); i++) {
+      for (int i = 0; i < cd.actionSize(); i++) {
         if (!getCmdletExecutor().isActionSupported(cd.getActionName(i))) {
           error += "Action '" + cd.getActionName(i) + "' not supported.\n";
         }
@@ -118,7 +117,7 @@ public class RuleManager implements Service {
     return ruleInfo.getId();
   }
 
-  public TranslateResult doCheckRule(String rule, TranslationContext ctx)
+  private TranslateResult doCheckRule(String rule, TranslationContext ctx)
       throws IOException {
     RuleStringParser parser = new RuleStringParser(rule, ctx);
     return parser.translate();
@@ -185,27 +184,6 @@ public class RuleManager implements Service {
       long checkedCount, int cmdletsGen) throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleId);
     infoRepo.updateRuleInfo(rs, lastCheckTime, checkedCount, cmdletsGen);
-  }
-
-  public void addNewCmdlets(List<CmdletInfo> cmdlets) {
-    if (cmdlets == null || cmdlets.size() == 0) {
-      return;
-    }
-
-    CmdletInfo[] cmds = cmdlets.toArray(new CmdletInfo[cmdlets.size()]);
-
-    // TODO: call cmdletExecutor interface to do this
-    // try {
-    // } catch (SQLException e) {
-    //   LOG.error(e.getMessage());
-    // }
-
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("" + cmdlets.size() + " cmdlets added.");
-      for (CmdletInfo cmd : cmdlets) {
-        LOG.debug("\t" + cmd);
-      }
-    }
   }
 
   public boolean isClosed() {

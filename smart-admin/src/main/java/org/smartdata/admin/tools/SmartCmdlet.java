@@ -24,7 +24,7 @@ import org.apache.hadoop.fs.shell.CommandFactory;
 import java.io.IOException;
 
 public class SmartCmdlet extends Command {
-  public static void registerCmdlets(CommandFactory factory) {
+  public static void registerCommands(CommandFactory factory) {
     factory.registerCommands(RuleCmdlets.class);
   }
 

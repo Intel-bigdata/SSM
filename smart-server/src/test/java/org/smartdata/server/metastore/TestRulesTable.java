@@ -21,8 +21,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.metastore.Util;
 
 import java.io.File;
 import java.sql.Connection;
@@ -42,8 +40,8 @@ public class TestRulesTable {
     String dbFile = TestDBUtil.getUniqueDBFilePath();
     Connection conn = null;
     try {
-      conn = Util.createSqliteConnection(dbFile);
-      Util.initializeDataBase(conn);
+      conn = MetaUtil.createSqliteConnection(dbFile);
+      MetaUtil.initializeDataBase(conn);
       String rule = "file : accessCount(10m) > 20 \n\n"
           + "and length() > 3 | cache";
       long submitTime = System.currentTimeMillis();

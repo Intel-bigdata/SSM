@@ -165,10 +165,58 @@ public class TestMoveFileAction extends ActionMiniCluster {
     try {
       moveFileAction.run();
     } catch (Exception e) {
-      e.printStackTrace();
       Assert.assertTrue(status.isFinished());
       Assert.assertFalse(status.isSuccessful());
       Assert.assertEquals(1.0f, status.getPercentage(), 0.0000001f);
     }
+  }
+
+  @Test
+  public void testMultiblockFile() throws Exception {
+    final String file1 = "/testParallelMovers/file1";
+    Path dir = new Path("/testParallelMovers");
+    dfs.mkdirs(dir);
+    // write to DISK
+    dfs.setStoragePolicy(dir, "HOT");
+    final FSDataOutputStream out1 = dfs.create(new Path(file1));
+    out1.writeChars("This is a block with 50B." +
+        "This is a block with 50B." +
+        "This is a block with 50B." +
+        "This is a block with 50B." +
+        "This is a block with 50B." +
+        "This is a block with 50B." +
+        "This is a block with 50B." +
+        "This is a block with 50B." +
+        "This is a block with 50B." +
+        "This is a block with 50B.");
+    out1.close();
+
+    // schedule move to ARCHIVE or SSD
+    ArchiveFileAction action1 = new ArchiveFileAction();
+    action1.setDfsClient(dfsClient);
+    action1.setContext(smartContext);
+    Map<String, String> args1 = new HashMap();
+    args1.put(ArchiveFileAction.FILE_PATH, file1);
+    action1.init(args1);
+
+    ActionStatus status1 = action1.getActionStatus();
+
+    action1.run();
+
+    if (status1 instanceof MoverStatus) {
+      MoverStatus moverStatus = (MoverStatus) status1;
+      while (!status1.isFinished()) {
+        System.out.println("Mover 1 running time : " +
+            StringUtils.formatTime(status1.getRunningTime()));
+        System.out.println("Moved/Total : " + moverStatus.getMovedBlocks()
+            + "/" + moverStatus.getTotalBlocks());
+        System.out.println("Move percentage : " +
+            status1.getPercentage() * 100 + "%");
+        Thread.sleep(3000);
+      }
+    }
+    Assert.assertTrue(status1.isSuccessful());
+    System.out.println("Mover 1 total running time : " +
+        StringUtils.formatTime(status1.getRunningTime()));
   }
 }

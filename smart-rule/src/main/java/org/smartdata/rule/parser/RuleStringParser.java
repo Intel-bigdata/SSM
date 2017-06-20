@@ -78,11 +78,11 @@ public class RuleStringParser {
   public TranslateResult translate() throws IOException {
     TranslateResult tr = doTranslate(rule);
     CmdletDescriptor cmdDes = tr.getCmdDescriptor();
-    if (cmdDes.size() == 0) {
+    if (cmdDes.actionSize() == 0) {
       throw new IOException("No cmdlet specified in Rule");
     }
     String actName = cmdDes.getActionName(0);
-    if (cmdDes.size() != 1 || optCond.get(actName) == null) {
+    if (cmdDes.actionSize() != 1 || optCond.get(actName) == null) {
       return tr;
     }
     int[] condPosition = tr.getCondPosition();

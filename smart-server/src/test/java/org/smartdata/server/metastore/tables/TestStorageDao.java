@@ -28,7 +28,6 @@ import org.smartdata.server.metastore.TestDaoUtil;
 
 import java.sql.SQLException;
 import java.util.Map;
-
 public class TestStorageDao extends TestDaoUtil {
 
   private StorageDao storageDao;
