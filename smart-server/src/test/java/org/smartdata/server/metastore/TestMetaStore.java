@@ -29,12 +29,13 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Before
   public void metaInit() throws Exception {
-    // Clear DB and create new tables
+    initDao();
     metaStore = new MetaStore(druidPool);
   }
 
   @After
   public void metaClose() throws Exception {
+    closeDao();
     if (metaStore != null) {
       metaStore = null;
     }
