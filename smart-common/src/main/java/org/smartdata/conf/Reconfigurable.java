@@ -20,7 +20,10 @@ package org.smartdata.conf;
 import java.util.List;
 
 /**
- * Created by root on 6/19/17.
+ * Properties that can be reconfigured at runtime.
+ * Note: ReconfigurableRegistry should be used to register
+ * the reconfigurable properties, otherwise won't get chance
+ * to reconfigure.
  */
 public interface Reconfigurable {
   /**

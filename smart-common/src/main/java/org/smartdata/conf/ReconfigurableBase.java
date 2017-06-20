@@ -19,6 +19,9 @@ package org.smartdata.conf;
 
 import java.util.List;
 
+/**
+ * This class helps to register all the properties of subclasses.
+ */
 public abstract class ReconfigurableBase implements Reconfigurable {
 
   public ReconfigurableBase() {
