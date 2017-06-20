@@ -17,7 +17,9 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
@@ -29,13 +31,20 @@ public class TestRuleDao extends TestDaoUtil {
 
   private RuleDao ruleDao;
 
-  private void daoInit() {
+  @Before
+  public void initRuleDao() throws Exception {
+    initDao();
     ruleDao = new RuleDao(druidPool.getDataSource());
+  }
+
+  @After
+  public void closeRuleDao() throws Exception {
+    closeDao();
+    ruleDao = null;
   }
 
   @Test
   public void testInsertGetRule() throws Exception {
-    daoInit();
     String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
@@ -62,14 +71,16 @@ public class TestRuleDao extends TestDaoUtil {
 
   @Test
   public void testUpdateRule() throws Exception {
-    daoInit();
     String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
     RuleInfo info1 = new RuleInfo(0, submitTime,
-        rule, RuleState.ACTIVE, 0, 0, 0);
+        rule, RuleState.ACTIVE,
+        0, 0, 0);
     ruleDao.insert(info1);
-    ruleDao.update(info1.getId(), RuleState.DISABLED.getValue(), 12l, 12l, 12);
+    ruleDao.update(info1.getId(),
+        RuleState.DISABLED.getValue(),
+        12l, 12l, 12);
     info1 = ruleDao.getById(info1.getId());
     Assert.assertTrue(info1.getLastCheckTime() == 12l);
   }

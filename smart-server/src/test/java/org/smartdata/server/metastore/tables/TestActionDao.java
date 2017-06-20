@@ -17,7 +17,9 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.actions.ActionInfo;
@@ -31,13 +33,20 @@ public class TestActionDao extends TestDaoUtil {
 
   private ActionDao actionDao;
 
-  private void daoInit() {
+  @Before
+  public void initActionDao() throws Exception {
+    initDao();
     actionDao = new ActionDao(druidPool.getDataSource());
+  }
+
+  @After
+  public void closeActionDao() throws Exception {
+    closeDao();
+    actionDao = null;
   }
 
   @Test
   public void testInsertGetAction() throws Exception {
-    daoInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
@@ -51,7 +60,6 @@ public class TestActionDao extends TestDaoUtil {
 
   @Test
   public void testUpdateAction() throws Exception {
-    daoInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
@@ -67,7 +75,6 @@ public class TestActionDao extends TestDaoUtil {
 
   @Test
   public void testGetNewDeleteAction() throws Exception {
-    daoInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
@@ -86,7 +93,6 @@ public class TestActionDao extends TestDaoUtil {
 
   @Test
   public void testMaxId() throws Exception {
-    daoInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,

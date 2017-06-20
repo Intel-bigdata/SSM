@@ -17,7 +17,9 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.metrics.FileAccessEvent;
@@ -32,13 +34,20 @@ public class TestCacheFileDao extends TestDaoUtil {
 
   private CacheFileDao cacheFileDao;
 
-  private void daoInit() {
+  @Before
+  public void initCacheFileDao() throws Exception {
+    initDao();
     cacheFileDao = new CacheFileDao(druidPool.getDataSource());
+  }
+
+  @After
+  public void closeCacheFileDao() throws Exception {
+    closeDao();
+    cacheFileDao = null;
   }
 
   @Test
   public void testUpdateCachedFiles() throws Exception {
-    daoInit();
     cacheFileDao.insert(80L,
         "testPath", 1000L, 2000L, 100);
     cacheFileDao.insert(new CachedFileStatus(90L,
@@ -73,7 +82,6 @@ public class TestCacheFileDao extends TestDaoUtil {
 
   @Test
   public void testInsertDeleteCachedFiles() throws Exception {
-    daoInit();
     cacheFileDao
         .insert(80l,
             "testPath", 123456l, 234567l, 456);
@@ -102,7 +110,6 @@ public class TestCacheFileDao extends TestDaoUtil {
 
   @Test
   public void testGetCachedFileStatus() throws Exception {
-    daoInit();
     cacheFileDao.insert(6l, "testPath", 1490918400000l,
         234567l, 456);
     cacheFileDao.insert(19l, "testPath", 1490918400000l,

@@ -20,25 +20,34 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.server.metastore.StorageCapacity;
 import org.smartdata.server.metastore.StoragePolicy;
 import org.smartdata.server.metastore.TestDaoUtil;
 
-import java.sql.SQLException;
 import java.util.Map;
+
 public class TestStorageDao extends TestDaoUtil {
 
   private StorageDao storageDao;
 
-  private void daoInit() {
+  @Before
+  public void initStorageDao() throws Exception {
+    initDao();
     storageDao = new StorageDao(druidPool.getDataSource());
+  }
+
+  @After
+  public void closeStorageDao() throws Exception {
+    closeDao();
+    storageDao = null;
   }
 
   @Test
   public void testInsertGetStorageTable() throws Exception {
-    daoInit();
     StorageCapacity[] storages = new StorageCapacity[2];
     storages[0] = new StorageCapacity("type1", 1l, 1l);
     storages[1] = new StorageCapacity("type2", 2l, 2l);
@@ -50,7 +59,6 @@ public class TestStorageDao extends TestDaoUtil {
 
   @Test
   public void testInsertGetStorage_policyTable() throws Exception {
-    daoInit();
     storageDao.insertStoragePolicyTable(new StoragePolicy((byte) 1, "pName"));
     Assert.assertTrue("pName".equals(storageDao.getStoragePolicyName(1)));
     Assert.assertTrue(storageDao.getStoragePolicyID("pName") == 1);

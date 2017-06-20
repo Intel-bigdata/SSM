@@ -17,9 +17,6 @@
  */
 package org.smartdata.server.metastore;
 
-import org.junit.After;
-import org.junit.Before;
-
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -27,8 +24,7 @@ import java.util.Properties;
 public class TestDaoUtil {
   protected DruidPool druidPool;
 
-  @Before
-  public void init() throws Exception {
+  public void initDao() throws Exception {
     InputStream in = getClass().getClassLoader()
         .getResourceAsStream("druid-template.xml");
     Properties p = new Properties();
@@ -41,8 +37,7 @@ public class TestDaoUtil {
     druidPool = new DruidPool(p);
   }
 
-  @After
-  public void shutdown() throws Exception {
+  public void closeDao() throws Exception {
     if (druidPool != null) {
       druidPool.close();
     }

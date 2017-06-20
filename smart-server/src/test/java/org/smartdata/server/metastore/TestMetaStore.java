@@ -3,13 +3,17 @@ package org.smartdata.server.metastore;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.common.metastore.CachedFileStatus;
+import org.smartdata.common.rule.RuleInfo;
+import org.smartdata.common.rule.RuleState;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.util.ArrayList;
@@ -23,23 +27,30 @@ import java.util.Random;
 public class TestMetaStore extends TestDaoUtil {
   private MetaStore metaStore;
 
-  private void reInit() throws Exception {
-    // Clear DB and create new tables
+  @Before
+  public void metaInit() throws Exception {
+    initDao();
     metaStore = new MetaStore(druidPool);
   }
 
+  @After
+  public void metaClose() throws Exception {
+    closeDao();
+    if (metaStore != null) {
+      metaStore = null;
+    }
+  }
+
 /*  @Test
-  public void testGetAccessCount() throws Exception {
-    init();
+  public void testGetAccessCount() throws Exception {;
     Map<Long, Integer> ret = metaStore.getAccessCount(1490932740000l,
         1490936400000l, null);
     Assert.assertTrue(ret.get(2l) == 32);
   }
-*/
 
-  /*@Test
+
+  @Test
   public void testGetFiles() throws Exception {
-    reInit();
     String pathString = "des";
     long length = 20484l;
     boolean isDir = false;
@@ -63,11 +74,10 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(hdfsFileStatus.getLen() == 20484l);
     hdfsFileStatus = metaStore.getFile("/tmp/des");
     Assert.assertTrue(hdfsFileStatus.getAccessTime() == 1490936390000l);
-  }*/
+  }
 
-/*  @Test
+  @Test
   public void testInsertStoragesTable() throws Exception {
-    reInit();
     StorageCapacity storage1 = new StorageCapacity("Flash",
         12343333l, 2223333l);
     StorageCapacity storage2 = new StorageCapacity("RAM",
@@ -84,12 +94,11 @@ public class TestMetaStore extends TestDaoUtil {
         123456L, 4562233L));
     Assert.assertTrue(metaStore.getStorageCapacity("Flash")
         .getCapacity() == 12343333l);
-  }*/
+  }
 
 
-/*  @Test
+  @Test
   public void testGetStorageCapacity() throws Exception {
-    reInit();
     StorageCapacity storage1 = new StorageCapacity("HDD",
         12343333l, 2223333l);
     StorageCapacity storage2 = new StorageCapacity("RAM",
@@ -101,8 +110,33 @@ public class TestMetaStore extends TestDaoUtil {
   }*/
 
   @Test
+  public void testInsertRule() throws Exception {
+    String rule = "file : accessCount(10m) > 20 \n\n"
+        + "and length() > 3 | cache";
+    long submitTime = System.currentTimeMillis();
+    RuleInfo info1 = new RuleInfo(0, submitTime,
+        rule, RuleState.ACTIVE, 0, 0, 0);
+    Assert.assertTrue(metaStore.insertNewRule(info1));
+    RuleInfo info1_1 = metaStore.getRuleInfo(info1.getId());
+    Assert.assertTrue(info1.equals(info1_1));
+
+    long now = System.currentTimeMillis();
+    metaStore.updateRuleInfo(info1.getId(), RuleState.DELETED, now, 1, 1);
+    RuleInfo info1_2 = metaStore.getRuleInfo(info1.getId());
+    Assert.assertTrue(info1_2.getLastCheckTime() == now);
+
+    RuleInfo info2 = new RuleInfo(0, submitTime,
+        rule, RuleState.ACTIVE, 0, 0, 0);
+    Assert.assertTrue(metaStore.insertNewRule(info2));
+    RuleInfo info2_1 = metaStore.getRuleInfo(info2.getId());
+    Assert.assertFalse(info1_1.equals(info2_1));
+
+    List<RuleInfo> infos = metaStore.getRuleInfo();
+    Assert.assertTrue(infos.size() == 2);
+  }
+
+  @Test
   public void testUpdateCachedFiles() throws Exception {
-    reInit();
     metaStore.insertCachedFiles(80L, "testPath", 1000L,
         2000L, 100);
     metaStore.insertCachedFiles(90L, "testPath2", 2000L,
@@ -141,7 +175,6 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsertDeleteCachedFiles() throws Exception {
-    reInit();
     metaStore.insertCachedFiles(80l, "testPath", 123456l,
         234567l, 456);
     Assert.assertTrue(metaStore.getCachedFileStatus(
@@ -170,7 +203,6 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testGetCachedFileStatus() throws Exception {
-    reInit();
     metaStore.insertCachedFiles(6l, "testPath", 1490918400000l,
         234567l, 456);
     metaStore.insertCachedFiles(19l, "testPath", 1490918400000l,
@@ -189,7 +221,6 @@ public class TestMetaStore extends TestDaoUtil {
 
 /*  @Test
   public void testInsetFiles() throws Exception {
-    reInit();
     String pathString = "testFile";
     long length = 123L;
     boolean isDir = false;
@@ -211,17 +242,32 @@ public class TestMetaStore extends TestDaoUtil {
     metaStore.insertFiles(files);
     HdfsFileStatus hdfsFileStatus = metaStore.getFile("/tmp/testFile");
     Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 * 1024L);
-  }*/
+  }
+  @Test
+  public void testGetFileIds() throws Exception {
+    createTables(databaseTester.getConnection());
+    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader()
+      .getResourceAsStream("files.xml"));
+    databaseTester.setDataSet(dataSet);
+    databaseTester.onSetup();
+
+    DBAdapter dbAdapter = new DBAdapter(databaseTester.getConnection().getConnection());
+    List<String> paths = Arrays.asList("file1", "file2", "file3");
+    Map<String, Long> pathToID = dbAdapter.getFileIDs(paths);
+    Assert.assertTrue(pathToID.get("file1") == 101);
+    Assert.assertTrue(pathToID.get("file2") == 102);
+    Assert.assertTrue(pathToID.get("file3") == 103);
+  }
+  */
 
   @Test
-  public void testInsertCommandsTable() throws Exception {
-    reInit();
+  public void testInsertCmdletsTable() throws Exception {
     CmdletInfo command1 = new CmdletInfo(0, 1,
         CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+    metaStore.insertCmdletTable(command1);
     CmdletInfo command2 = new CmdletInfo(1, 78,
         CmdletState.PAUSED, "tt", 123178333l, 232444994l);
-    CmdletInfo[] commands = {command1, command2};
-    metaStore.insertCmdletsTable(commands);
+    metaStore.insertCmdletTable(command2);
     String cidCondition = ">= 0 ";
     String ridCondition = "= 78 ";
     CmdletState state = null;
@@ -234,8 +280,7 @@ public class TestMetaStore extends TestDaoUtil {
   }
 
   @Test
-  public void testUpdateCommand() throws Exception {
-    reInit();
+  public void testUpdateDeleteCommand() throws Exception {
     long commandId = 0;
     commandId = metaStore.getMaxCmdletId();
     System.out.printf("CommandID = %d\n", commandId);
@@ -260,11 +305,13 @@ public class TestMetaStore extends TestDaoUtil {
     List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 1);
     Assert.assertTrue(com1.get(0).getState() == CmdletState.DONE);
+    metaStore.deleteCmdlet(command2.getCid());
+    com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
+    Assert.assertTrue(com1.size() == 0);
   }
 
   @Test
   public void testInsertListActions() throws Exception {
-    reInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
@@ -274,11 +321,14 @@ public class TestMetaStore extends TestDaoUtil {
     metaStore.insertActionsTable(new ActionInfo[]{actionInfo});
     List<ActionInfo> actionInfos = metaStore.getActionsTableItem(null, null);
     Assert.assertTrue(actionInfos.size() == 1);
+    actionInfo.setResult("Finished");
+    metaStore.updateActionsTable(new ActionInfo[]{actionInfo});
+    actionInfos = metaStore.getActionsTableItem(null, null);
+    Assert.assertTrue(actionInfos.get(0).getResult().equals("Finished"));
   }
 
   @Test
   public void testGetNewCreatedActions() throws Exception {
-    reInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     List<ActionInfo> actionInfos;
@@ -297,7 +347,6 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testGetMaxActionId() throws Exception {
-    reInit();
     long currentId = metaStore.getMaxActionId();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
@@ -323,7 +372,6 @@ public class TestMetaStore extends TestDaoUtil {
 
 /*  @Test
   public void testInsertStoragePolicyTable() throws Exception {
-    reInit();
     StoragePolicy s = new StoragePolicy((byte) 3, "COOL");
     Assert.assertEquals(metaStore.getStoragePolicyName(2), "COLD");
     metaStore.insertStoragePolicyTable(s);
@@ -335,7 +383,6 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsertXattrTable() throws Exception {
-    reInit();
     long fid = 567l;
     Map<String, byte[]> xAttrMap = new HashMap<>();
     String name1 = "user.a1";
