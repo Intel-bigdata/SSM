@@ -31,13 +31,13 @@ public class TestActionDao extends TestDaoUtil {
 
   private ActionDao actionDao;
 
-  private void daoInit() {
+  @Before
+  public void actionDaoInit() {
     actionDao = new ActionDao(druidPool.getDataSource());
   }
 
   @Test
   public void testInsertGetAction() throws Exception {
-    daoInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
@@ -51,7 +51,6 @@ public class TestActionDao extends TestDaoUtil {
 
   @Test
   public void testUpdateAction() throws Exception {
-    daoInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
@@ -67,7 +66,6 @@ public class TestActionDao extends TestDaoUtil {
 
   @Test
   public void testGetNewDeleteAction() throws Exception {
-    daoInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
@@ -86,7 +84,6 @@ public class TestActionDao extends TestDaoUtil {
 
   @Test
   public void testMaxId() throws Exception {
-    daoInit();
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,

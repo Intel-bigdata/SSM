@@ -28,7 +28,7 @@ public class TestDaoUtil {
   protected DruidPool druidPool;
 
   @Before
-  public void init() throws Exception {
+  public void initDao() throws Exception {
     InputStream in = getClass().getClassLoader()
         .getResourceAsStream("druid-template.xml");
     Properties p = new Properties();
@@ -42,7 +42,7 @@ public class TestDaoUtil {
   }
 
   @After
-  public void shutdown() throws Exception {
+  public void shutdownDao() throws Exception {
     if (druidPool != null) {
       druidPool.close();
     }

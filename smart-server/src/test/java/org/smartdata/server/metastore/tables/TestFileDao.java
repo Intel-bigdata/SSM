@@ -30,13 +30,13 @@ import java.util.List;
 public class TestFileDao extends TestDaoUtil {
   private FileDao fileDao;
 
-  private void daoInit() {
+  @Before
+  public void fileDaoInit() {
     fileDao = new FileDao(druidPool.getDataSource());
   }
 
   @Test
   public void testInsetGetFiles() throws Exception {
-    daoInit();
     String pathString = "testFile";
     long length = 123L;
     boolean isDir = false;
@@ -52,23 +52,25 @@ public class TestFileDao extends TestDaoUtil {
     long fileId = 312321L;
     int numChildren = 0;
     byte storagePolicy = 0;
-    FileStatusInternal fileStatusInternal = new FileStatusInternal(length, isDir, blockReplication,
-                                                            blockSize, modTime, accessTime, perms, owner, group, symlink,
-                                                            path, "/tmp", fileId, numChildren, null, storagePolicy);
+    FileStatusInternal fileStatusInternal =
+        new FileStatusInternal(length, isDir, blockReplication,
+        blockSize, modTime, accessTime, perms, owner, group, symlink,
+        path, "/tmp", fileId, numChildren, null, storagePolicy);
     fileDao.insert(fileStatusInternal);
     HdfsFileStatus hdfsFileStatus = fileDao.getByPath("/tmp/testFile");
-    Assert.assertTrue(hdfsFileStatus.getBlockSize() == fileStatusInternal.getBlockSize());
+    Assert.assertTrue(
+        hdfsFileStatus.getBlockSize() == fileStatusInternal.getBlockSize());
     hdfsFileStatus = fileDao.getById(312321L);
-    Assert.assertTrue(hdfsFileStatus.getModificationTime() == fileStatusInternal.getModificationTime());
+    Assert.assertTrue(hdfsFileStatus.getModificationTime() ==
+        fileStatusInternal.getModificationTime());
     fileStatusInternal = new FileStatusInternal(length, isDir, blockReplication,
-                                                   blockSize, modTime, accessTime, perms, owner, group, symlink,
-                                                   path, "/tmp2", fileId + 1, numChildren, null, storagePolicy);
-    fileDao.insert(new FileStatusInternal[] {fileStatusInternal});
+        blockSize, modTime, accessTime, perms, owner, group, symlink,
+        path, "/tmp2", fileId + 1, numChildren, null, storagePolicy);
+    fileDao.insert(new FileStatusInternal[]{fileStatusInternal});
   }
 
   @Test
   public void testInseDeleteFiles() throws Exception {
-    daoInit();
     String pathString = "testFile";
     long length = 123L;
     boolean isDir = false;
@@ -84,13 +86,15 @@ public class TestFileDao extends TestDaoUtil {
     long fileId = 312321L;
     int numChildren = 0;
     byte storagePolicy = 0;
-    FileStatusInternal fileStatusInternal1 = new FileStatusInternal(length, isDir, blockReplication,
-                                                                      blockSize, modTime, accessTime, perms, owner, group, symlink,
-                                                                      path, "/tmp", fileId, numChildren, null, storagePolicy);
-    FileStatusInternal fileStatusInternal2 = new FileStatusInternal(length, isDir, blockReplication,
-                                                   blockSize, modTime, accessTime, perms, owner, group, symlink,
-                                                   path, "/tmp2", fileId + 1, numChildren, null, storagePolicy);
-    fileDao.insert(new FileStatusInternal[] {fileStatusInternal1, fileStatusInternal2});
+    FileStatusInternal fileStatusInternal1 =
+        new FileStatusInternal(length, isDir, blockReplication,
+        blockSize, modTime, accessTime, perms, owner, group, symlink,
+        path, "/tmp", fileId, numChildren, null, storagePolicy);
+    FileStatusInternal fileStatusInternal2 =
+        new FileStatusInternal(length, isDir, blockReplication,
+        blockSize, modTime, accessTime, perms, owner, group, symlink,
+        path, "/tmp2", fileId + 1, numChildren, null, storagePolicy);
+    fileDao.insert(new FileStatusInternal[]{fileStatusInternal1, fileStatusInternal2});
     List<HdfsFileStatus> files = fileDao.getAll();
     Assert.assertTrue(files.size() == 2);
     fileDao.deleteById(fileStatusInternal1.getFileId());
@@ -103,7 +107,6 @@ public class TestFileDao extends TestDaoUtil {
 
   @Test
   public void testInseUpdateFiles() throws Exception {
-    daoInit();
     String pathString = "testFile";
     long length = 123L;
     boolean isDir = false;
@@ -119,13 +122,13 @@ public class TestFileDao extends TestDaoUtil {
     long fileId = 312321L;
     int numChildren = 0;
     byte storagePolicy = 0;
-    FileStatusInternal fileStatusInternal = new FileStatusInternal(length, isDir, blockReplication,
-                                                                       blockSize, modTime, accessTime, perms, owner, group, symlink,
-                                                                       path, "/tmp", fileId, numChildren, null, storagePolicy);
+    FileStatusInternal fileStatusInternal =
+        new FileStatusInternal(length, isDir, blockReplication,
+        blockSize, modTime, accessTime, perms, owner, group, symlink,
+        path, "/tmp", fileId, numChildren, null, storagePolicy);
     fileDao.insert(fileStatusInternal);
     fileDao.update("/tmp/testFile", 10);
-    fileStatusInternal = (FileStatusInternal)(fileDao.getById(312321L));
+    fileStatusInternal = (FileStatusInternal) (fileDao.getById(312321L));
     Assert.assertTrue(fileStatusInternal.getStoragePolicy() == 10);
   }
-
 }

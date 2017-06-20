@@ -18,6 +18,7 @@
 package org.smartdata.server.metastore.tables;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.cmdlet.CmdletInfo;
@@ -29,13 +30,13 @@ public class TestCmdletDao extends TestDaoUtil {
 
   private CmdletDao cmdletDao;
 
-  private void daoInit() {
+  @Before
+  public void cmdletDaoInit() {
     cmdletDao = new CmdletDao(druidPool.getDataSource());
   }
 
   @Test
   public void testInsertGetCmdlet() throws Exception {
-    daoInit();
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
         CmdletState.EXECUTING, "test", 123123333l, 232444444l);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
@@ -47,7 +48,6 @@ public class TestCmdletDao extends TestDaoUtil {
 
   @Test
   public void testUpdateCmdlet() throws Exception {
-    daoInit();
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
         CmdletState.EXECUTING, "test", 123123333l, 232444444l);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
@@ -61,7 +61,6 @@ public class TestCmdletDao extends TestDaoUtil {
 
   @Test
   public void testGetByCondition() throws Exception {
-    daoInit();
     CmdletInfo command1 = new CmdletInfo(0, 1,
         CmdletState.EXECUTING, "test", 123123333l, 232444444l);
     CmdletInfo command2 = new CmdletInfo(1, 78,
@@ -77,7 +76,6 @@ public class TestCmdletDao extends TestDaoUtil {
 
   @Test
   public void testDeleteACmdlet() throws Exception {
-    daoInit();
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
         CmdletState.EXECUTING, "test", 123123333l, 232444444l);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
@@ -90,7 +88,6 @@ public class TestCmdletDao extends TestDaoUtil {
 
   @Test
   public void testMaxId() throws Exception {
-    daoInit();
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
         CmdletState.EXECUTING, "test", 123123333l, 232444444l);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
