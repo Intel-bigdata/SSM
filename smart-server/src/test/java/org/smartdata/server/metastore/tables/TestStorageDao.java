@@ -26,6 +26,9 @@ import org.smartdata.server.metastore.StorageCapacity;
 import org.smartdata.server.metastore.StoragePolicy;
 import org.smartdata.server.metastore.TestDaoUtil;
 
+import java.sql.SQLException;
+import java.util.Map;
+
 public class TestStorageDao extends TestDaoUtil {
 
   private StorageDao storageDao;
@@ -42,6 +45,8 @@ public class TestStorageDao extends TestDaoUtil {
     storages[1] = new StorageCapacity("type2", 2l, 2l);
     storageDao.insertStoragesTable(storages);
     Assert.assertTrue(storageDao.getStorageCapacity("type1").getFree() == 1l);
+    Map<String, StorageCapacity> map = storageDao.getStorageTablesItem();
+    Assert.assertTrue("type1".equals(map.get("type1").getType()));
   }
 
   @Test
