@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 public class UserDao {
-  private Map<Integer, String> mapOwnerIdName = null;
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
 
@@ -66,10 +65,8 @@ public class UserDao {
         "SELECT COUNT(*) FROM `owners`", Integer.class);
   }
 
-  public void updateUsersMap() throws SQLException {
-    String sql = "SELECT * FROM owners";
-    List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-    mapOwnerIdName = toMap(list);
+  public Map<Integer, String> getUsersMap() throws SQLException {
+    return toMap(jdbcTemplate.queryForList("SELECT * FROM owners"));
   }
 
   private Map<Integer, String> toMap(List<Map<String, Object>> list) {

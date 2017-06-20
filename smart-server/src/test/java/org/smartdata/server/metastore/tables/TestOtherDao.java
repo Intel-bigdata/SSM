@@ -57,7 +57,7 @@ public class TestOtherDao extends TestDaoUtil {
     int i1 = groupsDao.getCountGroups();
     groupsDao.deleteGroup("groupname111");
     int i2 = groupsDao.getCountGroups();
-    groupsDao.updateGroupsMap();
+    groupsDao.getGroupsMap();
     List<String> list = groupsDao.listGroup();
     Assert.assertTrue(i == i2);
     Assert.assertTrue(i1 == i + 1);
@@ -70,7 +70,7 @@ public class TestOtherDao extends TestDaoUtil {
     int i1 = userDao.getCountUsers();
     userDao.deleteUser("username");
     int i2 = userDao.getCountUsers();
-    userDao.updateUsersMap();
+    userDao.getUsersMap();
     List<String> list = userDao.listUser();
     Assert.assertTrue(i == i2);
     Assert.assertTrue(i1 == i + 1);

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 public class GroupsDao {
-  private Map<Integer, String> mapGroupIdName = null;
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
 
@@ -67,10 +66,8 @@ public class GroupsDao {
     return groups;
   }
 
-  public void updateGroupsMap() throws SQLException {
-    String sql = "SELECT * FROM groups";
-    List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-    mapGroupIdName = toMap(list);
+  public Map<Integer, String> getGroupsMap() throws SQLException {
+    return toMap(jdbcTemplate.queryForList("SELECT * FROM groups"));
   }
 
   private Map<Integer, String> toMap(List<Map<String, Object>> list) {
