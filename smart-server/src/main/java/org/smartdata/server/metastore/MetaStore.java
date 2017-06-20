@@ -230,13 +230,11 @@ public class MetaStore {
   }
 
   private void updateUsersMap() throws SQLException {
-    // TODO map
-    userDao.updateUsersMap();
+    mapOwnerIdName = userDao.getUsersMap();
   }
 
   private void updateGroupsMap() throws SQLException {
-    // TODO map
-    groupsDao.updateGroupsMap();
+    mapGroupIdName = groupsDao.getGroupsMap();
   }
 
   /**
@@ -258,12 +256,12 @@ public class MetaStore {
         this.addGroup(group);
         this.updateGroupsMap();
       }
-      file.getOwner();
-      file.getGroup();
+      // file.setOid(getKey(mapOwnerIdName, file.getOwner()));
+      // file.setGid(getKey(mapGroupIdName, file.getGroup()));
     }
-    // TODO insert map
     fileDao.insert(files);
   }
+
 
   public int updateFileStoragePolicy(String path, String policyName)
       throws SQLException {
@@ -372,18 +370,17 @@ public class MetaStore {
 
   private void updateCache() throws SQLException {
     // TODO map
-    /*
     if (mapOwnerIdName == null) {
-      userDao.updateUsersMap();
+      mapOwnerIdName = userDao.getUsersMap();
     }
 
     if (mapGroupIdName == null) {
-      groupsDao.updateGroupsMap();
+      mapOwnerIdName = groupsDao.getGroupsMap();
     }
 
     if (mapStoragePolicyIdName == null) {
       mapStoragePolicyNameId = null;
-      // storageDao.updateFileStoragePolicy();
+      mapStoragePolicyIdName = storageDao.getStoragePolicyIdNameMap();
       mapStoragePolicyNameId = new HashMap<>();
       for (Integer key : mapStoragePolicyIdName.keySet()) {
         mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
@@ -391,9 +388,8 @@ public class MetaStore {
     }
 
     if (mapStorageCapacity == null) {
-      // storageDao.updateFileStoragePolicy();
+      mapStorageCapacity = storageDao.getStorageTablesItem();
     }
-    */
   }
 
   public synchronized void insertCachedFiles(long fid, String path, long fromTime,
