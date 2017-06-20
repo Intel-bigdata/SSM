@@ -19,16 +19,12 @@ package org.smartdata.server.metastore;
 
 
 import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,8 +40,8 @@ public class TestSqliteDB {
     String dbFile = TestDBUtil.getUniqueDBFilePath();
     Connection conn = null;
     try {
-      conn = Util.createSqliteConnection(dbFile);
-      Util.initializeDataBase(conn);
+      conn = MetaUtil.createSqliteConnection(dbFile);
+      MetaUtil.initializeDataBase(conn);
     } finally {
       if (conn != null) {
         conn.close();
@@ -60,8 +56,8 @@ public class TestSqliteDB {
     String dbFile = TestDBUtil.getUniqueDBFilePath();
     Connection conn = null;
     try {
-      conn = Util.createSqliteConnection(dbFile);
-      Util.initializeDataBase(conn);
+      conn = MetaUtil.createSqliteConnection(dbFile);
+      MetaUtil.initializeDataBase(conn);
       DBAdapter adapter = new DBAdapter(conn);
       Statement s = conn.createStatement();
       adapter.dropAllTables();
@@ -101,7 +97,7 @@ public class TestSqliteDB {
       s.executeUpdate("DROP DATABASE IF EXISTS "+db+";");
       s.executeUpdate("CREATE DATABASE "+db+";");
       s.execute("use "+db+";");
-      conn = Util.createConnection(url+db+"?","root","linux123");
+      conn = MetaUtil.createConnection(url+db+"?","root","linux123");
       DBAdapter adapter = new DBAdapter(conn);
       adapter.dropAllTables();
 
@@ -140,8 +136,8 @@ public class TestSqliteDB {
     String dbFile = TestDBUtil.getUniqueDBFilePath();
     Connection conn = null;
     try {
-      conn = Util.createSqliteConnection(dbFile);
-      Util.initializeDataBase(conn);
+      conn = MetaUtil.createSqliteConnection(dbFile);
+      MetaUtil.initializeDataBase(conn);
       DBAdapter adapter = new DBAdapter(conn);
 
       String[] presqls = new String[] {

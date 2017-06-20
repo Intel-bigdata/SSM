@@ -18,7 +18,6 @@
 package org.smartdata.server.metastore;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
@@ -54,9 +53,8 @@ import java.util.Map;
 /**
  * Operations supported for upper functions.
  */
-public class MetaStoreHandle {
+public class MetaStore {
 
-  private Connection connProvided = null;
   private DBPool pool = null;
 
   private Map<Integer, String> mapOwnerIdName = null;
@@ -75,7 +73,7 @@ public class MetaStoreHandle {
   private XattrDao xattrDao;
   
 
-  public MetaStoreHandle(DBPool pool) throws IOException {
+  public MetaStore(DBPool pool) throws IOException {
     this.pool = pool;
     ruleDao = new RuleDao(pool.getDataSource());
     cmdletDao = new CmdletDao(pool.getDataSource());
@@ -89,7 +87,10 @@ public class MetaStoreHandle {
   }
 
   public Connection getConnection() throws SQLException {
-    return pool != null ? pool.getConnection() : connProvided;
+    if (pool != null) {
+      return pool.getConnection();
+    }
+    return null;
   }
 
   private void closeConnection(Connection conn) throws SQLException {
@@ -99,6 +100,7 @@ public class MetaStoreHandle {
   }
 
   private class QueryHelper {
+    // TODO need to remove
     private String query;
     private Connection conn;
     private boolean connProvided = false;
@@ -161,6 +163,7 @@ public class MetaStoreHandle {
 
   public Map<Long, Integer> getAccessCount(long startTime, long endTime,
       String countFilter) throws SQLException {
+    // TODO access file
     Map<Long, Integer> ret = new HashMap<>();
     String sqlGetTableNames = "SELECT table_name FROM access_count_tables "
         + "WHERE start_time >= " + startTime + " AND end_time <= " + endTime;
@@ -181,7 +184,6 @@ public class MetaStoreHandle {
       if (tableNames.size() == 0) {
         return ret;
       }
-
 
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
       String sqlUnion = "SELECT fid, count FROM \'"
@@ -228,23 +230,13 @@ public class MetaStoreHandle {
   }
 
   private void updateUsersMap() throws SQLException {
-    String sql = "SELECT * FROM owners";
-    QueryHelper queryHelper = new QueryHelper(sql);
-    try {
-      mapOwnerIdName = convertToMap(queryHelper.executeQuery(), "oid", "owner_name");
-    } finally {
-      queryHelper.close();
-    }
+    // TODO map
+    userDao.updateUsersMap();
   }
 
   private void updateGroupsMap() throws SQLException {
-    String sql = "SELECT * FROM groups";
-    QueryHelper queryHelper = new QueryHelper(sql);
-    try {
-      mapGroupIdName = convertToMap(queryHelper.executeQuery(), "gid", "group_name");
-    } finally {
-      queryHelper.close();
-    }
+    // TODO map
+    groupsDao.updateGroupsMap();
   }
 
   /**
@@ -255,6 +247,21 @@ public class MetaStoreHandle {
   public synchronized void insertFiles(FileStatusInternal[] files)
       throws SQLException {
     updateCache();
+    for (FileStatusInternal file: files) {
+      String owner = file.getOwner();
+      String group = file.getGroup();
+      if (!this.mapOwnerIdName.values().contains(owner)) {
+        this.addUser(owner);
+        this.updateUsersMap();
+      }
+      if (!this.mapGroupIdName.values().contains(group)) {
+        this.addGroup(group);
+        this.updateGroupsMap();
+      }
+      file.getOwner();
+      file.getGroup();
+    }
+    // TODO insert map
     fileDao.insert(files);
   }
 
@@ -268,10 +275,6 @@ public class MetaStoreHandle {
           + policyName + "'");
     }
     return storageDao.updateFileStoragePolicy(path, policyName);
-  }
-
-  private int booleanToInt(boolean b) {
-    return b ? 1 : 0;
   }
 
   private Integer getKey(Map<Integer, String> map, String value) {
@@ -303,6 +306,7 @@ public class MetaStoreHandle {
   }
 
   public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables, int topNum) throws Exception {
+    // TODO accessfile
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
       StringBuilder unioned = new StringBuilder();
@@ -367,83 +371,29 @@ public class MetaStoreHandle {
   }
 
   private void updateCache() throws SQLException {
+    // TODO map
+    /*
     if (mapOwnerIdName == null) {
-      String sql = "SELECT * FROM owners";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapOwnerIdName = convertToMap(queryHelper.executeQuery(), "oid", "owner_name");
-      } finally {
-        queryHelper.close();
-      }
+      userDao.updateUsersMap();
     }
 
     if (mapGroupIdName == null) {
-      String sql = "SELECT * FROM groups";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapGroupIdName = convertToMap(queryHelper.executeQuery(), "gid", "group_name");
-      } finally {
-        queryHelper.close();
-      }
+      groupsDao.updateGroupsMap();
     }
 
     if (mapStoragePolicyIdName == null) {
       mapStoragePolicyNameId = null;
-      String sql = "SELECT * FROM storage_policy";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapStoragePolicyIdName = convertToMap(queryHelper.executeQuery(), "sid", "policy_name");
-        mapStoragePolicyNameId = new HashMap<>();
-        for (Integer key : mapStoragePolicyIdName.keySet()) {
-          mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
-        }
-      } finally {
-        queryHelper.close();
+      // storageDao.updateFileStoragePolicy();
+      mapStoragePolicyNameId = new HashMap<>();
+      for (Integer key : mapStoragePolicyIdName.keySet()) {
+        mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
       }
     }
 
     if (mapStorageCapacity == null) {
-      String sql = "SELECT * FROM storages";
-      QueryHelper queryHelper = new QueryHelper(sql);
-      try {
-        mapStorageCapacity =
-            convertStorageTablesItem(queryHelper.executeQuery());
-      } finally {
-        queryHelper.close();
-      }
+      // storageDao.updateFileStoragePolicy();
     }
-  }
-
-  private Map<String, StorageCapacity> convertStorageTablesItem(
-      ResultSet resultSet) throws SQLException {
-    Map<String, StorageCapacity> map = new HashMap<>();
-    if (resultSet == null) {
-      return map;
-    }
-
-    while (resultSet.next()) {
-      String type = resultSet.getString(1);
-      StorageCapacity storage = new StorageCapacity(
-          resultSet.getString(1),
-          resultSet.getLong(2),
-          resultSet.getLong(3));
-      map.put(type, storage);
-    }
-    return map;
-  }
-
-  private Map<Integer, String> convertToMap(ResultSet resultSet, String keyIndex, String valueIndex)
-      throws SQLException {
-    Map<Integer, String> ret = new HashMap<>();
-    if (resultSet == null) {
-      return ret;
-    }
-
-    while (resultSet.next()) {
-      // TODO: Tests for this
-      ret.put(resultSet.getInt(keyIndex), resultSet.getString(valueIndex));
-    }
-    return ret;
+    */
   }
 
   public synchronized void insertCachedFiles(long fid, String path, long fromTime,
@@ -460,64 +410,18 @@ public class MetaStoreHandle {
     cacheFileDao.deleteAll();
   }
 
+  public synchronized boolean updateCachedFiles(Long fid,
+      Long lastAccessTime, Integer numAccessed) throws SQLException {
+    return cacheFileDao.update(fid, lastAccessTime, numAccessed) >= 0;
+  }
+
   public void updateCachedFiles(Map<String, Long> pathToIds, List<FileAccessEvent> events)
       throws SQLException {
-    Map<Long, CachedFileStatus> idToStatus = new HashMap<>();
-    List<CachedFileStatus> cachedFileStatuses = this.getCachedFileStatus();
-    for (CachedFileStatus status : cachedFileStatuses) {
-      idToStatus.put(status.getFid(), status);
-    }
-    Collection<Long> cachedIds = idToStatus.keySet();
-    Collection<Long> needToUpdate = CollectionUtils.intersection(cachedIds, pathToIds.values());
-    if (!needToUpdate.isEmpty()) {
-      Map<Long, Integer> idToCount = new HashMap<>();
-      Map<Long, Long> idToLastTime = new HashMap<>();
-      for (FileAccessEvent event : events) {
-        Long fid = pathToIds.get(event.getPath());
-        if (needToUpdate.contains(fid)) {
-          if (!idToCount.containsKey(fid)) {
-            idToCount.put(fid, 0);
-          }
-          idToCount.put(fid, idToCount.get(fid) + 1);
-          if (!idToLastTime.containsKey(fid)) {
-            idToLastTime.put(fid, event.getTimestamp());
-          }
-          idToLastTime.put(fid, Math.max(event.getTimestamp(), idToLastTime.get(fid)));
-        }
-      }
-      for (Long fid : needToUpdate) {
-        Integer newAccessCount = idToStatus.get(fid).getNumAccessed() + idToCount.get(fid);
-        this.updateCachedFiles(fid, null, idToLastTime.get(fid), newAccessCount);
-      }
-    }
+    cacheFileDao.update(pathToIds, events);
   }
 
   public void deleteCachedFile(long fid) throws SQLException {
     cacheFileDao.deleteById(fid);
-  }
-
-  public synchronized boolean updateCachedFiles(Long fid, Long fromTime,
-      Long lastAccessTime, Integer numAccessed) throws SQLException {
-    StringBuffer sb = new StringBuffer("UPDATE cached_files SET");
-    if (fromTime != null) {
-      sb.append(" from_time = ").append(fid).append(",");
-    }
-    if (lastAccessTime != null) {
-      sb.append(" last_access_time = ").append(lastAccessTime).append(",");
-    }
-    if (numAccessed != null) {
-      sb.append(" num_accessed = ").append(numAccessed).append(",");
-    }
-    int idx = sb.lastIndexOf(",");
-    sb.replace(idx, idx + 1, "");
-    sb.append(" WHERE fid = ").append(fid).append(";");
-
-    QueryHelper queryHelper = new QueryHelper(sb.toString());
-    try {
-      return queryHelper.executeUpdate() == 1;
-    } finally {
-      queryHelper.close();
-    }
   }
 
   public List<CachedFileStatus> getCachedFileStatus() throws SQLException {
@@ -552,29 +456,6 @@ public class MetaStoreHandle {
 
   public void dropTable(String tableName) throws SQLException {
     execute("DROP TABLE " + tableName);
-  }
-
-  private List<CachedFileStatus> getCachedFileStatus(String sql)
-      throws SQLException {
-    QueryHelper queryHelper = new QueryHelper(sql);
-    List<CachedFileStatus> ret = new LinkedList<>();
-
-    try {
-      ResultSet resultSet = queryHelper.executeQuery();
-      while (resultSet.next()) {
-        CachedFileStatus f = new CachedFileStatus(
-            resultSet.getLong("fid"),
-            resultSet.getString("path"),
-            resultSet.getLong("from_time"),
-            resultSet.getLong("last_access_time"),
-            resultSet.getInt("num_accessed")
-        );
-        ret.add(f);
-      }
-      return ret;
-    } finally {
-      queryHelper.close();
-    }
   }
 
   public int executeUpdate(String sql) throws SQLException {
@@ -708,10 +589,7 @@ public class MetaStoreHandle {
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s)
       throws SQLException {
-    String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
-        + s.getSid() + "','" + s.getPolicyName() + "');";
-    mapStoragePolicyIdName = null;
-    execute(sql);
+    storageDao.insertStoragePolicyTable(s);
   }
 
   public String getStoragePolicyName(int sid) throws SQLException {
@@ -737,9 +615,9 @@ public class MetaStoreHandle {
     Connection conn = getConnection();
     try {
       String url = conn.getMetaData().getURL();
-      if (url.startsWith(Util.SQLITE_URL_PREFIX)) {
+      if (url.startsWith(MetaUtil.SQLITE_URL_PREFIX)) {
         dropAllTablesSqlite(conn);
-      } else if (url.startsWith(Util.MYSQL_URL_PREFIX)) {
+      } else if (url.startsWith(MetaUtil.MYSQL_URL_PREFIX)) {
         dropAllTablesMysql(conn, url);
       } else {
         throw new SQLException("Unsupported database");
@@ -787,7 +665,7 @@ public class MetaStoreHandle {
   public synchronized void initializeDataBase() throws SQLException {
     Connection conn = getConnection();
     try {
-      Util.initializeDataBase(conn);
+      MetaUtil.initializeDataBase(conn);
     } finally {
       closeConnection(conn);
     }

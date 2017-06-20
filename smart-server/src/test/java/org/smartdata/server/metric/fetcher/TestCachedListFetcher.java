@@ -37,7 +37,7 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.metastore.MetaUtil;
 
 import org.apache.hadoop.hdfs.DFSClient;
 import org.junit.After;
@@ -88,7 +88,7 @@ public class TestCachedListFetcher {
     smartContext = new SmartContext(conf);
     dbFile = TestDBUtil.getUniqueDBFilePath();
     conn = TestDBUtil.getTestDBInstance();
-    Util.initializeDataBase(conn);
+    MetaUtil.initializeDataBase(conn);
     adapter = new DBAdapter(conn);
     cachedListFetcher = new CachedListFetcher(600l, dfsClient, adapter);
   }

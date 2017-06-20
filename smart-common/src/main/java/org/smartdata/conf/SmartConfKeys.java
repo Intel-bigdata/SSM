@@ -22,6 +22,7 @@ package org.smartdata.conf;
  */
 public class SmartConfKeys {
   public final static String DFS_SSM_ENABLED_KEY = "dfs.smart.enabled";
+  public final static boolean DFS_SSM_ENABLED_DEFAULT = true;
 
   public final static String DFS_SSM_NAMENODE_RPCSERVER_KEY = "dfs.smart.namenode.rpcserver";
 

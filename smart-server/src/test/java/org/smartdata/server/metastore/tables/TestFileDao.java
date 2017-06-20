@@ -20,19 +20,12 @@ package org.smartdata.server.metastore.tables;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.server.metastore.DruidPool;
 import org.smartdata.server.metastore.FileStatusInternal;
-import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.server.metastore.TestDaoUtil;
-import org.smartdata.server.metastore.Util;
 
-import java.io.InputStream;
 import java.util.List;
-import java.util.Properties;
 
 public class TestFileDao extends TestDaoUtil {
   private FileDao fileDao;

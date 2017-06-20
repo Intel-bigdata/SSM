@@ -22,11 +22,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.server.RuleManager;
+import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.metastore.MetaUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,8 +46,8 @@ public class TestRuleManager {
     String dbFile = TestDBUtil.getUniqueDBFilePath();
     Connection conn = null;
     try {
-      conn = Util.createSqliteConnection(dbFile);
-      Util.initializeDataBase(conn);
+      conn = MetaUtil.createSqliteConnection(dbFile);
+      MetaUtil.initializeDataBase(conn);
       dbAdapter = new DBAdapter(conn);
       // TODO: to be fixed
       ruleManager = new RuleManager(null, null, dbAdapter);

@@ -37,7 +37,7 @@ public class StorageDao {
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsertStorages;
   private SimpleJdbcInsert simpleJdbcInsertStorage_policy;
-
+  
   public StorageDao(DataSource dataSource) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);
     this.simpleJdbcInsertStorages = new SimpleJdbcInsert(dataSource);

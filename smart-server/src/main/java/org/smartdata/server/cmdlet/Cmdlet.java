@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.server.engine.CmdletExecutor;
 import org.smartdata.server.metastore.DBAdapter;
 
 /**
@@ -51,10 +52,6 @@ public class Cmdlet implements Runnable {
   private long scheduleToExecuteTime;
   private long ExecutionCompleteTime;
   private DBAdapter adapter;
-
-  private Cmdlet() {
-
-  }
 
   public Cmdlet(SmartAction[] actions, CmdletExecutor.Callback cb) {
     this(actions, cb, null);
@@ -126,7 +123,6 @@ public class Cmdlet implements Runnable {
   public boolean isFinished() {
     return (currentActionIndex == actions.length || !running);
   }
-
 
   public void runActions() {
     for (SmartAction act : actions) {

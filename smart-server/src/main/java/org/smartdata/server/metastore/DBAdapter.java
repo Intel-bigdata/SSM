@@ -383,7 +383,8 @@ public class DBAdapter {
     }
   }
 
-  public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables, int topNum) throws Exception {
+  public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
+      int topNum) throws SQLException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
       StringBuilder unioned = new StringBuilder();
@@ -1310,9 +1311,9 @@ public class DBAdapter {
     Connection conn = getConnection();
     try {
       String url = conn.getMetaData().getURL();
-      if (url.startsWith(Util.SQLITE_URL_PREFIX)) {
+      if (url.startsWith(MetaUtil.SQLITE_URL_PREFIX)) {
         dropAllTablesSqlite(conn);
-      } else if (url.startsWith(Util.MYSQL_URL_PREFIX)) {
+      } else if (url.startsWith(MetaUtil.MYSQL_URL_PREFIX)) {
         dropAllTablesMysql(conn, url);
       } else {
         throw new SQLException("Unsupported database");
@@ -1360,7 +1361,7 @@ public class DBAdapter {
   public synchronized void initializeDataBase() throws SQLException {
     Connection conn = getConnection();
     try {
-      Util.initializeDataBase(conn);
+      MetaUtil.initializeDataBase(conn);
     } finally {
       closeConnection(conn);
     }

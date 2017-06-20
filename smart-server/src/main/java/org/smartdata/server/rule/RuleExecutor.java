@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.server.RuleManager;
+import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.ExecutionContext;
 import org.smartdata.server.metastore.tables.AccessCountTable;
