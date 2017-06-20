@@ -15,10 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.cmdlet.executor;
+package org.smartdata.server.cmdlet.message;
 
-import org.smartdata.server.cmdlet.message.StatusMessage;
+import org.smartdata.common.CmdletState;
 
-public interface CmdletStatusReporter {
-  void report(StatusMessage status);
+public class CmdletStatusUpdate implements StatusMessage {
+  private long cmdletId;
+  private CmdletState currentState;
+
+  public CmdletStatusUpdate(long cmdletId, CmdletState currentState) {
+    this.cmdletId = cmdletId;
+    this.currentState = currentState;
+  }
+
+  public long getCmdletId() {
+    return cmdletId;
+  }
+
+  public void setCmdletId(long cmdletId) {
+    this.cmdletId = cmdletId;
+  }
+
+  public CmdletState getCurrentState() {
+    return currentState;
+  }
+
+  public void setCurrentState(CmdletState currentState) {
+    this.currentState = currentState;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Cmdlet %s transfers to status %s", cmdletId, currentState);
+  }
 }

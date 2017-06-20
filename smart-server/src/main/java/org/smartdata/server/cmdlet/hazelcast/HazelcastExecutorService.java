@@ -22,22 +22,24 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cmdlet.CmdletFactory;
+import org.smartdata.server.cmdlet.CmdletManager;
 import org.smartdata.server.cmdlet.executor.CmdletExecutorService;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.cmdlet.message.StatusMessage;
 
 import java.util.concurrent.BlockingQueue;
 
 public class HazelcastExecutorService extends CmdletExecutorService {
-  public static final String COMMAND_QUEUE = "command_queue";
-  public static final String SLAVE_TO_MASTER = "slave_to_master";
+  static final String COMMAND_QUEUE = "command_queue";
+  static final String SLAVE_TO_MASTER = "slave_to_master";
   private BlockingQueue<LaunchCmdlet> commandQueue;
-  private ITopic topic;
+  private ITopic<StatusMessage> statusTopic;
 
-  public HazelcastExecutorService(CmdletFactory cmdletFactory) {
-    super(cmdletFactory);
+  public HazelcastExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
+    super(cmdletManager, cmdletFactory);
     this.commandQueue = HazelcastInstanceProvider.getInstance().getQueue(COMMAND_QUEUE);
-    this.topic = HazelcastInstanceProvider.getInstance().getTopic(SLAVE_TO_MASTER);
-    this.topic.addMessageListener(new SlaveMessageListener());
+    this.statusTopic = HazelcastInstanceProvider.getInstance().getTopic(SLAVE_TO_MASTER);
+    this.statusTopic.addMessageListener(new StatusMessageListener());
   }
 
   @Override
@@ -52,14 +54,13 @@ public class HazelcastExecutorService extends CmdletExecutorService {
 
   @Override
   public void execute(LaunchCmdlet cmdlet) {
-    System.out.println(getClass().getCanonicalName() + " got command" + cmdlet);
     commandQueue.add(cmdlet);
   }
 
-  private class SlaveMessageListener implements MessageListener<HazelcastMessage> {
-
+  private class StatusMessageListener implements MessageListener<StatusMessage> {
     @Override
-    public void onMessage(Message<HazelcastMessage> message) {
+    public void onMessage(Message<StatusMessage> message) {
+      cmdletManager.updateStatue(message.getMessageObject());
     }
   }
 }

@@ -18,13 +18,15 @@
 package org.smartdata.server.cmdlet.executor;
 
 import org.smartdata.server.cmdlet.CmdletFactory;
+import org.smartdata.server.cmdlet.CmdletManager;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.cmdlet.message.StatusMessage;
 
 public class LocalCmdletExecutorService extends CmdletExecutorService implements CmdletStatusReporter {
   private CmdletExecutor cmdletExecutor;
 
-  public LocalCmdletExecutorService(CmdletFactory cmdletFactory) {
-    super(cmdletFactory);
+  public LocalCmdletExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
+    super(cmdletManager, cmdletFactory);
     this.cmdletExecutor = new CmdletExecutor(this);
   }
 
@@ -40,12 +42,11 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
 
   @Override
   public void execute(LaunchCmdlet cmdlet) {
-    System.out.println(getClass().getCanonicalName() + " got command" + cmdlet);
     this.cmdletExecutor.execute(cmdletFactory.createCmdlet(cmdlet));
   }
 
   @Override
-  public void report(Object status) {
-    //
+  public void report(StatusMessage status) {
+    cmdletManager.updateStatue(status);
   }
 }

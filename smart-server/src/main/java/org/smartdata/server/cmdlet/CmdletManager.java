@@ -28,6 +28,7 @@ import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.server.cmdlet.message.LaunchAction;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.Service;
+import org.smartdata.server.cmdlet.message.StatusMessage;
 import org.smartdata.server.metastore.DBAdapter;
 
 import java.io.IOException;
@@ -58,7 +59,7 @@ public class CmdletManager implements Service {
 
   public CmdletManager() {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.dispatcher = new CmdletDispatcher();
+    this.dispatcher = new CmdletDispatcher(this);
     this.submittedCmdlets = new ConcurrentHashMap<>();
     this.pendingCmdlet = new LinkedBlockingQueue<>();
   }
@@ -172,6 +173,10 @@ public class CmdletManager implements Service {
     return actionInfos;
   }
 
+  public synchronized void updateStatue(StatusMessage status) {
+    System.out.println("Got message " + status);
+  }
+
   int num = 0;
 
   public LaunchCmdlet getNextCmdletToRun() throws IOException {
@@ -180,7 +185,7 @@ public class CmdletManager implements Service {
     Map<String, String> args = new HashMap<>();
     args.put(HelloAction.PRINT_MESSAGE, "this is the message " + num);
     actions.add(new LaunchAction(101L, "hello", args));
-    LaunchCmdlet cmdlet = new LaunchCmdlet(0, actions);
+    LaunchCmdlet cmdlet = new LaunchCmdlet(num, actions);
     if (num < 10) {
       return cmdlet;
     } else {

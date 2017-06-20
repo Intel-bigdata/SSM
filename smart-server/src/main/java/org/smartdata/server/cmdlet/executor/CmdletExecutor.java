@@ -22,10 +22,16 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.SmartAction;
+import org.smartdata.common.CmdletState;
 import org.smartdata.server.cmdlet.Cmdlet;
 import org.smartdata.server.cmdlet.message.ActionStatusReport;
+import org.smartdata.server.cmdlet.message.CmdletStatusUpdate;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -35,11 +41,13 @@ import java.util.concurrent.Future;
 //      2. add api providing available resource
 public class CmdletExecutor {
   private CmdletStatusReporter reporter;
-  private Map<Long, Future> runningCmdlets;
+  private Map<Long, Future> listenableFutures;
+  private Map<Long, Cmdlet> runningCmdlets;
   private ListeningExecutorService executorService;
 
   public CmdletExecutor(CmdletStatusReporter reporter) {
     this.reporter = reporter;
+    this.listenableFutures = new ConcurrentHashMap<>();
     this.runningCmdlets = new ConcurrentHashMap<>();
     this.executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10));
   }
@@ -47,14 +55,17 @@ public class CmdletExecutor {
   public void execute(Cmdlet cmdlet) {
     ListenableFuture<?> future = this.executorService.submit(cmdlet);
     Futures.addCallback(future, new CmdletCallBack(cmdlet), executorService);
-    this.runningCmdlets.put(cmdlet.getId(), future);
+    this.listenableFutures.put(cmdlet.getId(), future);
+    this.runningCmdlets.put(cmdlet.getId(), cmdlet);
+    cmdlet.setState(CmdletState.EXECUTING);
+    this.reportCurrentStatus(cmdlet);
   }
 
-  public void stop(Long commandId) {
-    if (this.runningCmdlets.containsKey(commandId)) {
-      this.runningCmdlets.get(commandId).cancel(true);
-      this.runningCmdlets.remove(commandId);
+  public void stop(Long cmdletId) {
+    if (this.listenableFutures.containsKey(cmdletId)) {
+      this.listenableFutures.get(cmdletId).cancel(true);
     }
+    removeCmdlet(cmdletId);
   }
 
   public void shutdown() {
@@ -62,24 +73,42 @@ public class CmdletExecutor {
   }
 
   public ActionStatusReport getActionStatusReport() {
-    return new ActionStatusReport();
+    List<ActionStatusReport.ActionStatus> actionStatusList = new ArrayList<>();
+    for (Cmdlet cmdlet : this.runningCmdlets.values()) {
+      for (SmartAction action : cmdlet.getActions()) {
+        ActionStatus status = action.getActionStatus();
+        actionStatusList.add(new ActionStatusReport.ActionStatus(status.getId(), status.getPercentage()));
+      }
+    }
+    return new ActionStatusReport(actionStatusList);
+  }
+
+  private void reportCurrentStatus(Cmdlet cmdlet) {
+    this.reporter.report(new CmdletStatusUpdate(cmdlet.getId(), cmdlet.getState()));
+  }
+
+  private void removeCmdlet(long cmdletId) {
+    this.runningCmdlets.remove(cmdletId);
+    this.listenableFutures.remove(cmdletId);
   }
 
   private class CmdletCallBack implements FutureCallback<Object> {
-    private final Cmdlet command;
+    private final Cmdlet cmdlet;
 
-    public CmdletCallBack(Cmdlet command) {
-      this.command = command;
+    public CmdletCallBack(Cmdlet cmdlet) {
+      this.cmdlet = cmdlet;
     }
 
     @Override
     public void onSuccess(@Nullable Object result) {
-      runningCmdlets.remove(this.command.getId());
+      removeCmdlet(this.cmdlet.getId());
+      reportCurrentStatus(this.cmdlet);
     }
 
     @Override
     public void onFailure(Throwable t) {
-      runningCmdlets.remove(this.command.getId());
+      removeCmdlet(this.cmdlet.getId());
+      reportCurrentStatus(this.cmdlet);
     }
   }
 }

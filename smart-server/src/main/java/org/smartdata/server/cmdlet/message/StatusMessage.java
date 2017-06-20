@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.cmdlet.executor;
+package org.smartdata.server.cmdlet.message;
 
-import org.smartdata.server.cmdlet.message.StatusMessage;
+import java.io.Serializable;
 
-public interface CmdletStatusReporter {
-  void report(StatusMessage status);
+public interface StatusMessage extends Serializable {
 }

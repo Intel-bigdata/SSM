@@ -22,10 +22,11 @@ import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cmdlet.CmdletFactory;
 import org.smartdata.server.cmdlet.executor.CmdletExecutor;
 import org.smartdata.server.cmdlet.executor.CmdletStatusReporter;
+import org.smartdata.server.cmdlet.message.ActionStatusReport;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.cmdlet.message.StatusMessage;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,7 +38,7 @@ public class HazelcastWorker implements CmdletStatusReporter {
   private CmdletExecutor cmdletExecutor;
   private CmdletFactory factory;
   private Future<?> fetcher;
-  private ITopic topic;
+  private ITopic<StatusMessage> statusTopic;
 
   public HazelcastWorker(CmdletFactory factory) {
     this.factory = factory;
@@ -45,7 +46,7 @@ public class HazelcastWorker implements CmdletStatusReporter {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.cmdletQueue =
         HazelcastInstanceProvider.getInstance().getQueue(HazelcastExecutorService.COMMAND_QUEUE);
-    this.topic =
+    this.statusTopic =
         HazelcastInstanceProvider.getInstance().getTopic(HazelcastExecutorService.SLAVE_TO_MASTER);
   }
 
@@ -64,18 +65,29 @@ public class HazelcastWorker implements CmdletStatusReporter {
   }
 
   @Override
-  public void report(Object status) {
-    this.topic.publish(status);
+  public void report(StatusMessage status) {
+    this.statusTopic.publish(status);
   }
 
   private class CmdletFetcher implements Runnable {
     @Override
     public void run() {
+      executeCmdlet();
+      updateStatus();
+    }
+
+    private void executeCmdlet() {
       LaunchCmdlet launchCmdlet = cmdletQueue.poll();
-      System.out.println("Polling cmdlet..." + launchCmdlet);
       while (launchCmdlet != null) {
         cmdletExecutor.execute(factory.createCmdlet(launchCmdlet));
         launchCmdlet = cmdletQueue.poll();
+      }
+    }
+
+    private void updateStatus() {
+      ActionStatusReport report = cmdletExecutor.getActionStatusReport();
+      if (!report.getActionStatuses().isEmpty()) {
+        report(report);
       }
     }
   }
