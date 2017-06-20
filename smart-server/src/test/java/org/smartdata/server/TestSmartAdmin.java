@@ -116,18 +116,6 @@ public class TestSmartAdmin {
       ssmClient.deleteRule(ruleId, true);
       assertEquals(RuleState.DELETED, ssmClient.getRuleInfo(ruleId).getState());
 
-      //test single SSM
-      caughtException = false;
-      try {
-        conf.set(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY, "localhost:8043");
-        SmartServer.createSSM(null, conf);
-      } catch (IOException e) {
-        assertEquals("java.io.IOException: Another SmartServer is running",
-            e.toString());
-        caughtException = true;
-      }
-      assertTrue(caughtException);
-
       //test cmdletInfo
       long id = ssmClient.submitCmdlet("cache -file /foo*");
       CmdletInfo cmdletInfo = ssmClient.getCmdletInfo(id);
