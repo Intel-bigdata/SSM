@@ -18,12 +18,15 @@
 package org.smartdata.server.cmdlet.executor;
 
 import org.smartdata.server.cmdlet.CmdletFactory;
+import org.smartdata.server.cmdlet.CmdletManager;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 
 public abstract class CmdletExecutorService {
+  protected CmdletManager cmdletManager;
   protected CmdletFactory cmdletFactory;
 
-  public CmdletExecutorService(CmdletFactory cmdletFactory) {
+  public CmdletExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
+    this.cmdletManager = cmdletManager;
     this.cmdletFactory = cmdletFactory;
   }
 

@@ -53,10 +53,6 @@ public class Cmdlet implements Runnable {
   private long ExecutionCompleteTime;
   private DBAdapter adapter;
 
-  private Cmdlet() {
-
-  }
-
   public Cmdlet(SmartAction[] actions, CmdletExecutor.Callback cb) {
     this(actions, cb, null);
   }
@@ -127,7 +123,6 @@ public class Cmdlet implements Runnable {
   public boolean isFinished() {
     return (currentActionIndex == actions.length || !running);
   }
-
 
   public void runActions() {
     for (SmartAction act : actions) {

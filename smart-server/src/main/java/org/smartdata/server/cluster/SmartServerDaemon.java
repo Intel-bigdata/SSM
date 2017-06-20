@@ -20,7 +20,6 @@ package org.smartdata.server.cluster;
 import com.hazelcast.core.HazelcastInstance;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.cmdlet.Cmdlet;
 import org.smartdata.server.cmdlet.CmdletFactory;
 import org.smartdata.server.cmdlet.CmdletManager;
 import org.smartdata.server.cmdlet.hazelcast.HazelcastWorker;
@@ -59,7 +58,7 @@ public class SmartServerDaemon {
     //SmartServer.main(args);
   }
 
-  public static void main(String[] args) throws IOException, InterruptedException {
+  public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
     SmartServerDaemon daemon = new SmartServerDaemon(args);
     daemon.start();
   }

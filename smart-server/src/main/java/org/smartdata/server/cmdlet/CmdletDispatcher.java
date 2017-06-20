@@ -32,12 +32,12 @@ public class CmdletDispatcher {
   private List<CmdletExecutorService> executorServices;
   private int index;
 
-  public CmdletDispatcher() {
+  public CmdletDispatcher(CmdletManager cmdletManager) {
     //Todo: make service configurable
     CmdletFactory factory = new CmdletFactory(new SmartContext(new SmartConf()));
     this.executorServices = new ArrayList<>();
-    this.executorServices.add(new LocalCmdletExecutorService(factory));
-    this.executorServices.add(new HazelcastExecutorService(factory));
+    this.executorServices.add(new LocalCmdletExecutorService(cmdletManager, factory));
+    this.executorServices.add(new HazelcastExecutorService(cmdletManager, factory));
     this.index = 0;
   }
 

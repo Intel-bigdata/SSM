@@ -18,7 +18,47 @@
 package org.smartdata.server.cmdlet.message;
 
 import java.io.Serializable;
+import java.util.List;
 
-public class ActionStatusReport implements Serializable {
+public class ActionStatusReport implements StatusMessage {
+  private List<ActionStatus> actionStatuses;
 
+  public ActionStatusReport(List<ActionStatus> actionStatuses) {
+    this.actionStatuses = actionStatuses;
+  }
+
+  public List<ActionStatus> getActionStatuses() {
+    return actionStatuses;
+  }
+
+  public void setActionStatuses(List<ActionStatus> actionStatuses) {
+    this.actionStatuses = actionStatuses;
+  }
+
+  //Todo: integrate this with the other class
+  public static class ActionStatus implements Serializable {
+    private long actionId;
+    private float percentage;
+
+    public ActionStatus(long actionId, float percentage) {
+      this.actionId = actionId;
+      this.percentage = percentage;
+    }
+
+    public long getActionId() {
+      return actionId;
+    }
+
+    public void setActionId(long actionId) {
+      this.actionId = actionId;
+    }
+
+    public float getPencentage() {
+      return percentage;
+    }
+
+    public void setPencentage(float percentage) {
+      this.percentage = percentage;
+    }
+  }
 }
