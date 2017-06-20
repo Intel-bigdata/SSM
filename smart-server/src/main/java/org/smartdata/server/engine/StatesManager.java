@@ -19,25 +19,24 @@ package org.smartdata.server.engine;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.common.metastore.CachedFileStatus;
-import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.SmartServer;
-import org.smartdata.server.metastore.FileAccessInfo;
-import org.smartdata.server.metric.fetcher.AccessEventFetcher;
-import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.metric.fetcher.CachedListFetcher;
-import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.FileAccessInfo;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 import org.smartdata.server.metastore.tables.AccessCountTableManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.smartdata.server.metric.fetcher.AccessEventFetcher;
+import org.smartdata.server.metric.fetcher.CachedListFetcher;
+import org.smartdata.server.metric.fetcher.InotifyEventFetcher;
+import org.smartdata.server.utils.HadoopUtils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -73,12 +72,8 @@ public class StatesManager implements Service {
     LOG.info("Initializing ...");
     this.dbAdapter = dbAdapter;
     this.cleanFileTableContents(dbAdapter);
-    String nnUri = conf.get(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
-    try {
-      this.client = new DFSClient(new URI(nnUri), conf);
-    } catch (URISyntaxException e) {
-      throw new IOException(e);
-    }
+    URI nnUri = HadoopUtils.getNameNodeUri(conf);
+    this.client = new DFSClient(nnUri, conf);
     this.executorService = Executors.newScheduledThreadPool(4);
     this.accessCountTableManager = new AccessCountTableManager(dbAdapter, executorService);
     this.fileAccessEventSource = MetricsFactory.createAccessEventSource(conf);

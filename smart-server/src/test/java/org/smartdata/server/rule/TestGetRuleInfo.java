@@ -64,7 +64,7 @@ public class TestGetRuleInfo extends TestEmptyMiniSmartCluster {
     String rule = "file: every 1s \n | length > 10 | cache";
     SmartAdmin client = new SmartAdmin(conf);
 
-    int nRules = 100;
+    int nRules = 10;
     for (int i = 0; i < nRules; i++) {
       client.submitRule(rule, RuleState.ACTIVE);
     }
