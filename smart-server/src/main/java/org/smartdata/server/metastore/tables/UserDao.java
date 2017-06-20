@@ -18,9 +18,11 @@
 package org.smartdata.server.metastore.tables;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +42,28 @@ public class UserDao {
   public synchronized void addUser(String userName) throws SQLException {
     String sql = String.format("INSERT INTO `owners` (owner_name) VALUES ('%s')", userName);
     jdbcTemplate.execute(sql);
+  }
+
+  public synchronized void deleteUser(String user) {
+    String sql = String.format(
+        "DELETE FROM `owners` where owner_name = '%s'", user);
+    jdbcTemplate.execute(sql);
+  }
+
+  public List<String> listUser() {
+    List<String> user = jdbcTemplate.query(
+        "select owner_name from owners",
+        new RowMapper<String>() {
+          public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return rs.getString("owner_name");
+          }
+        });
+    return user;
+  }
+
+  public int getCountUsers() {
+    return jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM `owners`", Integer.class);
   }
 
   public void updateUsersMap() throws SQLException {

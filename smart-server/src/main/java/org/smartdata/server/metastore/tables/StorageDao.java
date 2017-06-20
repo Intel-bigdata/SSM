@@ -29,33 +29,37 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class StorageDao {
 
   private JdbcTemplate jdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
+  private SimpleJdbcInsert simpleJdbcInsertStorages;
+  private SimpleJdbcInsert simpleJdbcInsertStorage_policy;
+
 
   public StorageDao(DataSource dataSource) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);
-    this.simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("storages");
+    this.simpleJdbcInsertStorages = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsertStorages.setTableName("storages");
+    this.simpleJdbcInsertStorage_policy = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsertStorage_policy.setTableName("storage_policy");
   }
 
-  private Map<String, StorageCapacity> convertStorageTablesItem(
-      ResultSet resultSet) throws SQLException {
+  public Map<String, StorageCapacity> getStorageTablesItem()
+      throws SQLException {
+    String sql = "SELECT * FROM storages";
+    List<StorageCapacity> list = this.jdbcTemplate.query(sql,
+        new RowMapper<StorageCapacity>() {
+          public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return new StorageCapacity(rs.getString("type"),
+                rs.getLong("capacity"), rs.getLong("free"));
+          }
+        });
     Map<String, StorageCapacity> map = new HashMap<>();
-    if (resultSet == null) {
-      return map;
-    }
-
-    while (resultSet.next()) {
-      String type = resultSet.getString(1);
-      StorageCapacity storage = new StorageCapacity(
-          resultSet.getString(1),
-          resultSet.getLong(2),
-          resultSet.getLong(3));
-      map.put(type, storage);
+    for (StorageCapacity s : list) {
+      map.put(s.getType(), s);
     }
     return map;
   }
@@ -64,9 +68,8 @@ public class StorageDao {
     String sql = "SELECT * FROM storages WHERE type = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{type}, new RowMapper<StorageCapacity>() {
       public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
-        StorageCapacity storageCapacity = new StorageCapacity(rs.getString("type"),
+        return new StorageCapacity(rs.getString("type"),
             rs.getLong("capacity"), rs.getLong("free"));
-        return storageCapacity;
       }
     });
   }

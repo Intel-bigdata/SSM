@@ -18,9 +18,11 @@
 package org.smartdata.server.metastore.tables;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +43,28 @@ public class GroupsDao {
     String sql = String.format(
         "INSERT INTO `groups` (group_name) VALUES ('%s')", groupName);
     jdbcTemplate.execute(sql);
+  }
+
+  public synchronized void deleteGroup(String groupName) {
+    String sql = String.format(
+        "DELETE FROM `groups` where group_name = '%s'", groupName);
+    jdbcTemplate.execute(sql);
+  }
+
+  public int getCountGroups() {
+    return jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM `groups`", Integer.class);
+  }
+
+  public List<String> listGroup() {
+    List<String> groups = jdbcTemplate.query(
+        "select group_name from groups",
+        new RowMapper<String>() {
+          public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return rs.getString("group_name");
+          }
+        });
+    return groups;
   }
 
   public void updateGroupsMap() throws SQLException {
