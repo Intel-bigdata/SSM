@@ -54,7 +54,7 @@ public class TestDBMethod {
 
   private void reInit() throws Exception {
     // Clear DB and create new tables
-    Util.initializeDataBase(conn);
+    MetaUtil.initializeDataBase(conn);
     dbAdapter = new DBAdapter(conn);
   }
 

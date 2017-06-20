@@ -18,7 +18,6 @@
 package org.smartdata.server.metastore;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
@@ -616,9 +615,9 @@ public class MetaStore {
     Connection conn = getConnection();
     try {
       String url = conn.getMetaData().getURL();
-      if (url.startsWith(Util.SQLITE_URL_PREFIX)) {
+      if (url.startsWith(MetaUtil.SQLITE_URL_PREFIX)) {
         dropAllTablesSqlite(conn);
-      } else if (url.startsWith(Util.MYSQL_URL_PREFIX)) {
+      } else if (url.startsWith(MetaUtil.MYSQL_URL_PREFIX)) {
         dropAllTablesMysql(conn, url);
       } else {
         throw new SQLException("Unsupported database");
@@ -666,7 +665,7 @@ public class MetaStore {
   public synchronized void initializeDataBase() throws SQLException {
     Connection conn = getConnection();
     try {
-      Util.initializeDataBase(conn);
+      MetaUtil.initializeDataBase(conn);
     } finally {
       closeConnection(conn);
     }

@@ -58,11 +58,11 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
       }
     } ~
       path("cachedfiles") {
-        complete(gson.toJson(ssmServer.getDBAdapter.getCachedFileStatus))
+        complete(gson.toJson(ssmServer.getStatesManager.getCachedFileStatus))
       } ~
       path("hotfiles") {
         val tables = ssmServer.getStatesManager.getTablesInLast(Constants.ONE_HOUR_IN_MILLIS)
-        complete(gson.toJson(ssmServer.getDBAdapter.getHotFiles(tables, 20)))
+        complete(gson.toJson(ssmServer.getStatesManager.getHotFiles(tables, 20)))
       } ~
       path("actiontypes") {
         complete(gson.toJson(ssmServer.getCmdletExecutor.listActionsSupported()))

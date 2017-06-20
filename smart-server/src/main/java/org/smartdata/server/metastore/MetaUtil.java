@@ -17,17 +17,27 @@
  */
 package org.smartdata.server.metastore;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * Utilities for table operations.
  */
-public class Util {
+public class MetaUtil {
   public static final String SQLITE_URL_PREFIX = "jdbc:sqlite:";
   public static final String MYSQL_URL_PREFIX = "jdbc:mysql:";
+  static final Logger LOG = LoggerFactory.getLogger(MetaUtil.class);
 
   public static Connection createConnection(String url,
       String userName, String password)
@@ -204,5 +214,77 @@ public class Util {
     } catch (SQLException e) {
       return false;
     }
+  }
+
+  public static void formatDatabase(SmartConf conf) throws Exception {
+    getDBAdapter(conf).formatDataBase();
+  }
+
+  public static DBAdapter getDBAdapter(SmartConf conf) throws Exception {
+    // TODO: move to etc directory
+    URL pathUrl = ClassLoader.getSystemResource("");
+    String path = pathUrl.getPath();
+
+    String fileName = "druid.xml";
+    String expectedCpPath = path + fileName;
+    LOG.info("Expected DB connection pool configuration path = "
+        + expectedCpPath);
+    File cpConfigFile = new File(expectedCpPath);
+    if (cpConfigFile.exists()) {
+      LOG.info("Using pool configure file: " + expectedCpPath);
+      Properties p = new Properties();
+      p.loadFromXML(new FileInputStream(cpConfigFile));
+
+      String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
+      if (url != null) {
+        p.setProperty("url", url);
+      }
+
+      for (String key : p.stringPropertyNames()) {
+        LOG.info("\t" + key + " = " + p.getProperty(key));
+      }
+      return new DBAdapter(new DruidPool(p));
+    } else {
+      LOG.info("DB connection pool config file " + expectedCpPath
+          + " NOT found.");
+    }
+
+    // TODO: keep it now for testing, remove it later.
+    Connection conn = getDBConnection(conf);
+    return new DBAdapter(conn);
+  }
+
+  private static Connection getDBConnection(SmartConf conf) throws Exception {
+    String dburi = getDBUri(conf);
+    LOG.info("Database file URI = " + dburi);
+    Connection conn = MetaUtil.createConnection(dburi.toString(), null, null);
+    return conn;
+  }
+
+  private static String getDBUri(SmartConf conf) throws Exception {
+    // TODO: Find and verify the latest SSM DB available
+    String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
+    if (url == null) {
+      LOG.warn("No database specified for SSM, "
+          + "will use a default one instead.");
+    }
+    return url != null ? url : getDefaultSqliteDB() ;
+  }
+
+  /**
+   * This default behavior provided here is mainly for convenience.
+   * @return
+   */
+  private static String getDefaultSqliteDB() throws Exception {
+    String absFilePath = System.getProperty("user.home")
+        + "/smart-test-default.db";
+    File file = new File(absFilePath);
+    if (file.exists()) {
+      return MetaUtil.SQLITE_URL_PREFIX + absFilePath;
+    }
+    Connection conn = MetaUtil.createSqliteConnection(absFilePath);
+    MetaUtil.initializeDataBase(conn);
+    conn.close();
+    return MetaUtil.SQLITE_URL_PREFIX + absFilePath;
   }
 }

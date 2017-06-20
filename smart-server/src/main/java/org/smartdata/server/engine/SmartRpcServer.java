@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server;
+package org.smartdata.server.engine;
 
 import com.google.protobuf.BlockingService;
 import org.apache.hadoop.conf.Configuration;
@@ -38,6 +38,7 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.server.SmartServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

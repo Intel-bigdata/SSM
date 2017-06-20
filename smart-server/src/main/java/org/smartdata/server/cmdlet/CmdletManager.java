@@ -25,9 +25,9 @@ import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.cmdlet.CmdletInfo;
-import org.smartdata.server.Service;
 import org.smartdata.server.cmdlet.message.LaunchAction;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.engine.Service;
 import org.smartdata.server.metastore.DBAdapter;
 
 import java.io.IOException;

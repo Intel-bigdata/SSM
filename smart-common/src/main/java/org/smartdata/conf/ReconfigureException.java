@@ -15,33 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common;
+package org.smartdata.conf;
 
-public enum SmartServiceState {
-  SAFEMODE(0),
-  ACTIVE(1),
-  DISABLED(2);
+import org.apache.hadoop.conf.ReconfigurationException;
 
-  private int value;
-
-  SmartServiceState(int value) {
-    this.value = value;
-  }
-
-  public static SmartServiceState fromValue(int v) {
-    for (SmartServiceState s : values()) {
-      if (s.getValue() == v) {
-        return s;
-      }
-    }
-    return null;
-  }
-
-  public int getValue() {
-    return value;
-  }
-
-  public String getName() {
-    return toString();
-  }
+public class ReconfigureException extends ReconfigurationException {
 }

@@ -15,33 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common;
+package org.smartdata.conf;
 
-public enum SmartServiceState {
-  SAFEMODE(0),
-  ACTIVE(1),
-  DISABLED(2);
+import java.util.List;
 
-  private int value;
+/**
+ * This class helps to register all the properties of subclasses.
+ */
+public abstract class ReconfigurableBase implements Reconfigurable {
 
-  SmartServiceState(int value) {
-    this.value = value;
-  }
-
-  public static SmartServiceState fromValue(int v) {
-    for (SmartServiceState s : values()) {
-      if (s.getValue() == v) {
-        return s;
-      }
+  public ReconfigurableBase() {
+    List<String> properties = getReconfigurableProperties();
+    if (properties != null) {
+      ReconfigurableRegistry.registReconfigurableProperty(properties, this);
     }
-    return null;
-  }
-
-  public int getValue() {
-    return value;
-  }
-
-  public String getName() {
-    return toString();
   }
 }

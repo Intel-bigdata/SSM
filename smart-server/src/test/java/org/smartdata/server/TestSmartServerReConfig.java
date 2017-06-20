@@ -22,13 +22,11 @@ import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
-import org.junit.After;
-import org.junit.Before;
-import org.smartdata.admin.SmartAdmin;
+import org.junit.Assert;
+import org.junit.Test;
+import org.smartdata.common.SmartServiceState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.common.SmartServiceState;
 import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.metastore.TestDBUtil;
 
@@ -39,7 +37,7 @@ import java.util.List;
 
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
 
-public class TestEmptyMiniSmartCluster {
+public class TestSmartServerReConfig {
   protected SmartConf conf;
   protected MiniDFSCluster cluster;
   protected SmartServer ssm;
@@ -48,33 +46,57 @@ public class TestEmptyMiniSmartCluster {
 
   private static final int DEFAULT_BLOCK_SIZE = 100;
 
-  static {
-    TestBalancer.initTestSetup();
-  }
-
-  @Before
+  @Test
   public void setUp() throws Exception {
-    conf = new SmartConf();
-    initConf(conf);
-    cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]
-            {StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE})
-        .build();
-    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
-    List<URI> uriList = new ArrayList<>(namenodes);
-    conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
-    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
-        uriList.get(0).toString());
+    try {
+      conf = new SmartConf();
+      initConf(conf);
+      cluster = new MiniDFSCluster.Builder(conf)
+          .numDataNodes(3)
+          .storagesPerDatanode(3)
+          .storageTypes(new StorageType[]
+              {StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE})
+          .build();
+      Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
+      List<URI> uriList = new ArrayList<>(namenodes);
+      conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
+      conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+          uriList.get(0).toString());
 
-    // Set db used
-    dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
+      // Set db used
+      dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+      dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
+      conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
-    // rpcServer start in SmartServer
-    ssm = SmartServer.createSSM(null, conf);
+      SmartConf serverConf = new SmartConf();
+      serverConf.set(SmartConfKeys.DFS_SSM_ENABLED_KEY, "false");
+      serverConf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
+      // rpcServer start in SmartServer
+      ssm = SmartServer.createSSM(null, serverConf);
+
+      Thread.sleep(2000);
+      Assert.assertTrue(ssm.getSSMServiceState() == SmartServiceState.DISABLED);
+      try {
+        ssm.enable();
+        Assert.fail("Should fail without specifying Namanode");
+      } catch (Exception e) {
+      }
+
+      serverConf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+          uriList.get(0).toString());
+      ssm.enable();
+
+      Assert.assertTrue(ssm.getSSMServiceState() == SmartServiceState.ACTIVE);
+
+    } finally {
+      if (ssm != null) {
+        ssm.shutdown();
+      }
+
+      if (cluster != null) {
+        cluster.shutdown();
+      }
+    }
   }
 
   private void initConf(Configuration conf) {
@@ -83,38 +105,5 @@ public class TestEmptyMiniSmartCluster {
     conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
     conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
-  }
-
-  public void waitTillSSMExitSafeMode() throws Exception {
-    SmartAdmin client = new SmartAdmin(conf);
-    long start = System.currentTimeMillis();
-    int retry = 5;
-    while (true) {
-      try {
-        SmartServiceState state = client.getServiceState();
-        if (state != SmartServiceState.SAFEMODE) {
-          break;
-        }
-        int secs = (int)(System.currentTimeMillis() - start) / 1000;
-        System.out.println("Waited for " + secs + " seconds ...");
-        Thread.sleep(1000);
-      } catch (Exception e) {
-        if (retry <= 0) {
-          throw e;
-        }
-        retry--;
-      }
-    }
-  }
-
-  @After
-  public void cleanUp() {
-    if (ssm != null) {
-      ssm.shutdown();
-    }
-
-    if (cluster != null) {
-      cluster.shutdown();
-    }
   }
 }
