@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,8 +32,15 @@ public class TestRuleDao extends TestDaoUtil {
   private RuleDao ruleDao;
 
   @Before
-  public void ruleDaoInit() {
+  public void initRuleDao() throws Exception {
+    initDao();
     ruleDao = new RuleDao(druidPool.getDataSource());
+  }
+
+  @After
+  public void closeRuleDao() throws Exception {
+    closeDao();
+    ruleDao = null;
   }
 
   @Test

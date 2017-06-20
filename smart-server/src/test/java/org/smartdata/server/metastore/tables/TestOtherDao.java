@@ -17,7 +17,9 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.server.metastore.TestDaoUtil;
 
@@ -32,15 +34,24 @@ public class TestOtherDao extends TestDaoUtil {
   private UserDao userDao;
   private XattrDao xattrDao;
 
-  private void daoInit() {
+  @Before
+  public void initOtherDao() throws Exception {
+    initDao();
     groupsDao = new GroupsDao(druidPool.getDataSource());
     userDao = new UserDao(druidPool.getDataSource());
     xattrDao = new XattrDao(druidPool.getDataSource());
   }
 
+  @After
+  public void closeOtherDao() throws Exception {
+    closeDao();
+    groupsDao = null;
+    userDao = null;
+    xattrDao = null;
+  }
+
   @Test
   public void testGroup() throws SQLException {
-    daoInit();
     int i = groupsDao.getCountGroups();
     groupsDao.addGroup("groupname111");
     int i1 = groupsDao.getCountGroups();
@@ -54,7 +65,6 @@ public class TestOtherDao extends TestDaoUtil {
 
   @Test
   public void testUser() throws SQLException {
-    daoInit();
     int i = userDao.getCountUsers();
     userDao.addUser("username");
     int i1 = userDao.getCountUsers();
@@ -68,7 +78,6 @@ public class TestOtherDao extends TestDaoUtil {
 
   @Test
   public void testXattr() throws SQLException {
-    daoInit();
     long fid = 567l;
     Map<String, byte[]> xAttrMap = new HashMap<>();
     String name1 = "user.a1";

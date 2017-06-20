@@ -20,7 +20,9 @@ package org.smartdata.server.metastore.tables;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.TestDaoUtil;
@@ -31,8 +33,15 @@ public class TestFileDao extends TestDaoUtil {
   private FileDao fileDao;
 
   @Before
-  public void fileDaoInit() {
+  public void initFileDao() throws Exception {
+    initDao();
     fileDao = new FileDao(druidPool.getDataSource());
+  }
+
+  @After
+  public void closeFileDao() throws Exception {
+    closeDao();
+    fileDao = null;
   }
 
   @Test

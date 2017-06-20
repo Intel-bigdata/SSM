@@ -17,7 +17,9 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.actions.ActionInfo;
@@ -32,8 +34,15 @@ public class TestActionDao extends TestDaoUtil {
   private ActionDao actionDao;
 
   @Before
-  public void actionDaoInit() {
+  public void initActionDao() throws Exception {
+    initDao();
     actionDao = new ActionDao(druidPool.getDataSource());
+  }
+
+  @After
+  public void closeActionDao() throws Exception {
+    closeDao();
+    actionDao = null;
   }
 
   @Test

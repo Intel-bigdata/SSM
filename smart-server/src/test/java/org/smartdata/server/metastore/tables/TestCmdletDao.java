@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.metastore.tables;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,8 +32,15 @@ public class TestCmdletDao extends TestDaoUtil {
   private CmdletDao cmdletDao;
 
   @Before
-  public void cmdletDaoInit() {
+  public void initCmdletDao() throws Exception {
+    initDao();
     cmdletDao = new CmdletDao(druidPool.getDataSource());
+  }
+
+  @After
+  public void closeCmdletDao() throws Exception {
+    closeDao();
+    cmdletDao = null;
   }
 
   @Test
