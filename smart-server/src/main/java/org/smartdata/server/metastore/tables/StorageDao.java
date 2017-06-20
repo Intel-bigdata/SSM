@@ -21,6 +21,7 @@ import org.smartdata.server.metastore.StorageCapacity;
 import org.smartdata.server.metastore.StoragePolicy;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
@@ -34,9 +35,6 @@ public class StorageDao {
 
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
-  private Map<Integer, String> mapStoragePolicyIdName = null;
-  private Map<String, Integer> mapStoragePolicyNameId = null;
-  private Map<String, StorageCapacity> mapStorageCapacity = null;
 
   public StorageDao(DataSource dataSource) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -63,46 +61,49 @@ public class StorageDao {
   }
 
   public StorageCapacity getStorageCapacity(String type) throws SQLException {
-//    updateCache();
-    return mapStorageCapacity.get(type);
+    String sql = "SELECT * FROM storages WHERE type = ?";
+    return jdbcTemplate.queryForObject(sql, new Object[]{type}, new RowMapper<StorageCapacity>() {
+      public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
+        StorageCapacity storageCapacity = new StorageCapacity(rs.getString("type"),
+            rs.getLong("capacity"), rs.getLong("free"));
+        return storageCapacity;
+      }
+    });
   }
 
   public String getStoragePolicyName(int sid) throws SQLException {
-//    updateCache();
-    return mapStoragePolicyIdName.get(sid);
+    String sql = "SELECT policy_name FROM `storage_policy` WHERE sid = ?";
+    return jdbcTemplate.queryForObject(sql, new Object[]{sid}, String.class);
   }
 
   public Integer getStoragePolicyID(String policyName) throws SQLException {
-//    updateCache();
-    return getKey(mapStoragePolicyIdName, policyName);
+    String sql = "SELECT sid FROM `storage_policy` WHERE policy_name = ?";
+    return jdbcTemplate.queryForObject(sql, new Object[]{policyName}, Integer.class);
   }
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s)
       throws SQLException {
     String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
         + s.getSid() + "','" + s.getPolicyName() + "');";
-    mapStoragePolicyIdName = null;
     jdbcTemplate.execute(sql);
   }
 
   public int updateFileStoragePolicy(String path, String policyName)
       throws SQLException {
-    if (mapStoragePolicyIdName == null) {
-      //updateCache();
-    }
-    if (!mapStoragePolicyNameId.containsKey(policyName)) {
+    String sql0 = "SELECT sid FROM `storage_policy` WHERE policy_name = ?";
+    Integer sid = jdbcTemplate.queryForObject(sql0, new Object[]{policyName}, Integer.class);
+    if (sid == null) {
       throw new SQLException("Unknown storage policy name '"
           + policyName + "'");
     }
     String sql = String.format(
         "UPDATE files SET sid = %d WHERE path = '%s';",
-        mapStoragePolicyNameId.get(policyName), path);
+        sid, path);
     return jdbcTemplate.update(sql);
   }
 
   public void insertStoragesTable(final StorageCapacity[] storages)
       throws SQLException {
-    mapStorageCapacity = null;
     String sql = "INSERT INTO `storages` (type, capacity, free) VALUES (?,?,?);";
     jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
@@ -130,17 +131,6 @@ public class StorageDao {
       sql = sqlPrefix + sqlCapacity + sqlFree + sqlSuffix;
       sql = sql.replaceFirst(",", "");
     }
-    mapStorageCapacity = null;
     return jdbcTemplate.update(sql) == 1;
   }
-
-  private Integer getKey(Map<Integer, String> map, String value) {
-    for (Integer key : map.keySet()) {
-      if (map.get(key).equals(value)) {
-        return key;
-      }
-    }
-    return null;
-  }
-
 }
