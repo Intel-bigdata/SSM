@@ -63,6 +63,22 @@ public class StorageDao {
     return map;
   }
 
+  public Map<Integer, String> getStoragePolicyIdNameMap() throws SQLException {
+    String sql = "SELECT * FROM storage_policy";
+    List<StoragePolicy> list = this.jdbcTemplate.query(sql,
+        new RowMapper<StoragePolicy>() {
+          public StoragePolicy mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return new StoragePolicy(rs.getByte("sid"),
+                rs.getString("policy_name"));
+          }
+        });
+    Map<Integer, String> map = new HashMap<>();
+    for (StoragePolicy s : list) {
+      map.put((int)(s.getSid()), s.getPolicyName());
+    }
+    return map;
+  }
+
   public StorageCapacity getStorageCapacity(String type) throws SQLException {
     String sql = "SELECT * FROM storages WHERE type = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{type}, new RowMapper<StorageCapacity>() {
