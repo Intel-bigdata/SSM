@@ -18,16 +18,17 @@
 package org.smartdata.server.metastore.tables;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class UserDao {
-  private Map<Integer, String> mapOwnerIdName = null;
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
 
@@ -42,10 +43,30 @@ public class UserDao {
     jdbcTemplate.execute(sql);
   }
 
-  public void updateUsersMap() throws SQLException {
-    String sql = "SELECT * FROM owners";
-    List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-    mapOwnerIdName = toMap(list);
+  public synchronized void deleteUser(String user) {
+    String sql = String.format(
+        "DELETE FROM `owners` where owner_name = '%s'", user);
+    jdbcTemplate.execute(sql);
+  }
+
+  public List<String> listUser() {
+    List<String> user = jdbcTemplate.query(
+        "select owner_name from owners",
+        new RowMapper<String>() {
+          public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return rs.getString("owner_name");
+          }
+        });
+    return user;
+  }
+
+  public int getCountUsers() {
+    return jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM `owners`", Integer.class);
+  }
+
+  public Map<Integer, String> getUsersMap() throws SQLException {
+    return toMap(jdbcTemplate.queryForList("SELECT * FROM owners"));
   }
 
   private Map<Integer, String> toMap(List<Map<String, Object>> list) {

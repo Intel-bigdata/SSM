@@ -18,16 +18,17 @@
 package org.smartdata.server.metastore.tables;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class GroupsDao {
-  private Map<Integer, String> mapGroupIdName = null;
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
 
@@ -43,10 +44,30 @@ public class GroupsDao {
     jdbcTemplate.execute(sql);
   }
 
-  public void updateGroupsMap() throws SQLException {
-    String sql = "SELECT * FROM groups";
-    List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
-    mapGroupIdName = toMap(list);
+  public synchronized void deleteGroup(String groupName) {
+    String sql = String.format(
+        "DELETE FROM `groups` where group_name = '%s'", groupName);
+    jdbcTemplate.execute(sql);
+  }
+
+  public int getCountGroups() {
+    return jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM `groups`", Integer.class);
+  }
+
+  public List<String> listGroup() {
+    List<String> groups = jdbcTemplate.query(
+        "select group_name from groups",
+        new RowMapper<String>() {
+          public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return rs.getString("group_name");
+          }
+        });
+    return groups;
+  }
+
+  public Map<Integer, String> getGroupsMap() throws SQLException {
+    return toMap(jdbcTemplate.queryForList("SELECT * FROM groups"));
   }
 
   private Map<Integer, String> toMap(List<Map<String, Object>> list) {

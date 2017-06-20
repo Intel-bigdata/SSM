@@ -43,16 +43,22 @@ public class StorageDao {
     this.simpleJdbcInsertStorages = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsertStorages.setTableName("storages");
     this.simpleJdbcInsertStorage_policy = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsertStorage_policy.setTableName("storages");
+    simpleJdbcInsertStorage_policy.setTableName("storage_policy");
   }
 
-  private Map<String, StorageCapacity> getStorageTablesItem()
+  public Map<String, StorageCapacity> getStorageTablesItem()
       throws SQLException {
     String sql = "SELECT * FROM storages";
-    List<StorageCapacity> list = jdbcTemplate.queryForList(sql,StorageCapacity.class);
-    Map<String,StorageCapacity> map = new HashMap<>();
-    for (StorageCapacity s:list) {
-      map.put(s.getType(),s);
+    List<StorageCapacity> list = this.jdbcTemplate.query(sql,
+        new RowMapper<StorageCapacity>() {
+          public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return new StorageCapacity(rs.getString("type"),
+                rs.getLong("capacity"), rs.getLong("free"));
+          }
+        });
+    Map<String, StorageCapacity> map = new HashMap<>();
+    for (StorageCapacity s : list) {
+      map.put(s.getType(), s);
     }
     return map;
   }
@@ -61,9 +67,8 @@ public class StorageDao {
     String sql = "SELECT * FROM storages WHERE type = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{type}, new RowMapper<StorageCapacity>() {
       public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
-        StorageCapacity storageCapacity = new StorageCapacity(rs.getString("type"),
+        return new StorageCapacity(rs.getString("type"),
             rs.getLong("capacity"), rs.getLong("free"));
-        return storageCapacity;
       }
     });
   }

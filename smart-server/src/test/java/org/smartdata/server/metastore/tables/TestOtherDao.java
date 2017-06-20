@@ -23,6 +23,7 @@ import org.smartdata.server.metastore.TestDaoUtil;
 
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -40,17 +41,29 @@ public class TestOtherDao extends TestDaoUtil {
   @Test
   public void testGroup() throws SQLException {
     daoInit();
+    int i = groupsDao.getCountGroups();
     groupsDao.addGroup("groupname111");
-    groupsDao.addGroup("groupname112");
-    groupsDao.updateGroupsMap();
+    int i1 = groupsDao.getCountGroups();
+    groupsDao.deleteGroup("groupname111");
+    int i2 = groupsDao.getCountGroups();
+    groupsDao.getGroupsMap();
+    List<String> list = groupsDao.listGroup();
+    Assert.assertTrue(i == i2);
+    Assert.assertTrue(i1 == i + 1);
   }
 
   @Test
   public void testUser() throws SQLException {
     daoInit();
-    userDao.addUser("username1");
-    userDao.addUser("username2");
-    userDao.updateUsersMap();
+    int i = userDao.getCountUsers();
+    userDao.addUser("username");
+    int i1 = userDao.getCountUsers();
+    userDao.deleteUser("username");
+    int i2 = userDao.getCountUsers();
+    userDao.getUsersMap();
+    List<String> list = userDao.listUser();
+    Assert.assertTrue(i == i2);
+    Assert.assertTrue(i1 == i + 1);
   }
 
   @Test
@@ -76,7 +89,7 @@ public class TestOtherDao extends TestDaoUtil {
   }
 
   @Test
-  public void testStorage(){
+  public void testStorage() {
   }
 
 }
