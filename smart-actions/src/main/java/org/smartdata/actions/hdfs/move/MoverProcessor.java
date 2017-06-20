@@ -51,6 +51,7 @@ class MoverProcessor {
 
   private final BlockStoragePolicy[] blockStoragePolicies;
   private long movedBlocks = 0;
+  private long remainingBlocks = 0;
   private final MoverStatus moverStatus;
 
   MoverProcessor(Dispatcher dispatcher, List<Path> targetPaths,
@@ -165,10 +166,11 @@ class MoverProcessor {
         retryCount.incrementAndGet();
       }
     } else {
-      moverStatus.increaseMovedBlocks(movedBlocks);
       // Reset retry count if no failure.
       retryCount.set(0);
     }
+    movedBlocks = moverStatus.getTotalBlocks() - remainingBlocks;
+    moverStatus.setMovedBlocks(movedBlocks);
     result.updateHasRemaining(hasFailed);
     return result.getExitStatus();
   }
@@ -263,9 +265,9 @@ class MoverProcessor {
       int remainingReplications = diff.removeOverlap(true);
       moverStatus.increaseTotalSize(lb.getBlockSize() * remainingReplications);
       moverStatus.increaseTotalBlocks(remainingReplications);
+      remainingBlocks += remainingReplications;
       if (remainingReplications != 0) {
         if (scheduleMoveBlock(diff, lb)) {
-          movedBlocks ++;
           result.updateHasRemaining(diff.existing.size() > 1
                   && diff.expected.size() > 1);
           // One block scheduled successfully, set noBlockMoved to false
