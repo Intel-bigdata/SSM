@@ -142,7 +142,7 @@ public class TestCachedListFetcher extends TestDaoUtil {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
-      Map<String, String> args = new HashMap();
+      Map<String, String> args = new HashMap<>();
       args.put(CacheFileAction.FILE_PATH, path);
       cacheAction.init(args);
       cacheAction.run();
@@ -163,7 +163,7 @@ public class TestCachedListFetcher extends TestDaoUtil {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       uncacheFileAction.setContext(smartContext);
       uncacheFileAction.setDfsClient(dfsClient);
-      Map<String, String> args = new HashMap();
+      Map<String, String> args = new HashMap<>();
       args.put(UncacheFileAction.FILE_PATH, path);
       uncacheFileAction.init(args);
       uncacheFileAction.run();
