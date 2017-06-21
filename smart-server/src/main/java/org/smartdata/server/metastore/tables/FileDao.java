@@ -24,6 +24,8 @@ import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.MetaUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
@@ -37,12 +39,14 @@ import java.util.Map;
 
 public class FileDao {
   private JdbcTemplate jdbcTemplate;
+  private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
   private Map<Integer, String> mapOwnerIdName;
   private Map<Integer, String> mapGroupIdName;
 
   public FileDao(DataSource dataSource) {
     jdbcTemplate = new JdbcTemplate(dataSource);
+    namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("files");
   }
@@ -70,36 +74,30 @@ public class FileDao {
         new Object[]{path}, new FileRowMapper());
   }
 
-  public Map<String, Long> getFids(Collection<String> paths)
+  public Map<String, Long> getPathFids(Collection<String> paths)
       throws SQLException {
     Map<String, Long> pathToId = new HashMap<>();
-    List<String> values = new ArrayList<>();
-    for (String path : paths) {
-      values.add("'" + path + "'");
-    }
-    String in = StringUtils.join(values, ", ");
-    String sql = "SELECT * FROM files WHERE path IN (" + in + ")";
-    List<HdfsFileStatus> files = jdbcTemplate.query(sql,
-        new FileRowMapper());
+    String sql = "SELECT * FROM files WHERE path IN (:paths)";
+    MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+    parameterSource.addValue("paths", paths);
+    List<HdfsFileStatus> files = namedParameterJdbcTemplate.query(sql,
+        parameterSource, new FileRowMapper());
     for (HdfsFileStatus file : files) {
-      pathToId.put(((FileStatusInternal) file).getPath(), file.getFileId());
+      pathToId.put(file.getLocalName(), file.getFileId());
     }
     return pathToId;
   }
 
-  public Map<Long, String> getPaths(Collection<Long> ids)
+  public Map<Long, String> getFidPaths(Collection<Long> ids)
       throws SQLException {
     Map<Long, String> idToPath = new HashMap<>();
-    List<String> values = new ArrayList<>();
-    for (Long id : ids) {
-      values.add("'" + id + "'");
-    }
-    String in = StringUtils.join(values, ", ");
-    String sql = "SELECT * FROM files WHERE path IN (" + in + ")";
-    List<HdfsFileStatus> files = jdbcTemplate.query(sql,
-        new FileRowMapper());
+    String sql = "SELECT * FROM files WHERE fid IN (:ids)";
+    MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+    parameterSource.addValue("ids", ids);
+    List<HdfsFileStatus> files = namedParameterJdbcTemplate.query(sql,
+        parameterSource, new FileRowMapper());
     for (HdfsFileStatus file : files) {
-      idToPath.put(file.getFileId(), ((FileStatusInternal) file).getPath());
+      idToPath.put(file.getFileId(), file.getLocalName());
     }
     return idToPath;
   }

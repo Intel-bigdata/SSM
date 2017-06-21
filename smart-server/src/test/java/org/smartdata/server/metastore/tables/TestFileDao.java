@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.TestDaoUtil;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,12 +118,22 @@ public class TestFileDao extends TestDaoUtil {
         new FileStatusInternal(length, isDir, blockReplication,
         blockSize, modTime, accessTime, perms, owner, group, symlink,
         path, "/tmp2", fileId + 1, numChildren, null, storagePolicy);
-    fileDao.insert(new FileStatusInternal[]{fileStatusInternal1, fileStatusInternal2});
+    FileStatusInternal fileStatusInternal3 =
+        new FileStatusInternal(length, isDir, blockReplication,
+            blockSize, modTime, accessTime, perms, owner, group, symlink,
+            path, "", fileId + 1, numChildren, null, storagePolicy);
+    fileDao.insert(new FileStatusInternal[]{fileStatusInternal1,
+        fileStatusInternal2, fileStatusInternal3});
     List<HdfsFileStatus> files = fileDao.getAll();
-    Assert.assertTrue(files.size() == 2);
+    Assert.assertTrue(files.size() == 3);
     fileDao.deleteById(fileStatusInternal1.getFileId());
     files = fileDao.getAll();
-    Assert.assertTrue(files.size() == 1);
+    Assert.assertTrue(files.size() == 2);
+    Map<String, Long> pathFiles =
+        fileDao.getPathFids(Arrays.asList(new String[]{"/tmp/testFile", "/tmp2/testFile", "/testFile"}));
+    Map<Long, String> fidPath = fileDao.getFidPaths(Arrays.asList(new Long[]{312321L, 312322L}));
+    Assert.assertTrue(pathFiles.size() == 2);
+    Assert.assertTrue(fidPath.size() == 1);
     fileDao.deleteAll();
     files = fileDao.getAll();
     Assert.assertTrue(files.size() == 0);

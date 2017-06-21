@@ -288,12 +288,12 @@ public class MetaStore {
 
   public Map<String, Long> getFileIDs(Collection<String> paths)
       throws SQLException {
-    return fileDao.getFids(paths);
+    return fileDao.getPathFids(paths);
   }
 
   public Map<Long, String> getFilePaths(Collection<Long> ids)
       throws SQLException {
-    return fileDao.getPaths(ids);
+    return fileDao.getFidPaths(ids);
   }
 
   public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
