@@ -17,7 +17,6 @@
  */
 package org.smartdata.server;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Option;
@@ -34,9 +33,10 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.CmdletExecutor;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
+import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.StatesManager;
-import org.smartdata.server.metastore.MetaStore;
-import org.smartdata.server.metastore.MetaUtil;
+import org.smartdata.server.engine.MetaStore;
+import org.smartdata.server.engine.metastore.MetaUtil;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.server.web.SmartHttpServer;
 

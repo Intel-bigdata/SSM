@@ -23,8 +23,8 @@ import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.RuleManager;
-import org.smartdata.server.metastore.MetaStore;
-import org.smartdata.server.metastore.ExecutionContext;
+import org.smartdata.server.engine.MetaStore;
+import org.smartdata.server.engine.metastore.ExecutionContext;
 
 import java.io.IOException;
 import java.sql.SQLException;

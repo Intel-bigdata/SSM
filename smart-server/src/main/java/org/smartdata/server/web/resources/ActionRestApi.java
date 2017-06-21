@@ -23,9 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.server.SmartServer;
-import org.smartdata.server.metastore.tables.AccessCountTable;
+import org.smartdata.server.engine.metastore.tables.AccessCountTable;
 import org.smartdata.server.utils.Constants;
 
 import javax.ws.rs.GET;

@@ -34,22 +34,17 @@ import com.typesafe.config.ConfigValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.actions.ActionFactory;
-import org.smartdata.actions.ActionRegistry;
-import org.smartdata.actions.SmartAction;
 import org.smartdata.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.agent.messages.MasterToAgent.AgentRegistered;
-import org.smartdata.server.cmdlet.CmdletFactory;
-import org.smartdata.server.cmdlet.executor.CmdletExecutor;
-import org.smartdata.server.cmdlet.executor.CmdletStatusReporter;
-import org.smartdata.server.cmdlet.message.LaunchAction;
-import org.smartdata.server.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.cmdlet.message.StatusMessage;
+import org.smartdata.server.engine.cmdlet.CmdletFactory;
+import org.smartdata.server.engine.cmdlet.CmdletExecutor;
+import org.smartdata.server.engine.cmdlet.CmdletStatusReporter;
+import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.engine.cmdlet.message.StatusMessage;
 import scala.Serializable;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class SmartAgent {

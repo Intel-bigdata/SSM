@@ -23,7 +23,7 @@ import org.smartdata.admin.SmartAdmin;
 import org.smartdata.admin.tools.SmartShell;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
-import org.smartdata.server.metastore.TestDBUtil;
+import org.smartdata.server.engine.metastore.TestDBUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;

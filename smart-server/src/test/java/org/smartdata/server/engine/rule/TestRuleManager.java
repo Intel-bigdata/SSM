@@ -24,11 +24,11 @@ import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.ServerContext;
+import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.RuleManager;
-import org.smartdata.server.metastore.MetaStore;
-import org.smartdata.server.metastore.FileStatusInternal;
-import org.smartdata.server.metastore.TestDaoUtil;
+import org.smartdata.server.engine.MetaStore;
+import org.smartdata.server.engine.metastore.FileStatusInternal;
+import org.smartdata.server.engine.metastore.TestDaoUtil;
 
 import java.io.IOException;
 import java.util.List;

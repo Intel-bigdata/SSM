@@ -36,10 +36,8 @@ import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.ServerContext;
-import org.smartdata.server.cmdlet.Cmdlet;
-import org.smartdata.server.cmdlet.CmdletPool;
-import org.smartdata.server.metastore.MetaStore;
+import org.smartdata.server.engine.cmdlet.Cmdlet;
+import org.smartdata.server.engine.cmdlet.CmdletPool;
 import org.smartdata.server.utils.HadoopUtils;
 
 import java.io.IOException;

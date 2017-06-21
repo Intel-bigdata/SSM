@@ -28,7 +28,7 @@ import com.typesafe.config.ConfigFactory;
 import org.junit.Test;
 import org.smartdata.agent.messages.AgentToMaster;
 import org.smartdata.agent.messages.MasterToAgent;
-import org.smartdata.server.cmdlet.CmdletManager;
+import org.smartdata.server.engine.CmdletManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

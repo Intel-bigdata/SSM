@@ -17,10 +17,10 @@
  */
 package org.smartdata.agent;
 
-import org.smartdata.server.cmdlet.CmdletFactory;
-import org.smartdata.server.cmdlet.CmdletManager;
-import org.smartdata.server.cmdlet.executor.CmdletExecutorService;
-import org.smartdata.server.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.engine.cmdlet.CmdletFactory;
+import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
+import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 public class AgentExecutorService extends CmdletExecutorService {
 

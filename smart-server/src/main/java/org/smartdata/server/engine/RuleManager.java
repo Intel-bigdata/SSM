@@ -27,12 +27,10 @@ import org.smartdata.common.rule.RuleState;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
-import org.smartdata.server.ServerContext;
 import org.smartdata.server.SmartServer;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
-import org.smartdata.server.metastore.MetaStore;
 
 import java.io.IOException;
 import java.sql.SQLException;
