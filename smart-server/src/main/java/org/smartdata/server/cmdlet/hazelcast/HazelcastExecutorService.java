@@ -27,19 +27,29 @@ import org.smartdata.server.cmdlet.executor.CmdletExecutorService;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.cmdlet.message.StatusMessage;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 public class HazelcastExecutorService extends CmdletExecutorService {
   static final String COMMAND_QUEUE = "command_queue";
-  static final String SLAVE_TO_MASTER = "slave_to_master";
+  static final String STATUS_TOPIC = "status_topic";
+  static final String WORKER_TO_MASTER = "worker_to_master";
+  private Map<String, Set<Long>> scheduledCmdlets;
   private BlockingQueue<LaunchCmdlet> commandQueue;
   private ITopic<StatusMessage> statusTopic;
+  private ITopic<HazelcastMessage> workToMaster;
 
   public HazelcastExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
     super(cmdletManager, cmdletFactory);
+    this.scheduledCmdlets = new HashMap<>();
     this.commandQueue = HazelcastInstanceProvider.getInstance().getQueue(COMMAND_QUEUE);
-    this.statusTopic = HazelcastInstanceProvider.getInstance().getTopic(SLAVE_TO_MASTER);
+    this.statusTopic = HazelcastInstanceProvider.getInstance().getTopic(STATUS_TOPIC);
     this.statusTopic.addMessageListener(new StatusMessageListener());
+    this.workToMaster = HazelcastInstanceProvider.getInstance().getTopic(WORKER_TO_MASTER);
+    this.workToMaster.addMessageListener(new HazelcastMessageListener());
   }
 
   @Override
@@ -55,6 +65,24 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   @Override
   public void execute(LaunchCmdlet cmdlet) {
     commandQueue.add(cmdlet);
+  }
+
+  private void onWorkerMessage(HazelcastMessage hazelcastMessage) {
+    if (hazelcastMessage instanceof CmdletScheduled) {
+      CmdletScheduled scheduled = (CmdletScheduled) hazelcastMessage;
+      if (!scheduledCmdlets.containsKey(scheduled.getInstanceId())) {
+        Set<Long> cmdlets = new HashSet<>();
+        scheduledCmdlets.put(scheduled.getInstanceId(), cmdlets);
+      }
+      scheduledCmdlets.get(scheduled.getInstanceId()).add(scheduled.getCmdletId());
+    }
+  }
+
+  private class HazelcastMessageListener implements MessageListener<HazelcastMessage> {
+    @Override
+    public void onMessage(Message<HazelcastMessage> message) {
+      onWorkerMessage(message.getMessageObject());
+    }
   }
 
   private class StatusMessageListener implements MessageListener<StatusMessage> {
