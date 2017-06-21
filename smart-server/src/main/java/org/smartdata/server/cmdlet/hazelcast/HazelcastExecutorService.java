@@ -17,7 +17,12 @@
  */
 package org.smartdata.server.cmdlet.hazelcast;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
+import com.hazelcast.core.Member;
+import com.hazelcast.core.MemberAttributeEvent;
+import com.hazelcast.core.MembershipEvent;
+import com.hazelcast.core.MembershipListener;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
@@ -26,30 +31,42 @@ import org.smartdata.server.cmdlet.CmdletManager;
 import org.smartdata.server.cmdlet.executor.CmdletExecutorService;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.cmdlet.message.StatusMessage;
+import org.smartdata.server.cmdlet.message.StopCmdlet;
+import org.smartdata.server.utils.HazelcastUtil;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 public class HazelcastExecutorService extends CmdletExecutorService {
-  static final String COMMAND_QUEUE = "command_queue";
+  static final String WORKER_TOPIC_PREFIX = "worker_";
   static final String STATUS_TOPIC = "status_topic";
-  static final String WORKER_TO_MASTER = "worker_to_master";
+  private final HazelcastInstance instance;
+  private Map<String, ITopic<Serializable>> masterToWorkers;
   private Map<String, Set<Long>> scheduledCmdlets;
-  private BlockingQueue<LaunchCmdlet> commandQueue;
   private ITopic<StatusMessage> statusTopic;
-  private ITopic<HazelcastMessage> workToMaster;
 
   public HazelcastExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
     super(cmdletManager, cmdletFactory);
     this.scheduledCmdlets = new HashMap<>();
-    this.commandQueue = HazelcastInstanceProvider.getInstance().getQueue(COMMAND_QUEUE);
-    this.statusTopic = HazelcastInstanceProvider.getInstance().getTopic(STATUS_TOPIC);
+    this.masterToWorkers = new HashMap<>();
+    this.instance = HazelcastInstanceProvider.getInstance();
+    this.statusTopic = instance.getTopic(STATUS_TOPIC);
     this.statusTopic.addMessageListener(new StatusMessageListener());
-    this.workToMaster = HazelcastInstanceProvider.getInstance().getTopic(WORKER_TO_MASTER);
-    this.workToMaster.addMessageListener(new HazelcastMessageListener());
+    initChannels();
+    instance.getCluster().addMembershipListener(new ClusterMembershipListener(instance));
+  }
+
+  private void initChannels() {
+    for (Member worker : HazelcastUtil.getWorkerMembers(this.instance)) {
+      ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
+      this.masterToWorkers.put(worker.getUuid(), topic);
+      this.scheduledCmdlets.put(worker.getUuid(), new HashSet<Long>());
+    }
   }
 
   @Override
@@ -59,36 +76,69 @@ public class HazelcastExecutorService extends CmdletExecutorService {
 
   @Override
   public boolean canAcceptMore() {
-    return HazelcastInstanceProvider.getInstance().getCluster().getMembers().size() > 1;
+    return !HazelcastUtil.getWorkerMembers(HazelcastInstanceProvider.getInstance()).isEmpty();
   }
 
   @Override
   public void execute(LaunchCmdlet cmdlet) {
-    commandQueue.add(cmdlet);
+    String[] members = masterToWorkers.keySet().toArray(new String[0]);
+    int index = new Random().nextInt() % members.length;
+    masterToWorkers.get(members[index]).publish(cmdlet);
+    scheduledCmdlets.get(members[index]).add(cmdlet.getCmdletId());
   }
 
-  private void onWorkerMessage(HazelcastMessage hazelcastMessage) {
-    if (hazelcastMessage instanceof CmdletScheduled) {
-      CmdletScheduled scheduled = (CmdletScheduled) hazelcastMessage;
-      if (!scheduledCmdlets.containsKey(scheduled.getInstanceId())) {
-        Set<Long> cmdlets = new HashSet<>();
-        scheduledCmdlets.put(scheduled.getInstanceId(), cmdlets);
+  @Override
+  public void stop(long cmdletId) {
+    for (Map.Entry<String, Set<Long>> entry : scheduledCmdlets.entrySet()) {
+      if (entry.getValue().contains(cmdletId)) {
+        this.masterToWorkers.get(entry.getKey()).publish(new StopCmdlet(cmdletId));
       }
-      scheduledCmdlets.get(scheduled.getInstanceId()).add(scheduled.getCmdletId());
     }
   }
 
-  private class HazelcastMessageListener implements MessageListener<HazelcastMessage> {
+  @Override
+  public void shutdown() {
+  }
+
+  public void onStatusMessage(StatusMessage message) {
+    cmdletManager.updateStatue(message);
+  }
+
+  private class ClusterMembershipListener implements MembershipListener {
+    private final HazelcastInstance instance;
+
+    public ClusterMembershipListener(HazelcastInstance instance) {
+      this.instance = instance;
+    }
+
     @Override
-    public void onMessage(Message<HazelcastMessage> message) {
-      onWorkerMessage(message.getMessageObject());
+    public void memberAdded(MembershipEvent membershipEvent) {
+      Member worker = membershipEvent.getMember();
+      if (!masterToWorkers.containsKey(worker.getUuid())) {
+        ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
+        masterToWorkers.put(worker.getUuid(), topic);
+        scheduledCmdlets.put(worker.getUuid(), new HashSet<Long>());
+      }
+    }
+
+    @Override
+    public void memberRemoved(MembershipEvent membershipEvent) {
+      Member member = membershipEvent.getMember();
+      if (masterToWorkers.containsKey(member.getUuid())) {
+        masterToWorkers.get(member.getUuid()).destroy();
+      }
+      //Todo: recover
+    }
+
+    @Override
+    public void memberAttributeChanged(MemberAttributeEvent memberAttributeEvent) {
     }
   }
 
   private class StatusMessageListener implements MessageListener<StatusMessage> {
     @Override
     public void onMessage(Message<StatusMessage> message) {
-      cmdletManager.updateStatue(message.getMessageObject());
+      onStatusMessage(message.getMessageObject());
     }
   }
 }

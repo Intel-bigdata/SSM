@@ -20,6 +20,10 @@ package org.smartdata.server.utils;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 public class HazelcastUtil {
   //Todo: find a better way to determine whether instance is the master node
   public static boolean isMaster(HazelcastInstance instance) {
@@ -29,5 +33,16 @@ public class HazelcastUtil {
 
   public static Member getMasterMember(HazelcastInstance instance) {
     return instance.getCluster().getMembers().iterator().next();
+  }
+
+  public static List<Member> getWorkerMembers(HazelcastInstance instance) {
+    List<Member> members = new ArrayList<>();
+    Member master = getMasterMember(instance);
+    for (Member member : instance.getCluster().getMembers()) {
+      if (!master.equals(member)) {
+        members.add(member);
+      }
+    }
+    return members;
   }
 }

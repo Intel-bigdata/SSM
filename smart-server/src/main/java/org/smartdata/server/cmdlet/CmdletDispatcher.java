@@ -60,4 +60,11 @@ public class CmdletDispatcher {
       index += 1;
     }
   }
+
+  //Todo: pick the right service to stop cmdlet
+  public void stop(long cmdletId) {
+    for (CmdletExecutorService service : executorServices) {
+      service.stop(cmdletId);
+    }
+  }
 }

@@ -19,6 +19,8 @@ package org.smartdata.server.cmdlet.hazelcast;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
+import com.hazelcast.core.Message;
+import com.hazelcast.core.MessageListener;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cmdlet.CmdletFactory;
 import org.smartdata.server.cmdlet.executor.CmdletExecutor;
@@ -26,21 +28,19 @@ import org.smartdata.server.cmdlet.executor.CmdletStatusReporter;
 import org.smartdata.server.cmdlet.message.ActionStatusReport;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.cmdlet.message.StatusMessage;
+import org.smartdata.server.cmdlet.message.StopCmdlet;
 
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
+import java.io.Serializable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class HazelcastWorker implements CmdletStatusReporter {
-  private final String instanceId;
+  private final HazelcastInstance instance;
   private ScheduledExecutorService executorService;
-  private BlockingQueue<LaunchCmdlet> cmdletQueue;
-  private ITopic<HazelcastMessage> workerToMaster;
+  private ITopic<Serializable> masterMessages;
   private ITopic<StatusMessage> statusTopic;
-
   private CmdletExecutor cmdletExecutor;
   private CmdletFactory factory;
   private Future<?> fetcher;
@@ -49,17 +49,17 @@ public class HazelcastWorker implements CmdletStatusReporter {
     this.factory = factory;
     this.cmdletExecutor = new CmdletExecutor(this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    HazelcastInstance instance = HazelcastInstanceProvider.getInstance();
-    this.instanceId =  instance.getCluster().getLocalMember().getUuid();
-    this.cmdletQueue = instance.getQueue(HazelcastExecutorService.COMMAND_QUEUE);
+    this.instance = HazelcastInstanceProvider.getInstance();
     this.statusTopic = instance.getTopic(HazelcastExecutorService.STATUS_TOPIC);
-    this.workerToMaster = instance.getTopic(HazelcastExecutorService.WORKER_TO_MASTER);
+    String instanceId = instance.getCluster().getLocalMember().getUuid();
+    this.masterMessages = instance.getTopic(HazelcastExecutorService.WORKER_TOPIC_PREFIX + instanceId);
+    this.masterMessages.addMessageListener(new MasterMessageListener());
   }
 
   public void start() {
     this.fetcher =
         this.executorService.scheduleAtFixedRate(
-            new CmdletFetcher(), 1000, 1000, TimeUnit.MILLISECONDS);
+            new StatusReporter(), 1000, 1000, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
@@ -75,28 +75,23 @@ public class HazelcastWorker implements CmdletStatusReporter {
     this.statusTopic.publish(status);
   }
 
-  private void cmdletScheduled(long cmdletId) {
-    this.workerToMaster.publish(
-        new CmdletScheduled(cmdletId, System.currentTimeMillis(), this.instanceId));
-  }
-
-  private class CmdletFetcher implements Runnable {
+  private class MasterMessageListener implements MessageListener<Serializable> {
     @Override
-    public void run() {
-      executeCmdlet();
-      updateStatus();
-    }
-
-    private void executeCmdlet() {
-      LaunchCmdlet launchCmdlet = cmdletQueue.poll();
-      while (launchCmdlet != null) {
-        cmdletScheduled(launchCmdlet.getCmdletId());
+    public void onMessage(Message<Serializable> message) {
+      Serializable msg = message.getMessageObject();
+      if (msg instanceof LaunchCmdlet) {
+        LaunchCmdlet launchCmdlet = (LaunchCmdlet) msg;
         cmdletExecutor.execute(factory.createCmdlet(launchCmdlet));
-        launchCmdlet = cmdletQueue.poll();
+      } else if (msg instanceof StopCmdlet) {
+        StopCmdlet stopCmdlet = (StopCmdlet) msg;
+        cmdletExecutor.stop(stopCmdlet.getCmdletId());
       }
     }
+  }
 
-    private void updateStatus() {
+  private class StatusReporter implements Runnable {
+    @Override
+    public void run() {
       ActionStatusReport report = cmdletExecutor.getActionStatusReport();
       if (!report.getActionStatuses().isEmpty()) {
         report(report);
