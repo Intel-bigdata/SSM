@@ -76,7 +76,7 @@ public class GenericOptionsParser {
       for(String prop : property) {
         String[] keyval = prop.split("=", 2);
         if (keyval.length == 2) {
-          conf.set(keyval[0], keyval[1], "from cmdlet line");
+          conf.set(keyval[0], keyval[1], "from command line");
         }
       }
     }

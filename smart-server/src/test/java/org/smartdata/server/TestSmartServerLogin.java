@@ -83,7 +83,7 @@ public class TestSmartServerLogin {
   public void loginSmartServerUsingKeytab() throws Exception {
     initConf();
     generateKeytab(keytabFileName, principal);
-    ssm = SmartServer.createSSM(null, conf);
+    ssm = new SmartServer(conf);
   }
 
   @After

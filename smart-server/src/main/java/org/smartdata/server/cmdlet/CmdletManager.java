@@ -19,15 +19,16 @@ package org.smartdata.server.cmdlet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.AbstractService;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.HelloAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.server.ServerContext;
 import org.smartdata.server.cmdlet.message.LaunchAction;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.Service;
 import org.smartdata.server.cmdlet.message.StatusMessage;
 import org.smartdata.server.metastore.DBAdapter;
 
@@ -47,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 //Todo: 1. check file lock
-public class CmdletManager implements Service {
+public class CmdletManager extends AbstractService {
   private final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
@@ -57,7 +58,10 @@ public class CmdletManager implements Service {
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
 
-  public CmdletManager() {
+  public CmdletManager(ServerContext context) {
+    super(context);
+
+    this.adapter = context.getDbAdapter();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.dispatcher = new CmdletDispatcher(this);
     this.submittedCmdlets = new ConcurrentHashMap<>();
@@ -65,9 +69,7 @@ public class CmdletManager implements Service {
   }
 
   @Override
-  public boolean init(DBAdapter adapter) throws IOException {
-    if (adapter != null) {
-      this.adapter = adapter;
+  public void init() throws IOException {
       try {
         maxActionId = new AtomicLong(adapter.getMaxActionId());
         maxCmdletId = new AtomicLong(adapter.getMaxCmdletId());
@@ -75,26 +77,17 @@ public class CmdletManager implements Service {
         LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
         throw new IOException(e);
       }
-      return true;
-    }
-    return false;
   }
 
   @Override
-  public boolean start() throws IOException, InterruptedException {
+  public void start() throws IOException {
     this.executorService.scheduleAtFixedRate(
         new ScheduleTask(this.dispatcher), 1000, 1000, TimeUnit.MILLISECONDS);
-    return true;
   }
 
   @Override
   public void stop() throws IOException {
     this.executorService.shutdown();
-  }
-
-  @Override
-  public void join() throws IOException {
-
   }
 
   public long submitCmdlet(String cmdlet) throws IOException {

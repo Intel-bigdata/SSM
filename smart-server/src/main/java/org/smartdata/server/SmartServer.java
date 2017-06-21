@@ -32,7 +32,7 @@ import org.smartdata.common.SmartServiceState;
 import org.smartdata.server.engine.CmdletExecutor;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
-import org.smartdata.server.engine.Service;
+import org.smartdata.SmartService;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.MetaUtil;
@@ -60,38 +60,34 @@ public class SmartServer {
   private SmartRpcServer rpcServer;
   private ConfManager confMgr;
   private SmartConf conf;
-  private List<Service> modules = new ArrayList<>();
+  private ServerContext context;
+  private List<SmartService> modules = new ArrayList<>();
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
   private SmartServiceState ssmServiceState = SmartServiceState.SAFEMODE;
 
-  SmartServer(SmartConf conf) throws IOException, URISyntaxException {
-    this(conf, StartupOption.REGULAR);
-  }
-
-  // TODO: will not share the definition
-  SmartServer(SmartConf conf, StartupOption startupOption)
-      throws IOException, URISyntaxException {
+  public SmartServer(SmartConf conf) {
     this.conf = conf;
     this.confMgr = new ConfManager(conf);
+  }
 
+  public void initWith(StartupOption startupOption) throws Exception {
     checkSecurityAndLogin();
 
-    switch (startupOption) {
-      case REGULAR:
-        httpServer = new SmartHttpServer(this, conf);
-        rpcServer = new SmartRpcServer(this, conf);
-        statesMgr = new StatesManager(this, conf);
-        ruleMgr = new RuleManager(this, conf);
-        cmdletExecutor = new CmdletExecutor(this, conf);
-        modules.add(statesMgr);
-        modules.add(ruleMgr);
-        modules.add(cmdletExecutor);
-        break;
+    DBAdapter dbAdapter = MetaUtil.getDBAdapter(conf);
+    context = new ServerContext(conf, dbAdapter);
 
-      // No module started by default
-      default:
-        break;
+    if (startupOption == StartupOption.REGULAR) {
+      statesMgr = new StatesManager(context);
+      ruleMgr = new RuleManager(context, this);
+      cmdletExecutor = new CmdletExecutor(context);
+
+      modules.add(statesMgr);
+      modules.add(ruleMgr);
+      modules.add(cmdletExecutor);
+
+      httpServer = new SmartHttpServer(this, conf);
+      rpcServer = new SmartRpcServer(this, conf);
     }
   }
 
@@ -107,53 +103,41 @@ public class SmartServer {
     return cmdletExecutor;
   }
 
-  /**
-   * Create SSM instance and launch the daemon threads.
-   *
-   * @param args
-   * @param conf
-   * @return
-   */
-  public static SmartServer createSSM(String[] args, SmartConf conf)
-      throws Exception {
+  public static StartupOption processArgs(String[] args, SmartConf conf) throws Exception {
     if (args == null) {
       args = new String[0];
     }
-    // TODO: bring back after remove dependency
-    //StringUtils.startupShutdownMessage(SmartServer.class, args, LOG);
 
     if (parseHelpArgument(args, USAGE, System.out, true)) {
       return null;
     }
-    // TODO: handle args
-    // Parse out some generic args into Configuration.
+
     GenericOptionsParser hParser = new GenericOptionsParser(conf, args);
     args = hParser.getRemainingArgs();
-    // Parse the rest, NN specific args.
+
     StartupOption startOpt = parseArguments(args);
 
-    switch (startOpt) {
-      case REGULAR:
-        SmartServer ssm = null;
-        try {
-          ssm = new SmartServer(conf, startOpt);
-          ssm.runSSMDaemons();
-        } catch (IOException e) {
-          if (ssm != null) {
-            ssm.shutdown();
-          }
-          throw e;
-        }
-        return ssm;
+    return startOpt;
+  }
 
-      case FORMAT:
-        LOG.info("Formatting DataBase ...");
-        MetaUtil.formatDatabase(conf);
-        LOG.info("Formatting DataBase finished successfully!");
-        return null;
+  static void processWith(StartupOption startOption, SmartConf conf) throws Exception {
+    if (startOption == StartupOption.FORMAT) {
+      LOG.info("Formatting DataBase ...");
+      MetaUtil.formatDatabase(conf);
+      LOG.info("Formatting DataBase finished successfully!");
+    }
 
-      default:
-        throw new IOException("Not supported start option: " + startOpt);
+    SmartServer ssm = new SmartServer(conf);
+    try {
+      ssm.initWith(startOption);
+      ssm.run();
+
+      //Todo: when to break
+      while (true) {
+        Thread.sleep(1000);
+      }
+    } finally {
+      ssm.shutdown();
     }
   }
 
@@ -164,17 +148,16 @@ public class SmartServer {
           + "\tSpecify or overwrite an configure option.\n"
           + "\tE.g. -D dfs.smart.namenode.rpcserver=hdfs://localhost:43543\n";
 
-  public static final Options helpOptions = new Options();
-  public static final Option helpOpt = new Option("h", "help", false,
+  private static final Options helpOptions = new Options();
+  private static final Option helpOpt = new Option("h", "help", false,
       "get help information");
 
   static {
     helpOptions.addOption(helpOpt);
   }
 
-  public static boolean parseHelpArgument(String[] args,
-      String helpDescription, PrintStream out,
-      boolean printGenericCmdletUsage) {
+  private static boolean parseHelpArgument(String[] args,
+      String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
     if (args.length == 1) {
       try {
         CommandLineParser parser = new PosixParser();
@@ -217,39 +200,20 @@ public class SmartServer {
         + subject.getPrincipals().iterator().next());
   }
 
-  public static void main(String[] args) {
-    SmartConf conf = new SmartConf();
-
-    int errorCode = 0;  // if SSM exit normally then the errorCode is 0
-    try {
-      SmartServer ssm = createSSM(args, conf);
-      if (ssm != null) {
-        //ssm.join();
-        // TODO: block now,  to be refined
-        while (true) {
-          Thread.sleep(1000);
-        }
-      }
-    } catch (Exception e) {
-      LOG.error("Failed to create SmartServer", e);
-      System.exit(1);
-    } finally {
-      System.exit(errorCode);
-    }
-  }
-
   /**
    * Bring up all the daemons threads needed.
    *
    * @throws Exception
    */
-  public void runSSMDaemons() throws Exception {
+  private void run() throws Exception {
     // Init and start RPC server and REST server
     rpcServer.start();
     httpServer.start();
 
-    if (conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLED_KEY,
-        SmartConfKeys.DFS_SSM_ENABLED_DEFAULT)) {
+    boolean enabled = conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLED_KEY,
+        SmartConfKeys.DFS_SSM_ENABLED_DEFAULT);
+
+    if (enabled) {
       startEngines();
       ssmServiceState = SmartServiceState.ACTIVE;
     } else {
@@ -258,13 +222,11 @@ public class SmartServer {
   }
 
   private void startEngines() throws Exception {
-    DBAdapter dbAdapter = MetaUtil.getDBAdapter(conf);
-
-    for (Service m : modules) {
-      m.init(dbAdapter);
+    for (SmartService m : modules) {
+      m.init();
     }
 
-    for (Service m : modules) {
+    for (SmartService m : modules) {
       m.start();
     }
   }
@@ -288,10 +250,11 @@ public class SmartServer {
     return ssmServiceState == SmartServiceState.ACTIVE;
   }
 
-  public void stop() throws Exception {
+  private void stop() throws Exception {
     for (int i = modules.size() - 1 ; i >= 0; i--) {
       modules.get(i).stop();
     }
+
     httpServer.stop();
     rpcServer.stop();
   }
@@ -299,6 +262,7 @@ public class SmartServer {
   /**
    * Waiting services to exit.
    */
+  /*
   private void join() throws Exception {
     for (int i = modules.size() - 1 ; i >= 0; i--) {
       modules.get(i).join();
@@ -306,19 +270,14 @@ public class SmartServer {
 
     httpServer.join();
     rpcServer.join();
-  }
-
+  }*/
   public void shutdown() {
     try {
       stop();
-      join();
+      //join();
     } catch (Exception e) {
       e.printStackTrace();
     }
-  }
-
-  public Configuration getConf() {
-    return conf;
   }
 
   private enum StartupOption {
@@ -336,8 +295,7 @@ public class SmartServer {
     }
   }
 
-  @VisibleForTesting
-  public static StartupOption parseArguments(String args[]) {
+  private static StartupOption parseArguments(String args[]) {
     int argsLen = (args == null) ? 0 : args.length;
     StartupOption startOpt = StartupOption.REGULAR;
     for(int i=0; i < argsLen; i++) {
@@ -349,5 +307,26 @@ public class SmartServer {
       }
     }
     return startOpt;
+  }
+
+  public static void launchWith(String[] args, SmartConf conf) throws Exception {
+    if (conf == null) {
+      conf = new SmartConf();
+    }
+
+    StartupOption startOption = processArgs(args, conf);
+    processWith(startOption, conf);
+  }
+
+  public static void main(String[] args) {
+    int errorCode = 0;  // if SSM exit normally then the errorCode is 0
+    try {
+      launchWith(args, null);
+    } catch (Exception e) {
+      LOG.error("Failed to create SmartServer", e);
+      System.exit(1);
+    } finally {
+      System.exit(errorCode);
+    }
   }
 }

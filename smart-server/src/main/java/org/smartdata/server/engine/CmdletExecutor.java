@@ -17,32 +17,29 @@
  */
 package org.smartdata.server.engine;
 
-import org.smartdata.SmartContext;
-import org.smartdata.client.SmartDFSClient;
-import org.smartdata.common.actions.ActionDescriptor;
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.hadoop.util.Daemon;
+import org.apache.hadoop.util.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.AbstractService;
+import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.ActionStatus;
-import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
+import org.smartdata.client.SmartDFSClient;
 import org.smartdata.common.CmdletState;
+import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.cmdlet.CmdletInfo;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.SmartServer;
+import org.smartdata.server.ServerContext;
 import org.smartdata.server.cmdlet.Cmdlet;
 import org.smartdata.server.cmdlet.CmdletPool;
 import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.actions.ActionRegistry;
-
-import org.apache.hadoop.util.Daemon;
-import org.apache.hadoop.util.Time;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.hadoop.conf.Configuration;
-import com.google.common.annotations.VisibleForTesting;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.server.utils.HadoopUtils;
 
 import java.io.IOException;
@@ -62,8 +59,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Schedule and execute cmdlets passed down.
  */
-public class CmdletExecutor implements Runnable, Service {
+public class CmdletExecutor extends AbstractService implements Runnable {
   static final Logger LOG = LoggerFactory.getLogger(CmdletExecutor.class);
+
+  private ServerContext serverContext;
+  private DBAdapter dbAdapter;
 
   private ArrayList<Set<Long>> cmdsInState = new ArrayList<>();
   private Map<Long, CmdletInfo> cmdsAll = new ConcurrentHashMap<>();
@@ -74,23 +74,23 @@ public class CmdletExecutor implements Runnable, Service {
   private Map<String, Long> cmdletHashSet;
   private Map<String, Long> fileLock;
   private Map<Long, SmartAction> actionPool;
-  private DBAdapter adapter;
   private ActionRegistry actionRegistry;
-  private SmartServer ssm;
-  private SmartContext smartContext;
   private boolean running;
   private long maxActionId;
   private long maxCmdletId;
-  private Configuration conf;
 
-  public CmdletExecutor(SmartServer ssm) {
-    this.ssm = ssm;
+  public CmdletExecutor(ServerContext context) {
+    super(context);
+
+    this.serverContext = context;
+    this.dbAdapter = context.getDbAdapter();
+    
     actionRegistry = ActionRegistry.instance();
     statusCache = new HashSet<>();
     for (CmdletState s : CmdletState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
     }
-    smartContext = new SmartContext();
+
     cmdletPool = new CmdletPool();
     actionPool = new ConcurrentHashMap<>();
     cmdletHashSet = new ConcurrentHashMap<>();
@@ -98,50 +98,37 @@ public class CmdletExecutor implements Runnable, Service {
     running = false;
   }
 
-  public CmdletExecutor(SmartServer ssm, SmartConf conf) {
-    this(ssm);
-    smartContext = new SmartContext(conf);
-    this.conf = conf;
-  }
-
-  public boolean init(DBAdapter adapter) throws IOException {
-    if (adapter != null) {
-      this.adapter = adapter;
+  @Override
+  public void init() throws IOException {
       try {
-        maxActionId = adapter.getMaxActionId();
-        maxCmdletId = adapter.getMaxCmdletId();
+        maxActionId = serverContext.getDbAdapter().getMaxActionId();
+        maxCmdletId = serverContext.getDbAdapter().getMaxCmdletId();
       } catch (Exception e) {
         maxActionId = 1;
         LOG.error("DB Connection error! Get Max CmdletId/ActionId fail!", e);
         throw new IOException(e);
       }
-      return true;
-    }
-    return false;
   }
 
   /**
    * Start CmdletExecutor.
    */
-  public boolean start() throws IOException {
+  @Override
+  public void start() throws IOException {
     // TODO add recovery code
     cmdletExecutorThread = new Daemon(this);
     cmdletExecutorThread.setName(this.getClass().getCanonicalName());
     cmdletExecutorThread.start();
     running = true;
-    return true;
   }
 
   /**
    * Stop CmdletExecutor
    */
+  @Override
   public void stop() throws IOException {
     running = false;
-    // Update Status
-    batchCmdletStatusUpdate();
-  }
 
-  public void join() throws IOException {
     try {
       if (cmdletPool != null) {
         cmdletPool.stop();
@@ -150,12 +137,9 @@ public class CmdletExecutor implements Runnable, Service {
       LOG.error("Shutdown MoverPool/CmdletPool Error!");
       throw new IOException(e);
     }
-    // Set all thread handle to null
-    cmdletPool = null;
-    cmdletExecutorThread = null;
-    adapter = null;
-    ssm = null;
-    smartContext = null;
+
+    // Update Status
+    batchCmdletStatusUpdate();
   }
 
   @Override
@@ -194,7 +178,7 @@ public class CmdletExecutor implements Runnable, Service {
     }
     List<CmdletInfo> ret = null;
     try {
-      ret = adapter.getCmdletsTableItem(String.format("= %d", cid),
+      ret = dbAdapter.getCmdletsTableItem(String.format("= %d", cid),
           null, null);
     } catch (SQLException e) {
       LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
@@ -212,10 +196,10 @@ public class CmdletExecutor implements Runnable, Service {
     // Get from DB
     try {
       if (rid != -1) {
-        retInfos.addAll(adapter.getCmdletsTableItem(null,
+        retInfos.addAll(dbAdapter.getCmdletsTableItem(null,
             String.format("= %d", rid), cmdletState));
       } else {
-        retInfos.addAll(adapter.getCmdletsTableItem(null,
+        retInfos.addAll(dbAdapter.getCmdletsTableItem(null,
             null, cmdletState));
       }
     } catch (SQLException e) {
@@ -302,7 +286,7 @@ public class CmdletExecutor implements Runnable, Service {
       cmdsAll.remove(cid);
     }
     try {
-      adapter.deleteCmdlet(cid);
+      dbAdapter.deleteCmdlet(cid);
     } catch (SQLException e) {
       LOG.error("Delete Cmdlet {} from DB error! {}", cid, e);
       throw new IOException(e);
@@ -313,7 +297,7 @@ public class CmdletExecutor implements Runnable, Service {
     ActionInfo actionInfo = null;
     ActionInfo dbActionInfo = null;
     try {
-      dbActionInfo = adapter.getActionsTableItem(
+      dbActionInfo = dbAdapter.getActionsTableItem(
           String.format("== %d ", actionID), null).get(0);
     } catch (SQLException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}",
@@ -350,7 +334,7 @@ public class CmdletExecutor implements Runnable, Service {
     return actionDescriptors;
   }
 
-  public boolean isActionSupported(String actionName) {
+  private boolean isActionSupported(String actionName) {
     return actionRegistry.checkAction(actionName);
   }
 
@@ -461,12 +445,12 @@ public class CmdletExecutor implements Runnable, Service {
     if (smartAction == null) {
       return null;
     }
-    smartAction.setContext(smartContext);
+    smartAction.setContext(serverContext);
     smartAction.setArguments(actionInfo.getArgs());
     if (smartAction instanceof HdfsAction) {
       ((HdfsAction) smartAction).setDfsClient(
-          new SmartDFSClient(HadoopUtils.getNameNodeUri(conf),
-              smartContext.getConf(), getRpcServerAddress()));
+          new SmartDFSClient(HadoopUtils.getNameNodeUri(serverContext.getConf()),
+              serverContext.getConf(), getRpcServerAddress()));
     }
     smartAction.getActionStatus().setId(actionInfo.getActionId());
     return smartAction;
@@ -477,11 +461,11 @@ public class CmdletExecutor implements Runnable, Service {
     if (smartAction == null) {
       return null;
     }
-    smartAction.setContext(smartContext);
+    smartAction.setContext(serverContext);
     if (smartAction instanceof HdfsAction) {
       ((HdfsAction) smartAction).setDfsClient(
-          new SmartDFSClient(HadoopUtils.getNameNodeUri(conf),
-              smartContext.getConf(), getRpcServerAddress()));
+          new SmartDFSClient(HadoopUtils.getNameNodeUri(serverContext.getConf()),
+              serverContext.getConf(), getRpcServerAddress()));
     }
     smartAction.getActionStatus().setId(maxActionId);
     maxActionId++;
@@ -489,7 +473,7 @@ public class CmdletExecutor implements Runnable, Service {
   }
 
   private InetSocketAddress getRpcServerAddress() {
-    String[] strings = conf.get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
+    String[] strings = serverContext.getConf().get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
         SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
     return new InetSocketAddress(strings[strings.length - 2]
         , Integer.parseInt(strings[strings.length - 1]));
@@ -591,18 +575,18 @@ public class CmdletExecutor implements Runnable, Service {
     }
     try {
       // Insert Cmdlet into DB
-      adapter.insertCmdletTable(cmdinfo);
+      dbAdapter.insertCmdletTable(cmdinfo);
     } catch (SQLException e) {
       LOG.error("Submit Cmdlet {} to DB error! {}", cmdinfo, e);
       throw new IOException(e);
     }
     try {
       // Insert Action into DB
-      adapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+      dbAdapter.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (SQLException e) {
       LOG.error("Submit Actions {} to DB error! {}", actionInfos, e);
       try {
-        adapter.deleteCmdlet(cmdinfo.getCid());
+        dbAdapter.deleteCmdlet(cmdinfo.getCid());
       } catch (SQLException e1) {
         LOG.error("Recover/Delete Cmdlet {} rom DB error! {}", cmdinfo, e);
       }
@@ -625,7 +609,7 @@ public class CmdletExecutor implements Runnable, Service {
     Cmdlet cmd;
     List<ActionInfo> actionInfos;
     try {
-      actionInfos = adapter.getActionsTableItem(cmdinfo.getAids());
+      actionInfos = dbAdapter.getActionsTableItem(cmdinfo.getAids());
     } catch (SQLException e) {
       LOG.error("Get Actions from DB with IDs {} error!", cmdinfo.getAids());
       throw new IOException(e);
@@ -643,7 +627,7 @@ public class CmdletExecutor implements Runnable, Service {
       return null;
     }
     cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]),
-        new Callback(), adapter);
+        new Callback(), dbAdapter);
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -669,7 +653,7 @@ public class CmdletExecutor implements Runnable, Service {
     // Get actions from Db
     int remainsAction = maxNumActions - actionInfos.size();
     try {
-      actionInfos.addAll(adapter.getNewCreatedActionsTableItem(remainsAction));
+      actionInfos.addAll(dbAdapter.getNewCreatedActionsTableItem(remainsAction));
     } catch (SQLException e) {
       LOG.error("Get Finished Actions from DB error", e);
       throw new IOException(e);
@@ -680,7 +664,7 @@ public class CmdletExecutor implements Runnable, Service {
   public List<CmdletInfo> getPendingCmdletsFromDB() throws IOException {
     // Get Pending cmds from DB
     try {
-      return adapter.getCmdletsTableItem(null,
+      return dbAdapter.getCmdletsTableItem(null,
           null, CmdletState.PENDING);
     } catch (SQLException e) {
       LOG.error("Get Pending Cmdlets From DB error!", e);
@@ -720,7 +704,7 @@ public class CmdletExecutor implements Runnable, Service {
   }
 
   public synchronized void batchCmdletStatusUpdate() throws IOException {
-    if (cmdletPool == null || adapter == null) {
+    if (cmdletPool == null || dbAdapter == null) {
       return;
     }
     LOG.info("INFO Number of Caches = {}", statusCache.size());
@@ -738,7 +722,7 @@ public class CmdletExecutor implements Runnable, Service {
         cmdsAll.remove(ct.cid);
         cmdletPool.deleteCmdlet(ct.cid);
         try {
-          adapter.updateCmdletStatus(ct.cid, ct.rid, ct.state);
+          dbAdapter.updateCmdletStatus(ct.cid, ct.rid, ct.state);
         } catch (SQLException e) {
           LOG.error("Batch Cmdlet Status Update error!", e);
           throw new IOException(e);
@@ -759,7 +743,7 @@ public class CmdletExecutor implements Runnable, Service {
         }
       }
       try {
-        adapter.updateActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+        dbAdapter.updateActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
       } catch (SQLException e) {
         LOG.error("Write CacheObject to DB error!", e);
         throw new IOException(e);

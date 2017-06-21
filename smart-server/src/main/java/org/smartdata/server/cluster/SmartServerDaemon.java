@@ -39,7 +39,7 @@ public class SmartServerDaemon {
   public void start() throws IOException, InterruptedException {
     HazelcastInstance instance = HazelcastInstanceProvider.getInstance();
     if (HazelcastUtil.isMaster(instance)) {
-      CmdletManager manager = new CmdletManager();
+      CmdletManager manager = new CmdletManager(null);
       Thread.sleep(10000);
       manager.start();
       //SmartServer.main(args);

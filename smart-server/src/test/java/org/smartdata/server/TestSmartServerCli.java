@@ -52,14 +52,13 @@ public class TestSmartServerCli {
 
       // rpcServer start in SmartServer
       try {
-        SmartServer.createSSM(null, conf);
+        new SmartServer(conf);
         Assert.fail("Should not work without specifying "
             + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
       } catch (Exception e) {
         Assert.assertTrue(e.getMessage().contains(
             SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY));
       }
-
 
       conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
           uriList.get(0).toString());
@@ -69,15 +68,12 @@ public class TestSmartServerCli {
               + uriList.get(0).toString()
       };
 
-      SmartServer s = SmartServer.createSSM(args, conf);
-      s.shutdown();
+      SmartServer.launchWith(args, conf);
 
-      String[] argsHelp = new String[]{
+      args = new String[] {
           "-h"
       };
-
-      s = SmartServer.createSSM(argsHelp, conf);
-      Assert.assertTrue(s == null);
+      SmartServer.launchWith(args, conf);
     } finally {
       cluster.shutdown();
     }

@@ -15,13 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine;
-
-import org.smartdata.server.metastore.DBAdapter;
+package org.smartdata;
 
 import java.io.IOException;
 
-public interface Service {
+public interface SmartService {
   enum State {
     INITING,
     INITED,
@@ -34,29 +32,22 @@ public interface Service {
   }
 
   /**
-   * Init module using info from configuration and database.
-   * @param dbAdapter
+   * Init.
    * @return
    * @throws IOException
    */
-  boolean init(DBAdapter dbAdapter) throws IOException;
+  void init() throws IOException;
 
   /**
    * After start call, all services and public calls should work.
    * @return
    * @throws IOException
    */
-  boolean start() throws IOException, InterruptedException;
+  void start() throws IOException, InterruptedException;
 
   /**
    * After stop call, all states in database will not be changed anymore.
    * @throws IOException
    */
   void stop() throws IOException;
-
-  /**
-   * Stop threads and other cleaning jobs.
-   * @throws IOException
-   */
-  void join() throws IOException;
 }

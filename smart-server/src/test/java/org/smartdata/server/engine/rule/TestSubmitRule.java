@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.rule;
+package org.smartdata.server.engine.rule;
 
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -24,12 +24,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
+import org.smartdata.common.rule.RuleState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.SmartServer;
-import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.server.metastore.MetaUtil;
+import org.smartdata.server.metastore.TestDBUtil;
 
 import java.io.IOException;
 import java.net.URI;
@@ -62,7 +62,7 @@ public class TestSubmitRule {
     conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
-    ssm = SmartServer.createSSM(null, conf);
+    ssm = new SmartServer(conf);
   }
 
   @After

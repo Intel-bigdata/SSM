@@ -17,15 +17,15 @@
  */
 package org.smartdata.server.engine;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.AbstractService;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
-import org.smartdata.server.SmartServer;
+import org.smartdata.server.ServerContext;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.FileAccessInfo;
 import org.smartdata.server.metastore.tables.AccessCountTable;
@@ -45,9 +45,9 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * Polls metrics and events from NameNode
  */
-public class StatesManager implements Service {
-  private SmartServer ssm;
-  private Configuration conf;
+public class StatesManager extends AbstractService {
+  private ServerContext serverContext;
+
   private DFSClient client;
   private ScheduledExecutorService executorService;
   private AccessCountTableManager accessCountTableManager;
@@ -55,12 +55,12 @@ public class StatesManager implements Service {
   private AccessEventFetcher accessEventFetcher;
   private CachedListFetcher cachedListFetcher;
   private FileAccessEventSource fileAccessEventSource;
-  private DBAdapter dbAdapter;
+
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
-  public StatesManager(SmartServer ssm, Configuration conf) {
-    this.ssm = ssm;
-    this.conf = conf;
+  public StatesManager(ServerContext context) {
+    super(context);
+    this.serverContext = context;
   }
 
   /**
@@ -68,36 +68,39 @@ public class StatesManager implements Service {
    *
    * @return true if initialized successfully
    */
-  public boolean init(DBAdapter dbAdapter) throws IOException {
+  @Override
+  public void init() throws IOException {
     LOG.info("Initializing ...");
-    this.dbAdapter = dbAdapter;
-    this.cleanFileTableContents(dbAdapter);
-    URI nnUri = HadoopUtils.getNameNodeUri(conf);
-    this.client = new DFSClient(nnUri, conf);
+    this.cleanFileTableContents(serverContext.getDbAdapter());
+    URI nnUri = HadoopUtils.getNameNodeUri(serverContext.getConf());
+    this.client = new DFSClient(nnUri, serverContext.getConf());
     this.executorService = Executors.newScheduledThreadPool(4);
-    this.accessCountTableManager = new AccessCountTableManager(dbAdapter, executorService);
-    this.fileAccessEventSource = MetricsFactory.createAccessEventSource(conf);
-    this.cachedListFetcher = new CachedListFetcher(client, dbAdapter);
+    this.accessCountTableManager = new AccessCountTableManager(
+        serverContext.getDbAdapter(), executorService);
+    this.fileAccessEventSource = MetricsFactory.createAccessEventSource(serverContext.getConf());
+    this.cachedListFetcher = new CachedListFetcher(client, serverContext.getDbAdapter());
     this.accessEventFetcher =
         new AccessEventFetcher(
-            conf, accessCountTableManager, executorService, fileAccessEventSource.getCollector());
-    this.inotifyEventFetcher = new InotifyEventFetcher(client, dbAdapter, executorService);
+            serverContext.getConf(), accessCountTableManager,
+            executorService, fileAccessEventSource.getCollector());
+    this.inotifyEventFetcher = new InotifyEventFetcher(client,
+        serverContext.getDbAdapter(), executorService);
     LOG.info("Initialized.");
-    return true;
   }
 
   /**
    * Start daemon threads in StatesManager for function.
    */
-  public boolean start() throws IOException, InterruptedException {
+  @Override
+  public void start() throws IOException, InterruptedException {
     LOG.info("Starting ...");
     this.inotifyEventFetcher.start();
     this.accessEventFetcher.start();
     this.cachedListFetcher.start();
     LOG.info("Started. ");
-    return true;
   }
 
+  @Override
   public void stop() throws IOException {
     LOG.info("Stopping ...");
     if (inotifyEventFetcher != null) {
@@ -114,11 +117,6 @@ public class StatesManager implements Service {
       this.cachedListFetcher.stop();
     }
     LOG.info("Stopped.");
-  }
-
-  public void join() throws IOException {
-    LOG.info("Joining ...");
-    LOG.info("Joined.");
   }
 
   public List<CachedFileStatus> getCachedList() throws SQLException {
@@ -161,7 +159,7 @@ public class StatesManager implements Service {
   public List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
       int topNum) throws IOException {
     try {
-      return dbAdapter.getHotFiles(tables, topNum);
+      return serverContext.getDbAdapter().getHotFiles(tables, topNum);
     } catch (SQLException e) {
       throw new IOException(e);
     }
@@ -169,7 +167,7 @@ public class StatesManager implements Service {
 
   public List<CachedFileStatus> getCachedFileStatus() throws IOException {
     try {
-      return dbAdapter.getCachedFileStatus();
+      return serverContext.getDbAdapter().getCachedFileStatus();
     } catch (SQLException e) {
       throw new IOException(e);
     }

@@ -17,21 +17,22 @@
  */
 package org.smartdata.server.engine;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.AbstractService;
+import org.smartdata.actions.ActionRegistry;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.server.SmartServer;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
+import org.smartdata.server.ServerContext;
+import org.smartdata.server.SmartServer;
+import org.smartdata.server.engine.rule.ExecutorScheduler;
+import org.smartdata.server.engine.rule.RuleExecutor;
+import org.smartdata.server.engine.rule.RuleInfoRepo;
 import org.smartdata.server.metastore.DBAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.smartdata.server.rule.ExecutorScheduler;
-import org.smartdata.server.rule.RuleInfoRepo;
-import org.smartdata.server.rule.RuleExecutor;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -44,10 +45,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * Manage and execute rules.
  * We can have 'cache' here to decrease the needs to execute a SQL query.
  */
-public class RuleManager implements Service {
-  private SmartServer ssm;
-  private Configuration conf;
+public class RuleManager extends AbstractService {
+  private ServerContext serverContext;
+  private SmartServer server;
   private DBAdapter dbAdapter;
+
   private boolean isClosed = false;
   public static final Logger LOG =
       LoggerFactory.getLogger(RuleManager.class.getName());
@@ -58,16 +60,12 @@ public class RuleManager implements Service {
   // TODO: configurable
   public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
 
-  @VisibleForTesting
-  public RuleManager(SmartServer ssm, Configuration conf, DBAdapter dbAdapter) {
-    this.ssm = ssm;
-    this.conf = conf;
-    this.dbAdapter = dbAdapter;
-  }
+  public RuleManager(ServerContext context, SmartServer server) {
+    super(context);
 
-  public RuleManager(SmartServer ssm, Configuration conf) {
-    this.ssm = ssm;
-    this.conf = conf;
+    this.server = server;
+    this.serverContext = context;
+    this.dbAdapter = context.getDbAdapter();
   }
 
   /**
@@ -89,17 +87,16 @@ public class RuleManager implements Service {
 
     TranslateResult tr = doCheckRule(rule, null);
     CmdletDescriptor cd = tr.getCmdDescriptor();
-    if (getCmdletExecutor() != null) {
-      String error = "";
-      for (int i = 0; i < cd.actionSize(); i++) {
-        if (!getCmdletExecutor().isActionSupported(cd.getActionName(i))) {
-          error += "Action '" + cd.getActionName(i) + "' not supported.\n";
-        }
-      }
-      if (error.length() > 0) {
-        throw new IOException(error);
+    String error = "";
+    for (int i = 0; i < cd.actionSize(); i++) {
+      if (!ActionRegistry.instance().checkAction(cd.getActionName(i))) {
+        error += "Action '" + cd.getActionName(i) + "' not supported.\n";
       }
     }
+    if (error.length() > 0) {
+      throw new IOException(error);
+    }
+
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
     RuleInfo ruleInfo = builder.build();
@@ -181,7 +178,7 @@ public class RuleManager implements Service {
   }
 
   public void updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
-      long checkedCount, int cmdletsGen) throws IOException {
+                             long checkedCount, int cmdletsGen) throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleId);
     infoRepo.updateRuleInfo(rs, lastCheckTime, checkedCount, cmdletsGen);
   }
@@ -191,11 +188,11 @@ public class RuleManager implements Service {
   }
 
   public StatesManager getStatesManager() {
-    return ssm != null ? ssm.getStatesManager() : null;
+    return server.getStatesManager();
   }
 
   public CmdletExecutor getCmdletExecutor() {
-    return ssm != null ? ssm.getCmdletExecutor() : null;
+    return server.getCmdletExecutor();
   }
 
   /**
@@ -204,7 +201,8 @@ public class RuleManager implements Service {
    *    2. Initial
    * @throws IOException
    */
-  public boolean init(DBAdapter dbAdapter) throws IOException {
+  @Override
+  public void init() throws IOException {
     LOG.info("Initializing ...");
     this.dbAdapter = dbAdapter;
     // Load rules table
@@ -224,7 +222,6 @@ public class RuleManager implements Service {
         LOG.debug("\t" + info);
       }
     }
-    return true;
   }
 
   private boolean submitRuleToScheduler(RuleExecutor executor)
@@ -239,28 +236,28 @@ public class RuleManager implements Service {
   /**
    * Start services
    */
-  public boolean start() throws IOException {
+  @Override
+  public void start() throws IOException {
     LOG.info("Starting ...");
     // after StateManager be ready
 
     int numLaunched = 0;
     // Submit runnable rules to scheduler
     for (RuleInfoRepo infoRepo : mapRules.values()) {
-        RuleInfo rule = infoRepo.getRuleInfoRef();
+      RuleInfo rule = infoRepo.getRuleInfoRef();
       if (rule.getState() == RuleState.ACTIVE
           || rule.getState() == RuleState.DRYRUN) {
         boolean sub = submitRuleToScheduler(infoRepo.launchExecutor(this));
         numLaunched += sub ? 1 : 0;
       }
     }
-    LOG.info("Started. " + numLaunched
-        + " rules launched for execution.");
-    return true;
+    LOG.info("Started. " + numLaunched + " rules launched for execution.");
   }
 
   /**
    * Stop services
    */
+  @Override
   public void stop() throws IOException {
     LOG.info("Stopping ...");
     isClosed = true;
@@ -268,13 +265,5 @@ public class RuleManager implements Service {
       execScheduler.shutdown();
     }
     LOG.info("Stopped.");
-  }
-
-  /**
-   * Waiting for threads to exit.
-   */
-  public void join() throws IOException {
-    LOG.info("Joining ...");
-    LOG.info("Joined.");
   }
 }

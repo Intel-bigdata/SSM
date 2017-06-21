@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.rule;
+package org.smartdata.server.engine.rule;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -50,7 +50,7 @@ public class TestRuleManager {
       MetaUtil.initializeDataBase(conn);
       dbAdapter = new DBAdapter(conn);
       // TODO: to be fixed
-      ruleManager = new RuleManager(null, null, dbAdapter);
+      ruleManager = new RuleManager(null, null);
     } finally {
       File file = new File(dbFile);
       file.deleteOnExit();
