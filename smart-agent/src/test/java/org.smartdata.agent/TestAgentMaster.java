@@ -28,16 +28,18 @@ import com.typesafe.config.ConfigFactory;
 import org.junit.Test;
 import org.smartdata.agent.messages.AgentToMaster;
 import org.smartdata.agent.messages.MasterToAgent;
+import org.smartdata.server.cmdlet.CmdletManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 public class TestAgentMaster extends ActorSystemHarness {
 
   @Test
   public void testAgentMaster() {
-    AgentMaster master = new AgentMaster();
-    master.start();
+    CmdletManager statusUpdater = mock(CmdletManager.class);
+    AgentMaster master = new AgentMaster(statusUpdater);
 
     ActorSystem system = getActorSystem();
     ActorRef mockedAgent = system.actorOf(Props.create(MockedAgent.class));

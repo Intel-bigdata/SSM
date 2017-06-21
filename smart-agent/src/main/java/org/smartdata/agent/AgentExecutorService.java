@@ -17,30 +17,32 @@
  */
 package org.smartdata.agent;
 
-import org.smartdata.actions.ActionFactory;
-import org.smartdata.actions.SmartAction;
+import org.smartdata.server.cmdlet.CmdletFactory;
+import org.smartdata.server.cmdlet.CmdletManager;
+import org.smartdata.server.cmdlet.executor.CmdletExecutorService;
+import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 
-import java.util.HashMap;
-import java.util.Map;
+public class AgentExecutorService extends CmdletExecutorService {
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+  private AgentMaster master;
 
-public class MockedActionFactory implements ActionFactory {
-
-  public static final String actionName = "mockAction";
-  public static final Map<String, String> actionArgs = new HashMap<>();
-  public static final SmartAction mockAction = mock(SmartAction.class);
-
-  static {
-    when(mockAction.getName()).thenReturn(actionName);
-    when(mockAction.getArguments()).thenReturn(actionArgs);
+  public AgentExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
+    super(cmdletManager, cmdletFactory);
+    this.master = new AgentMaster(cmdletManager);
   }
 
   @Override
-  public Map<String, Class<? extends SmartAction>> getSupportedActions() {
-    Map<String, Class<? extends SmartAction>> actions = new HashMap<>();
-    actions.put(actionName, mockAction.getClass());
-    return actions;
+  public boolean isLocalService() {
+    return false;
+  }
+
+  @Override
+  public boolean canAcceptMore() {
+    return master.canAcceptMore();
+  }
+
+  @Override
+  public void execute(LaunchCmdlet cmdlet) {
+    master.launchCmdlet(cmdlet);
   }
 }
