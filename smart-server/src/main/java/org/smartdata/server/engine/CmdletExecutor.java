@@ -172,6 +172,10 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     }
   }
 
+  public ServerContext getContext() {
+    return serverContext;
+  }
+
   public CmdletInfo getCmdletInfo(long cid) throws IOException {
     if (cmdsAll.containsKey(cid)) {
       return cmdsAll.get(cid);

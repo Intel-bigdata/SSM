@@ -80,8 +80,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
     ssm.getCmdletExecutor()
         .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
-    // ssm.getCmdletExecutor().submitCmdlet(cmdletDescriptor);
-    // Thread.sleep(1200);
+    Thread.sleep(1200);
     List<ActionInfo> actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
     System.out.println(actionInfos.size());
     Assert.assertTrue(actionInfos.size() >= 0);
@@ -166,7 +165,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private void generateTestCases() throws Exception {
-    MetaStore metaStore = MetaUtil.getDBAdapter(conf);
+    MetaStore metaStore = ssm.getCmdletExecutor().getContext().getMetaStore();
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
     CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
         CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
@@ -176,7 +175,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   }
 
   private void testCmdletExecutorHelper() throws Exception {
-    MetaStore metaStore = MetaUtil.getDBAdapter(conf);
+    MetaStore metaStore = ssm.getCmdletExecutor().getContext().getMetaStore();
     while (true) {
       Thread.sleep(2000);
       int current = ssm.getCmdletExecutor().cacheSize();

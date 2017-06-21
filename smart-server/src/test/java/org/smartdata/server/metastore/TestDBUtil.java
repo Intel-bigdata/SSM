@@ -85,6 +85,7 @@ public class TestDBUtil {
     try {
       conn = MetaUtil.createSqliteConnection(dbFile);
       MetaUtil.initializeDataBase(conn);
+      conn.close();
       return dbFile;
     } finally {
       if (conn != null) {

@@ -41,8 +41,8 @@ public class TestActionDao extends TestDaoUtil {
 
   @After
   public void closeActionDao() throws Exception {
-    closeDao();
     actionDao = null;
+    closeDao();
   }
 
   @Test
