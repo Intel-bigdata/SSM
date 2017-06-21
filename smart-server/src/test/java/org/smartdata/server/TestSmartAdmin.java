@@ -20,14 +20,15 @@ package org.smartdata.server;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletInfo;
-import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.metastore.TestDBUtil;
 
@@ -50,6 +51,7 @@ public class TestSmartAdmin {
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(4).build();
     SmartServer server = null;
+    SmartAdmin admin = null;
 
     try {
       // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
@@ -68,11 +70,11 @@ public class TestSmartAdmin {
 
       // rpcServer start in SmartServer
       server = SmartServer.launchWith(conf);
-      SmartAdmin ssmClient = new SmartAdmin(conf);
+      admin = new SmartAdmin(conf);
 
       while (true) {
         //test getServiceStatus
-        String state = ssmClient.getServiceState().getName();
+        String state = admin.getServiceState().getName();
         if ("ACTIVE".equals(state)) {
           break;
         }
@@ -80,68 +82,70 @@ public class TestSmartAdmin {
       }
 
       //test listRulesInfo and submitRule
-      List<RuleInfo> ruleInfos = ssmClient.listRulesInfo();
+      List<RuleInfo> ruleInfos = admin.listRulesInfo();
       int ruleCounts0 = ruleInfos.size();
-      long ruleId = ssmClient.submitRule(
+      long ruleId = admin.submitRule(
           "file: every 5s | path matches \"/foo*\"| cache",
           RuleState.DRYRUN);
-      ruleInfos = ssmClient.listRulesInfo();
+      ruleInfos = admin.listRulesInfo();
       int ruleCounts1 = ruleInfos.size();
       assertEquals(1, ruleCounts1 - ruleCounts0);
 
       //test checkRule
       //if success ,no Exception throw
-      ssmClient.checkRule("file: every 5s | path matches \"/foo*\"| cache");
+      admin.checkRule("file: every 5s | path matches \"/foo*\"| cache");
       boolean caughtException = false;
       try {
-        ssmClient.checkRule("file.path");
+        admin.checkRule("file.path");
       } catch (IOException e) {
         caughtException = true;
       }
       assertTrue(caughtException);
 
       //test getRuleInfo
-      RuleInfo ruleInfo = ssmClient.getRuleInfo(ruleId);
+      RuleInfo ruleInfo = admin.getRuleInfo(ruleId);
       assertNotEquals(null, ruleInfo);
 
       //test disableRule
-      ssmClient.disableRule(ruleId, true);
-      assertEquals(RuleState.DISABLED, ssmClient.getRuleInfo(ruleId).getState());
+      admin.disableRule(ruleId, true);
+      assertEquals(RuleState.DISABLED, admin.getRuleInfo(ruleId).getState());
 
       //test activateRule
-      ssmClient.activateRule(ruleId);
-      assertEquals(RuleState.ACTIVE, ssmClient.getRuleInfo(ruleId).getState());
+      admin.activateRule(ruleId);
+      assertEquals(RuleState.ACTIVE, admin.getRuleInfo(ruleId).getState());
 
       //test deleteRule
-      ssmClient.deleteRule(ruleId, true);
-      assertEquals(RuleState.DELETED, ssmClient.getRuleInfo(ruleId).getState());
+      admin.deleteRule(ruleId, true);
+      assertEquals(RuleState.DELETED, admin.getRuleInfo(ruleId).getState());
 
       //test cmdletInfo
-      long id = ssmClient.submitCmdlet("cache -file /foo*");
-      CmdletInfo cmdletInfo = ssmClient.getCmdletInfo(id);
+      long id = admin.submitCmdlet("cache -file /foo*");
+      CmdletInfo cmdletInfo = admin.getCmdletInfo(id);
       assertTrue("cache -file /foo*".equals(cmdletInfo.getParameters()));
 
       //test actioninfo
       List<Long> aidlist = cmdletInfo.getAids();
       assertNotEquals(0,aidlist.size());
-      ActionInfo actionInfo = ssmClient.getActionInfo(aidlist.get(0));
+      ActionInfo actionInfo = admin.getActionInfo(aidlist.get(0));
       assertEquals(id,actionInfo.getCmdletId());
 
       //test listActionInfoOfLastActions
-      ssmClient.listActionInfoOfLastActions(2);
+      admin.listActionInfoOfLastActions(2);
 
       //test client close
-      caughtException = false;
-      ssmClient.close();
+      admin.close();
       try {
-        ssmClient.getRuleInfo(ruleId);
+        admin.getRuleInfo(ruleId);
+        Assert.fail("Should fail because admin has closed.");
       } catch (IOException e) {
-        caughtException = true;
       }
-      assertEquals(true, caughtException);
-      server.shutdown();
-      cluster.shutdown();
+
+      admin = null;
     } finally {
+      if (admin != null) {
+        admin.close();
+      }
+
       if (server != null) {
         server.shutdown();
       }
@@ -149,27 +153,4 @@ public class TestSmartAdmin {
       cluster.shutdown();
     }
   }
-
-//  @Test
-//  public void testReal() throws Exception {
-//    final SmartConf conf = new SmartConf();
-//
-//    String[] args = new String[] {
-//        "-D",
-//        "dfs.smart.namenode.rpcserver=hdfs://localhost:9000"
-//    };
-//
-//    // rpcServer start in SmartServer
-//    SmartServer server = SmartServer.createSSM(args, conf);
-//
-//    Thread.sleep(6000);
-//
-//    SmartAdmin admin = new SmartAdmin(conf);
-//    String rule = "file : every 1s | mtime > now - 70day | cache";
-//    String cmd = "read /hadoopdbg";
-//    long id = admin.submitCmdlet(cmd);
-//
-//    Thread.sleep(1000);
-//    Thread.sleep(100000);
-//  }
 }
