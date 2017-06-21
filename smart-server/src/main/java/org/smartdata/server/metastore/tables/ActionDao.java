@@ -22,6 +22,8 @@ import org.smartdata.common.actions.ActionInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
@@ -36,8 +38,10 @@ public class ActionDao {
 
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
+  private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
   public ActionDao(DataSource dataSource) {
+    namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     jdbcTemplate = new JdbcTemplate(dataSource);
     simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("actions");
@@ -54,9 +58,10 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getByIds(List<Long> aids) {
-    return jdbcTemplate.query("select * from actions WHERE aid IN (?)",
-        new Object[]{StringUtils.join(aids, ",")},
-        new ActionRowMapper());
+    MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+    parameterSource.addValue("aids", aids);
+    return namedParameterJdbcTemplate.query("select * from actions WHERE aid IN (:aids)",
+        parameterSource, new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCid(long cid) {
