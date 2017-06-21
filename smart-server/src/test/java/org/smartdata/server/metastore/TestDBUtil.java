@@ -41,6 +41,7 @@ public class TestDBUtil {
    */
   public static Connection getTestDBInstance()
       throws IOException, SQLException, ClassNotFoundException {
+    // TODO remove today
     String srcdir = System.getProperty("srcdir",
         System.getProperty("user.dir") + "/src/resources");
     String srcPath = srcdir + "/data-schema.db";
