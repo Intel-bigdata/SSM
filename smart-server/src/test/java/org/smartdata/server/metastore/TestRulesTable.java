@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * Tests for table 'rules'.
  */
-public class TestRulesTable {
+public class TestRulesTable extends TestDaoUtil {
 
   /**
    * Insert rules into table and retrieve them back.
@@ -37,36 +37,26 @@ public class TestRulesTable {
    */
   @Test
   public void testRuleInsert() throws Exception {
-    String dbFile = TestDBUtil.getUniqueDBFilePath();
-    Connection conn = null;
-    try {
-      conn = MetaUtil.createSqliteConnection(dbFile);
-      MetaUtil.initializeDataBase(conn);
-      String rule = "file : accessCount(10m) > 20 \n\n"
-          + "and length() > 3 | cache";
-      long submitTime = System.currentTimeMillis();
-      RuleInfo info1 = new RuleInfo(0, submitTime,
-          rule, RuleState.ACTIVE, 0, 0, 0);
-      DBAdapter adapter = new DBAdapter(conn);
-      Assert.assertTrue(adapter.insertNewRule(info1));
-      RuleInfo info1_1 = adapter.getRuleInfo(info1.getId());
-      Assert.assertTrue(info1.equals(info1_1));
+    initDao();
+    DBAdapter adapter = new DBAdapter(druidPool);
+    String rule = "file : accessCount(10m) > 20 \n\n"
+        + "and length() > 3 | cache";
+    long submitTime = System.currentTimeMillis();
+    RuleInfo info1 = new RuleInfo(0, submitTime,
+        rule, RuleState.ACTIVE, 0, 0, 0);
 
-      RuleInfo info2 = new RuleInfo(0, submitTime,
-          rule, RuleState.ACTIVE, 0, 0, 0);
-      Assert.assertTrue(adapter.insertNewRule(info2));
-      RuleInfo info2_1 = adapter.getRuleInfo(info2.getId());
-      Assert.assertFalse(info1_1.equals(info2_1));
+    Assert.assertTrue(adapter.insertNewRule(info1));
+    RuleInfo info1_1 = adapter.getRuleInfo(info1.getId());
+    Assert.assertTrue(info1.equals(info1_1));
 
-      List<RuleInfo> infos = adapter.getRuleInfo();
-      assert(infos.size() == 2);
+    RuleInfo info2 = new RuleInfo(0, submitTime,
+        rule, RuleState.ACTIVE, 0, 0, 0);
+    Assert.assertTrue(adapter.insertNewRule(info2));
+    RuleInfo info2_1 = adapter.getRuleInfo(info2.getId());
+    Assert.assertFalse(info1_1.equals(info2_1));
 
-    } finally {
-      if (conn != null) {
-        conn.close();
-      }
-      File file = new File(dbFile);
-      file.deleteOnExit();
-    }
+    List<RuleInfo> infos = adapter.getRuleInfo();
+    assert(infos.size() == 2);
+    closeDao();
   }
 }

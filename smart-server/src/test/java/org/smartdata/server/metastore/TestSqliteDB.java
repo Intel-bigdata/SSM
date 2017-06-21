@@ -18,7 +18,10 @@
 package org.smartdata.server.metastore;
 
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.springframework.core.annotation.AliasFor;
 
 import java.io.File;
 import java.sql.Connection;
@@ -33,57 +36,48 @@ import static org.junit.Assert.assertEquals;
 /**
  * Test operations with sqlite database.
  */
-public class TestSqliteDB {
+public class TestSqliteDB extends TestDaoUtil {
+
+  private DBAdapter dbAdapter;
+
+  @Before
+  public void initDB() throws Exception {
+    initDao();
+    dbAdapter = new DBAdapter(druidPool);
+  }
+
+  @After
+  public void closeDB() throws Exception {
+    dbAdapter = null;
+    closeDao();
+  }
 
   @Test
   public void testCreateNewSqliteDB() throws Exception {
-    String dbFile = TestDBUtil.getUniqueDBFilePath();
-    Connection conn = null;
-    try {
-      conn = MetaUtil.createSqliteConnection(dbFile);
-      MetaUtil.initializeDataBase(conn);
-    } finally {
-      if (conn != null) {
-        conn.close();
-      }
-      File file = new File(dbFile);
-      file.deleteOnExit();
-    }
+    MetaUtil.initializeDataBase(dbAdapter.getConnection());
   }
 
   @Test
   public void testDropTablesSqlite() throws SQLException, ClassNotFoundException {
-    String dbFile = TestDBUtil.getUniqueDBFilePath();
-    Connection conn = null;
-    try {
-      conn = MetaUtil.createSqliteConnection(dbFile);
-      MetaUtil.initializeDataBase(conn);
-      DBAdapter adapter = new DBAdapter(conn);
-      Statement s = conn.createStatement();
-      adapter.dropAllTables();
-      for (int i = 0; i < 10; i++) {
-        adapter.execute("DROP TABLE IF EXISTS tb_"+i+";");
-        adapter.execute("CREATE TABLE tb_"+i+" (a INT(11));");
-      }
-      ResultSet rs = s.executeQuery("select tbl_name from sqlite_master;");
-      List<String> list = new ArrayList<>();
-      while (rs.next()) {
-        list.add(rs.getString(1));
-      }
-      adapter.dropAllTables();
-      rs = s.executeQuery("select tbl_name from sqlite_master;");
-      List<String> list1 = new ArrayList<>();
-      while (rs.next()) {
-        list1.add(rs.getString(1));
-      }
-      assertEquals(10,list.size()-list1.size());
-    } finally {
-      if (conn != null) {
-        conn.close();
-      }
-      File file = new File(dbFile);
-      file.deleteOnExit();
+    Connection conn = dbAdapter.getConnection();
+    Statement s = conn.createStatement();
+    dbAdapter.dropAllTables();
+    for (int i = 0; i < 10; i++) {
+      dbAdapter.execute("DROP TABLE IF EXISTS tb_"+i+";");
+      dbAdapter.execute("CREATE TABLE tb_"+i+" (a INT(11));");
     }
+    ResultSet rs = s.executeQuery("select tbl_name from sqlite_master;");
+    List<String> list = new ArrayList<>();
+    while (rs.next()) {
+      list.add(rs.getString(1));
+    }
+    dbAdapter.dropAllTables();
+    rs = s.executeQuery("select tbl_name from sqlite_master;");
+    List<String> list1 = new ArrayList<>();
+    while (rs.next()) {
+      list1.add(rs.getString(1));
+    }
+    assertEquals(10,list.size()-list1.size());
   }
 
   /*@Test
@@ -133,44 +127,30 @@ public class TestSqliteDB {
 
   @Test
   public void testSqliteDBBlankStatements() throws Exception {
-    String dbFile = TestDBUtil.getUniqueDBFilePath();
-    Connection conn = null;
-    try {
-      conn = MetaUtil.createSqliteConnection(dbFile);
-      MetaUtil.initializeDataBase(conn);
-      DBAdapter adapter = new DBAdapter(conn);
+    String[] presqls = new String[] {
+        "INSERT INTO rules (state, rule_text, submit_time, checked_count, "
+            + "cmdlets_generated) VALUES (0, 'file: every 1s \n" + " | "
+            + "accessCount(5s) > 3 | cache', 1494903787619, 0, 0);"
+    };
 
-      String[] presqls = new String[] {
-          "INSERT INTO rules (state, rule_text, submit_time, checked_count, "
-              + "cmdlets_generated) VALUES (0, 'file: every 1s \n" + " | "
-              + "accessCount(5s) > 3 | cache', 1494903787619, 0, 0);"
-      };
+    for (int i = 0; i< presqls.length; i++) {
+      String sql = presqls[i];
+      dbAdapter.execute(sql);
+    }
 
-      for (int i = 0; i< presqls.length; i++) {
-        String sql = presqls[i];
-        adapter.execute(sql);
-      }
+    String[] sqls = new String[] {
+        "DROP TABLE IF EXISTS 'VIR_ACC_CNT_TAB_1_accessCount_5000';",
+        "CREATE TABLE 'VIR_ACC_CNT_TAB_1_accessCount_5000' "
+            + "AS SELECT * FROM 'blank_access_count_info';",
+        "SELECT fid from 'VIR_ACC_CNT_TAB_1_accessCount_5000';",
+        "SELECT path FROM files WHERE (fid IN (SELECT fid FROM "
+            + "'VIR_ACC_CNT_TAB_1_accessCount_5000' WHERE ((count > 3))));"
+    };
 
-      String[] sqls = new String[] {
-          "DROP TABLE IF EXISTS 'VIR_ACC_CNT_TAB_1_accessCount_5000';",
-          "CREATE TABLE 'VIR_ACC_CNT_TAB_1_accessCount_5000' "
-              + "AS SELECT * FROM 'blank_access_count_info';",
-          "SELECT fid from 'VIR_ACC_CNT_TAB_1_accessCount_5000';",
-          "SELECT path FROM files WHERE (fid IN (SELECT fid FROM "
-              + "'VIR_ACC_CNT_TAB_1_accessCount_5000' WHERE ((count > 3))));"
-      };
-
-      for (int i = 0; i< sqls.length * 3; i++) {
-        int idx = i % sqls.length;
-        String sql = sqls[idx];
-        adapter.execute(sql);
-      }
-    } finally {
-      if (conn != null) {
-        conn.close();
-      }
-      File file = new File(dbFile);
-      file.deleteOnExit();
+    for (int i = 0; i< sqls.length * 3; i++) {
+      int idx = i % sqls.length;
+      String sql = sqls[idx];
+      dbAdapter.execute(sql);
     }
   }
 }

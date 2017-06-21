@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.engine.rule;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +30,7 @@ import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.metastore.TestDBUtil;
+import org.smartdata.server.metastore.TestDaoUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,26 +41,25 @@ import java.util.Random;
 /**
  * Testing RuleManager service.
  */
-public class TestRuleManager {
+public class TestRuleManager extends TestDaoUtil {
   private RuleManager ruleManager;
   private DBAdapter dbAdapter;
   private SmartConf smartConf;
 
   @Before
   public void init() throws Exception {
-    String dbFile = TestDBUtil.getUniqueDBFilePath();
-    Connection conn = null;
-    try {
-      conn = MetaUtil.createSqliteConnection(dbFile);
-      MetaUtil.initializeDataBase(conn);
-      smartConf = new SmartConf();
-      dbAdapter = new DBAdapter(conn);
-      ServerContext serverContext = new ServerContext(smartConf, dbAdapter);
-      ruleManager = new RuleManager(serverContext, null);
-    } finally {
-      File file = new File(dbFile);
-      file.deleteOnExit();
-    }
+    initDao();
+    smartConf = new SmartConf();
+    dbAdapter = new DBAdapter(druidPool);
+    ServerContext serverContext = new ServerContext(smartConf, dbAdapter);
+    ruleManager = new RuleManager(serverContext, null);
+  }
+
+  @After
+  public void close() throws Exception {
+    ruleManager = null;
+    dbAdapter = null;
+    closeDao();
   }
 
   @Test
