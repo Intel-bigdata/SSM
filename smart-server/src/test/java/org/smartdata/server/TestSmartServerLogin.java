@@ -95,5 +95,11 @@ public class TestSmartServerLogin {
     if (kdcServer != null) {
       kdcServer.stop();
     }
+    if (ssm != null) {
+      ssm.shutdown();
+    }
+    if (cluster != null) {
+      cluster.shutdown();
+    }
   }
 }
