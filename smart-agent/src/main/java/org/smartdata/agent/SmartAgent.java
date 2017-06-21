@@ -33,12 +33,23 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.SmartContext;
+import org.smartdata.actions.ActionFactory;
+import org.smartdata.actions.ActionRegistry;
+import org.smartdata.actions.SmartAction;
 import org.smartdata.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.agent.messages.MasterToAgent.AgentRegistered;
+import org.smartdata.server.cmdlet.CmdletFactory;
+import org.smartdata.server.cmdlet.executor.CmdletExecutor;
+import org.smartdata.server.cmdlet.executor.CmdletStatusReporter;
+import org.smartdata.server.cmdlet.message.LaunchAction;
+import org.smartdata.server.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.cmdlet.message.StatusMessage;
 import scala.Serializable;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class SmartAgent {
@@ -69,7 +80,7 @@ public class SmartAgent {
     }
   }
 
-  static class AgentActor extends UntypedActor {
+  static class AgentActor extends UntypedActor implements CmdletStatusReporter {
     private final static Logger LOG = LoggerFactory.getLogger(AgentActor.class);
 
     private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
@@ -79,15 +90,19 @@ public class SmartAgent {
     private ActorRef master;
     private final SmartAgent agent;
     private final String masterPath;
+    private final CmdletExecutor executor;
+    private final CmdletFactory factory;
 
     public AgentActor(SmartAgent agent, String masterPath) {
       this.agent = agent;
       this.masterPath = masterPath;
+      this.executor = new CmdletExecutor(this);
+      this.factory = new CmdletFactory(new SmartContext());
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
-      // unhandled(message);
+      unhandled(message);
     }
 
     @Override
@@ -107,6 +122,11 @@ public class SmartAgent {
             }
           },
           new Shutdown(agent));
+    }
+
+    @Override
+    public void report(StatusMessage status) {
+      master.tell(status, getSelf());
     }
 
     private class WaitForFindMaster implements Procedure<Object> {
@@ -162,7 +182,10 @@ public class SmartAgent {
 
       @Override
       public void apply(Object message) throws Exception {
-      if (message instanceof Terminated) {
+        if (message instanceof LaunchCmdlet) {
+          LaunchCmdlet launch = (LaunchCmdlet) message;
+          executor.execute(factory.createCmdlet(launch));
+        } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {
             LOG.warn("Lost contact with master {}. Try registering again...", getSender());

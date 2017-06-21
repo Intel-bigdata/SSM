@@ -34,32 +34,9 @@
   <dependencies>
     <dependency>
       <groupId>org.smartdata</groupId>
-      <artifactId>smart-common</artifactId>
-      <version>0.1-SNAPSHOT</version>
-      <!--<scope>provided</scope>-->
-    </dependency>
-    <dependency>
-      <groupId>org.smartdata</groupId>
-      <artifactId>smart-dfsclient</artifactId>
+      <artifactId>smart-server</artifactId>
       <version>0.1-SNAPSHOT</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.smartdata</groupId>
-      <artifactId>smart-metrics</artifactId>
-      <version>0.1-SNAPSHOT</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.smartdata</groupId>
-      <artifactId>smart-admin</artifactId>
-      <version>0.1-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.smartdata</groupId>
-      <artifactId>smart-actions</artifactId>
-      <version>0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>

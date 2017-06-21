@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.smartdata.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.agent.messages.MasterToAgent.AgentRegistered;
 
-public class TestAgent extends ActorSystemHarness {
+public class TestSmartAgent extends ActorSystemHarness {
 
   @Test
   public void testAgent() {
