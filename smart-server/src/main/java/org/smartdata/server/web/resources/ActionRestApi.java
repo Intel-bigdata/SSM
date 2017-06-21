@@ -42,20 +42,20 @@ import java.util.Random;
 @Path("/api/v1.0")
 @Produces("application/json")
 public class ActionRestApi {
+  SmartServer ssm;
   private static final Logger logger =
       LoggerFactory.getLogger(ActionRestApi.class);
   Gson gson = new Gson();
   private Collection<ActionInfo> actions = new ArrayList<ActionInfo>();
 
-  public ActionRestApi() {
+  public ActionRestApi(SmartServer ssm) {
+    this.ssm = ssm;
   }
 
   @GET
   @Path("/actions/{actionId}/detail")
   public Response detail(@PathParam("actionId") String actionId)
       throws Exception {
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
     Long longNumer = Long.parseLong(actionId);
     return new JsonResponse<>(Response.Status.OK,
         ssm.getCmdletExecutor().getActionInfo(longNumer)).build();
@@ -64,8 +64,6 @@ public class ActionRestApi {
   @GET
   @Path("/cachedfiles")
   public Response cachedFiles() throws Exception {
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
     return new JsonResponse<>(Response.Status.OK,
         ssm.getStatesManager().getCachedFileStatus()).build();
   }
@@ -73,8 +71,6 @@ public class ActionRestApi {
   @GET
   @Path("/hotfiles")
   public Response hotFiles() throws Exception {
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
     List<AccessCountTable> tables =
         ssm.getStatesManager().getTablesInLast(Constants.ONE_HOUR_IN_MILLIS);
     return new JsonResponse<>(Response.Status.OK,
@@ -84,20 +80,22 @@ public class ActionRestApi {
   @GET
   @Path("/actiontypes")
   public Response actionTypes() throws Exception {
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
     return new JsonResponse<>(Response.Status.OK,
         ssm.getCmdletExecutor().listActionsSupported()).build();
+  }
+
+  @GET
+  @Path("/actionlist")
+  public Response actionList() throws Exception {
+    return new JsonResponse<>(Response.Status.OK,
+        ssm.getCmdletExecutor().listNewCreatedActions(20)).build();
   }
 
   @POST
   @Path("/submitaction/{actionType}")
   public Response submitAction(String args,
       @PathParam("actionType") String actionType) {
-    SmartConf conf = new SmartConf();
-    SmartServer ssm;
     try {
-      ssm = SmartServer.createSSM(null, conf);
       ActionInfo request = gson.fromJson(args, ActionInfo.class);
       ActionInfo action = new ActionInfo.Builder().setActionName(actionType)
           .setActionId(Math.abs(new Random().nextLong()))

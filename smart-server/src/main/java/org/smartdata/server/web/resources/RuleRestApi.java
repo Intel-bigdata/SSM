@@ -41,11 +41,14 @@ import java.util.Map;
 @Path("/api/v1.0")
 @Produces("application/json")
 public class RuleRestApi {
+  private SmartServer ssm;
   private static final Logger logger =
       LoggerFactory.getLogger(RuleRestApi.class);
   Gson gson = new Gson();
 
-  public RuleRestApi() {}
+  public RuleRestApi(SmartServer ssm) {
+    this.ssm = ssm;
+  }
 
   @GET
   public String getString() {
@@ -56,8 +59,6 @@ public class RuleRestApi {
   @Path("/rules/{ruleId}/start")
   public Response start(@PathParam("ruleId") String ruleId) throws Exception {
     logger.info("Start rule{}", ruleId);
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
     Long intNumer = Long.parseLong(ruleId);
     ssm.getRuleManager().activateRule(intNumer);
     return new JsonResponse<>(Response.Status.OK).build();
@@ -67,8 +68,6 @@ public class RuleRestApi {
   @Path("/rules/{ruleId}/stop")
   public Response stop(@PathParam("ruleId") String ruleId) throws Exception {
     logger.info("Stop rule{}", ruleId);
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
     Long intNumer = Long.parseLong(ruleId);
     ssm.getRuleManager().disableRule(intNumer, true);
     return new JsonResponse<>(Response.Status.OK).build();
@@ -77,8 +76,6 @@ public class RuleRestApi {
   @GET
   @Path("/rules/{ruleId}/detail")
   public Response detail(@PathParam("ruleId") String ruleId) throws Exception {
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
     Long intNumer = Long.parseLong(ruleId);
     return new JsonResponse<>(Response.Status.OK,
         ssm.getRuleManager().getRuleInfo(intNumer)).build();
@@ -93,8 +90,6 @@ public class RuleRestApi {
   @GET
   @Path("/rules/{ruleId}/cmdlets")
   public Response cmdlets(@PathParam("ruleId") String ruleId) throws Exception {
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
     Long intNumer = Long.parseLong(ruleId);
     Map<String, String> m = new HashMap<String, String>();
     m.put("_FILE_PATH_", "/testCacheFile");
@@ -109,9 +104,6 @@ public class RuleRestApi {
   @GET
   @Path("/rulelist")
   public Response ruleList() throws Exception {
-    SmartConf conf = new SmartConf();
-    SmartServer ssm = SmartServer.createSSM(null, conf);
-//    SmartServer smartServer = (SmartServer)context.getAttribute("smartServer");
     return new JsonResponse<>(Response.Status.OK, "",
         ssm.getRuleManager().listRulesInfo()).build();
   }
@@ -119,14 +111,9 @@ public class RuleRestApi {
   @POST
   @Path("/addRule")
   public Response addRule(String message){
-    SmartConf conf = new SmartConf();
-    SmartServer ssm;
     String rule;
     long t;
     try {
-//      RuleInfo request = gson.fromJson(message, RuleInfo.class);
-//      logger.info("New rule {} added", request.getId());
-      ssm = SmartServer.createSSM(null, conf);
       rule = java.net.URLDecoder.decode(message, "UTF-8");
       logger.info("Adding rule: " + rule);
       t = ssm.getRuleManager().submitRule(rule, RuleState.DISABLED);
