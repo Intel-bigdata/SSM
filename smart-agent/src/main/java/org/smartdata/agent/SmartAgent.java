@@ -41,14 +41,14 @@ import scala.concurrent.duration.FiniteDuration;
 
 import java.util.concurrent.TimeUnit;
 
-public class Agent {
-  private static final String NAME = "Agent";
+public class SmartAgent {
+  private static final String NAME = "SmartAgent";
   static final String MASTER_PATH = "master.path";
-  private final static Logger LOG = LoggerFactory.getLogger(Agent.class);
+  private final static Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
 
   public static void main(String[] args) {
-    Agent agent = new Agent();
+    SmartAgent agent = new SmartAgent();
 
     Config config = ConfigFactory.load();
     String masterAddress = config.getString(AgentConstants.MASTER_ADDRESS);
@@ -77,10 +77,10 @@ public class Agent {
 
     private AgentId id;
     private ActorRef master;
-    private final Agent agent;
+    private final SmartAgent agent;
     private final String masterPath;
 
-    public AgentActor(Agent agent, String masterPath) {
+    public AgentActor(SmartAgent agent, String masterPath) {
       this.agent = agent;
       this.masterPath = masterPath;
     }
@@ -150,7 +150,7 @@ public class Agent {
           registerAgent.cancel();
           getContext().watch(master);
           AgentActor.this.id = registered.getAgentId();
-          LOG.info("Agent {} registered to {}",
+          LOG.info("SmartAgent {} registered to {}",
               AgentActor.this.id,
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           getContext().become(new Serve());
@@ -190,9 +190,9 @@ public class Agent {
 
     private class Shutdown implements Runnable {
 
-      private Agent agent;
+      private SmartAgent agent;
 
-      public Shutdown(Agent agent) {
+      public Shutdown(SmartAgent agent) {
         this.agent = agent;
       }
 

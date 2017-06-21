@@ -32,14 +32,14 @@ public class TestAgent extends ActorSystemHarness {
   public void testAgent() {
     ActorSystem system = getActorSystem();
     JavaTestKit mockedMaster = new JavaTestKit(system);
-    Config config = ConfigFactory.load().withValue(Agent.MASTER_PATH,
+    Config config = ConfigFactory.load().withValue(SmartAgent.MASTER_PATH,
         ConfigValueFactory.fromAnyRef(
             AgentUtils.getFullPath(system, mockedMaster.getRef().path())));
     AgentRunner runner = new AgentRunner(config);
     runner.start();
 
     mockedMaster.expectMsgClass(RegisterNewAgent.class);
-    mockedMaster.reply(new AgentRegistered(new Agent.AgentId(0)));
+    mockedMaster.reply(new AgentRegistered(new SmartAgent.AgentId(0)));
   }
 
   private class AgentRunner extends Thread {
@@ -52,7 +52,7 @@ public class TestAgent extends ActorSystemHarness {
 
     @Override
     public void run() {
-      Agent agent = new Agent();
+      SmartAgent agent = new SmartAgent();
       agent.start(config);
     }
 

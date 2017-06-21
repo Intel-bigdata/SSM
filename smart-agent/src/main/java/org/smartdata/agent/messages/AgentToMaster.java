@@ -17,13 +17,13 @@
  */
 package org.smartdata.agent.messages;
 
-import org.smartdata.agent.Agent;
+import org.smartdata.agent.SmartAgent;
 import org.smartdata.agent.AgentMaster;
 
 import java.io.Serializable;
 
 /**
- * Messages sent from {@link Agent} to {@link AgentMaster}
+ * Messages sent from {@link SmartAgent} to {@link AgentMaster}
  */
 public class AgentToMaster {
 
@@ -42,13 +42,13 @@ public class AgentToMaster {
   public static class RegisterAgent implements Serializable {
 
     private static final long serialVersionUID = 5566241875786339983L;
-    private final Agent.AgentId id;
+    private final SmartAgent.AgentId id;
 
-    public RegisterAgent(Agent.AgentId id) {
+    public RegisterAgent(SmartAgent.AgentId id) {
       this.id = id;
     }
 
-    public Agent.AgentId getId() {
+    public SmartAgent.AgentId getId() {
       return id;
     }
 

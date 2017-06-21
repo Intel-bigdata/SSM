@@ -95,7 +95,7 @@ public class AgentMaster {
   static class MasterActor extends UntypedActor {
 
     private int nextAgentId = 0;
-    private final Map<ActorRef, Agent.AgentId> agentIds = new HashMap<>();
+    private final Map<ActorRef, SmartAgent.AgentId> agentIds = new HashMap<>();
     private final List<ActorRef> agents = new LinkedList<>();
 
     @Override
@@ -109,7 +109,7 @@ public class AgentMaster {
 
     private boolean handleWorkerMessage(Object message) {
       if (message instanceof RegisterNewAgent) {
-        Agent.AgentId id = new Agent.AgentId(nextAgentId);
+        SmartAgent.AgentId id = new SmartAgent.AgentId(nextAgentId);
         nextAgentId++;
         getSelf().forward(new RegisterAgent(id), getContext());
         return true;
@@ -117,7 +117,7 @@ public class AgentMaster {
         RegisterAgent register = (RegisterAgent) message;
         ActorRef sender = getSender();
         getContext().watch(sender);
-        Agent.AgentId id = register.getId();
+        SmartAgent.AgentId id = register.getId();
         agentIds.put(sender, id);
         agents.add(sender);
         sender.tell(new AgentRegistered(id), getSelf());
@@ -132,9 +132,9 @@ public class AgentMaster {
       if (message instanceof Terminated) {
         Terminated terminated = (Terminated) message;
         ActorRef ref = terminated.actor();
-        Agent.AgentId id = agentIds.remove(ref);
+        SmartAgent.AgentId id = agentIds.remove(ref);
         agents.remove(ref);
-        LOG.warn("Agent ({} {} down", id, ref);
+        LOG.warn("SmartAgent ({} {} down", id, ref);
         return true;
       } else {
         return false;
