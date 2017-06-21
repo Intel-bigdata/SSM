@@ -77,8 +77,8 @@ public class SmartServer {
 
     if (startupOption == StartupOption.REGULAR) {
       statesMgr = new StatesManager(context);
-      ruleMgr = new RuleManager(context, this);
       cmdletExecutor = new CmdletExecutor(context);
+      ruleMgr = new RuleManager(context, statesMgr, cmdletExecutor);
 
       modules.add(statesMgr);
       modules.add(ruleMgr);

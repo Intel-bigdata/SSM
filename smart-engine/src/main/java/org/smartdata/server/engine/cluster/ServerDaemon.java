@@ -17,31 +17,7 @@
  */
 package org.smartdata.server.engine.cluster;
 
-import com.hazelcast.core.MemberAttributeEvent;
-import com.hazelcast.core.MembershipEvent;
-import com.hazelcast.core.MembershipListener;
-import org.smartdata.server.SmartServerDaemon;
-import org.smartdata.server.utils.HazelcastUtil;
+public interface ServerDaemon {
 
-public class ClusterMembershipListener implements MembershipListener {
-  private final SmartServerDaemon daemon;
-
-  public ClusterMembershipListener(SmartServerDaemon daemon) {
-    this.daemon = daemon;
-  }
-
-  @Override
-  public void memberAdded(MembershipEvent membershipEvent) {
-  }
-
-  @Override
-  public void memberRemoved(MembershipEvent membershipEvent) {
-    if (HazelcastUtil.isMaster(HazelcastInstanceProvider.getInstance())) {
-      this.daemon.becomeActive();
-    }
-  }
-
-  @Override
-  public void memberAttributeChanged(MemberAttributeEvent memberAttributeEvent) {
-  }
+  void becomeActive();
 }

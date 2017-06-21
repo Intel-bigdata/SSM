@@ -27,7 +27,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>smart-server</artifactId>
+    <artifactId>smart-engine</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -75,11 +75,6 @@
             <artifactId>smart-admin</artifactId>
             <version>0.1-SNAPSHOT</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.smartdata</groupId>
-            <artifactId>smart-engine</artifactId>
-            <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>

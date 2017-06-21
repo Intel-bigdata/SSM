@@ -28,6 +28,7 @@
     <module>smart-client</module>
     <module>smart-dfsclient</module>
     <module>smart-admin</module>
+    <module>smart-engine</module>
     <module>smart-server</module>
     <module>smart-alluxio</module>
     <module>smart-rule</module>

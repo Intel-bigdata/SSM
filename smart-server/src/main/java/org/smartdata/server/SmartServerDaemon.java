@@ -20,16 +20,17 @@ package org.smartdata.server;
 import com.hazelcast.core.HazelcastInstance;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cluster.ClusterMembershipListener;
 import org.smartdata.server.engine.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.engine.cluster.HazelcastWorker;
+import org.smartdata.server.engine.cluster.ServerDaemon;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
-import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.utils.HazelcastUtil;
 
 import java.io.IOException;
 
-public class SmartServerDaemon {
+public class SmartServerDaemon implements ServerDaemon {
   private final String[] args;
   //Todo: maybe we can make worker as an interface
   private HazelcastWorker hazelcastWorker;
@@ -53,6 +54,7 @@ public class SmartServerDaemon {
     }
   }
 
+  @Override
   public void becomeActive() {
     if (this.hazelcastWorker != null) {
       this.hazelcastWorker.stop();

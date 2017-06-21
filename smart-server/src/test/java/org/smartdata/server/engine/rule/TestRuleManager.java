@@ -48,7 +48,7 @@ public class TestRuleManager extends TestDaoUtil {
     smartConf = new SmartConf();
     metaStore = new MetaStore(druidPool);
     ServerContext serverContext = new ServerContext(smartConf, metaStore);
-    ruleManager = new RuleManager(serverContext, null);
+    ruleManager = new RuleManager(serverContext, null, null);
   }
 
   @After

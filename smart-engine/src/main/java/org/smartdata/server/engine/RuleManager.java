@@ -27,7 +27,6 @@ import org.smartdata.common.rule.RuleState;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
-import org.smartdata.server.SmartServer;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
@@ -45,7 +44,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RuleManager extends AbstractService {
   private ServerContext serverContext;
-  private SmartServer server;
+  private StatesManager statesManager;
+  private CmdletExecutor cmdletExecutor;
   private MetaStore metaStore;
 
   private boolean isClosed = false;
@@ -58,10 +58,12 @@ public class RuleManager extends AbstractService {
   // TODO: configurable
   public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
 
-  public RuleManager(ServerContext context, SmartServer server) {
+  public RuleManager(ServerContext context,
+                     StatesManager statesManager, CmdletExecutor cmdletExecutor) {
     super(context);
 
-    this.server = server;
+    this.statesManager = statesManager;
+    this.cmdletExecutor = cmdletExecutor;
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
   }
@@ -186,11 +188,11 @@ public class RuleManager extends AbstractService {
   }
 
   public StatesManager getStatesManager() {
-    return server == null ? null : server.getStatesManager();
+    return statesManager;
   }
 
   public CmdletExecutor getCmdletExecutor() {
-    return server == null ? null : server.getCmdletExecutor();
+    return cmdletExecutor;
   }
 
   /**
