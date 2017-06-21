@@ -26,15 +26,13 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.common.security.JaasLoginUtil;
-import org.smartdata.conf.ReconfigurableBase;
-import org.smartdata.conf.ReconfigureException;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.server.engine.CmdletExecutor;
+import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.Service;
-import org.smartdata.server.engine.SmartRpcServer;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.MetaUtil;
@@ -49,18 +47,18 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * From this Smart Storage Management begins.
  */
-public class SmartServer extends ReconfigurableBase {
-  private StatesManager statesManager;
-  private RuleManager ruleManager;
+public class SmartServer {
+  private StatesManager statesMgr;
+  private RuleManager ruleMgr;
   private CmdletExecutor cmdletExecutor;
   private SmartHttpServer httpServer;
   private SmartRpcServer rpcServer;
+  private ConfManager confMgr;
   private SmartConf conf;
   private List<Service> modules = new ArrayList<>();
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
@@ -75,6 +73,7 @@ public class SmartServer extends ReconfigurableBase {
   SmartServer(SmartConf conf, StartupOption startupOption)
       throws IOException, URISyntaxException {
     this.conf = conf;
+    this.confMgr = new ConfManager(conf);
 
     checkSecurityAndLogin();
 
@@ -82,11 +81,11 @@ public class SmartServer extends ReconfigurableBase {
       case REGULAR:
         httpServer = new SmartHttpServer(this, conf);
         rpcServer = new SmartRpcServer(this, conf);
-        statesManager = new StatesManager(this, conf);
-        ruleManager = new RuleManager(this, conf);
+        statesMgr = new StatesManager(this, conf);
+        ruleMgr = new RuleManager(this, conf);
         cmdletExecutor = new CmdletExecutor(this, conf);
-        modules.add(statesManager);
-        modules.add(ruleManager);
+        modules.add(statesMgr);
+        modules.add(ruleMgr);
         modules.add(cmdletExecutor);
         break;
 
@@ -97,11 +96,11 @@ public class SmartServer extends ReconfigurableBase {
   }
 
   public StatesManager getStatesManager() {
-    return statesManager;
+    return statesMgr;
   }
 
   public RuleManager getRuleManager() {
-    return ruleManager;
+    return ruleMgr;
   }
 
   public CmdletExecutor getCmdletExecutor() {
@@ -350,20 +349,5 @@ public class SmartServer extends ReconfigurableBase {
       }
     }
     return startOpt;
-  }
-
-  @Override
-  public void reconfigureProperty(String property, String newVal)
-      throws ReconfigureException {
-    if (property.equals(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY)) {
-      conf.set(property, newVal);
-    }
-  }
-
-  @Override
-  public List<String> getReconfigurableProperties() {
-    return Arrays.asList(
-        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY
-    );
   }
 }

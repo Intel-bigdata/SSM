@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine;
+package org.smartdata.server;
 
 import com.google.protobuf.BlockingService;
 import org.apache.hadoop.conf.Configuration;
