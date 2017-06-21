@@ -86,7 +86,6 @@ Convert 3x Replication file to Block EC file
 --------------------------------------------
 
 For some existing 3x replication large files, user many want to convert them to block EC files to save storage space. Apply block EC rule to the files or the directories to trigger the conversion. 
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 <img src="./block-ec-convert.png" width="624" height="125" />
 
