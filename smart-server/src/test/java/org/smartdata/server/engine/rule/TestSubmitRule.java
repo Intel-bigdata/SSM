@@ -17,81 +17,25 @@
  */
 package org.smartdata.server.engine.rule;
 
-import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.SmartServer;
-import org.smartdata.server.metastore.MetaUtil;
-import org.smartdata.server.metastore.TestDBUtil;
+import org.smartdata.server.TestEmptyMiniSmartCluster;
 
 import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
-
-public class TestSubmitRule {
-  private SmartConf conf;
-  private MiniDFSCluster cluster;
-  private SmartServer ssm;
-
-  @Before
-  public void setUp() throws Exception {
-    conf = new SmartConf();
-    cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3).build();
-
-    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
-    List<URI> uriList = new ArrayList<>(namenodes);
-    conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
-    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
-        uriList.get(0).toString());
-
-    // Set db used
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
-
-    // rpcServer start in SmartServer
-    ssm = SmartServer.launchWith(conf);
-  }
-
-  @After
-  public void cleanUp() throws Exception {
-    if (ssm != null) {
-      ssm.shutdown();
-    }
-    if (cluster != null) {
-      cluster.shutdown();
-    }
-  }
+public class TestSubmitRule extends TestEmptyMiniSmartCluster {
 
   @Test
   public void testSubmitRule() throws Exception {
+    waitTillSSMExitSafeMode();
+
     String rule = "file: every 1s \n | length > 10 | cache";
     SmartAdmin client = new SmartAdmin(conf);
 
     long ruleId = 0l;
-    boolean wait = true;
-    while (wait) {
-      try {
-        ruleId = client.submitRule(rule, RuleState.ACTIVE);
-        wait = false;
-      } catch (IOException e) {
-        if (!e.toString().contains("not ready")) {
-          throw e;
-        }
-      }
-    }
+    ruleId = client.submitRule(rule, RuleState.ACTIVE);
 
     for (int i = 0; i < 10; i++) {
       long id = client.submitRule(rule, RuleState.ACTIVE);
