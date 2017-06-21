@@ -17,7 +17,38 @@
  */
 package org.smartdata.server.cmdlet.hazelcast;
 
-import java.io.Serializable;
+public class CmdletScheduled implements HazelcastMessage {
+  private long cmdletId;
+  private long timestamp;
+  private String instanceId;
 
-public interface HazelcastMessage extends Serializable {
+  public CmdletScheduled(long cmdletId, long timestamp, String instanceId) {
+    this.cmdletId = cmdletId;
+    this.timestamp = timestamp;
+    this.instanceId = instanceId;
+  }
+
+  public String getInstanceId() {
+    return instanceId;
+  }
+
+  public void setInstanceId(String instanceId) {
+    this.instanceId = instanceId;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
+  }
+
+  public void setTimestamp(long timestamp) {
+    this.timestamp = timestamp;
+  }
+
+  public long getCmdletId() {
+    return cmdletId;
+  }
+
+  public void setCmdletId(long cmdletId) {
+    this.cmdletId = cmdletId;
+  }
 }

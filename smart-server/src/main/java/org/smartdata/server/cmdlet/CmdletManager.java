@@ -25,6 +25,8 @@ import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.server.cmdlet.message.ActionStatusReport;
+import org.smartdata.server.cmdlet.message.CmdletStatusUpdate;
 import org.smartdata.server.cmdlet.message.LaunchAction;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.Service;
@@ -174,11 +176,14 @@ public class CmdletManager implements Service {
   }
 
   public synchronized void updateStatue(StatusMessage status) {
-    System.out.println("Got message " + status);
+    if (status instanceof CmdletStatusUpdate) {
+
+    } else if (status instanceof ActionStatusReport) {
+
+    }
   }
 
   int num = 0;
-
   public LaunchCmdlet getNextCmdletToRun() throws IOException {
     num +=1;
     List<LaunchAction> actions = new ArrayList<>();

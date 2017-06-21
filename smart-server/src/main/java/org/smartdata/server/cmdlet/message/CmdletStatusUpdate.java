@@ -21,10 +21,12 @@ import org.smartdata.common.CmdletState;
 
 public class CmdletStatusUpdate implements StatusMessage {
   private long cmdletId;
+  private long timestamp;
   private CmdletState currentState;
 
-  public CmdletStatusUpdate(long cmdletId, CmdletState currentState) {
+  public CmdletStatusUpdate(long cmdletId, long timestamp, CmdletState currentState) {
     this.cmdletId = cmdletId;
+    this.timestamp = timestamp;
     this.currentState = currentState;
   }
 
@@ -34,6 +36,14 @@ public class CmdletStatusUpdate implements StatusMessage {
 
   public void setCmdletId(long cmdletId) {
     this.cmdletId = cmdletId;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
+  }
+
+  public void setTimestamp(long timestamp) {
+    this.timestamp = timestamp;
   }
 
   public CmdletState getCurrentState() {
