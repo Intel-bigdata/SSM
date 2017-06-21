@@ -22,12 +22,19 @@ import org.smartdata.server.cmdlet.CmdletManager;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.cmdlet.message.StatusMessage;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class LocalCmdletExecutorService extends CmdletExecutorService implements CmdletStatusReporter {
   private CmdletExecutor cmdletExecutor;
+  private ScheduledExecutorService executorService;
 
   public LocalCmdletExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
     super(cmdletManager, cmdletFactory);
     this.cmdletExecutor = new CmdletExecutor(this);
+    this.executorService = Executors.newSingleThreadScheduledExecutor();
+    this.executorService.scheduleAtFixedRate(new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
   }
 
   @Override
@@ -46,7 +53,25 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
   }
 
   @Override
+  public void stop(long cmdletId) {
+    this.cmdletExecutor.stop(cmdletId);
+  }
+
+  @Override
+  public void shutdown() {
+    this.executorService.shutdown();
+    this.cmdletExecutor.shutdown();
+  }
+
+  @Override
   public void report(StatusMessage status) {
     cmdletManager.updateStatue(status);
+  }
+
+  private class StatusFetchTask implements Runnable {
+    @Override
+    public void run() {
+      report(cmdletExecutor.getActionStatusReport());
+    }
   }
 }

@@ -45,4 +45,14 @@ public class AgentExecutorService extends CmdletExecutorService {
   public void execute(LaunchCmdlet cmdlet) {
     master.launchCmdlet(cmdlet);
   }
+
+  @Override
+  public void stop(long cmdletId) {
+
+  }
+
+  @Override
+  public void shutdown() {
+
+  }
 }

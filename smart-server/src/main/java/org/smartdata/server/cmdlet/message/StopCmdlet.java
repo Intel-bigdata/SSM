@@ -15,9 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.cmdlet.hazelcast;
+package org.smartdata.server.cmdlet.message;
 
 import java.io.Serializable;
 
-public interface HazelcastMessage extends Serializable {
+public class StopCmdlet implements Serializable {
+  private long cmdletId;
+
+  public StopCmdlet(long cmdletId) {
+    this.cmdletId = cmdletId;
+  }
+
+  public long getCmdletId() {
+    return cmdletId;
+  }
+
+  public void setCmdletId(long cmdletId) {
+    this.cmdletId = cmdletId;
+  }
 }

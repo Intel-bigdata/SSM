@@ -35,4 +35,8 @@ public abstract class CmdletExecutorService {
   public abstract boolean canAcceptMore();
 
   public abstract void execute(LaunchCmdlet cmdlet);
+
+  public abstract void stop(long cmdletId);
+
+  public abstract void shutdown();
 }

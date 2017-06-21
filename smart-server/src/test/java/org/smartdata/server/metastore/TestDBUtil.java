@@ -43,7 +43,7 @@ public class TestDBUtil {
       throws IOException, SQLException, ClassNotFoundException {
     // TODO remove today
     String srcdir = System.getProperty("srcdir",
-        System.getProperty("user.dir") + "/src/resources");
+        System.getProperty("user.dir") + "/src/main/resources");
     String srcPath = srcdir + "/data-schema.db";
     String destPath = getUniqueDBFilePath();
     copyFile(srcPath, destPath);
