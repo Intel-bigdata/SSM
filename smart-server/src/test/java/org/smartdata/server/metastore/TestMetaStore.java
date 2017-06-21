@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.smartdata.server.metastore;
 
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -42,11 +59,28 @@ public class TestMetaStore extends TestDaoUtil {
   }
 
 /*  @Test
-  public void testGetAccessCount() throws Exception {;
+  public void testGetAccessCount() throws Exception {
     Map<Long, Integer> ret = metaStore.getAccessCount(1490932740000l,
         1490936400000l, null);
     Assert.assertTrue(ret.get(2l) == 32);
   }
+
+  @Test
+  public void testGetFileIds() throws Exception {
+    createTables(databaseTester.getConnection());
+    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader()
+      .getResourceAsStream("files.xml"));
+    databaseTester.setDataSet(dataSet);
+    databaseTester.onSetup();
+
+    DBAdapter dbAdapter = new DBAdapter(databaseTester.getConnection().getConnection());
+    List<String> paths = Arrays.asList("file1", "file2", "file3");
+    Map<String, Long> pathToID = dbAdapter.getFileIDs(paths);
+    Assert.assertTrue(pathToID.get("file1") == 101);
+    Assert.assertTrue(pathToID.get("file2") == 102);
+    Assert.assertTrue(pathToID.get("file3") == 103);
+  }
+  */
 
 
   @Test
@@ -75,7 +109,6 @@ public class TestMetaStore extends TestDaoUtil {
     hdfsFileStatus = metaStore.getFile("/tmp/des");
     Assert.assertTrue(hdfsFileStatus.getAccessTime() == 1490936390000l);
   }
-*/
   @Test
   public void testInsertStoragesTable() throws Exception {
     StorageCapacity storage1 = new StorageCapacity("Flash",
@@ -219,7 +252,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(cachedFileList.get(2).getFid() == 23);
   }
 
-/*  @Test
+  @Test
   public void testInsetFiles() throws Exception {
     String pathString = "testFile";
     long length = 123L;
@@ -243,22 +276,6 @@ public class TestMetaStore extends TestDaoUtil {
     HdfsFileStatus hdfsFileStatus = metaStore.getFile("/tmp/testFile");
     Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 * 1024L);
   }
-  @Test
-  public void testGetFileIds() throws Exception {
-    createTables(databaseTester.getConnection());
-    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader()
-      .getResourceAsStream("files.xml"));
-    databaseTester.setDataSet(dataSet);
-    databaseTester.onSetup();
-
-    DBAdapter dbAdapter = new DBAdapter(databaseTester.getConnection().getConnection());
-    List<String> paths = Arrays.asList("file1", "file2", "file3");
-    Map<String, Long> pathToID = dbAdapter.getFileIDs(paths);
-    Assert.assertTrue(pathToID.get("file1") == 101);
-    Assert.assertTrue(pathToID.get("file2") == 102);
-    Assert.assertTrue(pathToID.get("file3") == 103);
-  }
-  */
 
   @Test
   public void testInsertCmdletsTable() throws Exception {

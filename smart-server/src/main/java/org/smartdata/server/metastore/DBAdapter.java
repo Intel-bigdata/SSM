@@ -48,6 +48,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.smartdata.server.metastore.MetaUtil.getKey;
+
 /**
  * Operations supported for upper functions.
  */
@@ -302,15 +304,6 @@ public class DBAdapter {
 
   private int booleanToInt(boolean b) {
     return b ? 1 : 0;
-  }
-
-  private Integer getKey(Map<Integer, String> map, String value) {
-    for (Integer key : map.keySet()) {
-      if (map.get(key).equals(value)) {
-        return key;
-      }
-    }
-    return null;
   }
 
   public List<HdfsFileStatus> getFile() throws SQLException {

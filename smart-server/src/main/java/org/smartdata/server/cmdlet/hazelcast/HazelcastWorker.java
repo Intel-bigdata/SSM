@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.cmdlet.hazelcast;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cmdlet.CmdletFactory;
@@ -26,6 +27,7 @@ import org.smartdata.server.cmdlet.message.ActionStatusReport;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.cmdlet.message.StatusMessage;
 
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -33,21 +35,25 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class HazelcastWorker implements CmdletStatusReporter {
+  private final String instanceId;
   private ScheduledExecutorService executorService;
   private BlockingQueue<LaunchCmdlet> cmdletQueue;
+  private ITopic<HazelcastMessage> workerToMaster;
+  private ITopic<StatusMessage> statusTopic;
+
   private CmdletExecutor cmdletExecutor;
   private CmdletFactory factory;
   private Future<?> fetcher;
-  private ITopic<StatusMessage> statusTopic;
 
   public HazelcastWorker(CmdletFactory factory) {
     this.factory = factory;
     this.cmdletExecutor = new CmdletExecutor(this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.cmdletQueue =
-        HazelcastInstanceProvider.getInstance().getQueue(HazelcastExecutorService.COMMAND_QUEUE);
-    this.statusTopic =
-        HazelcastInstanceProvider.getInstance().getTopic(HazelcastExecutorService.SLAVE_TO_MASTER);
+    HazelcastInstance instance = HazelcastInstanceProvider.getInstance();
+    this.instanceId =  instance.getCluster().getLocalMember().getUuid();
+    this.cmdletQueue = instance.getQueue(HazelcastExecutorService.COMMAND_QUEUE);
+    this.statusTopic = instance.getTopic(HazelcastExecutorService.STATUS_TOPIC);
+    this.workerToMaster = instance.getTopic(HazelcastExecutorService.WORKER_TO_MASTER);
   }
 
   public void start() {
@@ -69,6 +75,11 @@ public class HazelcastWorker implements CmdletStatusReporter {
     this.statusTopic.publish(status);
   }
 
+  private void cmdletScheduled(long cmdletId) {
+    this.workerToMaster.publish(
+        new CmdletScheduled(cmdletId, System.currentTimeMillis(), this.instanceId));
+  }
+
   private class CmdletFetcher implements Runnable {
     @Override
     public void run() {
@@ -79,6 +90,7 @@ public class HazelcastWorker implements CmdletStatusReporter {
     private void executeCmdlet() {
       LaunchCmdlet launchCmdlet = cmdletQueue.poll();
       while (launchCmdlet != null) {
+        cmdletScheduled(launchCmdlet.getCmdletId());
         cmdletExecutor.execute(factory.createCmdlet(launchCmdlet));
         launchCmdlet = cmdletQueue.poll();
       }

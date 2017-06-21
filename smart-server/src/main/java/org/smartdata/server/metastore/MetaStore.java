@@ -50,6 +50,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.smartdata.server.metastore.MetaUtil.getKey;
+
 /**
  * Operations supported for upper functions.
  */
@@ -221,20 +223,22 @@ public class MetaStore {
     }
   }
 
-  private synchronized void addUser(String userName) throws SQLException {
+  public synchronized void addUser(String userName) throws SQLException {
     userDao.addUser(userName);
   }
 
-  private synchronized void addGroup(String groupName) throws SQLException {
+  public synchronized void addGroup(String groupName) throws SQLException {
     groupsDao.addGroup(groupName);
   }
 
   private void updateUsersMap() throws SQLException {
     mapOwnerIdName = userDao.getUsersMap();
+    fileDao.updateUsersMap(mapOwnerIdName);
   }
 
   private void updateGroupsMap() throws SQLException {
     mapGroupIdName = groupsDao.getGroupsMap();
+    fileDao.updateGroupsMap(mapGroupIdName);
   }
 
   /**
@@ -256,8 +260,6 @@ public class MetaStore {
         this.addGroup(group);
         this.updateGroupsMap();
       }
-      // file.setOid(getKey(mapOwnerIdName, file.getOwner()));
-      // file.setGid(getKey(mapGroupIdName, file.getGroup()));
     }
     fileDao.insert(files);
   }
@@ -273,15 +275,6 @@ public class MetaStore {
           + policyName + "'");
     }
     return storageDao.updateFileStoragePolicy(path, policyName);
-  }
-
-  private Integer getKey(Map<Integer, String> map, String value) {
-    for (Integer key : map.keySet()) {
-      if (map.get(key).equals(value)) {
-        return key;
-      }
-    }
-    return null;
   }
 
   public List<HdfsFileStatus> getFile() throws SQLException {
@@ -369,15 +362,13 @@ public class MetaStore {
   }
 
   private void updateCache() throws SQLException {
-    // TODO map
     if (mapOwnerIdName == null) {
-      mapOwnerIdName = userDao.getUsersMap();
+      this.updateUsersMap();
     }
 
     if (mapGroupIdName == null) {
-      mapOwnerIdName = groupsDao.getGroupsMap();
+      this.updateGroupsMap();
     }
-
     if (mapStoragePolicyIdName == null) {
       mapStoragePolicyNameId = null;
       mapStoragePolicyIdName = storageDao.getStoragePolicyIdNameMap();
@@ -386,7 +377,6 @@ public class MetaStore {
         mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
       }
     }
-
     if (mapStorageCapacity == null) {
       mapStorageCapacity = storageDao.getStorageTablesItem();
     }

@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.server.metastore.FileStatusInternal;
+import org.smartdata.server.metastore.MetaUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -37,11 +38,21 @@ import java.util.Map;
 public class FileDao {
   private JdbcTemplate jdbcTemplate;
   private SimpleJdbcInsert simpleJdbcInsert;
+  private Map<Integer, String> mapOwnerIdName;
+  private Map<Integer, String> mapGroupIdName;
 
   public FileDao(DataSource dataSource) {
     jdbcTemplate = new JdbcTemplate(dataSource);
     simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("files");
+  }
+
+  public void updateUsersMap(Map<Integer, String> mapOwnerIdName) {
+    this.mapOwnerIdName = mapOwnerIdName;
+  }
+
+  public void updateGroupsMap(Map<Integer, String> mapGroupIdName) {
+    this.mapGroupIdName = mapGroupIdName;
   }
 
   public List<HdfsFileStatus> getAll() {
@@ -94,7 +105,8 @@ public class FileDao {
   }
 
   public void insert(FileStatusInternal fileStatusInternal) {
-    simpleJdbcInsert.execute(toMap(fileStatusInternal));
+    simpleJdbcInsert.execute(toMap(fileStatusInternal,
+        mapOwnerIdName, mapGroupIdName));
   }
 
   public void insert(FileStatusInternal[] fileStatusInternals) {
@@ -120,7 +132,8 @@ public class FileDao {
   }
 
 
-  private Map<String, Object> toMap(FileStatusInternal fileStatusInternal) {
+  private Map<String, Object> toMap(FileStatusInternal fileStatusInternal,
+      Map<Integer, String> mapOwnerIdName, Map<Integer, String> mapGroupIdName) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("path", fileStatusInternal.getPath());
     parameters.put("fid", fileStatusInternal.getFileId());
@@ -130,8 +143,8 @@ public class FileDao {
     parameters.put("modification_time", fileStatusInternal.getModificationTime());
     parameters.put("access_time", fileStatusInternal.getAccessTime());
     parameters.put("is_dir", fileStatusInternal.isDir());
-    parameters.put("sid", fileStatusInternal.getOwner());
-    parameters.put("oid", fileStatusInternal.getGroup());
+    parameters.put("sid", MetaUtil.getKey(mapOwnerIdName, fileStatusInternal.getOwner()));
+    parameters.put("oid", MetaUtil.getKey(mapGroupIdName, fileStatusInternal.getGroup()));
     parameters.put("permission", fileStatusInternal.getPermission());
     return parameters;
   }
@@ -148,8 +161,8 @@ public class FileDao {
           resultSet.getLong("modification_time"),
           resultSet.getLong("access_time"),
           new FsPermission(resultSet.getShort("permission")),
-          String.valueOf(resultSet.getShort("oid")),
-          String.valueOf(resultSet.getShort("gid")),
+          mapOwnerIdName.get((int)resultSet.getShort("oid")),
+          mapGroupIdName.get((int)resultSet.getShort("gid")),
           null, // Not tracked for now
           resultSet.getString("path").getBytes(),
           "",

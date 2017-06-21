@@ -40,7 +40,7 @@ import java.util.concurrent.Future;
 //Todo: 1. make this a interface so that we could have different executor implementation
 //      2. add api providing available resource
 public class CmdletExecutor {
-  private CmdletStatusReporter reporter;
+  private final CmdletStatusReporter reporter;
   private Map<Long, Future> listenableFutures;
   private Map<Long, Cmdlet> runningCmdlets;
   private ListeningExecutorService executorService;
@@ -53,12 +53,12 @@ public class CmdletExecutor {
   }
 
   public void execute(Cmdlet cmdlet) {
+    cmdlet.setState(CmdletState.EXECUTING);
+    this.reportCurrentStatus(cmdlet);
     ListenableFuture<?> future = this.executorService.submit(cmdlet);
     Futures.addCallback(future, new CmdletCallBack(cmdlet), executorService);
     this.listenableFutures.put(cmdlet.getId(), future);
     this.runningCmdlets.put(cmdlet.getId(), cmdlet);
-    cmdlet.setState(CmdletState.EXECUTING);
-    this.reportCurrentStatus(cmdlet);
   }
 
   public void stop(Long cmdletId) {
@@ -84,7 +84,8 @@ public class CmdletExecutor {
   }
 
   private void reportCurrentStatus(Cmdlet cmdlet) {
-    this.reporter.report(new CmdletStatusUpdate(cmdlet.getId(), cmdlet.getState()));
+    this.reporter.report(
+        new CmdletStatusUpdate(cmdlet.getId(), System.currentTimeMillis(), cmdlet.getState()));
   }
 
   private void removeCmdlet(long cmdletId) {
