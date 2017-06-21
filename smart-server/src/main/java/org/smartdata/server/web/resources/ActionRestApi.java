@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+
 @Path("/api/v1.0")
 @Produces("application/json")
 public class ActionRestApi {
@@ -62,27 +63,27 @@ public class ActionRestApi {
 
   @GET
   @Path("/cachedfiles")
-  public Response cachedfiles() throws Exception {
+  public Response cachedFiles() throws Exception {
     SmartConf conf = new SmartConf();
     SmartServer ssm = SmartServer.createSSM(null, conf);
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getDBAdapter().getCachedFileStatus()).build();
+        ssm.getStatesManager().getCachedFileStatus()).build();
   }
 
   @GET
   @Path("/hotfiles")
-  public Response hotfiles() throws Exception {
+  public Response hotFiles() throws Exception {
     SmartConf conf = new SmartConf();
     SmartServer ssm = SmartServer.createSSM(null, conf);
     List<AccessCountTable> tables =
         ssm.getStatesManager().getTablesInLast(Constants.ONE_HOUR_IN_MILLIS);
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getDBAdapter().getHotFiles(tables, 20)).build();
+        ssm.getStatesManager().getHotFiles(tables, 20)).build();
   }
 
   @GET
   @Path("/actiontypes")
-  public Response actiontypes() throws Exception {
+  public Response actionTypes() throws Exception {
     SmartConf conf = new SmartConf();
     SmartServer ssm = SmartServer.createSSM(null, conf);
     return new JsonResponse<>(Response.Status.OK,

@@ -47,19 +47,16 @@
             <artifactId>jersey-json</artifactId>
             <version>1.19</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-servlet -->
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-servlet</artifactId>
             <version>1.19.1</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api -->
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <version>2.1-m07</version>
         </dependency>
-
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
