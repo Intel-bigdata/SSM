@@ -19,7 +19,7 @@ package org.smartdata.server.metastore.tables;
 
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class AccessEventAggregator {
-  private final DBAdapter adapter;
+  private final MetaStore adapter;
   private final long aggregationGranularity;
   private final AccessCountTableManager accessCountTableManager;
   private Window currentWindow;
@@ -40,11 +40,11 @@ public class AccessEventAggregator {
   public static final Logger LOG =
       LoggerFactory.getLogger(AccessEventAggregator.class);
 
-  public AccessEventAggregator(DBAdapter adapter, AccessCountTableManager manager) {
+  public AccessEventAggregator(MetaStore adapter, AccessCountTableManager manager) {
     this(adapter, manager,  5 * 1000L);
   }
 
-  public AccessEventAggregator(DBAdapter adapter,
+  public AccessEventAggregator(MetaStore adapter,
       AccessCountTableManager manager, long aggregationGranularity) {
     this.adapter = adapter;
     this.accessCountTableManager = manager;

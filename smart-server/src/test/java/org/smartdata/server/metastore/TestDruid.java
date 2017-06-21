@@ -39,7 +39,7 @@ public class TestDruid {
     p.setProperty("url", url);
 
     DruidPool druidPool = new DruidPool(p);
-    DBAdapter adapter = new DBAdapter(druidPool);
+    MetaStore adapter = new MetaStore(druidPool);
 
     String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";

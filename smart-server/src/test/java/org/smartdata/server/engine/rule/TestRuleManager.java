@@ -26,15 +26,11 @@ import org.smartdata.common.rule.RuleState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.ServerContext;
 import org.smartdata.server.engine.RuleManager;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.FileStatusInternal;
-import org.smartdata.server.metastore.MetaUtil;
-import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.server.metastore.TestDaoUtil;
 
-import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.List;
 import java.util.Random;
 
@@ -43,22 +39,22 @@ import java.util.Random;
  */
 public class TestRuleManager extends TestDaoUtil {
   private RuleManager ruleManager;
-  private DBAdapter dbAdapter;
+  private MetaStore metaStore;
   private SmartConf smartConf;
 
   @Before
   public void init() throws Exception {
     initDao();
     smartConf = new SmartConf();
-    dbAdapter = new DBAdapter(druidPool);
-    ServerContext serverContext = new ServerContext(smartConf, dbAdapter);
+    metaStore = new MetaStore(druidPool);
+    ServerContext serverContext = new ServerContext(smartConf, metaStore);
     ruleManager = new RuleManager(serverContext, null);
   }
 
   @After
   public void close() throws Exception {
     ruleManager = null;
-    dbAdapter = null;
+    metaStore = null;
     closeDao();
   }
 
@@ -306,7 +302,7 @@ public class TestRuleManager extends TestDaoUtil {
         1024, now, now, null, null, null, null,
         "testfile".getBytes(), "/tmp", fid, 0, null, (byte)3) };
 
-    dbAdapter.insertFiles(files);
+    metaStore.insertFiles(files);
     long rid = ruleManager.submitRule(rule, RuleState.ACTIVE);
 
     long start = System.currentTimeMillis();

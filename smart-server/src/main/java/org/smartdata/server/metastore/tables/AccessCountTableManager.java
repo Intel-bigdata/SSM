@@ -19,7 +19,7 @@ package org.smartdata.server.metastore.tables;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.utils.TimeGranularity;
 import org.smartdata.server.utils.TimeUtils;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class AccessCountTableManager {
   private static final int NUM_MINUTE_TABLES_TO_KEEP = 30;
   private static final int NUM_SECOND_TABLES_TO_KEEP = 30;
 
-  private DBAdapter dbAdapter;
+  private MetaStore metaStore;
   private Map<TimeGranularity, AccessCountTableDeque> tableDeques;
   private AccessCountTableDeque secondTableDeque;
   private AccessEventAggregator accessEventAggregator;
@@ -48,12 +48,12 @@ public class AccessCountTableManager {
   public static final Logger LOG =
       LoggerFactory.getLogger(AccessCountTableManager.class);
 
-  public AccessCountTableManager(DBAdapter adapter) {
+  public AccessCountTableManager(MetaStore adapter) {
     this(adapter, Executors.newFixedThreadPool(4));
   }
 
-  public AccessCountTableManager(DBAdapter adapter, ExecutorService service) {
-    this.dbAdapter = adapter;
+  public AccessCountTableManager(MetaStore adapter, ExecutorService service) {
+    this.metaStore = adapter;
     this.tableDeques = new HashMap<>();
     this.executorService = service;
     this.accessEventAggregator = new AccessEventAggregator(adapter, this);
@@ -61,26 +61,26 @@ public class AccessCountTableManager {
   }
 
   private void initTables() {
-    AccessCountTableAggregator aggregator = new AccessCountTableAggregator(dbAdapter);
+    AccessCountTableAggregator aggregator = new AccessCountTableAggregator(metaStore);
     AccessCountTableDeque dayTableDeque =
-        new AccessCountTableDeque(new CountEvictor(dbAdapter, NUM_DAY_TABLES_TO_KEEP));
+        new AccessCountTableDeque(new CountEvictor(metaStore, NUM_DAY_TABLES_TO_KEEP));
     TableAddOpListener dayTableListener =
         new TableAddOpListener.DayTableListener(dayTableDeque, aggregator, executorService);
 
     AccessCountTableDeque hourTableDeque =
         new AccessCountTableDeque(
-            new CountEvictor(dbAdapter, NUM_HOUR_TABLES_TO_KEEP), dayTableListener);
+            new CountEvictor(metaStore, NUM_HOUR_TABLES_TO_KEEP), dayTableListener);
     TableAddOpListener hourTableListener =
         new TableAddOpListener.HourTableListener(hourTableDeque, aggregator, executorService);
 
     AccessCountTableDeque minuteTableDeque =
         new AccessCountTableDeque(
-            new CountEvictor(dbAdapter, NUM_MINUTE_TABLES_TO_KEEP), hourTableListener);
+            new CountEvictor(metaStore, NUM_MINUTE_TABLES_TO_KEEP), hourTableListener);
     TableAddOpListener minuteTableListener =
         new TableAddOpListener.MinuteTableListener(minuteTableDeque, aggregator, executorService);
 
     this.secondTableDeque =
-        new AccessCountTableDeque(new CountEvictor(dbAdapter, NUM_SECOND_TABLES_TO_KEEP), minuteTableListener);
+        new AccessCountTableDeque(new CountEvictor(metaStore, NUM_SECOND_TABLES_TO_KEEP), minuteTableListener);
     this.tableDeques.put(TimeGranularity.SECOND, this.secondTableDeque);
     this.tableDeques.put(TimeGranularity.MINUTE, minuteTableDeque);
     this.tableDeques.put(TimeGranularity.HOUR, hourTableDeque);
@@ -99,12 +99,12 @@ public class AccessCountTableManager {
   }
 
   public List<AccessCountTable> getTables(long lengthInMillis) throws SQLException {
-    return AccessCountTableManager.getTables(this.tableDeques, this.dbAdapter, lengthInMillis);
+    return AccessCountTableManager.getTables(this.tableDeques, this.metaStore, lengthInMillis);
   }
 
   public static List<AccessCountTable> getTables(
       Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-      DBAdapter adapter,
+      MetaStore adapter,
       long lengthInMillis)
       throws SQLException {
     if (tableDeques.isEmpty()) {
@@ -121,7 +121,7 @@ public class AccessCountTableManager {
   // Todo: multi-thread issue
   private static List<AccessCountTable> getTablesDuring(
       final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-      DBAdapter adapter,
+      MetaStore adapter,
       final long length,
       final long endTime,
       final TimeGranularity timeGranularityHint)

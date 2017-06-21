@@ -20,7 +20,7 @@ package org.smartdata.server.metric.fetcher;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,19 +53,19 @@ public class NamespaceFetcher {
   public static final Logger LOG =
       LoggerFactory.getLogger(NamespaceFetcher.class);
 
-  public NamespaceFetcher(DFSClient client, DBAdapter adapter) {
+  public NamespaceFetcher(DFSClient client, MetaStore adapter) {
     this(client, adapter, DEFAULT_INTERVAL);
   }
 
-  public NamespaceFetcher(DFSClient client, DBAdapter adapter, ScheduledExecutorService service) {
+  public NamespaceFetcher(DFSClient client, MetaStore adapter, ScheduledExecutorService service) {
     this(client, adapter, DEFAULT_INTERVAL, service);
   }
 
-  public NamespaceFetcher(DFSClient client, DBAdapter adapter, long fetchInterval) {
+  public NamespaceFetcher(DFSClient client, MetaStore adapter, long fetchInterval) {
     this(client, adapter, fetchInterval, Executors.newSingleThreadScheduledExecutor());
   }
 
-  public NamespaceFetcher(DFSClient client, DBAdapter adapter, long fetchInterval,
+  public NamespaceFetcher(DFSClient client, MetaStore adapter, long fetchInterval,
       ScheduledExecutorService service) {
     this.fetchTask = new FetchTask(client);
     this.consumer = new FileStatusConsumer(adapter, fetchTask);
@@ -233,13 +233,13 @@ public class NamespaceFetcher {
   }
 
   private static class FileStatusConsumer implements Runnable {
-    private final DBAdapter dbAdapter;
+    private final MetaStore metaStore;
     private final FetchTask fetchTask;
     private long startTime = System.currentTimeMillis();
     private long lastUpdateTime = startTime;
 
-    protected FileStatusConsumer(DBAdapter dbAdapter, FetchTask fetchTask) {
-      this.dbAdapter = dbAdapter;
+    protected FileStatusConsumer(MetaStore metaStore, FetchTask fetchTask) {
+      this.metaStore = metaStore;
       this.fetchTask = fetchTask;
     }
 
@@ -250,12 +250,12 @@ public class NamespaceFetcher {
         if (batch != null) {
           FileStatusInternal[] statuses = batch.getFileStatuses();
           if (statuses.length == batch.actualSize()) {
-            this.dbAdapter.insertFiles(batch.getFileStatuses());
+            this.metaStore.insertFiles(batch.getFileStatuses());
             numPersisted += statuses.length;
           } else {
             FileStatusInternal[] actual = new FileStatusInternal[batch.actualSize()];
             System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
-            this.dbAdapter.insertFiles(actual);
+            this.metaStore.insertFiles(actual);
             numPersisted += actual.length;
           }
 

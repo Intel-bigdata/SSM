@@ -27,7 +27,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.engine.CmdletExecutor;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one
@@ -51,14 +51,14 @@ public class Cmdlet implements Runnable {
   private long createTime;
   private long scheduleToExecuteTime;
   private long ExecutionCompleteTime;
-  private DBAdapter adapter;
+  private MetaStore adapter;
 
   public Cmdlet(SmartAction[] actions, CmdletExecutor.Callback cb) {
     this(actions, cb, null);
   }
 
   public Cmdlet(SmartAction[] actions, CmdletExecutor.Callback cb,
-      DBAdapter adapter) {
+      MetaStore adapter) {
     this.actions = actions.clone();
     this.currentActionIndex = 0;
     this.cb = cb;

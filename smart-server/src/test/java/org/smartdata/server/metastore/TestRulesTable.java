@@ -22,8 +22,6 @@ import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 
-import java.io.File;
-import java.sql.Connection;
 import java.util.List;
 
 /**
@@ -38,7 +36,7 @@ public class TestRulesTable extends TestDaoUtil {
   @Test
   public void testRuleInsert() throws Exception {
     initDao();
-    DBAdapter adapter = new DBAdapter(druidPool);
+    MetaStore adapter = new MetaStore(druidPool);
     String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();

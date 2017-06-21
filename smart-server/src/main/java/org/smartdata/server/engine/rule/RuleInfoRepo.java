@@ -23,7 +23,7 @@ import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.RuleManager;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.ExecutionContext;
 
 import java.io.IOException;
@@ -33,13 +33,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class RuleInfoRepo {
   private RuleInfo ruleInfo = null;
   private RuleExecutor executor = null;
-  private DBAdapter dbAdapter = null;
+  private MetaStore metaStore = null;
 
   private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 
-  public RuleInfoRepo(RuleInfo ruleInfo, DBAdapter dbAdapter) {
+  public RuleInfoRepo(RuleInfo ruleInfo, MetaStore metaStore) {
     this.ruleInfo = ruleInfo;
-    this.dbAdapter = dbAdapter;
+    this.metaStore = metaStore;
   }
 
   public RuleInfo getRuleInfo() {
@@ -99,9 +99,9 @@ public class RuleInfoRepo {
       boolean ret = true;
       changeRuleState(rs, false);
       ruleInfo.updateRuleInfo(rs, lastCheckTime, checkedCount, cmdletsGen);
-      if (dbAdapter != null) {
+      if (metaStore != null) {
         try {
-          ret = dbAdapter.updateRuleInfo(ruleInfo.getId(),
+          ret = metaStore.updateRuleInfo(ruleInfo.getId(),
               rs, lastCheckTime, checkedCount, cmdletsGen);
         } catch (SQLException e) {
           throw new IOException(ruleInfo.toString(), e);
@@ -128,7 +128,7 @@ public class RuleInfoRepo {
       TranslateResult tr = executor != null ? executor.getTranslateResult() :
           new RuleStringParser(ruleInfo.getRuleText(), transCtx).translate();
       executor = new RuleExecutor(
-          ruleManager, ctx, tr, ruleManager.getDbAdapter());
+          ruleManager, ctx, tr, ruleManager.getMetaStore());
       return executor;
     }
     return null;
@@ -158,8 +158,8 @@ public class RuleInfoRepo {
         case ACTIVE:
           if (oldState == RuleState.DISABLED || oldState == RuleState.DRYRUN) {
             ruleInfo.setState(newState);
-            if (updateDb && dbAdapter != null) {
-              dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+            if (updateDb && metaStore != null) {
+              metaStore.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
             }
             return true;
           }
@@ -169,8 +169,8 @@ public class RuleInfoRepo {
           if (oldState == RuleState.ACTIVE || oldState == RuleState.DRYRUN) {
             ruleInfo.setState(newState);
             markWorkExit();
-            if (updateDb && dbAdapter != null) {
-              dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+            if (updateDb && metaStore != null) {
+              metaStore.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
             }
             return true;
           }
@@ -179,16 +179,16 @@ public class RuleInfoRepo {
         case DELETED:
           ruleInfo.setState(newState);
           markWorkExit();
-          if (updateDb && dbAdapter != null) {
-            dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+          if (updateDb && metaStore != null) {
+            metaStore.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
           }
           return true;
 
         case FINISHED:
           if (oldState == RuleState.ACTIVE || oldState == RuleState.DRYRUN) {
             ruleInfo.setState(newState);
-            if (updateDb && dbAdapter != null) {
-              dbAdapter.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+            if (updateDb && metaStore != null) {
+              metaStore.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
             }
             return true;
           }

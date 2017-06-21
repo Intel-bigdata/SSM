@@ -23,7 +23,7 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -36,12 +36,12 @@ import java.util.List;
  * {@link org.apache.hadoop.hdfs.server.namenode.FSEditLogLoader}
  */
 public class InotifyEventApplier {
-  private final DBAdapter adapter;
+  private final MetaStore adapter;
   private DFSClient client;
   private static final Logger LOG =
       LoggerFactory.getLogger(InotifyEventFetcher.class);
 
-  public InotifyEventApplier(DBAdapter adapter, DFSClient client) {
+  public InotifyEventApplier(MetaStore adapter, DFSClient client) {
     this.adapter = adapter;
     this.client = client;
   }

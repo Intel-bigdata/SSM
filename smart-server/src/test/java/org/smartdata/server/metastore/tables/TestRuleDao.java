@@ -82,6 +82,6 @@ public class TestRuleDao extends TestDaoUtil {
         RuleState.DISABLED.getValue(),
         12l, 12l, 12);
     info1 = ruleDao.getById(info1.getId());
-    Assert.assertTrue(info1.getLastCheckTime() == 12l);
+    Assert.assertTrue(info1.getNumChecked() == 12l);
   }
 }

@@ -34,10 +34,8 @@ import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.UncacheFileAction;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.FileStatusInternal;
-import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.MetaUtil;
 
 import org.apache.hadoop.hdfs.DFSClient;
 import org.junit.After;
@@ -45,8 +43,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.server.metastore.TestDaoUtil;
 
-import java.io.File;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +51,7 @@ import java.util.Map;
 
 public class TestCachedListFetcher extends TestDaoUtil {
 
-  private DBAdapter adapter;
+  private MetaStore adapter;
   private long fid;
 
   private CachedListFetcher cachedListFetcher;
@@ -86,7 +82,7 @@ public class TestCachedListFetcher extends TestDaoUtil {
     dfs = cluster.getFileSystem();
     dfsClient = dfs.getClient();
     smartContext = new SmartContext(conf);
-    adapter = new DBAdapter(druidPool);
+    adapter = new MetaStore(druidPool);
     cachedListFetcher = new CachedListFetcher(600l, dfsClient, adapter);
   }
 
@@ -146,7 +142,7 @@ public class TestCachedListFetcher extends TestDaoUtil {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
-      Map<String, String> args = new HashMap();
+      Map<String, String> args = new HashMap<>();
       args.put(CacheFileAction.FILE_PATH, path);
       cacheAction.init(args);
       cacheAction.run();
@@ -167,7 +163,7 @@ public class TestCachedListFetcher extends TestDaoUtil {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       uncacheFileAction.setContext(smartContext);
       uncacheFileAction.setDfsClient(dfsClient);
-      Map<String, String> args = new HashMap();
+      Map<String, String> args = new HashMap<>();
       args.put(UncacheFileAction.FILE_PATH, path);
       uncacheFileAction.init(args);
       uncacheFileAction.run();

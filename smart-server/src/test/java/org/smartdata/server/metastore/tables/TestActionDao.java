@@ -25,6 +25,8 @@ import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.server.metastore.TestDaoUtil;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +43,8 @@ public class TestActionDao extends TestDaoUtil {
 
   @After
   public void closeActionDao() throws Exception {
-    closeDao();
     actionDao = null;
+    closeDao();
   }
 
   @Test
@@ -85,6 +87,8 @@ public class TestActionDao extends TestDaoUtil {
     actionInfo.setActionId(2);
     actionDao.insert(actionInfo);
     List<ActionInfo> actionInfoList = actionDao.getLatestActions(10);
+    Assert.assertTrue(actionInfoList.size() == 2);
+    actionInfoList = actionDao.getByIds(Arrays.asList(new Long[] {1l, 2l}));
     Assert.assertTrue(actionInfoList.size() == 2);
     actionDao.delete(actionInfo.getActionId());
     actionInfoList = actionDao.getAll();

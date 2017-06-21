@@ -17,14 +17,12 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import org.smartdata.server.metastore.DBAdapter;
-
-import java.sql.SQLException;
+import org.smartdata.server.metastore.MetaStore;
 
 public abstract class TableEvictor {
-  private DBAdapter adapter;
+  private MetaStore adapter;
 
-  public TableEvictor(DBAdapter adapter) {
+  public TableEvictor(MetaStore adapter) {
     this.adapter = adapter;
   }
 

@@ -17,7 +17,7 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,11 +26,11 @@ import java.util.Iterator;
 import java.util.List;
 
 public class AccessCountTableAggregator {
-  private final DBAdapter adapter;
+  private final MetaStore adapter;
   public static final Logger LOG =
       LoggerFactory.getLogger(AccessCountTableAggregator.class);
 
-  public AccessCountTableAggregator(DBAdapter adapter) {
+  public AccessCountTableAggregator(MetaStore adapter) {
     this.adapter = adapter;
   }
 

@@ -19,22 +19,22 @@ package org.smartdata.server;
 
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 public class ServerContext extends SmartContext {
 
-  private DBAdapter dbAdapter;
+  private MetaStore metaStore;
 
-  public ServerContext(DBAdapter dbAdapter) {
-    this.dbAdapter = dbAdapter;
+  public ServerContext(MetaStore metaStore) {
+    this.metaStore = metaStore;
   }
 
-  public ServerContext(SmartConf conf, DBAdapter dbAdapter) {
+  public ServerContext(SmartConf conf, MetaStore metaStore) {
     super(conf);
-    this.dbAdapter = dbAdapter;
+    this.metaStore = metaStore;
   }
 
-  public DBAdapter getDbAdapter() {
-    return dbAdapter;
+  public MetaStore getMetaStore() {
+    return metaStore;
   }
 }
