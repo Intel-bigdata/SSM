@@ -22,11 +22,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.server.ServerContext;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.FileStatusInternal;
-import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.server.metastore.MetaUtil;
+import org.smartdata.server.metastore.TestDBUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +42,7 @@ import java.util.Random;
 public class TestRuleManager {
   private RuleManager ruleManager;
   private DBAdapter dbAdapter;
+  private SmartConf smartConf;
 
   @Before
   public void init() throws Exception {
@@ -48,9 +51,10 @@ public class TestRuleManager {
     try {
       conn = MetaUtil.createSqliteConnection(dbFile);
       MetaUtil.initializeDataBase(conn);
+      smartConf = new SmartConf();
       dbAdapter = new DBAdapter(conn);
-      // TODO: to be fixed
-      ruleManager = new RuleManager(null, null);
+      ServerContext serverContext = new ServerContext(smartConf, dbAdapter);
+      ruleManager = new RuleManager(serverContext, null);
     } finally {
       File file = new File(dbFile);
       file.deleteOnExit();
