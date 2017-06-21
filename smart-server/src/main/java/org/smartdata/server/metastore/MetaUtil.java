@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -252,6 +253,15 @@ public class MetaUtil {
     // TODO: keep it now for testing, remove it later.
     Connection conn = getDBConnection(conf);
     return new DBAdapter(conn);
+  }
+
+  public static Integer getKey(Map<Integer, String> map, String value) {
+    for (Integer key : map.keySet()) {
+      if (map.get(key).equals(value)) {
+        return key;
+      }
+    }
+    return null;
   }
 
   private static Connection getDBConnection(SmartConf conf) throws Exception {

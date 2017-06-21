@@ -27,7 +27,9 @@ import org.junit.Test;
 import org.smartdata.server.metastore.FileStatusInternal;
 import org.smartdata.server.metastore.TestDaoUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TestFileDao extends TestDaoUtil {
   private FileDao fileDao;
@@ -61,6 +63,12 @@ public class TestFileDao extends TestDaoUtil {
     long fileId = 312321L;
     int numChildren = 0;
     byte storagePolicy = 0;
+    Map<Integer, String> mapOwnerIdName = new HashMap<>();
+    mapOwnerIdName.put(1, "root");
+    Map<Integer, String> mapGroupIdName = new HashMap<>();
+    mapGroupIdName.put(1, "admin");
+    fileDao.updateUsersMap(mapOwnerIdName);
+    fileDao.updateGroupsMap(mapGroupIdName);
     FileStatusInternal fileStatusInternal =
         new FileStatusInternal(length, isDir, blockReplication,
         blockSize, modTime, accessTime, perms, owner, group, symlink,
@@ -95,6 +103,12 @@ public class TestFileDao extends TestDaoUtil {
     long fileId = 312321L;
     int numChildren = 0;
     byte storagePolicy = 0;
+    Map<Integer, String> mapOwnerIdName = new HashMap<>();
+    mapOwnerIdName.put(1, "root");
+    Map<Integer, String> mapGroupIdName = new HashMap<>();
+    mapGroupIdName.put(1, "admin");
+    fileDao.updateUsersMap(mapOwnerIdName);
+    fileDao.updateGroupsMap(mapGroupIdName);
     FileStatusInternal fileStatusInternal1 =
         new FileStatusInternal(length, isDir, blockReplication,
         blockSize, modTime, accessTime, perms, owner, group, symlink,
@@ -131,6 +145,12 @@ public class TestFileDao extends TestDaoUtil {
     long fileId = 312321L;
     int numChildren = 0;
     byte storagePolicy = 0;
+    Map<Integer, String> mapOwnerIdName = new HashMap<>();
+    mapOwnerIdName.put(1, "root");
+    Map<Integer, String> mapGroupIdName = new HashMap<>();
+    mapGroupIdName.put(1, "admin");
+    fileDao.updateUsersMap(mapOwnerIdName);
+    fileDao.updateGroupsMap(mapGroupIdName);
     FileStatusInternal fileStatusInternal =
         new FileStatusInternal(length, isDir, blockReplication,
         blockSize, modTime, accessTime, perms, owner, group, symlink,
