@@ -21,9 +21,7 @@ package org.smartdata.server.metastore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.core.annotation.AliasFor;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,40 +36,40 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestSqliteDB extends TestDaoUtil {
 
-  private DBAdapter dbAdapter;
+  private MetaStore metaStore;
 
   @Before
   public void initDB() throws Exception {
     initDao();
-    dbAdapter = new DBAdapter(druidPool);
+    metaStore = new MetaStore(druidPool);
   }
 
   @After
   public void closeDB() throws Exception {
-    dbAdapter = null;
+    metaStore = null;
     closeDao();
   }
 
   @Test
   public void testCreateNewSqliteDB() throws Exception {
-    MetaUtil.initializeDataBase(dbAdapter.getConnection());
+    MetaUtil.initializeDataBase(metaStore.getConnection());
   }
 
   @Test
   public void testDropTablesSqlite() throws SQLException, ClassNotFoundException {
-    Connection conn = dbAdapter.getConnection();
+    Connection conn = metaStore.getConnection();
     Statement s = conn.createStatement();
-    dbAdapter.dropAllTables();
+    metaStore.dropAllTables();
     for (int i = 0; i < 10; i++) {
-      dbAdapter.execute("DROP TABLE IF EXISTS tb_"+i+";");
-      dbAdapter.execute("CREATE TABLE tb_"+i+" (a INT(11));");
+      metaStore.execute("DROP TABLE IF EXISTS tb_"+i+";");
+      metaStore.execute("CREATE TABLE tb_"+i+" (a INT(11));");
     }
     ResultSet rs = s.executeQuery("select tbl_name from sqlite_master;");
     List<String> list = new ArrayList<>();
     while (rs.next()) {
       list.add(rs.getString(1));
     }
-    dbAdapter.dropAllTables();
+    metaStore.dropAllTables();
     rs = s.executeQuery("select tbl_name from sqlite_master;");
     List<String> list1 = new ArrayList<>();
     while (rs.next()) {
@@ -92,7 +90,7 @@ public class TestSqliteDB extends TestDaoUtil {
       s.executeUpdate("CREATE DATABASE "+db+";");
       s.execute("use "+db+";");
       conn = MetaUtil.createConnection(url+db+"?","root","linux123");
-      DBAdapter adapter = new DBAdapter(conn);
+      MetaStore adapter = new MetaStore(conn);
       adapter.dropAllTables();
 
       for (int i = 0; i < 10; i++) {
@@ -135,7 +133,7 @@ public class TestSqliteDB extends TestDaoUtil {
 
     for (int i = 0; i< presqls.length; i++) {
       String sql = presqls[i];
-      dbAdapter.execute(sql);
+      metaStore.execute(sql);
     }
 
     String[] sqls = new String[] {
@@ -150,7 +148,7 @@ public class TestSqliteDB extends TestDaoUtil {
     for (int i = 0; i< sqls.length * 3; i++) {
       int idx = i % sqls.length;
       String sql = sqls[idx];
-      dbAdapter.execute(sql);
+      metaStore.execute(sql);
     }
   }
 }

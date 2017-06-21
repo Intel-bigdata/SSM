@@ -19,12 +19,12 @@ package org.smartdata.server.metastore.tables;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 import static org.mockito.Mockito.mock;
 
 public class TestTableEvictor {
-  DBAdapter adapter = mock(DBAdapter.class);
+  MetaStore adapter = mock(MetaStore.class);
 
   @Test
   public void testCountEvictor() {

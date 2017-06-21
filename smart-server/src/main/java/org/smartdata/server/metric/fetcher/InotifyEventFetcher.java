@@ -22,7 +22,7 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.utils.EventBatchSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,12 +48,12 @@ public class InotifyEventFetcher {
   public static final Logger LOG =
       LoggerFactory.getLogger(InotifyEventFetcher.class);
 
-  public InotifyEventFetcher(DFSClient client, DBAdapter adapter,
+  public InotifyEventFetcher(DFSClient client, MetaStore adapter,
       ScheduledExecutorService service) {
     this(client, adapter, service, new InotifyEventApplier(adapter, client));
   }
 
-  public InotifyEventFetcher(DFSClient client, DBAdapter adapter,
+  public InotifyEventFetcher(DFSClient client, MetaStore adapter,
       ScheduledExecutorService service, InotifyEventApplier applier) {
     this.client = client;
     this.applier = applier;

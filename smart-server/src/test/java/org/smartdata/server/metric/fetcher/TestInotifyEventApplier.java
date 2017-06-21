@@ -17,26 +17,9 @@
  */
 package org.smartdata.server.metric.fetcher;
 
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.inotify.Event;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.junit.Assert;
-import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
-import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.metastore.TestDaoUtil;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class TestInotifyEventApplier extends TestDaoUtil {
 
@@ -46,7 +29,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     DFSClient client = mock(DFSClient.class);
     Connection connection = druidPool.getConnection();
     MetaUtil.initializeDataBase(connection);
-    DBAdapter adapter = new DBAdapter(druidPool);
+    MetaStore adapter = new MetaStore(druidPool);
     InotifyEventApplier applier = new InotifyEventApplier(adapter, client);
 
     Event.CreateEvent createEvent =

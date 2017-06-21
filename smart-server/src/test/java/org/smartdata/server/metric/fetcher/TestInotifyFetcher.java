@@ -32,7 +32,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -50,7 +50,7 @@ public class TestInotifyFetcher {
   private static class EventApplierForTest extends InotifyEventApplier {
     private List<Event> events = new ArrayList<>();
 
-    public EventApplierForTest(DBAdapter adapter, DFSClient client) {
+    public EventApplierForTest(MetaStore adapter, DFSClient client) {
       super(adapter, client);
     }
 
@@ -88,7 +88,7 @@ public class TestInotifyFetcher {
         BLOCK_SIZE * 2, (short) 1, 0L);
       fs.mkdirs(new Path("/tmp"), new FsPermission("777"));
 
-      DBAdapter adapter = mock(DBAdapter.class);
+      MetaStore adapter = mock(MetaStore.class);
       EventApplierForTest applierForTest = new EventApplierForTest(adapter, client);
       final InotifyEventFetcher fetcher = new InotifyEventFetcher(client, adapter,
           Executors.newScheduledThreadPool(2), applierForTest);

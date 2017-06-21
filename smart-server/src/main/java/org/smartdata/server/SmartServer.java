@@ -34,7 +34,7 @@ import org.smartdata.server.engine.CmdletExecutor;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.StatesManager;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.server.web.SmartHttpServer;
@@ -71,8 +71,8 @@ public class SmartServer {
   public void initWith(StartupOption startupOption) throws Exception {
     checkSecurityAndLogin();
 
-    DBAdapter dbAdapter = MetaUtil.getDBAdapter(conf);
-    context = new ServerContext(conf, dbAdapter);
+    MetaStore metaStore = MetaUtil.getDBAdapter(conf);
+    context = new ServerContext(conf, metaStore);
 
     if (startupOption == StartupOption.REGULAR) {
       statesMgr = new StatesManager(context);

@@ -32,7 +32,7 @@ import org.smartdata.server.cmdlet.message.CmdletStatusUpdate;
 import org.smartdata.server.cmdlet.message.LaunchAction;
 import org.smartdata.server.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.cmdlet.message.StatusMessage;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -56,14 +56,14 @@ public class CmdletManager extends AbstractService {
   private CmdletDispatcher dispatcher;
   private Queue<CmdletInfo> pendingCmdlet;
   private Map<String, Long> submittedCmdlets;
-  private DBAdapter adapter;
+  private MetaStore adapter;
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
 
   public CmdletManager(ServerContext context) {
     super(context);
 
-    this.adapter = context.getDbAdapter();
+    this.adapter = context.getMetaStore();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.dispatcher = new CmdletDispatcher(this);
     this.submittedCmdlets = new ConcurrentHashMap<>();

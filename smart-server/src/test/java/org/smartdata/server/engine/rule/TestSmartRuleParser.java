@@ -26,7 +26,7 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.ExecutionContext;
 import org.smartdata.server.metastore.TestDBUtil;
 import org.smartdata.rule.parser.SmartRuleLexer;
@@ -138,14 +138,14 @@ public class TestSmartRuleParser {
     ExecutionContext ctx = new ExecutionContext();
     ctx.setProperty(ExecutionContext.RULE_ID, 2016);
     // TODO remove/upgrade today
-    DBAdapter dbAdapter = new DBAdapter(TestDBUtil.getTestDBInstance());
-    RuleExecutor qe = new RuleExecutor(null, ctx, result, dbAdapter);
-    List<String> paths = qe.executeFileRuleQuery();
-    index = 1;
-    System.out.println("\nFiles:");
-    for (String path : paths) {
-      System.out.println("" + index + ". " + path);
-      index++;
-    }
+    // MetaStore metaStore = new MetaStore(TestDBUtil.getTestDBInstance());
+    // RuleExecutor qe = new RuleExecutor(null, ctx, result, metaStore);
+    // List<String> paths = qe.executeFileRuleQuery();
+    // index = 1;
+    // System.out.println("\nFiles:");
+    // for (String path : paths) {
+    //   System.out.println("" + index + ". " + path);
+    //   index++;
+    // }
   }
 }

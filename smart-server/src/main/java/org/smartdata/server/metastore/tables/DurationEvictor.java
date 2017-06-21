@@ -17,14 +17,14 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 import java.util.Iterator;
 
 public class DurationEvictor extends TableEvictor {
   private final long duration;
 
-  public DurationEvictor(DBAdapter adapter, long duration) {
+  public DurationEvictor(MetaStore adapter, long duration) {
     super(adapter);
     this.duration = duration;
   }

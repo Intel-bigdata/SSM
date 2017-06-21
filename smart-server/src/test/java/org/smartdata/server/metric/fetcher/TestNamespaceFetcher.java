@@ -27,7 +27,7 @@ import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.FileStatusInternal;
 
 import java.io.IOException;
@@ -75,7 +75,7 @@ public class TestNamespaceFetcher {
     dfs.mkdir(new Path("/tmp"), new FsPermission("777"));
     DFSClient client = dfs.getClient();
 
-    DBAdapter adapter = mock(DBAdapter.class);
+    MetaStore adapter = mock(MetaStore.class);
     NamespaceFetcher fetcher = new NamespaceFetcher(client, adapter, 100);
     fetcher.startFetch();
     List<String> expected = Arrays.asList("/", "/user", "/user/user1", "/user/user2", "/tmp");

@@ -17,14 +17,14 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 import java.util.Iterator;
 
 public class CountEvictor extends TableEvictor {
   private final int maxCount;
 
-  public CountEvictor(DBAdapter adapter, int count) {
+  public CountEvictor(MetaStore adapter, int count) {
     super(adapter);
     this.maxCount = count;
   }

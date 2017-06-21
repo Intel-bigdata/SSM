@@ -19,9 +19,8 @@ package org.smartdata.server.metastore.tables;
 
 import com.google.common.collect.Lists;
 import org.junit.Test;
-import org.mockito.verification.VerificationMode;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 import java.sql.SQLException;
 
@@ -32,7 +31,7 @@ public class TestAccessEventAggregator {
 
   @Test
   public void testAccessEventAggregator() throws SQLException {
-    DBAdapter adapter = mock(DBAdapter.class);
+    MetaStore adapter = mock(MetaStore.class);
     AccessCountTableManager manager = mock(AccessCountTableManager.class);
     AccessEventAggregator aggregator = new AccessEventAggregator(adapter, manager);
 

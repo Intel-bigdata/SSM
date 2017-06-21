@@ -32,7 +32,7 @@ import org.smartdata.server.SmartServer;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RuleManager extends AbstractService {
   private ServerContext serverContext;
   private SmartServer server;
-  private DBAdapter dbAdapter;
+  private MetaStore metaStore;
 
   private boolean isClosed = false;
   public static final Logger LOG =
@@ -65,7 +65,7 @@ public class RuleManager extends AbstractService {
 
     this.server = server;
     this.serverContext = context;
-    this.dbAdapter = context.getDbAdapter();
+    this.metaStore = context.getMetaStore();
   }
 
   /**
@@ -101,12 +101,12 @@ public class RuleManager extends AbstractService {
     builder.setRuleText(rule).setState(initState);
     RuleInfo ruleInfo = builder.build();
     try {
-      dbAdapter.insertNewRule(ruleInfo);
+      metaStore.insertNewRule(ruleInfo);
     } catch (SQLException e) {
       throw new IOException("RuleText = " + rule, e);
     }
 
-    RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, dbAdapter);
+    RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, metaStore);
     mapRules.put(ruleInfo.getId(), infoRepo);
 
     submitRuleToScheduler(infoRepo.launchExecutor(this));
@@ -124,8 +124,8 @@ public class RuleManager extends AbstractService {
     doCheckRule(rule, null);
   }
 
-  public DBAdapter getDbAdapter() {
-    return dbAdapter;
+  public MetaStore getMetaStore() {
+    return metaStore;
   }
 
   /**
@@ -207,12 +207,12 @@ public class RuleManager extends AbstractService {
     // Load rules table
     List<RuleInfo> rules = null;
     try {
-      rules = dbAdapter.getRuleInfo();
+      rules = metaStore.getRuleInfo();
     } catch (SQLException e) {
       LOG.error("Can not load rules from database:\n" + e.getMessage());
     }
     for (RuleInfo rule : rules) {
-      mapRules.put(rule.getId(), new RuleInfoRepo(rule, dbAdapter));
+      mapRules.put(rule.getId(), new RuleInfoRepo(rule, metaStore));
     }
     LOG.info("Initialized. Totally " + rules.size()
         + " rules loaded from DataBase.");

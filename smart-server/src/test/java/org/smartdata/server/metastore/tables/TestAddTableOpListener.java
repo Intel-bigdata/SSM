@@ -19,7 +19,7 @@ package org.smartdata.server.metastore.tables;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.utils.TimeGranularity;
 
 import java.util.concurrent.ExecutorService;
@@ -28,10 +28,10 @@ import java.util.concurrent.Executors;
 import static org.mockito.Mockito.mock;
 
 public class TestAddTableOpListener {
-  DBAdapter adapter = mock(DBAdapter.class);
+  MetaStore adapter = mock(MetaStore.class);
   ExecutorService executorService = Executors.newFixedThreadPool(4);
   AccessCountTableAggregator aggregator = new AccessCountTableAggregator(
-      mock(DBAdapter.class));
+      mock(MetaStore.class));
 
   @Test
   public void testMinuteTableListener() throws InterruptedException {

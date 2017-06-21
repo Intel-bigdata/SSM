@@ -19,7 +19,7 @@ package org.smartdata.server.metastore.tables;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.TestDaoUtil;
 import org.smartdata.server.utils.Constants;
 import org.smartdata.server.utils.TimeGranularity;
@@ -37,7 +37,7 @@ public class TestAccessCountTableManager extends TestDaoUtil {
 
   @Test
   public void testAccessCountTableManager() throws InterruptedException {
-    DBAdapter adapter = mock(DBAdapter.class);
+    MetaStore adapter = mock(MetaStore.class);
     AccessCountTableManager manager = new AccessCountTableManager(adapter);
     Long firstDayEnd = 24 * 60 * 60 * 1000L;
     AccessCountTable accessCountTable =
@@ -82,7 +82,7 @@ public class TestAccessCountTableManager extends TestDaoUtil {
   @Test
   public void testAddAccessCountInfo() throws Exception {
     // TODO need upgrade
-    // DBAdapter adapter = new DBAdapter(databaseTester.getConnection().getConnection());
+    // MetaStore adapter = new MetaStore(databaseTester.getConnection().getConnection());
     // AccessCountTableManager manager = new AccessCountTableManager(adapter);
     // List<FileAccessEvent> accessEvents = new ArrayList<>();
     // accessEvents.add(new FileAccessEvent("file1", 0));
@@ -105,7 +105,7 @@ public class TestAccessCountTableManager extends TestDaoUtil {
 
   @Test
   public void testGetTables() throws SQLException {
-    DBAdapter adapter = mock(DBAdapter.class);
+    MetaStore adapter = mock(MetaStore.class);
     TableEvictor tableEvictor = new CountEvictor(adapter, 20);
     Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
     AccessCountTableDeque dayDeque = new AccessCountTableDeque(tableEvictor);
@@ -183,7 +183,7 @@ public class TestAccessCountTableManager extends TestDaoUtil {
 
   @Test
   public void testGetTablesCornerCase() throws SQLException {
-    DBAdapter adapter = mock(DBAdapter.class);
+    MetaStore adapter = mock(MetaStore.class);
     TableEvictor tableEvictor = new CountEvictor(adapter, 20);
     Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
     AccessCountTableDeque minute = new AccessCountTableDeque(tableEvictor);

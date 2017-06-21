@@ -73,7 +73,7 @@ public class MetaStore {
   private UserDao userDao;
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
-  
+
 
   public MetaStore(DBPool pool) throws IOException {
     this.pool = pool;
@@ -296,8 +296,8 @@ public class MetaStore {
     return fileDao.getPaths(ids);
   }
 
-  public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables, int topNum) throws Exception {
-    // TODO accessfile
+  public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
+      int topNum) throws SQLException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
       StringBuilder unioned = new StringBuilder();
@@ -339,6 +339,7 @@ public class MetaStore {
       return new ArrayList<>();
     }
   }
+
 
   public HdfsFileStatus getFile(String path) throws SQLException {
     return fileDao.getByPath(path);

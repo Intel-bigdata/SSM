@@ -221,7 +221,7 @@ public class MetaUtil {
     getDBAdapter(conf).formatDataBase();
   }
 
-  public static DBAdapter getDBAdapter(SmartConf conf) throws Exception {
+  public static MetaStore getDBAdapter(SmartConf conf) throws Exception {
     // TODO: move to etc directory
     URL pathUrl = ClassLoader.getSystemResource("");
     String path = pathUrl.getPath();
@@ -244,15 +244,29 @@ public class MetaUtil {
       for (String key : p.stringPropertyNames()) {
         LOG.info("\t" + key + " = " + p.getProperty(key));
       }
-      return new DBAdapter(new DruidPool(p));
+      return new MetaStore(new DruidPool(p));
     } else {
       LOG.info("DB connection pool config file " + expectedCpPath
           + " NOT found.");
     }
+    // Get Default configure from druid-template.xml
+    fileName = "druid-template.xml";
+    expectedCpPath = path + fileName;
+    LOG.info("Expected DB connection pool configuration path = "
+        + expectedCpPath);
+    cpConfigFile = new File(expectedCpPath);
+    LOG.info("Using pool configure file: " + expectedCpPath);
+    Properties p = new Properties();
+    p.loadFromXML(new FileInputStream(cpConfigFile));
 
-    // TODO: keep it now for testing, remove it later.
-    Connection conn = getDBConnection(conf);
-    return new DBAdapter(conn);
+    String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
+    if (url != null) {
+      p.setProperty("url", url);
+    }
+    for (String key : p.stringPropertyNames()) {
+      LOG.info("\t" + key + " = " + p.getProperty(key));
+    }
+    return new MetaStore(new DruidPool(p));
   }
 
   public static Integer getKey(Map<Integer, String> map, String value) {

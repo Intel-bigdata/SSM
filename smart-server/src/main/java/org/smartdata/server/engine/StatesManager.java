@@ -26,7 +26,7 @@ import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.ServerContext;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.FileAccessInfo;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 import org.smartdata.server.metastore.tables.AccessCountTableManager;
@@ -71,20 +71,20 @@ public class StatesManager extends AbstractService {
   @Override
   public void init() throws IOException {
     LOG.info("Initializing ...");
-    this.cleanFileTableContents(serverContext.getDbAdapter());
+    this.cleanFileTableContents(serverContext.getMetaStore());
     URI nnUri = HadoopUtils.getNameNodeUri(serverContext.getConf());
     this.client = new DFSClient(nnUri, serverContext.getConf());
     this.executorService = Executors.newScheduledThreadPool(4);
     this.accessCountTableManager = new AccessCountTableManager(
-        serverContext.getDbAdapter(), executorService);
+        serverContext.getMetaStore(), executorService);
     this.fileAccessEventSource = MetricsFactory.createAccessEventSource(serverContext.getConf());
-    this.cachedListFetcher = new CachedListFetcher(client, serverContext.getDbAdapter());
+    this.cachedListFetcher = new CachedListFetcher(client, serverContext.getMetaStore());
     this.accessEventFetcher =
         new AccessEventFetcher(
             serverContext.getConf(), accessCountTableManager,
             executorService, fileAccessEventSource.getCollector());
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
-        serverContext.getDbAdapter(), executorService);
+        serverContext.getMetaStore(), executorService);
     LOG.info("Initialized.");
   }
 
@@ -148,7 +148,7 @@ public class StatesManager extends AbstractService {
   public void unsubscribeEvent() {
   }
 
-  private void cleanFileTableContents(DBAdapter adapter) throws IOException {
+  private void cleanFileTableContents(MetaStore adapter) throws IOException {
     try {
       adapter.execute("DELETE FROM files");
     } catch (SQLException e) {
@@ -159,7 +159,7 @@ public class StatesManager extends AbstractService {
   public List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
       int topNum) throws IOException {
     try {
-      return serverContext.getDbAdapter().getHotFiles(tables, topNum);
+      return serverContext.getMetaStore().getHotFiles(tables, topNum);
     } catch (SQLException e) {
       throw new IOException(e);
     }
@@ -167,7 +167,7 @@ public class StatesManager extends AbstractService {
 
   public List<CachedFileStatus> getCachedFileStatus() throws IOException {
     try {
-      return serverContext.getDbAdapter().getCachedFileStatus();
+      return serverContext.getMetaStore().getCachedFileStatus();
     } catch (SQLException e) {
       throw new IOException(e);
     }

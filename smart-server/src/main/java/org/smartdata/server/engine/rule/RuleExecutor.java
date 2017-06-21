@@ -23,7 +23,7 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.server.engine.RuleManager;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.smartdata.server.metastore.ExecutionContext;
 import org.smartdata.server.metastore.tables.AccessCountTable;
 import org.smartdata.rule.parser.TimeBasedScheduleInfo;
@@ -47,7 +47,7 @@ public class RuleExecutor implements Runnable {
   private RuleManager ruleManager;
   private TranslateResult tr;
   private ExecutionContext ctx;
-  private DBAdapter adapter; // TODO: abstract to prevent direct call
+  private MetaStore adapter; // TODO: abstract to prevent direct call
   private volatile boolean exited = false;
   private long exitTime;
   private Stack<String> dynamicCleanups = new Stack<>();
@@ -61,7 +61,7 @@ public class RuleExecutor implements Runnable {
 
 
   public RuleExecutor(RuleManager ruleManager, ExecutionContext ctx,
-      TranslateResult tr, DBAdapter adapter) {
+      TranslateResult tr, MetaStore adapter) {
     this.ruleManager = ruleManager;
     this.ctx = ctx;
     this.tr = tr;

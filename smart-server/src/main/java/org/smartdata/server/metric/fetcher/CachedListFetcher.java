@@ -18,7 +18,7 @@
 package org.smartdata.server.metric.fetcher;
 
 import org.smartdata.common.metastore.CachedFileStatus;
-import org.smartdata.server.metastore.DBAdapter;
+import org.smartdata.server.metastore.MetaStore;
 import org.apache.hadoop.util.Time;
 
 import org.apache.hadoop.fs.RemoteIterator;
@@ -48,38 +48,38 @@ public class CachedListFetcher {
   private final Long fetchInterval;
   private FetchTask fetchTask;
   private ScheduledFuture scheduledFuture;
-  private DBAdapter dbAdapter;
+  private MetaStore metaStore;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(CachedListFetcher.class);
 
   public CachedListFetcher(
       Long fetchInterval,
-      DFSClient dfsClient, DBAdapter dbAdapter,
+      DFSClient dfsClient, MetaStore metaStore,
       ScheduledExecutorService service) {
     this.fetchInterval = fetchInterval;
-    this.dbAdapter = dbAdapter;
-    this.fetchTask = new FetchTask(dfsClient, dbAdapter);
+    this.metaStore = metaStore;
+    this.fetchTask = new FetchTask(dfsClient, metaStore);
     this.scheduledExecutorService = service;
   }
 
   public CachedListFetcher(
       Long fetchInterval,
-      DFSClient dfsClient, DBAdapter dbAdapter) {
-    this(fetchInterval, dfsClient, dbAdapter,
+      DFSClient dfsClient, MetaStore metaStore) {
+    this(fetchInterval, dfsClient, metaStore,
         Executors.newSingleThreadScheduledExecutor());
   }
 
   public CachedListFetcher(
-      DFSClient dfsClient, DBAdapter dbAdapter) {
-    this(DEFAULT_INTERVAL, dfsClient, dbAdapter,
+      DFSClient dfsClient, MetaStore metaStore) {
+    this(DEFAULT_INTERVAL, dfsClient, metaStore,
         Executors.newSingleThreadScheduledExecutor());
   }
 
   public CachedListFetcher(
-      DFSClient dfsClient, DBAdapter dbAdapter,
+      DFSClient dfsClient, MetaStore metaStore,
       ScheduledExecutorService service) {
-    this(DEFAULT_INTERVAL, dfsClient, dbAdapter, service);
+    this(DEFAULT_INTERVAL, dfsClient, metaStore, service);
   }
 
   public void start() {
@@ -96,18 +96,18 @@ public class CachedListFetcher {
   }
 
   public List<CachedFileStatus> getCachedList() throws SQLException {
-    return this.dbAdapter.getCachedFileStatus();
+    return this.metaStore.getCachedFileStatus();
   }
 
   private static class FetchTask extends Thread {
     private DFSClient dfsClient;
-    private DBAdapter dbAdapter;
+    private MetaStore metaStore;
     private Set<Long> fileSet;
     private boolean reInit;
 
-    public FetchTask(DFSClient dfsClient, DBAdapter dbAdapter) {
+    public FetchTask(DFSClient dfsClient, MetaStore metaStore) {
       this.dfsClient = dfsClient;
-      this.dbAdapter = dbAdapter;
+      this.metaStore = metaStore;
       reInit = true;
     }
 
@@ -115,7 +115,7 @@ public class CachedListFetcher {
       fileSet = new HashSet<>();
       try {
         LOG.debug("Sync CacheObject list from DB!");
-        fileSet.addAll(dbAdapter.getCachedFids());
+        fileSet.addAll(metaStore.getCachedFids());
         reInit = false;
       } catch (SQLException e) {
         LOG.error("Read fids from DB error!", e);
@@ -126,7 +126,7 @@ public class CachedListFetcher {
     private void clearAll() throws SQLException {
       LOG.debug("CacheObject List empty!");
       if (fileSet.size() > 0) {
-        dbAdapter.deleteAllCachedFile();
+        metaStore.deleteAllCachedFile();
         fileSet.clear();
       }
     }
@@ -155,10 +155,10 @@ public class CachedListFetcher {
           paths.add(currentInfo.getPath().toString());
         }
         // Delete all records to avoid conflict
-        // dbAdapter.deleteAllCachedFile();
+        // metaStore.deleteAllCachedFile();
         // Insert new records into DB
         LOG.info("Current Paths", paths);
-        Map<String, Long> pathFid = dbAdapter.getFileIDs(paths);
+        Map<String, Long> pathFid = metaStore.getFileIDs(paths);
         if (pathFid == null || pathFid.size() == 0) {
           clearAll();
           return;
@@ -172,12 +172,12 @@ public class CachedListFetcher {
           }
         }
         if (cachedFileStatuses.size() != 0) {
-          dbAdapter.insertCachedFiles(cachedFileStatuses);
+          metaStore.insertCachedFiles(cachedFileStatuses);
         }
         // Remove uncached files from DB
         for (Long fid : fileSet) {
           if (!newFileSet.contains(fid)) {
-            dbAdapter.deleteCachedFile(fid);
+            metaStore.deleteCachedFile(fid);
           }
         }
       } catch (SQLException e) {

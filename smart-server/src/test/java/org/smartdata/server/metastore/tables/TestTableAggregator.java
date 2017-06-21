@@ -17,22 +17,11 @@
  */
 package org.smartdata.server.metastore.tables;
 
-import com.google.common.collect.Lists;
-import org.dbunit.Assertion;
 import org.dbunit.database.IDatabaseConnection;
-import org.dbunit.dataset.IDataSet;
-import org.dbunit.dataset.ITable;
-import org.dbunit.dataset.xml.XmlDataSet;
-import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.DBTest;
-import org.smartdata.server.metastore.FileAccessInfo;
-import org.smartdata.server.utils.TimeGranularity;
 
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
 
 public class TestTableAggregator extends DBTest {
 
@@ -83,7 +72,7 @@ public class TestTableAggregator extends DBTest {
     //   .getResourceAsStream("accessCountTable.xml"));
     // databaseTester.setDataSet(dataSet);
     // databaseTester.onSetup();
-    // DBAdapter adapter = new DBAdapter(databaseTester.getConnection().getConnection());
+    // MetaStore adapter = new MetaStore(databaseTester.getConnection().getConnection());
     //
     // AccessCountTable table1 = new AccessCountTable("table1", 0L,
     //   0L, TimeGranularity.SECOND);
