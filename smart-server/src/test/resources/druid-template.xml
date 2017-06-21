@@ -21,7 +21,7 @@
     <entry key="testOnBorrow">false</entry>
     <entry key="testOnReturn">false</entry>
 
-    <entry key="poolPreparedStatements">true</entry>
+    <entry key="poolPreparedStatements">false</entry>
     <entry key="maxPoolPreparedStatementPerConnectionSize">30</entry>
 
     <entry key="removeAbandoned">true</entry>
