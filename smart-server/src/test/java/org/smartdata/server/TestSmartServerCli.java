@@ -52,7 +52,7 @@ public class TestSmartServerCli {
 
       // rpcServer start in SmartServer
       try {
-        new SmartServer(conf);
+        SmartServer.launchWith(conf);
         Assert.fail("Should not work without specifying "
             + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
       } catch (Exception e) {
@@ -68,7 +68,9 @@ public class TestSmartServerCli {
               + uriList.get(0).toString()
       };
 
-      SmartServer.launchWith(args, conf);
+      SmartServer regServer = SmartServer.launchWith(args, conf);
+      Thread.sleep(1000);
+      regServer.shutdown();
 
       args = new String[] {
           "-h"

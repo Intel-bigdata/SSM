@@ -188,11 +188,11 @@ public class RuleManager extends AbstractService {
   }
 
   public StatesManager getStatesManager() {
-    return server.getStatesManager();
+    return server == null ? null : server.getStatesManager();
   }
 
   public CmdletExecutor getCmdletExecutor() {
-    return server.getCmdletExecutor();
+    return server == null ? null : server.getCmdletExecutor();
   }
 
   /**
@@ -204,7 +204,6 @@ public class RuleManager extends AbstractService {
   @Override
   public void init() throws IOException {
     LOG.info("Initializing ...");
-    this.dbAdapter = dbAdapter;
     // Load rules table
     List<RuleInfo> rules = null;
     try {
