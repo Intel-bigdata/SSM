@@ -72,7 +72,7 @@ public class TestSmartServerReConfig {
       serverConf.set(SmartConfKeys.DFS_SSM_ENABLED_KEY, "false");
       serverConf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
       // rpcServer start in SmartServer
-      ssm = new SmartServer(serverConf);
+      ssm = SmartServer.launchWith(serverConf);
 
       Thread.sleep(2000);
       Assert.assertTrue(ssm.getSSMServiceState() == SmartServiceState.DISABLED);

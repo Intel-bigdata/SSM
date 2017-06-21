@@ -74,7 +74,7 @@ public class TestEmptyMiniSmartCluster {
     conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
-    ssm = new SmartServer(conf);
+    ssm = SmartServer.launchWith(conf);
   }
 
   private void initConf(Configuration conf) {

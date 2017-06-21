@@ -17,35 +17,32 @@
  */
 package org.smartdata.server;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.SmartService;
+import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.common.SmartServiceState;
 import org.smartdata.server.engine.CmdletExecutor;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
-import org.smartdata.SmartService;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.metastore.DBAdapter;
 import org.smartdata.server.metastore.MetaUtil;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.server.web.SmartHttpServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,7 +117,7 @@ public class SmartServer {
     return startOpt;
   }
 
-  static void processWith(StartupOption startOption, SmartConf conf) throws Exception {
+  static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
       MetaUtil.formatDatabase(conf);
@@ -131,13 +128,10 @@ public class SmartServer {
     try {
       ssm.initWith(startOption);
       ssm.run();
-
-      //Todo: when to break
-      while (true) {
-        Thread.sleep(1000);
-      }
-    } finally {
+      return ssm;
+    } catch (Exception e){
       ssm.shutdown();
+      throw e;
     }
   }
 
@@ -309,19 +303,31 @@ public class SmartServer {
     return startOpt;
   }
 
-  public static void launchWith(String[] args, SmartConf conf) throws Exception {
+  public static SmartServer launchWith(SmartConf conf) throws Exception {
+    return launchWith(null, conf);
+  }
+
+  public static SmartServer launchWith(String[] args, SmartConf conf) throws Exception {
     if (conf == null) {
       conf = new SmartConf();
     }
 
     StartupOption startOption = processArgs(args, conf);
-    processWith(startOption, conf);
+    if (startOption == null) {
+      return null;
+    }
+    return processWith(startOption, conf);
   }
 
   public static void main(String[] args) {
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {
-      launchWith(args, null);
+      if (launchWith(args, null) != null) {
+        //Todo: when to break
+        while (true) {
+          Thread.sleep(1000);
+        }
+      }
     } catch (Exception e) {
       LOG.error("Failed to create SmartServer", e);
       System.exit(1);

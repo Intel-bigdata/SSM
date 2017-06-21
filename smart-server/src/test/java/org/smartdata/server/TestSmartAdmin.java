@@ -67,7 +67,7 @@ public class TestSmartAdmin {
       conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
       // rpcServer start in SmartServer
-      server = new SmartServer(conf);
+      server = SmartServer.launchWith(conf);
       SmartAdmin ssmClient = new SmartAdmin(conf);
 
       while (true) {
