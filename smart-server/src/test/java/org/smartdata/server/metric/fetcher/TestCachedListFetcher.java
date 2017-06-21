@@ -43,6 +43,7 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.server.metastore.TestDaoUtil;
 
 import java.io.File;
 import java.sql.Connection;
@@ -52,11 +53,9 @@ import java.util.List;
 import java.util.Map;
 
 
-public class TestCachedListFetcher {
+public class TestCachedListFetcher extends TestDaoUtil {
 
   private DBAdapter adapter;
-  private String dbFile;
-  private Connection conn;
   private long fid;
 
   private CachedListFetcher cachedListFetcher;
@@ -73,6 +72,7 @@ public class TestCachedListFetcher {
 
   @Before
   public void init() throws Exception {
+    initDao();
     SmartConf conf = new SmartConf();
     initConf(conf);
     fid = 0l;
@@ -86,10 +86,7 @@ public class TestCachedListFetcher {
     dfs = cluster.getFileSystem();
     dfsClient = dfs.getClient();
     smartContext = new SmartContext(conf);
-    dbFile = TestDBUtil.getUniqueDBFilePath();
-    conn = TestDBUtil.getTestDBInstance();
-    MetaUtil.initializeDataBase(conn);
-    adapter = new DBAdapter(conn);
+    adapter = new DBAdapter(druidPool);
     cachedListFetcher = new CachedListFetcher(600l, dfsClient, adapter);
   }
 
@@ -104,15 +101,10 @@ public class TestCachedListFetcher {
   @After
   public void shutdown() throws Exception {
     cachedListFetcher.stop();
+    cachedListFetcher = null;
+    closeDao();
     if (cluster != null) {
       cluster.shutdown();
-    }
-    if (conn != null) {
-      conn.close();
-    }
-    if (dbFile != null) {
-      File file = new File(dbFile);
-      file.deleteOnExit();
     }
   }
 

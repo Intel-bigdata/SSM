@@ -137,6 +137,7 @@ public class TestSmartRuleParser {
 
     ExecutionContext ctx = new ExecutionContext();
     ctx.setProperty(ExecutionContext.RULE_ID, 2016);
+    // TODO remove/upgrade today
     DBAdapter dbAdapter = new DBAdapter(TestDBUtil.getTestDBInstance());
     RuleExecutor qe = new RuleExecutor(null, ctx, result, dbAdapter);
     List<String> paths = qe.executeFileRuleQuery();
