@@ -59,6 +59,15 @@ public class RuleDao {
     return id;
   }
 
+  public int update(long ruleId, long lastCheckTime,
+      long checkedCount, int cmdletsGen) {
+    String sql = "update rules set " +
+        "last_check_time = ?, " +
+        "checked_count = ?, " +
+        "cmdlets_generated = ? where id = ?";
+    return jdbcTemplate.update(sql, lastCheckTime, checkedCount, cmdletsGen, ruleId);
+  }
+
   public int update(long ruleId, int rs,
       long lastCheckTime, long checkedCount, int cmdletsGen) {
     String sql = "update rules set " +
@@ -81,6 +90,9 @@ public class RuleDao {
 
   private Map<String, Object> toMap(RuleInfo ruleInfo) {
     Map<String, Object> parameters = new HashMap<>();
+    if (ruleInfo.getSubmitTime() == 0) {
+      ruleInfo.setSubmitTime(System.currentTimeMillis());
+    }
     parameters.put("submit_time", ruleInfo.getSubmitTime());
     parameters.put("rule_text", ruleInfo.getRuleText());
     parameters.put("state", ruleInfo.getState().getValue());
