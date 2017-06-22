@@ -34,6 +34,7 @@
     <module>smart-rule</module>
     <!--<module>smart-zeppelin</module>-->
     <module>smart-agent</module>
+    <module>smart-hdfs</module>
     <module>smart-dist</module>
   </modules>
 

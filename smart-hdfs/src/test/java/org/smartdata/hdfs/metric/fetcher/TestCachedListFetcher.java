@@ -15,34 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.data;
+package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.UncacheFileAction;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.MetaStore;
-import org.smartdata.server.engine.data.files.CachedListFetcher;
-import org.smartdata.server.engine.metastore.FileStatusInternal;
-
-import org.apache.hadoop.hdfs.DFSClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.smartdata.server.engine.metastore.TestDaoUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +48,7 @@ import java.util.Map;
 
 public class TestCachedListFetcher extends TestDaoUtil {
 
-  private MetaStore adapter;
+  private MetaStore metaStore;
   private long fid;
 
   private CachedListFetcher cachedListFetcher;
@@ -83,8 +79,8 @@ public class TestCachedListFetcher extends TestDaoUtil {
     dfs = cluster.getFileSystem();
     dfsClient = dfs.getClient();
     smartContext = new SmartContext(conf);
-    adapter = new MetaStore(druidPool);
-    cachedListFetcher = new CachedListFetcher(600l, dfsClient, adapter);
+    metaStore = new MetaStore(druidPool);
+    cachedListFetcher = new CachedListFetcher(600l, dfsClient, metaStore);
   }
 
   static void initConf(Configuration conf) {
@@ -143,15 +139,15 @@ public class TestCachedListFetcher extends TestDaoUtil {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
-      Map<String, String> args = new HashMap<>();
+      Map<String, String> args = new HashMap();
       args.put(CacheFileAction.FILE_PATH, path);
       cacheAction.init(args);
       cacheAction.run();
       // System.out.println(cacheAction.isCached(path));
     }
-    adapter.insertFiles(fileStatusInternals
+    metaStore.insertFiles(fileStatusInternals
         .toArray(new FileStatusInternal[fileStatusInternals.size()]));
-    List<HdfsFileStatus> ret = adapter.getFile();
+    List<HdfsFileStatus> ret = metaStore.getFile();
     Assert.assertTrue(ret.size() == fids.length);
     cachedListFetcher.start();
     Thread.sleep(1000);
@@ -164,7 +160,7 @@ public class TestCachedListFetcher extends TestDaoUtil {
       fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
       uncacheFileAction.setContext(smartContext);
       uncacheFileAction.setDfsClient(dfsClient);
-      Map<String, String> args = new HashMap<>();
+      Map<String, String> args = new HashMap();
       args.put(UncacheFileAction.FILE_PATH, path);
       uncacheFileAction.init(args);
       uncacheFileAction.run();

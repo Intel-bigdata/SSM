@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.data;
+package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
@@ -32,9 +32,8 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.smartdata.server.engine.MetaStore;
-import org.smartdata.server.engine.data.files.InotifyEventApplier;
-import org.smartdata.server.engine.data.files.InotifyEventFetcher;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -44,16 +43,14 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-import static org.mockito.Mockito.mock;
-
 public class TestInotifyFetcher {
   private static final int BLOCK_SIZE = 1024;
 
   private static class EventApplierForTest extends InotifyEventApplier {
     private List<Event> events = new ArrayList<>();
 
-    public EventApplierForTest(MetaStore adapter, DFSClient client) {
-      super(adapter, client);
+    public EventApplierForTest(MetaStore metaStore, DFSClient client) {
+      super(metaStore, client);
     }
 
     @Override
@@ -90,9 +87,9 @@ public class TestInotifyFetcher {
         BLOCK_SIZE * 2, (short) 1, 0L);
       fs.mkdirs(new Path("/tmp"), new FsPermission("777"));
 
-      MetaStore adapter = mock(MetaStore.class);
-      EventApplierForTest applierForTest = new EventApplierForTest(adapter, client);
-      final InotifyEventFetcher fetcher = new InotifyEventFetcher(client, adapter,
+      MetaStore metaStore = Mockito.mock(MetaStore.class);
+      EventApplierForTest applierForTest = new EventApplierForTest(metaStore, client);
+      final InotifyEventFetcher fetcher = new InotifyEventFetcher(client, metaStore,
           Executors.newScheduledThreadPool(2), applierForTest);
 
       Thread thread = new Thread() {

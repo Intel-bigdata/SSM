@@ -15,22 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.data;
+package org.smartdata.hdfs.metric.fetcher;
 
-import org.smartdata.server.engine.metastore.TestDaoUtil;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.inotify.Event;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.junit.Assert;
+import org.junit.Test;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.smartdata.server.engine.MetaStore;
+import org.smartdata.server.engine.metastore.MetaUtil;
 
-import static org.mockito.Mockito.mock;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-public class TestInotifyEventApplier extends TestDaoUtil {
+public class TestInotifyEventApplier extends DBTest {
 
-/*  @Test
+  @Test
   public void testApplier() throws Exception {
-    initDao();
-    DFSClient client = mock(DFSClient.class);
-    Connection connection = druidPool.getConnection();
+    DFSClient client = Mockito.mock(DFSClient.class);
+    Connection connection = databaseTester.getConnection().getConnection();
     MetaUtil.initializeDataBase(connection);
-    MetaStore adapter = new MetaStore(druidPool);
-    InotifyEventApplier applier = new InotifyEventApplier(adapter, client);
+    MetaStore metaStore = new MetaStore(connection);
+    InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
 
     Event.CreateEvent createEvent =
         new Event.CreateEvent.Builder()
@@ -61,19 +74,25 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             0,
             null,
             (byte) 0);
-    when(client.getFileInfo(anyString())).thenReturn(status1);
+    Mockito.when(client.getFileInfo(Matchers.anyString())).thenReturn(status1);
     applier.apply(new Event[] {createEvent});
 
-    ResultSet result1 = adapter.executeQuery("SELECT * FROM files");
+    ResultSet result1 = metaStore.executeQuery("SELECT * FROM files");
     Assert.assertEquals(result1.getString("path"), "/file");
     Assert.assertEquals(result1.getLong("fid"), 1010L);
     Assert.assertEquals(result1.getShort("permission"), 511);
 
     Event close = new Event.CloseEvent("/file", 1024, 0);
     applier.apply(new Event[] {close});
-    ResultSet result2 = adapter.executeQuery("SELECT * FROM files");
+    ResultSet result2 = metaStore.executeQuery("SELECT * FROM files");
     Assert.assertEquals(result2.getLong("length"), 1024);
     Assert.assertEquals(result2.getLong("modification_time"), 0L);
+
+//    Event truncate = new Event.TruncateEvent("/file", 512, 16);
+//    applier.apply(new Event[] {truncate});
+//    ResultSet result3 = metaStore.executeQuery("SELECT * FROM files");
+//    Assert.assertEquals(result3.getLong("length"), 512);
+//    Assert.assertEquals(result3.getLong("modification_time"), 16L);
 
     Event meta =
         new Event.MetadataUpdateEvent.Builder()
@@ -86,7 +105,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             .groupName("cg2")
             .build();
     applier.apply(new Event[] {meta});
-    ResultSet result4 = adapter.executeQuery("SELECT * FROM files");
+    ResultSet result4 = metaStore.executeQuery("SELECT * FROM files");
     Assert.assertEquals(result4.getLong("access_time"), 3);
     Assert.assertEquals(result4.getLong("modification_time"), 2);
 
@@ -116,7 +135,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
       new Event.RenameEvent.Builder().dstPath("/dir2").srcPath("/dir").timestamp(5).build();
 
     applier.apply(new Event[] {createEvent2, createEvent3, rename});
-    ResultSet result5 = adapter.executeQuery("SELECT * FROM files");
+    ResultSet result5 = metaStore.executeQuery("SELECT * FROM files");
     List<String> expectedPaths = Arrays.asList("/dir2", "/dir2/file", "/file");
     List<String> actualPaths = new ArrayList<>();
     while (result5.next()) {
@@ -128,7 +147,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
 
     Event unlink = new Event.UnlinkEvent.Builder().path("/").timestamp(6).build();
     applier.apply(new Event[] {unlink});
-    ResultSet result6 = adapter.executeQuery("SELECT * FROM files");
+    ResultSet result6 = metaStore.executeQuery("SELECT * FROM files");
     Assert.assertFalse(result6.next());
-  }*/
+  }
 }
