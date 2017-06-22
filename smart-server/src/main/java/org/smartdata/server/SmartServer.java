@@ -25,7 +25,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.SmartService;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
@@ -44,8 +43,6 @@ import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * From this Smart Storage Management begins.
@@ -57,7 +54,6 @@ public class SmartServer {
   private SmartConf conf;
   private SmartEngine engine;
   private ServerContext context;
-  private List<SmartService> modules = new ArrayList<>();
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
   private SmartServiceState ssmServiceState = SmartServiceState.SAFEMODE;
@@ -208,13 +204,8 @@ public class SmartServer {
   }
 
   private void startEngines() throws Exception {
-    for (SmartService m : modules) {
-      m.init();
-    }
-
-    for (SmartService m : modules) {
-      m.start();
-    }
+    engine.init();
+    engine.start();
   }
 
   public void enable() throws IOException {
@@ -237,12 +228,24 @@ public class SmartServer {
   }
 
   private void stop() throws Exception {
-    for (int i = modules.size() - 1 ; i >= 0; i--) {
-      modules.get(i).stop();
+    if (engine != null) {
+      engine.stop();
     }
 
-    httpServer.stop();
-    rpcServer.stop();
+    try {
+      if (httpServer != null) {
+        httpServer.stop();
+      }
+    } catch (Exception e) {
+      // ignore to make sure the following services can be closed
+    }
+
+    try {
+      if (rpcServer != null) {
+        rpcServer.stop();
+      }
+    } catch (Exception e) {
+    }
   }
 
   /**

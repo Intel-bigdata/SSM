@@ -38,7 +38,6 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.SmartServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

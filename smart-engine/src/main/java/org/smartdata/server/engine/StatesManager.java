@@ -45,7 +45,7 @@ public class StatesManager extends AbstractService {
   private AccessCountTableManager accessCountTableManager;
   private AccessEventFetcher accessEventFetcher;
   private FileAccessEventSource fileAccessEventSource;
-  private AbstractService nameSpaceService;
+  private AbstractService statesUpdaterService;
 
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
@@ -70,9 +70,10 @@ public class StatesManager extends AbstractService {
         new AccessEventFetcher(
             serverContext.getConf(), accessCountTableManager,
             executorService, fileAccessEventSource.getCollector());
-    nameSpaceService =
-        StatesUpdaterServiceFactory.createStatesUpdaterService(serverContext.getConf());
-    nameSpaceService.setContext(serverContext);
+    // TODO: fix after MetaStore refactor
+//    statesUpdaterService =
+//        StatesUpdaterServiceFactory.createStatesUpdaterService(serverContext.getConf());
+//    statesUpdaterService.setContext(serverContext);
     LOG.info("Initialized.");
   }
 
