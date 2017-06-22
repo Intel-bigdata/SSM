@@ -17,10 +17,12 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.engine.cluster.HazelcastExecutorService;
-import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.*;
+import org.smartdata.server.engine.cmdlet.agent.AgentExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import java.util.List;
 
 //Todo: extract the schedule implementation
 public class CmdletDispatcher {
+  private Logger LOG = LoggerFactory.getLogger(CmdletDispatcher.class);
   private List<CmdletExecutorService> executorServices;
   private int index;
 
@@ -37,6 +40,7 @@ public class CmdletDispatcher {
     this.executorServices = new ArrayList<>();
     this.executorServices.add(new LocalCmdletExecutorService(cmdletManager, factory));
     this.executorServices.add(new HazelcastExecutorService(cmdletManager, factory));
+    this.executorServices.add(new AgentExecutorService(cmdletManager, factory));
     this.index = 0;
   }
 
@@ -55,7 +59,12 @@ public class CmdletDispatcher {
       while (!executorServices.get(index % executorServices.size()).canAcceptMore()) {
         index += 1;
       }
-      executorServices.get(index % executorServices.size()).execute(cmdlet);
+      CmdletExecutorService selected = executorServices.get(index % executorServices.size());
+      selected.execute(cmdlet);
+      LOG.info(
+          String.format(
+              "Dispatching cmdlet %s to executor service %s",
+              cmdlet.getCmdletId(), selected.getClass()));
       index += 1;
     }
   }

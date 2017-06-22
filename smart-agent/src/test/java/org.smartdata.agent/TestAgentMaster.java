@@ -26,9 +26,12 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.typesafe.config.ConfigFactory;
 import org.junit.Test;
-import org.smartdata.agent.messages.AgentToMaster;
-import org.smartdata.agent.messages.MasterToAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
+import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
+import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

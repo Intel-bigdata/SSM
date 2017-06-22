@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.agent;
+package org.smartdata.server.engine.cmdlet.agent;
 
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.CmdletManager;

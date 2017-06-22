@@ -15,15 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cluster;
+package org.smartdata.server.cluster;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
+import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.CmdletStatusReporter;
+import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
 import org.smartdata.server.engine.cmdlet.message.ActionStatusReport;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StatusMessage;
@@ -35,6 +36,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+//Todo: recover and reconnect when master is offline
 public class HazelcastWorker implements CmdletStatusReporter {
   private final HazelcastInstance instance;
   private ScheduledExecutorService executorService;

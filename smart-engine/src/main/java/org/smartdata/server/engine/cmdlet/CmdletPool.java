@@ -32,7 +32,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * CmdletPool : A singleton class to manage all cmdletsThread
+ *
+ * @deprecated Will be removed after using new executor service framework
  */
+@Deprecated
 public class CmdletPool {
   static final Logger LOG = LoggerFactory.getLogger(CmdletExecutor.class);
 

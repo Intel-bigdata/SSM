@@ -77,7 +77,7 @@ public class CmdletManager extends AbstractService {
   public CmdletManager(ServerContext context) {
     super(context);
 
-    this.metaStore = context.getMetaStore();
+    //this.metaStore = context.getMetaStore();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.dispatcher = new CmdletDispatcher(this);
     this.runningCmdlets = new ArrayList<>();
@@ -89,13 +89,13 @@ public class CmdletManager extends AbstractService {
 
   @Override
   public void init() throws IOException {
-      try {
-        maxActionId = new AtomicLong(metaStore.getMaxActionId());
-        maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
-      } catch (Exception e) {
-        LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
-        throw new IOException(e);
-      }
+    try {
+      maxActionId = new AtomicLong(metaStore.getMaxActionId());
+      maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
+    } catch (Exception e) {
+      LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
+      throw new IOException(e);
+    }
   }
 
   @Override
@@ -190,7 +190,7 @@ public class CmdletManager extends AbstractService {
     return actionInfos;
   }
 
-  public synchronized void updateStatue(StatusMessage status) {
+  public synchronized void updateStatus(StatusMessage status) {
     if (status instanceof CmdletStatusUpdate) {
 
     } else if (status instanceof ActionStatusReport) {

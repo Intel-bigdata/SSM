@@ -64,7 +64,7 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
 
   @Override
   public void report(StatusMessage status) {
-    cmdletManager.updateStatue(status);
+    cmdletManager.updateStatus(status);
   }
 
   private class StatusFetchTask implements Runnable {

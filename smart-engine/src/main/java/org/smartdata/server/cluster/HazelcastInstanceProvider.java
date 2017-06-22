@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.agent;
+package org.smartdata.server.cluster;
 
-public class AgentConstants {
+import com.hazelcast.config.ClasspathXmlConfig;
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
 
-  public static final String MASTER_ADDRESS = "smartdata.agent.master";
-  public static final String MASTER_ACTOR_SYSTEM_NAME = "AgentMaster";
-  public static final String MASTER_ACTOR_NAME = "master";
+public class HazelcastInstanceProvider {
+  private static String CONFIG_FILE = "hazelcast.xml";
+  private static HazelcastInstance instance;
+
+  private HazelcastInstanceProvider() {}
+
+  public static HazelcastInstance getInstance() {
+    if (instance == null) {
+//      instance = Hazelcast.newHazelcastInstance(new ClasspathXmlConfig(CONFIG_FILE));
+      instance = Hazelcast.newHazelcastInstance(new Config());
+    }
+    return instance;
+  }
 }

@@ -15,22 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cluster;
+package org.smartdata.server.cluster;
 
-import com.hazelcast.config.ClasspathXmlConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.MemberAttributeEvent;
+import com.hazelcast.core.MembershipEvent;
+import com.hazelcast.core.MembershipListener;
+import org.smartdata.server.utils.HazelcastUtil;
 
-public class HazelcastInstanceProvider {
-  private static String CONFIG_FILE = "hazelcast.xml";
-  private static HazelcastInstance instance;
+public class ClusterMembershipListener implements MembershipListener {
+  private final ServerDaemon daemon;
 
-  private HazelcastInstanceProvider() {}
+  public ClusterMembershipListener(ServerDaemon daemon) {
+    this.daemon = daemon;
+  }
 
-  public static HazelcastInstance getInstance() {
-    if (instance == null) {
-      instance = Hazelcast.newHazelcastInstance(new ClasspathXmlConfig(CONFIG_FILE));
+  @Override
+  public void memberAdded(MembershipEvent membershipEvent) {
+  }
+
+  @Override
+  public void memberRemoved(MembershipEvent membershipEvent) {
+    if (HazelcastUtil.isMaster(HazelcastInstanceProvider.getInstance())) {
+      this.daemon.becomeActive();
     }
-    return instance;
+  }
+
+  @Override
+  public void memberAttributeChanged(MemberAttributeEvent memberAttributeEvent) {
   }
 }

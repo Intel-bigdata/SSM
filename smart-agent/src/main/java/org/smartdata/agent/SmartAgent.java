@@ -34,14 +34,16 @@ import com.typesafe.config.ConfigValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.agent.messages.MasterToAgent.AgentRegistered;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.CmdletStatusReporter;
+import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
+import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StatusMessage;
-import scala.Serializable;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -81,7 +83,7 @@ public class SmartAgent {
     private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
     private final static FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
 
-    private AgentId id;
+    private MasterToAgent.AgentId id;
     private ActorRef master;
     private final SmartAgent agent;
     private final String masterPath;
@@ -222,39 +224,4 @@ public class SmartAgent {
       }
     }
   }
-
-  public static class AgentId implements Serializable {
-
-    private static final long serialVersionUID = -4032231012646281770L;
-    private final int id;
-
-    public AgentId(int id) {
-      this.id = id;
-    }
-
-    public int getId() {
-      return id;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      AgentId agentId = (AgentId) o;
-
-      return id == agentId.id;
-    }
-
-    @Override
-    public int hashCode() {
-      return id;
-    }
-
-    @Override
-    public String toString() {
-      return "AgentId{" +
-          "id=" + id +
-          '}';
-    }  }
 }
