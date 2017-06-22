@@ -59,6 +59,15 @@ public class RuleDao {
     return id;
   }
 
+  public int update(long ruleId, long lastCheckTime,
+      long checkedCount, int cmdletsGen) {
+    String sql = "update rules set " +
+        "last_check_time = ?, " +
+        "checked_count = ?, " +
+        "cmdlets_generated = ? where id = ?";
+    return jdbcTemplate.update(sql, lastCheckTime, checkedCount, cmdletsGen, ruleId);
+  }
+
   public int update(long ruleId, int rs,
       long lastCheckTime, long checkedCount, int cmdletsGen) {
     String sql = "update rules set " +

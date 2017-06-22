@@ -502,6 +502,10 @@ public class MetaStore {
   public synchronized boolean updateRuleInfo(long ruleId, RuleState rs,
       long lastCheckTime, long checkedCount, int commandsGen)
       throws SQLException {
+    if (rs == null) {
+      return ruleDao.update(ruleId,
+          lastCheckTime, checkedCount, commandsGen) >= 0;
+    }
     return ruleDao.update(ruleId,
         rs.getValue(), lastCheckTime, checkedCount, commandsGen) >= 0;
   }
