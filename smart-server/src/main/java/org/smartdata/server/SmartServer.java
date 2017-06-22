@@ -32,10 +32,10 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.CmdletExecutor;
 import org.smartdata.server.engine.ConfManager;
+import org.smartdata.server.engine.MetaStore;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.StatesManager;
-import org.smartdata.server.engine.MetaStore;
 import org.smartdata.server.engine.metastore.MetaUtil;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.server.web.SmartHttpServer;
@@ -51,13 +51,11 @@ import java.util.List;
  * From this Smart Storage Management begins.
  */
 public class SmartServer {
-  private StatesManager statesMgr;
-  private RuleManager ruleMgr;
-  private CmdletExecutor cmdletExecutor;
   private SmartHttpServer httpServer;
   private SmartRpcServer rpcServer;
   private ConfManager confMgr;
   private SmartConf conf;
+  private SmartEngine engine;
   private ServerContext context;
   private List<SmartService> modules = new ArrayList<>();
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
@@ -76,29 +74,22 @@ public class SmartServer {
     context = new ServerContext(conf, metaStore);
 
     if (startupOption == StartupOption.REGULAR) {
-      statesMgr = new StatesManager(context);
-      cmdletExecutor = new CmdletExecutor(context);
-      ruleMgr = new RuleManager(context, statesMgr, cmdletExecutor);
-
-      modules.add(statesMgr);
-      modules.add(ruleMgr);
-      modules.add(cmdletExecutor);
-
-      httpServer = new SmartHttpServer(this, conf);
+      engine = new SmartEngine(context);
+      httpServer = new SmartHttpServer(engine, conf);
       rpcServer = new SmartRpcServer(this, conf);
     }
   }
 
   public StatesManager getStatesManager() {
-    return statesMgr;
+    return engine.getStatesManager();
   }
 
   public RuleManager getRuleManager() {
-    return ruleMgr;
+    return engine.getRuleManager();
   }
 
   public CmdletExecutor getCmdletExecutor() {
-    return cmdletExecutor;
+    return engine.getCmdletExecutor();
   }
 
   public static StartupOption processArgs(String[] args, SmartConf conf) throws Exception {

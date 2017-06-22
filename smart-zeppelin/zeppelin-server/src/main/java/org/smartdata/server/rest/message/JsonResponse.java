@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.smartdata.server.web.resources;
+package org.smartdata.server.rest.message;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -26,12 +26,12 @@ import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.common.actions.{ActionDescriptor, ActionInfo}
 import org.smartdata.common.cmdlet.CmdletDescriptor
-import org.smartdata.server.SmartServer
+import org.smartdata.server.SmartEngine
 import org.smartdata.server.utils.Constants
 
 import scala.util.Random
 
-class ActionService(ssmServer: SmartServer) extends BasicService {
+class ActionService(ssmServer: SmartEngine) extends BasicService {
   private val gson: Gson = new Gson()
   private val actions: util.Collection[ActionInfo] = new util.ArrayList[ActionInfo]()
   val builder = new ActionInfo.Builder()

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.web.resources;
+package org.smartdata.server.rest;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -23,8 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.server.SmartServer;
+import org.smartdata.server.SmartEngine;
 import org.smartdata.server.engine.metastore.tables.AccessCountTable;
+import org.smartdata.server.rest.message.JsonResponse;
 import org.smartdata.server.utils.Constants;
 
 import javax.ws.rs.GET;
@@ -38,16 +39,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Action APIs.
+ */
 @Path("/api/v1.0")
 @Produces("application/json")
 public class ActionRestApi {
-  SmartServer ssm;
+  SmartEngine ssm;
   private static final Logger logger =
       LoggerFactory.getLogger(ActionRestApi.class);
   Gson gson = new Gson();
   private Collection<ActionInfo> actions = new ArrayList<ActionInfo>();
 
-  public ActionRestApi(SmartServer ssm) {
+  public ActionRestApi(SmartEngine ssm) {
     this.ssm = ssm;
   }
 

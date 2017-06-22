@@ -23,6 +23,9 @@ import com.google.gson.reflect.TypeToken;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Json utilities for REST APIs.
+ */
 public class JsonUtil {
 
   public static String toJsonString(Map<String, String> map) {

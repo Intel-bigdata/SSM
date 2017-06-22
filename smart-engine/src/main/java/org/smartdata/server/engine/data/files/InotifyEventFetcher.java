@@ -22,10 +22,10 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
-import org.smartdata.server.engine.MetaStore;
-import org.smartdata.server.utils.EventBatchSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.server.engine.MetaStore;
+import org.smartdata.server.utils.EventBatchSerializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class InotifyEventFetcher {
     this.nameSpaceFetcher = new NamespaceFetcher(client, adapter, service);
   }
 
-  public void start() throws IOException, InterruptedException {
+  public void start() throws IOException {
     this.inotifyFile = new File("/tmp/inotify" + new Random().nextLong());
     this.queueFile = new QueueFile(inotifyFile);
     long startId = this.client.getNamenode().getCurrentEditLogTxid();
@@ -78,8 +78,12 @@ public class InotifyEventFetcher {
     LOG.info("Name space fetch finished.");
   }
 
-  private void waitNameSpaceFetcherFinished() throws InterruptedException, IOException {
-    eventApplyTask.join();
+  private void waitNameSpaceFetcherFinished() throws IOException {
+    try {
+      eventApplyTask.join();
+    } catch (InterruptedException e) {
+      throw new IOException(e);
+    }
 
     long lastId = eventApplyTask.getLastId();
     this.inotifyFetchFuture.cancel(false);

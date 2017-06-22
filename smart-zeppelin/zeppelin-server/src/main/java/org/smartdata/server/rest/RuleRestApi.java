@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.web.resources;
+package org.smartdata.server.rest;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.conf.SmartConf;
-import org.smartdata.server.SmartServer;
+import org.smartdata.server.SmartEngine;
+import org.smartdata.server.rest.message.JsonResponse;
 import org.smartdata.server.utils.JsonUtil;
 
 import javax.ws.rs.DELETE;
@@ -38,21 +38,25 @@ import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 
+import static javafx.scene.input.KeyCode.L;
+
+/**
+ * Rules APIs.
+ */
 @Path("/api/v1.0")
 @Produces("application/json")
 public class RuleRestApi {
-  private SmartServer ssm;
+  private SmartEngine ssm;
   private static final Logger logger =
       LoggerFactory.getLogger(RuleRestApi.class);
-  Gson gson = new Gson();
 
-  public RuleRestApi(SmartServer ssm) {
+  public RuleRestApi(SmartEngine ssm) {
     this.ssm = ssm;
   }
 
   @GET
   public String getString() {
-      return "hello";
+    return "hello";
   }
 
   @POST
@@ -94,9 +98,9 @@ public class RuleRestApi {
     Map<String, String> m = new HashMap<String, String>();
     m.put("_FILE_PATH_", "/testCacheFile");
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
-        CmdletState.PENDING, JsonUtil.toJsonString(m), 123123333l, 232444444l);
+        CmdletState.PENDING, JsonUtil.toJsonString(m), 123123333L, 232444444L);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 1, CmdletState.PENDING,
-        JsonUtil.toJsonString(m), 123178333l, 232444994l);
+        JsonUtil.toJsonString(m), 123178333L, 232444994L);
     return new JsonResponse<>(Response.Status.OK,
         ssm.getCmdletExecutor().listCmdletsInfo(intNumer, null)).build();
   }

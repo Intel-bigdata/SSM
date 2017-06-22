@@ -19,9 +19,9 @@ package org.smartdata.server.web
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.smartdata.server.SmartServer
+import org.smartdata.server.SmartEngine
 
-class RestServices(ssmServer: SmartServer) {
+class RestServices(ssmServer: SmartEngine) {
 
   private val static = new StaticRestService().route
   private val rule = new RuleService(ssmServer).route

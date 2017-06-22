@@ -99,7 +99,7 @@ public class TestInotifyFetcher {
         public void run() {
           try {
             fetcher.start();
-          } catch (IOException | InterruptedException e) {
+          } catch (IOException e) {
             e.printStackTrace();
           }
         }

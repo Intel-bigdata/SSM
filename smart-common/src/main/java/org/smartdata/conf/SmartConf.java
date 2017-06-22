@@ -18,7 +18,6 @@
 package org.smartdata.conf;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
 
 import java.io.Console;
 import java.io.IOException;
@@ -26,7 +25,7 @@ import java.io.IOException;
 /**
  * SSM related configurations as well as HDFS configurations.
  */
-public class SmartConf extends HdfsConfiguration {
+public class SmartConf extends Configuration {
   public SmartConf() {
     Configuration.addDefaultResource("smart-default.xml");
     Configuration.addDefaultResource("smart-site.xml");

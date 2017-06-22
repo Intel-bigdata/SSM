@@ -90,7 +90,7 @@ public class StatesManager extends AbstractService {
    * Start daemon threads in StatesManager for function.
    */
   @Override
-  public void start() throws IOException, InterruptedException {
+  public void start() throws IOException {
     LOG.info("Starting ...");
     this.inotifyEventFetcher.start();
     this.accessEventFetcher.start();

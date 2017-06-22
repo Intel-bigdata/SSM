@@ -43,7 +43,7 @@ public interface SmartService {
    * @return
    * @throws IOException
    */
-  void start() throws IOException, InterruptedException;
+  void start() throws IOException;
 
   /**
    * After stop call, all states in database will not be changed anymore.
