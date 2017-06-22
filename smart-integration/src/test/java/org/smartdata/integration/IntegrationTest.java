@@ -62,8 +62,9 @@ public class IntegrationTest {
 
   @Test
   public void testRestApi() throws Exception {
-    Response response = RestAssured.get("/api/v1.0/addrule/norule");
-    ValidatableResponse validatable = response.then();
+    Response response1 = RestAssured.post("/api/v1.0/submitaction/write?args=-file%20%2Fhello%20-length%2010");
+    Response response2 = RestAssured.get("/api/v1.0/actionlist");
+    ValidatableResponse validatable = response2.then();
     while(true) {
 
     }
