@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.server.SmartEngine;
-import org.smartdata.server.engine.metastore.tables.AccessCountTable;
+import main.java.org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.server.rest.message.JsonResponse;
 import org.smartdata.server.utils.Constants;
 

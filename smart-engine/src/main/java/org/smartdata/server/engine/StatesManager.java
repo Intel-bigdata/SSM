@@ -26,8 +26,8 @@ import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 import org.smartdata.server.engine.metastore.FileAccessInfo;
-import org.smartdata.server.engine.metastore.tables.AccessCountTable;
-import org.smartdata.server.engine.metastore.tables.AccessCountTableManager;
+import main.java.org.smartdata.metastore.tables.AccessCountTable;
+import main.java.org.smartdata.metastore.tables.AccessCountTableManager;
 
 import java.io.IOException;
 import java.sql.SQLException;

@@ -25,7 +25,7 @@ import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.MetaStore;
 import org.smartdata.server.engine.metastore.ExecutionContext;
-import org.smartdata.server.engine.metastore.tables.AccessCountTable;
+import main.java.org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.rule.parser.TimeBasedScheduleInfo;
 import org.smartdata.rule.parser.TranslateResult;
 

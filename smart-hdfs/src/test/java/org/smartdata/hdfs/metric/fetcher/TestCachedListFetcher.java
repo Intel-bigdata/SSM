@@ -38,7 +38,7 @@
 //import org.smartdata.actions.hdfs.UncacheFileAction;
 //import org.smartdata.common.metastore.CachedFileStatus;
 //import org.smartdata.conf.SmartConf;
-//import org.smartdata.server.engine.MetaStore;
+//import main.java.org.smartdata.metastore.MetaStore;
 //
 //import java.util.ArrayList;
 //import java.util.HashMap;
