@@ -74,13 +74,14 @@ public class TestRuleDao extends TestDaoUtil {
     String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
-    RuleInfo info1 = new RuleInfo(0, submitTime,
+    RuleInfo info1 = new RuleInfo(20l, submitTime,
         rule, RuleState.ACTIVE,
         0, 0, 0);
     ruleDao.insert(info1);
-    ruleDao.update(info1.getId(),
+    long rid = ruleDao.update(info1.getId(),
         RuleState.DISABLED.getValue(),
         12l, 12l, 12);
+    Assert.assertTrue(rid == info1.getId());
     info1 = ruleDao.getById(info1.getId());
     Assert.assertTrue(info1.getNumChecked() == 12l);
   }

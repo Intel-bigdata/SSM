@@ -81,6 +81,9 @@ public class RuleDao {
 
   private Map<String, Object> toMap(RuleInfo ruleInfo) {
     Map<String, Object> parameters = new HashMap<>();
+    if (ruleInfo.getSubmitTime() == 0) {
+      ruleInfo.setSubmitTime(System.currentTimeMillis());
+    }
     parameters.put("submit_time", ruleInfo.getSubmitTime());
     parameters.put("rule_text", ruleInfo.getRuleText());
     parameters.put("state", ruleInfo.getState().getValue());
