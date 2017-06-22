@@ -34,6 +34,7 @@
     <module>smart-zeppelin</module>
     <module>smart-agent</module>
     <module>smart-dist</module>
+    <module>smart-integration</module>
   </modules>
 
   <properties>
