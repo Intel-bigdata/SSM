@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.agent;
+package org.smartdata.server.engine.cmdlet.agent;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -29,9 +29,10 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.agent.messages.AgentToMaster.RegisterAgent;
-import org.smartdata.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.agent.messages.MasterToAgent.AgentRegistered;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StatusMessage;
@@ -132,7 +133,7 @@ public class AgentMaster {
 
   static class MasterActor extends UntypedActor {
 
-    private final Map<ActorRef, SmartAgent.AgentId> agents = new HashMap<>();
+    private final Map<ActorRef, MasterToAgent.AgentId> agents = new HashMap<>();
     private List<ActorRef> resources = new ArrayList<>();
     private int nextAgentId = 0;
     private int dispatchIndex = 0;
@@ -154,7 +155,7 @@ public class AgentMaster {
 
     private boolean handleAgentMessage(Object message) {
       if (message instanceof RegisterNewAgent) {
-        SmartAgent.AgentId id = new SmartAgent.AgentId(nextAgentId);
+        MasterToAgent.AgentId id = new MasterToAgent.AgentId(nextAgentId);
         nextAgentId++;
         getSelf().forward(new RegisterAgent(id), getContext());
         return true;
@@ -162,7 +163,7 @@ public class AgentMaster {
         RegisterAgent register = (RegisterAgent) message;
         ActorRef agent = getSender();
         getContext().watch(agent);
-        SmartAgent.AgentId id = register.getId();
+        MasterToAgent.AgentId id = register.getId();
         agents.put(agent, id);
         AgentRegistered registered = new AgentRegistered(id);
         resources.add(agent);
@@ -170,7 +171,7 @@ public class AgentMaster {
         LOG.info("Register SmartAgent {} from {}", id, agent);
         return true;
       } else if (message instanceof StatusMessage) {
-        statusUpdater.updateStatue((StatusMessage) message);
+        statusUpdater.updateStatus((StatusMessage) message);
         return true;
       } else {
         return false;
@@ -197,7 +198,7 @@ public class AgentMaster {
       if (message instanceof Terminated) {
         Terminated terminated = (Terminated) message;
         ActorRef agent = terminated.actor();
-        SmartAgent.AgentId id = agents.remove(agent);
+        MasterToAgent.AgentId id = agents.remove(agent);
         resources.remove(agent);
         LOG.warn("SmartAgent ({} {} down", id, agent);
         return true;

@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.agent.messages;
+package org.smartdata.server.engine.cmdlet.agent.messages;
 
-import org.smartdata.agent.SmartAgent;
-import org.smartdata.agent.AgentMaster;
+import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 
 import java.io.Serializable;
 
@@ -42,13 +41,13 @@ public class AgentToMaster {
   public static class RegisterAgent implements Serializable {
 
     private static final long serialVersionUID = 5566241875786339983L;
-    private final SmartAgent.AgentId id;
+    private final MasterToAgent.AgentId id;
 
-    public RegisterAgent(SmartAgent.AgentId id) {
+    public RegisterAgent(MasterToAgent.AgentId id) {
       this.id = id;
     }
 
-    public SmartAgent.AgentId getId() {
+    public MasterToAgent.AgentId getId() {
       return id;
     }
 

@@ -23,8 +23,10 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.junit.Test;
-import org.smartdata.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.agent.messages.MasterToAgent.AgentRegistered;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
+import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 
 public class TestSmartAgent extends ActorSystemHarness {
 
@@ -39,7 +41,7 @@ public class TestSmartAgent extends ActorSystemHarness {
     runner.start();
 
     mockedMaster.expectMsgClass(RegisterNewAgent.class);
-    mockedMaster.reply(new AgentRegistered(new SmartAgent.AgentId(0)));
+    mockedMaster.reply(new AgentRegistered(new MasterToAgent.AgentId(0)));
   }
 
   private class AgentRunner extends Thread {

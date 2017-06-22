@@ -15,24 +15,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.agent.messages;
-
-import org.smartdata.agent.SmartAgent;
+package org.smartdata.server.engine.cmdlet.agent.messages;
 
 import java.io.Serializable;
 
 public class MasterToAgent {
 
-  public static class AgentRegistered implements Serializable {
+  public static class AgentId implements scala.Serializable {
 
-    private static final long serialVersionUID = -7212238600261028430L;
-    private final SmartAgent.AgentId id;
+    private static final long serialVersionUID = -4032231012646281770L;
+    private final int id;
 
-    public AgentRegistered(SmartAgent.AgentId id ) {
+    public AgentId(int id) {
       this.id = id;
     }
 
-    public SmartAgent.AgentId getAgentId() {
+    public int getId() {
+      return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      AgentId agentId = (AgentId) o;
+
+      return id == agentId.id;
+    }
+
+    @Override
+    public int hashCode() {
+      return id;
+    }
+
+    @Override
+    public String toString() {
+      return "AgentId{" +
+        "id=" + id +
+        '}';
+    }
+  }
+
+  public static class AgentRegistered implements Serializable {
+
+    private static final long serialVersionUID = -7212238600261028430L;
+    private final AgentId id;
+
+    public AgentRegistered(AgentId id ) {
+      this.id = id;
+    }
+
+    public AgentId getAgentId() {
       return id;
     }
 

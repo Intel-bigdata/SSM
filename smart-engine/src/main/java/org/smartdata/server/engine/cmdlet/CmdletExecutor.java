@@ -25,6 +25,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CmdletState;
+import org.smartdata.server.engine.cmdlet.Cmdlet;
+import org.smartdata.server.engine.cmdlet.CmdletStatusReporter;
 import org.smartdata.server.engine.cmdlet.message.ActionStatusReport;
 import org.smartdata.server.engine.cmdlet.message.CmdletStatusUpdate;
 

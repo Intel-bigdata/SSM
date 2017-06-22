@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cluster;
+package org.smartdata.server.engine.cmdlet;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
@@ -25,9 +25,10 @@ import com.hazelcast.core.MembershipEvent;
 import com.hazelcast.core.MembershipListener;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import org.smartdata.server.engine.cmdlet.CmdletFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.engine.CmdletManager;
-import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
@@ -41,15 +42,18 @@ import java.util.Random;
 import java.util.Set;
 
 public class HazelcastExecutorService extends CmdletExecutorService {
-  static final String WORKER_TOPIC_PREFIX = "worker_";
-  static final String STATUS_TOPIC = "status_topic";
+  private Logger LOG = LoggerFactory.getLogger(HazelcastExecutorService.class);
+  public static final String WORKER_TOPIC_PREFIX = "worker_";
+  public static final String STATUS_TOPIC = "status_topic";
   private final HazelcastInstance instance;
+  private Random random;
   private Map<String, ITopic<Serializable>> masterToWorkers;
   private Map<String, Set<Long>> scheduledCmdlets;
   private ITopic<StatusMessage> statusTopic;
 
   public HazelcastExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
     super(cmdletManager, cmdletFactory);
+    this.random = new Random();
     this.scheduledCmdlets = new HashMap<>();
     this.masterToWorkers = new HashMap<>();
     this.instance = HazelcastInstanceProvider.getInstance();
@@ -74,15 +78,16 @@ public class HazelcastExecutorService extends CmdletExecutorService {
 
   @Override
   public boolean canAcceptMore() {
-    return !HazelcastUtil.getWorkerMembers(HazelcastInstanceProvider.getInstance()).isEmpty();
+    return !HazelcastUtil.getWorkerMembers(instance).isEmpty();
   }
 
   @Override
   public void execute(LaunchCmdlet cmdlet) {
     String[] members = masterToWorkers.keySet().toArray(new String[0]);
-    int index = new Random().nextInt() % members.length;
-    masterToWorkers.get(members[index]).publish(cmdlet);
-    scheduledCmdlets.get(members[index]).add(cmdlet.getCmdletId());
+    String memeber = members[random.nextInt() % members.length];
+    masterToWorkers.get(memeber).publish(cmdlet);
+    scheduledCmdlets.get(memeber).add(cmdlet.getCmdletId());
+    LOG.info(String.format("Executing cmdlet %s on worker %s", cmdlet.getCmdletId(), members));
   }
 
   @Override
@@ -99,7 +104,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   }
 
   public void onStatusMessage(StatusMessage message) {
-    cmdletManager.updateStatue(message);
+    cmdletManager.updateStatus(message);
   }
 
   private class ClusterMembershipListener implements MembershipListener {

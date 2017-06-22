@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.agent;
+package org.smartdata.server.engine.cmdlet.agent;
 
 import akka.actor.ActorPath;
 import akka.actor.ActorRef;
@@ -24,6 +24,7 @@ import akka.actor.Address;
 import akka.actor.Cancellable;
 import akka.actor.ExtendedActorSystem;
 import akka.actor.Scheduler;
+import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
 
