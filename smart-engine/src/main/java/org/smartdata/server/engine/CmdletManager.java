@@ -142,7 +142,7 @@ public class CmdletManager extends AbstractService {
       cmdletInfo.addAction(actionInfo.getActionId());
     }
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
-      if (!ActionRegistry.instance().checkAction(cmdletDescriptor.getActionName(index))) {
+      if (!ActionRegistry.checkAction(cmdletDescriptor.getActionName(index))) {
         throw new IOException(
           String.format("Submit Command %s error! Action names are not correct!", cmdletInfo));
       }
@@ -296,7 +296,7 @@ public class CmdletManager extends AbstractService {
   public List<ActionDescriptor> listActionsSupported() throws IOException {
     //TODO add more information for list ActionDescriptor
     ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
-    for (String name : ActionRegistry.instance().namesOfAction()) {
+    for (String name : ActionRegistry.namesOfAction()) {
       actionDescriptors.add(new ActionDescriptor(name,
         name, "", ""));
     }

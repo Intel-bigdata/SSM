@@ -29,11 +29,9 @@ import java.util.List;
 
 public class CmdletFactory {
   private final SmartContext smartContext;
-  private ActionRegistry actionRegistry;
 
   public CmdletFactory(SmartContext smartContext) {
     this.smartContext = smartContext;
-    this.actionRegistry = ActionRegistry.instance();
   }
 
   public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet) {
@@ -47,7 +45,7 @@ public class CmdletFactory {
   }
 
   public SmartAction createAction(LaunchAction launchAction) {
-    SmartAction smartAction = actionRegistry.createAction(launchAction.getActionType());
+    SmartAction smartAction = ActionRegistry.createAction(launchAction.getActionType());
     if (smartAction == null) {
       return null;
     }
