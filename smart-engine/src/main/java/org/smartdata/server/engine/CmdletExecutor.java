@@ -71,7 +71,6 @@ public class CmdletExecutor extends AbstractService implements Runnable {
   private Map<String, Long> cmdletHashSet;
   private Map<String, Long> fileLock;
   private Map<Long, SmartAction> actionPool;
-  private ActionRegistry actionRegistry;
   private boolean running;
   private long maxActionId;
   private long maxCmdletId;
@@ -82,7 +81,6 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
     
-    actionRegistry = ActionRegistry.instance();
     statusCache = new HashSet<>();
     for (CmdletState s : CmdletState.values()) {
       cmdsInState.add(s.getValue(), new HashSet<Long>());
@@ -328,7 +326,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
   public List<ActionDescriptor> listActionsSupported() throws IOException {
     //TODO add more information for list ActionDescriptor
     ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
-    for (String name : ActionRegistry.instance().namesOfAction()) {
+    for (String name : ActionRegistry.namesOfAction()) {
       actionDescriptors.add(new ActionDescriptor(name,
           name, "", ""));
     }
@@ -336,7 +334,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
   }
 
   private boolean isActionSupported(String actionName) {
-    return actionRegistry.checkAction(actionName);
+    return ActionRegistry.checkAction(actionName);
   }
 
   private void addToPending(CmdletInfo cmdinfo) throws IOException {
@@ -442,7 +440,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
   }
 
   private SmartAction createSmartAction(ActionInfo actionInfo) throws IOException {
-    SmartAction smartAction = actionRegistry.createAction(actionInfo.getActionName());
+    SmartAction smartAction = ActionRegistry.createAction(actionInfo.getActionName());
     if (smartAction == null) {
       return null;
     }
@@ -458,7 +456,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
   }
 
   private SmartAction createSmartAction(String name) throws IOException {
-    SmartAction smartAction = actionRegistry.createAction(name);
+    SmartAction smartAction = ActionRegistry.createAction(name);
     if (smartAction == null) {
       return null;
     }
@@ -560,7 +558,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
         submitTime, submitTime);
     maxCmdletId ++;
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
-      if (!actionRegistry.checkAction(cmdletDescriptor.getActionName(index))) {
+      if (!ActionRegistry.checkAction(cmdletDescriptor.getActionName(index))) {
         LOG.error("Submit Cmdlet {} error! Action names are not correct!", cmdinfo);
         throw new IOException();
       }

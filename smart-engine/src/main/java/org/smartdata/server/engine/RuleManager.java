@@ -89,7 +89,7 @@ public class RuleManager extends AbstractService {
     CmdletDescriptor cd = tr.getCmdDescriptor();
     String error = "";
     for (int i = 0; i < cd.actionSize(); i++) {
-      if (!ActionRegistry.instance().checkAction(cd.getActionName(i))) {
+      if (!ActionRegistry.checkAction(cd.getActionName(i))) {
         error += "Action '" + cd.getActionName(i) + "' not supported.\n";
       }
     }

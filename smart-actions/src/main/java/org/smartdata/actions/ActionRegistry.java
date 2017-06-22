@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Actions registry. Singleton.
@@ -28,43 +29,28 @@ import java.util.*;
 public class ActionRegistry {
   static final Logger LOG = LoggerFactory.getLogger(ActionRegistry.class);
 
-  private HashMap<String, Class> allActions;
+  private static Map<String, Class> allActions = new ConcurrentHashMap<>();
 
-  private static ActionRegistry theInstance = new ActionRegistry();
-
-  public ActionRegistry() {
-    allActions = new HashMap<>();
-  }
-
-  public static ActionRegistry instance() {
-    synchronized (theInstance) {
-      if (theInstance.allActions.isEmpty()) {
-        theInstance.loadActions();
-      }
-    }
-    return theInstance;
-  }
-
-  private void loadActions() {
+  static {
     try {
       ServiceLoader<ActionFactory> actionFactories = ServiceLoader.load(ActionFactory.class);
       for (ActionFactory fact : actionFactories) {
         allActions.putAll(fact.getSupportedActions());
       }
     } catch (ServiceConfigurationError e) {
-      LOG.error("Loading actions fail from factory {}", namesOfAction().getClass());
+      LOG.error("Loading actions fail from factory");
     }
   }
 
-  public Set<String> namesOfAction() {
+  public static Set<String> namesOfAction() {
     return Collections.unmodifiableSet(allActions.keySet());
   }
 
-  public boolean checkAction(String name) {
+  public static boolean checkAction(String name) {
     return allActions.containsKey(name);
   }
 
-  public SmartAction createAction(String name) {
+  public static SmartAction createAction(String name) {
     if (!checkAction(name)) {
       return null;
     }

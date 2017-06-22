@@ -27,22 +27,20 @@ public class TestActionRegistry {
 
   @Test
   public void testInit() throws IOException {
-    ActionRegistry ar = ActionRegistry.instance();
-    Set<String> actionNames = ar.namesOfAction();
+    Set<String> actionNames = ActionRegistry.namesOfAction();
     // System.out.print(actionNames.size());
     Assert.assertTrue(actionNames.size() > 0);
   }
 
   @Test
   public void testCreateAction() throws IOException {
-    ActionRegistry ar = ActionRegistry.instance();
-    Assert.assertTrue(ar
+    Assert.assertTrue(ActionRegistry
         .createAction("archive")
         .getClass().toString().contains("ArchiveFileAction"));
-    Set<String> actionNames = ar.namesOfAction();
+    Set<String> actionNames = ActionRegistry.namesOfAction();
     // create all kinds of actions
     for (String name: actionNames) {
-      ar.createAction(name);
+      ActionRegistry.createAction(name);
     }
   }
 }
