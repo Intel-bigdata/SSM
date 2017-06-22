@@ -155,7 +155,7 @@ public class CmdletManager extends AbstractService {
       try {
         metaStore.deleteCmdlet(cmdletInfo.getCid());
       } catch (SQLException e1) {
-        LOG.error("Recover/Delete Command {} rom DB error! {}", cmdletInfo, e);
+        LOG.error("Delete Command {} rom DB error! {}", cmdletInfo, e);
       }
       throw new IOException(e);
     }
@@ -192,10 +192,18 @@ public class CmdletManager extends AbstractService {
 
   public synchronized void updateStatus(StatusMessage status) {
     if (status instanceof CmdletStatusUpdate) {
-
+      onCmdletStatusUpdate((CmdletStatusUpdate) status);
     } else if (status instanceof ActionStatusReport) {
-
+      onActionStatusReport((ActionStatusReport) status);
     }
+  }
+
+  private void onCmdletStatusUpdate(CmdletStatusUpdate statusUpdate) {
+
+  }
+
+  private void onActionStatusReport(ActionStatusReport report) {
+
   }
 
   int num = 0;
@@ -252,7 +260,6 @@ public class CmdletManager extends AbstractService {
   }
 
   public void activateCmdlet(long cid) throws IOException {
-
   }
 
   public void disableCmdlet(long cid) throws IOException {
@@ -301,7 +308,6 @@ public class CmdletManager extends AbstractService {
   }
 
   private void flushCmdletInfo(CmdletInfo info) {
-
   }
 
   private class ScheduleTask implements Runnable {
