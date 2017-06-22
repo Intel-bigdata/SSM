@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.data.files;
+package org.smartdata.hdfs.metric.fetcher;
 
 import com.squareup.tape.QueueFile;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -25,7 +25,6 @@ import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.engine.MetaStore;
-import org.smartdata.server.utils.EventBatchSerializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,17 +47,17 @@ public class InotifyEventFetcher {
   public static final Logger LOG =
       LoggerFactory.getLogger(InotifyEventFetcher.class);
 
-  public InotifyEventFetcher(DFSClient client, MetaStore adapter,
+  public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service) {
-    this(client, adapter, service, new InotifyEventApplier(adapter, client));
+    this(client, metaStore, service, new InotifyEventApplier(metaStore, client));
   }
 
-  public InotifyEventFetcher(DFSClient client, MetaStore adapter,
+  public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service, InotifyEventApplier applier) {
     this.client = client;
     this.applier = applier;
     this.scheduledExecutorService = service;
-    this.nameSpaceFetcher = new NamespaceFetcher(client, adapter, service);
+    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service);
   }
 
   public void start() throws IOException {
@@ -74,16 +73,16 @@ public class InotifyEventFetcher {
     LOG.info("Start apply iNotify events.");
     eventApplyTask.start();
 
-    this.waitNameSpaceFetcherFinished();
-    LOG.info("Name space fetch finished.");
-  }
-
-  private void waitNameSpaceFetcherFinished() throws IOException {
     try {
-      eventApplyTask.join();
+      this.waitNameSpaceFetcherFinished();
     } catch (InterruptedException e) {
       throw new IOException(e);
     }
+    LOG.info("Name space fetch finished.");
+  }
+
+  private void waitNameSpaceFetcherFinished() throws InterruptedException, IOException {
+    eventApplyTask.join();
 
     long lastId = eventApplyTask.getLastId();
     this.inotifyFetchFuture.cancel(false);

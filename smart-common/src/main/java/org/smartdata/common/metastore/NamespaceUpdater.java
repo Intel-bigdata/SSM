@@ -15,20 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata;
+package org.smartdata.common.metastore;
 
-public abstract class AbstractService implements SmartService {
-  private SmartContext context;
+public interface NamespaceUpdater {
 
-  public AbstractService(SmartContext context) {
-    this.context = context;
-  }
+  void insertFile(FileInfo file);
 
-  public SmartContext getContext() {
-    return context;
-  }
+  void insertFiles(FileInfo[] files);
 
-  public void setContext(SmartContext context) {
-    this.context = context;
-  }
+  void updateFile(FileInfoMapper fileInfoMapper);
+
+  void updateFiles(FileInfoMapper[] fileInfoMappers);
+
+  void deleteFile(long fid);
+
+  void deleteDirectory(String dirPath);
+
+  void deleteAllFiles();
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.data.files;
+package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -36,13 +36,13 @@ import java.util.List;
  * {@link org.apache.hadoop.hdfs.server.namenode.FSEditLogLoader}
  */
 public class InotifyEventApplier {
-  private final MetaStore adapter;
+  private final MetaStore metaStore;
   private DFSClient client;
   private static final Logger LOG =
       LoggerFactory.getLogger(InotifyEventFetcher.class);
 
-  public InotifyEventApplier(MetaStore adapter, DFSClient client) {
-    this.adapter = adapter;
+  public InotifyEventApplier(MetaStore metaStore, DFSClient client) {
+    this.metaStore = metaStore;
     this.client = client;
   }
 
@@ -54,7 +54,7 @@ public class InotifyEventApplier {
         statements.add(statement);
       }
     }
-    this.adapter.execute(statements);
+    this.metaStore.execute(statements);
   }
 
   public void apply(Event[] events) throws IOException, SQLException {

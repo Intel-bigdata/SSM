@@ -15,19 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.data.files;
-
-import org.smartdata.common.metastore.CachedFileStatus;
-import org.smartdata.server.engine.MetaStore;
-import org.apache.hadoop.util.Time;
+package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
-
+import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.common.metastore.CachedFileStatus;
+import org.smartdata.server.engine.MetaStore;
 
 import java.io.IOException;
 import java.sql.SQLException;

@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.data.files;
+package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.server.engine.MetaStore;
-import org.smartdata.server.engine.metastore.FileStatusInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.server.engine.MetaStore;
+import org.smartdata.server.engine.metastore.FileStatusInternal;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -53,22 +53,22 @@ public class NamespaceFetcher {
   public static final Logger LOG =
       LoggerFactory.getLogger(NamespaceFetcher.class);
 
-  public NamespaceFetcher(DFSClient client, MetaStore adapter) {
-    this(client, adapter, DEFAULT_INTERVAL);
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore) {
+    this(client, metaStore, DEFAULT_INTERVAL);
   }
 
-  public NamespaceFetcher(DFSClient client, MetaStore adapter, ScheduledExecutorService service) {
-    this(client, adapter, DEFAULT_INTERVAL, service);
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore, ScheduledExecutorService service) {
+    this(client, metaStore, DEFAULT_INTERVAL, service);
   }
 
-  public NamespaceFetcher(DFSClient client, MetaStore adapter, long fetchInterval) {
-    this(client, adapter, fetchInterval, Executors.newSingleThreadScheduledExecutor());
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval) {
+    this(client, metaStore, fetchInterval, Executors.newSingleThreadScheduledExecutor());
   }
 
-  public NamespaceFetcher(DFSClient client, MetaStore adapter, long fetchInterval,
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service) {
     this.fetchTask = new FetchTask(client);
-    this.consumer = new FileStatusConsumer(adapter, fetchTask);
+    this.consumer = new FileStatusConsumer(metaStore, fetchTask);
     this.fetchInterval = fetchInterval;
     this.scheduledExecutorService = service;
   }
@@ -233,13 +233,13 @@ public class NamespaceFetcher {
   }
 
   private static class FileStatusConsumer implements Runnable {
-    private final MetaStore metaStore;
+    private final MetaStore dbAdapter;
     private final FetchTask fetchTask;
     private long startTime = System.currentTimeMillis();
     private long lastUpdateTime = startTime;
 
-    protected FileStatusConsumer(MetaStore metaStore, FetchTask fetchTask) {
-      this.metaStore = metaStore;
+    protected FileStatusConsumer(MetaStore dbAdapter, FetchTask fetchTask) {
+      this.dbAdapter = dbAdapter;
       this.fetchTask = fetchTask;
     }
 
@@ -250,12 +250,12 @@ public class NamespaceFetcher {
         if (batch != null) {
           FileStatusInternal[] statuses = batch.getFileStatuses();
           if (statuses.length == batch.actualSize()) {
-            this.metaStore.insertFiles(batch.getFileStatuses());
+            this.dbAdapter.insertFiles(batch.getFileStatuses());
             numPersisted += statuses.length;
           } else {
             FileStatusInternal[] actual = new FileStatusInternal[batch.actualSize()];
             System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
-            this.metaStore.insertFiles(actual);
+            this.dbAdapter.insertFiles(actual);
             numPersisted += actual.length;
           }
 

@@ -19,6 +19,7 @@ package org.smartdata.server.rest.message;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.zeppelin.server.JsonExclusionStrategy;
 
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response.ResponseBuilder;
