@@ -36,6 +36,7 @@
     <module>smart-agent</module>
     <module>smart-hdfs</module>
     <module>smart-dist</module>
+    <module>smart-integration</module>
   </modules>
 
   <properties>
