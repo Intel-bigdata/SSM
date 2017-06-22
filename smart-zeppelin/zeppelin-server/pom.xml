@@ -81,6 +81,11 @@
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>org.smartdata</groupId>
+      <artifactId>smart-engine</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -392,6 +397,11 @@
       <artifactId>xml-apis</artifactId>
       <version>${xml.apis.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.smartdata</groupId>
+      <artifactId>smart-common</artifactId>
+      <version>0.1-SNAPSHOT</version>
     </dependency>
 
   </dependencies>

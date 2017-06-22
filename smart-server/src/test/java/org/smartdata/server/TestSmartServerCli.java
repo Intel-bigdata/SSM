@@ -24,8 +24,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.engine.metastore.MetaUtil;
+import org.smartdata.server.engine.metastore.TestDBUtil;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -40,43 +40,44 @@ public class TestSmartServerCli {
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(config)
         .numDataNodes(3).build();
 
-    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(config);
-    List<URI> uriList = new ArrayList<>(namenodes);
-
-    SmartConf conf = new SmartConf();
-    // Set db used
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
-
-    // rpcServer start in SmartServer
     try {
-      SmartServer.createSSM(null, conf);
-      Assert.fail("Should not work without specifying "
-          + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
-    } catch (Exception e) {
-      Assert.assertTrue(e.getMessage().contains(
-          SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY));
+      Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(config);
+      List<URI> uriList = new ArrayList<>(namenodes);
+
+      SmartConf conf = new SmartConf();
+      // Set db used
+      String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+      String dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
+      conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
+
+      // rpcServer start in SmartServer
+      try {
+        SmartServer.launchWith(conf);
+        Assert.fail("Should not work without specifying "
+            + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+      } catch (Exception e) {
+        Assert.assertTrue(e.getMessage().contains(
+            SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY));
+      }
+
+      conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+          uriList.get(0).toString());
+      String[] args = new String[]{
+          "-D",
+          SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "="
+              + uriList.get(0).toString()
+      };
+
+      SmartServer regServer = SmartServer.launchWith(args, conf);
+      Thread.sleep(1000);
+      regServer.shutdown();
+
+      args = new String[] {
+          "-h"
+      };
+      SmartServer.launchWith(args, conf);
+    } finally {
+      cluster.shutdown();
     }
-
-
-    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
-        uriList.get(0).toString());
-    String[] args = new String[] {
-        "-D",
-        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "="
-            + uriList.get(0).toString()
-    };
-
-    SmartServer s = SmartServer.createSSM(args, conf);
-    s.shutdown();
-
-    String[] argsHelp = new String[] {
-        "-h"
-    };
-
-    s = SmartServer.createSSM(argsHelp, conf);
-    Assert.assertTrue(s == null);
-    cluster.shutdown();
   }
 }

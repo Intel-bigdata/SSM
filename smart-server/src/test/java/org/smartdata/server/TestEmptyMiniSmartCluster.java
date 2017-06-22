@@ -29,8 +29,8 @@ import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
-import org.smartdata.server.metastore.TestDBUtil;
-import org.smartdata.server.metastore.Util;
+import org.smartdata.server.engine.metastore.MetaUtil;
+import org.smartdata.server.engine.metastore.TestDBUtil;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -70,11 +70,11 @@ public class TestEmptyMiniSmartCluster {
 
     // Set db used
     dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    dbUrl = Util.SQLITE_URL_PREFIX + dbFile;
+    dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
     conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
-    ssm = SmartServer.createSSM(null, conf);
+    ssm = SmartServer.launchWith(conf);
   }
 
   private void initConf(Configuration conf) {

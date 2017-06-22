@@ -19,7 +19,8 @@ package org.smartdata.common;
 
 public enum SmartServiceState {
   SAFEMODE(0),
-  ACTIVE(1);
+  ACTIVE(1),
+  DISABLED(2);
 
   private int value;
 

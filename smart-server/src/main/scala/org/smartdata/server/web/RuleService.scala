@@ -19,23 +19,20 @@ package org.smartdata.server.web
 
 import java.util
 
-import org.smartdata.common.cmdlet.CmdletInfo
-import org.smartdata.server.SmartServer
-
-import scala.collection.JavaConverters._
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Directives.{complete, path}
+import akka.http.scaladsl.server.Directives.{complete, path, _}
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import com.google.gson.Gson
-import org.smartdata.common.actions.ActionType
 import org.smartdata.common.CmdletState
+import org.smartdata.common.cmdlet.CmdletInfo
 import org.smartdata.common.rule.{RuleInfo, RuleState}
+import org.smartdata.server.SmartEngine
 import org.smartdata.server.utils.JsonUtil
 
+import scala.collection.JavaConverters._
 import scala.util.Random
 
-class RuleService(ssmServer: SmartServer) extends BasicService {
+class RuleService(ssmServer: SmartEngine) extends BasicService {
   private val gson: Gson = new Gson()
   private val rules: util.Collection[RuleInfo] = new util.ArrayList[RuleInfo]()
 

@@ -26,12 +26,12 @@ import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.common.actions.{ActionDescriptor, ActionInfo}
 import org.smartdata.common.cmdlet.CmdletDescriptor
-import org.smartdata.server.SmartServer
+import org.smartdata.server.SmartEngine
 import org.smartdata.server.utils.Constants
 
 import scala.util.Random
 
-class ActionService(ssmServer: SmartServer) extends BasicService {
+class ActionService(ssmServer: SmartEngine) extends BasicService {
   private val gson: Gson = new Gson()
   private val actions: util.Collection[ActionInfo] = new util.ArrayList[ActionInfo]()
   val builder = new ActionInfo.Builder()
@@ -58,11 +58,11 @@ class ActionService(ssmServer: SmartServer) extends BasicService {
       }
     } ~
       path("cachedfiles") {
-        complete(gson.toJson(ssmServer.getDBAdapter.getCachedFileStatus))
+        complete(gson.toJson(ssmServer.getStatesManager.getCachedFileStatus))
       } ~
       path("hotfiles") {
         val tables = ssmServer.getStatesManager.getTablesInLast(Constants.ONE_HOUR_IN_MILLIS)
-        complete(gson.toJson(ssmServer.getDBAdapter.getHotFiles(tables, 20)))
+        complete(gson.toJson(ssmServer.getStatesManager.getHotFiles(tables, 20)))
       } ~
       path("actiontypes") {
         complete(gson.toJson(ssmServer.getCmdletExecutor.listActionsSupported()))

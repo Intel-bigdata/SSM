@@ -24,12 +24,12 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import org.apache.hadoop.conf.Configuration
 import org.smartdata.conf.SmartConfKeys
-import org.smartdata.server.SmartServer
+import org.smartdata.server.SmartEngine
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class SmartHttpServer(ssmServer: SmartServer, conf: Configuration) {
+class SmartHttpServer(ssmServer: SmartEngine, conf: Configuration) {
   implicit val system = ActorSystem("my-system")
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
