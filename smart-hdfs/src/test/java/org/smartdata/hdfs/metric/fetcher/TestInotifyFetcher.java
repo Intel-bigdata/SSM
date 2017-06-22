@@ -33,7 +33,7 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.MetaStore;
 
 import java.io.IOException;
 import java.io.OutputStream;

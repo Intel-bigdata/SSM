@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.metastore.tables;
 
 import org.dbunit.database.IDatabaseConnection;
 import org.junit.Test;
-import org.smartdata.server.engine.metastore.DBTest;
+import org.smartdata.metastore.DBTest;
 
 import java.sql.Statement;
 

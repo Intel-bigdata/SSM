@@ -18,10 +18,10 @@
 package org.smartdata.metastore.tables;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.smartdata.metastore.utils.TimeGranularity;
+import org.smartdata.metastore.utils.TimeUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.engine.MetaStore;
-import org.smartdata.server.utils.TimeGranularity;
-import org.smartdata.server.utils.TimeUtils;
+import org.smartdata.metastore.MetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

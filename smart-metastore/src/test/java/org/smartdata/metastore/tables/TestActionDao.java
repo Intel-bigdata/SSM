@@ -23,8 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.metastore.TestDaoUtil;
-import org.smartdata.server.engine.metastore.TestDaoUtil;
+import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.util.Arrays;
 import java.util.HashMap;

@@ -29,8 +29,8 @@ import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.engine.metastore.MetaUtil;
-import org.smartdata.server.engine.metastore.TestDBUtil;
+import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.TestDBUtil;
 
 import java.io.IOException;
 import java.net.URI;

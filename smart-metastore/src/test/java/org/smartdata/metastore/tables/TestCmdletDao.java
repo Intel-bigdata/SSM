@@ -23,8 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.cmdlet.CmdletInfo;
-import org.smartdata.metastore.TestDaoUtil;
-import org.smartdata.server.engine.metastore.TestDaoUtil;
+import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.util.List;
 

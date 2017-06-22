@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.metastore.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.DruidPool;
+import org.smartdata.metastore.MetaStore;
 
 import java.io.File;
 import java.io.FileInputStream;

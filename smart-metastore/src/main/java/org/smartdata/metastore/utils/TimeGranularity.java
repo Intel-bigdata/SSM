@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-package org.smartdata.server.utils;
+package org.smartdata.metastore.utils;
 
 public enum TimeGranularity {
   SECOND,

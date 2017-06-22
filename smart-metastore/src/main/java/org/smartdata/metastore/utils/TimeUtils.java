@@ -15,7 +15,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.smartdata.server.utils;
+package org.smartdata.metastore.utils;
 
 public class TimeUtils {
   public static TimeGranularity getGranularity(long length) {

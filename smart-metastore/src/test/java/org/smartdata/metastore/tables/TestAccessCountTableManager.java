@@ -15,14 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.metastore.tables;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.engine.MetaStore;
-import org.smartdata.server.engine.metastore.TestDaoUtil;
-import org.smartdata.server.utils.Constants;
-import org.smartdata.server.utils.TimeGranularity;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.utils.Constants;
+import org.smartdata.metastore.utils.TimeGranularity;
+
 
 import java.sql.Connection;
 import java.sql.SQLException;

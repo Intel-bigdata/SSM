@@ -21,8 +21,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.server.engine.metastore.TestDaoUtil;
-import org.smartdata.metastore.TestDaoUtil;
+import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.sql.SQLException;
 import java.util.HashMap;

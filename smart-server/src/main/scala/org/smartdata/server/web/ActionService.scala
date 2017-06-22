@@ -26,8 +26,8 @@ import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.common.actions.{ActionDescriptor, ActionInfo}
 import org.smartdata.common.cmdlet.CmdletDescriptor
+import org.smartdata.metastore.utils.Constants
 import org.smartdata.server.SmartEngine
-import org.smartdata.server.utils.Constants
 
 import scala.util.Random
 

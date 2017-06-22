@@ -27,6 +27,7 @@ import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.message.ActionStatusReport;
 import org.smartdata.server.engine.cmdlet.message.CmdletStatusUpdate;

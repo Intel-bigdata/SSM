@@ -17,7 +17,7 @@
  */
 package org.smartdata.metastore.tables;
 
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.MetaStore;
 
 import java.util.Iterator;
 

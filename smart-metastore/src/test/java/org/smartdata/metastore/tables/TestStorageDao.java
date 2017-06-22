@@ -24,12 +24,12 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.metastore.TestDaoUtil;
-import org.smartdata.server.engine.metastore.StorageCapacity;
-import org.smartdata.server.engine.metastore.StoragePolicy;
-import org.smartdata.server.engine.metastore.TestDaoUtil;
+import org.smartdata.metastore.StorageCapacity;
+import org.smartdata.metastore.StoragePolicy;
+import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.util.Map;
+
 
 public class TestStorageDao extends TestDaoUtil {
 

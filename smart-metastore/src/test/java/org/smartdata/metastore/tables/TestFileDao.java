@@ -24,9 +24,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.server.engine.metastore.FileStatusInternal;
-import org.smartdata.server.engine.metastore.TestDaoUtil;
-import org.smartdata.metastore.TestDaoUtil;
+import org.smartdata.metastore.FileStatusInternal;
+import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.util.Arrays;
 import java.util.HashMap;

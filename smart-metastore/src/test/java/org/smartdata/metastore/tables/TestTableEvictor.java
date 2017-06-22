@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.metastore.tables;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.MetaStore;
 
 import static org.mockito.Mockito.mock;
 

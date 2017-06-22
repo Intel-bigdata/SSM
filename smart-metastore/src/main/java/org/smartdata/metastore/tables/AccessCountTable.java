@@ -17,7 +17,7 @@
  */
 package org.smartdata.metastore.tables;
 
-import org.smartdata.server.utils.TimeGranularity;
+import org.smartdata.metastore.utils.TimeGranularity;
 
 public class AccessCountTable {
   public final static String FILE_FIELD = "fid";

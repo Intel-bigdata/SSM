@@ -23,10 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.server.SmartEngine;
-import main.java.org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.server.rest.message.JsonResponse;
-import org.smartdata.server.utils.Constants;
+import org.smartdata.metastore.utils.Constants;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;

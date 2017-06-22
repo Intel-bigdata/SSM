@@ -17,8 +17,8 @@
  */
 package org.smartdata.metastore.tables;
 
-import org.smartdata.server.utils.Constants;
-import org.smartdata.server.utils.TimeGranularity;
+import org.smartdata.metastore.utils.Constants;
+import org.smartdata.metastore.utils.TimeGranularity;
 
 import java.sql.SQLException;
 import java.util.List;

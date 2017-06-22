@@ -25,7 +25,7 @@ import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.metastore.CachedFileStatus;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.MetaStore;
 
 import java.io.IOException;
 import java.sql.SQLException;

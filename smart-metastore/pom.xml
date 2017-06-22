@@ -39,6 +39,11 @@
             <!--<scope>provided</scope>-->
         </dependency>
         <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-actions</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
         </dependency>

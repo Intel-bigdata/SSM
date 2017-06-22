@@ -19,7 +19,7 @@ package org.smartdata.metastore.tables;
 
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.MetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

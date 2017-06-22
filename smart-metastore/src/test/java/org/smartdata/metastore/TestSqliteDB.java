@@ -19,9 +19,11 @@ package org.smartdata.metastore;
 
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -30,7 +32,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
 
 /**
  * Test operations with sqlite database.

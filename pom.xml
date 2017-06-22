@@ -25,6 +25,7 @@
     <module>smart-common</module>
     <module>smart-metrics</module>
     <module>smart-actions</module>
+    <module>smart-metastore</module>
     <module>smart-client</module>
     <module>smart-dfsclient</module>
     <module>smart-admin</module>

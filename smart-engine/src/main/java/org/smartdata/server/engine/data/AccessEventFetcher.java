@@ -18,9 +18,9 @@
 package org.smartdata.server.engine.data;
 
 import org.apache.hadoop.conf.Configuration;
+import org.smartdata.metastore.tables.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
-import main.java.org.smartdata.metastore.tables.AccessCountTableManager;
 
 import java.io.IOException;
 import java.util.List;

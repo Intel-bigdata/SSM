@@ -31,8 +31,8 @@ import org.smartdata.common.cmdlet.CmdletInfo;
 import org.smartdata.common.metastore.CachedFileStatus;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.engine.MetaStore;
 
 import java.util.ArrayList;
 import java.util.HashMap;

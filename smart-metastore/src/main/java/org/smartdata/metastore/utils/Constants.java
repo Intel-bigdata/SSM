@@ -15,31 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.metastore.utils;
 
-import java.io.InputStream;
-import java.util.Properties;
+public class Constants {
+  public static final long ONE_SECOND_IN_MILLIS = 1000L;
 
+  public static final long ONE_MINUTE_IN_MILLIS = 60 * ONE_SECOND_IN_MILLIS;
 
-public class TestDaoUtil {
-  protected DruidPool druidPool;
+  public static final long ONE_HOUR_IN_MILLIS = 60 * ONE_MINUTE_IN_MILLIS;
 
-  public void initDao() throws Exception {
-    InputStream in = getClass().getClassLoader()
-        .getResourceAsStream("druid-template.xml");
-    Properties p = new Properties();
-    p.loadFromXML(in);
-
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = MetaUtil.SQLITE_URL_PREFIX + dbFile;
-    p.setProperty("url", url);
-
-    druidPool = new DruidPool(p);
-  }
-
-  public void closeDao() throws Exception {
-    if (druidPool != null) {
-      druidPool.close();
-    }
-  }
+  public static final long ONE_DAY_IN_MILLIS = 24 * ONE_HOUR_IN_MILLIS;
 }

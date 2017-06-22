@@ -22,9 +22,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.common.metastore.CachedFileStatus;
-import org.smartdata.metastore.TestDaoUtil;
+import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.server.engine.metastore.TestDaoUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
