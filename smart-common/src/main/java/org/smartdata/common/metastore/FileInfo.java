@@ -17,6 +17,7 @@
  */
 package org.smartdata.common.metastore;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 
 public class FileInfo {
@@ -147,8 +148,21 @@ public class FileInfo {
     this.storagePolicy = storagePolicy;
   }
 
-  public static FileInfo fromHdfsFileStatus(HdfsFileStatus hdfsFileStatus, String parent) {
-    return null;
+  public static FileInfo fromHdfsFileStatus(HdfsFileStatus status, String parent) {
+    return newBuilder()
+        .setPath(status.getFullPath(new Path(parent)).toString())
+        .setFileId(status.getFileId())
+        .setLength(status.getLen())
+        .setIsdir(status.isDir())
+        .setBlock_replication(status.getReplication())
+        .setBlocksize(status.getBlockSize())
+        .setModification_time(status.getModificationTime())
+        .setAccess_time(status.getAccessTime())
+        .setPermission(status.getPermission().toShort())
+        .setOwner(status.getOwner())
+        .setGroup(status.getGroup())
+        .setStoragePolicy(status.getStoragePolicy())
+        .build();
   }
 
   public static Builder newBuilder() {
