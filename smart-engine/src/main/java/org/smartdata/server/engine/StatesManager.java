@@ -70,6 +70,9 @@ public class StatesManager extends AbstractService {
         new AccessEventFetcher(
             serverContext.getConf(), accessCountTableManager,
             executorService, fileAccessEventSource.getCollector());
+    nameSpaceService =
+        StatesUpdaterServiceFactory.createStatesUpdaterService(serverContext.getConf());
+    nameSpaceService.setContext(serverContext);
     LOG.info("Initialized.");
   }
 

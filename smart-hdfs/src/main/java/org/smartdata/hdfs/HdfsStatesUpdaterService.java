@@ -36,7 +36,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * Polls metrics and events from NameNode
  */
-public class NamespaceUpdateService extends AbstractService {
+public class HdfsStatesUpdaterService extends AbstractService {
   private ServerContext serverContext;
 
   private DFSClient client;
@@ -45,9 +45,13 @@ public class NamespaceUpdateService extends AbstractService {
   private CachedListFetcher cachedListFetcher;
 
   public static final Logger LOG =
-      LoggerFactory.getLogger(NamespaceUpdateService.class);
+      LoggerFactory.getLogger(HdfsStatesUpdaterService.class);
 
-  public NamespaceUpdateService(ServerContext context) {
+  public HdfsStatesUpdaterService() {
+    super(null);
+  }
+
+  public HdfsStatesUpdaterService(ServerContext context) {
     super(context);
     this.serverContext = context;
   }
@@ -60,6 +64,9 @@ public class NamespaceUpdateService extends AbstractService {
   @Override
   public void init() throws IOException {
     LOG.info("Initializing ...");
+    if (serverContext == null) {
+      serverContext = (ServerContext)getContext();
+    }
     this.cleanFileTableContents(serverContext.getMetaStore());
     URI nnUri = HadoopUtils.getNameNodeUri(serverContext.getConf());
     this.client = new DFSClient(nnUri, serverContext.getConf());

@@ -27,4 +27,8 @@ public abstract class AbstractService implements SmartService {
   public SmartContext getContext() {
     return context;
   }
+
+  public void setContext(SmartContext context) {
+    this.context = context;
+  }
 }

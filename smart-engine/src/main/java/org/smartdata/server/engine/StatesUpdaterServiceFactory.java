@@ -17,6 +17,23 @@
  */
 package org.smartdata.server.engine;
 
-public class StatesUpdater {
+import org.apache.hadoop.conf.Configuration;
+import org.smartdata.AbstractService;
 
+import java.io.IOException;
+
+public class StatesUpdaterServiceFactory {
+  private static final String STATES_UPDATER_SERVICES_KEY = "dfs.smartdata.states.updater";
+  private static final String STATES_UPDATER_SERVICES_DEFAULT = "org.smartdata.hdfs.HdfsStatesUpdaterService";
+
+  public static AbstractService createStatesUpdaterService(Configuration conf)
+      throws IOException {
+    String source = conf.get(STATES_UPDATER_SERVICES_KEY, STATES_UPDATER_SERVICES_DEFAULT);
+    try {
+      Class clazz = Class.forName(source);
+      return (AbstractService) clazz.newInstance();
+    } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+      throw new IOException(e);
+    }
+  }
 }
