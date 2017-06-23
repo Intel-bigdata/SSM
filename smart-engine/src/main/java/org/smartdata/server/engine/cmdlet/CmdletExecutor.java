@@ -25,10 +25,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CmdletState;
-import org.smartdata.server.engine.cmdlet.Cmdlet;
-import org.smartdata.server.engine.cmdlet.CmdletStatusReporter;
-import org.smartdata.server.engine.cmdlet.message.ActionStatusReport;
-import org.smartdata.server.engine.cmdlet.message.CmdletStatusUpdate;
+import org.smartdata.common.message.StatusReporter;
+import org.smartdata.common.message.ActionStatusReport;
+import org.smartdata.common.message.CmdletStatusUpdate;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -41,12 +40,12 @@ import java.util.concurrent.Future;
 //Todo: 1. make this a interface so that we could have different executor implementation
 //      2. add api providing available resource
 public class CmdletExecutor {
-  private final CmdletStatusReporter reporter;
+  private final StatusReporter reporter;
   private Map<Long, Future> listenableFutures;
   private Map<Long, Cmdlet> runningCmdlets;
   private ListeningExecutorService executorService;
 
-  public CmdletExecutor(CmdletStatusReporter reporter) {
+  public CmdletExecutor(StatusReporter reporter) {
     this.reporter = reporter;
     this.listenableFutures = new ConcurrentHashMap<>();
     this.runningCmdlets = new ConcurrentHashMap<>();

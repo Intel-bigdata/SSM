@@ -17,15 +17,16 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.smartdata.common.message.StatusReporter;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.cmdlet.message.StatusMessage;
+import org.smartdata.common.message.StatusMessage;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class LocalCmdletExecutorService extends CmdletExecutorService implements CmdletStatusReporter {
+public class LocalCmdletExecutorService extends CmdletExecutorService implements StatusReporter {
   private CmdletExecutor cmdletExecutor;
   private ScheduledExecutorService executorService;
 

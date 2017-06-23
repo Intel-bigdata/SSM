@@ -23,11 +23,11 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
-import org.smartdata.server.engine.cmdlet.CmdletStatusReporter;
+import org.smartdata.common.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
-import org.smartdata.server.engine.cmdlet.message.ActionStatusReport;
+import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.cmdlet.message.StatusMessage;
+import org.smartdata.common.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 
 import java.io.Serializable;
@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 //Todo: recover and reconnect when master is offline
-public class HazelcastWorker implements CmdletStatusReporter {
+public class HazelcastWorker implements StatusReporter {
   private final HazelcastInstance instance;
   private ScheduledExecutorService executorService;
   private ITopic<Serializable> masterMessages;

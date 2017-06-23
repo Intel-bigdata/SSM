@@ -39,11 +39,11 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
-import org.smartdata.server.engine.cmdlet.CmdletStatusReporter;
+import org.smartdata.common.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.cmdlet.message.StatusMessage;
+import org.smartdata.common.message.StatusMessage;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -77,7 +77,7 @@ public class SmartAgent {
     }
   }
 
-  static class AgentActor extends UntypedActor implements CmdletStatusReporter {
+  static class AgentActor extends UntypedActor implements StatusReporter {
     private final static Logger LOG = LoggerFactory.getLogger(AgentActor.class);
 
     private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);

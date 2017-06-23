@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.cmdlet.message.StatusMessage;
+import org.smartdata.common.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import org.smartdata.server.utils.HazelcastUtil;
 
