@@ -18,6 +18,7 @@
 package org.smartdata.actions;
 
 import org.smartdata.SmartContext;
+import org.smartdata.common.message.StatusReporter;
 
 import java.io.PrintStream;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.Map;
  * are also meant to extend this.
  */
 public abstract class SmartAction {
+  private StatusReporter statusReporter;
   private Map<String, String> actionArgs;
   private SmartContext context;
   protected String name;
@@ -36,7 +38,12 @@ public abstract class SmartAction {
   protected PrintStream logOut;
 
   public SmartAction() {
+    this(null);
+  }
+
+  public SmartAction(StatusReporter statusReporter) {
     createStatus();
+    this.statusReporter = statusReporter;
   }
 
   protected void createStatus() {

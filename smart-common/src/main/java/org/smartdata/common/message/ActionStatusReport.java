@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.message;
+package org.smartdata.common.message;
+
+import org.smartdata.common.message.StatusMessage;
 
 import java.io.Serializable;
 import java.util.List;

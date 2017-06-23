@@ -35,7 +35,7 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.cmdlet.message.StatusMessage;
+import org.smartdata.common.message.StatusMessage;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;

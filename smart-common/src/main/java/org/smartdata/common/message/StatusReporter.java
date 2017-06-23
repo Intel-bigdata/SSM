@@ -15,10 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet;
+package org.smartdata.common.message;
 
-import org.smartdata.server.engine.cmdlet.message.StatusMessage;
-
-public interface CmdletStatusReporter {
+public interface StatusReporter {
   void report(StatusMessage status);
 }

@@ -29,11 +29,11 @@ import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
-import org.smartdata.server.engine.cmdlet.message.ActionStatusReport;
-import org.smartdata.server.engine.cmdlet.message.CmdletStatusUpdate;
+import org.smartdata.common.message.ActionStatusReport;
+import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.cmdlet.message.StatusMessage;
+import org.smartdata.common.message.StatusMessage;
 
 import java.io.IOException;
 import java.sql.SQLException;

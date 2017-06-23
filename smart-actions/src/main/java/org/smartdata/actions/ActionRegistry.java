@@ -19,7 +19,9 @@ package org.smartdata.actions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.common.message.StatusReporter;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -58,6 +60,20 @@ public class ActionRegistry {
       SmartAction smartAction = (SmartAction) allActions.get(name).newInstance();
       smartAction.setName(name);
       return smartAction;
+    } catch (Exception e) {
+      LOG.error("Create {} action failed", name, e);
+      throw new RuntimeException("Create action failed", e);
+    }
+  }
+
+  public static SmartAction createAction(String name, StatusReporter statusReporter) {
+    if (!checkAction(name)) {
+      return null;
+    }
+    try {
+      Class clazz = allActions.get(name);
+      Constructor constructor = clazz.getConstructor(StatusReporter.class);
+      return (SmartAction) constructor.newInstance(statusReporter);
     } catch (Exception e) {
       LOG.error("Create {} action failed", name, e);
       throw new RuntimeException("Create action failed", e);
