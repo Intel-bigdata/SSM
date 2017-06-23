@@ -38,7 +38,7 @@
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
-            <artifactId>smart-engine</artifactId>
+            <artifactId>smart-metastore</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
 

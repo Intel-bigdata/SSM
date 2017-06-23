@@ -71,9 +71,12 @@ public class StatesManager extends AbstractService {
             serverContext.getConf(), accessCountTableManager,
             executorService, fileAccessEventSource.getCollector());
     // TODO: fix after MetaStore refactor
-//    statesUpdaterService =
-//        StatesUpdaterServiceFactory.createStatesUpdaterService(serverContext.getConf());
-//    statesUpdaterService.setContext(serverContext);
+    statesUpdaterService =
+        StatesUpdaterServiceFactory.createStatesUpdaterService(
+            serverContext.getConf(),
+            serverContext, serverContext.getMetaStore());
+    statesUpdaterService.setContext(serverContext);
+    statesUpdaterService.init();
     LOG.info("Initialized.");
   }
 
@@ -83,7 +86,8 @@ public class StatesManager extends AbstractService {
   @Override
   public void start() throws IOException {
     LOG.info("Starting ...");
-    this.accessEventFetcher.start();
+    accessEventFetcher.start();
+    statesUpdaterService.start();
     LOG.info("Started. ");
   }
 
@@ -96,6 +100,9 @@ public class StatesManager extends AbstractService {
     }
     if (this.fileAccessEventSource != null) {
       this.fileAccessEventSource.close();
+    }
+    if (statesUpdaterService != null) {
+      statesUpdaterService.stop();
     }
     LOG.info("Stopped.");
   }

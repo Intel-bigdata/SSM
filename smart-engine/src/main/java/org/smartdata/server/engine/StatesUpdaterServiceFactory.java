@@ -19,20 +19,30 @@ package org.smartdata.server.engine;
 
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.AbstractService;
+import org.smartdata.SmartContext;
+import org.smartdata.hdfs.HdfsStatesUpdaterService;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.StatesUpdaterService;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 public class StatesUpdaterServiceFactory {
   private static final String STATES_UPDATER_SERVICES_KEY = "dfs.smartdata.states.updater";
-  private static final String STATES_UPDATER_SERVICES_DEFAULT = "org.smartdata.hdfs.HdfsStatesUpdaterService";
+  private static final String STATES_UPDATER_SERVICES_DEFAULT = HdfsStatesUpdaterService.class.getName();
 
-  public static AbstractService createStatesUpdaterService(Configuration conf)
-      throws IOException {
-    String source = conf.get(STATES_UPDATER_SERVICES_KEY, STATES_UPDATER_SERVICES_DEFAULT);
+  public static AbstractService createStatesUpdaterService(Configuration conf,
+      SmartContext context, MetaStore metaStore) throws IOException {
+    String source = conf.get(STATES_UPDATER_SERVICES_KEY,
+        STATES_UPDATER_SERVICES_DEFAULT);
     try {
       Class clazz = Class.forName(source);
-      return (AbstractService) clazz.newInstance();
-    } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+      Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
+      return (StatesUpdaterService) c.newInstance(context, metaStore);
+    } catch (ClassNotFoundException | IllegalAccessException
+        | InstantiationException | NoSuchMethodException
+        | InvocationTargetException e) {
       throw new IOException(e);
     }
   }
