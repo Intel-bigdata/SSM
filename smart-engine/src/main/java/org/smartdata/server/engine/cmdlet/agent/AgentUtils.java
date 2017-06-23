@@ -24,7 +24,9 @@ import akka.actor.Address;
 import akka.actor.Cancellable;
 import akka.actor.ExtendedActorSystem;
 import akka.actor.Scheduler;
-import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigValueFactory;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -78,6 +80,15 @@ public class AgentUtils {
         AgentConstants.MASTER_ACTOR_SYSTEM_NAME,
         hostPort.getHost(), hostPort.getPort(),
         AgentConstants.MASTER_ACTOR_NAME);
+  }
+
+  public static Config loadConfigWithAddress(String address) {
+    Config config = ConfigFactory.load();
+    AgentUtils.HostPort hostPort = new AgentUtils.HostPort(config.getString(address));
+    return config.withValue(AgentConstants.AKKA_REMOTE_HOST_KEY,
+        ConfigValueFactory.fromAnyRef(hostPort.getHost()))
+        .withValue(AgentConstants.AKKA_REMOTE_PORT_KEY,
+            ConfigValueFactory.fromAnyRef(hostPort.getPort()));
   }
 
   public static class HostPort {

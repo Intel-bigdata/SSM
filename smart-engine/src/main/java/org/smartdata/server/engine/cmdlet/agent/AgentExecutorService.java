@@ -48,11 +48,11 @@ public class AgentExecutorService extends CmdletExecutorService {
 
   @Override
   public void stop(long cmdletId) {
-
+    master.stopCmdlet(cmdletId);
   }
 
   @Override
   public void shutdown() {
-
+    master.shutdown();
   }
 }

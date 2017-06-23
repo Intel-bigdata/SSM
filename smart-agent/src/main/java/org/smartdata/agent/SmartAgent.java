@@ -34,16 +34,17 @@ import com.typesafe.config.ConfigValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.common.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
-import org.smartdata.common.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.common.message.StatusMessage;
+import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -182,6 +183,9 @@ public class SmartAgent {
         if (message instanceof LaunchCmdlet) {
           LaunchCmdlet launch = (LaunchCmdlet) message;
           executor.execute(factory.createCmdlet(launch));
+        } else if (message instanceof StopCmdlet) {
+          StopCmdlet stop = (StopCmdlet) message;
+          executor.stop(stop.getCmdletId());
         } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {

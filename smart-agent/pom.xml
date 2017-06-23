@@ -63,6 +63,14 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.smartdata</groupId>
+      <artifactId>smart-engine</artifactId>
+      <version>0.1-SNAPSHOT</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
