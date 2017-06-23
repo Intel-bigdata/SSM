@@ -58,7 +58,10 @@ public class CmdletPool {
   }
 
   public void setFinished(long cid, CmdletState status) {
-    getCmdlet(cid).setState(status);
+    Cmdlet cmdlet = getCmdlet(cid);
+    if (cmdlet != null) {
+      cmdlet.setState(status);
+    }
   }
 
   /**

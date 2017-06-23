@@ -17,9 +17,6 @@
  */
 package org.smartdata.server;
 
-import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
@@ -27,59 +24,24 @@ import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.utils.MetaUtil;
-import org.smartdata.metastore.utils.TestDBUtil;
 
 import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestSmartAdmin {
+public class TestSmartAdmin extends TestEmptyMiniSmartCluster {
 
   @Test
   public void test() throws Exception {
-    final SmartConf conf = new SmartConf();
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(4).build();
-    SmartServer server = null;
+    waitTillSSMExitSafeMode();
+
     SmartAdmin admin = null;
 
     try {
-      // dfs not used , but datanode.ReplicaNotFoundException throws without dfs
-      final DistributedFileSystem dfs = cluster.getFileSystem();
-
-      final Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
-      List<URI> uriList = new ArrayList<>(namenodes);
-      conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
-      conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
-          uriList.get(0).toString());
-
-      // Set db used
-      String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-      String dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
-      conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
-
-      // rpcServer start in SmartServer
-      server = SmartServer.launchWith(conf);
       admin = new SmartAdmin(conf);
-
-      while (true) {
-        //test getServiceStatus
-        String state = admin.getServiceState().getName();
-        if ("ACTIVE".equals(state)) {
-          break;
-        }
-        Thread.sleep(1000);
-      }
 
       //test listRulesInfo and submitRule
       List<RuleInfo> ruleInfos = admin.listRulesInfo();
@@ -145,12 +107,6 @@ public class TestSmartAdmin {
       if (admin != null) {
         admin.close();
       }
-
-      if (server != null) {
-        server.shutdown();
-      }
-
-      cluster.shutdown();
     }
   }
 }
