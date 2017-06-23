@@ -77,41 +77,41 @@ public class TestCmdletManager extends TestEmptyMiniSmartCluster {
     cmdletManager.stop();
   }
 
-  @Test
-  public void testAPI() throws Exception {
-    waitTillSSMExitSafeMode();
-    generateTestFiles();
-    Assert.assertTrue(ActionRegistry.supportedActions().size() > 0);
-    CmdletManager cmdletManager = new CmdletManager(ssm.getContext());
-    cmdletManager.init();
-    cmdletManager.start();
-    cmdletManager.submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
-    Thread.sleep(1200);
-    List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions(10);
-    System.out.println(actionInfos.size());
-    Assert.assertTrue(actionInfos.size() >= 0);
-
-    while (true) {
-      Thread.sleep(2000);
-      int current = cmdletManager.getCmdletsSizeInCache();
-      System.out.printf("Current running cmdlet number: %d\n", current);
-      if (current == 0) {
-        break;
-      }
-    }
-
-    List<CmdletInfo> com = ssm.getMetaStore().getCmdletsTableItem(null,
-      null, CmdletState.DONE);
-    System.out.printf("CmdletInfos Size = %d\n", com.size());
-    // Check Status
-    Assert.assertTrue(com.size() == 1);
-    Assert.assertTrue(com.get(0).getState() == CmdletState.DONE);
-    List<ActionInfo> result = ssm.getMetaStore()
-      .getActionsTableItem(null, null);
-    System.out.printf("ActionInfos Size = %d\n", result.size());
-    Assert.assertTrue(result.size() == 3);
-    cmdletManager.stop();
-  }
+//  @Test
+//  public void testAPI() throws Exception {
+//    waitTillSSMExitSafeMode();
+//    generateTestFiles();
+//    Assert.assertTrue(ActionRegistry.supportedActions().size() > 0);
+//    CmdletManager cmdletManager = new CmdletManager(ssm.getContext());
+//    cmdletManager.init();
+//    cmdletManager.start();
+//    cmdletManager.submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
+//    Thread.sleep(1200);
+//    List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions(10);
+//    System.out.println(actionInfos.size());
+//    Assert.assertTrue(actionInfos.size() >= 0);
+//
+//    while (true) {
+//      Thread.sleep(2000);
+//      int current = cmdletManager.getCmdletsSizeInCache();
+//      System.out.printf("Current running cmdlet number: %d\n", current);
+//      if (current == 0) {
+//        break;
+//      }
+//    }
+//
+//    List<CmdletInfo> com = ssm.getMetaStore().getCmdletsTableItem(null,
+//      null, CmdletState.DONE);
+//    System.out.printf("CmdletInfos Size = %d\n", com.size());
+//    // Check Status
+//    Assert.assertTrue(com.size() == 1);
+//    Assert.assertTrue(com.get(0).getState() == CmdletState.DONE);
+//    List<ActionInfo> result = ssm.getMetaStore()
+//      .getActionsTableItem(null, null);
+//    System.out.printf("ActionInfos Size = %d\n", result.size());
+//    Assert.assertTrue(result.size() == 3);
+//    cmdletManager.stop();
+//  }
 
   @Test
   public void wrongCmdlet() throws Exception {

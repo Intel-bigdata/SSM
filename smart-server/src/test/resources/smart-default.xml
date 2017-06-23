@@ -55,4 +55,10 @@
     <value></value>
     <description>get namenode.rpcserver by ssm</description>
   </property>
+
+  <property>
+    <name>dfs.smart.agent.master.address</name>
+    <value>0.0.0.0:7051</value>
+    <description>SmartAgent master address</description>
+  </property>
 </configuration>

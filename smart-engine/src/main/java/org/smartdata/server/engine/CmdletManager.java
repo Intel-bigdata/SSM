@@ -80,7 +80,7 @@ public class CmdletManager extends AbstractService {
   public CmdletManager(ServerContext context) {
     super(context);
 
-    //this.metaStore = context.getMetaStore();
+    this.metaStore = context.getMetaStore();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.dispatcher = new CmdletDispatcher(this, context);
     this.runningCmdlets = new ArrayList<>();
@@ -410,7 +410,7 @@ public class CmdletManager extends AbstractService {
     public void run() {
       while (this.dispatcher.canDispatchMore()) {
         try {
-          LaunchCmdlet launchCmdlet = getNextCmdletToRun();
+          LaunchCmdlet launchCmdlet = getNextCmdletToRun2();
           if (launchCmdlet == null) {
             break;
           } else {
