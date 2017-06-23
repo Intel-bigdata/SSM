@@ -26,7 +26,7 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionType;
 
 import java.util.Date;
@@ -67,9 +67,8 @@ public class CacheFileAction extends HdfsAction {
     }
   }
 
-  protected void execute() {
-    ActionStatus actionStatus = getActionStatus();
-    actionStatus.begin();
+  @Override
+  protected void execute() throws ActionException {
     try {
       // set cache replication as the replication number of the file if not set
       if (replication == 0) {
@@ -78,12 +77,8 @@ public class CacheFileAction extends HdfsAction {
       }
       addActionEvent(fileName);
       executeCacheAction(fileName);
-      actionStatus.setSuccessful(true);
     } catch (Exception e) {
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    } finally {
-      actionStatus.end();
+      throw new ActionException(e);
     }
   }
 

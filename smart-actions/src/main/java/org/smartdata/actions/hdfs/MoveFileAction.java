@@ -19,6 +19,7 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionType;
 import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
@@ -58,27 +59,24 @@ public class MoveFileAction extends HdfsAction {
     this.storagePolicy = args.get(STORAGE_POLICY);
   }
 
-  protected void execute() {
+  @Override
+  protected void execute() throws ActionException {
     logOut.println("Action starts at "
         + (new Date(System.currentTimeMillis())).toString() + " : "
         + fileName + " -> " + storagePolicy.toString());
     try {
       dfsClient.setStoragePolicy(fileName, storagePolicy);
     } catch (Exception e) {
-      actionStatus.end();
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
+      throw new ActionException(e);
     }
 
     // TODO : make MoveRunner configurable
-    moveRunner = new MoverBasedMoveRunner(
-        getContext().getConf(), getActionStatus());
+    moveRunner = new MoverBasedMoveRunner(getContext().getConf(), getActionStatus());
 
     try {
       moveRunner.move(fileName);
-      actionStatus.setSuccessful(true);
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new ActionException(e);
     }
   }
 }

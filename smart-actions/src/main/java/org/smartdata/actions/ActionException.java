@@ -15,19 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs;
+package org.smartdata.actions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionException;
+public class ActionException extends Exception {
+  public ActionException(String errorMsg) {
+    super(errorMsg);
+  }
 
-/**
- * An action to do disk balance for a data node.
- */
-public class DiskBalanceAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(DiskBalanceAction.class);
+  public ActionException(String errorMsg, Throwable throwable) {
+    super(errorMsg, throwable);
+  }
 
-  @Override
-  protected void execute() throws ActionException {
+  public ActionException(Throwable throwable) {
+    super(throwable);
   }
 }

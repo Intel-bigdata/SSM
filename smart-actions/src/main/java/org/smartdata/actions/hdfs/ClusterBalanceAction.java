@@ -19,6 +19,7 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionException;
 
 /**
  * An action to do balance for a cluster.
@@ -27,6 +28,7 @@ public class ClusterBalanceAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ClusterBalanceAction.class);
 
   @Override
-  protected void execute() {
+  protected void execute() throws ActionException {
+
   }
 }

@@ -19,7 +19,7 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.ActionException;
 
 import java.util.Map;
 
@@ -42,17 +42,11 @@ public class SetStoragePolicyAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() {
-    ActionStatus actionStatus = getActionStatus();
-    actionStatus.begin();
+  protected void execute() throws ActionException {
     try {
       dfsClient.setStoragePolicy(fileName, storagePolicy);
-      actionStatus.setSuccessful(true);
     } catch (Exception e) {
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    } finally {
-      actionStatus.end();
+      throw new ActionException(e);
     }
   }
 }

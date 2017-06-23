@@ -94,9 +94,18 @@ public abstract class SmartAction {
     actionArgs = args;
   }
 
-  protected abstract void execute();
+  protected abstract void execute() throws ActionException;
 
   public void run() {
-    execute();
+    try{
+      actionStatus.begin();
+      execute();
+      actionStatus.setSuccessful(true);
+    } catch (ActionException exception) {
+      exception.printStackTrace();
+      actionStatus.setSuccessful(false);
+    } finally {
+      actionStatus.end();
+    }
   }
 }

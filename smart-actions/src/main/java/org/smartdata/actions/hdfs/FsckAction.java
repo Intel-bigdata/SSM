@@ -19,6 +19,7 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionException;
 
 /**
  * An action to do fsck check.
@@ -27,6 +28,6 @@ public class FsckAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(FsckAction.class);
 
   @Override
-  protected void execute() {
+  protected void execute() throws ActionException {
   }
 }

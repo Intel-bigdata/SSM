@@ -24,6 +24,7 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionStatus;
 
 import java.util.Date;
@@ -55,17 +56,13 @@ public class UncacheFileAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() {
+  protected void execute() throws ActionException {
     ActionStatus actionStatus = getActionStatus();
     actionStatus.begin();
     try {
       executeUncacheAction();
-      actionStatus.setSuccessful(true);
     } catch (Exception e) {
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    } finally {
-      actionStatus.end();
+      throw new ActionException(e);
     }
   }
 

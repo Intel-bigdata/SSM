@@ -24,7 +24,7 @@ import java.io.IOException;
  */
 public abstract class MoveRunner {
 
-  public abstract void move(String file) throws IOException;
+  public abstract void move(String file) throws IOException, InterruptedException;
 
-  public abstract void move(String[] files) throws IOException;
+  public abstract void move(String[] files) throws IOException, InterruptedException;
 }

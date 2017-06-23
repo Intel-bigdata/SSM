@@ -20,9 +20,7 @@ package org.smartdata.actions.hdfs;
 
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.ActionException;
 
 import java.io.IOException;
 import java.util.Date;
@@ -51,12 +49,10 @@ public class ReadFileAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() {
+  protected void execute() throws ActionException {
     logOut.println("Action starts at "
         + (new Date(System.currentTimeMillis())).toString() + " : Read "
         + filePath);
-    ActionStatus actionStatus = getActionStatus();
-    actionStatus.begin();
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
       if (fileStatus == null) {
@@ -68,12 +64,9 @@ public class ReadFileAction extends HdfsAction {
       while (dfsInputStream.read(buffer, 0, bufferSize) != -1) {
       }
       dfsInputStream.close();
-      actionStatus.setSuccessful(true);
     } catch (IOException e) {
-      actionStatus.setSuccessful(false);
       resultOut.println("ReadFile Action fails!\n" + e.getMessage());
-    } finally {
-      actionStatus.end();
+      throw new ActionException(e);
     }
   }
 }

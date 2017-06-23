@@ -113,7 +113,6 @@ public class MoverCli extends Configured implements Tool {
   @Override
   public int run(String[] args) throws Exception {
     final long startTime = Time.now();
-    status.begin();
     final Configuration conf = getConf();
 
     try {
@@ -132,7 +131,6 @@ public class MoverCli extends Configured implements Tool {
       LOG.info(e + ".  Exiting ...");
       return ExitStatus.ILLEGAL_ARGUMENTS.getExitCode();
     } finally {
-      status.end();
       long runningTime = Time.now() - startTime;
       Log.format("%-24s ", DateFormat.getDateTimeInstance().format(new Date()));
       LOG.info("Mover took " + StringUtils.formatTime(runningTime));

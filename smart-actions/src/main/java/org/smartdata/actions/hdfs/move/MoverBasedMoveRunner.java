@@ -41,15 +41,17 @@ public class MoverBasedMoveRunner extends MoveRunner {
   }
 
   @Override
-  public void move(String file) throws IOException {
+  public void move(String file) throws IOException, InterruptedException {
     Thread moverProcess = new MoverProcess(actionStatus, new String[] {file});
     moverProcess.start();
+    moverProcess.join();
   }
 
   @Override
-  public void move(String[] files) throws IOException {
+  public void move(String[] files) throws IOException, InterruptedException {
     Thread moverProcess = new MoverProcess(actionStatus, files);
     moverProcess.start();
+    moverProcess.join();
   }
 
   class MoverProcess extends Thread {

@@ -21,9 +21,7 @@ public class HelloAction extends SmartAction {
   public static final String PRINT_MESSAGE = "print_message";
 
   @Override
-  protected void execute() {
+  protected void execute() throws ActionException {
     System.out.println(getArguments().get(PRINT_MESSAGE));
-    actionStatus.end();
-    actionStatus.setSuccessful(true);
   }
 }

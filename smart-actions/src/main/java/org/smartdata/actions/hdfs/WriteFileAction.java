@@ -20,6 +20,7 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
@@ -57,12 +58,10 @@ public class WriteFileAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() {
+  protected void execute() throws ActionException {
     logOut.println("Action starts at "
         + (new Date(System.currentTimeMillis())).toString() + " : Write "
         + filePath + String.format(" with length %d", length));
-    ActionStatus actionStatus = getActionStatus();
-    actionStatus.begin();
     try {
       if (length == -1) {
         resultOut.println("Write Action provides wrong length!");
@@ -80,12 +79,9 @@ public class WriteFileAction extends HdfsAction {
       }
       out.close();
       logOut.println("Write Successfully!");
-      actionStatus.setSuccessful(true);
     } catch (IOException e) {
-      actionStatus.setSuccessful(false);
       resultOut.println("WriteFile Action fails!\n" + e);
-    } finally {
-      actionStatus.end();
+      throw new ActionException(e);
     }
   }
 }
