@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.utils.HadoopUtils;
 

@@ -25,8 +25,8 @@
 //import org.junit.Test;
 //import org.mockito.Matchers;
 //import org.mockito.Mockito;
-//import org.smartdata.server.engine.MetaStore;
-//import org.smartdata.server.engine.metastore.MetaUtil;
+//import main.java.org.smartdata.metastore.MetaStore;
+//import main.java.org.smartdata.metastore.MetaUtil;
 //
 //import java.sql.Connection;
 //import java.sql.ResultSet;

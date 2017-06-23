@@ -26,11 +26,11 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.engine.metastore.ExecutionContext;
 import org.smartdata.rule.parser.SmartRuleLexer;
 import org.smartdata.rule.parser.SmartRuleParser;
 import org.smartdata.rule.parser.SmartRuleVisitTranslator;
 import org.smartdata.rule.parser.TranslateResult;
+import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

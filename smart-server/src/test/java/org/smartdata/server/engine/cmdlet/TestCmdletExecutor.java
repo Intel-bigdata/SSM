@@ -21,8 +21,8 @@ import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
-import org.smartdata.server.engine.MetaStore;
 
 
 import org.apache.hadoop.fs.FSDataOutputStream;

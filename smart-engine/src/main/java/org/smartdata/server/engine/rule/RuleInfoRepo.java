@@ -19,12 +19,12 @@ package org.smartdata.server.engine.rule;
 
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.RuleManager;
-import org.smartdata.server.engine.MetaStore;
-import org.smartdata.server.engine.metastore.ExecutionContext;
+import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.IOException;
 import java.sql.SQLException;

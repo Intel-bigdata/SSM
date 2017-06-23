@@ -21,13 +21,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.common.metastore.CachedFileStatus;
+import org.smartdata.metastore.FileAccessInfo;
+import org.smartdata.metastore.tables.AccessCountTable;
+import org.smartdata.metastore.tables.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.engine.data.AccessEventFetcher;
-import org.smartdata.server.engine.metastore.FileAccessInfo;
-import org.smartdata.server.engine.metastore.tables.AccessCountTable;
-import org.smartdata.server.engine.metastore.tables.AccessCountTableManager;
 
 import java.io.IOException;
 import java.sql.SQLException;

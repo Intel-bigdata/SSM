@@ -24,6 +24,7 @@ import org.smartdata.actions.ActionRegistry;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.rule.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;

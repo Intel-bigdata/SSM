@@ -29,8 +29,8 @@ import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
-import org.smartdata.server.engine.metastore.MetaUtil;
-import org.smartdata.server.engine.metastore.TestDBUtil;
+import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.TestDBUtil;
 
 import java.net.URI;
 import java.util.ArrayList;

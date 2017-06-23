@@ -10,8 +10,8 @@ import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
-import org.smartdata.server.engine.metastore.TestDBUtil;
-import org.smartdata.server.engine.metastore.MetaUtil;
+import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.TestDBUtil;
 
 import java.io.File;
 import java.net.URI;

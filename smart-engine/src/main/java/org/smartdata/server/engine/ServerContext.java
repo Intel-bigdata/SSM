@@ -19,7 +19,7 @@ package org.smartdata.server.engine;
 
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.MetaStore;
 
 public class ServerContext extends SmartContext {
 

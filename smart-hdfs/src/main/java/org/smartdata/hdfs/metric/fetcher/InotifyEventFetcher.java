@@ -24,7 +24,7 @@ import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.server.engine.MetaStore;
+import org.smartdata.metastore.MetaStore;
 
 import java.io.File;
 import java.io.IOException;
