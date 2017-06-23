@@ -34,9 +34,9 @@ public class CmdletDispatcher {
   private List<CmdletExecutorService> executorServices;
   private int index;
 
-  public CmdletDispatcher(CmdletManager cmdletManager) {
+  public CmdletDispatcher(CmdletManager cmdletManager, SmartContext context) {
     //Todo: make service configurable
-    CmdletFactory factory = new CmdletFactory(new SmartContext(new SmartConf()));
+    CmdletFactory factory = new CmdletFactory(context);
     this.executorServices = new ArrayList<>();
     this.executorServices.add(new LocalCmdletExecutorService(cmdletManager, factory));
     this.executorServices.add(new HazelcastExecutorService(cmdletManager, factory));
@@ -73,6 +73,13 @@ public class CmdletDispatcher {
   public void stop(long cmdletId) {
     for (CmdletExecutorService service : executorServices) {
       service.stop(cmdletId);
+    }
+  }
+
+  //Todo: move this function to a proper place
+  public void shutDownExcutorServices() {
+    for (CmdletExecutorService service : executorServices) {
+      service.shutdown();
     }
   }
 }

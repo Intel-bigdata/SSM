@@ -19,8 +19,10 @@ package org.smartdata.actions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.message.StatusReporter;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,6 +52,15 @@ public class ActionRegistry {
 
   public static boolean checkAction(String name) {
     return allActions.containsKey(name);
+  }
+
+  public static List<ActionDescriptor> supportedActions() throws IOException {
+    //TODO add more information for list ActionDescriptor
+    ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
+    for (String name : namesOfAction()) {
+      actionDescriptors.add(new ActionDescriptor(name, name, "", ""));
+    }
+    return actionDescriptors;
   }
 
   public static SmartAction createAction(String name) {

@@ -30,10 +30,9 @@ import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.client.SmartDFSClient;
 import org.smartdata.common.CmdletState;
-import org.smartdata.common.actions.ActionDescriptor;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.common.utils.HadoopUtils;
 import org.smartdata.conf.SmartConfKeys;
@@ -316,22 +315,6 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     }
     actionInfo.setCmdletId(dbActionInfo.getCmdletId());
     return actionInfo;
-  }
-
-  /**
-   * List actions supported in SmartServer.
-   *
-   * @return
-   * @throws IOException
-   */
-  public List<ActionDescriptor> listActionsSupported() throws IOException {
-    //TODO add more information for list ActionDescriptor
-    ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
-    for (String name : ActionRegistry.namesOfAction()) {
-      actionDescriptors.add(new ActionDescriptor(name,
-          name, "", ""));
-    }
-    return actionDescriptors;
   }
 
   private boolean isActionSupported(String actionName) {
@@ -626,8 +609,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     if (smartActions.size() == 0) {
       return null;
     }
-    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]),
-        new Callback(), metaStore);
+    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]), new Callback(), metaStore);
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -751,6 +733,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     }
   }
 
+  @Deprecated
   public class CmdTuple {
     public long cid;
     public long rid;
@@ -779,6 +762,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     cmdsExecuting.remove(cid);
   }
 
+  @Deprecated
   public class Callback {
 
     public void complete(long cid, long rid, CmdletState state) {

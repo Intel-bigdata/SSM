@@ -88,6 +88,14 @@ public class SmartServer {
     return engine.getCmdletExecutor();
   }
 
+  public MetaStore getMetaStore() {
+    return this.context.getMetaStore();
+  }
+
+  public ServerContext getContext() {
+    return this.context;
+  }
+
   public static StartupOption processArgs(String[] args, SmartConf conf) throws Exception {
     if (args == null) {
       args = new String[0];
