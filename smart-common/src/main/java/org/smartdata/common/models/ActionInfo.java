@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common.actions;
+package org.smartdata.common.models;
 
 
 import com.google.gson.Gson;

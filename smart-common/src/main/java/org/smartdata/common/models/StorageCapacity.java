@@ -15,21 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common.metastore;
+package org.smartdata.common.models;
 
-public interface NamespaceUpdater {
+public final class StorageCapacity {
+  private final String type;
+  private final Long capacity;
+  private final Long free;
 
-  void insertFile(FileInfo file);
+  public StorageCapacity(String type, Long capacity, Long free) {
+    this.type = type;
+    this.capacity = capacity;
+    this.free = free;
+  }
 
-  void insertFiles(FileInfo[] files);
 
-  void updateFile(FileInfoMapper fileInfoMapper);
+  public String getType() {
+    return type;
+  }
 
-  void updateFiles(FileInfoMapper[] fileInfoMappers);
+  public Long getCapacity() {
+    return capacity;
+  }
 
-  void deleteFile(long fid);
+  public Long getFree() {
+    return free;
+  }
 
-  void deleteDirectory(String dirPath);
-
-  void deleteAllFiles();
 }

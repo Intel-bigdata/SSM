@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common.cmdlet;
+package org.smartdata.common.models;
 
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.common.CmdletState;

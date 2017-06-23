@@ -19,7 +19,7 @@ package org.smartdata.server.engine.rule;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.rule.RuleInfo;
+import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.metastore.MetaStore;

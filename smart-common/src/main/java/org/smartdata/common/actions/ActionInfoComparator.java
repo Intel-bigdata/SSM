@@ -1,5 +1,7 @@
 package org.smartdata.common.actions;
 
+import org.smartdata.common.models.ActionInfo;
+
 import java.util.Comparator;
 
 public class ActionInfoComparator implements Comparator<ActionInfo> {

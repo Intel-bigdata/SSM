@@ -20,10 +20,10 @@ package org.smartdata.common.protocol;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.SmartServiceState;
-import org.smartdata.common.actions.ActionInfo;
-import org.smartdata.common.rule.RuleInfo;
+import org.smartdata.common.models.ActionInfo;
+import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.common.models.CmdletInfo;
 
 import java.io.IOException;
 import java.util.List;

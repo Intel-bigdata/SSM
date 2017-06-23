@@ -21,23 +21,21 @@ package org.smartdata.common.protocolPB;
 import com.google.protobuf.ServiceException;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CmdletState;
-import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.common.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
-import org.smartdata.common.rule.RuleInfo;
+import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.common.protocol.AdminServerProto.ActionInfoProto.Builder;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class PBHelper {

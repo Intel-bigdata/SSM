@@ -24,7 +24,7 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.metastore.CachedFileStatus;
+import org.smartdata.common.CachedFileStatus;
 import org.smartdata.metastore.MetaStore;
 
 import java.io.IOException;

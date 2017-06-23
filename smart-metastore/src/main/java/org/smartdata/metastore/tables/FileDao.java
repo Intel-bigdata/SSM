@@ -19,7 +19,7 @@ package org.smartdata.metastore.tables;
 
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.metastore.FileStatusInternal;
+import org.smartdata.common.models.FileStatusInternal;
 import org.smartdata.metastore.utils.MetaUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

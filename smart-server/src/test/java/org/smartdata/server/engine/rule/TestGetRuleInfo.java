@@ -20,7 +20,7 @@ package org.smartdata.server.engine.rule;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
-import org.smartdata.common.rule.RuleInfo;
+import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 
