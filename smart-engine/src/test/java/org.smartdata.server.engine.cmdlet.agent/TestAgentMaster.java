@@ -17,9 +17,6 @@
  */
 package org.smartdata.server.engine.cmdlet.agent;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
 import org.junit.Test;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
@@ -34,13 +31,7 @@ public class TestAgentMaster {
   @Test
   public void testAgentMaster() throws Exception {
     CmdletManager statusUpdater = mock(CmdletManager.class);
-    String host = "127.0.0.1";
-    String port = "30000";
-    Config config = ConfigFactory.empty().withValue(AgentConstants.AKKA_REMOTE_HOST_KEY,
-        ConfigValueFactory.fromAnyRef(host))
-        .withValue(AgentConstants.AKKA_REMOTE_PORT_KEY,
-            ConfigValueFactory.fromAnyRef(port));
-    AgentMaster master = new AgentMaster(config, statusUpdater);
+    AgentMaster master = new AgentMaster(statusUpdater);
 
     // Wait for master to start
     Thread.sleep(1000);

@@ -29,12 +29,11 @@ import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Procedure;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.common.message.StatusReporter;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
@@ -52,22 +51,21 @@ import java.util.concurrent.TimeUnit;
 
 public class SmartAgent {
   private static final String NAME = "SmartAgent";
-  static final String MASTER_PATH = "master.path";
   private final static Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
 
   public static void main(String[] args) {
     SmartAgent agent = new SmartAgent();
 
-    Config config = ConfigFactory.load();
-    String masterAddress = config.getString(AgentConstants.MASTER_ADDRESS);
-    agent.start(config.withValue(MASTER_PATH,
-        ConfigValueFactory.fromAnyRef(AgentUtils.getMasterActorPath(masterAddress))));
+    SmartConf conf = new SmartConf();
+    String masterAddress = conf.get(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
+    agent.start(AgentUtils.loadConfigWithAddress(conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
+        AgentUtils.getMasterActorPath(masterAddress));
   }
 
-  void start(Config config) {
+  void start(Config config, String masterPath) {
     system = ActorSystem.apply(NAME, config);
-    system.actorOf(Props.create(AgentActor.class, this, config.getString(MASTER_PATH)));
+    system.actorOf(Props.create(AgentActor.class, this, masterPath));
     system.awaitTermination();
   }
 

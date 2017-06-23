@@ -27,6 +27,7 @@ import akka.util.Timeout;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
@@ -56,10 +57,12 @@ public class AgentMaster {
   private ResourceManager resourceManager;
 
   public AgentMaster(CmdletManager statusUpdater) {
-    this(AgentUtils.loadConfigWithAddress(AgentConstants.MASTER_ADDRESS), statusUpdater);
+    this(new SmartConf(), statusUpdater);
   }
 
-  public AgentMaster(Config config, CmdletManager statusUpdater) {
+  public AgentMaster(SmartConf conf, CmdletManager statusUpdater) {
+    Config config = AgentUtils.loadConfigWithAddress(
+        conf.get(AgentConstants.AGENT_MASTER_ADDRESS_KEY));
     this.resourceManager = new ResourceManager();
     Props props = Props.create(MasterActor.class, statusUpdater, resourceManager);
     ActorSystemLauncher launcher = new ActorSystemLauncher(config, props);
