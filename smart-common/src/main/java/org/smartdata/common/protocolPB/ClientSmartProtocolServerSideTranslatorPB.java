@@ -21,7 +21,7 @@ import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.smartdata.common.actions.ActionDescriptor;
 import org.smartdata.common.CmdletState;
-import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.protocol.AdminServerProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.common.protocol.AdminServerProto.CheckRuleResponseProto;
@@ -67,8 +67,8 @@ import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequ
 import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.protocol.SmartServerProtocols;
-import org.smartdata.common.rule.RuleInfo;
-import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.common.models.RuleInfo;
+import org.smartdata.common.models.CmdletInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;

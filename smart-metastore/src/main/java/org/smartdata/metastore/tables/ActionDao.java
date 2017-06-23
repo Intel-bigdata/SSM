@@ -17,7 +17,7 @@
  */
 package org.smartdata.metastore.tables;
 
-import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.models.ActionInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

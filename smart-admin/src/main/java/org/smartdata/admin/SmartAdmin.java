@@ -23,14 +23,14 @@ import org.apache.hadoop.ipc.RPC;
 import org.smartdata.admin.protocolPB.SmartAdminProtocolAdminSideTranslatorPB;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.common.SmartServiceState;
-import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.common.protocol.SmartAdminProtocol;
 import org.smartdata.common.protocolPB.SmartAdminProtocolPB;
-import org.smartdata.common.rule.RuleInfo;
+import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 
 import java.io.IOException;

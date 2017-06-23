@@ -24,8 +24,8 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.common.CmdletState
-import org.smartdata.common.cmdlet.CmdletInfo
-import org.smartdata.common.rule.{RuleInfo, RuleState}
+import org.smartdata.common.models.{CmdletInfo, RuleInfo}
+import org.smartdata.common.rule.RuleState
 import org.smartdata.server.SmartEngine
 import org.smartdata.server.utils.JsonUtil
 

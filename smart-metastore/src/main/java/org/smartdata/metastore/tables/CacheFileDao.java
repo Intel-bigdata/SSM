@@ -18,7 +18,7 @@
 package org.smartdata.metastore.tables;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.smartdata.common.metastore.CachedFileStatus;
+import org.smartdata.common.CachedFileStatus;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

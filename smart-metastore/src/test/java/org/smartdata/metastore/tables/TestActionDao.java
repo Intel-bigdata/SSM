@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
-import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.util.Arrays;

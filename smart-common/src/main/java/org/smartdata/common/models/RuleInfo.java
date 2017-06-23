@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common.rule;
+package org.smartdata.common.models;
+
+import org.smartdata.common.rule.RuleState;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

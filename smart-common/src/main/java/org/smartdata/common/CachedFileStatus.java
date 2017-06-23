@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.common.metastore;
+package org.smartdata.common;
 
 /**
  * Information maintained for a file cached in hdfs.

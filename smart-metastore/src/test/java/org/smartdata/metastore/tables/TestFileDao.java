@@ -24,7 +24,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.metastore.FileStatusInternal;
+import org.smartdata.common.models.FileStatusInternal;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.util.Arrays;

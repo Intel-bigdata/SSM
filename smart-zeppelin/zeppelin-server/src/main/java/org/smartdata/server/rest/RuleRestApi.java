@@ -17,12 +17,11 @@
  */
 package org.smartdata.server.rest;
 
-import com.google.gson.Gson;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.CmdletState;
-import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
@@ -37,8 +36,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
-
-import static javafx.scene.input.KeyCode.L;
 
 /**
  * Rules APIs.

@@ -17,8 +17,8 @@
  */
 package org.smartdata.metastore.tables;
 
-import org.smartdata.metastore.StorageCapacity;
-import org.smartdata.metastore.StoragePolicy;
+import org.smartdata.common.models.StorageCapacity;
+import org.smartdata.common.models.StoragePolicy;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

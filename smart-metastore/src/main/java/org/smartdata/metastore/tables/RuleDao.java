@@ -17,7 +17,7 @@
  */
 package org.smartdata.metastore.tables;
 
-import org.smartdata.common.rule.RuleInfo;
+import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

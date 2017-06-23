@@ -18,9 +18,9 @@
 package org.smartdata.server.engine.cmdlet;
 
 import org.smartdata.common.CmdletState;
-import org.smartdata.common.actions.ActionInfo;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.common.cmdlet.CmdletInfo;
+import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 

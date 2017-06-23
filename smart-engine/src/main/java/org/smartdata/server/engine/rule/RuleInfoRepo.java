@@ -17,7 +17,7 @@
  */
 package org.smartdata.server.engine.rule;
 
-import org.smartdata.common.rule.RuleInfo;
+import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.rule.parser.RuleStringParser;

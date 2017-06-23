@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.smartdata.metastore;
+package org.smartdata.common.models;
 
 import java.util.Objects;
 
