@@ -19,26 +19,30 @@ package org.smartdata.actions.alluxio;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.smartdata.actions.SmartAction;
+import alluxio.client.file.options.SetAttributeOptions;
 
-import alluxio.AlluxioURI;
-import alluxio.client.file.FileSystem;
+public class SetTTLAction extends AlluxioAction {
 
-public abstract class AlluxioAction extends SmartAction {
-  protected static final Logger LOG = LoggerFactory.getLogger(AlluxioAction.class);
-  public static final String FILE_PATH = "-path";
-
-  protected AlluxioURI uri;
-  protected AlluxioActionType actionType;
-  protected FileSystem alluxioFs;
+  private long ttl;
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
-    this.uri = new AlluxioURI(args.get(FILE_PATH));
-    this.alluxioFs = FileSystem.Factory.get();
+    this.actionType = AlluxioActionType.SetTTL;
+    this.ttl = Long.valueOf(args.get("TTL"));
   }
 
+  @Override
+  protected void execute() {
+    try {
+      LOG.info("Executing Alluxio action: SetTTLAction, path:" + uri.toString());
+      SetAttributeOptions options = SetAttributeOptions.defaults().setTtl(ttl);
+      alluxioFs.setAttribute(uri, options);
+      LOG.info("File " + uri + " was successfully set TTL to " + ttl + ".");
+    } catch (Exception e) {
+      actionStatus.end();
+      actionStatus.setSuccessful(false);
+      throw new RuntimeException(e);
+    }
+  }
 }

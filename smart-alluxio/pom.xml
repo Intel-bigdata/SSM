@@ -50,6 +50,13 @@
            <scope>provided</scope>
         </dependency>
         <dependency>
+           <groupId>org.alluxio</groupId>
+           <artifactId>alluxio-minicluster</artifactId>
+           <version>${alluxio.version}</version>
+           <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-client</artifactId>
             <version>0.1-SNAPSHOT</version>
@@ -86,7 +93,16 @@
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
-
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>14.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>
