@@ -17,6 +17,8 @@
  */
 package org.smartdata.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.CmdletExecutor;
@@ -26,6 +28,8 @@ import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.StatesManager;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SmartEngine extends AbstractService {
   private ConfManager confMgr;
@@ -34,6 +38,8 @@ public class SmartEngine extends AbstractService {
   private StatesManager statesMgr;
   private RuleManager ruleMgr;
   private CmdletExecutor cmdletExecutor;
+  private List<AbstractService> services = new ArrayList<>();
+  public static final Logger LOG = LoggerFactory.getLogger(SmartEngine.class);
 
   public SmartEngine(ServerContext context) {
     super(context);
@@ -43,18 +49,40 @@ public class SmartEngine extends AbstractService {
   @Override
   public void init() throws IOException {
     statesMgr = new StatesManager(serverContext);
+    services.add(statesMgr);
     cmdletExecutor = new CmdletExecutor(serverContext);
+    services.add(cmdletExecutor);
     ruleMgr = new RuleManager(serverContext, statesMgr, cmdletExecutor);
+    services.add(ruleMgr);
+
+    for (AbstractService s : services) {
+      s.init();
+    }
   }
 
   @Override
   public void start() throws IOException {
-
+    for (AbstractService s : services) {
+      s.start();
+    }
   }
 
   @Override
   public void stop() throws IOException {
+    for (int i = services.size() - 1; i >= 0; i--) {
+      stopEngineService(services.get(i));
+    }
+  }
 
+  private void stopEngineService(AbstractService service) {
+    try {
+      if (service != null) {
+        service.stop();
+      }
+    } catch (IOException e) {
+      LOG.error("Error while stopping "
+          + service.getClass().getCanonicalName(), e);
+    }
   }
 
   public ConfManager getConfMgr() {
