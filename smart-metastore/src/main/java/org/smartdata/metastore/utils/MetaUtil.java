@@ -29,8 +29,11 @@ import java.io.FileInputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -312,5 +315,36 @@ public class MetaUtil {
     MetaUtil.initializeDataBase(conn);
     conn.close();
     return MetaUtil.SQLITE_URL_PREFIX + absFilePath;
+  }
+
+  public static void dropAllTablesSqlite(Connection conn) throws SQLException {
+    Statement s = conn.createStatement();
+    ResultSet rs = s.executeQuery("SELECT tbl_name FROM sqlite_master;");
+    List<String> list = new ArrayList<>();
+    while (rs.next()) {
+      list.add(rs.getString(1));
+    }
+    for (String tb : list) {
+      if (!"sqlite_sequence".equals(tb)) {
+        s.execute("DROP TABLE IF EXISTS '" + tb + "';");
+      }
+    }
+  }
+
+  public static void dropAllTablesMysql(Connection conn, String url) throws SQLException {
+    Statement stat = conn.createStatement();
+    if(!url.contains("?")) {
+      throw new SQLException("Invalid MySQL url without db_name");
+    }
+    String dbName = url.substring(url.indexOf("/", 13) + 1, url.indexOf("?"));
+    ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
+        + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
+    List<String> list = new ArrayList<>();
+    while (rs.next()) {
+      list.add(rs.getString(1));
+    }
+    for (String tb : list) {
+      stat.execute("DROP TABLE IF EXISTS '" + tb + "';");
+    }
   }
 }
