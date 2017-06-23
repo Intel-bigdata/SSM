@@ -25,8 +25,6 @@ import akka.actor.UntypedActor;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
@@ -36,6 +34,7 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegi
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.common.message.StatusMessage;
+import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -50,76 +49,81 @@ import java.util.concurrent.TimeUnit;
 public class AgentMaster {
 
   private static final Logger LOG = LoggerFactory.getLogger(AgentMaster.class);
-  private static final Timeout TIMEOUT = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+  public static final Timeout TIMEOUT = new Timeout(Duration.create(5, TimeUnit.SECONDS));
 
-  private final ActorSystem system;
-  private final ActorRef master;
+  private ActorSystem system;
+  private ActorRef master;
+  private ResourceManager resourceManager;
 
   public AgentMaster(CmdletManager statusUpdater) {
+    this(AgentUtils.loadConfigWithAddress(AgentConstants.MASTER_ADDRESS), statusUpdater);
+  }
 
-    Config config = loadConfig();
-    system = ActorSystem.apply(AgentConstants.MASTER_ACTOR_SYSTEM_NAME, config);
-
-    master = system.actorOf(Props.create(MasterActor.class, statusUpdater),
-        AgentConstants.MASTER_ACTOR_NAME);
-    LOG.info("MasterActor created at {}", AgentUtils.getFullPath(system, master.path()));
-
-    ActorSystemWatcher watcher = new ActorSystemWatcher(system, master);
-    watcher.start();
+  public AgentMaster(Config config, CmdletManager statusUpdater) {
+    this.resourceManager = new ResourceManager();
+    Props props = Props.create(MasterActor.class, statusUpdater, resourceManager);
+    ActorSystemLauncher launcher = new ActorSystemLauncher(config, props);
+    launcher.start();
   }
 
   public boolean canAcceptMore() {
-    try {
-      return (boolean) askMaster(CanAcceptMore.getInstance());
-    } catch (Exception e) {
-      LOG.error(e.getMessage());
-      return false;
-    }
+    return resourceManager.hasFreeResource();
   }
 
   public void launchCmdlet(LaunchCmdlet launch) {
     try {
       askMaster(launch);
     } catch (Exception e) {
-      LOG.error(e.getMessage());
+      LOG.error("Failed to launch Cmdlet {} due to {}", launch, e.getMessage());
     }
   }
 
-  private Object askMaster(Object message) throws Exception {
+  public void stopCmdlet(long cmdletId) {
+    try {
+      askMaster(new StopCmdlet(cmdletId));
+    } catch (Exception e) {
+      LOG.error("Failed to stop Cmdlet {} due to {}", cmdletId, e.getMessage());
+    }
+  }
+
+  public void shutdown() {
+    if (system != null && !system.isTerminated()) {
+      if (master != null && !master.isTerminated()) {
+        LOG.info("Shutting down master {}...", AgentUtils.getFullPath(system, master.path()));
+        system.stop(master);
+      }
+
+      LOG.info("Shutting down system {}...", AgentUtils.getSystemAddres(system));
+      system.shutdown();
+    }
+  }
+
+  Object askMaster(Object message) throws Exception {
     Future<Object> answer = Patterns.ask(master, message, TIMEOUT);
     return Await.result(answer, TIMEOUT.duration());
   }
 
+  class ActorSystemLauncher extends Thread {
 
-  private Config loadConfig() {
-    Config config = ConfigFactory.load();
-    AgentUtils.HostPort hostPort = new AgentUtils.HostPort(config.getString(AgentConstants.MASTER_ADDRESS));
-    return config.withValue("akka.remote.netty.tcp.host",
-        ConfigValueFactory.fromAnyRef(hostPort.getHost()))
-        .withValue("akka.remote.netty.tcp.port",
-            ConfigValueFactory.fromAnyRef(hostPort.getPort()));
-  }
+    private final Props masterProps;
+    private final Config config;
 
-  class ActorSystemWatcher extends Thread {
-
-    private final ActorSystem system;
-    private final ActorRef master;
-
-    public ActorSystemWatcher(ActorSystem system, ActorRef master) {
-      this.system = system;
-      this.master = master;
+    public ActorSystemLauncher(Config config, Props masterProps) {
+      this.config = config;
+      this.masterProps = masterProps;
     }
 
     @Override
     public void run() {
+      system = ActorSystem.apply(AgentConstants.MASTER_ACTOR_SYSTEM_NAME, config);
+
+      master = system.actorOf(masterProps, AgentConstants.MASTER_ACTOR_NAME);
+      LOG.info("MasterActor created at {}", AgentUtils.getFullPath(system, master.path()));
       final Thread currentThread = Thread.currentThread();
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
         public void run() {
-          LOG.info("Shutting down master {}...", AgentUtils.getFullPath(system, master.path()));
-          system.stop(master);
-          LOG.info("Shutting down system {}...", AgentUtils.getSystemAddres(system));
-          system.shutdown();
+          shutdown();
           try {
             currentThread.join();
           } catch (InterruptedException e) {
@@ -134,13 +138,15 @@ public class AgentMaster {
   static class MasterActor extends UntypedActor {
 
     private final Map<ActorRef, MasterToAgent.AgentId> agents = new HashMap<>();
-    private List<ActorRef> resources = new ArrayList<>();
+    private final Map<Long, ActorRef> dispatches = new HashMap<>();
     private int nextAgentId = 0;
-    private int dispatchIndex = 0;
-    private CmdletManager statusUpdater;
 
-    public MasterActor(CmdletManager statusUpdater) {
+    private CmdletManager statusUpdater;
+    private ResourceManager resourceManager;
+
+    public MasterActor(CmdletManager statusUpdater, ResourceManager resourceManager) {
       this.statusUpdater = statusUpdater;
+      this.resourceManager = resourceManager;
     }
 
     @Override
@@ -166,12 +172,12 @@ public class AgentMaster {
         MasterToAgent.AgentId id = register.getId();
         agents.put(agent, id);
         AgentRegistered registered = new AgentRegistered(id);
-        resources.add(agent);
+        this.resourceManager.addResource(agent);
         agent.tell(registered, getSelf());
         LOG.info("Register SmartAgent {} from {}", id, agent);
         return true;
       } else if (message instanceof StatusMessage) {
-        statusUpdater.updateStatus((StatusMessage) message);
+        this.statusUpdater.updateStatus((StatusMessage) message);
         return true;
       } else {
         return false;
@@ -180,14 +186,25 @@ public class AgentMaster {
 
     private boolean handleClientMessage(Object message) {
       if (message instanceof CanAcceptMore) {
-        if (agents.size() > 0) {
-          getSender().tell(true, getSelf());
-        } else {
+        if (agents.isEmpty()) {
           getSender().tell(false, getSelf());
+        } else {
+          getSender().tell(true, getSelf());
         }
         return true;
       } else if (message instanceof LaunchCmdlet) {
-        getFreeAgent().tell(message, getSelf());
+        if (!agents.isEmpty()) {
+          LaunchCmdlet launch = (LaunchCmdlet) message;
+          ActorRef agent = this.resourceManager.getFreeResource();
+          agent.tell(launch, getSelf());
+          dispatches.put(launch.getCmdletId(), agent);
+          getSender().tell("Succeed", getSelf());
+        }
+        return true;
+      } else if (message instanceof StopCmdlet) {
+        long cmdletId = ((StopCmdlet) message).getCmdletId();
+        dispatches.get(cmdletId).tell(message, getSelf());
+        getSender().tell("Succeed", getSelf());
         return true;
       } else {
         return false;
@@ -199,7 +216,7 @@ public class AgentMaster {
         Terminated terminated = (Terminated) message;
         ActorRef agent = terminated.actor();
         MasterToAgent.AgentId id = agents.remove(agent);
-        resources.remove(agent);
+        this.resourceManager.removeResource(agent);
         LOG.warn("SmartAgent ({} {} down", id, agent);
         return true;
       } else {
@@ -207,7 +224,26 @@ public class AgentMaster {
       }
     }
 
-    private ActorRef getFreeAgent() {
+  }
+
+  static class ResourceManager {
+
+    private List<ActorRef> resources = new ArrayList<>();
+    private int dispatchIndex = 0;
+
+    void addResource(ActorRef agent) {
+      resources.add(agent);
+    }
+
+    void removeResource(ActorRef agent) {
+      resources.remove(agent);
+    }
+
+    boolean hasFreeResource() {
+      return !resources.isEmpty();
+    }
+
+    ActorRef getFreeResource() {
       int id = dispatchIndex % resources.size();
       dispatchIndex = (id + 1) % resources.size();
       return resources.get(id);
