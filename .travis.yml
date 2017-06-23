@@ -21,8 +21,5 @@ cache:
   directories:
     - $HOME/.m2
 script:
-  - mvn cobertura:cobertura test
-
-after_success:
-  - bash <(curl -s https://codecov.io/bash);
+  - mvn test
 
