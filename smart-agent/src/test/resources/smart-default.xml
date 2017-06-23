@@ -24,41 +24,8 @@
 
 <configuration>
   <property>
-    <name>dfs.smart.enabled</name>
-    <value>true</value>
-    <description>
-      Enable NN and DN supporting for SSM if true.
-      For SSM, all functions disabled except rpc and web service if false.
-    </description>
-  </property>
-
-  <property>
-    <name>dfs.smart.rpc-address</name>
-    <value>0.0.0.0:7042</value>
-    <description>rpc server of SSM</description>
-  </property>
-
-  <property>
-    <name>dfs.smart.http-address</name>
-    <value>0.0.0.0:7045</value>
-    <description>HTTP server of SSM</description>
-  </property>
-
-  <property>
-    <name>dfs.smart.poll.namenode.interval</name>
-    <value>5</value>
-    <description>Time interval in seconds for SSM to fetch info from NN</description>
-  </property>
-
-  <property>
-    <name>dfs.smart.namenode.rpcserver</name>
-    <value></value>
-    <description>get namenode.rpcserver by ssm</description>
-  </property>
-
-  <property>
-    <name>dfs.smart.agent.master.address</name>
-    <value>0.0.0.0:7051</value>
-    <description>SmartAgent master address</description>
+    <name>dfs.smart.agent.address</name>
+    <value>0.0.0.0:7048</value>
+    <description>SmartAgent address</description>
   </property>
 </configuration>

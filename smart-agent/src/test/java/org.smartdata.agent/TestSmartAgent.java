@@ -20,10 +20,10 @@ package org.smartdata.agent;
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
 import org.junit.Test;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.cmdlet.agent.ActorSystemHarness;
+import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
@@ -35,10 +35,10 @@ public class TestSmartAgent extends ActorSystemHarness {
   public void testAgent() {
     ActorSystem system = getActorSystem();
     JavaTestKit mockedMaster = new JavaTestKit(system);
-    Config config = ConfigFactory.load().withValue(SmartAgent.MASTER_PATH,
-        ConfigValueFactory.fromAnyRef(
-            AgentUtils.getFullPath(system, mockedMaster.getRef().path())));
-    AgentRunner runner = new AgentRunner(config);
+    SmartConf conf = new SmartConf();
+    AgentRunner runner = new AgentRunner(
+        AgentUtils.loadConfigWithAddress(conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
+        AgentUtils.getFullPath(system, mockedMaster.getRef().path()));
     runner.start();
 
     mockedMaster.expectMsgClass(RegisterNewAgent.class);
@@ -48,15 +48,17 @@ public class TestSmartAgent extends ActorSystemHarness {
   private class AgentRunner extends Thread {
 
     private final Config config;
+    private final String masterPath;
 
-    public AgentRunner(Config config) {
+    public AgentRunner(Config config, String masterPath) {
       this.config = config;
+      this.masterPath = masterPath;
     }
 
     @Override
     public void run() {
       SmartAgent agent = new SmartAgent();
-      agent.start(config);
+      agent.start(config, masterPath);
     }
 
   }

@@ -27,6 +27,7 @@ import akka.actor.Scheduler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
+import org.smartdata.conf.SmartConf;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -83,9 +84,8 @@ public class AgentUtils {
   }
 
   public static Config loadConfigWithAddress(String address) {
-    Config config = ConfigFactory.load();
-    AgentUtils.HostPort hostPort = new AgentUtils.HostPort(config.getString(address));
-    return config.withValue(AgentConstants.AKKA_REMOTE_HOST_KEY,
+    AgentUtils.HostPort hostPort = new AgentUtils.HostPort(address);
+    return ConfigFactory.load().withValue(AgentConstants.AKKA_REMOTE_HOST_KEY,
         ConfigValueFactory.fromAnyRef(hostPort.getHost()))
         .withValue(AgentConstants.AKKA_REMOTE_PORT_KEY,
             ConfigValueFactory.fromAnyRef(hostPort.getPort()));
