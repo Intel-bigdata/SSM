@@ -20,12 +20,12 @@ package org.smartdata.hdfs;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.AbstractService;
+import org.smartdata.SmartContext;
+import org.smartdata.common.utils.HadoopUtils;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.server.engine.ServerContext;
-import org.smartdata.server.utils.HadoopUtils;
+import org.smartdata.metastore.StatesUpdaterService;
 
 import java.io.IOException;
 import java.net.URI;
@@ -36,8 +36,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * Polls metrics and events from NameNode
  */
-public class HdfsStatesUpdaterService extends AbstractService {
-  private ServerContext serverContext;
+public class HdfsStatesUpdaterService extends StatesUpdaterService {
 
   private DFSClient client;
   private ScheduledExecutorService executorService;
@@ -47,13 +46,8 @@ public class HdfsStatesUpdaterService extends AbstractService {
   public static final Logger LOG =
       LoggerFactory.getLogger(HdfsStatesUpdaterService.class);
 
-  public HdfsStatesUpdaterService() {
-    super(null);
-  }
-
-  public HdfsStatesUpdaterService(ServerContext context) {
-    super(context);
-    this.serverContext = context;
+  public HdfsStatesUpdaterService(SmartContext context, MetaStore metaStore) {
+    super(context, metaStore);
   }
 
   /**
@@ -64,16 +58,14 @@ public class HdfsStatesUpdaterService extends AbstractService {
   @Override
   public void init() throws IOException {
     LOG.info("Initializing ...");
-    if (serverContext == null) {
-      serverContext = (ServerContext)getContext();
-    }
-    this.cleanFileTableContents(serverContext.getMetaStore());
-    URI nnUri = HadoopUtils.getNameNodeUri(serverContext.getConf());
-    this.client = new DFSClient(nnUri, serverContext.getConf());
+    this.cleanFileTableContents(metaStore);
+    SmartContext context = getContext();
+    URI nnUri = HadoopUtils.getNameNodeUri(context.getConf());
+    this.client = new DFSClient(nnUri, context.getConf());
     this.executorService = Executors.newScheduledThreadPool(4);
-    this.cachedListFetcher = new CachedListFetcher(client, serverContext.getMetaStore());
+    this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
-        serverContext.getMetaStore(), executorService);
+        metaStore, executorService);
     LOG.info("Initialized.");
   }
 

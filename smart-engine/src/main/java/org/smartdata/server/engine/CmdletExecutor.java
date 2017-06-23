@@ -31,15 +31,15 @@ import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.client.SmartDFSClient;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
+import org.smartdata.common.utils.HadoopUtils;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.cmdlet.Cmdlet;
 import org.smartdata.server.engine.cmdlet.CmdletPool;
-import org.smartdata.server.utils.HadoopUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

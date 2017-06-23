@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.utils;
+package org.smartdata.common.utils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 
 import java.io.IOException;
