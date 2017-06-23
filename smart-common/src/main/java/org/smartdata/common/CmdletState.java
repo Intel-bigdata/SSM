@@ -36,6 +36,7 @@ public enum CmdletState {
   private CmdletState(int value) {
     this.value = value;
   }
+
   public static CmdletState fromValue(int value) {
     for (CmdletState r : values()) {
       if (value == r.getValue()) {
@@ -47,5 +48,12 @@ public enum CmdletState {
 
   public int getValue() {
     return value;
+  }
+
+  public static boolean isTerminalState(CmdletState state) {
+    return state.equals(DONE)
+        || state.equals(CANCELLED)
+        || state.equals(DISABLED)
+        || state.equals(FAILED);
   }
 }

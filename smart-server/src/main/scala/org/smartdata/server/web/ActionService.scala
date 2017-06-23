@@ -24,6 +24,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.ParameterDirectives.ParamMagnet
 import akka.stream.Materializer
 import com.google.gson.Gson
+import org.smartdata.actions.ActionRegistry
 import org.smartdata.common.actions.ActionDescriptor
 import org.smartdata.common.cmdlet.CmdletDescriptor
 import org.smartdata.common.models.ActionInfo
@@ -66,7 +67,7 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
         complete(gson.toJson(ssmServer.getStatesManager.getHotFiles(tables, 20)))
       } ~
       path("actiontypes") {
-        complete(gson.toJson(ssmServer.getCmdletExecutor.listActionsSupported()))
+        complete(gson.toJson(ActionRegistry.supportedActions()))
       } ~
       path("actionlist") {
         complete(gson.toJson(ssmServer.getCmdletExecutor.listNewCreatedActions(20)))

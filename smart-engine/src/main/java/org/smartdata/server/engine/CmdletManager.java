@@ -17,28 +17,30 @@
  */
 package org.smartdata.server.engine;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.HelloAction;
 import org.smartdata.common.CmdletState;
-import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.models.ActionInfo;
+import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.common.message.ActionStatusReport;
+import org.smartdata.common.message.CmdletStatusUpdate;
+import org.smartdata.common.message.StatusMessage;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
-import org.smartdata.common.message.ActionStatusReport;
-import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.common.message.StatusMessage;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -80,7 +82,7 @@ public class CmdletManager extends AbstractService {
 
     //this.metaStore = context.getMetaStore();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.dispatcher = new CmdletDispatcher(this);
+    this.dispatcher = new CmdletDispatcher(this, context);
     this.runningCmdlets = new ArrayList<>();
     this.submittedCmdlets = new HashSet<>();
     this.pendingCmdlet = new LinkedBlockingQueue<>();
@@ -108,6 +110,7 @@ public class CmdletManager extends AbstractService {
   @Override
   public void stop() throws IOException {
     this.executorService.shutdown();
+    this.dispatcher.shutDownExcutorServices();
   }
 
   public long submitCmdlet(String cmdlet) throws IOException {
@@ -169,44 +172,6 @@ public class CmdletManager extends AbstractService {
     return cmdletInfo.getCid();
   }
 
-  private synchronized List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
-    List<ActionInfo> actionInfos = new ArrayList<>();
-    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
-      Map<String, String> args = cmdletDescriptor.getActionArgs(index);
-      ActionInfo actionInfo =
-          new ActionInfo(
-              maxActionId.getAndIncrement(),
-              cid,
-              cmdletDescriptor.getActionName(index),
-              args,
-              "",
-              "",
-              false,
-              0,
-              false,
-              0,
-              0);
-      actionInfos.add(actionInfo);
-    }
-    return actionInfos;
-  }
-
-  public synchronized void updateStatus(StatusMessage status) {
-    if (status instanceof CmdletStatusUpdate) {
-      onCmdletStatusUpdate((CmdletStatusUpdate) status);
-    } else if (status instanceof ActionStatusReport) {
-      onActionStatusReport((ActionStatusReport) status);
-    }
-  }
-
-  private void onCmdletStatusUpdate(CmdletStatusUpdate statusUpdate) {
-
-  }
-
-  private void onActionStatusReport(ActionStatusReport report) {
-
-  }
-
   int num = 0;
   public LaunchCmdlet getNextCmdletToRun() throws IOException {
     num +=1;
@@ -219,6 +184,27 @@ public class CmdletManager extends AbstractService {
       return cmdlet;
     } else {
       return null;
+    }
+  }
+
+  public LaunchCmdlet getNextCmdletToRun2() throws IOException {
+    CmdletInfo cmdletInfo = this.pendingCmdlet.poll();
+    if (cmdletInfo == null) {
+      return null;
+    }
+    try {
+      List<ActionInfo> actionInfos = metaStore.getActionsTableItem(cmdletInfo.getAids());
+      List<LaunchAction> launchActions = new ArrayList<>();
+      for (ActionInfo actionInfo : actionInfos) {
+        launchActions.add(
+            new LaunchAction(
+                actionInfo.getActionId(), actionInfo.getActionName(), actionInfo.getArgs()));
+      }
+      this.runningCmdlets.add(cmdletInfo.getCid());
+      return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
+    } catch (SQLException e) {
+      LOG.error("Get Actions from DB with IDs {} error!", cmdletInfo.getAids());
+      throw new IOException(e);
     }
   }
 
@@ -261,6 +247,7 @@ public class CmdletManager extends AbstractService {
   }
 
   public void activateCmdlet(long cid) throws IOException {
+    // Currently the default cmdlet status is pending, do nothing here
   }
 
   public void disableCmdlet(long cid) throws IOException {
@@ -269,16 +256,34 @@ public class CmdletManager extends AbstractService {
       if (pendingCmdlet.contains(info)) {
         pendingCmdlet.remove(info);
         info.setState(CmdletState.DISABLED);
+        this.removeActions(cid);
+        flushCmdletInfo(info);
       }
+      // Wait status update from status reporter, so need to update to MetaStore
       if (runningCmdlets.contains(cid)) {
         dispatcher.stop(cid);
       }
-      flushCmdletInfo(info);
     }
   }
 
-  public void deleteCmdlet(long cid) throws IOException {
+  //Remove ActionInfos of a specific cmdlet.
+  private void removeActions(long cmdletId) {
 
+  }
+
+  public void deleteCmdlet(long cid) throws IOException {
+    this.disableCmdlet(cid);
+    try {
+      metaStore.deleteCmdlet(cid);
+    } catch (SQLException e) {
+      LOG.error("Delete Cmdlet {} from DB error! {}", cid, e);
+      throw new IOException(e);
+    }
+  }
+
+  @VisibleForTesting
+  protected int getCmdletsSizeInCache() {
+    return this.idToCmdlets.size();
   }
 
   public ActionInfo getActionInfo(long actionID) throws IOException {
@@ -293,22 +298,105 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  //Todo: move this function out of CmdletManager
-  public List<ActionDescriptor> listActionsSupported() throws IOException {
-    //TODO add more information for list ActionDescriptor
-    ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
-    for (String name : ActionRegistry.namesOfAction()) {
-      actionDescriptors.add(new ActionDescriptor(name,
-        name, "", ""));
+  public List<ActionInfo> listNewCreatedActions(int actionNum) throws IOException {
+    List<ActionInfo> result = new ArrayList<>();
+    result.addAll(this.idToActions.values());
+    Collections.sort(result, new ActionInfoComparator());
+    if (result.size() > actionNum) {
+      return result.subList(0, actionNum);
     }
-    return actionDescriptors;
+    int remainsAction = actionNum - result.size();
+    try {
+      result.addAll(metaStore.getNewCreatedActionsTableItem(remainsAction));
+      return result;
+    } catch (SQLException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
   }
 
-  public List<ActionInfo> listNewCreatedActions(int maxNumActions) throws IOException {
-    return null;
+  public synchronized void updateStatus(StatusMessage status) {
+    try{
+      if (status instanceof CmdletStatusUpdate) {
+        onCmdletStatusUpdate((CmdletStatusUpdate) status);
+      } else if (status instanceof ActionStatusReport) {
+        onActionStatusReport((ActionStatusReport) status);
+      }
+    } catch (IOException e) {
+      LOG.error(String.format("Update status %s failed with %s", status, e));
+    }
   }
 
-  private void flushCmdletInfo(CmdletInfo info) {
+  private void onCmdletStatusUpdate(CmdletStatusUpdate statusUpdate) throws IOException {
+    System.out.println("got update " + statusUpdate);
+    long cmdletId = statusUpdate.getCmdletId();
+    if (this.idToCmdlets.containsKey(cmdletId)) {
+      CmdletState state = statusUpdate.getCurrentState();
+      CmdletInfo cmdletInfo = this.idToCmdlets.get(cmdletId);
+      cmdletInfo.setState(state);
+      this.flushCmdletInfo(cmdletInfo);
+      //The cmdlet is already finished or terminated, remove status from memory.
+      if (CmdletState.isTerminalState(state)) {
+        //Todo: recover cmdlet?
+        this.idToCmdlets.remove(cmdletId);
+        this.runningCmdlets.remove(cmdletId);
+      }
+    } else {
+      // Updating cmdlet status which is not pending or running
+    }
+  }
+
+  private void onActionStatusReport(ActionStatusReport report) throws IOException {
+    for (ActionStatusReport.ActionStatus status : report.getActionStatuses()) {
+      long actionId = status.getActionId();
+      if (this.idToActions.containsKey(actionId)) {
+        ActionInfo actionInfo = this.idToActions.get(actionId);
+        flushActionInfo(actionInfo);
+        //Todo: remove action info status
+      } else {
+        // Updating action info which is not pending or running
+      }
+    }
+  }
+
+  private void flushCmdletInfo(CmdletInfo info) throws IOException {
+    try {
+      metaStore.updateCmdletStatus(info.getCid(), info.getRid(), info.getState());
+    } catch (SQLException e) {
+      LOG.error("Batch Cmdlet Status Update error!", e);
+      throw new IOException(e);
+    }
+  }
+
+  private void flushActionInfo(ActionInfo info) throws IOException {
+    try {
+      metaStore.updateActionsTable(new ActionInfo[]{info});
+    } catch (SQLException e) {
+      LOG.error("Write CacheObject to DB error!", e);
+      throw new IOException(e);
+    }
+  }
+
+  protected synchronized List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
+    List<ActionInfo> actionInfos = new ArrayList<>();
+    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
+      Map<String, String> args = cmdletDescriptor.getActionArgs(index);
+      ActionInfo actionInfo =
+        new ActionInfo(
+          maxActionId.getAndIncrement(),
+          cid,
+          cmdletDescriptor.getActionName(index),
+          args,
+          "",
+          "",
+          false,
+          0,
+          false,
+          0,
+          0);
+      actionInfos.add(actionInfo);
+    }
+    return actionInfos;
   }
 
   private class ScheduleTask implements Runnable {

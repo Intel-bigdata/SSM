@@ -22,6 +22,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.models.ActionInfo;
+import org.smartdata.actions.ActionRegistry;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.server.SmartEngine;
@@ -84,7 +85,7 @@ public class ActionRestApi {
   @Path("/actiontypes")
   public Response actionTypes() throws Exception {
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().listActionsSupported()).build();
+      ActionRegistry.supportedActions()).build();
   }
 
   @GET

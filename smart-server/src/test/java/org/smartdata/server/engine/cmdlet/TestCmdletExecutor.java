@@ -17,13 +17,13 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.smartdata.actions.ActionRegistry;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
-
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -76,7 +76,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   public void testAPI() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
-    Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
+    Assert.assertTrue(ActionRegistry.supportedActions().size() > 0);
     ssm.getCmdletExecutor()
         .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
     Thread.sleep(1200);
@@ -90,7 +90,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
   public void wrongCmdlet() throws Exception {
     waitTillSSMExitSafeMode();
     generateTestFiles();
-    Assert.assertTrue(ssm.getCmdletExecutor().listActionsSupported().size() > 0);
+    Assert.assertTrue(ActionRegistry.supportedActions().size() > 0);
     try {
       ssm.getCmdletExecutor()
           .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; bug /bug bug bug");
@@ -178,7 +178,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     while (true) {
       Thread.sleep(2000);
       int current = ssm.getCmdletExecutor().cacheSize();
-      System.out.printf("Cmdlet CacheObject size = %d\n ", current);
+      System.out.printf("Cmdlet CacheObject size = %d\n", current);
       if (current == 0) {
         break;
       }

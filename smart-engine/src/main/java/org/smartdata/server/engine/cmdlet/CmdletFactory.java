@@ -21,9 +21,15 @@ import org.smartdata.SmartContext;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
+import org.smartdata.client.SmartDFSClient;
+import org.smartdata.common.utils.HadoopUtils;
+import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,11 +41,15 @@ public class CmdletFactory {
   }
 
   public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet) {
+    return createCmdlet(launchCmdlet, null);
+  }
+
+  public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet, MetaStore metaStore) {
     List<SmartAction> actions = new ArrayList<>();
     for (LaunchAction action : launchCmdlet.getLaunchActions()) {
       actions.add(this.createAction(action));
     }
-    Cmdlet cmdlet = new Cmdlet(actions.toArray(new SmartAction[0]), null);
+    Cmdlet cmdlet = new Cmdlet(actions.toArray(new SmartAction[0]),null,  metaStore);
     cmdlet.setId(launchCmdlet.getCmdletId());
     return cmdlet;
   }
@@ -50,13 +60,24 @@ public class CmdletFactory {
       return null;
     }
     smartAction.setContext(smartContext);
-    smartAction.setArguments(launchAction.getArgs());
+    smartAction.init(launchAction.getArgs());
     if (smartAction instanceof HdfsAction) {
-//      ((HdfsAction) smartAction).setDfsClient(
-//        new SmartDFSClient(ssm.getNamenodeURI(),
-//          smartContext.getConf(), getRpcServerAddress()));
+      try {
+        ((HdfsAction) smartAction).setDfsClient(
+          new SmartDFSClient(HadoopUtils.getNameNodeUri(smartContext.getConf()),
+            smartContext.getConf(), getRpcServerAddress()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
     smartAction.getActionStatus().setId(launchAction.getActionId());
     return smartAction;
+  }
+
+  private InetSocketAddress getRpcServerAddress() {
+    String[] strings = smartContext.getConf().get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
+      SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
+    return new InetSocketAddress(strings[strings.length - 2]
+      , Integer.parseInt(strings[strings.length - 1]));
   }
 }
