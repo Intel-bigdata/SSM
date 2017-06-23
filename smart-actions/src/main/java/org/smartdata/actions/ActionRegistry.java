@@ -66,7 +66,7 @@ public class ActionRegistry {
     }
   }
 
-  public static SmartAction createeAction(String name, StatusReporter statusReporter) {
+  public static SmartAction createAction(String name, StatusReporter statusReporter) {
     if (!checkAction(name)) {
       return null;
     }
