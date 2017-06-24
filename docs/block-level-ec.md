@@ -56,7 +56,7 @@ The following lists the targets of this design:
 2. Transparent data recovery in background
 
 Supported Erasure Coding Policies
-
+======================
 This implementation will leverage existing Hadoop 3.0 erasure coding
 Codecs. All Hadoop 3.0 supported EC policies will be supported on block
 layout EC. Please refer to [Hadoop 3.0 EC guide](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/HDFSErasureCoding.html)
