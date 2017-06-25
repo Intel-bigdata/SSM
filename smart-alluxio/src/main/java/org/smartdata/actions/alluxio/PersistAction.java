@@ -48,6 +48,7 @@ public class PersistAction extends AlluxioAction {
       } else {
         LOG.info("Path " + uri + " was successfully persisted.");
       }
+      actionStatus.setSuccessful(true);
     } catch (Exception e) {
       actionStatus.setSuccessful(false);
       throw new RuntimeException(e);
