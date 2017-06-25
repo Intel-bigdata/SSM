@@ -20,7 +20,9 @@ public class TestAlluxioActions {
   FileSystem fs;
   @Before
   public void setUp() throws Exception {
+    System.out.println("setUp .b");
     mLocalAlluxioCluster = new LocalAlluxioCluster(2);
+    System.out.println("setUp .a");
     mLocalAlluxioCluster.initConfiguration();
     System.out.println("setUp ");
     mLocalAlluxioCluster.start();
@@ -36,7 +38,7 @@ public class TestAlluxioActions {
     }
     System.out.println("tearDown oooooo");
   }
-  
+
   @Test
   public void testPersistAction() throws Exception {
     // write a file and not persisted
