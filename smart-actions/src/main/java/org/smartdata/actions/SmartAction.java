@@ -18,12 +18,15 @@
 package org.smartdata.actions;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.smartdata.SmartContext;
 import org.smartdata.common.message.ActionFinished;
 import org.smartdata.common.message.ActionStarted;
+import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.StatusReporter;
 
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 /**
@@ -36,7 +39,9 @@ public abstract class SmartAction {
   private long actionId;
   private Map<String, String> actionArgs;
   private SmartContext context;
+  private ByteArrayOutputStream resultOs;
   private PrintStream psResultOs;
+  private ByteArrayOutputStream logOs;
   private PrintStream psLogOs;
   protected String name;
 
@@ -47,8 +52,10 @@ public abstract class SmartAction {
   public SmartAction(StatusReporter statusReporter) {
     this.statusReporter = statusReporter;
     //Todo: extract the print stream out of this class
-    this.psResultOs = new PrintStream(new ByteArrayOutputStream(64 * 1024), false);
-    this.psLogOs = new PrintStream(new ByteArrayOutputStream(64 * 1024), false);
+    this.resultOs = new ByteArrayOutputStream(64 * 1024);
+    this.psResultOs = new PrintStream(resultOs, false);
+    this.logOs = new ByteArrayOutputStream(64 * 1024);
+    this.psLogOs = new PrintStream(logOs, false);
   }
 
   public String getName() {
@@ -142,12 +149,10 @@ public abstract class SmartAction {
     return 0.0F;
   }
 
-//  public ActionStatusReport.ActionStatus getActionStatus() {
-//    return new ActionStatusReport.ActionStatus(this.actionId, getActionId());
-//  }
-
-  public ActionStatus getActionStatus() {
-    return null;
+  public ActionStatusReport.ActionStatus getActionStatus() throws UnsupportedEncodingException {
+    return new ActionStatusReport.ActionStatus(this.actionId, getProgress(),
+      StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
+      StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")));
   }
 
   private void stop() {

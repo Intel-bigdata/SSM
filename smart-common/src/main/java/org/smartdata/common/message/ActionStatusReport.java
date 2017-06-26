@@ -39,10 +39,14 @@ public class ActionStatusReport implements StatusMessage {
   public static class ActionStatus implements Serializable {
     private long actionId;
     private float percentage;
+    private String result;
+    private String log;
 
-    public ActionStatus(long actionId, float percentage) {
+    public ActionStatus(long actionId, float percentage, String result, String log) {
       this.actionId = actionId;
       this.percentage = percentage;
+      this.result = result;
+      this.log = log;
     }
 
     public long getActionId() {
@@ -59,6 +63,22 @@ public class ActionStatusReport implements StatusMessage {
 
     public void setPencentage(float percentage) {
       this.percentage = percentage;
+    }
+
+    public String getResult() {
+      return result;
+    }
+
+    public void setResult(String result) {
+      this.result = result;
+    }
+
+    public String getLog() {
+      return log;
+    }
+
+    public void setLog(String log) {
+      this.log = log;
     }
   }
 }
