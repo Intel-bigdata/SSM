@@ -1,0 +1,162 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.smartdata.metastore.tables;
+
+import org.smartdata.common.models.FileInfo;
+import org.smartdata.metastore.utils.MetaUtil;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class FileInfoDao {
+  private JdbcTemplate jdbcTemplate;
+  private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+  private SimpleJdbcInsert simpleJdbcInsert;
+  private Map<Integer, String> mapOwnerIdName;
+  private Map<Integer, String> mapGroupIdName;
+
+  public FileInfoDao(DataSource dataSource) {
+    jdbcTemplate = new JdbcTemplate(dataSource);
+    namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+    simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("files");
+  }
+
+  public void updateUsersMap(Map<Integer, String> mapOwnerIdName) {
+    this.mapOwnerIdName = mapOwnerIdName;
+  }
+
+  public void updateGroupsMap(Map<Integer, String> mapGroupIdName) {
+    this.mapGroupIdName = mapGroupIdName;
+  }
+
+  public List<FileInfo> getAll() {
+    return jdbcTemplate.query("SELECT * FROM files",
+        new FileInfoDao.FileInfoRowMapper());
+  }
+
+  public FileInfo getById(long fid) {
+    return jdbcTemplate.queryForObject("SELECT * FROM files WHERE fid = ?",
+        new Object[]{fid}, new FileInfoDao.FileInfoRowMapper());
+  }
+
+  public FileInfo getByPath(String path) {
+    return jdbcTemplate.queryForObject("SELECT * FROM files WHERE path = ?",
+        new Object[]{path}, new FileInfoDao.FileInfoRowMapper());
+  }
+
+  public Map<String, Long> getPathFids(Collection<String> paths)
+      throws SQLException {
+    Map<String, Long> pathToId = new HashMap<>();
+    String sql = "SELECT * FROM files WHERE path IN (:paths)";
+    MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+    parameterSource.addValue("paths", paths);
+    List<FileInfo> files = namedParameterJdbcTemplate.query(sql,
+        parameterSource, new FileInfoRowMapper());
+    for (FileInfo file : files) {
+      pathToId.put(file.getPath(), file.getFileId());
+    }
+    return pathToId;
+  }
+
+  public Map<Long, String> getFidPaths(Collection<Long> ids)
+      throws SQLException {
+    Map<Long, String> idToPath = new HashMap<>();
+    String sql = "SELECT * FROM files WHERE fid IN (:ids)";
+    MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+    parameterSource.addValue("ids", ids);
+    List<FileInfo> files = namedParameterJdbcTemplate.query(sql,
+        parameterSource, new FileInfoRowMapper());
+    for (FileInfo file : files) {
+      idToPath.put(file.getFileId(), file.getPath());
+    }
+    return idToPath;
+  }
+
+  public void insert(FileInfo fileInfo) {
+    simpleJdbcInsert.execute(toMap(fileInfo,
+        mapOwnerIdName, mapGroupIdName));
+  }
+
+  public void insert(FileInfo[] fileInfos) {
+    // TODO need upgrade
+    for (FileInfo file : fileInfos) {
+      insert(file);
+    }
+  }
+
+  public void deleteById(long fid) {
+    final String sql = "delete from files where fid = ?";
+    jdbcTemplate.update(sql, fid);
+  }
+
+  public void deleteAll() {
+    final String sql = "DELETE from files";
+    jdbcTemplate.execute(sql);
+  }
+
+  private Map<String, Object> toMap(FileInfo fileInfo
+      , Map<Integer, String> mapOwnerIdName
+      , Map<Integer, String> mapGroupIdName) {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("path", fileInfo.getPath());
+    parameters.put("fid", fileInfo.getFileId());
+    parameters.put("length", fileInfo.getLength());
+    parameters.put("block_replication", fileInfo.getBlock_replication());
+    parameters.put("block_size", fileInfo.getBlocksize());
+    parameters.put("modification_time", fileInfo.getModification_time());
+    parameters.put("access_time", fileInfo.getAccess_time());
+    parameters.put("is_dir", fileInfo.isdir());
+    parameters.put("sid", fileInfo.getStoragePolicy());
+    parameters.put("oid", MetaUtil.getKey(mapOwnerIdName, fileInfo.getOwner()));
+    parameters.put("gid", MetaUtil.getKey(mapGroupIdName, fileInfo.getGroup()));
+    parameters.put("permission", fileInfo.getPermission());
+    return parameters;
+  }
+
+  class FileInfoRowMapper implements RowMapper<FileInfo> {
+    @Override
+    public FileInfo mapRow(ResultSet resultSet, int i)
+        throws SQLException {
+      FileInfo fileInfo = new FileInfo(resultSet.getString("path"),
+          resultSet.getLong("fid"),
+          resultSet.getLong("length"),
+          resultSet.getBoolean("is_dir"),
+          resultSet.getShort("block_replication"),
+          resultSet.getLong("block_size"),
+          resultSet.getLong("modification_time"),
+          resultSet.getLong("access_time"),
+          resultSet.getShort("permission"),
+          mapOwnerIdName.get((int) resultSet.getShort("oid")),
+          mapGroupIdName.get((int) resultSet.getShort("gid")),
+          resultSet.getByte("sid")
+      );
+      return fileInfo;
+    }
+  }
+}
