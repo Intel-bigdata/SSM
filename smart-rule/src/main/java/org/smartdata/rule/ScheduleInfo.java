@@ -17,9 +17,7 @@
  */
 package org.smartdata.rule;
 
-/**
- * Created by root on 5/4/17.
- */
+
 public interface ScheduleInfo {
   long getStartTime();
   int getRate();

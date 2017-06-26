@@ -35,6 +35,9 @@ public class SmartConfKeys {
   public final static String DFS_SSM_SECURITY_ENABLE = "dfs.smart.security.enable";
   public final static String DFS_SSM_KEYTAB_FILE_KEY = "dfs.smart.keytab.file";
   public final static String DFS_SSM_KERBEROS_PRINCIPAL_KEY = "dfs.smart.kerberos.principal";
-
   public final static String DFS_SSM_DB_URL_KEY = "dfs.smart.db.url";
+
+  // RuleManager
+  public final static String DFS_SSM_RULE_EXECUTORS_KEY = "dfs.smart.rule.executors";
+  public final static int DFS_SSM_RULE_EXECUTORS_DEFAULT = 5;
 }

@@ -30,6 +30,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * Contains detailed info about a rule.
+ */
 public class RuleInfoRepo {
   private RuleInfo ruleInfo = null;
   private RuleExecutor executor = null;
@@ -122,7 +125,7 @@ public class RuleInfoRepo {
       }
 
       ExecutionContext ctx = new ExecutionContext();
-      ctx.setProperty(ExecutionContext.RULE_ID, ruleInfo.getId());
+      ctx.setRuleId(ruleInfo.getId());
       TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
           ruleInfo.getSubmitTime());
       TranslateResult tr = executor != null ? executor.getTranslateResult() :

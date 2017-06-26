@@ -20,7 +20,6 @@ package org.smartdata.rule.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;
@@ -53,6 +52,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   private CmdletDescriptor cmdDescriptor = null;
   private TranslationContext transCtx = null;
   private int[] condPostion;
+  private long minTimeInverval = Long.MAX_VALUE;
 
   public SmartRuleVisitTranslator() {
   }
@@ -346,7 +346,13 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         throw new RuleParserException("Unexpected parameter type: "
             + ctx.getChild(i).getText());
       }
-      paras.add(((ValueNode) res).eval().getValue());
+      Object value = ((ValueNode) res).eval().getValue();
+      paras.add(value);
+
+      if (p.getParamsTypes().get(paraIndex) == ValueType.TIMEINTVAL) {
+        minTimeInverval = Long.min((long)value, minTimeInverval);
+      }
+
       paraIndex++;
     }
     PropertyRealParas realParas = new PropertyRealParas(p, paras);
@@ -402,6 +408,20 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         ret = new ValueNode(left.eval().eval(OperatorType.fromString(operator), right.eval()));
       } else {
         ret = new OperNode(OperatorType.fromString(operator), left, right);
+      }
+
+      if (ret.isOperNode()) {
+        left.setParent(ret);
+        if (right != null) {
+          right.setParent(ret);
+
+          if (!right.isOperNode()) {
+            VisitResult vs = ((ValueNode) right).eval();
+            if (vs.isConst() && vs.getValueType() == ValueType.TIMEINTVAL) {
+              minTimeInverval = Long.min((long)vs.getValue(), minTimeInverval);
+            }
+          }
+        }
       }
     } catch (IOException e) {
       throw new RuleParserException(e.getMessage());
@@ -610,16 +630,16 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       result = new ValueNode(
           new VisitResult(ValueType.TIMEPOINT, date.getTime()));
     } catch (ParseException e) {
-      result = new ValueNode(new VisitResult());
+      throw new RuleParserException("Invalid time point string '" + str + "'");
     }
     return result;
   }
 
   private void setDefaultTimeBasedScheduleInfo() {
-    // TODO: using a more sophisticated way
     if (timeBasedScheduleInfo == null) {
+      long intval = Long.max(5000, minTimeInverval / 20);
       timeBasedScheduleInfo = new TimeBasedScheduleInfo(getTimeNow(),
-          TimeBasedScheduleInfo.FOR_EVER, 5000);
+          TimeBasedScheduleInfo.FOR_EVER, intval);
     }
   }
 
@@ -643,8 +663,12 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
     if (l != null) {
       TreeNode actRoot = r == null ? l : new OperNode(OperatorType.AND, l, r);
+      if (r != null) {
+        l.setParent(actRoot);
+        r.setParent(actRoot);
+      }
       TreeNode root = new OperNode(OperatorType.NONE, actRoot, null);
-      // TODO: only file now
+      actRoot.setParent(root);
       ret += " WHERE " + doGenerateSql(root, "files").getRet() + ";";
     }
 
@@ -750,10 +774,10 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       boolean procAccLt = false;
       String res;
       if (op.length() > 0) {
-        // TODO: define more formal spec
         String ropStr = rop.getRet();
         if (optype == OperatorType.MATCHES) {
           ropStr = ropStr.replace("*", "%");
+          ropStr = ropStr.replace("?", "_");
         }
         if (procAcc) {
           switch (optype) {
@@ -802,7 +826,6 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
             } else {
               return new NodeTransResult(null, "0");
             }
-          // TODO: for other types
           default:
             throw new IOException("Type = " + vr.getValueType().toString());
         }
