@@ -20,60 +20,60 @@ package org.smartdata.server.rest;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionRegistry;
+import org.smartdata.metastore.tables.AccessCountTable;
+import org.smartdata.metastore.utils.Constants;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 /**
- * Action APIs.
+ * Cluster APIs.
  */
-@Path("/smart/api/v1/actions")
+@Path("/smart/api/v1/cluster")
 @Produces("application/json")
-public class ActionRestApi {
+public class ClusterRestApi {
   SmartEngine ssm;
   private static final Logger logger =
-      LoggerFactory.getLogger(ActionRestApi.class);
+      LoggerFactory.getLogger(ClusterRestApi.class);
   Gson gson = new Gson();
 
-  public ActionRestApi(SmartEngine ssm) {
+  public ClusterRestApi(SmartEngine ssm) {
     this.ssm = ssm;
   }
 
   @GET
-  @Path("/registry/list")
-  public Response actionTypes() {
+  @Path("/primary")
+  public void primary() {
+  }
+
+  @GET
+  @Path("/primary/cachedfiles")
+  public Response cachedFiles() {
     return new JsonResponse<>(Response.Status.OK,
-      ActionRegistry.supportedActions()).build();
+        ssm.getStatesManager().getCachedFileStatus()).build();
   }
 
   @GET
-  @Path("/list")
-  public Response actionList() {
+  @Path("/primary/hotfiles")
+  public Response hotFiles() {
+    List<AccessCountTable> tables =
+        ssm.getStatesManager().getTablesInLast(Constants.ONE_HOUR_IN_MILLIS);
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().listNewCreatedActions(20)).build();
+        ssm.getStatesManager().getHotFiles(tables, 20)).build();
   }
 
   @GET
-  @Path("/{actionId}/status")
-  public void status() {
+  @Path("/alluxio/{clusterName}")
+  public void alluxio() {
   }
 
   @GET
-  @Path("/{actionId}/detail")
-  public Response detail(@PathParam("actionId") String actionId) {
-    Long longNumer = Long.parseLong(actionId);
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().getActionInfo(longNumer)).build();
+  @Path("/hdfs/{clusterName}")
+  public void hdfs() {
   }
 
-  @GET
-  @Path("/{actionId}/summary")
-  public void summary() {
-  }
 }
