@@ -60,7 +60,7 @@ public class RuleManager extends AbstractService {
   public ExecutorScheduler execScheduler;
 
   public RuleManager(ServerContext context,
-                     StatesManager statesManager, CmdletExecutor cmdletExecutor) {
+      StatesManager statesManager, CmdletExecutor cmdletExecutor) {
     super(context);
 
     int numExecutors = context.getConf().getInt(
@@ -92,16 +92,7 @@ public class RuleManager extends AbstractService {
     }
 
     TranslateResult tr = doCheckRule(rule, null);
-    CmdletDescriptor cd = tr.getCmdDescriptor();
-    String error = "";
-    for (int i = 0; i < cd.actionSize(); i++) {
-      if (!ActionRegistry.checkAction(cd.getActionName(i))) {
-        error += "Action '" + cd.getActionName(i) + "' not supported.\n";
-      }
-    }
-    if (error.length() > 0) {
-      throw new IOException(error);
-    }
+    doCheckActions(tr.getCmdDescriptor());
 
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
@@ -114,10 +105,21 @@ public class RuleManager extends AbstractService {
 
     RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, metaStore);
     mapRules.put(ruleInfo.getId(), infoRepo);
-
     submitRuleToScheduler(infoRepo.launchExecutor(this));
 
     return ruleInfo.getId();
+  }
+
+  private void doCheckActions(CmdletDescriptor cd) throws IOException {
+    String error = "";
+    for (int i = 0; i < cd.actionSize(); i++) {
+      if (!ActionRegistry.checkAction(cd.getActionName(i))) {
+        error += "Action '" + cd.getActionName(i) + "' not supported.\n";
+      }
+    }
+    if (error.length() > 0) {
+      throw new IOException(error);
+    }
   }
 
   private TranslateResult doCheckRule(String rule, TranslationContext ctx)

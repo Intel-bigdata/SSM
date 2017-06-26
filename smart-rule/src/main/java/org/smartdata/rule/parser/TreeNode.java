@@ -20,6 +20,7 @@ package org.smartdata.rule.parser;
 import java.io.IOException;
 
 public abstract class TreeNode {
+  protected TreeNode parent;
   protected TreeNode left;
   protected TreeNode right;
 
@@ -43,6 +44,23 @@ public abstract class TreeNode {
 
   public TreeNode getRight() {
     return right;
+  }
+
+  public void setParent(TreeNode parent) {
+    this.parent = parent;
+  }
+
+  public TreeNode getParent() {
+    return parent;
+  }
+
+  public TreeNode getPeer() {
+    if (getParent() == null) {
+      return null;
+    }
+
+    return getParent().getLeft() == this ?
+        getParent().getRight() : getParent().getRight();
   }
 
   public abstract boolean isOperNode();

@@ -18,17 +18,60 @@
 package org.smartdata.server.engine.data;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Abstract of rule execution environment.
  */
 public class ExecutionContext {
-  private long ruleId;
+  public static final String RULE_ID = "RuleId";
+  private Map<String, Object> envVariables = new HashMap<>();
 
   public long getRuleId() {
-    return ruleId;
+    return getLong(RULE_ID);
   }
 
   public void setRuleId(long ruleId) {
-    this.ruleId = ruleId;
+    envVariables.put(RULE_ID, ruleId);
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    if (properties == null) {
+      envVariables.clear();
+    } else {
+      envVariables = properties;
+    }
+  }
+
+  public void setProperty(String property, Object value) {
+    envVariables.put(property, value);
+  }
+
+  public String getString(String property) {
+    Object val = envVariables.get(property);
+    if (val == null) {
+      return null;
+    }
+    return val.toString();
+  }
+
+  public Long getLong(String property) {
+    Object val = envVariables.get(property);
+    if (val == null) {
+      return null;
+    }
+    if (val instanceof Integer) {
+      return Long.valueOf((Integer)val);
+    } else if (val instanceof Long) {
+      return (Long)val;
+    } else if (val instanceof String) {
+      try {
+        return Long.parseLong((String) val);
+      } catch (NumberFormatException e) {
+        return null;
+      }
+    }
+    return null;
   }
 }
