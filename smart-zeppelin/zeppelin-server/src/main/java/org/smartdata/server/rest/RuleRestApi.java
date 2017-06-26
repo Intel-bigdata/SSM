@@ -34,13 +34,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Rules APIs.
  */
-@Path("/api/v1.0")
+@Path("/smart/api/v1/rules")
 @Produces("application/json")
 public class RuleRestApi {
   private SmartEngine ssm;
@@ -51,66 +49,8 @@ public class RuleRestApi {
     this.ssm = ssm;
   }
 
-  @GET
-  public String getString() {
-    return "hello";
-  }
-
   @POST
-  @Path("/rules/{ruleId}/start")
-  public Response start(@PathParam("ruleId") String ruleId) throws Exception {
-    logger.info("Start rule{}", ruleId);
-    Long intNumer = Long.parseLong(ruleId);
-    ssm.getRuleManager().activateRule(intNumer);
-    return new JsonResponse<>(Response.Status.OK).build();
-  }
-
-  @DELETE
-  @Path("/rules/{ruleId}/stop")
-  public Response stop(@PathParam("ruleId") String ruleId) throws Exception {
-    logger.info("Stop rule{}", ruleId);
-    Long intNumer = Long.parseLong(ruleId);
-    ssm.getRuleManager().disableRule(intNumer, true);
-    return new JsonResponse<>(Response.Status.OK).build();
-  }
-
-  @GET
-  @Path("/rules/{ruleId}/detail")
-  public Response detail(@PathParam("ruleId") String ruleId) throws Exception {
-    Long intNumer = Long.parseLong(ruleId);
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getRuleManager().getRuleInfo(intNumer)).build();
-  }
-
-  @GET
-  @Path("/rules/{ruleId}/errors")
-  public Response errors(@PathParam("ruleId") String ruleId) {
-    return new JsonResponse<>(Response.Status.NOT_FOUND).build();
-  }
-
-  @GET
-  @Path("/rules/{ruleId}/cmdlets")
-  public Response cmdlets(@PathParam("ruleId") String ruleId) throws Exception {
-    Long intNumer = Long.parseLong(ruleId);
-    Map<String, String> m = new HashMap<String, String>();
-    m.put("_FILE_PATH_", "/testCacheFile");
-    CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
-        CmdletState.PENDING, JsonUtil.toJsonString(m), 123123333L, 232444444L);
-    CmdletInfo cmdlet2 = new CmdletInfo(1, 1, CmdletState.PENDING,
-        JsonUtil.toJsonString(m), 123178333L, 232444994L);
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().listCmdletsInfo(intNumer, null)).build();
-  }
-
-  @GET
-  @Path("/rulelist")
-  public Response ruleList() throws Exception {
-    return new JsonResponse<>(Response.Status.OK, "",
-        ssm.getRuleManager().listRulesInfo()).build();
-  }
-
-  @POST
-  @Path("/addRule")
+  @Path("/add")
   public Response addRule(String message){
     String rule;
     long t;
@@ -124,5 +64,57 @@ public class RuleRestApi {
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
     return new JsonResponse(Response.Status.CREATED, t).build();
+  }
+
+  @DELETE
+  @Path("/{ruleId}/delete")
+  public void addRule(){
+  }
+
+  @POST
+  @Path("/{ruleId}/start")
+  public Response start(@PathParam("ruleId") String ruleId) {
+    logger.info("Start rule{}", ruleId);
+    Long intNumer = Long.parseLong(ruleId);
+    ssm.getRuleManager().activateRule(intNumer);
+    return new JsonResponse<>(Response.Status.OK).build();
+  }
+
+  @DELETE
+  @Path("/{ruleId}/stop")
+  public Response stop(@PathParam("ruleId") String ruleId) {
+    logger.info("Stop rule{}", ruleId);
+    Long intNumer = Long.parseLong(ruleId);
+    ssm.getRuleManager().disableRule(intNumer, true);
+    return new JsonResponse<>(Response.Status.OK).build();
+  }
+
+  @GET
+  @Path("/{ruleId}/status")
+  public Response status(@PathParam("ruleId") String ruleId) {
+    Long intNumer = Long.parseLong(ruleId);
+    return new JsonResponse<>(Response.Status.OK,
+        ssm.getRuleManager().getRuleInfo(intNumer)).build();
+  }
+
+  @GET
+  @Path("/{ruleId}/cmdlets")
+  public Response cmdlets(@PathParam("ruleId") String ruleId) {
+    Long intNumer = Long.parseLong(ruleId);
+    Map<String, String> m = new HashMap<String, String>();
+    m.put("_FILE_PATH_", "/testCacheFile");
+    CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
+        CmdletState.PENDING, JsonUtil.toJsonString(m), 123123333L, 232444444L);
+    CmdletInfo cmdlet2 = new CmdletInfo(1, 1, CmdletState.PENDING,
+        JsonUtil.toJsonString(m), 123178333L, 232444994L);
+    return new JsonResponse<>(Response.Status.OK,
+        ssm.getCmdletExecutor().listCmdletsInfo(intNumer, null)).build();
+  }
+
+  @GET
+  @Path("/list")
+  public Response ruleList() {
+    return new JsonResponse<>(Response.Status.OK, "",
+        ssm.getRuleManager().listRulesInfo()).build();
   }
 }

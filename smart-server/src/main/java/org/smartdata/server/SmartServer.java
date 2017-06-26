@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.zeppelin.server.ZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.SmartServiceState;
@@ -48,15 +49,17 @@ import java.io.PrintStream;
  * From this Smart Storage Management begins.
  */
 public class SmartServer {
+  public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
+
   private SmartHttpServer httpServer;
   private SmartRpcServer rpcServer;
   private ConfManager confMgr;
   private SmartConf conf;
   private SmartEngine engine;
+  private ZeppelinServer zeppelinServer;
   private ServerContext context;
-  public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
-  private SmartServiceState ssmServiceState = SmartServiceState.SAFEMODE;
+  private SmartServiceState serviceState = SmartServiceState.SAFEMODE;
 
   public SmartServer(SmartConf conf) {
     this.conf = conf;
@@ -205,9 +208,9 @@ public class SmartServer {
 
     if (enabled) {
       startEngines();
-      ssmServiceState = SmartServiceState.ACTIVE;
+      serviceState = SmartServiceState.ACTIVE;
     } else {
-      ssmServiceState = SmartServiceState.DISABLED;
+      serviceState = SmartServiceState.DISABLED;
     }
   }
 
@@ -217,10 +220,10 @@ public class SmartServer {
   }
 
   public void enable() throws IOException {
-    if (ssmServiceState == SmartServiceState.DISABLED) {
+    if (serviceState == SmartServiceState.DISABLED) {
       try {
         startEngines();
-        ssmServiceState = SmartServiceState.ACTIVE;
+        serviceState = SmartServiceState.ACTIVE;
       } catch (Exception e) {
         throw new IOException(e);
       }
@@ -228,11 +231,11 @@ public class SmartServer {
   }
 
   public SmartServiceState getSSMServiceState() {
-    return ssmServiceState;
+    return serviceState;
   }
 
   public boolean isActive() {
-    return ssmServiceState == SmartServiceState.ACTIVE;
+    return serviceState == SmartServiceState.ACTIVE;
   }
 
   private void stop() throws Exception {

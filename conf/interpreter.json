@@ -1,0 +1,112 @@
+{
+  "interpreterSettings": {
+    "2CMEQYVSZ": {
+      "id": "2CMEQYVSZ",
+      "name": "spark",
+      "group": "spark",
+      "properties": {
+        "spark.cores.max": "",
+        "zeppelin.spark.printREPLOutput": "true",
+        "master": "local[*]",
+        "zeppelin.spark.maxResult": "1000",
+        "zeppelin.dep.localrepo": "local-repo",
+        "spark.app.name": "Zeppelin",
+        "spark.executor.memory": "",
+        "zeppelin.spark.importImplicit": "true",
+        "zeppelin.spark.sql.stacktrace": "false",
+        "zeppelin.spark.useHiveContext": "true",
+        "zeppelin.spark.concurrentSQL": "false",
+        "args": "",
+        "zeppelin.pyspark.python": "python",
+        "zeppelin.dep.additionalRemoteRepository": "spark-packages,http://dl.bintray.com/spark-packages/maven,false;"
+      },
+      "status": "READY",
+      "interpreterGroup": [
+        {
+          "name": "spark",
+          "class": "org.apache.zeppelin.spark.SparkInterpreter",
+          "defaultInterpreter": true,
+          "editor": {
+            "language": "scala",
+            "editOnDblClick": false
+          }
+        },
+        {
+          "name": "sql",
+          "class": "org.apache.zeppelin.spark.SparkSqlInterpreter",
+          "defaultInterpreter": false,
+          "editor": {
+            "language": "sql",
+            "editOnDblClick": false
+          }
+        },
+        {
+          "name": "dep",
+          "class": "org.apache.zeppelin.spark.DepInterpreter",
+          "defaultInterpreter": false,
+          "editor": {
+            "language": "scala",
+            "editOnDblClick": false
+          }
+        },
+        {
+          "name": "pyspark",
+          "class": "org.apache.zeppelin.spark.PySparkInterpreter",
+          "defaultInterpreter": false,
+          "editor": {
+            "language": "python",
+            "editOnDblClick": false
+          }
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "port": -1,
+        "perNote": "shared",
+        "perUser": "shared",
+        "isExistingProcess": false,
+        "setPermission": false,
+        "users": [],
+        "isUserImpersonate": false
+      }
+    }
+  },
+  "interpreterBindings": {},
+  "interpreterRepositories": [
+    {
+      "id": "central",
+      "type": "default",
+      "url": "http://repo1.maven.org/maven2/",
+      "releasePolicy": {
+        "enabled": true,
+        "updatePolicy": "daily",
+        "checksumPolicy": "warn"
+      },
+      "snapshotPolicy": {
+        "enabled": true,
+        "updatePolicy": "daily",
+        "checksumPolicy": "warn"
+      },
+      "mirroredRepositories": [],
+      "repositoryManager": false
+    },
+    {
+      "id": "local",
+      "type": "default",
+      "url": "file://C:\\Users\\kaizhen/.m2/repository",
+      "releasePolicy": {
+        "enabled": true,
+        "updatePolicy": "daily",
+        "checksumPolicy": "warn"
+      },
+      "snapshotPolicy": {
+        "enabled": true,
+        "updatePolicy": "daily",
+        "checksumPolicy": "warn"
+      },
+      "mirroredRepositories": [],
+      "repositoryManager": false
+    }
+  ]
+}
