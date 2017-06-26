@@ -53,14 +53,10 @@ public class MoverStatus extends ActionStatus {
 
   @Override
   synchronized public float getPercentage() {
-    if (isFinished()) {
-      return 1;
-    }
     if (!totalValueSet) {
       return 0;
     }
-    return movedBlocks >= totalBlocks ? 0.99f :
-            0.99f * movedBlocks / totalBlocks;
+    return 1.0f * movedBlocks / totalBlocks;
   }
 
   synchronized public long getTotalSize() {

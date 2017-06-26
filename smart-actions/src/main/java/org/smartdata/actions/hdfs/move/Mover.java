@@ -144,7 +144,7 @@ public class Mover {
           final ExitStatus r = m.run();
 
           if (r == ExitStatus.SUCCESS) {
-            //status.setMovedBlocks(status.getTotalBlocks());
+            status.setMovedBlocks(status.getTotalBlocks());
             IOUtils.cleanup(null, nnc);
             iter.remove();
           } else if (r != ExitStatus.IN_PROGRESS) {
