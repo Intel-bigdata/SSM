@@ -34,6 +34,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Rules APIs.
@@ -73,7 +75,7 @@ public class RuleRestApi {
 
   @POST
   @Path("/{ruleId}/start")
-  public Response start(@PathParam("ruleId") String ruleId) {
+  public Response start(@PathParam("ruleId") String ruleId) throws Exception {
     logger.info("Start rule{}", ruleId);
     Long intNumer = Long.parseLong(ruleId);
     ssm.getRuleManager().activateRule(intNumer);
@@ -82,7 +84,7 @@ public class RuleRestApi {
 
   @DELETE
   @Path("/{ruleId}/stop")
-  public Response stop(@PathParam("ruleId") String ruleId) {
+  public Response stop(@PathParam("ruleId") String ruleId) throws Exception {
     logger.info("Stop rule{}", ruleId);
     Long intNumer = Long.parseLong(ruleId);
     ssm.getRuleManager().disableRule(intNumer, true);
@@ -91,7 +93,7 @@ public class RuleRestApi {
 
   @GET
   @Path("/{ruleId}/status")
-  public Response status(@PathParam("ruleId") String ruleId) {
+  public Response status(@PathParam("ruleId") String ruleId) throws Exception {
     Long intNumer = Long.parseLong(ruleId);
     return new JsonResponse<>(Response.Status.OK,
         ssm.getRuleManager().getRuleInfo(intNumer)).build();
@@ -99,7 +101,7 @@ public class RuleRestApi {
 
   @GET
   @Path("/{ruleId}/cmdlets")
-  public Response cmdlets(@PathParam("ruleId") String ruleId) {
+  public Response cmdlets(@PathParam("ruleId") String ruleId) throws Exception {
     Long intNumer = Long.parseLong(ruleId);
     Map<String, String> m = new HashMap<String, String>();
     m.put("_FILE_PATH_", "/testCacheFile");
@@ -113,7 +115,7 @@ public class RuleRestApi {
 
   @GET
   @Path("/list")
-  public Response ruleList() {
+  public Response ruleList() throws Exception {
     return new JsonResponse<>(Response.Status.OK, "",
         ssm.getRuleManager().listRulesInfo()).build();
   }

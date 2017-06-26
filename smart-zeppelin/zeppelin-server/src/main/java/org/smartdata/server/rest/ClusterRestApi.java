@@ -29,6 +29,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 /**
  * Cluster APIs.
@@ -52,14 +53,14 @@ public class ClusterRestApi {
 
   @GET
   @Path("/primary/cachedfiles")
-  public Response cachedFiles() {
+  public Response cachedFiles() throws Exception {
     return new JsonResponse<>(Response.Status.OK,
         ssm.getStatesManager().getCachedFileStatus()).build();
   }
 
   @GET
   @Path("/primary/hotfiles")
-  public Response hotFiles() {
+  public Response hotFiles() throws Exception {
     List<AccessCountTable> tables =
         ssm.getStatesManager().getTablesInLast(Constants.ONE_HOUR_IN_MILLIS);
     return new JsonResponse<>(Response.Status.OK,

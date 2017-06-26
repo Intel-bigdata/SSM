@@ -47,14 +47,14 @@ public class ActionRestApi {
 
   @GET
   @Path("/registry/list")
-  public Response actionTypes() {
+  public Response actionTypes() throws Exception {
     return new JsonResponse<>(Response.Status.OK,
       ActionRegistry.supportedActions()).build();
   }
 
   @GET
   @Path("/list")
-  public Response actionList() {
+  public Response actionList() throws Exception {
     return new JsonResponse<>(Response.Status.OK,
         ssm.getCmdletExecutor().listNewCreatedActions(20)).build();
   }
@@ -66,7 +66,7 @@ public class ActionRestApi {
 
   @GET
   @Path("/{actionId}/detail")
-  public Response detail(@PathParam("actionId") String actionId) {
+  public Response detail(@PathParam("actionId") String actionId) throws Exception {
     Long longNumer = Long.parseLong(actionId);
     return new JsonResponse<>(Response.Status.OK,
         ssm.getCmdletExecutor().getActionInfo(longNumer)).build();
