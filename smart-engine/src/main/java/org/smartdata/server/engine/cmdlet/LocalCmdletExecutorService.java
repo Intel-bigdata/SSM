@@ -27,11 +27,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class LocalCmdletExecutorService extends CmdletExecutorService implements StatusReporter {
+  private CmdletFactory cmdletFactory;
   private CmdletExecutor cmdletExecutor;
   private ScheduledExecutorService executorService;
 
-  public LocalCmdletExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
-    super(cmdletManager, cmdletFactory);
+  public LocalCmdletExecutorService(CmdletManager cmdletManager) {
+    super(cmdletManager);
+    this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
     this.cmdletExecutor = new CmdletExecutor(this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.executorService.scheduleAtFixedRate(new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);

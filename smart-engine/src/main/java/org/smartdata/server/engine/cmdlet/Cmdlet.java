@@ -134,30 +134,29 @@ public class Cmdlet implements Runnable {
         // Init Action
         act.init(act.getArguments());
         act.run();
-        if (act instanceof MoveFileAction
-            && act.getActionStatus().isSuccessful() && adapter != null) {
-          Map<String, String> args = act.getArguments();
-          if (args.containsKey(MoveFileAction.STORAGE_POLICY)) {
-            adapter.updateFileStoragePolicy(args.get(MoveFileAction.FILE_PATH),
-                args.get(MoveFileAction.STORAGE_POLICY));
-          }
-        }
+//        if (act instanceof MoveFileAction
+//            && act.getActionStatus().isSuccessful() && adapter != null) {
+//          Map<String, String> args = act.getArguments();
+//          if (args.containsKey(MoveFileAction.STORAGE_POLICY)) {
+//            adapter.updateFileStoragePolicy(args.get(MoveFileAction.FILE_PATH),
+//                args.get(MoveFileAction.STORAGE_POLICY));
+//          }
+//        }
       } catch (Exception e) {
-        LOG.error("Action {} running error! {}", act.getActionStatus().getId(), e);
-        act.getActionStatus().end();
+        LOG.error("Action {} running error! {}", act.getActionId(), e);
         this.setState(CmdletState.FAILED);
         break;
       }
       // Run actions sequentially!
-      while (!act.getActionStatus().isFinished()) {
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException e) {
-          if (!running) {
-            break;
-          }
-        }
-      }
+//      while (!act.getActionStatus().isFinished()) {
+//        try {
+//          Thread.sleep(1000);
+//        } catch (InterruptedException e) {
+//          if (!running) {
+//            break;
+//          }
+//        }
+//      }
       this.setState(CmdletState.DONE);
     }
   }

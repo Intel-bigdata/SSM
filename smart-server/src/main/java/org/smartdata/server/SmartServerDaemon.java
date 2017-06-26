@@ -25,7 +25,6 @@ import org.smartdata.server.cluster.ClusterMembershipListener;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cluster.HazelcastWorker;
 import org.smartdata.server.cluster.ServerDaemon;
-import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.utils.HazelcastUtil;
 
 import java.io.IOException;
@@ -48,8 +47,7 @@ public class SmartServerDaemon implements ServerDaemon {
       //SmartServer.main(args);
     } else {
       instance.getCluster().addMembershipListener(new ClusterMembershipListener(this));
-      CmdletFactory factory = new CmdletFactory(new SmartContext(new SmartConf()));
-      this.hazelcastWorker = new HazelcastWorker(factory);
+      this.hazelcastWorker = new HazelcastWorker(new SmartContext(new SmartConf()));
       this.hazelcastWorker.start();
     }
   }

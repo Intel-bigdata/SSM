@@ -76,18 +76,4 @@ public class ActionRegistry {
       throw new RuntimeException("Create action failed", e);
     }
   }
-
-  public static SmartAction createAction(String name, StatusReporter statusReporter) {
-    if (!checkAction(name)) {
-      return null;
-    }
-    try {
-      Class clazz = allActions.get(name);
-      Constructor constructor = clazz.getConstructor(StatusReporter.class);
-      return (SmartAction) constructor.newInstance(statusReporter);
-    } catch (Exception e) {
-      LOG.error("Create {} action failed", name, e);
-      throw new RuntimeException("Create action failed", e);
-    }
-  }
 }

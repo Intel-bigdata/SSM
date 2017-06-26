@@ -26,6 +26,8 @@ import org.smartdata.actions.HelloAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.common.message.ActionFinished;
+import org.smartdata.common.message.ActionStarted;
 import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.common.message.StatusMessage;
@@ -80,9 +82,9 @@ public class CmdletManager extends AbstractService {
   public CmdletManager(ServerContext context) {
     super(context);
 
-    this.metaStore = context.getMetaStore();
+    //this.metaStore = context.getMetaStore();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.dispatcher = new CmdletDispatcher(this, context);
+    this.dispatcher = new CmdletDispatcher(this);
     this.runningCmdlets = new ArrayList<>();
     this.submittedCmdlets = new HashSet<>();
     this.pendingCmdlet = new LinkedBlockingQueue<>();
@@ -316,11 +318,16 @@ public class CmdletManager extends AbstractService {
   }
 
   public synchronized void updateStatus(StatusMessage status) {
+    System.out.println("got update " + status);
     try{
       if (status instanceof CmdletStatusUpdate) {
         onCmdletStatusUpdate((CmdletStatusUpdate) status);
       } else if (status instanceof ActionStatusReport) {
         onActionStatusReport((ActionStatusReport) status);
+      } else if (status instanceof ActionStarted) {
+        onActionStarted((ActionStarted) status);
+      } else if (status instanceof ActionFinished) {
+        onActionFinished((ActionFinished) status);
       }
     } catch (IOException e) {
       LOG.error(String.format("Update status %s failed with %s", status, e));
@@ -328,7 +335,6 @@ public class CmdletManager extends AbstractService {
   }
 
   private void onCmdletStatusUpdate(CmdletStatusUpdate statusUpdate) throws IOException {
-    System.out.println("got update " + statusUpdate);
     long cmdletId = statusUpdate.getCmdletId();
     if (this.idToCmdlets.containsKey(cmdletId)) {
       CmdletState state = statusUpdate.getCurrentState();
@@ -357,6 +363,14 @@ public class CmdletManager extends AbstractService {
         // Updating action info which is not pending or running
       }
     }
+  }
+
+  private void onActionStarted(ActionStarted started) {
+
+  }
+
+  private void onActionFinished(ActionFinished finished) {
+
   }
 
   private void flushCmdletInfo(CmdletInfo info) throws IOException {
@@ -410,7 +424,7 @@ public class CmdletManager extends AbstractService {
     public void run() {
       while (this.dispatcher.canDispatchMore()) {
         try {
-          LaunchCmdlet launchCmdlet = getNextCmdletToRun2();
+          LaunchCmdlet launchCmdlet = getNextCmdletToRun();
           if (launchCmdlet == null) {
             break;
           } else {

@@ -23,11 +23,9 @@ import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 public abstract class CmdletExecutorService {
   protected CmdletManager cmdletManager;
-  protected CmdletFactory cmdletFactory;
 
-  public CmdletExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
+  public CmdletExecutorService(CmdletManager cmdletManager) {
     this.cmdletManager = cmdletManager;
-    this.cmdletFactory = cmdletFactory;
   }
 
   public abstract boolean isLocalService();

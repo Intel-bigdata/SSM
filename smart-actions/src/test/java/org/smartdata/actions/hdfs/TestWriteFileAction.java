@@ -22,6 +22,7 @@ import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.MockActionStatusReporter;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,19 +33,12 @@ public class TestWriteFileAction extends ActionMiniCluster {
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.setDfsClient(dfsClient);
     writeFileAction.setContext(smartContext);
+    writeFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(WriteFileAction.FILE_PATH, filePath);
     args.put(WriteFileAction.LENGTH, "" + length);
     writeFileAction.init(args);
     writeFileAction.run();
-
-    // check results
-    ActionStatus actionStatus = writeFileAction.getActionStatus();
-    Assert.assertTrue(actionStatus.isFinished());
-    Assert.assertTrue(actionStatus.isSuccessful());
-    System.out.println("Write file action running time : " +
-        StringUtils.formatTime(actionStatus.getRunningTime()));
-    Assert.assertEquals(1.0f, actionStatus.getPercentage(), 0.00001f);
   }
 
   @Test
@@ -54,6 +48,7 @@ public class TestWriteFileAction extends ActionMiniCluster {
     args.put(WriteFileAction.LENGTH, "100000000000000");
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.init(args);
+    writeFileAction.setStatusReporter(new MockActionStatusReporter());
     args.put(WriteFileAction.BUF_SIZE, "1024");
     writeFileAction.init(args);
   }

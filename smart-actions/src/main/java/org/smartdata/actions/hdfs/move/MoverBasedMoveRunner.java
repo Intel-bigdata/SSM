@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * HDFS move based move runner.
@@ -69,7 +68,7 @@ public class MoverBasedMoveRunner extends MoveRunner {
     public void run() {
       try {
         LOG.info("Start move : id = {}", id);
-        int result = ToolRunner.run(conf, moverClient, paths);
+        ToolRunner.run(conf, moverClient, paths);
         LOG.info("Finish move : id = {}", id);
       } catch (Exception e) {
         throw new RuntimeException(e);

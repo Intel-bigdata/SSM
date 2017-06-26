@@ -17,7 +17,10 @@
  */
 package org.smartdata.actions;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.smartdata.SmartContext;
+import org.smartdata.common.message.ActionFinished;
+import org.smartdata.common.message.ActionStarted;
 import org.smartdata.common.message.StatusReporter;
 
 import java.io.PrintStream;
@@ -30,26 +33,22 @@ import java.util.Map;
  */
 public abstract class SmartAction {
   private StatusReporter statusReporter;
+  private long actionId;
   private Map<String, String> actionArgs;
   private SmartContext context;
+  private PrintStream psResultOs;
+  private PrintStream psLogOs;
   protected String name;
-  protected ActionStatus actionStatus;
-  protected PrintStream resultOut;
-  protected PrintStream logOut;
 
   public SmartAction() {
     this(null);
   }
 
   public SmartAction(StatusReporter statusReporter) {
-    createStatus();
     this.statusReporter = statusReporter;
-  }
-
-  protected void createStatus() {
-    this.actionStatus = new ActionStatus();
-    resultOut = actionStatus.getResultPrintStream();
-    logOut = actionStatus.getLogPrintStream();
+    //Todo: extract the print stream out of this class
+    this.psResultOs = new PrintStream(new ByteArrayOutputStream(64 * 1024), false);
+    this.psLogOs = new PrintStream(new ByteArrayOutputStream(64 * 1024), false);
   }
 
   public String getName() {
@@ -68,8 +67,8 @@ public abstract class SmartAction {
     this.context = context;
   }
 
-  public ActionStatus getActionStatus() {
-    return actionStatus;
+  public void setStatusReporter(StatusReporter statusReporter) {
+    this.statusReporter = statusReporter;
   }
 
   /**
@@ -94,18 +93,65 @@ public abstract class SmartAction {
     actionArgs = args;
   }
 
-  protected abstract void execute() throws ActionException;
+  public long getActionId() {
+    return actionId;
+  }
+
+  public void setActionId(long actionId) {
+    this.actionId = actionId;
+  }
+
+  protected abstract void execute() throws Exception;
 
   public void run() {
-    try{
-      actionStatus.begin();
+    Exception exception = null;
+    try {
+      reportStart();
       execute();
-      actionStatus.setSuccessful(true);
-    } catch (ActionException exception) {
-      exception.printStackTrace();
-      actionStatus.setSuccessful(false);
+    } catch (Exception e) {
+      e.printStackTrace();
+      exception = e;
     } finally {
-      actionStatus.end();
+      reportFinished(exception);
+      this.stop();
     }
+  }
+
+  private void reportStart() {
+    if (this.statusReporter != null) {
+      this.statusReporter.report(new ActionStarted(this.actionId, System.currentTimeMillis()));
+    }
+  }
+
+  private void reportFinished(Exception exception) {
+    if (this.statusReporter != null) {
+      this.statusReporter.report(
+          new ActionFinished(this.actionId, System.currentTimeMillis(), exception));
+    }
+  }
+
+  protected void appendResult(String result) {
+    this.psResultOs.println(result);
+  }
+
+  protected void appendLog(String log) {
+    this.psLogOs.println(log);
+  }
+
+  public float getProgress() {
+    return 0.0F;
+  }
+
+//  public ActionStatusReport.ActionStatus getActionStatus() {
+//    return new ActionStatusReport.ActionStatus(this.actionId, getActionId());
+//  }
+
+  public ActionStatus getActionStatus() {
+    return null;
+  }
+
+  private void stop() {
+    this.psLogOs.close();
+    this.psResultOs.close();
   }
 }

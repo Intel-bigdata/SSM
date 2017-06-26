@@ -22,6 +22,7 @@ import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.client.SmartDFSClient;
+import org.smartdata.common.message.StatusReporter;
 import org.smartdata.common.utils.HadoopUtils;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
@@ -35,9 +36,15 @@ import java.util.List;
 
 public class CmdletFactory {
   private final SmartContext smartContext;
+  private final StatusReporter reporter;
 
   public CmdletFactory(SmartContext smartContext) {
+    this(smartContext, null);
+  }
+
+  public CmdletFactory(SmartContext smartContext, StatusReporter reporter) {
     this.smartContext = smartContext;
+    this.reporter = reporter;
   }
 
   public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet) {
@@ -61,6 +68,8 @@ public class CmdletFactory {
     }
     smartAction.setContext(smartContext);
     smartAction.init(launchAction.getArgs());
+    smartAction.setActionId(launchAction.getActionId());
+    smartAction.setStatusReporter(reporter);
     if (smartAction instanceof HdfsAction) {
       try {
         ((HdfsAction) smartAction).setDfsClient(
@@ -70,7 +79,6 @@ public class CmdletFactory {
         e.printStackTrace();
       }
     }
-    smartAction.getActionStatus().setId(launchAction.getActionId());
     return smartAction;
   }
 

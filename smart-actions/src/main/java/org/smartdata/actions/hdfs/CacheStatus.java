@@ -27,14 +27,13 @@ import java.util.Map;
  */
 public class CacheStatus extends ActionStatus{
   // the key named cachePoolName
-  private Map<String, List<cacheFileInfo>> cacheStatusMap;
+  private Map<String, List<CacheFileInfo>> cacheStatusMap;
   //cache for each node information,the key means Datanote host name
-  private Map<String, nodeCacheInfo> dnCacheStatusMap;
+  private Map<String, NodeCacheInfo> dnCacheStatusMap;
   private long cacheCapacityTotal;
   private long cacheUsedTotal;
   private long cacheRemainingTotal;
   private float cacheUsedPercentageTotal;
-
 
   public CacheStatus() {
     cacheCapacityTotal = 0;
@@ -43,11 +42,11 @@ public class CacheStatus extends ActionStatus{
     cacheUsedPercentageTotal = 0;
   }
 
-  public class cacheFileInfo {
+  public class CacheFileInfo {
     private String filePath;
     private int repliNum;
 
-    public cacheFileInfo() {
+    public CacheFileInfo() {
       filePath = null;
       repliNum = 0;
     }
@@ -70,14 +69,13 @@ public class CacheStatus extends ActionStatus{
   }
 
   //only contain DataNode info
-  public static class nodeCacheInfo {
+  public static class NodeCacheInfo {
     private long cacheCapacity;
     private long cacheUsed;
     private long cacheRemaining;
     private float cacheUsedPercentage;
 
-
-    public nodeCacheInfo() {
+    public NodeCacheInfo() {
       cacheCapacity = 0;
       cacheUsed = 0;
       cacheRemaining = 0;
@@ -117,19 +115,19 @@ public class CacheStatus extends ActionStatus{
     }
   }
 
-  public Map<String, List<cacheFileInfo>> getCacheStatusMap() {
+  public Map<String, List<CacheFileInfo>> getCacheStatusMap() {
     return cacheStatusMap;
   }
 
-  public void setCacheStatusMap(Map<String, List<cacheFileInfo>> cacheStatusMap) {
+  public void setCacheStatusMap(Map<String, List<CacheFileInfo>> cacheStatusMap) {
     this.cacheStatusMap = cacheStatusMap;
   }
 
-  public Map<String, nodeCacheInfo> getdnCacheStatusMap() {
+  public Map<String, NodeCacheInfo> getdnCacheStatusMap() {
     return dnCacheStatusMap;
   }
 
-  public void setdnCacheStatusMap(Map<String, nodeCacheInfo> dnCacheStatusMap) {
+  public void setdnCacheStatusMap(Map<String, NodeCacheInfo> dnCacheStatusMap) {
     this.dnCacheStatusMap = dnCacheStatusMap;
   }
 

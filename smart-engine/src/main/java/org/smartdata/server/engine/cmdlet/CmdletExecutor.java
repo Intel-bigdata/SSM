@@ -76,8 +76,8 @@ public class CmdletExecutor {
     List<ActionStatusReport.ActionStatus> actionStatusList = new ArrayList<>();
     for (Cmdlet cmdlet : this.runningCmdlets.values()) {
       for (SmartAction action : cmdlet.getActions()) {
-        ActionStatus status = action.getActionStatus();
-        actionStatusList.add(new ActionStatusReport.ActionStatus(status.getId(), status.getPercentage()));
+//        ActionStatus status = action.getActionStatus();
+//        actionStatusList.add(new ActionStatusReport.ActionStatus(status.getId(), status.getPercentage()));
       }
     }
     return new ActionStatusReport(actionStatusList);

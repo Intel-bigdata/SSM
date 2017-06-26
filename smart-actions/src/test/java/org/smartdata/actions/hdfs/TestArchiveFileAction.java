@@ -21,10 +21,9 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.MockActionStatusReporter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,20 +47,12 @@ public class TestArchiveFileAction extends ActionMiniCluster {
     ArchiveFileAction action = new ArchiveFileAction();
     action.setDfsClient(dfsClient);
     action.setContext(smartContext);
+    action.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(ArchiveFileAction.FILE_PATH, file);
     action.init(args);
-    ActionStatus status = action.getActionStatus();
     action.run();
 
-    while (!status.isFinished()) {
-      System.out.println("Mover running time : " +
-          StringUtils.formatTime(status.getRunningTime()));
-      Thread.sleep(1000);
-    }
-
-    // verify after movement
-    Assert.assertTrue(status.isSuccessful());
     LocatedBlock lb = dfsClient.getLocatedBlocks(file, 0).get(0);
     StorageType[] storageTypes = lb.getStorageTypes();
     for (StorageType storageType : storageTypes) {

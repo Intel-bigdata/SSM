@@ -4,6 +4,7 @@ import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.MockActionStatusReporter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,6 +34,7 @@ public class TestReadFileAction extends ActionMiniCluster {
   @Test
   public void testInit() throws IOException {
     ReadFileAction readFileAction = new ReadFileAction();
+    readFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(ReadFileAction.FILE_PATH, "Test");
     readFileAction.init(args);
@@ -48,17 +50,10 @@ public class TestReadFileAction extends ActionMiniCluster {
     ReadFileAction readFileAction = new ReadFileAction();
     readFileAction.setDfsClient(dfsClient);
     readFileAction.setContext(smartContext);
+    readFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(ReadFileAction.FILE_PATH, filePath);
     readFileAction.init(args);
     readFileAction.run();
-
-    // check results
-    ActionStatus actionStatus = readFileAction.getActionStatus();
-    Assert.assertTrue(actionStatus.isFinished());
-    Assert.assertTrue(actionStatus.isSuccessful());
-    System.out.println("Read file action running time : " +
-        StringUtils.formatTime(actionStatus.getRunningTime()));
-    Assert.assertEquals(1.0f, actionStatus.getPercentage(), 0.00001f);
   }
 }

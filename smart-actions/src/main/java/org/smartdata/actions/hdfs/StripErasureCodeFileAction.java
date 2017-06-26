@@ -19,7 +19,6 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionException;
 
 /**
  * An action to do strip level erasure code a file. Only for Hadoop 3.x.
@@ -28,6 +27,6 @@ public class StripErasureCodeFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(StripErasureCodeFileAction.class);
 
   @Override
-  protected void execute() throws ActionException {
+  protected void execute() throws Exception {
   }
 }

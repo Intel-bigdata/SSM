@@ -22,6 +22,7 @@ import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.MockActionStatusReporter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -70,19 +71,12 @@ public class TestSetStoragePolicyAction extends ActionMiniCluster {
     SetStoragePolicyAction action = new SetStoragePolicyAction();
     action.setDfsClient(dfsClient);
     action.setContext(smartContext);
+    action.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(SetStoragePolicyAction.FILE_PATH, file);
     args.put(SetStoragePolicyAction.STORAGE_POLICY, storagePolicy);
     action.init(args);
     action.run();
-    ActionStatus status = action.getActionStatus();
-
-    // check results
-    System.out.println("Action running time = " +
-        StringUtils.formatTime(status.getRunningTime()));
-    Assert.assertTrue(status.isFinished());
-    Assert.assertTrue(status.isSuccessful());
-    Assert.assertEquals(1.0f, status.getPercentage(), 0.00001f);
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(file);
     return fileStatus.getStoragePolicy();
   }

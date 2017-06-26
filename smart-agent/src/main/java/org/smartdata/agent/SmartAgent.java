@@ -93,7 +93,7 @@ public class SmartAgent {
       this.agent = agent;
       this.masterPath = masterPath;
       this.executor = new CmdletExecutor(this);
-      this.factory = new CmdletFactory(new SmartContext());
+      this.factory = new CmdletFactory(new SmartContext(), this);
     }
 
     @Override

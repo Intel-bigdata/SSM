@@ -21,9 +21,9 @@ package org.smartdata.actions.hdfs;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.actions.ActionException;
+import org.smartdata.actions.Utils;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -49,14 +49,13 @@ public class ReadFileAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() throws ActionException {
-    logOut.println("Action starts at "
-        + (new Date(System.currentTimeMillis())).toString() + " : Read "
-        + filePath);
+  protected void execute() throws Exception {
+    this.appendLog(
+        String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
       if (fileStatus == null) {
-        resultOut.println("ReadFile Action fails, file doesn't exist!");
+        this.appendResult("ReadFile Action fails, file doesn't exist!");
       }
       DFSInputStream dfsInputStream = dfsClient.open(filePath);
       byte[] buffer = new byte[bufferSize];
@@ -65,7 +64,7 @@ public class ReadFileAction extends HdfsAction {
       }
       dfsInputStream.close();
     } catch (IOException e) {
-      resultOut.println("ReadFile Action fails!\n" + e.getMessage());
+      this.appendResult("ReadFile Action fails!\n" + e.getMessage());
       throw new ActionException(e);
     }
   }

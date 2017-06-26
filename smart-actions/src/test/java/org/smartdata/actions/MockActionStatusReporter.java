@@ -15,18 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs;
+package org.smartdata.actions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.Assert;
+import org.smartdata.common.message.ActionFinished;
+import org.smartdata.common.message.StatusMessage;
+import org.smartdata.common.message.StatusReporter;
 
-/**
- * An action to do block level erasure code a file, for both Hadoop 2.x and Hadoop 3.x.
- */
-public class BlockErasureCodeFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(BlockErasureCodeFileAction.class);
-
+public class MockActionStatusReporter implements StatusReporter {
   @Override
-  protected void execute() throws Exception {
+  public void report(StatusMessage status) {
+    if (status instanceof ActionFinished) {
+      ActionFinished finished = (ActionFinished) status;
+      Assert.assertNull(finished.getException());
+    }
   }
 }

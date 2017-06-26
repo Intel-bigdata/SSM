@@ -18,14 +18,11 @@
 
 package org.smartdata.actions.hdfs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionException;
-import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.Utils;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 
@@ -58,29 +55,30 @@ public class WriteFileAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() throws ActionException {
-    logOut.println("Action starts at "
-        + (new Date(System.currentTimeMillis())).toString() + " : Write "
-        + filePath + String.format(" with length %d", length));
+  protected void execute() throws Exception {
+    this.appendLog(
+        String.format(
+            "Action starts at %s : Write %s with length %s",
+            Utils.getFormatedCurrentTime(), filePath, length));
     try {
       if (length == -1) {
-        resultOut.println("Write Action provides wrong length!");
+        this.appendResult("Write Action provides wrong length!");
         throw new IOException();
       }
       final OutputStream out = dfsClient.create(filePath, true);
       // generate random data with given length
       byte[] buffer = new byte[bufferSize];
       new Random().nextBytes(buffer);
-      logOut.println(String.format("Generate random data with length %d", length));
+      this.appendLog(String.format("Generate random data with length %d", length));
       // write to HDFS
       for (int pos = 0; pos < length; pos += bufferSize) {
         long writeLength = pos + bufferSize < length ? bufferSize : length - pos;
         out.write(buffer, 0, (int)writeLength);
       }
       out.close();
-      logOut.println("Write Successfully!");
+      this.appendLog("Write Successfully!");
     } catch (IOException e) {
-      resultOut.println("WriteFile Action fails!\n" + e);
+      this.appendResult("WriteFile Action fails!\n" + e);
       throw new ActionException(e);
     }
   }

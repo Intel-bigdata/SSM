@@ -43,7 +43,7 @@ public class CheckStorageAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() throws ActionException {
+  protected void execute() throws Exception {
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
       if (fileStatus == null) {
@@ -68,7 +68,7 @@ public class CheckStorageAction extends HdfsAction {
           blockInfo.append(" ");
         }
         blockInfo.append("}");
-        this.resultOut.println(blockInfo);
+        this.appendResult(blockInfo.toString());
       }
     } catch (Exception e) {
       LOG.error("CheckStorageAction failed", e);

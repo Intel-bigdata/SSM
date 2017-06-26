@@ -19,8 +19,6 @@ package org.smartdata.actions.hdfs.move;
 
 import org.smartdata.actions.ActionStatus;
 
-import java.util.UUID;
-
 /**
  * ActionStatus of Mover tool.
  */
@@ -43,20 +41,12 @@ public class MoverStatus extends ActionStatus {
     init();
   }
 
-  /**
-   * Reset status to initial value.
-   */
-  @Override
-  synchronized public void reset() {
-    init();
-  }
-
   @Override
   synchronized public float getPercentage() {
     if (!totalValueSet) {
       return 0;
     }
-    return 1.0f * movedBlocks / totalBlocks;
+    return movedBlocks * 1.0F / totalBlocks;
   }
 
   synchronized public long getTotalSize() {

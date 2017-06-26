@@ -51,8 +51,8 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   private Map<String, Set<Long>> scheduledCmdlets;
   private ITopic<StatusMessage> statusTopic;
 
-  public HazelcastExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
-    super(cmdletManager, cmdletFactory);
+  public HazelcastExecutorService(CmdletManager cmdletManager) {
+    super(cmdletManager);
     this.random = new Random();
     this.scheduledCmdlets = new HashMap<>();
     this.masterToWorkers = new HashMap<>();

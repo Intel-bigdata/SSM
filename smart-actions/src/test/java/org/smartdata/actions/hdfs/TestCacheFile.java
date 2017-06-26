@@ -23,6 +23,7 @@ import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.MockActionStatusReporter;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -46,19 +47,14 @@ public class TestCacheFile extends ActionMiniCluster {
     CacheFileAction cacheAction = new CacheFileAction();
     cacheAction.setContext(smartContext);
     cacheAction.setDfsClient(dfsClient);
+    cacheAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, file);
     cacheAction.init(args);
-    ActionStatus actionStatus = cacheAction.getActionStatus();
     try {
-      Assert.assertEquals(false, cacheAction.isCached(file));
+      Assert.assertFalse(cacheAction.isCached(file));
       cacheAction.run();
-      Assert.assertEquals(true, cacheAction.isCached(file));
-      Assert.assertTrue(actionStatus.isFinished());
-      Assert.assertTrue(actionStatus.isSuccessful());
-      System.out.println("Cache action running time : " +
-          StringUtils.formatTime(actionStatus.getRunningTime()));
-      Assert.assertEquals(1.0f, actionStatus.getPercentage(), 0.00001f);
+      Assert.assertTrue(cacheAction.isCached(file));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

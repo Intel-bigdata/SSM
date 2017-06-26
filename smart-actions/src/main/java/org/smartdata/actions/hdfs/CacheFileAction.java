@@ -26,10 +26,9 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionType;
+import org.smartdata.actions.Utils;
 
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -46,16 +45,9 @@ public class CacheFileAction extends HdfsAction {
   private short replication = 0;
 
   public CacheFileAction() {
+    super();
     this.actionType = ActionType.CacheFile;
     this.actionEvents = new LinkedBlockingQueue<>();
-    createStatus();
-  }
-
-  @Override
-  protected void createStatus() {
-    this.actionStatus = new CacheStatus();
-    resultOut = actionStatus.getResultPrintStream();
-    logOut = actionStatus.getLogPrintStream();
   }
 
   @Override
@@ -68,18 +60,14 @@ public class CacheFileAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() throws ActionException {
-    try {
-      // set cache replication as the replication number of the file if not set
-      if (replication == 0) {
-        HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
-        replication = fileStatus.isDir() ? 1 : fileStatus.getReplication();
-      }
-      addActionEvent(fileName);
-      executeCacheAction(fileName);
-    } catch (Exception e) {
-      throw new ActionException(e);
+  protected void execute() throws Exception {
+    // set cache replication as the replication number of the file if not set
+    if (replication == 0) {
+      HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+      replication = fileStatus.isDir() ? 1 : fileStatus.getReplication();
     }
+    addActionEvent(fileName);
+    executeCacheAction(fileName);
   }
 
   public void addActionEvent(String fileName) throws Exception {
@@ -91,9 +79,9 @@ public class CacheFileAction extends HdfsAction {
     if (isCached(fileName)) {
       return;
     }
-    logOut.println("Action starts at "
-        + (new Date(System.currentTimeMillis())).toString() + " : "
-        + " cache -> " + fileName);
+    this.appendLog(
+        String.format(
+            "Action starts at %s : cache -> %s", Utils.getFormatedCurrentTime(), fileName));
     addDirective(fileName);
   }
 

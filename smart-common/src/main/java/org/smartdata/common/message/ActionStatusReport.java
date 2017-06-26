@@ -17,8 +17,6 @@
  */
 package org.smartdata.common.message;
 
-import org.smartdata.common.message.StatusMessage;
-
 import java.io.Serializable;
 import java.util.List;
 

@@ -26,8 +26,8 @@ public class AgentExecutorService extends CmdletExecutorService {
 
   private AgentMaster master;
 
-  public AgentExecutorService(CmdletManager cmdletManager, CmdletFactory cmdletFactory) {
-    super(cmdletManager, cmdletFactory);
+  public AgentExecutorService(CmdletManager cmdletManager) {
+    super(cmdletManager);
     this.master = new AgentMaster(cmdletManager);
   }
 
