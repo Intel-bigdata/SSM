@@ -285,10 +285,12 @@ public class MetaStore {
   }
 
   public List<HdfsFileStatus> getFile() throws SQLException {
+    updateCache();
     return fileDao.getAll();
   }
 
   public HdfsFileStatus getFile(long fid) throws SQLException {
+    updateCache();
     return fileDao.getById(fid);
 
   }
