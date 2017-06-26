@@ -32,7 +32,28 @@ public class OperNode extends TreeNode {
     if (operatorType.isLogicalOperation()) {
       return ValueType.BOOLEAN;
     }
-    // TODO: to be completed
+
+    ValueType l = left.getValueType();
+    ValueType r = right.getValueType();
+
+    switch (operatorType) {
+      case ADD:
+        if ((l == ValueType.TIMEPOINT && r == ValueType.TIMEINTVAL)
+            || (r == ValueType.TIMEPOINT && l == ValueType.TIMEINTVAL)) {
+          return ValueType.TIMEPOINT;
+        }
+        return l;
+
+      case SUB:
+        if (l == ValueType.TIMEPOINT) {
+          if (r == ValueType.TIMEINTVAL) {
+            return ValueType.TIMEPOINT;
+          } else if (r == ValueType.TIMEPOINT) {
+            return ValueType.TIMEINTVAL;
+          }
+        }
+        return l;
+    }
     return left.getValueType();
   }
 

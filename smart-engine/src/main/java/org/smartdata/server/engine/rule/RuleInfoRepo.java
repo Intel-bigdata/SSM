@@ -125,7 +125,7 @@ public class RuleInfoRepo {
       }
 
       ExecutionContext ctx = new ExecutionContext();
-      ctx.setProperty(ExecutionContext.RULE_ID, ruleInfo.getId());
+      ctx.setRuleId(ruleInfo.getId());
       TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
           ruleInfo.getSubmitTime());
       TranslateResult tr = executor != null ? executor.getTranslateResult() :

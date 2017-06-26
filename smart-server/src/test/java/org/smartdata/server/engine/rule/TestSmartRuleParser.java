@@ -134,7 +134,7 @@ public class TestSmartRuleParser {
     }
 
     ExecutionContext ctx = new ExecutionContext();
-    ctx.setProperty(ExecutionContext.RULE_ID, 2016);
+    ctx.setRuleId(2016);
     // TODO remove/upgrade today
     // MetaStore metaStore = new MetaStore(TestDBUtil.getTestDBInstance());
     // RuleExecutor qe = new RuleExecutor(null, ctx, result, metaStore);
