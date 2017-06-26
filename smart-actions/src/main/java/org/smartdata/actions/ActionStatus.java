@@ -30,7 +30,6 @@ public class ActionStatus {
   private long startTime;
   private Boolean finished;
   private long finishTime;
-  private float percentage;
   private Boolean successful;
   private ByteArrayOutputStream resultOs;
   private PrintStream psResultOs;
@@ -63,9 +62,6 @@ public class ActionStatus {
     return finished;
   }
 
-  public long getStartTime() {
-    return startTime;
-  }
 
   public boolean isSuccessful() {
     return successful;
@@ -87,10 +83,6 @@ public class ActionStatus {
       return finishTime;
     }
     return Time.now();
-  }
-
-  public void updateProgress(float percentage) {
-    this.percentage = percentage;
   }
 
   public PrintStream getResultPrintStream() {

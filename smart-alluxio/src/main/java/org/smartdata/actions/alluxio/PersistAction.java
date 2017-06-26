@@ -36,22 +36,15 @@ public class PersistAction extends AlluxioAction {
   }
 
   @Override
-  protected void execute() {
-    try {
-      LOG.info("Executing Alluxio action: PersistAction, path:"
-          + uri.toString());
-      persistInternal(uri);
-      if (!exceptionMessages.isEmpty()) {
-        for (String message : exceptionMessages) {
-          LOG.warn(message);
-        }
-      } else {
-        LOG.info("Path " + uri + " was successfully persisted.");
+  protected void execute() throws Exception {
+    LOG.info("Executing Alluxio action: PersistAction, path:" + uri.toString());
+    persistInternal(uri);
+    if (!exceptionMessages.isEmpty()) {
+      for (String message : exceptionMessages) {
+        LOG.warn(message);
       }
-    } catch (Exception e) {
-      actionStatus.end();
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
+    } else {
+      LOG.info("Path " + uri + " was successfully persisted.");
     }
   }
 

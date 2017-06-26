@@ -27,15 +27,9 @@ public class FreeAction extends AlluxioAction{
   }
 
   @Override
-  protected void execute() {
-    try {
-      LOG.info("Executing Alluxio action: FreeAction, file:" + uri.toString());
-      alluxioFs.free(uri);
-      LOG.info("File " + uri + " was successfully freed.");
-    } catch (Exception e) {
-      actionStatus.end();
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    }   
+  protected void execute() throws Exception {
+    LOG.info("Executing Alluxio action: FreeAction, file:" + uri.toString());
+    alluxioFs.free(uri);
+    LOG.info("File " + uri + " was successfully freed.");
   }
 }

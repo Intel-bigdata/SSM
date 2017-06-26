@@ -47,7 +47,7 @@ public class CheckStorageAction extends HdfsAction {
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
       if (fileStatus == null) {
-        throw new ActionException("File does not exit.");
+        throw new ActionException("File does not exist.");
       }
       long length = fileStatus.getLen();
       List<LocatedBlock> locatedBlocks = dfsClient.getLocatedBlocks(
