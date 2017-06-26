@@ -233,11 +233,11 @@ Example:
 ### Get Smart cmdlets status
 * Submit a HTTP GET request.
 ```
-    https://<host>:<port>/smart/api/v1/cmdlets/status
+    https://<host>:<port>/smart/api/v1/cmdlets/{cmdletId}/status
 ```
 Example:
 ```
-    GET https://<host>:<port>/smart/api/v1/cmdlets/status
+    GET https://<host>:<port>/smart/api/v1/cmdlets/1/status
     Code:200
     Content-Type:application/json
 ```
@@ -274,14 +274,14 @@ Example:
     Code:200
     Content-Type:application/json
 ```
-### Get Smart cmdlets submit
-* Submit a HTTP GET request.
+### Submit a Smart cmdlet
+* Submit a HTTP POST request.
 ```
-    https://<host>:<port>/smart/api/v1/cmdlets/submit
+    https://<host>:<port>/smart/api/v1/cmdlets/submit/{actionType}
 ```
 Example:
 ```
-    GET https://<host>:<port>/smart/api/v1/cmdlets/submit
+    Post https://<host>:<port>/smart/api/v1/cmdlets/submit/write?args=...
     Code:200
     Content-Type:application/json
 ```
