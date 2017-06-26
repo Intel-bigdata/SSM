@@ -17,63 +17,61 @@
  */
 package org.smartdata.server.rest;
 
-import com.google.gson.Gson;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionRegistry;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 /**
- * Action APIs.
+ * Cmdlets APIs.
  */
-@Path("/smart/api/v1/actions")
+@Path("/smart/api/v1/cmdlets")
 @Produces("application/json")
-public class ActionRestApi {
-  SmartEngine ssm;
+public class CmdletRestApi {
+  private SmartEngine ssm;
   private static final Logger logger =
-      LoggerFactory.getLogger(ActionRestApi.class);
-  Gson gson = new Gson();
+      LoggerFactory.getLogger(CmdletRestApi.class);
 
-  public ActionRestApi(SmartEngine ssm) {
+  public CmdletRestApi(SmartEngine ssm) {
     this.ssm = ssm;
   }
 
   @GET
-  @Path("/registry/list")
-  public Response actionTypes() throws Exception {
+  @Path("/{cmdletId}/status")
+  public Response status(@PathParam("cmdletId") String cmdletId)
+      throws Exception {
+    Long longNumber = Long.parseLong(cmdletId);
     return new JsonResponse<>(Response.Status.OK,
-      ActionRegistry.supportedActions()).build();
+        ssm.getCmdletExecutor().getCmdletInfo(longNumber)).build();
   }
 
   @GET
   @Path("/list")
-  public Response actionList() throws Exception {
+  public Response list() throws Exception {
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().listNewCreatedActions(20)).build();
+        ssm.getCmdletExecutor().listCmdletsInfo(-1, null))
+        .build();
   }
 
-  @GET
-  @Path("/{actionId}/status")
-  public void status() {
-  }
-
-  @GET
-  @Path("/{actionId}/detail")
-  public Response detail(@PathParam("actionId") String actionId) throws Exception {
-    Long longNumer = Long.parseLong(actionId);
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().getActionInfo(longNumer)).build();
-  }
-
-  @GET
-  @Path("/{actionId}/summary")
-  public void summary() {
+  @POST
+  @Path("/submit/{actionType}")
+  public Response submitAction(String args,
+      @PathParam("actionType") String actionType) {
+    try {
+      return new JsonResponse<>(Response.Status.CREATED, ssm.getCmdletExecutor()
+          .submitCmdlet(actionType + " " + args)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ActionRestApi while adding action ", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 }
