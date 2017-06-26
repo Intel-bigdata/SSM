@@ -20,60 +20,34 @@ package org.smartdata.server.rest;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionRegistry;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 /**
- * Action APIs.
+ * Conf APIs.
  */
-@Path("/smart/api/v1/actions")
+@Path("/smart/api/v1")
 @Produces("application/json")
-public class ActionRestApi {
+public class ConfRestApi {
   SmartEngine ssm;
   private static final Logger logger =
-      LoggerFactory.getLogger(ActionRestApi.class);
+      LoggerFactory.getLogger(ConfRestApi.class);
   Gson gson = new Gson();
 
-  public ActionRestApi(SmartEngine ssm) {
+  public ConfRestApi(SmartEngine ssm) {
     this.ssm = ssm;
   }
 
   @GET
-  @Path("/registry/list")
-  public Response actionTypes() {
-    return new JsonResponse<>(Response.Status.OK,
-      ActionRegistry.supportedActions()).build();
+  @Path("/conf")
+  public Response conf() {
+    return new JsonResponse<>(Response.Status.OK, "",
+        ssm.getConf().toString()).build();
   }
 
-  @GET
-  @Path("/list")
-  public Response actionList() {
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().listNewCreatedActions(20)).build();
-  }
-
-  @GET
-  @Path("/{actionId}/status")
-  public void status() {
-  }
-
-  @GET
-  @Path("/{actionId}/detail")
-  public Response detail(@PathParam("actionId") String actionId) {
-    Long longNumer = Long.parseLong(actionId);
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().getActionInfo(longNumer)).build();
-  }
-
-  @GET
-  @Path("/{actionId}/summary")
-  public void summary() {
-  }
 }
