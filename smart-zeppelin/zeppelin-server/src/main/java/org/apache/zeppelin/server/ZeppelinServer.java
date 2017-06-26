@@ -214,7 +214,7 @@ public class ZeppelinServer extends Application {
 
     // when zeppelin is started inside of ide (especially for eclipse)
     // for graceful shutdown, input any key in console window
-    if (System.getenv("ZEPPELIN_IDENT_STRING") == null) {
+    /*if (System.getenv("ZEPPELIN_IDENT_STRING") == null) {
       try {
         System.in.read();
       } catch (IOException e) {
@@ -224,7 +224,7 @@ public class ZeppelinServer extends Application {
     }
 
     jettyWebServer.join();
-    ZeppelinServer.notebook.getInterpreterSettingManager().close();
+    ZeppelinServer.notebook.getInterpreterSettingManager().close();*/
   }
 
   private static Server setupJettyServer(ZeppelinConfiguration conf) {
