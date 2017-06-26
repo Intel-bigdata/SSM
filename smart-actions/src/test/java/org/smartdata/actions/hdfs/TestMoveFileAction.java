@@ -25,6 +25,9 @@ import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.MockActionStatusReporter;
 import org.smartdata.actions.hdfs.move.MoverStatus;
+import org.smartdata.common.message.ActionFinished;
+import org.smartdata.common.message.StatusMessage;
+import org.smartdata.common.message.StatusReporter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -134,20 +137,21 @@ public class TestMoveFileAction extends ActionMiniCluster {
     MoveFileAction moveFileAction = new MoveFileAction();
     moveFileAction.setDfsClient(dfsClient);
     moveFileAction.setContext(smartContext);
-    moveFileAction.setStatusReporter(new MockActionStatusReporter());
+    moveFileAction.setStatusReporter(new StatusReporter() {
+      @Override
+      public void report(StatusMessage status) {
+        if (status instanceof ActionFinished) {
+          ActionFinished finished = (ActionFinished) status;
+          Assert.assertNotNull(finished.getException());
+        }
+      }
+    });
 
     Map<String, String> args = new HashMap();
     args.put(MoveFileAction.FILE_PATH, dir);
     args.put(MoveFileAction.STORAGE_POLICY, "ALL_SSD");
     moveFileAction.init(args);
-    MoverStatus status = moveFileAction.getStatus();
-    try {
-      moveFileAction.run();
-    } catch (Exception e) {
-      Assert.assertTrue(status.isFinished());
-      Assert.assertFalse(status.isSuccessful());
-      Assert.assertEquals(1.0f, status.getPercentage(), 0.0000001f);
-    }
+    moveFileAction.run();
   }
 
   @Test
@@ -178,20 +182,9 @@ public class TestMoveFileAction extends ActionMiniCluster {
     Map<String, String> args1 = new HashMap();
     args1.put(ArchiveFileAction.FILE_PATH, file1);
     action1.init(args1);
-
     action1.run();
 
-    MoverStatus moverStatus = action1.getStatus();
-    while (!moverStatus.isFinished()) {
-      System.out.println(
-          "Mover 1 running time : " + StringUtils.formatTime(moverStatus.getRunningTime()));
-      System.out.println(
-          "Moved/Total : " + moverStatus.getMovedBlocks() + "/" + moverStatus.getTotalBlocks());
-      System.out.println("Move percentage : " + moverStatus.getPercentage() * 100 + "%");
-      Thread.sleep(3000);
-    }
-    Assert.assertTrue(moverStatus.isSuccessful());
-    System.out.println("Mover 1 total running time : " +
-        StringUtils.formatTime(moverStatus.getRunningTime()));
+    MoverStatus status = action1.getStatus();
+    Assert.assertEquals(1.0f, status.getPercentage(), 0.0000001f);
   }
 }
