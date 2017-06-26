@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.server.ZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,6 @@ public class SmartServer {
   private ConfManager confMgr;
   private SmartConf conf;
   private SmartEngine engine;
-  private ZeppelinServer zeppelinServer;
   private ServerContext context;
 
   private SmartServiceState serviceState = SmartServiceState.SAFEMODE;
@@ -194,15 +194,11 @@ public class SmartServer {
   }
 
   /**
-   * Bring up all the daemons threads needed.
+   * Bring up all the daemon threads needed.
    *
    * @throws Exception
    */
   private void run() throws Exception {
-    // Init and start RPC server and REST server
-    rpcServer.start();
-    httpServer.start();
-
     boolean enabled = conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLED_KEY,
         SmartConfKeys.DFS_SSM_ENABLED_DEFAULT);
 
@@ -212,6 +208,12 @@ public class SmartServer {
     } else {
       serviceState = SmartServiceState.DISABLED;
     }
+
+    rpcServer.start();
+    httpServer.start();
+
+    ZeppelinConfiguration zeppelinConf = ZeppelinConfiguration.create();
+    ZeppelinServer.startZeppelinServer(zeppelinConf);
   }
 
   private void startEngines() throws Exception {

@@ -163,10 +163,13 @@ public class ZeppelinServer extends Application {
   }
 
   public static void main(String[] args) throws InterruptedException {
-
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     conf.setProperty("args", args);
 
+    startZeppelinServer(conf);
+  }
+
+  public static void startZeppelinServer(ZeppelinConfiguration conf) throws InterruptedException {
     jettyWebServer = setupJettyServer(conf);
 
     ContextHandlerCollection contexts = new ContextHandlerCollection();
