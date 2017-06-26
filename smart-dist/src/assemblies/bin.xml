@@ -23,11 +23,7 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${basedir}/../smart-server/src/main/conf</directory>
-            <outputDirectory>/smart-data-${project.version}/conf</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${basedir}/../smart-common/src/main/conf</directory>
+            <directory>${basedir}/../conf</directory>
             <outputDirectory>/smart-data-${project.version}/conf</outputDirectory>
         </fileSet>
     </fileSets>
