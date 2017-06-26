@@ -19,8 +19,8 @@
 -->
 
 <!-- Do not modify this file directly.  Instead, copy entries that you -->
-<!-- wish to modify from this file into smartEngine-site.xml and change them -->
-<!-- there.  If smartEngine-site.xml does not already exist, create it.      -->
+<!-- wish to modify from this file into ssm-site.xml and change them -->
+<!-- there.  If ssm-site.xml does not already exist, create it.      -->
 
 <configuration>
   <property>
