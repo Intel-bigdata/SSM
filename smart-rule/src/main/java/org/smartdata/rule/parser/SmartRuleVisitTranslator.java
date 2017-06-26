@@ -749,10 +749,10 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       boolean procAccLt = false;
       String res;
       if (op.length() > 0) {
-        // TODO: define more formal spec
         String ropStr = rop.getRet();
         if (optype == OperatorType.MATCHES) {
           ropStr = ropStr.replace("*", "%");
+          ropStr = ropStr.replace("?", "_");
         }
         if (procAcc) {
           switch (optype) {
@@ -801,7 +801,6 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
             } else {
               return new NodeTransResult(null, "0");
             }
-          // TODO: for other types
           default:
             throw new IOException("Type = " + vr.getValueType().toString());
         }

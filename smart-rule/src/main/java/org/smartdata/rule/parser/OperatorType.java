@@ -25,12 +25,12 @@ public enum OperatorType {
   MUL("*", false),
   DIV("/", false),
   MOD("%", false),
-  GT(">", true), // ">"
-  GE(">=", true), // ">="
-  LT("<", true), // "<"
-  LE("<=", true), // "<="
-  EQ("==", true), // "=="
-  NE("!=", true, "<>"), // "!="
+  GT(">", true),
+  GE(">=", true),
+  LT("<", true),
+  LE("<=", true),
+  EQ("==", true),
+  NE("!=", true, "<>"),
   MATCHES("matches", true, "LIKE"),
   AND("and", true, "AND"),
   OR("or", true, "OR"),

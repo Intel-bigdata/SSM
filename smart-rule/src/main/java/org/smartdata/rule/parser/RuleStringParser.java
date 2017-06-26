@@ -37,7 +37,6 @@ import java.util.Map;
 
 /**
  * Parser a rule string and translate it.
- * // TODO: Refine exceptions and error handling
  */
 public class RuleStringParser {
   private String rule;
@@ -64,8 +63,8 @@ public class RuleStringParser {
                             RecognitionException e) {
       List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
       Collections.reverse(stack);
-      parserErrorMessage += "Line " + line + ":" + charPositionInLine + " : "
-          + msg + "\n";
+      parserErrorMessage += "Line " + line + ", Char " + charPositionInLine
+          + " : " + msg + "\n";
       parseErrors.add(e);
     }
   }
@@ -104,8 +103,6 @@ public class RuleStringParser {
     parser.removeErrorListeners();
     parser.addErrorListener(new SSMRuleErrorListener());
     ParseTree tree = parser.ssmrule();
-
-    // TODO: return errors as much as possible
 
     if (parseErrors.size() > 0) {
       throw new IOException(parserErrorMessage);
