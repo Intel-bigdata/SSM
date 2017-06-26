@@ -60,7 +60,7 @@
     <hazelcast.version>3.7.8</hazelcast.version>
     <guava.version>11.0.2</guava.version>
     <test.build.dir>${project.build.directory}/test-dir</test.build.dir>
-    <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
+    <!--maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile-->
   </properties>
 
   <dependencyManagement>
