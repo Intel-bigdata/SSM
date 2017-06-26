@@ -189,6 +189,21 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     return null;
   }
 
+  /**
+   * Delete all cmdlets related with rid
+   * @param rid
+   * @throws IOException
+   */
+  public void deleteCmdletByRule(long rid) throws IOException {
+    List<CmdletInfo> cmdletInfoList = listCmdletsInfo(rid, null);
+    if (cmdletInfoList == null || cmdletInfoList.size() == 0) {
+      return;
+    }
+    for (CmdletInfo cmdletInfo : cmdletInfoList) {
+      deleteCmdlet(cmdletInfo.getCid());
+    }
+  }
+
   public List<CmdletInfo> listCmdletsInfo(long rid,
       CmdletState cmdletState) throws IOException {
     List<CmdletInfo> retInfos = new ArrayList<>();
@@ -773,6 +788,9 @@ public class CmdletExecutor extends AbstractService implements Runnable {
       }
       LOG.info("Cmdlet {} finished!", cmdsAll.get(cid));
       // Mark cmdletInfo as DONE
+      if (!cmdsAll.containsKey(cid)) {
+        return;
+      }
       cmdsAll.get(cid).setState(state);
       // Mark cmdlet as DONE
       cmdletPool.setFinished(cid, state);

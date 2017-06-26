@@ -49,6 +49,7 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(cmdletDescriptor.actionSize() == actionInfos.size());
   }
 
+
   @Test
   public void testfileLock() throws Exception {
     waitTillSSMExitSafeMode();
@@ -114,6 +115,20 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     Assert.assertTrue(ssm
         .getCmdletExecutor().getCmdletInfo(0) != null);
     ssm.getCmdletExecutor().deleteCmdlet(0);
+    Assert.assertTrue(ssm
+        .getCmdletExecutor()
+        .listCmdletsInfo(1, null).size() == 0);
+    // Test delete all cmdlets under rid = 1
+    ssm.getCmdletExecutor().submitCmdlet(
+        new CmdletDescriptor("allssd -file /testMoveFile/file1", 1));
+    ssm.getCmdletExecutor().submitCmdlet(
+        new CmdletDescriptor("write -file /test1 -length 1024", 1));
+    ssm.getCmdletExecutor().submitCmdlet(
+        new CmdletDescriptor("write -file /test -length 1024", 1));
+    Assert.assertTrue(ssm
+        .getCmdletExecutor()
+        .listCmdletsInfo(1, null).size() == 3);
+    ssm.getCmdletExecutor().deleteCmdletByRule(1);
     Assert.assertTrue(ssm
         .getCmdletExecutor()
         .listCmdletsInfo(1, null).size() == 0);
