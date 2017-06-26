@@ -165,6 +165,31 @@ public class FileInfo {
         .build();
   }
 
+  public boolean equals(FileInfo fileInfo) {
+    if (this == fileInfo) {
+      return true;
+    }
+    if (fileInfo == null || getClass() != fileInfo.getClass()) {
+      return false;
+    }
+    if (fileId != fileInfo.fileId
+        || length != fileInfo.length
+        || isdir != fileInfo.isdir
+        || block_replication != fileInfo.block_replication
+        || blocksize != fileInfo.blocksize
+        || modification_time != fileInfo.modification_time
+        || access_time != fileInfo.access_time
+        || permission != fileInfo.permission
+        || storagePolicy != fileInfo.storagePolicy) {
+      return false;
+    }
+    if ((path != null ? !path.equals(fileInfo.path) : fileInfo.path != null)
+        || (owner != null ? !owner.equals(fileInfo.owner) : fileInfo.owner != null)) {
+      return false;
+    }
+    return group != null ? group.equals(fileInfo.group) : fileInfo.group == null;
+  }
+
   public static Builder newBuilder() {
     return new Builder();
   }
