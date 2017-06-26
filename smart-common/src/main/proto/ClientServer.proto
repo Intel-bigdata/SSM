@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.ssm.protocol;
+package org.apache.hadoop.smartEngine.protocol;
 
 option java_package = "org.smartdata.common.protocol";
 option java_outer_classname = "ClientServerProto";
