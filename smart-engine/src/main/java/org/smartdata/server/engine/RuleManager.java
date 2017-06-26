@@ -24,6 +24,7 @@ import org.smartdata.actions.ActionRegistry;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
@@ -56,12 +57,16 @@ public class RuleManager extends AbstractService {
   private ConcurrentHashMap<Long, RuleInfoRepo> mapRules =
       new ConcurrentHashMap<>();
 
-  // TODO: configurable
-  public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
+  public ExecutorScheduler execScheduler;
 
   public RuleManager(ServerContext context,
                      StatesManager statesManager, CmdletExecutor cmdletExecutor) {
     super(context);
+
+    int numExecutors = context.getConf().getInt(
+        SmartConfKeys.DFS_SSM_RULE_EXECUTORS_KEY,
+        SmartConfKeys.DFS_SSM_RULE_EXECUTORS_DEFAULT);
+    execScheduler = new ExecutorScheduler(numExecutors);
 
     this.statesManager = statesManager;
     this.cmdletExecutor = cmdletExecutor;

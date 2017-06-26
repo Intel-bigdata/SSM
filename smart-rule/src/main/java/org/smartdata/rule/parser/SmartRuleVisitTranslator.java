@@ -20,7 +20,6 @@ package org.smartdata.rule.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.common.actions.ActionType;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;

@@ -30,6 +30,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * Contains detailed info about a rule.
+ */
 public class RuleInfoRepo {
   private RuleInfo ruleInfo = null;
   private RuleExecutor executor = null;
