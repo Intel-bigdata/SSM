@@ -17,17 +17,21 @@
  */
 package org.smartdata.integration;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 import io.restassured.response.Response;
-import org.hamcrest.Matchers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.smartdata.common.models.ActionInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.integration.cluster.MiniSmartCluster;
 import org.smartdata.integration.cluster.SmartCluster;
+
+import java.util.List;
 
 
 /**
@@ -71,18 +75,19 @@ public class IntegrationTest {
     Response response0 = RestAssured.get("/api/v1.0/actionlist");
     String json0 = response0.asString();
     RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello -length 10");
-    Thread.sleep(2000);
+    //Thread.sleep(2000);
     RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello2 -length 10");
-    Thread.sleep(2000);
+    //Thread.sleep(2000);
     RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello3 -length 10");
-    Thread.sleep(2000);
+    //Thread.sleep(2000);
     RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello4 -length 10");
-    Thread.sleep(2000);
+    //Thread.sleep(2000);
     RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello5 -length 10");
 
     Thread.sleep(5000);
     Response response = RestAssured.get("/api/v1.0/actionlist");
     String json = response.asString();
+    List<ActionInfo> actionInfos = new Gson().fromJson(json, new TypeToken<List<ActionInfo>>(){}.getType());
     System.out.print(json);
 
     /*response.then().body("actionId[0]", Matchers.equalTo(5))
