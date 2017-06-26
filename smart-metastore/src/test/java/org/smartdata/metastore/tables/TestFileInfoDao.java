@@ -45,7 +45,7 @@ public class TestFileInfoDao extends TestDaoUtil {
 
   @Test
   public void testInsetGetDeleteFiles() throws Exception {
-    String path = "testFile";
+    String path = "/testFile";
     long length = 123L;
     boolean isDir = false;
     short blockReplication = 1;
@@ -66,7 +66,7 @@ public class TestFileInfoDao extends TestDaoUtil {
     FileInfo fileInfo = new FileInfo(path, fileId, length, isDir, blockReplication,
         blockSize, modTime, accessTime, permission, owner, group, storagePolicy);
     fileInfoDao.insert(fileInfo);
-    FileInfo file1 = fileInfoDao.getByPath("testFile");
+    FileInfo file1 = fileInfoDao.getByPath("/testFile");
     Assert.assertTrue(fileInfo.equals(file1));
     FileInfo file2 = fileInfoDao.getById(fileId);
     Assert.assertTrue(fileInfo.equals(file2));
@@ -81,5 +81,33 @@ public class TestFileInfoDao extends TestDaoUtil {
     fileInfoDao.deleteAll();
     fileInfos = fileInfoDao.getAll();
     Assert.assertTrue(fileInfos.size() == 0);
+  }
+
+  @Test
+  public void testInsertUpdateFiles() throws Exception {
+    String path = "/testFile";
+    long length = 123L;
+    boolean isDir = false;
+    short blockReplication = 1;
+    long blockSize = 128 * 1024L;
+    long modTime = 123123123L;
+    long accessTime = 123123120L;
+    short permission = 1;
+    String owner = "root";
+    String group = "admin";
+    long fileId = 312321L;
+    byte storagePolicy = 0;
+    Map<Integer, String> mapOwnerIdName = new HashMap<>();
+    mapOwnerIdName.put(1, "root");
+    Map<Integer, String> mapGroupIdName = new HashMap<>();
+    mapGroupIdName.put(1, "admin");
+    fileInfoDao.updateUsersMap(mapOwnerIdName);
+    fileInfoDao.updateGroupsMap(mapGroupIdName);
+    FileInfo fileInfo = new FileInfo(path, fileId, length, isDir, blockReplication,
+        blockSize, modTime, accessTime, permission, owner, group, storagePolicy);
+    fileInfoDao.insert(fileInfo);
+    fileInfoDao.update(path, 10);
+    FileInfo file = fileInfoDao.getById(fileId);
+    Assert.assertTrue(10 == file.getStoragePolicy());
   }
 }

@@ -110,6 +110,11 @@ public class FileInfoDao {
     }
   }
 
+  public int update(String path, int storagePolicy) {
+    final String sql = "UPDATE files SET sid =? WHERE path = ?;";
+    return this.jdbcTemplate.update(sql, storagePolicy, path);
+  }
+
   public void deleteById(long fid) {
     final String sql = "delete from files where fid = ?";
     jdbcTemplate.update(sql, fid);
