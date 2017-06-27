@@ -227,7 +227,6 @@ public class MetaUtil {
   }
 
   public static MetaStore getDBAdapter(SmartConf conf) throws Exception {
-    // TODO: move to etc directory
     URL pathUrl = ClassLoader.getSystemResource("");
     String path = pathUrl.getPath();
 
@@ -244,6 +243,13 @@ public class MetaUtil {
       String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
       if (url != null) {
         p.setProperty("url", url);
+      }
+
+      String purl = p.getProperty("url");
+      if (purl == null || purl.length() == 0) {
+        purl = getDefaultSqliteDB(); // For testing
+        p.setProperty("url", purl);
+        LOG.warn("Database URL not specified, using " + purl);
       }
 
       for (String key : p.stringPropertyNames()) {
@@ -281,23 +287,6 @@ public class MetaUtil {
       }
     }
     return null;
-  }
-
-  private static Connection getDBConnection(SmartConf conf) throws Exception {
-    String dburi = getDBUri(conf);
-    LOG.info("Database file URI = " + dburi);
-    Connection conn = MetaUtil.createConnection(dburi.toString(), null, null);
-    return conn;
-  }
-
-  private static String getDBUri(SmartConf conf) throws Exception {
-    // TODO: Find and verify the latest SSM DB available
-    String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
-    if (url == null) {
-      LOG.warn("No database specified for SSM, "
-          + "will use a default one instead.");
-    }
-    return url != null ? url : getDefaultSqliteDB() ;
   }
 
   /**

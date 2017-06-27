@@ -49,6 +49,6 @@ script="${BASH_SOURCE-$0}"
 bin=$(cd -P -- "$(dirname -- "${script}")" >/dev/null && pwd -P)
 
 SMART_HOME=${bin}/..
-CLASS_PATH=$SMART_HOME/lib/*:.
+CLASS_PATH=$SMART_HOME/lib/*:$SMART_HOME/conf:.
 java $DEBUG -classpath "$CLASS_PATH" org.smartdata.server.SmartServer $args
 
