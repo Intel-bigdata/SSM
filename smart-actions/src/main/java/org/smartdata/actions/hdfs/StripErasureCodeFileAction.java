@@ -27,6 +27,6 @@ public class StripErasureCodeFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(StripErasureCodeFileAction.class);
 
   @Override
-  protected void execute() {
+  protected void execute() throws Exception {
   }
 }

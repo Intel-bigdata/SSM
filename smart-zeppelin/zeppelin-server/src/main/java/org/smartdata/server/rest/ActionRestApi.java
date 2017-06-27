@@ -62,7 +62,7 @@ public class ActionRestApi {
   public Response actionList() {
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletExecutor().listNewCreatedActions(20)).build();
+          smartEngine.getCmdletManager().listNewCreatedActions(20)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
@@ -76,7 +76,7 @@ public class ActionRestApi {
     Long longNumber = Long.parseLong(actionId);
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletExecutor().getActionInfo(longNumber)).build();
+          smartEngine.getCmdletManager().getActionInfo(longNumber)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing actions", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
@@ -86,7 +86,10 @@ public class ActionRestApi {
 
   @GET
   @Path("/{actionId}/detail")
-  public void detail() throws Exception {
+  public Response detail(@PathParam("actionId") String actionId) throws Exception {
+    Long longNumer = Long.parseLong(actionId);
+    return new JsonResponse<>(Response.Status.OK,
+        smartEngine.getCmdletManager().getActionInfo(longNumer)).build();
   }
 
   @GET

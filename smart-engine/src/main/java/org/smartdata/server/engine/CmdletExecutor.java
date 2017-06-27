@@ -56,6 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Schedule and execute cmdlets passed down.
  */
+@Deprecated
 public class CmdletExecutor extends AbstractService implements Runnable {
   static final Logger LOG = LoggerFactory.getLogger(CmdletExecutor.class);
 
@@ -450,7 +451,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
           new SmartDFSClient(HadoopUtils.getNameNodeUri(serverContext.getConf()),
               serverContext.getConf(), getRpcServerAddress()));
     }
-    smartAction.getActionStatus().setId(actionInfo.getActionId());
+    //smartAction.getActionStatus().setId(actionInfo.getActionId());
     return smartAction;
   }
 
@@ -465,7 +466,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
           new SmartDFSClient(HadoopUtils.getNameNodeUri(serverContext.getConf()),
               serverContext.getConf(), getRpcServerAddress()));
     }
-    smartAction.getActionStatus().setId(maxActionId);
+    //smartAction.getActionStatus().setId(maxActionId);
     maxActionId++;
     return smartAction;
   }
@@ -624,7 +625,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     if (smartActions.size() == 0) {
       return null;
     }
-    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]), new Callback(), metaStore);
+    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]));
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
@@ -676,16 +677,17 @@ public class CmdletExecutor extends AbstractService implements Runnable {
 
   private ActionInfo createActionInfoFromAction(SmartAction smartAction,
       long cid) throws IOException {
-    ActionStatus status = smartAction.getActionStatus();
-    // Replace special character with
-    return new ActionInfo(status.getId(),
-        cid, smartAction.getName(),
-        smartAction.getArguments(),
-        StringEscapeUtils.escapeJava(status.getResultStream().toString("UTF-8")),
-        StringEscapeUtils.escapeJava(status.getLogStream().toString("UTF-8")),
-        status.isSuccessful(), status.getStartTime(),
-        status.isFinished(), status.getFinishTime(),
-        status.getPercentage());
+//    ActionStatus status = smartAction.getActionStatus();
+//    // Replace special character with
+//    return new ActionInfo(status.getId(),
+//        cid, smartAction.getName(),
+//        smartAction.getArguments(),
+//        StringEscapeUtils.escapeJava(status.getResultStream().toString("UTF-8")),
+//        StringEscapeUtils.escapeJava(status.getLogStream().toString("UTF-8")),
+//        status.isSuccessful(), status.getStartTime(),
+//        status.isFinished(), status.getFinishTime(),
+//        status.getPercentage());
+    return null;
   }
 
   private List<ActionInfo> getActionInfoFromCmdlet(long cid) throws IOException {

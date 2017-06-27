@@ -21,6 +21,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
+import org.smartdata.SmartContext;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.common.message.StatusReporter;
@@ -46,8 +47,8 @@ public class HazelcastWorker implements StatusReporter {
   private CmdletFactory factory;
   private Future<?> fetcher;
 
-  public HazelcastWorker(CmdletFactory factory) {
-    this.factory = factory;
+  public HazelcastWorker(SmartContext smartContext) {
+    this.factory = new CmdletFactory(smartContext, this);
     this.cmdletExecutor = new CmdletExecutor(this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.instance = HazelcastInstanceProvider.getInstance();

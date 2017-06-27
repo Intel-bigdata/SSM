@@ -39,23 +39,16 @@ public class LoadAction extends AlluxioAction {
   }
 
   @Override
-  protected void execute() {
-    try {
-      LOG.info("Executing Alluxio action: LoadAction, path:" + uri.toString());
-      loadInternal(uri);
-      if (!exceptionMessages.isEmpty()){
-        for (String message : exceptionMessages){
-          LOG.warn(message);
-        }
-      } else {
-        LOG.info("Path " + uri + " was successfully loaded.");
+  protected void execute() throws Exception {
+    LOG.info("Executing Alluxio action: LoadAction, path:" + uri.toString());
+    loadInternal(uri);
+    if (!exceptionMessages.isEmpty()) {
+      for (String message : exceptionMessages) {
+        LOG.warn(message);
       }
-    } catch (Exception e) {
-      actionStatus.end();
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
+    } else {
+      LOG.info("Path " + uri + " was successfully loaded.");
     }
-    
   }
 
   // load file into memory recursively
@@ -87,6 +80,5 @@ public class LoadAction extends AlluxioAction {
         }
       }
     }
-
   }
 }

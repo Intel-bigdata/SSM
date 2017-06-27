@@ -20,12 +20,10 @@ package org.smartdata.actions.hdfs;
 
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.ActionException;
+import org.smartdata.actions.Utils;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -51,16 +49,13 @@ public class ReadFileAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() {
-    logOut.println("Action starts at "
-        + (new Date(System.currentTimeMillis())).toString() + " : Read "
-        + filePath);
-    ActionStatus actionStatus = getActionStatus();
-    actionStatus.begin();
+  protected void execute() throws Exception {
+    this.appendLog(
+        String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
       if (fileStatus == null) {
-        resultOut.println("ReadFile Action fails, file doesn't exist!");
+        this.appendResult("ReadFile Action fails, file doesn't exist!");
       }
       DFSInputStream dfsInputStream = dfsClient.open(filePath);
       byte[] buffer = new byte[bufferSize];
@@ -68,12 +63,9 @@ public class ReadFileAction extends HdfsAction {
       while (dfsInputStream.read(buffer, 0, bufferSize) != -1) {
       }
       dfsInputStream.close();
-      actionStatus.setSuccessful(true);
     } catch (IOException e) {
-      actionStatus.setSuccessful(false);
-      resultOut.println("ReadFile Action fails!\n" + e.getMessage());
-    } finally {
-      actionStatus.end();
+      this.appendResult("ReadFile Action fails!\n" + e.getMessage());
+      throw new ActionException(e);
     }
   }
 }

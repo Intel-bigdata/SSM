@@ -32,6 +32,7 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.MetaUtil;
 import org.smartdata.server.engine.CmdletExecutor;
+import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
@@ -85,8 +86,8 @@ public class SmartServer {
     return engine.getRuleManager();
   }
 
-  public CmdletExecutor getCmdletExecutor() {
-    return engine.getCmdletExecutor();
+  public CmdletManager getCmdletManager() {
+    return engine.getCmdletManager();
   }
 
   public MetaStore getMetaStore() {

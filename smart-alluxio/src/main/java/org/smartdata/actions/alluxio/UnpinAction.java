@@ -30,16 +30,10 @@ public class UnpinAction extends AlluxioAction {
   }
 
   @Override
-  protected void execute() {
-    try {
-      LOG.info("Executing Alluxio action: UnpinAction, path:" + uri.toString());
-      SetAttributeOptions options = SetAttributeOptions.defaults().setPinned(false);
-      alluxioFs.setAttribute(uri, options);
-      LOG.info("File " + uri + " was successfully unpinned.");
-    } catch (Exception e) {
-      actionStatus.end();
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    }
+  protected void execute() throws Exception {
+    LOG.info("Executing Alluxio action: UnpinAction, path:" + uri.toString());
+    SetAttributeOptions options = SetAttributeOptions.defaults().setPinned(false);
+    alluxioFs.setAttribute(uri, options);
+    LOG.info("File " + uri + " was successfully unpinned.");
   }
 }

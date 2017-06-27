@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.CmdletExecutor;
+import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
@@ -37,7 +38,7 @@ public class SmartEngine extends AbstractService {
   private ServerContext serverContext;
   private StatesManager statesMgr;
   private RuleManager ruleMgr;
-  private CmdletExecutor cmdletExecutor;
+  private CmdletManager cmdletManager;
   private List<AbstractService> services = new ArrayList<>();
   public static final Logger LOG = LoggerFactory.getLogger(SmartEngine.class);
 
@@ -50,9 +51,9 @@ public class SmartEngine extends AbstractService {
   public void init() throws IOException {
     statesMgr = new StatesManager(serverContext);
     services.add(statesMgr);
-    cmdletExecutor = new CmdletExecutor(serverContext);
-    services.add(cmdletExecutor);
-    ruleMgr = new RuleManager(serverContext, statesMgr, cmdletExecutor);
+    cmdletManager = new CmdletManager(serverContext);
+    services.add(cmdletManager);
+    ruleMgr = new RuleManager(serverContext, statesMgr, cmdletManager);
     services.add(ruleMgr);
 
     for (AbstractService s : services) {
@@ -101,7 +102,7 @@ public class SmartEngine extends AbstractService {
     return ruleMgr;
   }
 
-  public CmdletExecutor getCmdletExecutor() {
-    return cmdletExecutor;
+  public CmdletManager getCmdletManager() {
+    return cmdletManager;
   }
 }

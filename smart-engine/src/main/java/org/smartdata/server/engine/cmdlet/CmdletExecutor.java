@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.message.StatusReporter;
@@ -30,6 +29,7 @@ import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.CmdletStatusUpdate;
 
 import javax.annotation.Nullable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -76,8 +76,11 @@ public class CmdletExecutor {
     List<ActionStatusReport.ActionStatus> actionStatusList = new ArrayList<>();
     for (Cmdlet cmdlet : this.runningCmdlets.values()) {
       for (SmartAction action : cmdlet.getActions()) {
-        ActionStatus status = action.getActionStatus();
-        actionStatusList.add(new ActionStatusReport.ActionStatus(status.getId(), status.getPercentage()));
+        try {
+          actionStatusList.add(action.getActionStatus());
+        } catch (UnsupportedEncodingException e) {
+          e.printStackTrace();
+        }
       }
     }
     return new ActionStatusReport(actionStatusList);

@@ -30,16 +30,10 @@ public class PinAction extends AlluxioAction {
   }
 
   @Override
-  protected void execute() {
-    try {
-      LOG.info("Executing Alluxio action: PinAction, path:" + uri.toString());
-      SetAttributeOptions options = SetAttributeOptions.defaults().setPinned(true);
-      alluxioFs.setAttribute(uri, options);
-      LOG.info("File " + uri + " was successfully pinned.");
-    } catch (Exception e) {
-      actionStatus.end();
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    }
+  protected void execute() throws Exception {
+    LOG.info("Executing Alluxio action: PinAction, path:" + uri.toString());
+    SetAttributeOptions options = SetAttributeOptions.defaults().setPinned(true);
+    alluxioFs.setAttribute(uri, options);
+    LOG.info("File " + uri + " was successfully pinned.");
   }
 }

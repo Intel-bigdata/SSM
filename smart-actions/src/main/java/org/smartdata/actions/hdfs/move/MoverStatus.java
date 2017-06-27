@@ -41,23 +41,12 @@ public class MoverStatus extends ActionStatus {
     init();
   }
 
-  /**
-   * Reset status to initial value.
-   */
-  @Override
-  synchronized public void reset() {
-    init();
-  }
-
   @Override
   synchronized public float getPercentage() {
-    if (isFinished()) {
-      return 1.0f;
-    }
     if (!totalValueSet) {
       return 0;
     }
-    return 1.0f * movedBlocks / totalBlocks;
+    return movedBlocks * 1.0F / totalBlocks;
   }
 
   synchronized public long getTotalSize() {

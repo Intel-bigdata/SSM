@@ -27,6 +27,6 @@ public class ListFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ListFileAction.class);
 
   @Override
-  protected void execute() {
+  protected void execute() throws Exception {
   }
 }

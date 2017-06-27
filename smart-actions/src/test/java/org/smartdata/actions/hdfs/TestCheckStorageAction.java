@@ -17,11 +17,12 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.common.message.ActionFinished;
+import org.smartdata.common.message.StatusMessage;
+import org.smartdata.common.message.StatusReporter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,6 +38,7 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     CheckStorageAction checkStorageAction = new CheckStorageAction();
     checkStorageAction.setDfsClient(dfsClient);
     checkStorageAction.setContext(smartContext);
+    checkStorageAction.setStatusReporter(new MockActionStatusReporter());
     final String file = "/testPath/file1";
     dfsClient.mkdirs("/testPath");
     dfsClient.setStoragePolicy("/testPath", "ONE_SSD");
@@ -53,14 +55,6 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     // do CheckStorageAction
     checkStorageAction.init(args);
     checkStorageAction.run();
-    ActionStatus actionStatus = checkStorageAction.getActionStatus();
-    System.out.println(StringUtils.formatTime(actionStatus.getRunningTime()));
-    Assert.assertTrue(actionStatus.isFinished());
-    Assert.assertTrue(actionStatus.isSuccessful());
-    Assert.assertEquals(1.0f, actionStatus.getPercentage(), 0.00001f);
-
-    ByteArrayOutputStream resultStream = actionStatus.getResultStream();
-    System.out.println(resultStream);
   }
 
   @Test
@@ -68,6 +62,16 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     CheckStorageAction checkStorageAction = new CheckStorageAction();
     checkStorageAction.setDfsClient(dfsClient);
     checkStorageAction.setContext(smartContext);
+    checkStorageAction.setStatusReporter(new StatusReporter() {
+      @Override
+      public void report(StatusMessage status) {
+        if (status instanceof ActionFinished) {
+          ActionFinished finished = (ActionFinished) status;
+          Assert.assertNotNull(finished.getException());
+        }
+      }
+    });
+
     final String file = "/testPath/wrongfile";
     dfsClient.mkdirs("/testPath");
 
@@ -76,8 +80,5 @@ public class TestCheckStorageAction extends ActionMiniCluster {
     // do CheckStorageAction
     checkStorageAction.init(args);
     checkStorageAction.run();
-    ActionStatus actionStatus = checkStorageAction.getActionStatus();
-    Assert.assertTrue(actionStatus.isFinished());
-    Assert.assertFalse(actionStatus.isSuccessful());
   }
 }

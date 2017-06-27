@@ -27,6 +27,6 @@ public class FsckAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(FsckAction.class);
 
   @Override
-  protected void execute() {
+  protected void execute() throws Exception {
   }
 }

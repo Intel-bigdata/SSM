@@ -77,7 +77,7 @@ class RuleService(ssmServer: SmartEngine) extends BasicService {
       val cmdlet2 = new CmdletInfo(1, 1, CmdletState.PENDING,
         JsonUtil.toJsonString(smap1), 123178333l, 232444994l)
       try {
-        complete(gson.toJson(ssmServer.getCmdletExecutor.listCmdletsInfo(ruleId, null)))
+        complete(gson.toJson(ssmServer.getCmdletManager.listCmdletsInfo(ruleId, null)))
       } catch {
         case e: Exception => failWith(e)
       }

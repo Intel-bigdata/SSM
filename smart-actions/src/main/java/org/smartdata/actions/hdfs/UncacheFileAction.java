@@ -25,8 +25,8 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.Utils;
 
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -37,17 +37,6 @@ public class UncacheFileAction extends HdfsAction {
 
   private String fileName;
 
-  public UncacheFileAction() {
-    createStatus();
-  }
-
-  @Override
-  protected void createStatus() {
-    this.actionStatus = new CacheStatus();
-    resultOut = actionStatus.getResultPrintStream();
-    logOut = actionStatus.getLogPrintStream();
-  }
-
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
@@ -55,23 +44,8 @@ public class UncacheFileAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() {
-    ActionStatus actionStatus = getActionStatus();
-    actionStatus.begin();
-    try {
-      executeUncacheAction();
-      actionStatus.setSuccessful(true);
-    } catch (Exception e) {
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    } finally {
-      actionStatus.end();
-    }
-  }
-
-  private void executeUncacheAction() throws Exception {
-    LOG.info("Action starts at {} : {} -> uncache",
-        new Date(System.currentTimeMillis()), fileName);
+  protected void execute() throws Exception {
+    LOG.info("Action starts at {} : {} -> uncache", Utils.getFormatedCurrentTime(), fileName);
     removeDirective(fileName);
   }
 

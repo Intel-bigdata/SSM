@@ -56,7 +56,7 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
   override protected def doRoute(implicit mat: Materializer): Route =
     pathPrefix("actions" / LongNumber) { actionId =>
       path("detail") {
-        complete(gson.toJson(ssmServer.getCmdletExecutor.getActionInfo(actionId)))
+        complete(gson.toJson(ssmServer.getCmdletManager.getActionInfo(actionId)))
       }
     } ~
       path("cachedfiles") {
@@ -70,7 +70,7 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
         complete(gson.toJson(ActionRegistry.supportedActions()))
       } ~
       path("actionlist") {
-        complete(gson.toJson(ssmServer.getCmdletExecutor.listNewCreatedActions(20)))
+        complete(gson.toJson(ssmServer.getCmdletManager.listNewCreatedActions(20)))
       } ~
       path("submitaction" / Segment) { actionType =>
         post {
@@ -84,7 +84,7 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
               .setSuccessful(false).build()
             actions.add(action)
             try {
-              ssmServer.getCmdletExecutor.submitCmdlet(actionType + " " + args)
+              ssmServer.getCmdletManager.submitCmdlet(actionType + " " + args)
               complete("Success")
             } catch {
               case e: Exception => failWith(e)

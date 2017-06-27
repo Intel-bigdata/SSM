@@ -23,7 +23,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.ActionException;
 
 import java.util.List;
 import java.util.Map;
@@ -43,13 +43,11 @@ public class CheckStorageAction extends HdfsAction {
   }
 
   @Override
-  protected void execute() {
-    ActionStatus actionStatus = getActionStatus();
-    actionStatus.begin();
+  protected void execute() throws Exception {
     try {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
       if (fileStatus == null) {
-        throw new IllegalArgumentException("File does not exit.");
+        throw new ActionException("File does not exist.");
       }
       long length = fileStatus.getLen();
       List<LocatedBlock> locatedBlocks = dfsClient.getLocatedBlocks(
@@ -70,14 +68,11 @@ public class CheckStorageAction extends HdfsAction {
           blockInfo.append(" ");
         }
         blockInfo.append("}");
-        this.resultOut.println(blockInfo);
+        this.appendResult(blockInfo.toString());
       }
-      actionStatus.setSuccessful(true);
     } catch (Exception e) {
-      actionStatus.setSuccessful(false);
       LOG.error("CheckStorageAction failed", e);
-    } finally {
-      actionStatus.end();
+      throw new ActionException(e);
     }
   }
 }

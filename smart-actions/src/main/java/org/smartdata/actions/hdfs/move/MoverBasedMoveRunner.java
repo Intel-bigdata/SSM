@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * HDFS move based move runner.
@@ -41,15 +40,17 @@ public class MoverBasedMoveRunner extends MoveRunner {
   }
 
   @Override
-  public void move(String file) throws IOException {
+  public void move(String file) throws IOException, InterruptedException {
     Thread moverProcess = new MoverProcess(actionStatus, new String[] {file});
     moverProcess.start();
+    moverProcess.join();
   }
 
   @Override
-  public void move(String[] files) throws IOException {
+  public void move(String[] files) throws IOException, InterruptedException {
     Thread moverProcess = new MoverProcess(actionStatus, files);
     moverProcess.start();
+    moverProcess.join();
   }
 
   class MoverProcess extends Thread {
@@ -67,7 +68,7 @@ public class MoverBasedMoveRunner extends MoveRunner {
     public void run() {
       try {
         LOG.info("Start move : id = {}", id);
-        int result = ToolRunner.run(conf, moverClient, paths);
+        ToolRunner.run(conf, moverClient, paths);
         LOG.info("Finish move : id = {}", id);
       } catch (Exception e) {
         throw new RuntimeException(e);

@@ -125,7 +125,7 @@ public class RuleRestApi {
     Long intNumber = Long.parseLong(ruleId);
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletExecutor().listCmdletsInfo(intNumber, null)).build();
+          smartEngine.getCmdletManager().listCmdletsInfo(intNumber, null)).build();
     } catch (Exception e) {
       logger.error("Exception in RuleRestApi while getting cmdlets ", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,

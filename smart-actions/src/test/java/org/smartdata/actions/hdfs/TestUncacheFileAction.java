@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.ActionStatus;
+import org.smartdata.actions.MockActionStatusReporter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class TestUncacheFileAction extends ActionMiniCluster {
     CacheFileAction cacheFileAction = new CacheFileAction();
     cacheFileAction.setDfsClient(dfsClient);
     cacheFileAction.setContext(smartContext);
+    cacheFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> argsCache = new HashMap();
     argsCache.put(CacheFileAction.FILE_PATH, file);
     cacheFileAction.init(argsCache);
@@ -51,19 +53,17 @@ public class TestUncacheFileAction extends ActionMiniCluster {
     UncacheFileAction uncacheFileAction = new UncacheFileAction();
     uncacheFileAction.setDfsClient(dfsClient);
     uncacheFileAction.setContext(smartContext);
+    uncacheFileAction.setStatusReporter(new MockActionStatusReporter());
+
     Map<String, String> argsUncache = new HashMap();
     argsUncache.put(UncacheFileAction.FILE_PATH, file);
     uncacheFileAction.init(argsUncache);
-    ActionStatus actionStatus = uncacheFileAction.getActionStatus();
 
     cacheFileAction.run();
     Assert.assertTrue(cacheFileAction.isCached(file));
 
     uncacheFileAction.run();
     Assert.assertFalse(cacheFileAction.isCached(file));
-    Assert.assertTrue(actionStatus.isFinished());
-    Assert.assertTrue(actionStatus.isSuccessful());
-    Assert.assertEquals(1.0f, actionStatus.getPercentage(), 0.000001f);
   }
 
   @Test
@@ -80,18 +80,17 @@ public class TestUncacheFileAction extends ActionMiniCluster {
     UncacheFileAction uncacheFileAction = new UncacheFileAction();
     uncacheFileAction.setDfsClient(dfsClient);
     uncacheFileAction.setContext(smartContext);
+    uncacheFileAction.setStatusReporter(new MockActionStatusReporter());
+
     Map<String, String> argsUncache = new HashMap();
     argsUncache.put(UncacheFileAction.FILE_PATH, file);
     uncacheFileAction.init(argsUncache);
-    ActionStatus actionStatus = uncacheFileAction.getActionStatus();
 
     uncacheFileAction.run();
     CacheFileAction cacheFileAction = new CacheFileAction();
+    cacheFileAction.setStatusReporter(new MockActionStatusReporter());
     cacheFileAction.setDfsClient(dfsClient);
     cacheFileAction.setContext(smartContext);
     Assert.assertFalse(cacheFileAction.isCached(file));
-    Assert.assertTrue(actionStatus.isFinished());
-    Assert.assertTrue(actionStatus.isSuccessful());
-    Assert.assertEquals(1.0f, actionStatus.getPercentage(), 0.000001f);
   }
 }

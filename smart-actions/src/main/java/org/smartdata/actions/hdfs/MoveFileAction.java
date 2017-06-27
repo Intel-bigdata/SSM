@@ -20,11 +20,11 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionType;
+import org.smartdata.actions.Utils;
 import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoverStatus;
 
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -33,22 +33,18 @@ import java.util.Map;
 public class MoveFileAction extends HdfsAction {
   public static final String STORAGE_POLICY = "-storagePolicy";
   private static final Logger LOG = LoggerFactory.getLogger(MoveFileAction.class);
-
-  protected String storagePolicy;
-  protected String fileName;
-  protected ActionType actionType;
-  protected MoveRunner moveRunner = null;
+  private MoverStatus status;
+  private String storagePolicy;
+  private String fileName;
 
   public MoveFileAction() {
+    super();
     this.actionType = ActionType.MoveFile;
-    createStatus();
+    this.status = new MoverStatus();
   }
 
-  @Override
-  protected void createStatus() {
-    this.actionStatus = new MoverStatus();
-    resultOut = actionStatus.getResultPrintStream();
-    logOut = actionStatus.getLogPrintStream();
+  public MoverStatus getStatus() {
+    return this.status;
   }
 
   @Override
@@ -58,27 +54,21 @@ public class MoveFileAction extends HdfsAction {
     this.storagePolicy = args.get(STORAGE_POLICY);
   }
 
-  protected void execute() {
-    logOut.println("Action starts at "
-        + (new Date(System.currentTimeMillis())).toString() + " : "
-        + fileName + " -> " + storagePolicy.toString());
-    try {
-      dfsClient.setStoragePolicy(fileName, storagePolicy);
-    } catch (Exception e) {
-      actionStatus.end();
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    }
+  @Override
+  protected void execute() throws Exception {
+    this.appendLog(
+        String.format(
+            "Action starts at %s : %s -> %s",
+            Utils.getFormatedCurrentTime(), fileName, storagePolicy));
+    dfsClient.setStoragePolicy(fileName, storagePolicy);
 
     // TODO : make MoveRunner configurable
-    moveRunner = new MoverBasedMoveRunner(
-        getContext().getConf(), getActionStatus());
+    MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
+    moveRunner.move(fileName);
+  }
 
-    try {
-      moveRunner.move(fileName);
-      actionStatus.setSuccessful(true);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  @Override
+  public float getProgress() {
+    return this.status.getPercentage();
   }
 }

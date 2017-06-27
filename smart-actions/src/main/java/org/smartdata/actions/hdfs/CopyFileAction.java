@@ -27,6 +27,7 @@ public class CopyFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(CopyFileAction.class);
 
   @Override
-  protected void execute() {
+  protected void execute() throws Exception {
+
   }
 }

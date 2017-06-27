@@ -33,16 +33,10 @@ public class SetTTLAction extends AlluxioAction {
   }
 
   @Override
-  protected void execute() {
-    try {
-      LOG.info("Executing Alluxio action: SetTTLAction, path:" + uri.toString());
-      SetAttributeOptions options = SetAttributeOptions.defaults().setTtl(ttl);
-      alluxioFs.setAttribute(uri, options);
-      LOG.info("File " + uri + " was successfully set TTL to " + ttl + ".");
-    } catch (Exception e) {
-      actionStatus.end();
-      actionStatus.setSuccessful(false);
-      throw new RuntimeException(e);
-    }
+  protected void execute() throws Exception {
+    LOG.info("Executing Alluxio action: SetTTLAction, path:" + uri.toString());
+    SetAttributeOptions options = SetAttributeOptions.defaults().setTtl(ttl);
+    alluxioFs.setAttribute(uri, options);
+    LOG.info("File " + uri + " was successfully set TTL to " + ttl + ".");
   }
 }

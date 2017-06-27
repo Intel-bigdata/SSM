@@ -47,7 +47,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RuleManager extends AbstractService {
   private ServerContext serverContext;
   private StatesManager statesManager;
-  private CmdletExecutor cmdletExecutor;
+  private CmdletManager cmdletManager;
   private MetaStore metaStore;
 
   private boolean isClosed = false;
@@ -60,7 +60,7 @@ public class RuleManager extends AbstractService {
   public ExecutorScheduler execScheduler;
 
   public RuleManager(ServerContext context,
-      StatesManager statesManager, CmdletExecutor cmdletExecutor) {
+      StatesManager statesManager, CmdletManager cmdletManager) {
     super(context);
 
     int numExecutors = context.getConf().getInt(
@@ -69,7 +69,7 @@ public class RuleManager extends AbstractService {
     execScheduler = new ExecutorScheduler(numExecutors);
 
     this.statesManager = statesManager;
-    this.cmdletExecutor = cmdletExecutor;
+    this.cmdletManager = cmdletManager;
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
   }
@@ -150,8 +150,8 @@ public class RuleManager extends AbstractService {
       throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     try {
-      if (dropPendingCmdlets && getCmdletExecutor() != null) {
-        getCmdletExecutor().deleteCmdletByRule(infoRepo.getRuleInfo().getId());
+      if (dropPendingCmdlets && getCmdletManager() != null) {
+        getCmdletManager().deleteCmdletByRule(infoRepo.getRuleInfo().getId());
       }
     } finally {
       infoRepo.delete();
@@ -205,8 +205,8 @@ public class RuleManager extends AbstractService {
     return statesManager;
   }
 
-  public CmdletExecutor getCmdletExecutor() {
-    return cmdletExecutor;
+  public CmdletManager getCmdletManager() {
+    return cmdletManager;
   }
 
   /**

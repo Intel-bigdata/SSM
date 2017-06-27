@@ -50,7 +50,7 @@ public class CmdletRestApi {
     Long longNumber = Long.parseLong(cmdletId);
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletExecutor().getCmdletInfo(longNumber)).build();
+          smartEngine.getCmdletManager().getCmdletInfo(longNumber)).build();
     } catch (Exception e) {
       logger.error("Exception in CmdletRestApi while getting status", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
@@ -63,7 +63,7 @@ public class CmdletRestApi {
   public Response list() {
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletExecutor()
+          smartEngine.getCmdletManager()
           .listCmdletsInfo(-1, null))
           .build();
     } catch (Exception e) {
@@ -78,7 +78,7 @@ public class CmdletRestApi {
   public Response submitAction(String args,
       @PathParam("actionType") String actionType) {
     try {
-      return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletExecutor()
+      return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletManager()
           .submitCmdlet(actionType + " " + args)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while adding cmdlet", e);

@@ -23,9 +23,12 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.HelloAction;
+import org.smartdata.actions.hdfs.MoveFileAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.common.message.ActionFinished;
+import org.smartdata.common.message.ActionStarted;
 import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.common.message.StatusMessage;
@@ -43,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -62,7 +66,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * The map idToCmdlets stores all the recent CmdletInfos, including pending and running Cmdlets.
  * After the Cmdlet is finished or cancelled or failed, it's status will be flush to DB.
  */
-//Todo: 1. check file lock
 public class CmdletManager extends AbstractService {
   private final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
   private ScheduledExecutorService executorService;
@@ -76,18 +79,20 @@ public class CmdletManager extends AbstractService {
   private List<Long> runningCmdlets;
   private Map<Long, CmdletInfo> idToCmdlets;
   private Map<Long, ActionInfo> idToActions;
+  private Map<String, Long> fileLocks;
 
   public CmdletManager(ServerContext context) {
     super(context);
 
     this.metaStore = context.getMetaStore();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.dispatcher = new CmdletDispatcher(this, context);
+    this.dispatcher = new CmdletDispatcher(this);
     this.runningCmdlets = new ArrayList<>();
     this.submittedCmdlets = new HashSet<>();
     this.pendingCmdlet = new LinkedBlockingQueue<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
+    this.fileLocks = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -148,8 +153,11 @@ public class CmdletManager extends AbstractService {
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
       if (!ActionRegistry.checkAction(cmdletDescriptor.getActionName(index))) {
         throw new IOException(
-          String.format("Submit Command %s error! Action names are not correct!", cmdletInfo));
+          String.format("Submit Cmdlet %s error! Action names are not correct!", cmdletInfo));
       }
+    }
+    if (this.hasConflictAction(actionInfos)) {
+      throw new IOException("Has conflict actions, submit cmdlet failed.");
     }
     try {
       metaStore.insertCmdletTable(cmdletInfo);
@@ -168,6 +176,13 @@ public class CmdletManager extends AbstractService {
     this.submittedCmdlets.add(cmdletDescriptor.getCmdletString());
     for (ActionInfo actionInfo : actionInfos) {
       this.idToActions.put(actionInfo.getActionId(), actionInfo);
+      Map<String, String> args = actionInfo.getArgs();
+      if (args != null && args.size() > 0) {
+        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+        if (file != null && fileLocks.containsKey(file)) {
+          this.fileLocks.put(file, actionInfo.getActionId());
+        }
+      }
     }
     return cmdletInfo.getCid();
   }
@@ -185,6 +200,20 @@ public class CmdletManager extends AbstractService {
     } else {
       return null;
     }
+  }
+
+  private boolean hasConflictAction(List<ActionInfo> actionInfos) {
+    for (ActionInfo actionInfo : actionInfos) {
+      Map<String, String> args = actionInfo.getArgs();
+      if (args != null && args.size() > 0) {
+        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+        if (file != null && fileLocks.containsKey(file)) {
+          LOG.warn("Warning: Other actions are processing {}!", file);
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public LaunchCmdlet getNextCmdletToRun2() throws IOException {
@@ -256,8 +285,7 @@ public class CmdletManager extends AbstractService {
       if (pendingCmdlet.contains(info)) {
         pendingCmdlet.remove(info);
         info.setState(CmdletState.DISABLED);
-        this.removeActions(cid);
-        flushCmdletInfo(info);
+        this.cmdletFinished(cid);
       }
       // Wait status update from status reporter, so need to update to MetaStore
       if (runningCmdlets.contains(cid)) {
@@ -266,9 +294,32 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  //Remove ActionInfos of a specific cmdlet.
-  private void removeActions(long cmdletId) {
+  //Todo: optimize this function.
+  private void cmdletFinished(long cmdletId) throws IOException {
+    CmdletInfo cmdletInfo = this.idToCmdlets.remove(cmdletId);
+    this.runningCmdlets.remove(cmdletId);
+    if (cmdletInfo != null) {
+      this.flushCmdletInfo(cmdletInfo);
+    }
 
+    List<ActionInfo> removed = new ArrayList<>();
+    for (Iterator<Map.Entry<Long, ActionInfo>> it = idToActions.entrySet().iterator(); it.hasNext();) {
+      Map.Entry<Long, ActionInfo> entry = it.next();
+      if (entry.getValue().getCmdletId() == cmdletId) {
+        it.remove();
+        removed.add(entry.getValue());
+      }
+    }
+    for (ActionInfo actionInfo : removed) {
+      Map<String, String> args = actionInfo.getArgs();
+      if (args != null && args.size() > 0) {
+        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+        if (file != null && fileLocks.containsKey(file)) {
+          this.fileLocks.remove(file);
+        }
+      }
+    }
+    this.flushActionInfos(removed);
   }
 
   public void deleteCmdlet(long cid) throws IOException {
@@ -282,7 +333,7 @@ public class CmdletManager extends AbstractService {
   }
 
   @VisibleForTesting
-  protected int getCmdletsSizeInCache() {
+  public int getCmdletsSizeInCache() {
     return this.idToCmdlets.size();
   }
 
@@ -315,12 +366,32 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  /**
+   * Delete all cmdlets related with rid
+   * @param rid
+   * @throws IOException
+   */
+  public void deleteCmdletByRule(long rid) throws IOException {
+    List<CmdletInfo> cmdletInfoList = listCmdletsInfo(rid, null);
+    if (cmdletInfoList == null || cmdletInfoList.size() == 0) {
+      return;
+    }
+    for (CmdletInfo cmdletInfo : cmdletInfoList) {
+      deleteCmdlet(cmdletInfo.getCid());
+    }
+  }
+
   public synchronized void updateStatus(StatusMessage status) {
+    System.out.println("got update " + status);
     try{
       if (status instanceof CmdletStatusUpdate) {
         onCmdletStatusUpdate((CmdletStatusUpdate) status);
       } else if (status instanceof ActionStatusReport) {
         onActionStatusReport((ActionStatusReport) status);
+      } else if (status instanceof ActionStarted) {
+        onActionStarted((ActionStarted) status);
+      } else if (status instanceof ActionFinished) {
+        onActionFinished((ActionFinished) status);
       }
     } catch (IOException e) {
       LOG.error(String.format("Update status %s failed with %s", status, e));
@@ -328,7 +399,6 @@ public class CmdletManager extends AbstractService {
   }
 
   private void onCmdletStatusUpdate(CmdletStatusUpdate statusUpdate) throws IOException {
-    System.out.println("got update " + statusUpdate);
     long cmdletId = statusUpdate.getCmdletId();
     if (this.idToCmdlets.containsKey(cmdletId)) {
       CmdletState state = statusUpdate.getCurrentState();
@@ -338,8 +408,7 @@ public class CmdletManager extends AbstractService {
       //The cmdlet is already finished or terminated, remove status from memory.
       if (CmdletState.isTerminalState(state)) {
         //Todo: recover cmdlet?
-        this.idToCmdlets.remove(cmdletId);
-        this.runningCmdlets.remove(cmdletId);
+        this.cmdletFinished(cmdletId);
       }
     } else {
       // Updating cmdlet status which is not pending or running
@@ -351,11 +420,39 @@ public class CmdletManager extends AbstractService {
       long actionId = status.getActionId();
       if (this.idToActions.containsKey(actionId)) {
         ActionInfo actionInfo = this.idToActions.get(actionId);
-        flushActionInfo(actionInfo);
-        //Todo: remove action info status
+        actionInfo.setProgress(status.getPencentage());
+        actionInfo.setLog(status.getLog());
+        actionInfo.setResult(status.getResult());
       } else {
         // Updating action info which is not pending or running
       }
+    }
+  }
+
+  private void onActionStarted(ActionStarted started) {
+    if (this.idToActions.containsKey(started.getActionId())) {
+      this.idToActions.get(started.getActionId()).setCreateTime(started.getTimestamp());
+    } else {
+      // Updating action status which is not pending or running
+    }
+  }
+
+  private void onActionFinished(ActionFinished finished) throws IOException {
+    if (this.idToActions.containsKey(finished.getActionId())) {
+      ActionInfo actionInfo = this.idToActions.get(finished.getActionId());
+      actionInfo.setFinished(true);
+      actionInfo.setFinishTime(finished.getTimestamp());
+      actionInfo.setResult(finished.getResult());
+      actionInfo.setLog(finished.getLog());
+      if (finished.getException() != null) {
+        actionInfo.setSuccessful(false);
+      } else {
+        actionInfo.setSuccessful(true);
+        actionInfo.setProgress(1.0F);
+        this.updateStorageIfNeeded(actionInfo);
+      }
+    } else {
+      // Updating action status which is not pending or running
     }
   }
 
@@ -368,12 +465,29 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void flushActionInfo(ActionInfo info) throws IOException {
+  private void flushActionInfos(List<ActionInfo> infos) throws IOException {
     try {
-      metaStore.updateActionsTable(new ActionInfo[]{info});
+      metaStore.updateActionsTable(infos.toArray(new ActionInfo[infos.size()]));
     } catch (SQLException e) {
       LOG.error("Write CacheObject to DB error!", e);
       throw new IOException(e);
+    }
+  }
+
+  //Todo: remove this implementation
+  private void updateStorageIfNeeded(ActionInfo info) {
+    if (ActionRegistry.createAction(info.getActionName()) instanceof MoveFileAction) {
+      Map<String, String> args = info.getArgs();
+      if (args.containsKey(MoveFileAction.STORAGE_POLICY)) {
+        String policy = args.get(MoveFileAction.STORAGE_POLICY);
+        String path = args.get(MoveFileAction.FILE_PATH);
+        try {
+          this.metaStore.updateFileStoragePolicy(path, policy);
+        } catch (SQLException e) {
+          e.printStackTrace();
+          LOG.error(String.format("Failed to update storage policy %s for file %s", policy, path));
+        }
+      }
     }
   }
 

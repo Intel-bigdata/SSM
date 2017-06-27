@@ -27,6 +27,7 @@ public class ClusterBalanceAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ClusterBalanceAction.class);
 
   @Override
-  protected void execute() {
+  protected void execute() throws Exception {
+
   }
 }
