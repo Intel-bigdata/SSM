@@ -37,7 +37,9 @@ import org.smartdata.common.rule.RuleState;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -86,6 +88,101 @@ public class TestMetaStore extends TestDaoUtil {
   }
   */
 
+
+  @Test
+  public void testHighConcurrency() throws Exception {
+    // Multiple threads
+    Thread th1 = new InsertThread(metaStore);
+    Thread th2 = new SelectUpdateThread(metaStore);
+    th1.start();
+    Thread.sleep(1000);
+    th2.start();
+    th2.join();
+  }
+
+
+  @Test
+  public void testThreadSleepConcurrency() throws Exception {
+    // Multiple threads
+    Thread th1 = new InsertThread(metaStore);
+    Thread th2 = new SelectUpdateThread(metaStore);
+    th1.start();
+    Thread.sleep(1000);
+    th2.start();
+    th2.join();
+
+  }
+
+  class SleepSelectUpdateThread extends Thread {
+    private MetaStore metaStore;
+
+    public SleepSelectUpdateThread(MetaStore metaStore) {
+      this.metaStore = metaStore;
+    }
+    public void run() {
+      for (int i = 0 ; i < 1000; i++) {
+        try {
+          List<ActionInfo> actionInfoList = metaStore.getActionsTableItem(Arrays.asList(new Long[]{(long)i}));
+          actionInfoList.get(0).setFinished(true);
+          actionInfoList.get(0).setFinishTime(System.currentTimeMillis());
+          sleep(200);
+          metaStore.updateActionsTable(actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
+          metaStore.getActionsTableItem(null, null);
+        } catch (SQLException e) {
+          e.printStackTrace();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+  }
+
+
+  class InsertThread extends Thread {
+    private MetaStore metaStore;
+
+    public InsertThread(MetaStore metaStore) {
+      this.metaStore = metaStore;
+    }
+
+    public void run() {
+      Map<String, String> args = new HashMap();
+      args.put(CacheFileAction.FILE_PATH, "/test/file");
+      ActionInfo actionInfo = new ActionInfo(1, 1,
+          "cache", args, "Test",
+          "Test", true, 123213213l, true, 123123l,
+          100);
+      for (int i = 0 ; i < 1000; i++) {
+        actionInfo.setActionId(i);
+        try {
+          metaStore.insertActionTable(actionInfo);
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+  }
+
+  class SelectUpdateThread extends Thread {
+    private MetaStore metaStore;
+
+    public SelectUpdateThread(MetaStore metaStore) {
+      this.metaStore = metaStore;
+    }
+    public void run() {
+      for (int i = 0 ; i < 1000; i++) {
+        try {
+          List<ActionInfo> actionInfoList = metaStore.getActionsTableItem(Arrays.asList(new Long[]{(long)i}));
+          actionInfoList.get(0).setFinished(true);
+          actionInfoList.get(0).setFinishTime(System.currentTimeMillis());
+          metaStore.updateActionsTable(actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
+          metaStore.getActionsTableItem(null, null);
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+  }
 
   @Test
   public void testGetFiles() throws Exception {
