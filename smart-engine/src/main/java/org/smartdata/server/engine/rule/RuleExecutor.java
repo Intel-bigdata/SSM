@@ -311,7 +311,7 @@ public class RuleExecutor implements Runnable {
   }
 
   private int submitCmdlets(List<String> files, long ruleId) {
-    if (ruleManager.getCmdletExecutor() == null) {
+    if (ruleManager.getCmdletManager() == null) {
       return 0;
     }
     int nSubmitted = 0;
@@ -321,7 +321,7 @@ public class RuleExecutor implements Runnable {
         try {
           CmdletDescriptor cmd = new CmdletDescriptor(template, ruleId);
           cmd.setCmdletParameter(CmdletDescriptor.HDFS_FILE_PATH, file);
-          ruleManager.getCmdletExecutor().submitCmdlet(cmd);
+          ruleManager.getCmdletManager().submitCmdlet(cmd);
           nSubmitted++;
         } catch (IOException | ParseException e) {
           // ignore this and continue submit

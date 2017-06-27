@@ -48,15 +48,11 @@ public class CmdletFactory {
   }
 
   public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet) {
-    return createCmdlet(launchCmdlet, null);
-  }
-
-  public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet, MetaStore metaStore) {
     List<SmartAction> actions = new ArrayList<>();
     for (LaunchAction action : launchCmdlet.getLaunchActions()) {
       actions.add(this.createAction(action));
     }
-    Cmdlet cmdlet = new Cmdlet(actions.toArray(new SmartAction[0]),null,  metaStore);
+    Cmdlet cmdlet = new Cmdlet(actions.toArray(new SmartAction[0]));
     cmdlet.setId(launchCmdlet.getCmdletId());
     return cmdlet;
   }

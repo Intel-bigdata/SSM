@@ -184,45 +184,45 @@ public class SmartRpcServer implements SmartServerProtocols {
   @Override
   public CmdletInfo getCmdletInfo(long cmdletID) throws IOException {
     checkIfActive();
-    return ssm.getCmdletExecutor().getCmdletInfo(cmdletID);
+    return ssm.getCmdletManager().getCmdletInfo(cmdletID);
   }
 
   @Override
   public List<CmdletInfo> listCmdletInfo(long rid, CmdletState cmdletState)
       throws IOException {
     checkIfActive();
-    return ssm.getCmdletExecutor().listCmdletsInfo(rid, cmdletState);
+    return ssm.getCmdletManager().listCmdletsInfo(rid, cmdletState);
   }
 
   @Override
   public void activateCmdlet(long cmdletID) throws IOException {
     checkIfActive();
-    ssm.getCmdletExecutor().activateCmdlet(cmdletID);
+    ssm.getCmdletManager().activateCmdlet(cmdletID);
   }
 
   @Override
   public void disableCmdlet(long cmdletID) throws IOException {
     checkIfActive();
-    ssm.getCmdletExecutor().disableCmdlet(cmdletID);
+    ssm.getCmdletManager().disableCmdlet(cmdletID);
   }
 
   @Override
   public void deleteCmdlet(long cmdletID) throws IOException {
     checkIfActive();
-    ssm.getCmdletExecutor().deleteCmdlet(cmdletID);
+    ssm.getCmdletManager().deleteCmdlet(cmdletID);
   }
 
   @Override
   public ActionInfo getActionInfo(long actionID) throws IOException {
     checkIfActive();
-    return ssm.getCmdletExecutor().getActionInfo(actionID);
+    return ssm.getCmdletManager().getActionInfo(actionID);
   }
 
   @Override
   public List<ActionInfo> listActionInfoOfLastActions(int maxNumActions)
       throws IOException {
     checkIfActive();
-    return ssm.getCmdletExecutor().listNewCreatedActions(maxNumActions);
+    return ssm.getCmdletManager().listNewCreatedActions(maxNumActions);
   }
 
   @Override
@@ -235,7 +235,7 @@ public class SmartRpcServer implements SmartServerProtocols {
   public long submitCmdlet(String cmd) throws IOException {
     checkIfActive();
     // TODO: to be implemented
-    return ssm.getCmdletExecutor().submitCmdlet(cmd);
+    return ssm.getCmdletManager().submitCmdlet(cmd);
   }
 
   @Override

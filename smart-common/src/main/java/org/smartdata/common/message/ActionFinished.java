@@ -20,16 +20,40 @@ package org.smartdata.common.message;
 public class ActionFinished implements StatusMessage {
   private long actionId;
   private long timestamp;
+  private String result;
+  private String log;
   private Exception exception;
 
-  public ActionFinished(long actionId, long timestamp) {
-    this(actionId, timestamp, null);
+  public ActionFinished(long actionId, long timestamp, Exception e) {
+    this(actionId, timestamp, "", "",e);
   }
 
-  public ActionFinished(long actionId, long timestamp, Exception exception) {
+  public ActionFinished(long actionId, long timestamp, String result, String log) {
+    this(actionId, timestamp, result, log,null);
+  }
+
+  public ActionFinished(long actionId, long timestamp, String result, String log, Exception exception) {
     this.actionId = actionId;
     this.timestamp = timestamp;
+    this.result = result;
+    this.log = log;
     this.exception = exception;
+  }
+
+  public String getResult() {
+    return result;
+  }
+
+  public void setResult(String result) {
+    this.result = result;
+  }
+
+  public String getLog() {
+    return log;
+  }
+
+  public void setLog(String log) {
+    this.log = log;
   }
 
   public long getActionId() {

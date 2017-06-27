@@ -56,7 +56,7 @@ public class ActionRestApi {
   @Path("/list")
   public Response actionList() throws Exception {
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().listNewCreatedActions(20)).build();
+        ssm.getCmdletManager().listNewCreatedActions(20)).build();
   }
 
   @GET
@@ -69,7 +69,7 @@ public class ActionRestApi {
   public Response detail(@PathParam("actionId") String actionId) throws Exception {
     Long longNumer = Long.parseLong(actionId);
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().getActionInfo(longNumer)).build();
+        ssm.getCmdletManager().getActionInfo(longNumer)).build();
   }
 
   @GET

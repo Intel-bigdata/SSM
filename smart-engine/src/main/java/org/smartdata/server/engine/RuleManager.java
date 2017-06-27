@@ -46,7 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RuleManager extends AbstractService {
   private ServerContext serverContext;
   private StatesManager statesManager;
-  private CmdletExecutor cmdletExecutor;
+  private CmdletManager cmdletManager;
   private MetaStore metaStore;
 
   private boolean isClosed = false;
@@ -60,11 +60,11 @@ public class RuleManager extends AbstractService {
   public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
 
   public RuleManager(ServerContext context,
-                     StatesManager statesManager, CmdletExecutor cmdletExecutor) {
+      StatesManager statesManager, CmdletManager cmdletManager) {
     super(context);
 
     this.statesManager = statesManager;
-    this.cmdletExecutor = cmdletExecutor;
+    this.cmdletManager = cmdletManager;
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
   }
@@ -192,8 +192,8 @@ public class RuleManager extends AbstractService {
     return statesManager;
   }
 
-  public CmdletExecutor getCmdletExecutor() {
-    return cmdletExecutor;
+  public CmdletManager getCmdletManager() {
+    return cmdletManager;
   }
 
   /**

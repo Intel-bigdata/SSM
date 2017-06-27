@@ -110,7 +110,7 @@ public class RuleRestApi {
     CmdletInfo cmdlet2 = new CmdletInfo(1, 1, CmdletState.PENDING,
         JsonUtil.toJsonString(m), 123178333L, 232444994L);
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().listCmdletsInfo(intNumer, null)).build();
+        ssm.getCmdletManager().listCmdletsInfo(intNumer, null)).build();
   }
 
   @GET

@@ -25,6 +25,7 @@ import org.smartdata.common.message.ActionStarted;
 import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.StatusReporter;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
@@ -43,6 +44,7 @@ public abstract class SmartAction {
   private PrintStream psResultOs;
   private ByteArrayOutputStream logOs;
   private PrintStream psLogOs;
+  private volatile boolean successful;
   protected String name;
 
   public SmartAction() {
@@ -50,6 +52,7 @@ public abstract class SmartAction {
   }
 
   public SmartAction(StatusReporter statusReporter) {
+    this.successful = false;
     this.statusReporter = statusReporter;
     //Todo: extract the print stream out of this class
     this.resultOs = new ByteArrayOutputStream(64 * 1024);
@@ -115,6 +118,7 @@ public abstract class SmartAction {
     try {
       reportStart();
       execute();
+      this.successful = true;
     } catch (Exception e) {
       e.printStackTrace();
       exception = e;
@@ -132,8 +136,19 @@ public abstract class SmartAction {
 
   private void reportFinished(Exception exception) {
     if (this.statusReporter != null) {
-      this.statusReporter.report(
-          new ActionFinished(this.actionId, System.currentTimeMillis(), exception));
+      try {
+        this.statusReporter.report(
+            new ActionFinished(
+                this.actionId,
+                System.currentTimeMillis(),
+                StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
+                StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
+                exception));
+      } catch (IOException e) {
+        e.printStackTrace();
+        this.statusReporter.report(
+            new ActionFinished(this.actionId, System.currentTimeMillis(), exception));
+      }
     }
   }
 
@@ -146,6 +161,9 @@ public abstract class SmartAction {
   }
 
   public float getProgress() {
+    if (this.successful) {
+      return 1.0F;
+    }
     return 0.0F;
   }
 
@@ -158,5 +176,9 @@ public abstract class SmartAction {
   private void stop() {
     this.psLogOs.close();
     this.psResultOs.close();
+  }
+
+  public boolean isSuccessful() {
+    return this.successful;
   }
 }

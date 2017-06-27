@@ -32,6 +32,7 @@ import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.CmdletExecutor;
+import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.RuleManager;
@@ -87,8 +88,8 @@ public class SmartServer {
     return engine.getRuleManager();
   }
 
-  public CmdletExecutor getCmdletExecutor() {
-    return engine.getCmdletExecutor();
+  public CmdletManager getCmdletManager() {
+    return engine.getCmdletManager();
   }
 
   public MetaStore getMetaStore() {
@@ -212,8 +213,8 @@ public class SmartServer {
     rpcServer.start();
     httpServer.start();
 
-    ZeppelinConfiguration zeppelinConf = ZeppelinConfiguration.create();
-    ZeppelinServer.startZeppelinServer(zeppelinConf);
+//    ZeppelinConfiguration zeppelinConf = ZeppelinConfiguration.create();
+//    ZeppelinServer.startZeppelinServer(zeppelinConf);
   }
 
   private void startEngines() throws Exception {

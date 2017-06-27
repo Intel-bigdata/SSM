@@ -56,6 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Schedule and execute cmdlets passed down.
  */
+@Deprecated
 public class CmdletExecutor extends AbstractService implements Runnable {
   static final Logger LOG = LoggerFactory.getLogger(CmdletExecutor.class);
 
@@ -624,7 +625,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     if (smartActions.size() == 0) {
       return null;
     }
-    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]), new Callback(), metaStore);
+    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]));
     cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());

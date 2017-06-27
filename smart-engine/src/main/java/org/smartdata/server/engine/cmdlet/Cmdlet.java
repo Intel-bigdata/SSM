@@ -17,17 +17,13 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
-import org.smartdata.actions.hdfs.MoveFileAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.actions.SmartAction;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.server.engine.CmdletExecutor;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one
@@ -45,25 +41,14 @@ public class Cmdlet implements Runnable {
   private SmartAction[] actions;
   private String parameters;
   private int currentActionIndex;
-  private CmdletExecutor.Callback cb;
-  private boolean running;
+  private volatile boolean running;
 
-  private long createTime;
   private long scheduleToExecuteTime;
-  private long ExecutionCompleteTime;
-  private MetaStore adapter;
 
-  public Cmdlet(SmartAction[] actions, CmdletExecutor.Callback cb) {
-    this(actions, cb, null);
-  }
-
-  public Cmdlet(SmartAction[] actions, CmdletExecutor.Callback cb,
-      MetaStore adapter) {
+  public Cmdlet(SmartAction[] actions) {
     this.actions = actions.clone();
     this.currentActionIndex = 0;
-    this.cb = cb;
-    this.running = true;
-    this.adapter = adapter;
+    this.running = false;
   }
 
   public long getRuleId() {
@@ -102,10 +87,6 @@ public class Cmdlet implements Runnable {
     return actions == null ? null : actions.clone();
   }
 
-  public long getScheduleToExecuteTime() {
-    return scheduleToExecuteTime;
-  }
-
   public void setScheduleToExecuteTime(long time) {
     this.scheduleToExecuteTime = time;
   }
@@ -124,49 +105,27 @@ public class Cmdlet implements Runnable {
     return (currentActionIndex == actions.length || !running);
   }
 
-  public void runActions() {
+  private void runActions() {
     for (SmartAction act : actions) {
       currentActionIndex++;
       if (act == null || !running) {
         continue;
       }
-      try {
-        // Init Action
-        act.init(act.getArguments());
-        act.run();
-//        if (act instanceof MoveFileAction
-//            && act.getActionStatus().isSuccessful() && adapter != null) {
-//          Map<String, String> args = act.getArguments();
-//          if (args.containsKey(MoveFileAction.STORAGE_POLICY)) {
-//            adapter.updateFileStoragePolicy(args.get(MoveFileAction.FILE_PATH),
-//                args.get(MoveFileAction.STORAGE_POLICY));
-//          }
-//        }
-      } catch (Exception e) {
-        LOG.error("Action {} running error! {}", act.getActionId(), e);
+      // Init Action
+      act.init(act.getArguments());
+      act.run();
+      if (!act.isSuccessful()) {
         this.setState(CmdletState.FAILED);
         break;
       }
-      // Run actions sequentially!
-//      while (!act.getActionStatus().isFinished()) {
-//        try {
-//          Thread.sleep(1000);
-//        } catch (InterruptedException e) {
-//          if (!running) {
-//            break;
-//          }
-//        }
-//      }
-      this.setState(CmdletState.DONE);
     }
+    this.setState(CmdletState.DONE);
   }
 
   @Override
   public void run() {
+    running = true;
     runActions();
     running = false;
-    if (cb != null) {
-      cb.complete(this.id, this.ruleId, state);
-    }
   }
 }

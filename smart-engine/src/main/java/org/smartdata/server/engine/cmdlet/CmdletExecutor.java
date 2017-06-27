@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.message.StatusReporter;

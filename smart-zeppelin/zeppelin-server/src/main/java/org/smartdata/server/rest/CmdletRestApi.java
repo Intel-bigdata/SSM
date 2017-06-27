@@ -50,14 +50,14 @@ public class CmdletRestApi {
       throws Exception {
     Long longNumber = Long.parseLong(cmdletId);
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().getCmdletInfo(longNumber)).build();
+        ssm.getCmdletManager().getCmdletInfo(longNumber)).build();
   }
 
   @GET
   @Path("/list")
   public Response list() throws Exception {
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletExecutor().listCmdletsInfo(-1, null))
+        ssm.getCmdletManager().listCmdletsInfo(-1, null))
         .build();
   }
 
@@ -66,7 +66,7 @@ public class CmdletRestApi {
   public Response submitAction(String args,
       @PathParam("actionType") String actionType) {
     try {
-      return new JsonResponse<>(Response.Status.CREATED, ssm.getCmdletExecutor()
+      return new JsonResponse<>(Response.Status.CREATED, ssm.getCmdletManager()
           .submitCmdlet(actionType + " " + args)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while adding action ", e);

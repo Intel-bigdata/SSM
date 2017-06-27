@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.StatusReporter;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -73,7 +74,10 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
   private class StatusFetchTask implements Runnable {
     @Override
     public void run() {
-      report(cmdletExecutor.getActionStatusReport());
+      ActionStatusReport statusReport = cmdletExecutor.getActionStatusReport();
+      if (statusReport.getActionStatuses().size() > 0) {
+        report(statusReport);
+      }
     }
   }
 }
