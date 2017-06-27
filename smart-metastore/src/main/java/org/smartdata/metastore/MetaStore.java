@@ -20,6 +20,8 @@ package org.smartdata.metastore;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
@@ -63,6 +65,7 @@ import static org.smartdata.metastore.utils.MetaUtil.getKey;
  * Operations supported for upper functions.
  */
 public class MetaStore {
+  static final Logger LOG = LoggerFactory.getLogger(MetaStore.class);
 
   private DBPool pool = null;
 
@@ -556,11 +559,16 @@ public class MetaStore {
 
   public synchronized void insertActionTable(ActionInfo actionInfo)
       throws SQLException {
+    LOG.debug("Insert Action ID {}", actionInfo.getActionId());
     actionDao.insert(actionInfo);
   }
 
   public synchronized void updateActionsTable(ActionInfo[] actionInfos)
       throws SQLException {
+    if (actionInfos == null || actionInfos.length == 0) {
+      return;
+    }
+    LOG.debug("Update Action ID {}", actionInfos[0].getActionId());
     actionDao.update(actionInfos);
   }
 
@@ -575,11 +583,13 @@ public class MetaStore {
     if (aids == null || aids.size() == 0){
       return null;
     }
+    LOG.debug("Get Action ID {}", aids.toString());
     return actionDao.getByIds(aids);
   }
 
   public List<ActionInfo> getActionsTableItem(String aidCondition,
       String cidCondition) throws SQLException {
+    LOG.debug("Get aid {} cid {}", aidCondition, cidCondition);
     return actionDao.getByCondition(aidCondition, cidCondition);
   }
 
