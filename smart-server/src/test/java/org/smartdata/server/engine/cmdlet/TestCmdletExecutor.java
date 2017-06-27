@@ -33,23 +33,33 @@
 //import org.junit.Test;
 //
 //import java.io.IOException;
+//import java.util.ArrayList;
 //import java.util.List;
 //
 ///**
 // * CmdletExecutor Unit Test
 // */
-//@Deprecated
 //public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
+//
+//  @Test
+//  public void testCreateFromDescriptor() throws Exception {
+//    waitTillSSMExitSafeMode();
+//    generateTestCases();
+//    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
+//    List<ActionInfo> actionInfos = ssm.getCmdletExecutor().createActionInfos(cmdletDescriptor, 0);
+//    Assert.assertTrue(cmdletDescriptor.actionSize() == actionInfos.size());
+//  }
+//
 //
 //  @Test
 //  public void testfileLock() throws Exception {
 //    waitTillSSMExitSafeMode();
 //    // generateTestCases();
-//    ssm.getCmdletManager()
+//    ssm.getCmdletExecutor()
 //        .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile");
 //    // Cause Exception with the same files
 //    try {
-//      ssm.getCmdletManager()
+//      ssm.getCmdletExecutor()
 //          .submitCmdlet("onessd -file /testMoveFile/file1 ; uncache -file /testCacheFile");
 //    } catch (IOException e) {
 //      Assert.assertTrue(true);
@@ -69,12 +79,21 @@
 //    waitTillSSMExitSafeMode();
 //    generateTestFiles();
 //    Assert.assertTrue(ActionRegistry.supportedActions().size() > 0);
-//    ssm.getCmdletManager()
-//        .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
-//    Thread.sleep(1200);
-//    List<ActionInfo> actionInfos = ssm.getCmdletManager().listNewCreatedActions(10);
-//    System.out.println(actionInfos.size());
-//    Assert.assertTrue(actionInfos.size() >= 0);
+//    ssm.getCmdletExecutor()
+//        .submitCmdlet("allssd -file /testMoveFile/file1 ; "
+//            + "cache -file /testCacheFile ; "
+//            + "write -file /test -length 1024");
+//
+//    List<ActionInfo> actionInfos = new ArrayList<>();
+//    for (int i = 0; i < 4; i++) {
+//      Thread.sleep(1000);
+//      actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
+//      System.out.println((i + 1) + "s, actions = " + actionInfos.size());
+//      if (actionInfos.size() > 0) {
+//        break;
+//      }
+//    }
+//    Assert.assertTrue(actionInfos.size() > 0);
 //    testCmdletExecutorHelper();
 //  }
 //
@@ -84,14 +103,14 @@
 //    generateTestFiles();
 //    Assert.assertTrue(ActionRegistry.supportedActions().size() > 0);
 //    try {
-//      ssm.getCmdletManager()
+//      ssm.getCmdletExecutor()
 //          .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; bug /bug bug bug");
 //    } catch (IOException e) {
 //      System.out.println("Wrong cmdlet is detected!");
 //      Assert.assertTrue(true);
 //    }
 //    Thread.sleep(1200);
-//    List<ActionInfo> actionInfos = ssm.getCmdletManager().listNewCreatedActions(10);
+//    List<ActionInfo> actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
 //    Assert.assertTrue(actionInfos.size() == 0);
 //    // testCmdletExecutorHelper();
 //  }
@@ -101,27 +120,27 @@
 //    waitTillSSMExitSafeMode();
 //    generateTestCases();
 //    Assert.assertTrue(ssm
-//        .getCmdletManager()
+//        .getCmdletExecutor()
 //        .listCmdletsInfo(1, null).size() == 1);
 //    Assert.assertTrue(ssm
-//        .getCmdletManager().getCmdletInfo(0) != null);
-//    ssm.getCmdletManager().deleteCmdlet(0);
+//        .getCmdletExecutor().getCmdletInfo(0) != null);
+//    ssm.getCmdletExecutor().deleteCmdlet(0);
 //    Assert.assertTrue(ssm
-//        .getCmdletManager()
+//        .getCmdletExecutor()
 //        .listCmdletsInfo(1, null).size() == 0);
 //    // Test delete all cmdlets under rid = 1
-//    ssm.getCmdletManager().submitCmdlet(
+//    ssm.getCmdletExecutor().submitCmdlet(
 //        new CmdletDescriptor("allssd -file /testMoveFile/file1", 1));
-//    ssm.getCmdletManager().submitCmdlet(
+//    ssm.getCmdletExecutor().submitCmdlet(
 //        new CmdletDescriptor("write -file /test1 -length 1024", 1));
-//    ssm.getCmdletManager().submitCmdlet(
+//    ssm.getCmdletExecutor().submitCmdlet(
 //        new CmdletDescriptor("write -file /test -length 1024", 1));
 //    Assert.assertTrue(ssm
-//        .getCmdletManager()
+//        .getCmdletExecutor()
 //        .listCmdletsInfo(1, null).size() == 3);
-//    ssm.getCmdletManager().deleteCmdletByRule(1);
+//    ssm.getCmdletExecutor().deleteCmdletByRule(1);
 //    Assert.assertTrue(ssm
-//        .getCmdletManager()
+//        .getCmdletExecutor()
 //        .listCmdletsInfo(1, null).size() == 0);
 //  }
 //
@@ -131,12 +150,12 @@
 //    generateTestFiles();
 //    generateTestCases();
 //    // Activate 1
-//    ssm.getCmdletManager().activateCmdlet(1);
-//    Assert.assertTrue(ssm.getCmdletManager().inCache(1));
+//    ssm.getCmdletExecutor().activateCmdlet(1);
+//    Assert.assertTrue(ssm.getCmdletExecutor().inCache(1));
 //    // Disable 1
-//    CmdletInfo cmdinfo = ssm.getCmdletManager().getCmdletInfo(1);
+//    CmdletInfo cmdinfo = ssm.getCmdletExecutor().getCmdletInfo(1);
 //    if (cmdinfo.getState() != CmdletState.DONE) {
-//      ssm.getCmdletManager().disableCmdlet(1);
+//      ssm.getCmdletExecutor().disableCmdlet(1);
 //      Assert.assertTrue(cmdinfo.getState() == CmdletState.DISABLED);
 //    }
 //  }*/
@@ -170,7 +189,7 @@
 //  }
 //
 //  private void generateTestCases() throws Exception {
-//    MetaStore metaStore = ssm.getMetaStore();
+//    MetaStore metaStore = ssm.getCmdletExecutor().getContext().getMetaStore();
 //    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
 //    CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
 //        CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
@@ -180,10 +199,10 @@
 //  }
 //
 //  private void testCmdletExecutorHelper() throws Exception {
-//    MetaStore metaStore = ssm.getMetaStore();
+//    MetaStore metaStore = ssm.getCmdletExecutor().getContext().getMetaStore();
 //    while (true) {
 //      Thread.sleep(2000);
-//      int current = ssm.getCmdletManager().getCmdletsSizeInCache();
+//      int current = ssm.getCmdletExecutor().cacheSize();
 //      System.out.printf("Cmdlet CacheObject size = %d\n", current);
 //      if (current == 0) {
 //        break;
