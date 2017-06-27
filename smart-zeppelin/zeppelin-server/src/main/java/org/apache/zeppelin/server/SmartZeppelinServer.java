@@ -17,21 +17,10 @@
 
 package org.apache.zeppelin.server;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.servlet.DispatcherType;
-import javax.ws.rs.core.Application;
-
 import com.sun.jersey.api.core.ApplicationAdapter;
-import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import org.apache.commons.lang.StringUtils;
-import org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet;
 import org.apache.shiro.web.env.EnvironmentLoaderListener;
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
@@ -79,17 +68,28 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.server.SmartEngine;
+
+import javax.servlet.DispatcherType;
+import javax.ws.rs.core.Application;
+import java.io.File;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Main class of Zeppelin.
  */
-public class ZeppelinServer extends Application {
-  private static final Logger LOG = LoggerFactory.getLogger(ZeppelinServer.class);
+public class SmartZeppelinServer extends Application {
+  private static final Logger LOG = LoggerFactory.getLogger(SmartZeppelinServer.class);
 
-  public static Notebook notebook;
-  public static Server jettyWebServer;
-  public static NotebookServer notebookWsServer;
-  public static Helium helium;
+  private SmartEngine engine;
+
+  private ZeppelinConfiguration conf;
+  private Notebook notebook;
+  private Server jettyWebServer;
+  private NotebookServer notebookWsServer;
+  private Helium helium;
 
   private final InterpreterSettingManager interpreterSettingManager;
   private SchedulerFactory schedulerFactory;
@@ -100,8 +100,9 @@ public class ZeppelinServer extends Application {
   private Credentials credentials;
   private DependencyResolver depResolver;
 
-  public ZeppelinServer() throws Exception {
-    ZeppelinConfiguration conf = ZeppelinConfiguration.create();
+  public SmartZeppelinServer(SmartEngine engine) throws Exception {
+    this.engine = engine;
+    this.conf = ZeppelinConfiguration.create();
 
     this.depResolver = new DependencyResolver(
         conf.getString(ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
@@ -166,18 +167,7 @@ public class ZeppelinServer extends Application {
     notebook.addNotebookEventListener(notebookWsServer.getNotebookInformationListener());
   }
 
-  public static void main(String[] args) throws InterruptedException {
-    ZeppelinConfiguration conf = ZeppelinConfiguration.create();
-    conf.setProperty("args", args);
-
-    try {
-      startZeppelinServer(conf);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  public static void startZeppelinServer(ZeppelinConfiguration conf) throws Exception {
+  public void start() throws Exception {
     jettyWebServer = setupJettyServer(conf);
 
     ContextHandlerCollection contexts = new ContextHandlerCollection();
@@ -191,9 +181,6 @@ public class ZeppelinServer extends Application {
 
     // REST api
     setupRestApiContextHandler(webApp, conf);
-
-    //Below is commented since zeppelin-docs module is removed.
-    //final WebAppContext webAppSwagg = setupWebAppSwagger(conf);
 
     LOG.info("Starting zeppelin server");
     try {
@@ -218,21 +205,6 @@ public class ZeppelinServer extends Application {
         LOG.info("Bye");
       }
     });
-
-
-    // when zeppelin is started inside of ide (especially for eclipse)
-    // for graceful shutdown, input any key in console window
-    if (System.getenv("ZEPPELIN_IDENT_STRING") == null) {
-      try {
-        System.in.read();
-      } catch (IOException e) {
-        LOG.error("Exception in ZeppelinServer while main ", e);
-      }
-      System.exit(0);
-    }
-
-    jettyWebServer.join();
-    ZeppelinServer.notebook.getInterpreterSettingManager().close();
   }
 
   private static Server setupJettyServer(ZeppelinConfiguration conf) {
@@ -281,7 +253,7 @@ public class ZeppelinServer extends Application {
     return server;
   }
 
-  private static void setupNotebookServer(WebAppContext webapp,
+  private void setupNotebookServer(WebAppContext webapp,
                                           ZeppelinConfiguration conf) {
     notebookWsServer = new NotebookServer();
     String maxTextMessageSize = conf.getWebsocketMaxTextMessageSize();
@@ -315,9 +287,10 @@ public class ZeppelinServer extends Application {
     return sslContextFactory;
   }
 
-  private static void setupRestApiContextHandler(WebAppContext webapp,
+  private void setupRestApiContextHandler(WebAppContext webapp,
                                                  ZeppelinConfiguration conf) throws Exception {
-    ResourceConfig config = new ApplicationAdapter(new ZeppelinServer());
+
+    ResourceConfig config = new ApplicationAdapter(this);
     ServletHolder restServletHolder = new ServletHolder(new ServletContainer(config));
 
     webapp.setSessionHandler(new SessionHandler());
@@ -360,6 +333,7 @@ public class ZeppelinServer extends Application {
         EnumSet.allOf(DispatcherType.class));
 
     return webApp;
+
   }
 
   @Override

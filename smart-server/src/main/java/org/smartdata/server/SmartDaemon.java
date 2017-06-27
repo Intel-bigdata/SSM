@@ -29,12 +29,12 @@ import org.smartdata.server.utils.HazelcastUtil;
 
 import java.io.IOException;
 
-public class SmartServerDaemon implements ServerDaemon {
+public class SmartDaemon implements ServerDaemon {
   private final String[] args;
   //Todo: maybe we can make worker as an interface
   private HazelcastWorker hazelcastWorker;
 
-  public SmartServerDaemon(String[] args) {
+  public SmartDaemon(String[] args) {
     this.args = args;
   }
 
@@ -60,8 +60,12 @@ public class SmartServerDaemon implements ServerDaemon {
     //SmartServer.main(args);
   }
 
-  public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
-    SmartServerDaemon daemon = new SmartServerDaemon(args);
-    daemon.start();
+  public static void main(String[] args) {
+    SmartDaemon daemon = new SmartDaemon(args);
+    try {
+      daemon.start();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

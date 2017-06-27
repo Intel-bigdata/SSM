@@ -40,4 +40,7 @@ public class SmartConfKeys {
   // RuleManager
   public final static String DFS_SSM_RULE_EXECUTORS_KEY = "dfs.smart.rule.executors";
   public final static int DFS_SSM_RULE_EXECUTORS_DEFAULT = 5;
+
+  public final static String DFS_SSM_ENABLE_ZEPPELIN = "dfs.smart.zeppelin.enable";
+  public final static boolean DFS_SSM_ENABLE_ZEPPELIN_DEFAULT = false;
 }

@@ -23,6 +23,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.apache.zeppelin.server.SmartZeppelinServer;
+import org.apache.zeppelin.server.ZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.SmartServiceState;
@@ -51,14 +54,15 @@ import java.io.PrintStream;
 public class SmartServer {
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
-  private SmartHttpServer httpServer;
-  private SmartRpcServer rpcServer;
   private ConfManager confMgr;
   private SmartConf conf;
   private SmartEngine engine;
   private ServerContext context;
-
   private SmartServiceState serviceState = SmartServiceState.SAFEMODE;
+
+  private SmartHttpServer httpServer;
+  private SmartRpcServer rpcServer;
+  private SmartZeppelinServer zeppelinServer;
 
   public SmartServer(SmartConf conf) {
     this.conf = conf;
@@ -75,6 +79,10 @@ public class SmartServer {
       engine = new SmartEngine(context);
       httpServer = new SmartHttpServer(engine, conf);
       rpcServer = new SmartRpcServer(this, conf);
+
+      if (isZeppelinEnabled()) {
+        zeppelinServer = new SmartZeppelinServer(engine);
+      }
     }
   }
 
@@ -172,6 +180,11 @@ public class SmartServer {
     return conf.getBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, false);
   }
 
+  private boolean isZeppelinEnabled() {
+    return conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN,
+        SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN_DEFAULT);
+  }
+
   private void checkSecurityAndLogin() throws IOException {
     if (!isSecurityEnabled()) {
       return;
@@ -211,8 +224,9 @@ public class SmartServer {
     rpcServer.start();
     httpServer.start();
 
-//    ZeppelinConfiguration zeppelinConf = ZeppelinConfiguration.create();
-//    ZeppelinServer.startZeppelinServer(zeppelinConf);
+    if (isZeppelinEnabled()) {
+      zeppelinServer.start();
+    }
   }
 
   private void startEngines() throws Exception {
@@ -260,18 +274,6 @@ public class SmartServer {
     }
   }
 
-  /**
-   * Waiting services to exit.
-   */
-  /*
-  private void join() throws Exception {
-    for (int i = modules.size() - 1 ; i >= 0; i--) {
-      modules.get(i).join();
-    }
-
-    httpServer.join();
-    rpcServer.join();
-  }*/
   public void shutdown() {
     try {
       stop();
