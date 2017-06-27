@@ -26,6 +26,10 @@ import java.util.Set;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.Application;
 
+import com.sun.jersey.api.core.ApplicationAdapter;
+import com.sun.jersey.api.core.PackagesResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet;
 import org.apache.shiro.web.env.EnvironmentLoaderListener;
@@ -166,10 +170,14 @@ public class ZeppelinServer extends Application {
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     conf.setProperty("args", args);
 
-    startZeppelinServer(conf);
+    try {
+      startZeppelinServer(conf);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
-  public static void startZeppelinServer(ZeppelinConfiguration conf) throws InterruptedException {
+  public static void startZeppelinServer(ZeppelinConfiguration conf) throws Exception {
     jettyWebServer = setupJettyServer(conf);
 
     ContextHandlerCollection contexts = new ContextHandlerCollection();
@@ -178,11 +186,11 @@ public class ZeppelinServer extends Application {
     // Web UI
     final WebAppContext webApp = setupWebAppContext(contexts, conf);
 
-    // REST api
-    setupRestApiContextHandler(webApp, conf);
-
     // Notebook server
     setupNotebookServer(webApp, conf);
+
+    // REST api
+    setupRestApiContextHandler(webApp, conf);
 
     //Below is commented since zeppelin-docs module is removed.
     //final WebAppContext webAppSwagg = setupWebAppSwagger(conf);
@@ -221,10 +229,10 @@ public class ZeppelinServer extends Application {
         LOG.error("Exception in ZeppelinServer while main ", e);
       }
       System.exit(0);
-    }
+    }*/
 
-    jettyWebServer.join();
-    ZeppelinServer.notebook.getInterpreterSettingManager().close();*/
+    //jettyWebServer.join();
+    //ZeppelinServer.notebook.getInterpreterSettingManager().close();
   }
 
   private static Server setupJettyServer(ZeppelinConfiguration conf) {
@@ -308,15 +316,20 @@ public class ZeppelinServer extends Application {
   }
 
   private static void setupRestApiContextHandler(WebAppContext webapp,
-                                                 ZeppelinConfiguration conf) {
-
+                                                 ZeppelinConfiguration conf) throws Exception {
+    /*
     final ServletHolder cxfServletHolder = new ServletHolder(new CXFNonSpringJaxrsServlet());
     cxfServletHolder.setInitParameter("javax.ws.rs.Application", ZeppelinServer.class.getName());
     cxfServletHolder.setName("rest");
     cxfServletHolder.setForcedPath("rest");
+    */
+
+    //ResourceConfig config = new PackagesResourceConfig("org.apache.zeppelin.rest");
+    ResourceConfig config = new ApplicationAdapter(new ZeppelinServer());
+    ServletHolder restServletHolder = new ServletHolder(new ServletContainer(config));
 
     webapp.setSessionHandler(new SessionHandler());
-    webapp.addServlet(cxfServletHolder, "/api/*");
+    webapp.addServlet(restServletHolder, "/api/*");
 
     String shiroIniPath = conf.getShiroPath();
     if (!StringUtils.isBlank(shiroIniPath)) {
@@ -332,6 +345,7 @@ public class ZeppelinServer extends Application {
 
     WebAppContext webApp = new WebAppContext();
     webApp.setContextPath(conf.getServerContextPath());
+
     File warPath = new File(conf.getString(ConfVars.ZEPPELIN_WAR));
     if (warPath.isDirectory()) {
       // Development mode, read from FS
