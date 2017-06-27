@@ -47,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class AgentMaster {
 
   private static final Logger LOG = LoggerFactory.getLogger(AgentMaster.class);
@@ -61,8 +63,9 @@ public class AgentMaster {
   }
 
   public AgentMaster(SmartConf conf, CmdletManager statusUpdater) {
-    Config config = AgentUtils.loadConfigWithAddress(
-        conf.get(AgentConstants.AGENT_MASTER_ADDRESS_KEY));
+    String address = conf.get(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
+    checkNotNull(address);
+    Config config = AgentUtils.loadConfigWithAddress(address);
     this.resourceManager = new ResourceManager();
     Props props = Props.create(MasterActor.class, statusUpdater, resourceManager);
     ActorSystemLauncher launcher = new ActorSystemLauncher(config, props);

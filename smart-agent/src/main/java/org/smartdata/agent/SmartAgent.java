@@ -49,6 +49,8 @@ import scala.concurrent.duration.FiniteDuration;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class SmartAgent {
   private static final String NAME = "SmartAgent";
   private final static Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
@@ -58,12 +60,15 @@ public class SmartAgent {
     SmartAgent agent = new SmartAgent();
 
     SmartConf conf = new SmartConf();
-    String masterAddress = conf.get(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
+    String[] masters = conf.getStrings(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
+
+    checkNotNull(masters);
+
     agent.start(AgentUtils.loadConfigWithAddress(conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
-        AgentUtils.getMasterActorPath(masterAddress));
+        AgentUtils.getMasterActorPaths(masters));
   }
 
-  void start(Config config, String masterPath) {
+  void start(Config config, String[] masterPath) {
     system = ActorSystem.apply(NAME, config);
     system.actorOf(Props.create(AgentActor.class, this, masterPath));
     system.awaitTermination();
@@ -85,13 +90,13 @@ public class SmartAgent {
     private MasterToAgent.AgentId id;
     private ActorRef master;
     private final SmartAgent agent;
-    private final String masterPath;
+    private final String[] masters;
     private final CmdletExecutor executor;
     private final CmdletFactory factory;
 
-    public AgentActor(SmartAgent agent, String masterPath) {
+    public AgentActor(SmartAgent agent, String[] masters) {
       this.agent = agent;
-      this.masterPath = masterPath;
+      this.masters = masters;
       this.executor = new CmdletExecutor(this);
       this.factory = new CmdletFactory(new SmartContext());
     }
@@ -103,21 +108,22 @@ public class SmartAgent {
 
     @Override
     public void preStart() {
-      Cancellable findMaster = findMaster(masterPath);
+      Cancellable findMaster = findMaster();
       getContext().become(new WaitForFindMaster(findMaster));
     }
 
-    private Cancellable findMaster(final String masterPath) {
-      final ActorSelection actorSelection = getContext().actorSelection(masterPath);
+    private Cancellable findMaster() {
       return AgentUtils.repeatActionUntil(getContext().system(),
           Duration.Zero(), RETRY_INTERVAL, TIMEOUT,
           new Runnable() {
             @Override
             public void run() {
-              actorSelection.tell(new Identify(null), getSelf());
+              for (String m : masters) {
+                final ActorSelection actorSelection = getContext().actorSelection(m);
+                actorSelection.tell(new Identify(null), getSelf());
+              }
             }
-          },
-          new Shutdown(agent));
+          }, new Shutdown(agent));
     }
 
     @Override
@@ -188,7 +194,7 @@ public class SmartAgent {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {
             LOG.warn("Lost contact with master {}. Try registering again...", getSender());
-            getContext().become(new WaitForFindMaster(findMaster(masterPath)));
+            getContext().become(new WaitForFindMaster(findMaster()));
           }
         }
       }

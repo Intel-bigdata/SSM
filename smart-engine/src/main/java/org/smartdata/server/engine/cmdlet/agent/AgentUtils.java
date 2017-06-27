@@ -75,7 +75,15 @@ public class AgentUtils {
     };
   }
 
-  public static String getMasterActorPath(String masterAddress) {
+  public static String[] getMasterActorPaths(String[] masters) {
+    String[] paths = new String[masters.length];
+    for (int i = 0; i < masters.length; i++) {
+      paths[i] = getMasterActorPath(masters[i]);
+    }
+    return paths;
+  }
+
+  private static String getMasterActorPath(String masterAddress) {
     HostPort hostPort = new HostPort(masterAddress);
     return String.format("akka.tcp://%s@%s:%s/user/%s",
         AgentConstants.MASTER_ACTOR_SYSTEM_NAME,
