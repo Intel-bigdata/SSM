@@ -17,7 +17,7 @@
  */
 package org.smartdata.server.rest;
 
-import com.google.gson.Gson;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.tables.AccessCountTable;
@@ -37,13 +37,12 @@ import java.util.List;
 @Path("/smart/api/v1/cluster")
 @Produces("application/json")
 public class ClusterRestApi {
-  SmartEngine ssm;
+  SmartEngine smartEngine;
   private static final Logger logger =
       LoggerFactory.getLogger(ClusterRestApi.class);
-  Gson gson = new Gson();
 
-  public ClusterRestApi(SmartEngine ssm) {
-    this.ssm = ssm;
+  public ClusterRestApi(SmartEngine smartEngine) {
+    this.smartEngine = smartEngine;
   }
 
   @GET
@@ -53,18 +52,30 @@ public class ClusterRestApi {
 
   @GET
   @Path("/primary/cachedfiles")
-  public Response cachedFiles() throws Exception {
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getStatesManager().getCachedFileStatus()).build();
+  public Response cachedFiles() {
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getStatesManager().getCachedFileStatus()).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while listing cached files", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 
   @GET
   @Path("/primary/hotfiles")
-  public Response hotFiles() throws Exception {
-    List<AccessCountTable> tables =
-        ssm.getStatesManager().getTablesInLast(Constants.ONE_HOUR_IN_MILLIS);
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getStatesManager().getHotFiles(tables, 20)).build();
+  public Response hotFiles() {
+    try {
+      List<AccessCountTable> tables =
+          smartEngine.getStatesManager().getTablesInLast(Constants.ONE_HOUR_IN_MILLIS);
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getStatesManager().getHotFiles(tables, 20)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while listing hot files", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 
   @GET
@@ -76,5 +87,4 @@ public class ClusterRestApi {
   @Path("/hdfs/{clusterName}")
   public void hdfs() {
   }
-
 }

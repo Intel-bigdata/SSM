@@ -60,4 +60,10 @@
     <value>0.0.0.0:7051</value>
     <description>SmartAgent master address</description>
   </property>
+
+  <property>
+    <name>dfs.smart.rule.executors</name>
+    <value>5</value>
+    <description>Max number of rules that can be executed in parallel</description>
+  </property>
 </configuration>
