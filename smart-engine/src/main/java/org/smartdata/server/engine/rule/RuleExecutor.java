@@ -19,14 +19,14 @@ package org.smartdata.server.engine.rule;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.tables.AccessCountTable;
-import org.smartdata.server.engine.RuleManager;
 import org.smartdata.rule.parser.TimeBasedScheduleInfo;
 import org.smartdata.rule.parser.TranslateResult;
+import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.IOException;
@@ -34,7 +34,6 @@ import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -47,7 +46,7 @@ public class RuleExecutor implements Runnable {
   private RuleManager ruleManager;
   private TranslateResult tr;
   private ExecutionContext ctx;
-  private MetaStore adapter; // TODO: abstract to prevent direct call
+  private MetaStore adapter;
   private volatile boolean exited = false;
   private long exitTime;
   private Stack<String> dynamicCleanups = new Stack<>();
@@ -119,7 +118,7 @@ public class RuleExecutor implements Runnable {
         index++;
       } catch (SQLException e) {
         LOG.error("Rule " + ctx.getRuleId() + " exception", e);
-        return null;
+        return ret;
       }
     }
 
@@ -177,7 +176,6 @@ public class RuleExecutor implements Runnable {
             "SELECT fid, count FROM \'" + tableNames.get(i) + "\'\n";
       }
       String sqlSufix = ") GROUP BY fid ";
-      // TODO: safe check
       String sqlCountFilter =
           (countFilter == null || countFilter.length() == 0) ?
               "" :
@@ -231,19 +229,6 @@ public class RuleExecutor implements Runnable {
     }
     return tableNames;
   }
-
-  /**
-   * Get access count tables within the time interval.
-   * @param startTime
-   * @param endTime
-   * @return can not be null
-   */
-  public static List<String> getAccessCountTablesBetween(
-      long startTime, long endTime) {
-    // TODO: hard code for test now
-    return Arrays.asList("sec-2017-03-31-12-59-45", "sec-2017-03-31-12-59-50");
-  }
-
 
   @Override
   public void run() {

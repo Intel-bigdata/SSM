@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.rest;
 
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.SmartEngine;
@@ -34,20 +33,19 @@ import javax.ws.rs.core.Response;
 @Path("/smart/api/v1")
 @Produces("application/json")
 public class ConfRestApi {
-  SmartEngine ssm;
+  SmartEngine smartEngine;
   private static final Logger logger =
       LoggerFactory.getLogger(ConfRestApi.class);
-  Gson gson = new Gson();
 
-  public ConfRestApi(SmartEngine ssm) {
-    this.ssm = ssm;
+  public ConfRestApi(SmartEngine smartEngine) {
+    this.smartEngine = smartEngine;
   }
 
   @GET
   @Path("/conf")
   public Response conf() {
-    return new JsonResponse<>(Response.Status.OK, "",
-        ssm.getConf().toString()).build();
+    return new JsonResponse<>(Response.Status.OK,
+        smartEngine.getConf().toString()).build();
   }
 
 }

@@ -43,6 +43,9 @@ public class MoverStatus extends ActionStatus {
 
   @Override
   synchronized public float getPercentage() {
+    if (isFinished()) {
+      return 1.0f;
+    }
     if (!totalValueSet) {
       return 0;
     }

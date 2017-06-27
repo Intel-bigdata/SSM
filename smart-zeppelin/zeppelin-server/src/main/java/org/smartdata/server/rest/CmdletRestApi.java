@@ -36,29 +36,41 @@ import javax.ws.rs.core.Response;
 @Path("/smart/api/v1/cmdlets")
 @Produces("application/json")
 public class CmdletRestApi {
-  private SmartEngine ssm;
+  private SmartEngine smartEngine;
   private static final Logger logger =
       LoggerFactory.getLogger(CmdletRestApi.class);
 
-  public CmdletRestApi(SmartEngine ssm) {
-    this.ssm = ssm;
+  public CmdletRestApi(SmartEngine smartEngine) {
+    this.smartEngine = smartEngine;
   }
 
   @GET
   @Path("/{cmdletId}/status")
-  public Response status(@PathParam("cmdletId") String cmdletId)
-      throws Exception {
+  public Response status(@PathParam("cmdletId") String cmdletId) {
     Long longNumber = Long.parseLong(cmdletId);
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletManager().getCmdletInfo(longNumber)).build();
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager().getCmdletInfo(longNumber)).build();
+    } catch (Exception e) {
+      logger.error("Exception in CmdletRestApi while getting status", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 
   @GET
   @Path("/list")
-  public Response list() throws Exception {
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletManager().listCmdletsInfo(-1, null))
-        .build();
+  public Response list() {
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager()
+          .listCmdletsInfo(-1, null))
+          .build();
+    } catch (Exception e) {
+      logger.error("Exception in CmdletRestApi while listing cmdlets", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 
   @POST
@@ -66,12 +78,22 @@ public class CmdletRestApi {
   public Response submitAction(String args,
       @PathParam("actionType") String actionType) {
     try {
-      return new JsonResponse<>(Response.Status.CREATED, ssm.getCmdletManager()
+      return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletManager()
           .submitCmdlet(actionType + " " + args)).build();
     } catch (Exception e) {
-      logger.error("Exception in ActionRestApi while adding action ", e);
+      logger.error("Exception in ActionRestApi while adding cmdlet", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
+  }
+
+  @GET
+  @Path("/{cmdletId}/detail")
+  public void detail() throws Exception {
+  }
+
+  @GET
+  @Path("/{cmdletId}/summary")
+  public void summary() {
   }
 }

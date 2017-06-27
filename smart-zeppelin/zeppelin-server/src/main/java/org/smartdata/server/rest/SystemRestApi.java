@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.rest;
 
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.SmartEngine;
@@ -32,13 +31,12 @@ import javax.ws.rs.Produces;
 @Path("/smart/api/v1/system")
 @Produces("application/json")
 public class SystemRestApi {
-  SmartEngine ssm;
+  SmartEngine smartEngine;
   private static final Logger logger =
       LoggerFactory.getLogger(SystemRestApi.class);
-  Gson gson = new Gson();
 
-  public SystemRestApi(SmartEngine ssm) {
-    this.ssm = ssm;
+  public SystemRestApi(SmartEngine smartEngine) {
+    this.smartEngine = smartEngine;
   }
 
   @GET

@@ -25,11 +25,15 @@ import java.util.Map;
  * Abstract of rule execution environment.
  */
 public class ExecutionContext {
-  public static final String RULE_ID = "ruleid";
+  public static final String RULE_ID = "RuleId";
   private Map<String, Object> envVariables = new HashMap<>();
 
   public long getRuleId() {
     return getLong(RULE_ID);
+  }
+
+  public void setRuleId(long ruleId) {
+    envVariables.put(RULE_ID, ruleId);
   }
 
   public void setProperties(Map<String, Object> properties) {
@@ -67,7 +71,7 @@ public class ExecutionContext {
       } catch (NumberFormatException e) {
         return null;
       }
-    } // TODO: other types
+    }
     return null;
   }
 }

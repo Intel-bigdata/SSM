@@ -24,6 +24,7 @@ import org.smartdata.actions.ActionRegistry;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
@@ -56,12 +57,16 @@ public class RuleManager extends AbstractService {
   private ConcurrentHashMap<Long, RuleInfoRepo> mapRules =
       new ConcurrentHashMap<>();
 
-  // TODO: configurable
-  public ExecutorScheduler execScheduler = new ExecutorScheduler(4);
+  public ExecutorScheduler execScheduler;
 
   public RuleManager(ServerContext context,
       StatesManager statesManager, CmdletManager cmdletManager) {
     super(context);
+
+    int numExecutors = context.getConf().getInt(
+        SmartConfKeys.DFS_SSM_RULE_EXECUTORS_KEY,
+        SmartConfKeys.DFS_SSM_RULE_EXECUTORS_DEFAULT);
+    execScheduler = new ExecutorScheduler(numExecutors);
 
     this.statesManager = statesManager;
     this.cmdletManager = cmdletManager;
@@ -87,16 +92,7 @@ public class RuleManager extends AbstractService {
     }
 
     TranslateResult tr = doCheckRule(rule, null);
-    CmdletDescriptor cd = tr.getCmdDescriptor();
-    String error = "";
-    for (int i = 0; i < cd.actionSize(); i++) {
-      if (!ActionRegistry.checkAction(cd.getActionName(i))) {
-        error += "Action '" + cd.getActionName(i) + "' not supported.\n";
-      }
-    }
-    if (error.length() > 0) {
-      throw new IOException(error);
-    }
+    doCheckActions(tr.getCmdDescriptor());
 
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
@@ -109,10 +105,21 @@ public class RuleManager extends AbstractService {
 
     RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, metaStore);
     mapRules.put(ruleInfo.getId(), infoRepo);
-
     submitRuleToScheduler(infoRepo.launchExecutor(this));
 
     return ruleInfo.getId();
+  }
+
+  private void doCheckActions(CmdletDescriptor cd) throws IOException {
+    String error = "";
+    for (int i = 0; i < cd.actionSize(); i++) {
+      if (!ActionRegistry.checkAction(cd.getActionName(i))) {
+        error += "Action '" + cd.getActionName(i) + "' not supported.\n";
+      }
+    }
+    if (error.length() > 0) {
+      throw new IOException(error);
+    }
   }
 
   private TranslateResult doCheckRule(String rule, TranslationContext ctx)
@@ -142,7 +149,13 @@ public class RuleManager extends AbstractService {
   public void deleteRule(long ruleID, boolean dropPendingCmdlets)
       throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
-    infoRepo.delete();
+    try {
+      if (dropPendingCmdlets && getCmdletManager() != null) {
+        getCmdletManager().deleteCmdletByRule(infoRepo.getRuleInfo().getId());
+      }
+    } finally {
+      infoRepo.delete();
+    }
   }
 
   public void activateRule(long ruleID) throws IOException {

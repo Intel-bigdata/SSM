@@ -17,7 +17,7 @@
  */
 package org.smartdata.server.rest;
 
-import com.google.gson.Gson;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionRegistry;
@@ -36,32 +36,52 @@ import javax.ws.rs.core.Response;
 @Path("/smart/api/v1/actions")
 @Produces("application/json")
 public class ActionRestApi {
-  SmartEngine ssm;
+  SmartEngine smartEngine;
   private static final Logger logger =
       LoggerFactory.getLogger(ActionRestApi.class);
-  Gson gson = new Gson();
 
-  public ActionRestApi(SmartEngine ssm) {
-    this.ssm = ssm;
+  public ActionRestApi(SmartEngine smartEngine) {
+    this.smartEngine = smartEngine;
   }
 
   @GET
   @Path("/registry/list")
-  public Response actionTypes() throws Exception {
-    return new JsonResponse<>(Response.Status.OK,
-      ActionRegistry.supportedActions()).build();
+  public Response actionTypes() {
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          ActionRegistry.supportedActions()).build();
+    } catch (Exception e) {
+      logger.error("Exception in ActionRestApi while listing action types", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 
   @GET
   @Path("/list")
-  public Response actionList() throws Exception {
-    return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletManager().listNewCreatedActions(20)).build();
+  public Response actionList() {
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager().listNewCreatedActions(20)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ActionRestApi while listing action types", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 
   @GET
   @Path("/{actionId}/status")
-  public void status() {
+  public Response status(@PathParam("actionId") String actionId) {
+    Long longNumber = Long.parseLong(actionId);
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager().getActionInfo(longNumber)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ActionRestApi while listing actions", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 
   @GET
@@ -69,7 +89,7 @@ public class ActionRestApi {
   public Response detail(@PathParam("actionId") String actionId) throws Exception {
     Long longNumer = Long.parseLong(actionId);
     return new JsonResponse<>(Response.Status.OK,
-        ssm.getCmdletManager().getActionInfo(longNumer)).build();
+        smartEngine.getCmdletManager().getActionInfo(longNumer)).build();
   }
 
   @GET

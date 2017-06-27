@@ -17,9 +17,6 @@
  */
 package org.smartdata.rule.parser;
 
-/**
- * Created by root on 3/23/17.
- */
 public enum ValueType {
   ERROR, NONE, LONG, STRING, BOOLEAN, TIMEINTVAL, TIMEPOINT;
 }
