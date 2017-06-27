@@ -1,9 +1,6 @@
 package org.smartdata.actions.hdfs;
 
-import org.apache.hadoop.util.StringUtils;
-import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.MockActionStatusReporter;
 
 import java.io.IOException;

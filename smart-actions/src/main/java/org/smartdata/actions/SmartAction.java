@@ -113,7 +113,7 @@ public abstract class SmartAction {
 
   protected abstract void execute() throws Exception;
 
-  public void run() {
+  final public void run() {
     Exception exception = null;
     try {
       reportStart();
