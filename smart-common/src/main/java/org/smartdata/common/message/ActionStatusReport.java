@@ -17,7 +17,6 @@
  */
 package org.smartdata.common.message;
 
-import java.io.Serializable;
 import java.util.List;
 
 public class ActionStatusReport implements StatusMessage {
@@ -33,52 +32,5 @@ public class ActionStatusReport implements StatusMessage {
 
   public void setActionStatuses(List<ActionStatus> actionStatuses) {
     this.actionStatuses = actionStatuses;
-  }
-
-  //Todo: integrate this with the other class
-  public static class ActionStatus implements Serializable {
-    private long actionId;
-    private float percentage;
-    private String result;
-    private String log;
-
-    public ActionStatus(long actionId, float percentage, String result, String log) {
-      this.actionId = actionId;
-      this.percentage = percentage;
-      this.result = result;
-      this.log = log;
-    }
-
-    public long getActionId() {
-      return actionId;
-    }
-
-    public void setActionId(long actionId) {
-      this.actionId = actionId;
-    }
-
-    public float getPencentage() {
-      return percentage;
-    }
-
-    public void setPencentage(float percentage) {
-      this.percentage = percentage;
-    }
-
-    public String getResult() {
-      return result;
-    }
-
-    public void setResult(String result) {
-      this.result = result;
-    }
-
-    public String getLog() {
-      return log;
-    }
-
-    public void setLog(String log) {
-      this.log = log;
-    }
   }
 }

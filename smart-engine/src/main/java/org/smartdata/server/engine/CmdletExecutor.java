@@ -18,14 +18,12 @@
 package org.smartdata.server.engine;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.actions.ActionRegistry;
-import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.client.SmartDFSClient;

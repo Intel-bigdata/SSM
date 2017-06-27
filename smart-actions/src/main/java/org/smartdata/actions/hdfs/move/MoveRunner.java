@@ -17,14 +17,12 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import java.io.IOException;
-
 /**
  * Base class for all kinds of move strategies.
  */
 public abstract class MoveRunner {
 
-  public abstract void move(String file) throws IOException, InterruptedException;
+  public abstract void move(String file) throws Exception;
 
-  public abstract void move(String[] files) throws IOException, InterruptedException;
+  public abstract void move(String[] files) throws Exception;
 }

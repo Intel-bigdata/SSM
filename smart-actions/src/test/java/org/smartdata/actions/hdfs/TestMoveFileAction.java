@@ -19,10 +19,8 @@ package org.smartdata.actions.hdfs;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.MockActionStatusReporter;
 import org.smartdata.actions.hdfs.move.MoverStatus;
 import org.smartdata.common.message.ActionFinished;

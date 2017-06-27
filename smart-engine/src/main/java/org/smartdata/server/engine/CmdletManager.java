@@ -29,6 +29,7 @@ import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.message.ActionFinished;
 import org.smartdata.common.message.ActionStarted;
+import org.smartdata.common.message.ActionStatus;
 import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.common.message.StatusMessage;
@@ -416,11 +417,11 @@ public class CmdletManager extends AbstractService {
   }
 
   private void onActionStatusReport(ActionStatusReport report) throws IOException {
-    for (ActionStatusReport.ActionStatus status : report.getActionStatuses()) {
+    for (ActionStatus status : report.getActionStatuses()) {
       long actionId = status.getActionId();
       if (this.idToActions.containsKey(actionId)) {
         ActionInfo actionInfo = this.idToActions.get(actionId);
-        actionInfo.setProgress(status.getPencentage());
+        actionInfo.setProgress(status.getPercentage());
         actionInfo.setLog(status.getLog());
         actionInfo.setResult(status.getResult());
       } else {
