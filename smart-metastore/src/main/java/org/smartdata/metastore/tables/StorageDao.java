@@ -90,25 +90,25 @@ public class StorageDao {
   }
 
   public String getStoragePolicyName(int sid) throws SQLException {
-    String sql = "SELECT policy_name FROM `storage_policy` WHERE sid = ?";
+    String sql = "SELECT policy_name FROM storage_policy WHERE sid = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{sid}, String.class);
   }
 
   public Integer getStoragePolicyID(String policyName) throws SQLException {
-    String sql = "SELECT sid FROM `storage_policy` WHERE policy_name = ?";
+    String sql = "SELECT sid FROM storage_policy WHERE policy_name = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{policyName}, Integer.class);
   }
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s)
       throws SQLException {
-    String sql = "INSERT INTO `storage_policy` (sid, policy_name) VALUES('"
+    String sql = "INSERT INTO storage_policy (sid, policy_name) VALUES('"
         + s.getSid() + "','" + s.getPolicyName() + "');";
     jdbcTemplate.execute(sql);
   }
 
   public int updateFileStoragePolicy(String path, String policyName)
       throws SQLException {
-    String sql0 = "SELECT sid FROM `storage_policy` WHERE policy_name = ?";
+    String sql0 = "SELECT sid FROM storage_policy WHERE policy_name = ?";
     Integer sid = jdbcTemplate.queryForObject(sql0, new Object[]{policyName}, Integer.class);
     if (sid == null) {
       throw new SQLException("Unknown storage policy name '"
@@ -122,7 +122,7 @@ public class StorageDao {
 
   public void insertStoragesTable(final StorageCapacity[] storages)
       throws SQLException {
-    String sql = "INSERT INTO `storages` (type, capacity, free) VALUES (?,?,?);";
+    String sql = "INSERT INTO storages (type, capacity, free) VALUES (?,?,?);";
     jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
           public void setValues(PreparedStatement ps, int i) throws SQLException {

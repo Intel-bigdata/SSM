@@ -165,7 +165,7 @@ public class ActionDao {
     parameters.put("create_time", actionInfo.getCreateTime());
     parameters.put("finished", actionInfo.isFinished());
     parameters.put("finish_time", actionInfo.getFinishTime());
-    parameters.put("progress", actionInfo.getProgress());
+    parameters.put("progress", (int)(actionInfo.getProgress()));
     return parameters;
   }
 
@@ -184,7 +184,7 @@ public class ActionDao {
       actionInfo.setCreateTime(resultSet.getLong("create_time"));
       actionInfo.setFinished(resultSet.getBoolean("finished"));
       actionInfo.setFinishTime(resultSet.getLong("finish_time"));
-      actionInfo.setProgress(resultSet.getFloat("progress"));
+      actionInfo.setProgress(resultSet.getInt("progress"));
       return actionInfo;
     }
   }

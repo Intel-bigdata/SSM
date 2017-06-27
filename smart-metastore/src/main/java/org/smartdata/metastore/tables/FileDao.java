@@ -141,7 +141,7 @@ public class FileDao {
     parameters.put("is_dir", fileStatusInternal.isDir());
     parameters.put("sid", MetaUtil.getKey(mapOwnerIdName, fileStatusInternal.getOwner()));
     parameters.put("oid", MetaUtil.getKey(mapGroupIdName, fileStatusInternal.getGroup()));
-    parameters.put("permission", fileStatusInternal.getPermission());
+    parameters.put("permission", fileStatusInternal.getPermission().toShort());
     return parameters;
   }
 

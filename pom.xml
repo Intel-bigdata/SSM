@@ -169,6 +169,11 @@
         <version>3.16.1</version>
       </dependency>
       <dependency>
+        <groupId>Mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>5.1.38</version>
+      </dependency>
+      <dependency>
         <groupId>com.alibaba</groupId>
         <artifactId>druid</artifactId>
         <version>${druid.version}</version>
