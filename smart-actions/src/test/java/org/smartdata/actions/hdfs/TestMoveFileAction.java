@@ -167,7 +167,6 @@ public class TestMoveFileAction extends ActionMiniCluster {
     } catch (Exception e) {
       Assert.assertTrue(status.isFinished());
       Assert.assertFalse(status.isSuccessful());
-      Assert.assertEquals(1.0f, status.getPercentage(), 0.0000001f);
     }
   }
 
