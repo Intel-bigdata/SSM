@@ -22,7 +22,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.smartdata.SmartContext;
 import org.smartdata.common.message.ActionFinished;
 import org.smartdata.common.message.ActionStarted;
-import org.smartdata.common.message.ActionStatusReport;
+import org.smartdata.common.message.ActionStatus;
 import org.smartdata.common.message.StatusReporter;
 
 import java.io.IOException;
@@ -113,7 +113,7 @@ public abstract class SmartAction {
 
   protected abstract void execute() throws Exception;
 
-  public void run() {
+  final public void run() {
     Exception exception = null;
     try {
       reportStart();
@@ -167,8 +167,8 @@ public abstract class SmartAction {
     return 0.0F;
   }
 
-  public ActionStatusReport.ActionStatus getActionStatus() throws UnsupportedEncodingException {
-    return new ActionStatusReport.ActionStatus(this.actionId, getProgress(),
+  public ActionStatus getActionStatus() throws UnsupportedEncodingException {
+    return new ActionStatus(this.actionId, getProgress(),
       StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
       StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")));
   }

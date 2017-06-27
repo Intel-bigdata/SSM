@@ -17,20 +17,18 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import java.io.IOException;
-
 /**
  * HDFS SPS based move runner.
  */
 public class SPSBasedMoveRunner extends MoveRunner {
 
   @Override
-  public void move(String file) throws IOException {
+  public void move(String file) throws Exception {
 
   }
 
   @Override
-  public void move(String[] files) throws IOException {
+  public void move(String[] files) throws Exception {
 
   }
 }

@@ -32,7 +32,6 @@ import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionStatus;
 
 import java.io.IOException;
 import java.net.URI;
@@ -51,14 +50,8 @@ public class MoverCli extends Configured implements Tool {
     this(new MoverStatus());
   }
 
-  public MoverCli(ActionStatus status) {
-    if (status instanceof MoverStatus) {
-      this.status = (MoverStatus)status;
-    }
-    else {
-      throw new IllegalArgumentException("MoverBasedMoveRunner must use MoverStatus to"
-          + "initialize");
-    }
+  public MoverCli(MoverStatus status) {
+    this.status = status;
   }
 
   @VisibleForTesting

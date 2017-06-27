@@ -24,43 +24,52 @@ import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.cmdlet.agent.ActorSystemHarness;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
-import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 
 public class TestSmartAgent extends ActorSystemHarness {
 
   @Test
-  public void testAgent() {
+  public void testAgent() throws InterruptedException {
     ActorSystem system = getActorSystem();
-    JavaTestKit mockedMaster = new JavaTestKit(system);
+    final int num = 2;
+    JavaTestKit[] masters = new JavaTestKit[num];
+    String[] masterPaths = new String[num];
+    for (int i = 0; i < num; i++) {
+      masters[i] = new JavaTestKit(system);
+      masterPaths[i] = AgentUtils.getFullPath(system, masters[i].getRef().path());
+    };
     SmartConf conf = new SmartConf();
     AgentRunner runner = new AgentRunner(
-        AgentUtils.loadConfigWithAddress(conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
-        AgentUtils.getFullPath(system, mockedMaster.getRef().path()));
+        AgentUtils.loadConfigWithAddress(conf.get(AgentConstants.AGENT_ADDRESS_KEY)), masterPaths);
     runner.start();
 
-    mockedMaster.expectMsgClass(RegisterNewAgent.class);
-    mockedMaster.reply(new AgentRegistered(new MasterToAgent.AgentId(0)));
+    masters[0].expectMsgClass(RegisterNewAgent.class);
+    masters[0].reply(new MasterToAgent.AgentRegistered(new MasterToAgent.AgentId(0)));
+
+    system.stop(masters[0].getRef());
+
+    masters[1].expectMsgClass(RegisterNewAgent.class);
   }
+
 
   private class AgentRunner extends Thread {
 
     private final Config config;
-    private final String masterPath;
+    private final String[] masters;
 
-    public AgentRunner(Config config, String masterPath) {
+    public AgentRunner(Config config, String[] masters) {
       this.config = config;
-      this.masterPath = masterPath;
+      this.masters = masters;
     }
 
     @Override
     public void run() {
       SmartAgent agent = new SmartAgent();
-      agent.start(config, masterPath);
+      agent.start(config, masters);
     }
-
   }
 
 }

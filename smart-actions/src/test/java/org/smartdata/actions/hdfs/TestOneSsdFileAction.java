@@ -21,10 +21,8 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.hadoop.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.actions.ActionStatus;
 import org.smartdata.actions.MockActionStatusReporter;
 
 import java.util.HashMap;
