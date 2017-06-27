@@ -239,8 +239,8 @@ public class TestRuleManager extends TestDaoUtil {
 
     Thread[] threads = new Thread[] {
         new Thread(new RuleInfoUpdater(rid, 3)),
-        new Thread(new RuleInfoUpdater(rid, 7)),
-        new Thread(new RuleInfoUpdater(rid, 11)),
+//        new Thread(new RuleInfoUpdater(rid, 7)),
+//        new Thread(new RuleInfoUpdater(rid, 11)),
         new Thread(new RuleInfoUpdater(rid, 17))} ;
 
     for (Thread t : threads) {
@@ -307,7 +307,7 @@ public class TestRuleManager extends TestDaoUtil {
 
     long start = System.currentTimeMillis();
 
-    int nThreads = 10;
+    int nThreads = 2;
     Thread[] threads = new Thread[nThreads];
     for (int i = 0; i< nThreads; i++) {
       threads[i] = new Thread(new StateChangeWorker(rid));
