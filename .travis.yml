@@ -11,12 +11,14 @@ before_install:
   - pushd protobuf-2.5.0 && ./configure --prefix=/usr && make && sudo make install && popd
 
 #  - sh bin/build.sh
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
-jdk:
-  - oraclejdk8
+
+matrix:
+  include:
+    - jdk: "oraclejdk7"
+      env: PROFILE=""
+    - jdk: "oraclejdk8"
+      env: PROFILE="-Pjava8"
+
 cache:
   directories:
     - $HOME/.m2
