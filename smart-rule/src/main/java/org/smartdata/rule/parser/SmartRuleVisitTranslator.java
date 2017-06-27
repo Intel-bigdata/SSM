@@ -350,7 +350,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       paras.add(value);
 
       if (p.getParamsTypes().get(paraIndex) == ValueType.TIMEINTVAL) {
-        minTimeInverval = Long.min((long)value, minTimeInverval);
+        minTimeInverval = Math.min((long)value, minTimeInverval);
       }
 
       paraIndex++;
@@ -418,7 +418,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           if (!right.isOperNode()) {
             VisitResult vs = ((ValueNode) right).eval();
             if (vs.isConst() && vs.getValueType() == ValueType.TIMEINTVAL) {
-              minTimeInverval = Long.min((long)vs.getValue(), minTimeInverval);
+              minTimeInverval = Math.min((long)vs.getValue(), minTimeInverval);
             }
           }
         }
@@ -637,7 +637,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   private void setDefaultTimeBasedScheduleInfo() {
     if (timeBasedScheduleInfo == null) {
-      long intval = Long.max(5000, minTimeInverval / 20);
+      long intval = Math.max(5000, minTimeInverval / 20);
       timeBasedScheduleInfo = new TimeBasedScheduleInfo(getTimeNow(),
           TimeBasedScheduleInfo.FOR_EVER, intval);
     }
