@@ -31,7 +31,6 @@
     <module>smart-admin</module>
     <module>smart-engine</module>
     <module>smart-server</module>
-    <module>smart-alluxio</module>
     <module>smart-rule</module>
     <module>smart-zeppelin</module>
     <module>smart-agent</module>
@@ -39,6 +38,18 @@
     <module>smart-dist</module>
     <module>smart-integration</module>
   </modules>
+
+  <profiles>
+    <profile>
+      <id>java8</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <modules>
+        <module>smart-alluxio</module>
+      </modules>
+    </profile>
+  </profiles>
 
   <properties>
     <maven.compiler.source>1.7</maven.compiler.source>
