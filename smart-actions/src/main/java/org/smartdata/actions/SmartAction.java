@@ -142,7 +142,7 @@ public abstract class SmartAction {
                 this.actionId,
                 System.currentTimeMillis(),
                 StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
-                StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
+                StringEscapeUtils.escapeJava(this.logOs.toString("UTF-8")),
                 exception));
       } catch (IOException e) {
         e.printStackTrace();

@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Deprecated
 public class CmdletPool {
-  static final Logger LOG = LoggerFactory.getLogger(CmdletExecutor.class);
+  static final Logger LOG = LoggerFactory.getLogger(CmdletPool.class);
 
   private Map<Long, Cmdlet> cmdletMap;
   private Map<Long, Thread> cmdletThread;
