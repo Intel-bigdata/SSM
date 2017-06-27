@@ -33,6 +33,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -79,11 +80,20 @@ public class TestCmdletExecutor extends TestEmptyMiniSmartCluster {
     generateTestFiles();
     Assert.assertTrue(ActionRegistry.supportedActions().size() > 0);
     ssm.getCmdletExecutor()
-        .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
-    Thread.sleep(1200);
-    List<ActionInfo> actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
-    System.out.println(actionInfos.size());
-    Assert.assertTrue(actionInfos.size() >= 0);
+        .submitCmdlet("allssd -file /testMoveFile/file1 ; "
+            + "cache -file /testCacheFile ; "
+            + "write -file /test -length 1024");
+
+    List<ActionInfo> actionInfos = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      Thread.sleep(1000);
+      actionInfos = ssm.getCmdletExecutor().listNewCreatedActions(10);
+      System.out.println((i + 1) + "s, actions = " + actionInfos.size());
+      if (actionInfos.size() > 0) {
+        break;
+      }
+    }
+    Assert.assertTrue(actionInfos.size() > 0);
     testCmdletExecutorHelper();
   }
 

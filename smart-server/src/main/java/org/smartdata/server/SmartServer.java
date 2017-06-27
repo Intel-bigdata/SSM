@@ -23,21 +23,19 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
-import org.apache.zeppelin.server.ZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.SmartServiceState;
 import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.utils.MetaUtil;
 import org.smartdata.server.engine.CmdletExecutor;
 import org.smartdata.server.engine.ConfManager;
-import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.StatesManager;
-import org.smartdata.metastore.utils.MetaUtil;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.server.web.SmartHttpServer;
 
@@ -212,8 +210,8 @@ public class SmartServer {
     rpcServer.start();
     httpServer.start();
 
-    ZeppelinConfiguration zeppelinConf = ZeppelinConfiguration.create();
-    ZeppelinServer.startZeppelinServer(zeppelinConf);
+//    ZeppelinConfiguration zeppelinConf = ZeppelinConfiguration.create();
+//    ZeppelinServer.startZeppelinServer(zeppelinConf);
   }
 
   private void startEngines() throws Exception {
