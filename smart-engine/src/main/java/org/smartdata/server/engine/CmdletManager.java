@@ -29,6 +29,7 @@ import org.smartdata.common.actions.ActionInfoComparator;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.message.ActionFinished;
 import org.smartdata.common.message.ActionStarted;
+import org.smartdata.common.message.ActionStatus;
 import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.common.message.StatusMessage;
@@ -188,7 +189,7 @@ public class CmdletManager extends AbstractService {
   }
 
   int num = 0;
-  public LaunchCmdlet getNextCmdletToRun() throws IOException {
+  public LaunchCmdlet getNextCmdletToRunForTest() throws IOException {
     num +=1;
     List<LaunchAction> actions = new ArrayList<>();
     Map<String, String> args = new HashMap<>();
@@ -216,7 +217,7 @@ public class CmdletManager extends AbstractService {
     return false;
   }
 
-  public LaunchCmdlet getNextCmdletToRun2() throws IOException {
+  public LaunchCmdlet getNextCmdletToRun() throws IOException {
     CmdletInfo cmdletInfo = this.pendingCmdlet.poll();
     if (cmdletInfo == null) {
       return null;
@@ -297,10 +298,11 @@ public class CmdletManager extends AbstractService {
   //Todo: optimize this function.
   private void cmdletFinished(long cmdletId) throws IOException {
     CmdletInfo cmdletInfo = this.idToCmdlets.remove(cmdletId);
-    this.runningCmdlets.remove(cmdletId);
     if (cmdletInfo != null) {
       this.flushCmdletInfo(cmdletInfo);
     }
+    this.runningCmdlets.remove(cmdletId);
+    this.submittedCmdlets.remove(cmdletInfo.getParameters());
 
     List<ActionInfo> removed = new ArrayList<>();
     for (Iterator<Map.Entry<Long, ActionInfo>> it = idToActions.entrySet().iterator(); it.hasNext();) {
@@ -333,7 +335,7 @@ public class CmdletManager extends AbstractService {
   }
 
   @VisibleForTesting
-  public int getCmdletsSizeInCache() {
+  int getCmdletsSizeInCache() {
     return this.idToCmdlets.size();
   }
 
@@ -404,7 +406,6 @@ public class CmdletManager extends AbstractService {
       CmdletState state = statusUpdate.getCurrentState();
       CmdletInfo cmdletInfo = this.idToCmdlets.get(cmdletId);
       cmdletInfo.setState(state);
-      this.flushCmdletInfo(cmdletInfo);
       //The cmdlet is already finished or terminated, remove status from memory.
       if (CmdletState.isTerminalState(state)) {
         //Todo: recover cmdlet?
@@ -416,11 +417,11 @@ public class CmdletManager extends AbstractService {
   }
 
   private void onActionStatusReport(ActionStatusReport report) throws IOException {
-    for (ActionStatusReport.ActionStatus status : report.getActionStatuses()) {
+    for (ActionStatus status : report.getActionStatuses()) {
       long actionId = status.getActionId();
       if (this.idToActions.containsKey(actionId)) {
         ActionInfo actionInfo = this.idToActions.get(actionId);
-        actionInfo.setProgress(status.getPencentage());
+        actionInfo.setProgress(status.getPercentage());
         actionInfo.setLog(status.getLog());
         actionInfo.setResult(status.getResult());
       } else {
@@ -491,7 +492,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  protected synchronized List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
+  protected List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
     List<ActionInfo> actionInfos = new ArrayList<>();
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
       Map<String, String> args = cmdletDescriptor.getActionArgs(index);
@@ -524,7 +525,7 @@ public class CmdletManager extends AbstractService {
     public void run() {
       while (this.dispatcher.canDispatchMore()) {
         try {
-          LaunchCmdlet launchCmdlet = getNextCmdletToRun2();
+          LaunchCmdlet launchCmdlet = getNextCmdletToRun();
           if (launchCmdlet == null) {
             break;
           } else {

@@ -17,31 +17,22 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import org.smartdata.actions.ActionStatus;
-
 /**
  * ActionStatus of Mover tool.
  */
-public class MoverStatus extends ActionStatus {
+public class MoverStatus {
   private long totalBlocks;
   private long totalSize;
   private long movedBlocks;
   private boolean totalValueSet;
 
-  @Override
-  public void init() {
-    super.init();
+  public MoverStatus() {
     totalBlocks = 0;
     totalSize = 0;
     movedBlocks = 0;
     totalValueSet = false;
   }
 
-  public MoverStatus() {
-    init();
-  }
-
-  @Override
   synchronized public float getPercentage() {
     if (!totalValueSet) {
       return 0;

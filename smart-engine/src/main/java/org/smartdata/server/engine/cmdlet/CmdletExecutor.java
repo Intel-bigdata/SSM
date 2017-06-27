@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.common.CmdletState;
+import org.smartdata.common.message.ActionStatus;
 import org.smartdata.common.message.StatusReporter;
 import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.CmdletStatusUpdate;
@@ -73,7 +74,7 @@ public class CmdletExecutor {
   }
 
   public ActionStatusReport getActionStatusReport() {
-    List<ActionStatusReport.ActionStatus> actionStatusList = new ArrayList<>();
+    List<ActionStatus> actionStatusList = new ArrayList<>();
     for (Cmdlet cmdlet : this.runningCmdlets.values()) {
       for (SmartAction action : cmdlet.getActions()) {
         try {
