@@ -62,7 +62,6 @@ public class StatesManager extends AbstractService {
   @Override
   public void init() throws IOException {
     LOG.info("Initializing ...");
-    /*
     this.executorService = Executors.newScheduledThreadPool(4);
     this.accessCountTableManager = new AccessCountTableManager(
         serverContext.getMetaStore(), executorService);
@@ -78,7 +77,6 @@ public class StatesManager extends AbstractService {
             serverContext, serverContext.getMetaStore());
     statesUpdaterService.setContext(serverContext);
     statesUpdaterService.init();
-    */
     LOG.info("Initialized.");
   }
 
@@ -88,8 +86,8 @@ public class StatesManager extends AbstractService {
   @Override
   public void start() throws IOException {
     LOG.info("Starting ...");
-    //accessEventFetcher.start();
-    //statesUpdaterService.start();
+    accessEventFetcher.start();
+    statesUpdaterService.start();
     LOG.info("Started. ");
   }
 
