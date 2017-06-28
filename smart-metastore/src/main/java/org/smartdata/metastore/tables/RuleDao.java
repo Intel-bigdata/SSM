@@ -32,28 +32,32 @@ import java.util.Map;
 
 public class RuleDao {
 
-  private JdbcTemplate jdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
+  private DataSource dataSource;
+
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
 
   public RuleDao(DataSource dataSource) {
-    jdbcTemplate = new JdbcTemplate(dataSource);
-    simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("rules");
-    simpleJdbcInsert.usingGeneratedKeyColumns("id");
+    this.dataSource = dataSource;
   }
 
   public List<RuleInfo> getAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from rules",
         new RuleRowMapper());
   }
 
   public RuleInfo getById(long id) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("select * from rules where id = ?",
         new Object[]{id}, new RuleRowMapper());
   }
 
-
   public long insert(RuleInfo ruleInfo) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("rules");
+    simpleJdbcInsert.usingGeneratedKeyColumns("id");
     long id = simpleJdbcInsert.executeAndReturnKey(toMap(ruleInfo)).longValue();
     ruleInfo.setId(id);
     return id;
@@ -61,6 +65,7 @@ public class RuleDao {
 
   public int update(long ruleId, long lastCheckTime,
       long checkedCount, int cmdletsGen) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "update rules set " +
         "last_check_time = ?, " +
         "checked_count = ?, " +
@@ -70,6 +75,7 @@ public class RuleDao {
 
   public int update(long ruleId, int rs,
       long lastCheckTime, long checkedCount, int cmdletsGen) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "update rules set " +
         "state = ?, " +
         "last_check_time = ?, " +
@@ -79,11 +85,13 @@ public class RuleDao {
   }
 
   public void delete(long id) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from rules where id = ?";
     jdbcTemplate.update(sql, id);
   }
 
   public void deleteAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from rules";
     jdbcTemplate.update(sql);
   }

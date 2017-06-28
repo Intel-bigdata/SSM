@@ -19,7 +19,6 @@ package org.smartdata.metastore.tables;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -29,33 +28,38 @@ import java.util.List;
 import java.util.Map;
 
 public class GroupsDao {
-  private JdbcTemplate jdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
+  private DataSource dataSource;
 
-  public GroupsDao(DataSource dataSource) {
-    this.jdbcTemplate = new JdbcTemplate(dataSource);
-    this.simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("groups");
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
   }
 
-  public synchronized void addGroup(String groupName) throws SQLException {
+  public GroupsDao(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
+  public synchronized void addGroup(String groupName) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = String.format(
         "INSERT INTO groups (group_name) VALUES ('%s')", groupName);
     jdbcTemplate.execute(sql);
   }
 
   public synchronized void deleteGroup(String groupName) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = String.format(
         "DELETE FROM groups where group_name = '%s'", groupName);
     jdbcTemplate.execute(sql);
   }
 
   public int getCountGroups() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject(
         "SELECT COUNT(*) FROM groups", Integer.class);
   }
 
   public List<String> listGroup() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     List<String> groups = jdbcTemplate.query(
         "select group_name from groups",
         new RowMapper<String>() {
@@ -66,7 +70,8 @@ public class GroupsDao {
     return groups;
   }
 
-  public Map<Integer, String> getGroupsMap() throws SQLException {
+  public Map<Integer, String> getGroupsMap() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return toMap(jdbcTemplate.queryForList("SELECT * FROM groups"));
   }
 
@@ -77,6 +82,4 @@ public class GroupsDao {
     }
     return res;
   }
-
 }
-

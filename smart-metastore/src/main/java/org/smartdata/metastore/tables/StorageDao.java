@@ -22,7 +22,6 @@ import org.smartdata.common.models.StoragePolicy;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
@@ -33,23 +32,21 @@ import java.util.List;
 import java.util.Map;
 
 public class StorageDao {
+  private DataSource dataSource;
 
-  private JdbcTemplate jdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsertStorages;
-  private SimpleJdbcInsert simpleJdbcInsertStorage_policy;
-  
-  public StorageDao(DataSource dataSource) {
-    this.jdbcTemplate = new JdbcTemplate(dataSource);
-    this.simpleJdbcInsertStorages = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsertStorages.setTableName("storages");
-    this.simpleJdbcInsertStorage_policy = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsertStorage_policy.setTableName("storage_policy");
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
   }
 
-  public Map<String, StorageCapacity> getStorageTablesItem()
-      throws SQLException {
+  
+  public StorageDao(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
+  public Map<String, StorageCapacity> getStorageTablesItem() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT * FROM storages";
-    List<StorageCapacity> list = this.jdbcTemplate.query(sql,
+    List<StorageCapacity> list = jdbcTemplate.query(sql,
         new RowMapper<StorageCapacity>() {
           public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
             return new StorageCapacity(rs.getString("type"),
@@ -64,8 +61,9 @@ public class StorageDao {
   }
 
   public Map<Integer, String> getStoragePolicyIdNameMap() throws SQLException {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT * FROM storage_policy";
-    List<StoragePolicy> list = this.jdbcTemplate.query(sql,
+    List<StoragePolicy> list = jdbcTemplate.query(sql,
         new RowMapper<StoragePolicy>() {
           public StoragePolicy mapRow(ResultSet rs, int rowNum) throws SQLException {
             return new StoragePolicy(rs.getByte("sid"),
@@ -79,7 +77,8 @@ public class StorageDao {
     return map;
   }
 
-  public StorageCapacity getStorageCapacity(String type) throws SQLException {
+  public StorageCapacity getStorageCapacity(String type) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT * FROM storages WHERE type = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{type}, new RowMapper<StorageCapacity>() {
       public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -89,25 +88,27 @@ public class StorageDao {
     });
   }
 
-  public String getStoragePolicyName(int sid) throws SQLException {
+  public String getStoragePolicyName(int sid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT policy_name FROM storage_policy WHERE sid = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{sid}, String.class);
   }
 
-  public Integer getStoragePolicyID(String policyName) throws SQLException {
+  public Integer getStoragePolicyID(String policyName) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT sid FROM storage_policy WHERE policy_name = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{policyName}, Integer.class);
   }
 
-  public synchronized void insertStoragePolicyTable(StoragePolicy s)
-      throws SQLException {
+  public synchronized void insertStoragePolicyTable(StoragePolicy s) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "INSERT INTO storage_policy (sid, policy_name) VALUES('"
         + s.getSid() + "','" + s.getPolicyName() + "');";
     jdbcTemplate.execute(sql);
   }
 
-  public int updateFileStoragePolicy(String path, String policyName)
-      throws SQLException {
+  public int updateFileStoragePolicy(String path, String policyName) throws SQLException {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql0 = "SELECT sid FROM storage_policy WHERE policy_name = ?";
     Integer sid = jdbcTemplate.queryForObject(sql0, new Object[]{policyName}, Integer.class);
     if (sid == null) {
@@ -122,6 +123,7 @@ public class StorageDao {
 
   public void insertStoragesTable(final StorageCapacity[] storages)
       throws SQLException {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "INSERT INTO storages (type, capacity, free) VALUES (?,?,?);";
     jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
@@ -139,6 +141,7 @@ public class StorageDao {
 
   public synchronized boolean updateStoragesTable(String type
       , Long capacity, Long free) throws SQLException {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = null;
     String sqlPrefix = "UPDATE storages SET";
     String sqlCapacity = (capacity != null) ? ", capacity = '"
