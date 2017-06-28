@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-    <comment>mysql</comment>
-    <entry key="url">jdbc:mysql://localhost/test</entry>
-    <entry key="username">root</entry>
-    <entry key="password">root</entry>
+    <comment>sqlite</comment>
+    <entry key="url">jdbc:sqlite:sqlit-db-path</entry>
+    <entry key="username">""</entry>
+    <entry key="password">""</entry>
 
     <entry key="initialSize">2</entry>
     <entry key="minIdle">2</entry>
