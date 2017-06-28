@@ -35,7 +35,7 @@ import javax.ws.rs.core.Response;
 /**
  * Rules APIs.
  */
-@Path("/smart/api/v1/rules")
+@Path("/rules")
 @Produces("application/json")
 public class RuleRestApi {
   private SmartEngine smartEngine;

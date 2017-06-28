@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
 /**
  * Action APIs.
  */
-@Path("/smart/api/v1/actions")
+@Path("/actions")
 @Produces("application/json")
 public class ActionRestApi {
   SmartEngine smartEngine;

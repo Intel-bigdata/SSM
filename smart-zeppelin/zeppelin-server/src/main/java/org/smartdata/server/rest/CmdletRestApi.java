@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
 /**
  * Cmdlets APIs.
  */
-@Path("/smart/api/v1/cmdlets")
+@Path("/cmdlets")
 @Produces("application/json")
 public class CmdletRestApi {
   private SmartEngine smartEngine;

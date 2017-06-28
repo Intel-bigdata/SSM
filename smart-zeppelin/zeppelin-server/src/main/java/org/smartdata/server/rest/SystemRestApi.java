@@ -31,7 +31,7 @@ import javax.ws.rs.core.Response;
 /**
  * System APIs.
  */
-@Path("/smart/api/v1/system")
+@Path("/system")
 @Produces("application/json")
 public class SystemRestApi {
   SmartEngine smartEngine;
