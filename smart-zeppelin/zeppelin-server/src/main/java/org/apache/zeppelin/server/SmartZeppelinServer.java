@@ -71,6 +71,11 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.SmartEngine;
+import org.smartdata.server.rest.ActionRestApi;
+import org.smartdata.server.rest.ClusterRestApi;
+import org.smartdata.server.rest.CmdletRestApi;
+import org.smartdata.server.rest.ConfRestApi;
+import org.smartdata.server.rest.RuleRestApi;
 import org.smartdata.server.rest.SystemRestApi;
 
 import javax.servlet.DispatcherType;
@@ -85,6 +90,7 @@ import java.util.Set;
  */
 public class SmartZeppelinServer extends Application {
   private static final Logger LOG = LoggerFactory.getLogger(SmartZeppelinServer.class);
+  private static final String SMART_PATH_SPEC = "/smart/api/v1/*";
 
   private SmartEngine engine;
   private SmartConf conf;
@@ -276,6 +282,9 @@ public class SmartZeppelinServer extends Application {
 
   private void setupNotebookServer(WebAppContext webapp) {
     notebookWsServer = new NotebookServer();
+    if (!isZeppelinEnabled()) {
+      return;
+    }
     String maxTextMessageSize = zconf.getWebsocketMaxTextMessageSize();
     final ServletHolder servletHolder = new ServletHolder(notebookWsServer);
     servletHolder.setInitParameter("maxTextMessageSize", maxTextMessageSize);
@@ -313,7 +322,7 @@ public class SmartZeppelinServer extends Application {
     ServletHolder restServletHolder = new ServletHolder(new ServletContainer(config));
 
     webapp.setSessionHandler(new SessionHandler());
-    webapp.addServlet(restServletHolder, "/api/*");
+    webapp.addServlet(restServletHolder, SMART_PATH_SPEC);
 
     String shiroIniPath = zconf.getShiroPath();
     if (!StringUtils.isBlank(shiroIniPath)) {
@@ -329,6 +338,8 @@ public class SmartZeppelinServer extends Application {
 
     WebAppContext webApp = new WebAppContext();
     webApp.setContextPath(zconf.getServerContextPath());
+    webApp.setResourceBase("");
+    contexts.addHandler(webApp);
 
     if (!isZeppelinEnabled()) {
       return webApp;
@@ -368,8 +379,23 @@ public class SmartZeppelinServer extends Application {
   public Set<Object> getSingletons() {
     Set<Object> singletons = new HashSet<>();
 
-    SystemRestApi sysApi = new SystemRestApi(engine);
-    singletons.add(sysApi);
+    SystemRestApi systemApi = new SystemRestApi(engine);
+    singletons.add(systemApi);
+
+    ConfRestApi confApi = new ConfRestApi(engine);
+    singletons.add(confApi);
+
+    ActionRestApi actionApi = new ActionRestApi(engine);
+    singletons.add(actionApi);
+
+    ClusterRestApi clusterApi = new ClusterRestApi(engine);
+    singletons.add(clusterApi);
+
+    CmdletRestApi cmdletApi = new CmdletRestApi(engine);
+    singletons.add(cmdletApi);
+
+    RuleRestApi ruleApi = new RuleRestApi(engine);
+    singletons.add(ruleApi);
 
     if (!isZeppelinEnabled()) {
       return singletons;

@@ -30,7 +30,7 @@ import javax.ws.rs.core.Response;
 /**
  * Conf APIs.
  */
-@Path("/smart/api/v1")
+@Path("/conf")
 @Produces("application/json")
 public class ConfRestApi {
   SmartEngine smartEngine;
@@ -42,7 +42,7 @@ public class ConfRestApi {
   }
 
   @GET
-  @Path("/conf")
+  @Path("")
   public Response conf() {
     return new JsonResponse<>(Response.Status.OK,
         smartEngine.getConf().toString()).build();

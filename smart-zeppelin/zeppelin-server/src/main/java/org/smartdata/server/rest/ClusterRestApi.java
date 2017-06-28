@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Cluster APIs.
  */
-@Path("/smart/api/v1/cluster")
+@Path("/cluster")
 @Produces("application/json")
 public class ClusterRestApi {
   SmartEngine smartEngine;

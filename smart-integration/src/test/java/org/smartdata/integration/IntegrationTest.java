@@ -18,21 +18,17 @@
 package org.smartdata.integration;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import io.restassured.RestAssured;
-import io.restassured.parsing.Parser;
 import io.restassured.response.Response;
+import io.restassured.response.ValidatableResponse;
+import org.hamcrest.Matchers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.smartdata.common.models.ActionInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.integration.cluster.MiniSmartCluster;
 import org.smartdata.integration.cluster.SmartCluster;
-
-import java.util.List;
-
 
 /**
  * Integration test.
@@ -44,6 +40,8 @@ public class IntegrationTest {
   private static String httpUri;
   private static String httpHost;
   private static int httpPort;
+  private static int zeppelinPort;
+  private static Gson gson = new Gson();
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -55,6 +53,7 @@ public class IntegrationTest {
     conf = cluster.getConf();
     httpHost = "localhost";
     httpPort = 7045;
+    zeppelinPort = 8080;
     httpUri = httpHost + ":" + httpPort;
     conf.set(SmartConfKeys.DFS_SSM_HTTP_ADDRESS_KEY, httpUri);
     smartServer = new IntegrationSmartServer();
@@ -65,13 +64,27 @@ public class IntegrationTest {
   }
 
   private static void initRestAssured() {
-    RestAssured.port = httpPort;
-    RestAssured.registerParser("text/plain", Parser.JSON);
+    RestAssured.port = zeppelinPort;
+    //RestAssured.registerParser("text/plain", Parser.JSON);
   }
 
   // Just an example
   @Test
   public void testSubmitAction() throws Exception {
+    Response response1 = RestAssured.get("/smart/api/v1/system/version");
+    String json1 = response1.asString();
+    response1.then().body("body", Matchers.equalTo("0.1.0"));
+
+    Response response2 = RestAssured.get("/smart/api/v1/actions/registry/list");
+    String json2 = response2.asString();
+    ValidatableResponse validatableResponse = response2.then().root("body");
+    validatableResponse.body("find { it.actionName == 'fsck' }.displayName", Matchers.equalTo("fsck"));
+    validatableResponse.body("actionName", Matchers.hasItems("fsck",
+        "diskbalance", "uncache", "setstoragepolicy", "blockec", "copy",
+        "write", "stripec", "cache", "read", "allssd", "checkstorage",
+        "archive", "list", "clusterbalance", "onessd", "hello"));
+
+    /*
     Response response0 = RestAssured.get("/api/v1.0/actionlist");
     String json0 = response0.asString();
     // RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello -length 10");
@@ -95,6 +108,7 @@ public class IntegrationTest {
     String json = response.asString();
     List<ActionInfo> actionInfos = new Gson().fromJson(json, new TypeToken<List<ActionInfo>>(){}.getType());
     System.out.print(json);
+    */
 
     /*response.then().body("actionId[0]", Matchers.equalTo(5))
         .body("actionId[1]", Matchers.equalTo(4))
