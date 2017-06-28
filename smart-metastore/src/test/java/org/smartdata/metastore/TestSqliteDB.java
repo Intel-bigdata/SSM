@@ -22,7 +22,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.sql.Connection;
@@ -54,7 +54,7 @@ public class TestSqliteDB extends TestDaoUtil {
 
   @Test
   public void testCreateNewSqliteDB() throws Exception {
-    MetaUtil.initializeDataBase(metaStore.getConnection());
+    MetaStoreUtils.initializeDataBase(metaStore.getConnection());
   }
 
   @Test
@@ -91,7 +91,7 @@ public class TestSqliteDB extends TestDaoUtil {
       s.executeUpdate("DROP DATABASE IF EXISTS "+db+";");
       s.executeUpdate("CREATE DATABASE "+db+";");
       s.execute("use "+db+";");
-      conn = MetaUtil.createConnection(url+db+"?","root","linux123");
+      conn = MetaStoreUtils.createConnection(url+db+"?","root","linux123");
       MetaStore adapter = new MetaStore(conn);
       adapter.dropAllTables();
 

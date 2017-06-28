@@ -42,7 +42,7 @@ import org.smartdata.metastore.tables.CmdletDao;
 import org.smartdata.metastore.tables.FileDao;
 import org.smartdata.metastore.tables.UserDao;
 import org.smartdata.metastore.tables.XattrDao;
-import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
@@ -58,7 +58,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static org.smartdata.metastore.utils.MetaUtil.getKey;
+import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
 
 
 /**
@@ -625,10 +625,10 @@ public class MetaStore {
     Connection conn = getConnection();
     try {
       String url = conn.getMetaData().getURL();
-      if (url.startsWith(MetaUtil.SQLITE_URL_PREFIX)) {
-        MetaUtil.dropAllTablesSqlite(conn);
-      } else if (url.startsWith(MetaUtil.MYSQL_URL_PREFIX)) {
-        MetaUtil.dropAllTablesMysql(conn, url);
+      if (url.startsWith(MetaStoreUtils.SQLITE_URL_PREFIX)) {
+        MetaStoreUtils.dropAllTablesSqlite(conn);
+      } else if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+        MetaStoreUtils.dropAllTablesMysql(conn, url);
       } else {
         throw new SQLException("Unsupported database");
       }
@@ -640,7 +640,7 @@ public class MetaStore {
   public synchronized void initializeDataBase() throws SQLException {
     Connection conn = getConnection();
     try {
-      MetaUtil.initializeDataBase(conn);
+      MetaStoreUtils.initializeDataBase(conn);
     } finally {
       closeConnection(conn);
     }

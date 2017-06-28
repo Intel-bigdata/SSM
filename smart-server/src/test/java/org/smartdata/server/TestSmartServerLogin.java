@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
-import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.utils.TestDBUtil;
 
 import java.io.File;
@@ -65,7 +65,7 @@ public class TestSmartServerLogin {
 
     // Set db used
     dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    dbUrl = MetaUtil.SQLITE_URL_PREFIX + dbFile;
+    dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
     conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
     conf.setBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, true);

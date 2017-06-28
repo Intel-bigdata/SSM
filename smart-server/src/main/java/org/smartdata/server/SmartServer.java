@@ -23,9 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.server.SmartZeppelinServer;
-import org.apache.zeppelin.server.ZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.SmartServiceState;
@@ -33,8 +31,7 @@ import org.smartdata.common.security.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.utils.MetaUtil;
-import org.smartdata.server.engine.CmdletExecutor;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
@@ -72,7 +69,7 @@ public class SmartServer {
   public void initWith(StartupOption startupOption) throws Exception {
     checkSecurityAndLogin();
 
-    MetaStore metaStore = MetaUtil.getDBAdapter(conf);
+    MetaStore metaStore = MetaStoreUtils.getDBAdapter(conf);
     context = new ServerContext(conf, metaStore);
 
     if (startupOption == StartupOption.REGULAR) {
@@ -124,7 +121,7 @@ public class SmartServer {
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
-      MetaUtil.formatDatabase(conf);
+      MetaStoreUtils.formatDatabase(conf);
       LOG.info("Formatting DataBase finished successfully!");
     }
 
