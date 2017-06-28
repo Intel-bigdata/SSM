@@ -122,7 +122,7 @@ public class MetaStoreUtils {
             "  block_size bigint(20) DEFAULT NULL,\n" +
             "  modification_time bigint(20) DEFAULT NULL,\n" +
             "  access_time bigint(20) DEFAULT NULL,\n" +
-            "  is_dir bit(1) DEFAULT NULL,\n" +
+            "  is_dir tinyint(1) DEFAULT NULL,\n" +
             "  sid tinyint(4) DEFAULT NULL,\n" +
             "  oid smallint(6) DEFAULT NULL,\n" +
             "  gid smallint(6) DEFAULT NULL,\n" +
