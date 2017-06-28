@@ -174,7 +174,7 @@ public class CmdletManager extends AbstractService {
     }
     this.pendingCmdlet.add(cmdletInfo);
     this.idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
-    this.submittedCmdlets.add(cmdletDescriptor.getCmdletString());
+    this.submittedCmdlets.add(cmdletInfo.getParameters());
     for (ActionInfo actionInfo : actionInfos) {
       this.idToActions.put(actionInfo.getActionId(), actionInfo);
       Map<String, String> args = actionInfo.getArgs();

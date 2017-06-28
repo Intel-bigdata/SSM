@@ -50,9 +50,9 @@ public class CmdletFactory {
   public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet) {
     List<SmartAction> actions = new ArrayList<>();
     for (LaunchAction action : launchCmdlet.getLaunchActions()) {
-      actions.add(this.createAction(action));
+      actions.add(createAction(action));
     }
-    Cmdlet cmdlet = new Cmdlet(actions.toArray(new SmartAction[0]));
+    Cmdlet cmdlet = new Cmdlet(actions.toArray(new SmartAction[0]), reporter);
     cmdlet.setId(launchCmdlet.getCmdletId());
     return cmdlet;
   }

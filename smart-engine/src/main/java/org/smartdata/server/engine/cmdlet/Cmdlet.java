@@ -20,10 +20,10 @@ package org.smartdata.server.engine.cmdlet;
 import org.smartdata.common.CmdletState;
 import org.smartdata.actions.SmartAction;
 
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.common.message.CmdletStatusUpdate;
+import org.smartdata.common.message.StatusReporter;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one
@@ -32,23 +32,18 @@ import org.slf4j.LoggerFactory;
  *
  * The cmdlet get executed when rule conditions fulfills.
  */
+// Todo: Cmdlet's state should be maintained by itself
 public class Cmdlet implements Runnable {
   static final Logger LOG = LoggerFactory.getLogger(Cmdlet.class);
-
   private long ruleId;   // id of the rule that this cmdlet comes from
   private long id;
   private CmdletState state = CmdletState.NOTINITED;
-  private SmartAction[] actions;
-  private String parameters;
-  private int currentActionIndex;
-  private volatile boolean running;
+  private final SmartAction[] actions;
+  private final StatusReporter statusReporter;
 
-  private long scheduleToExecuteTime;
-
-  public Cmdlet(SmartAction[] actions) {
-    this.actions = actions.clone();
-    this.currentActionIndex = 0;
-    this.running = false;
+  public Cmdlet(SmartAction[] actions, StatusReporter reporter) {
+    this.statusReporter = reporter;
+    this.actions = actions;
   }
 
   public long getRuleId() {
@@ -67,18 +62,11 @@ public class Cmdlet implements Runnable {
     return id;
   }
 
-  public String getParameter() {
-    return parameters;
-  }
-
-  public void setParameters(String parameters) {
-    this.parameters = parameters;
-  }
-
   public CmdletState getState() {
     return state;
   }
 
+  //Todo: remove this method
   public void setState(CmdletState state) {
     this.state = state;
   }
@@ -87,45 +75,42 @@ public class Cmdlet implements Runnable {
     return actions == null ? null : actions.clone();
   }
 
-  public void setScheduleToExecuteTime(long time) {
-    this.scheduleToExecuteTime = time;
-  }
-
   public String toString() {
     return "Rule-" + ruleId + "-Cmd-" + id;
   }
 
-  public void stop() throws IOException {
-    LOG.info("Cmdlet {} Stopped!", toString());
-    //TODO Force Stop Cmdlet
-    running = false;
-  }
-
   public boolean isFinished() {
-    return (currentActionIndex == actions.length || !running);
+    return CmdletState.isTerminalState(state);
   }
 
-  private void runActions() {
+  private void runAllActions() {
+    state = CmdletState.EXECUTING;
+    reportCurrentStatus();
     for (SmartAction act : actions) {
-      currentActionIndex++;
-      if (act == null || !running) {
+      if (act == null) {
         continue;
       }
       // Init Action
       act.init(act.getArguments());
       act.run();
       if (!act.isSuccessful()) {
-        this.setState(CmdletState.FAILED);
-        break;
+        state = CmdletState.FAILED;
+        reportCurrentStatus();
+        return;
       }
     }
-    this.setState(CmdletState.DONE);
+    state = CmdletState.DONE;
+    reportCurrentStatus();
   }
 
   @Override
   public void run() {
-    running = true;
-    runActions();
-    running = false;
+    runAllActions();
+  }
+
+  private void reportCurrentStatus() {
+    if (statusReporter != null) {
+      statusReporter.report(new CmdletStatusUpdate(id, System.currentTimeMillis(), state));
+    }
   }
 }

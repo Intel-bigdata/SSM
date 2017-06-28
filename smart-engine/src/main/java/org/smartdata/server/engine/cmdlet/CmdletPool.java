@@ -77,7 +77,7 @@ public class CmdletPool {
     Cmdlet cmd = cmdletMap.get(cid);
     if (cmd.getState() != CmdletState.DONE) {
       LOG.info("Force Terminate Cmdlet {}", cmd.toString());
-      cmd.stop();
+//      cmd.stop();
     }
     cmdletMap.remove(cid);
     cmdletThread.remove(cid);

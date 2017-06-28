@@ -121,7 +121,7 @@ public class TestCmdlet {
     args.put(CacheFileAction.FILE_PATH, "/testCacheFile");
     actions[2].init(args);
     // New Cmdlet
-    Cmdlet cmd = new Cmdlet(actions);
+    Cmdlet cmd = new Cmdlet(actions, null);
     cmd.setId(1);
     cmd.setRuleId(1);
     cmd.setState(CmdletState.PENDING);

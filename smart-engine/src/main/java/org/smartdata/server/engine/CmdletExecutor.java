@@ -19,7 +19,6 @@ package org.smartdata.server.engine;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.util.Daemon;
-import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
@@ -148,7 +147,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
         if (cmdletPool.size() <= 5) {
           Cmdlet toExec = schedule();
           if (toExec != null) {
-            toExec.setScheduleToExecuteTime(Time.now());
+            //toExec.setScheduleToExecuteTime(Time.now());
             cmdletPool.execute(toExec);
           } else {
             Thread.sleep(1000);
@@ -623,8 +622,8 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     if (smartActions.size() == 0) {
       return null;
     }
-    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]));
-    cmd.setParameters(cmdinfo.getParameters());
+    cmd = new Cmdlet(smartActions.toArray(new SmartAction[smartActions.size()]), null);
+    //cmd.setParameters(cmdinfo.getParameters());
     cmd.setId(cmdinfo.getCid());
     cmd.setRuleId(cmdinfo.getRid());
     cmd.setState(cmdinfo.getState());
