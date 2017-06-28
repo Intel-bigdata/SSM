@@ -40,19 +40,19 @@ public class GroupsDao {
 
   public synchronized void addGroup(String groupName) throws SQLException {
     String sql = String.format(
-        "INSERT INTO `groups` (group_name) VALUES ('%s')", groupName);
+        "INSERT INTO groups (group_name) VALUES ('%s')", groupName);
     jdbcTemplate.execute(sql);
   }
 
   public synchronized void deleteGroup(String groupName) {
     String sql = String.format(
-        "DELETE FROM `groups` where group_name = '%s'", groupName);
+        "DELETE FROM groups where group_name = '%s'", groupName);
     jdbcTemplate.execute(sql);
   }
 
   public int getCountGroups() {
     return jdbcTemplate.queryForObject(
-        "SELECT COUNT(*) FROM `groups`", Integer.class);
+        "SELECT COUNT(*) FROM groups", Integer.class);
   }
 
   public List<String> listGroup() {

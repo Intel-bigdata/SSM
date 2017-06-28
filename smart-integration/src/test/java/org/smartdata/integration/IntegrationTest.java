@@ -74,15 +74,21 @@ public class IntegrationTest {
   public void testSubmitAction() throws Exception {
     Response response0 = RestAssured.get("/api/v1.0/actionlist");
     String json0 = response0.asString();
-    RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello -length 10");
+    // RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello -length 10");
     //Thread.sleep(2000);
-    RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello2 -length 10");
+    // RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello2 -length 10");
     //Thread.sleep(2000);
-    RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello3 -length 10");
+    // RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello3 -length 10");
     //Thread.sleep(2000);
-    RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello4 -length 10");
+    // RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello4 -length 10");
     //Thread.sleep(2000);
-    RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello5 -length 10");
+    // RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello5 -length 10");
+
+    for (int i = 0; i < 10; i++) {
+      RestAssured.post("/api/v1.0/submitaction/write?args=-file /hello"+
+          + i + " -length 10");
+      // Thread.sleep(2000);
+    }
 
     Thread.sleep(5000);
     Response response = RestAssured.get("/api/v1.0/actionlist");

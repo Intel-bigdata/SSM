@@ -39,13 +39,13 @@ public class UserDao {
   }
 
   public synchronized void addUser(String userName) throws SQLException {
-    String sql = String.format("INSERT INTO `owners` (owner_name) VALUES ('%s')", userName);
+    String sql = String.format("INSERT INTO owners (owner_name) VALUES ('%s')", userName);
     jdbcTemplate.execute(sql);
   }
 
   public synchronized void deleteUser(String user) {
     String sql = String.format(
-        "DELETE FROM `owners` where owner_name = '%s'", user);
+        "DELETE FROM owners where owner_name = '%s'", user);
     jdbcTemplate.execute(sql);
   }
 
@@ -62,7 +62,7 @@ public class UserDao {
 
   public int getCountUsers() {
     return jdbcTemplate.queryForObject(
-        "SELECT COUNT(*) FROM `owners`", Integer.class);
+        "SELECT COUNT(*) FROM owners", Integer.class);
   }
 
   public Map<Integer, String> getUsersMap() throws SQLException {

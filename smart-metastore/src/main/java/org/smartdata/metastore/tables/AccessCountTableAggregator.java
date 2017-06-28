@@ -52,7 +52,7 @@ public class AccessCountTableAggregator {
   protected String aggregateSQLStatement(AccessCountTable destinationTable,
       List<AccessCountTable> tablesToAggregate) {
     StringBuilder statement = new StringBuilder();
-    statement.append("CREATE TABLE '" + destinationTable.getTableName() + "' as ");
+    statement.append("CREATE TABLE " + destinationTable.getTableName() + " as ");
     statement.append("SELECT " + AccessCountTable.FILE_FIELD + ", SUM(" +
         AccessCountTable.ACCESSCOUNT_FIELD + ") as " +
         AccessCountTable.ACCESSCOUNT_FIELD + " FROM (");
