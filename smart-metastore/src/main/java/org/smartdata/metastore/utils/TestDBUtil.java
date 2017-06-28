@@ -47,7 +47,7 @@ public class TestDBUtil {
     String srcPath = srcdir + "/data-schema.db";
     String destPath = getUniqueDBFilePath();
     copyFile(srcPath, destPath);
-    Connection conn = MetaUtil.createSqliteConnection(destPath);
+    Connection conn = MetaStoreUtils.createSqliteConnection(destPath);
     return conn;
   }
 
@@ -67,7 +67,7 @@ public class TestDBUtil {
 
   public static Connection getUniqueEmptySqliteDBInstance()
       throws IOException, SQLException, ClassNotFoundException {
-      return MetaUtil.createSqliteConnection(getUniqueEmptySqliteDBFile());
+      return MetaStoreUtils.createSqliteConnection(getUniqueEmptySqliteDBFile());
   }
 
   /**
@@ -83,8 +83,8 @@ public class TestDBUtil {
     String dbFile = getUniqueDBFilePath();
     Connection conn = null;
     try {
-      conn = MetaUtil.createSqliteConnection(dbFile);
-      MetaUtil.initializeDataBase(conn);
+      conn = MetaStoreUtils.createSqliteConnection(dbFile);
+      MetaStoreUtils.initializeDataBase(conn);
       conn.close();
       return dbFile;
     } finally {

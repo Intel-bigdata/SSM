@@ -40,10 +40,10 @@ import java.util.Properties;
 /**
  * Utilities for table operations.
  */
-public class MetaUtil {
+public class MetaStoreUtils {
   public static final String SQLITE_URL_PREFIX = "jdbc:sqlite:";
   public static final String MYSQL_URL_PREFIX = "jdbc:mysql:";
-  static final Logger LOG = LoggerFactory.getLogger(MetaUtil.class);
+  static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
 
   public static Connection createConnection(String url,
       String userName, String password)
@@ -204,7 +204,7 @@ public class MetaUtil {
     };
     for (String s : createEmptyTables) {
       String url = conn.getMetaData().getURL();
-      if (url.startsWith(MetaUtil.MYSQL_URL_PREFIX)) {
+      if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
         s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
       }
       executeSql(conn, s);
@@ -301,12 +301,12 @@ public class MetaUtil {
         + "/smart-test-default.db";
     File file = new File(absFilePath);
     if (file.exists()) {
-      return MetaUtil.SQLITE_URL_PREFIX + absFilePath;
+      return MetaStoreUtils.SQLITE_URL_PREFIX + absFilePath;
     }
-    Connection conn = MetaUtil.createSqliteConnection(absFilePath);
-    MetaUtil.initializeDataBase(conn);
+    Connection conn = MetaStoreUtils.createSqliteConnection(absFilePath);
+    MetaStoreUtils.initializeDataBase(conn);
     conn.close();
-    return MetaUtil.SQLITE_URL_PREFIX + absFilePath;
+    return MetaStoreUtils.SQLITE_URL_PREFIX + absFilePath;
   }
 
   public static void dropAllTablesSqlite(Connection conn) throws SQLException {

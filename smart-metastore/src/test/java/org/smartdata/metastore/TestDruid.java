@@ -21,7 +21,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
-import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.utils.TestDBUtil;
 
 import java.io.InputStream;
@@ -37,7 +37,7 @@ public class TestDruid {
     p.loadFromXML(in);
 
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = MetaUtil.SQLITE_URL_PREFIX + dbFile;
+    String url = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
     p.setProperty("url", url);
 
     DruidPool druidPool = new DruidPool(p);

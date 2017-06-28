@@ -20,7 +20,7 @@ package org.smartdata.metastore.tables;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.common.models.FileStatusInternal;
-import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -139,8 +139,8 @@ public class FileDao {
     parameters.put("modification_time", fileStatusInternal.getModificationTime());
     parameters.put("access_time", fileStatusInternal.getAccessTime());
     parameters.put("is_dir", fileStatusInternal.isDir());
-    parameters.put("sid", MetaUtil.getKey(mapOwnerIdName, fileStatusInternal.getOwner()));
-    parameters.put("oid", MetaUtil.getKey(mapGroupIdName, fileStatusInternal.getGroup()));
+    parameters.put("sid", MetaStoreUtils.getKey(mapOwnerIdName, fileStatusInternal.getOwner()));
+    parameters.put("oid", MetaStoreUtils.getKey(mapGroupIdName, fileStatusInternal.getGroup()));
     parameters.put("permission", fileStatusInternal.getPermission().toShort());
     return parameters;
   }

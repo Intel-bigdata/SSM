@@ -18,7 +18,7 @@
 package org.smartdata.metastore.tables;
 
 import org.smartdata.common.models.FileInfo;
-import org.smartdata.metastore.utils.MetaUtil;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -138,8 +138,8 @@ public class FileInfoDao {
     parameters.put("access_time", fileInfo.getAccess_time());
     parameters.put("is_dir", fileInfo.isdir());
     parameters.put("sid", fileInfo.getStoragePolicy());
-    parameters.put("oid", MetaUtil.getKey(mapOwnerIdName, fileInfo.getOwner()));
-    parameters.put("gid", MetaUtil.getKey(mapGroupIdName, fileInfo.getGroup()));
+    parameters.put("oid", MetaStoreUtils.getKey(mapOwnerIdName, fileInfo.getOwner()));
+    parameters.put("gid", MetaStoreUtils.getKey(mapGroupIdName, fileInfo.getGroup()));
     parameters.put("permission", fileInfo.getPermission());
     return parameters;
   }
