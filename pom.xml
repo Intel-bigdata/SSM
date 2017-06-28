@@ -168,10 +168,11 @@
         <artifactId>sqlite-jdbc</artifactId>
         <version>3.16.1</version>
       </dependency>
+      <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
       <dependency>
-        <groupId>Mysql</groupId>
+        <groupId>mysql</groupId>
         <artifactId>mysql-connector-java</artifactId>
-        <version>5.1.38</version>
+        <version>6.0.6</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba</groupId>
