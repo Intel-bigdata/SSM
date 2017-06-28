@@ -80,9 +80,7 @@ public class SmartServer {
       httpServer = new SmartHttpServer(engine, conf);
       rpcServer = new SmartRpcServer(this, conf);
 
-      if (isZeppelinEnabled()) {
-        zeppelinServer = new SmartZeppelinServer(engine);
-      }
+      zeppelinServer = new SmartZeppelinServer(conf, engine);
     }
   }
 
@@ -180,11 +178,6 @@ public class SmartServer {
     return conf.getBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, false);
   }
 
-  private boolean isZeppelinEnabled() {
-    return conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN,
-        SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN_DEFAULT);
-  }
-
   private void checkSecurityAndLogin() throws IOException {
     if (!isSecurityEnabled()) {
       return;
@@ -224,9 +217,7 @@ public class SmartServer {
     rpcServer.start();
     httpServer.start();
 
-    if (isZeppelinEnabled()) {
-      zeppelinServer.start();
-    }
+    zeppelinServer.start();
   }
 
   private void startEngines() throws Exception {

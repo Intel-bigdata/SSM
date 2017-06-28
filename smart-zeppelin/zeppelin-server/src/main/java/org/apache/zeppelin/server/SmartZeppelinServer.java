@@ -68,7 +68,10 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.SmartEngine;
+import org.smartdata.server.rest.SystemRestApi;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.Application;
@@ -84,14 +87,15 @@ public class SmartZeppelinServer extends Application {
   private static final Logger LOG = LoggerFactory.getLogger(SmartZeppelinServer.class);
 
   private SmartEngine engine;
+  private SmartConf conf;
 
-  private ZeppelinConfiguration conf;
+  private ZeppelinConfiguration zconf;
   private Notebook notebook;
   private Server jettyWebServer;
   private NotebookServer notebookWsServer;
   private Helium helium;
 
-  private final InterpreterSettingManager interpreterSettingManager;
+  private InterpreterSettingManager interpreterSettingManager;
   private SchedulerFactory schedulerFactory;
   private InterpreterFactory replFactory;
   private SearchService noteSearchService;
@@ -100,40 +104,46 @@ public class SmartZeppelinServer extends Application {
   private Credentials credentials;
   private DependencyResolver depResolver;
 
-  public SmartZeppelinServer(SmartEngine engine) throws Exception {
+  public SmartZeppelinServer(SmartConf conf, SmartEngine engine) throws Exception {
+    this.conf = conf;
     this.engine = engine;
-    this.conf = ZeppelinConfiguration.create();
+
+    this.zconf = ZeppelinConfiguration.create();
+
+    if (!isZeppelinEnabled()) {
+      return;
+    }
 
     this.depResolver = new DependencyResolver(
-        conf.getString(ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
+        zconf.getString(ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
 
-    InterpreterOutput.limit = conf.getInt(ConfVars.ZEPPELIN_INTERPRETER_OUTPUT_LIMIT);
+    InterpreterOutput.limit = zconf.getInt(ConfVars.ZEPPELIN_INTERPRETER_OUTPUT_LIMIT);
 
     HeliumApplicationFactory heliumApplicationFactory = new HeliumApplicationFactory();
     HeliumVisualizationFactory heliumVisualizationFactory;
 
-    if (isBinaryPackage(conf)) {
+    if (isBinaryPackage(zconf)) {
       /* In binary package, zeppelin-web/src/app/visualization and zeppelin-web/src/app/tabledata
        * are copied to lib/node_modules/zeppelin-vis, lib/node_modules/zeppelin-tabledata directory.
        * Check zeppelin/zeppelin-distribution/src/assemble/distribution.xml to see how they're
        * packaged into binary package.
        */
       heliumVisualizationFactory = new HeliumVisualizationFactory(
-          conf,
-          new File(conf.getRelativeDir(ConfVars.ZEPPELIN_DEP_LOCALREPO)),
-          new File(conf.getRelativeDir("lib/node_modules/zeppelin-tabledata")),
-          new File(conf.getRelativeDir("lib/node_modules/zeppelin-vis")));
+          zconf,
+          new File(zconf.getRelativeDir(ConfVars.ZEPPELIN_DEP_LOCALREPO)),
+          new File(zconf.getRelativeDir("lib/node_modules/zeppelin-tabledata")),
+          new File(zconf.getRelativeDir("lib/node_modules/zeppelin-vis")));
     } else {
       heliumVisualizationFactory = new HeliumVisualizationFactory(
-          conf,
-          new File(conf.getRelativeDir(ConfVars.ZEPPELIN_DEP_LOCALREPO)),
-          new File(conf.getRelativeDir("zeppelin-web/src/app/tabledata")),
-          new File(conf.getRelativeDir("zeppelin-web/src/app/visualization")));
+          zconf,
+          new File(zconf.getRelativeDir(ConfVars.ZEPPELIN_DEP_LOCALREPO)),
+          new File(zconf.getRelativeDir("zeppelin-web/src/app/tabledata")),
+          new File(zconf.getRelativeDir("zeppelin-web/src/app/visualization")));
     }
 
     this.helium = new Helium(
-        conf.getHeliumConfPath(),
-        conf.getHeliumDefaultLocalRegistryPath(),
+        zconf.getHeliumConfPath(),
+        zconf.getHeliumDefaultLocalRegistryPath(),
         heliumVisualizationFactory,
         heliumApplicationFactory);
 
@@ -145,16 +155,16 @@ public class SmartZeppelinServer extends Application {
     }
 
     this.schedulerFactory = new SchedulerFactory();
-    this.interpreterSettingManager = new InterpreterSettingManager(conf, depResolver,
+    this.interpreterSettingManager = new InterpreterSettingManager(zconf, depResolver,
         new InterpreterOption(true));
-    this.replFactory = new InterpreterFactory(conf, notebookWsServer,
+    this.replFactory = new InterpreterFactory(zconf, notebookWsServer,
         notebookWsServer, heliumApplicationFactory, depResolver, SecurityUtils.isAuthenticated(),
         interpreterSettingManager);
-    this.notebookRepo = new NotebookRepoSync(conf);
+    this.notebookRepo = new NotebookRepoSync(zconf);
     this.noteSearchService = new LuceneSearch();
-    this.notebookAuthorization = NotebookAuthorization.init(conf);
-    this.credentials = new Credentials(conf.credentialsPersist(), conf.getCredentialsPath());
-    notebook = new Notebook(conf,
+    this.notebookAuthorization = NotebookAuthorization.init(zconf);
+    this.credentials = new Credentials(zconf.credentialsPersist(), zconf.getCredentialsPath());
+    notebook = new Notebook(zconf,
         notebookRepo, schedulerFactory, replFactory, interpreterSettingManager, notebookWsServer,
             noteSearchService, notebookAuthorization, credentials);
 
@@ -167,20 +177,25 @@ public class SmartZeppelinServer extends Application {
     notebook.addNotebookEventListener(notebookWsServer.getNotebookInformationListener());
   }
 
+  private boolean isZeppelinEnabled() {
+    return conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN,
+        SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN_DEFAULT);
+  }
+
   public void start() throws Exception {
-    jettyWebServer = setupJettyServer(conf);
+    jettyWebServer = setupJettyServer(zconf);
 
     ContextHandlerCollection contexts = new ContextHandlerCollection();
     jettyWebServer.setHandler(contexts);
 
     // Web UI
-    final WebAppContext webApp = setupWebAppContext(contexts, conf);
+    final WebAppContext webApp = setupWebAppContext(contexts);
 
     // Notebook server
-    setupNotebookServer(webApp, conf);
+    setupNotebookServer(webApp);
 
     // REST api
-    setupRestApiContextHandler(webApp, conf);
+    setupRestApiContextHandler(webApp);
 
     LOG.info("Starting zeppelin server");
     try {
@@ -207,16 +222,16 @@ public class SmartZeppelinServer extends Application {
     });
   }
 
-  private static Server setupJettyServer(ZeppelinConfiguration conf) {
+  private static Server setupJettyServer(ZeppelinConfiguration zconf) {
 
     final Server server = new Server();
     ServerConnector connector;
 
-    if (conf.useSsl()) {
-      LOG.debug("Enabling SSL for Zeppelin Server on port " + conf.getServerSslPort());
+    if (zconf.useSsl()) {
+      LOG.debug("Enabling SSL for Zeppelin Server on port " + zconf.getServerSslPort());
       HttpConfiguration httpConfig = new HttpConfiguration();
       httpConfig.setSecureScheme("https");
-      httpConfig.setSecurePort(conf.getServerSslPort());
+      httpConfig.setSecurePort(zconf.getServerSslPort());
       httpConfig.setOutputBufferSize(32768);
       httpConfig.setRequestHeaderSize(8192);
       httpConfig.setResponseHeaderSize(8192);
@@ -231,7 +246,8 @@ public class SmartZeppelinServer extends Application {
 
       connector = new ServerConnector(
               server,
-              new SslConnectionFactory(getSslContextFactory(conf), HttpVersion.HTTP_1_1.asString()),
+              new SslConnectionFactory(getSslContextFactory(zconf),
+                  HttpVersion.HTTP_1_1.asString()),
               new HttpConnectionFactory(httpsConfig));
     } else {
       connector = new ServerConnector(server);
@@ -241,22 +257,26 @@ public class SmartZeppelinServer extends Application {
     int timeout = 1000 * 30;
     connector.setIdleTimeout(timeout);
     connector.setSoLingerTime(-1);
-    connector.setHost(conf.getServerAddress());
-    if (conf.useSsl()) {
-      connector.setPort(conf.getServerSslPort());
+
+    String webUrl = "";
+    connector.setHost(zconf.getServerAddress());
+    if (zconf.useSsl()) {
+      connector.setPort(zconf.getServerSslPort());
+      webUrl = "https://" + zconf.getServerAddress() + ":" + zconf.getServerSslPort();
     } else {
-      connector.setPort(conf.getServerPort());
+      connector.setPort(zconf.getServerPort());
+      webUrl = "http://" + zconf.getServerAddress() + ":" + zconf.getServerPort();
     }
 
+    LOG.info("Web address:" + webUrl);
     server.addConnector(connector);
 
     return server;
   }
 
-  private void setupNotebookServer(WebAppContext webapp,
-                                          ZeppelinConfiguration conf) {
+  private void setupNotebookServer(WebAppContext webapp) {
     notebookWsServer = new NotebookServer();
-    String maxTextMessageSize = conf.getWebsocketMaxTextMessageSize();
+    String maxTextMessageSize = zconf.getWebsocketMaxTextMessageSize();
     final ServletHolder servletHolder = new ServletHolder(notebookWsServer);
     servletHolder.setInitParameter("maxTextMessageSize", maxTextMessageSize);
 
@@ -266,29 +286,28 @@ public class SmartZeppelinServer extends Application {
     webapp.addServlet(servletHolder, "/ws/*");
   }
 
-  private static SslContextFactory getSslContextFactory(ZeppelinConfiguration conf) {
+  private static SslContextFactory getSslContextFactory(ZeppelinConfiguration zconf) {
     SslContextFactory sslContextFactory = new SslContextFactory();
 
     // Set keystore
-    sslContextFactory.setKeyStorePath(conf.getKeyStorePath());
-    sslContextFactory.setKeyStoreType(conf.getKeyStoreType());
-    sslContextFactory.setKeyStorePassword(conf.getKeyStorePassword());
-    sslContextFactory.setKeyManagerPassword(conf.getKeyManagerPassword());
+    sslContextFactory.setKeyStorePath(zconf.getKeyStorePath());
+    sslContextFactory.setKeyStoreType(zconf.getKeyStoreType());
+    sslContextFactory.setKeyStorePassword(zconf.getKeyStorePassword());
+    sslContextFactory.setKeyManagerPassword(zconf.getKeyManagerPassword());
 
-    if (conf.useClientAuth()) {
-      sslContextFactory.setNeedClientAuth(conf.useClientAuth());
+    if (zconf.useClientAuth()) {
+      sslContextFactory.setNeedClientAuth(zconf.useClientAuth());
 
       // Set truststore
-      sslContextFactory.setTrustStorePath(conf.getTrustStorePath());
-      sslContextFactory.setTrustStoreType(conf.getTrustStoreType());
-      sslContextFactory.setTrustStorePassword(conf.getTrustStorePassword());
+      sslContextFactory.setTrustStorePath(zconf.getTrustStorePath());
+      sslContextFactory.setTrustStoreType(zconf.getTrustStoreType());
+      sslContextFactory.setTrustStorePassword(zconf.getTrustStorePassword());
     }
 
     return sslContextFactory;
   }
 
-  private void setupRestApiContextHandler(WebAppContext webapp,
-                                                 ZeppelinConfiguration conf) throws Exception {
+  private void setupRestApiContextHandler(WebAppContext webapp) throws Exception {
 
     ResourceConfig config = new ApplicationAdapter(this);
     ServletHolder restServletHolder = new ServletHolder(new ServletContainer(config));
@@ -296,22 +315,26 @@ public class SmartZeppelinServer extends Application {
     webapp.setSessionHandler(new SessionHandler());
     webapp.addServlet(restServletHolder, "/api/*");
 
-    String shiroIniPath = conf.getShiroPath();
+    String shiroIniPath = zconf.getShiroPath();
     if (!StringUtils.isBlank(shiroIniPath)) {
-      webapp.setInitParameter("shiroConfigLocations", new File(shiroIniPath).toURI().toString());
+      webapp.setInitParameter("shiroConfigLocations",
+          new File(shiroIniPath).toURI().toString());
       SecurityUtils.initSecurityManager(shiroIniPath);
       webapp.addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class));
       webapp.addEventListener(new EnvironmentLoaderListener());
     }
   }
 
-  private static WebAppContext setupWebAppContext(ContextHandlerCollection contexts,
-                                                  ZeppelinConfiguration conf) {
+  private WebAppContext setupWebAppContext(ContextHandlerCollection contexts) {
 
     WebAppContext webApp = new WebAppContext();
-    webApp.setContextPath(conf.getServerContextPath());
+    webApp.setContextPath(zconf.getServerContextPath());
 
-    File warPath = new File(conf.getString(ConfVars.ZEPPELIN_WAR));
+    if (!isZeppelinEnabled()) {
+      return webApp;
+    }
+
+    File warPath = new File(zconf.getString(ConfVars.ZEPPELIN_WAR));
     if (warPath.isDirectory()) {
       // Development mode, read from FS
       // webApp.setDescriptor(warPath+"/WEB-INF/web.xml");
@@ -320,7 +343,7 @@ public class SmartZeppelinServer extends Application {
     } else {
       // use packaged WAR
       webApp.setWar(warPath.getAbsolutePath());
-      File warTempDirectory = new File(conf.getRelativeDir(ConfVars.ZEPPELIN_WAR_TEMPDIR));
+      File warTempDirectory = new File(zconf.getRelativeDir(ConfVars.ZEPPELIN_WAR_TEMPDIR));
       warTempDirectory.mkdir();
       LOG.info("ZeppelinServer Webapp path: {}", warTempDirectory.getPath());
       webApp.setTempDirectory(warTempDirectory);
@@ -333,7 +356,6 @@ public class SmartZeppelinServer extends Application {
         EnumSet.allOf(DispatcherType.class));
 
     return webApp;
-
   }
 
   @Override
@@ -345,6 +367,13 @@ public class SmartZeppelinServer extends Application {
   @Override
   public Set<Object> getSingletons() {
     Set<Object> singletons = new HashSet<>();
+
+    SystemRestApi sysApi = new SystemRestApi(engine);
+    singletons.add(sysApi);
+
+    if (!isZeppelinEnabled()) {
+      return singletons;
+    }
 
     /** Rest-api root endpoint */
     ZeppelinRestApi root = new ZeppelinRestApi();

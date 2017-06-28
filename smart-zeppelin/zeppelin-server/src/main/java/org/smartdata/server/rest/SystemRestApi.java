@@ -17,6 +17,8 @@
  */
 package org.smartdata.server.rest;
 
+import org.apache.zeppelin.server.JsonResponse;
+import org.apache.zeppelin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.SmartEngine;
@@ -24,6 +26,7 @@ import org.smartdata.server.SmartEngine;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
 
 /**
  * System APIs.
@@ -37,6 +40,12 @@ public class SystemRestApi {
 
   public SystemRestApi(SmartEngine smartEngine) {
     this.smartEngine = smartEngine;
+  }
+
+  @GET
+  @Path("/version")
+  public Response version() {
+    return new JsonResponse<>(Response.Status.OK, "SSM version", "0.1.0").build();
   }
 
   @GET

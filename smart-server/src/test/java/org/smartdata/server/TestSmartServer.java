@@ -70,9 +70,9 @@ public class TestSmartServer {
 
   }
 
-  @Test
-  public void test() {
-
+  //@Test
+  public void test() throws InterruptedException {
+    Thread.sleep(1000000);
   }
 
   @After
