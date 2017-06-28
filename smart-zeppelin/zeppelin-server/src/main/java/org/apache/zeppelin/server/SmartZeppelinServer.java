@@ -202,7 +202,7 @@ public class SmartZeppelinServer extends Application {
       jettyWebServer.start(); //Instantiates ZeppelinServer
     } catch (Exception e) {
       LOG.error("Error while running jettyServer", e);
-      System.exit(-1);
+      //System.exit(-1);
     }
     LOG.info("Done, zeppelin server started");
 
