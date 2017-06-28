@@ -58,10 +58,11 @@ public class HdfsStatesUpdaterService extends StatesUpdaterService {
   @Override
   public void init() throws IOException {
     LOG.info("Initializing ...");
-    this.cleanFileTableContents(metaStore);
     SmartContext context = getContext();
     URI nnUri = HadoopUtils.getNameNodeUri(context.getConf());
     this.client = new DFSClient(nnUri, context.getConf());
+
+    this.cleanFileTableContents(metaStore);
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,

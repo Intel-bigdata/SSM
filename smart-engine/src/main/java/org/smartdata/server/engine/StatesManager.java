@@ -22,6 +22,10 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.common.CachedFileStatus;
 import org.smartdata.common.models.FileAccessInfo;
+import org.smartdata.conf.Reconfigurable;
+import org.smartdata.conf.ReconfigurableRegistry;
+import org.smartdata.conf.ReconfigureException;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.metastore.tables.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
@@ -31,6 +35,7 @@ import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,7 +43,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * Polls metrics and events from NameNode
  */
-public class StatesManager extends AbstractService {
+public class StatesManager extends AbstractService implements Reconfigurable {
   private ServerContext serverContext;
 
   private ScheduledExecutorService executorService;
@@ -46,6 +51,7 @@ public class StatesManager extends AbstractService {
   private AccessEventFetcher accessEventFetcher;
   private FileAccessEventSource fileAccessEventSource;
   private AbstractService statesUpdaterService;
+  private volatile boolean working = false;
 
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
@@ -70,13 +76,12 @@ public class StatesManager extends AbstractService {
         new AccessEventFetcher(
             serverContext.getConf(), accessCountTableManager,
             executorService, fileAccessEventSource.getCollector());
-    // TODO: fix after MetaStore refactor
-    statesUpdaterService =
-        StatesUpdaterServiceFactory.createStatesUpdaterService(
-            serverContext.getConf(),
-            serverContext, serverContext.getMetaStore());
-    statesUpdaterService.setContext(serverContext);
-    statesUpdaterService.init();
+
+    initStatesUpdaterService();
+    if (statesUpdaterService == null) {
+      ReconfigurableRegistry.registReconfigurableProperty(
+          getReconfigurableProperties(), this);
+    }
     LOG.info("Initialized.");
   }
 
@@ -87,12 +92,16 @@ public class StatesManager extends AbstractService {
   public void start() throws IOException {
     LOG.info("Starting ...");
     accessEventFetcher.start();
-    statesUpdaterService.start();
+    if (statesUpdaterService != null) {
+      statesUpdaterService.start();
+    }
+    working = true;
     LOG.info("Started. ");
   }
 
   @Override
   public void stop() throws IOException {
+    working = false;
     LOG.info("Stopping ...");
 
     if (accessEventFetcher != null) {
@@ -134,6 +143,50 @@ public class StatesManager extends AbstractService {
       return serverContext.getMetaStore().getCachedFileStatus();
     } catch (SQLException e) {
       throw new IOException(e);
+    }
+  }
+
+  public void reconfigureProperty(String property, String newVal)
+      throws ReconfigureException {
+    LOG.debug("Received reconfig event: property={} newVal={}",
+        property, newVal);
+    if (SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY.equals(property)
+        || SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY.equals(property)) {
+      if (statesUpdaterService != null) {
+        throw new ReconfigureException(
+            "States update service already been initialized.");
+      }
+
+      if (working) {
+        initStatesUpdaterService();
+      }
+    }
+  }
+
+  public List<String> getReconfigurableProperties() {
+    return Arrays.asList(
+        SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY,
+        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+  }
+
+  private synchronized void initStatesUpdaterService() {
+    try {
+      statesUpdaterService = StatesUpdaterServiceFactory
+          .createStatesUpdaterService(getContext().getConf(),
+              serverContext, serverContext.getMetaStore());
+      statesUpdaterService.init();
+    } catch (IOException e) {
+      statesUpdaterService = null;
+      LOG.info("Failed to create states updater service.");
+    }
+
+    if (working) {
+      try {
+        statesUpdaterService.start();
+      } catch (IOException e) {
+        LOG.info("Failed to start states updater service.");
+        statesUpdaterService = null;
+      }
     }
   }
 }

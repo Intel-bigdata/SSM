@@ -20,6 +20,7 @@ package org.smartdata.server.engine;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.AbstractService;
 import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HdfsStatesUpdaterService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdaterService;
@@ -29,13 +30,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 public class StatesUpdaterServiceFactory {
-  private static final String STATES_UPDATER_SERVICES_KEY = "dfs.smartdata.states.updater";
-  private static final String STATES_UPDATER_SERVICES_DEFAULT = HdfsStatesUpdaterService.class.getName();
-
   public static AbstractService createStatesUpdaterService(Configuration conf,
       SmartContext context, MetaStore metaStore) throws IOException {
-    String source = conf.get(STATES_UPDATER_SERVICES_KEY,
-        STATES_UPDATER_SERVICES_DEFAULT);
+    String source = getStatesUpdaterName(conf);
     try {
       Class clazz = Class.forName(source);
       Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
@@ -45,5 +42,10 @@ public class StatesUpdaterServiceFactory {
         | InvocationTargetException e) {
       throw new IOException(e);
     }
+  }
+
+  public static String getStatesUpdaterName(Configuration conf) {
+    return conf.get(SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY,
+        SmartConfKeys.SMART_STATES_UPDATER_SERVICES_DEFAULT);
   }
 }

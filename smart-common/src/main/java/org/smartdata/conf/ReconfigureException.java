@@ -17,7 +17,53 @@
  */
 package org.smartdata.conf;
 
-import org.apache.hadoop.conf.ReconfigurationException;
+public class ReconfigureException extends Exception {
+  private String reason;
+  private String property;
+  private String newVal;
+  private String oldVal;
 
-public class ReconfigureException extends ReconfigurationException {
+  public ReconfigureException(String reason) {
+    super(reason);
+    this.reason = reason;
+    this.property = null;
+    this.newVal = null;
+    this.oldVal = null;
+  }
+
+  public ReconfigureException(String property, String newVal, String oldVal) {
+    super(formatMessage(property, newVal, oldVal));
+    this.property = property;
+    this.newVal = newVal;
+    this.oldVal = oldVal;
+  }
+
+  public ReconfigureException(String property, String newVal, String oldVal,
+      Throwable cause) {
+    super(formatMessage(property, newVal, oldVal), cause);
+    this.property = property;
+    this.newVal = newVal;
+    this.oldVal = oldVal;
+  }
+
+  public String getReason() {
+    return reason;
+  }
+
+  public String getProperty() {
+    return property;
+  }
+
+  public String getNewValue() {
+    return newVal;
+  }
+
+  public String getOldValue() {
+    return oldVal;
+  }
+
+  private static String formatMessage(String property, String newVal, String oldVal) {
+    return String.format("Failed to reconfig '%s' from '%s' to '%s'",
+        property, oldVal, newVal);
+  }
 }
