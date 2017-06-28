@@ -86,7 +86,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Main class of Zeppelin.
+ * Main class of embedded Zeppelin Server.
  */
 public class SmartZeppelinServer extends Application {
   private static final Logger LOG = LoggerFactory.getLogger(SmartZeppelinServer.class);
@@ -316,21 +316,21 @@ public class SmartZeppelinServer extends Application {
     return sslContextFactory;
   }
 
-  private void setupRestApiContextHandler(WebAppContext webapp) throws Exception {
+  private void setupRestApiContextHandler(WebAppContext webApp) throws Exception {
 
     ResourceConfig config = new ApplicationAdapter(this);
     ServletHolder restServletHolder = new ServletHolder(new ServletContainer(config));
 
-    webapp.setSessionHandler(new SessionHandler());
-    webapp.addServlet(restServletHolder, SMART_PATH_SPEC);
+    webApp.setSessionHandler(new SessionHandler());
+    webApp.addServlet(restServletHolder, SMART_PATH_SPEC);
 
     String shiroIniPath = zconf.getShiroPath();
     if (!StringUtils.isBlank(shiroIniPath)) {
-      webapp.setInitParameter("shiroConfigLocations",
+      webApp.setInitParameter("shiroConfigLocations",
           new File(shiroIniPath).toURI().toString());
       SecurityUtils.initSecurityManager(shiroIniPath);
-      webapp.addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class));
-      webapp.addEventListener(new EnvironmentLoaderListener());
+      webApp.addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class));
+      webApp.addEventListener(new EnvironmentLoaderListener());
     }
   }
 
@@ -361,7 +361,7 @@ public class SmartZeppelinServer extends Application {
     }
     // Explicit bind to root
     webApp.addServlet(new ServletHolder(new DefaultServlet()), "/*");
-    contexts.addHandler(webApp);
+    //contexts.addHandler(webApp); // already added
 
     webApp.addFilter(new FilterHolder(CorsFilter.class), "/*",
         EnumSet.allOf(DispatcherType.class));

@@ -51,7 +51,7 @@ public class IntegrationTest {
 
     // Start a Smart server
     conf = cluster.getConf();
-    httpHost = "localhost";
+    httpHost = "127.0.0.1";
     httpPort = 7045;
     zeppelinPort = 8080;
     httpUri = httpHost + ":" + httpPort;

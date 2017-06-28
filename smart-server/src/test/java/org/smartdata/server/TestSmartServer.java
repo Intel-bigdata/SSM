@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.utils.MetaStoreUtils;
@@ -56,9 +57,9 @@ public class TestSmartServer {
 
   }
 
-  //@Test
+  @Test
   public void test() throws InterruptedException {
-    Thread.sleep(1000000);
+    //Thread.sleep(1000000);
   }
 
   @After
