@@ -26,13 +26,25 @@ import org.junit.rules.ExpectedException;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.common.message.ActionFinished;
+import org.smartdata.common.message.ActionStarted;
+import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
+import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
+import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class TestCmdletManager extends TestEmptyMiniSmartCluster {
   public ExpectedException thrown = ExpectedException.none();
@@ -133,5 +145,58 @@ public class TestCmdletManager extends TestEmptyMiniSmartCluster {
     thrown.expect(IOException.class);
     ssm.getCmdletManager()
         .submitCmdlet("onessd -file /testMoveFile/file1 ; uncache -file /testCacheFile");
+  }
+
+  @Test
+  public void testWithoutCluster() throws SQLException, IOException, InterruptedException {
+    long cmdletId = 10;
+    long actionId = 101;
+    MetaStore metaStore = mock(MetaStore.class);
+    when(metaStore.getMaxCmdletId()).thenReturn(cmdletId);
+    when(metaStore.getMaxActionId()).thenReturn(actionId);
+    CmdletDispatcher dispatcher = mock(CmdletDispatcher.class);
+    when(dispatcher.canDispatchMore()).thenReturn(true);
+    ServerContext serverContext = new ServerContext(new SmartConf(), metaStore);
+    CmdletManager cmdletManager = new CmdletManager(serverContext);
+    cmdletManager.init();
+    cmdletManager.setDispatcher(dispatcher);
+
+    cmdletManager.start();
+    cmdletManager.submitCmdlet("hello");
+    verify(metaStore, times(1)).insertCmdletTable(any(CmdletInfo.class));
+    verify(metaStore, times(1)).insertActionsTable(any(ActionInfo[].class));
+
+    Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
+    Thread.sleep(1000);
+    verify(dispatcher, times(1)).dispatch(any(LaunchCmdlet.class));
+
+    long actionStartTime = System.currentTimeMillis();
+    cmdletManager.updateStatus(new ActionStarted(actionId, actionStartTime));
+    ActionInfo actionInfo = cmdletManager.getActionInfo(actionId);
+    Assert.assertNotNull(actionInfo);
+    Assert.assertEquals(actionInfo.getCreateTime(), actionStartTime);
+
+    long actionFinished = System.currentTimeMillis();
+    cmdletManager.updateStatus(new ActionFinished(actionId, actionFinished, null));
+    Assert.assertTrue(actionInfo.isFinished());
+    Assert.assertTrue(actionInfo.isSuccessful());
+    Assert.assertEquals(actionInfo.getFinishTime(), actionFinished);
+
+    cmdletManager.updateStatus(new CmdletStatusUpdate(cmdletId, System.currentTimeMillis(), CmdletState.EXECUTING));
+    CmdletInfo info = cmdletManager.getCmdletInfo(cmdletId);
+    Assert.assertNotNull(info);
+    Assert.assertEquals(info.getParameters(), "hello");
+    Assert.assertEquals(info.getAids().size(), 1);
+    Assert.assertTrue(info.getAids().get(0) == actionId);
+    Assert.assertEquals(info.getState(), CmdletState.EXECUTING);
+
+    cmdletManager.updateStatus(new CmdletStatusUpdate(cmdletId, System.currentTimeMillis(), CmdletState.DONE));
+    Assert.assertEquals(info.getState(), CmdletState.DONE);
+    Assert.assertEquals(0, cmdletManager.getCmdletsSizeInCache());
+
+    Assert.assertNull(cmdletManager.getCmdletInfo(cmdletId));
+    Assert.assertNull(cmdletManager.getActionInfo(actionId));
+
+    cmdletManager.stop();
   }
 }

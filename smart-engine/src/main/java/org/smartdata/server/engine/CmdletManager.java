@@ -36,6 +36,7 @@ import org.smartdata.common.message.StatusMessage;
 import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.server.engine.cmdlet.Cmdlet;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -94,6 +95,11 @@ public class CmdletManager extends AbstractService {
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
     this.fileLocks = new ConcurrentHashMap<>();
+  }
+
+  @VisibleForTesting
+  void setDispatcher(CmdletDispatcher dispatcher) {
+    this.dispatcher = dispatcher;
   }
 
   @Override
@@ -186,21 +192,6 @@ public class CmdletManager extends AbstractService {
       }
     }
     return cmdletInfo.getCid();
-  }
-
-  int num = 0;
-  public LaunchCmdlet getNextCmdletToRunForTest() throws IOException {
-    num +=1;
-    List<LaunchAction> actions = new ArrayList<>();
-    Map<String, String> args = new HashMap<>();
-    args.put(HelloAction.PRINT_MESSAGE, "this is the message " + num);
-    actions.add(new LaunchAction(101L, "hello", args));
-    LaunchCmdlet cmdlet = new LaunchCmdlet(num, actions);
-    if (num < 10) {
-      return cmdlet;
-    } else {
-      return null;
-    }
   }
 
   private boolean hasConflictAction(List<ActionInfo> actionInfos) {
@@ -344,7 +335,11 @@ public class CmdletManager extends AbstractService {
       return this.idToActions.get(actionID);
     }
     try {
-      return metaStore.getActionsTableItem(String.format("== %d ", actionID), null).get(0);
+      List<ActionInfo> actionInfos = metaStore.getActionsTableItem(String.format("== %d ", actionID), null);
+      if (actionInfos != null && !actionInfos.isEmpty()) {
+        return actionInfos.get(0);
+      }
+      return null;
     } catch (SQLException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}", actionID, e);
       throw new IOException(e);
