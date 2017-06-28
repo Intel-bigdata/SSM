@@ -51,13 +51,16 @@ public class TestSmartServerCli {
       conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
 
       // rpcServer start in SmartServer
+      SmartServer ssm = null;
       try {
-        SmartServer.launchWith(conf);
-        Assert.fail("Should not work without specifying "
-            + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+        ssm = SmartServer.launchWith(conf);
+        Thread.sleep(2000);
       } catch (Exception e) {
-        Assert.assertTrue(e.getMessage().contains(
-            SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY));
+        Assert.fail("Should work without specifying NN");
+      } finally {
+        if (ssm != null) {
+          ssm.shutdown();
+        }
       }
 
       conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,

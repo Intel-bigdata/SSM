@@ -37,6 +37,10 @@ public class SmartConfKeys {
   public final static String DFS_SSM_KERBEROS_PRINCIPAL_KEY = "dfs.smart.kerberos.principal";
   public final static String DFS_SSM_DB_URL_KEY = "dfs.smart.db.url";
 
+  // StatesManager
+  public static final String SMART_STATES_UPDATER_SERVICES_KEY = "dfs.smart.states.updater";
+  public static final String SMART_STATES_UPDATER_SERVICES_DEFAULT = "org.smartdata.hdfs.HdfsStatesUpdaterService";
+
   // RuleManager
   public final static String DFS_SSM_RULE_EXECUTORS_KEY = "dfs.smart.rule.executors";
   public final static int DFS_SSM_RULE_EXECUTORS_DEFAULT = 5;
