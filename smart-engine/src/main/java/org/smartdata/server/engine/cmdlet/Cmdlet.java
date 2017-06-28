@@ -109,6 +109,8 @@ public class Cmdlet implements Runnable {
   }
 
   private void reportCurrentStatus() {
-    statusReporter.report(new CmdletStatusUpdate(id, System.currentTimeMillis(), state));
+    if (statusReporter != null) {
+      statusReporter.report(new CmdletStatusUpdate(id, System.currentTimeMillis(), state));
+    }
   }
 }
