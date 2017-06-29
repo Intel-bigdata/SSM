@@ -20,6 +20,7 @@ package org.smartdata.server.rest;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.metastore.utils.Constants;
 import org.smartdata.server.SmartEngine;
@@ -47,8 +48,18 @@ public class ClusterRestApi {
 
   @GET
   @Path("/primary")
-  public void primary() {
+  public Response primary() {
     // return NN url
+    try {
+      String namenodeUrl = smartEngine.getConf().
+          get(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+      return new JsonResponse<>(Response.Status.OK,
+          "Namenode URL", namenodeUrl).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while getting primary info", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 
   @GET
