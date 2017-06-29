@@ -105,9 +105,22 @@ public class CmdletDao {
     // SqlParameterSource[] batch = SqlParameterSourceUtils
     //     .createBatch(CmdletInfos);
     // simpleJdbcInsert.executeBatch(batch);
-    for (CmdletInfo CmdletInfo : CmdletInfos) {
-      insert(CmdletInfo);
+//    for (CmdletInfo CmdletInfo : CmdletInfos) {
+//      insert(CmdletInfo);
+//    }
+
+    //A new way to batch insert
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("cmdlets");
+
+    Map<String, Object>[] maps = new Map[CmdletInfos.length];
+
+    for (int i = 0; i < CmdletInfos.length; i++) {
+      maps[i] = toMap(CmdletInfos[i]);
     }
+
+    simpleJdbcInsert.executeBatch(maps);
+
   }
 
   public int update(long cid, long rid, int state) {

@@ -30,10 +30,10 @@ public class TestTableAggregator extends DBTest {
     String sql = "CREATE TABLE `files` (`path` varchar(4096) NOT NULL," +
       "`fid` bigint(20) NOT NULL )";
     statement.execute(sql);
-    statement.execute(AccessCountDao.createTableSQL("table1"));
-    statement.execute(AccessCountDao.createTableSQL("table2"));
-    statement.execute(AccessCountDao.createTableSQL("table3"));
-    statement.execute(AccessCountDao.createTableSQL("expect"));
+    statement.execute(AccessCountTable.createTableSQL("table1"));
+    statement.execute(AccessCountTable.createTableSQL("table2"));
+    statement.execute(AccessCountTable.createTableSQL("table3"));
+    statement.execute(AccessCountTable.createTableSQL("expect"));
     statement.close();
   }
 
