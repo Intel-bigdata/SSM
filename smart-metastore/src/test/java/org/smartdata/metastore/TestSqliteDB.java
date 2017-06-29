@@ -58,7 +58,7 @@ public class TestSqliteDB extends TestDaoUtil {
   }
 
   @Test
-  public void testDropTables() throws SQLException, ClassNotFoundException {
+  public void testDropTables() throws Exception {
     Connection conn = metaStore.getConnection();
     Statement s = conn.createStatement();
     metaStore.dropAllTables();

@@ -23,6 +23,7 @@ import org.smartdata.common.cmdlet.CmdletDescriptor;
 import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.rule.parser.TimeBasedScheduleInfo;
 import org.smartdata.rule.parser.TranslateResult;
@@ -31,7 +32,6 @@ import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +116,7 @@ public class RuleExecutor implements Runnable {
           adapter.execute(sql);
         }
         index++;
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         LOG.error("Rule " + ctx.getRuleId() + " exception", e);
         return ret;
       }
@@ -126,7 +126,7 @@ public class RuleExecutor implements Runnable {
       String sql = dynamicCleanups.pop();
       try {
         adapter.execute(sql);
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         LOG.error("Rule " + ctx.getRuleId() + " exception", e);
       }
     }
@@ -201,7 +201,7 @@ public class RuleExecutor implements Runnable {
     List<AccessCountTable> accTables = null;
     try {
       accTables = ruleManager.getStatesManager().getTablesInLast(lastInterval);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Rule " + ctx.getRuleId()
           + " get access info tables exception", e);
     }

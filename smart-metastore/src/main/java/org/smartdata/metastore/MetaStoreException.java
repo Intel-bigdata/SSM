@@ -17,17 +17,17 @@
  */
 package org.smartdata.metastore;
 
-public class MetaStoreExecption extends Exception {
+public class MetaStoreException extends Exception {
 
-  public MetaStoreExecption(String errorMsg) {
+  public MetaStoreException(String errorMsg) {
     super(errorMsg);
   }
 
-  public MetaStoreExecption(String errorMsg, Throwable throwable) {
+  public MetaStoreException(String errorMsg, Throwable throwable) {
     super(errorMsg, throwable);
   }
 
-  public MetaStoreExecption(Throwable throwable) {
+  public MetaStoreException(Throwable throwable) {
     super(throwable);
   }
 }

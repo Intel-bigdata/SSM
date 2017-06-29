@@ -27,9 +27,9 @@ import alluxio.AlluxioURI;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.URIStatus;
 import alluxio.exception.AlluxioException;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -243,7 +243,7 @@ public class AlluxioNamespaceFetcher {
             LOG.debug(batch.actualSize() + " files insert into table 'files'.");
           }
         }
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         // TODO: handle this issue
         LOG.error("Consumer error");
       }

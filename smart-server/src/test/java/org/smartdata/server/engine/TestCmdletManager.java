@@ -34,12 +34,12 @@ import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
@@ -150,7 +150,7 @@ public class TestCmdletManager extends TestEmptyMiniSmartCluster {
   }
 
   @Test
-  public void testWithoutCluster() throws SQLException, IOException, InterruptedException {
+  public void testWithoutCluster() throws MetaStoreException, IOException, InterruptedException {
     long cmdletId = 10;
     long actionId = 101;
     MetaStore metaStore = mock(MetaStore.class);

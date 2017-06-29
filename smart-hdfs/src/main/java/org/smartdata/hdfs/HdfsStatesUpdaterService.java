@@ -25,6 +25,7 @@ import org.smartdata.common.utils.HadoopUtils;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.StatesUpdaterService;
 
 import java.io.IOException;
@@ -97,7 +98,7 @@ public class HdfsStatesUpdaterService extends StatesUpdaterService {
   private void cleanFileTableContents(MetaStore adapter) throws IOException {
     try {
       adapter.execute("DELETE FROM files");
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       throw new IOException("Error while 'DELETE FROM files'", e);
     }
   }

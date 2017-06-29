@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.models.FileStatusInternal;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -263,7 +264,7 @@ public class NamespaceFetcher {
             LOG.debug(batch.actualSize() + " files insert into table 'files'.");
           }
         }
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         // TODO: handle this issue
         LOG.error("Consumer error");
       }
