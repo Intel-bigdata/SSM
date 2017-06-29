@@ -78,7 +78,7 @@ public class ClusterRestApi {
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
-// TODO: implment
+
 //  @GET
 //  @Path("/alluxio/{clusterName}")
 //  public void alluxio() {
