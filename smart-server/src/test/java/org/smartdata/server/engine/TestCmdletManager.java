@@ -21,6 +21,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.smartdata.actions.ActionRegistry;
@@ -47,6 +48,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TestCmdletManager extends TestEmptyMiniSmartCluster {
+  @Rule
   public ExpectedException thrown = ExpectedException.none();
 
   private CmdletDescriptor generateCmdletDescriptor() throws Exception {

@@ -19,6 +19,7 @@ package org.smartdata.actions;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.actions.hdfs.ArchiveFileAction;
 
 import java.io.IOException;
 import java.util.Set;
@@ -27,19 +28,17 @@ public class TestActionRegistry {
 
   @Test
   public void testInit() throws IOException {
-    Set<String> actionNames = ActionRegistry.namesOfAction();
+    Set<String> actionNames = ActionRegistry.registeredActions();
     // System.out.print(actionNames.size());
     Assert.assertTrue(actionNames.size() > 0);
   }
 
   @Test
-  public void testCreateAction() throws IOException {
-    Assert.assertTrue(ActionRegistry
-        .createAction("archive")
-        .getClass().toString().contains("ArchiveFileAction"));
-    Set<String> actionNames = ActionRegistry.namesOfAction();
+  public void testCreateAction() throws IOException, ActionException {
+    Assert.assertTrue(ActionRegistry.createAction("archive") instanceof ArchiveFileAction);
+    Set<String> actionNames = ActionRegistry.registeredActions();
     // create all kinds of actions
-    for (String name: actionNames) {
+    for (String name : actionNames) {
       ActionRegistry.createAction(name);
     }
   }

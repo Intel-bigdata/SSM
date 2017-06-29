@@ -68,7 +68,7 @@ public class TestSmartAgent extends ActorSystemHarness {
     @Override
     public void run() {
       SmartAgent agent = new SmartAgent();
-      agent.start(config, masters);
+      agent.start(config, masters, new SmartConf());
     }
   }
 

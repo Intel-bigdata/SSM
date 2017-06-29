@@ -21,7 +21,10 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.actions.ActionException;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.common.message.StatusReporter;
@@ -39,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 //Todo: recover and reconnect when master is offline
 public class HazelcastWorker implements StatusReporter {
+  private final static Logger LOG = LoggerFactory.getLogger(HazelcastWorker.class);
   private final HazelcastInstance instance;
   private ScheduledExecutorService executorService;
   private ITopic<Serializable> masterMessages;
@@ -49,7 +53,7 @@ public class HazelcastWorker implements StatusReporter {
 
   public HazelcastWorker(SmartContext smartContext) {
     this.factory = new CmdletFactory(smartContext, this);
-    this.cmdletExecutor = new CmdletExecutor(this);
+    this.cmdletExecutor = new CmdletExecutor(smartContext.getConf(), this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.instance = HazelcastInstanceProvider.getInstance();
     this.statusTopic = instance.getTopic(HazelcastExecutorService.STATUS_TOPIC);
@@ -83,7 +87,12 @@ public class HazelcastWorker implements StatusReporter {
       Serializable msg = message.getMessageObject();
       if (msg instanceof LaunchCmdlet) {
         LaunchCmdlet launchCmdlet = (LaunchCmdlet) msg;
-        cmdletExecutor.execute(factory.createCmdlet(launchCmdlet));
+        try {
+          cmdletExecutor.execute(factory.createCmdlet(launchCmdlet));
+        } catch (ActionException e) {
+          e.printStackTrace();
+          LOG.error("Failed to create cmdlet from " + launchCmdlet);
+        }
       } else if (msg instanceof StopCmdlet) {
         StopCmdlet stopCmdlet = (StopCmdlet) msg;
         cmdletExecutor.stop(stopCmdlet.getCmdletId());

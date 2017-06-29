@@ -27,6 +27,7 @@ import org.smartdata.common.message.ActionStarted;
 import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.common.message.StatusMessage;
 import org.smartdata.common.message.StatusReporter;
+import org.smartdata.conf.SmartConf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,7 +46,7 @@ public class TestCmdletExecutor {
         statusMessages.add(status);
       }
     };
-    CmdletExecutor executor = new CmdletExecutor(reporter);
+    CmdletExecutor executor = new CmdletExecutor(new SmartConf(), reporter);
     SmartAction action = new HelloAction();
     Map<String, String> args = new HashMap<>();
     args.put(HelloAction.PRINT_MESSAGE, "message");
@@ -84,7 +85,7 @@ public class TestCmdletExecutor {
         statusMessages.add(status);
       }
     };
-    CmdletExecutor executor = new CmdletExecutor(reporter);
+    CmdletExecutor executor = new CmdletExecutor(new SmartConf(), reporter);
     SmartAction action = new HangingAction();
     action.setStatusReporter(reporter);
     action.setActionId(101);

@@ -21,6 +21,8 @@ import org.smartdata.actions.SmartAction;
 import org.smartdata.common.message.ActionStatus;
 import org.smartdata.common.message.StatusReporter;
 import org.smartdata.common.message.ActionStatusReport;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -35,15 +37,21 @@ import java.util.concurrent.Future;
 //      2. add api providing available resource
 public class CmdletExecutor {
   private final StatusReporter reporter;
+  private final SmartConf smartConf;
   private Map<Long, Future> listenableFutures;
   private Map<Long, Cmdlet> runningCmdlets;
   private ExecutorService executorService;
 
-  public CmdletExecutor(StatusReporter reporter) {
+  public CmdletExecutor(SmartConf smartConf, StatusReporter reporter) {
     this.reporter = reporter;
+    this.smartConf = smartConf;
     this.listenableFutures = new ConcurrentHashMap<>();
     this.runningCmdlets = new ConcurrentHashMap<>();
-    this.executorService = Executors.newFixedThreadPool(10);
+    int nThreads =
+        smartConf.getInt(
+            SmartConfKeys.SMART_CMDLET_EXECUTOR_THREAD_SIZE,
+            SmartConfKeys.SMART_CMDLET_EXECUTOR_THREAD_SIZE_DEFAULT);
+    this.executorService = Executors.newFixedThreadPool(nThreads);
   }
 
   public void execute(Cmdlet cmdlet) {

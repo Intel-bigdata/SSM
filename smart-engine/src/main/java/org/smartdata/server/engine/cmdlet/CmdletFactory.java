@@ -18,6 +18,7 @@
 package org.smartdata.server.engine.cmdlet;
 
 import org.smartdata.SmartContext;
+import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
@@ -47,7 +48,7 @@ public class CmdletFactory {
     this.reporter = reporter;
   }
 
-  public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet) {
+  public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet) throws ActionException {
     List<SmartAction> actions = new ArrayList<>();
     for (LaunchAction action : launchCmdlet.getLaunchActions()) {
       actions.add(createAction(action));
@@ -57,31 +58,35 @@ public class CmdletFactory {
     return cmdlet;
   }
 
-  public SmartAction createAction(LaunchAction launchAction) {
+  public SmartAction createAction(LaunchAction launchAction) throws ActionException {
     SmartAction smartAction = ActionRegistry.createAction(launchAction.getActionType());
-    if (smartAction == null) {
-      return null;
-    }
     smartAction.setContext(smartContext);
     smartAction.init(launchAction.getArgs());
     smartAction.setActionId(launchAction.getActionId());
     smartAction.setStatusReporter(reporter);
     if (smartAction instanceof HdfsAction) {
       try {
-        ((HdfsAction) smartAction).setDfsClient(
-          new SmartDFSClient(HadoopUtils.getNameNodeUri(smartContext.getConf()),
-            smartContext.getConf(), getRpcServerAddress()));
+        ((HdfsAction) smartAction)
+            .setDfsClient(
+                new SmartDFSClient(
+                    HadoopUtils.getNameNodeUri(smartContext.getConf()),
+                    smartContext.getConf(),
+                    getRpcServerAddress()));
       } catch (IOException e) {
         e.printStackTrace();
+        throw new ActionException(e);
       }
     }
     return smartAction;
   }
 
   private InetSocketAddress getRpcServerAddress() {
-    String[] strings = smartContext.getConf().get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
-      SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
-    return new InetSocketAddress(strings[strings.length - 2]
-      , Integer.parseInt(strings[strings.length - 1]));
+    String[] strings =
+        smartContext
+            .getConf()
+            .get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY, SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT)
+            .split(":");
+    return new InetSocketAddress(
+        strings[strings.length - 2], Integer.parseInt(strings[strings.length - 1]));
   }
 }

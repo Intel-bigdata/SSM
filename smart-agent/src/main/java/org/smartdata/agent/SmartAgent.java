@@ -65,12 +65,12 @@ public class SmartAgent {
     checkNotNull(masters);
 
     agent.start(AgentUtils.loadConfigWithAddress(conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
-        AgentUtils.getMasterActorPaths(masters));
+        AgentUtils.getMasterActorPaths(masters), conf);
   }
 
-  void start(Config config, String[] masterPath) {
+  void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
-    system.actorOf(Props.create(AgentActor.class, this, masterPath));
+    system.actorOf(Props.create(AgentActor.class, conf, this, masterPath));
     system.awaitTermination();
   }
 
@@ -89,15 +89,17 @@ public class SmartAgent {
 
     private MasterToAgent.AgentId id;
     private ActorRef master;
+    private final SmartConf smartConf;
     private final SmartAgent agent;
     private final String[] masters;
     private final CmdletExecutor executor;
     private final CmdletFactory factory;
 
-    public AgentActor(SmartAgent agent, String[] masters) {
+    public AgentActor(SmartConf smartConf, SmartAgent agent, String[] masters) {
       this.agent = agent;
       this.masters = masters;
-      this.executor = new CmdletExecutor(this);
+      this.smartConf = smartConf;
+      this.executor = new CmdletExecutor(smartConf, this);
       this.factory = new CmdletFactory(new SmartContext(), this);
     }
 

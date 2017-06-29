@@ -17,8 +17,12 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.actions.ActionException;
 import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.common.message.StatusReporter;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.common.message.StatusMessage;
@@ -28,14 +32,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class LocalCmdletExecutorService extends CmdletExecutorService implements StatusReporter {
+  private final static Logger LOG = LoggerFactory.getLogger(LocalCmdletExecutorService.class);
   private CmdletFactory cmdletFactory;
   private CmdletExecutor cmdletExecutor;
   private ScheduledExecutorService executorService;
 
-  public LocalCmdletExecutorService(CmdletManager cmdletManager) {
+  public LocalCmdletExecutorService(SmartConf smartConf, CmdletManager cmdletManager) {
     super(cmdletManager);
     this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
-    this.cmdletExecutor = new CmdletExecutor(this);
+    this.cmdletExecutor = new CmdletExecutor(smartConf, this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.executorService.scheduleAtFixedRate(new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
   }
@@ -52,7 +57,12 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
 
   @Override
   public void execute(LaunchCmdlet cmdlet) {
-    this.cmdletExecutor.execute(cmdletFactory.createCmdlet(cmdlet));
+    try {
+      this.cmdletExecutor.execute(cmdletFactory.createCmdlet(cmdlet));
+    } catch (ActionException e) {
+      e.printStackTrace();
+      LOG.error("Failed to create cmdlet from " + cmdlet);
+    }
   }
 
   @Override
