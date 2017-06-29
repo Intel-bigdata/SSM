@@ -48,6 +48,7 @@ public class ClusterRestApi {
   @GET
   @Path("/primary")
   public void primary() {
+    // return NN url
   }
 
   @GET
@@ -77,14 +78,14 @@ public class ClusterRestApi {
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
-
-  @GET
-  @Path("/alluxio/{clusterName}")
-  public void alluxio() {
-  }
-
-  @GET
-  @Path("/hdfs/{clusterName}")
-  public void hdfs() {
-  }
+// TODO: implment
+//  @GET
+//  @Path("/alluxio/{clusterName}")
+//  public void alluxio() {
+//  }
+//
+//  @GET
+//  @Path("/hdfs/{clusterName}")
+//  public void hdfs() {
+//  }
 }

@@ -75,17 +75,6 @@ Example:
     GET https://<host>:<port>/smart/api/v1/rules/{ruleId}/detail
     Code:200
     Content-Type:application/json
-```     
-### Get Smart rule status
-* Submit a HTTP GET request.
-```
-    https://<host>:<port>/smart/api/v1/rules/{ruleId}/status
-```
-Example:
-```
-    GET https://<host>:<port>/smart/api/v1/rules/{ruleId}/errors
-    Code:200
-    Content-Type:application/json
 ```
 ### Get Smart rule cmdlets
 * Submit a HTTP GET request.

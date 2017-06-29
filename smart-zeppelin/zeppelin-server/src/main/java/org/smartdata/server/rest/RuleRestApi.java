@@ -106,14 +106,14 @@ public class RuleRestApi {
   }
 
   @GET
-  @Path("/{ruleId}/status")
-  public Response status(@PathParam("ruleId") String ruleId) {
+  @Path("/{ruleId}/info")
+  public Response info(@PathParam("ruleId") String ruleId) {
     Long intNumber = Long.parseLong(ruleId);
     try {
       return new JsonResponse<>(Response.Status.OK,
           smartEngine.getRuleManager().getRuleInfo(intNumber)).build();
     } catch (Exception e) {
-      logger.error("Exception in RuleRestApi while getting rule status", e);
+      logger.error("Exception in RuleRestApi while getting rule info", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }

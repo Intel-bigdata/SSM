@@ -45,14 +45,14 @@ public class CmdletRestApi {
   }
 
   @GET
-  @Path("/{cmdletId}/status")
-  public Response status(@PathParam("cmdletId") String cmdletId) {
+  @Path("/{cmdletId}/info")
+  public Response info(@PathParam("cmdletId") String cmdletId) {
     Long longNumber = Long.parseLong(cmdletId);
     try {
       return new JsonResponse<>(Response.Status.OK,
           smartEngine.getCmdletManager().getCmdletInfo(longNumber)).build();
     } catch (Exception e) {
-      logger.error("Exception in CmdletRestApi while getting status", e);
+      logger.error("Exception in CmdletRestApi while getting info", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
@@ -75,7 +75,7 @@ public class CmdletRestApi {
 
   @POST
   @Path("/submit/{actionType}")
-  public Response submitAction(String args,
+  public Response submitCmdlet(String args,
       @PathParam("actionType") String actionType) {
     try {
       return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletManager()
@@ -87,13 +87,17 @@ public class CmdletRestApi {
     }
   }
 
-  @GET
-  @Path("/{cmdletId}/detail")
-  public void detail() throws Exception {
-  }
-
-  @GET
-  @Path("/{cmdletId}/summary")
-  public void summary() {
+  @POST
+  @Path("/{cmdletId}/stop")
+  public Response stop(@PathParam("cmdletId") String cmdletId) {
+    Long longNumber = Long.parseLong(cmdletId);
+    try {
+      smartEngine.getCmdletManager().disableCmdlet(longNumber);
+      return new JsonResponse<>(Response.Status.OK).build();
+    } catch (Exception e) {
+      logger.error("Exception in CmdletRestApi while stop cmdlet " + longNumber, e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
 }

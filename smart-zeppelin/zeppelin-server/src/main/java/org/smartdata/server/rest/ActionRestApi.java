@@ -71,29 +71,16 @@ public class ActionRestApi {
   }
 
   @GET
-  @Path("/{actionId}/status")
-  public Response status(@PathParam("actionId") String actionId) {
+  @Path("/{actionId}/info")
+  public Response info(@PathParam("actionId") String actionId) {
     Long longNumber = Long.parseLong(actionId);
     try {
       return new JsonResponse<>(Response.Status.OK,
           smartEngine.getCmdletManager().getActionInfo(longNumber)).build();
     } catch (Exception e) {
-      logger.error("Exception in ActionRestApi while listing actions", e);
+      logger.error("Exception in ActionRestApi while getting info", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
-  }
-
-  @GET
-  @Path("/{actionId}/detail")
-  public Response detail(@PathParam("actionId") String actionId) throws Exception {
-    Long longNumer = Long.parseLong(actionId);
-    return new JsonResponse<>(Response.Status.OK,
-        smartEngine.getCmdletManager().getActionInfo(longNumer)).build();
-  }
-
-  @GET
-  @Path("/{actionId}/summary")
-  public void summary() {
   }
 }

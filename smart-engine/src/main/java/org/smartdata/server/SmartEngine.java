@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.engine.CmdletExecutor;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
@@ -91,7 +90,7 @@ public class SmartEngine extends AbstractService {
   }
 
   public SmartConf getConf() {
-    return conf;
+    return serverContext.getConf();
   }
 
   public StatesManager getStatesManager() {

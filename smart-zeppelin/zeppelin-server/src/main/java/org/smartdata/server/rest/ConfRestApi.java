@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.rest;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.SmartEngine;
@@ -44,8 +45,13 @@ public class ConfRestApi {
   @GET
   @Path("")
   public Response conf() {
-    return new JsonResponse<>(Response.Status.OK,
-        smartEngine.getConf().toString()).build();
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getConf().toString()).build();
+    } catch (Exception e) {
+      logger.error("Exception while getting configuration", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
   }
-
 }
