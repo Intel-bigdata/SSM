@@ -76,11 +76,6 @@ public class TestSmartServerReConfig {
 
       Thread.sleep(2000);
       Assert.assertTrue(ssm.getSSMServiceState() == SmartServiceState.DISABLED);
-      try {
-        ssm.enable();
-        Assert.fail("Should fail without specifying Namanode");
-      } catch (Exception e) {
-      }
 
       serverConf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
           uriList.get(0).toString());
