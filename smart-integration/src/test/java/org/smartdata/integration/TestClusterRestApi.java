@@ -23,6 +23,7 @@ import io.restassured.response.ValidatableResponse;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.integration.util.RetryTask;
 import org.smartdata.integration.util.Util;
 import org.smartdata.server.SmartDaemon;
 import org.smartdata.server.engine.StandbyServerInfo;
@@ -49,19 +50,17 @@ public class TestClusterRestApi extends IntegrationTestBase {
   public void testServers() throws IOException, InterruptedException {
     Response response = RestAssured.get("/smart/api/v1/cluster/servers");
     response.then().body("body", Matchers.empty());
+    Process worker = Util.startNewServer();
 
-    Process worker =
-        Util.buildProcess(
-            System.getProperty("java.class.path").split(File.pathSeparator),
-            SmartDaemon.class.getCanonicalName(),
-            new String[0]);
-    //Wait until worker process fully launched.
-    Thread.sleep(10000);
+    Util.retryUntil(new RetryTask() {
+      @Override
+      public boolean retry() {
+        Response response1 = RestAssured.get("/smart/api/v1/cluster/servers");
+        List<String> ids = with(response1.asString()).get("body.id");
+        return ids.size() > 0;
+      }
+    }, 15);
 
-    Response response1 = RestAssured.get("/smart/api/v1/cluster/servers");
-    List<String> ids = with(response1.asString()).get("body.id");
-    System.out.println(response1.asString());
-    Assert.assertTrue(ids.size() > 0);
     worker.destroy();
   }
 }

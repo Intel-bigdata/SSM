@@ -18,6 +18,7 @@
 package org.smartdata.integration.util;
 
 import org.apache.commons.lang.StringUtils;
+import org.smartdata.server.SmartDaemon;
 import scala.reflect.io.File;
 
 import java.io.IOException;
@@ -48,6 +49,12 @@ public class Util {
     }
   }
 
+  public static Process startNewServer() throws IOException {
+    return Util.buildProcess(
+        System.getProperty("java.class.path").split(java.io.File.pathSeparator),
+        SmartDaemon.class.getCanonicalName(),
+        new String[0]);
+  }
 
   public static Process buildProcess(
       String[] options, String[] classPath, String mainClass, String[] arguments)
