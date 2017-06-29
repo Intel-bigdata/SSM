@@ -29,6 +29,7 @@ import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Procedure;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -47,6 +48,7 @@ import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -64,13 +66,15 @@ public class SmartAgent {
 
     checkNotNull(masters);
 
-    agent.start(AgentUtils.loadConfigWithAddress(conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
+    agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(),
+        conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
         AgentUtils.getMasterActorPaths(masters), conf);
   }
 
   void start(Config config, String[] masterPath, SmartConf conf) {
+    LOG.info(config.getString("akka.actor.provider"));
     system = ActorSystem.apply(NAME, config);
-    system.actorOf(Props.create(AgentActor.class, conf, this, masterPath));
+    system.actorOf(Props.create(AgentActor.class, conf, this, masterPath), getAgentName());
     system.awaitTermination();
   }
 
@@ -79,6 +83,10 @@ public class SmartAgent {
       LOG.info("Shutting down system {}", AgentUtils.getSystemAddres(system));
       system.shutdown();
     }
+  }
+
+  private String getAgentName() {
+    return "agent-" + UUID.randomUUID().toString();
   }
 
   static class AgentActor extends UntypedActor implements StatusReporter {
