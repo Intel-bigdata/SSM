@@ -24,7 +24,6 @@ import org.smartdata.common.rule.RuleState;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
-import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -64,15 +63,17 @@ public class RuleRestApi {
     return new JsonResponse(Response.Status.CREATED, t).build();
   }
 
-  @DELETE
+  @POST
   @Path("/{ruleId}/delete")
-  public void deleteRule(@PathParam("ruleId") String ruleId) {
+  public Response deleteRule(@PathParam("ruleId") String ruleId) {
     try {
       Long longNumber = Long.parseLong(ruleId);
-      smartEngine.getRuleManager().deleteRule(longNumber,
-          false);
+      smartEngine.getRuleManager().deleteRule(longNumber, false);
+      return new JsonResponse<>(Response.Status.OK).build();
     } catch (Exception e) {
       logger.error("Exception in RuleRestApi while deleting rule ", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
