@@ -73,7 +73,7 @@ public class TestAccessCountTableManager extends TestDaoUtil {
 
   private void createTables(Connection connection) throws Exception {
     Statement statement = connection.createStatement();
-    statement.execute(AccessCountTable.createTableSQL("expect1"));
+    statement.execute(AccessCountDao.createTableSQL("expect1"));
     String sql =
         "CREATE TABLE `files` (" + "`path` varchar(4096) NOT NULL," + "`fid` bigint(20) NOT NULL )";
     statement.execute(sql);
