@@ -28,13 +28,12 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.smartdata.common.models.FileStatusInternal;
+import org.smartdata.common.models.FileInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,7 +41,7 @@ import java.util.List;
 
 public class TestNamespaceFetcher {
 
-  public class FileStatusArgMatcher extends ArgumentMatcher<FileStatusInternal[]> {
+  public class FileStatusArgMatcher extends ArgumentMatcher<FileInfo[]> {
     private List<String> expected;
 
     public FileStatusArgMatcher(List<String> path) {
@@ -51,9 +50,9 @@ public class TestNamespaceFetcher {
 
     @Override
     public boolean matches(Object o) {
-      FileStatusInternal[] array = (FileStatusInternal[]) o;
+      FileInfo[] array = (FileInfo[]) o;
       List<String> paths = new ArrayList<>();
-      for (FileStatusInternal statusInternal : array) {
+      for (FileInfo statusInternal : array) {
         paths.add(statusInternal.getPath());
       }
       Collections.sort(paths);
