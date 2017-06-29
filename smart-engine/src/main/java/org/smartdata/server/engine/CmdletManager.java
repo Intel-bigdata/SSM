@@ -21,8 +21,8 @@ import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
+import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionRegistry;
-import org.smartdata.actions.HelloAction;
 import org.smartdata.actions.hdfs.MoveFileAction;
 import org.smartdata.common.CmdletState;
 import org.smartdata.common.actions.ActionInfoComparator;
@@ -36,7 +36,6 @@ import org.smartdata.common.message.StatusMessage;
 import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.server.engine.cmdlet.Cmdlet;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -46,7 +45,6 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -88,7 +86,7 @@ public class CmdletManager extends AbstractService {
 
     this.metaStore = context.getMetaStore();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.dispatcher = new CmdletDispatcher(this);
+    this.dispatcher = new CmdletDispatcher(context, this);
     this.runningCmdlets = new ArrayList<>();
     this.submittedCmdlets = new HashSet<>();
     this.pendingCmdlet = new LinkedBlockingQueue<>();
@@ -158,7 +156,7 @@ public class CmdletManager extends AbstractService {
       cmdletInfo.addAction(actionInfo.getActionId());
     }
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
-      if (!ActionRegistry.checkAction(cmdletDescriptor.getActionName(index))) {
+      if (!ActionRegistry.registeredAction(cmdletDescriptor.getActionName(index))) {
         throw new IOException(
           String.format("Submit Cmdlet %s error! Action names are not correct!", cmdletInfo));
       }
@@ -379,7 +377,7 @@ public class CmdletManager extends AbstractService {
   }
 
   public synchronized void updateStatus(StatusMessage status) {
-    System.out.println("got update " + status);
+    LOG.debug("Got status update: " + status);
     try{
       if (status instanceof CmdletStatusUpdate) {
         onCmdletStatusUpdate((CmdletStatusUpdate) status);
@@ -392,6 +390,8 @@ public class CmdletManager extends AbstractService {
       }
     } catch (IOException e) {
       LOG.error(String.format("Update status %s failed with %s", status, e));
+    } catch (ActionException e) {
+      e.printStackTrace();
     }
   }
 
@@ -433,7 +433,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void onActionFinished(ActionFinished finished) throws IOException {
+  private void onActionFinished(ActionFinished finished) throws IOException, ActionException {
     if (this.idToActions.containsKey(finished.getActionId())) {
       ActionInfo actionInfo = this.idToActions.get(finished.getActionId());
       actionInfo.setFinished(true);
@@ -471,7 +471,7 @@ public class CmdletManager extends AbstractService {
   }
 
   //Todo: remove this implementation
-  private void updateStorageIfNeeded(ActionInfo info) {
+  private void updateStorageIfNeeded(ActionInfo info) throws ActionException {
     if (ActionRegistry.createAction(info.getActionName()) instanceof MoveFileAction) {
       Map<String, String> args = info.getArgs();
       if (args.containsKey(MoveFileAction.STORAGE_POLICY)) {

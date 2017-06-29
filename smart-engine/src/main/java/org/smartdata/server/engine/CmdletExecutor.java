@@ -22,6 +22,7 @@ import org.apache.hadoop.util.Daemon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
+import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
@@ -161,6 +162,8 @@ public class CmdletExecutor extends AbstractService implements Runnable {
         }
       } catch (IOException e) {
         LOG.error("Schedule error!", e);
+      } catch (ActionException e) {
+        e.printStackTrace();
       }
     }
   }
@@ -331,7 +334,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
   }
 
   private boolean isActionSupported(String actionName) {
-    return ActionRegistry.checkAction(actionName);
+    return ActionRegistry.registeredAction(actionName);
   }
 
   private void addToPending(CmdletInfo cmdinfo) throws IOException {
@@ -392,7 +395,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
    *
    * @return
    */
-  private synchronized Cmdlet schedule() throws IOException {
+  private synchronized Cmdlet schedule() throws IOException, ActionException {
     // currently FIFO
     Set<Long> cmdsPending = cmdsInState
         .get(CmdletState.PENDING.getValue());
@@ -436,7 +439,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     return ret;
   }
 
-  private SmartAction createSmartAction(ActionInfo actionInfo) throws IOException {
+  private SmartAction createSmartAction(ActionInfo actionInfo) throws IOException, ActionException {
     SmartAction smartAction = ActionRegistry.createAction(actionInfo.getActionName());
     if (smartAction == null) {
       return null;
@@ -452,7 +455,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     return smartAction;
   }
 
-  private SmartAction createSmartAction(String name) throws IOException {
+  private SmartAction createSmartAction(String name) throws IOException, ActionException {
     SmartAction smartAction = ActionRegistry.createAction(name);
     if (smartAction == null) {
       return null;
@@ -555,7 +558,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
         submitTime, submitTime);
     maxCmdletId ++;
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
-      if (!ActionRegistry.checkAction(cmdletDescriptor.getActionName(index))) {
+      if (!ActionRegistry.registeredAction(cmdletDescriptor.getActionName(index))) {
         LOG.error("Submit Cmdlet {} error! Action names are not correct!", cmdinfo);
         throw new IOException();
       }
@@ -600,7 +603,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
   }
 
   private Cmdlet getCmdletFromCmdInfo(CmdletInfo cmdinfo)
-      throws IOException {
+    throws IOException, ActionException {
     // New Cmdlet
     Cmdlet cmd;
     List<ActionInfo> actionInfos;

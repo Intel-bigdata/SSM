@@ -47,4 +47,7 @@ public class SmartConfKeys {
 
   public final static String DFS_SSM_ENABLE_ZEPPELIN = "dfs.smart.zeppelin.enable";
   public final static boolean DFS_SSM_ENABLE_ZEPPELIN_DEFAULT = false;
+
+  public final static String SMART_CMDLET_EXECUTOR_THREAD_SIZE = "dfs.smart.cmdlet.executor.thread.size";
+  public final static int SMART_CMDLET_EXECUTOR_THREAD_SIZE_DEFAULT = 10;
 }

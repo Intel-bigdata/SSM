@@ -20,10 +20,8 @@ package org.smartdata.actions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.message.StatusReporter;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,26 +44,26 @@ public class ActionRegistry {
     }
   }
 
-  public static Set<String> namesOfAction() {
+  public static Set<String> registeredActions() {
     return Collections.unmodifiableSet(allActions.keySet());
   }
 
-  public static boolean checkAction(String name) {
+  public static boolean registeredAction(String name) {
     return allActions.containsKey(name);
   }
 
   public static List<ActionDescriptor> supportedActions() throws IOException {
     //TODO add more information for list ActionDescriptor
     ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
-    for (String name : namesOfAction()) {
+    for (String name : registeredActions()) {
       actionDescriptors.add(new ActionDescriptor(name, name, "", ""));
     }
     return actionDescriptors;
   }
 
-  public static SmartAction createAction(String name) {
-    if (!checkAction(name)) {
-      return null;
+  public static SmartAction createAction(String name) throws ActionException {
+    if (!registeredAction(name)) {
+      throw new ActionException("Unregistered action " + name);
     }
     try {
       SmartAction smartAction = (SmartAction) allActions.get(name).newInstance();
@@ -73,7 +71,7 @@ public class ActionRegistry {
       return smartAction;
     } catch (Exception e) {
       LOG.error("Create {} action failed", name, e);
-      throw new RuntimeException("Create action failed", e);
+      throw new ActionException(e);
     }
   }
 }
