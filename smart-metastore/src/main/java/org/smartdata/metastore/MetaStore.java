@@ -100,16 +100,24 @@ public class MetaStore {
     accessCountDao = new AccessCountDao(pool.getDataSource());
   }
 
-  public Connection getConnection() throws SQLException {
+  public Connection getConnection() throws MetaStoreExecption {
     if (pool != null) {
-      return pool.getConnection();
+      try {
+        return pool.getConnection();
+      } catch (SQLException e) {
+        throw new MetaStoreExecption(e);
+      }
     }
     return null;
   }
 
-  private void closeConnection(Connection conn) throws SQLException {
+  private void closeConnection(Connection conn) throws MetaStoreExecption {
     if (pool != null) {
-      pool.closeConnection(conn);
+      try {
+        pool.closeConnection(conn);
+      } catch (SQLException e) {
+        throw new MetaStoreExecption(e);
+      }
     }
   }
 
@@ -122,51 +130,68 @@ public class MetaStore {
     private ResultSet resultSet;
     private boolean closed = false;
 
-    public QueryHelper(String query) throws SQLException {
+    public QueryHelper(String query) throws MetaStoreExecption {
       this.query = query;
       conn = getConnection();
       if (conn == null) {
-        throw new SQLException("Invalid null connection");
+        throw new MetaStoreExecption("Invalid null connection");
       }
     }
 
-    public QueryHelper(String query, Connection conn) throws SQLException {
+    public QueryHelper(String query,
+        Connection conn) throws MetaStoreExecption {
       this.query = query;
       this.conn = conn;
       connProvided = true;
       if (conn == null) {
-        throw new SQLException("Invalid null connection");
+        throw new MetaStoreExecption("Invalid null connection");
       }
     }
 
-    public ResultSet executeQuery() throws SQLException {
-      statement = conn.createStatement();
-      resultSet = statement.executeQuery(query);
+    public ResultSet executeQuery() throws MetaStoreExecption {
+      try {
+        statement = conn.createStatement();
+        resultSet = statement.executeQuery(query);
+      } catch (SQLException e) {
+        throw new MetaStoreExecption(e);
+      }
       return resultSet;
     }
 
-    public int executeUpdate() throws SQLException {
-      statement = conn.createStatement();
-      return statement.executeUpdate(query);
+    public int executeUpdate() throws MetaStoreExecption {
+      try {
+        statement = conn.createStatement();
+        return statement.executeUpdate(query);
+      } catch (SQLException e) {
+        throw new MetaStoreExecption(e);
+      }
     }
 
-    public void execute() throws SQLException {
-      statement = conn.createStatement();
-      statement.execute(query);
+    public void execute() throws MetaStoreExecption {
+      try {
+        statement = conn.createStatement();
+        statement.execute(query);
+      } catch (SQLException e) {
+        throw new MetaStoreExecption(e);
+      }
     }
 
-    public void close() throws SQLException {
+    public void close() throws MetaStoreExecption {
       if (closed) {
         return;
       }
       closed = true;
 
-      if (resultSet != null && !resultSet.isClosed()) {
-        resultSet.close();
-      }
+      try {
+        if (resultSet != null && !resultSet.isClosed()) {
+          resultSet.close();
+        }
 
-      if (statement != null && !statement.isClosed()) {
-        statement.close();
+        if (statement != null && !statement.isClosed()) {
+          statement.close();
+        }
+      } catch (SQLException e) {
+        throw new MetaStoreExecption(e);
       }
 
       if (conn != null && !connProvided) {
@@ -176,7 +201,7 @@ public class MetaStore {
   }
 
   public Map<Long, Integer> getAccessCount(long startTime, long endTime,
-      String countFilter) throws SQLException {
+      String countFilter) throws MetaStoreExecption {
     // TODO access file
     Map<Long, Integer> ret = new HashMap<>();
     String sqlGetTableNames = "SELECT table_name FROM access_count_tables "
@@ -190,8 +215,12 @@ public class MetaStore {
       qhTableName = new QueryHelper(sqlGetTableNames, conn);
       rsTableNames = qhTableName.executeQuery();
       List<String> tableNames = new LinkedList<>();
-      while (rsTableNames.next()) {
-        tableNames.add(rsTableNames.getString(1));
+      try {
+        while (rsTableNames.next()) {
+          tableNames.add(rsTableNames.getString(1));
+        }
+      } catch (SQLException e) {
+        throw new MetaStoreExecption(e);
       }
       qhTableName.close();
 
@@ -217,8 +246,12 @@ public class MetaStore {
       qhValues = new QueryHelper(sqlFinal, conn);
       rsValues = qhValues.executeQuery();
 
-      while (rsValues.next()) {
-        ret.put(rsValues.getLong(1), rsValues.getInt(2));
+      try {
+        while (rsValues.next()) {
+          ret.put(rsValues.getLong(1), rsValues.getInt(2));
+        }
+      } catch (SQLException e) {
+        throw new MetaStoreExecption(e);
       }
 
       return ret;
@@ -235,22 +268,35 @@ public class MetaStore {
     }
   }
 
-  public synchronized void addUser(String userName) throws SQLException {
-    userDao.addUser(userName);
+  public synchronized void addUser(String userName) throws MetaStoreExecption {
+    try {
+      userDao.addUser(userName);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public synchronized void addGroup(String groupName) throws SQLException {
-    groupsDao.addGroup(groupName);
+  public synchronized void addGroup(
+      String groupName) throws MetaStoreExecption {
+    try {
+      groupsDao.addGroup(groupName);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  private void updateUsersMap() throws SQLException {
+  private void updateUsersMap() throws MetaStoreExecption {
     mapOwnerIdName = userDao.getUsersMap();
     fileDao.updateUsersMap(mapOwnerIdName);
   }
 
-  private void updateGroupsMap() throws SQLException {
-    mapGroupIdName = groupsDao.getGroupsMap();
-    fileDao.updateGroupsMap(mapGroupIdName);
+  private void updateGroupsMap() throws MetaStoreExecption {
+    try {
+      mapGroupIdName = groupsDao.getGroupsMap();
+      fileDao.updateGroupsMap(mapGroupIdName);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   /**
@@ -259,9 +305,9 @@ public class MetaStore {
    * @param files
    */
   public synchronized void insertFiles(FileStatusInternal[] files)
-      throws SQLException {
+      throws MetaStoreExecption {
     updateCache();
-    for (FileStatusInternal file: files) {
+    for (FileStatusInternal file : files) {
       String owner = file.getOwner();
       String group = file.getGroup();
       if (!this.mapOwnerIdName.values().contains(owner)) {
@@ -273,52 +319,77 @@ public class MetaStore {
         this.updateGroupsMap();
       }
     }
-    fileDao.insert(files);
+    try {
+      fileDao.insert(files);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
 
   public int updateFileStoragePolicy(String path, String policyName)
-      throws SQLException {
+      throws MetaStoreExecption {
     if (mapStoragePolicyIdName == null) {
       updateCache();
     }
     if (!mapStoragePolicyNameId.containsKey(policyName)) {
-      throw new SQLException("Unknown storage policy name '"
+      throw new MetaStoreExecption("Unknown storage policy name '"
           + policyName + "'");
     }
-    return storageDao.updateFileStoragePolicy(path, policyName);
+    try {
+      return storageDao.updateFileStoragePolicy(path, policyName);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public List<HdfsFileStatus> getFile() throws SQLException {
+  public List<HdfsFileStatus> getFile() throws MetaStoreExecption {
     updateCache();
-    return fileDao.getAll();
+    try {
+      return fileDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public HdfsFileStatus getFile(long fid) throws SQLException {
+  public HdfsFileStatus getFile(long fid) throws MetaStoreExecption {
     updateCache();
-    return fileDao.getById(fid);
-
+    try {
+      return fileDao.getById(fid);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public Map<String, Long> getFileIDs(Collection<String> paths)
-      throws SQLException {
-    return fileDao.getPathFids(paths);
+      throws MetaStoreExecption {
+    try {
+      return fileDao.getPathFids(paths);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public Map<Long, String> getFilePaths(Collection<Long> ids)
-      throws SQLException {
-    return fileDao.getFidPaths(ids);
+      throws MetaStoreExecption {
+    try {
+      return fileDao.getFidPaths(ids);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public synchronized List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
-                                                       int topNum) throws SQLException {
+  public synchronized List<FileAccessInfo> getHotFiles(
+      List<AccessCountTable> tables,
+      int topNum) throws MetaStoreExecption {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
       StringBuilder unioned = new StringBuilder();
       while (tableIterator.hasNext()) {
         AccessCountTable table = tableIterator.next();
         if (tableIterator.hasNext()) {
-          unioned.append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
+          unioned
+              .append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
         } else {
           unioned.append("SELECT * FROM " + table.getTableName());
         }
@@ -333,50 +404,71 @@ public class MetaStore {
               AccessCountDao.FILE_FIELD,
               AccessCountDao.ACCESSCOUNT_FIELD,
               topNum);
-      ResultSet resultSet = this.executeQuery(statement);
-      Map<Long, Integer> accessCounts = new HashMap<>();
-      while (resultSet.next()) {
-        accessCounts.put(
-            resultSet.getLong(AccessCountDao.FILE_FIELD),
-            resultSet.getInt(AccessCountDao.ACCESSCOUNT_FIELD));
-      }
-      Map<Long, String> idToPath = this.getFilePaths(accessCounts.keySet());
-      List<FileAccessInfo> result = new ArrayList<>();
-      for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
-        Long fid = entry.getKey();
-        if (idToPath.containsKey(fid)) {
-          result.add(new FileAccessInfo(fid, idToPath.get(fid), accessCounts.get(fid)));
+      try {
+        ResultSet resultSet = this.executeQuery(statement);
+        Map<Long, Integer> accessCounts = new HashMap<>();
+        while (resultSet.next()) {
+          accessCounts.put(
+              resultSet.getLong(AccessCountDao.FILE_FIELD),
+              resultSet.getInt(AccessCountDao.ACCESSCOUNT_FIELD));
         }
+        Map<Long, String> idToPath = this.getFilePaths(accessCounts.keySet());
+        List<FileAccessInfo> result = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
+          Long fid = entry.getKey();
+          if (idToPath.containsKey(fid)) {
+            result.add(new FileAccessInfo(fid, idToPath.get(fid),
+                accessCounts.get(fid)));
+          }
+        }
+        return result;
+      } catch (Exception e) {
+        throw new MetaStoreExecption(e);
       }
-      return result;
     } else {
       return new ArrayList<>();
     }
   }
 
 
-  public HdfsFileStatus getFile(String path) throws SQLException {
-    return fileDao.getByPath(path);
+  public HdfsFileStatus getFile(String path) throws MetaStoreExecption {
+    try {
+      return fileDao.getByPath(path);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public void insertStoragesTable(StorageCapacity[] storages)
-      throws SQLException {
+      throws MetaStoreExecption {
     mapStorageCapacity = null;
-    storageDao.insertStoragesTable(storages);
+    try {
+      storageDao.insertStoragesTable(storages);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public StorageCapacity getStorageCapacity(String type) throws SQLException {
-    // TODO updateCache
+  public StorageCapacity getStorageCapacity(
+      String type) throws MetaStoreExecption {
     updateCache();
-    return mapStorageCapacity.get(type);
+    try {
+      return mapStorageCapacity.get(type);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized boolean updateStoragesTable(String type,
-      Long capacity, Long free) throws SQLException {
-    return storageDao.updateStoragesTable(type, capacity, free);
+      Long capacity, Long free) throws MetaStoreExecption {
+    try {
+      return storageDao.updateStoragesTable(type, capacity, free);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  private void updateCache() throws SQLException {
+  private void updateCache() throws MetaStoreExecption {
     if (mapOwnerIdName == null) {
       this.updateUsersMap();
     }
@@ -386,59 +478,107 @@ public class MetaStore {
     }
     if (mapStoragePolicyIdName == null) {
       mapStoragePolicyNameId = null;
-      mapStoragePolicyIdName = storageDao.getStoragePolicyIdNameMap();
+      try {
+        mapStoragePolicyIdName = storageDao.getStoragePolicyIdNameMap();
+      } catch (Exception e) {
+        throw new MetaStoreExecption(e);
+      }
       mapStoragePolicyNameId = new HashMap<>();
       for (Integer key : mapStoragePolicyIdName.keySet()) {
         mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
       }
     }
     if (mapStorageCapacity == null) {
-      mapStorageCapacity = storageDao.getStorageTablesItem();
+      try {
+        mapStorageCapacity = storageDao.getStorageTablesItem();
+      } catch (Exception e) {
+        throw new MetaStoreExecption(e);
+      }
     }
   }
 
-  public synchronized void insertCachedFiles(long fid, String path, long fromTime,
-      long lastAccessTime, int numAccessed) throws SQLException {
-    cacheFileDao.insert(fid, path, fromTime, lastAccessTime, numAccessed);
+  public synchronized void insertCachedFiles(long fid, String path,
+      long fromTime,
+      long lastAccessTime, int numAccessed) throws MetaStoreExecption {
+    try {
+      cacheFileDao.insert(fid, path, fromTime, lastAccessTime, numAccessed);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized void insertCachedFiles(List<CachedFileStatus> s)
-      throws SQLException {
-    cacheFileDao.insert(s.toArray(new CachedFileStatus[s.size()]));
+      throws MetaStoreExecption {
+    try {
+      cacheFileDao.insert(s.toArray(new CachedFileStatus[s.size()]));
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public void deleteAllCachedFile() throws SQLException {
-    cacheFileDao.deleteAll();
+  public void deleteAllCachedFile() throws MetaStoreExecption {
+    try {
+      cacheFileDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized boolean updateCachedFiles(Long fid,
-      Long lastAccessTime, Integer numAccessed) throws SQLException {
-    return cacheFileDao.update(fid, lastAccessTime, numAccessed) >= 0;
+      Long lastAccessTime, Integer numAccessed) throws MetaStoreExecption {
+    try {
+      return cacheFileDao.update(fid, lastAccessTime, numAccessed) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public void updateCachedFiles(Map<String, Long> pathToIds, List<FileAccessEvent> events)
-      throws SQLException {
-    cacheFileDao.update(pathToIds, events);
+  public void updateCachedFiles(Map<String, Long> pathToIds,
+      List<FileAccessEvent> events)
+      throws MetaStoreExecption {
+    try {
+      cacheFileDao.update(pathToIds, events);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public void deleteCachedFile(long fid) throws SQLException {
-    cacheFileDao.deleteById(fid);
+  public void deleteCachedFile(long fid) throws MetaStoreExecption {
+    try {
+      cacheFileDao.deleteById(fid);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public List<CachedFileStatus> getCachedFileStatus() throws SQLException {
-    return cacheFileDao.getAll();
+  public List<CachedFileStatus> getCachedFileStatus() throws MetaStoreExecption {
+    try {
+      return cacheFileDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public List<Long> getCachedFids() throws SQLException {
-    return cacheFileDao.getFids();
+  public List<Long> getCachedFids() throws MetaStoreExecption {
+    try {
+      return cacheFileDao.getFids();
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public CachedFileStatus getCachedFileStatus(long fid) throws SQLException {
-    return cacheFileDao.getById(fid);
+  public CachedFileStatus getCachedFileStatus(
+      long fid) throws MetaStoreExecption {
+    try {
+      return cacheFileDao.getById(fid);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public void createProportionView(AccessCountTable dest, AccessCountTable source)
-      throws SQLException {
+  public void createProportionView(AccessCountTable dest,
+      AccessCountTable source)
+      throws MetaStoreExecption {
     double percentage =
         ((double) dest.getEndTime() - dest.getStartTime())
             / (source.getEndTime() - source.getStartTime());
@@ -452,14 +592,22 @@ public class MetaStore {
             percentage,
             AccessCountDao.ACCESSCOUNT_FIELD,
             source.getTableName());
-    execute(sql);
+    try {
+      execute(sql);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public void dropTable(String tableName) throws SQLException {
-    execute("DROP TABLE " + tableName);
+  public void dropTable(String tableName) throws MetaStoreExecption {
+    try {
+      execute("DROP TABLE " + tableName);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public int executeUpdate(String sql) throws SQLException {
+  public int executeUpdate(String sql) throws MetaStoreExecption {
     QueryHelper queryHelper = new QueryHelper(sql);
     try {
       return queryHelper.executeUpdate();
@@ -468,7 +616,7 @@ public class MetaStore {
     }
   }
 
-  public void execute(String sql) throws SQLException {
+  public void execute(String sql) throws MetaStoreExecption {
     QueryHelper queryHelper = new QueryHelper(sql);
     try {
       queryHelper.execute();
@@ -478,19 +626,24 @@ public class MetaStore {
   }
 
   //Todo: optimize
-  public void execute(List<String> statements) throws SQLException {
+  public void execute(List<String> statements) throws MetaStoreExecption {
     for (String statement : statements) {
       this.execute(statement);
     }
   }
 
-  public List<String> executeFilesPathQuery(String sql) throws SQLException {
+  public List<String> executeFilesPathQuery(
+      String sql) throws MetaStoreExecption {
     List<String> paths = new LinkedList<>();
     QueryHelper queryHelper = new QueryHelper(sql);
     try {
       ResultSet res = queryHelper.executeQuery();
-      while (res.next()) {
-        paths.add(res.getString(1));
+      try {
+        while (res.next()) {
+          paths.add(res.getString(1));
+        }
+      } catch (Exception e) {
+        throw new MetaStoreExecption(e);
       }
       return paths;
     } finally {
@@ -499,131 +652,218 @@ public class MetaStore {
   }
 
   public synchronized boolean insertNewRule(RuleInfo info)
-      throws SQLException {
-    long id = ruleDao.insert(info);
-    if (id >= 0) {
-      return true;
+      throws MetaStoreExecption {
+    try {
+      return ruleDao.insert(info) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
     }
-    return false;
   }
 
   public synchronized boolean updateRuleInfo(long ruleId, RuleState rs,
       long lastCheckTime, long checkedCount, int commandsGen)
-      throws SQLException {
-    if (rs == null) {
+      throws MetaStoreExecption {
+    try {
+      if (rs == null) {
+        return ruleDao.update(ruleId,
+            lastCheckTime, checkedCount, commandsGen) >= 0;
+      }
       return ruleDao.update(ruleId,
-          lastCheckTime, checkedCount, commandsGen) >= 0;
+          rs.getValue(), lastCheckTime, checkedCount, commandsGen) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
     }
-    return ruleDao.update(ruleId,
-        rs.getValue(), lastCheckTime, checkedCount, commandsGen) >= 0;
   }
 
-  public RuleInfo getRuleInfo(long ruleId) throws SQLException {
-    return ruleDao.getById(ruleId);
+  public RuleInfo getRuleInfo(long ruleId) throws MetaStoreExecption {
+    try {
+      return ruleDao.getById(ruleId);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public List<RuleInfo> getRuleInfo() throws SQLException {
-    return ruleDao.getAll();
+  public List<RuleInfo> getRuleInfo() throws MetaStoreExecption {
+    try {
+      return ruleDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized void insertCmdletsTable(CmdletInfo[] commands)
-      throws SQLException {
-    cmdletDao.insert(commands);
+      throws MetaStoreExecption {
+    try {
+      cmdletDao.insert(commands);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized void insertCmdletTable(CmdletInfo command)
-      throws SQLException {
-    cmdletDao.insert(command);
+      throws MetaStoreExecption {
+    try {
+      cmdletDao.insert(command);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public long getMaxCmdletId() throws SQLException {
-    return cmdletDao.getMaxId();
+  public long getMaxCmdletId() throws MetaStoreExecption {
+    try {
+      return cmdletDao.getMaxId();
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public List<CmdletInfo> getCmdletsTableItem(String cidCondition,
-      String ridCondition, CmdletState state) throws SQLException {
-    return cmdletDao.getByCondition(cidCondition, ridCondition, state);
+      String ridCondition, CmdletState state) throws MetaStoreExecption {
+    try {
+      return cmdletDao.getByCondition(cidCondition, ridCondition, state);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public boolean updateCmdletStatus(long cid, long rid, CmdletState state)
-      throws SQLException {
-    return cmdletDao.update(cid, rid, state.getValue()) >= 0;
+      throws MetaStoreExecption {
+    try {
+      return cmdletDao.update(cid, rid, state.getValue()) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public void deleteCmdlet(long cid) throws SQLException {
-    cmdletDao.delete(cid);
+  public void deleteCmdlet(long cid) throws MetaStoreExecption {
+    try {
+      cmdletDao.delete(cid);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized void insertActionsTable(ActionInfo[] actionInfos)
-      throws SQLException {
-    actionDao.insert(actionInfos);
+      throws MetaStoreExecption {
+    try {
+      actionDao.insert(actionInfos);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized void insertActionTable(ActionInfo actionInfo)
-      throws SQLException {
+      throws MetaStoreExecption {
     LOG.debug("Insert Action ID {}", actionInfo.getActionId());
-    actionDao.insert(actionInfo);
+    try {
+      actionDao.insert(actionInfo);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized void updateActionsTable(ActionInfo[] actionInfos)
-      throws SQLException {
+      throws MetaStoreExecption {
     if (actionInfos == null || actionInfos.length == 0) {
       return;
     }
     LOG.debug("Update Action ID {}", actionInfos[0].getActionId());
-    actionDao.update(actionInfos);
+    try {
+      actionDao.update(actionInfos);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public List<ActionInfo> getNewCreatedActionsTableItem(int size) throws SQLException {
+  public List<ActionInfo> getNewCreatedActionsTableItem(
+      int size) throws MetaStoreExecption {
     if (size <= 0) {
       return new ArrayList<>();
     }
-    return actionDao.getLatestActions(size);
+    try {
+      return actionDao.getLatestActions(size);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public List<ActionInfo> getActionsTableItem(List<Long> aids) throws SQLException {
-    if (aids == null || aids.size() == 0){
+  public List<ActionInfo> getActionsTableItem(
+      List<Long> aids) throws MetaStoreExecption {
+    if (aids == null || aids.size() == 0) {
       return null;
     }
     LOG.debug("Get Action ID {}", aids.toString());
-    return actionDao.getByIds(aids);
+    try {
+      return actionDao.getByIds(aids);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public List<ActionInfo> getActionsTableItem(String aidCondition,
-      String cidCondition) throws SQLException {
+      String cidCondition) throws MetaStoreExecption {
     LOG.debug("Get aid {} cid {}", aidCondition, cidCondition);
-    return actionDao.getByCondition(aidCondition, cidCondition);
+    try {
+      return actionDao.getByCondition(aidCondition, cidCondition);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public long getMaxActionId() throws SQLException {
-    return actionDao.getMaxId();
+  public long getMaxActionId() throws MetaStoreExecption {
+    try {
+      return actionDao.getMaxId();
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s)
-      throws SQLException {
-    storageDao.insertStoragePolicyTable(s);
+      throws MetaStoreExecption {
+    try {
+      storageDao.insertStoragePolicyTable(s);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public String getStoragePolicyName(int sid) throws SQLException {
+  public String getStoragePolicyName(int sid) throws MetaStoreExecption {
     updateCache();
-    return mapStoragePolicyIdName.get(sid);
+    try {
+      return mapStoragePolicyIdName.get(sid);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public Integer getStoragePolicyID(String policyName) throws SQLException {
+  public Integer getStoragePolicyID(
+      String policyName) throws MetaStoreExecption {
     updateCache();
-    return getKey(mapStoragePolicyIdName, policyName);
+    try {
+      return getKey(mapStoragePolicyIdName, policyName);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   public synchronized boolean insertXattrTable(Long fid, Map<String,
-      byte[]> map) throws SQLException {
-    return xattrDao.insertXattrTable(fid, map);
+      byte[]> map) throws MetaStoreExecption {
+    try {
+      return xattrDao.insertXattrTable(fid, map);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public Map<String, byte[]> getXattrTable(Long fid) throws SQLException {
-    return xattrDao.getXattrTable(fid);
+  public Map<String, byte[]> getXattrTable(Long fid) throws MetaStoreExecption {
+    try {
+      return xattrDao.getXattrTable(fid);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
-  public void dropAllTables() throws SQLException {
+  public void dropAllTables() throws MetaStoreExecption {
     Connection conn = getConnection();
     try {
       String url = conn.getMetaData().getURL();
@@ -632,39 +872,49 @@ public class MetaStore {
       } else if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
         MetaStoreUtils.dropAllTablesMysql(conn, url);
       } else {
-        throw new SQLException("Unsupported database");
+        throw new MetaStoreExecption("Unsupported database");
       }
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
     } finally {
       closeConnection(conn);
     }
   }
 
-  public synchronized void initializeDataBase() throws SQLException {
+  public synchronized void initializeDataBase() throws MetaStoreExecption {
     Connection conn = getConnection();
     try {
       MetaStoreUtils.initializeDataBase(conn);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
     } finally {
       closeConnection(conn);
     }
   }
 
-  public synchronized void formatDataBase() throws SQLException {
+  public synchronized void formatDataBase() throws MetaStoreExecption {
     dropAllTables();
     initializeDataBase();
   }
 
   public String aggregateSQLStatement(AccessCountTable destinationTable
-      , List<AccessCountTable> tablesToAggregate) {
-    return accessCountDao
-        .aggregateSQLStatement(destinationTable,tablesToAggregate);
+      , List<AccessCountTable> tablesToAggregate) throws MetaStoreExecption {
+    try {
+      return accessCountDao
+          .aggregateSQLStatement(destinationTable, tablesToAggregate);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
+    }
   }
 
   @VisibleForTesting
-  public ResultSet executeQuery(String sqlQuery) throws SQLException {
+  public ResultSet executeQuery(String sqlQuery) throws MetaStoreExecption {
     Connection conn = getConnection();
     try {
       Statement s = conn.createStatement();
       return s.executeQuery(sqlQuery);
+    } catch (Exception e) {
+      throw new MetaStoreExecption(e);
     } finally {
       closeConnection(conn);
     }
