@@ -150,7 +150,7 @@ public class MetaStore {
 
     public void execute() throws SQLException {
       statement = conn.createStatement();
-      statement.executeUpdate(query);
+      statement.execute(query);
     }
 
     public void close() throws SQLException {
