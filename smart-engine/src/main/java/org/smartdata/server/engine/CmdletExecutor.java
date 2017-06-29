@@ -35,12 +35,12 @@ import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.common.utils.HadoopUtils;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.server.engine.cmdlet.Cmdlet;
 import org.smartdata.server.engine.cmdlet.CmdletPool;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -180,7 +180,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     try {
       ret = metaStore.getCmdletsTableItem(String.format("= %d", cid),
           null, null);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
@@ -217,7 +217,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
         retInfos.addAll(metaStore.getCmdletsTableItem(null,
             null, cmdletState));
       }
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("List CmdletInfo from DB error! Conditions rid {}, {}", rid, e);
       throw new IOException(e);
     }
@@ -302,7 +302,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     }
     try {
       metaStore.deleteCmdlet(cid);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Delete Cmdlet {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
@@ -314,7 +314,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     try {
       dbActionInfo = metaStore.getActionsTableItem(
           String.format("== %d ", actionID), null).get(0);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}",
           actionID, e);
       throw new IOException(e);
@@ -575,18 +575,18 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     try {
       // Insert Cmdlet into DB
       metaStore.insertCmdletTable(cmdinfo);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Submit Cmdlet {} to DB error! {}", cmdinfo, e);
       throw new IOException(e);
     }
     try {
       // Insert Action into DB
       metaStore.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Submit Actions {} to DB error! {}", actionInfos, e);
       try {
         metaStore.deleteCmdlet(cmdinfo.getCid());
-      } catch (SQLException e1) {
+      } catch (MetaStoreException e1) {
         LOG.error("Recover/Delete Cmdlet {} rom DB error! {}", cmdinfo, e);
       }
       throw new IOException(e);
@@ -609,7 +609,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     List<ActionInfo> actionInfos;
     try {
       actionInfos = metaStore.getActionsTableItem(cmdinfo.getAids());
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get Actions from DB with IDs {} error!", cmdinfo.getAids());
       throw new IOException(e);
     }
@@ -652,7 +652,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     int remainsAction = maxNumActions - actionInfos.size();
     try {
       actionInfos.addAll(metaStore.getNewCreatedActionsTableItem(remainsAction));
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get Finished Actions from DB error", e);
       throw new IOException(e);
     }
@@ -664,7 +664,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     try {
       return metaStore.getCmdletsTableItem(null,
           null, CmdletState.PENDING);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get Pending Cmdlets From DB error!", e);
       throw new IOException(e);
     }
@@ -722,7 +722,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
         cmdletPool.deleteCmdlet(ct.cid);
         try {
           metaStore.updateCmdletStatus(ct.cid, ct.rid, ct.state);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           LOG.error("Batch Cmdlet Status Update error!", e);
           throw new IOException(e);
         }
@@ -743,7 +743,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
       }
       try {
         metaStore.updateActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         LOG.error("Write CacheObject to DB error!", e);
         throw new IOException(e);
       }
