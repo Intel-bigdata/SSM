@@ -75,7 +75,7 @@ public class AccessEventAggregator {
 
   private void createTable() {
     AccessCountTable table = new AccessCountTable(currentWindow.start, currentWindow.end);
-    String createTable = AccessCountTable.createTableSQL(table.getTableName());
+    String createTable = AccessCountDao.createTableSQL(table.getTableName());
     try {
       this.adapter.execute(createTable);
     } catch (SQLException e) {
@@ -99,8 +99,8 @@ public class AccessEventAggregator {
       String insertValue = String.format(
         "INSERT INTO %s (%s, %s) VALUES %s",
         table.getTableName(),
-        AccessCountTable.FILE_FIELD,
-        AccessCountTable.ACCESSCOUNT_FIELD,
+        AccessCountDao.FILE_FIELD,
+        AccessCountDao.ACCESSCOUNT_FIELD,
         StringUtils.join(values, ", "));
       try {
         this.adapter.execute(insertValue);
