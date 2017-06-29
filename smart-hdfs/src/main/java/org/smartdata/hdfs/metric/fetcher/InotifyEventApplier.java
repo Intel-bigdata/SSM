@@ -24,6 +24,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -46,7 +47,7 @@ public class InotifyEventApplier {
     this.client = client;
   }
 
-  public void apply(List<Event> events) throws IOException, SQLException {
+  public void apply(List<Event> events) throws IOException, MetaStoreException {
     List<String> statements = new ArrayList<>();
     for (Event event : events) {
       String statement = getSqlStatement(event);
@@ -57,7 +58,7 @@ public class InotifyEventApplier {
     this.metaStore.execute(statements);
   }
 
-  public void apply(Event[] events) throws IOException, SQLException {
+  public void apply(Event[] events) throws IOException, MetaStoreException {
     this.apply(Arrays.asList(events));
   }
 

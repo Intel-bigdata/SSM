@@ -20,6 +20,7 @@ package org.smartdata.metastore.tables;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metastore.utils.Constants;
 import org.smartdata.metastore.utils.TimeGranularity;
@@ -105,7 +106,7 @@ public class TestAccessCountTableManager extends TestDaoUtil {
   }
 
   @Test
-  public void testGetTables() throws SQLException {
+  public void testGetTables() throws MetaStoreException {
     MetaStore adapter = mock(MetaStore.class);
     TableEvictor tableEvictor = new CountEvictor(adapter, 20);
     Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
@@ -183,7 +184,7 @@ public class TestAccessCountTableManager extends TestDaoUtil {
   }
 
   @Test
-  public void testGetTablesCornerCase() throws SQLException {
+  public void testGetTablesCornerCase() throws MetaStoreException {
     MetaStore adapter = mock(MetaStore.class);
     TableEvictor tableEvictor = new CountEvictor(adapter, 20);
     Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();

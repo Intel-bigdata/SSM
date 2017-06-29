@@ -36,12 +36,12 @@ import org.smartdata.common.message.StatusMessage;
 import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -167,11 +167,11 @@ public class CmdletManager extends AbstractService {
     try {
       metaStore.insertCmdletTable(cmdletInfo);
       metaStore.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Submit Command {} to DB error!", cmdletInfo);
       try {
         metaStore.deleteCmdlet(cmdletInfo.getCid());
-      } catch (SQLException e1) {
+      } catch (MetaStoreException e1) {
         LOG.error("Delete Command {} rom DB error! {}", cmdletInfo, e);
       }
       throw new IOException(e);
@@ -221,7 +221,7 @@ public class CmdletManager extends AbstractService {
       }
       this.runningCmdlets.add(cmdletInfo.getCid());
       return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get Actions from DB with IDs {} error!", cmdletInfo.getAids());
       throw new IOException(e);
     }
@@ -239,7 +239,7 @@ public class CmdletManager extends AbstractService {
       } else {
         return null;
       }
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
@@ -253,7 +253,7 @@ public class CmdletManager extends AbstractService {
       } else {
         result.addAll(metaStore.getCmdletsTableItem(null, String.format("= %d", rid), cmdletState));
       }
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("List CmdletInfo from DB error! Conditions rid {}, {}", rid, e);
       throw new IOException(e);
     }
@@ -317,7 +317,7 @@ public class CmdletManager extends AbstractService {
     this.disableCmdlet(cid);
     try {
       metaStore.deleteCmdlet(cid);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Delete Cmdlet {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
@@ -338,7 +338,7 @@ public class CmdletManager extends AbstractService {
         return actionInfos.get(0);
       }
       return null;
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}", actionID, e);
       throw new IOException(e);
     }
@@ -355,7 +355,7 @@ public class CmdletManager extends AbstractService {
     try {
       result.addAll(metaStore.getNewCreatedActionsTableItem(remainsAction));
       return result;
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Get Finished Actions from DB error", e);
       throw new IOException(e);
     }
@@ -455,7 +455,7 @@ public class CmdletManager extends AbstractService {
   private void flushCmdletInfo(CmdletInfo info) throws IOException {
     try {
       metaStore.updateCmdletStatus(info.getCid(), info.getRid(), info.getState());
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Batch Cmdlet Status Update error!", e);
       throw new IOException(e);
     }
@@ -464,7 +464,7 @@ public class CmdletManager extends AbstractService {
   private void flushActionInfos(List<ActionInfo> infos) throws IOException {
     try {
       metaStore.updateActionsTable(infos.toArray(new ActionInfo[infos.size()]));
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Write CacheObject to DB error!", e);
       throw new IOException(e);
     }
@@ -479,7 +479,7 @@ public class CmdletManager extends AbstractService {
         String path = args.get(MoveFileAction.FILE_PATH);
         try {
           this.metaStore.updateFileStoragePolicy(path, policy);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           e.printStackTrace();
           LOG.error(String.format("Failed to update storage policy %s for file %s", policy, path));
         }

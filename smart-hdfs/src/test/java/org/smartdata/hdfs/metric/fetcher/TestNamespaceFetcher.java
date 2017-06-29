@@ -31,6 +31,7 @@ import org.mockito.Mockito;
 import org.smartdata.common.models.FileStatusInternal;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -62,7 +63,7 @@ public class TestNamespaceFetcher {
 
   @Test
   public void testNamespaceFetcher() throws IOException, InterruptedException,
-      MissingEventsException, SQLException {
+      MissingEventsException, MetaStoreException {
     final Configuration conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(2).build();

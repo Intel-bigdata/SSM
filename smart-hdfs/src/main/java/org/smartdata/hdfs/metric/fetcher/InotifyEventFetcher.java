@@ -25,10 +25,10 @@ import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -159,7 +159,7 @@ public class InotifyEventFetcher {
             break;
           }
         }
-      } catch (InterruptedException | IOException | SQLException e) {
+      } catch (InterruptedException | IOException | MetaStoreException e) {
         e.printStackTrace();
       }
     }

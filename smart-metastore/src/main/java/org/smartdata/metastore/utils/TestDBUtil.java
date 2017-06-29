@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 package org.smartdata.metastore.utils;
+
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -40,7 +42,7 @@ public class TestDBUtil {
    * @return
    */
   public static Connection getTestDBInstance()
-      throws IOException, SQLException, ClassNotFoundException {
+      throws MetaStoreException {
     // TODO remove today
     String srcdir = System.getProperty("srcdir",
         System.getProperty("user.dir") + "/src/main/resources");
@@ -66,8 +68,8 @@ public class TestDBUtil {
   }
 
   public static Connection getUniqueEmptySqliteDBInstance()
-      throws IOException, SQLException, ClassNotFoundException {
-      return MetaStoreUtils.createSqliteConnection(getUniqueEmptySqliteDBFile());
+      throws MetaStoreException {
+    return MetaStoreUtils.createSqliteConnection(getUniqueEmptySqliteDBFile());
   }
 
   /**
@@ -75,11 +77,11 @@ public class TestDBUtil {
    *
    * @return
    * @throws IOException
-   * @throws SQLException
+   * @throws MetaStoreException
    * @throws ClassNotFoundException
    */
   public static String getUniqueEmptySqliteDBFile()
-      throws IOException, SQLException, ClassNotFoundException {
+      throws MetaStoreException {
     String dbFile = getUniqueDBFilePath();
     Connection conn = null;
     try {
@@ -87,9 +89,15 @@ public class TestDBUtil {
       MetaStoreUtils.initializeDataBase(conn);
       conn.close();
       return dbFile;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     } finally {
       if (conn != null) {
-        conn.close();
+        try {
+          conn.close();
+        } catch (Exception e) {
+          throw new MetaStoreException(e);
+        }
       }
       File file = new File(dbFile);
       file.deleteOnExit();
@@ -120,8 +128,8 @@ public class TestDBUtil {
     try {
       in = new BufferedInputStream(new FileInputStream(src));
       out = new PrintStream(
-        new BufferedOutputStream(
-          new FileOutputStream(dest)));
+          new BufferedOutputStream(
+              new FileOutputStream(dest)));
 
       byte[] buffer = new byte[1024 * 100];
       int len = -1;

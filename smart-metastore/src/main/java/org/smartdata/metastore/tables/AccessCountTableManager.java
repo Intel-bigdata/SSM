@@ -18,6 +18,7 @@
 package org.smartdata.metastore.tables;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.TimeGranularity;
 import org.smartdata.metastore.utils.TimeUtils;
 import org.smartdata.metrics.FileAccessEvent;
@@ -98,7 +99,7 @@ public class AccessCountTableManager {
     this.accessEventAggregator.addAccessEvents(accessEvents);
   }
 
-  public List<AccessCountTable> getTables(long lengthInMillis) throws SQLException {
+  public List<AccessCountTable> getTables(long lengthInMillis) throws MetaStoreException {
     return AccessCountTableManager.getTables(this.tableDeques, this.metaStore, lengthInMillis);
   }
 
@@ -106,7 +107,7 @@ public class AccessCountTableManager {
       Map<TimeGranularity, AccessCountTableDeque> tableDeques,
       MetaStore adapter,
       long lengthInMillis)
-      throws SQLException {
+      throws MetaStoreException {
     if (tableDeques.isEmpty()) {
       return new ArrayList<>();
     }
@@ -125,7 +126,7 @@ public class AccessCountTableManager {
       final long length,
       final long endTime,
       final TimeGranularity timeGranularityHint)
-      throws SQLException {
+      throws MetaStoreException {
     long startTime = endTime - length;
     TimeGranularity timeGranularity =
         timeGranularityHint == null ? TimeUtils.getGranularity(length) : timeGranularityHint;

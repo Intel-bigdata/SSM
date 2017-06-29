@@ -20,6 +20,7 @@ package org.smartdata.metastore.tables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.sql.SQLException;
 
@@ -35,7 +36,7 @@ public abstract class TableEvictor {
     try {
       this.adapter.dropTable(accessCountTable.getTableName());
       LOG.debug("Dropped access count table " + accessCountTable.getTableName());
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       e.printStackTrace();
     }
   }

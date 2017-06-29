@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.common.CachedFileStatus;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -93,7 +94,7 @@ public class CachedListFetcher {
     }
   }
 
-  public List<CachedFileStatus> getCachedList() throws SQLException {
+  public List<CachedFileStatus> getCachedList() throws MetaStoreException {
     return this.metaStore.getCachedFileStatus();
   }
 
@@ -115,13 +116,13 @@ public class CachedListFetcher {
         LOG.debug("Sync CacheObject list from DB!");
         fileSet.addAll(metaStore.getCachedFids());
         reInit = false;
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         LOG.error("Read fids from DB error!", e);
         reInit = true;
       }
     }
 
-    private void clearAll() throws SQLException {
+    private void clearAll() throws MetaStoreException {
       LOG.debug("CacheObject List empty!");
       if (fileSet.size() > 0) {
         metaStore.deleteAllCachedFile();
@@ -178,7 +179,7 @@ public class CachedListFetcher {
             metaStore.deleteCachedFile(fid);
           }
         }
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         LOG.error("Sync cached file list SQL error!", e);
         reInit = true;
       } catch (IOException e) {

@@ -26,6 +26,7 @@ import org.smartdata.conf.Reconfigurable;
 import org.smartdata.conf.ReconfigurableRegistry;
 import org.smartdata.conf.ReconfigureException;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.tables.AccessCountTable;
 import org.smartdata.metastore.tables.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
@@ -34,7 +35,6 @@ import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -116,11 +116,11 @@ public class StatesManager extends AbstractService implements Reconfigurable {
     LOG.info("Stopped.");
   }
 
-  public List<CachedFileStatus> getCachedList() throws SQLException {
+  public List<CachedFileStatus> getCachedList() throws MetaStoreException {
     return serverContext.getMetaStore().getCachedFileStatus();
   }
 
-  public List<AccessCountTable> getTablesInLast(long timeInMills) throws SQLException {
+  public List<AccessCountTable> getTablesInLast(long timeInMills) throws MetaStoreException {
     return this.accessCountTableManager.getTables(timeInMills);
   }
 
@@ -133,7 +133,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       int topNum) throws IOException {
     try {
       return serverContext.getMetaStore().getHotFiles(tables, topNum);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       throw new IOException(e);
     }
   }
@@ -141,7 +141,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   public List<CachedFileStatus> getCachedFileStatus() throws IOException {
     try {
       return serverContext.getMetaStore().getCachedFileStatus();
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       throw new IOException(e);
     }
   }
