@@ -325,22 +325,18 @@ public class MetaStoreUtils {
 
   public static void dropAllTablesMysql(Connection conn, String url) throws SQLException {
     Statement stat = conn.createStatement();
-    String dbName;
-    if(url.contains("?")) {
-      dbName = url.substring(url.indexOf("/", 13) + 1, url.indexOf("?"));
-    } else {
-      dbName = url.substring(url.lastIndexOf("/") + 1, url.length());
+    if(!url.contains("?")) {
+      throw new SQLException("Invalid MySQL url without db_name");
     }
-    LOG.info("Drop All tables of Current DBname: " + dbName);
+    String dbName = url.substring(url.indexOf("/", 13) + 1, url.indexOf("?"));
     ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
         + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
-    List<String> tbList = new ArrayList<>();
+    List<String> list = new ArrayList<>();
     while (rs.next()) {
-      tbList.add(rs.getString(1));
+      list.add(rs.getString(1));
     }
-    for (String tb : tbList) {
-      LOG.info(tb);
-      stat.execute("DROP TABLE IF EXISTS " + tb + ";");
+    for (String tb : list) {
+      stat.execute("DROP TABLE IF EXISTS '" + tb + "';");
     }
   }
 }

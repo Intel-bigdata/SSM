@@ -43,7 +43,6 @@ import org.smartdata.metastore.tables.FileDao;
 import org.smartdata.metastore.tables.UserDao;
 import org.smartdata.metastore.tables.XattrDao;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.tables.*;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
@@ -84,7 +83,7 @@ public class MetaStore {
   private UserDao userDao;
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
-  private AccessCountDao accessCountDao;
+
 
   public MetaStore(DBPool pool) throws IOException {
     this.pool = pool;
@@ -97,7 +96,6 @@ public class MetaStore {
     userDao = new UserDao(pool.getDataSource());
     storageDao = new StorageDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
-    accessCountDao = new AccessCountDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws SQLException {
@@ -152,7 +150,7 @@ public class MetaStore {
 
     public void execute() throws SQLException {
       statement = conn.createStatement();
-      statement.execute(query);
+      statement.executeUpdate(query);
     }
 
     public void close() throws SQLException {
@@ -326,19 +324,19 @@ public class MetaStore {
       String statement =
           String.format(
               "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
-              AccessCountDao.FILE_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
+              AccessCountTable.FILE_FIELD,
+              AccessCountTable.ACCESSCOUNT_FIELD,
+              AccessCountTable.ACCESSCOUNT_FIELD,
               unioned,
-              AccessCountDao.FILE_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
+              AccessCountTable.FILE_FIELD,
+              AccessCountTable.ACCESSCOUNT_FIELD,
               topNum);
       ResultSet resultSet = this.executeQuery(statement);
       Map<Long, Integer> accessCounts = new HashMap<>();
       while (resultSet.next()) {
         accessCounts.put(
-            resultSet.getLong(AccessCountDao.FILE_FIELD),
-            resultSet.getInt(AccessCountDao.ACCESSCOUNT_FIELD));
+            resultSet.getLong(AccessCountTable.FILE_FIELD),
+            resultSet.getInt(AccessCountTable.ACCESSCOUNT_FIELD));
       }
       Map<Long, String> idToPath = this.getFilePaths(accessCounts.keySet());
       List<FileAccessInfo> result = new ArrayList<>();
@@ -446,11 +444,11 @@ public class MetaStore {
         String.format(
             "CREATE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
             dest.getTableName(),
-            AccessCountDao.FILE_FIELD,
+            AccessCountTable.FILE_FIELD,
             source.getTableName(),
-            AccessCountDao.ACCESSCOUNT_FIELD,
+            AccessCountTable.ACCESSCOUNT_FIELD,
             percentage,
-            AccessCountDao.ACCESSCOUNT_FIELD,
+            AccessCountTable.ACCESSCOUNT_FIELD,
             source.getTableName());
     execute(sql);
   }
@@ -651,12 +649,6 @@ public class MetaStore {
   public synchronized void formatDataBase() throws SQLException {
     dropAllTables();
     initializeDataBase();
-  }
-
-  public String aggregateSQLStatement(AccessCountTable destinationTable
-      , List<AccessCountTable> tablesToAggregate) {
-    return accessCountDao
-        .aggregateSQLStatement(destinationTable,tablesToAggregate);
   }
 
   @VisibleForTesting

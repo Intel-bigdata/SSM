@@ -25,7 +25,6 @@ import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
 import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -49,7 +48,7 @@ public class RuleRestApi {
 
   @POST
   @Path("/add")
-  public Response addRule(@FormParam("args") String message) {
+  public Response addRule(String message) {
     String rule;
     long t;
     try {
@@ -91,7 +90,7 @@ public class RuleRestApi {
     }
   }
 
-  @POST
+  @DELETE
   @Path("/{ruleId}/stop")
   public Response stop(@PathParam("ruleId") String ruleId) {
     logger.info("Stop rule{}", ruleId);

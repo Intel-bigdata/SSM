@@ -20,6 +20,9 @@ package org.smartdata.metastore.tables;
 import org.smartdata.metastore.utils.TimeGranularity;
 
 public class AccessCountTable {
+  public final static String FILE_FIELD = "fid";
+  public final static String ACCESSCOUNT_FIELD = "count";
+
   private String tableName;
   private Long startTime;
   private Long endTime;
@@ -81,6 +84,12 @@ public class AccessCountTable {
     return String.format(
         "AccessCountTable %s starts from %s ends with %s and granularity is %s",
         this.tableName, this.startTime, this.endTime, this.granularity);
+  }
+
+  public static String createTableSQL(String tableName) {
+    return String.format(
+        "CREATE TABLE %s (%s INTEGER NOT NULL, %s INTEGER NOT NULL)",
+        tableName, FILE_FIELD, ACCESSCOUNT_FIELD);
   }
 
   public boolean isView() {
