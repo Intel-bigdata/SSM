@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -75,8 +76,8 @@ public class CmdletRestApi {
 
   @POST
   @Path("/submit/{actionType}")
-  public Response submitCmdlet(String args,
-      @PathParam("actionType") String actionType) {
+  public Response submitCmdlet(@PathParam("actionType") String actionType,
+      @FormParam("args") String args) {
     try {
       return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletManager()
           .submitCmdlet(actionType + " " + args)).build();
