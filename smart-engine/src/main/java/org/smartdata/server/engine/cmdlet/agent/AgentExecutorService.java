@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.engine.cmdlet.agent;
 
-import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;

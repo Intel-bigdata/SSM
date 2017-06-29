@@ -25,7 +25,7 @@
 <configuration>
   <property>
     <name>dfs.smart.agent.address</name>
-    <value>0.0.0.0:7048</value>
+    <value>127.0.0.1:7048</value>
     <description>SmartAgent address</description>
   </property>
 </configuration>

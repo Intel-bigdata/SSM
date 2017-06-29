@@ -39,7 +39,7 @@ public class CmdletDispatcher {
     this.executorServices = new ArrayList<>();
     this.executorServices.add(new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager));
     this.executorServices.add(new HazelcastExecutorService(cmdletManager));
-   // this.executorServices.add(new AgentExecutorService(cmdletManager));
+    this.executorServices.add(new AgentExecutorService(cmdletManager));
     this.index = 0;
   }
 

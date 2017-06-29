@@ -25,6 +25,7 @@ import akka.actor.UntypedActor;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
@@ -65,7 +66,7 @@ public class AgentMaster {
   public AgentMaster(SmartConf conf, CmdletManager statusUpdater) {
     String address = conf.get(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
     checkNotNull(address);
-    Config config = AgentUtils.loadConfigWithAddress(address);
+    Config config = AgentUtils.overrideRemoteAddress(ConfigFactory.load(), address);
     this.resourceManager = new ResourceManager();
     Props props = Props.create(MasterActor.class, statusUpdater, resourceManager);
     ActorSystemLauncher launcher = new ActorSystemLauncher(config, props);

@@ -27,7 +27,6 @@ import akka.actor.Scheduler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
-import org.smartdata.conf.SmartConf;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -91,9 +90,9 @@ public class AgentUtils {
         AgentConstants.MASTER_ACTOR_NAME);
   }
 
-  public static Config loadConfigWithAddress(String address) {
+  public static Config overrideRemoteAddress(Config config, String address) {
     AgentUtils.HostPort hostPort = new AgentUtils.HostPort(address);
-    return ConfigFactory.load().withValue(AgentConstants.AKKA_REMOTE_HOST_KEY,
+    return config.withValue(AgentConstants.AKKA_REMOTE_HOST_KEY,
         ConfigValueFactory.fromAnyRef(hostPort.getHost()))
         .withValue(AgentConstants.AKKA_REMOTE_PORT_KEY,
             ConfigValueFactory.fromAnyRef(hostPort.getPort()));
