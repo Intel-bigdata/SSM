@@ -184,7 +184,7 @@ public class CmdletManager extends AbstractService {
       Map<String, String> args = actionInfo.getArgs();
       if (args != null && args.size() > 0) {
         String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-        if (file != null && fileLocks.containsKey(file)) {
+        if (file != null) {
           this.fileLocks.put(file, actionInfo.getActionId());
         }
       }
