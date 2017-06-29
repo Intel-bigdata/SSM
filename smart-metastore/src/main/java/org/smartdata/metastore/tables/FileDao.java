@@ -36,17 +36,16 @@ import java.util.List;
 import java.util.Map;
 
 public class FileDao {
-  private JdbcTemplate jdbcTemplate;
-  private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
+  private DataSource dataSource;
   private Map<Integer, String> mapOwnerIdName;
   private Map<Integer, String> mapGroupIdName;
 
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
   public FileDao(DataSource dataSource) {
-    jdbcTemplate = new JdbcTemplate(dataSource);
-    namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-    simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("files");
+    this.dataSource = dataSource;
   }
 
   public void updateUsersMap(Map<Integer, String> mapOwnerIdName) {
@@ -58,22 +57,26 @@ public class FileDao {
   }
 
   public List<HdfsFileStatus> getAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("SELECT * FROM files",
         new FileRowMapper());
   }
 
   public HdfsFileStatus getById(long fid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM files WHERE fid = ?",
         new Object[]{fid}, new FileRowMapper());
   }
 
   public HdfsFileStatus getByPath(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM files WHERE path = ?",
         new Object[]{path}, new FileRowMapper());
   }
 
-  public Map<String, Long> getPathFids(Collection<String> paths)
-      throws SQLException {
+  public Map<String, Long> getPathFids(Collection<String> paths) {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate =
+        new NamedParameterJdbcTemplate(dataSource);
     Map<String, Long> pathToId = new HashMap<>();
     String sql = "SELECT * FROM files WHERE path IN (:paths)";
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
@@ -86,8 +89,9 @@ public class FileDao {
     return pathToId;
   }
 
-  public Map<Long, String> getFidPaths(Collection<Long> ids)
-      throws SQLException {
+  public Map<Long, String> getFidPaths(Collection<Long> ids) {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate =
+        new NamedParameterJdbcTemplate(dataSource);
     Map<Long, String> idToPath = new HashMap<>();
     String sql = "SELECT * FROM files WHERE fid IN (:ids)";
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
@@ -101,6 +105,8 @@ public class FileDao {
   }
 
   public void insert(FileStatusInternal fileStatusInternal) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("files");
     simpleJdbcInsert.execute(toMap(fileStatusInternal,
         mapOwnerIdName, mapGroupIdName));
   }
@@ -113,16 +119,19 @@ public class FileDao {
   }
 
   public int update(String path, int policyId) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "UPDATE files SET sid =? WHERE path = ?;";
-    return this.jdbcTemplate.update(sql, policyId, path);
+    return jdbcTemplate.update(sql, policyId, path);
   }
 
   public void deleteById(long fid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from files where fid = ?";
     jdbcTemplate.update(sql, fid);
   }
 
   public void deleteAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE from files";
     jdbcTemplate.execute(sql);
   }

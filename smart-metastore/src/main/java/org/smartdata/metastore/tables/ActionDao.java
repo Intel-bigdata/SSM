@@ -35,28 +35,31 @@ import java.util.Map;
 
 public class ActionDao {
 
-  private JdbcTemplate jdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
-  private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+  private DataSource dataSource;
+
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
 
   public ActionDao(DataSource dataSource) {
-    namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-    jdbcTemplate = new JdbcTemplate(dataSource);
-    simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("actions");
+    this.dataSource = dataSource;
   }
 
   public List<ActionInfo> getAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from actions",
         new ActionRowMapper());
   }
 
   public ActionInfo getById(long aid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("select * from actions where aid = ?",
         new Object[]{aid}, new ActionRowMapper());
   }
 
   public List<ActionInfo> getByIds(List<Long> aids) {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate =
+        new NamedParameterJdbcTemplate(dataSource);
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
     parameterSource.addValue("aids", aids);
     return namedParameterJdbcTemplate.query("select * from actions WHERE aid IN (:aids)",
@@ -64,12 +67,14 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getByCid(long cid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from actions where cid = ?",
         new Object[]{cid}, new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCondition(String aidCondition,
       String cidCondition) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sqlPrefix = "SELECT * FROM actions WHERE ";
     String sqlAid = (aidCondition == null) ? "" : "AND aid " + aidCondition;
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
@@ -84,6 +89,7 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getLatestActions(int size) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "select * from actions WHERE finished = 1" +
         " ORDER by create_time DESC limit ?";
     return jdbcTemplate.query(sql, new Object[]{size},
@@ -91,11 +97,14 @@ public class ActionDao {
   }
 
   public void delete(long aid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from actions where aid = ?";
     jdbcTemplate.update(sql, aid);
   }
 
   public void insert(ActionInfo actionInfo) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("actions");
     simpleJdbcInsert.execute(toMap(actionInfo));
   }
 
@@ -114,6 +123,7 @@ public class ActionDao {
   }
 
   public int[] update(final ActionInfo[] actionInfos) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "update actions set " +
         "result = ?, " +
         "log = ?, " +
@@ -144,7 +154,8 @@ public class ActionDao {
   }
 
   public long getMaxId() {
-    Long ret = this.jdbcTemplate
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    Long ret = jdbcTemplate
         .queryForObject("select MAX(aid) from actions", Long.class);
     if (ret == null) {
       return 0;

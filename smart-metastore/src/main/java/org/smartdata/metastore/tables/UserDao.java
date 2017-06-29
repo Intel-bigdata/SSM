@@ -17,6 +17,7 @@
  */
 package org.smartdata.metastore.tables;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -29,27 +30,32 @@ import java.util.List;
 import java.util.Map;
 
 public class UserDao {
-  private JdbcTemplate jdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
 
-  public UserDao(DataSource dataSource) {
-    this.jdbcTemplate = new JdbcTemplate(dataSource);
-    this.simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("owners");
+  private DataSource dataSource;
+
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
   }
 
-  public synchronized void addUser(String userName) throws SQLException {
+  public UserDao(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
+  public synchronized void addUser(String userName) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = String.format("INSERT INTO owners (owner_name) VALUES ('%s')", userName);
     jdbcTemplate.execute(sql);
   }
 
   public synchronized void deleteUser(String user) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = String.format(
         "DELETE FROM owners where owner_name = '%s'", user);
     jdbcTemplate.execute(sql);
   }
 
   public List<String> listUser() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     List<String> user = jdbcTemplate.query(
         "select owner_name from owners",
         new RowMapper<String>() {
@@ -61,11 +67,13 @@ public class UserDao {
   }
 
   public int getCountUsers() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject(
         "SELECT COUNT(*) FROM owners", Integer.class);
   }
 
-  public Map<Integer, String> getUsersMap() throws SQLException {
+  public Map<Integer, String> getUsersMap() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return toMap(jdbcTemplate.queryForList("SELECT * FROM owners"));
   }
 
@@ -76,5 +84,4 @@ public class UserDao {
     }
     return res;
   }
-
 }

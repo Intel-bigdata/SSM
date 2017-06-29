@@ -32,13 +32,15 @@ import java.util.List;
 import java.util.Map;
 
 public class XattrDao {
-  private JdbcTemplate jdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
+
+  private DataSource dataSource;
+
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
 
   public XattrDao(DataSource dataSource) {
-    this.jdbcTemplate = new JdbcTemplate(dataSource);
-    this.simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("xattr");
+    this.dataSource = dataSource;
   }
 
   public Map<String, byte[]> getXattrTable(Long fid) throws SQLException {
@@ -48,6 +50,7 @@ public class XattrDao {
   }
 
   public Map<String, byte[]> getXattrTable(String sql) throws SQLException {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     List<XAttr> list = new LinkedList<>();
     List<Map<String, Object>> maplist = jdbcTemplate.queryForList(sql);
     int i = 1;
@@ -63,6 +66,7 @@ public class XattrDao {
 
   public synchronized boolean insertXattrTable(final Long fid, final Map<String,
       byte[]> map) throws SQLException {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "INSERT INTO xattr (fid, namespace, name, value) "
         + "VALUES (?, ?, ?, ?)";
     final List<XAttr> xattrlist = new ArrayList<>();
@@ -89,5 +93,4 @@ public class XattrDao {
       return false;
     }
   }
-
 }

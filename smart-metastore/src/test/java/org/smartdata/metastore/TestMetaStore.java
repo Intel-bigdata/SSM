@@ -105,12 +105,11 @@ public class TestMetaStore extends TestDaoUtil {
   public void testThreadSleepConcurrency() throws Exception {
     // Multiple threads
     Thread th1 = new InsertThread(metaStore);
-    Thread th2 = new SelectUpdateThread(metaStore);
+    Thread th2 = new SleepSelectUpdateThread(metaStore);
     th1.start();
     Thread.sleep(1000);
     th2.start();
     th2.join();
-
   }
 
   class SleepSelectUpdateThread extends Thread {
@@ -119,14 +118,17 @@ public class TestMetaStore extends TestDaoUtil {
     public SleepSelectUpdateThread(MetaStore metaStore) {
       this.metaStore = metaStore;
     }
+
     public void run() {
-      for (int i = 0 ; i < 1000; i++) {
+      for (int i = 0; i < 100; i++) {
         try {
-          List<ActionInfo> actionInfoList = metaStore.getActionsTableItem(Arrays.asList(new Long[]{(long)i}));
+          List<ActionInfo> actionInfoList = metaStore
+              .getActionsTableItem(Arrays.asList(new Long[]{(long) i}));
           actionInfoList.get(0).setFinished(true);
           actionInfoList.get(0).setFinishTime(System.currentTimeMillis());
           sleep(5);
-          metaStore.updateActionsTable(actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
+          metaStore.updateActionsTable(
+              actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
           metaStore.getActionsTableItem(null, null);
         } catch (SQLException e) {
           System.out.println(e.getMessage());
@@ -154,7 +156,7 @@ public class TestMetaStore extends TestDaoUtil {
           "cache", args, "Test",
           "Test", true, 123213213l, true, 123123l,
           100);
-      for (int i = 0 ; i < 1000; i++) {
+      for (int i = 0; i < 100; i++) {
         actionInfo.setActionId(i);
         try {
           metaStore.insertActionTable(actionInfo);
@@ -173,7 +175,7 @@ public class TestMetaStore extends TestDaoUtil {
       this.metaStore = metaStore;
     }
     public void run() {
-      for (int i = 0 ; i < 1000; i++) {
+      for (int i = 0 ; i < 100; i++) {
         try {
           List<ActionInfo> actionInfoList = metaStore.getActionsTableItem(Arrays.asList(new Long[]{(long)i}));
           actionInfoList.get(0).setFinished(true);

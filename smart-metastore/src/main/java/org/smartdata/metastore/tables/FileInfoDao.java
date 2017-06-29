@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,17 +34,17 @@ import java.util.List;
 import java.util.Map;
 
 public class FileInfoDao {
-  private JdbcTemplate jdbcTemplate;
-  private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
+
+  private DataSource dataSource;
   private Map<Integer, String> mapOwnerIdName;
   private Map<Integer, String> mapGroupIdName;
 
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
   public FileInfoDao(DataSource dataSource) {
-    jdbcTemplate = new JdbcTemplate(dataSource);
-    namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-    simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("files");
+    this.dataSource = dataSource;
   }
 
   public void updateUsersMap(Map<Integer, String> mapOwnerIdName) {
@@ -56,22 +56,27 @@ public class FileInfoDao {
   }
 
   public List<FileInfo> getAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("SELECT * FROM files",
         new FileInfoDao.FileInfoRowMapper());
   }
 
   public FileInfo getById(long fid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM files WHERE fid = ?",
         new Object[]{fid}, new FileInfoDao.FileInfoRowMapper());
   }
 
   public FileInfo getByPath(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM files WHERE path = ?",
         new Object[]{path}, new FileInfoDao.FileInfoRowMapper());
   }
 
   public Map<String, Long> getPathFids(Collection<String> paths)
       throws SQLException {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate =
+        new NamedParameterJdbcTemplate(dataSource);
     Map<String, Long> pathToId = new HashMap<>();
     String sql = "SELECT * FROM files WHERE path IN (:paths)";
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
@@ -86,6 +91,8 @@ public class FileInfoDao {
 
   public Map<Long, String> getFidPaths(Collection<Long> ids)
       throws SQLException {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate =
+        new NamedParameterJdbcTemplate(dataSource);
     Map<Long, String> idToPath = new HashMap<>();
     String sql = "SELECT * FROM files WHERE fid IN (:ids)";
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
@@ -99,6 +106,8 @@ public class FileInfoDao {
   }
 
   public void insert(FileInfo fileInfo) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("files");
     simpleJdbcInsert.execute(toMap(fileInfo,
         mapOwnerIdName, mapGroupIdName));
   }
@@ -111,16 +120,19 @@ public class FileInfoDao {
   }
 
   public int update(String path, int storagePolicy) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "UPDATE files SET sid =? WHERE path = ?;";
-    return this.jdbcTemplate.update(sql, storagePolicy, path);
+    return jdbcTemplate.update(sql, storagePolicy, path);
   }
 
   public void deleteById(long fid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from files where fid = ?";
     jdbcTemplate.update(sql, fid);
   }
 
   public void deleteAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE from files";
     jdbcTemplate.execute(sql);
   }
@@ -138,8 +150,10 @@ public class FileInfoDao {
     parameters.put("access_time", fileInfo.getAccess_time());
     parameters.put("is_dir", fileInfo.isdir());
     parameters.put("sid", fileInfo.getStoragePolicy());
-    parameters.put("oid", MetaStoreUtils.getKey(mapOwnerIdName, fileInfo.getOwner()));
-    parameters.put("gid", MetaStoreUtils.getKey(mapGroupIdName, fileInfo.getGroup()));
+    parameters
+        .put("oid", MetaStoreUtils.getKey(mapOwnerIdName, fileInfo.getOwner()));
+    parameters
+        .put("gid", MetaStoreUtils.getKey(mapGroupIdName, fileInfo.getGroup()));
     parameters.put("permission", fileInfo.getPermission());
     return parameters;
   }

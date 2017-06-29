@@ -36,26 +36,31 @@ import java.util.Map;
 
 
 public class CacheFileDao {
-  private JdbcTemplate jdbcTemplate;
-  private SimpleJdbcInsert simpleJdbcInsert;
+
+  private DataSource dataSource;
+
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
 
   public CacheFileDao(DataSource dataSource) {
-    jdbcTemplate = new JdbcTemplate(dataSource);
-    simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("cached_files");
+    this.dataSource = dataSource;
   }
 
   public List<CachedFileStatus> getAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from cached_files",
         new CacheFileRowMapper());
   }
 
   public CachedFileStatus getById(long fid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("select * from cached_files where fid = ?",
         new Object[]{fid}, new CacheFileRowMapper());
   }
 
   public List<Long> getFids() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT fid FROM cached_files";
     List<Long> fids = jdbcTemplate.query(sql,
         new RowMapper<Long>() {
@@ -67,16 +72,22 @@ public class CacheFileDao {
   }
 
   public void insert(CachedFileStatus cachedFileStatus) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("cached_files");
     simpleJdbcInsert.execute(toMap(cachedFileStatus));
   }
 
   public void insert(long fid, String path, long fromTime,
                      long lastAccessTime, int numAccessed) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("cached_files");
     simpleJdbcInsert.execute(toMap(new CachedFileStatus(fid, path,
         fromTime, lastAccessTime, numAccessed)));
   }
 
   public void insert(CachedFileStatus[] cachedFileStatusList) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("cached_files");
     SqlParameterSource[] batch = SqlParameterSourceUtils
                                      .createBatch(cachedFileStatusList);
     simpleJdbcInsert.executeBatch(batch);
@@ -84,9 +95,10 @@ public class CacheFileDao {
 
   public int update(Long fid, Long lastAccessTime,
                     Integer numAccessed) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "update cached_files set last_access_time = ?, "  +
                      "num_accessed = ? where fid = ?";
-    return this.jdbcTemplate.update(sql, lastAccessTime, numAccessed, fid);
+    return jdbcTemplate.update(sql, lastAccessTime, numAccessed, fid);
   }
 
   public void update(Map<String, Long> pathToIds,
@@ -122,11 +134,13 @@ public class CacheFileDao {
   }
 
   public void deleteById(long fid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from cached_files where fid = ?";
     jdbcTemplate.update(sql, fid);
   }
 
   public void deleteAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "DELETE from cached_files";
     jdbcTemplate.execute(sql);
   }
