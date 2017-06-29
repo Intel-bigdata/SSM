@@ -15,23 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.cluster;
+package org.smartdata.server.engine;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
+public class StandbyServerInfo {
+  private String id;
+  private String location;
 
-public class HazelcastInstanceProvider {
-  private static String CONFIG_FILE = "hazelcast.xml";
-  private static HazelcastInstance instance;
+  public StandbyServerInfo(String id, String location) {
+    this.id = id;
+    this.location = location;
+  }
 
-  private HazelcastInstanceProvider() {}
+  public String getId() {
+    return id;
+  }
 
-  public static HazelcastInstance getInstance() {
-    if (instance == null) {
-//      instance = Hazelcast.newHazelcastInstance(new ClasspathXmlConfig(CONFIG_FILE));
-      instance = Hazelcast.newHazelcastInstance(new Config());
-    }
-    return instance;
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
   }
 }

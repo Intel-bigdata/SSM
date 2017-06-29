@@ -72,4 +72,8 @@ public class IntegrationSmartServer {
       ssm.shutdown();
     }
   }
+
+  public SmartServer getSsm() {
+    return ssm;
+  }
 }

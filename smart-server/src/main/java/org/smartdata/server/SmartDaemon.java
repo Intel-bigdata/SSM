@@ -50,6 +50,13 @@ public class SmartDaemon implements ServerDaemon {
       this.hazelcastWorker = new HazelcastWorker(new SmartContext(new SmartConf()));
       this.hazelcastWorker.start();
     }
+
+    Runtime.getRuntime().addShutdownHook(new Thread(){
+      @Override public void run() {
+        hazelcastWorker.stop();
+        HazelcastInstanceProvider.getInstance().getLifecycleService().terminate();
+      }
+    });
   }
 
   @Override
