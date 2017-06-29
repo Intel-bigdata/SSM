@@ -105,14 +105,14 @@ Example:
     Code:200
     Content-Type:application/json
 ```
-### List all Smart actions
+### List Smart actions
 * Submit a HTTP GET request.
 ```
-    https://<host>:<port>/smart/api/v1/actions/list
+    https://<host>:<port>/smart/api/v1/actions/list/{listNumber}
 ```
 Example:
 ```
-    GET https://<host>:<port>/smart/api/v1/actions/list
+    GET https://<host>:<port>/smart/api/v1/actions/list/{listNumber}
     Code:200
     Content-Type:application/json
 ```
