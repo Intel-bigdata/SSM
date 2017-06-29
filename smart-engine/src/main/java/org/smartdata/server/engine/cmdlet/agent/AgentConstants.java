@@ -23,6 +23,6 @@ public class AgentConstants {
   public static final String AGENT_ADDRESS_KEY = "dfs.smart.agent.address";
   public static final String MASTER_ACTOR_SYSTEM_NAME = "AgentMaster";
   public static final String MASTER_ACTOR_NAME = "master";
-  public static final String AKKA_REMOTE_HOST_KEY = "akka.remote.netty.tcp.host";
+  public static final String AKKA_REMOTE_HOST_KEY = "akka.remote.netty.tcp.hostname";
   public static final String AKKA_REMOTE_PORT_KEY = "akka.remote.netty.tcp.port";
 }
