@@ -21,9 +21,9 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class InotifyFetchAndApplyTask implements Runnable {
@@ -47,7 +47,7 @@ public class InotifyFetchAndApplyTask implements Runnable {
         this.lastId.getAndSet(eventBatch.getTxid());
         eventBatch = inotifyEventInputStream.poll();
       }
-    } catch (IOException | MissingEventsException | SQLException e) {
+    } catch (IOException | MissingEventsException | MetaStoreException e) {
       e.printStackTrace();
     }
   }

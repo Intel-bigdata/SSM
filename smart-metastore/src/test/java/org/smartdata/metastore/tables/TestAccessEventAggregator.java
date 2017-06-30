@@ -20,6 +20,7 @@ package org.smartdata.metastore.tables;
 import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.sql.SQLException;
@@ -30,7 +31,7 @@ import static org.mockito.Mockito.*;
 public class TestAccessEventAggregator {
 
   @Test
-  public void testAccessEventAggregator() throws SQLException {
+  public void testAccessEventAggregator() throws MetaStoreException {
     MetaStore adapter = mock(MetaStore.class);
     AccessCountTableManager manager = mock(AccessCountTableManager.class);
     AccessEventAggregator aggregator = new AccessEventAggregator(adapter, manager);

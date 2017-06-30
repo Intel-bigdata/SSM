@@ -20,9 +20,7 @@ package org.smartdata.server.engine.cmdlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.*;
-import org.smartdata.server.engine.cmdlet.agent.AgentExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.util.ArrayList;
@@ -38,9 +36,11 @@ public class CmdletDispatcher {
     //Todo: make service configurable
     this.executorServices = new ArrayList<>();
     this.executorServices.add(new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager));
-    this.executorServices.add(new HazelcastExecutorService(cmdletManager));
-   // this.executorServices.add(new AgentExecutorService(cmdletManager));
     this.index = 0;
+  }
+
+  public void registerExecutorService(CmdletExecutorService executorService) {
+    this.executorServices.add(executorService);
   }
 
   public boolean canDispatchMore() {

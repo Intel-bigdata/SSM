@@ -20,6 +20,7 @@ package org.smartdata.metastore.tables;
 import org.smartdata.metastore.MetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -35,7 +36,7 @@ public class AccessCountTableAggregator {
   }
 
   public void aggregate(AccessCountTable destinationTable,
-      List<AccessCountTable> tablesToAggregate) throws SQLException {
+      List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     if (tablesToAggregate.size() > 0) {
       String aggregateSQ = adapter.aggregateSQLStatement(destinationTable, tablesToAggregate);
       this.adapter.execute(aggregateSQ);

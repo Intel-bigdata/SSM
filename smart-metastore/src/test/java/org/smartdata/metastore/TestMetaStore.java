@@ -130,7 +130,7 @@ public class TestMetaStore extends TestDaoUtil {
           metaStore.updateActionsTable(
               actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
           metaStore.getActionsTableItem(null, null);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
         } catch (InterruptedException e) {
@@ -160,7 +160,7 @@ public class TestMetaStore extends TestDaoUtil {
         actionInfo.setActionId(i);
         try {
           metaStore.insertActionTable(actionInfo);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
         }
@@ -182,7 +182,7 @@ public class TestMetaStore extends TestDaoUtil {
           actionInfoList.get(0).setFinishTime(System.currentTimeMillis());
           metaStore.updateActionsTable(actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
           metaStore.getActionsTableItem(null, null);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
         }

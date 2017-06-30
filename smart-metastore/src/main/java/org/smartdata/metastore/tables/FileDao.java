@@ -19,6 +19,7 @@ package org.smartdata.metastore.tables;
 
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.smartdata.common.models.FileInfo;
 import org.smartdata.common.models.FileStatusInternal;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,6 +29,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -118,6 +120,19 @@ public class FileDao {
     }
   }
 
+  public void insert(FileInfo fileInfo) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("files");
+    simpleJdbcInsert.execute(toMap(fileInfo,
+        mapOwnerIdName, mapGroupIdName));
+  }
+
+  public void insert(FileInfo[] fileInfos) {
+    // TODO need upgrade
+    for (FileInfo file : fileInfos) {
+      insert(file);
+    }
+  }
   public int update(String path, int policyId) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "UPDATE files SET sid =? WHERE path = ?;";
@@ -151,6 +166,23 @@ public class FileDao {
     parameters.put("sid", MetaStoreUtils.getKey(mapOwnerIdName, fileStatusInternal.getOwner()));
     parameters.put("oid", MetaStoreUtils.getKey(mapGroupIdName, fileStatusInternal.getGroup()));
     parameters.put("permission", fileStatusInternal.getPermission().toShort());
+    return parameters;
+  }
+
+  private Map<String, Object> toMap(FileInfo fileInfo,
+      Map<Integer, String> mapOwnerIdName, Map<Integer, String> mapGroupIdName) {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("path", fileInfo.getPath());
+    parameters.put("fid", fileInfo.getFileId());
+    parameters.put("length", fileInfo.getLength());
+    parameters.put("block_replication", fileInfo.getBlock_replication());
+    parameters.put("block_size", fileInfo.getBlocksize());
+    parameters.put("modification_time", fileInfo.getModification_time());
+    parameters.put("access_time", fileInfo.getAccess_time());
+    parameters.put("is_dir", fileInfo.isdir());
+    parameters.put("sid", MetaStoreUtils.getKey(mapOwnerIdName, fileInfo.getOwner()));
+    parameters.put("oid", MetaStoreUtils.getKey(mapGroupIdName, fileInfo.getGroup()));
+    parameters.put("permission", fileInfo.getPermission());
     return parameters;
   }
 

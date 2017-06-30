@@ -26,6 +26,7 @@ import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
@@ -34,7 +35,6 @@ import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -99,7 +99,7 @@ public class RuleManager extends AbstractService {
     RuleInfo ruleInfo = builder.build();
     try {
       metaStore.insertNewRule(ruleInfo);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       throw new IOException("RuleText = " + rule, e);
     }
 
@@ -222,7 +222,7 @@ public class RuleManager extends AbstractService {
     List<RuleInfo> rules = null;
     try {
       rules = metaStore.getRuleInfo();
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Can not load rules from database:\n" + e.getMessage());
     }
     for (RuleInfo rule : rules) {

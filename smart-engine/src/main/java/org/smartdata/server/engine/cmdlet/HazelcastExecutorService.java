@@ -29,14 +29,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.common.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import org.smartdata.server.utils.HazelcastUtil;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -71,6 +74,14 @@ public class HazelcastExecutorService extends CmdletExecutorService {
     }
   }
 
+  public List<StandbyServerInfo> getStandbyServers() {
+    List<StandbyServerInfo> infos = new ArrayList<>();
+    for (Member worker : HazelcastUtil.getWorkerMembers(this.instance)) {
+      infos.add(new StandbyServerInfo(worker.getUuid(), worker.getAddress().toString()));
+    }
+    return infos;
+  }
+
   @Override
   public boolean isLocalService() {
     return false;
@@ -94,7 +105,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   public void stop(long cmdletId) {
     for (Map.Entry<String, Set<Long>> entry : scheduledCmdlets.entrySet()) {
       if (entry.getValue().contains(cmdletId)) {
-        this.masterToWorkers.get(entry.getKey()).publish(new StopCmdlet(cmdletId));
+        masterToWorkers.get(entry.getKey()).publish(new StopCmdlet(cmdletId));
       }
     }
   }
