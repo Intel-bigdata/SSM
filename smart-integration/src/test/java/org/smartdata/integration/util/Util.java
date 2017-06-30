@@ -17,6 +17,8 @@
  */
 package org.smartdata.integration.util;
 
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.agent.SmartAgent;
 import org.smartdata.server.SmartDaemon;
@@ -27,7 +29,31 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.restassured.path.json.JsonPath.with;
+
 public class Util {
+
+  public static void waitSlaveServerAvailable() throws InterruptedException {
+    Util.retryUntil(new RetryTask() {
+      @Override
+      public boolean retry() {
+        Response response = RestAssured.get("/smart/api/v1/cluster/servers");
+        List<String> ids = with(response.asString()).get("body.id");
+        return ids.size() > 0;
+      }
+    }, 15);
+  }
+
+  public static void waitAgentAvailable() throws InterruptedException {
+    Util.retryUntil(new RetryTask() {
+      @Override
+      public boolean retry() {
+        Response response = RestAssured.get("/smart/api/v1/cluster/agents");
+        List<String> ids = with(response.asString()).get("body.id");
+        return ids.size() > 0;
+      }
+    }, 15);
+  }
 
   public static void retryUntil(RetryTask retryTask, int maxRetries) throws InterruptedException {
     retryUntil(retryTask, maxRetries, 1000);
