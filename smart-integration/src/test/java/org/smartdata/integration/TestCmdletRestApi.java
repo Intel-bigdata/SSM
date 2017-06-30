@@ -15,27 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.cluster;
+package org.smartdata.integration;
 
-import com.hazelcast.config.ClasspathXmlConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import org.junit.Test;
+import org.smartdata.integration.IntegrationTestBase;
 
-public class HazelcastInstanceProvider {
-  private static String CONFIG_FILE = "hazelcast.xml";
-  private static HazelcastInstance instance;
-
-  private HazelcastInstanceProvider() {}
-
-  public static HazelcastInstance getInstance() {
-    if (instance == null) {
-      instance = Hazelcast.newHazelcastInstance(new ClasspathXmlConfig(CONFIG_FILE));
-      Runtime.getRuntime().addShutdownHook(new Thread(){
-        @Override public void run() {
-          instance.getLifecycleService().shutdown();
-        }
-      });
-    }
-    return instance;
+/**
+ * Created by root on 6/29/17.
+ */
+public class TestCmdletRestApi extends IntegrationTestBase {
+  @Test
+  public void test() throws Exception {
   }
 }

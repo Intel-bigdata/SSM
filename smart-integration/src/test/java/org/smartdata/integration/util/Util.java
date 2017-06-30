@@ -18,6 +18,7 @@
 package org.smartdata.integration.util;
 
 import org.apache.commons.lang.StringUtils;
+import org.smartdata.agent.SmartAgent;
 import org.smartdata.server.SmartDaemon;
 import scala.reflect.io.File;
 
@@ -53,6 +54,13 @@ public class Util {
     return Util.buildProcess(
         System.getProperty("java.class.path").split(java.io.File.pathSeparator),
         SmartDaemon.class.getCanonicalName(),
+        new String[0]);
+  }
+
+  public static Process startNewAgent() throws IOException {
+    return Util.buildProcess(
+        System.getProperty("java.class.path").split(java.io.File.pathSeparator),
+        SmartAgent.class.getCanonicalName(),
         new String[0]);
   }
 
