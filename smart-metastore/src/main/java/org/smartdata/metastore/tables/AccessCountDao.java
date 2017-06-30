@@ -25,7 +25,10 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class AccessCountDao {
   private DataSource dataSource;
@@ -71,13 +74,12 @@ public class AccessCountDao {
   public String aggregateSQLStatement(AccessCountTable destinationTable
       , List<AccessCountTable> tablesToAggregate) {
     StringBuilder statement = new StringBuilder();
-    statement.append("CREATE TABLE '" + destinationTable.getTableName() + "' as ");
+    statement.append("CREATE TABLE " + destinationTable.getTableName() + " as ");
     statement.append("SELECT " + AccessCountDao.FILE_FIELD + ", SUM(" +
         AccessCountDao.ACCESSCOUNT_FIELD + ") as " +
         AccessCountDao.ACCESSCOUNT_FIELD + " FROM (");
     Iterator<AccessCountTable> tableIterator = tablesToAggregate.iterator();
-    while (true) {
-      if (!(tableIterator.hasNext())) break;
+    while (tableIterator.hasNext()) {
       AccessCountTable table = tableIterator.next();
       if (tableIterator.hasNext()) {
         statement.append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
@@ -90,7 +92,7 @@ public class AccessCountDao {
   }
 
 
-  public Map<Long, Integer> getAccessCount(long startTime, long endTime,
+  /*public Map<Long, Integer> getHotFiles(long startTime, long endTime,
                                            String countFilter) throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Map<Long, Integer> ret = new HashMap<>();
@@ -122,10 +124,10 @@ public class AccessCountDao {
       ret.put(sqlRowSet.getLong("fid"), sqlRowSet.getInt("count"));
     }
     return ret;
-  }
+  }*/
 
-  public Map<Long, Integer> getAccessCount( List<AccessCountTable> tables,
-                                            int topNum) throws SQLException {
+  public Map<Long, Integer> getHotFiles(List<AccessCountTable> tables,
+                                        int topNum) throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     StringBuilder unioned = new StringBuilder();

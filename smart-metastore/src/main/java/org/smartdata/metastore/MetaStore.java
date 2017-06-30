@@ -201,74 +201,6 @@ public class MetaStore {
     }
   }
 
-  public Map<Long, Integer> getAccessCount(long startTime, long endTime,
-      String countFilter) throws MetaStoreException {
-    // TODO access file
-    Map<Long, Integer> ret = new HashMap<>();
-    String sqlGetTableNames = "SELECT table_name FROM access_count_tables "
-        + "WHERE start_time >= " + startTime + " AND end_time <= " + endTime;
-    Connection conn = getConnection();
-    QueryHelper qhTableName = null;
-    ResultSet rsTableNames = null;
-    QueryHelper qhValues = null;
-    ResultSet rsValues = null;
-    try {
-      qhTableName = new QueryHelper(sqlGetTableNames, conn);
-      rsTableNames = qhTableName.executeQuery();
-      List<String> tableNames = new LinkedList<>();
-      try {
-        while (rsTableNames.next()) {
-          tableNames.add(rsTableNames.getString(1));
-        }
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-      qhTableName.close();
-
-      if (tableNames.size() == 0) {
-        return ret;
-      }
-
-      String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
-      String sqlUnion = "SELECT fid, count FROM \'"
-          + tableNames.get(0) + "\'\n";
-      for (int i = 1; i < tableNames.size(); i++) {
-        sqlUnion += "UNION ALL\n" +
-            "SELECT fid, count FROM \'" + tableNames.get(i) + "\'\n";
-      }
-      String sqlSufix = ") GROUP BY fid ";
-      // TODO: safe check
-      String sqlCountFilter =
-          (countFilter == null || countFilter.length() == 0) ?
-              "" :
-              "HAVING SUM(count) " + countFilter;
-      String sqlFinal = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-
-      qhValues = new QueryHelper(sqlFinal, conn);
-      rsValues = qhValues.executeQuery();
-
-      try {
-        while (rsValues.next()) {
-          ret.put(rsValues.getLong(1), rsValues.getInt(2));
-        }
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-
-      return ret;
-    } finally {
-      if (qhTableName != null) {
-        qhTableName.close();
-      }
-
-      if (qhValues != null) {
-        qhValues.close();
-      }
-
-      closeConnection(conn);
-    }
-  }
-
   public synchronized void addUser(String userName) throws MetaStoreException {
     try {
       userDao.addUser(userName);
@@ -407,34 +339,8 @@ public class MetaStore {
       int topNum) throws MetaStoreException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
-      StringBuilder unioned = new StringBuilder();
-      while (tableIterator.hasNext()) {
-        AccessCountTable table = tableIterator.next();
-        if (tableIterator.hasNext()) {
-          unioned
-              .append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
-        } else {
-          unioned.append("SELECT * FROM " + table.getTableName());
-        }
-      }
-      String statement =
-          String.format(
-              "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
-              AccessCountDao.FILE_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              unioned,
-              AccessCountDao.FILE_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              topNum);
-      try {
-        ResultSet resultSet = this.executeQuery(statement);
-        Map<Long, Integer> accessCounts = new HashMap<>();
-        while (resultSet.next()) {
-          accessCounts.put(
-              resultSet.getLong(AccessCountDao.FILE_FIELD),
-              resultSet.getInt(AccessCountDao.ACCESSCOUNT_FIELD));
-        }
+      try{
+        Map<Long, Integer> accessCounts = accessCountDao.getHotFiles(tables, topNum);
         Map<Long, String> idToPath = this.getFilePaths(accessCounts.keySet());
         List<FileAccessInfo> result = new ArrayList<>();
         for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
