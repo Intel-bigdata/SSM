@@ -19,6 +19,7 @@ package org.smartdata.metastore;
 
 
 import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import org.smartdata.common.models.ActionInfo;
 import org.smartdata.common.models.CmdletInfo;
 import org.smartdata.common.CachedFileStatus;
 import org.smartdata.common.models.FileAccessInfo;
+import org.smartdata.common.models.FileInfo;
 import org.smartdata.common.models.FileStatusInternal;
 import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.models.StorageCapacity;
@@ -46,7 +48,6 @@ import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.tables.*;
 import org.smartdata.metrics.FileAccessEvent;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -326,6 +327,28 @@ public class MetaStore {
     }
   }
 
+  /**
+   * Store files info into database.
+   *
+   * @param files
+   */
+  public synchronized void insertFiles(FileInfo[] files)
+      throws MetaStoreException {
+    updateCache();
+    for (FileInfo file: files) {
+      String owner = file.getOwner();
+      String group = file.getGroup();
+      if (!this.mapOwnerIdName.values().contains(owner)) {
+        this.addUser(owner);
+        this.updateUsersMap();
+      }
+      if (!this.mapGroupIdName.values().contains(group)) {
+        this.addGroup(group);
+        this.updateGroupsMap();
+      }
+    }
+    fileDao.insert(files);
+  }
 
   public int updateFileStoragePolicy(String path, String policyName)
       throws MetaStoreException {
