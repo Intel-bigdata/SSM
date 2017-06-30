@@ -264,7 +264,10 @@ public class MetaStore {
     if (tableIterator.hasNext()) {
       try{
         Map<Long, Integer> accessCounts = accessCountDao.getHotFiles(tables, topNum);
-        Map<Long, String> idToPath = this.getFilePaths(accessCounts.keySet());
+        if (accessCounts.size() == 0) {
+          return new ArrayList<>();
+        }
+        Map<Long, String> idToPath = getFilePaths(accessCounts.keySet());
         List<FileAccessInfo> result = new ArrayList<>();
         for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
           Long fid = entry.getKey();
