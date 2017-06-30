@@ -106,6 +106,11 @@ public class FileDao {
     return idToPath;
   }
 
+  public int getCount() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("select count(*) from files", Integer.class);
+  }
+
   public void insert(FileStatusInternal fileStatusInternal) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("files");

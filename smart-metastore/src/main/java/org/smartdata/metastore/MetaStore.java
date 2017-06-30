@@ -86,6 +86,7 @@ public class MetaStore {
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
   private AccessCountDao accessCountDao;
+  private ManagementDao managementDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -99,6 +100,7 @@ public class MetaStore {
     storageDao = new StorageDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
+    managementDao = new ManagementDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -122,6 +124,7 @@ public class MetaStore {
     }
   }
 
+  @Deprecated
   private class QueryHelper {
     // TODO need to remove
     private String query;
@@ -546,37 +549,22 @@ public class MetaStore {
   }
 
   public void execute(String sql) throws MetaStoreException {
-    QueryHelper queryHelper = new QueryHelper(sql);
-    try {
-      queryHelper.execute();
-    } finally {
-      queryHelper.close();
-    }
+    managementDao.execute(sql);
   }
 
   //Todo: optimize
   public void execute(List<String> statements) throws MetaStoreException {
     for (String statement : statements) {
-      this.execute(statement);
+      execute(statement);
     }
   }
 
   public List<String> executeFilesPathQuery(
       String sql) throws MetaStoreException {
-    List<String> paths = new LinkedList<>();
-    QueryHelper queryHelper = new QueryHelper(sql);
     try {
-      ResultSet res = queryHelper.executeQuery();
-      try {
-        while (res.next()) {
-          paths.add(res.getString(1));
-        }
-      } catch (Exception e) {
-        throw new MetaStoreException(e);
-      }
-      return paths;
-    } finally {
-      queryHelper.close();
+      return managementDao.getFilesPath(sql);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
