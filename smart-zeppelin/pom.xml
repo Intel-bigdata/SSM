@@ -667,7 +667,7 @@
 
   <profiles>
     <profile>
-      <id>build-web</id>
+      <id>web</id>
       <modules>
         <module>zeppelin-web</module>
         <module>zeppelin-distribution</module>
