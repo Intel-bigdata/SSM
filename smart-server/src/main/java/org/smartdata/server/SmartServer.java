@@ -246,6 +246,10 @@ public class SmartServer {
       engine.stop();
     }
 
+    if (zeppelinServer != null) {
+      zeppelinServer.stop();
+    }
+
     try {
       if (httpServer != null) {
         httpServer.stop();
