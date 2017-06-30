@@ -59,7 +59,7 @@ public class AccessCountDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql =
         String.format(
-        "delete from actions where start_time >= ? AND end_time <= ?",
+        "delete from access_count_tables where start_time >= ? AND end_time <= ?",
             startTime,
             endTime);
     jdbcTemplate.update(sql);
