@@ -27,6 +27,8 @@ public class AccessCountTable {
 
   private boolean isView;
 
+  public AccessCountTable() {}
+
   public AccessCountTable(Long startTime, Long endTime) {
     this(startTime, endTime, TimeGranularity.SECOND);
   }
@@ -43,12 +45,25 @@ public class AccessCountTable {
     this.isView = false;
   }
 
+
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
+  }
+
   public String getTableName() {
     return tableName;
   }
 
+  public void setStartTime(long startTime) {
+    this.startTime = startTime;
+  }
+
   public Long getStartTime() {
     return startTime;
+  }
+
+  public void setEndTime(long endTime) {
+    this.endTime = endTime;
   }
 
   public Long getEndTime() {
