@@ -49,7 +49,7 @@ public class TestActionRestApi extends IntegrationTestBase {
         "archive", "list", "clusterbalance", "onessd", "hello"));
   }
 
-  @Test (timeout = 100000)
+  @Test (timeout = 300000)
   public void testActionsInSequence() throws Exception {
     // write and read
     testAction("write", "-file /hello -length 10");

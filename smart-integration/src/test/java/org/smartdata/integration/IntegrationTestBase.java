@@ -17,10 +17,9 @@
  */
 package org.smartdata.integration;
 
-import com.google.gson.Gson;
 import io.restassured.RestAssured;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.integration.cluster.MiniSmartCluster;
@@ -30,17 +29,16 @@ import org.smartdata.integration.cluster.SmartCluster;
  * Integration test.
  */
 public class IntegrationTestBase {
-  private static SmartCluster cluster;
-  private static SmartConf conf;
-  private static IntegrationSmartServer smartServer;
-  private static String httpUri;
-  private static String httpHost;
-  private static int httpPort;
-  private static int zeppelinPort;
-  private static Gson gson = new Gson();
+  private SmartCluster cluster;
+  private SmartConf conf;
+  private IntegrationSmartServer smartServer;
+  private String httpUri;
+  private String httpHost;
+  private int httpPort;
+  private int zeppelinPort;
 
-  @BeforeClass
-  public static void setup() throws Exception {
+  @Before
+  public void setup() throws Exception {
     // Set up an HDFS cluster
     cluster = new MiniSmartCluster();
     cluster.setUp();
@@ -59,13 +57,13 @@ public class IntegrationTestBase {
     initRestAssured();
   }
 
-  private static void initRestAssured() {
+  private void initRestAssured() {
     RestAssured.port = zeppelinPort;
     //RestAssured.registerParser("text/plain", Parser.JSON);
   }
 
-  @AfterClass
-  public static void cleanUp() throws Exception {
+  @After
+  public void cleanUp() throws Exception {
     smartServer.cleanUp();
     cluster.cleanUp();
   }
