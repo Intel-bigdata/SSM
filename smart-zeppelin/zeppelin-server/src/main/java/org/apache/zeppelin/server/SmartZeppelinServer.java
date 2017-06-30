@@ -211,21 +211,19 @@ public class SmartZeppelinServer extends Application {
       //System.exit(-1);
     }
     LOG.info("Done, zeppelin server started");
+  }
 
-    Runtime.getRuntime().addShutdownHook(new Thread(){
-      @Override public void run() {
-        LOG.info("Shutting down Zeppelin Server ... ");
-        try {
-          jettyWebServer.stop();
-          notebook.getInterpreterSettingManager().shutdown();
-          notebook.close();
-          Thread.sleep(3000);
-        } catch (Exception e) {
-          LOG.error("Error while stopping servlet container", e);
-        }
-        LOG.info("Bye");
-      }
-    });
+  public void stop() {
+    LOG.info("Shutting down Zeppelin Server ... ");
+    try {
+      jettyWebServer.stop();
+      notebook.getInterpreterSettingManager().shutdown();
+      notebook.close();
+      Thread.sleep(1000);
+    } catch (Exception e) {
+      LOG.error("Error while stopping servlet container", e);
+    }
+    LOG.info("Bye");
   }
 
   private static Server setupJettyServer(ZeppelinConfiguration zconf) {
