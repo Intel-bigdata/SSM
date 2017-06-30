@@ -22,21 +22,19 @@ import io.restassured.RestAssured;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.integration.cluster.MiniSmartCluster;
 import org.smartdata.integration.cluster.SmartCluster;
-import org.smartdata.server.SmartServer;
 
 /**
  * Integration test.
  */
 public class IntegrationTestBase {
+  public static final String ROOT = "/smart/api/v1";
+  public static final String RULEROOT = ROOT + "/rules";
+
   private static SmartCluster cluster;
   private static SmartConf conf;
   protected static IntegrationSmartServer smartServer;
-  private static String httpUri;
-  private static String httpHost;
-  private static int httpPort;
   private static int zeppelinPort;
   protected static Gson gson = new Gson();
 
@@ -48,11 +46,7 @@ public class IntegrationTestBase {
 
     // Start a Smart server
     conf = cluster.getConf();
-    httpHost = "127.0.0.1";
-    httpPort = 7045;
     zeppelinPort = 8080;
-    httpUri = httpHost + ":" + httpPort;
-    conf.set(SmartConfKeys.DFS_SSM_HTTP_ADDRESS_KEY, httpUri);
     smartServer = new IntegrationSmartServer();
     smartServer.setUp(conf);
 
