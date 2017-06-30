@@ -130,7 +130,6 @@ public class AccessCountDao {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     StringBuilder unioned = new StringBuilder();
     while (tableIterator.hasNext()) {
-      if (!(tableIterator.hasNext())) break;
       AccessCountTable table = tableIterator.next();
       if (tableIterator.hasNext()) {
         unioned
