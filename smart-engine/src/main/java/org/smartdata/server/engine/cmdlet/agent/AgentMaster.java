@@ -105,7 +105,12 @@ public class AgentMaster {
   }
 
   public List<AgentInfo> getAgentInfos() {
-    return new ArrayList<>();
+    List<AgentInfo> infos = new ArrayList<>();
+    for (Map.Entry<ActorRef, AgentId> entry : agentManager.getAgents().entrySet()) {
+      String location = AgentUtils.getHostPort(entry.getKey());
+      infos.add(new AgentInfo(entry.getValue().getId(), location));
+    }
+    return infos;
   }
 
   Object askMaster(Object message) throws Exception {

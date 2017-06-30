@@ -51,16 +51,22 @@ public class TestClusterRestApi extends IntegrationTestBase {
     Response response = RestAssured.get("/smart/api/v1/cluster/servers");
     response.then().body("body", Matchers.empty());
     Process worker = Util.startNewServer();
+    Process agent = Util.startNewAgent();
 
     Util.retryUntil(new RetryTask() {
       @Override
       public boolean retry() {
         Response response1 = RestAssured.get("/smart/api/v1/cluster/servers");
         List<String> ids = with(response1.asString()).get("body.id");
-        return ids.size() > 0;
+
+        Response response2 = RestAssured.get("/smart/api/v1/cluster/agents");
+        System.out.println(response2.asString());
+        List<String> ids2 = with(response2.asString()).get("body.id");
+        return ids.size() > 0 && ids2.size() > 0;
       }
     }, 15);
 
+    agent.destroy();
     worker.destroy();
   }
 }
