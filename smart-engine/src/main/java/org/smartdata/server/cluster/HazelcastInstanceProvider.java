@@ -31,6 +31,12 @@ public class HazelcastInstanceProvider {
     if (instance == null) {
 //      instance = Hazelcast.newHazelcastInstance(new ClasspathXmlConfig(CONFIG_FILE));
       instance = Hazelcast.newHazelcastInstance(new Config());
+
+      Runtime.getRuntime().addShutdownHook(new Thread(){
+        @Override public void run() {
+          instance.getLifecycleService().shutdown();
+        }
+      });
     }
     return instance;
   }
