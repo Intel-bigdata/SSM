@@ -17,6 +17,11 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.common.message.ActionStatus;
 import org.smartdata.common.message.StatusReporter;
@@ -24,6 +29,7 @@ import org.smartdata.common.message.ActionStatusReport;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 
+import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +46,7 @@ public class CmdletExecutor {
   private final SmartConf smartConf;
   private Map<Long, Future> listenableFutures;
   private Map<Long, Cmdlet> runningCmdlets;
-  private ExecutorService executorService;
+  private ListeningExecutorService executorService;
 
   public CmdletExecutor(SmartConf smartConf, StatusReporter reporter) {
     this.reporter = reporter;
@@ -51,11 +57,12 @@ public class CmdletExecutor {
         smartConf.getInt(
             SmartConfKeys.SMART_CMDLET_EXECUTOR_THREAD_SIZE,
             SmartConfKeys.SMART_CMDLET_EXECUTOR_THREAD_SIZE_DEFAULT);
-    this.executorService = Executors.newFixedThreadPool(nThreads);
+    this.executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(nThreads));
   }
 
   public void execute(Cmdlet cmdlet) {
-    Future<?> future = this.executorService.submit(cmdlet);
+    ListenableFuture<?> future = this.executorService.submit(cmdlet);
+    Futures.addCallback(future, new CmdletCallBack(cmdlet), executorService);
     this.listenableFutures.put(cmdlet.getId(), future);
     this.runningCmdlets.put(cmdlet.getId(), cmdlet);
   }
@@ -89,4 +96,23 @@ public class CmdletExecutor {
     this.runningCmdlets.remove(cmdletId);
     this.listenableFutures.remove(cmdletId);
   }
+
+  private class CmdletCallBack implements FutureCallback<Object> {
+    private final Cmdlet cmdlet;
+
+    public CmdletCallBack(Cmdlet cmdlet) {
+      this.cmdlet = cmdlet;
+    }
+
+    @Override
+    public void onSuccess(@Nullable Object result) {
+      removeCmdlet(cmdlet.getId());
+    }
+
+    @Override
+    public void onFailure(Throwable t) {
+      removeCmdlet(cmdlet.getId());
+    }
+  }
+
 }
