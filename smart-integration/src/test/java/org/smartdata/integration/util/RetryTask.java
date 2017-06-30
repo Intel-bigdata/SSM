@@ -15,29 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.cluster;
+package org.smartdata.integration.util;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-
-public class HazelcastInstanceProvider {
-  private static String CONFIG_FILE = "hazelcast.xml";
-  private static HazelcastInstance instance;
-
-  private HazelcastInstanceProvider() {}
-
-  public static HazelcastInstance getInstance() {
-    if (instance == null) {
-//      instance = Hazelcast.newHazelcastInstance(new ClasspathXmlConfig(CONFIG_FILE));
-      instance = Hazelcast.newHazelcastInstance(new Config());
-
-      Runtime.getRuntime().addShutdownHook(new Thread(){
-        @Override public void run() {
-          instance.getLifecycleService().shutdown();
-        }
-      });
-    }
-    return instance;
-  }
+public interface RetryTask {
+  boolean retry();
 }

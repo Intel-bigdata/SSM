@@ -105,6 +105,10 @@ public class AgentMaster {
     }
   }
 
+  public List<AgentInfo> getAgentInfos() {
+    return new ArrayList<>();
+  }
+
   Object askMaster(Object message) throws Exception {
     Future<Object> answer = Patterns.ask(master, message, TIMEOUT);
     return Await.result(answer, TIMEOUT.duration());
