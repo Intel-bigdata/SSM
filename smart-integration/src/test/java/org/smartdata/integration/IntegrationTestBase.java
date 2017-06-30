@@ -19,7 +19,9 @@ package org.smartdata.integration;
 
 import io.restassured.RestAssured;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.integration.cluster.MiniSmartCluster;
@@ -30,16 +32,16 @@ import org.smartdata.server.SmartServer;
  * Integration test.
  */
 public class IntegrationTestBase {
-  private SmartCluster cluster;
-  private SmartConf conf;
-  private IntegrationSmartServer smartServer;
-  private String httpUri;
-  private String httpHost;
-  private int httpPort;
-  private int zeppelinPort;
+  private static SmartCluster cluster;
+  private static SmartConf conf;
+  private static IntegrationSmartServer smartServer;
+  private static String httpUri;
+  private static String httpHost;
+  private static int httpPort;
+  private static int zeppelinPort;
 
-  @Before
-  public void setup() throws Exception {
+  @BeforeClass
+  public static void setup() throws Exception {
     // Set up an HDFS cluster
     cluster = new MiniSmartCluster();
     cluster.setUp();
@@ -58,13 +60,13 @@ public class IntegrationTestBase {
     initRestAssured();
   }
 
-  private void initRestAssured() {
+  private static void initRestAssured() {
     RestAssured.port = zeppelinPort;
     //RestAssured.registerParser("text/plain", Parser.JSON);
   }
 
-  @After
-  public void cleanUp() throws Exception {
+  @AfterClass
+  public static void cleanUp() throws Exception {
     smartServer.cleanUp();
     cluster.cleanUp();
   }
