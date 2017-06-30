@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -41,7 +41,6 @@ import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +56,7 @@ public class AgentMaster {
 
   private ActorSystem system;
   private ActorRef master;
-  private ResourceManager resourceManager;
+  private AgentManager agentManager;
 
   public AgentMaster(CmdletManager statusUpdater) {
     this(new SmartConf(), statusUpdater);
@@ -67,14 +66,14 @@ public class AgentMaster {
     String address = conf.get(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
     checkNotNull(address);
     Config config = AgentUtils.overrideRemoteAddress(ConfigFactory.load(), address);
-    this.resourceManager = new ResourceManager();
-    Props props = Props.create(MasterActor.class, statusUpdater, resourceManager);
+    this.agentManager = new AgentManager();
+    Props props = Props.create(MasterActor.class, statusUpdater, agentManager);
     ActorSystemLauncher launcher = new ActorSystemLauncher(config, props);
     launcher.start();
   }
 
   public boolean canAcceptMore() {
-    return resourceManager.hasFreeResource();
+    return agentManager.hasFreeAgent();
   }
 
   public void launchCmdlet(LaunchCmdlet launch) {
@@ -144,16 +143,16 @@ public class AgentMaster {
 
   static class MasterActor extends UntypedActor {
 
-    private final Map<ActorRef, MasterToAgent.AgentId> agents = new HashMap<>();
+
     private final Map<Long, ActorRef> dispatches = new HashMap<>();
     private int nextAgentId = 0;
 
     private CmdletManager statusUpdater;
-    private ResourceManager resourceManager;
+    private AgentManager agentManager;
 
-    public MasterActor(CmdletManager statusUpdater, ResourceManager resourceManager) {
+    public MasterActor(CmdletManager statusUpdater, AgentManager agentManager) {
       this.statusUpdater = statusUpdater;
-      this.resourceManager = resourceManager;
+      this.agentManager = agentManager;
     }
 
     @Override
@@ -168,7 +167,7 @@ public class AgentMaster {
 
     private boolean handleAgentMessage(Object message) {
       if (message instanceof RegisterNewAgent) {
-        MasterToAgent.AgentId id = new MasterToAgent.AgentId(nextAgentId);
+        AgentId id = new AgentId(nextAgentId);
         nextAgentId++;
         getSelf().forward(new RegisterAgent(id), getContext());
         return true;
@@ -176,10 +175,9 @@ public class AgentMaster {
         RegisterAgent register = (RegisterAgent) message;
         ActorRef agent = getSender();
         getContext().watch(agent);
-        MasterToAgent.AgentId id = register.getId();
-        agents.put(agent, id);
+        AgentId id = register.getId();
         AgentRegistered registered = new AgentRegistered(id);
-        this.resourceManager.addResource(agent);
+        this.agentManager.addAgent(agent, id);
         agent.tell(registered, getSelf());
         LOG.info("Register SmartAgent {} from {}", id, agent);
         return true;
@@ -192,17 +190,10 @@ public class AgentMaster {
     }
 
     private boolean handleClientMessage(Object message) {
-      if (message instanceof CanAcceptMore) {
-        if (agents.isEmpty()) {
-          getSender().tell(false, getSelf());
-        } else {
-          getSender().tell(true, getSelf());
-        }
-        return true;
-      } else if (message instanceof LaunchCmdlet) {
-        if (!agents.isEmpty()) {
+      if (message instanceof LaunchCmdlet) {
+        if (agentManager.hasFreeAgent()) {
           LaunchCmdlet launch = (LaunchCmdlet) message;
-          ActorRef agent = this.resourceManager.getFreeResource();
+          ActorRef agent = this.agentManager.dispatch();
           agent.tell(launch, getSelf());
           dispatches.put(launch.getCmdletId(), agent);
           getSender().tell("Succeed", getSelf());
@@ -222,8 +213,7 @@ public class AgentMaster {
       if (message instanceof Terminated) {
         Terminated terminated = (Terminated) message;
         ActorRef agent = terminated.actor();
-        MasterToAgent.AgentId id = agents.remove(agent);
-        this.resourceManager.removeResource(agent);
+        AgentId id = this.agentManager.removeAgent(agent);
         LOG.warn("SmartAgent ({} {} down", id, agent);
         return true;
       } else {
@@ -233,38 +223,36 @@ public class AgentMaster {
 
   }
 
-  static class ResourceManager {
+  static class AgentManager {
 
+    private final Map<ActorRef, AgentId> agents = new HashMap<>();
     private List<ActorRef> resources = new ArrayList<>();
     private int dispatchIndex = 0;
 
-    void addResource(ActorRef agent) {
+    void addAgent(ActorRef agent, AgentId id) {
+      agents.put(agent, id);
       resources.add(agent);
     }
 
-    void removeResource(ActorRef agent) {
+    AgentId removeAgent(ActorRef agent) {
+      AgentId id = agents.remove(agent);
       resources.remove(agent);
+      return id;
     }
 
-    boolean hasFreeResource() {
+    boolean hasFreeAgent() {
       return !resources.isEmpty();
     }
 
-    ActorRef getFreeResource() {
+    ActorRef dispatch() {
       int id = dispatchIndex % resources.size();
       dispatchIndex = (id + 1) % resources.size();
       return resources.get(id);
     }
-  }
 
-  static class CanAcceptMore implements Serializable {
-
-    private static final CanAcceptMore instance = new CanAcceptMore();
-
-    private CanAcceptMore() {}
-
-    public static CanAcceptMore getInstance() {
-      return instance;
+    Map<ActorRef, AgentId> getAgents() {
+      return agents;
     }
   }
+
 }
