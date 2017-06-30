@@ -33,6 +33,9 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.actions.ActionException;
+import org.smartdata.common.CmdletState;
+import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.common.message.StatusReporter;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
@@ -208,7 +211,14 @@ public class SmartAgent {
       public void apply(Object message) throws Exception {
         if (message instanceof LaunchCmdlet) {
           LaunchCmdlet launch = (LaunchCmdlet) message;
-          executor.execute(factory.createCmdlet(launch));
+          try{
+            executor.execute(factory.createCmdlet(launch));
+          } catch (ActionException e) {
+            e.printStackTrace();
+            report(
+                new CmdletStatusUpdate(
+                    launch.getCmdletId(), System.currentTimeMillis(), CmdletState.FAILED));
+          }
         } else if (message instanceof StopCmdlet) {
           StopCmdlet stop = (StopCmdlet) message;
           executor.stop(stop.getCmdletId());
