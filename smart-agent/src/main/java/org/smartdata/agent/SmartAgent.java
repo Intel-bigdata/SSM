@@ -75,6 +75,18 @@ public class SmartAgent {
     LOG.info(config.getString("akka.actor.provider"));
     system = ActorSystem.apply(NAME, config);
     system.actorOf(Props.create(AgentActor.class, conf, this, masterPath), getAgentName());
+    final Thread currentThread = Thread.currentThread();
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        close();
+        try {
+          currentThread.join();
+        } catch (InterruptedException e) {
+          // Ignore
+        }
+      }
+    });
     system.awaitTermination();
   }
 
