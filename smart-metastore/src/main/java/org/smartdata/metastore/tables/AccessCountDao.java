@@ -124,6 +124,47 @@ public class AccessCountDao {
     return ret;
   }
 
+  public Map<Long, Integer> getAccessCount( List<AccessCountTable> tables,
+                                            int topNum) throws SQLException {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    Iterator<AccessCountTable> tableIterator = tables.iterator();
+    boolean is = tableIterator.hasNext();
+    if (is) {
+      StringBuilder unioned = new StringBuilder();
+      while (is) {
+        AccessCountTable table = tableIterator.next();
+        if (tableIterator.hasNext()) {
+          unioned
+              .append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
+        } else {
+          unioned.append("SELECT * FROM " + table.getTableName());
+        }
+      }
+      String statement =
+          String.format(
+              "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
+              AccessCountDao.FILE_FIELD,
+              AccessCountDao.ACCESSCOUNT_FIELD,
+              AccessCountDao.ACCESSCOUNT_FIELD,
+              unioned,
+              AccessCountDao.FILE_FIELD,
+              AccessCountDao.ACCESSCOUNT_FIELD,
+              topNum);
+      SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(statement);
+      Map<Long, Integer> accessCounts = new HashMap<>();
+      while (sqlRowSet.next()) {
+        accessCounts.put(
+            sqlRowSet.getLong(AccessCountDao.FILE_FIELD),
+            sqlRowSet.getInt(AccessCountDao.ACCESSCOUNT_FIELD));
+      }
+      return accessCounts;
+    }
+    else{
+      return null;
+    }
+  }
+
+
   public void createProportionView(AccessCountTable dest, AccessCountTable source)
       throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);;
@@ -155,10 +196,9 @@ public class AccessCountDao {
 
     @Override
     public AccessCountTable mapRow(ResultSet resultSet, int i) throws SQLException {
-      AccessCountTable accessCountTable = new AccessCountTable();
-      accessCountTable.setTableName(resultSet.getString("table_name"));
-      accessCountTable.setStartTime(resultSet.getLong("start_time"));
-      accessCountTable.setEndTime(resultSet.getLong("end_time"));
+      AccessCountTable accessCountTable = new AccessCountTable(
+          resultSet.getLong("start_time"),
+          resultSet.getLong("end_time") );
       return accessCountTable;
     }
   }
