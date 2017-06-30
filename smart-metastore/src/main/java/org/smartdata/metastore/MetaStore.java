@@ -124,86 +124,6 @@ public class MetaStore {
     }
   }
 
-  @Deprecated
-  private class QueryHelper {
-    // TODO need to remove
-    private String query;
-    private Connection conn;
-    private boolean connProvided = false;
-    private Statement statement;
-    private ResultSet resultSet;
-    private boolean closed = false;
-
-    public QueryHelper(String query) throws MetaStoreException {
-      this.query = query;
-      conn = getConnection();
-      if (conn == null) {
-        throw new MetaStoreException("Invalid null connection");
-      }
-    }
-
-    public QueryHelper(String query,
-        Connection conn) throws MetaStoreException {
-      this.query = query;
-      this.conn = conn;
-      connProvided = true;
-      if (conn == null) {
-        throw new MetaStoreException("Invalid null connection");
-      }
-    }
-
-    public ResultSet executeQuery() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        resultSet = statement.executeQuery(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-      return resultSet;
-    }
-
-    public int executeUpdate() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        return statement.executeUpdate(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-    }
-
-    public void execute() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        statement.execute(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-    }
-
-    public void close() throws MetaStoreException {
-      if (closed) {
-        return;
-      }
-      closed = true;
-
-      try {
-        if (resultSet != null && !resultSet.isClosed()) {
-          resultSet.close();
-        }
-
-        if (statement != null && !statement.isClosed()) {
-          statement.close();
-        }
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-
-      if (conn != null && !connProvided) {
-        closeConnection(conn);
-      }
-    }
-  }
-
   public synchronized void addUser(String userName) throws MetaStoreException {
     try {
       userDao.addUser(userName);
@@ -539,17 +459,12 @@ public class MetaStore {
     }
   }
 
-  public int executeUpdate(String sql) throws MetaStoreException {
-    QueryHelper queryHelper = new QueryHelper(sql);
-    try {
-      return queryHelper.executeUpdate();
-    } finally {
-      queryHelper.close();
-    }
-  }
-
   public void execute(String sql) throws MetaStoreException {
-    managementDao.execute(sql);
+    try {
+      managementDao.execute(sql);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   //Todo: optimize
@@ -821,19 +736,6 @@ public class MetaStore {
           .aggregateSQLStatement(destinationTable, tablesToAggregate);
     } catch (Exception e) {
       throw new MetaStoreException(e);
-    }
-  }
-
-  @VisibleForTesting
-  public ResultSet executeQuery(String sqlQuery) throws MetaStoreException {
-    Connection conn = getConnection();
-    try {
-      Statement s = conn.createStatement();
-      return s.executeQuery(sqlQuery);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    } finally {
-      closeConnection(conn);
     }
   }
 }
