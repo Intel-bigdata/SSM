@@ -78,7 +78,9 @@ public class TestNamespaceFetcher {
       NamespaceFetcher fetcher = new NamespaceFetcher(client, adapter, 100);
       fetcher.startFetch();
       List<String> expected = Arrays.asList("/", "/user", "/user/user1", "/user/user2", "/tmp");
-      Thread.sleep(1000);
+      while (!fetcher.fetchFinished()) {
+        Thread.sleep(1000);
+      }
 
       Mockito.verify(adapter).insertFiles(Matchers.argThat(new FileStatusArgMatcher(expected)));
       fetcher.stop();
