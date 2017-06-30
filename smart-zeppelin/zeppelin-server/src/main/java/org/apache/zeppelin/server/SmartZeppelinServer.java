@@ -116,10 +116,10 @@ public class SmartZeppelinServer extends Application {
 
     this.zconf = ZeppelinConfiguration.create();
 
-    if (!isZeppelinEnabled()) {
-      return;
-    }
+    //init();
+  }
 
+  private void init() throws Exception {
     this.depResolver = new DependencyResolver(
         zconf.getString(ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
 
@@ -183,9 +183,9 @@ public class SmartZeppelinServer extends Application {
     notebook.addNotebookEventListener(notebookWsServer.getNotebookInformationListener());
   }
 
-  private boolean isZeppelinEnabled() {
-    return conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN,
-        SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN_DEFAULT);
+  private boolean isZeppelinWebEnabled() {
+    return conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN_WEB,
+        SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN_WEB_DEFAULT);
   }
 
   public void start() throws Exception {
@@ -199,6 +199,7 @@ public class SmartZeppelinServer extends Application {
 
     // Notebook server
     setupNotebookServer(webApp);
+    init();
 
     // REST api
     setupRestApiContextHandler(webApp);
@@ -282,9 +283,7 @@ public class SmartZeppelinServer extends Application {
 
   private void setupNotebookServer(WebAppContext webapp) {
     notebookWsServer = new NotebookServer();
-    if (!isZeppelinEnabled()) {
-      return;
-    }
+
     String maxTextMessageSize = zconf.getWebsocketMaxTextMessageSize();
     final ServletHolder servletHolder = new ServletHolder(notebookWsServer);
     servletHolder.setInitParameter("maxTextMessageSize", maxTextMessageSize);
@@ -338,10 +337,10 @@ public class SmartZeppelinServer extends Application {
 
     WebAppContext webApp = new WebAppContext();
     webApp.setContextPath(zconf.getServerContextPath());
-    webApp.setResourceBase("");
-    contexts.addHandler(webApp);
 
-    if (!isZeppelinEnabled()) {
+    if (!isZeppelinWebEnabled()) {
+      webApp.setResourceBase("");
+      contexts.addHandler(webApp);
       return webApp;
     }
 
@@ -396,10 +395,6 @@ public class SmartZeppelinServer extends Application {
 
     RuleRestApi ruleApi = new RuleRestApi(engine);
     singletons.add(ruleApi);
-
-    if (!isZeppelinEnabled()) {
-      return singletons;
-    }
 
     /** Rest-api root endpoint */
     ZeppelinRestApi root = new ZeppelinRestApi();

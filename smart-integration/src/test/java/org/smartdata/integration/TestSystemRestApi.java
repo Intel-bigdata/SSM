@@ -30,7 +30,10 @@ public class TestSystemRestApi extends IntegrationTestBase {
   // Just an example
   @Test
   public void testSubmitAction() throws Exception {
-    Response response1 = RestAssured.get("/smart/api/v1/system/version");
+    while (true) {
+
+    }
+    /*Response response1 = RestAssured.get("/smart/api/v1/system/version");
     String json1 = response1.asString();
     response1.then().body("body", Matchers.equalTo("0.1.0"));
 
@@ -41,7 +44,7 @@ public class TestSystemRestApi extends IntegrationTestBase {
     validatableResponse.body("actionName", Matchers.hasItems("fsck",
         "diskbalance", "uncache", "setstoragepolicy", "blockec", "copy",
         "write", "stripec", "cache", "read", "allssd", "checkstorage",
-        "archive", "list", "clusterbalance", "onessd", "hello"));
+        "archive", "list", "clusterbalance", "onessd", "hello"));*/
 
     /*
     Response response0 = RestAssured.get("/api/v1.0/actionlist");
