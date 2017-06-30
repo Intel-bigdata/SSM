@@ -360,7 +360,7 @@ public class SmartZeppelinServer extends Application {
     }
     // Explicit bind to root
     webApp.addServlet(new ServletHolder(new DefaultServlet()), "/*");
-    //contexts.addHandler(webApp); // already added
+    contexts.addHandler(webApp); // already added
 
     webApp.addFilter(new FilterHolder(CorsFilter.class), "/*",
         EnumSet.allOf(DispatcherType.class));
