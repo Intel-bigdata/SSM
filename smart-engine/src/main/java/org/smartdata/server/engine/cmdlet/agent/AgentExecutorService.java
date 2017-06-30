@@ -21,6 +21,8 @@ import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
+import java.util.List;
+
 public class AgentExecutorService extends CmdletExecutorService {
 
   private AgentMaster master;
@@ -53,5 +55,9 @@ public class AgentExecutorService extends CmdletExecutorService {
   @Override
   public void shutdown() {
     master.shutdown();
+  }
+
+  public List<AgentInfo> getAgentInfos() {
+    return master.getAgentInfos();
   }
 }

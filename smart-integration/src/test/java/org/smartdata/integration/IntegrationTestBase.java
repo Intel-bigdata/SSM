@@ -25,6 +25,7 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.integration.cluster.MiniSmartCluster;
 import org.smartdata.integration.cluster.SmartCluster;
+import org.smartdata.server.SmartServer;
 
 /**
  * Integration test.
@@ -32,12 +33,12 @@ import org.smartdata.integration.cluster.SmartCluster;
 public class IntegrationTestBase {
   private static SmartCluster cluster;
   private static SmartConf conf;
-  private static IntegrationSmartServer smartServer;
+  protected static IntegrationSmartServer smartServer;
   private static String httpUri;
   private static String httpHost;
   private static int httpPort;
   private static int zeppelinPort;
-  private static Gson gson = new Gson();
+  protected static Gson gson = new Gson();
 
   @BeforeClass
   public static void setup() throws Exception {
