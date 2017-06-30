@@ -17,9 +17,10 @@
  */
 package org.smartdata.integration;
 
-import com.google.gson.Gson;
 import io.restassured.RestAssured;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
@@ -33,12 +34,11 @@ import org.smartdata.server.SmartServer;
 public class IntegrationTestBase {
   private static SmartCluster cluster;
   private static SmartConf conf;
-  protected static IntegrationSmartServer smartServer;
+  private static IntegrationSmartServer smartServer;
   private static String httpUri;
   private static String httpHost;
   private static int httpPort;
   private static int zeppelinPort;
-  protected static Gson gson = new Gson();
 
   @BeforeClass
   public static void setup() throws Exception {
