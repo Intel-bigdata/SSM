@@ -15,19 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.server.engine.cmdlet.agent;
 
-public class MetaStoreExecption extends Exception {
+public class AgentInfo {
+  private long id;
+  private String location;
 
-  public MetaStoreExecption(String errorMsg) {
-    super(errorMsg);
+  public AgentInfo(long id, String location) {
+    this.id = id;
+    this.location = location;
   }
 
-  public MetaStoreExecption(String errorMsg, Throwable throwable) {
-    super(errorMsg, throwable);
+  public long getId() {
+    return id;
   }
 
-  public MetaStoreExecption(Throwable throwable) {
-    super(throwable);
+  public void setId(long id) {
+    this.id = id;
+  }
+
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
   }
 }

@@ -15,31 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore.tables;
+package org.smartdata.server.engine;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
+public class StandbyServerInfo {
+  private String id;
+  private String location;
 
-import java.sql.SQLException;
-
-public abstract class TableEvictor {
-  public final Logger LOG = LoggerFactory.getLogger(this.getClass());
-  private MetaStore adapter;
-
-  public TableEvictor(MetaStore adapter) {
-    this.adapter = adapter;
+  public StandbyServerInfo(String id, String location) {
+    this.id = id;
+    this.location = location;
   }
 
-  public void dropTable(AccessCountTable accessCountTable) {
-    try {
-      this.adapter.dropTable(accessCountTable.getTableName());
-      LOG.debug("Dropped access count table " + accessCountTable.getTableName());
-    } catch (MetaStoreException e) {
-      e.printStackTrace();
-    }
+  public String getId() {
+    return id;
   }
 
-  abstract void evictTables(AccessCountTableDeque tables, int size);
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
+  }
 }

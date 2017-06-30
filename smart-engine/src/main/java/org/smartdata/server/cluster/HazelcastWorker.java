@@ -63,22 +63,22 @@ public class HazelcastWorker implements StatusReporter {
   }
 
   public void start() {
-    this.fetcher =
-        this.executorService.scheduleAtFixedRate(
+    fetcher =
+        executorService.scheduleAtFixedRate(
             new StatusReporter(), 1000, 1000, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
-    if (this.fetcher != null) {
-      this.fetcher.cancel(true);
+    if (fetcher != null) {
+      fetcher.cancel(true);
     }
-    this.executorService.shutdown();
-    this.cmdletExecutor.shutdown();
+    executorService.shutdown();
+    cmdletExecutor.shutdown();
   }
 
   @Override
   public void report(StatusMessage status) {
-    this.statusTopic.publish(status);
+    statusTopic.publish(status);
   }
 
   private class MasterMessageListener implements MessageListener<Serializable> {

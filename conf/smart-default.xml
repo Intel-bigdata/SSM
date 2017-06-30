@@ -51,13 +51,13 @@
 
   <property>
     <name>dfs.smart.agent.address</name>
-    <value>0.0.0.0:7048</value>
+    <value>127.0.0.1:7048</value>
     <description>SmartAgent address</description>
   </property>
 
   <property>
     <name>dfs.smart.agent.master.address</name>
-    <value>0.0.0.0:7051</value>
+    <value>127.0.0.1:7051</value>
     <description>SmartAgent master address</description>
   </property>
 

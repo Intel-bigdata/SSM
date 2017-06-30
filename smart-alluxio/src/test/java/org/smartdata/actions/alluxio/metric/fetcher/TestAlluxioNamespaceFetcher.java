@@ -39,7 +39,7 @@ import alluxio.client.file.options.CreateFileOptions;
 import alluxio.exception.AlluxioException;
 import alluxio.master.LocalAlluxioCluster;
 
-public class TestAlluxioNamespaceFetcher  extends TestDaoUtil {
+public class TestAlluxioNamespaceFetcher extends TestDaoUtil {
   LocalAlluxioCluster mLocalAlluxioCluster;
   FileSystem fs;
   MetaStore metaStore;

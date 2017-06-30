@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.cluster;
 
-import com.hazelcast.config.ClasspathXmlConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -32,6 +31,12 @@ public class HazelcastInstanceProvider {
     if (instance == null) {
 //      instance = Hazelcast.newHazelcastInstance(new ClasspathXmlConfig(CONFIG_FILE));
       instance = Hazelcast.newHazelcastInstance(new Config());
+
+      Runtime.getRuntime().addShutdownHook(new Thread(){
+        @Override public void run() {
+          instance.getLifecycleService().shutdown();
+        }
+      });
     }
     return instance;
   }

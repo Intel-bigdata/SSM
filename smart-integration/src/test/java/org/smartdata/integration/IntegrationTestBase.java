@@ -24,6 +24,7 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.integration.cluster.MiniSmartCluster;
 import org.smartdata.integration.cluster.SmartCluster;
+import org.smartdata.server.SmartServer;
 
 /**
  * Integration test.

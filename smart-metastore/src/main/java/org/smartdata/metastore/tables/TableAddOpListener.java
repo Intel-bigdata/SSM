@@ -17,10 +17,10 @@
  */
 package org.smartdata.metastore.tables;
 
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.Constants;
 import org.smartdata.metastore.utils.TimeGranularity;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -53,7 +53,7 @@ public abstract class TableAddOpListener {
                 try {
                   tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
                   coarseGrainedTableDeque.add(lastCoarseGrainedTable);
-                } catch (SQLException e) {
+                } catch (MetaStoreException e) {
                   e.printStackTrace();
                 }
               }

@@ -28,8 +28,13 @@ import java.util.Properties;
 public class DruidPool implements DBPool {
   private final DruidDataSource ds;
 
-  public DruidPool(Properties properties) throws Exception {
-    ds = (DruidDataSource) DruidDataSourceFactory.createDataSource(properties);
+  public DruidPool(Properties properties) throws MetaStoreException {
+    try {
+      ds =
+          (DruidDataSource) DruidDataSourceFactory.createDataSource(properties);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   public DataSource getDataSource() {

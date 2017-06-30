@@ -15,31 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore.tables;
+package org.smartdata.metastore.fetcher;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.common.models.FileInfo;
 
-import java.sql.SQLException;
+public class FileInfoBatch {
+  private FileInfo[] fileInfos;
+  private final int batchSize;
+  private int index;
 
-public abstract class TableEvictor {
-  public final Logger LOG = LoggerFactory.getLogger(this.getClass());
-  private MetaStore adapter;
-
-  public TableEvictor(MetaStore adapter) {
-    this.adapter = adapter;
+  public FileInfoBatch(int batchSize) {
+    this.batchSize = batchSize;
+    this.fileInfos = new FileInfo[batchSize];
+    this.index = 0;
   }
 
-  public void dropTable(AccessCountTable accessCountTable) {
-    try {
-      this.adapter.dropTable(accessCountTable.getTableName());
-      LOG.debug("Dropped access count table " + accessCountTable.getTableName());
-    } catch (MetaStoreException e) {
-      e.printStackTrace();
-    }
+  public void add(FileInfo status) {
+    this.fileInfos[index] = status;
+    index += 1;
   }
 
-  abstract void evictTables(AccessCountTableDeque tables, int size);
+  public boolean isFull() {
+    return index == batchSize;
+  }
+
+  public int actualSize() {
+    return this.index;
+  }
+
+  public FileInfo[] getFileInfos() {
+    return this.fileInfos;
+  }
 }
+

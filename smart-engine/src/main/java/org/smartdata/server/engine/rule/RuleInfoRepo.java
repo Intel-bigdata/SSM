@@ -20,6 +20,7 @@ package org.smartdata.server.engine.rule;
 import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.rule.parser.RuleStringParser;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
@@ -27,7 +28,6 @@ import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -106,7 +106,7 @@ public class RuleInfoRepo {
         try {
           ret = metaStore.updateRuleInfo(ruleInfo.getId(),
               rs, lastCheckTime, checkedCount, cmdletsGen);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           throw new IOException(ruleInfo.toString(), e);
         }
       }
@@ -197,7 +197,7 @@ public class RuleInfoRepo {
           }
           break;
       }
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       throw new IOException(ruleInfo.toString(), e);
     }
 

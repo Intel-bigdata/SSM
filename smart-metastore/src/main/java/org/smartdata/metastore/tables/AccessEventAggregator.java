@@ -18,6 +18,7 @@
 package org.smartdata.metastore.tables;
 
 import org.apache.commons.lang.StringUtils;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metastore.MetaStore;
 import org.slf4j.Logger;
@@ -78,14 +79,14 @@ public class AccessEventAggregator {
     String createTable = AccessCountDao.createTableSQL(table.getTableName());
     try {
       this.adapter.execute(createTable);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Create table error: " + table, e);
     }
     if (this.eventBuffer.size() > 0) {
       final Map<String, Long> pathToIDs;
       try {
         pathToIDs = adapter.getFileIDs(getPaths(eventBuffer));
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         // TODO: dirty handle here
         LOG.error("Create Table " + table.getTableName(), e);
         return;
@@ -108,7 +109,7 @@ public class AccessEventAggregator {
         if (LOG.isDebugEnabled()) {
           LOG.debug("Table created: " + table);
         }
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         LOG.error("Create table error: " + table, e);
       }
     }
