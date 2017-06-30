@@ -128,40 +128,35 @@ public class AccessCountDao {
                                             int topNum) throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Iterator<AccessCountTable> tableIterator = tables.iterator();
-    boolean is = tableIterator.hasNext();
-    if (is) {
-      StringBuilder unioned = new StringBuilder();
-      while (is) {
-        AccessCountTable table = tableIterator.next();
-        if (tableIterator.hasNext()) {
-          unioned
-              .append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
-        } else {
-          unioned.append("SELECT * FROM " + table.getTableName());
-        }
+    StringBuilder unioned = new StringBuilder();
+    while (tableIterator.hasNext()) {
+      if (!(tableIterator.hasNext())) break;
+      AccessCountTable table = tableIterator.next();
+      if (tableIterator.hasNext()) {
+        unioned
+            .append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
+      } else {
+        unioned.append("SELECT * FROM " + table.getTableName());
       }
-      String statement =
-          String.format(
-              "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
-              AccessCountDao.FILE_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              unioned,
-              AccessCountDao.FILE_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              topNum);
-      SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(statement);
-      Map<Long, Integer> accessCounts = new HashMap<>();
-      while (sqlRowSet.next()) {
-        accessCounts.put(
-            sqlRowSet.getLong(AccessCountDao.FILE_FIELD),
-            sqlRowSet.getInt(AccessCountDao.ACCESSCOUNT_FIELD));
-      }
-      return accessCounts;
     }
-    else{
-      return null;
+    String statement =
+        String.format(
+            "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
+            AccessCountDao.FILE_FIELD,
+            AccessCountDao.ACCESSCOUNT_FIELD,
+            AccessCountDao.ACCESSCOUNT_FIELD,
+            unioned,
+            AccessCountDao.FILE_FIELD,
+            AccessCountDao.ACCESSCOUNT_FIELD,
+            topNum);
+    SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(statement);
+    Map<Long, Integer> accessCounts = new HashMap<>();
+    while (sqlRowSet.next()) {
+      accessCounts.put(
+          sqlRowSet.getLong(AccessCountDao.FILE_FIELD),
+          sqlRowSet.getInt(AccessCountDao.ACCESSCOUNT_FIELD));
     }
+    return accessCounts;
   }
 
 
