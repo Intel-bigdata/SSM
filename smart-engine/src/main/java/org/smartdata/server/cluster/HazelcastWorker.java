@@ -25,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.ActionException;
+import org.smartdata.common.CmdletState;
+import org.smartdata.common.message.CmdletStatusUpdate;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.common.message.StatusReporter;
@@ -92,6 +94,9 @@ public class HazelcastWorker implements StatusReporter {
         } catch (ActionException e) {
           e.printStackTrace();
           LOG.error("Failed to create cmdlet from " + launchCmdlet);
+          report(
+              new CmdletStatusUpdate(
+                  launchCmdlet.getCmdletId(), System.currentTimeMillis(), CmdletState.FAILED));
         }
       } else if (msg instanceof StopCmdlet) {
         StopCmdlet stopCmdlet = (StopCmdlet) msg;
