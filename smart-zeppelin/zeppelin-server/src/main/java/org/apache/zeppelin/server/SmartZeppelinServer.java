@@ -184,8 +184,8 @@ public class SmartZeppelinServer extends Application {
   }
 
   private boolean isZeppelinEnabled() {
-    return conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN,
-        SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN_DEFAULT);
+    return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB,
+        SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB_DEFAULT);
   }
 
   public void start() throws Exception {

@@ -60,17 +60,17 @@ public class TestSmartServerLogin {
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
-    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+    conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
         uriList.get(0).toString());
 
     // Set db used
     dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
+    conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
-    conf.setBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, true);
-    conf.set(SmartConfKeys.DFS_SSM_KEYTAB_FILE_KEY, keytabFileName);
-    conf.set(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY, principal);
+    conf.setBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, true);
+    conf.set(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY, keytabFileName);
+    conf.set(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY, principal);
   }
 
   private File generateKeytab(String keytabFileName, String principal) throws Exception {

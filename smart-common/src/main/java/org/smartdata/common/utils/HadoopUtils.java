@@ -35,7 +35,7 @@ public class HadoopUtils {
     String nnRpcAddr = null;
 
     String[] rpcAddrKeys = {
-        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY, // Keep it first
+        SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY, // Keep it first
         DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY,
         DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY
     };
@@ -52,7 +52,7 @@ public class HadoopUtils {
     if (nnRpcAddr == null) {
       throw new IOException("Can not find NameNode RPC server address. "
           + "Please configure it through '"
-          + SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "'.");
+          + SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY + "'.");
     }
 
     if (lastNotNullIdx == 0 && rpcAddrKeys.length > 1) {

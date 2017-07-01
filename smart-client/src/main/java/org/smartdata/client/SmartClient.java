@@ -38,10 +38,10 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
-    String rpcConfValue = conf.get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY);
+    String rpcConfValue = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     if (rpcConfValue == null) {
       throw new IOException("SmartServer address not found. Please configure "
-          + "it through " + SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY);
+          + "it through " + SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     }
 
     String[] strings = rpcConfValue.split(":");

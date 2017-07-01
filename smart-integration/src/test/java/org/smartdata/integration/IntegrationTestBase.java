@@ -21,11 +21,11 @@ import io.restassured.RestAssured;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.integration.cluster.MiniSmartCluster;
+import org.smartdata.integration.cluster.SmartMiniCluster;
 import org.smartdata.integration.cluster.SmartCluster;
 
 /**
- * Integration test.
+ * Integration test base.
  */
 public class IntegrationTestBase {
   public static final String ROOT = "/smart/api/v1";
@@ -39,7 +39,7 @@ public class IntegrationTestBase {
   @BeforeClass
   public static void setup() throws Exception {
     // Set up an HDFS cluster
-    cluster = new MiniSmartCluster();
+    cluster = new SmartMiniCluster();
     cluster.setUp();
 
     // Start a Smart server

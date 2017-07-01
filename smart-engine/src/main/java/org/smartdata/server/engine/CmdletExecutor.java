@@ -472,8 +472,8 @@ public class CmdletExecutor extends AbstractService implements Runnable {
   }
 
   private InetSocketAddress getRpcServerAddress() {
-    String[] strings = serverContext.getConf().get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
-        SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
+    String[] strings = serverContext.getConf().get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+        SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT).split(":");
     return new InetSocketAddress(strings[strings.length - 2]
         , Integer.parseInt(strings[strings.length - 1]));
   }
