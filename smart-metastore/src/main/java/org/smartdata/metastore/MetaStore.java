@@ -86,6 +86,7 @@ public class MetaStore {
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
   private AccessCountDao accessCountDao;
+  private ManagementDao managementDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -99,6 +100,7 @@ public class MetaStore {
     storageDao = new StorageDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
+    managementDao = new ManagementDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -118,85 +120,6 @@ public class MetaStore {
         pool.closeConnection(conn);
       } catch (SQLException e) {
         throw new MetaStoreException(e);
-      }
-    }
-  }
-
-  private class QueryHelper {
-    // TODO need to remove
-    private String query;
-    private Connection conn;
-    private boolean connProvided = false;
-    private Statement statement;
-    private ResultSet resultSet;
-    private boolean closed = false;
-
-    public QueryHelper(String query) throws MetaStoreException {
-      this.query = query;
-      conn = getConnection();
-      if (conn == null) {
-        throw new MetaStoreException("Invalid null connection");
-      }
-    }
-
-    public QueryHelper(String query,
-        Connection conn) throws MetaStoreException {
-      this.query = query;
-      this.conn = conn;
-      connProvided = true;
-      if (conn == null) {
-        throw new MetaStoreException("Invalid null connection");
-      }
-    }
-
-    public ResultSet executeQuery() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        resultSet = statement.executeQuery(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-      return resultSet;
-    }
-
-    public int executeUpdate() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        return statement.executeUpdate(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-    }
-
-    public void execute() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        statement.execute(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-    }
-
-    public void close() throws MetaStoreException {
-      if (closed) {
-        return;
-      }
-      closed = true;
-
-      try {
-        if (resultSet != null && !resultSet.isClosed()) {
-          resultSet.close();
-        }
-
-        if (statement != null && !statement.isClosed()) {
-          statement.close();
-        }
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-
-      if (conn != null && !connProvided) {
-        closeConnection(conn);
       }
     }
   }
@@ -341,7 +264,10 @@ public class MetaStore {
     if (tableIterator.hasNext()) {
       try{
         Map<Long, Integer> accessCounts = accessCountDao.getHotFiles(tables, topNum);
-        Map<Long, String> idToPath = this.getFilePaths(accessCounts.keySet());
+        if (accessCounts.size() == 0) {
+          return new ArrayList<>();
+        }
+        Map<Long, String> idToPath = getFilePaths(accessCounts.keySet());
         List<FileAccessInfo> result = new ArrayList<>();
         for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
           Long fid = entry.getKey();
@@ -536,47 +462,27 @@ public class MetaStore {
     }
   }
 
-  public int executeUpdate(String sql) throws MetaStoreException {
-    QueryHelper queryHelper = new QueryHelper(sql);
-    try {
-      return queryHelper.executeUpdate();
-    } finally {
-      queryHelper.close();
-    }
-  }
-
   public void execute(String sql) throws MetaStoreException {
-    QueryHelper queryHelper = new QueryHelper(sql);
     try {
-      queryHelper.execute();
-    } finally {
-      queryHelper.close();
+      managementDao.execute(sql);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
   //Todo: optimize
   public void execute(List<String> statements) throws MetaStoreException {
     for (String statement : statements) {
-      this.execute(statement);
+      execute(statement);
     }
   }
 
   public List<String> executeFilesPathQuery(
       String sql) throws MetaStoreException {
-    List<String> paths = new LinkedList<>();
-    QueryHelper queryHelper = new QueryHelper(sql);
     try {
-      ResultSet res = queryHelper.executeQuery();
-      try {
-        while (res.next()) {
-          paths.add(res.getString(1));
-        }
-      } catch (Exception e) {
-        throw new MetaStoreException(e);
-      }
-      return paths;
-    } finally {
-      queryHelper.close();
+      return managementDao.getFilesPath(sql);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
@@ -833,19 +739,6 @@ public class MetaStore {
           .aggregateSQLStatement(destinationTable, tablesToAggregate);
     } catch (Exception e) {
       throw new MetaStoreException(e);
-    }
-  }
-
-  @VisibleForTesting
-  public ResultSet executeQuery(String sqlQuery) throws MetaStoreException {
-    Connection conn = getConnection();
-    try {
-      Statement s = conn.createStatement();
-      return s.executeQuery(sqlQuery);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    } finally {
-      closeConnection(conn);
     }
   }
 }
