@@ -22,7 +22,7 @@ import org.smartdata.AbstractService;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.StatesUpdaterService;
+import org.smartdata.metastore.StatesUpdateService;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -35,7 +35,7 @@ public class StatesUpdaterServiceFactory {
     try {
       Class clazz = Class.forName(source);
       Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
-      return (StatesUpdaterService) c.newInstance(context, metaStore);
+      return (StatesUpdateService) c.newInstance(context, metaStore);
     } catch (ClassNotFoundException | IllegalAccessException
         | InstantiationException | NoSuchMethodException
         | InvocationTargetException e) {
