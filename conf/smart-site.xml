@@ -18,7 +18,7 @@
 
 <configuration>
     <property>
-        <name>dfs.smart.namenode.rpcserver</name>
+        <name>smart.dfs.namenode.rpcserver</name>
         <value></value>
         <description>Namenode rpcserver</description>
     </property>

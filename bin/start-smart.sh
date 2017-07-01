@@ -18,8 +18,8 @@
 #
 # Run SmartServer
 #
-#./bin/start-smart.sh -D dfs.smart.namenode.rpcserver=hdfs://localhost:9000
-#./bin/start-smart.sh -D dfs.smart.namenode.rpcserver=hdfs://localhost:9000 -D dfs.smart.default.db.url=jdbc:sqlite:file-sql.db
+#./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000
+#./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000 -D dfs.smart.default.db.url=jdbc:sqlite:file-sql.db
 
 USAGE="Usage: bin/start-smart.sh [--config <conf-dir>] ..."
 

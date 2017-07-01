@@ -21,7 +21,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.smartdata.AbstractService;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.hdfs.HdfsStatesUpdaterService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdaterService;
 
@@ -45,7 +44,7 @@ public class StatesUpdaterServiceFactory {
   }
 
   public static String getStatesUpdaterName(Configuration conf) {
-    return conf.get(SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY,
-        SmartConfKeys.SMART_STATES_UPDATER_SERVICES_DEFAULT);
+    return conf.get(SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY,
+        SmartConfKeys.SMART_STATES_UPDATE_SERVICE_DEFAULT);
   }
 }

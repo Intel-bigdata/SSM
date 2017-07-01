@@ -150,8 +150,8 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       throws ReconfigureException {
     LOG.debug("Received reconfig event: property={} newVal={}",
         property, newVal);
-    if (SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY.equals(property)
-        || SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY.equals(property)) {
+    if (SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY.equals(property)
+        || SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY.equals(property)) {
       if (statesUpdaterService != null) {
         throw new ReconfigureException(
             "States update service already been initialized.");
@@ -165,8 +165,8 @@ public class StatesManager extends AbstractService implements Reconfigurable {
 
   public List<String> getReconfigurableProperties() {
     return Arrays.asList(
-        SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY,
-        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+        SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY,
+        SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
   }
 
   private synchronized void initStatesUpdaterService() {

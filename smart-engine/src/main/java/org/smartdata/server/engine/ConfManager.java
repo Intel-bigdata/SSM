@@ -19,7 +19,7 @@ public class ConfManager extends ReconfigurableBase {
   @Override
   public void reconfigureProperty(String property, String newVal)
       throws ReconfigureException {
-    if (property.equals(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY)) {
+    if (property.equals(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY)) {
       conf.set(property, newVal);
     }
   }
@@ -27,7 +27,7 @@ public class ConfManager extends ReconfigurableBase {
   @Override
   public List<String> getReconfigurableProperties() {
     return Arrays.asList(
-        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY
+        SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY
     );
   }
 }
