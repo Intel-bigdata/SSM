@@ -20,10 +20,10 @@ package org.smartdata.metastore;
 import org.smartdata.AbstractService;
 import org.smartdata.SmartContext;
 
-public abstract class StatesUpdaterService extends AbstractService {
+public abstract class StatesUpdateService extends AbstractService {
   protected MetaStore metaStore;
 
-  public StatesUpdaterService(SmartContext context, MetaStore metaStore) {
+  public StatesUpdateService(SmartContext context, MetaStore metaStore) {
     super(context);
     this.metaStore = metaStore;
   }

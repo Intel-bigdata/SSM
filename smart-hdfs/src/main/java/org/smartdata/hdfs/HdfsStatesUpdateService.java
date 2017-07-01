@@ -26,18 +26,17 @@ import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.metastore.StatesUpdaterService;
+import org.smartdata.metastore.StatesUpdateService;
 
 import java.io.IOException;
 import java.net.URI;
-import java.sql.SQLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Polls metrics and events from NameNode
  */
-public class HdfsStatesUpdaterService extends StatesUpdaterService {
+public class HdfsStatesUpdateService extends StatesUpdateService {
 
   private DFSClient client;
   private ScheduledExecutorService executorService;
@@ -45,9 +44,9 @@ public class HdfsStatesUpdaterService extends StatesUpdaterService {
   private CachedListFetcher cachedListFetcher;
 
   public static final Logger LOG =
-      LoggerFactory.getLogger(HdfsStatesUpdaterService.class);
+      LoggerFactory.getLogger(HdfsStatesUpdateService.class);
 
-  public HdfsStatesUpdaterService(SmartContext context, MetaStore metaStore) {
+  public HdfsStatesUpdateService(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
   }
 
