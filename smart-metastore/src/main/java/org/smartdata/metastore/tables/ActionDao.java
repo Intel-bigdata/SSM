@@ -113,9 +113,24 @@ public class ActionDao {
     // SqlParameterSource[] batch = SqlParameterSourceUtils
     //     .createBatch(actionInfos);
     // simpleJdbcInsert.executeBatch(batch);
-    for (ActionInfo actionInfo : actionInfos) {
-      insert(actionInfo);
+
+
+//    for (ActionInfo actionInfo : actionInfos) {
+//      insert(actionInfo);
+//    }
+
+    //A new way to batch insert
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("actions");
+
+    Map<String, Object>[] maps = new Map[actionInfos.length];
+
+    for (int i = 0; i < actionInfos.length; i++) {
+      maps[i] = toMap(actionInfos[i]);
     }
+
+    simpleJdbcInsert.executeBatch(maps);
+
   }
 
   public int update(final ActionInfo actionInfo) {

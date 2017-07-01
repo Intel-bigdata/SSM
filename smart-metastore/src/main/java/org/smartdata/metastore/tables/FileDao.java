@@ -115,9 +115,21 @@ public class FileDao {
 
   public void insert(FileStatusInternal[] fileStatusInternals) {
     // TODO need upgrade
-    for (FileStatusInternal file : fileStatusInternals) {
-      insert(file);
+//    for (FileStatusInternal file : fileStatusInternals) {
+//      insert(file);
+//    }
+
+    //A new way to batch insert
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("files");
+
+    Map<String, Object>[] maps = new Map[fileStatusInternals.length];
+
+    for (int i = 0; i < fileStatusInternals.length; i++) {
+      maps[i] = toMap(fileStatusInternals[i],mapOwnerIdName,mapGroupIdName);
     }
+
+    simpleJdbcInsert.executeBatch(maps);
   }
 
   public void insert(FileInfo fileInfo) {
