@@ -383,7 +383,7 @@ public class CmdletManager extends AbstractService {
 
   public synchronized void updateStatus(StatusMessage status) {
     LOG.debug("Got status update: " + status);
-    try{
+    try {
       if (status instanceof CmdletStatusUpdate) {
         onCmdletStatusUpdate((CmdletStatusUpdate) status);
       } else if (status instanceof ActionStatusReport) {

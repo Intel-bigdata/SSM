@@ -26,7 +26,6 @@ import org.smartdata.client.SmartDFSClient;
 import org.smartdata.common.message.StatusReporter;
 import org.smartdata.common.utils.HadoopUtils;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.MetaStore;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
@@ -84,7 +83,7 @@ public class CmdletFactory {
     String[] strings =
         smartContext
             .getConf()
-            .get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY, SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT)
+            .get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY, SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
             .split(":");
     return new InetSocketAddress(
         strings[strings.length - 2], Integer.parseInt(strings[strings.length - 1]));

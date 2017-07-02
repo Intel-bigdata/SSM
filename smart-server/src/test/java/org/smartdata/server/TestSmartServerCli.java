@@ -48,7 +48,7 @@ public class TestSmartServerCli {
       // Set db used
       String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
       String dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
-      conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
+      conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
       // rpcServer start in SmartServer
       SmartServer ssm = null;
@@ -63,11 +63,11 @@ public class TestSmartServerCli {
         }
       }
 
-      conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+      conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
           uriList.get(0).toString());
       String[] args = new String[]{
           "-D",
-          SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY + "="
+          SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY + "="
               + uriList.get(0).toString()
       };
 

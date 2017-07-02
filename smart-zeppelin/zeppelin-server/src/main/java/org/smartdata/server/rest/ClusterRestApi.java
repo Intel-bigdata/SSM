@@ -52,7 +52,7 @@ public class ClusterRestApi {
     // return NN url
     try {
       String namenodeUrl = smartEngine.getConf().
-          get(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+          get(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
       return new JsonResponse<>(Response.Status.OK,
           "Namenode URL", namenodeUrl).build();
     } catch (Exception e) {

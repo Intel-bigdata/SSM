@@ -43,7 +43,7 @@ public class RuleCmdlets {
       conf = new SmartConf();
     }
 
-    //System.out.println(conf.get(SmartConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY));
+    //System.out.println(conf.get(SmartConfigureKeys.SMART_SERVER_RPC_ADDRESS_KEY));
     SmartAdmin client = new SmartAdmin(conf);
     return client;
   }

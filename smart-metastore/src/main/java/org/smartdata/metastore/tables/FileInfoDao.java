@@ -114,9 +114,22 @@ public class FileInfoDao {
 
   public void insert(FileInfo[] fileInfos) {
     // TODO need upgrade
-    for (FileInfo file : fileInfos) {
-      insert(file);
+//    for (FileInfo file : fileInfos) {
+//      insert(file);
+//    }
+
+    //A new way to batch insert
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("files");
+
+    Map<String, Object>[] maps = new Map[fileInfos.length];
+
+    for (int i = 0; i < fileInfos.length; i++) {
+      maps[i] = toMap(fileInfos[i],mapOwnerIdName,mapGroupIdName);
     }
+
+    simpleJdbcInsert.executeBatch(maps);
+
   }
 
   public int update(String path, int storagePolicy) {
