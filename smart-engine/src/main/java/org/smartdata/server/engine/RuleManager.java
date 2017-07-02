@@ -64,8 +64,8 @@ public class RuleManager extends AbstractService {
     super(context);
 
     int numExecutors = context.getConf().getInt(
-        SmartConfKeys.DFS_SSM_RULE_EXECUTORS_KEY,
-        SmartConfKeys.DFS_SSM_RULE_EXECUTORS_DEFAULT);
+        SmartConfKeys.SMART_RULE_EXECUTORS_KEY,
+        SmartConfKeys.SMART_RULE_EXECUTORS_DEFAULT);
     execScheduler = new ExecutorScheduler(numExecutors);
 
     this.statesManager = statesManager;

@@ -260,7 +260,7 @@ public class MetaStoreUtils {
       try {
         p.loadFromXML(new FileInputStream(cpConfigFile));
 
-        String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
+        String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
         if (url != null) {
           p.setProperty("url", url);
         }
@@ -296,7 +296,7 @@ public class MetaStoreUtils {
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
-    String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
+    String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
     if (url != null) {
       p.setProperty("url", url);
     }

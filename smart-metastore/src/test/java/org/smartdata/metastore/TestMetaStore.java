@@ -66,7 +66,7 @@ public class TestMetaStore extends TestDaoUtil {
 
 /*  @Test
   public void testGetAccessCount() throws Exception {
-    Map<Long, Integer> ret = metaStore.getAccessCount(1490932740000l,
+    Map<Long, Integer> ret = metaStore.getHotFiles(1490932740000l,
         1490936400000l, null);
     Assert.assertTrue(ret.get(2l) == 32);
   }

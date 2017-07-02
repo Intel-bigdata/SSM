@@ -17,14 +17,8 @@
  */
 package org.smartdata.integration;
 
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import org.junit.Test;
-import org.smartdata.integration.IntegrationTestBase;
 
-/**
- * Created by root on 6/29/17.
- */
 public class TestCmdletRestApi extends IntegrationTestBase {
   @Test
   public void test() throws Exception {

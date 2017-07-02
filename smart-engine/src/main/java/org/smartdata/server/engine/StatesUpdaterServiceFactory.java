@@ -21,9 +21,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.smartdata.AbstractService;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.hdfs.HdfsStatesUpdaterService;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.StatesUpdaterService;
+import org.smartdata.metastore.StatesUpdateService;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -36,7 +35,7 @@ public class StatesUpdaterServiceFactory {
     try {
       Class clazz = Class.forName(source);
       Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
-      return (StatesUpdaterService) c.newInstance(context, metaStore);
+      return (StatesUpdateService) c.newInstance(context, metaStore);
     } catch (ClassNotFoundException | IllegalAccessException
         | InstantiationException | NoSuchMethodException
         | InvocationTargetException e) {
@@ -45,7 +44,7 @@ public class StatesUpdaterServiceFactory {
   }
 
   public static String getStatesUpdaterName(Configuration conf) {
-    return conf.get(SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY,
-        SmartConfKeys.SMART_STATES_UPDATER_SERVICES_DEFAULT);
+    return conf.get(SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY,
+        SmartConfKeys.SMART_STATES_UPDATE_SERVICE_DEFAULT);
   }
 }

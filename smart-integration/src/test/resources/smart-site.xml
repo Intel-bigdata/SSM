@@ -17,10 +17,5 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-    <property>
-        <name>smart.dfs.namenode.rpcserver</name>
-        <value></value>
-        <description>Namenode rpcserver</description>
-    </property>
 
 </configuration>

@@ -86,6 +86,7 @@ public class MetaStore {
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
   private AccessCountDao accessCountDao;
+  private ManagementDao managementDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -99,6 +100,7 @@ public class MetaStore {
     storageDao = new StorageDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
+    managementDao = new ManagementDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -119,153 +121,6 @@ public class MetaStore {
       } catch (SQLException e) {
         throw new MetaStoreException(e);
       }
-    }
-  }
-
-  private class QueryHelper {
-    // TODO need to remove
-    private String query;
-    private Connection conn;
-    private boolean connProvided = false;
-    private Statement statement;
-    private ResultSet resultSet;
-    private boolean closed = false;
-
-    public QueryHelper(String query) throws MetaStoreException {
-      this.query = query;
-      conn = getConnection();
-      if (conn == null) {
-        throw new MetaStoreException("Invalid null connection");
-      }
-    }
-
-    public QueryHelper(String query,
-        Connection conn) throws MetaStoreException {
-      this.query = query;
-      this.conn = conn;
-      connProvided = true;
-      if (conn == null) {
-        throw new MetaStoreException("Invalid null connection");
-      }
-    }
-
-    public ResultSet executeQuery() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        resultSet = statement.executeQuery(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-      return resultSet;
-    }
-
-    public int executeUpdate() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        return statement.executeUpdate(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-    }
-
-    public void execute() throws MetaStoreException {
-      try {
-        statement = conn.createStatement();
-        statement.execute(query);
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-    }
-
-    public void close() throws MetaStoreException {
-      if (closed) {
-        return;
-      }
-      closed = true;
-
-      try {
-        if (resultSet != null && !resultSet.isClosed()) {
-          resultSet.close();
-        }
-
-        if (statement != null && !statement.isClosed()) {
-          statement.close();
-        }
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-
-      if (conn != null && !connProvided) {
-        closeConnection(conn);
-      }
-    }
-  }
-
-  public Map<Long, Integer> getAccessCount(long startTime, long endTime,
-      String countFilter) throws MetaStoreException {
-    // TODO access file
-    Map<Long, Integer> ret = new HashMap<>();
-    String sqlGetTableNames = "SELECT table_name FROM access_count_tables "
-        + "WHERE start_time >= " + startTime + " AND end_time <= " + endTime;
-    Connection conn = getConnection();
-    QueryHelper qhTableName = null;
-    ResultSet rsTableNames = null;
-    QueryHelper qhValues = null;
-    ResultSet rsValues = null;
-    try {
-      qhTableName = new QueryHelper(sqlGetTableNames, conn);
-      rsTableNames = qhTableName.executeQuery();
-      List<String> tableNames = new LinkedList<>();
-      try {
-        while (rsTableNames.next()) {
-          tableNames.add(rsTableNames.getString(1));
-        }
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-      qhTableName.close();
-
-      if (tableNames.size() == 0) {
-        return ret;
-      }
-
-      String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
-      String sqlUnion = "SELECT fid, count FROM \'"
-          + tableNames.get(0) + "\'\n";
-      for (int i = 1; i < tableNames.size(); i++) {
-        sqlUnion += "UNION ALL\n" +
-            "SELECT fid, count FROM \'" + tableNames.get(i) + "\'\n";
-      }
-      String sqlSufix = ") GROUP BY fid ";
-      // TODO: safe check
-      String sqlCountFilter =
-          (countFilter == null || countFilter.length() == 0) ?
-              "" :
-              "HAVING SUM(count) " + countFilter;
-      String sqlFinal = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-
-      qhValues = new QueryHelper(sqlFinal, conn);
-      rsValues = qhValues.executeQuery();
-
-      try {
-        while (rsValues.next()) {
-          ret.put(rsValues.getLong(1), rsValues.getInt(2));
-        }
-      } catch (SQLException e) {
-        throw new MetaStoreException(e);
-      }
-
-      return ret;
-    } finally {
-      if (qhTableName != null) {
-        qhTableName.close();
-      }
-
-      if (qhValues != null) {
-        qhValues.close();
-      }
-
-      closeConnection(conn);
     }
   }
 
@@ -407,35 +262,12 @@ public class MetaStore {
       int topNum) throws MetaStoreException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
-      StringBuilder unioned = new StringBuilder();
-      while (tableIterator.hasNext()) {
-        AccessCountTable table = tableIterator.next();
-        if (tableIterator.hasNext()) {
-          unioned
-              .append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
-        } else {
-          unioned.append("SELECT * FROM " + table.getTableName());
+      try{
+        Map<Long, Integer> accessCounts = accessCountDao.getHotFiles(tables, topNum);
+        if (accessCounts.size() == 0) {
+          return new ArrayList<>();
         }
-      }
-      String statement =
-          String.format(
-              "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
-              AccessCountDao.FILE_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              unioned,
-              AccessCountDao.FILE_FIELD,
-              AccessCountDao.ACCESSCOUNT_FIELD,
-              topNum);
-      try {
-        ResultSet resultSet = this.executeQuery(statement);
-        Map<Long, Integer> accessCounts = new HashMap<>();
-        while (resultSet.next()) {
-          accessCounts.put(
-              resultSet.getLong(AccessCountDao.FILE_FIELD),
-              resultSet.getInt(AccessCountDao.ACCESSCOUNT_FIELD));
-        }
-        Map<Long, String> idToPath = this.getFilePaths(accessCounts.keySet());
+        Map<Long, String> idToPath = getFilePaths(accessCounts.keySet());
         List<FileAccessInfo> result = new ArrayList<>();
         for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
           Long fid = entry.getKey();
@@ -630,47 +462,27 @@ public class MetaStore {
     }
   }
 
-  public int executeUpdate(String sql) throws MetaStoreException {
-    QueryHelper queryHelper = new QueryHelper(sql);
-    try {
-      return queryHelper.executeUpdate();
-    } finally {
-      queryHelper.close();
-    }
-  }
-
   public void execute(String sql) throws MetaStoreException {
-    QueryHelper queryHelper = new QueryHelper(sql);
     try {
-      queryHelper.execute();
-    } finally {
-      queryHelper.close();
+      managementDao.execute(sql);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
   //Todo: optimize
   public void execute(List<String> statements) throws MetaStoreException {
     for (String statement : statements) {
-      this.execute(statement);
+      execute(statement);
     }
   }
 
   public List<String> executeFilesPathQuery(
       String sql) throws MetaStoreException {
-    List<String> paths = new LinkedList<>();
-    QueryHelper queryHelper = new QueryHelper(sql);
     try {
-      ResultSet res = queryHelper.executeQuery();
-      try {
-        while (res.next()) {
-          paths.add(res.getString(1));
-        }
-      } catch (Exception e) {
-        throw new MetaStoreException(e);
-      }
-      return paths;
-    } finally {
-      queryHelper.close();
+      return managementDao.getFilesPath(sql);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
@@ -927,19 +739,6 @@ public class MetaStore {
           .aggregateSQLStatement(destinationTable, tablesToAggregate);
     } catch (Exception e) {
       throw new MetaStoreException(e);
-    }
-  }
-
-  @VisibleForTesting
-  public ResultSet executeQuery(String sqlQuery) throws MetaStoreException {
-    Connection conn = getConnection();
-    try {
-      Statement s = conn.createStatement();
-      return s.executeQuery(sqlQuery);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    } finally {
-      closeConnection(conn);
     }
   }
 }

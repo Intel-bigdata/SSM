@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.alluxio.metric.fetcher.AlluxioNamespaceFetcher;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.StatesUpdaterService;
+import org.smartdata.metastore.StatesUpdateService;
 
 import alluxio.client.file.FileSystem;
 
@@ -32,16 +32,16 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * Polls metrics and events from Alluxio Server
  */
-public class AlluxioStatesUpdaterService extends StatesUpdaterService {
+public class AlluxioStatesUpdateService extends StatesUpdateService {
 
   private FileSystem alluxioFs;
   private ScheduledExecutorService executorService;
   private AlluxioNamespaceFetcher namespaceFetcher;
 
   public static final Logger LOG =
-      LoggerFactory.getLogger(AlluxioStatesUpdaterService.class);
+      LoggerFactory.getLogger(AlluxioStatesUpdateService.class);
 
-  public AlluxioStatesUpdaterService(SmartContext context, MetaStore metaStore) {
+  public AlluxioStatesUpdateService(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
   }
 

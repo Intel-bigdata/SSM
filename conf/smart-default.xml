@@ -24,7 +24,7 @@
 
 <configuration>
   <property>
-    <name>dfs.smart.enabled</name>
+    <name>smart.dfs.enabled</name>
     <value>true</value>
     <description>
       For SSM, all functions disabled except rpc and RESTApi service if false.
@@ -32,13 +32,13 @@
   </property>
 
   <property>
-    <name>dfs.smart.rpc-address</name>
+    <name>smart.server.rpc.address</name>
     <value>0.0.0.0:7042</value>
     <description>rpc server of SSM</description>
   </property>
 
   <property>
-    <name>dfs.smart.http-address</name>
+    <name>smart.server.http.address</name>
     <value>0.0.0.0:7045</value>
     <description>REST server of SSM</description>
   </property>
@@ -62,7 +62,7 @@
   </property>
 
   <property>
-    <name>dfs.smart.rule.executors</name>
+    <name>smart.rule.executors</name>
     <value>5</value>
     <description>Max number of rules that can be executed in parallel</description>
   </property>

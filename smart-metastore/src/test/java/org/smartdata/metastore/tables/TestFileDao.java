@@ -126,6 +126,7 @@ public class TestFileDao extends TestDaoUtil {
         fileStatusInternal2, fileStatusInternal3});
     List<HdfsFileStatus> files = fileDao.getAll();
     Assert.assertTrue(files.size() == 3);
+    Assert.assertTrue(fileDao.getCount() == 3);
     fileDao.deleteById(fileStatusInternal1.getFileId());
     files = fileDao.getAll();
     Assert.assertTrue(files.size() == 2);

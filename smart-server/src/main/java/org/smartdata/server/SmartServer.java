@@ -141,7 +141,7 @@ public class SmartServer {
           + "  -h\n\tShow this usage information.\n\n"
           + "  -D property=value\n"
           + "\tSpecify or overwrite an configure option.\n"
-          + "\tE.g. -D dfs.smart.namenode.rpcserver=hdfs://localhost:43543\n";
+          + "\tE.g. -D smart.dfs.namenode.rpcserver=hdfs://localhost:43543\n";
 
   private static final Options helpOptions = new Options();
   private static final Option helpOpt = new Option("h", "help", false,
@@ -172,19 +172,19 @@ public class SmartServer {
   }
 
   private boolean isSecurityEnabled() {
-    return conf.getBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, false);
+    return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
   }
 
   private void checkSecurityAndLogin() throws IOException {
     if (!isSecurityEnabled()) {
       return;
     }
-    String keytabFilename = conf.get(SmartConfKeys.DFS_SSM_KEYTAB_FILE_KEY);
+    String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
     if (keytabFilename == null || keytabFilename.length() == 0) {
       throw new IOException("Running in secure mode, but config doesn't have a keytab");
     }
     File keytabPath = new File(keytabFilename);
-    String principal = conf.get(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY);
+    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
     Subject subject = null;
     try {
       subject = JaasLoginUtil.loginUsingKeytab(principal, keytabPath);
@@ -201,8 +201,8 @@ public class SmartServer {
    * @throws Exception
    */
   private void run() throws Exception {
-    boolean enabled = conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLED_KEY,
-        SmartConfKeys.DFS_SSM_ENABLED_DEFAULT);
+    boolean enabled = conf.getBoolean(SmartConfKeys.SMART_DFS_ENABLED,
+        SmartConfKeys.SMART_DFS_ENABLED_DEFAULT);
 
     if (enabled) {
       startEngines();

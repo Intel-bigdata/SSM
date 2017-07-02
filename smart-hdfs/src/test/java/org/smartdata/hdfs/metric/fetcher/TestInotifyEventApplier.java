@@ -155,8 +155,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
 
     Event unlink = new Event.UnlinkEvent.Builder().path("/").timestamp(6).build();
     applier.apply(new Event[] {unlink});
-    ResultSet result6 = metaStore.executeQuery("SELECT * FROM files");
-    Assert.assertFalse(result6.next());
+    Assert.assertFalse(metaStore.getFile().size() > 0);
   }
 
   @After
