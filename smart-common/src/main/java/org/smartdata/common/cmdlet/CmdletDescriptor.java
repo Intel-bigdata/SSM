@@ -112,8 +112,6 @@ public class CmdletDescriptor {
     return actionNames.size();
   }
 
-  // TODO: descriptor --> String
-
   /**
    * Construct an CmdletDescriptor from cmdlet string.
    * @param cmdString

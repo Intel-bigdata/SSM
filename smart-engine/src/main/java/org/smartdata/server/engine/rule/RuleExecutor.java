@@ -296,7 +296,8 @@ public class RuleExecutor implements Runnable {
   }
 
   private int submitCmdlets(List<String> files, long ruleId) {
-    if (ruleManager.getCmdletManager() == null) {
+    if (files == null || files.size() == 0
+        || ruleManager.getCmdletManager() == null) {
       return 0;
     }
     int nSubmitted = 0;
