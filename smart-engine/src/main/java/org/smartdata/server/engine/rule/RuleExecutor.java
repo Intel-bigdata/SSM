@@ -24,7 +24,7 @@ import org.smartdata.common.models.RuleInfo;
 import org.smartdata.common.rule.RuleState;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.metastore.tables.AccessCountTable;
+import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.rule.parser.TimeBasedScheduleInfo;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.server.engine.RuleManager;
