@@ -18,7 +18,7 @@
 package org.smartdata.server.engine.data;
 
 import org.apache.hadoop.conf.Configuration;
-import org.smartdata.metastore.tables.AccessCountTableManager;
+import org.smartdata.metastore.dao.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
 
