@@ -30,7 +30,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class AccessEventFetcher {
-  private static final Long DEFAULT_INTERVAL = 5 * 1000L;
+  private static final Long DEFAULT_INTERVAL = 1 * 1000L;
   private final ScheduledExecutorService scheduledExecutorService;
   private final Long fetchInterval;
   private ScheduledFuture scheduledFuture;
