@@ -75,12 +75,11 @@ public class CmdletRestApi {
   }
 
   @POST
-  @Path("/submit/{actionType}")
-  public Response submitCmdlet(@PathParam("actionType") String actionType,
-      @FormParam("args") String args) {
+  @Path("/submit")
+  public Response submitCmdlet(String args) {
     try {
       return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletManager()
-          .submitCmdlet(actionType + " " + args)).build();
+          .submitCmdlet(args)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while adding cmdlet", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
