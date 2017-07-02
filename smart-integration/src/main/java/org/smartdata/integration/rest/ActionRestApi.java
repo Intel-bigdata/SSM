@@ -34,10 +34,7 @@ public class ActionRestApi extends RestApiBase {
    * @return
    */
   public static Long submitAction(String actionType, String args) {
-    Response action = RestAssured.post(CMDLETROOT +
-        "/submit/" + actionType + "?" + "args=" + args);
-    action.then().body("status", Matchers.equalTo("CREATED"));
-    return new JsonPath(action.asString()).getLong("body");
+    return CmdletRestApi.submitCmdlet(actionType + " " + args);
   }
 
   /**
