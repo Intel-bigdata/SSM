@@ -188,6 +188,13 @@ public class SmartZeppelinServer extends Application {
         SmartConfKeys.DFS_SSM_ENABLE_ZEPPELIN_WEB_DEFAULT);
   }
 
+  public static void main(String[] args) throws Exception {
+    SmartZeppelinServer server = new SmartZeppelinServer(new SmartConf(), null);
+
+    server.start();
+
+  }
+
   public void start() throws Exception {
     jettyWebServer = setupJettyServer(zconf);
 
@@ -212,6 +219,21 @@ public class SmartZeppelinServer extends Application {
       //System.exit(-1);
     }
     LOG.info("Done, zeppelin server started");
+
+    Runtime.getRuntime().addShutdownHook(new Thread(){
+      @Override public void run() {
+        LOG.info("Shutting down Zeppelin Server ... ");
+        try {
+          jettyWebServer.stop();
+          notebook.getInterpreterSettingManager().shutdown();
+          notebook.close();
+          Thread.sleep(3000);
+        } catch (Exception e) {
+          LOG.error("Error while stopping servlet container", e);
+        }
+        LOG.info("Bye");
+      }
+    });
   }
 
   public void stop() {
@@ -342,7 +364,8 @@ public class SmartZeppelinServer extends Application {
       return webApp;
     }
 
-    File warPath = new File(zconf.getString(ConfVars.ZEPPELIN_WAR));
+    File warPath = new File("../dist/zeppelin-web-0.7.2.war");
+        //File(zconf.getString(ConfVars.ZEPPELIN_WAR));
     if (warPath.isDirectory()) {
       // Development mode, read from FS
       // webApp.setDescriptor(warPath+"/WEB-INF/web.xml");

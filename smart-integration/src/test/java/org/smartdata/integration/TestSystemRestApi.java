@@ -34,4 +34,12 @@ public class TestSystemRestApi extends IntegrationTestBase {
     String json1 = response1.asString();
     response1.then().body("body", Matchers.equalTo("0.1.0"));
   }
+
+  // For testing SmartZeppelinServer
+  @Test
+  public void test() throws Exception {
+    while (true) {
+
+    }
+  }
 }
