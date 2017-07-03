@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.metastore.utils.TestDaoUtil;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.List;
 
@@ -65,6 +66,11 @@ public class TestCmdletDao extends TestDaoUtil {
     cmdletDao.update(cmdlet1);
     cmdlet1 = cmdletDao.getById(cmdlet1.getCid());
     Assert.assertTrue(cmdlet1.getState() == CmdletState.DONE);
+    try {
+      cmdletDao.getById(2000l);
+    } catch (EmptyResultDataAccessException e) {
+      Assert.assertTrue(true);
+    }
   }
 
   @Test

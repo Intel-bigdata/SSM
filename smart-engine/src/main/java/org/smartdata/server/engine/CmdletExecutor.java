@@ -178,16 +178,11 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     }
     List<CmdletInfo> ret = null;
     try {
-      ret = metaStore.getCmdletsTableItem(String.format("= %d", cid),
-          null, null);
+      return metaStore.getCmdletById(cid);
     } catch (MetaStoreException e) {
       LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
       throw new IOException(e);
     }
-    if (ret != null) {
-      return ret.get(0);
-    }
-    return null;
   }
 
   /**
@@ -313,7 +308,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     ActionInfo dbActionInfo = null;
     try {
       dbActionInfo = metaStore.getActionsTableItem(
-          String.format("== %d ", actionID), null).get(0);
+          String.format("= %d ", actionID), null).get(0);
     } catch (MetaStoreException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}",
           actionID, e);
