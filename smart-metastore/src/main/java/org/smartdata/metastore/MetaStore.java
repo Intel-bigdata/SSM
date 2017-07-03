@@ -18,45 +18,40 @@
 package org.smartdata.metastore;
 
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.CmdletState;
-import org.smartdata.common.models.ActionInfo;
-import org.smartdata.common.models.CmdletInfo;
-import org.smartdata.common.CachedFileStatus;
-import org.smartdata.common.models.FileAccessInfo;
-import org.smartdata.common.models.FileInfo;
-import org.smartdata.common.models.FileStatusInternal;
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.models.StorageCapacity;
-import org.smartdata.common.models.StoragePolicy;
-import org.smartdata.common.rule.RuleState;
-import org.smartdata.metastore.tables.AccessCountTable;
-import org.smartdata.metastore.tables.ActionDao;
-import org.smartdata.metastore.tables.CacheFileDao;
-import org.smartdata.metastore.tables.GroupsDao;
-import org.smartdata.metastore.tables.RuleDao;
-import org.smartdata.metastore.tables.StorageDao;
-import org.smartdata.metastore.tables.CmdletDao;
-import org.smartdata.metastore.tables.FileDao;
-import org.smartdata.metastore.tables.UserDao;
-import org.smartdata.metastore.tables.XattrDao;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.FileAccessInfo;
+import org.smartdata.model.FileInfo;
+import org.smartdata.model.FileStatusInternal;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.StorageCapacity;
+import org.smartdata.model.StoragePolicy;
+import org.smartdata.model.RuleState;
+import org.smartdata.metastore.dao.AccessCountTable;
+import org.smartdata.metastore.dao.ActionDao;
+import org.smartdata.metastore.dao.CacheFileDao;
+import org.smartdata.metastore.dao.GroupsDao;
+import org.smartdata.metastore.dao.RuleDao;
+import org.smartdata.metastore.dao.StorageDao;
+import org.smartdata.metastore.dao.CmdletDao;
+import org.smartdata.metastore.dao.FileDao;
+import org.smartdata.metastore.dao.UserDao;
+import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.tables.*;
+import org.smartdata.metastore.dao.*;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 

@@ -41,7 +41,8 @@ public class TestRuleRestApi extends IntegrationTestBase {
         .body("body.size", is(1)).root("body").body("ruleText", contains(rule))
         .body("numChecked", contains(0));
 
-    RestAssured.post(RULEROOT + "/" + ruleId + "/start");
+    RestAssured.post(RULEROOT + "/" + ruleId + "/start").then()
+        .body("status", equalTo("OK"));
     Thread.sleep(2000);
     RestAssured.get(RULEROOT + "/" + ruleId + "/info").then()
         .body("body.numChecked", Matchers.greaterThan(0));

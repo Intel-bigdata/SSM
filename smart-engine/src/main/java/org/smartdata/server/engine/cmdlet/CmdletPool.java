@@ -17,7 +17,7 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
-import org.smartdata.common.CmdletState;
+import org.smartdata.model.CmdletState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -23,9 +23,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
 import org.smartdata.actions.hdfs.move.MoverStatus;
-import org.smartdata.common.message.ActionFinished;
-import org.smartdata.common.message.StatusMessage;
-import org.smartdata.common.message.StatusReporter;
+import org.smartdata.protocol.message.ActionFinished;
+import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.protocol.message.StatusReporter;
 
 import java.util.HashMap;
 import java.util.Map;

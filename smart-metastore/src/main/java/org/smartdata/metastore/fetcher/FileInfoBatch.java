@@ -17,7 +17,7 @@
  */
 package org.smartdata.metastore.fetcher;
 
-import org.smartdata.common.models.FileInfo;
+import org.smartdata.model.FileInfo;
 
 public class FileInfoBatch {
   private FileInfo[] fileInfos;

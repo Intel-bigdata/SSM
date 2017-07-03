@@ -18,22 +18,22 @@
 package org.smartdata.integration;
 
 import io.restassured.RestAssured;
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.integration.util.RetryTask;
 import org.smartdata.integration.util.Util;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static io.restassured.path.json.JsonPath.with;
+import static org.smartdata.integration.rest.ActionRestApi.getActionIds;
+import static org.smartdata.integration.rest.ActionRestApi.getActionInfo;
+import static org.smartdata.integration.rest.ActionRestApi.submitAction;
+import static org.smartdata.integration.rest.CovUtil.getLong;
 
 /**
  * Test for ActionRestApi.
@@ -111,36 +111,13 @@ public class TestActionRestApi extends IntegrationTestBase {
     }
     return count;
   }
-
-  // submit an action using action type and arguments
-  private int submitAction(String actionType, String args) {
-    Response action = RestAssured.post(CMDLET_ROOT +
-        "/submit/" + actionType + "?" + "args=" + args);
-    action.then().body("status", Matchers.equalTo("CREATED"));
-    return new JsonPath(action.asString()).getInt("body");
-  }
-
-  // get aids of a cmdlet
-  private List<Integer> getActionIds(int cid) {
-    Response cmdletInfo = RestAssured.get(CMDLET_ROOT + "/" + cid + "/info");
-    JsonPath cmdletInfoPath = new JsonPath(cmdletInfo.asString());
-    return (List)cmdletInfoPath.getMap("body").get("aids");
-  }
-
-  // get action info
-  private Map getActionInfo(int aid) {
-    Response actionInfo = RestAssured.get(ACTION_ROOT + "/" + aid + "/info");
-    JsonPath actionInfoPath = new JsonPath(actionInfo.asString());
-    Map actionInfoMap = actionInfoPath.getMap("body");
-    return actionInfoMap;
-  }
-
+  
   // submit an action and wait until it is finished with some basic info check
   private Map testAction(String actionType, String args) throws Exception {
     // add a write action by submitting cmdlet
-    int cid = submitAction(actionType, args);
+    Long cid = submitAction(actionType, args);
 
-    int aid;
+    Long aid;
     Map actionInfoMap;
     // check action info until the action is finished
     while (true) {
@@ -152,8 +129,8 @@ public class TestActionRestApi extends IntegrationTestBase {
       // get actionInfo
       actionInfoMap = getActionInfo(aid);
       Assert.assertEquals(actionType, actionInfoMap.get("actionName"));
-      Assert.assertEquals(aid, actionInfoMap.get("actionId"));
-      Assert.assertEquals(cid, actionInfoMap.get("cmdletId"));
+      Assert.assertEquals(aid, getLong(actionInfoMap.get("actionId")));
+      Assert.assertEquals(cid, getLong(actionInfoMap.get("cmdletId")));
       Boolean finished = (Boolean)actionInfoMap.get("finished");
       if (finished) {
         Assert.assertEquals(true, actionInfoMap.get("successful"));
@@ -164,8 +141,9 @@ public class TestActionRestApi extends IntegrationTestBase {
 
     // check action list
     Response actionList = RestAssured.get(ACTION_ROOT + "/list/0");
-    actionList.then().body("status", Matchers.equalTo("OK"))
-        .root("body").body("actionId", Matchers.hasItems(aid));
+    actionList.then().body("status", Matchers.equalTo("OK"));
+    actionList.jsonPath().getList("body.actionId", Long.class).contains(aid);
+
     System.out.println("Action " + actionType + " is finished.");
     return actionInfoMap;
   }

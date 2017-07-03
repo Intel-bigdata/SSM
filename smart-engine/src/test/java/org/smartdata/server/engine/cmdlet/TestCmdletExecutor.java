@@ -21,12 +21,12 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.HelloAction;
 import org.smartdata.actions.SmartAction;
-import org.smartdata.common.CmdletState;
-import org.smartdata.common.message.ActionFinished;
-import org.smartdata.common.message.ActionStarted;
-import org.smartdata.common.message.CmdletStatusUpdate;
-import org.smartdata.common.message.StatusMessage;
-import org.smartdata.common.message.StatusReporter;
+import org.smartdata.model.CmdletState;
+import org.smartdata.protocol.message.ActionFinished;
+import org.smartdata.protocol.message.ActionStarted;
+import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConf;
 
 import java.util.ArrayList;

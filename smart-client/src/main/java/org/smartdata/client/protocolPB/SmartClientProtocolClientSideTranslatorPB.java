@@ -19,10 +19,10 @@ package org.smartdata.client.protocolPB;
 
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
-import org.smartdata.common.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
-import org.smartdata.common.protocol.SmartClientProtocol;
-import org.smartdata.common.protocolPB.PBHelper;
-import org.smartdata.common.protocolPB.SmartClientProtocolPB;
+import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.protocol.SmartClientProtocol;
+import org.smartdata.protocol.protocolPB.PBHelper;
+import org.smartdata.protocol.protocolPB.SmartClientProtocolPB;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
