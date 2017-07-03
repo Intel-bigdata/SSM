@@ -20,8 +20,6 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 /**
  * An action to do one-ssd for a file.
  */
@@ -29,8 +27,7 @@ public class OneSsdFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(OneSsdFileAction.class);
 
   @Override
-  public void init(Map<String, String> args) {
-    args.put(STORAGE_POLICY, "ONE_SSD");
-    super.init(args);
+  public String getStoragePolicy() {
+    return "ONE_SSD";
   }
 }

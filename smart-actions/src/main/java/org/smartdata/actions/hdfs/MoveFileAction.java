@@ -51,7 +51,8 @@ public class MoveFileAction extends HdfsAction {
   public void init(Map<String, String> args) {
     super.init(args);
     this.fileName = args.get(FILE_PATH);
-    this.storagePolicy = args.get(STORAGE_POLICY);
+    this.storagePolicy = getStoragePolicy() != null ?
+        getStoragePolicy() : args.get(STORAGE_POLICY);
   }
 
   @Override
@@ -70,5 +71,9 @@ public class MoveFileAction extends HdfsAction {
   @Override
   public float getProgress() {
     return this.status.getPercentage();
+  }
+
+  public String getStoragePolicy() {
+    return storagePolicy;
   }
 }
