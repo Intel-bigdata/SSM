@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol.protocolPB;
+package org.smartdata.protocol.protobuffer;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
@@ -23,9 +23,9 @@ import org.apache.hadoop.ipc.ProtocolInfo;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 
-@ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.SmartClientProtocolPB",
+@ProtocolInfo(protocolName = "org.smartdata.protocol.protocolbuffer.ClientProtocolProtoBuffer",
     protocolVersion = 1)
-public interface SmartClientProtocolPB {
+public interface ClientProtocolProtoBuffer {
   ReportFileAccessEventResponseProto
   reportFileAccessEvent(RpcController controller,
       ReportFileAccessEventRequestProto req) throws ServiceException;

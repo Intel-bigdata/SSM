@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol.protocolPB;
+package org.smartdata.protocol.protobuffer;
 
-public interface SmartServerProtocolPBs extends SmartClientProtocolPB,
-    SmartAdminProtocolPB {
+public interface ServerProtocolsProtoBuffer extends ClientProtocolProtoBuffer,
+    AdminProtocolProtoBuffer {
 }
