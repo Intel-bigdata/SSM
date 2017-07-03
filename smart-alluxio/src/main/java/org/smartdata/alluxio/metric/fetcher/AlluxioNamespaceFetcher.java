@@ -19,7 +19,7 @@ package org.smartdata.alluxio.metric.fetcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.models.FileInfo;
+import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.fetcher.FetchTask;
 import org.smartdata.metastore.fetcher.FileInfoBatch;
@@ -31,10 +31,7 @@ import alluxio.client.file.URIStatus;
 import alluxio.exception.AlluxioException;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayDeque;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;

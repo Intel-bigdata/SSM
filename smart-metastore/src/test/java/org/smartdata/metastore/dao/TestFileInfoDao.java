@@ -21,7 +21,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.common.models.FileInfo;
+import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.util.HashMap;

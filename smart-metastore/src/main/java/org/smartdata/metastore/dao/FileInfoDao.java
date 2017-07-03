@@ -17,7 +17,7 @@
  */
 package org.smartdata.metastore.dao;
 
-import org.smartdata.common.models.FileInfo;
+import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

@@ -19,8 +19,8 @@ package org.smartdata.metastore.dao;
 
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.common.models.FileInfo;
-import org.smartdata.common.models.FileStatusInternal;
+import org.smartdata.model.FileInfo;
+import org.smartdata.model.FileStatusInternal;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

@@ -28,7 +28,7 @@ import org.junit.Before;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.common.SmartServiceState;
+import org.smartdata.SmartServiceState;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.utils.TestDBUtil;
 

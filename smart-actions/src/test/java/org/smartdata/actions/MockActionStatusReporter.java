@@ -18,9 +18,9 @@
 package org.smartdata.actions;
 
 import org.junit.Assert;
-import org.smartdata.common.message.ActionFinished;
-import org.smartdata.common.message.StatusMessage;
-import org.smartdata.common.message.StatusReporter;
+import org.smartdata.protocol.message.ActionFinished;
+import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.protocol.message.StatusReporter;
 
 public class MockActionStatusReporter implements StatusReporter {
   @Override

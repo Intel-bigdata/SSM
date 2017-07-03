@@ -17,8 +17,8 @@
  */
 package org.smartdata.metastore.dao;
 
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.rule.RuleState;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;

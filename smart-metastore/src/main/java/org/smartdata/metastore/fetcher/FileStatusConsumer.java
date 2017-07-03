@@ -19,7 +19,7 @@ package org.smartdata.metastore.fetcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.models.FileInfo;
+import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 

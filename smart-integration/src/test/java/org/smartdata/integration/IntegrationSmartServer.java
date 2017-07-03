@@ -18,7 +18,7 @@
 package org.smartdata.integration;
 
 import org.smartdata.admin.SmartAdmin;
-import org.smartdata.common.SmartServiceState;
+import org.smartdata.SmartServiceState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.utils.MetaStoreUtils;

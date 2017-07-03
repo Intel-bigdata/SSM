@@ -28,9 +28,8 @@ import org.junit.Test;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.HdfsAction;
-import org.smartdata.common.CmdletState;
+import org.smartdata.model.CmdletState;
 import org.smartdata.conf.SmartConf;
-
 
 import java.io.IOException;
 import java.util.HashMap;
