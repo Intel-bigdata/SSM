@@ -25,7 +25,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.integration.util.Util;
 
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,17 +33,16 @@ import static org.smartdata.integration.rest.ActionRestApi.getActionIds;
 import static org.smartdata.integration.rest.ActionRestApi.getActionInfo;
 import static org.smartdata.integration.rest.ActionRestApi.submitAction;
 import static org.smartdata.integration.rest.CovUtil.getLong;
+import static org.smartdata.integration.rest.RestApiBase.ACTIONROOT;
 
 /**
  * Test for ActionRestApi.
  */
 public class TestActionRestApi extends IntegrationTestBase {
-  private static final String ACTION_ROOT = "/smart/api/v1/actions";
-  private static final String CMDLET_ROOT = "/smart/api/v1/cmdlets";
 
-  @Test
+  @Test (timeout = 10000)
   public void testActionTypes() {
-    Response response = RestAssured.get(ACTION_ROOT + "/registry/list");
+    Response response = RestAssured.get(ACTIONROOT + "/registry/list");
     ValidatableResponse validatableResponse = response.then().root("body");
     validatableResponse.body("find { it.actionName == 'fsck' }.displayName",
         Matchers.equalTo("fsck"));
@@ -54,7 +52,7 @@ public class TestActionRestApi extends IntegrationTestBase {
         "archive", "list", "clusterbalance", "onessd", "hello"));
   }
 
-  @Test
+  @Test (timeout = 200000)
   public void testActionsInSequence() throws Exception {
     // write and read
     testAction("write", "-file /hello -length 10");
@@ -140,7 +138,7 @@ public class TestActionRestApi extends IntegrationTestBase {
     }
 
     // check action list
-    Response actionList = RestAssured.get(ACTION_ROOT + "/list/0");
+    Response actionList = RestAssured.get(ACTIONROOT + "/list/0");
     actionList.then().body("status", Matchers.equalTo("OK"));
     actionList.jsonPath().getList("body.actionId", Long.class).contains(aid);
 
