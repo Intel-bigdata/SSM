@@ -49,5 +49,5 @@ public class SmartConfKeys {
   public final static int SMART_CMDLET_EXECUTORS_DEFAULT = 10;
 
   public final static String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
-  public final static boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = true;
+  public final static boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = false;
 }

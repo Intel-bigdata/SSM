@@ -21,17 +21,34 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.smartdata.integration.rest.RestApiBase;
+import org.smartdata.integration.util.Util;
+
+import java.io.IOException;
 
 /**
  * Test for SystemRestApi.
  */
 public class TestSystemRestApi extends IntegrationTestBase {
-  private static final String ROOT = "/smart/api/v1/system";
 
   @Test
   public void testVersion() throws Exception {
-    Response response1 = RestAssured.get(ROOT + "/version");
+    Response response1 = RestAssured.get(RestApiBase.SYSTEMROOT + "/version");
     String json1 = response1.asString();
     response1.then().body("body", Matchers.equalTo("0.1.0"));
+  }
+
+  @Test
+  public void testServers() throws IOException, InterruptedException {
+    Response response = RestAssured.get(RestApiBase.SYSTEMROOT+ "/servers");
+    response.then().body("body", Matchers.empty());
+    Process worker = Util.startNewServer();
+    Process agent = Util.startNewAgent();
+
+    Util.waitSlaveServerAvailable();
+    Util.waitAgentAvailable();
+
+    agent.destroy();
+    worker.destroy();
   }
 }

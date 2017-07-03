@@ -17,10 +17,10 @@
  */
 package org.smartdata.server.rest;
 
-import org.apache.zeppelin.server.JsonResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.server.SmartEngine;
+import org.smartdata.server.rest.message.JsonResponse;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -49,13 +49,15 @@ public class SystemRestApi {
 
   @GET
   @Path("/servers")
-  public void servers() {
+  public Response servers() {
     // return list of SmartServers and their states
+    return new JsonResponse<>(Response.Status.OK, smartEngine.getStandbyServers()).build();
   }
 
   @GET
   @Path("/agents")
-  public void agents() {
+  public Response agents() {
     // return list of agents and their states
+    return new JsonResponse<>(Response.Status.OK, smartEngine.getAgents()).build();
   }
 }
