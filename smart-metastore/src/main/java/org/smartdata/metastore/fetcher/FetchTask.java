@@ -19,7 +19,7 @@ package org.smartdata.metastore.fetcher;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.LinkedBlockingDeque;
-import org.smartdata.common.models.FileInfo;
+import org.smartdata.model.FileInfo;
 
 public abstract class FetchTask implements Runnable{
   public static long numFilesFetched = 0L;

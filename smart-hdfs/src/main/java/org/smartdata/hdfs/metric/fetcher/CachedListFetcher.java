@@ -24,12 +24,11 @@ import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.CachedFileStatus;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.CachedFileStatus;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

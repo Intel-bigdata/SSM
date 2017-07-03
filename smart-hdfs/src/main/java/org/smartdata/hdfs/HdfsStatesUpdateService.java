@@ -21,7 +21,7 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.common.utils.HadoopUtils;
+import org.smartdata.utils.HadoopUtils;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;

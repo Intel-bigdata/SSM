@@ -31,7 +31,7 @@ import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.common.message.StatusMessage;
+import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import org.smartdata.server.utils.HazelcastUtil;
 

@@ -24,7 +24,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.common.SmartServiceState;
+import org.smartdata.SmartServiceState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.utils.MetaStoreUtils;

@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.smartdata.common.models.FileInfo;
+import org.smartdata.model.FileInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;

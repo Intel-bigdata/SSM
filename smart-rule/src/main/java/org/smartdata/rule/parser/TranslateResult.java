@@ -17,7 +17,7 @@
  */
 package org.smartdata.rule.parser;
 
-import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.model.CmdletDescriptor;
 
 import java.util.List;
 import java.util.Map;

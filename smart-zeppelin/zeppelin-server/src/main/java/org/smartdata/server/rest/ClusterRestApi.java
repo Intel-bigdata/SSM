@@ -21,7 +21,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.tables.AccessCountTable;
+import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.metastore.utils.Constants;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
