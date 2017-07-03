@@ -15,12 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol.protocolPB;
+package org.smartdata.protocol.protobuffer;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
-import org.smartdata.protocol.AdminServerProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleResponseProto;
 import org.smartdata.protocol.AdminServerProto.GetRuleInfoRequestProto;
@@ -56,9 +55,9 @@ import org.smartdata.protocol.AdminServerProto.SubmitCmdletRequestProto;
 import org.smartdata.protocol.AdminServerProto.ListActionsSupportedResponseProto;
 import org.smartdata.protocol.AdminServerProto.ListActionsSupportedRequestProto;
 
-@ProtocolInfo(protocolName = "org.apache.hadoop.ssm.protocolPB.SmartAdminProtocolPB",
+@ProtocolInfo(protocolName = "org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer",
     protocolVersion = 1)
-public interface SmartAdminProtocolPB {
+public interface AdminProtocolProtoBuffer {
 
   GetServiceStateResponseProto
   getServiceState(RpcController controller,

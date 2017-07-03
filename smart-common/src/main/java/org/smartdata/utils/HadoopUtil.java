@@ -28,7 +28,7 @@ import java.net.URISyntaxException;
 /**
  * Contain utils related to hadoop cluster.
  */
-public class HadoopUtils {
+public class HadoopUtil {
 
   public static URI getNameNodeUri(Configuration conf)
       throws IOException {

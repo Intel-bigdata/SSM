@@ -15,24 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.client.protocolPB;
+package org.smartdata.protocol.protobuffer;
 
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.SmartClientProtocol;
-import org.smartdata.protocol.protocolPB.PBHelper;
-import org.smartdata.protocol.protocolPB.SmartClientProtocolPB;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 
-public class SmartClientProtocolClientSideTranslatorPB implements
+public class ClientProtocolClientSideTranslator implements
     java.io.Closeable, SmartClientProtocol {
-  private SmartClientProtocolPB rpcProxy;
+  private ClientProtocolProtoBuffer rpcProxy;
 
-  public SmartClientProtocolClientSideTranslatorPB(
-      SmartClientProtocolPB proxy) {
+  public ClientProtocolClientSideTranslator(
+      ClientProtocolProtoBuffer proxy) {
     rpcProxy = proxy;
   }
 
@@ -53,7 +51,7 @@ public class SmartClientProtocolClientSideTranslatorPB implements
     try {
       rpcProxy.reportFileAccessEvent(null, req);
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 }

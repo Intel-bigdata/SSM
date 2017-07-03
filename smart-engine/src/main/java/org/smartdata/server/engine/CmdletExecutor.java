@@ -32,7 +32,7 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.ActionInfoComparator;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
-import org.smartdata.utils.HadoopUtils;
+import org.smartdata.utils.HadoopUtil;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -448,7 +448,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     smartAction.setArguments(actionInfo.getArgs());
     if (smartAction instanceof HdfsAction) {
       ((HdfsAction) smartAction).setDfsClient(
-          new SmartDFSClient(HadoopUtils.getNameNodeUri(serverContext.getConf()),
+          new SmartDFSClient(HadoopUtil.getNameNodeUri(serverContext.getConf()),
               serverContext.getConf(), getRpcServerAddress()));
     }
     //smartAction.getActionStatus().setId(actionInfo.getActionId());
@@ -463,7 +463,7 @@ public class CmdletExecutor extends AbstractService implements Runnable {
     smartAction.setContext(serverContext);
     if (smartAction instanceof HdfsAction) {
       ((HdfsAction) smartAction).setDfsClient(
-          new SmartDFSClient(HadoopUtils.getNameNodeUri(serverContext.getConf()),
+          new SmartDFSClient(HadoopUtil.getNameNodeUri(serverContext.getConf()),
               serverContext.getConf(), getRpcServerAddress()));
     }
     //smartAction.getActionStatus().setId(maxActionId);

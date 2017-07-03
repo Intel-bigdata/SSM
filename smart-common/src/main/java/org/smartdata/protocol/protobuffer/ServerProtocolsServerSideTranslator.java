@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol.protocolPB;
+package org.smartdata.protocol.protobuffer;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
@@ -66,21 +66,21 @@ import org.smartdata.protocol.ClientServerProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.SmartServiceState;
-import org.smartdata.protocol.SmartServerProtocols;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.CmdletInfo;
+import org.smartdata.protocol.SmartServerProtocols;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientSmartProtocolServerSideTranslatorPB implements
-    org.smartdata.protocol.protocolPB.SmartServerProtocolPBs,
+public class ServerProtocolsServerSideTranslator implements
+    ServerProtocolsProtoBuffer,
     AdminServerProto.protoService.BlockingInterface,
     ClientServerProto.protoService.BlockingInterface {
   final private SmartServerProtocols server;
 
-  public ClientSmartProtocolServerSideTranslatorPB(SmartServerProtocols server) {
+  public ServerProtocolsServerSideTranslator(SmartServerProtocols server) {
     this.server = server;
   }
 
@@ -102,7 +102,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
       SubmitRuleRequestProto req) throws ServiceException {
     try {
       long ruleId = server.submitRule(req.getRule(),
-          PBHelper.convert(req.getInitState()));
+          ProtoBufferHelper.convert(req.getInitState()));
       return SubmitRuleResponseProto.newBuilder().setRuleId(ruleId).build();
     } catch (IOException e) {
       throw new ServiceException(e);
@@ -126,7 +126,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
     try {
       RuleInfo info = server.getRuleInfo(req.getRuleId());
       return GetRuleInfoResponseProto.newBuilder()
-          .setResult(PBHelper.convert(info)).build();
+          .setResult(ProtoBufferHelper.convert(info)).build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
@@ -139,7 +139,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
       List<RuleInfo> infos = server.listRulesInfo();
       List<RuleInfoProto> infoProtos = new ArrayList<>();
       for (RuleInfo info : infos) {
-        infoProtos.add(PBHelper.convert(info));
+        infoProtos.add(ProtoBufferHelper.convert(info));
       }
       return ListRulesInfoResponseProto.newBuilder()
           .addAllRulesInfo(infoProtos).build();
@@ -189,7 +189,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
       CmdletInfo cmdletInfo = server.getCmdletInfo(req.getCmdletID());
       return GetCmdletInfoResponseProto
           .newBuilder()
-          .setCmdletInfo(PBHelper.convert(cmdletInfo))
+          .setCmdletInfo(ProtoBufferHelper.convert(cmdletInfo))
           .build();
     } catch (IOException e) {
       throw new ServiceException(e);
@@ -207,7 +207,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
         return ListCmdletInfoResponseProto.newBuilder().build();
       List<CmdletInfoProto> protoList = new ArrayList<>();
       for (CmdletInfo info : list) {
-        protoList.add(PBHelper.convert(info));
+        protoList.add(ProtoBufferHelper.convert(info));
       }
       return ListCmdletInfoResponseProto.newBuilder()
           .addAllCmdletInfos(protoList).build();
@@ -259,7 +259,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
     try {
       ActionInfo aI = server.getActionInfo(request.getActionID());
       return GetActionInfoResponseProto.newBuilder()
-          .setActionInfo(PBHelper.convert(aI)).build();
+          .setActionInfo(ProtoBufferHelper.convert(aI)).build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
@@ -277,7 +277,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
       }
       List<ActionInfoProto> protoList = new ArrayList<>();
       for (ActionInfo a:list){
-        protoList.add(PBHelper.convert(a));
+        protoList.add(ProtoBufferHelper.convert(a));
       }
       return ListActionInfoOfLastActionsResponseProto.newBuilder()
           .addAllActionInfoList(protoList).build();
@@ -306,7 +306,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
       List<ActionDescriptor> adList = server.listActionsSupported();
       List<ActionDescriptorProto> prolist = new ArrayList<>();
       for (ActionDescriptor a : adList) {
-        prolist.add(PBHelper.convert(a));
+        prolist.add(ProtoBufferHelper.convert(a));
       }
       return ListActionsSupportedResponseProto.newBuilder()
           .addAllActDesList(prolist)
@@ -321,7 +321,7 @@ public class ClientSmartProtocolServerSideTranslatorPB implements
       RpcController controller, ReportFileAccessEventRequestProto req)
       throws ServiceException {
     try {
-      server.reportFileAccessEvent(PBHelper.convert(req));
+      server.reportFileAccessEvent(ProtoBufferHelper.convert(req));
       return ReportFileAccessEventResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);

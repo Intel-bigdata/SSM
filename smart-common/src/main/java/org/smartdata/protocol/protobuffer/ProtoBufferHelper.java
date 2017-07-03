@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol.protocolPB;
+package org.smartdata.protocol.protobuffer;
 
 
 import com.google.protobuf.ServiceException;
@@ -38,8 +38,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 
-public class PBHelper {
-  private PBHelper() {
+public class ProtoBufferHelper {
+  private ProtoBufferHelper() {
   }
 
   public static IOException getRemoteException(ServiceException se) {
