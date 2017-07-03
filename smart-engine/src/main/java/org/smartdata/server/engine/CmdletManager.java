@@ -23,20 +23,21 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionRegistry;
+import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.MoveFileAction;
-import org.smartdata.model.CmdletState;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.ActionInfo;
 import org.smartdata.model.ActionInfoComparator;
 import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.model.ActionInfo;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
@@ -477,17 +478,19 @@ public class CmdletManager extends AbstractService {
 
   //Todo: remove this implementation
   private void updateStorageIfNeeded(ActionInfo info) throws ActionException {
-    if (ActionRegistry.createAction(info.getActionName()) instanceof MoveFileAction) {
+    SmartAction action = ActionRegistry.createAction(info.getActionName());
+    if (action instanceof MoveFileAction) {
+      String policy = ((MoveFileAction) action).getStoragePolicy();
       Map<String, String> args = info.getArgs();
-      if (args.containsKey(MoveFileAction.STORAGE_POLICY)) {
-        String policy = args.get(MoveFileAction.STORAGE_POLICY);
-        String path = args.get(MoveFileAction.FILE_PATH);
-        try {
-          metaStore.updateFileStoragePolicy(path, policy);
-        } catch (MetaStoreException e) {
-          e.printStackTrace();
-          LOG.error(String.format("Failed to update storage policy %s for file %s", policy, path));
-        }
+      if (policy == null) {
+        policy = args.get(MoveFileAction.STORAGE_POLICY);
+      }
+      String path = args.get(MoveFileAction.FILE_PATH);
+      try {
+        metaStore.updateFileStoragePolicy(path, policy);
+      } catch (MetaStoreException e) {
+        e.printStackTrace();
+        LOG.error(String.format("Failed to update storage policy %s for file %s", policy, path));
       }
     }
   }
