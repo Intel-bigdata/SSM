@@ -17,21 +17,19 @@
  */
 package org.smartdata.integration;
 
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 /**
- * Test for SystemRestApi.
+ * Test for SmartZeppelinServer.
  */
-public class TestSystemRestApi extends IntegrationTestBase {
-  private static final String ROOT = "/smart/api/v1/system";
+public class TestZeppelinServer extends IntegrationTestBase {
 
   @Test
-  public void testVersion() throws Exception {
-    Response response1 = RestAssured.get(ROOT + "/version");
-    String json1 = response1.asString();
-    response1.then().body("body", Matchers.equalTo("0.1.0"));
+  public void test() throws Exception {
+    /*
+    while (true) {
+
+    }
+    */
   }
 }
