@@ -34,6 +34,13 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         parseIntFromQueryPathTail: function (path) {
           return Number(_.last(path.split('.')).replace(/[^0-9]/g, ''));
+        },
+        joinArguments: function (args) {
+          var result = '';
+          Object.keys(args).forEach(function(key) {
+            result = result + ' ' + key + ' ' + args[key];
+          });
+          return result;
         }
       };
 
@@ -143,7 +150,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
             uptime: obj.finishTime - obj.createTime,
             status: obj.finished ? 'Finished' : 'Running',
             pageUrl: locator.action(obj.actionId),
-            argument: obj.args.join(' ')
+            argument: util.joinArguments(obj.args)
           });
         }
       };
