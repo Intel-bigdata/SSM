@@ -274,6 +274,12 @@ public class MetaStore {
         return result;
       } catch (Exception e) {
         throw new MetaStoreException(e);
+      } finally {
+        for (AccessCountTable accessCountTable : tables) {
+          if (accessCountTable.isView()) {
+            this.dropView(accessCountTable.getTableName());
+          }
+        }
       }
     } else {
       return new ArrayList<>();
@@ -452,6 +458,14 @@ public class MetaStore {
   public void dropTable(String tableName) throws MetaStoreException {
     try {
       execute("DROP TABLE " + tableName);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void dropView(String tableName) throws MetaStoreException {
+    try {
+      execute("DROP VIEW IF EXISTS " + tableName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
