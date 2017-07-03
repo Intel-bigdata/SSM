@@ -17,19 +17,17 @@
  */
 package org.smartdata.integration;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.integration.rest.RuleRestApi;
 
 import static org.smartdata.integration.rest.ClusterRestApi.getCachedFilePaths;
 import static org.smartdata.integration.rest.CmdletRestApi.submitCmdlet;
 import static org.smartdata.integration.rest.CmdletRestApi.waitCmdletComplete;
-import static org.smartdata.integration.rest.RuleRestApi.getRuleInfo;
 import static org.smartdata.integration.rest.RuleRestApi.startRule;
 
 public class TestCaseCacheFile extends IntegrationTestBase {
 
-  @Test(timeout = 30000)
+  @Test(timeout = 40000)
   public void test() throws Exception {
     String rule = "file : every 1s | accessCount(1min) > 1 | cache";
     long ruleId = RuleRestApi.submitRule(rule);
@@ -40,10 +38,6 @@ public class TestCaseCacheFile extends IntegrationTestBase {
 
     waitCmdletComplete(submitCmdlet("read -file " + file));
     waitCmdletComplete(submitCmdlet("read -file " + file));
-
-    Thread.sleep(10000);
-
-    Assert.assertTrue(getRuleInfo(ruleId).getLong("numCmdsGen") > 0);
 
     while (true) {
       if (getCachedFilePaths().contains(file)) {
