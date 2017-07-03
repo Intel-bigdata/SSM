@@ -28,7 +28,7 @@ public class RuleRestApi extends RestApiBase {
 
   public static long submitRule(String ruleText) {
     Response res = RestAssured.with()
-        .body("ruleText=" + ruleText).post(RULEROOT + "/add/");
+        .body("ruleText=" + ruleText).post(RULEROOT + "/add");
     res.then().body("status", equalTo("CREATED"));
     return res.jsonPath().getLong("body");
   }
