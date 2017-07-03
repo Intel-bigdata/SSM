@@ -45,6 +45,7 @@ import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.dao.*;
 import org.smartdata.metrics.FileAccessEvent;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -547,6 +548,17 @@ public class MetaStore {
     }
   }
 
+  public CmdletInfo getCmdletById(long cid) throws MetaStoreException {
+    LOG.debug("Get cmdlet by cid {}", cid);
+    try {
+      return cmdletDao.getById(cid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<CmdletInfo> getCmdletsTableItem(String cidCondition,
       String ridCondition, CmdletState state) throws MetaStoreException {
     try {
@@ -639,6 +651,18 @@ public class MetaStore {
       throw new MetaStoreException(e);
     }
   }
+
+  public ActionInfo getActionById(long aid) throws MetaStoreException {
+    LOG.debug("Get actioninfo by aid {}", aid);
+    try {
+      return actionDao.getById(aid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
 
   public long getMaxActionId() throws MetaStoreException {
     try {
