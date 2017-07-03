@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
