@@ -52,9 +52,8 @@ SMART_LOGFILE="${SMART_LOG_DIR}/smart-${SMART_IDENT_STRING}-${HOSTNAME}.log"
 ZEPPELIN_LOGFILE="${SMART_LOG_DIR}/zeppelin-${SMART_IDENT_STRING}-${HOSTNAME}.log"
 LOG="${SMART_LOG_DIR}/smart-cli-${SMART_IDENT_STRING}-${HOSTNAME}.out"
 
-SMART_SERVER=org.smartdata.server.SmartServer
+SMART_SERVER=org.smartdata.server.SmartDaemon
 JAVA_OPTS+=" -Dzeppelin.log.file=${ZEPPELIN_LOGFILE}"
-
 
 addJarInDir "${SMART_HOME}/smart-server/target/lib"
 addNonTestJarInDir "${SMART_HOME}/smart-server/target"
