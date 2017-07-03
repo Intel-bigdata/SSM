@@ -90,18 +90,6 @@ public class ClusterRestApi {
     }
   }
 
-  @GET
-  @Path("/servers")
-  public Response servers() {
-    return new JsonResponse<>(Response.Status.OK, smartEngine.getStandbyServers()).build();
-  }
-
-  @GET
-  @Path("/agents")
-  public Response agents() {
-    return new JsonResponse<>(Response.Status.OK, smartEngine.getAgents()).build();
-  }
-
 //  @GET
 //  @Path("/alluxio/{clusterName}")
 //  public void alluxio() {

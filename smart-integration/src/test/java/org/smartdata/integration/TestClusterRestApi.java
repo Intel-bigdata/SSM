@@ -19,20 +19,9 @@ package org.smartdata.integration;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.integration.util.RetryTask;
-import org.smartdata.integration.util.Util;
-import org.smartdata.server.SmartDaemon;
-import org.smartdata.server.engine.StandbyServerInfo;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
-import static io.restassured.path.json.JsonPath.with;
+import org.smartdata.integration.rest.RestApiBase;
 
 /**
  * Test for ClusterRestApi.
@@ -40,23 +29,9 @@ import static io.restassured.path.json.JsonPath.with;
 public class TestClusterRestApi extends IntegrationTestBase {
   @Test
   public void testPrimary() {
-    Response response = RestAssured.get("/smart/api/v1/cluster/primary");
+    Response response = RestAssured.get(RestApiBase.PRIMCLUSTERROOT);
     String json = response.asString();
     response.then().body("message", Matchers.equalTo("Namenode URL"));
     response.then().body("body", Matchers.containsString("localhost"));
-  }
-
-  @Test
-  public void testServers() throws IOException, InterruptedException {
-    Response response = RestAssured.get("/smart/api/v1/cluster/servers");
-    response.then().body("body", Matchers.empty());
-    Process worker = Util.startNewServer();
-    Process agent = Util.startNewAgent();
-
-    Util.waitSlaveServerAvailable();
-    Util.waitAgentAvailable();
-
-    agent.destroy();
-    worker.destroy();
   }
 }
