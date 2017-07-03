@@ -90,7 +90,7 @@ import java.util.Set;
  */
 public class SmartZeppelinServer extends Application {
   private static final Logger LOG = LoggerFactory.getLogger(SmartZeppelinServer.class);
-  private static final String SMART_PATH_SPEC = "/smart/api/v1/*";
+  private static final String SMART_PATH_SPEC = "smart/api/v1/*";
 
   private SmartEngine engine;
   private SmartConf conf;
@@ -348,7 +348,7 @@ public class SmartZeppelinServer extends Application {
       webApp.setInitParameter("shiroConfigLocations",
           new File(shiroIniPath).toURI().toString());
       SecurityUtils.initSecurityManager(shiroIniPath);
-      webApp.addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class));
+      webApp.addFilter(ShiroFilter.class, SMART_PATH_SPEC, EnumSet.allOf(DispatcherType.class));
       webApp.addEventListener(new EnvironmentLoaderListener());
     }
   }
