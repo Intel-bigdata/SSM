@@ -60,6 +60,7 @@ public class ActionRestApi extends RestApiBase {
    */
   public static Map getActionInfo(long aid) {
     Response actionInfo = RestAssured.get(ACTIONROOT + "/" + aid + "/info");
+    actionInfo.then().body("status", Matchers.equalTo("OK"));
     JsonPath actionInfoPath = new JsonPath(actionInfo.asString());
     Map actionInfoMap = actionInfoPath.getMap("body");
     return actionInfoMap;
@@ -71,6 +72,7 @@ public class ActionRestApi extends RestApiBase {
    */
   public static List<String> getActionsSupported() {
     Response response = RestAssured.get(ACTIONROOT + "/registry/list");
+    response.then().body("status", Matchers.equalTo("OK"));
     return response.jsonPath().getList("body");
   }
 }

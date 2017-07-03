@@ -21,6 +21,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.agent.SmartAgent;
+import org.smartdata.integration.rest.RestApiBase;
 import org.smartdata.server.SmartDaemon;
 import scala.reflect.io.File;
 
@@ -37,7 +38,7 @@ public class Util {
     Util.retryUntil(new RetryTask() {
       @Override
       public boolean retry() {
-        Response response = RestAssured.get("/smart/api/v1/cluster/servers");
+        Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/servers");
         List<String> ids = with(response.asString()).get("body.id");
         return ids.size() > 0;
       }
@@ -48,7 +49,7 @@ public class Util {
     Util.retryUntil(new RetryTask() {
       @Override
       public boolean retry() {
-        Response response = RestAssured.get("/smart/api/v1/cluster/agents");
+        Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/agents");
         List<String> ids = with(response.asString()).get("body.id");
         return ids.size() > 0;
       }

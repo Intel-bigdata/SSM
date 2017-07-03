@@ -28,8 +28,6 @@ import org.smartdata.integration.cluster.SmartCluster;
  * Integration test base.
  */
 public class IntegrationTestBase {
-  public static final String ROOT = "/smart/api/v1";
-  public static final String RULEROOT = ROOT + "/rules";
 
   private static SmartCluster cluster;
   private static SmartConf conf;
