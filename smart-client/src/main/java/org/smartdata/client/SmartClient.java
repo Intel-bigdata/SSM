@@ -22,8 +22,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.client.protocolPB.SmartClientProtocolClientSideTranslatorPB;
-import org.smartdata.common.protocol.SmartClientProtocol;
-import org.smartdata.common.protocolPB.SmartClientProtocolPB;
+import org.smartdata.protocol.SmartClientProtocol;
+import org.smartdata.protocol.protocolPB.SmartClientProtocolPB;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 

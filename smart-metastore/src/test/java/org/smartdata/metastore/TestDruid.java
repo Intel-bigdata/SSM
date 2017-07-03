@@ -19,8 +19,8 @@ package org.smartdata.metastore;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.rule.RuleState;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.utils.TestDBUtil;
 

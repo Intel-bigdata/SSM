@@ -20,12 +20,12 @@ package org.smartdata.server.engine.cmdlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionException;
-import org.smartdata.common.message.ActionStatusReport;
-import org.smartdata.common.message.StatusReporter;
+import org.smartdata.protocol.message.ActionStatusReport;
+import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.common.message.StatusMessage;
+import org.smartdata.protocol.message.StatusMessage;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

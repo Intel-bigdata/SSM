@@ -20,10 +20,10 @@ package org.smartdata.actions;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.smartdata.SmartContext;
-import org.smartdata.common.message.ActionFinished;
-import org.smartdata.common.message.ActionStarted;
-import org.smartdata.common.message.ActionStatus;
-import org.smartdata.common.message.StatusReporter;
+import org.smartdata.protocol.message.ActionFinished;
+import org.smartdata.protocol.message.ActionStarted;
+import org.smartdata.protocol.message.ActionStatus;
+import org.smartdata.protocol.message.StatusReporter;
 
 import java.io.IOException;
 import java.io.PrintStream;

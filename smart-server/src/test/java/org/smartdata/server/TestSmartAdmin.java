@@ -20,10 +20,10 @@ package org.smartdata.server;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
-import org.smartdata.common.models.ActionInfo;
-import org.smartdata.common.models.CmdletInfo;
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.rule.RuleState;
+import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 
 import java.io.IOException;
 import java.util.List;

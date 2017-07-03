@@ -19,7 +19,7 @@ package org.smartdata.server.engine.cmdlet;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.model.CmdletDescriptor;
 
 import java.util.HashMap;
 import java.util.Map;

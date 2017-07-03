@@ -17,13 +17,13 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
-import org.smartdata.common.CmdletState;
+import org.smartdata.model.CmdletState;
 import org.smartdata.actions.SmartAction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.message.CmdletStatusUpdate;
-import org.smartdata.common.message.StatusReporter;
+import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.protocol.message.StatusReporter;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one

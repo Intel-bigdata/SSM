@@ -18,8 +18,8 @@
 package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.common.CmdletState;
-import org.smartdata.common.models.CmdletInfo;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.CmdletInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
