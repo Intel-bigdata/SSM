@@ -20,8 +20,6 @@ package org.smartdata.actions.hdfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 /**
  * An action to do all-ssd for a file.
  */
@@ -29,8 +27,7 @@ public class AllSsdFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(AllSsdFileAction.class);
 
   @Override
-  public void init(Map<String, String> args) {
-    args.put(STORAGE_POLICY, "ALL_SSD");
-    super.init(args);
+  public String getStoragePolicy() {
+    return "ALL_SSD";
   }
 }
