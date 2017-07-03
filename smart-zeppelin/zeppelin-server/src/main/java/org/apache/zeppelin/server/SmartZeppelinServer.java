@@ -116,10 +116,10 @@ public class SmartZeppelinServer extends Application {
 
     this.zconf = ZeppelinConfiguration.create();
 
-    if (!isZeppelinEnabled()) {
-      return;
-    }
+    //init();
+  }
 
+  private void init() throws Exception {
     this.depResolver = new DependencyResolver(
         zconf.getString(ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
 
@@ -183,9 +183,16 @@ public class SmartZeppelinServer extends Application {
     notebook.addNotebookEventListener(notebookWsServer.getNotebookInformationListener());
   }
 
-  private boolean isZeppelinEnabled() {
+  private boolean isZeppelinWebEnabled() {
     return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB,
         SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB_DEFAULT);
+  }
+
+  public static void main(String[] args) throws Exception {
+    SmartZeppelinServer server = new SmartZeppelinServer(new SmartConf(), null);
+
+    server.start();
+
   }
 
   public void start() throws Exception {
@@ -199,6 +206,7 @@ public class SmartZeppelinServer extends Application {
 
     // Notebook server
     setupNotebookServer(webApp);
+    init();
 
     // REST api
     setupRestApiContextHandler(webApp);
@@ -280,9 +288,7 @@ public class SmartZeppelinServer extends Application {
 
   private void setupNotebookServer(WebAppContext webapp) {
     notebookWsServer = new NotebookServer();
-    if (!isZeppelinEnabled()) {
-      return;
-    }
+
     String maxTextMessageSize = zconf.getWebsocketMaxTextMessageSize();
     final ServletHolder servletHolder = new ServletHolder(notebookWsServer);
     servletHolder.setInitParameter("maxTextMessageSize", maxTextMessageSize);
@@ -336,14 +342,15 @@ public class SmartZeppelinServer extends Application {
 
     WebAppContext webApp = new WebAppContext();
     webApp.setContextPath(zconf.getServerContextPath());
-    webApp.setResourceBase("");
-    contexts.addHandler(webApp);
 
-    if (!isZeppelinEnabled()) {
+    if (!isZeppelinWebEnabled()) {
+      webApp.setResourceBase("");
+      contexts.addHandler(webApp);
       return webApp;
     }
 
-    File warPath = new File(zconf.getString(ConfVars.ZEPPELIN_WAR));
+    File warPath = new File("../dist/zeppelin-web-0.7.2.war");
+        //File(zconf.getString(ConfVars.ZEPPELIN_WAR));
     if (warPath.isDirectory()) {
       // Development mode, read from FS
       // webApp.setDescriptor(warPath+"/WEB-INF/web.xml");
@@ -359,7 +366,7 @@ public class SmartZeppelinServer extends Application {
     }
     // Explicit bind to root
     webApp.addServlet(new ServletHolder(new DefaultServlet()), "/*");
-    //contexts.addHandler(webApp); // already added
+    contexts.addHandler(webApp); // already added
 
     webApp.addFilter(new FilterHolder(CorsFilter.class), "/*",
         EnumSet.allOf(DispatcherType.class));
@@ -394,10 +401,6 @@ public class SmartZeppelinServer extends Application {
 
     RuleRestApi ruleApi = new RuleRestApi(engine);
     singletons.add(ruleApi);
-
-    if (!isZeppelinEnabled()) {
-      return singletons;
-    }
 
     /** Rest-api root endpoint */
     ZeppelinRestApi root = new ZeppelinRestApi();
