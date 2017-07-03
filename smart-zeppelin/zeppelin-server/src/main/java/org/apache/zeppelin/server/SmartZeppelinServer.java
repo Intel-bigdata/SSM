@@ -90,7 +90,7 @@ import java.util.Set;
  */
 public class SmartZeppelinServer extends Application {
   private static final Logger LOG = LoggerFactory.getLogger(SmartZeppelinServer.class);
-  private static final String SMART_PATH_SPEC = "smart/api/v1/*";
+  private static final String SMART_PATH_SPEC = "/smart/api/v1/*";
 
   private SmartEngine engine;
   private SmartConf conf;
