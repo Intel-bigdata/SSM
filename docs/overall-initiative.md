@@ -19,3 +19,6 @@ Supported data systems
 ---------------------
 ### 1. Apache HDFS
 Apache Hadoop/HDFS is the most widely deployed big data storage system, **HDFS-SSM** is our major work to support it in this effort. 
+
+### 2. Alluxio
+Alluxio support is also on-going, China Mobile big data team is working on this aspect.
