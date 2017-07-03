@@ -338,7 +338,8 @@ public class ZeppelinServer extends Application {
     WebAppContext webApp = new WebAppContext();
     webApp.setContextPath(conf.getServerContextPath());
 
-    File warPath = new File(conf.getString(ConfVars.ZEPPELIN_WAR));
+    File warPath = new File("../dist/zeppelin-web-0.7.2.war");
+    //File(conf.getString(ConfVars.ZEPPELIN_WAR));
     if (warPath.isDirectory()) {
       // Development mode, read from FS
       // webApp.setDescriptor(warPath+"/WEB-INF/web.xml");

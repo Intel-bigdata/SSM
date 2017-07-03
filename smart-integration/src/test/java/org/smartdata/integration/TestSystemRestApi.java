@@ -29,7 +29,7 @@ public class TestSystemRestApi extends IntegrationTestBase {
   private static final String ROOT = "/smart/api/v1/system";
 
   @Test
-  public void testSubmitAction() throws Exception {
+  public void testVersion() throws Exception {
     Response response1 = RestAssured.get(ROOT + "/version");
     String json1 = response1.asString();
     response1.then().body("body", Matchers.equalTo("0.1.0"));

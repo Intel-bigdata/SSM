@@ -15,36 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine;
+package org.smartdata.integration;
 
-import org.smartdata.conf.ReconfigurableBase;
-import org.smartdata.conf.ReconfigureException;
-import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
+import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
+/**
+ * Test for SmartZeppelinServer.
+ */
+public class TestZeppelinServer extends IntegrationTestBase {
 
-public class ConfManager extends ReconfigurableBase {
+  @Test
+  public void test() throws Exception {
+    /*
+    while (true) {
 
-  private SmartConf conf;
-
-  public ConfManager(SmartConf conf) {
-    this.conf = conf;
-  }
-
-  @Override
-  public void reconfigureProperty(String property, String newVal)
-      throws ReconfigureException {
-    if (property.equals(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY)) {
-      conf.set(property, newVal);
     }
-  }
-
-  @Override
-  public List<String> getReconfigurableProperties() {
-    return Arrays.asList(
-        SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY
-    );
+    */
   }
 }
