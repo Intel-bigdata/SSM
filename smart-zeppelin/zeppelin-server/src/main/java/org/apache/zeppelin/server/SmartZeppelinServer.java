@@ -333,7 +333,7 @@ public class SmartZeppelinServer extends Application {
       webApp.setInitParameter("shiroConfigLocations",
           new File(shiroIniPath).toURI().toString());
       SecurityUtils.initSecurityManager(shiroIniPath);
-      webApp.addFilter(ShiroFilter.class, SMART_PATH_SPEC, EnumSet.allOf(DispatcherType.class));
+      webApp.addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class));
       webApp.addEventListener(new EnvironmentLoaderListener());
     }
   }
