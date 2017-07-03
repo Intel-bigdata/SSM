@@ -24,12 +24,15 @@ import org.junit.Test;
  */
 public class TestZeppelinServer extends IntegrationTestBase {
 
+  static {
+
+  }
   @Test
   public void test() throws Exception {
-    /*
+
     while (true) {
 
     }
-    */
+
   }
 }
