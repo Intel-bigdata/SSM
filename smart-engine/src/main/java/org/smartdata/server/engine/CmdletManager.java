@@ -238,13 +238,7 @@ public class CmdletManager extends AbstractService {
       return idToCmdlets.get(cid);
     }
     try {
-      List<CmdletInfo> infos = metaStore.getCmdletsTableItem(String.format("= %d", cid),
-        null, null);
-      if (infos != null && infos.size() > 0) {
-        return infos.get(0);
-      } else {
-        return null;
-      }
+      return  metaStore.getCmdletById(cid);
     } catch (MetaStoreException e) {
       LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
       throw new IOException(e);
@@ -339,11 +333,7 @@ public class CmdletManager extends AbstractService {
       return idToActions.get(actionID);
     }
     try {
-      List<ActionInfo> actionInfos = metaStore.getActionsTableItem(String.format("== %d ", actionID), null);
-      if (actionInfos != null && !actionInfos.isEmpty()) {
-        return actionInfos.get(0);
-      }
-      return null;
+      return metaStore.getActionById(actionID);
     } catch (MetaStoreException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}", actionID, e);
       throw new IOException(e);
