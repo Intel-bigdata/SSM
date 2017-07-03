@@ -44,4 +44,35 @@ public class RuleRestApi extends RestApiBase {
     JsonPath path = cmdletInfo.jsonPath().setRoot("body");
     return path;
   }
+
+  /**
+   * Wait until the specified rule generates one cmdlet.
+   * @param ruleId
+   * @param secToWait
+   * @return
+   */
+  public static boolean waitRuleTriggered(long ruleId, int secToWait) {
+    do {
+      JsonPath pa = getRuleInfo(ruleId);
+//      System.out.println("numChecked = " + pa.getLong("numChecked")
+//          + ", numCmdsGen = " + pa.getLong("numCmdsGen"));
+      if (pa.getLong("numCmdsGen") > 0) {
+        return true;
+      }
+      secToWait--;
+      if (secToWait < 0) {
+        break;
+      }
+      try {
+        Thread.sleep(1000);
+      } catch (Exception e) {
+        // ignore
+      }
+    } while (true);
+    return false;
+  }
+
+  public static boolean waitRuleTriggered(long ruleId) {
+    return waitRuleTriggered(ruleId, Integer.MAX_VALUE);
+  }
 }
