@@ -9,14 +9,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManagementDao {
+public class MetaStoreHelper {
   private DataSource dataSource;
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
-  public ManagementDao(DataSource dataSource) {
+  public MetaStoreHelper(DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
