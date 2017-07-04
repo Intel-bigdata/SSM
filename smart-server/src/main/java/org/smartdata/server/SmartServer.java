@@ -123,6 +123,7 @@ public class SmartServer {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
       LOG.info("Formatting DataBase finished successfully!");
+      return null;
     }
 
     SmartServer ssm = new SmartServer(conf);

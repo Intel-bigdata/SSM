@@ -224,9 +224,13 @@ public class SmartZeppelinServer extends Application {
   public void stop() {
     LOG.info("Shutting down Zeppelin Server ... ");
     try {
-      jettyWebServer.stop();
-      notebook.getInterpreterSettingManager().shutdown();
-      notebook.close();
+      if (jettyWebServer != null) {
+        jettyWebServer.stop();
+      }
+      if (notebook != null) {
+        notebook.getInterpreterSettingManager().shutdown();
+        notebook.close();
+      }
       Thread.sleep(1000);
     } catch (Exception e) {
       LOG.error("Error while stopping servlet container", e);
