@@ -91,51 +91,15 @@ public class AccessCountDao {
     return statement.toString();
   }
 
-
-  /*public Map<Long, Integer> getHotFiles(long startTime, long endTime,
-                                           String countFilter) throws SQLException {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    Map<Long, Integer> ret = new HashMap<>();
-    String sqlGetTableNames = String.format(
-        "SELECT table_name FROM access_count_tables "
-            + "WHERE start_time >= %s AND end_time <= %s",
-        startTime,
-        endTime);
-    List<AccessCountTable> list = jdbcTemplate.query(sqlGetTableNames, new AccessCountRowMapper());
-    if(list == null) {
-      return null;
-    }
-    String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (";
-    String sqlUnion = "SELECT fid, count FROM \'"
-        + list.get(0) + "\'";
-    for (int i = 1; i < list.size(); i++) {
-      sqlUnion += "UNION ALL" +
-          "SELECT fid, count FROM \'" + list.get(i) + "\'";
-    }
-    String sqlSufix = ") GROUP BY fid ";
-    // TODO: safe check
-    String sqlCountFilter =
-        (countFilter == null || countFilter.length() == 0) ?
-            "" :
-            "HAVING SUM(count) " + countFilter;
-    String sqlFinal = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-    SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sqlFinal);
-    while(sqlRowSet.next()) {
-      ret.put(sqlRowSet.getLong("fid"), sqlRowSet.getInt("count"));
-    }
-    return ret;
-  }*/
-
-  public Map<Long, Integer> getHotFiles(List<AccessCountTable> tables,
-                                        int topNum) throws SQLException {
+  public Map<Long, Integer> getHotFiles(List<AccessCountTable> tables, int topNum)
+      throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     StringBuilder unioned = new StringBuilder();
     while (tableIterator.hasNext()) {
       AccessCountTable table = tableIterator.next();
       if (tableIterator.hasNext()) {
-        unioned
-            .append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
+        unioned.append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
       } else {
         unioned.append("SELECT * FROM " + table.getTableName());
       }

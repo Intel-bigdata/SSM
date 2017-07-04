@@ -17,24 +17,35 @@
  */
 package org.smartdata.metastore.dao;
 
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSUtil;
+import org.dbunit.Assertion;
+import org.dbunit.dataset.IDataSet;
+import org.dbunit.dataset.ITable;
+import org.dbunit.dataset.SortedTable;
+import org.dbunit.dataset.xml.XmlDataSet;
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.metastore.DBTest;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metastore.utils.Constants;
 import org.smartdata.metastore.utils.TimeGranularity;
+import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.FileStatusInternal;
 
 
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 
-public class TestAccessCountTableManager extends TestDaoUtil {
+public class TestAccessCountTableManager extends DBTest {
 
   @Test
   public void testAccessCountTableManager() throws InterruptedException {
@@ -74,34 +85,60 @@ public class TestAccessCountTableManager extends TestDaoUtil {
   private void createTables(Connection connection) throws Exception {
     Statement statement = connection.createStatement();
     statement.execute(AccessCountDao.createTableSQL("expect1"));
-    String sql =
-        "CREATE TABLE `files` (" + "`path` varchar(4096) NOT NULL," + "`fid` bigint(20) NOT NULL )";
-    statement.execute(sql);
     statement.close();
   }
 
   @Test
   public void testAddAccessCountInfo() throws Exception {
-    // TODO need upgrade
-    // MetaStore adapter = new MetaStore(databaseTester.getConnection().getConnection());
-    // AccessCountTableManager manager = new AccessCountTableManager(adapter);
-    // List<FileAccessEvent> accessEvents = new ArrayList<>();
-    // accessEvents.add(new FileAccessEvent("file1", 0));
-    // accessEvents.add(new FileAccessEvent("file2", 1));
-    // accessEvents.add(new FileAccessEvent("file2", 2));
-    // accessEvents.add(new FileAccessEvent("file3", 2));
-    // accessEvents.add(new FileAccessEvent("file3", 3));
-    // accessEvents.add(new FileAccessEvent("file3", 4));
-    //
-    // accessEvents.add(new FileAccessEvent("file3", 5000));
-    //
-    // manager.onAccessEventsArrived(accessEvents);
-    // AccessCountTable accessCountTable = new AccessCountTable(0L, 5000L);
-    // ITable actual = databaseTester.getConnection().createTable(accessCountTable.getTableName());
-    // ITable expect = databaseTester.getDataSet().getTable("expect1");
-    // SortedTable sortedActual = new SortedTable(actual, new String[] {"fid"});
-    // sortedActual.setUseComparable(true);
-    // Assertion.assertEquals(expect, sortedActual);
+    MetaStore metaStore = new MetaStore(druidPool);
+    createTables(databaseTester.getConnection().getConnection());
+    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader().getResourceAsStream("files.xml"));
+    databaseTester.setDataSet(dataSet);
+    databaseTester.onSetup();
+    prepareFiles(metaStore);
+    AccessCountTableManager manager = new AccessCountTableManager(metaStore);
+    List<FileAccessEvent> accessEvents = new ArrayList<>();
+    accessEvents.add(new FileAccessEvent("file1", 0));
+    accessEvents.add(new FileAccessEvent("file2", 1));
+    accessEvents.add(new FileAccessEvent("file2", 2));
+    accessEvents.add(new FileAccessEvent("file3", 2));
+    accessEvents.add(new FileAccessEvent("file3", 3));
+    accessEvents.add(new FileAccessEvent("file3", 4));
+
+    accessEvents.add(new FileAccessEvent("file3", 5000));
+
+    manager.onAccessEventsArrived(accessEvents);
+    AccessCountTable accessCountTable = new AccessCountTable(0L, 5000L);
+    ITable actual = databaseTester.getConnection().createTable(accessCountTable.getTableName());
+    ITable expect = databaseTester.getDataSet().getTable("expect1");
+    SortedTable sortedActual = new SortedTable(actual, new String[] {"fid"});
+    sortedActual.setUseComparable(true);
+    Assertion.assertEquals(expect, sortedActual);
+  }
+
+  private void prepareFiles(MetaStore metaStore) throws MetaStoreException {
+    List<FileStatusInternal> statusInternals = new ArrayList<>();
+    for (int id = 1; id < 4; id++) {
+      statusInternals.add(
+          new FileStatusInternal(
+              123L,
+              false,
+              1,
+              128 * 1024L,
+              123123123L,
+              123123120L,
+              FsPermission.getDefault(),
+              "root",
+              "admin",
+              null,
+              DFSUtil.string2Bytes("file" + id),
+              "",
+              id,
+              0,
+              null,
+              (byte) 0));
+    }
+    metaStore.insertFiles(statusInternals.toArray(new FileStatusInternal[0]));
   }
 
   @Test
