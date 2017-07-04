@@ -17,25 +17,27 @@
  */
 package org.smartdata.metastore;
 
+import org.dbunit.DataSourceDatabaseTester;
 import org.dbunit.IDatabaseTester;
 import org.dbunit.JdbcDatabaseTester;
+import org.junit.After;
 import org.junit.Before;
+import org.smartdata.metastore.utils.TestDaoUtil;
 
-import java.io.File;
-
-public abstract class DBTest {
+public abstract class DBTest extends TestDaoUtil {
   protected IDatabaseTester databaseTester;
-  private static final String DB_PATH = "/tmp/test.db";
 
   @Before
   public void setUp() throws Exception {
-    File db = new File(DB_PATH);
-    if (db.exists()) {
-      db.delete();
-    }
-    databaseTester = new JdbcDatabaseTester("org.sqlite.JDBC",
-      "jdbc:sqlite:" + DB_PATH);
+    initDao();
+    databaseTester = new JdbcDatabaseTester("org.sqlite.JDBC", url);
     databaseTester.getConnection().getConfig().setProperty(
       "http://www.dbunit.org/properties/tableType", new String[]{"TABLE", "VIEW"});
+  }
+
+  @After
+  public void close() throws Exception {
+    databaseTester.onTearDown();
+    closeDao();
   }
 }
