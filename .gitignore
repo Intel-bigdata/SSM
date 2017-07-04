@@ -16,7 +16,7 @@
 target
 build
 local-repo
-conf/interpreter.json
+interpreter.json
 dependency-reduced-pom.xml
 
 # Filesystem contract test options and credentials
