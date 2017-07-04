@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class testRuleExecutor extends TestDaoUtil {
+public class TestRuleExecutor extends TestDaoUtil {
   private MetaStoreHelper metaStoreHelper;
 
   @Before
@@ -47,8 +47,8 @@ public class testRuleExecutor extends TestDaoUtil {
   public void generateSQL() throws Exception {
     String countFilter = "";
     String newTable = "test";
-    List<String> tableNames = new ArrayList<>(
-        Arrays.asList("blank_access_count_info"));
+    List<String> tableNames = new ArrayList<>();
+    tableNames.add("blank_access_count_info");
     String sql;
     /*sql = "CREATE TABLE actual as SELECT fid, SUM(count)" +
         " as count FROM (SELECT * FROM blank_access_count_info " +
