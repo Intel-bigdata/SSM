@@ -367,10 +367,16 @@ public class MetaStoreUtils {
         dbName = url.substring(url.lastIndexOf("/") + 1, url.length());
       }
       LOG.info("Drop All tables of Current DBname: " + dbName);
-      String sql = "SELECT concat('DROP TABLE IF EXISTS ', table_name, ';')\n" +
-          "FROM information_schema.tables\n" +
-          "WHERE table_schema = " + dbName;
-      stat.execute(sql);
+      ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
+          + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
+      List<String> tbList = new ArrayList<>();
+      while (rs.next()) {
+        tbList.add(rs.getString(1));
+      }
+      for (String tb : tbList) {
+        LOG.info(tb);
+        stat.execute("DROP TABLE IF EXISTS " + tb + ";");
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
