@@ -82,7 +82,7 @@ public class MetaStore {
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
   private AccessCountDao accessCountDao;
-  private ManagementDao managementDao;
+  private MetaStoreHelper metaStoreHelper;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -96,7 +96,7 @@ public class MetaStore {
     storageDao = new StorageDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
-    managementDao = new ManagementDao(pool.getDataSource());
+    metaStoreHelper = new MetaStoreHelper(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -474,7 +474,7 @@ public class MetaStore {
 
   public void execute(String sql) throws MetaStoreException {
     try {
-      managementDao.execute(sql);
+      metaStoreHelper.execute(sql);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -490,7 +490,7 @@ public class MetaStore {
   public List<String> executeFilesPathQuery(
       String sql) throws MetaStoreException {
     try {
-      return managementDao.getFilesPath(sql);
+      return metaStoreHelper.getFilesPath(sql);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
