@@ -72,4 +72,4 @@ fi
 #   $(mkdir -p "${SMART_PID_DIR}")
 # fi
 
-exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_AGENT "$vargs"
+exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_AGENT $vargs
