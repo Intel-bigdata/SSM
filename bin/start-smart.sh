@@ -21,31 +21,42 @@
 #./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000
 #./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000 -D dfs.smart.default.db.url=jdbc:sqlite:file-sql.db
 
-USAGE="Usage: bin/start-smart.sh [--config <conf-dir>] ..."
+USAGE="Usage: bin/start-smart.sh [--config <conf-dir>] [--debug] ..."
 
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
 
 echo "Command: $0 $*"
 
-if [[ "$1" == "--config" ]]; then
-  shift
-  conf_dir="$1"
-  if [[ ! -d "${conf_dir}" ]]; then
-    echo "ERROR : ${conf_dir} is not a directory"
-    echo ${USAGE}
-    exit 1
-  else
-    export SMART_CONF_DIR="${conf_dir}"
-  fi
-  shift
-fi
+vargs=
+while [ $# != 0 ]; do
+  case "$1" in
+    "--config")
+      shift
+      conf_dir="$1"
+      if [[ ! -d "${conf_dir}" ]]; then
+        echo "ERROR : ${conf_dir} is not a directory"
+        echo ${USAGE}
+        exit 1
+      else
+        export SMART_CONF_DIR="${conf_dir}"
+        echo "SMART_CONF_DIR="$SMART_CONF_DIR
+      fi
+      shift
+      ;;
+    "--debug")
+      JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
+      shift
+      ;;
+    *)
+      vargs+=" $1"
+      shift
+      ;;
+  esac
+done
 
 . "${bin}/common.sh"
 
-if [ "$1" == "--version" ] || [ "$1" == "-v" ]; then
-    getZeppelinVersion
-fi
 
 HOSTNAME=$(hostname)
 SMART_LOGFILE="${SMART_LOG_DIR}/smart-${SMART_IDENT_STRING}-${HOSTNAME}.log"
@@ -69,4 +80,4 @@ fi
 #   $(mkdir -p "${SMART_PID_DIR}")
 # fi
 
-exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER "$@"
+exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER "$vargs"
