@@ -90,10 +90,10 @@ public class ActionDao {
 
   public List<ActionInfo> getLatestActions(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    jdbcTemplate.setMaxRows(size);
     String sql = "select * from actions WHERE finished = 1" +
-        " ORDER by create_time DESC limit ?";
-    return jdbcTemplate.query(sql, new Object[]{size},
-        new ActionRowMapper());
+        " ORDER by create_time DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
   public void delete(long aid) {
