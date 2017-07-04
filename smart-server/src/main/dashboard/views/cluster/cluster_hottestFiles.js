@@ -24,7 +24,7 @@ angular.module('dashboard')
 
             $stateProvider
                 .state('cluster.hottestFiles',{
-                url:'/hottestFiles',
+                url:'/fileInCache',
                 templateUrl: 'views/cluster/cluster_hottestFiles.html',
                 controller: 'HotFileCtrl',
                 resolve: {
