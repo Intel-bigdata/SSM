@@ -441,7 +441,7 @@ public class MetaStore {
             / (source.getEndTime() - source.getStartTime());
     String sql =
         String.format(
-            "CREATE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
+            "CREATE OR REPLACE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
             dest.getTableName(),
             AccessCountDao.FILE_FIELD,
             source.getTableName(),

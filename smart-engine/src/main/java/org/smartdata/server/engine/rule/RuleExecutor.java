@@ -220,7 +220,6 @@ public class RuleExecutor implements Runnable {
       return tableNames;
     }
 
-
     for (AccessCountTable t : accTables) {
       tableNames.add(t.getTableName());
       if (t.isView()) {

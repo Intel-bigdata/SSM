@@ -115,7 +115,7 @@ public class AccessCountTableManager {
       return new ArrayList<>();
     }
     long now = secondTableDeque.getLast().getEndTime();
-    return getTablesDuring(tableDeques, metaStore, lengthInMillis, now, null);
+    return getTablesDuring(tableDeques, metaStore, lengthInMillis, now, TimeUtils.getGranularity(lengthInMillis));
   }
 
   // Todo: multi-thread issue
@@ -124,16 +124,10 @@ public class AccessCountTableManager {
       MetaStore metaStore,
       final long length,
       final long endTime,
-      final TimeGranularity timeGranularityHint)
+      final TimeGranularity timeGranularity)
       throws MetaStoreException {
     long startTime = endTime - length;
-    TimeGranularity timeGranularity =
-        timeGranularityHint == null ? TimeUtils.getGranularity(length) : timeGranularityHint;
     AccessCountTableDeque tables = tableDeques.get(timeGranularity);
-    if (tables.isEmpty()) {
-      TimeGranularity fineGrained = TimeUtils.getFineGarinedGranularity(timeGranularity);
-      return getTablesDuring(tableDeques, metaStore, length, endTime, fineGrained);
-    }
     List<AccessCountTable> results = new ArrayList<>();
     for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext(); ) {
       // Here we assume that the tables are all sorted by time.
@@ -152,7 +146,8 @@ public class AccessCountTableManager {
       }
     }
     if (startTime != endTime && !timeGranularity.equals(TimeGranularity.SECOND)) {
-      results.addAll(getTablesDuring(tableDeques, metaStore, endTime - startTime, endTime, null));
+      TimeGranularity fineGrained = TimeUtils.getFineGarinedGranularity(timeGranularity);
+      results.addAll(getTablesDuring(tableDeques, metaStore, endTime - startTime, endTime, fineGrained));
     }
     return results;
   }
