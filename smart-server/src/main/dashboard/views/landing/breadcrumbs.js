@@ -28,7 +28,7 @@ angular.module('dashboard')
       scope: {},
       controller: ['$scope', function ($scope) {
 
-        $scope.$on('$stateChangeSuccess', function () {
+        $scope.$on('$locationChangeSuccess', function () {
           $scope.breadcrumbs = buildBreadcrumbs();
         });
 
