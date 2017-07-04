@@ -217,20 +217,16 @@ public class CmdletManager extends AbstractService {
     if (cmdletInfo == null) {
       return null;
     }
-    try {
-      List<ActionInfo> actionInfos = metaStore.getActionsTableItem(cmdletInfo.getAids());
-      List<LaunchAction> launchActions = new ArrayList<>();
-      for (ActionInfo actionInfo : actionInfos) {
+    List<LaunchAction> launchActions = new ArrayList<>();
+    for (Long aid : cmdletInfo.getAids()) {
+      if (idToActions.containsKey(aid)) {
+        ActionInfo toLaunch = idToActions.get(aid);
         launchActions.add(
-            new LaunchAction(
-                actionInfo.getActionId(), actionInfo.getActionName(), actionInfo.getArgs()));
+            new LaunchAction(toLaunch.getActionId(), toLaunch.getActionName(), toLaunch.getArgs()));
       }
-      runningCmdlets.add(cmdletInfo.getCid());
-      return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
-    } catch (MetaStoreException e) {
-      LOG.error("Get Actions from DB with IDs {} error!", cmdletInfo.getAids());
-      throw new IOException(e);
     }
+    runningCmdlets.add(cmdletInfo.getCid());
+    return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
   }
 
   public CmdletInfo getCmdletInfo(long cid) throws IOException {
@@ -238,7 +234,7 @@ public class CmdletManager extends AbstractService {
       return idToCmdlets.get(cid);
     }
     try {
-      return  metaStore.getCmdletById(cid);
+      return metaStore.getCmdletById(cid);
     } catch (MetaStoreException e) {
       LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
       throw new IOException(e);
