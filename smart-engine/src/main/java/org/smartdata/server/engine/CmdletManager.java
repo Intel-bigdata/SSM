@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -167,15 +168,18 @@ public class CmdletManager extends AbstractService {
           String.format("Submit Cmdlet %s error! Action names are not correct!", cmdletInfo));
       }
     }
-    if (this.hasConflictAction(actionInfos)) {
-      throw new IOException("Has conflict actions, submit cmdlet failed.");
-    }
+
+    Set<String> filesLocked = lockMovefileActionFiles(actionInfos);
+
     try {
       metaStore.insertCmdletTable(cmdletInfo);
       metaStore.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("Submit Command {} to DB error!", cmdletInfo);
       try {
+        for (String file : filesLocked) {
+          fileLocks.remove(file);
+        }
         metaStore.deleteCmdlet(cmdletInfo.getCid());
       } catch (MetaStoreException e1) {
         LOG.error("Delete Command {} rom DB error! {}", cmdletInfo, e);
@@ -187,29 +191,39 @@ public class CmdletManager extends AbstractService {
     submittedCmdlets.add(cmdletInfo.getParameters());
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
-      Map<String, String> args = actionInfo.getArgs();
-      if (args != null && args.size() > 0) {
-        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-        if (file != null) {
-          fileLocks.put(file, actionInfo.getActionId());
-        }
-      }
     }
     return cmdletInfo.getCid();
   }
 
-  private boolean hasConflictAction(List<ActionInfo> actionInfos) {
-    for (ActionInfo actionInfo : actionInfos) {
-      Map<String, String> args = actionInfo.getArgs();
-      if (args != null && args.size() > 0) {
-        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-        if (file != null && fileLocks.containsKey(file)) {
-          LOG.warn("Warning: Other actions are processing {}!", file);
-          return true;
+  private synchronized Set<String> lockMovefileActionFiles(List<ActionInfo> actionInfos)
+      throws IOException {
+    Map<String, Long> filesToLock = new HashMap<>();
+    for (ActionInfo info : actionInfos) {
+      SmartAction action;
+      try {
+        action = ActionRegistry.createAction(info.getActionName());
+      } catch (ActionException e) {
+        throw new IOException("Failed to create '" + info.getActionName()
+            + "' action instance", e);
+      }
+      if (action instanceof MoveFileAction) {
+        Map<String, String> args = info.getArgs();
+        if (args != null && args.size() > 0) {
+          String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+          if (file != null) {
+            if (fileLocks.containsKey(file)) {
+              LOG.info("Warning: Other actions are processing {}!", file);
+              throw new IOException("Has conflict actions, submit cmdlet failed.");
+            } else {
+              filesToLock.put(file, info.getActionId());
+            }
+          }
         }
       }
     }
-    return false;
+
+    fileLocks.putAll(filesToLock);
+    return filesToLock.keySet();
   }
 
   public LaunchCmdlet getNextCmdletToRun() throws IOException {
@@ -298,11 +312,19 @@ public class CmdletManager extends AbstractService {
       }
     }
     for (ActionInfo actionInfo : removed) {
-      Map<String, String> args = actionInfo.getArgs();
-      if (args != null && args.size() > 0) {
-        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-        if (file != null && fileLocks.containsKey(file)) {
-          fileLocks.remove(file);
+      SmartAction action;
+      try {
+        action = ActionRegistry.createAction(actionInfo.getActionName());
+      } catch (ActionException e) {
+        continue;
+      }
+      if (action instanceof MoveFileAction) {
+        Map<String, String> args = actionInfo.getArgs();
+        if (args != null && args.size() > 0) {
+          String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+          if (file != null && fileLocks.containsKey(file)) {
+            fileLocks.remove(file);
+          }
         }
       }
     }
