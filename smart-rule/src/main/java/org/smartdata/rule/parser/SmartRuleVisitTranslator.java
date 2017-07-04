@@ -841,7 +841,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           String virTab = "VIR_ACC_CNT_TAB_" + rid + realParas.instId();
           if (!tempTableNames.contains(virTab)) {
             tempTableNames.add(virTab);
-            sqlStatements.add("DROP TABLE IF EXISTS '" + virTab + "';");
+            sqlStatements.add("DROP TABLE IF EXISTS " + virTab + ";");
             sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
             dynamicParameters.put(virTab,
                 Arrays.asList(realParas.getValues(), virTab));

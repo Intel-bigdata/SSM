@@ -115,6 +115,7 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient.reportFileAccessEvent(new FileAccessEvent(src));
     } catch (IOException e) {  // Here just ignores that failed to report
+      e.printStackTrace();
       LOG.error("Can not report file access event to SmartServer: " + src);
     }
   }
