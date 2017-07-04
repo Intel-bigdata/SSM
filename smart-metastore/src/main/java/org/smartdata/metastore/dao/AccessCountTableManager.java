@@ -104,7 +104,7 @@ public class AccessCountTableManager {
 
   public static List<AccessCountTable> getTables(
       Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-      MetaStore adapter,
+      MetaStore metaStore,
       long lengthInMillis)
       throws MetaStoreException {
     if (tableDeques.isEmpty()) {
@@ -115,13 +115,13 @@ public class AccessCountTableManager {
       return new ArrayList<>();
     }
     long now = secondTableDeque.getLast().getEndTime();
-    return getTablesDuring(tableDeques, adapter, lengthInMillis, now, null);
+    return getTablesDuring(tableDeques, metaStore, lengthInMillis, now, null);
   }
 
   // Todo: multi-thread issue
   private static List<AccessCountTable> getTablesDuring(
       final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-      MetaStore adapter,
+      MetaStore metaStore,
       final long length,
       final long endTime,
       final TimeGranularity timeGranularityHint)
@@ -132,7 +132,7 @@ public class AccessCountTableManager {
     AccessCountTableDeque tables = tableDeques.get(timeGranularity);
     if (tables.isEmpty()) {
       TimeGranularity fineGrained = TimeUtils.getFineGarinedGranularity(timeGranularity);
-      return getTablesDuring(tableDeques, adapter, length, endTime, fineGrained);
+      return getTablesDuring(tableDeques, metaStore, length, endTime, fineGrained);
     }
     List<AccessCountTable> results = new ArrayList<>();
     for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext(); ) {
@@ -145,14 +145,14 @@ public class AccessCountTableManager {
           // We got a table should be spilt here.
           AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime());
           splitTable.setView(true);
-          adapter.createProportionView(splitTable, table);
+          metaStore.createProportionView(splitTable, table);
           results.add(splitTable);
         }
         startTime = table.getEndTime();
       }
     }
     if (startTime != endTime && !timeGranularity.equals(TimeGranularity.SECOND)) {
-      results.addAll(getTablesDuring(tableDeques, adapter, endTime - startTime, endTime, null));
+      results.addAll(getTablesDuring(tableDeques, metaStore, endTime - startTime, endTime, null));
     }
     return results;
   }
