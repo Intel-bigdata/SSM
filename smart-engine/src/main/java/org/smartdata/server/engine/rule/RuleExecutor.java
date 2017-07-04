@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.engine.rule;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.CmdletDescriptor;
@@ -160,29 +161,33 @@ public class RuleExecutor implements Runnable {
     String countFilter = "";
     List<String> tableNames =
         getAccessCountTablesDuringLast(interval);
+    return generateSQL(tableNames, newTable, countFilter);
+  }
 
+  @VisibleForTesting
+  static String  generateSQL(List<String> tableNames, String newTable, String countFilter) {
     String sqlFinal;
     if (tableNames.size() <= 1) {
       String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
           tableNames.get(0);
-      sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM '"
-          + tableName + "';";
+      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM "
+          + tableName + ";";
     } else {
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
-      String sqlUnion = "SELECT fid, count FROM \'"
-          + tableNames.get(0) + "\'\n";
+      String sqlUnion = "SELECT fid, count FROM "
+          + tableNames.get(0) + " \n";
       for (int i = 1; i < tableNames.size(); i++) {
         sqlUnion += "UNION ALL\n" +
-            "SELECT fid, count FROM \'" + tableNames.get(i) + "\'\n";
+            "SELECT fid, count FROM " + tableNames.get(i) + " \n";
       }
-      String sqlSufix = ") GROUP BY fid ";
+      String sqlSufix = ") as tmp GROUP BY fid ";
       String sqlCountFilter =
           (countFilter == null || countFilter.length() == 0) ?
               "" :
               "HAVING SUM(count) " + countFilter;
       String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-      sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM ("
-          + sqlRe + ");";
+      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM ("
+          + sqlRe + ") as t;";
     }
     return sqlFinal;
   }
