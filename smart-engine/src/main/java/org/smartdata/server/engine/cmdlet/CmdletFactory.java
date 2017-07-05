@@ -24,7 +24,7 @@ import org.smartdata.actions.SmartAction;
 import org.smartdata.actions.hdfs.HdfsAction;
 import org.smartdata.client.SmartDFSClient;
 import org.smartdata.protocol.message.StatusReporter;
-import org.smartdata.utils.HadoopUtils;
+import org.smartdata.utils.HadoopUtil;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -68,7 +68,7 @@ public class CmdletFactory {
         ((HdfsAction) smartAction)
             .setDfsClient(
                 new SmartDFSClient(
-                    HadoopUtils.getNameNodeUri(smartContext.getConf()),
+                    HadoopUtil.getNameNodeUri(smartContext.getConf()),
                     smartContext.getConf(),
                     getRpcServerAddress()));
       } catch (IOException e) {

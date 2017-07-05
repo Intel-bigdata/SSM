@@ -23,6 +23,7 @@ package org.smartdata.conf;
 public class SmartConfKeys {
   public final static String SMART_DFS_ENABLED = "smart.dfs.enabled";
   public final static boolean SMART_DFS_ENABLED_DEFAULT = true;
+  public final static String SMART_CONF_DIR = "smart.conf.dir";
 
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
 
@@ -50,4 +51,8 @@ public class SmartConfKeys {
 
   public final static String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
   public final static boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = false;
+
+  // SmartAgent
+  public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
+  public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
 }

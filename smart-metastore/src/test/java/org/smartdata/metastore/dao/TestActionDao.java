@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.metastore.utils.TestDaoUtil;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,6 +58,12 @@ public class TestActionDao extends TestDaoUtil {
     actionDao.insert(new ActionInfo[] {actionInfo});
     actionInfo = actionDao.getById(1l);
     Assert.assertTrue(actionInfo.getCmdletId() == 1);
+    // Get wrong id
+    try {
+      actionInfo = actionDao.getById(100l);
+    } catch (EmptyResultDataAccessException e) {
+      Assert.assertTrue(true);
+    }
   }
 
   @Test
@@ -82,10 +89,13 @@ public class TestActionDao extends TestDaoUtil {
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
         100);
+    List<ActionInfo> actionInfoList = actionDao.getLatestActions(10);
+    // Get from empty table
+    Assert.assertTrue(actionInfoList.size() == 0);
     actionDao.insert(actionInfo);
     actionInfo.setActionId(2);
     actionDao.insert(actionInfo);
-    List<ActionInfo> actionInfoList = actionDao.getLatestActions(10);
+    actionInfoList = actionDao.getLatestActions(10);
     Assert.assertTrue(actionInfoList.size() == 2);
     actionInfoList = actionDao.getByIds(Arrays.asList(new Long[] {1l, 2l}));
     Assert.assertTrue(actionInfoList.size() == 2);

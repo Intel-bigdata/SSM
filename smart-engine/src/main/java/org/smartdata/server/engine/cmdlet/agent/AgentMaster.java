@@ -29,6 +29,7 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
@@ -63,7 +64,7 @@ public class AgentMaster {
   }
 
   public AgentMaster(SmartConf conf, CmdletManager statusUpdater) {
-    String address = conf.get(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
+    String address = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
     checkNotNull(address);
     Config config = AgentUtils.overrideRemoteAddress(ConfigFactory.load(), address);
     this.agentManager = new AgentManager();

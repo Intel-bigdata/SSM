@@ -45,6 +45,7 @@ import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.dao.*;
 import org.smartdata.metrics.FileAccessEvent;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -75,13 +76,14 @@ public class MetaStore {
   private CmdletDao cmdletDao;
   private ActionDao actionDao;
   private FileDao fileDao;
+  private FileInfoDao fileInfoDao;
   private CacheFileDao cacheFileDao;
   private StorageDao storageDao;
   private UserDao userDao;
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
   private AccessCountDao accessCountDao;
-  private ManagementDao managementDao;
+  private MetaStoreHelper metaStoreHelper;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -89,13 +91,14 @@ public class MetaStore {
     cmdletDao = new CmdletDao(pool.getDataSource());
     actionDao = new ActionDao(pool.getDataSource());
     fileDao = new FileDao(pool.getDataSource());
+    fileInfoDao = new FileInfoDao(pool.getDataSource());
     xattrDao = new XattrDao(pool.getDataSource());
     cacheFileDao = new CacheFileDao(pool.getDataSource());
     userDao = new UserDao(pool.getDataSource());
     storageDao = new StorageDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
-    managementDao = new ManagementDao(pool.getDataSource());
+    metaStoreHelper = new MetaStoreHelper(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -139,12 +142,14 @@ public class MetaStore {
   private void updateUsersMap() throws MetaStoreException {
     mapOwnerIdName = userDao.getUsersMap();
     fileDao.updateUsersMap(mapOwnerIdName);
+    fileInfoDao.updateUsersMap(mapOwnerIdName);
   }
 
   private void updateGroupsMap() throws MetaStoreException {
     try {
       mapGroupIdName = groupsDao.getGroupsMap();
       fileDao.updateGroupsMap(mapGroupIdName);
+      fileInfoDao.updateGroupsMap(mapGroupIdName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -197,7 +202,7 @@ public class MetaStore {
         this.updateGroupsMap();
       }
     }
-    fileDao.insert(files);
+    fileInfoDao.insert(files);
   }
 
   public int updateFileStoragePolicy(String path, String policyName)
@@ -274,6 +279,12 @@ public class MetaStore {
         return result;
       } catch (Exception e) {
         throw new MetaStoreException(e);
+      } finally {
+        for (AccessCountTable accessCountTable : tables) {
+          if (accessCountTable.isView()) {
+            this.dropView(accessCountTable.getTableName());
+          }
+        }
       }
     } else {
       return new ArrayList<>();
@@ -434,7 +445,7 @@ public class MetaStore {
             / (source.getEndTime() - source.getStartTime());
     String sql =
         String.format(
-            "CREATE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
+            "CREATE OR REPLACE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
             dest.getTableName(),
             AccessCountDao.FILE_FIELD,
             source.getTableName(),
@@ -451,7 +462,17 @@ public class MetaStore {
 
   public void dropTable(String tableName) throws MetaStoreException {
     try {
-      execute("DROP TABLE " + tableName);
+      LOG.debug("Drop table = {}", tableName);
+      metaStoreHelper.dropTable(tableName);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void dropView(String viewName) throws MetaStoreException {
+    try {
+      LOG.debug("Drop view = {}", viewName);
+      metaStoreHelper.dropView(viewName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -459,7 +480,8 @@ public class MetaStore {
 
   public void execute(String sql) throws MetaStoreException {
     try {
-      managementDao.execute(sql);
+      LOG.debug("Execute sql = {}", sql);
+      metaStoreHelper.execute(sql);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -475,7 +497,7 @@ public class MetaStore {
   public List<String> executeFilesPathQuery(
       String sql) throws MetaStoreException {
     try {
-      return managementDao.getFilesPath(sql);
+      return metaStoreHelper.getFilesPath(sql);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -542,6 +564,17 @@ public class MetaStore {
   public long getMaxCmdletId() throws MetaStoreException {
     try {
       return cmdletDao.getMaxId();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public CmdletInfo getCmdletById(long cid) throws MetaStoreException {
+    LOG.debug("Get cmdlet by cid {}", cid);
+    try {
+      return cmdletDao.getById(cid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -639,6 +672,18 @@ public class MetaStore {
       throw new MetaStoreException(e);
     }
   }
+
+  public ActionInfo getActionById(long aid) throws MetaStoreException {
+    LOG.debug("Get actioninfo by aid {}", aid);
+    try {
+      return actionDao.getById(aid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
 
   public long getMaxActionId() throws MetaStoreException {
     try {

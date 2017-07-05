@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -167,15 +168,18 @@ public class CmdletManager extends AbstractService {
           String.format("Submit Cmdlet %s error! Action names are not correct!", cmdletInfo));
       }
     }
-    if (this.hasConflictAction(actionInfos)) {
-      throw new IOException("Has conflict actions, submit cmdlet failed.");
-    }
+
+    Set<String> filesLocked = lockMovefileActionFiles(actionInfos);
+
     try {
       metaStore.insertCmdletTable(cmdletInfo);
       metaStore.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("Submit Command {} to DB error!", cmdletInfo);
       try {
+        for (String file : filesLocked) {
+          fileLocks.remove(file);
+        }
         metaStore.deleteCmdlet(cmdletInfo.getCid());
       } catch (MetaStoreException e1) {
         LOG.error("Delete Command {} rom DB error! {}", cmdletInfo, e);
@@ -187,29 +191,39 @@ public class CmdletManager extends AbstractService {
     submittedCmdlets.add(cmdletInfo.getParameters());
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
-      Map<String, String> args = actionInfo.getArgs();
-      if (args != null && args.size() > 0) {
-        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-        if (file != null) {
-          fileLocks.put(file, actionInfo.getActionId());
-        }
-      }
     }
     return cmdletInfo.getCid();
   }
 
-  private boolean hasConflictAction(List<ActionInfo> actionInfos) {
-    for (ActionInfo actionInfo : actionInfos) {
-      Map<String, String> args = actionInfo.getArgs();
-      if (args != null && args.size() > 0) {
-        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-        if (file != null && fileLocks.containsKey(file)) {
-          LOG.warn("Warning: Other actions are processing {}!", file);
-          return true;
+  private synchronized Set<String> lockMovefileActionFiles(List<ActionInfo> actionInfos)
+      throws IOException {
+    Map<String, Long> filesToLock = new HashMap<>();
+    for (ActionInfo info : actionInfos) {
+      SmartAction action;
+      try {
+        action = ActionRegistry.createAction(info.getActionName());
+      } catch (ActionException e) {
+        throw new IOException("Failed to create '" + info.getActionName()
+            + "' action instance", e);
+      }
+      if (action instanceof MoveFileAction) {
+        Map<String, String> args = info.getArgs();
+        if (args != null && args.size() > 0) {
+          String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+          if (file != null) {
+            if (fileLocks.containsKey(file)) {
+              LOG.info("Warning: Other actions are processing {}!", file);
+              throw new IOException("Has conflict actions, submit cmdlet failed.");
+            } else {
+              filesToLock.put(file, info.getActionId());
+            }
+          }
         }
       }
     }
-    return false;
+
+    fileLocks.putAll(filesToLock);
+    return filesToLock.keySet();
   }
 
   public LaunchCmdlet getNextCmdletToRun() throws IOException {
@@ -217,20 +231,16 @@ public class CmdletManager extends AbstractService {
     if (cmdletInfo == null) {
       return null;
     }
-    try {
-      List<ActionInfo> actionInfos = metaStore.getActionsTableItem(cmdletInfo.getAids());
-      List<LaunchAction> launchActions = new ArrayList<>();
-      for (ActionInfo actionInfo : actionInfos) {
+    List<LaunchAction> launchActions = new ArrayList<>();
+    for (Long aid : cmdletInfo.getAids()) {
+      if (idToActions.containsKey(aid)) {
+        ActionInfo toLaunch = idToActions.get(aid);
         launchActions.add(
-            new LaunchAction(
-                actionInfo.getActionId(), actionInfo.getActionName(), actionInfo.getArgs()));
+            new LaunchAction(toLaunch.getActionId(), toLaunch.getActionName(), toLaunch.getArgs()));
       }
-      runningCmdlets.add(cmdletInfo.getCid());
-      return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
-    } catch (MetaStoreException e) {
-      LOG.error("Get Actions from DB with IDs {} error!", cmdletInfo.getAids());
-      throw new IOException(e);
     }
+    runningCmdlets.add(cmdletInfo.getCid());
+    return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
   }
 
   public CmdletInfo getCmdletInfo(long cid) throws IOException {
@@ -238,13 +248,7 @@ public class CmdletManager extends AbstractService {
       return idToCmdlets.get(cid);
     }
     try {
-      List<CmdletInfo> infos = metaStore.getCmdletsTableItem(String.format("= %d", cid),
-        null, null);
-      if (infos != null && infos.size() > 0) {
-        return infos.get(0);
-      } else {
-        return null;
-      }
+      return metaStore.getCmdletById(cid);
     } catch (MetaStoreException e) {
       LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
       throw new IOException(e);
@@ -308,11 +312,19 @@ public class CmdletManager extends AbstractService {
       }
     }
     for (ActionInfo actionInfo : removed) {
-      Map<String, String> args = actionInfo.getArgs();
-      if (args != null && args.size() > 0) {
-        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-        if (file != null && fileLocks.containsKey(file)) {
-          fileLocks.remove(file);
+      SmartAction action;
+      try {
+        action = ActionRegistry.createAction(actionInfo.getActionName());
+      } catch (ActionException e) {
+        continue;
+      }
+      if (action instanceof MoveFileAction) {
+        Map<String, String> args = actionInfo.getArgs();
+        if (args != null && args.size() > 0) {
+          String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+          if (file != null && fileLocks.containsKey(file)) {
+            fileLocks.remove(file);
+          }
         }
       }
     }
@@ -339,11 +351,7 @@ public class CmdletManager extends AbstractService {
       return idToActions.get(actionID);
     }
     try {
-      List<ActionInfo> actionInfos = metaStore.getActionsTableItem(String.format("== %d ", actionID), null);
-      if (actionInfos != null && !actionInfos.isEmpty()) {
-        return actionInfos.get(0);
-      }
-      return null;
+      return metaStore.getActionById(actionID);
     } catch (MetaStoreException e) {
       LOG.error("Get ActionInfo of {} from DB error! {}", actionID, e);
       throw new IOException(e);
@@ -425,6 +433,7 @@ public class CmdletManager extends AbstractService {
         actionInfo.setProgress(status.getPercentage());
         actionInfo.setLog(status.getLog());
         actionInfo.setResult(status.getResult());
+        actionInfo.setFinishTime(System.currentTimeMillis());
       } else {
         // Updating action info which is not pending or running
       }

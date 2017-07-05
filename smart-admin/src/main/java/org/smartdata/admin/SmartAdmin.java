@@ -20,16 +20,16 @@ package org.smartdata.admin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.smartdata.admin.protocolPB.SmartAdminProtocolAdminSideTranslatorPB;
+import org.smartdata.protocol.protobuffer.AdminProtocolClientSideTranslator;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer;
 import org.smartdata.utils.JaasLoginUtil;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.SmartServiceState;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.protocol.SmartAdminProtocol;
-import org.smartdata.protocol.protocolPB.SmartAdminProtocolPB;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 
@@ -52,11 +52,11 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
     InetSocketAddress address = new InetSocketAddress(
         strings[strings.length - 2],
         Integer.parseInt(strings[strings.length - 1]));
-    RPC.setProtocolEngine(conf, SmartAdminProtocolPB.class,
+    RPC.setProtocolEngine(conf, AdminProtocolProtoBuffer.class,
         ProtobufRpcEngine.class);
-    SmartAdminProtocolPB proxy = RPC.getProxy(
-        SmartAdminProtocolPB.class, VERSION, address, conf);
-    this.ssm = new SmartAdminProtocolAdminSideTranslatorPB(proxy);
+    AdminProtocolProtoBuffer proxy = RPC.getProxy(
+        AdminProtocolProtoBuffer.class, VERSION, address, conf);
+    this.ssm = new AdminProtocolClientSideTranslator(proxy);
   }
 
   private boolean isSecurityEnabled() {

@@ -17,6 +17,5 @@
  */
 package org.smartdata.protocol;
 
-public interface SmartServerProtocols extends org.smartdata.protocol.SmartClientProtocol,
-    org.smartdata.protocol.SmartAdminProtocol {
+public interface SmartServerProtocols extends SmartClientProtocol, SmartAdminProtocol {
 }

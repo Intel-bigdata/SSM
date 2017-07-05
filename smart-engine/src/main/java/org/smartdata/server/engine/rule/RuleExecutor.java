@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.engine.rule;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.CmdletDescriptor;
@@ -77,6 +78,7 @@ public class RuleExecutor implements Runnable {
 
   private String unfoldVariables(String sql) {
     String ret = sql;
+    ctx.setProperty("NOW", System.currentTimeMillis());
     Matcher m = varPattern.matcher(sql);
     while (m.find()) {
       String rep = m.group();
@@ -145,14 +147,6 @@ public class RuleExecutor implements Runnable {
     }
   }
 
-  private long timeNow() {
-    Long p = ctx.getLong("Now");
-    if (p == null) {
-      return System.currentTimeMillis();
-    }
-    return p;
-  }
-
   public String genVirtualAccessCountTable(List<Object> parameters) {
     List<Object> paraList = (List<Object>)parameters.get(0);
     String newTable = (String) parameters.get(1);
@@ -160,29 +154,33 @@ public class RuleExecutor implements Runnable {
     String countFilter = "";
     List<String> tableNames =
         getAccessCountTablesDuringLast(interval);
+    return generateSQL(tableNames, newTable, countFilter);
+  }
 
+  @VisibleForTesting
+  static String  generateSQL(List<String> tableNames, String newTable, String countFilter) {
     String sqlFinal;
     if (tableNames.size() <= 1) {
       String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
           tableNames.get(0);
-      sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM '"
-          + tableName + "';";
+      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM "
+          + tableName + ";";
     } else {
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
-      String sqlUnion = "SELECT fid, count FROM \'"
-          + tableNames.get(0) + "\'\n";
+      String sqlUnion = "SELECT fid, count FROM "
+          + tableNames.get(0) + " \n";
       for (int i = 1; i < tableNames.size(); i++) {
         sqlUnion += "UNION ALL\n" +
-            "SELECT fid, count FROM \'" + tableNames.get(i) + "\'\n";
+            "SELECT fid, count FROM " + tableNames.get(i) + " \n";
       }
-      String sqlSufix = ") GROUP BY fid ";
+      String sqlSufix = ") as tmp GROUP BY fid ";
       String sqlCountFilter =
           (countFilter == null || countFilter.length() == 0) ?
               "" :
               "HAVING SUM(count) " + countFilter;
       String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-      sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM ("
-          + sqlRe + ");";
+      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM ("
+          + sqlRe + ") as t;";
     }
     return sqlFinal;
   }
@@ -220,11 +218,10 @@ public class RuleExecutor implements Runnable {
       return tableNames;
     }
 
-
     for (AccessCountTable t : accTables) {
       tableNames.add(t.getTableName());
       if (t.isView()) {
-        dynamicCleanups.push("DROP VIEW " + t.getTableName() + ";");
+        dynamicCleanups.push("DROP VIEW IF EXISTS " + t.getTableName() + ";");
       }
     }
     return tableNames;
@@ -257,7 +254,8 @@ public class RuleExecutor implements Runnable {
         // TODO: special for scheduleInfo.isOneShot()
         LOG.info("Rule " + ctx.getRuleId()
             + " exit rule executor due to time passed or finished");
-        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, timeNow(), 0, 0);
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED,
+            System.currentTimeMillis(), 0, 0);
         exitSchedule();
       }
 
@@ -265,7 +263,8 @@ public class RuleExecutor implements Runnable {
       List<String> files = executeFileRuleQuery();
       long endCheckTime = System.currentTimeMillis();
       int numCmdSubmitted = submitCmdlets(files, rid);
-      ruleManager.updateRuleInfo(rid, null, timeNow(), 1, numCmdSubmitted);
+      ruleManager.updateRuleInfo(rid, null,
+          System.currentTimeMillis(), 1, numCmdSubmitted);
       if (exited) {
         exitSchedule();
       }

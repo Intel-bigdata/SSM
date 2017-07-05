@@ -22,16 +22,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>zeppelin</artifactId>
-    <groupId>org.apache.zeppelin</groupId>
-    <version>0.7.2</version>
+    <artifactId>smart-zeppelin</artifactId>
+    <groupId>org.smartdata</groupId>
+    <version>0.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
-  <groupId>org.apache.zeppelin</groupId>
-  <artifactId>zeppelin-interpreter</artifactId>
+  <groupId>org.smartdata</groupId>
+  <artifactId>smart-zeppelin-interpreter</artifactId>
   <packaging>jar</packaging>
-  <version>0.7.2</version>
+  <version>0.1-SNAPSHOT</version>
   <name>Zeppelin: Interpreter</name>
   <description>Zeppelin Interpreter</description>
 

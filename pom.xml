@@ -58,6 +58,7 @@
     <alluxio.version>1.4.0</alluxio.version>
     <junit.version>4.11</junit.version>
     <scala.version>2.11.8</scala.version>
+    <scala.binary.version>2.11</scala.binary.version>
     <mockito.version>1.8.5</mockito.version>
     <bouncycastle.version>1.46</bouncycastle.version>
     <protobuf.version>2.5.0</protobuf.version>

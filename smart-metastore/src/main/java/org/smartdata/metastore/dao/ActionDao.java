@@ -90,10 +90,10 @@ public class ActionDao {
 
   public List<ActionInfo> getLatestActions(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    jdbcTemplate.setMaxRows(size);
     String sql = "select * from actions WHERE finished = 1" +
-        " ORDER by create_time DESC limit ?";
-    return jdbcTemplate.query(sql, new Object[]{size},
-        new ActionRowMapper());
+        " ORDER by create_time DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
   public void delete(long aid) {
@@ -109,28 +109,13 @@ public class ActionDao {
   }
 
   public void insert(ActionInfo[] actionInfos) {
-    // TODO need upgrade
-    // SqlParameterSource[] batch = SqlParameterSourceUtils
-    //     .createBatch(actionInfos);
-    // simpleJdbcInsert.executeBatch(batch);
-
-
-//    for (ActionInfo actionInfo : actionInfos) {
-//      insert(actionInfo);
-//    }
-
-    //A new way to batch insert
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("actions");
-
     Map<String, Object>[] maps = new Map[actionInfos.length];
-
     for (int i = 0; i < actionInfos.length; i++) {
       maps[i] = toMap(actionInfos[i]);
     }
-
     simpleJdbcInsert.executeBatch(maps);
-
   }
 
   public int update(final ActionInfo actionInfo) {

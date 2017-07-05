@@ -25,6 +25,7 @@ import java.util.Properties;
 
 public class TestDaoUtil {
   protected DruidPool druidPool;
+  protected String url;
 
   public void initDao() throws Exception {
     InputStream in = getClass().getClassLoader()
@@ -33,7 +34,7 @@ public class TestDaoUtil {
     p.loadFromXML(in);
 
     String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
+    url = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
     p.setProperty("url", url);
 
     druidPool = new DruidPool(p);

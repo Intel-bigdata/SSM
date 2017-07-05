@@ -6,7 +6,7 @@ Docker can greately reduce boring time for installing and maintaining software o
 
 ### Launch a mysql container
 
-Pull mysql official image from docker store.
+Pull latest mysql official image from docker store. You can use `mysql:tag` to specify the MySQL version (`tag`) you want.
 
 ```
 docker pull mysql
@@ -28,11 +28,11 @@ Parameters:
 Assuming you are in SSM root directory, modify `conf/druid.xml` to enable SSM to connect with mysql.
 
 ```
-	<entry key="url">jdbc:mysql:/localhost/{database_name}/</entry>
+	<entry key="url">jdbc:mysql://localhost/{database_name}</entry>
 	<entry key="username">root</entry>
 	<entry key="password">{root_password}</entry>
 ```
-Use `bin/start-smart.sh -format` to test/re-init the database.
+Wait for at least 10 seconds. Then, use `bin/start-smart.sh -format` to format (re-init) the database. Also, you can use this command to clear all data in database in tests.
 
 ### Stop/Remove Mysql container
 

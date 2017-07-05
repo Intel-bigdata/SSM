@@ -9,18 +9,30 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManagementDao {
+public class MetaStoreHelper {
   private DataSource dataSource;
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
-  public ManagementDao(DataSource dataSource) {
+  public MetaStoreHelper(DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
   public void execute(String sql) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    jdbcTemplate.execute(sql);
+  }
+
+  public void dropTable(String tableName) {
+    String sql = "DROP TABLE IF EXISTS " + tableName;
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    jdbcTemplate.execute(sql);
+  }
+
+  public void dropView(String viewName) {
+    String sql = "DROP VIEW IF EXISTS " + viewName;
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     jdbcTemplate.execute(sql);
   }

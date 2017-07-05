@@ -28,12 +28,12 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.protocol.ClientServerProto;
 import org.smartdata.protocol.SmartServerProtocols;
-import org.smartdata.protocol.protocolPB.SmartClientProtocolPB;
+import org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer;
+import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.SmartServiceState;
 import org.smartdata.protocol.AdminServerProto;
-import org.smartdata.protocol.protocolPB.SmartAdminProtocolPB;
-import org.smartdata.protocol.protocolPB.ClientSmartProtocolServerSideTranslatorPB;
+import org.smartdata.protocol.protobuffer.ServerProtocolsServerSideTranslator;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.CmdletInfo;
@@ -60,10 +60,10 @@ public class SmartRpcServer implements SmartServerProtocols {
     this.conf = conf;
     // TODO: implement ssm SmartAdminProtocol
     InetSocketAddress rpcAddr = getRpcServerAddress();
-    RPC.setProtocolEngine(conf, SmartAdminProtocolPB.class, ProtobufRpcEngine.class);
+    RPC.setProtocolEngine(conf, AdminProtocolProtoBuffer.class, ProtobufRpcEngine.class);
 
-    ClientSmartProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
-        = new ClientSmartProtocolServerSideTranslatorPB(this);
+    ServerProtocolsServerSideTranslator clientSSMProtocolServerSideTranslatorPB
+        = new ServerProtocolsServerSideTranslator(this);
 
     BlockingService adminSmartPbService = AdminServerProto.protoService
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
@@ -73,7 +73,7 @@ public class SmartRpcServer implements SmartServerProtocols {
     // TODO: provide service for SmartClientProtocol and SmartAdminProtocol
     // TODO: in different port and server
     clientRpcServer = new RPC.Builder(conf)
-        .setProtocol(SmartAdminProtocolPB.class)
+        .setProtocol(AdminProtocolProtoBuffer.class)
         .setInstance(adminSmartPbService)
         .setBindAddress(rpcAddr.getHostName())
         .setPort(rpcAddr.getPort())
@@ -85,9 +85,9 @@ public class SmartRpcServer implements SmartServerProtocols {
     clientRpcAddress = new InetSocketAddress(
         rpcAddr.getHostName(), listenAddr.getPort());
 
-    DFSUtil.addPBProtocol(conf, SmartAdminProtocolPB.class,
+    DFSUtil.addPBProtocol(conf, AdminProtocolProtoBuffer.class,
         adminSmartPbService, clientRpcServer);
-    DFSUtil.addPBProtocol(conf, SmartClientProtocolPB.class,
+    DFSUtil.addPBProtocol(conf, ClientProtocolProtoBuffer.class,
         clientSmartPbService, clientRpcServer);
   }
 

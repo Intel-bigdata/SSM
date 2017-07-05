@@ -21,7 +21,7 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.utils.HadoopUtils;
+import org.smartdata.utils.HadoopUtil;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
@@ -59,7 +59,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
   public void init() throws IOException {
     LOG.info("Initializing ...");
     SmartContext context = getContext();
-    URI nnUri = HadoopUtils.getNameNodeUri(context.getConf());
+    URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
     this.client = new DFSClient(nnUri, context.getConf());
 
     this.cleanFileTableContents(metaStore);

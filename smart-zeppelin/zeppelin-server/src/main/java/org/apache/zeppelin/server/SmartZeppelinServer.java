@@ -116,7 +116,11 @@ public class SmartZeppelinServer extends Application {
     this.engine = engine;
 
     this.zconf = ZeppelinConfiguration.create();
+
+    this.zconf.setProperty(ConfVars.ZEPPELIN_CONF_DIR.getVarName(),
+        conf.get(SmartConfKeys.SMART_CONF_DIR));
   }
+
 
   private void init() throws Exception {
     this.depResolver = new DependencyResolver(
@@ -226,9 +230,13 @@ public class SmartZeppelinServer extends Application {
       @Override public void run() {
         LOG.info("Shutting down Zeppelin Server ... ");
         try {
-          jettyWebServer.stop();
-          notebook.getInterpreterSettingManager().shutdown();
-          notebook.close();
+          if (jettyWebServer != null) {
+            jettyWebServer.stop();
+          }
+          if (notebook != null) {
+            notebook.getInterpreterSettingManager().shutdown();
+            notebook.close();
+          }
           Thread.sleep(1000);
         } catch (Exception e) {
           LOG.error("Error while stopping servlet container", e);
@@ -241,9 +249,13 @@ public class SmartZeppelinServer extends Application {
   public void stop() {
     LOG.info("Shutting down Zeppelin Server ... ");
     try {
-      jettyWebServer.stop();
-      notebook.getInterpreterSettingManager().shutdown();
-      notebook.close();
+      if (jettyWebServer != null) {
+        jettyWebServer.stop();
+      }
+      if (notebook != null) {
+        notebook.getInterpreterSettingManager().shutdown();
+        notebook.close();
+      }
       Thread.sleep(1000);
     } catch (Exception e) {
       LOG.error("Error while stopping servlet container", e);
@@ -456,7 +468,6 @@ public class SmartZeppelinServer extends Application {
    * @return
    */
   private static boolean isBinaryPackage(ZeppelinConfiguration conf) {
-    //return !new File(conf.getRelativeDir("zeppelin-web")).isDirectory();
     return !new File(conf.getRelativeDir("smart-zeppelin/zeppelin-web")).isDirectory();
   }
 }

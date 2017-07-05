@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.admin.protocolPB;
+package org.smartdata.protocol.protobuffer;
 
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
@@ -43,8 +43,6 @@ import org.smartdata.protocol.AdminServerProto.GetActionInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
 import org.smartdata.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.SmartServiceState;
-import org.smartdata.protocol.protocolPB.PBHelper;
-import org.smartdata.protocol.protocolPB.SmartAdminProtocolPB;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.CmdletInfo;
@@ -57,11 +55,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SmartAdminProtocolAdminSideTranslatorPB implements
+public class AdminProtocolClientSideTranslator implements
     java.io.Closeable, SmartAdminProtocol {
-  private SmartAdminProtocolPB rpcProxy;
+  private AdminProtocolProtoBuffer rpcProxy;
 
-  public SmartAdminProtocolAdminSideTranslatorPB(SmartAdminProtocolPB proxy) {
+  public AdminProtocolClientSideTranslator(AdminProtocolProtoBuffer proxy) {
     this.rpcProxy = proxy;
   }
 
@@ -73,7 +71,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
       return SmartServiceState.fromValue(
           rpcProxy.getServiceState(null, req).getState());
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -83,9 +81,9 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
       GetRuleInfoRequestProto req =
           GetRuleInfoRequestProto.newBuilder().setRuleId(id).build();
       GetRuleInfoResponseProto r = rpcProxy.getRuleInfo(null, req);
-      return PBHelper.convert(r.getResult());
+      return ProtoBufferHelper.convert(r.getResult());
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -93,10 +91,10 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
   public long submitRule(String rule, RuleState initState) throws IOException {
     try {
       SubmitRuleRequestProto req = SubmitRuleRequestProto.newBuilder()
-          .setRule(rule).setInitState(PBHelper.convert(initState)).build();
+          .setRule(rule).setInitState(ProtoBufferHelper.convert(initState)).build();
       return rpcProxy.submitRule(null, req).getRuleId();
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -107,7 +105,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
           .setRule(rule).build();
       rpcProxy.checkRule(null, req);
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -123,11 +121,11 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
       }
       List<RuleInfo> ret = new ArrayList<>();
       for (RuleInfoProto infoProto : infoProtos) {
-        ret.add(PBHelper.convert(infoProto));
+        ret.add(ProtoBufferHelper.convert(infoProto));
       }
       return ret;
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -141,7 +139,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
     try {
       rpcProxy.deleteRule(null, req);
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -152,7 +150,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
     try {
       rpcProxy.activateRule(null, req);
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -166,7 +164,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
     try {
       rpcProxy.disableRule(null, req);
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -176,9 +174,9 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
     GetCmdletInfoRequestProto req = GetCmdletInfoRequestProto.newBuilder()
         .setCmdletID(cmdletID).build();
     try {
-      return PBHelper.convert(rpcProxy.getCmdletInfo(null, req).getCmdletInfo());
+      return ProtoBufferHelper.convert(rpcProxy.getCmdletInfo(null, req).getCmdletInfo());
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -195,11 +193,11 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
         return new ArrayList<>();
       List<CmdletInfo> list = new ArrayList<>();
       for (CmdletInfoProto infoProto : protoslist) {
-        list.add(PBHelper.convert(infoProto));
+        list.add(ProtoBufferHelper.convert(infoProto));
       }
       return list;
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -211,7 +209,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
           .build();
       rpcProxy.activateCmdlet(null, req);
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
 
   }
@@ -224,7 +222,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
           .build();
       rpcProxy.disableCmdlet(null, req);
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -236,7 +234,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
           .build();
       rpcProxy.deleteCmdlet(null, req);
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -246,9 +244,9 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
         .setActionID(actionID)
         .build();
     try {
-      return PBHelper.convert(rpcProxy.getActionInfo(null,req).getActionInfo());
+      return ProtoBufferHelper.convert(rpcProxy.getActionInfo(null,req).getActionInfo());
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -266,11 +264,11 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
       }
       List<ActionInfo> list = new ArrayList<>();
       for (ActionInfoProto infoProto : protoslist) {
-        list.add(PBHelper.convert(infoProto));
+        list.add(ProtoBufferHelper.convert(infoProto));
       }
       return list;
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -281,7 +279,7 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
     try {
      return rpcProxy.submitCmdlet(null,req).getRes();
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
@@ -294,11 +292,11 @@ public class SmartAdminProtocolAdminSideTranslatorPB implements
           .listActionsSupported(null,req).getActDesListList();
       List<ActionDescriptor> list = new ArrayList<>();
       for(ActionDescriptorProto a:prolist){
-        list.add(PBHelper.convert(a));
+        list.add(ProtoBufferHelper.convert(a));
       }
       return list;
     } catch (ServiceException e) {
-      throw PBHelper.getRemoteException(e);
+      throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 

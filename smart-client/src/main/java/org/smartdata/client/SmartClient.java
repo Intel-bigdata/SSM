@@ -21,9 +21,9 @@ package org.smartdata.client;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.smartdata.client.protocolPB.SmartClientProtocolClientSideTranslatorPB;
+import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
 import org.smartdata.protocol.SmartClientProtocol;
-import org.smartdata.protocol.protocolPB.SmartClientProtocolPB;
+import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 
@@ -57,11 +57,11 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   }
 
   private void initialize(InetSocketAddress address) throws IOException {
-    RPC.setProtocolEngine(conf, SmartClientProtocolPB.class,
+    RPC.setProtocolEngine(conf, ClientProtocolProtoBuffer.class,
         ProtobufRpcEngine.class);
-    SmartClientProtocolPB proxy = RPC.getProxy(
-        SmartClientProtocolPB.class, VERSION, address, conf);
-    this.server = new SmartClientProtocolClientSideTranslatorPB(proxy);
+    ClientProtocolProtoBuffer proxy = RPC.getProxy(
+        ClientProtocolProtoBuffer.class, VERSION, address, conf);
+    this.server = new ClientProtocolClientSideTranslator(proxy);
   }
 
   @Override

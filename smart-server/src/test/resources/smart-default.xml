@@ -45,19 +45,13 @@
   </property>
 
   <property>
-    <name>dfs.smart.poll.namenode.interval</name>
-    <value>5</value>
-    <description>Time interval in seconds for SSM to fetch info from NN</description>
-  </property>
-
-  <property>
     <name>smart.dfs.namenode.rpcserver</name>
     <value></value>
     <description>get namenode.rpcserver by ssm</description>
   </property>
 
   <property>
-    <name>dfs.smart.agent.master.address</name>
+    <name>smart.agent.master.address</name>
     <value>0.0.0.0:7051</value>
     <description>SmartAgent master address</description>
   </property>

@@ -51,7 +51,7 @@ public class FileObject extends SmartObject {
     properties.put("age",
         new Property("age", ValueType.TIMEINTVAL,
             null, "files", null, false,
-            "(strftime('%s','now') * 1000 - modification_time)"));
+            "($NOW - modification_time)"));
     properties.put("mtime",
         new Property("mtime", ValueType.TIMEPOINT,
             null, "files", "modification_time", false));
@@ -61,7 +61,7 @@ public class FileObject extends SmartObject {
     properties.put("storagePolicy",
         new Property("storagePolicy", ValueType.STRING,
             null, "files", null, false,
-            "(SELECT policy_name FROM storage_policy WHERE sid == files.sid)"));
+            "(SELECT policy_name FROM storage_policy WHERE sid = files.sid)"));
   }
 
   public FileObject() {

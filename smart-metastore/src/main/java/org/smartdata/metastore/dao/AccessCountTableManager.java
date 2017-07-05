@@ -104,7 +104,7 @@ public class AccessCountTableManager {
 
   public static List<AccessCountTable> getTables(
       Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-      MetaStore adapter,
+      MetaStore metaStore,
       long lengthInMillis)
       throws MetaStoreException {
     if (tableDeques.isEmpty()) {
@@ -115,25 +115,19 @@ public class AccessCountTableManager {
       return new ArrayList<>();
     }
     long now = secondTableDeque.getLast().getEndTime();
-    return getTablesDuring(tableDeques, adapter, lengthInMillis, now, null);
+    return getTablesDuring(tableDeques, metaStore, lengthInMillis, now, TimeUtils.getGranularity(lengthInMillis));
   }
 
   // Todo: multi-thread issue
   private static List<AccessCountTable> getTablesDuring(
       final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-      MetaStore adapter,
+      MetaStore metaStore,
       final long length,
       final long endTime,
-      final TimeGranularity timeGranularityHint)
+      final TimeGranularity timeGranularity)
       throws MetaStoreException {
     long startTime = endTime - length;
-    TimeGranularity timeGranularity =
-        timeGranularityHint == null ? TimeUtils.getGranularity(length) : timeGranularityHint;
     AccessCountTableDeque tables = tableDeques.get(timeGranularity);
-    if (tables.isEmpty()) {
-      TimeGranularity fineGrained = TimeUtils.getFineGarinedGranularity(timeGranularity);
-      return getTablesDuring(tableDeques, adapter, length, endTime, fineGrained);
-    }
     List<AccessCountTable> results = new ArrayList<>();
     for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext(); ) {
       // Here we assume that the tables are all sorted by time.
@@ -141,20 +135,35 @@ public class AccessCountTableManager {
       if (table.getEndTime() > startTime) {
         if (table.getStartTime() >= startTime) {
           results.add(table);
+          startTime = table.getEndTime();
         } else if (table.getStartTime() < startTime) {
-          // We got a table should be spilt here.
-          AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime());
-          splitTable.setView(true);
-          adapter.createProportionView(splitTable, table);
-          results.add(splitTable);
+          // We got a table should be spilt here. But sometimes we will split out an
+          // table that already exists, so this situation should be avoided.
+          if (!tableExists(tableDeques, startTime, table.getEndTime())) {
+            AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime());
+            splitTable.setView(true);
+            metaStore.createProportionView(splitTable, table);
+            results.add(splitTable);
+            startTime = table.getEndTime();
+          }
         }
-        startTime = table.getEndTime();
       }
     }
     if (startTime != endTime && !timeGranularity.equals(TimeGranularity.SECOND)) {
-      results.addAll(getTablesDuring(tableDeques, adapter, endTime - startTime, endTime, null));
+      TimeGranularity fineGrained = TimeUtils.getFineGarinedGranularity(timeGranularity);
+      results.addAll(getTablesDuring(tableDeques, metaStore, endTime - startTime, endTime, fineGrained));
     }
     return results;
+  }
+
+  private static boolean tableExists(final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
+    long start, long end) {
+    TimeGranularity granularity = TimeUtils.getGranularity(end - start);
+    AccessCountTable fakeTable = new AccessCountTable(start, end, granularity);
+    if (!tableDeques.containsKey(granularity)) {
+      return false;
+    }
+    return tableDeques.get(granularity).contains(fakeTable);
   }
 
   @VisibleForTesting
