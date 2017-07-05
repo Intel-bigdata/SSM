@@ -20,16 +20,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>zeppelin</artifactId>
-    <groupId>org.apache.zeppelin</groupId>
-    <version>0.7.2</version>
+    <artifactId>smart-zeppelin</artifactId>
+    <groupId>org.smartdata</groupId>
+    <version>0.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
-  <groupId>org.apache.zeppelin</groupId>
-  <artifactId>zeppelin-spark_2.10</artifactId>
+  <groupId>org.smartdata</groupId>
+  <artifactId>smart-zeppelin-spark_2.10</artifactId>
   <packaging>jar</packaging>
-  <version>0.7.2</version>
+  <version>0.1-SNAPSHOT</version>
   <name>Zeppelin: Spark</name>
   <description>Zeppelin spark support</description>
 
@@ -61,13 +61,13 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>zeppelin-display_${scala.binary.version}</artifactId>
+      <artifactId>smart-zeppelin-display_${scala.binary.version}</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>zeppelin-interpreter</artifactId>
+      <artifactId>smart-zeppelin-interpreter</artifactId>
       <version>${project.version}</version>
     </dependency>
 
