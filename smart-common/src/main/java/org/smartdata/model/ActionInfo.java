@@ -42,10 +42,48 @@ public class ActionInfo {
 
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  public boolean equals(ActionInfo actionInfo) {
+    if (this == actionInfo) {
+      return true;
+    }
+    if (actionInfo == null || getClass() != actionInfo.getClass()) {
+      return false;
+    }
+
+    if (actionId != actionInfo.actionId
+        || cmdletId != actionInfo.cmdletId
+        || successful != actionInfo.successful
+        || createTime != actionInfo.createTime
+        || finished != actionInfo.finished
+        || finishTime != actionInfo.finishTime
+        || progress != actionInfo.progress) {
+      return false;
+    }
+
+    if ((actionName != null ? !actionName.equals(actionInfo.actionName) : actionInfo.actionName != null)
+        || (args != null ? !args.equals(actionInfo.args) : actionInfo.args != null)
+        || (result != null ? !result.equals(actionInfo.result) : actionInfo.result != null)
+        || (log != null ? !log.equals(actionInfo.log) : actionInfo.log != null)) {
+      return false;
+    }
+
+    return true;
+  }
+
   public ActionInfo(long actionId, long cmdletId, String actionName,
-                    Map<String, String> args, String result, String log,
-                    boolean successful, long createTime, boolean finished,
-                    long finishTime, float progress) {
+      Map<String, String> args, String result, String log,
+      boolean successful, long createTime, boolean finished,
+      long finishTime, float progress) {
     this.actionId = actionId;
     this.cmdletId = cmdletId;
     this.actionName = actionName;
@@ -99,7 +137,8 @@ public class ActionInfo {
   public void setArgsFromJsonString(String jsonArgs) {
     Gson gson = new Gson();
     args = gson.fromJson(jsonArgs,
-        new TypeToken<Map<String, String>>(){}.getType());
+        new TypeToken<Map<String, String>>() {
+        }.getType());
   }
 
   public String getResult() {
@@ -238,7 +277,7 @@ public class ActionInfo {
     }
 
     public ActionInfo build() {
-      return new ActionInfo(actionId,cmdletId,actionName, args, result,
+      return new ActionInfo(actionId, cmdletId, actionName, args, result,
           log, successful, createTime, finished, finishTime, progress);
     }
   }
