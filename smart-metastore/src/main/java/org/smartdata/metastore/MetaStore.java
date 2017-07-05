@@ -458,15 +458,17 @@ public class MetaStore {
 
   public void dropTable(String tableName) throws MetaStoreException {
     try {
-      execute("DROP TABLE " + tableName);
+      LOG.debug("Drop table = {}", tableName);
+      metaStoreHelper.dropTable(tableName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public void dropView(String tableName) throws MetaStoreException {
+  public void dropView(String viewName) throws MetaStoreException {
     try {
-      execute("DROP VIEW IF EXISTS " + tableName);
+      LOG.debug("Drop view = {}", viewName);
+      metaStoreHelper.dropView(viewName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -474,6 +476,7 @@ public class MetaStore {
 
   public void execute(String sql) throws MetaStoreException {
     try {
+      LOG.debug("Execute sql = {}", sql);
       metaStoreHelper.execute(sql);
     } catch (Exception e) {
       throw new MetaStoreException(e);

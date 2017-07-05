@@ -25,6 +25,18 @@ public class MetaStoreHelper {
     jdbcTemplate.execute(sql);
   }
 
+  public void dropTable(String tableName) {
+    String sql = "DROP TABLE IF EXISTS " + tableName;
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    jdbcTemplate.execute(sql);
+  }
+
+  public void dropView(String viewName) {
+    String sql = "DROP VIEW IF EXISTS " + viewName;
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    jdbcTemplate.execute(sql);
+  }
+
   public List<String> getFilesPath(String sql) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query(sql, new ResultSetExtractor<List<String>>() {
