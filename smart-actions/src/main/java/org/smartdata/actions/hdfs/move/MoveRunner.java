@@ -24,5 +24,4 @@ public abstract class MoveRunner {
 
   public abstract void move(String file) throws Exception;
 
-  public abstract void move(String[] files) throws Exception;
 }
