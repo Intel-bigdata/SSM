@@ -36,6 +36,16 @@ public class RuleInfo implements Cloneable {
   private long numCmdsGen;
   private long lastCheckTime;
 
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
   public boolean equals(RuleInfo info) {
     if (this == info) {
       return true;
