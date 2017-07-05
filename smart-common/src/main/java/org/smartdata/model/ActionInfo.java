@@ -61,19 +61,19 @@ public class ActionInfo {
     }
 
     if (actionId != actionInfo.actionId
-            || cmdletId != actionInfo.cmdletId
-            || successful != actionInfo.successful
-            || createTime != actionInfo.createTime
-            || finished != actionInfo.finished
-            || finishTime != actionInfo.finishTime
-            || progress != actionInfo.progress) {
+        || cmdletId != actionInfo.cmdletId
+        || successful != actionInfo.successful
+        || createTime != actionInfo.createTime
+        || finished != actionInfo.finished
+        || finishTime != actionInfo.finishTime
+        || progress != actionInfo.progress) {
       return false;
     }
 
     if ((actionName != null ? !actionName.equals(actionInfo.actionName) : actionInfo.actionName != null)
-            || (args != null ? !args.equals(actionInfo.args) : actionInfo.args != null)
-            || (result != null ? !result.equals(actionInfo.result) : actionInfo.result != null)
-            || (log != null ? !log.equals(actionInfo.log) : actionInfo.log != null)) {
+        || (args != null ? !args.equals(actionInfo.args) : actionInfo.args != null)
+        || (result != null ? !result.equals(actionInfo.result) : actionInfo.result != null)
+        || (log != null ? !log.equals(actionInfo.log) : actionInfo.log != null)) {
       return false;
     }
 
@@ -81,9 +81,9 @@ public class ActionInfo {
   }
 
   public ActionInfo(long actionId, long cmdletId, String actionName,
-                    Map<String, String> args, String result, String log,
-                    boolean successful, long createTime, boolean finished,
-                    long finishTime, float progress) {
+      Map<String, String> args, String result, String log,
+      boolean successful, long createTime, boolean finished,
+      long finishTime, float progress) {
     this.actionId = actionId;
     this.cmdletId = cmdletId;
     this.actionName = actionName;
@@ -137,8 +137,8 @@ public class ActionInfo {
   public void setArgsFromJsonString(String jsonArgs) {
     Gson gson = new Gson();
     args = gson.fromJson(jsonArgs,
-            new TypeToken<Map<String, String>>() {
-            }.getType());
+        new TypeToken<Map<String, String>>() {
+        }.getType());
   }
 
   public String getResult() {
@@ -278,7 +278,7 @@ public class ActionInfo {
 
     public ActionInfo build() {
       return new ActionInfo(actionId, cmdletId, actionName, args, result,
-              log, successful, createTime, finished, finishTime, progress);
+          log, successful, createTime, finished, finishTime, progress);
     }
   }
 }
