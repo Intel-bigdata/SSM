@@ -27,8 +27,4 @@ public class SPSBasedMoveRunner extends MoveRunner {
 
   }
 
-  @Override
-  public void move(String[] files) throws Exception {
-
-  }
 }
