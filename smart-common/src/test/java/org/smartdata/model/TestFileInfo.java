@@ -33,43 +33,34 @@ public class TestFileInfo {
   @Test
   public void testEquals() throws Exception {
     //Case 1:
-    FileInfo fileInfo = new FileInfo(" ", 1, 1, true, (short) 1, 1
-        , 1, 1, (short) 1, " ", " ", (byte) 1);
+    FileInfo fileInfo = new FileInfo(" ", 1, 1, true, (short) 1, 1, 1, 1, (short) 1, " ", " ", (byte) 1);
     Assert.assertEquals(true, fileInfo.equals(fileInfo));
 
     //Case 2:
-    FileInfo fileInfo1 = new FileInfo(" ", 1, 1, true, (short) 1, 1
-        , 1, 1, (short) 1, " ", " ", (byte) 1);
+    FileInfo fileInfo1 = new FileInfo(" ", 1, 1, true, (short) 1, 1, 1, 1, (short) 1, " ", " ", (byte) 1);
     Assert.assertEquals(true, fileInfo.equals(fileInfo1));
 
     //Case 3:
-    FileInfo fileInfo2 = new FileInfo(" ", 1, 1, true, (short) 1, 1
-        , 1, 1, (short) 1, null, " ", (byte) 1);
+    FileInfo fileInfo2 = new FileInfo(" ", 1, 1, true, (short) 1, 1, 1, 1, (short) 1, null, " ", (byte) 1);
     Assert.assertEquals(false, fileInfo.equals(fileInfo2));
     Assert.assertEquals(false, fileInfo2.equals(fileInfo));
 
     //Case 4:
-    FileInfo fileInfo3 = new FileInfo(null, 1, 1, true, (short) 1, 1
-        , 1, 1, (short) 1, " ", " ", (byte) 1);
+    FileInfo fileInfo3 = new FileInfo(null, 1, 1, true, (short) 1, 1, 1, 1, (short) 1, " ", " ", (byte) 1);
     Assert.assertEquals(false, fileInfo.equals(fileInfo3));
     Assert.assertEquals(false, fileInfo3.equals(fileInfo));
 
 
     //Case 5:
-    FileInfo fileInfo4 = new FileInfo(null, 1, 1, true, (short) 1, 1
-        , 1, 1, (short) 1, " ", null, (byte) 1);
+    FileInfo fileInfo4 = new FileInfo(null, 1, 1, true, (short) 1, 1, 1, 1, (short) 1, " ", null, (byte) 1);
     Assert.assertEquals(false, fileInfo.equals(fileInfo4));
     Assert.assertEquals(false, fileInfo4.equals(fileInfo));
 
     //Case 6:
-    FileInfo fileInfo5 = new FileInfo(" ", 1, 1, true, (short) 1, 1
-        , 1, 1, (short) 2, " ", " ", (byte) 1);
+    FileInfo fileInfo5 = new FileInfo(" ", 1, 1, true, (short) 1, 1, 1, 1, (short) 2, " ", " ", (byte) 1);
     Assert.assertEquals(false, fileInfo.equals(fileInfo5));
 
-    //Case 7;
-    FileInfo fileInfo6 = new ChildFileInfo(" ", 1, 1, true, (short) 1, 1
-        , 1, 1, (short) 2, " ", " ", (byte) 1);
-    Assert.assertEquals(false, fileInfo.equals(fileInfo6));
+
 
   }
 }

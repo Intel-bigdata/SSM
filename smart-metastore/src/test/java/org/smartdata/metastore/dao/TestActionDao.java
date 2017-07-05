@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,9 +52,9 @@ public class TestActionDao extends TestDaoUtil {
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
-            "cache", args, "Test",
-            "Test", false, 123213213l, true, 123123l,
-            100);
+        "cache", args, "Test",
+        "Test", false, 123213213l, true, 123123l,
+        100);
     actionDao.insert(new ActionInfo[]{actionInfo});
     ActionInfo dbActionInfo = actionDao.getById(1l);
     Assert.assertTrue(actionInfo.equals(dbActionInfo));
@@ -71,9 +71,9 @@ public class TestActionDao extends TestDaoUtil {
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
-            "cache", args, "Test",
-            "Test", false, 123213213l, true, 123123l,
-            100);
+        "cache", args, "Test",
+        "Test", false, 123213213l, true, 123123l,
+        100);
     actionDao.insert(actionInfo);
     actionInfo.setSuccessful(true);
     actionDao.update(actionInfo);
@@ -86,9 +86,9 @@ public class TestActionDao extends TestDaoUtil {
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
-            "cache", args, "Test",
-            "Test", false, 123213213l, true, 123123l,
-            100);
+        "cache", args, "Test",
+        "Test", false, 123213213l, true, 123123l,
+        100);
     List<ActionInfo> actionInfoList = actionDao.getLatestActions(10);
     // Get from empty table
     Assert.assertTrue(actionInfoList.size() == 0);
@@ -109,9 +109,9 @@ public class TestActionDao extends TestDaoUtil {
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
-            "cache", args, "Test",
-            "Test", false, 123213213l, true, 123123l,
-            100);
+        "cache", args, "Test",
+        "Test", false, 123213213l, true, 123123l,
+        100);
     Assert.assertTrue(actionDao.getMaxId() == 0);
     actionDao.insert(actionInfo);
     Assert.assertTrue(actionDao.getMaxId() == 2);
