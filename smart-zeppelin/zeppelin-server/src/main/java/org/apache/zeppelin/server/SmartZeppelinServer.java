@@ -115,8 +115,6 @@ public class SmartZeppelinServer extends Application {
     this.engine = engine;
 
     this.zconf = ZeppelinConfiguration.create();
-    this.zconf.setProperty(ConfVars.ZEPPELIN_CONF_DIR.getVarName(),
-        conf.get(SmartConfKeys.SMART_CONF_DIR));
 
     //init();
   }
