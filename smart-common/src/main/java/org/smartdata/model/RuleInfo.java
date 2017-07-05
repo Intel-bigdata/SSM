@@ -36,6 +36,32 @@ public class RuleInfo implements Cloneable {
   private long numCmdsGen;
   private long lastCheckTime;
 
+  public boolean equals(RuleInfo info) {
+    if (this == info) {
+      return true;
+    }
+    if (info == null || getClass() != info.getClass()) {
+      return false;
+    }
+
+    if (id != info.id
+            || submitTime != info.submitTime
+            || numChecked != info.numChecked
+            || numCmdsGen != info.numCmdsGen
+            || lastCheckTime != info.lastCheckTime
+            ) {
+      return false;
+    }
+
+    if ((ruleText != null ? !ruleText.equals(info.ruleText) : info.ruleText != null)
+            || (state != null ? !state.equals(info.state) : info.state != null)
+            ) {
+      return false;
+    }
+
+    return true;
+  }
+
   public long getId() {
     return id;
   }
@@ -129,13 +155,7 @@ public class RuleInfo implements Cloneable {
     this.lastCheckTime = lastCheckTime;
   }
 
-  public boolean equals(RuleInfo info) {
-    return info != null && id == info.id && submitTime == info.submitTime
-        && ruleText.equals(info.ruleText) && state == info.state
-        && numChecked == info.numChecked
-        && numCmdsGen == info.numCmdsGen
-        && lastCheckTime == info.lastCheckTime;
-  }
+
 
   @Override
   public String toString() {

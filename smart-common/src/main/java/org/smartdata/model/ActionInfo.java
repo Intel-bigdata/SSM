@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,6 +40,35 @@ public class ActionInfo {
 
   public ActionInfo() {
 
+  }
+
+
+  public boolean equals(ActionInfo actionInfo) {
+    if (this == actionInfo) {
+      return true;
+    }
+    if (actionInfo == null || getClass() != actionInfo.getClass()) {
+      return false;
+    }
+
+    if (actionId != actionInfo.actionId
+            || cmdletId != actionInfo.cmdletId
+            || successful != actionInfo.successful
+            || createTime != actionInfo.createTime
+            || finished != actionInfo.finished
+            || finishTime != actionInfo.finishTime
+            || progress != actionInfo.progress) {
+      return false;
+    }
+
+    if ((actionName != null ? !actionName.equals(actionInfo.actionName) : actionInfo.actionName != null)
+            || (args != null ? !args.equals(actionInfo.args) : actionInfo.args != null)
+            || (result != null ? !result.equals(actionInfo.result) : actionInfo.result != null)
+            || (log != null ? !log.equals(actionInfo.log) : actionInfo.log != null)) {
+      return false;
+    }
+
+    return true;
   }
 
   public ActionInfo(long actionId, long cmdletId, String actionName,
@@ -99,7 +128,8 @@ public class ActionInfo {
   public void setArgsFromJsonString(String jsonArgs) {
     Gson gson = new Gson();
     args = gson.fromJson(jsonArgs,
-        new TypeToken<Map<String, String>>(){}.getType());
+            new TypeToken<Map<String, String>>() {
+            }.getType());
   }
 
   public String getResult() {
@@ -238,8 +268,8 @@ public class ActionInfo {
     }
 
     public ActionInfo build() {
-      return new ActionInfo(actionId,cmdletId,actionName, args, result,
-          log, successful, createTime, finished, finishTime, progress);
+      return new ActionInfo(actionId, cmdletId, actionName, args, result,
+              log, successful, createTime, finished, finishTime, progress);
     }
   }
 }
