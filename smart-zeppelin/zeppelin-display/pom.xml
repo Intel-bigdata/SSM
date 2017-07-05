@@ -27,7 +27,7 @@
   </parent>
 
   <groupId>org.smartdata</groupId>
-  <artifactId>smart-zeppelin-display_2.10</artifactId>
+  <artifactId>smart-zeppelin-display</artifactId>
   <packaging>jar</packaging>
   <version>0.1-SNAPSHOT</version>
   <name>Zeppelin: Display system apis</name>
@@ -97,21 +97,14 @@
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
-  </dependencies>
 
-  <profiles>
-    <profile>
-      <id>scala-2.11</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-xml_${scala.binary.version}</artifactId>
-          <version>1.0.2</version>
-          <scope>provided</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
+    <dependency>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-xml_${scala.binary.version}</artifactId>
+      <version>1.0.2</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
