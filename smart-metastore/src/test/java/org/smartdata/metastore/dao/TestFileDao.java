@@ -78,6 +78,8 @@ public class TestFileDao extends TestDaoUtil {
     HdfsFileStatus hdfsFileStatus = fileDao.getByPath("/tmp/testFile");
     Assert.assertTrue(
         hdfsFileStatus.getBlockSize() == fileStatusInternal.getBlockSize());
+    Assert.assertTrue(
+        hdfsFileStatus.getStoragePolicy() == fileStatusInternal.getStoragePolicy());
     hdfsFileStatus = fileDao.getById(312321L);
     Assert.assertTrue(hdfsFileStatus.getModificationTime() ==
         fileStatusInternal.getModificationTime());
