@@ -46,7 +46,6 @@ public class CmdletInfo {
   }
 
 
-
   public boolean equals(CmdletInfo cmdletInfo) {
     if (this == cmdletInfo) {
       return true;
@@ -56,15 +55,15 @@ public class CmdletInfo {
     }
 
     if (cid != cmdletInfo.cid
-            || rid != cmdletInfo.rid
-            || generateTime != cmdletInfo.generateTime
-            || stateChangedTime != cmdletInfo.stateChangedTime) {
+        || rid != cmdletInfo.rid
+        || generateTime != cmdletInfo.generateTime
+        || stateChangedTime != cmdletInfo.stateChangedTime) {
       return false;
     }
 
     if ((aids != null ? !aids.equals(cmdletInfo.aids) : cmdletInfo.aids != null)
-            || (state != null ? !state.equals(cmdletInfo.state) : cmdletInfo.state != null)
-            || (parameters != null ? !parameters.equals(cmdletInfo.parameters) : cmdletInfo.parameters != null)) {
+        || (state != null ? !state.equals(cmdletInfo.state) : cmdletInfo.state != null)
+        || (parameters != null ? !parameters.equals(cmdletInfo.parameters) : cmdletInfo.parameters != null)) {
       return false;
     }
 
@@ -72,7 +71,7 @@ public class CmdletInfo {
   }
 
   public CmdletInfo(long cid, long rid, CmdletState state,
-                    String parameters, long generateTime, long stateChangedTime) {
+      String parameters, long generateTime, long stateChangedTime) {
     this.cid = cid;
     this.rid = rid;
     this.state = state;
@@ -83,7 +82,7 @@ public class CmdletInfo {
   }
 
   public CmdletInfo(long cid, long rid, List<Long> aids, CmdletState state,
-                    String parameters, long generateTime, long stateChangedTime) {
+      String parameters, long generateTime, long stateChangedTime) {
     this(cid, rid, state, parameters, generateTime, stateChangedTime);
     this.aids = aids;
   }
@@ -91,10 +90,10 @@ public class CmdletInfo {
   @Override
   public String toString() {
     return String.format("{cid = %d, rid = %d, aids = %s, genTime = %d, "
-                    + "stateChangedTime = %d, state = %s, params = %s}",
-            cid, rid, StringUtils.join(getAidsString(), ","),
-            generateTime, stateChangedTime, state,
-            parameters);
+            + "stateChangedTime = %d, state = %s, params = %s}",
+        cid, rid, StringUtils.join(getAidsString(), ","),
+        generateTime, stateChangedTime, state,
+        parameters);
   }
 
   public void addAction(long aid) {
@@ -220,7 +219,7 @@ public class CmdletInfo {
 
     public CmdletInfo build() {
       return new CmdletInfo(cid, rid, aids, state, parameters,
-              generateTime, stateChangedTime);
+          generateTime, stateChangedTime);
     }
   }
 }
