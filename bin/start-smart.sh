@@ -80,4 +80,5 @@ fi
 #   $(mkdir -p "${SMART_PID_DIR}")
 # fi
 
+vargs+=" -D smart.conf.dir="${SMART_CONF_DIR}
 exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $vargs
