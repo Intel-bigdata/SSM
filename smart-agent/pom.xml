@@ -42,7 +42,7 @@
       <groupId>org.smartdata</groupId>
       <artifactId>smart-dfsclient</artifactId>
       <version>0.1-SNAPSHOT</version>
-      <scope>provided</scope>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
