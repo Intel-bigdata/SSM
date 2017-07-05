@@ -17,22 +17,28 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.protocol.*;
-import org.apache.hadoop.hdfs.server.balancer.Dispatcher;
+import org.apache.hadoop.hdfs.protocol.Block;
+import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.hdfs.server.balancer.Matcher;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
-import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -43,27 +49,22 @@ class MoverProcessor {
 
   private final DFSClient dfs;
   private final Dispatcher dispatcher;
-  private final List<Path> targetPaths;
-  private final int retryMaxAttempts;
+  private Path targetPath;
   private final StorageMap storages;
   private final AtomicInteger retryCount;
-  private final List<String> snapshottableDirs = new ArrayList<String>();
 
   private final BlockStoragePolicy[] blockStoragePolicies;
   private long movedBlocks = 0;
   private long remainingBlocks = 0;
   private final MoverStatus moverStatus;
 
-  MoverProcessor(Dispatcher dispatcher, List<Path> targetPaths,
-      AtomicInteger retryCount, int retryMaxAttempts, StorageMap storages,
-      MoverStatus moverStatus)
-      throws IOException {
+  MoverProcessor(Dispatcher dispatcher, Path targetPath, StorageMap storages,
+      MoverStatus moverStatus) throws IOException {
     this.dispatcher = dispatcher;
+    this.targetPath = targetPath;
     this.dfs = dispatcher.getDistributedFileSystem().getClient();
-    this.targetPaths = targetPaths;
-    this.retryMaxAttempts = retryMaxAttempts;
     this.storages = storages;
-    this.retryCount = retryCount;
+    this.retryCount = new AtomicInteger(1);
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
         BlockStoragePolicySuite.ID_BIT_LENGTH];
     initStoragePolicies();
@@ -79,63 +80,12 @@ class MoverProcessor {
     }
   }
 
-  private void getSnapshottableDirs() {
-    SnapshottableDirectoryStatus[] dirs = null;
-    try {
-      dirs = dfs.getSnapshottableDirListing();
-    } catch (IOException e) {
-      LOG.warn("Failed to get snapshottable directories."
-              + " Ignore and continue.", e);
-    }
-    if (dirs != null) {
-      for (SnapshottableDirectoryStatus dir : dirs) {
-        snapshottableDirs.add(dir.getFullPath().toString());
-      }
-    }
-  }
-
-  /**
-   * @return true if the given path is a snapshot path and the corresponding
-   * INode is still in the current fsdirectory.
-   */
-  private boolean isSnapshotPathInCurrent(String path) throws IOException {
-    // if the parent path contains "/.snapshot/", this is a snapshot path
-    if (path.contains(HdfsConstants.SEPARATOR_DOT_SNAPSHOT_DIR_SEPARATOR)) {
-      String[] pathComponents = INode.getPathNames(path);
-      if (HdfsConstants.DOT_SNAPSHOT_DIR
-              .equals(pathComponents[pathComponents.length - 2])) {
-        // this is a path for a specific snapshot (e.g., /foo/.snapshot/s1)
-        return false;
-      }
-      String nonSnapshotPath = convertSnapshotPath(pathComponents);
-      return dfs.getFileInfo(nonSnapshotPath) != null;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * convert a snapshot path to non-snapshot path. E.g.,
-   * /foo/.snapshot/snapshot-name/bar --> /foo/bar
-   */
-  private String convertSnapshotPath(String[] pathComponents) {
-    StringBuilder sb = new StringBuilder(Path.SEPARATOR);
-    for (int i = 0; i < pathComponents.length; i++) {
-      if (pathComponents[i].equals(HdfsConstants.DOT_SNAPSHOT_DIR)) {
-        i++;
-      } else {
-        sb.append(pathComponents[i]);
-      }
-    }
-    return sb.toString();
-  }
-
   Dispatcher.DBlock newDBlock(LocatedBlock lb, List<MLocation> locations) {
     Block blk = lb.getBlock().getLocalBlock();
     Dispatcher.DBlock db;
     db = new Dispatcher.DBlock(blk);
     for(MLocation ml : locations) {
-      Dispatcher.DDatanode.StorageGroup source = storages.getSource(ml);
+      Dispatcher.StorageGroup source = storages.getSource(ml);
       if (source != null) {
         db.addLocation(source);
       }
@@ -148,19 +98,19 @@ class MoverProcessor {
    * round
    */
   ExitStatus processNamespace() throws IOException {
-    getSnapshottableDirs();
     MoverProcessResult result = new MoverProcessResult();
-    for (Path target : targetPaths) {
-      processPath(target.toUri().getPath(), result);
+    HdfsFileStatus status = dfs.getFileInfo(targetPath.toUri().getPath());
+    if (!status.isSymlink()) { // file
+      processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status, result);
     }
+
     // wait for pending move to finish and retry the failed migration
-    boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.getTargets()
-            .values());
+    boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.getTargets().values());
     if (hasFailed) {
-      if (retryCount.get() == retryMaxAttempts) {
+      if (retryCount.get() == 1) {
         result.setRetryFailed();
         LOG.error("Failed to move some block's after "
-                + retryMaxAttempts + " retries.");
+                + 1 + " retries.");
         return result.getExitStatus();
       } else {
         retryCount.incrementAndGet();
@@ -173,65 +123,6 @@ class MoverProcessor {
     moverStatus.setMovedBlocks(movedBlocks);
     result.updateHasRemaining(hasFailed);
     return result.getExitStatus();
-  }
-
-  /**
-   * @return whether there is still remaining migration work for the next
-   * round
-   */
-  private void processPath(String fullPath, MoverProcessResult result) {
-    for (byte[] lastReturnedName = HdfsFileStatus.EMPTY_NAME; ; ) {
-      final DirectoryListing children;
-      try {
-        children = dfs.listPaths(fullPath, lastReturnedName, true);
-      } catch (IOException e) {
-        LOG.warn("Failed to list directory " + fullPath
-                + ". Ignore the directory and continue.", e);
-        return;
-      }
-      if (children == null) {
-        return;
-      }
-      for (HdfsFileStatus child : children.getPartialListing()) {
-        processRecursively(fullPath, child, result);
-      }
-      if (children.hasMore()) {
-        lastReturnedName = children.getLastName();
-      } else {
-        return;
-      }
-    }
-  }
-
-  /**
-   * @return whether the migration requires next round
-   */
-  private void processRecursively(String parent, HdfsFileStatus status,
-                                  MoverProcessResult result) {
-    String fullPath = status.getFullName(parent);
-    if (status.isDir()) {
-      if (!fullPath.endsWith(Path.SEPARATOR)) {
-        fullPath = fullPath + Path.SEPARATOR;
-      }
-
-      processPath(fullPath, result);
-      // process snapshots if this is a snapshottable directory
-      if (snapshottableDirs.contains(fullPath)) {
-        final String dirSnapshot = fullPath + HdfsConstants.DOT_SNAPSHOT_DIR;
-        processPath(dirSnapshot, result);
-      }
-    } else if (!status.isSymlink()) { // file
-      try {
-        if (!isSnapshotPathInCurrent(fullPath)) {
-          // the full path is a snapshot path but it is also included in the
-          // current directory tree, thus ignore it.
-          processFile(fullPath, (HdfsLocatedFileStatus) status, result);
-        }
-      } catch (IOException e) {
-        LOG.warn("Failed to check the moverStatus of " + parent
-                + ". Ignore it and continue.", e);
-      }
-    }
   }
 
   /**
@@ -248,8 +139,7 @@ class MoverProcessor {
       LOG.warn("Failed to get the storage policy of file " + fullPath);
       return;
     }
-    List<StorageType> types = policy.chooseStorageTypes(
-            status.getReplication());
+    List<StorageType> types = policy.chooseStorageTypes(status.getReplication());
 
     final LocatedBlocks locatedBlocks = status.getBlockLocations();
     final boolean lastBlkComplete = locatedBlocks.isLastBlockComplete();
@@ -260,8 +150,7 @@ class MoverProcessor {
         continue;
       }
       LocatedBlock lb = lbs.get(i);
-      final StorageTypeDiff diff = new StorageTypeDiff(types,
-              lb.getStorageTypes());
+      final StorageTypeDiff diff = new StorageTypeDiff(types, lb.getStorageTypes());
       int remainingReplications = diff.removeOverlap(true);
       moverStatus.increaseTotalSize(lb.getBlockSize() * remainingReplications);
       moverStatus.increaseTotalBlocks(remainingReplications);
@@ -298,14 +187,6 @@ class MoverProcessor {
     return false;
   }
 
-  @VisibleForTesting
-  boolean scheduleMoveReplica(Dispatcher.DBlock db, MLocation ml,
-                              List<StorageType> targetTypes) {
-    final Dispatcher.Source source = storages.getSource(ml);
-    return source == null ? false : scheduleMoveReplica(db, source,
-            targetTypes);
-  }
-
   boolean scheduleMoveReplica(Dispatcher.DBlock db, Dispatcher.Source source,
                               List<StorageType> targetTypes) {
     // Match storage on the same node
@@ -333,7 +214,7 @@ class MoverProcessor {
   boolean chooseTargetInSameNode(Dispatcher.DBlock db, Dispatcher.Source source,
                                  List<StorageType> targetTypes) {
     for (StorageType t : targetTypes) {
-      Dispatcher.DDatanode.StorageGroup target = storages.getTarget(source.getDatanodeInfo()
+      Dispatcher.StorageGroup target = storages.getTarget(source.getDatanodeInfo()
               .getDatanodeUuid(), t);
       if (target == null) {
         continue;
@@ -351,9 +232,9 @@ class MoverProcessor {
                        List<StorageType> targetTypes, Matcher matcher) {
     final NetworkTopology cluster = dispatcher.getCluster();
     for (StorageType t : targetTypes) {
-      final List<Dispatcher.DDatanode.StorageGroup> targets = storages.getTargetStorages(t);
+      final List<Dispatcher.StorageGroup> targets = storages.getTargetStorages(t);
       Collections.shuffle(targets);
-      for (Dispatcher.DDatanode.StorageGroup target : targets) {
+      for (Dispatcher.StorageGroup target : targets) {
         if (matcher.match(cluster, source.getDatanodeInfo(),
                 target.getDatanodeInfo())) {
           final Dispatcher.PendingMove pm = source.addPendingMove(db, target);
