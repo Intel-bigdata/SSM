@@ -64,8 +64,8 @@ public class TestCmdletDao extends TestDaoUtil {
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2});
     cmdlet1.setState(CmdletState.DONE);
     cmdletDao.update(cmdlet1);
-    cmdlet1 = cmdletDao.getById(cmdlet1.getCid());
-    Assert.assertTrue(cmdlet1.getState() == CmdletState.DONE);
+    CmdletInfo dbcmdlet1 = cmdletDao.getById(cmdlet1.getCid());
+    Assert.assertTrue(dbcmdlet1.equals(cmdlet1));
     try {
       cmdletDao.getById(2000l);
     } catch (EmptyResultDataAccessException e) {
