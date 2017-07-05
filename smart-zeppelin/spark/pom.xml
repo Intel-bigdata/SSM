@@ -27,7 +27,7 @@
   </parent>
 
   <groupId>org.smartdata</groupId>
-  <artifactId>smart-zeppelin-spark_2.10</artifactId>
+  <artifactId>smart-zeppelin-spark</artifactId>
   <packaging>jar</packaging>
   <version>0.1-SNAPSHOT</version>
   <name>Zeppelin: Spark</name>
@@ -61,7 +61,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>smart-zeppelin-display_${scala.binary.version}</artifactId>
+      <artifactId>smart-zeppelin-display</artifactId>
       <version>${project.version}</version>
     </dependency>
 
