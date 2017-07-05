@@ -81,7 +81,8 @@ public class Mover {
   ExitStatus run() {
     try {
       init();
-      return new MoverProcessor(dispatcher, targetPath, storages, status).processNamespace();
+      MoverProcessor mp = new MoverProcessor(dispatcher, targetPath, storages, status);
+      return mp.processNamespace();
     } catch (IllegalArgumentException e) {
       LOG.info(e + ".  Exiting ...");
       return ExitStatus.ILLEGAL_ARGUMENTS;
