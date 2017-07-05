@@ -76,6 +76,7 @@ public class MetaStore {
   private CmdletDao cmdletDao;
   private ActionDao actionDao;
   private FileDao fileDao;
+  private FileInfoDao fileInfoDao;
   private CacheFileDao cacheFileDao;
   private StorageDao storageDao;
   private UserDao userDao;
@@ -90,6 +91,7 @@ public class MetaStore {
     cmdletDao = new CmdletDao(pool.getDataSource());
     actionDao = new ActionDao(pool.getDataSource());
     fileDao = new FileDao(pool.getDataSource());
+    fileInfoDao = new FileInfoDao(pool.getDataSource());
     xattrDao = new XattrDao(pool.getDataSource());
     cacheFileDao = new CacheFileDao(pool.getDataSource());
     userDao = new UserDao(pool.getDataSource());
@@ -198,7 +200,7 @@ public class MetaStore {
         this.updateGroupsMap();
       }
     }
-    fileDao.insert(files);
+    fileInfoDao.insert(files);
   }
 
   public int updateFileStoragePolicy(String path, String policyName)

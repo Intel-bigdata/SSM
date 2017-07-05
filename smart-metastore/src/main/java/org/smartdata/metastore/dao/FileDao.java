@@ -19,7 +19,6 @@ package org.smartdata.metastore.dao;
 
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileStatusInternal;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -119,37 +118,15 @@ public class FileDao {
   }
 
   public void insert(FileStatusInternal[] fileStatusInternals) {
-    // TODO need upgrade
-//    for (FileStatusInternal file : fileStatusInternals) {
-//      insert(file);
-//    }
-
-    //A new way to batch insert
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("files");
-
     Map<String, Object>[] maps = new Map[fileStatusInternals.length];
-
     for (int i = 0; i < fileStatusInternals.length; i++) {
       maps[i] = toMap(fileStatusInternals[i],mapOwnerIdName,mapGroupIdName);
     }
-
     simpleJdbcInsert.executeBatch(maps);
   }
 
-  public void insert(FileInfo fileInfo) {
-    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("files");
-    simpleJdbcInsert.execute(toMap(fileInfo,
-        mapOwnerIdName, mapGroupIdName));
-  }
-
-  public void insert(FileInfo[] fileInfos) {
-    // TODO need upgrade
-    for (FileInfo file : fileInfos) {
-      insert(file);
-    }
-  }
   public int update(String path, int policyId) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "UPDATE files SET sid =? WHERE path = ?;";
@@ -168,7 +145,6 @@ public class FileDao {
     jdbcTemplate.execute(sql);
   }
 
-
   private Map<String, Object> toMap(FileStatusInternal fileStatusInternal,
       Map<Integer, String> mapOwnerIdName, Map<Integer, String> mapGroupIdName) {
     Map<String, Object> parameters = new HashMap<>();
@@ -180,28 +156,13 @@ public class FileDao {
     parameters.put("modification_time", fileStatusInternal.getModificationTime());
     parameters.put("access_time", fileStatusInternal.getAccessTime());
     parameters.put("is_dir", fileStatusInternal.isDir());
-    parameters.put("sid", MetaStoreUtils.getKey(mapOwnerIdName, fileStatusInternal.getOwner()));
-    parameters.put("oid", MetaStoreUtils.getKey(mapGroupIdName, fileStatusInternal.getGroup()));
+    parameters.put("sid", fileStatusInternal.getStoragePolicy());
+    parameters.put("oid", MetaStoreUtils.getKey(mapOwnerIdName, fileStatusInternal.getOwner()));
+    parameters.put("gid", MetaStoreUtils.getKey(mapGroupIdName, fileStatusInternal.getGroup()));
     parameters.put("permission", fileStatusInternal.getPermission().toShort());
     return parameters;
   }
 
-  private Map<String, Object> toMap(FileInfo fileInfo,
-      Map<Integer, String> mapOwnerIdName, Map<Integer, String> mapGroupIdName) {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("path", fileInfo.getPath());
-    parameters.put("fid", fileInfo.getFileId());
-    parameters.put("length", fileInfo.getLength());
-    parameters.put("block_replication", fileInfo.getBlock_replication());
-    parameters.put("block_size", fileInfo.getBlocksize());
-    parameters.put("modification_time", fileInfo.getModification_time());
-    parameters.put("access_time", fileInfo.getAccess_time());
-    parameters.put("is_dir", fileInfo.isdir());
-    parameters.put("sid", MetaStoreUtils.getKey(mapOwnerIdName, fileInfo.getOwner()));
-    parameters.put("oid", MetaStoreUtils.getKey(mapGroupIdName, fileInfo.getGroup()));
-    parameters.put("permission", fileInfo.getPermission());
-    return parameters;
-  }
 
   class FileRowMapper implements RowMapper<HdfsFileStatus> {
 
