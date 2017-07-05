@@ -142,12 +142,14 @@ public class MetaStore {
   private void updateUsersMap() throws MetaStoreException {
     mapOwnerIdName = userDao.getUsersMap();
     fileDao.updateUsersMap(mapOwnerIdName);
+    fileInfoDao.updateUsersMap(mapOwnerIdName);
   }
 
   private void updateGroupsMap() throws MetaStoreException {
     try {
       mapGroupIdName = groupsDao.getGroupsMap();
       fileDao.updateGroupsMap(mapGroupIdName);
+      fileInfoDao.updateGroupsMap(mapGroupIdName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
