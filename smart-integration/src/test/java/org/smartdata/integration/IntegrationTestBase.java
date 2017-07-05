@@ -21,6 +21,7 @@ import io.restassured.RestAssured;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.integration.cluster.SmartMiniCluster;
 import org.smartdata.integration.cluster.SmartCluster;
 
@@ -37,11 +38,18 @@ public class IntegrationTestBase {
   @BeforeClass
   public static void setup() throws Exception {
     // Set up an HDFS cluster
-    cluster = new SmartMiniCluster();
-    cluster.setUp();
+    conf = new SmartConf();
+    String nn = conf.get(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
+    if (nn == null || nn.length() == 0) {
+      System.out.println("Setting up an mini cluster for testing");
+      cluster = new SmartMiniCluster();
+      cluster.setUp();
+      conf = cluster.getConf();
+    } else {
+      System.out.println("Using extern HDFS cluster:" + nn);
+    }
 
     // Start a Smart server
-    conf = cluster.getConf();
     zeppelinPort = 8080;
     smartServer = new IntegrationSmartServer();
     smartServer.setUp(conf);
@@ -57,7 +65,11 @@ public class IntegrationTestBase {
 
   @AfterClass
   public static void cleanUp() throws Exception {
-    smartServer.cleanUp();
-    cluster.cleanUp();
+    if (smartServer != null) {
+      smartServer.cleanUp();
+    }
+    if (cluster != null) {
+      cluster.cleanUp();
+    }
   }
 }

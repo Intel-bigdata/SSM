@@ -17,12 +17,9 @@
  */
 package org.smartdata.integration;
 
-import org.smartdata.admin.SmartAdmin;
 import org.smartdata.SmartServiceState;
+import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.utils.TestDBUtil;
 import org.smartdata.server.SmartServer;
 
 /**
@@ -37,9 +34,9 @@ public class IntegrationSmartServer {
   public void setUp(SmartConf conf) throws Exception {
     this.conf = conf;
     // Set db used
-    dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
+//    dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+//    dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
+//    conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
     ssm = SmartServer.launchWith(conf);
     waitTillSSMExitSafeMode();
