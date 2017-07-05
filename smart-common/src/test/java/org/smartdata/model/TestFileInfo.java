@@ -33,6 +33,7 @@ public class TestFileInfo {
   @Test
   public void testEquals() throws Exception {
     //Case 1:
+
     FileInfo fileInfo = new FileInfo(" ", 1, 1, true, (short) 1, 1, 1, 1, (short) 1, " ", " ", (byte) 1);
     Assert.assertEquals(true, fileInfo.equals(fileInfo));
 
@@ -42,11 +43,13 @@ public class TestFileInfo {
 
     //Case 3:
     FileInfo fileInfo2 = new FileInfo(" ", 1, 1, true, (short) 1, 1, 1, 1, (short) 1, null, " ", (byte) 1);
+
     Assert.assertEquals(false, fileInfo.equals(fileInfo2));
     Assert.assertEquals(false, fileInfo2.equals(fileInfo));
 
     //Case 4:
     FileInfo fileInfo3 = new FileInfo(null, 1, 1, true, (short) 1, 1, 1, 1, (short) 1, " ", " ", (byte) 1);
+
     Assert.assertEquals(false, fileInfo.equals(fileInfo3));
     Assert.assertEquals(false, fileInfo3.equals(fileInfo));
 

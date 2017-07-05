@@ -45,12 +45,15 @@ under the License.
 
         <form name="form" class="form-horizontal">
           <!-- right margin align to cancel button right -->
-          <div style="margin-bottom: 18px">
-            <!-- input 1 -->
-            <form-control
-              type="text" label="Rule Spec"
-              help="Rule specifications."
-              ng-model="launchArgs"></form-control>
+          <div class="row" style="margin-bottom: 18px">
+            <div class="col-md-2">
+              <span>Rule Spec</span>
+            </div>
+            <div class="col-md-10">
+              <textarea help="Rule specifications."
+                        style="width: inherit; height: inherit;"
+                        ng-model="launchArgs"></textarea>
+            </div>
           </div>
         </form>
       </div>
