@@ -28,7 +28,7 @@ Parameters:
 Assuming you are in SSM root directory, modify `conf/druid.xml` to enable SSM to connect with mysql.
 
 ```
-	<entry key="url">jdbc:mysql:/localhost/{database_name}/</entry>
+	<entry key="url">jdbc:mysql://localhost/{database_name}/</entry>
 	<entry key="username">root</entry>
 	<entry key="password">{root_password}</entry>
 ```
