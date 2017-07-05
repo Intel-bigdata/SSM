@@ -17,10 +17,28 @@
  */
 package org.smartdata.actions.hdfs.move;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.sun.tools.javac.util.Log;
+import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSUtil;
+import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
+import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.URI;
+import java.text.DateFormat;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * HDFS move based move runner.
@@ -31,6 +49,16 @@ public class MoverBasedMoveRunner extends MoveRunner {
   private Configuration conf;
   private MoverStatus actionStatus;
 
+  static class Pair {
+    URI ns;
+    Path path;
+
+    Pair(URI ns, Path path) {
+      this.ns = ns;
+      this.path = path;
+    }
+  }
+
   public MoverBasedMoveRunner(Configuration conf, MoverStatus actionStatus) {
     this.conf = conf;
     this.actionStatus = actionStatus;
@@ -38,12 +66,49 @@ public class MoverBasedMoveRunner extends MoveRunner {
 
   @Override
   public void move(String file) throws Exception {
-    this.move(new String[] {file});
+    long startTime = Time.now();
+    try {
+      final Pair pathPair = getNameNodePathsToMove(file);
+      return Mover.run(pathPair, conf, actionStatus);
+    } finally {
+      long runningTime = Time.now() - startTime;
+      Log.format("%-24s ", DateFormat.getDateTimeInstance().format(new Date()));
+      LOG.info("Mover took " + StringUtils.formatTime(runningTime));
+    }
   }
 
-  @Override
-  public void move(String[] files) throws Exception {
-    MoverCli moverCli = new MoverCli(actionStatus);
-    ToolRunner.run(conf, moverCli, files);
+
+  @VisibleForTesting
+  Pair getNameNodePathsToMove(String path) throws Exception {
+    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
+    final URI singleNs = namenodes.size() == 1 ? namenodes.iterator().next() : null;
+
+    Path target = new Path(path);
+    if (!target.isUriPathAbsolute()) {
+      throw new IllegalArgumentException("The path " + target + " is not absolute");
+    }
+    URI targetUri = target.toUri();
+    if ((targetUri.getAuthority() == null || targetUri.getScheme() == null) && singleNs == null) {
+      // each path must contains both scheme and authority information
+      // unless there is only one name service specified in the
+      // configuration
+      throw new IllegalArgumentException("The path " + target
+              + " does not contain scheme and authority thus cannot identify"
+              + " its name service");
+    }
+
+    URI key = singleNs;
+    if (singleNs == null) {
+      key = new URI(targetUri.getScheme(), targetUri.getAuthority(), null, null, null);
+      if (!namenodes.contains(key)) {
+        throw new IllegalArgumentException(
+            "Cannot resolve the path " + target
+                + ". The namenode services specified in the "
+                + "configuration: " + namenodes);
+      }
+    }
+
+    return new Pair(key, Path.getPathWithoutSchemeAndAuthority(target));
   }
+
 }
