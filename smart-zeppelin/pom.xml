@@ -21,19 +21,20 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.apache.zeppelin</groupId>
-  <artifactId>zeppelin</artifactId>
+  <parent>
+    <groupId>org.smartdata</groupId>
+    <artifactId>smartdata-project</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <groupId>org.smartdata</groupId>
+  <artifactId>smart-zeppelin</artifactId>
   <packaging>pom</packaging>
-  <version>0.7.2</version>
+  <version>0.1-SNAPSHOT</version>
   <name>Zeppelin</name>
   <description>Zeppelin project</description>
   <url>http://zeppelin.apache.org</url>
-
-  <parent>
-    <groupId>org.apache</groupId>
-    <artifactId>apache</artifactId>
-    <version>17</version>
-  </parent>
 
   <licenses>
     <license>

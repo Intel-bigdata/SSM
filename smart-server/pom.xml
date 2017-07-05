@@ -78,9 +78,9 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.zeppelin</groupId>
-            <artifactId>zeppelin-server</artifactId>
-            <version>0.7.2</version>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-zeppelin-server</artifactId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.squareup</groupId>
