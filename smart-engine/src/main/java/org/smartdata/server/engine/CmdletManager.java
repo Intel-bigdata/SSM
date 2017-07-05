@@ -433,6 +433,7 @@ public class CmdletManager extends AbstractService {
         actionInfo.setProgress(status.getPercentage());
         actionInfo.setLog(status.getLog());
         actionInfo.setResult(status.getResult());
+        actionInfo.setFinishTime(System.currentTimeMillis());
       } else {
         // Updating action info which is not pending or running
       }
