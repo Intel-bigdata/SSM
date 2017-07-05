@@ -23,7 +23,7 @@ angular.module('dashboard')
 
             $stateProvider
                 .state('cluster.fileInCache',{
-                    url:'/hottestFiles',
+                    url:'/fileInCache',
                     templateUrl: 'views/cluster/cluster_fileInCache.html',
                     controller: 'FileInCacheCtrl',
                     resolve: {
