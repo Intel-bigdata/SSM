@@ -18,11 +18,13 @@
 
 package org.smartdata.actions.alluxio.metric.fetcher;
 
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-import java.util.concurrent.Executors;
-
+import alluxio.AlluxioURI;
+import alluxio.client.WriteType;
+import alluxio.client.file.FileOutStream;
+import alluxio.client.file.FileSystem;
+import alluxio.client.file.options.CreateFileOptions;
+import alluxio.exception.AlluxioException;
+import alluxio.master.LocalAlluxioCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.After;
 import org.junit.Before;
@@ -31,13 +33,12 @@ import org.smartdata.alluxio.metric.fetcher.AlluxioNamespaceFetcher;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
-import alluxio.AlluxioURI;
-import alluxio.client.WriteType;
-import alluxio.client.file.FileOutStream;
-import alluxio.client.file.FileSystem;
-import alluxio.client.file.options.CreateFileOptions;
-import alluxio.exception.AlluxioException;
-import alluxio.master.LocalAlluxioCluster;
+import java.io.IOException;
+import java.util.concurrent.Executors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class TestAlluxioNamespaceFetcher extends TestDaoUtil {
   LocalAlluxioCluster mLocalAlluxioCluster;
@@ -94,6 +95,8 @@ public class TestAlluxioNamespaceFetcher extends TestDaoUtil {
     while (!fetcher.fetchFinished()) {
       Thread.sleep(1000);
     }
+
+    Thread.sleep(2000);
 
     assertEquals(10, metaStore.getFile().size());
     
