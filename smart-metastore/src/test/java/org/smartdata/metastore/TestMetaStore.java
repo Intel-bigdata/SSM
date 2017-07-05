@@ -29,7 +29,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
-import org.smartdata.model.FileStatusInternal;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
@@ -191,29 +191,25 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testGetFiles() throws Exception {
-    String pathString = "des";
-    long length = 20484l;
+    String pathString = "/tmp/des";
+    long length = 123L;
     boolean isDir = false;
     int blockReplication = 1;
     long blockSize = 128 * 1024L;
     long modTime = 123123123L;
-    long accessTime = 1490936390000l;
-    FsPermission perms = FsPermission.getDefault();
+    long accessTime = 123123120L;
     String owner = "root";
     String group = "admin";
-    byte[] symlink = null;
-    byte[] path = DFSUtil.string2Bytes(pathString);
     long fileId = 56l;
-    int numChildren = 0;
     byte storagePolicy = 0;
-    FileStatusInternal[] files = {new FileStatusInternal(length, isDir, blockReplication,
-        blockSize, modTime, accessTime, perms, owner, group, symlink,
-        path, "/tmp", fileId, numChildren, null, storagePolicy)};
-    metaStore.insertFiles(files);
-    HdfsFileStatus hdfsFileStatus = metaStore.getFile(56);
-    Assert.assertTrue(hdfsFileStatus.getLen() == 20484l);
-    hdfsFileStatus = metaStore.getFile("/tmp/des");
-    Assert.assertTrue(hdfsFileStatus.getAccessTime() == 1490936390000l);
+    FileInfo fileInfo = new FileInfo(pathString, fileId, length,
+        isDir, (short)blockReplication, blockSize, modTime, accessTime,
+        (short) 1, owner, group, storagePolicy);
+    metaStore.insertFile(fileInfo);
+    FileInfo dbFileInfo = metaStore.getFile(56);
+    Assert.assertTrue(dbFileInfo.equals(fileInfo));
+    dbFileInfo = metaStore.getFile("/tmp/des");
+    Assert.assertTrue(dbFileInfo.equals(fileInfo));
   }
   @Test
   public void testInsertStoragesTable() throws Exception {
@@ -360,27 +356,23 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsetFiles() throws Exception {
-    String pathString = "testFile";
+    String pathString = "/tmp/testFile";
     long length = 123L;
     boolean isDir = false;
     int blockReplication = 1;
     long blockSize = 128 * 1024L;
     long modTime = 123123123L;
     long accessTime = 123123120L;
-    FsPermission perms = FsPermission.getDefault();
     String owner = "root";
     String group = "admin";
-    byte[] symlink = null;
-    byte[] path = DFSUtil.string2Bytes(pathString);
     long fileId = 312321L;
-    int numChildren = 0;
     byte storagePolicy = 0;
-    FileStatusInternal[] files = {new FileStatusInternal(length, isDir, blockReplication,
-        blockSize, modTime, accessTime, perms, owner, group, symlink,
-        path, "/tmp", fileId, numChildren, null, storagePolicy)};
+    FileInfo[] files = {new FileInfo(pathString, fileId, length,
+        isDir, (short)blockReplication, blockSize, modTime, accessTime,
+        (short) 1, owner, group, storagePolicy)};
     metaStore.insertFiles(files);
-    HdfsFileStatus hdfsFileStatus = metaStore.getFile("/tmp/testFile");
-    Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 * 1024L);
+    FileInfo dbFileInfo = metaStore.getFile("/tmp/testFile");
+    Assert.assertTrue(dbFileInfo.equals(files[0]));
   }
 
   @Test
