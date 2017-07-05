@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-    <comment>sqlite</comment>
-    <entry key="url">jdbc:sqlite:sqlit-db-path</entry>
-    <entry key="username">""</entry>
-    <entry key="password">""</entry>
+    <!--<entry key="url">jdbc:sqlite:sqlit-db-path</entry>-->
+    <!--<entry key="username"></entry>-->
+    <!--<entry key="password"></entry>-->
 
     <entry key="initialSize">10</entry>
     <entry key="minIdle">4</entry>
