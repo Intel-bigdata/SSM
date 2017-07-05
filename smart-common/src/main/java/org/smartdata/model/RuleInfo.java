@@ -59,8 +59,6 @@ public class RuleInfo implements Cloneable {
         || numChecked != info.numChecked
         || numCmdsGen != info.numCmdsGen
         || lastCheckTime != info.lastCheckTime) {
-        || lastCheckTime != info.lastCheckTime
-        ) {
       return false;
     }
 
