@@ -24,6 +24,7 @@ import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
@@ -112,6 +113,11 @@ public class AgentMaster {
       infos.add(new AgentInfo(entry.getValue().getId(), location));
     }
     return infos;
+  }
+
+  @VisibleForTesting
+  ActorRef getMasterActor() {
+    return master;
   }
 
   Object askMaster(Object message) throws Exception {
