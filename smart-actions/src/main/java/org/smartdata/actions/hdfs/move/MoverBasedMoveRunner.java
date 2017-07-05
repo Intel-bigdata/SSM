@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.ToolRunner;
@@ -67,10 +68,35 @@ public class MoverBasedMoveRunner extends MoveRunner {
   @Override
   public void move(String file) throws Exception {
     long startTime = Time.now();
+    NameNodeConnector nnc = null;
     try {
       final Pair pathPair = getNameNodePathsToMove(file);
-      return Mover.run(pathPair, conf, actionStatus);
+      //return Mover.run(pathPair, conf, actionStatus);
+      LOG.info("Namenode = " + pathPair.ns);
+      nnc = new NameNodeConnector(pathPair.ns, conf);
+
+      final Mover m = new Mover(nnc, conf, actionStatus);
+      final ExitStatus r = m.run();
+
+      if (r == ExitStatus.SUCCESS) {
+        actionStatus.setMovedBlocks(actionStatus.getTotalBlocks());
+        IOUtils.cleanup(null, nnc);
+      } else if (r != ExitStatus.IN_PROGRESS) {
+        if (r == ExitStatus.NO_MOVE_PROGRESS) {
+          LOG.error("Failed to move some blocks after "
+              + m.retryMaxAttempts + " retries. Exiting...");
+        } else if (r == ExitStatus.NO_MOVE_BLOCK) {
+          LOG.error("Some blocks can't be moved. Exiting...");
+        } else {
+          LOG.error("Mover failed. Exiting with status " + r
+              + "... ");
+        }
+      }
+
+      LOG.info("Mover Successful: all blocks satisfy"
+          + " the specified storage policy. Exiting...");
     } finally {
+      IOUtils.cleanup(null, nnc);
       long runningTime = Time.now() - startTime;
       Log.format("%-24s ", DateFormat.getDateTimeInstance().format(new Date()));
       LOG.info("Mover took " + StringUtils.formatTime(runningTime));
@@ -93,8 +119,8 @@ public class MoverBasedMoveRunner extends MoveRunner {
       // unless there is only one name service specified in the
       // configuration
       throw new IllegalArgumentException("The path " + target
-              + " does not contain scheme and authority thus cannot identify"
-              + " its name service");
+          + " does not contain scheme and authority thus cannot identify"
+          + " its name service");
     }
 
     URI key = singleNs;

@@ -39,10 +39,8 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.SaslDataTransferClient;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos.BlockOpResponseProto;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos.Status;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
-import org.apache.hadoop.hdfs.server.balancer.Dispatcher.DDatanode.StorageGroup;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.balancer.MovedBlocks;
-import org.apache.hadoop.hdfs.server.balancer.NameNodeConnector;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.hdfs.server.protocol.BlocksWithLocations;
 import org.apache.hadoop.hdfs.server.protocol.BlocksWithLocations.BlockWithLocations;
@@ -194,8 +192,8 @@ public class Dispatcher {
       final Block b = block != null ? block.getBlock() : null;
       String bStr = b != null ? (b + " with size=" + b.getNumBytes() + " ")
           : " ";
-      return bStr + "from " + source.getDisplayName() + " to " + target
-          .getDisplayName() + " through " + (proxySource != null ? proxySource
+      return bStr + "from " + source.getDisplayName() + " to " +
+          target.getDisplayName() + " through " + (proxySource != null ? proxySource
           .datanode : "");
     }
 
@@ -317,7 +315,6 @@ public class Dispatcher {
 
         sendRequest(out, eb, accessToken);
         receiveResponse(in);
-        nnc.getBytesMoved().addAndGet(block.getNumBytes());
         LOG.info("Successfully moved " + this);
       } catch (IOException e) {
         LOG.warn("Failed to move " + this + ": " + e.getMessage());
@@ -339,8 +336,8 @@ public class Dispatcher {
         synchronized (this) {
           reset();
         }
-        synchronized (org.apache.hadoop.hdfs.server.balancer.Dispatcher.this) {
-          org.apache.hadoop.hdfs.server.balancer.Dispatcher.this.notifyAll();
+        synchronized (Dispatcher.this) {
+          Dispatcher.this.notifyAll();
         }
       }
     }
@@ -395,103 +392,103 @@ public class Dispatcher {
     }
   }
 
-  /** A class that keeps track of a datanode. */
-  public static class DDatanode {
+  /** A group of storages in a datanode with the same storage type. */
+  public static class StorageGroup {
+    final StorageType storageType;
+    final long maxSize2Move;
+    private long scheduledSize = 0L;
+    private DDatanode datanode;
 
-    /** A group of storages in a datanode with the same storage type. */
-    public class StorageGroup {
-      final StorageType storageType;
-      final long maxSize2Move;
-      private long scheduledSize = 0L;
-
-      private StorageGroup(StorageType storageType, long maxSize2Move) {
-        this.storageType = storageType;
-        this.maxSize2Move = maxSize2Move;
-      }
-
-      public StorageType getStorageType() {
-        return storageType;
-      }
-
-      private DDatanode getDDatanode() {
-        return DDatanode.this;
-      }
-
-      public DatanodeInfo getDatanodeInfo() {
-        return DDatanode.this.datanode;
-      }
-
-      /** Decide if still need to move more bytes */
-      boolean hasSpaceForScheduling() {
-        return hasSpaceForScheduling(0L);
-      }
-
-      synchronized boolean hasSpaceForScheduling(long size) {
-        return availableSizeToMove() > size;
-      }
-
-      /** @return the total number of bytes that need to be moved */
-      synchronized long availableSizeToMove() {
-        return maxSize2Move - scheduledSize;
-      }
-
-      /** increment scheduled size */
-      public synchronized void incScheduledSize(long size) {
-        scheduledSize += size;
-      }
-
-      /** @return scheduled size */
-      synchronized long getScheduledSize() {
-        return scheduledSize;
-      }
-
-      /** Reset scheduled size to zero. */
-      synchronized void resetScheduledSize() {
-        scheduledSize = 0L;
-      }
-
-      private PendingMove addPendingMove(DBlock block, final PendingMove pm) {
-        if (getDDatanode().addPendingBlock(pm)) {
-          if (pm.markMovedIfGoodBlock(block, getStorageType())) {
-            incScheduledSize(pm.block.getNumBytes());
-            return pm;
-          } else {
-            getDDatanode().removePendingBlock(pm);
-          }
-        }
-        return null;
-      }
-
-      /** @return the name for display */
-      String getDisplayName() {
-        return datanode + ":" + storageType;
-      }
-
-      @Override
-      public String toString() {
-        return getDisplayName();
-      }
-
-      @Override
-      public int hashCode() {
-        return getStorageType().hashCode() ^ getDatanodeInfo().hashCode();
-      }
-
-      @Override
-      public boolean equals(Object obj) {
-        if (this == obj) {
-          return true;
-        } else if (obj == null || !(obj instanceof StorageGroup)) {
-          return false;
-        } else {
-          final StorageGroup that = (StorageGroup) obj;
-          return this.getStorageType() == that.getStorageType()
-              && this.getDatanodeInfo().equals(that.getDatanodeInfo());
-        }
-      }
-
+    private StorageGroup(DDatanode datanode, StorageType storageType, long maxSize2Move) {
+      this.datanode = datanode;
+      this.storageType = storageType;
+      this.maxSize2Move = maxSize2Move;
     }
 
+    public StorageType getStorageType() {
+      return storageType;
+    }
+
+    private DDatanode getDDatanode() {
+      return datanode;
+    }
+
+    public DatanodeInfo getDatanodeInfo() {
+      return datanode.datanode;
+    }
+
+    /** Decide if still need to move more bytes */
+    boolean hasSpaceForScheduling() {
+      return hasSpaceForScheduling(0L);
+    }
+
+    synchronized boolean hasSpaceForScheduling(long size) {
+      return availableSizeToMove() > size;
+    }
+
+    /** @return the total number of bytes that need to be moved */
+    synchronized long availableSizeToMove() {
+      return maxSize2Move - scheduledSize;
+    }
+
+    /** increment scheduled size */
+    public synchronized void incScheduledSize(long size) {
+      scheduledSize += size;
+    }
+
+    /** @return scheduled size */
+    synchronized long getScheduledSize() {
+      return scheduledSize;
+    }
+
+    /** Reset scheduled size to zero. */
+    synchronized void resetScheduledSize() {
+      scheduledSize = 0L;
+    }
+
+    private PendingMove addPendingMove(DBlock block, final PendingMove pm) {
+      if (getDDatanode().addPendingBlock(pm)) {
+        if (pm.markMovedIfGoodBlock(block, getStorageType())) {
+          incScheduledSize(pm.block.getNumBytes());
+          return pm;
+        } else {
+          getDDatanode().removePendingBlock(pm);
+        }
+      }
+      return null;
+    }
+
+    /** @return the name for display */
+    String getDisplayName() {
+      return datanode + ":" + storageType;
+    }
+
+    @Override
+    public String toString() {
+      return getDisplayName();
+    }
+
+    @Override
+    public int hashCode() {
+      return getStorageType().hashCode() ^ getDatanodeInfo().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      } else if (obj == null || !(obj instanceof StorageGroup)) {
+        return false;
+      } else {
+        final StorageGroup that = (StorageGroup) obj;
+        return this.getStorageType() == that.getStorageType()
+            && this.getDatanodeInfo().equals(that.getDatanodeInfo());
+      }
+    }
+  }
+
+  /** A class that keeps track of a datanode. */
+  public static class DDatanode {
     final DatanodeInfo datanode;
     private final EnumMap<StorageType, Source> sourceMap
         = new EnumMap<StorageType, Source>(StorageType.class);
@@ -525,12 +522,12 @@ public class Dispatcher {
     }
 
     public StorageGroup addTarget(StorageType storageType, long maxSize2Move) {
-      final StorageGroup g = new StorageGroup(storageType, maxSize2Move);
+      final StorageGroup g = new StorageGroup(this, storageType, maxSize2Move);
       put(storageType, g, targetMap);
       return g;
     }
 
-    public Source addSource(StorageType storageType, long maxSize2Move, org.apache.hadoop.hdfs.server.balancer.Dispatcher d) {
+    public Source addSource(StorageType storageType, long maxSize2Move, Dispatcher d) {
       final Source s = d.new Source(storageType, maxSize2Move, this);
       put(storageType, s, sourceMap);
       return s;
@@ -577,7 +574,7 @@ public class Dispatcher {
   }
 
   /** A node that can be the sources of a block move */
-  public class Source extends DDatanode.StorageGroup {
+  public class Source extends StorageGroup {
 
     private final List<Task> tasks = new ArrayList<Task>(2);
     private long blocksToReceive = 0L;
@@ -589,7 +586,7 @@ public class Dispatcher {
     private final List<DBlock> srcBlocks = new ArrayList<DBlock>();
 
     private Source(StorageType storageType, long maxSize2Move, DDatanode dn) {
-      dn.super(storageType, maxSize2Move);
+      super(dn, storageType, maxSize2Move);
     }
 
     /** Add a task */
@@ -767,8 +764,8 @@ public class Dispatcher {
         // Now we can not schedule any block to move and there are
         // no new blocks added to the source block list, so we wait.
         try {
-          synchronized (org.apache.hadoop.hdfs.server.balancer.Dispatcher.this) {
-            org.apache.hadoop.hdfs.server.balancer.Dispatcher.this.wait(1000); // wait for targets/sources to be idle
+          synchronized (Dispatcher.this) {
+            Dispatcher.this.wait(1000); // wait for targets/sources to be idle
           }
         } catch (InterruptedException ignored) {
         }
@@ -816,10 +813,6 @@ public class Dispatcher {
 
   public NetworkTopology getCluster() {
     return cluster;
-  }
-
-  long getBytesMoved() {
-    return nnc.getBytesMoved().get();
   }
 
   long bytesToMove() {
@@ -892,10 +885,6 @@ public class Dispatcher {
     });
   }
 
-  public boolean dispatchAndCheckContinue() throws InterruptedException {
-    return nnc.shouldContinue(dispatchBlockMoves());
-  }
-
   /**
    * Dispatch block moves for each source. The thread selects blocks to move &
    * sends request to proxy source to initiate block move. The process is flow
@@ -904,8 +893,7 @@ public class Dispatcher {
    *
    * @return the total number of bytes successfully moved in this iteration.
    */
-  private long dispatchBlockMoves() throws InterruptedException {
-    final long bytesLastMoved = getBytesMoved();
+  private void dispatchBlockMoves() throws InterruptedException {
     final Future<?>[] futures = new Future<?>[sources.size()];
 
     final Iterator<Source> i = sources.iterator();
@@ -930,8 +918,6 @@ public class Dispatcher {
 
     // wait for all block moving to be done
     waitForMoveCompletion(targets);
-
-    return getBytesMoved() - bytesLastMoved;
   }
 
   /** The sleeping period before checking if block move is completed again */
