@@ -78,6 +78,7 @@ public class RuleExecutor implements Runnable {
 
   private String unfoldVariables(String sql) {
     String ret = sql;
+    ctx.setProperty("NOW", System.currentTimeMillis());
     Matcher m = varPattern.matcher(sql);
     while (m.find()) {
       String rep = m.group();
@@ -144,14 +145,6 @@ public class RuleExecutor implements Runnable {
           + " exception when call " + funcName, e);
       return null;
     }
-  }
-
-  private long timeNow() {
-    Long p = ctx.getLong("Now");
-    if (p == null) {
-      return System.currentTimeMillis();
-    }
-    return p;
   }
 
   public String genVirtualAccessCountTable(List<Object> parameters) {
@@ -261,7 +254,8 @@ public class RuleExecutor implements Runnable {
         // TODO: special for scheduleInfo.isOneShot()
         LOG.info("Rule " + ctx.getRuleId()
             + " exit rule executor due to time passed or finished");
-        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, timeNow(), 0, 0);
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED,
+            System.currentTimeMillis(), 0, 0);
         exitSchedule();
       }
 
@@ -269,7 +263,8 @@ public class RuleExecutor implements Runnable {
       List<String> files = executeFileRuleQuery();
       long endCheckTime = System.currentTimeMillis();
       int numCmdSubmitted = submitCmdlets(files, rid);
-      ruleManager.updateRuleInfo(rid, null, timeNow(), 1, numCmdSubmitted);
+      ruleManager.updateRuleInfo(rid, null,
+          System.currentTimeMillis(), 1, numCmdSubmitted);
       if (exited) {
         exitSchedule();
       }
