@@ -44,19 +44,13 @@
   </property>
 
   <property>
-    <name>dfs.smart.poll.namenode.interval</name>
-    <value>5</value>
-    <description>Time interval in seconds for SSM to fetch info from NN</description>
-  </property>
-
-  <property>
-    <name>dfs.smart.agent.address</name>
+    <name>smart.agent.address</name>
     <value>127.0.0.1:7048</value>
     <description>SmartAgent address</description>
   </property>
 
   <property>
-    <name>dfs.smart.agent.master.address</name>
+    <name>smart.agent.master.address</name>
     <value>127.0.0.1:7051</value>
     <description>SmartAgent master address</description>
   </property>

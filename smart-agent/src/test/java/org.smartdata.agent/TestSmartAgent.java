@@ -23,8 +23,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.junit.Test;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.cmdlet.agent.ActorSystemHarness;
-import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
@@ -44,7 +44,7 @@ public class TestSmartAgent extends ActorSystemHarness {
     SmartConf conf = new SmartConf();
     AgentRunner runner = new AgentRunner(
         AgentUtils.overrideRemoteAddress(ConfigFactory.load(),
-            conf.get(AgentConstants.AGENT_ADDRESS_KEY)), masterPaths);
+            conf.get(SmartConfKeys.SMART_AGENT_ADDRESS_KEY)), masterPaths);
     runner.start();
 
     masters[0].expectMsgClass(RegisterNewAgent.class);

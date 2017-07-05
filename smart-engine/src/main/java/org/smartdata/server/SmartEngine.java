@@ -50,6 +50,7 @@ public class SmartEngine extends AbstractService {
   public SmartEngine(ServerContext context) {
     super(context);
     this.serverContext = context;
+    this.conf = serverContext.getConf();
   }
 
   @Override
@@ -58,7 +59,7 @@ public class SmartEngine extends AbstractService {
     services.add(statesMgr);
     cmdletManager = new CmdletManager(serverContext);
     services.add(cmdletManager);
-    agentService = new AgentExecutorService(cmdletManager);
+    agentService = new AgentExecutorService(conf, cmdletManager);
     hazelcastService = new HazelcastExecutorService(cmdletManager);
     cmdletManager.registerExecutorService(agentService);
     cmdletManager.registerExecutorService(hazelcastService);
