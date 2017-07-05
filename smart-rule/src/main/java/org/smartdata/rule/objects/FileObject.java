@@ -61,7 +61,7 @@ public class FileObject extends SmartObject {
     properties.put("storagePolicy",
         new Property("storagePolicy", ValueType.STRING,
             null, "files", null, false,
-            "(SELECT policy_name FROM storage_policy WHERE sid == files.sid)"));
+            "(SELECT policy_name FROM storage_policy WHERE sid = files.sid)"));
   }
 
   public FileObject() {

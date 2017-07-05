@@ -24,7 +24,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.common.SmartServiceState;
+import org.smartdata.SmartServiceState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.utils.MetaStoreUtils;
@@ -60,24 +60,24 @@ public class TestSmartServerReConfig {
       Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
       List<URI> uriList = new ArrayList<>(namenodes);
       conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
-      conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+      conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
           uriList.get(0).toString());
 
       // Set db used
       dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
       dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
-      conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
+      conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
       SmartConf serverConf = new SmartConf();
-      serverConf.set(SmartConfKeys.DFS_SSM_ENABLED_KEY, "false");
-      serverConf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
+      serverConf.set(SmartConfKeys.SMART_DFS_ENABLED, "false");
+      serverConf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
       // rpcServer start in SmartServer
       ssm = SmartServer.launchWith(serverConf);
 
       Thread.sleep(2000);
       Assert.assertTrue(ssm.getSSMServiceState() == SmartServiceState.DISABLED);
 
-      serverConf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY,
+      serverConf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
           uriList.get(0).toString());
       ssm.enable();
 

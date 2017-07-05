@@ -20,7 +20,7 @@ package org.smartdata.rule.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;
 import org.smartdata.rule.objects.PropertyRealParas;
@@ -841,7 +841,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           String virTab = "VIR_ACC_CNT_TAB_" + rid + realParas.instId();
           if (!tempTableNames.contains(virTab)) {
             tempTableNames.add(virTab);
-            sqlStatements.add("DROP TABLE IF EXISTS '" + virTab + "';");
+            sqlStatements.add("DROP TABLE IF EXISTS " + virTab + ";");
             sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
             dynamicParameters.put(virTab,
                 Arrays.asList(realParas.getValues(), virTab));

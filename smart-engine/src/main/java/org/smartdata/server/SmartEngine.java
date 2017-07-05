@@ -25,7 +25,11 @@ import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
+import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.StatesManager;
+import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
+import org.smartdata.server.engine.cmdlet.agent.AgentExecutorService;
+import org.smartdata.server.engine.cmdlet.agent.AgentInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,12 +42,15 @@ public class SmartEngine extends AbstractService {
   private StatesManager statesMgr;
   private RuleManager ruleMgr;
   private CmdletManager cmdletManager;
+  private AgentExecutorService agentService;
+  private HazelcastExecutorService hazelcastService;
   private List<AbstractService> services = new ArrayList<>();
   public static final Logger LOG = LoggerFactory.getLogger(SmartEngine.class);
 
   public SmartEngine(ServerContext context) {
     super(context);
     this.serverContext = context;
+    this.conf = serverContext.getConf();
   }
 
   @Override
@@ -52,6 +59,10 @@ public class SmartEngine extends AbstractService {
     services.add(statesMgr);
     cmdletManager = new CmdletManager(serverContext);
     services.add(cmdletManager);
+    agentService = new AgentExecutorService(conf, cmdletManager);
+    hazelcastService = new HazelcastExecutorService(cmdletManager);
+    cmdletManager.registerExecutorService(agentService);
+    cmdletManager.registerExecutorService(hazelcastService);
     ruleMgr = new RuleManager(serverContext, statesMgr, cmdletManager);
     services.add(ruleMgr);
 
@@ -83,6 +94,14 @@ public class SmartEngine extends AbstractService {
       LOG.error("Error while stopping "
           + service.getClass().getCanonicalName(), e);
     }
+  }
+
+  public List<StandbyServerInfo> getStandbyServers() {
+    return hazelcastService.getStandbyServers();
+  }
+
+  public List<AgentInfo> getAgents() {
+    return agentService.getAgentInfos();
   }
 
   public ConfManager getConfMgr() {

@@ -17,41 +17,32 @@
  */
 package org.smartdata.integration;
 
-import com.google.gson.Gson;
 import io.restassured.RestAssured;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.integration.cluster.MiniSmartCluster;
+import org.smartdata.integration.cluster.SmartMiniCluster;
 import org.smartdata.integration.cluster.SmartCluster;
 
 /**
- * Integration test.
+ * Integration test base.
  */
 public class IntegrationTestBase {
+
   private static SmartCluster cluster;
   private static SmartConf conf;
   private static IntegrationSmartServer smartServer;
-  private static String httpUri;
-  private static String httpHost;
-  private static int httpPort;
   private static int zeppelinPort;
-  private static Gson gson = new Gson();
 
   @BeforeClass
   public static void setup() throws Exception {
     // Set up an HDFS cluster
-    cluster = new MiniSmartCluster();
+    cluster = new SmartMiniCluster();
     cluster.setUp();
 
     // Start a Smart server
     conf = cluster.getConf();
-    httpHost = "127.0.0.1";
-    httpPort = 7045;
     zeppelinPort = 8080;
-    httpUri = httpHost + ":" + httpPort;
-    conf.set(SmartConfKeys.DFS_SSM_HTTP_ADDRESS_KEY, httpUri);
     smartServer = new IntegrationSmartServer();
     smartServer.setUp(conf);
 

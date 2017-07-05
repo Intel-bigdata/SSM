@@ -18,7 +18,7 @@
 package org.smartdata.integration;
 
 import org.smartdata.admin.SmartAdmin;
-import org.smartdata.common.SmartServiceState;
+import org.smartdata.SmartServiceState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.utils.MetaStoreUtils;
@@ -39,7 +39,7 @@ public class IntegrationSmartServer {
     // Set db used
     dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.DFS_SSM_DB_URL_KEY, dbUrl);
+    conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
     ssm = SmartServer.launchWith(conf);
     waitTillSSMExitSafeMode();
@@ -71,5 +71,9 @@ public class IntegrationSmartServer {
     if (ssm != null) {
       ssm.shutdown();
     }
+  }
+
+  public SmartServer getSsm() {
+    return ssm;
   }
 }

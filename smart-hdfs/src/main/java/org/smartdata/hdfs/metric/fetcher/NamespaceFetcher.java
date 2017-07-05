@@ -22,16 +22,16 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.models.FileStatusInternal;
+import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.fetcher.FetchTask;
+import org.smartdata.metastore.fetcher.FileInfoBatch;
+import org.smartdata.metastore.fetcher.FileStatusConsumer;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -45,10 +45,6 @@ public class NamespaceFetcher {
   private ScheduledFuture consumerFuture;
   private FileStatusConsumer consumer;
   private FetchTask fetchTask;
-
-  private static long numFilesFetched = 0L;
-  private static long numDirectoriesFetched = 0L;
-  private static long numPersisted = 0L;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(NamespaceFetcher.class);
@@ -67,7 +63,7 @@ public class NamespaceFetcher {
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service) {
-    this.fetchTask = new FetchTask(client);
+    this.fetchTask = new HdfsFetchTask(client);
     this.consumer = new FileStatusConsumer(metaStore, fetchTask);
     this.fetchInterval = fetchInterval;
     this.scheduledExecutorService = service;
@@ -94,27 +90,12 @@ public class NamespaceFetcher {
     }
   }
 
-  private static class FetchTask implements Runnable {
-    private final static int DEFAULT_BATCH_SIZE = 20;
-    private final static String ROOT = "/";
+  private static class HdfsFetchTask extends FetchTask {
     private final HdfsFileStatus[] EMPTY_STATUS = new HdfsFileStatus[0];
     private final DFSClient client;
-    // Deque for Breadth-First-Search
-    private ArrayDeque<String> deque;
-    // Queue for outer-consumer to fetch file status
-    private LinkedBlockingDeque<FileStatusInternalBatch> batches;
-    private FileStatusInternalBatch currentBatch;
-    private volatile boolean isFinished = false;
-
-    private long lastUpdateTime = System.currentTimeMillis();
-    private long startTime = lastUpdateTime;
-
-    public FetchTask(DFSClient client) {
-      this.deque = new ArrayDeque<>();
-      this.batches = new LinkedBlockingDeque<>();
-      this.currentBatch = new FileStatusInternalBatch(DEFAULT_BATCH_SIZE);
+    public HdfsFetchTask(DFSClient client) {
+      super();
       this.client = client;
-      this.deque.add(ROOT);
     }
 
     @Override
@@ -139,7 +120,7 @@ public class NamespaceFetcher {
             LOG.error("Current batch actual size = "
                 + currentBatch.actualSize(), e);
           }
-          this.currentBatch = new FileStatusInternalBatch(DEFAULT_BATCH_SIZE);
+          this.currentBatch = new FileInfoBatch(DEFAULT_BATCH_SIZE);
         }
 
         if (this.batches.isEmpty()) {
@@ -156,7 +137,7 @@ public class NamespaceFetcher {
       try {
         HdfsFileStatus status = client.getFileInfo(parent);
         if (status != null && status.isDir()) {
-          FileStatusInternal internal = new FileStatusInternal(status);
+          FileInfo internal = convertToFileInfo(status,"");
           internal.setPath(parent);
           this.addFileStatus(internal);
           numDirectoriesFetched++;
@@ -165,7 +146,7 @@ public class NamespaceFetcher {
             if (child.isDir()) {
               this.deque.add(child.getFullName(parent));
             } else {
-              this.addFileStatus(new FileStatusInternal(child, parent));
+              this.addFileStatus(convertToFileInfo(child, parent));
               numFilesFetched++;
             }
           }
@@ -174,22 +155,6 @@ public class NamespaceFetcher {
         LOG.error("Totally, numDirectoriesFetched = " + numDirectoriesFetched
             + ", numFilesFetched = " + numFilesFetched
             + ". Parent = " + parent, e);
-      }
-    }
-
-    public boolean finished() {
-      return this.isFinished;
-    }
-
-    public FileStatusInternalBatch pollBatch() {
-      return this.batches.poll();
-    }
-
-    public void addFileStatus(FileStatusInternal status) throws InterruptedException {
-      this.currentBatch.add(status);
-      if (this.currentBatch.isFull()) {
-        this.batches.put(currentBatch);
-        this.currentBatch = new FileStatusInternalBatch(DEFAULT_BATCH_SIZE);
       }
     }
 
@@ -230,89 +195,22 @@ public class NamespaceFetcher {
 
       return listing.toArray(new HdfsFileStatus[listing.size()]);
     }
-  }
 
-  private static class FileStatusConsumer implements Runnable {
-    private final MetaStore dbAdapter;
-    private final FetchTask fetchTask;
-    private long startTime = System.currentTimeMillis();
-    private long lastUpdateTime = startTime;
-
-    protected FileStatusConsumer(MetaStore dbAdapter, FetchTask fetchTask) {
-      this.dbAdapter = dbAdapter;
-      this.fetchTask = fetchTask;
-    }
-
-    @Override
-    public void run() {
-      FileStatusInternalBatch batch = fetchTask.pollBatch();
-      try {
-        if (batch != null) {
-          FileStatusInternal[] statuses = batch.getFileStatuses();
-          if (statuses.length == batch.actualSize()) {
-            this.dbAdapter.insertFiles(batch.getFileStatuses());
-            numPersisted += statuses.length;
-          } else {
-            FileStatusInternal[] actual = new FileStatusInternal[batch.actualSize()];
-            System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
-            this.dbAdapter.insertFiles(actual);
-            numPersisted += actual.length;
-          }
-
-          if (LOG.isDebugEnabled()) {
-            LOG.debug(batch.actualSize() + " files insert into table 'files'.");
-          }
-        }
-      } catch (SQLException e) {
-        // TODO: handle this issue
-        LOG.error("Consumer error");
-      }
-
-      if (LOG.isDebugEnabled()) {
-        long curr = System.currentTimeMillis();
-        if (curr - lastUpdateTime >= 2000) {
-          long total = numDirectoriesFetched + numFilesFetched;
-          if (total > 0) {
-            LOG.debug(String.format(
-                "%d sec, %%%d persisted into database",
-                (curr - startTime) / 1000, numPersisted * 100 / total));
-          } else {
-            LOG.debug(String.format(
-                "%d sec, %%0 persisted into database",
-                (curr - startTime) / 1000));
-          }
-          lastUpdateTime = curr;
-        }
-      }
-    }
-  }
-
-  private static class FileStatusInternalBatch {
-    private FileStatusInternal[] fileStatuses;
-    private final int batchSize;
-    private int index;
-
-    public FileStatusInternalBatch(int batchSize) {
-      this.batchSize = batchSize;
-      this.fileStatuses = new FileStatusInternal[batchSize];
-      this.index = 0;
-    }
-
-    public void add(FileStatusInternal status) {
-      this.fileStatuses[index] = status;
-      index += 1;
-    }
-
-    public boolean isFull() {
-      return index == batchSize;
-    }
-
-    public int actualSize() {
-      return this.index;
-    }
-
-    public FileStatusInternal[] getFileStatuses() {
-      return this.fileStatuses;
+    private FileInfo convertToFileInfo(HdfsFileStatus status, String parent) {
+      FileInfo fileInfo = new FileInfo(
+          status.getFullName(parent),
+          status.getFileId(),
+          status.getLen(),
+          status.isDir(),
+          status.getReplication(),
+          status.getBlockSize(),
+          status.getModificationTime(),
+          status.getAccessTime(),
+          status.getPermission().toShort(),
+          status.getOwner(),
+          status.getGroup(),
+          status.getStoragePolicy());
+      return fileInfo;
     }
   }
 }

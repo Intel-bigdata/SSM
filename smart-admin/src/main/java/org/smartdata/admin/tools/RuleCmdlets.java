@@ -23,8 +23,8 @@ import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.rule.RuleState;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,7 +43,7 @@ public class RuleCmdlets {
       conf = new SmartConf();
     }
 
-    //System.out.println(conf.get(SmartConfigureKeys.DFS_SSM_RPC_ADDRESS_KEY));
+    //System.out.println(conf.get(SmartConfigureKeys.SMART_SERVER_RPC_ADDRESS_KEY));
     SmartAdmin client = new SmartAdmin(conf);
     return client;
   }

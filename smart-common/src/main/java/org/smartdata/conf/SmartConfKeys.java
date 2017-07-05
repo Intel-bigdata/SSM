@@ -21,33 +21,37 @@ package org.smartdata.conf;
  * This class contains the configure keys needed by SSM.
  */
 public class SmartConfKeys {
-  public final static String DFS_SSM_ENABLED_KEY = "dfs.smart.enabled";
-  public final static boolean DFS_SSM_ENABLED_DEFAULT = true;
+  public final static String SMART_DFS_ENABLED = "smart.dfs.enabled";
+  public final static boolean SMART_DFS_ENABLED_DEFAULT = true;
 
-  public final static String DFS_SSM_NAMENODE_RPCSERVER_KEY = "dfs.smart.namenode.rpcserver";
+  public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
 
   //ssm
-  public final static String DFS_SSM_RPC_ADDRESS_KEY = "dfs.smart.rpc-address";
-  public final static String DFS_SSM_RPC_ADDRESS_DEFAULT = "0.0.0.0:7042";
-  public final static String DFS_SSM_HTTP_ADDRESS_KEY = "dfs.smart.http-address";
-  public final static String DFS_SSM_HTTP_ADDRESS_DEFAULT = "0.0.0.0:7045";
-  public final static String DFS_SSM_HTTPS_ADDRESS_KEY = "dfs.smart.https-address";
-  public final static String DFS_SSM_SECURITY_ENABLE = "dfs.smart.security.enable";
-  public final static String DFS_SSM_KEYTAB_FILE_KEY = "dfs.smart.keytab.file";
-  public final static String DFS_SSM_KERBEROS_PRINCIPAL_KEY = "dfs.smart.kerberos.principal";
-  public final static String DFS_SSM_DB_URL_KEY = "dfs.smart.db.url";
+  public final static String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
+  public final static String SMART_SERVER_RPC_ADDRESS_DEFAULT = "0.0.0.0:7042";
+  public final static String SMART_SERVER_HTTP_ADDRESS_KEY = "smart.server.http.address";
+  public final static String SMART_SERVER_HTTP_ADDRESS_DEFAULT = "0.0.0.0:7045";
+  public final static String SMART_SERVER_HTTPS_ADDRESS_KEY = "smart.server.https.address";
+  public final static String SMART_SECURITY_ENABLE = "smart.security.enable";
+  public final static String SMART_SERVER_KEYTAB_FILE_KEY = "smart.server.keytab.file";
+  public final static String SMART_SERVER_KERBEROS_PRINCIPAL_KEY = "smart.server.kerberos.principal";
+  public final static String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
 
   // StatesManager
-  public static final String SMART_STATES_UPDATER_SERVICES_KEY = "dfs.smart.states.updater";
-  public static final String SMART_STATES_UPDATER_SERVICES_DEFAULT = "org.smartdata.hdfs.HdfsStatesUpdaterService";
+  public static final String SMART_STATES_UPDATE_SERVICE_KEY = "smart.states.update.service";
+  public static final String SMART_STATES_UPDATE_SERVICE_DEFAULT = "org.smartdata.hdfs.HdfsStatesUpdateService";
 
   // RuleManager
-  public final static String DFS_SSM_RULE_EXECUTORS_KEY = "dfs.smart.rule.executors";
-  public final static int DFS_SSM_RULE_EXECUTORS_DEFAULT = 5;
+  public final static String SMART_RULE_EXECUTORS_KEY = "smart.rule.executors";
+  public final static int SMART_RULE_EXECUTORS_DEFAULT = 5;
 
-  public final static String DFS_SSM_ENABLE_ZEPPELIN = "dfs.smart.zeppelin.enable";
-  public final static boolean DFS_SSM_ENABLE_ZEPPELIN_DEFAULT = false;
+  public final static String SMART_CMDLET_EXECUTORS_KEY = "smart.cmdlet.executors";
+  public final static int SMART_CMDLET_EXECUTORS_DEFAULT = 10;
 
-  public final static String SMART_CMDLET_EXECUTOR_THREAD_SIZE = "dfs.smart.cmdlet.executor.thread.size";
-  public final static int SMART_CMDLET_EXECUTOR_THREAD_SIZE_DEFAULT = 10;
+  public final static String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
+  public final static boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = false;
+
+  // SmartAgent
+  public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
+  public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
 }

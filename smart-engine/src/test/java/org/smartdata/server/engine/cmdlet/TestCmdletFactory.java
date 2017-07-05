@@ -43,7 +43,7 @@ public class TestCmdletFactory {
     SmartContext smartContext = mock(SmartContext.class);
     SmartConf conf = new SmartConf();
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, "http://0.0.0.0:8088");
-    conf.set(SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY, "hdfs://0.0.0.0:8089");
+    conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY, "hdfs://0.0.0.0:8089");
     when(smartContext.getConf()).thenReturn(conf);
     CmdletFactory cmdletFactory = new CmdletFactory(smartContext);
 

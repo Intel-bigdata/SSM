@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.DruidPool;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,20 +59,26 @@ public class MetaStoreUtils {
   }
 
   public static Connection createConnection(String driver, String url,
-      String userName, String password) throws ClassNotFoundException, SQLException {
+      String userName,
+      String password) throws ClassNotFoundException, SQLException {
     Class.forName(driver);
     Connection conn = DriverManager.getConnection(url, userName, password);
     return conn;
   }
 
   public static Connection createSqliteConnection(String dbFilePath)
-      throws ClassNotFoundException, SQLException {
-    return createConnection("org.sqlite.JDBC", SQLITE_URL_PREFIX + dbFilePath,
-        null, null);
+      throws MetaStoreException {
+    try {
+      return createConnection("org.sqlite.JDBC", SQLITE_URL_PREFIX + dbFilePath,
+          null, null);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
-  public static void initializeDataBase(Connection conn) throws SQLException {
-    String createEmptyTables[] = new String[] {
+  public static void initializeDataBase(
+      Connection conn) throws MetaStoreException {
+    String createEmptyTables[] = new String[]{
         "DROP TABLE IF EXISTS access_count_tables;",
         "DROP TABLE IF EXISTS cached_files;",
         "DROP TABLE IF EXISTS ecpolicys;",
@@ -151,12 +158,12 @@ public class MetaStoreUtils {
             "  policy_name varchar(64) DEFAULT NULL\n" +
             ") ;",
 
-        "INSERT INTO storage_policy VALUES ('0', 'HOT');" ,
-        "INSERT INTO storage_policy VALUES ('2', 'COLD');" ,
-        "INSERT INTO storage_policy VALUES ('5', 'WARM');" ,
-        "INSERT INTO storage_policy VALUES ('7', 'HOT');" ,
-        "INSERT INTO storage_policy VALUES ('10', 'ONE_SSD');" ,
-        "INSERT INTO storage_policy VALUES ('12', 'ALL_SSD');" ,
+        "INSERT INTO storage_policy VALUES ('0', 'HOT');",
+        "INSERT INTO storage_policy VALUES ('2', 'COLD');",
+        "INSERT INTO storage_policy VALUES ('5', 'WARM');",
+        "INSERT INTO storage_policy VALUES ('7', 'HOT');",
+        "INSERT INTO storage_policy VALUES ('10', 'ONE_SSD');",
+        "INSERT INTO storage_policy VALUES ('12', 'ALL_SSD');",
         "INSERT INTO storage_policy VALUES ('15', 'LAZY_PERSIST');",
 
         "CREATE TABLE xattr (\n" +
@@ -202,34 +209,43 @@ public class MetaStoreUtils {
             "  progress INTEGER NOT NULL\n" +
             ") ;"
     };
-    for (String s : createEmptyTables) {
-      String url = conn.getMetaData().getURL();
-      if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
-        s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+    try {
+      for (String s : createEmptyTables) {
+        String url = conn.getMetaData().getURL();
+        if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+          s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+        }
+        executeSql(conn, s);
       }
-      executeSql(conn, s);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
   public static void executeSql(Connection conn, String sql)
-      throws SQLException {
-    Statement s = conn.createStatement();
-    s.execute(sql);
+      throws MetaStoreException {
+    try {
+      Statement s = conn.createStatement();
+      s.execute(sql);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   public static boolean supportsBatchUpdates(Connection conn) {
     try {
       return conn.getMetaData().supportsBatchUpdates();
-    } catch (SQLException e) {
+    } catch (Exception e) {
       return false;
     }
   }
 
-  public static void formatDatabase(SmartConf conf) throws Exception {
+  public static void formatDatabase(SmartConf conf) throws MetaStoreException {
     getDBAdapter(conf).formatDataBase();
   }
 
-  public static MetaStore getDBAdapter(SmartConf conf) throws Exception {
+  public static MetaStore getDBAdapter(
+      SmartConf conf) throws MetaStoreException {
     URL pathUrl = ClassLoader.getSystemResource("");
     String path = pathUrl.getPath();
 
@@ -241,24 +257,28 @@ public class MetaStoreUtils {
     if (cpConfigFile.exists()) {
       LOG.info("Using pool configure file: " + expectedCpPath);
       Properties p = new Properties();
-      p.loadFromXML(new FileInputStream(cpConfigFile));
+      try {
+        p.loadFromXML(new FileInputStream(cpConfigFile));
 
-      String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
-      if (url != null) {
-        p.setProperty("url", url);
-      }
+        String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
+        if (url != null) {
+          p.setProperty("url", url);
+        }
 
-      String purl = p.getProperty("url");
-      if (purl == null || purl.length() == 0) {
-        purl = getDefaultSqliteDB(); // For testing
-        p.setProperty("url", purl);
-        LOG.warn("Database URL not specified, using " + purl);
-      }
+        String purl = p.getProperty("url");
+        if (purl == null || purl.length() == 0) {
+          purl = getDefaultSqliteDB(); // For testing
+          p.setProperty("url", purl);
+          LOG.warn("Database URL not specified, using " + purl);
+        }
 
-      for (String key : p.stringPropertyNames()) {
-        LOG.info("\t" + key + " = " + p.getProperty(key));
+        for (String key : p.stringPropertyNames()) {
+          LOG.info("\t" + key + " = " + p.getProperty(key));
+        }
+        return new MetaStore(new DruidPool(p));
+      } catch (Exception e) {
+        throw new MetaStoreException(e);
       }
-      return new MetaStore(new DruidPool(p));
     } else {
       LOG.info("DB connection pool config file " + expectedCpPath
           + " NOT found.");
@@ -271,9 +291,12 @@ public class MetaStoreUtils {
     cpConfigFile = new File(expectedCpPath);
     LOG.info("Using pool configure file: " + expectedCpPath);
     Properties p = new Properties();
-    p.loadFromXML(new FileInputStream(cpConfigFile));
-
-    String url = conf.get(SmartConfKeys.DFS_SSM_DB_URL_KEY);
+    try {
+      p.loadFromXML(new FileInputStream(cpConfigFile));
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+    String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
     if (url != null) {
       p.setProperty("url", url);
     }
@@ -294,53 +317,68 @@ public class MetaStoreUtils {
 
   /**
    * This default behavior provided here is mainly for convenience.
+   *
    * @return
    */
-  private static String getDefaultSqliteDB() throws Exception {
+  private static String getDefaultSqliteDB() throws MetaStoreException {
     String absFilePath = System.getProperty("user.home")
         + "/smart-test-default.db";
     File file = new File(absFilePath);
     if (file.exists()) {
       return MetaStoreUtils.SQLITE_URL_PREFIX + absFilePath;
     }
-    Connection conn = MetaStoreUtils.createSqliteConnection(absFilePath);
-    MetaStoreUtils.initializeDataBase(conn);
-    conn.close();
+    try {
+      Connection conn = MetaStoreUtils.createSqliteConnection(absFilePath);
+      MetaStoreUtils.initializeDataBase(conn);
+      conn.close();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
     return MetaStoreUtils.SQLITE_URL_PREFIX + absFilePath;
   }
 
-  public static void dropAllTablesSqlite(Connection conn) throws SQLException {
-    Statement s = conn.createStatement();
-    ResultSet rs = s.executeQuery("SELECT tbl_name FROM sqlite_master;");
-    List<String> list = new ArrayList<>();
-    while (rs.next()) {
-      list.add(rs.getString(1));
-    }
-    for (String tb : list) {
-      if (!"sqlite_sequence".equals(tb)) {
-        s.execute("DROP TABLE IF EXISTS '" + tb + "';");
+  public static void dropAllTablesSqlite(
+      Connection conn) throws MetaStoreException {
+    try {
+      Statement s = conn.createStatement();
+      ResultSet rs = s.executeQuery("SELECT tbl_name FROM sqlite_master;");
+      List<String> list = new ArrayList<>();
+      while (rs.next()) {
+        list.add(rs.getString(1));
       }
+      for (String tb : list) {
+        if (!"sqlite_sequence".equals(tb)) {
+          s.execute("DROP TABLE IF EXISTS '" + tb + "';");
+        }
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
-  public static void dropAllTablesMysql(Connection conn, String url) throws SQLException {
-    Statement stat = conn.createStatement();
-    String dbName;
-    if(url.contains("?")) {
-      dbName = url.substring(url.indexOf("/", 13) + 1, url.indexOf("?"));
-    } else {
-      dbName = url.substring(url.lastIndexOf("/") + 1, url.length());
-    }
-    LOG.info("Drop All tables of Current DBname: " + dbName);
-    ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
-        + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
-    List<String> tbList = new ArrayList<>();
-    while (rs.next()) {
-      tbList.add(rs.getString(1));
-    }
-    for (String tb : tbList) {
-      LOG.info(tb);
-      stat.execute("DROP TABLE IF EXISTS " + tb + ";");
+  public static void dropAllTablesMysql(Connection conn,
+      String url) throws MetaStoreException {
+    try {
+      Statement stat = conn.createStatement();
+      String dbName;
+      if (url.contains("?")) {
+        dbName = url.substring(url.indexOf("/", 13) + 1, url.indexOf("?"));
+      } else {
+        dbName = url.substring(url.lastIndexOf("/") + 1, url.length());
+      }
+      LOG.info("Drop All tables of Current DBname: " + dbName);
+      ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
+          + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
+      List<String> tbList = new ArrayList<>();
+      while (rs.next()) {
+        tbList.add(rs.getString(1));
+      }
+      for (String tb : tbList) {
+        LOG.info(tb);
+        stat.execute("DROP TABLE IF EXISTS " + tb + ";");
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 }

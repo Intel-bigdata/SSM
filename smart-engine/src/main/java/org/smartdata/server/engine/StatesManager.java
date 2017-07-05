@@ -20,21 +20,21 @@ package org.smartdata.server.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
-import org.smartdata.common.CachedFileStatus;
-import org.smartdata.common.models.FileAccessInfo;
+import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.FileAccessInfo;
 import org.smartdata.conf.Reconfigurable;
 import org.smartdata.conf.ReconfigurableRegistry;
 import org.smartdata.conf.ReconfigureException;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.tables.AccessCountTable;
-import org.smartdata.metastore.tables.AccessCountTableManager;
+import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.metastore.dao.AccessCountTable;
+import org.smartdata.metastore.dao.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -116,11 +116,11 @@ public class StatesManager extends AbstractService implements Reconfigurable {
     LOG.info("Stopped.");
   }
 
-  public List<CachedFileStatus> getCachedList() throws SQLException {
+  public List<CachedFileStatus> getCachedList() throws MetaStoreException {
     return serverContext.getMetaStore().getCachedFileStatus();
   }
 
-  public List<AccessCountTable> getTablesInLast(long timeInMills) throws SQLException {
+  public List<AccessCountTable> getTablesInLast(long timeInMills) throws MetaStoreException {
     return this.accessCountTableManager.getTables(timeInMills);
   }
 
@@ -133,7 +133,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       int topNum) throws IOException {
     try {
       return serverContext.getMetaStore().getHotFiles(tables, topNum);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       throw new IOException(e);
     }
   }
@@ -141,7 +141,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   public List<CachedFileStatus> getCachedFileStatus() throws IOException {
     try {
       return serverContext.getMetaStore().getCachedFileStatus();
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       throw new IOException(e);
     }
   }
@@ -150,8 +150,8 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       throws ReconfigureException {
     LOG.debug("Received reconfig event: property={} newVal={}",
         property, newVal);
-    if (SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY.equals(property)
-        || SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY.equals(property)) {
+    if (SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY.equals(property)
+        || SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY.equals(property)) {
       if (statesUpdaterService != null) {
         throw new ReconfigureException(
             "States update service already been initialized.");
@@ -165,8 +165,8 @@ public class StatesManager extends AbstractService implements Reconfigurable {
 
   public List<String> getReconfigurableProperties() {
     return Arrays.asList(
-        SmartConfKeys.SMART_STATES_UPDATER_SERVICES_KEY,
-        SmartConfKeys.DFS_SSM_NAMENODE_RPCSERVER_KEY);
+        SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY,
+        SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
   }
 
   private synchronized void initStatesUpdaterService() {

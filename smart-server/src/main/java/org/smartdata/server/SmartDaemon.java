@@ -41,10 +41,7 @@ public class SmartDaemon implements ServerDaemon {
   public void start() throws IOException, InterruptedException {
     HazelcastInstance instance = HazelcastInstanceProvider.getInstance();
     if (HazelcastUtil.isMaster(instance)) {
-      CmdletManager manager = new CmdletManager(null);
-      Thread.sleep(10000);
-      manager.start();
-      //SmartServer.main(args);
+      SmartServer.main(args);
     } else {
       instance.getCluster().addMembershipListener(new ClusterMembershipListener(this));
       this.hazelcastWorker = new HazelcastWorker(new SmartContext(new SmartConf()));

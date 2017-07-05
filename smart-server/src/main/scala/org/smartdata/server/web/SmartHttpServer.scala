@@ -35,8 +35,8 @@ class SmartHttpServer(ssmServer: SmartEngine, conf: Configuration) {
   implicit val ec = system.dispatcher
 
   val httpServerAddress: InetSocketAddress = {
-    val strings = conf.get(SmartConfKeys.DFS_SSM_HTTP_ADDRESS_KEY,
-      SmartConfKeys.DFS_SSM_HTTP_ADDRESS_DEFAULT).split(":")
+    val strings = conf.get(SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_KEY,
+      SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_DEFAULT).split(":")
     new InetSocketAddress(strings(strings.length - 2), strings(strings.length - 1).toInt)
   }
 

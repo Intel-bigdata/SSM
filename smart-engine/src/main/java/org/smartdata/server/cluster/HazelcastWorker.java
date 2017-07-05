@@ -25,13 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.ActionException;
+import org.smartdata.model.CmdletState;
+import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
-import org.smartdata.common.message.StatusReporter;
+import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
-import org.smartdata.common.message.ActionStatusReport;
+import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.common.message.StatusMessage;
+import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 
 import java.io.Serializable;
@@ -63,22 +65,22 @@ public class HazelcastWorker implements StatusReporter {
   }
 
   public void start() {
-    this.fetcher =
-        this.executorService.scheduleAtFixedRate(
+    fetcher =
+        executorService.scheduleAtFixedRate(
             new StatusReporter(), 1000, 1000, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
-    if (this.fetcher != null) {
-      this.fetcher.cancel(true);
+    if (fetcher != null) {
+      fetcher.cancel(true);
     }
-    this.executorService.shutdown();
-    this.cmdletExecutor.shutdown();
+    executorService.shutdown();
+    cmdletExecutor.shutdown();
   }
 
   @Override
   public void report(StatusMessage status) {
-    this.statusTopic.publish(status);
+    statusTopic.publish(status);
   }
 
   private class MasterMessageListener implements MessageListener<Serializable> {
@@ -92,6 +94,9 @@ public class HazelcastWorker implements StatusReporter {
         } catch (ActionException e) {
           e.printStackTrace();
           LOG.error("Failed to create cmdlet from " + launchCmdlet);
+          report(
+              new CmdletStatusUpdate(
+                  launchCmdlet.getCmdletId(), System.currentTimeMillis(), CmdletState.FAILED));
         }
       } else if (msg instanceof StopCmdlet) {
         StopCmdlet stopCmdlet = (StopCmdlet) msg;

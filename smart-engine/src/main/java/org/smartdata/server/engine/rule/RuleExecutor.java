@@ -17,13 +17,15 @@
  */
 package org.smartdata.server.engine.rule;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.rule.RuleState;
+import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.tables.AccessCountTable;
+import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.rule.parser.TimeBasedScheduleInfo;
 import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.server.engine.RuleManager;
@@ -31,7 +33,6 @@ import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +117,7 @@ public class RuleExecutor implements Runnable {
           adapter.execute(sql);
         }
         index++;
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         LOG.error("Rule " + ctx.getRuleId() + " exception", e);
         return ret;
       }
@@ -126,7 +127,7 @@ public class RuleExecutor implements Runnable {
       String sql = dynamicCleanups.pop();
       try {
         adapter.execute(sql);
-      } catch (SQLException e) {
+      } catch (MetaStoreException e) {
         LOG.error("Rule " + ctx.getRuleId() + " exception", e);
       }
     }
@@ -160,29 +161,33 @@ public class RuleExecutor implements Runnable {
     String countFilter = "";
     List<String> tableNames =
         getAccessCountTablesDuringLast(interval);
+    return generateSQL(tableNames, newTable, countFilter);
+  }
 
+  @VisibleForTesting
+  static String  generateSQL(List<String> tableNames, String newTable, String countFilter) {
     String sqlFinal;
     if (tableNames.size() <= 1) {
       String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
           tableNames.get(0);
-      sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM '"
-          + tableName + "';";
+      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM "
+          + tableName + ";";
     } else {
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
-      String sqlUnion = "SELECT fid, count FROM \'"
-          + tableNames.get(0) + "\'\n";
+      String sqlUnion = "SELECT fid, count FROM "
+          + tableNames.get(0) + " \n";
       for (int i = 1; i < tableNames.size(); i++) {
         sqlUnion += "UNION ALL\n" +
-            "SELECT fid, count FROM \'" + tableNames.get(i) + "\'\n";
+            "SELECT fid, count FROM " + tableNames.get(i) + " \n";
       }
-      String sqlSufix = ") GROUP BY fid ";
+      String sqlSufix = ") as tmp GROUP BY fid ";
       String sqlCountFilter =
           (countFilter == null || countFilter.length() == 0) ?
               "" :
               "HAVING SUM(count) " + countFilter;
       String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-      sqlFinal = "CREATE TABLE '" + newTable + "' AS SELECT * FROM ("
-          + sqlRe + ");";
+      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM ("
+          + sqlRe + ") as t;";
     }
     return sqlFinal;
   }
@@ -201,7 +206,7 @@ public class RuleExecutor implements Runnable {
     List<AccessCountTable> accTables = null;
     try {
       accTables = ruleManager.getStatesManager().getTablesInLast(lastInterval);
-    } catch (SQLException e) {
+    } catch (MetaStoreException e) {
       LOG.error("Rule " + ctx.getRuleId()
           + " get access info tables exception", e);
     }
@@ -220,11 +225,10 @@ public class RuleExecutor implements Runnable {
       return tableNames;
     }
 
-
     for (AccessCountTable t : accTables) {
       tableNames.add(t.getTableName());
       if (t.isView()) {
-        dynamicCleanups.push("DROP VIEW " + t.getTableName() + ";");
+        dynamicCleanups.push("DROP VIEW IF EXISTS " + t.getTableName() + ";");
       }
     }
     return tableNames;
@@ -296,7 +300,8 @@ public class RuleExecutor implements Runnable {
   }
 
   private int submitCmdlets(List<String> files, long ruleId) {
-    if (ruleManager.getCmdletManager() == null) {
+    if (files == null || files.size() == 0
+        || ruleManager.getCmdletManager() == null) {
       return 0;
     }
     int nSubmitted = 0;

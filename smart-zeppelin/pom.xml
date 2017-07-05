@@ -21,19 +21,20 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.apache.zeppelin</groupId>
-  <artifactId>zeppelin</artifactId>
+  <parent>
+    <groupId>org.smartdata</groupId>
+    <artifactId>smartdata-project</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <groupId>org.smartdata</groupId>
+  <artifactId>smart-zeppelin</artifactId>
   <packaging>pom</packaging>
-  <version>0.7.2</version>
+  <version>0.1-SNAPSHOT</version>
   <name>Zeppelin</name>
   <description>Zeppelin project</description>
   <url>http://zeppelin.apache.org</url>
-
-  <parent>
-    <groupId>org.apache</groupId>
-    <artifactId>apache</artifactId>
-    <version>17</version>
-  </parent>
 
   <licenses>
     <license>
@@ -61,8 +62,6 @@
 
   <properties>
     <!-- language versions -->
-    <scala.version>2.10.5</scala.version>
-    <scala.binary.version>2.10</scala.binary.version>
     <scalatest.version>2.2.4</scalatest.version>
     <scalacheck.version>1.12.5</scalacheck.version>
 
@@ -667,30 +666,11 @@
 
   <profiles>
     <profile>
-      <id>build-web</id>
+      <id>web</id>
       <modules>
         <module>zeppelin-web</module>
         <module>zeppelin-distribution</module>
       </modules>
-    </profile>
-
-    <profile>
-      <id>scala-2.10</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <scala.version>2.10.5</scala.version>
-        <scala.binary.version>2.10</scala.binary.version>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>scala-2.11</id>
-      <properties>
-        <scala.version>2.11.7</scala.version>
-        <scala.binary.version>2.11</scala.binary.version>
-      </properties>
     </profile>
 
     <profile>

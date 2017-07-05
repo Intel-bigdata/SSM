@@ -26,8 +26,8 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.zeppelin.server.SmartZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.SmartServiceState;
-import org.smartdata.common.security.JaasLoginUtil;
+import org.smartdata.SmartServiceState;
+import org.smartdata.utils.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
@@ -123,6 +123,7 @@ public class SmartServer {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
       LOG.info("Formatting DataBase finished successfully!");
+      return null;
     }
 
     SmartServer ssm = new SmartServer(conf);
@@ -141,7 +142,7 @@ public class SmartServer {
           + "  -h\n\tShow this usage information.\n\n"
           + "  -D property=value\n"
           + "\tSpecify or overwrite an configure option.\n"
-          + "\tE.g. -D dfs.smart.namenode.rpcserver=hdfs://localhost:43543\n";
+          + "\tE.g. -D smart.dfs.namenode.rpcserver=hdfs://localhost:43543\n";
 
   private static final Options helpOptions = new Options();
   private static final Option helpOpt = new Option("h", "help", false,
@@ -172,19 +173,19 @@ public class SmartServer {
   }
 
   private boolean isSecurityEnabled() {
-    return conf.getBoolean(SmartConfKeys.DFS_SSM_SECURITY_ENABLE, false);
+    return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
   }
 
   private void checkSecurityAndLogin() throws IOException {
     if (!isSecurityEnabled()) {
       return;
     }
-    String keytabFilename = conf.get(SmartConfKeys.DFS_SSM_KEYTAB_FILE_KEY);
+    String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
     if (keytabFilename == null || keytabFilename.length() == 0) {
       throw new IOException("Running in secure mode, but config doesn't have a keytab");
     }
     File keytabPath = new File(keytabFilename);
-    String principal = conf.get(SmartConfKeys.DFS_SSM_KERBEROS_PRINCIPAL_KEY);
+    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
     Subject subject = null;
     try {
       subject = JaasLoginUtil.loginUsingKeytab(principal, keytabPath);
@@ -201,8 +202,8 @@ public class SmartServer {
    * @throws Exception
    */
   private void run() throws Exception {
-    boolean enabled = conf.getBoolean(SmartConfKeys.DFS_SSM_ENABLED_KEY,
-        SmartConfKeys.DFS_SSM_ENABLED_DEFAULT);
+    boolean enabled = conf.getBoolean(SmartConfKeys.SMART_DFS_ENABLED,
+        SmartConfKeys.SMART_DFS_ENABLED_DEFAULT);
 
     if (enabled) {
       startEngines();
@@ -244,6 +245,10 @@ public class SmartServer {
   private void stop() throws Exception {
     if (engine != null) {
       engine.stop();
+    }
+
+    if (zeppelinServer != null) {
+      zeppelinServer.stop();
     }
 
     try {

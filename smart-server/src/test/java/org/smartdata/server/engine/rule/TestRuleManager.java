@@ -21,10 +21,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.rule.RuleState;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.common.models.FileStatusInternal;
+import org.smartdata.model.FileStatusInternal;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.server.engine.ServerContext;
@@ -273,7 +273,7 @@ public class TestRuleManager extends TestDaoUtil {
       long checkedCount;
       int cmdletsGen;
       try {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 200; i++) {
           RuleInfo info = ruleManager.getRuleInfo(ruleid);
           lastCheckTime = System.currentTimeMillis();
           checkedCount = info.getNumChecked();
@@ -348,7 +348,7 @@ public class TestRuleManager extends TestDaoUtil {
     public void run() {
       Random r = new Random();
       try {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 200; i++) {
           int rand = r.nextInt() % 2;
           //System.out.println(rand == 0 ? "Active" : "Disable");
           switch (rand) {

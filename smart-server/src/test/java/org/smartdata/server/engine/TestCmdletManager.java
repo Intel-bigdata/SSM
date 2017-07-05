@@ -25,21 +25,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.smartdata.actions.ActionRegistry;
-import org.smartdata.common.CmdletState;
-import org.smartdata.common.cmdlet.CmdletDescriptor;
-import org.smartdata.common.message.ActionFinished;
-import org.smartdata.common.message.ActionStarted;
-import org.smartdata.common.message.CmdletStatusUpdate;
-import org.smartdata.common.models.ActionInfo;
-import org.smartdata.common.models.CmdletInfo;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.protocol.message.ActionFinished;
+import org.smartdata.protocol.message.ActionStarted;
+import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.server.TestEmptyMiniSmartCluster;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
@@ -150,7 +150,7 @@ public class TestCmdletManager extends TestEmptyMiniSmartCluster {
   }
 
   @Test
-  public void testWithoutCluster() throws SQLException, IOException, InterruptedException {
+  public void testWithoutCluster() throws MetaStoreException, IOException, InterruptedException {
     long cmdletId = 10;
     long actionId = 101;
     MetaStore metaStore = mock(MetaStore.class);

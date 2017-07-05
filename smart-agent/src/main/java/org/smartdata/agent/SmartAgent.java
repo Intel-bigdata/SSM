@@ -29,24 +29,29 @@ import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Procedure;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.common.message.StatusReporter;
+import org.smartdata.actions.ActionException;
+import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.model.CmdletState;
+import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
-import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.common.message.StatusMessage;
+import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -60,17 +65,30 @@ public class SmartAgent {
     SmartAgent agent = new SmartAgent();
 
     SmartConf conf = new SmartConf();
-    String[] masters = conf.getStrings(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
+    String[] masters = conf.getStrings(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
 
     checkNotNull(masters);
 
-    agent.start(AgentUtils.loadConfigWithAddress(conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
+    agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(),
+        conf.get(SmartConfKeys.SMART_AGENT_ADDRESS_KEY)),
         AgentUtils.getMasterActorPaths(masters), conf);
   }
 
   void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
-    system.actorOf(Props.create(AgentActor.class, conf, this, masterPath));
+    system.actorOf(Props.create(AgentActor.class, conf, this, masterPath), getAgentName());
+    final Thread currentThread = Thread.currentThread();
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        close();
+        try {
+          currentThread.join();
+        } catch (InterruptedException e) {
+          // Ignore
+        }
+      }
+    });
     system.awaitTermination();
   }
 
@@ -79,6 +97,10 @@ public class SmartAgent {
       LOG.info("Shutting down system {}", AgentUtils.getSystemAddres(system));
       system.shutdown();
     }
+  }
+
+  private String getAgentName() {
+    return "agent-" + UUID.randomUUID().toString();
   }
 
   static class AgentActor extends UntypedActor implements StatusReporter {
@@ -188,7 +210,14 @@ public class SmartAgent {
       public void apply(Object message) throws Exception {
         if (message instanceof LaunchCmdlet) {
           LaunchCmdlet launch = (LaunchCmdlet) message;
-          executor.execute(factory.createCmdlet(launch));
+          try{
+            executor.execute(factory.createCmdlet(launch));
+          } catch (ActionException e) {
+            e.printStackTrace();
+            report(
+                new CmdletStatusUpdate(
+                    launch.getCmdletId(), System.currentTimeMillis(), CmdletState.FAILED));
+          }
         } else if (message instanceof StopCmdlet) {
           StopCmdlet stop = (StopCmdlet) message;
           executor.stop(stop.getCmdletId());

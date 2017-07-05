@@ -25,9 +25,9 @@ import akka.http.scaladsl.server.directives.ParameterDirectives.ParamMagnet
 import akka.stream.Materializer
 import com.google.gson.Gson
 import org.smartdata.actions.ActionRegistry
-import org.smartdata.common.actions.ActionDescriptor
-import org.smartdata.common.cmdlet.CmdletDescriptor
-import org.smartdata.common.models.ActionInfo
+import org.smartdata.model.ActionDescriptor
+import org.smartdata.model.CmdletDescriptor
+import org.smartdata.model.ActionInfo
 import org.smartdata.metastore.utils.Constants
 import org.smartdata.server.SmartEngine
 

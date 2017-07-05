@@ -20,11 +20,10 @@ package org.smartdata.server.rest;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.common.rule.RuleState;
+import org.smartdata.model.RuleState;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
-import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -49,13 +48,12 @@ public class RuleRestApi {
 
   @POST
   @Path("/add")
-  public Response addRule(@FormParam("args") String message) {
+  public Response addRule(@FormParam("ruleText") String ruleText) {
     String rule;
     long t;
     try {
-      rule = java.net.URLDecoder.decode(message, "UTF-8");
-      logger.info("Adding rule: " + rule);
-      t = smartEngine.getRuleManager().submitRule(rule, RuleState.DISABLED);
+      logger.info("Adding rule: " + ruleText);
+      t = smartEngine.getRuleManager().submitRule(ruleText, RuleState.DISABLED);
     } catch (Exception e) {
       logger.error("Exception in RuleRestApi while adding rule ", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
@@ -64,15 +62,17 @@ public class RuleRestApi {
     return new JsonResponse(Response.Status.CREATED, t).build();
   }
 
-  @DELETE
+  @POST
   @Path("/{ruleId}/delete")
-  public void deleteRule(@PathParam("ruleId") String ruleId) {
+  public Response deleteRule(@PathParam("ruleId") String ruleId) {
     try {
       Long longNumber = Long.parseLong(ruleId);
-      smartEngine.getRuleManager().deleteRule(longNumber,
-          false);
+      smartEngine.getRuleManager().deleteRule(longNumber, false);
+      return new JsonResponse<>(Response.Status.OK).build();
     } catch (Exception e) {
       logger.error("Exception in RuleRestApi while deleting rule ", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 

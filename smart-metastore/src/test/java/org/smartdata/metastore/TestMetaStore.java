@@ -25,19 +25,18 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
-import org.smartdata.common.CmdletState;
-import org.smartdata.common.models.ActionInfo;
-import org.smartdata.common.models.CmdletInfo;
-import org.smartdata.common.CachedFileStatus;
-import org.smartdata.common.models.FileStatusInternal;
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.models.StorageCapacity;
-import org.smartdata.common.models.StoragePolicy;
-import org.smartdata.common.rule.RuleState;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.FileStatusInternal;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.StorageCapacity;
+import org.smartdata.model.StoragePolicy;
+import org.smartdata.model.RuleState;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -66,7 +65,7 @@ public class TestMetaStore extends TestDaoUtil {
 
 /*  @Test
   public void testGetAccessCount() throws Exception {
-    Map<Long, Integer> ret = metaStore.getAccessCount(1490932740000l,
+    Map<Long, Integer> ret = metaStore.getHotFiles(1490932740000l,
         1490936400000l, null);
     Assert.assertTrue(ret.get(2l) == 32);
   }
@@ -130,7 +129,7 @@ public class TestMetaStore extends TestDaoUtil {
           metaStore.updateActionsTable(
               actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
           metaStore.getActionsTableItem(null, null);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
         } catch (InterruptedException e) {
@@ -160,7 +159,7 @@ public class TestMetaStore extends TestDaoUtil {
         actionInfo.setActionId(i);
         try {
           metaStore.insertActionTable(actionInfo);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
         }
@@ -182,7 +181,7 @@ public class TestMetaStore extends TestDaoUtil {
           actionInfoList.get(0).setFinishTime(System.currentTimeMillis());
           metaStore.updateActionsTable(actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
           metaStore.getActionsTableItem(null, null);
-        } catch (SQLException e) {
+        } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
         }

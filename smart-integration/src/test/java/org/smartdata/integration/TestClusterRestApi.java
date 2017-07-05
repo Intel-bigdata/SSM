@@ -21,6 +21,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.smartdata.integration.rest.RestApiBase;
 
 /**
  * Test for ClusterRestApi.
@@ -28,7 +29,7 @@ import org.junit.Test;
 public class TestClusterRestApi extends IntegrationTestBase {
   @Test
   public void testPrimary() {
-    Response response = RestAssured.get("/smart/api/v1/cluster/primary");
+    Response response = RestAssured.get(RestApiBase.PRIMCLUSTERROOT);
     String json = response.asString();
     response.then().body("message", Matchers.equalTo("Namenode URL"));
     response.then().body("body", Matchers.containsString("localhost"));

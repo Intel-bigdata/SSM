@@ -21,13 +21,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>zeppelin</artifactId>
-    <groupId>org.apache.zeppelin</groupId>
-    <version>0.7.2</version>
+    <artifactId>smart-zeppelin</artifactId>
+    <groupId>org.smartdata</groupId>
+    <version>0.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
-  <artifactId>zeppelin-distribution</artifactId>
+  <artifactId>smart-zeppelin-distribution</artifactId>
   <packaging>pom</packaging>
   <name>Zeppelin: Packaging distribution</name>
 
@@ -75,12 +75,12 @@
 
   <dependencies>
     <dependency>
-      <artifactId>zeppelin-server</artifactId>
+      <artifactId>smart-zeppelin-server</artifactId>
       <groupId>${project.groupId}</groupId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <artifactId>zeppelin-web</artifactId>
+      <artifactId>smart-zeppelin-web</artifactId>
       <groupId>${project.groupId}</groupId>
       <version>${project.version}</version>
       <type>war</type>

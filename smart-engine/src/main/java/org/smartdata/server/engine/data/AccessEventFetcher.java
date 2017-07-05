@@ -18,7 +18,7 @@
 package org.smartdata.server.engine.data;
 
 import org.apache.hadoop.conf.Configuration;
-import org.smartdata.metastore.tables.AccessCountTableManager;
+import org.smartdata.metastore.dao.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
 
@@ -30,7 +30,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class AccessEventFetcher {
-  private static final Long DEFAULT_INTERVAL = 5 * 1000L;
+  private static final Long DEFAULT_INTERVAL = 1 * 1000L;
   private final ScheduledExecutorService scheduledExecutorService;
   private final Long fetchInterval;
   private ScheduledFuture scheduledFuture;

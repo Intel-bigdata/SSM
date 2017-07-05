@@ -23,20 +23,20 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
-import org.smartdata.common.actions.ActionDescriptor;
-import org.smartdata.common.CmdletState;
-import org.smartdata.common.models.ActionInfo;
-import org.smartdata.common.protocol.ClientServerProto;
-import org.smartdata.common.protocol.SmartServerProtocols;
-import org.smartdata.common.protocolPB.SmartClientProtocolPB;
+import org.smartdata.model.ActionDescriptor;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.ActionInfo;
+import org.smartdata.protocol.ClientServerProto;
+import org.smartdata.protocol.SmartServerProtocols;
+import org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer;
+import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.common.SmartServiceState;
-import org.smartdata.common.protocol.AdminServerProto;
-import org.smartdata.common.protocolPB.SmartAdminProtocolPB;
-import org.smartdata.common.protocolPB.ClientSmartProtocolServerSideTranslatorPB;
-import org.smartdata.common.models.RuleInfo;
-import org.smartdata.common.rule.RuleState;
-import org.smartdata.common.models.CmdletInfo;
+import org.smartdata.SmartServiceState;
+import org.smartdata.protocol.AdminServerProto;
+import org.smartdata.protocol.protobuffer.ServerProtocolsServerSideTranslator;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
@@ -60,10 +60,10 @@ public class SmartRpcServer implements SmartServerProtocols {
     this.conf = conf;
     // TODO: implement ssm SmartAdminProtocol
     InetSocketAddress rpcAddr = getRpcServerAddress();
-    RPC.setProtocolEngine(conf, SmartAdminProtocolPB.class, ProtobufRpcEngine.class);
+    RPC.setProtocolEngine(conf, AdminProtocolProtoBuffer.class, ProtobufRpcEngine.class);
 
-    ClientSmartProtocolServerSideTranslatorPB clientSSMProtocolServerSideTranslatorPB
-        = new ClientSmartProtocolServerSideTranslatorPB(this);
+    ServerProtocolsServerSideTranslator clientSSMProtocolServerSideTranslatorPB
+        = new ServerProtocolsServerSideTranslator(this);
 
     BlockingService adminSmartPbService = AdminServerProto.protoService
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
@@ -73,7 +73,7 @@ public class SmartRpcServer implements SmartServerProtocols {
     // TODO: provide service for SmartClientProtocol and SmartAdminProtocol
     // TODO: in different port and server
     clientRpcServer = new RPC.Builder(conf)
-        .setProtocol(SmartAdminProtocolPB.class)
+        .setProtocol(AdminProtocolProtoBuffer.class)
         .setInstance(adminSmartPbService)
         .setBindAddress(rpcAddr.getHostName())
         .setPort(rpcAddr.getPort())
@@ -85,15 +85,15 @@ public class SmartRpcServer implements SmartServerProtocols {
     clientRpcAddress = new InetSocketAddress(
         rpcAddr.getHostName(), listenAddr.getPort());
 
-    DFSUtil.addPBProtocol(conf, SmartAdminProtocolPB.class,
+    DFSUtil.addPBProtocol(conf, AdminProtocolProtoBuffer.class,
         adminSmartPbService, clientRpcServer);
-    DFSUtil.addPBProtocol(conf, SmartClientProtocolPB.class,
+    DFSUtil.addPBProtocol(conf, ClientProtocolProtoBuffer.class,
         clientSmartPbService, clientRpcServer);
   }
 
   private InetSocketAddress getRpcServerAddress() {
-    String[] strings = conf.get(SmartConfKeys.DFS_SSM_RPC_ADDRESS_KEY,
-        SmartConfKeys.DFS_SSM_RPC_ADDRESS_DEFAULT).split(":");
+    String[] strings = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+        SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT).split(":");
     return new InetSocketAddress(strings[strings.length - 2]
         , Integer.parseInt(strings[strings.length - 1]));
   }

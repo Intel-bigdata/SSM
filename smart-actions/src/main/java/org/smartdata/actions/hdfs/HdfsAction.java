@@ -20,7 +20,7 @@ package org.smartdata.actions.hdfs;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.smartdata.actions.ActionType;
 import org.smartdata.actions.SmartAction;
-import org.smartdata.common.cmdlet.CmdletDescriptor;
+import org.smartdata.model.CmdletDescriptor;
 
 /**
  * Base class for all HDFS actions.
