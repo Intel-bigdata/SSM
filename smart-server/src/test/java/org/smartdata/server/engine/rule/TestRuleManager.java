@@ -21,10 +21,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.model.FileStatusInternal;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.server.engine.ServerContext;
@@ -298,9 +298,8 @@ public class TestRuleManager extends TestDaoUtil {
 
     long length = 100;
     long fid = 10000;
-    FileStatusInternal[] files = { new FileStatusInternal(length, false, 3,
-        1024, now, now, null, null, null, null,
-        "testfile".getBytes(), "/tmp", fid, 0, null, (byte)3) };
+    FileInfo[] files = { new FileInfo("/tmp/testfile", fid,  length, false, (short)3,
+        1024, now, now, (short) 1, null, null, (byte)3) };
 
     metaStore.insertFiles(files);
     long rid = ruleManager.submitRule(rule, RuleState.ACTIVE);

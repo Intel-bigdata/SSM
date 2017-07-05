@@ -29,8 +29,8 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.model.FileInfo;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -85,16 +85,16 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Mockito.when(client.getFileInfo(Matchers.anyString())).thenReturn(status1);
     applier.apply(new Event[] {createEvent});
 
-    HdfsFileStatus result1 = metaStore.getFile().get(0);
-    Assert.assertEquals(result1.getLocalName(), "/file");
+    FileInfo result1 = metaStore.getFile().get(0);
+    Assert.assertEquals(result1.getPath(), "/file");
     Assert.assertEquals(result1.getFileId(), 1010L);
-    Assert.assertEquals(result1.getPermission().toShort(), 511);
+    Assert.assertEquals(result1.getPermission(), 511);
 
     Event close = new Event.CloseEvent("/file", 1024, 0);
     applier.apply(new Event[] {close});
-    HdfsFileStatus result2 = metaStore.getFile().get(0);
-    Assert.assertEquals(result2.getLen(), 1024);
-    Assert.assertEquals(result2.getModificationTime(), 0L);
+    FileInfo result2 = metaStore.getFile().get(0);
+    Assert.assertEquals(result2.getLength(), 1024);
+    Assert.assertEquals(result2.getModification_time(), 0L);
 
 //    Event truncate = new Event.TruncateEvent("/file", 512, 16);
 //    applier.apply(new Event[] {truncate});
@@ -113,9 +113,9 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             .groupName("cg2")
             .build();
     applier.apply(new Event[] {meta});
-    HdfsFileStatus result4 = metaStore.getFile().get(0);
-    Assert.assertEquals(result4.getAccessTime(), 3);
-    Assert.assertEquals(result4.getModificationTime(), 2);
+    FileInfo result4 = metaStore.getFile().get(0);
+    Assert.assertEquals(result4.getAccess_time(), 3);
+    Assert.assertEquals(result4.getModification_time(), 2);
 
     Event.CreateEvent createEvent2 =
         new Event.CreateEvent.Builder()
@@ -143,11 +143,11 @@ public class TestInotifyEventApplier extends TestDaoUtil {
       new Event.RenameEvent.Builder().dstPath("/dir2").srcPath("/dir").timestamp(5).build();
 
     applier.apply(new Event[] {createEvent2, createEvent3, rename});
-    List<HdfsFileStatus> result5 = metaStore.getFile();
+    List<FileInfo> result5 = metaStore.getFile();
     List<String> expectedPaths = Arrays.asList("/dir2", "/dir2/file", "/file");
     List<String> actualPaths = new ArrayList<>();
-    for (HdfsFileStatus s : result5) {
-      actualPaths.add(s.getLocalName());
+    for (FileInfo s : result5) {
+      actualPaths.add(s.getPath());
     }
     Collections.sort(actualPaths);
     Assert.assertTrue(actualPaths.size() == 3);
