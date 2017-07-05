@@ -228,7 +228,7 @@ public class RuleExecutor implements Runnable {
     for (AccessCountTable t : accTables) {
       tableNames.add(t.getTableName());
       if (t.isView()) {
-        dynamicCleanups.push("DROP VIEW " + t.getTableName() + ";");
+        dynamicCleanups.push("DROP VIEW IF EXISTS " + t.getTableName() + ";");
       }
     }
     return tableNames;

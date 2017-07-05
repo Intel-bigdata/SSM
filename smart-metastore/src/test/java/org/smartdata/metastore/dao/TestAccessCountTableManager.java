@@ -243,4 +243,38 @@ public class TestAccessCountTableManager extends DBTest {
     Assert.assertTrue(result.get(0).equals(firstFiveSeconds));
     Assert.assertTrue(result.get(1).equals(secondFiveSeconds));
   }
+
+  @Test
+  public void testGetTablesCornerCase2() throws MetaStoreException {
+    MetaStore adapter = mock(MetaStore.class);
+    TableEvictor tableEvictor = new CountEvictor(adapter, 20);
+    Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
+    AccessCountTableDeque minute = new AccessCountTableDeque(tableEvictor);
+    AccessCountTable firstMinute =
+      new AccessCountTable(0L, Constants.ONE_MINUTE_IN_MILLIS);
+    minute.add(firstMinute);
+    map.put(TimeGranularity.MINUTE, minute);
+
+    AccessCountTableDeque secondDeque = new AccessCountTableDeque(tableEvictor);
+    AccessCountTable firstFiveSeconds =
+      new AccessCountTable(55 * Constants.ONE_SECOND_IN_MILLIS, 60 * Constants.ONE_SECOND_IN_MILLIS);
+    AccessCountTable secondFiveSeconds =
+      new AccessCountTable(60 * Constants.ONE_SECOND_IN_MILLIS,
+        65 * Constants.ONE_SECOND_IN_MILLIS);
+    AccessCountTable thirdFiveSeconds =
+      new AccessCountTable(110 * Constants.ONE_SECOND_IN_MILLIS,
+        115 * Constants.ONE_SECOND_IN_MILLIS);
+    secondDeque.add(firstFiveSeconds);
+    secondDeque.add(secondFiveSeconds);
+    secondDeque.add(thirdFiveSeconds);
+    map.put(TimeGranularity.SECOND, secondDeque);
+
+    List<AccessCountTable> result = AccessCountTableManager.getTables(map, adapter,
+      Constants.ONE_MINUTE_IN_MILLIS);
+    Assert.assertTrue(result.size() == 3);
+    Assert.assertTrue(result.get(0).equals(firstFiveSeconds));
+    Assert.assertFalse(result.get(0).isView());
+    Assert.assertTrue(result.get(1).equals(secondFiveSeconds));
+    Assert.assertTrue(result.get(2).equals(thirdFiveSeconds));
+  }
 }

@@ -155,7 +155,6 @@ public class CachedListFetcher {
         // Delete all records to avoid conflict
         // metaStore.deleteAllCachedFile();
         // Insert new records into DB
-        LOG.info("Current Paths", paths);
         Map<String, Long> pathFid = metaStore.getFileIDs(paths);
         if (pathFid == null || pathFid.size() == 0) {
           clearAll();
