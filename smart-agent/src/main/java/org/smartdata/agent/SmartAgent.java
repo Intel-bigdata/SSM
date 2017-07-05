@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.ActionException;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusReporter;
@@ -43,7 +44,6 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
-import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.protocol.message.StatusMessage;
@@ -65,17 +65,16 @@ public class SmartAgent {
     SmartAgent agent = new SmartAgent();
 
     SmartConf conf = new SmartConf();
-    String[] masters = conf.getStrings(AgentConstants.AGENT_MASTER_ADDRESS_KEY);
+    String[] masters = conf.getStrings(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
 
     checkNotNull(masters);
 
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(),
-        conf.get(AgentConstants.AGENT_ADDRESS_KEY)),
+        conf.get(SmartConfKeys.SMART_AGENT_ADDRESS_KEY)),
         AgentUtils.getMasterActorPaths(masters), conf);
   }
 
   void start(Config config, String[] masterPath, SmartConf conf) {
-    LOG.info(config.getString("akka.actor.provider"));
     system = ActorSystem.apply(NAME, config);
     system.actorOf(Props.create(AgentActor.class, conf, this, masterPath), getAgentName());
     final Thread currentThread = Thread.currentThread();
