@@ -25,13 +25,14 @@ import alluxio.client.file.FileSystem;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.exception.AlluxioException;
 import alluxio.master.LocalAlluxioCluster;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.smartdata.alluxio.metric.fetcher.AlluxioNamespaceFetcher;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.model.FileInfo;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -39,6 +40,7 @@ import java.util.concurrent.Executors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 
 public class TestAlluxioNamespaceFetcher extends TestDaoUtil {
   LocalAlluxioCluster mLocalAlluxioCluster;
@@ -100,14 +102,14 @@ public class TestAlluxioNamespaceFetcher extends TestDaoUtil {
 
     assertEquals(10, metaStore.getFile().size());
     
-    HdfsFileStatus dir1 = metaStore.getFile("/dir2/dir22");
+    FileInfo dir1 = metaStore.getFile("/dir2/dir22");
     assertTrue(dir1 != null);
-    assertTrue(dir1.isDir());
+    assertTrue(dir1.isdir());
 
-    HdfsFileStatus file1 = metaStore.getFile("/dir2/dir22/file221");
+    FileInfo file1 = metaStore.getFile("/dir2/dir22/file221");
     assertTrue(file1 != null);
-    assertFalse(file1.isDir());
-    assertEquals(1, file1.getReplication());
+    assertFalse(file1.isdir());
+    assertEquals(1, file1.getBlock_replication());
     
   }
 

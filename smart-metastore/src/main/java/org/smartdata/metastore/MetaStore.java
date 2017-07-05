@@ -18,32 +18,31 @@
 package org.smartdata.metastore;
 
 
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.metastore.dao.AccessCountDao;
+import org.smartdata.metastore.dao.AccessCountTable;
+import org.smartdata.metastore.dao.ActionDao;
+import org.smartdata.metastore.dao.CacheFileDao;
+import org.smartdata.metastore.dao.CmdletDao;
+import org.smartdata.metastore.dao.FileInfoDao;
+import org.smartdata.metastore.dao.GroupsDao;
+import org.smartdata.metastore.dao.MetaStoreHelper;
+import org.smartdata.metastore.dao.RuleDao;
+import org.smartdata.metastore.dao.StorageDao;
+import org.smartdata.metastore.dao.UserDao;
+import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileInfo;
-import org.smartdata.model.FileStatusInternal;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.RuleState;
-import org.smartdata.metastore.dao.AccessCountTable;
-import org.smartdata.metastore.dao.ActionDao;
-import org.smartdata.metastore.dao.CacheFileDao;
-import org.smartdata.metastore.dao.GroupsDao;
-import org.smartdata.metastore.dao.RuleDao;
-import org.smartdata.metastore.dao.StorageDao;
-import org.smartdata.metastore.dao.CmdletDao;
-import org.smartdata.metastore.dao.FileDao;
-import org.smartdata.metastore.dao.UserDao;
-import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.dao.*;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.dao.EmptyResultDataAccessException;
 
@@ -75,7 +74,6 @@ public class MetaStore {
   private RuleDao ruleDao;
   private CmdletDao cmdletDao;
   private ActionDao actionDao;
-  private FileDao fileDao;
   private FileInfoDao fileInfoDao;
   private CacheFileDao cacheFileDao;
   private StorageDao storageDao;
@@ -90,7 +88,6 @@ public class MetaStore {
     ruleDao = new RuleDao(pool.getDataSource());
     cmdletDao = new CmdletDao(pool.getDataSource());
     actionDao = new ActionDao(pool.getDataSource());
-    fileDao = new FileDao(pool.getDataSource());
     fileInfoDao = new FileInfoDao(pool.getDataSource());
     xattrDao = new XattrDao(pool.getDataSource());
     cacheFileDao = new CacheFileDao(pool.getDataSource());
@@ -141,14 +138,12 @@ public class MetaStore {
 
   private void updateUsersMap() throws MetaStoreException {
     mapOwnerIdName = userDao.getUsersMap();
-    fileDao.updateUsersMap(mapOwnerIdName);
     fileInfoDao.updateUsersMap(mapOwnerIdName);
   }
 
   private void updateGroupsMap() throws MetaStoreException {
     try {
       mapGroupIdName = groupsDao.getGroupsMap();
-      fileDao.updateGroupsMap(mapGroupIdName);
       fileInfoDao.updateGroupsMap(mapGroupIdName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -156,31 +151,26 @@ public class MetaStore {
   }
 
   /**
-   * Store files info into database.
+   * Store a single file info into database.
    *
-   * @param files
+   * @param file
    */
-  public synchronized void insertFiles(FileStatusInternal[] files)
+  public synchronized void insertFile(FileInfo file)
       throws MetaStoreException {
     updateCache();
-    for (FileStatusInternal file : files) {
-      String owner = file.getOwner();
-      String group = file.getGroup();
-      if (!this.mapOwnerIdName.values().contains(owner)) {
-        this.addUser(owner);
-        this.updateUsersMap();
-      }
-      if (!this.mapGroupIdName.values().contains(group)) {
-        this.addGroup(group);
-        this.updateGroupsMap();
-      }
+    String owner = file.getOwner();
+    String group = file.getGroup();
+    if (!this.mapOwnerIdName.values().contains(owner)) {
+      this.addUser(owner);
+      this.updateUsersMap();
     }
-    try {
-      fileDao.insert(files);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
+    if (!this.mapGroupIdName.values().contains(group)) {
+      this.addGroup(group);
+      this.updateGroupsMap();
     }
+    fileInfoDao.insert(file);
   }
+
 
   /**
    * Store files info into database.
@@ -221,19 +211,34 @@ public class MetaStore {
     }
   }
 
-  public List<HdfsFileStatus> getFile() throws MetaStoreException {
+  public FileInfo getFile(long fid) throws MetaStoreException {
     updateCache();
     try {
-      return fileDao.getAll();
+      return fileInfoDao.getById(fid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public HdfsFileStatus getFile(long fid) throws MetaStoreException {
+  public FileInfo getFile(String path) throws MetaStoreException {
     updateCache();
     try {
-      return fileDao.getById(fid);
+      return fileInfoDao.getByPath(path);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<FileInfo> getFile() throws MetaStoreException {
+    updateCache();
+    try {
+      return fileInfoDao.getAll();
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -242,7 +247,9 @@ public class MetaStore {
   public Map<String, Long> getFileIDs(Collection<String> paths)
       throws MetaStoreException {
     try {
-      return fileDao.getPathFids(paths);
+      return fileInfoDao.getPathFids(paths);
+    } catch (EmptyResultDataAccessException e) {
+      return new HashMap<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -251,7 +258,9 @@ public class MetaStore {
   public Map<Long, String> getFilePaths(Collection<Long> ids)
       throws MetaStoreException {
     try {
-      return fileDao.getFidPaths(ids);
+      return fileInfoDao.getFidPaths(ids);
+    } catch (EmptyResultDataAccessException e) {
+      return new HashMap<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -277,6 +286,8 @@ public class MetaStore {
           }
         }
         return result;
+      } catch (EmptyResultDataAccessException e) {
+        return new ArrayList<>();
       } catch (Exception e) {
         throw new MetaStoreException(e);
       } finally {
@@ -288,15 +299,6 @@ public class MetaStore {
       }
     } else {
       return new ArrayList<>();
-    }
-  }
-
-
-  public HdfsFileStatus getFile(String path) throws MetaStoreException {
-    try {
-      return fileDao.getByPath(path);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
     }
   }
 
@@ -315,6 +317,8 @@ public class MetaStore {
     updateCache();
     try {
       return mapStorageCapacity.get(type);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -415,6 +419,8 @@ public class MetaStore {
   public List<CachedFileStatus> getCachedFileStatus() throws MetaStoreException {
     try {
       return cacheFileDao.getAll();
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -423,6 +429,8 @@ public class MetaStore {
   public List<Long> getCachedFids() throws MetaStoreException {
     try {
       return cacheFileDao.getFids();
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -432,6 +440,8 @@ public class MetaStore {
       long fid) throws MetaStoreException {
     try {
       return cacheFileDao.getById(fid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -440,21 +450,8 @@ public class MetaStore {
   public void createProportionView(AccessCountTable dest,
       AccessCountTable source)
       throws MetaStoreException {
-    double percentage =
-        ((double) dest.getEndTime() - dest.getStartTime())
-            / (source.getEndTime() - source.getStartTime());
-    String sql =
-        String.format(
-            "CREATE OR REPLACE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
-            dest.getTableName(),
-            AccessCountDao.FILE_FIELD,
-            source.getTableName(),
-            AccessCountDao.ACCESSCOUNT_FIELD,
-            percentage,
-            AccessCountDao.ACCESSCOUNT_FIELD,
-            source.getTableName());
     try {
-      execute(sql);
+      accessCountDao.createProportionView(dest, source);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -498,6 +495,8 @@ public class MetaStore {
       String sql) throws MetaStoreException {
     try {
       return metaStoreHelper.getFilesPath(sql);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -530,6 +529,8 @@ public class MetaStore {
   public RuleInfo getRuleInfo(long ruleId) throws MetaStoreException {
     try {
       return ruleDao.getById(ruleId);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -538,6 +539,8 @@ public class MetaStore {
   public List<RuleInfo> getRuleInfo() throws MetaStoreException {
     try {
       return ruleDao.getAll();
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -584,6 +587,8 @@ public class MetaStore {
       String ridCondition, CmdletState state) throws MetaStoreException {
     try {
       return cmdletDao.getByCondition(cidCondition, ridCondition, state);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -645,6 +650,8 @@ public class MetaStore {
     }
     try {
       return actionDao.getLatestActions(size);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -653,11 +660,13 @@ public class MetaStore {
   public List<ActionInfo> getActionsTableItem(
       List<Long> aids) throws MetaStoreException {
     if (aids == null || aids.size() == 0) {
-      return null;
+      return new ArrayList<>();
     }
     LOG.debug("Get Action ID {}", aids.toString());
     try {
       return actionDao.getByIds(aids);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -668,6 +677,8 @@ public class MetaStore {
     LOG.debug("Get aid {} cid {}", aidCondition, cidCondition);
     try {
       return actionDao.getByCondition(aidCondition, cidCondition);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -706,6 +717,8 @@ public class MetaStore {
     updateCache();
     try {
       return mapStoragePolicyIdName.get(sid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -716,6 +729,8 @@ public class MetaStore {
     updateCache();
     try {
       return getKey(mapStoragePolicyIdName, policyName);
+    } catch (EmptyResultDataAccessException e) {
+      return -1;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -733,6 +748,8 @@ public class MetaStore {
   public Map<String, byte[]> getXattrTable(Long fid) throws MetaStoreException {
     try {
       return xattrDao.getXattrTable(fid);
+    } catch (EmptyResultDataAccessException e) {
+      return new HashMap<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -777,6 +794,8 @@ public class MetaStore {
     try {
       return accessCountDao
           .aggregateSQLStatement(destinationTable, tablesToAggregate);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

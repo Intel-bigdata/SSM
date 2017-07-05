@@ -21,13 +21,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.junit.After;
 import org.junit.Assert;
@@ -37,7 +34,7 @@ import org.smartdata.SmartContext;
 import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.actions.hdfs.UncacheFileAction;
 import org.smartdata.model.CachedFileStatus;
-import org.smartdata.model.FileStatusInternal;
+import org.smartdata.model.FileInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
@@ -103,25 +100,21 @@ public class TestCachedListFetcher extends TestDaoUtil {
     }
   }
 
-  private FileStatusInternal createFileStatus(String pathSting) {
+  private FileInfo createFileStatus(String pathString) {
     long length = 123L;
     boolean isDir = false;
     int blockReplication = 1;
     long blockSize = 128 * 1024L;
     long modTime = 123123123L;
     long accessTime = 123123120L;
-    FsPermission perms = FsPermission.getDefault();
     String owner = "root";
     String group = "admin";
-    byte[] symlink = null;
-    byte[] path = DFSUtil.string2Bytes(pathSting);
     long fileId = fid;
-    fid++;
-    int numChildren = 0;
     byte storagePolicy = 0;
-    return new FileStatusInternal(length, isDir, blockReplication,
-        blockSize, modTime, accessTime, perms, owner, group, symlink,
-        path, "", fileId, numChildren, null, storagePolicy);
+    fid++;
+    return new FileInfo(pathString, fileId, length,
+        isDir, (short)blockReplication, blockSize, modTime, accessTime,
+        (short) 1, owner, group, storagePolicy);
   }
 
   @Test
@@ -131,14 +124,14 @@ public class TestCachedListFetcher extends TestDaoUtil {
     Path dir = new Path(pathPrefix);
     dfs.mkdirs(dir);
     dfs.setStoragePolicy(dir, "HOT");
-    List<FileStatusInternal> fileStatusInternals = new ArrayList<>();
+    List<FileInfo> fileInfos = new ArrayList<>();
     for (int i = 0; i < fids.length; i++) {
       CacheFileAction cacheAction = new CacheFileAction();
       String path = pathPrefix + fids[i];
       FSDataOutputStream out = dfs.create(new Path(path));
       out.writeChars("testUncache");
       out.close();
-      fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
+      fileInfos.add(createFileStatus(pathPrefix + fids[i]));
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
       Map<String, String> args = new HashMap();
@@ -147,9 +140,9 @@ public class TestCachedListFetcher extends TestDaoUtil {
       cacheAction.run();
       // System.out.println(cacheAction.isCached(path));
     }
-    metaStore.insertFiles(fileStatusInternals
-        .toArray(new FileStatusInternal[fileStatusInternals.size()]));
-    List<HdfsFileStatus> ret = metaStore.getFile();
+    metaStore.insertFiles(fileInfos
+        .toArray(new FileInfo[fileInfos.size()]));
+    List<FileInfo> ret = metaStore.getFile();
     Assert.assertTrue(ret.size() == fids.length);
     cachedListFetcher.start();
     Thread.sleep(1000);
@@ -159,7 +152,7 @@ public class TestCachedListFetcher extends TestDaoUtil {
     for (int i = 0; i < unCachedSize; i++) {
       UncacheFileAction uncacheFileAction = new UncacheFileAction();
       String path = pathPrefix + fids[i];
-      fileStatusInternals.add(createFileStatus("fileTest/cache/" + fids[i]));
+      fileInfos.add(createFileStatus("fileTest/cache/" + fids[i]));
       uncacheFileAction.setContext(smartContext);
       uncacheFileAction.setDfsClient(dfsClient);
       Map<String, String> args = new HashMap();
