@@ -24,9 +24,6 @@ import org.junit.Test;
 import java.util.Random;
 
 
-/**
- * Created by zhendu on 2017/7/5.
- */
 public class TestCmdletInfo {
   private class cmdletInfo extends TestCmdletInfo {
 

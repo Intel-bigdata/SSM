@@ -35,6 +35,17 @@ public class CmdletInfo {
 
   }
 
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
+  }
+
+
 
   public boolean equals(CmdletInfo cmdletInfo) {
     if (this == cmdletInfo) {
