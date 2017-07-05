@@ -18,10 +18,7 @@
 package org.smartdata.actions.hdfs.move;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.sun.tools.javac.util.Log;
-import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSUtil;
@@ -29,24 +26,19 @@ import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
-import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
 import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 /**
  * HDFS move based move runner.
  */
 public class MoverBasedMoveRunner extends MoveRunner {
-  private static final Logger LOG = LoggerFactory.getLogger(
-      MoverBasedMoveRunner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MoverBasedMoveRunner.class);
   private Configuration conf;
   private MoverStatus actionStatus;
 
@@ -75,7 +67,7 @@ public class MoverBasedMoveRunner extends MoveRunner {
       LOG.info("Namenode = " + pathPair.ns);
       nnc = new NameNodeConnector(pathPair.ns, conf);
 
-      final Mover m = new Mover(nnc, conf, actionStatus);
+      final Mover m = new Mover(nnc, pathPair.path, conf, actionStatus);
       final ExitStatus r = m.run();
 
       if (r == ExitStatus.SUCCESS) {
@@ -84,12 +76,11 @@ public class MoverBasedMoveRunner extends MoveRunner {
       } else if (r != ExitStatus.IN_PROGRESS) {
         if (r == ExitStatus.NO_MOVE_PROGRESS) {
           LOG.error("Failed to move some blocks after "
-              + m.retryMaxAttempts + " retries. Exiting...");
+              + 1 + " retries. Exiting...");
         } else if (r == ExitStatus.NO_MOVE_BLOCK) {
           LOG.error("Some blocks can't be moved. Exiting...");
         } else {
-          LOG.error("Mover failed. Exiting with status " + r
-              + "... ");
+          LOG.error("Mover failed. Exiting with status " + r + "... ");
         }
       }
 
