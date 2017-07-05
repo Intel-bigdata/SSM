@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class NamespaceFetcher {
-  private static final Long DEFAULT_INTERVAL = 1000L;
+  private static final Long DEFAULT_INTERVAL = 100L;
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final long fetchInterval;
