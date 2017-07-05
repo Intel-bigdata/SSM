@@ -3,7 +3,7 @@
     {
       "title": "Hello R",
       "text": "%r\nfoo \u003c- TRUE\nprint(foo)\nbare \u003c- c(1, 2.5, 4)\nprint(bare)\ndouble \u003c- 15.0\nprint(double)",
-      "user": "anonymous",
+      "user": "admin",
       "dateUpdated": "Jan 29, 2017 2:45:40 AM",
       "config": {
         "colWidth": 12.0,
@@ -33,11 +33,11 @@
         "forms": {}
       },
       "results": {
-        "code": "SUCCESS",
+        "code": "ERROR",
         "msg": [
           {
             "type": "TEXT",
-            "data": "\n[1] TRUE\n[1] 1.0 2.5 4.0\n[1] 15\n\n\n\n"
+            "data": "paragraph_1429882946244_-381648689\u0027s Interpreter r not found"
           }
         ]
       },
@@ -47,7 +47,8 @@
       "dateCreated": "Apr 24, 2015 3:42:26 AM",
       "dateStarted": "Jan 29, 2017 2:42:27 AM",
       "dateFinished": "Jan 29, 2017 2:42:40 AM",
-      "status": "FINISHED",
+      "status": "ERROR",
+      "errorMessage": "org.apache.zeppelin.interpreter.InterpreterException: paragraph_1429882946244_-381648689\u0027s Interpreter r not found\n\tat org.apache.zeppelin.notebook.Note.run(Note.java:605)\n\tat org.apache.zeppelin.notebook.Note.runAll(Note.java:580)\n\tat org.apache.zeppelin.rest.NotebookRestApi.runNoteJobs(NotebookRestApi.java:611)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat com.sun.jersey.spi.container.JavaMethodInvokerFactory$1.invoke(JavaMethodInvokerFactory.java:60)\n\tat com.sun.jersey.server.impl.model.method.dispatch.AbstractResourceMethodDispatchProvider$ResponseOutInvoker._dispatch(AbstractResourceMethodDispatchProvider.java:205)\n\tat com.sun.jersey.server.impl.model.method.dispatch.ResourceJavaMethodDispatcher.dispatch(ResourceJavaMethodDispatcher.java:75)\n\tat com.sun.jersey.server.impl.uri.rules.HttpMethodRule.accept(HttpMethodRule.java:302)\n\tat com.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:147)\n\tat com.sun.jersey.server.impl.uri.rules.ResourceObjectRule.accept(ResourceObjectRule.java:100)\n\tat com.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:147)\n\tat com.sun.jersey.server.impl.uri.rules.RootResourceClassesRule.accept(RootResourceClassesRule.java:84)\n\tat com.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1480)\n\tat com.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1411)\n\tat com.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1360)\n\tat com.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1350)\n\tat com.sun.jersey.spi.container.servlet.WebComponent.service(WebComponent.java:416)\n\tat com.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:538)\n\tat com.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:716)\n\tat javax.servlet.http.HttpServlet.service(HttpServlet.java:790)\n\tat org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:812)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1669)\n\tat org.apache.shiro.web.servlet.ProxiedFilterChain.doFilter(ProxiedFilterChain.java:61)\n\tat org.apache.shiro.web.servlet.AdviceFilter.executeChain(AdviceFilter.java:108)\n\tat org.apache.shiro.web.servlet.AdviceFilter.doFilterInternal(AdviceFilter.java:137)\n\tat org.apache.shiro.web.servlet.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:125)\n\tat org.apache.shiro.web.servlet.ProxiedFilterChain.doFilter(ProxiedFilterChain.java:66)\n\tat org.apache.shiro.web.servlet.AbstractShiroFilter.executeChain(AbstractShiroFilter.java:449)\n\tat org.apache.shiro.web.servlet.AbstractShiroFilter$1.call(AbstractShiroFilter.java:365)\n\tat org.apache.shiro.subject.support.SubjectCallable.doCall(SubjectCallable.java:90)\n\tat org.apache.shiro.subject.support.SubjectCallable.call(SubjectCallable.java:83)\n\tat org.apache.shiro.subject.support.DelegatingSubject.execute(DelegatingSubject.java:383)\n\tat org.apache.shiro.web.servlet.AbstractShiroFilter.doFilterInternal(AbstractShiroFilter.java:362)\n\tat org.apache.shiro.web.servlet.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:125)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1652)\n\tat org.apache.zeppelin.server.CorsFilter.doFilter(CorsFilter.java:72)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1652)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:585)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:143)\n\tat org.eclipse.jetty.security.SecurityHandler.handle(SecurityHandler.java:577)\n\tat org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:223)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1127)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:515)\n\tat org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:185)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1061)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.ContextHandlerCollection.handle(ContextHandlerCollection.java:215)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:97)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:499)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:311)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:257)\n\tat org.eclipse.jetty.io.AbstractConnection$2.run(AbstractConnection.java:544)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:635)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:555)\n\tat java.lang.Thread.run(Thread.java:745)\n",
       "progressUpdateIntervalMs": 500
     },
     {
@@ -1281,27 +1282,7 @@
   ],
   "name": "Zeppelin Tutorial/R (SparkR)",
   "id": "2BWJFTXKJ",
-  "angularObjects": {
-    "2C9A5UJ3F:shared_process": [],
-    "2C8D7ETGW:shared_process": [],
-    "2C9S19J4N:shared_process": [],
-    "2C734G5GU:shared_process": [],
-    "2C7F9HJVB:shared_process": [],
-    "2C7RMKT4T:shared_process": [],
-    "2C6UPN6XS:shared_process": [],
-    "2C8MCDYHM:shared_process": [],
-    "2C7GPJHE2:shared_process": [],
-    "2C81DYM51:shared_process": [],
-    "2C7Z5PJKA:shared_process": [],
-    "2C7KKEX6R:shared_process": [],
-    "2C8G679A7:shared_process": [],
-    "2C96T367K:shared_process": [],
-    "2C79TYUDA:shared_process": [],
-    "2C82EG3YP:shared_process": [],
-    "2C8C4BYC9:shared_process": [],
-    "2C77RB7Q2:shared_process": [],
-    "2C9ENJ461:shared_process": []
-  },
+  "angularObjects": {},
   "config": {
     "looknfeel": "default"
   },

@@ -19,6 +19,11 @@
 
 <configuration>
 
+  <property>
+    <name>zeppelin.war</name>
+    <value>war/zeppelin-web-0.7.2.war</value>
+  </property>
+
 <property>
   <name>zeppelin.server.addr</name>
   <value>0.0.0.0</value>

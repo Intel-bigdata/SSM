@@ -23,4 +23,11 @@
         <description>Namenode rpcserver</description>
     </property>
 
+    <!--
+    <property>
+        <name>smart.zeppelin.web.enable</name>
+        <value>true</value>
+    </property>
+    -->
+
 </configuration>

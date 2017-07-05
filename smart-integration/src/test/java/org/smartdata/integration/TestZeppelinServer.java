@@ -17,22 +17,56 @@
  */
 package org.smartdata.integration;
 
+import io.restassured.RestAssured;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.integration.cluster.SmartCluster;
+import org.smartdata.integration.cluster.SmartMiniCluster;
 
 /**
  * Test for SmartZeppelinServer.
  */
-public class TestZeppelinServer extends IntegrationTestBase {
+public class TestZeppelinServer {
 
-  static {
+  private static SmartCluster cluster;
+  private static SmartConf conf;
+  private static IntegrationSmartServer smartServer;
+  private static int zeppelinPort;
 
+  @BeforeClass
+  public static void setup() throws Exception {
+    // Set up an HDFS cluster
+    cluster = new SmartMiniCluster();
+    cluster.setUp();
+
+    // Start a Smart server
+    conf = cluster.getConf();
+    zeppelinPort = 8080;
+    conf.setBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB, true);
+    smartServer = new IntegrationSmartServer();
+    smartServer.setUp(conf);
+
+    // Initialize RestAssured
+    initRestAssured();
   }
+
+  private static void initRestAssured() {
+    RestAssured.port = zeppelinPort;
+    //RestAssured.registerParser("text/plain", Parser.JSON);
+  }
+
+  @AfterClass
+  public static void cleanUp() throws Exception {
+    smartServer.cleanUp();
+    cluster.cleanUp();
+  }
+
   @Test
   public void test() throws Exception {
-
-    while (true) {
-
-    }
+    //Thread.sleep(1000000);
 
   }
 }

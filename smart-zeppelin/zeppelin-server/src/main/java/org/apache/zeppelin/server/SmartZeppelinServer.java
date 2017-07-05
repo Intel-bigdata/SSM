@@ -90,15 +90,16 @@ import java.util.Set;
  */
 public class SmartZeppelinServer extends Application {
   private static final Logger LOG = LoggerFactory.getLogger(SmartZeppelinServer.class);
-  private static final String SMART_PATH_SPEC = "/smart/api/v1/*";
+  private static final String SMART_PATH_SPEC = "/api/*";
+  ///smart/api/v1/*";
 
   private SmartEngine engine;
   private SmartConf conf;
 
+  public static Notebook notebook;
+  public static NotebookServer notebookWsServer;
   private ZeppelinConfiguration zconf;
-  private Notebook notebook;
   private Server jettyWebServer;
-  private NotebookServer notebookWsServer;
   private Helium helium;
 
   private InterpreterSettingManager interpreterSettingManager;
@@ -115,8 +116,6 @@ public class SmartZeppelinServer extends Application {
     this.engine = engine;
 
     this.zconf = ZeppelinConfiguration.create();
-
-    //init();
   }
 
   private void init() throws Exception {
@@ -143,8 +142,10 @@ public class SmartZeppelinServer extends Application {
       heliumVisualizationFactory = new HeliumVisualizationFactory(
           zconf,
           new File(zconf.getRelativeDir(ConfVars.ZEPPELIN_DEP_LOCALREPO)),
-          new File(zconf.getRelativeDir("zeppelin-web/src/app/tabledata")),
-          new File(zconf.getRelativeDir("zeppelin-web/src/app/visualization")));
+          //new File(zconf.getRelativeDir("zeppelin-web/src/app/tabledata")),
+          //new File(zconf.getRelativeDir("zeppelin-web/src/app/visualization")));
+          new File(zconf.getRelativeDir("smart-zeppelin/zeppelin-web/src/app/tabledata")),
+          new File(zconf.getRelativeDir("smart-zeppelin/zeppelin-web/src/app/visualization")));
     }
 
     this.helium = new Helium(
@@ -206,6 +207,7 @@ public class SmartZeppelinServer extends Application {
 
     // Notebook server
     setupNotebookServer(webApp);
+
     init();
 
     // REST api
@@ -219,6 +221,21 @@ public class SmartZeppelinServer extends Application {
       //System.exit(-1);
     }
     LOG.info("Done, zeppelin server started");
+
+    Runtime.getRuntime().addShutdownHook(new Thread(){
+      @Override public void run() {
+        LOG.info("Shutting down Zeppelin Server ... ");
+        try {
+          jettyWebServer.stop();
+          notebook.getInterpreterSettingManager().shutdown();
+          notebook.close();
+          Thread.sleep(1000);
+        } catch (Exception e) {
+          LOG.error("Error while stopping servlet container", e);
+        }
+        LOG.info("Bye");
+      }
+    });
   }
 
   public void stop() {
@@ -349,8 +366,8 @@ public class SmartZeppelinServer extends Application {
       return webApp;
     }
 
-    File warPath = new File("../dist/zeppelin-web-0.7.2.war");
-        //File(zconf.getString(ConfVars.ZEPPELIN_WAR));
+    File warPath = new File(zconf.getString(ConfVars.ZEPPELIN_WAR));
+    //File warPath = new File("../dist/zeppelin-web-0.7.2.war");
     if (warPath.isDirectory()) {
       // Development mode, read from FS
       // webApp.setDescriptor(warPath+"/WEB-INF/web.xml");
@@ -366,7 +383,7 @@ public class SmartZeppelinServer extends Application {
     }
     // Explicit bind to root
     webApp.addServlet(new ServletHolder(new DefaultServlet()), "/*");
-    contexts.addHandler(webApp); // already added
+    contexts.addHandler(webApp);
 
     webApp.addFilter(new FilterHolder(CorsFilter.class), "/*",
         EnumSet.allOf(DispatcherType.class));
@@ -439,6 +456,7 @@ public class SmartZeppelinServer extends Application {
    * @return
    */
   private static boolean isBinaryPackage(ZeppelinConfiguration conf) {
-    return !new File(conf.getRelativeDir("zeppelin-web")).isDirectory();
+    //return !new File(conf.getRelativeDir("zeppelin-web")).isDirectory();
+    return !new File(conf.getRelativeDir("smart-zeppelin/zeppelin-web")).isDirectory();
   }
 }
