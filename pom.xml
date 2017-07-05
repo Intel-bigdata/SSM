@@ -353,12 +353,6 @@
         <version>${hadoop.version}</version>
         <scope>test</scope>
         <type>test-jar</type>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -366,12 +360,6 @@
         <version>${hadoop.version}</version>
         <scope>test</scope>
         <type>test-jar</type>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
