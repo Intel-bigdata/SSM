@@ -79,4 +79,5 @@ fi
 # fi
 
 vargs+=" -D smart.conf.dir="${SMART_CONF_DIR}
+vargs+=" -D smart.log.dir="${SMART_LOG_DIR}
 exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $vargs
