@@ -108,6 +108,7 @@ public class TestFileInfoDao extends TestDaoUtil {
     fileInfoDao.insert(fileInfo);
     fileInfoDao.update(path, 10);
     FileInfo file = fileInfoDao.getById(fileId);
-    Assert.assertTrue(10 == file.getStoragePolicy());
+    fileInfo.setStoragePolicy((byte) 10);
+    Assert.assertTrue(file.equals(fileInfo));
   }
 }

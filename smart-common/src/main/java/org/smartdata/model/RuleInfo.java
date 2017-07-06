@@ -34,6 +34,7 @@ public class RuleInfo implements Cloneable {
   private long numCmdsGen;
   private long lastCheckTime;
 
+
   public long getId() {
     return id;
   }
