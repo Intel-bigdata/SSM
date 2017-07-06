@@ -59,24 +59,24 @@ done
 
 
 HOSTNAME=$(hostname)
-SMART_LOGFILE="${SMART_LOG_DIR}/smart-${SMART_IDENT_STRING}-${HOSTNAME}.log"
-LOG="${SMART_LOG_DIR}/smart-cli-${SMART_IDENT_STRING}-${HOSTNAME}.out"
 
 SMART_SERVER=org.smartdata.server.SmartDaemon
+JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
 
 addJarInDir "${SMART_HOME}/smart-server/target/lib"
 addNonTestJarInDir "${SMART_HOME}/smart-server/target"
 addJarInDir "${SMART_HOME}/lib"
 
+if [ "$SMART_CLASSPATH" = "" ]; then
+  SMART_CLASSPATH="${SMART_CONF_DIR}"
+else
+  SMART_CLASSPATH="${SMART_CONF_DIR}:${SMART_CLASSPATH}"
+fi
+
 if [[ ! -d "${SMART_LOG_DIR}" ]]; then
   echo "Log dir doesn't exist, create ${SMART_LOG_DIR}"
   $(mkdir -p "${SMART_LOG_DIR}")
 fi
-
-# if [[ ! -d "${SMART_PID_DIR}" ]]; then
-#   echo "Pid dir doesn't exist, create ${SMART_PID_DIR}"
-#   $(mkdir -p "${SMART_PID_DIR}")
-# fi
 
 vargs+=" -D smart.conf.dir="${SMART_CONF_DIR}
 vargs+=" -D smart.log.dir="${SMART_LOG_DIR}
