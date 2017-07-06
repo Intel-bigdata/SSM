@@ -147,7 +147,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         action: function (obj) {
           return angular.merge(obj, {
-            uptime: obj.finishTime - obj.createTime,
+            uptime: Math.max(obj.finishTime - obj.createTime, 1),
             status: obj.finished ? 'Finished' : 'Running',
             pageUrl: locator.action(obj.actionId),
             argument: util.joinArguments(obj.args)
