@@ -39,7 +39,7 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.zeppelin.notebook.repo.zeppelinhub.model.UserSessionContainer;
 import org.apache.zeppelin.notebook.repo.zeppelinhub.websocket.utils.ZeppelinhubUtils;
-import org.apache.zeppelin.server.ZeppelinServer;
+import org.apache.zeppelin.server.SmartZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,7 +214,7 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
     /* TODO(xxx): add proper roles */
     HashSet<String> userAndRoles = new HashSet<String>();
     userAndRoles.add(username);
-    ZeppelinServer.notebookWsServer.broadcastReloadedNoteList(
+    SmartZeppelinServer.notebookWsServer.broadcastReloadedNoteList(
         new org.apache.zeppelin.user.AuthenticationInfo(username), userAndRoles);
 
     ZeppelinhubUtils.userLoginRoutine(username);
