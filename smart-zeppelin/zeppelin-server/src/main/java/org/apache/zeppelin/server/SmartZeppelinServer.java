@@ -88,17 +88,18 @@ import java.util.Set;
 /**
  * Main class of embedded Zeppelin Server.
  */
-public class SmartZeppelinServer extends Application {
+public class SmartZeppelinServer {
   private static final Logger LOG = LoggerFactory.getLogger(SmartZeppelinServer.class);
   private static final String SMART_PATH_SPEC = "/smart/api/v1/*";
+  private static final String ZEPPELIN_PATH_SPEC = "/api/*";
 
   private SmartEngine engine;
   private SmartConf conf;
 
+  public static Notebook notebook;
+  public static NotebookServer notebookWsServer;
   private ZeppelinConfiguration zconf;
-  private Notebook notebook;
   private Server jettyWebServer;
-  private NotebookServer notebookWsServer;
   private Helium helium;
 
   private InterpreterSettingManager interpreterSettingManager;
@@ -115,10 +116,12 @@ public class SmartZeppelinServer extends Application {
     this.engine = engine;
 
     this.zconf = ZeppelinConfiguration.create();
+
     this.zconf.setProperty(ConfVars.ZEPPELIN_CONF_DIR.getVarName(),
         conf.get(SmartConfKeys.SMART_CONF_DIR));
-
-    //init();
+    if (!isBinaryPackage(zconf)) {
+      zconf.setProperty(ConfVars.ZEPPELIN_HOME.getVarName(), "smart-zeppelin/");
+    }
   }
 
 
@@ -146,8 +149,10 @@ public class SmartZeppelinServer extends Application {
       heliumVisualizationFactory = new HeliumVisualizationFactory(
           zconf,
           new File(zconf.getRelativeDir(ConfVars.ZEPPELIN_DEP_LOCALREPO)),
-          new File(zconf.getRelativeDir("zeppelin-web/src/app/tabledata")),
-          new File(zconf.getRelativeDir("zeppelin-web/src/app/visualization")));
+          //new File(zconf.getRelativeDir("zeppelin-web/src/app/tabledata")),
+          //new File(zconf.getRelativeDir("zeppelin-web/src/app/visualization")));
+          new File(zconf.getRelativeDir("smart-zeppelin/zeppelin-web/src/app/tabledata")),
+          new File(zconf.getRelativeDir("smart-zeppelin/zeppelin-web/src/app/visualization")));
     }
 
     this.helium = new Helium(
@@ -209,6 +214,7 @@ public class SmartZeppelinServer extends Application {
 
     // Notebook server
     setupNotebookServer(webApp);
+
     init();
 
     // REST api
@@ -222,6 +228,25 @@ public class SmartZeppelinServer extends Application {
       //System.exit(-1);
     }
     LOG.info("Done, zeppelin server started");
+
+    Runtime.getRuntime().addShutdownHook(new Thread(){
+      @Override public void run() {
+        LOG.info("Shutting down Zeppelin Server ... ");
+        try {
+          if (jettyWebServer != null) {
+            jettyWebServer.stop();
+          }
+          if (notebook != null) {
+            notebook.getInterpreterSettingManager().shutdown();
+            notebook.close();
+          }
+          Thread.sleep(1000);
+        } catch (Exception e) {
+          LOG.error("Error while stopping servlet container", e);
+        }
+        LOG.info("Bye");
+      }
+    });
   }
 
   public void stop() {
@@ -327,13 +352,95 @@ public class SmartZeppelinServer extends Application {
     return sslContextFactory;
   }
 
+  class SmartRestApp extends Application {
+    @Override
+    public Set<Class<?>> getClasses() {
+      Set<Class<?>> classes = new HashSet<>();
+      return classes;
+    }
+
+    @Override
+    public Set<Object> getSingletons() {
+      Set<Object> singletons = new HashSet<>();
+
+      SystemRestApi systemApi = new SystemRestApi(engine);
+      singletons.add(systemApi);
+
+      ConfRestApi confApi = new ConfRestApi(engine);
+      singletons.add(confApi);
+
+      ActionRestApi actionApi = new ActionRestApi(engine);
+      singletons.add(actionApi);
+
+      ClusterRestApi clusterApi = new ClusterRestApi(engine);
+      singletons.add(clusterApi);
+
+      CmdletRestApi cmdletApi = new CmdletRestApi(engine);
+      singletons.add(cmdletApi);
+
+      RuleRestApi ruleApi = new RuleRestApi(engine);
+      singletons.add(ruleApi);
+
+      return singletons;
+    }
+  }
+
+  class ZeppelinRestApp extends Application {
+    @Override
+    public Set<Class<?>> getClasses() {
+      Set<Class<?>> classes = new HashSet<>();
+      return classes;
+    }
+
+    @Override
+    public Set<Object> getSingletons() {
+      Set<Object> singletons = new HashSet<>();
+
+      /** Rest-api root endpoint */
+      ZeppelinRestApi root = new ZeppelinRestApi();
+      singletons.add(root);
+
+      NotebookRestApi notebookApi =
+        new NotebookRestApi(notebook, notebookWsServer, noteSearchService);
+      singletons.add(notebookApi);
+
+      NotebookRepoRestApi notebookRepoApi =
+        new NotebookRepoRestApi(notebookRepo, notebookWsServer);
+      singletons.add(notebookRepoApi);
+
+      HeliumRestApi heliumApi = new HeliumRestApi(helium, notebook);
+      singletons.add(heliumApi);
+
+      InterpreterRestApi interpreterApi = new InterpreterRestApi(interpreterSettingManager);
+      singletons.add(interpreterApi);
+
+      CredentialRestApi credentialApi = new CredentialRestApi(credentials);
+      singletons.add(credentialApi);
+
+      SecurityRestApi securityApi = new SecurityRestApi();
+      singletons.add(securityApi);
+
+      LoginRestApi loginRestApi = new LoginRestApi();
+      singletons.add(loginRestApi);
+
+      ConfigurationsRestApi settingsApi = new ConfigurationsRestApi(notebook);
+      singletons.add(settingsApi);
+
+      return singletons;
+    }
+  }
+
   private void setupRestApiContextHandler(WebAppContext webApp) throws Exception {
 
-    ResourceConfig config = new ApplicationAdapter(this);
-    ServletHolder restServletHolder = new ServletHolder(new ServletContainer(config));
-
     webApp.setSessionHandler(new SessionHandler());
-    webApp.addServlet(restServletHolder, SMART_PATH_SPEC);
+
+    ResourceConfig smartConfig = new ApplicationAdapter(new SmartRestApp());
+    ServletHolder smartServletHolder = new ServletHolder(new ServletContainer(smartConfig));
+    webApp.addServlet(smartServletHolder, SMART_PATH_SPEC);
+
+    ResourceConfig zeppelinConfig = new ApplicationAdapter(new ZeppelinRestApp());
+    ServletHolder zeppelinServletHolder = new ServletHolder(new ServletContainer(zeppelinConfig));
+    webApp.addServlet(zeppelinServletHolder, ZEPPELIN_PATH_SPEC);
 
     String shiroIniPath = zconf.getShiroPath();
     if (!StringUtils.isBlank(shiroIniPath)) {
@@ -356,8 +463,8 @@ public class SmartZeppelinServer extends Application {
       return webApp;
     }
 
-    File warPath = new File("../dist/zeppelin-web-0.7.2.war");
-        //File(zconf.getString(ConfVars.ZEPPELIN_WAR));
+    File warPath = new File(zconf.getString(ConfVars.ZEPPELIN_WAR));
+    //File warPath = new File("../dist/zeppelin-web-0.7.2.war");
     if (warPath.isDirectory()) {
       // Development mode, read from FS
       // webApp.setDescriptor(warPath+"/WEB-INF/web.xml");
@@ -373,7 +480,7 @@ public class SmartZeppelinServer extends Application {
     }
     // Explicit bind to root
     webApp.addServlet(new ServletHolder(new DefaultServlet()), "/*");
-    contexts.addHandler(webApp); // already added
+    contexts.addHandler(webApp);
 
     webApp.addFilter(new FilterHolder(CorsFilter.class), "/*",
         EnumSet.allOf(DispatcherType.class));
@@ -381,71 +488,11 @@ public class SmartZeppelinServer extends Application {
     return webApp;
   }
 
-  @Override
-  public Set<Class<?>> getClasses() {
-    Set<Class<?>> classes = new HashSet<>();
-    return classes;
-  }
-
-  @Override
-  public Set<Object> getSingletons() {
-    Set<Object> singletons = new HashSet<>();
-
-    SystemRestApi systemApi = new SystemRestApi(engine);
-    singletons.add(systemApi);
-
-    ConfRestApi confApi = new ConfRestApi(engine);
-    singletons.add(confApi);
-
-    ActionRestApi actionApi = new ActionRestApi(engine);
-    singletons.add(actionApi);
-
-    ClusterRestApi clusterApi = new ClusterRestApi(engine);
-    singletons.add(clusterApi);
-
-    CmdletRestApi cmdletApi = new CmdletRestApi(engine);
-    singletons.add(cmdletApi);
-
-    RuleRestApi ruleApi = new RuleRestApi(engine);
-    singletons.add(ruleApi);
-
-    /** Rest-api root endpoint */
-    ZeppelinRestApi root = new ZeppelinRestApi();
-    singletons.add(root);
-
-    NotebookRestApi notebookApi
-      = new NotebookRestApi(notebook, notebookWsServer, noteSearchService);
-    singletons.add(notebookApi);
-
-    NotebookRepoRestApi notebookRepoApi = new NotebookRepoRestApi(notebookRepo, notebookWsServer);
-    singletons.add(notebookRepoApi);
-
-    HeliumRestApi heliumApi = new HeliumRestApi(helium, notebook);
-    singletons.add(heliumApi);
-
-    InterpreterRestApi interpreterApi = new InterpreterRestApi(interpreterSettingManager);
-    singletons.add(interpreterApi);
-
-    CredentialRestApi credentialApi = new CredentialRestApi(credentials);
-    singletons.add(credentialApi);
-
-    SecurityRestApi securityApi = new SecurityRestApi();
-    singletons.add(securityApi);
-
-    LoginRestApi loginRestApi = new LoginRestApi();
-    singletons.add(loginRestApi);
-
-    ConfigurationsRestApi settingsApi = new ConfigurationsRestApi(notebook);
-    singletons.add(settingsApi);
-
-    return singletons;
-  }
-
   /**
    * Check if it is source build or binary package
    * @return
    */
   private static boolean isBinaryPackage(ZeppelinConfiguration conf) {
-    return !new File(conf.getRelativeDir("zeppelin-web")).isDirectory();
+    return !new File(conf.getRelativeDir("smart-zeppelin/zeppelin-web")).isDirectory();
   }
 }

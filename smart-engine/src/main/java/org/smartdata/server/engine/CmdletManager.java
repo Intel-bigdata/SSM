@@ -212,7 +212,7 @@ public class CmdletManager extends AbstractService {
           String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
           if (file != null) {
             if (fileLocks.containsKey(file)) {
-              LOG.info("Warning: Other actions are processing {}!", file);
+              LOG.debug("Warning: Other actions are processing {}!", file);
               throw new IOException("Has conflict actions, submit cmdlet failed.");
             } else {
               filesToLock.put(file, info.getActionId());
