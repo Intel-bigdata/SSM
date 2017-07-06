@@ -41,4 +41,32 @@ public final class StorageCapacity {
     return free;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    StorageCapacity that = (StorageCapacity) o;
+
+    if (type != null ? !type.equals(that.type) : that.type != null) {
+      return false;
+    }
+    if (capacity != null ? !capacity.equals(that.capacity) :
+        that.capacity != null) {
+      return false;
+    }
+    return free != null ? free.equals(that.free) : that.free == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = type != null ? type.hashCode() : 0;
+    result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
+    result = 31 * result + (free != null ? free.hashCode() : 0);
+    return result;
+  }
 }

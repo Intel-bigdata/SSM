@@ -29,7 +29,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
-import org.smartdata.model.FileStatusInternal;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
@@ -173,10 +173,11 @@ public class TestMetaStore extends TestDaoUtil {
     public SelectUpdateThread(MetaStore metaStore) {
       this.metaStore = metaStore;
     }
+
     public void run() {
-      for (int i = 0 ; i < 100; i++) {
+      for (int i = 0; i < 100; i++) {
         try {
-          List<ActionInfo> actionInfoList = metaStore.getActionsTableItem(Arrays.asList(new Long[]{(long)i}));
+          List<ActionInfo> actionInfoList = metaStore.getActionsTableItem(Arrays.asList(new Long[]{(long) i}));
           actionInfoList.get(0).setFinished(true);
           actionInfoList.get(0).setFinishTime(System.currentTimeMillis());
           metaStore.updateActionsTable(actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
@@ -191,30 +192,27 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testGetFiles() throws Exception {
-    String pathString = "des";
-    long length = 20484l;
+    String pathString = "/tmp/des";
+    long length = 123L;
     boolean isDir = false;
     int blockReplication = 1;
     long blockSize = 128 * 1024L;
     long modTime = 123123123L;
-    long accessTime = 1490936390000l;
-    FsPermission perms = FsPermission.getDefault();
+    long accessTime = 123123120L;
     String owner = "root";
     String group = "admin";
-    byte[] symlink = null;
-    byte[] path = DFSUtil.string2Bytes(pathString);
     long fileId = 56l;
-    int numChildren = 0;
     byte storagePolicy = 0;
-    FileStatusInternal[] files = {new FileStatusInternal(length, isDir, blockReplication,
-        blockSize, modTime, accessTime, perms, owner, group, symlink,
-        path, "/tmp", fileId, numChildren, null, storagePolicy)};
-    metaStore.insertFiles(files);
-    HdfsFileStatus hdfsFileStatus = metaStore.getFile(56);
-    Assert.assertTrue(hdfsFileStatus.getLen() == 20484l);
-    hdfsFileStatus = metaStore.getFile("/tmp/des");
-    Assert.assertTrue(hdfsFileStatus.getAccessTime() == 1490936390000l);
+    FileInfo fileInfo = new FileInfo(pathString, fileId, length,
+        isDir, (short) blockReplication, blockSize, modTime, accessTime,
+        (short) 1, owner, group, storagePolicy);
+    metaStore.insertFile(fileInfo);
+    FileInfo dbFileInfo = metaStore.getFile(56);
+    Assert.assertTrue(dbFileInfo.equals(fileInfo));
+    dbFileInfo = metaStore.getFile("/tmp/des");
+    Assert.assertTrue(dbFileInfo.equals(fileInfo));
   }
+
   @Test
   public void testInsertStoragesTable() throws Exception {
     StorageCapacity storage1 = new StorageCapacity("Flash",
@@ -227,8 +225,8 @@ public class TestMetaStore extends TestDaoUtil {
         .getStorageCapacity("Flash");
     StorageCapacity storageCapacity2 = metaStore
         .getStorageCapacity("RAM");
-    Assert.assertTrue(storageCapacity1.getCapacity() == 12343333l);
-    Assert.assertTrue(storageCapacity2.getFree() == 2223663l);
+    Assert.assertTrue(storageCapacity1.equals(storage1));
+    Assert.assertTrue(storageCapacity2.equals(storage2));
     Assert.assertTrue(metaStore.updateStoragesTable("Flash",
         123456L, 4562233L));
     Assert.assertTrue(metaStore.getStorageCapacity("Flash")
@@ -244,8 +242,8 @@ public class TestMetaStore extends TestDaoUtil {
         12342233l, 2223663l);
     StorageCapacity[] storages = {storage1, storage2};
     metaStore.insertStoragesTable(storages);
-    StorageCapacity storageCapacity = metaStore.getStorageCapacity("HDD");
-    Assert.assertTrue(storageCapacity.getCapacity() == 12343333l);
+    Assert.assertTrue(metaStore.getStorageCapacity("HDD").equals(storage1));
+    Assert.assertTrue(metaStore.getStorageCapacity("RAM").equals(storage2));
   }
 
   @Test
@@ -261,8 +259,12 @@ public class TestMetaStore extends TestDaoUtil {
 
     long now = System.currentTimeMillis();
     metaStore.updateRuleInfo(info1.getId(), RuleState.DELETED, now, 1, 1);
+    info1.setState(RuleState.DELETED);
+    info1.setLastCheckTime(now);
+    info1.setNumChecked(1);
+    info1.setNumCmdsGen(1);
     RuleInfo info1_2 = metaStore.getRuleInfo(info1.getId());
-    Assert.assertTrue(info1_2.getLastCheckTime() == now);
+    Assert.assertTrue(info1_2.equals(info1));
 
     RuleInfo info2 = new RuleInfo(0, submitTime,
         rule, RuleState.ACTIVE, 0, 0, 0);
@@ -360,27 +362,23 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsetFiles() throws Exception {
-    String pathString = "testFile";
+    String pathString = "/tmp/testFile";
     long length = 123L;
     boolean isDir = false;
     int blockReplication = 1;
     long blockSize = 128 * 1024L;
     long modTime = 123123123L;
     long accessTime = 123123120L;
-    FsPermission perms = FsPermission.getDefault();
     String owner = "root";
     String group = "admin";
-    byte[] symlink = null;
-    byte[] path = DFSUtil.string2Bytes(pathString);
     long fileId = 312321L;
-    int numChildren = 0;
     byte storagePolicy = 0;
-    FileStatusInternal[] files = {new FileStatusInternal(length, isDir, blockReplication,
-        blockSize, modTime, accessTime, perms, owner, group, symlink,
-        path, "/tmp", fileId, numChildren, null, storagePolicy)};
+    FileInfo[] files = {new FileInfo(pathString, fileId, length,
+        isDir, (short) blockReplication, blockSize, modTime, accessTime,
+        (short) 1, owner, group, storagePolicy)};
     metaStore.insertFiles(files);
-    HdfsFileStatus hdfsFileStatus = metaStore.getFile("/tmp/testFile");
-    Assert.assertTrue(hdfsFileStatus.getBlockSize() == 128 * 1024L);
+    FileInfo dbFileInfo = metaStore.getFile("/tmp/testFile");
+    Assert.assertTrue(dbFileInfo.equals(files[0]));
   }
 
   @Test
@@ -396,10 +394,10 @@ public class TestMetaStore extends TestDaoUtil {
     CmdletState state = null;
     CmdletState state1 = CmdletState.PAUSED;
     List<CmdletInfo> com = metaStore.getCmdletsTableItem(cidCondition, ridCondition, state);
-    Assert.assertTrue(com.get(0).getState() == CmdletState.PAUSED);
+    Assert.assertTrue(com.get(0).equals(command2));
     List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(null,
         null, state1);
-    Assert.assertTrue(com1.get(0).getState() == CmdletState.PAUSED);
+    Assert.assertTrue(com1.get(0).equals(command2));
   }
 
   @Test
@@ -427,7 +425,8 @@ public class TestMetaStore extends TestDaoUtil {
     }
     List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 1);
-    Assert.assertTrue(com1.get(0).getState() == CmdletState.DONE);
+
+    Assert.assertTrue(com1.get(0).getState().equals(CmdletState.DONE));
     metaStore.deleteCmdlet(command2.getCid());
     com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 0);
@@ -447,7 +446,7 @@ public class TestMetaStore extends TestDaoUtil {
     actionInfo.setResult("Finished");
     metaStore.updateActionsTable(new ActionInfo[]{actionInfo});
     actionInfos = metaStore.getActionsTableItem(null, null);
-    Assert.assertTrue(actionInfos.get(0).getResult().equals("Finished"));
+    Assert.assertTrue(actionInfos.get(0).equals(actionInfo));
   }
 
   @Test

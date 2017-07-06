@@ -15,8 +15,6 @@
 package org.smartdata.metastore.dao;
 
 import com.google.common.collect.Lists;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.DFSUtil;
 import org.dbunit.Assertion;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
@@ -29,7 +27,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.TimeGranularity;
 import org.smartdata.model.FileAccessInfo;
-import org.smartdata.model.FileStatusInternal;
+import org.smartdata.model.FileInfo;
 
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -99,27 +97,23 @@ public class TestTableAggregator extends DBTest {
   }
 
   private void prepareFiles(MetaStore metaStore) throws MetaStoreException {
-    List<FileStatusInternal> statusInternals = new ArrayList<>();
+    List<FileInfo> statusInternals = new ArrayList<>();
     for (int id = 1; id < 6; id++) {
       statusInternals.add(
-        new FileStatusInternal(
-          123L,
-          false,
-          1,
-          128 * 1024L,
-          123123123L,
-          123123120L,
-          FsPermission.getDefault(),
-          "root",
-          "admin",
-          null,
-          DFSUtil.string2Bytes("file" + id),
-          "/",
-          id + 100,
-          0,
-          null,
-          (byte) 0));
+          new FileInfo(
+              "/file" + id,
+              id + 100,
+              123L,
+              false,
+              (short) 1,
+              128 * 1024L,
+              123123123L,
+              123123120L,
+              (short) 1,
+              "root",
+              "admin",
+              (byte) 0));
     }
-    metaStore.insertFiles(statusInternals.toArray(new FileStatusInternal[0]));
+    metaStore.insertFiles(statusInternals.toArray(new FileInfo[0]));
   }
 }

@@ -29,11 +29,10 @@ import org.junit.Test;
 import org.smartdata.metastore.DBTest;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metastore.utils.Constants;
 import org.smartdata.metastore.utils.TimeGranularity;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.model.FileStatusInternal;
+import org.smartdata.model.FileInfo;
 
 
 import java.sql.Connection;
@@ -117,28 +116,23 @@ public class TestAccessCountTableManager extends DBTest {
   }
 
   private void prepareFiles(MetaStore metaStore) throws MetaStoreException {
-    List<FileStatusInternal> statusInternals = new ArrayList<>();
+    List<FileInfo> statusInternals = new ArrayList<>();
     for (int id = 1; id < 4; id++) {
       statusInternals.add(
-          new FileStatusInternal(
+          new FileInfo("file" + id,
+              id,
               123L,
               false,
-              1,
+              (short) 1,
               128 * 1024L,
               123123123L,
               123123120L,
-              FsPermission.getDefault(),
+              (short) 1,
               "root",
               "admin",
-              null,
-              DFSUtil.string2Bytes("file" + id),
-              "",
-              id,
-              0,
-              null,
               (byte) 0));
     }
-    metaStore.insertFiles(statusInternals.toArray(new FileStatusInternal[0]));
+    metaStore.insertFiles(statusInternals.toArray(new FileInfo[0]));
   }
 
   @Test

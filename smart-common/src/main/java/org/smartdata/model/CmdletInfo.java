@@ -32,42 +32,6 @@ public class CmdletInfo {
   private long stateChangedTime;
 
   public CmdletInfo() {
-
-  }
-
-  @Override
-  public int hashCode() {
-    return super.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return super.equals(obj);
-  }
-
-
-  public boolean equals(CmdletInfo cmdletInfo) {
-    if (this == cmdletInfo) {
-      return true;
-    }
-    if (cmdletInfo == null || getClass() != cmdletInfo.getClass()) {
-      return false;
-    }
-
-    if (cid != cmdletInfo.cid
-        || rid != cmdletInfo.rid
-        || generateTime != cmdletInfo.generateTime
-        || stateChangedTime != cmdletInfo.stateChangedTime) {
-      return false;
-    }
-
-    if ((aids != null ? !aids.equals(cmdletInfo.aids) : cmdletInfo.aids != null)
-        || (state != null ? !state.equals(cmdletInfo.state) : cmdletInfo.state != null)
-        || (parameters != null ? !parameters.equals(cmdletInfo.parameters) : cmdletInfo.parameters != null)) {
-      return false;
-    }
-
-    return true;
   }
 
   public CmdletInfo(long cid, long rid, CmdletState state,
@@ -162,6 +126,34 @@ public class CmdletInfo {
 
   public void setStateChangedTime(long stateChangedTime) {
     this.stateChangedTime = stateChangedTime;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    CmdletInfo that = (CmdletInfo) o;
+
+    if (cid != that.cid) return false;
+    if (rid != that.rid) return false;
+    if (generateTime != that.generateTime) return false;
+    if (stateChangedTime != that.stateChangedTime) return false;
+    if (aids != null ? !aids.equals(that.aids) : that.aids != null) return false;
+    if (state != that.state) return false;
+    return parameters != null ? parameters.equals(that.parameters) : that.parameters == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = (int) (cid ^ (cid >>> 32));
+    result = 31 * result + (int) (rid ^ (rid >>> 32));
+    result = 31 * result + (aids != null ? aids.hashCode() : 0);
+    result = 31 * result + (state != null ? state.hashCode() : 0);
+    result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
+    result = 31 * result + (int) (generateTime ^ (generateTime >>> 32));
+    result = 31 * result + (int) (stateChangedTime ^ (stateChangedTime >>> 32));
+    return result;
   }
 
   public static Builder newBuilder() {
