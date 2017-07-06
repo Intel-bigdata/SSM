@@ -308,8 +308,10 @@ public class RuleExecutor implements Runnable {
           cmd.setCmdletParameter(CmdletDescriptor.HDFS_FILE_PATH, file);
           ruleManager.getCmdletManager().submitCmdlet(cmd);
           nSubmitted++;
-        } catch (IOException | ParseException e) {
-          // ignore this and continue submit
+        } catch (IOException e) {
+          // it's common here, ignore this and continue submit
+          LOG.debug("Failed to submit cmdlet for file: " + file, e);
+        } catch (ParseException e) {
           LOG.error("Failed to submit cmdlet for file: " + file, e);
         }
       } else {
