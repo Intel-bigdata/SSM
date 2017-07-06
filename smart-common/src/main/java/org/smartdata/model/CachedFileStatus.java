@@ -83,4 +83,40 @@ public class CachedFileStatus {
   public void setNumAccessed(int numAccessed) {
     this.numAccessed = numAccessed;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    CachedFileStatus that = (CachedFileStatus) o;
+
+    if (fid != that.fid) {
+      return false;
+    }
+    if (fromTime != that.fromTime) {
+      return false;
+    }
+    if (lastAccessTime != that.lastAccessTime) {
+      return false;
+    }
+    if (numAccessed != that.numAccessed) {
+      return false;
+    }
+    return path != null ? path.equals(that.path) : that.path == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = (int) (fid ^ (fid >>> 32));
+    result = 31 * result + (path != null ? path.hashCode() : 0);
+    result = 31 * result + (int) (fromTime ^ (fromTime >>> 32));
+    result = 31 * result + (int) (lastAccessTime ^ (lastAccessTime >>> 32));
+    result = 31 * result + numAccessed;
+    return result;
+  }
 }

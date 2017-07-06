@@ -29,13 +29,41 @@ public class StoragePolicy {
   public byte getSid() {
     return sid;
   }
+
   public void setSid(byte sid) {
     this.sid = sid;
   }
+
   public String getPolicyName() {
     return policyName;
   }
+
   public void setPolicyName(String policyName) {
     this.policyName = policyName;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    StoragePolicy that = (StoragePolicy) o;
+
+    if (sid != that.sid) {
+      return false;
+    }
+    return policyName != null ? policyName.equals(that.policyName) :
+        that.policyName == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = (int) sid;
+    result = 31 * result + (policyName != null ? policyName.hashCode() : 0);
+    return result;
   }
 }

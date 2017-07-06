@@ -225,8 +225,8 @@ public class TestMetaStore extends TestDaoUtil {
         .getStorageCapacity("Flash");
     StorageCapacity storageCapacity2 = metaStore
         .getStorageCapacity("RAM");
-    Assert.assertTrue(storageCapacity1.getCapacity() == 12343333l);
-    Assert.assertTrue(storageCapacity2.getFree() == 2223663l);
+    Assert.assertTrue(storageCapacity1.equals(storage1));
+    Assert.assertTrue(storageCapacity2.equals(storage2));
     Assert.assertTrue(metaStore.updateStoragesTable("Flash",
         123456L, 4562233L));
     Assert.assertTrue(metaStore.getStorageCapacity("Flash")
@@ -242,8 +242,8 @@ public class TestMetaStore extends TestDaoUtil {
         12342233l, 2223663l);
     StorageCapacity[] storages = {storage1, storage2};
     metaStore.insertStoragesTable(storages);
-    StorageCapacity storageCapacity = metaStore.getStorageCapacity("HDD");
-    Assert.assertTrue(storageCapacity.getCapacity() == 12343333l);
+    Assert.assertTrue(metaStore.getStorageCapacity("HDD").equals(storage1));
+    Assert.assertTrue(metaStore.getStorageCapacity("RAM").equals(storage2));
   }
 
   @Test
