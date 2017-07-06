@@ -38,7 +38,7 @@ public class StorageDao {
     this.dataSource = dataSource;
   }
 
-  
+
   public StorageDao(DataSource dataSource) {
     this.dataSource = dataSource;
   }
@@ -48,7 +48,8 @@ public class StorageDao {
     String sql = "SELECT * FROM storages";
     List<StorageCapacity> list = jdbcTemplate.query(sql,
         new RowMapper<StorageCapacity>() {
-          public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
+          public StorageCapacity mapRow(ResultSet rs,
+              int rowNum) throws SQLException {
             return new StorageCapacity(rs.getString("type"),
                 rs.getLong("capacity"), rs.getLong("free"));
           }
@@ -65,14 +66,15 @@ public class StorageDao {
     String sql = "SELECT * FROM storage_policy";
     List<StoragePolicy> list = jdbcTemplate.query(sql,
         new RowMapper<StoragePolicy>() {
-          public StoragePolicy mapRow(ResultSet rs, int rowNum) throws SQLException {
+          public StoragePolicy mapRow(ResultSet rs,
+              int rowNum) throws SQLException {
             return new StoragePolicy(rs.getByte("sid"),
                 rs.getString("policy_name"));
           }
         });
     Map<Integer, String> map = new HashMap<>();
     for (StoragePolicy s : list) {
-      map.put((int)(s.getSid()), s.getPolicyName());
+      map.put((int) (s.getSid()), s.getPolicyName());
     }
     return map;
   }
@@ -80,12 +82,14 @@ public class StorageDao {
   public StorageCapacity getStorageCapacity(String type) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT * FROM storages WHERE type = ?";
-    return jdbcTemplate.queryForObject(sql, new Object[]{type}, new RowMapper<StorageCapacity>() {
-      public StorageCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return new StorageCapacity(rs.getString("type"),
-            rs.getLong("capacity"), rs.getLong("free"));
-      }
-    });
+    return jdbcTemplate.queryForObject(sql, new Object[]{type},
+        new RowMapper<StorageCapacity>() {
+          public StorageCapacity mapRow(ResultSet rs,
+              int rowNum) throws SQLException {
+            return new StorageCapacity(rs.getString("type"),
+                rs.getLong("capacity"), rs.getLong("free"));
+          }
+        });
   }
 
   public String getStoragePolicyName(int sid) {
@@ -97,7 +101,8 @@ public class StorageDao {
   public Integer getStoragePolicyID(String policyName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT sid FROM storage_policy WHERE policy_name = ?";
-    return jdbcTemplate.queryForObject(sql, new Object[]{policyName}, Integer.class);
+    return jdbcTemplate
+        .queryForObject(sql, new Object[]{policyName}, Integer.class);
   }
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s) {
@@ -107,10 +112,12 @@ public class StorageDao {
     jdbcTemplate.execute(sql);
   }
 
-  public int updateFileStoragePolicy(String path, String policyName) throws SQLException {
+  public int updateFileStoragePolicy(String path,
+      String policyName) throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql0 = "SELECT sid FROM storage_policy WHERE policy_name = ?";
-    Integer sid = jdbcTemplate.queryForObject(sql0, new Object[]{policyName}, Integer.class);
+    Integer sid = jdbcTemplate
+        .queryForObject(sql0, new Object[]{policyName}, Integer.class);
     if (sid == null) {
       throw new SQLException("Unknown storage policy name '"
           + policyName + "'");
@@ -127,7 +134,8 @@ public class StorageDao {
     String sql = "INSERT INTO storages (type, capacity, free) VALUES (?,?,?);";
     jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
-          public void setValues(PreparedStatement ps, int i) throws SQLException {
+          public void setValues(PreparedStatement ps,
+              int i) throws SQLException {
             ps.setString(1, storages[i].getType());
             ps.setLong(2, storages[i].getCapacity());
             ps.setLong(3, storages[i].getFree());

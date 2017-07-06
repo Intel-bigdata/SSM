@@ -30,6 +30,7 @@ import akka.actor.UntypedActor;
 import akka.japi.Procedure;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -48,9 +49,11 @@ import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
+import org.smartdata.server.utils.GenericOptionsParser;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -61,10 +64,10 @@ public class SmartAgent {
   private final static Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
 
-    SmartConf conf = new SmartConf();
+    Configuration conf = new GenericOptionsParser(new SmartConf(), args).getConfiguration();
     String[] masters = conf.getStrings(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
 
     checkNotNull(masters);
@@ -74,7 +77,7 @@ public class SmartAgent {
         AgentUtils.getMasterActorPaths(masters), conf);
   }
 
-  void start(Config config, String[] masterPath, SmartConf conf) {
+  void start(Config config, String[] masterPath, Configuration conf) {
     system = ActorSystem.apply(NAME, config);
     system.actorOf(Props.create(AgentActor.class, conf, this, masterPath), getAgentName());
     final Thread currentThread = Thread.currentThread();
