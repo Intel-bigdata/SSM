@@ -23,10 +23,6 @@ import org.junit.Test;
 
 
 public class TestRuleInfo {
-  private class ChildRuleInfo extends RuleInfo {
-
-  }
-
   @Test
   public void testEquals() throws Exception {
     //Case 1:

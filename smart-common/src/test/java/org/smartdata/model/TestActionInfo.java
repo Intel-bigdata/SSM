@@ -26,10 +26,6 @@ import java.util.Random;
 
 
 public class TestActionInfo {
-  private class ChildTestActionInfo extends ActionInfo {
-
-  }
-
   @Test
   public void testEquals() throws Exception {
     //Case 1
@@ -44,8 +40,8 @@ public class TestActionInfo {
     Assert.assertEquals(true, actionInfo.equals(actionInfo));
 
     //Case 3
-    Assert.assertEquals(false, actionInfo.equals(new ChildTestActionInfo()));
-    Assert.assertEquals(false, new ChildTestActionInfo().equals(actionInfo));
+    Assert.assertEquals(false, actionInfo.equals(new Object()));
+    Assert.assertEquals(false, new Object().equals(actionInfo));
 
     //Case4
     Assert.assertEquals(false, actionInfo.equals(null));
@@ -106,6 +102,5 @@ public class TestActionInfo {
         1, 1.1f);
     Assert.assertEquals(false, actionInfo1.equals(actionInfo2));
     Assert.assertEquals(false, actionInfo2.equals(actionInfo1));
-
   }
 }
