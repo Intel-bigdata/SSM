@@ -27,7 +27,6 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -87,7 +86,7 @@ public class InotifyEventApplier {
     HdfsFileStatus fileStatus = client.getFileInfo(createEvent.getPath());
     boolean isDir = createEvent.getiNodeType() == Event.CreateEvent.INodeType.DIRECTORY;
     return String.format(
-        "INSERT INTO `files` (path, fid, block_replication, "
+        "INSERT INTO files (path, fid, block_replication, "
             + "block_size, is_dir, permission) VALUES ('%s', %s, %s, %s, %s, %s);",
         createEvent.getPath(),
         fileStatus.getFileId(),
