@@ -17,13 +17,6 @@
  */
 package org.smartdata.admin.tools;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.commons.lang.WordUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,11 +25,18 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
-import org.smartdata.admin.SmartAdmin;
 import org.apache.hadoop.tools.TableListing;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /** Provide cmdlet line access to a FileSystem. */
 @InterfaceAudience.Private
@@ -348,7 +348,7 @@ public class SmartShell extends Configured implements Tool {
 
     @Override
     public String getMessage() {
-      return ((cmd != null) ? "`"+cmd+"': " : "") + "Unknown cmdlet";
+      return ((cmd != null) ? "'" + cmd + "': " : "") + "Unknown cmdlet";
     }
   }
 }
