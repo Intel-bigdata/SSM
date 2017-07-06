@@ -324,7 +324,20 @@ public class SmartServer {
   public static void main(String[] args) {
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {
-      if (launchWith(args, null) != null) {
+      final SmartServer inst = launchWith(args, null);
+      if (inst != null) {
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+          @Override
+          public void run() {
+            LOG.info("Shutting down SmartServer ... ");
+            try {
+              inst.shutdown();
+             } catch (Exception e) {
+               LOG.error("Error while stopping servlet container", e);
+             }
+             LOG.info("SmartServer was down.");
+           }
+         });
         //Todo: when to break
         while (true) {
           Thread.sleep(1000);
