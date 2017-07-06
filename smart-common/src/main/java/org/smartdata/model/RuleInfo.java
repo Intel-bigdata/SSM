@@ -34,44 +34,7 @@ public class RuleInfo implements Cloneable {
   private long numCmdsGen;
   private long lastCheckTime;
 
-<<<<<<< HEAD
-  @Override
-  public boolean equals(Object obj) {
-    return super.equals(obj);
-  }
 
-  @Override
-  public int hashCode() {
-    return super.hashCode();
-  }
-
-  public boolean equals(RuleInfo info) {
-    if (this == info) {
-      return true;
-    }
-    if (info == null || getClass() != info.getClass()) {
-      return false;
-    }
-
-    if (id != info.id
-        || submitTime != info.submitTime
-        || numChecked != info.numChecked
-        || numCmdsGen != info.numCmdsGen
-        || lastCheckTime != info.lastCheckTime) {
-      return false;
-    }
-
-    if ((ruleText != null ? !ruleText.equals(info.ruleText) : info.ruleText != null)
-
-        || (state != null ? !state.equals(info.state) : info.state != null)) {
-      return false;
-    }
-
-    return true;
-  }
-
-=======
->>>>>>> trunk
   public long getId() {
     return id;
   }
