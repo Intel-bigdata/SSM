@@ -44,12 +44,10 @@ public class TestActionRestApi extends IntegrationTestBase {
   public void testActionTypes() {
     Response response = RestAssured.get(ACTIONROOT + "/registry/list");
     ValidatableResponse validatableResponse = response.then().root("body");
-    validatableResponse.body("find { it.actionName == 'fsck' }.displayName",
-        Matchers.equalTo("fsck"));
-    validatableResponse.body("actionName", Matchers.hasItems("fsck",
-        "diskbalance", "uncache", "setstoragepolicy", "blockec", "copy",
-        "write", "stripec", "cache", "read", "allssd", "checkstorage",
-        "archive", "list", "clusterbalance", "onessd", "hello"));
+    validatableResponse.body("find { it.actionName == 'allssd' }.displayName",
+        Matchers.equalTo("allssd"));
+    validatableResponse.body("actionName", Matchers.hasItems("uncache", "write",
+        "cache", "read", "allssd", "checkstorage", "archive", "onessd", "hello"));
   }
 
   @Test (timeout = 200000)
