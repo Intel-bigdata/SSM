@@ -43,7 +43,7 @@
             <directory>${basedir}/../smart-zeppelin/zeppelin-web/src/app/tabledata</directory>
         </fileSet>
         <fileSet>
-            <outputDirectory>/smart-data-${project.version}/war</outputDirectory>
+            <outputDirectory>/smart-data-${project.version}/dist</outputDirectory>
             <directory>${basedir}/../dist</directory>
         </fileSet>
     </fileSets>

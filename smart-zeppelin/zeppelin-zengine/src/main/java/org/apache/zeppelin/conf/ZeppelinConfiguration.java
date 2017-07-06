@@ -194,6 +194,13 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   }
 
   public String getString(String envName, String propertyName, String defaultValue) {
+    if (System.getenv(envName) != null) {
+      return System.getenv(envName);
+    }
+    if (System.getProperty(propertyName) != null) {
+      return System.getProperty(propertyName);
+    }
+
     return getStringValue(propertyName, defaultValue);
   }
 
@@ -202,6 +209,13 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   }
 
   public int getInt(String envName, String propertyName, int defaultValue) {
+    if (System.getenv(envName) != null) {
+      return Integer.parseInt(System.getenv(envName));
+    }
+
+    if (System.getProperty(propertyName) != null) {
+      return Integer.parseInt(System.getProperty(propertyName));
+    }
     return getIntValue(propertyName, defaultValue);
   }
 
@@ -210,6 +224,13 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   }
 
   public long getLong(String envName, String propertyName, long defaultValue) {
+    if (System.getenv(envName) != null) {
+      return Long.parseLong(System.getenv(envName));
+    }
+
+    if (System.getProperty(propertyName) != null) {
+      return Long.parseLong(System.getProperty(propertyName));
+    }
     return getLongValue(propertyName, defaultValue);
   }
 
@@ -218,6 +239,12 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   }
 
   public float getFloat(String envName, String propertyName, float defaultValue) {
+    if (System.getenv(envName) != null) {
+      return Float.parseFloat(System.getenv(envName));
+    }
+    if (System.getProperty(propertyName) != null) {
+      return Float.parseFloat(System.getProperty(propertyName));
+    }
     return getFloatValue(propertyName, defaultValue);
   }
 
@@ -226,6 +253,13 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   }
 
   public boolean getBoolean(String envName, String propertyName, boolean defaultValue) {
+    if (System.getenv(envName) != null) {
+      return Boolean.parseBoolean(System.getenv(envName));
+    }
+
+    if (System.getProperty(propertyName) != null) {
+      return Boolean.parseBoolean(System.getProperty(propertyName));
+    }
     return getBooleanValue(propertyName, defaultValue);
   }
 

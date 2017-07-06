@@ -119,6 +119,9 @@ public class SmartZeppelinServer {
 
     this.zconf.setProperty(ConfVars.ZEPPELIN_CONF_DIR.getVarName(),
         conf.get(SmartConfKeys.SMART_CONF_DIR));
+    if (!isBinaryPackage(zconf)) {
+      zconf.setProperty(ConfVars.ZEPPELIN_HOME.getVarName(), "smart-zeppelin/");
+    }
   }
 
 
@@ -349,7 +352,7 @@ public class SmartZeppelinServer {
     return sslContextFactory;
   }
 
-  class SmartApplication extends Application {
+  class SmartRestApp extends Application {
     @Override
     public Set<Class<?>> getClasses() {
       Set<Class<?>> classes = new HashSet<>();
@@ -382,7 +385,7 @@ public class SmartZeppelinServer {
     }
   }
 
-  class ZeppelinApplication extends Application {
+  class ZeppelinRestApp extends Application {
     @Override
     public Set<Class<?>> getClasses() {
       Set<Class<?>> classes = new HashSet<>();
@@ -431,11 +434,11 @@ public class SmartZeppelinServer {
 
     webApp.setSessionHandler(new SessionHandler());
 
-    ResourceConfig smartConfig = new ApplicationAdapter(new SmartApplication());
+    ResourceConfig smartConfig = new ApplicationAdapter(new SmartRestApp());
     ServletHolder smartServletHolder = new ServletHolder(new ServletContainer(smartConfig));
     webApp.addServlet(smartServletHolder, SMART_PATH_SPEC);
 
-    ResourceConfig zeppelinConfig = new ApplicationAdapter(new ZeppelinApplication());
+    ResourceConfig zeppelinConfig = new ApplicationAdapter(new ZeppelinRestApp());
     ServletHolder zeppelinServletHolder = new ServletHolder(new ServletContainer(zeppelinConfig));
     webApp.addServlet(zeppelinServletHolder, ZEPPELIN_PATH_SPEC);
 
