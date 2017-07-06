@@ -27,6 +27,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Conf APIs.
@@ -46,8 +49,13 @@ public class ConfRestApi {
   @Path("")
   public Response conf() {
     try {
-      return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getConf().toString()).build();
+      Iterator<Map.Entry<String, String>> conf = smartEngine.getConf().iterator();
+      Map<String, String> confMap = new HashMap<>();
+      while (conf.hasNext()) {
+        Map.Entry<String, String> confEntry = conf.next();
+        confMap.put(confEntry.getKey(), confEntry.getValue());
+      }
+      return new JsonResponse<>(Response.Status.OK, confMap).build();
     } catch (Exception e) {
       logger.error("Exception while getting configuration", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
