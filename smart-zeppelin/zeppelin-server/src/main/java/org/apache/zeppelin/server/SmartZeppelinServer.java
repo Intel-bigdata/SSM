@@ -81,6 +81,7 @@ import org.smartdata.server.rest.SystemRestApi;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.Application;
 import java.io.File;
+import java.net.InetAddress;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
@@ -117,8 +118,22 @@ public class SmartZeppelinServer {
 
     this.zconf = ZeppelinConfiguration.create();
 
+    // set zeppelin log dir
+    String userName = System.getProperty("user.name", "user");
+    String hostName;
+    try {
+      hostName = InetAddress.getLocalHost().getHostName();
+    } catch (Exception e) {
+      hostName = "host";
+    }
+    String zeppelinLogFile = "logs/zeppelin-" + userName + "-" + hostName + ".log";
+    this.zconf.setProperty("zeppelin.log.file", zeppelinLogFile);
+
+    // set ZEPPELIN_CONF_DIR
     this.zconf.setProperty(ConfVars.ZEPPELIN_CONF_DIR.getVarName(),
         conf.get(SmartConfKeys.SMART_CONF_DIR));
+
+    // set ZEPPELIN_HOME
     if (!isBinaryPackage(zconf)) {
       zconf.setProperty(ConfVars.ZEPPELIN_HOME.getVarName(), "smart-zeppelin/");
     }
