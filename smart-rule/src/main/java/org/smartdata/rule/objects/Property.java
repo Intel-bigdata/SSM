@@ -86,39 +86,34 @@ public class Property {
     return paramsTypes != null;
   }
 
-  public boolean equals(Property p) {
-    if (p == null) {
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    Property property = (Property) o;
+
+    if (isGlobal != property.isGlobal) return false;
+    if (propertyName != null ? !propertyName.equals(property.propertyName) : property.propertyName != null)
       return false;
-    }
-    // null
-    boolean others = retType == p.getValueType()
-        && tableName.equals(p.getTableName())
-        && tableItemName.equals(p.getTableItemName())
-        && isGlobal == p.isGlobal();
-
-    if (!others) {
+    if (retType != property.retType) return false;
+    if (paramsTypes != null ? !paramsTypes.equals(property.paramsTypes) : property.paramsTypes != null) return false;
+    if (tableName != null ? !tableName.equals(property.tableName) : property.tableName != null) return false;
+    if (tableItemName != null ? !tableItemName.equals(property.tableItemName) : property.tableItemName != null)
       return false;
-    }
+    return formatTemplate != null ? formatTemplate.equals(property.formatTemplate) : property.formatTemplate == null;
+  }
 
-    if (paramsTypes == null && p.getParamsTypes() == null) {
-      return true;
-    }
-
-    if (paramsTypes == null || p.getParamsTypes() == null) {
-      return false;
-    }
-
-    if (paramsTypes.size() != p.getParamsTypes().size()) {
-      return false;
-    }
-
-    for (int i = 0; i < paramsTypes.size(); i++) {
-      if (!paramsTypes.get(i).equals(p.getParamsTypes().get(i))) {
-        return false;
-      }
-    }
-
-    return true;
+  @Override
+  public int hashCode() {
+    int result = propertyName != null ? propertyName.hashCode() : 0;
+    result = 31 * result + (retType != null ? retType.hashCode() : 0);
+    result = 31 * result + (paramsTypes != null ? paramsTypes.hashCode() : 0);
+    result = 31 * result + (tableName != null ? tableName.hashCode() : 0);
+    result = 31 * result + (tableItemName != null ? tableItemName.hashCode() : 0);
+    result = 31 * result + (formatTemplate != null ? formatTemplate.hashCode() : 0);
+    result = 31 * result + (isGlobal ? 1 : 0);
+    return result;
   }
 
   public String instId(List<Object> values) {

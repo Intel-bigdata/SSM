@@ -25,10 +25,6 @@ import java.util.Random;
 
 
 public class TestCmdletInfo {
-  private class cmdletInfo extends TestCmdletInfo {
-
-  }
-
   @Test
   public void testEquals() throws Exception {
     //Case 1
@@ -40,8 +36,8 @@ public class TestCmdletInfo {
     Assert.assertEquals(true, cmdletInfo.equals(cmdletInfo));
 
     //Case 3
-    Assert.assertEquals(false, cmdletInfo.equals(new cmdletInfo()));
-    Assert.assertEquals(false, new cmdletInfo().equals(cmdletInfo));
+    Assert.assertEquals(false, cmdletInfo.equals(new Object()));
+    Assert.assertEquals(false, new Object().equals(cmdletInfo));
 
     //Case 4
     Assert.assertEquals(false, cmdletInfo.equals(null));
