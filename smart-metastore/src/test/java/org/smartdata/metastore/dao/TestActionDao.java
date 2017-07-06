@@ -55,9 +55,9 @@ public class TestActionDao extends TestDaoUtil {
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
         100);
-    actionDao.insert(new ActionInfo[] {actionInfo});
-    actionInfo = actionDao.getById(1l);
-    Assert.assertTrue(actionInfo.getCmdletId() == 1);
+    actionDao.insert(new ActionInfo[]{actionInfo});
+    ActionInfo dbActionInfo = actionDao.getById(1l);
+    Assert.assertTrue(actionInfo.equals(dbActionInfo));
     // Get wrong id
     try {
       actionInfo = actionDao.getById(100l);
@@ -77,8 +77,8 @@ public class TestActionDao extends TestDaoUtil {
     actionDao.insert(actionInfo);
     actionInfo.setSuccessful(true);
     actionDao.update(actionInfo);
-    actionInfo = actionDao.getById(actionInfo.getActionId());
-    Assert.assertTrue(actionInfo.isFinished());
+    ActionInfo dbActionInfo = actionDao.getById(actionInfo.getActionId());
+    Assert.assertTrue(actionInfo.equals(dbActionInfo));
   }
 
   @Test
@@ -97,7 +97,7 @@ public class TestActionDao extends TestDaoUtil {
     actionDao.insert(actionInfo);
     actionInfoList = actionDao.getLatestActions(10);
     Assert.assertTrue(actionInfoList.size() == 2);
-    actionInfoList = actionDao.getByIds(Arrays.asList(new Long[] {1l, 2l}));
+    actionInfoList = actionDao.getByIds(Arrays.asList(new Long[]{1l, 2l}));
     Assert.assertTrue(actionInfoList.size() == 2);
     actionDao.delete(actionInfo.getActionId());
     actionInfoList = actionDao.getAll();
