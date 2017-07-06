@@ -28,18 +28,18 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction("allssd", AllSsdFileAction.class);
     addAction("onessd", OneSsdFileAction.class);
     addAction("archive", ArchiveFileAction.class);
-    addAction("stripec", StripErasureCodeFileAction.class);
-    addAction("blockec", BlockErasureCodeFileAction.class);
     addAction("cache", CacheFileAction.class);
     addAction("uncache", UncacheFileAction.class);
     addAction("read", ReadFileAction.class);
     addAction("write", WriteFileAction.class);
-    addAction("copy", CopyFileAction.class);
-    addAction("list", ListFileAction.class);
-    addAction("fsck", FsckAction.class);
-    addAction("diskbalance", DiskBalanceAction.class);
-    addAction("clusterbalance", ClusterBalanceAction.class);
     addAction("checkstorage", CheckStorageAction.class);
-    addAction("setstoragepolicy", SetStoragePolicyAction.class);
+//    addAction("stripec", StripErasureCodeFileAction.class);
+//    addAction("blockec", BlockErasureCodeFileAction.class);
+//    addAction("copy", CopyFileAction.class);
+//    addAction("list", ListFileAction.class);
+//    addAction("fsck", FsckAction.class);
+//    addAction("diskbalance", DiskBalanceAction.class);
+//    addAction("clusterbalance", ClusterBalanceAction.class);
+//    addAction("setstoragepolicy", SetStoragePolicyAction.class);
   }
 }
