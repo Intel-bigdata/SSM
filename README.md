@@ -30,9 +30,13 @@ High Level Considerations
 
 Architecture
 ------------
-SSM overall as follows. Ref. [SSM design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
+SSM overall as follows. Ref. [SSM design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details. Note some of the contents need to be updated according to the lastest implementation.
 
 <img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-overall.png" />
+
+How SSM server and agents collaborate to serve for one specific service, like move HDFS file blocks among storage tiers, copy files to back up cluster or block erasure coding? Please ref. below picture.
+
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-overall-2.png" />
 
 The following picture depicts SSM system behaviours.
 
