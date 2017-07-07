@@ -21,7 +21,7 @@
 #./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000
 #./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000 -D dfs.smart.default.db.url=jdbc:sqlite:file-sql.db
 
-USAGE="Usage: bin/start-smart.sh [--config <conf-dir>] [--debug] ..."
+USAGE="Usage: bin/stop-smart.sh [--config <conf-dir>] [--debug] ..."
 
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
@@ -85,7 +85,7 @@ SMART_VARGS+=" -D smart.conf.dir="${SMART_CONF_DIR}
 SMART_VARGS+=" -D smart.log.dir="${SMART_LOG_DIR}
 
 if [ -z "$DAEMON_MOD" ]; then
-  start_smart_server
+  stop_smart_server
 else
-  smart_start_daemon ${SMART_SERVER_PID_FILE}
+  smart_stop_daemon ${SMART_SERVER_PID_FILE}
 fi
