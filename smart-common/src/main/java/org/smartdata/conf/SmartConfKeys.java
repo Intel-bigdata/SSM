@@ -23,8 +23,11 @@ package org.smartdata.conf;
 public class SmartConfKeys {
   public final static String SMART_DFS_ENABLED = "smart.dfs.enabled";
   public final static boolean SMART_DFS_ENABLED_DEFAULT = true;
-  public final static String SMART_CONF_DIR = "smart.conf.dir";
-  public final static String SMART_LOG_DIR = "smart.log.dir";
+
+  public final static String SMART_CONF_DIR_KEY = "smart.conf.dir";
+  public final static String SMART_CONF_DIR_DEFAULT = "conf";
+  public final static String SMART_LOG_DIR_KEY = "smart.log.dir";
+  public final static String SMART_LOG_DIR_DEFAULT = "logs";
 
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
 
