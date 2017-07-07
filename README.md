@@ -13,7 +13,7 @@ High Level Goals
 ### 1. Enhancement for HDFS-HSM and HDFS-Cache
 **Automatically** and **smartly** adjusting storage policies and options in favor of data temperature. Note this is approaching completion.
 ### 2. Support block level erasure coding
-Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**. The design doc for this will be coming soon.
+Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**. Ref. the [block level erasure coding design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/block-level-ec.md).
 ### 3. Small files support and compaction
 Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory. Support both write and read. Ref. the [HDFS small files support design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/small-file-solution.md).
 ### 4. Cluster Disaster Recovery
@@ -30,11 +30,15 @@ High Level Considerations
 
 Architecture
 ------------
+SSM overall as follows. Ref. [SSM design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
+
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-overall.png" />
+
 The following picture depicts SSM system behaviours.
 
 <img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-lifecycle.png" />
 
-Below figure illustrates how to position SSM in big data ecosystem. Ref. [SSM architecture](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details.
+Below figure illustrates how to position SSM in big data ecosystem.
 <img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/high-level-architecture.png" />
 
 Development Phases

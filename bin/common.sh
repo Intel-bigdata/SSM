@@ -132,3 +132,61 @@ fi
 if [[ -z "$SMART_INTERPRETER_REMOTE_RUNNER" ]]; then
   export SMART_INTERPRETER_REMOTE_RUNNER="bin/interpreter.sh"
 fi
+
+
+SMART_SERVER_PID_FILE=/tmp/SmartServer.pid
+
+SSH_OPTIONS="-o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10s"
+
+function start_smart_server() {
+  local servers=localhost
+  ssh ${SSH_OPTIONS} ${servers} cd ${SMART_HOME}; ${SMART_HOME}/bin/start-smart.sh "--daemon" 2>&1 >/dev/null &
+}
+
+function stop_smart_server() {
+  local servers=localhost
+  ssh ${SSH_OPTIONS} ${servers} ${SMART_HOME}/bin/stop-smart.sh "--daemon" 2>&1 >/dev/null &
+}
+
+function smart_start_daemon() {
+  local pidfile=$1
+
+  if [[ -f "${pidfile}" ]]; then
+    pid=$(cat "$pidfile")
+    if ps -p "${pid}" > /dev/null 2>&1; then
+      return
+    fi
+  fi
+
+  echo $$ > "${pidfile}" 2>/dev/null
+  if [[ $? -gt 0 ]]; then
+    echo "ERROR: Can NOT write PID file ${pidfile}."
+  fi
+
+  exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $SMART_VARGS
+}
+
+function smart_stop_daemon() {
+  local pidfile=$1
+  shift
+
+  local pid
+  local cur_pid
+
+  if [[ -f "${pidfile}" ]]; then
+    pid=$(cat "$pidfile")
+
+    kill "${pid}" >/dev/null 2>&1
+    sleep 5
+    if kill -0 "${pid}" > /dev/null 2>&1; then
+      echo "Daemon still alive after 5 seconds, Trying to kill it by force."
+      kill -9 "${pid}" >/dev/null 2>&1
+    fi
+    if ps -p "${pid}" > /dev/null 2>&1; then
+      echo "ERROR: Unable to kill ${pid}"
+    fi
+    rm -f "$pidfile"
+  else
+    echo "Can NOT find PID file $pidfile"
+  fi
+}
