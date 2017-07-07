@@ -140,7 +140,7 @@ SSH_OPTIONS="-o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10s"
 
 function start_smart_server() {
   local servers=localhost
-  ssh ${SSH_OPTIONS} ${servers} cd ${SMART_HOME}; ${SMART_HOME}/bin/start-smart.sh "--daemon" 2>&1 >/dev/null &
+  ssh ${SSH_OPTIONS} ${servers} cd ${SMART_HOME}; ${SMART_HOME}/bin/start-smart.sh $SMART_VARGS "--daemon" 2>&1 >/dev/null &
 }
 
 function stop_smart_server() {
