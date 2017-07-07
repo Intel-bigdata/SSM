@@ -29,7 +29,7 @@ public class HazelcastInstanceProvider {
     String typeKey = "hazelcast.logging.type";
     String loggerType = System.getProperty(typeKey);
     if (loggerType == null) {
-      System.setProperty("hazelcast.logging.type", "slf4j");
+      System.setProperty(typeKey, "slf4j");
     }
   }
 
