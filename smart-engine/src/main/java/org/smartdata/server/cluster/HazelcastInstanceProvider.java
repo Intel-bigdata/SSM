@@ -25,6 +25,14 @@ public class HazelcastInstanceProvider {
   private static String CONFIG_FILE = "hazelcast.xml";
   private static HazelcastInstance instance;
 
+  static {
+    String typeKey = "hazelcast.logging.type";
+    String loggerType = System.getProperty(typeKey);
+    if (loggerType == null) {
+      System.setProperty("hazelcast.logging.type", "slf4j");
+    }
+  }
+
   private HazelcastInstanceProvider() {}
 
   public static HazelcastInstance getInstance() {
