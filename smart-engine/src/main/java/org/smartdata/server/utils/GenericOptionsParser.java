@@ -26,7 +26,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.util.Shell;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,7 +82,12 @@ public class GenericOptionsParser {
   }
 
   private String[] preProcessForWindows(String[] args) {
-    if (!Shell.WINDOWS) {
+    boolean isWindows = false;
+    String osName = System.getProperty("os.name");
+    if (osName.startsWith("Windows")) {
+      isWindows = true;
+    }
+    if (!isWindows) {
       return args;
     }
     if (args == null) {
