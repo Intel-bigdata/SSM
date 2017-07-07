@@ -20,7 +20,6 @@ package org.smartdata.server;
 import com.hazelcast.core.HazelcastInstance;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.cluster.ClusterMembershipListener;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cluster.HazelcastWorker;
