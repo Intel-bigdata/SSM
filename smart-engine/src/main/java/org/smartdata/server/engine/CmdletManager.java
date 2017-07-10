@@ -48,7 +48,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +77,6 @@ public class CmdletManager extends AbstractService {
   private AtomicLong maxCmdletId;
 
   private Queue<CmdletInfo> pendingCmdlet;
-  private Set<String> submittedCmdlets;
   private List<Long> runningCmdlets;
   private Map<Long, CmdletInfo> idToCmdlets;
   private Map<Long, ActionInfo> idToActions;
@@ -91,7 +89,6 @@ public class CmdletManager extends AbstractService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.dispatcher = new CmdletDispatcher(context, this);
     this.runningCmdlets = new ArrayList<>();
-    this.submittedCmdlets = new HashSet<>();
     this.pendingCmdlet = new LinkedBlockingQueue<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
@@ -132,9 +129,6 @@ public class CmdletManager extends AbstractService {
 
   public long submitCmdlet(String cmdlet) throws IOException {
     LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdlet));
-    if (submittedCmdlets.contains(cmdlet)) {
-      throw new IOException("Duplicate Cmdlet found, submit canceled!");
-    }
     try {
       CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdlet);
       return submitCmdlet(cmdletDescriptor);
@@ -146,9 +140,6 @@ public class CmdletManager extends AbstractService {
 
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
     LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
-    if (submittedCmdlets.contains(cmdletDescriptor.getCmdletString())) {
-      throw new IOException("Duplicate Cmdlet found, submit canceled!");
-    }
     long submitTime = System.currentTimeMillis();
     CmdletInfo cmdletInfo =
       new CmdletInfo(
@@ -188,7 +179,6 @@ public class CmdletManager extends AbstractService {
     }
     pendingCmdlet.add(cmdletInfo);
     idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
-    submittedCmdlets.add(cmdletInfo.getParameters());
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
     }
@@ -301,7 +291,6 @@ public class CmdletManager extends AbstractService {
       flushCmdletInfo(cmdletInfo);
     }
     runningCmdlets.remove(cmdletId);
-    submittedCmdlets.remove(cmdletInfo.getParameters());
 
     List<ActionInfo> removed = new ArrayList<>();
     for (Iterator<Map.Entry<Long, ActionInfo>> it = idToActions.entrySet().iterator(); it.hasNext();) {
