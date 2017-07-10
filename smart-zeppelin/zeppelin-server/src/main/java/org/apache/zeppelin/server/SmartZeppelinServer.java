@@ -118,17 +118,17 @@ public class SmartZeppelinServer {
     this.zconf = ZeppelinConfiguration.create();
 
     // set zeppelin log dir
-    String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR, "logs");
+    String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR_KEY, SmartConfKeys.SMART_LOG_DIR_DEFAULT);
     String zeppelinLogFile = logDir + "/zeppelin.log";
-    this.zconf.setProperty("zeppelin.log.file", zeppelinLogFile);
+    System.setProperty("zeppelin.log.file", zeppelinLogFile);
 
     // set ZEPPELIN_CONF_DIR
-    this.zconf.setProperty(ConfVars.ZEPPELIN_CONF_DIR.getVarName(),
-        conf.get(SmartConfKeys.SMART_CONF_DIR));
+    System.setProperty(ConfVars.ZEPPELIN_CONF_DIR.getVarName(),
+        conf.get(SmartConfKeys.SMART_CONF_DIR_KEY, SmartConfKeys.SMART_CONF_DIR_DEFAULT));
 
     // set ZEPPELIN_HOME
     if (!isBinaryPackage(zconf)) {
-      zconf.setProperty(ConfVars.ZEPPELIN_HOME.getVarName(), "smart-zeppelin/");
+      System.setProperty(ConfVars.ZEPPELIN_HOME.getVarName(), "smart-zeppelin/");
     }
   }
 
