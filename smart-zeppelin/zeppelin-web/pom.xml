@@ -33,8 +33,6 @@
   <name>Smart: web Application</name>
 
 
-
-
   <!-- See https://github.com/eirslett/frontend-maven-plugin/issues/229 -->
   <prerequisites>
     <maven>3.1.0</maven>
@@ -155,6 +153,8 @@
                     <arguments>run test</arguments>
                   </configuration>
                 </execution>
+
+              </executions>
 
               </executions>
             </plugin>

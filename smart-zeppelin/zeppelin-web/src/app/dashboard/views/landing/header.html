@@ -1,0 +1,87 @@
+<nav class="navbar navbar-default navbar-fixed-top">
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main_nav">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="#/">Smart Storage Management
+      <span class="label label-primary"
+            ng-bind="version"></span>
+    </a>
+  </div>
+  <div class="collapse navbar-collapse" id="main_nav">
+    <ul class="nav navbar-nav" bs-navbar>
+      <li role="placeholder"></li>
+      <!--
+      <li data-match-route="/cluster">
+        <a class="dropdown-toggle" data-toggle="dropdown">
+          <span class="fa fa-sitemap"></span>
+          Cluster
+          <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li ng-repeat="item in clusterMenuItems track by $index">
+            <a href="#/cluster/{{item.pathPatt}}" class="header-menu"
+               data-toggle="collapse" data-target=".in">
+              <span class="{{item.icon}}"></span> {{item.text}}</a>
+          </li>
+        </ul>
+      </li>
+      -->
+      <li data-match-route="/cluster">
+        <a href="#/cluster" data-toggle="collapse" data-target=".in">
+          Cluster</a>
+      </li>
+      <li data-match-route="/rules">
+        <a href="#/rules" data-toggle="collapse" data-target=".in">
+          <span class="fa fa-code"></span>
+          Rules</a>
+      </li>
+      <li data-match-route="/actions">
+        <a href="#/actions" data-toggle="collapse" data-target=".in">
+          <span class="fa fa-code"></span>
+          Actions</a>
+      </li>
+    </ul>
+
+    <ul class="dropdown nav navbar-nav navbar-right">
+      <li role="placeholder"></li>
+      <li>
+        <a class="dropdown-toggle" type="button" data-toggle="dropdown">
+          <span class="glyphicon glyphicon-user"></span>
+          {{username}}
+          <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li ng-repeat="item in userMenuItems track by $index"
+              ng-class="{'divider': item.isDivider}">
+            <a ng-if="!item.isDivider"
+               href="{{item.href}}" class="header-menu"
+               data-toggle="collapse" data-target=".in">
+              <span class="{{item.icon}}"></span>
+              {{item.text}}
+            </a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</nav>
