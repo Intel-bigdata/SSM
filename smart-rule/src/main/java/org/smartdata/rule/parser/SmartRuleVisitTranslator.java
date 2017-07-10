@@ -19,7 +19,7 @@ package org.smartdata.rule.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.apache.commons.lang.StringUtils;
+import org.antlr.v4.runtime.misc.Interval;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;
@@ -608,11 +608,9 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitCmdlet(SmartRuleParser.CmdletContext ctx) {
-    List<String> vs = new ArrayList<>();
-    for (int i = 0; i < ctx.getChildCount(); i++) {
-      vs.add(ctx.getChild(i).getText());
-    }
-    String cmd = StringUtils.join(vs, " ");
+    Interval i = new Interval(ctx.getStart().getStartIndex(),
+        ctx.getStop().getStopIndex());
+    String cmd = ctx.getStart().getInputStream().getText(i);
     try {
       cmdDescriptor = CmdletDescriptor.fromCmdletString(cmd);
     } catch (ParseException e) {
