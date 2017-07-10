@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.FileInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -84,16 +85,15 @@ public class InotifyEventApplier {
   //Todo: times and ec policy id, etc.
   private String getCreateSql(Event.CreateEvent createEvent) throws IOException {
     HdfsFileStatus fileStatus = client.getFileInfo(createEvent.getPath());
-    boolean isDir = createEvent.getiNodeType() == Event.CreateEvent.INodeType.DIRECTORY;
-    return String.format(
-        "INSERT INTO files (path, fid, block_replication, "
-            + "block_size, is_dir, permission) VALUES ('%s', %s, %s, %s, %s, %s);",
-        createEvent.getPath(),
-        fileStatus.getFileId(),
-        createEvent.getReplication(),
-        createEvent.getDefaultBlockSize(),
-        isDir ? 1 : 0,
-        createEvent.getPerms().toShort());
+    FileInfo fileInfo = FileInfo.fromHdfsFileStatus(fileStatus, null);
+    fileInfo.setPath(createEvent.getPath());
+    try {
+      metaStore.insertFile(fileInfo);
+    } catch (MetaStoreException e) {
+      LOG.error("Insert new created file " + fileInfo.getPath() + " error.", e);
+      throw new IOException(e);
+    }
+    return null;
   }
 
   //Todo: should update mtime? atime?
