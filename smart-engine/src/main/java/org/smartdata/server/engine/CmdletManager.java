@@ -455,11 +455,11 @@ public class CmdletManager extends AbstractService {
       actionInfo.setFinishTime(finished.getTimestamp());
       actionInfo.setResult(finished.getResult());
       actionInfo.setLog(finished.getLog());
+      actionInfo.setProgress(1.0F);
       if (finished.getException() != null) {
         actionInfo.setSuccessful(false);
       } else {
         actionInfo.setSuccessful(true);
-        actionInfo.setProgress(1.0F);
         updateStorageIfNeeded(actionInfo);
       }
     } else {
