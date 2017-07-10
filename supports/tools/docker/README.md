@@ -27,6 +27,9 @@ docker run -p 3306:3306 --name {container_name} -e MYSQL_ROOT_PASSWORD={root_pas
 -  `database_name` Create a new database/schema with given name.
 
 ### HDFS on Docker
+
+**Note that this part is not suggested on OSX (mac), becasue the containers' newtork is limited on OSX.**
+
 Pull a well-known third-party hadoop image from docker store. You can use `hadoop-docker:tag` to specify the Hadoop version (`tag`) you want.
 
 #### Set a HDFS Container
