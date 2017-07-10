@@ -46,8 +46,16 @@ limitations under the License.
           </ul>
         </li>
         <li><a href="#/jobmanager">Job</a></li>
+        <li class="dropdown" uib-dropdown>
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>Cluster <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#/cluster/hotTestFiles">Hot Files</a></li>
+              <li><a href="#/cluster/fileInCache">file In Cache</a></li>
+            </ul>
+        </li>
+        <li><a href="#/rules">Rules</a></li>
+        <li><a href="#/actions">Actions</a></li>
       </ul>
-
       <ul class="nav navbar-nav navbar-right" style="margin-right:5px;">
         <li class="nav-component" ng-if="ticket">
         <!--TODO(bzz): move to Typeahead https://angular-ui.github.io/bootstrap  -->
