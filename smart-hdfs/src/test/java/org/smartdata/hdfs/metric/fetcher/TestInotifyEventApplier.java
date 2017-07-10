@@ -73,7 +73,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             1024,
             0,
             0,
-            new FsPermission((short) 777),
+            new FsPermission("777"),
             "owner",
             "group",
             new byte[0],
