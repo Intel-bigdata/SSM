@@ -38,7 +38,7 @@ public class AccessCountTableManager {
   private static final int NUM_DAY_TABLES_TO_KEEP = 30;
   private static final int NUM_HOUR_TABLES_TO_KEEP = 48;
   private static final int NUM_MINUTE_TABLES_TO_KEEP = 120;
-  private static final int NUM_SECOND_TABLES_TO_KEEP = 120;
+  private static final int NUM_SECOND_TABLES_TO_KEEP = 30;
 
   private MetaStore metaStore;
   private Map<TimeGranularity, AccessCountTableDeque> tableDeques;
