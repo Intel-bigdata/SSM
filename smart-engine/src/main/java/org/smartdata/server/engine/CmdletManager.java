@@ -18,6 +18,7 @@
 package org.smartdata.server.engine;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
@@ -263,6 +264,25 @@ public class CmdletManager extends AbstractService {
       }
     }
     return result;
+  }
+
+  public List<CmdletInfo> listCmdletsInfo(long rid) throws IOException {
+    Map<Long, CmdletInfo> result = new HashMap<>();
+    try {
+      String ridCondition = rid == -1 ? null : String.format("= %d", rid);
+      for (CmdletInfo info : metaStore.getCmdletsTableItem(null, ridCondition, null)) {
+        result.put(info.getCid(), info);
+      }
+    } catch (MetaStoreException e) {
+      LOG.error("List CmdletInfo from DB error! Conditions rid {}, {}", rid, e);
+      throw new IOException(e);
+    }
+    for (CmdletInfo info : idToCmdlets.values()) {
+      if (info.getRid() == rid) {
+        result.put(info.getCid(), info);
+      }
+    }
+    return Lists.newArrayList(result.values());
   }
 
   public void activateCmdlet(long cid) throws IOException {

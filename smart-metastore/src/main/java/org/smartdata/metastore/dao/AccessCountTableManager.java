@@ -156,18 +156,15 @@ public class AccessCountTableManager {
     return results;
   }
 
-  private static boolean tableExists(final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-    long start, long end) {
+  private static boolean tableExists(
+      final Map<TimeGranularity, AccessCountTableDeque> tableDeques, long start, long end) {
     TimeGranularity granularity = TimeUtils.getGranularity(end - start);
     AccessCountTable fakeTable = new AccessCountTable(start, end, granularity);
-    if (!tableDeques.containsKey(granularity)) {
-      return false;
-    }
-    return tableDeques.get(granularity).contains(fakeTable);
+    return tableDeques.containsKey(granularity) && tableDeques.get(granularity).contains(fakeTable);
   }
 
   @VisibleForTesting
-  protected Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
+  Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
     return this.tableDeques;
   }
 }
