@@ -18,24 +18,6 @@
  */
 angular.module('zeppelinWebApp')
 
-  // .config(['$stateProvider',
-  //   function ($stateProvider) {
-  //     'use strict';
-  //
-  //     $stateProvider
-  //       .state('action', {
-  //         abstract: true,
-  //         url: '/actions/action/:actionId',
-  //         templateUrl: 'views/actions/action/action.html',
-  //         controller: 'ActionCtrl',
-  //         resolve: {
-  //           action0: ['$stateParams', 'models', function ($stateParams, models) {
-  //             return models.$get.action($stateParams.actionId);
-  //           }]
-  //         }
-  //       });
-  //   }])
-
 /**
  * This controller is used to obtain action. All nested views will read status from here.
  */

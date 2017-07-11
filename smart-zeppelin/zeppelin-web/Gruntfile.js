@@ -359,6 +359,11 @@ module.exports = function(grunt) {
           expand: true,
           cwd: '<%= yeoman.app %>',
           dest: '<%= yeoman.dist %>',
+          src: ['app/dashing-deps/0.1.3/roboto/fonts/**/*.{eot,svg,ttf,woff,woff2}']
+        }, {
+          expand: true,
+          cwd: '<%= yeoman.app %>',
+          dest: '<%= yeoman.dist %>',
           src: ['app/**/*.html', 'components/**/*.html']
         }, {
           expand: true,
