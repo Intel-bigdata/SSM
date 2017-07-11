@@ -69,4 +69,13 @@ public final class StorageCapacity {
     result = 31 * result + (free != null ? free.hashCode() : 0);
     return result;
   }
+
+  @Override
+  public String toString() {
+    return "StorageCapacity{" +
+        "type='" + type + '\'' +
+        ", capacity=" + capacity +
+        ", free=" + free +
+        '}';
+  }
 }

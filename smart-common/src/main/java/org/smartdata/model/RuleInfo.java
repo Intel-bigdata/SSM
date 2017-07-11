@@ -176,6 +176,8 @@ public class RuleInfo implements Cloneable {
     return Builder.create();
   }
 
+
+
   public static class Builder {
     private long id;
     private long submitTime;
@@ -227,6 +229,19 @@ public class RuleInfo implements Cloneable {
     public RuleInfo build() {
       return new RuleInfo(id, submitTime, ruleText, state, numChecked,
           numCmdsGen, lastCheckTime);
+    }
+
+    @Override
+    public String toString() {
+      return "Builder{" +
+          "id=" + id +
+          ", submitTime=" + submitTime +
+          ", ruleText='" + ruleText + '\'' +
+          ", state=" + state +
+          ", numChecked=" + numChecked +
+          ", numCmdsGen=" + numCmdsGen +
+          ", lastCheckTime=" + lastCheckTime +
+          '}';
     }
   }
 }

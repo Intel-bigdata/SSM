@@ -194,6 +194,23 @@ public class ActionInfo {
     return result1;
   }
 
+  @Override
+  public String toString() {
+    return "ActionInfo{" +
+        "actionId=" + actionId +
+        ", cmdletId=" + cmdletId +
+        ", actionName='" + actionName + '\'' +
+        ", args=" + args +
+        ", result='" + result + '\'' +
+        ", log='" + log + '\'' +
+        ", successful=" + successful +
+        ", createTime=" + createTime +
+        ", finished=" + finished +
+        ", finishTime=" + finishTime +
+        ", progress=" + progress +
+        '}';
+  }
+
   public static Builder newBuilder() {
     return Builder.create();
   }
@@ -276,6 +293,23 @@ public class ActionInfo {
     public ActionInfo build() {
       return new ActionInfo(actionId, cmdletId, actionName, args, result,
           log, successful, createTime, finished, finishTime, progress);
+    }
+
+    @Override
+    public String toString() {
+      return "Builder{" +
+          "actionId=" + actionId +
+          ", cmdletId=" + cmdletId +
+          ", actionName='" + actionName + '\'' +
+          ", args=" + args +
+          ", result='" + result + '\'' +
+          ", log='" + log + '\'' +
+          ", successful=" + successful +
+          ", createTime=" + createTime +
+          ", finished=" + finished +
+          ", finishTime=" + finishTime +
+          ", progress=" + progress +
+          '}';
     }
   }
 }

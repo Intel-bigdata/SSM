@@ -61,4 +61,11 @@ public enum ActionType {
     }
     return null;
   }
+
+  @Override
+  public String toString() {
+    return "ActionType{" +
+        "value=" + value +
+        '}';
+  }
 }

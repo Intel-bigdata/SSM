@@ -51,6 +51,13 @@ public enum RuleState {
     return null;
   }
 
+  @Override
+  public String toString() {
+    return "RuleState{" +
+        "value=" + value +
+        '}';
+  }
+
   public int getValue() {
     return value;
   }

@@ -72,4 +72,13 @@ public class FileAccessInfo {
     result = 31 * result + (accessCount != null ? accessCount.hashCode() : 0);
     return result;
   }
+
+  @Override
+  public String toString() {
+    return "FileAccessInfo{" +
+        "fid=" + fid +
+        ", path='" + path + '\'' +
+        ", accessCount=" + accessCount +
+        '}';
+  }
 }

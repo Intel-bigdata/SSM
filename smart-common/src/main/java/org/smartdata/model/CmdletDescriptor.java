@@ -350,4 +350,14 @@ public class CmdletDescriptor {
       return rep;
     }
   }
+
+  @Override
+  public String toString() {
+    return "CmdletDescriptor{" +
+        "actionCommon=" + actionCommon +
+        ", actionNames=" + actionNames +
+        ", actionArgs=" + actionArgs +
+        ", cmdletString='" + cmdletString + '\'' +
+        '}';
+  }
 }

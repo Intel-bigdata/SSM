@@ -119,4 +119,15 @@ public class CachedFileStatus {
     result = 31 * result + numAccessed;
     return result;
   }
+
+  @Override
+  public String toString() {
+    return "CachedFileStatus{" +
+        "fid=" + fid +
+        ", path='" + path + '\'' +
+        ", fromTime=" + fromTime +
+        ", lastAccessTime=" + lastAccessTime +
+        ", numAccessed=" + numAccessed +
+        '}';
+  }
 }
