@@ -321,23 +321,27 @@ public class CmdletManager extends AbstractService {
       }
     }
     for (ActionInfo actionInfo : removed) {
-      SmartAction action;
-      try {
-        action = ActionRegistry.createAction(actionInfo.getActionName());
-      } catch (ActionException e) {
-        continue;
-      }
-      if (action instanceof MoveFileAction) {
-        Map<String, String> args = actionInfo.getArgs();
-        if (args != null && args.size() > 0) {
-          String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-          if (file != null && fileLocks.containsKey(file)) {
-            fileLocks.remove(file);
-          }
+      unLockFileIfNeeded(actionInfo);
+    }
+    flushActionInfos(removed);
+  }
+
+  private void unLockFileIfNeeded(ActionInfo actionInfo) {
+    SmartAction action;
+    try {
+      action = ActionRegistry.createAction(actionInfo.getActionName());
+    } catch (ActionException e) {
+      return;
+    }
+    if (action instanceof MoveFileAction) {
+      Map<String, String> args = actionInfo.getArgs();
+      if (args != null && args.size() > 0) {
+        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+        if (file != null && fileLocks.containsKey(file)) {
+          fileLocks.remove(file);
         }
       }
     }
-    flushActionInfos(removed);
   }
 
   public void deleteCmdlet(long cid) throws IOException {
@@ -465,6 +469,7 @@ public class CmdletManager extends AbstractService {
       actionInfo.setResult(finished.getResult());
       actionInfo.setLog(finished.getLog());
       actionInfo.setProgress(1.0F);
+      unLockFileIfNeeded(actionInfo);
       if (finished.getException() != null) {
         actionInfo.setSuccessful(false);
       } else {
