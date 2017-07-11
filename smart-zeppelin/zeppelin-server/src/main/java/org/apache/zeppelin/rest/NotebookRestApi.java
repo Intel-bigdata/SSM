@@ -399,7 +399,7 @@ public class NotebookRestApi {
   @ZeppelinApi
   public Response cloneNote(@PathParam("noteId") String noteId, String message)
       throws IOException, CloneNotSupportedException, IllegalArgumentException {
-    LOG.info("clone note by JSON {}", message);
+    LOG.info("Clone note by JSON {}", message);
     checkIfUserCanWrite(noteId, "Insufficient privileges you cannot clone this note");
     NewNoteRequest request = gson.fromJson(message, NewNoteRequest.class);
     String newNoteName = null;
@@ -425,7 +425,7 @@ public class NotebookRestApi {
   @ZeppelinApi
   public Response insertParagraph(@PathParam("noteId") String noteId, String message)
       throws IOException {
-    LOG.info("insert paragraph {} {}", noteId, message);
+    LOG.info("Insert paragraph {} {}", noteId, message);
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);

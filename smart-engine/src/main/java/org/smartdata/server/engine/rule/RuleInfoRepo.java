@@ -105,7 +105,7 @@ public class RuleInfoRepo {
       if (metaStore != null) {
         try {
           ret = metaStore.updateRuleInfo(ruleInfo.getId(),
-              rs, lastCheckTime, checkedCount, cmdletsGen);
+              rs, lastCheckTime, ruleInfo.getNumChecked(), (int)ruleInfo.getNumCmdsGen());
         } catch (MetaStoreException e) {
           throw new IOException(ruleInfo.toString(), e);
         }
