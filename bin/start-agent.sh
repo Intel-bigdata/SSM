@@ -55,6 +55,7 @@ done
 HOSTNAME=$(hostname)
 SMART_AGENT=org.smartdata.agent.SmartAgent
 JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
+JAVA_OPTS+=" -Dsmart.log.file=SmartAgent.log"
 
 addJarInDir "${SMART_HOME}/lib"
 

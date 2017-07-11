@@ -65,6 +65,7 @@ HOSTNAME=$(hostname)
 
 SMART_SERVER=org.smartdata.server.SmartDaemon
 JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
+JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
 
 addJarInDir "${SMART_HOME}/smart-server/target/lib"
 addNonTestJarInDir "${SMART_HOME}/smart-server/target"
