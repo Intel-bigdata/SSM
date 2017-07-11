@@ -55,6 +55,8 @@ public class SmartConfKeys {
 
   public final static String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
   public final static boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = false;
+  public final static String SMART_ENABLE_ZEPPELIN = "smart.zeppelin.enable";
+  public final static boolean SMART_ENABLE_ZEPPELIN_DEFAULT = false;
 
   // SmartAgent
   public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";

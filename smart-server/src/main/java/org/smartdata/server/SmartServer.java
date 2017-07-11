@@ -83,7 +83,7 @@ public class SmartServer {
       httpServer = new SmartHttpServer(engine, conf);
       rpcServer = new SmartRpcServer(this, conf);
 
-      if (isZeppelinWebEnabled()) {
+      if (isZeppelinEnabled()) {
         zeppelinServer = new SmartZeppelinServer(conf, engine);
       }
     }
@@ -184,9 +184,9 @@ public class SmartServer {
     return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
   }
 
-  private boolean isZeppelinWebEnabled() {
-    return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB,
-        SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB_DEFAULT);
+  private boolean isZeppelinEnabled() {
+    return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN,
+        SmartConfKeys.SMART_ENABLE_ZEPPELIN_DEFAULT);
   }
 
   private void checkSecurityAndLogin() throws IOException {
