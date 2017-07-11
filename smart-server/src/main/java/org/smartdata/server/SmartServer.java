@@ -26,6 +26,7 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.zeppelin.server.SmartZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.smartdata.SmartServiceState;
 import org.smartdata.utils.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
@@ -60,6 +61,11 @@ public class SmartServer {
   private SmartHttpServer httpServer;
   private SmartRpcServer rpcServer;
   private SmartZeppelinServer zeppelinServer;
+
+  static {
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
+  }
 
   public SmartServer(SmartConf conf) {
     this.conf = conf;
