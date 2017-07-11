@@ -139,7 +139,7 @@ public class TestAccessCountTableManager extends DBTest {
     Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
     AccessCountTableDeque dayDeque = new AccessCountTableDeque(tableEvictor);
     AccessCountTable firstDay = new AccessCountTable(0L, Constants.ONE_DAY_IN_MILLIS);
-    dayDeque.add(firstDay);
+    dayDeque.addAndNotifyListener(firstDay);
     map.put(TimeGranularity.DAY, dayDeque);
 
     AccessCountTableDeque hourDeque = new AccessCountTableDeque(tableEvictor);
@@ -147,8 +147,8 @@ public class TestAccessCountTableManager extends DBTest {
         new AccessCountTable(23 * Constants.ONE_HOUR_IN_MILLIS, 24 * Constants.ONE_HOUR_IN_MILLIS);
     AccessCountTable secondHour =
         new AccessCountTable(24 * Constants.ONE_HOUR_IN_MILLIS, 25 * Constants.ONE_HOUR_IN_MILLIS);
-    hourDeque.add(firstHour);
-    hourDeque.add(secondHour);
+    hourDeque.addAndNotifyListener(firstHour);
+    hourDeque.addAndNotifyListener(secondHour);
     map.put(TimeGranularity.HOUR, hourDeque);
 
     AccessCountTableDeque minuteDeque = new AccessCountTableDeque(tableEvictor);
@@ -161,8 +161,8 @@ public class TestAccessCountTableManager extends DBTest {
         new AccessCountTable(
             numMins * Constants.ONE_MINUTE_IN_MILLIS,
             (numMins + 1) * Constants.ONE_MINUTE_IN_MILLIS);
-    minuteDeque.add(firstMin);
-    minuteDeque.add(secondMin);
+    minuteDeque.addAndNotifyListener(firstMin);
+    minuteDeque.addAndNotifyListener(secondMin);
     map.put(TimeGranularity.MINUTE, minuteDeque);
 
     AccessCountTableDeque secondDeque = new AccessCountTableDeque(tableEvictor);
@@ -175,8 +175,8 @@ public class TestAccessCountTableManager extends DBTest {
         new AccessCountTable(
             numSeconds * Constants.ONE_SECOND_IN_MILLIS,
             (numSeconds + 5) * Constants.ONE_SECOND_IN_MILLIS);
-    secondDeque.add(firstFiveSeconds);
-    secondDeque.add(secondFiveSeconds);
+    secondDeque.addAndNotifyListener(firstFiveSeconds);
+    secondDeque.addAndNotifyListener(secondFiveSeconds);
     map.put(TimeGranularity.SECOND, secondDeque);
 
     List<AccessCountTable> firstResult =
@@ -224,8 +224,8 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTable secondFiveSeconds =
       new AccessCountTable(5 * Constants.ONE_SECOND_IN_MILLIS,
         10 * Constants.ONE_SECOND_IN_MILLIS);
-    secondDeque.add(firstFiveSeconds);
-    secondDeque.add(secondFiveSeconds);
+    secondDeque.addAndNotifyListener(firstFiveSeconds);
+    secondDeque.addAndNotifyListener(secondFiveSeconds);
     map.put(TimeGranularity.SECOND, secondDeque);
 
     List<AccessCountTable> result = AccessCountTableManager.getTables(map, adapter,
@@ -243,7 +243,7 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTableDeque minute = new AccessCountTableDeque(tableEvictor);
     AccessCountTable firstMinute =
       new AccessCountTable(0L, Constants.ONE_MINUTE_IN_MILLIS);
-    minute.add(firstMinute);
+    minute.addAndNotifyListener(firstMinute);
     map.put(TimeGranularity.MINUTE, minute);
 
     AccessCountTableDeque secondDeque = new AccessCountTableDeque(tableEvictor);
@@ -255,9 +255,9 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTable thirdFiveSeconds =
       new AccessCountTable(110 * Constants.ONE_SECOND_IN_MILLIS,
         115 * Constants.ONE_SECOND_IN_MILLIS);
-    secondDeque.add(firstFiveSeconds);
-    secondDeque.add(secondFiveSeconds);
-    secondDeque.add(thirdFiveSeconds);
+    secondDeque.addAndNotifyListener(firstFiveSeconds);
+    secondDeque.addAndNotifyListener(secondFiveSeconds);
+    secondDeque.addAndNotifyListener(thirdFiveSeconds);
     map.put(TimeGranularity.SECOND, secondDeque);
 
     List<AccessCountTable> result = AccessCountTableManager.getTables(map, adapter,

@@ -91,8 +91,7 @@ public class ActionDao {
   public List<ActionInfo> getLatestActions(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     jdbcTemplate.setMaxRows(size);
-    String sql = "select * from actions WHERE finished = 1" +
-        " ORDER by create_time DESC";
+    String sql = "select * from actions ORDER by aid DESC";
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 

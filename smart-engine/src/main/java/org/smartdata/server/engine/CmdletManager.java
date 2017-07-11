@@ -29,7 +29,6 @@ import org.smartdata.actions.hdfs.MoveFileAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
-import org.smartdata.model.ActionInfoComparator;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
@@ -372,16 +371,13 @@ public class CmdletManager extends AbstractService {
   }
 
   public List<ActionInfo> listNewCreatedActions(int actionNum) throws IOException {
-    List<ActionInfo> result = new ArrayList<>();
-    result.addAll(idToActions.values());
-    Collections.sort(result, new ActionInfoComparator());
-    if (result.size() > actionNum) {
-      return result.subList(0, actionNum);
-    }
-    int remainsAction = actionNum - result.size();
     try {
-      result.addAll(metaStore.getNewCreatedActionsTableItem(remainsAction));
-      return result;
+      Map<Long, ActionInfo> actionInfos = new HashMap<>();
+      for (ActionInfo info : metaStore.getNewCreatedActionsTableItem(actionNum)) {
+        actionInfos.put(info.getActionId(), info);
+      }
+      actionInfos.putAll(idToActions);
+      return Lists.newArrayList(actionInfos.values());
     } catch (MetaStoreException e) {
       LOG.error("Get Finished Actions from DB error", e);
       throw new IOException(e);

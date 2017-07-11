@@ -57,18 +57,15 @@ public class AccessEventAggregator {
       this.currentWindow = assignWindow(eventList.get(0).getTimestamp());
     }
     for (FileAccessEvent event : eventList) {
-      if (this.currentWindow.contains(event.getTimestamp())) {
-        // Exclude watermark event
-        if (!event.getPath().isEmpty()) {
-          this.eventBuffer.add(event);
-        }
-      } else { // New Window occurs
+      if (!this.currentWindow.contains(event.getTimestamp())) {
+        // New Window occurs
         this.createTable();
         this.currentWindow = assignWindow(event.getTimestamp());
         this.eventBuffer.clear();
-        if (!event.getPath().isEmpty()) {
-          this.eventBuffer.add(event);
-        }
+      }
+      // Exclude watermark event
+      if (!event.getPath().isEmpty()) {
+        this.eventBuffer.add(event);
       }
     }
   }
@@ -77,7 +74,8 @@ public class AccessEventAggregator {
     AccessCountTable table = new AccessCountTable(currentWindow.start, currentWindow.end);
     String createTable = AccessCountDao.createTableSQL(table.getTableName());
     try {
-      this.adapter.execute(createTable);
+      adapter.execute(createTable);
+      adapter.insertAccessCountTable(table);
     } catch (MetaStoreException e) {
       LOG.error("Create table error: " + table, e);
     }
