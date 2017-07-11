@@ -54,7 +54,7 @@ public class AccessCountTable {
   private static String getTableName(Long startTime, Long endTime, boolean isView) {
     String tableName = "accessCount_" + startTime + "_" + endTime;
     if (isView) {
-      tableName += "_view_" + new Random().nextInt();
+      tableName += "_view_" + Math.abs(new Random().nextInt());
     }
     return tableName;
   }
