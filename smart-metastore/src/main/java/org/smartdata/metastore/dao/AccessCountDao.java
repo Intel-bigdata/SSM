@@ -18,10 +18,12 @@
 package org.smartdata.metastore.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,8 +32,8 @@ import java.util.Map;
 
 public class AccessCountDao {
   private DataSource dataSource;
-  public final static String FILE_FIELD = "fid";
-  public final static String ACCESSCOUNT_FIELD = "count";
+  final static String FILE_FIELD = "fid";
+  final static String ACCESSCOUNT_FIELD = "count";
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -63,10 +65,22 @@ public class AccessCountDao {
     jdbcTemplate.update(sql);
   }
 
+  public void delete(AccessCountTable table) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "delete from access_count_tables where table_name = ?";
+    jdbcTemplate.update(sql, table.getTableName());
+  }
+
   public static String createTableSQL(String tableName) {
     return String.format(
         "CREATE TABLE %s (%s INTEGER NOT NULL, %s INTEGER NOT NULL)",
         tableName, FILE_FIELD, ACCESSCOUNT_FIELD);
+  }
+
+  public List<AccessCountTable> getAllSortedTables() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM access_count_tables ORDER BY start_time ASC";
+    return jdbcTemplate.query(sql, new AccessCountRowMapper());
   }
 
   public String aggregateSQLStatement(AccessCountTable destinationTable
@@ -143,5 +157,15 @@ public class AccessCountDao {
     parameters.put("start_time", accessCountTable.getStartTime());
     parameters.put("end_time", accessCountTable.getEndTime());
     return parameters;
+  }
+
+  class AccessCountRowMapper implements RowMapper<AccessCountTable> {
+    @Override
+    public AccessCountTable mapRow(ResultSet resultSet, int i) throws SQLException {
+      AccessCountTable accessCountTable = new AccessCountTable(
+        resultSet.getLong("start_time"),
+        resultSet.getLong("end_time"));
+      return accessCountTable;
+    }
   }
 }

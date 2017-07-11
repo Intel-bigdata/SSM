@@ -85,13 +85,28 @@ public class AccessCountTableManager {
     this.tableDeques.put(TimeGranularity.MINUTE, minuteTableDeque);
     this.tableDeques.put(TimeGranularity.HOUR, hourTableDeque);
     this.tableDeques.put(TimeGranularity.DAY, dayTableDeque);
+    this.recoverTables();
+  }
+
+  private void recoverTables() {
+    try {
+      List<AccessCountTable> tables = metaStore.getAllSortedTables();
+      for (AccessCountTable table : tables) {
+        TimeGranularity timeGranularity = TimeUtils.getGranularity(table.getEndTime() - table.getStartTime());
+        if (tableDeques.containsKey(timeGranularity)) {
+          tableDeques.get(timeGranularity).add(table);
+        }
+      }
+    } catch (MetaStoreException e) {
+      LOG.error(e.toString());
+    }
   }
 
   public void addTable(AccessCountTable accessCountTable) {
     if (LOG.isDebugEnabled()) {
       LOG.debug(accessCountTable.toString());
     }
-    this.secondTableDeque.add(accessCountTable);
+    this.secondTableDeque.addAndNotifyListener(accessCountTable);
   }
 
   public void onAccessEventsArrived(List<FileAccessEvent> accessEvents) {

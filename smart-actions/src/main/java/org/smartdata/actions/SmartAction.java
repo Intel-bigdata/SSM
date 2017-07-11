@@ -19,6 +19,7 @@ package org.smartdata.actions;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -126,7 +127,7 @@ public abstract class SmartAction {
     } catch (Exception e) {
       LOG.error("SmartAction execute error", e);
       exception = e;
-      appendLog(e.toString());
+      appendLog(ExceptionUtils.getFullStackTrace(e));
     } finally {
       reportFinished(exception);
       this.stop();
