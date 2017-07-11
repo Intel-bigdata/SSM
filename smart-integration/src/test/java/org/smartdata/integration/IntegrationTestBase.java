@@ -51,6 +51,7 @@ public class IntegrationTestBase {
 
     // Start a Smart server
     zeppelinPort = 8080;
+    conf.setBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN, true);
     smartServer = new IntegrationSmartServer();
     smartServer.setUp(conf);
 
