@@ -50,6 +50,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
+  static final Logger LOG = LoggerFactory.getLogger(NNMetricsAccessEventCollector.class);
+
   private static final List<FileAccessEvent> EMPTY_RESULT = new ArrayList<>();
   private Reader reader;
   private long now;
@@ -58,7 +60,7 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
     try {
       this.reader = Reader.create();
     } catch (IOException | URISyntaxException e) {
-      e.printStackTrace();
+      LOG.error("Create Reader error\n {}", e);
     }
     now = System.currentTimeMillis();
   }
@@ -83,7 +85,7 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
         now = now + reader.getRollingIntervalMillis() - now % reader.getRollingIntervalMillis();
       }
     } catch (IOException | URISyntaxException e) {
-      e.printStackTrace();
+      LOG.error("FileAccessEvent collect error \n{}", e);
     }
     return EMPTY_RESULT;
   }

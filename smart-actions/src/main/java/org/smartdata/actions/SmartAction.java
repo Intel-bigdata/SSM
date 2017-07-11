@@ -149,7 +149,7 @@ public abstract class SmartAction {
                 StringEscapeUtils.escapeJava(this.logOs.toString("UTF-8")),
                 exception));
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.error("Action statusReporter error {}", e);
         this.statusReporter.report(
             new ActionFinished(this.actionId, System.currentTimeMillis(), exception));
       }

@@ -134,7 +134,7 @@ public class CmdletManager extends AbstractService {
       CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdlet);
       return submitCmdlet(cmdletDescriptor);
     } catch (ParseException e) {
-      e.printStackTrace();
+      LOG.error("Cmdlet format is not correct {}", e);
       throw new IOException(e);
     }
   }
@@ -414,7 +414,7 @@ public class CmdletManager extends AbstractService {
     } catch (IOException e) {
       LOG.error(String.format("Update status %s failed with %s", status, e));
     } catch (ActionException e) {
-      e.printStackTrace();
+      LOG.error("Action Status error {}", e);
     }
   }
 
@@ -507,8 +507,8 @@ public class CmdletManager extends AbstractService {
       try {
         metaStore.updateFileStoragePolicy(path, policy);
       } catch (MetaStoreException e) {
-        e.printStackTrace();
         LOG.error(String.format("Failed to update storage policy %s for file %s", policy, path));
+        LOG.error("MetaStoreException {}", e);
       }
     }
   }
@@ -553,7 +553,7 @@ public class CmdletManager extends AbstractService {
             dispatcher.dispatch(launchCmdlet);
           }
         } catch (IOException e) {
-          e.printStackTrace();
+          LOG.error("Cmdlet dispatcher error {}", e);
         }
       }
     }

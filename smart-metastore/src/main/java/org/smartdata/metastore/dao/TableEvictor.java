@@ -24,6 +24,7 @@ import org.smartdata.metastore.MetaStoreException;
 
 public abstract class TableEvictor {
   public final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
   private MetaStore adapter;
 
   public TableEvictor(MetaStore adapter) {
@@ -35,7 +36,7 @@ public abstract class TableEvictor {
       this.adapter.dropTable(accessCountTable.getTableName());
       LOG.debug("Dropped access count table " + accessCountTable.getTableName());
     } catch (MetaStoreException e) {
-      e.printStackTrace();
+      LOG.error("Drop access count table {} fail {}", accessCountTable.getTableName(), e);
     }
   }
 

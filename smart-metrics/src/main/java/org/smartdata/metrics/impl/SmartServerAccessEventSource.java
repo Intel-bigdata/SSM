@@ -17,6 +17,8 @@
  */
 package org.smartdata.metrics.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
 import org.smartdata.metrics.FileAccessEventSource;
@@ -26,6 +28,8 @@ import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class SmartServerAccessEventSource implements FileAccessEventSource {
+  static final Logger LOG = LoggerFactory.getLogger(SmartServerAccessEventSource.class);
+
   private static final long DEFAULT_INTERVAL = 5 * 1000; //5 seconds
   private final SmartServerAccessEventCollector collector;
   private LinkedBlockingQueue<FileAccessEvent> eventQueue;
@@ -48,7 +52,7 @@ public class SmartServerAccessEventSource implements FileAccessEventSource {
     try {
       this.eventQueue.put(event);
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      LOG.error("Event queue enqueue error {}", e);
     }
   }
 
@@ -70,7 +74,7 @@ public class SmartServerAccessEventSource implements FileAccessEventSource {
         //Todo: do not use HDFSFileAccessEvent
         this.outerQueue.put(new FileAccessEvent("", System.currentTimeMillis()));
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        LOG.error("Outer queue enqueue error {}", e);
       }
     }
   }

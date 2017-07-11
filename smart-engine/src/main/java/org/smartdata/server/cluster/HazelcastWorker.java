@@ -92,8 +92,7 @@ public class HazelcastWorker implements StatusReporter {
         try {
           cmdletExecutor.execute(factory.createCmdlet(launchCmdlet));
         } catch (ActionException e) {
-          e.printStackTrace();
-          LOG.error("Failed to create cmdlet from " + launchCmdlet);
+          LOG.error("Failed to create cmdlet from {}\n {}", launchCmdlet, e);
           report(
               new CmdletStatusUpdate(
                   launchCmdlet.getCmdletId(), System.currentTimeMillis(), CmdletState.FAILED));
