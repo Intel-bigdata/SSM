@@ -507,8 +507,7 @@ public class CmdletManager extends AbstractService {
       try {
         metaStore.updateFileStoragePolicy(path, policy);
       } catch (MetaStoreException e) {
-        LOG.error(String.format("Failed to update storage policy %s for file %s", policy, path));
-        LOG.error("MetaStoreException updateFileStoragePolicy path={} error", path, e);
+        LOG.error("Failed to update storage policy {} for file {}", policy, path, e);
       }
     }
   }
