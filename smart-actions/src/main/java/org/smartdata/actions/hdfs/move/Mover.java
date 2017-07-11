@@ -175,4 +175,15 @@ public class Mover {
     }
   }
 
+  @Override
+  public String toString() {
+    return "Mover{" +
+        "dispatcher=" + dispatcher +
+        ", storages=" + storages +
+        ", targetPaths=" + targetPaths +
+        ", retryMaxAttempts=" + retryMaxAttempts +
+        ", retryCount=" + retryCount +
+        ", status=" + status +
+        '}';
+  }
 }
