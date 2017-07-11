@@ -67,7 +67,8 @@ public class AgentMaster {
   public AgentMaster(SmartConf conf, CmdletManager statusUpdater) {
     String address = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
     checkNotNull(address);
-    Config config = AgentUtils.overrideRemoteAddress(ConfigFactory.load(), address);
+    Config config = AgentUtils.overrideRemoteAddress(
+        ConfigFactory.load(AgentConstants.AKKA_CONF_FILE), address);
     this.agentManager = new AgentManager();
     Props props = Props.create(MasterActor.class, statusUpdater, agentManager);
     ActorSystemLauncher launcher = new ActorSystemLauncher(config, props);

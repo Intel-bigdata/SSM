@@ -40,6 +40,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
@@ -72,7 +73,7 @@ public class SmartAgent {
 
     checkNotNull(masters);
 
-    agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(),
+    agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         conf.get(SmartConfKeys.SMART_AGENT_ADDRESS_KEY)),
         AgentUtils.getMasterActorPaths(masters), conf);
   }
