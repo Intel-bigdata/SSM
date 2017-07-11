@@ -122,6 +122,7 @@ public abstract class SmartAction {
     } catch (Exception e) {
       e.printStackTrace();
       exception = e;
+      appendLog(e.toString());
     } finally {
       reportFinished(exception);
       this.stop();

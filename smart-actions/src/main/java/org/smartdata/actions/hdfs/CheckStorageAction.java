@@ -21,8 +21,6 @@ import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfoWithStorage;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionException;
 
 import java.util.List;
@@ -32,8 +30,6 @@ import java.util.Map;
  * Check and return file blocks storage location.
  */
 public class CheckStorageAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(WriteFileAction.class);
-
   private String fileName;
 
   @Override
@@ -71,7 +67,7 @@ public class CheckStorageAction extends HdfsAction {
         this.appendResult(blockInfo.toString());
       }
     } catch (Exception e) {
-      LOG.error("CheckStorageAction failed", e);
+      this.appendResult("CheckStorageAction failed :" + e);
       throw new ActionException(e);
     }
   }
