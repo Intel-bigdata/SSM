@@ -17,8 +17,6 @@
  */
 package org.smartdata.metastore.dao;
 
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.DFSUtil;
 import org.dbunit.Assertion;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.ITable;
@@ -33,7 +31,6 @@ import org.smartdata.metastore.utils.Constants;
 import org.smartdata.metastore.utils.TimeGranularity;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileInfo;
-
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -52,7 +49,7 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTableManager manager = new AccessCountTableManager(adapter);
     Long firstDayEnd = 24 * 60 * 60 * 1000L;
     AccessCountTable accessCountTable =
-        new AccessCountTable(firstDayEnd - 5 * 1000, firstDayEnd, TimeGranularity.SECOND);
+        new AccessCountTable(firstDayEnd - 5 * 1000, firstDayEnd);
     manager.addTable(accessCountTable);
 
     Thread.sleep(5000);
@@ -64,19 +61,19 @@ public class TestAccessCountTableManager extends DBTest {
 
     AccessCountTableDeque minute = map.get(TimeGranularity.MINUTE);
     AccessCountTable minuteTable =
-        new AccessCountTable(firstDayEnd - 60 * 1000, firstDayEnd, TimeGranularity.MINUTE);
+        new AccessCountTable(firstDayEnd - 60 * 1000, firstDayEnd);
     Assert.assertTrue(minute.size() == 1);
     Assert.assertEquals(minute.peek(), minuteTable);
 
     AccessCountTableDeque hour = map.get(TimeGranularity.HOUR);
     AccessCountTable hourTable =
-        new AccessCountTable(firstDayEnd - 60 * 60 * 1000, firstDayEnd, TimeGranularity.HOUR);
+        new AccessCountTable(firstDayEnd - 60 * 60 * 1000, firstDayEnd);
     Assert.assertTrue(hour.size() == 1);
     Assert.assertEquals(hour.peek(), hourTable);
 
     AccessCountTableDeque day = map.get(TimeGranularity.DAY);
     AccessCountTable dayTable =
-        new AccessCountTable(firstDayEnd - 24 * 60 * 60 * 1000, firstDayEnd, TimeGranularity.DAY);
+        new AccessCountTable(firstDayEnd - 24 * 60 * 60 * 1000, firstDayEnd);
     Assert.assertTrue(day.size() == 1);
     Assert.assertEquals(day.peek(), dayTable);
   }

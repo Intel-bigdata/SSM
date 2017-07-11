@@ -45,11 +45,11 @@ public class TestAddTableOpListener {
         new AccessCountTableDeque(tableEvictor, minuteTableListener);
 
     AccessCountTable table1 =
-        new AccessCountTable(45 * oneSec, 50 * oneSec, TimeGranularity.SECOND);
+        new AccessCountTable(45 * oneSec, 50 * oneSec);
     AccessCountTable table2 =
-        new AccessCountTable(50 * oneSec, 55 * oneSec, TimeGranularity.SECOND);
+        new AccessCountTable(50 * oneSec, 55 * oneSec);
     AccessCountTable table3 =
-        new AccessCountTable(55 * oneSec, 60 * oneSec, TimeGranularity.SECOND);
+        new AccessCountTable(55 * oneSec, 60 * oneSec);
 
     secondTableDeque.add(table1);
     Assert.assertTrue(minuteTableDeque.size() == 0);
@@ -60,7 +60,7 @@ public class TestAddTableOpListener {
     Thread.sleep(1000);
 
     Assert.assertTrue(minuteTableDeque.size() == 1);
-    AccessCountTable expected = new AccessCountTable(0L, 60 * oneSec, TimeGranularity.MINUTE);
+    AccessCountTable expected = new AccessCountTable(0L, 60 * oneSec);
     Assert.assertEquals(minuteTableDeque.poll(), expected);
   }
 
@@ -75,11 +75,11 @@ public class TestAddTableOpListener {
         new AccessCountTableDeque(tableEvictor, hourTableListener);
 
     AccessCountTable table1 =
-        new AccessCountTable(57 * oneMin, 58 * oneMin, TimeGranularity.MINUTE);
+        new AccessCountTable(57 * oneMin, 58 * oneMin);
     AccessCountTable table2 =
-        new AccessCountTable(58 * oneMin, 59 * oneMin, TimeGranularity.MINUTE);
+        new AccessCountTable(58 * oneMin, 59 * oneMin);
     AccessCountTable table3 =
-        new AccessCountTable(59 * oneMin, 60 * oneMin, TimeGranularity.MINUTE);
+        new AccessCountTable(59 * oneMin, 60 * oneMin);
 
     minuteTableDeque.add(table1);
     Assert.assertTrue(hourTableDeque.size() == 0);
@@ -91,7 +91,7 @@ public class TestAddTableOpListener {
     Thread.sleep(1000);
 
     Assert.assertTrue(hourTableDeque.size() == 1);
-    AccessCountTable expected = new AccessCountTable(0L, 60 * oneMin, TimeGranularity.HOUR);
+    AccessCountTable expected = new AccessCountTable(0L, 60 * oneMin);
     Assert.assertEquals(hourTableDeque.poll(), expected);
   }
 
@@ -106,11 +106,11 @@ public class TestAddTableOpListener {
         new AccessCountTableDeque(tableEvictor, dayTableListener);
 
     AccessCountTable table1 =
-        new AccessCountTable(21 * oneHour, 22 * oneHour, TimeGranularity.HOUR);
+        new AccessCountTable(21 * oneHour, 22 * oneHour);
     AccessCountTable table2 =
-        new AccessCountTable(22 * oneHour, 23 * oneHour, TimeGranularity.HOUR);
+        new AccessCountTable(22 * oneHour, 23 * oneHour);
     AccessCountTable table3 =
-        new AccessCountTable(23 * oneHour, 24 * oneHour, TimeGranularity.HOUR);
+        new AccessCountTable(23 * oneHour, 24 * oneHour);
 
     hourTableDeque.add(table1);
     Assert.assertTrue(dayTableDeque.size() == 0);
@@ -122,7 +122,7 @@ public class TestAddTableOpListener {
     Thread.sleep(1000);
 
     Assert.assertTrue(dayTableDeque.size() == 1);
-    AccessCountTable today = new AccessCountTable(0L, 24 * oneHour, TimeGranularity.DAY);
+    AccessCountTable today = new AccessCountTable(0L, 24 * oneHour);
     Assert.assertEquals(dayTableDeque.poll(), today);
   }
 }
