@@ -56,6 +56,7 @@ public class ReadFileAction extends HdfsAction {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
       if (fileStatus == null) {
         this.appendResult("ReadFile Action fails, file doesn't exist!");
+        return;
       }
       DFSInputStream dfsInputStream = dfsClient.open(filePath);
       byte[] buffer = new byte[bufferSize];
@@ -64,7 +65,6 @@ public class ReadFileAction extends HdfsAction {
       }
       dfsInputStream.close();
     } catch (IOException e) {
-      this.appendResult("ReadFile Action fails!\n" + e.getMessage());
       throw new ActionException(e);
     }
   }

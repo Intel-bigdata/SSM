@@ -302,6 +302,30 @@ public class MetaStore {
     }
   }
 
+  public List<AccessCountTable> getAllSortedTables() throws MetaStoreException {
+    try {
+      return accessCountDao.getAllSortedTables();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAccessCountTable(AccessCountTable table) throws MetaStoreException {
+    try{
+      accessCountDao.delete(table);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertAccessCountTable(AccessCountTable accessCountTable) throws MetaStoreException {
+    try{
+      accessCountDao.insert(accessCountTable);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void insertStoragesTable(StorageCapacity[] storages)
       throws MetaStoreException {
     mapStorageCapacity = null;

@@ -33,19 +33,12 @@ public class AccessCountTableDeque extends ArrayDeque<AccessCountTable> {
   }
 
   public AccessCountTableDeque(TableEvictor tableEvictor, TableAddOpListener listener) {
-    this(tableEvictor, listener, new ArrayList<AccessCountTable>());
-  }
-
-  public AccessCountTableDeque(TableEvictor tableEvictor, TableAddOpListener listener, List<AccessCountTable> initialTables) {
     super();
     this.listener = listener;
     this.tableEvictor = tableEvictor;
-    for (AccessCountTable table : initialTables) {
-      super.add(table);
-    }
   }
 
-  public boolean add(AccessCountTable table) {
+  public boolean addAndNotifyListener(AccessCountTable table) {
     if (!this.isEmpty()) {
       assert table.getEndTime() > this.peekLast().getEndTime();
     }

@@ -20,7 +20,6 @@ package org.smartdata.metastore.dao;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.utils.TimeGranularity;
 
 
 import java.util.concurrent.ExecutorService;
@@ -51,12 +50,12 @@ public class TestAddTableOpListener {
     AccessCountTable table3 =
         new AccessCountTable(55 * oneSec, 60 * oneSec);
 
-    secondTableDeque.add(table1);
+    secondTableDeque.addAndNotifyListener(table1);
     Assert.assertTrue(minuteTableDeque.size() == 0);
-    secondTableDeque.add(table2);
+    secondTableDeque.addAndNotifyListener(table2);
     Assert.assertTrue(minuteTableDeque.size() == 0);
 
-    secondTableDeque.add(table3);
+    secondTableDeque.addAndNotifyListener(table3);
     Thread.sleep(1000);
 
     Assert.assertTrue(minuteTableDeque.size() == 1);
@@ -81,13 +80,13 @@ public class TestAddTableOpListener {
     AccessCountTable table3 =
         new AccessCountTable(59 * oneMin, 60 * oneMin);
 
-    minuteTableDeque.add(table1);
+    minuteTableDeque.addAndNotifyListener(table1);
     Assert.assertTrue(hourTableDeque.size() == 0);
 
-    minuteTableDeque.add(table2);
+    minuteTableDeque.addAndNotifyListener(table2);
     Assert.assertTrue(hourTableDeque.size() == 0);
 
-    minuteTableDeque.add(table3);
+    minuteTableDeque.addAndNotifyListener(table3);
     Thread.sleep(1000);
 
     Assert.assertTrue(hourTableDeque.size() == 1);
@@ -112,13 +111,13 @@ public class TestAddTableOpListener {
     AccessCountTable table3 =
         new AccessCountTable(23 * oneHour, 24 * oneHour);
 
-    hourTableDeque.add(table1);
+    hourTableDeque.addAndNotifyListener(table1);
     Assert.assertTrue(dayTableDeque.size() == 0);
 
-    hourTableDeque.add(table2);
+    hourTableDeque.addAndNotifyListener(table2);
     Assert.assertTrue(dayTableDeque.size() == 0);
 
-    hourTableDeque.add(table3);
+    hourTableDeque.addAndNotifyListener(table3);
     Thread.sleep(1000);
 
     Assert.assertTrue(dayTableDeque.size() == 1);

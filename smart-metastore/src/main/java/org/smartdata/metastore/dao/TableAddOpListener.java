@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.Constants;
-import org.smartdata.metastore.utils.TimeGranularity;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +55,7 @@ public abstract class TableAddOpListener {
               public void run() {
                 try {
                   tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
-                  coarseGrainedTableDeque.add(lastCoarseGrainedTable);
+                  coarseGrainedTableDeque.addAndNotifyListener(lastCoarseGrainedTable);
                 } catch (MetaStoreException e) {
                   LOG.error("Add AccessCount Table {} error", lastCoarseGrainedTable.getTableName(), e);
                 }
