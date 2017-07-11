@@ -22,8 +22,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.Utils;
 
 import java.util.Map;
@@ -32,8 +30,6 @@ import java.util.Map;
  * An action to un-cache a file.
  */
 public class UncacheFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(UncacheFileAction.class);
-
   private String fileName;
 
   @Override
@@ -44,7 +40,9 @@ public class UncacheFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    LOG.info("Action starts at {} : {} -> uncache", Utils.getFormatedCurrentTime(), fileName);
+    this.appendLog(
+        String.format(
+            "Action starts at %s : %s -> uncache", Utils.getFormatedCurrentTime(), fileName));
     removeDirective(fileName);
   }
 
@@ -63,7 +61,7 @@ public class UncacheFileAction extends HdfsAction {
   private void removeDirective(String fileName) throws Exception {
     Long id = getCacheId(fileName);
     if (id == null) {
-      LOG.info("File {} is already cached. No action taken.", fileName);
+      this.appendLog(String.format("File %s is already cached. No action taken.", fileName));
       return;
     }
     dfsClient.removeCacheDirective(id);
