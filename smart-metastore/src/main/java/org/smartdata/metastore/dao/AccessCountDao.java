@@ -57,7 +57,7 @@ public class AccessCountDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql =
         String.format(
-        "delete from access_count_tables where start_time >= ? AND end_time <= ?",
+        "delete from access_count_tables where start_time >= %s AND end_time <= %s",
             startTime,
             endTime);
     jdbcTemplate.update(sql);
@@ -120,7 +120,7 @@ public class AccessCountDao {
 
   public void createProportionView(AccessCountTable dest, AccessCountTable source)
       throws SQLException {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);;
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     double percentage =
         ((double) dest.getEndTime() - dest.getStartTime())
             / (source.getEndTime() - source.getStartTime());
