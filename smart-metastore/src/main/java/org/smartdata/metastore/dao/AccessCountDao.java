@@ -67,10 +67,8 @@ public class AccessCountDao {
 
   public void delete(AccessCountTable table) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql =
-        String.format(
-            "delete from access_count_tables where table_name = %s", table.getTableName());
-    jdbcTemplate.update(sql);
+    final String sql = "delete from access_count_tables where table_name = ?";
+    jdbcTemplate.update(sql, table.getTableName());
   }
 
   public static String createTableSQL(String tableName) {
