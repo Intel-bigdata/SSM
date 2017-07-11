@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 public class AccessEventAggregator {
@@ -84,12 +85,11 @@ public class AccessEventAggregator {
     if (this.eventBuffer.size() > 0 || lastAccessCount.size() > 0) {
       Map<String, Integer> accessCount = this.getAccessCountMap(eventBuffer);
       Set<String> now = accessCount.keySet();
-      Set<String> all = lastAccessCount.keySet();
-      all.addAll(now);
+      accessCount = mergeMap(accessCount, lastAccessCount);
 
       final Map<String, Long> pathToIDs;
       try {
-        pathToIDs = adapter.getFileIDs(all);
+        pathToIDs = adapter.getFileIDs(accessCount.keySet());
       } catch (MetaStoreException e) {
         // TODO: dirty handle here
         LOG.error("Create Table " + table.getTableName(), e);
@@ -99,13 +99,13 @@ public class AccessEventAggregator {
       now.removeAll(pathToIDs.keySet());
       Map<String, Integer> tmpLast = new HashMap<>();
       for (String key : now) {
-        tmpLast.put(key, accessCount.get(key) + lastAccessCount.get(key));
+        tmpLast.put(key, accessCount.get(key));
       }
 
       List<String> values = new ArrayList<>();
       for(String key : pathToIDs.keySet()) {
         values.add(String.format("(%d, %d)", pathToIDs.get(key),
-            accessCount.get(key) + lastAccessCount.get(key)));
+            accessCount.get(key)));
       }
 
       if (LOG.isDebugEnabled()) {
@@ -123,23 +123,37 @@ public class AccessEventAggregator {
       }
       lastAccessCount = tmpLast;
 
-      String insertValue = String.format(
-        "INSERT INTO %s (%s, %s) VALUES %s",
-        table.getTableName(),
-        AccessCountDao.FILE_FIELD,
-        AccessCountDao.ACCESSCOUNT_FIELD,
-        StringUtils.join(values, ", "));
-      try {
-        this.adapter.execute(insertValue);
-        this.adapter.updateCachedFiles(pathToIDs, eventBuffer);
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("Table created: " + table);
+      if (values.size() != 0) {
+        String insertValue = String.format(
+            "INSERT INTO %s (%s, %s) VALUES %s",
+            table.getTableName(),
+            AccessCountDao.FILE_FIELD,
+            AccessCountDao.ACCESSCOUNT_FIELD,
+            StringUtils.join(values, ", "));
+        try {
+          this.adapter.execute(insertValue);
+          this.adapter.updateCachedFiles(pathToIDs, eventBuffer);
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("Table created: " + table);
+          }
+        } catch (MetaStoreException e) {
+          LOG.error("Create table error: " + table, e);
         }
-      } catch (MetaStoreException e) {
-        LOG.error("Create table error: " + table, e);
       }
     }
     this.accessCountTableManager.addTable(table);
+  }
+
+  private Map<String, Integer> mergeMap(Map<String, Integer> map1, Map<String, Integer> map2) {
+    for (Entry<String, Integer> entry : map2.entrySet()) {
+      String key = entry.getKey();
+      if (map1.containsKey(key)) {
+        map1.put(key, map1.get(key) + entry.getValue());
+      } else {
+        map1.put(key, map2.get(key));
+      }
+    }
+    return map1;
   }
 
   private Set<String> getPaths(List<FileAccessEvent> events) {
