@@ -18,11 +18,11 @@
 package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.metastore.MetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.metrics.FileAccessEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +37,7 @@ public class AccessEventAggregator {
   private final AccessCountTableManager accessCountTableManager;
   private Window currentWindow;
   private List<FileAccessEvent> eventBuffer;
+  private Map<String, Integer> lastAccessCount = new HashMap<>();
   public static final Logger LOG =
       LoggerFactory.getLogger(AccessEventAggregator.class);
 
@@ -78,21 +79,49 @@ public class AccessEventAggregator {
       adapter.insertAccessCountTable(table);
     } catch (MetaStoreException e) {
       LOG.error("Create table error: " + table, e);
+      return;
     }
-    if (this.eventBuffer.size() > 0) {
+    if (this.eventBuffer.size() > 0 || lastAccessCount.size() > 0) {
+      Map<String, Integer> accessCount = this.getAccessCountMap(eventBuffer);
+      Set<String> now = accessCount.keySet();
+      Set<String> all = lastAccessCount.keySet();
+      all.addAll(now);
+
       final Map<String, Long> pathToIDs;
       try {
-        pathToIDs = adapter.getFileIDs(getPaths(eventBuffer));
+        pathToIDs = adapter.getFileIDs(all);
       } catch (MetaStoreException e) {
         // TODO: dirty handle here
         LOG.error("Create Table " + table.getTableName(), e);
         return;
       }
-      Map<String, Integer> accessCount = this.getAccessCountMap(eventBuffer);
-      List<String> values = new ArrayList<>();
-      for(Map.Entry<String, Integer> entry: accessCount.entrySet()) {
-        values.add("(" + pathToIDs.get(entry.getKey()) + ", " + entry.getValue() + ")");
+
+      now.removeAll(pathToIDs.keySet());
+      Map<String, Integer> tmpLast = new HashMap<>();
+      for (String key : now) {
+        tmpLast.put(key, accessCount.get(key) + lastAccessCount.get(key));
       }
+
+      List<String> values = new ArrayList<>();
+      for(String key : pathToIDs.keySet()) {
+        values.add(String.format("(%d, %d)", pathToIDs.get(key),
+            accessCount.get(key) + lastAccessCount.get(key)));
+      }
+
+      if (LOG.isDebugEnabled()) {
+        if (lastAccessCount.size() != 0) {
+          Set<String> non = lastAccessCount.keySet();
+          non.removeAll(pathToIDs.keySet());
+          if (non.size() != 0) {
+            String result = "Access events ignored for file:\n";
+            for (String p : non) {
+              result += p + " --> " + lastAccessCount.get(p) + "\n";
+            }
+            LOG.debug(result);
+          }
+        }
+      }
+      lastAccessCount = tmpLast;
 
       String insertValue = String.format(
         "INSERT INTO %s (%s, %s) VALUES %s",
