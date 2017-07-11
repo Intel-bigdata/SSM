@@ -66,12 +66,4 @@ public class StoragePolicy {
     result = 31 * result + (policyName != null ? policyName.hashCode() : 0);
     return result;
   }
-
-  @Override
-  public String toString() {
-    return "StoragePolicy{" +
-        "sid=" + sid +
-        ", policyName='" + policyName + '\'' +
-        '}';
-  }
 }

@@ -205,24 +205,6 @@ public class FileInfo {
     return result;
   }
 
-  @Override
-  public String toString() {
-    return "FileInfo{" +
-        "path='" + path + '\'' +
-        ", fileId=" + fileId +
-        ", length=" + length +
-        ", isdir=" + isdir +
-        ", block_replication=" + block_replication +
-        ", blocksize=" + blocksize +
-        ", modification_time=" + modification_time +
-        ", access_time=" + access_time +
-        ", permission=" + permission +
-        ", owner='" + owner + '\'' +
-        ", group='" + group + '\'' +
-        ", storagePolicy=" + storagePolicy +
-        '}';
-  }
-
   public static Builder newBuilder() {
     return new Builder();
   }
@@ -305,24 +287,6 @@ public class FileInfo {
       return new FileInfo(path, fileId, length, isdir, block_replication,
           blocksize, modification_time, access_time, permission,owner,
           group, storagePolicy);
-    }
-
-    @Override
-    public String toString() {
-      return "Builder{" +
-          "path='" + path + '\'' +
-          ", fileId=" + fileId +
-          ", length=" + length +
-          ", isdir=" + isdir +
-          ", block_replication=" + block_replication +
-          ", blocksize=" + blocksize +
-          ", modification_time=" + modification_time +
-          ", access_time=" + access_time +
-          ", permission=" + permission +
-          ", owner='" + owner + '\'' +
-          ", group='" + group + '\'' +
-          ", storagePolicy=" + storagePolicy +
-          '}';
     }
   }
 }

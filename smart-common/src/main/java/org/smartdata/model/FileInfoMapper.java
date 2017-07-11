@@ -102,13 +102,6 @@ public class FileInfoMapper {
     return new Builder();
   }
 
-  @Override
-  public String toString() {
-    return "FileInfoMapper{" +
-        "attrMap=" + attrMap +
-        '}';
-  }
-
   public static class Builder {
     private Map<String, Object> attrMap = new HashMap<>();
 
@@ -174,13 +167,6 @@ public class FileInfoMapper {
 
     public FileInfoMapper build() {
       return new FileInfoMapper(attrMap);
-    }
-
-    @Override
-    public String toString() {
-      return "Builder{" +
-          "attrMap=" + attrMap +
-          '}';
     }
   }
 }

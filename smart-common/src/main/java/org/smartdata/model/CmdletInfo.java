@@ -213,18 +213,5 @@ public class CmdletInfo {
       return new CmdletInfo(cid, rid, aids, state, parameters,
           generateTime, stateChangedTime);
     }
-
-    @Override
-    public String toString() {
-      return "Builder{" +
-          "cid=" + cid +
-          ", rid=" + rid +
-          ", aids=" + aids +
-          ", state=" + state +
-          ", parameters='" + parameters + '\'' +
-          ", generateTime=" + generateTime +
-          ", stateChangedTime=" + stateChangedTime +
-          '}';
-    }
   }
 }

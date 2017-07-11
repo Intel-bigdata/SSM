@@ -105,13 +105,4 @@ public class ActionDescriptor {
     }
   }
 
-  @Override
-  public String toString() {
-    return "ActionDescriptor{" +
-        "actionName='" + actionName + '\'' +
-        ", displayName='" + displayName + '\'' +
-        ", usage='" + usage + '\'' +
-        ", comment='" + comment + '\'' +
-        '}';
-  }
 }
