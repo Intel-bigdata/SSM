@@ -84,7 +84,8 @@ public class AccessEventAggregator {
     }
     if (this.eventBuffer.size() > 0 || lastAccessCount.size() > 0) {
       Map<String, Integer> accessCount = this.getAccessCountMap(eventBuffer);
-      Set<String> now = accessCount.keySet();
+      Set<String> now = new HashSet<>();
+      now.addAll(accessCount.keySet());
       accessCount = mergeMap(accessCount, lastAccessCount);
 
       final Map<String, Long> pathToIDs;
@@ -154,14 +155,6 @@ public class AccessEventAggregator {
       }
     }
     return map1;
-  }
-
-  private Set<String> getPaths(List<FileAccessEvent> events) {
-    Set<String> paths = new HashSet<>();
-    for (FileAccessEvent event : events) {
-      paths.add(event.getPath());
-    }
-    return paths;
   }
 
   private Map<String, Integer> getAccessCountMap(List<FileAccessEvent> events) {
