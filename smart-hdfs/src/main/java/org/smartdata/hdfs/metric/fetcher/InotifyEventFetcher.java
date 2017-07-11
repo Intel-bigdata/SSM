@@ -124,7 +124,7 @@ public class InotifyEventFetcher {
           eventBatch = inotifyEventInputStream.poll();
         }
       } catch (IOException | MissingEventsException e) {
-        e.printStackTrace();
+        LOG.error("Inotify enqueue error {}", e);
       }
     }
   }
@@ -160,7 +160,7 @@ public class InotifyEventFetcher {
           }
         }
       } catch (InterruptedException | IOException | MetaStoreException e) {
-        e.printStackTrace();
+        LOG.error("Inotify dequeue error {}", e);
       }
     }
 

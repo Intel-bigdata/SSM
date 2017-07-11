@@ -216,7 +216,7 @@ public class SmartAgent {
           try{
             executor.execute(factory.createCmdlet(launch));
           } catch (ActionException e) {
-            e.printStackTrace();
+            LOG.error("createCmdlet error {}", e);
             report(
                 new CmdletStatusUpdate(
                     launch.getCmdletId(), System.currentTimeMillis(), CmdletState.FAILED));

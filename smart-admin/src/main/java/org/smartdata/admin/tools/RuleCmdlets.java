@@ -21,6 +21,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.shell.Command;
 import org.apache.hadoop.fs.shell.CommandFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.model.RuleInfo;
@@ -32,6 +34,8 @@ import java.io.IOException;
 import java.util.List;
 
 public class RuleCmdlets {
+  static final Logger LOG = LoggerFactory.getLogger(RuleCmdlets.class);
+
   public static void registerCommands(CommandFactory factory) {
     factory.addClass(SubmitRule.class, "submitrule");
     factory.addClass(ListRules.class, "listrules");
@@ -95,11 +99,11 @@ public class RuleCmdlets {
     }
 
     public int run(String[] argv) {
-      //System.out.println("Args = " + argv.toString());
+      LOG.info("Args = " + argv.toString());
       try {
         return doSubmit(argv);
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.error("doSubmit error {}", e);
       }
       return -1;
     }
@@ -134,7 +138,7 @@ public class RuleCmdlets {
       try {
         return doList(argv);
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.error("doList error {}", e);
       }
       return -1;
     }

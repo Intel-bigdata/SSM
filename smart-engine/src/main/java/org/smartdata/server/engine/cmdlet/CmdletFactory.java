@@ -17,6 +17,8 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionRegistry;
@@ -35,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CmdletFactory {
+  static final Logger LOG = LoggerFactory.getLogger(CmdletFactory.class);
   private final SmartContext smartContext;
   private final StatusReporter reporter;
 
@@ -72,7 +75,7 @@ public class CmdletFactory {
                     smartContext.getConf(),
                     getRpcServerAddress()));
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.error("smartAction setDfsClient error {}", e);
         throw new ActionException(e);
       }
     }

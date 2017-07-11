@@ -21,12 +21,16 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class InotifyFetchAndApplyTask implements Runnable {
+  static final Logger LOG = LoggerFactory.getLogger(InotifyFetchAndApplyTask.class);
+
   private final AtomicLong lastId;
   private final InotifyEventApplier applier;
   private DFSInotifyEventInputStream inotifyEventInputStream;
@@ -48,7 +52,7 @@ public class InotifyFetchAndApplyTask implements Runnable {
         eventBatch = inotifyEventInputStream.poll();
       }
     } catch (IOException | MissingEventsException | MetaStoreException e) {
-      e.printStackTrace();
+      LOG.error("Inotify Apply Events error {}", e);
     }
   }
 

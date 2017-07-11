@@ -19,6 +19,8 @@ package org.smartdata.actions;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
@@ -36,6 +38,8 @@ import java.util.Map;
  * are also meant to extend this.
  */
 public abstract class SmartAction {
+  static final Logger LOG = LoggerFactory.getLogger(SmartAction.class);
+
   private StatusReporter statusReporter;
   private long actionId;
   private Map<String, String> actionArgs;
@@ -120,7 +124,7 @@ public abstract class SmartAction {
       execute();
       this.successful = true;
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.error("SmartAction run error {}", e);
       exception = e;
     } finally {
       reportFinished(exception);
