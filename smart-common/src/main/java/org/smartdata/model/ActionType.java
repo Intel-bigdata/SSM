@@ -61,4 +61,9 @@ public enum ActionType {
     }
     return null;
   }
+
+  @Override
+  public String toString() {
+    return String.format("ActionType{value=%s} %s", value, super.toString());
+  }
 }

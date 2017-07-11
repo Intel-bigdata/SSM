@@ -164,6 +164,12 @@ public class CmdletDescriptor {
     return true;
   }
 
+  @Override
+  public String toString() {
+    return String.format("CmdletDescriptor{actionCommon=%s, actionNames=%s, actionArgs=%s, cmdletString=\'%s\'}",
+        actionCommon, actionNames, actionArgs, cmdletString);
+  }
+
   private void parseCmdletString(String cmdlet)
       throws ParseException {
     if (cmdlet == null || cmdlet.length() == 0) {
