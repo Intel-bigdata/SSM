@@ -23,4 +23,5 @@ public class AgentConstants {
   public static final String MASTER_ACTOR_NAME = "master";
   public static final String AKKA_REMOTE_HOST_KEY = "akka.remote.netty.tcp.hostname";
   public static final String AKKA_REMOTE_PORT_KEY = "akka.remote.netty.tcp.port";
+  public static final String AKKA_CONF_FILE = "application.conf";
 }
