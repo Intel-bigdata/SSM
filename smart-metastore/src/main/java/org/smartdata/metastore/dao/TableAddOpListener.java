@@ -17,6 +17,8 @@
  */
 package org.smartdata.metastore.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.Constants;
 import org.smartdata.metastore.utils.TimeGranularity;
@@ -25,6 +27,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 public abstract class TableAddOpListener {
+  static final Logger LOG = LoggerFactory.getLogger(TableAddOpListener.class);
+
   AccessCountTableDeque coarseGrainedTableDeque;
   AccessCountTableAggregator tableAggregator;
   ExecutorService executorService;
@@ -54,7 +58,7 @@ public abstract class TableAddOpListener {
                   tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
                   coarseGrainedTableDeque.add(lastCoarseGrainedTable);
                 } catch (MetaStoreException e) {
-                  e.printStackTrace();
+                  LOG.error("Add AccessCount Table {} error", lastCoarseGrainedTable.getTableName(), e);
                 }
               }
             });
