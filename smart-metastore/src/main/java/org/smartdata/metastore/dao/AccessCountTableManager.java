@@ -140,8 +140,7 @@ public class AccessCountTableManager {
           // We got a table should be spilt here. But sometimes we will split out an
           // table that already exists, so this situation should be avoided.
           if (!tableExists(tableDeques, startTime, table.getEndTime())) {
-            AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime());
-            splitTable.setView(true);
+            AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime(), true);
             metaStore.createProportionView(splitTable, table);
             results.add(splitTable);
             startTime = table.getEndTime();
@@ -156,18 +155,15 @@ public class AccessCountTableManager {
     return results;
   }
 
-  private static boolean tableExists(final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-    long start, long end) {
+  private static boolean tableExists(
+      final Map<TimeGranularity, AccessCountTableDeque> tableDeques, long start, long end) {
     TimeGranularity granularity = TimeUtils.getGranularity(end - start);
-    AccessCountTable fakeTable = new AccessCountTable(start, end, granularity);
-    if (!tableDeques.containsKey(granularity)) {
-      return false;
-    }
-    return tableDeques.get(granularity).contains(fakeTable);
+    AccessCountTable fakeTable = new AccessCountTable(start, end);
+    return tableDeques.containsKey(granularity) && tableDeques.get(granularity).contains(fakeTable);
   }
 
   @VisibleForTesting
-  protected Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
+  Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
     return this.tableDeques;
   }
 }

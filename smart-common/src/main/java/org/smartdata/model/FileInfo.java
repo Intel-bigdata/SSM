@@ -149,8 +149,7 @@ public class FileInfo {
   }
 
   public static FileInfo fromHdfsFileStatus(HdfsFileStatus status, String parent) {
-    return newBuilder()
-        .setPath(status.getFullPath(new Path(parent)).toString())
+    Builder builder = newBuilder()
         .setFileId(status.getFileId())
         .setLength(status.getLen())
         .setIsdir(status.isDir())
@@ -161,8 +160,11 @@ public class FileInfo {
         .setPermission(status.getPermission().toShort())
         .setOwner(status.getOwner())
         .setGroup(status.getGroup())
-        .setStoragePolicy(status.getStoragePolicy())
-        .build();
+        .setStoragePolicy(status.getStoragePolicy());
+    if (parent != null) {
+      builder.setPath(status.getFullPath(new Path(parent)).toString());
+    }
+    return builder.build();
   }
 
   @Override

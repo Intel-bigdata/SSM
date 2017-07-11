@@ -18,6 +18,7 @@
 package org.smartdata.server.engine;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
@@ -48,7 +49,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +78,6 @@ public class CmdletManager extends AbstractService {
   private AtomicLong maxCmdletId;
 
   private Queue<CmdletInfo> pendingCmdlet;
-  private Set<String> submittedCmdlets;
   private List<Long> runningCmdlets;
   private Map<Long, CmdletInfo> idToCmdlets;
   private Map<Long, ActionInfo> idToActions;
@@ -91,7 +90,6 @@ public class CmdletManager extends AbstractService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.dispatcher = new CmdletDispatcher(context, this);
     this.runningCmdlets = new ArrayList<>();
-    this.submittedCmdlets = new HashSet<>();
     this.pendingCmdlet = new LinkedBlockingQueue<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
@@ -132,9 +130,6 @@ public class CmdletManager extends AbstractService {
 
   public long submitCmdlet(String cmdlet) throws IOException {
     LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdlet));
-    if (submittedCmdlets.contains(cmdlet)) {
-      throw new IOException("Duplicate Cmdlet found, submit canceled!");
-    }
     try {
       CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdlet);
       return submitCmdlet(cmdletDescriptor);
@@ -146,9 +141,6 @@ public class CmdletManager extends AbstractService {
 
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
     LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
-    if (submittedCmdlets.contains(cmdletDescriptor.getCmdletString())) {
-      throw new IOException("Duplicate Cmdlet found, submit canceled!");
-    }
     long submitTime = System.currentTimeMillis();
     CmdletInfo cmdletInfo =
       new CmdletInfo(
@@ -188,7 +180,6 @@ public class CmdletManager extends AbstractService {
     }
     pendingCmdlet.add(cmdletInfo);
     idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
-    submittedCmdlets.add(cmdletInfo.getParameters());
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
     }
@@ -275,6 +266,25 @@ public class CmdletManager extends AbstractService {
     return result;
   }
 
+  public List<CmdletInfo> listCmdletsInfo(long rid) throws IOException {
+    Map<Long, CmdletInfo> result = new HashMap<>();
+    try {
+      String ridCondition = rid == -1 ? null : String.format("= %d", rid);
+      for (CmdletInfo info : metaStore.getCmdletsTableItem(null, ridCondition, null)) {
+        result.put(info.getCid(), info);
+      }
+    } catch (MetaStoreException e) {
+      LOG.error("List CmdletInfo from DB error! Conditions rid {}, {}", rid, e);
+      throw new IOException(e);
+    }
+    for (CmdletInfo info : idToCmdlets.values()) {
+      if (info.getRid() == rid) {
+        result.put(info.getCid(), info);
+      }
+    }
+    return Lists.newArrayList(result.values());
+  }
+
   public void activateCmdlet(long cid) throws IOException {
     // Currently the default cmdlet status is pending, do nothing here
   }
@@ -301,7 +311,6 @@ public class CmdletManager extends AbstractService {
       flushCmdletInfo(cmdletInfo);
     }
     runningCmdlets.remove(cmdletId);
-    submittedCmdlets.remove(cmdletInfo.getParameters());
 
     List<ActionInfo> removed = new ArrayList<>();
     for (Iterator<Map.Entry<Long, ActionInfo>> it = idToActions.entrySet().iterator(); it.hasNext();) {
@@ -312,23 +321,27 @@ public class CmdletManager extends AbstractService {
       }
     }
     for (ActionInfo actionInfo : removed) {
-      SmartAction action;
-      try {
-        action = ActionRegistry.createAction(actionInfo.getActionName());
-      } catch (ActionException e) {
-        continue;
-      }
-      if (action instanceof MoveFileAction) {
-        Map<String, String> args = actionInfo.getArgs();
-        if (args != null && args.size() > 0) {
-          String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-          if (file != null && fileLocks.containsKey(file)) {
-            fileLocks.remove(file);
-          }
+      unLockFileIfNeeded(actionInfo);
+    }
+    flushActionInfos(removed);
+  }
+
+  private void unLockFileIfNeeded(ActionInfo actionInfo) {
+    SmartAction action;
+    try {
+      action = ActionRegistry.createAction(actionInfo.getActionName());
+    } catch (ActionException e) {
+      return;
+    }
+    if (action instanceof MoveFileAction) {
+      Map<String, String> args = actionInfo.getArgs();
+      if (args != null && args.size() > 0) {
+        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+        if (file != null && fileLocks.containsKey(file)) {
+          fileLocks.remove(file);
         }
       }
     }
-    flushActionInfos(removed);
   }
 
   public void deleteCmdlet(long cid) throws IOException {
@@ -456,6 +469,7 @@ public class CmdletManager extends AbstractService {
       actionInfo.setResult(finished.getResult());
       actionInfo.setLog(finished.getLog());
       actionInfo.setProgress(1.0F);
+      unLockFileIfNeeded(actionInfo);
       if (finished.getException() != null) {
         actionInfo.setSuccessful(false);
       } else {

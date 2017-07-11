@@ -76,7 +76,7 @@ public abstract class TableAddOpListener {
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
       Long lastEnd = endTime - (endTime % Constants.ONE_MINUTE_IN_MILLIS);
       Long lastStart = lastEnd - Constants.ONE_MINUTE_IN_MILLIS;
-      return new AccessCountTable(lastStart, lastEnd, TimeGranularity.MINUTE);
+      return new AccessCountTable(lastStart, lastEnd);
     }
   }
 
@@ -92,7 +92,7 @@ public abstract class TableAddOpListener {
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
       Long lastEnd = endTime - (endTime % Constants.ONE_HOUR_IN_MILLIS);
       Long lastStart = lastEnd - Constants.ONE_HOUR_IN_MILLIS;
-      return new AccessCountTable(lastStart, lastEnd, TimeGranularity.HOUR);
+      return new AccessCountTable(lastStart, lastEnd);
     }
   }
 
@@ -108,7 +108,7 @@ public abstract class TableAddOpListener {
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
       Long lastEnd = endTime - (endTime % Constants.ONE_DAY_IN_MILLIS);
       Long lastStart = lastEnd - Constants.ONE_DAY_IN_MILLIS;
-      return new AccessCountTable(lastStart, lastEnd, TimeGranularity.DAY);
+      return new AccessCountTable(lastStart, lastEnd);
     }
   }
 
