@@ -29,7 +29,7 @@ angular.module('zeppelinWebApp')
 
       $scope.data = {
         model: null,
-        actions: actionTypes
+        actions: actionTypes.body
       };
 
       $scope.submit = function () {

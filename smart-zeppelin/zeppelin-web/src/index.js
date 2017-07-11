@@ -96,3 +96,5 @@ import './app/dashboard/views/rules/rules.js';
 import './app/dashboard/views/rules/rule/rule.js';
 import './app/dashboard/views/rules/submit/submit.js';
 import './app/dashboard/views/rules/rule/overview.js';
+import './app/dashboard/views/rules/rule/alerts_table.js';
+import './app/dashboard/views/rules/rule/cmdlets_table.js';
