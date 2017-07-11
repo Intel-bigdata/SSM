@@ -88,7 +88,7 @@ public class CmdletExecutor {
         try {
           actionStatusList.add(action.getActionStatus());
         } catch (UnsupportedEncodingException e) {
-          LOG.error("actionStatusList.add error {}", e);
+          LOG.error("Add actionStatus aid={} to actionStatusList error", action.getActionId(), e);
         }
       }
     }

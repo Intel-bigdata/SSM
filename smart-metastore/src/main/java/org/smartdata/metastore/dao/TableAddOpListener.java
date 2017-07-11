@@ -58,7 +58,7 @@ public abstract class TableAddOpListener {
                   tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
                   coarseGrainedTableDeque.add(lastCoarseGrainedTable);
                 } catch (MetaStoreException e) {
-                  LOG.error("AccessCount Table Add error {}", e);
+                  LOG.error("Add AccessCount Table {} error", lastCoarseGrainedTable.getTableName(), e);
                 }
               }
             });

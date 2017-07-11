@@ -60,7 +60,7 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
     try {
       this.reader = Reader.create();
     } catch (IOException | URISyntaxException e) {
-      LOG.error("Create Reader error\n {}", e);
+      LOG.error("Create Reader error", e);
     }
     now = System.currentTimeMillis();
   }
@@ -85,7 +85,7 @@ public class NNMetricsAccessEventCollector implements FileAccessEventCollector {
         now = now + reader.getRollingIntervalMillis() - now % reader.getRollingIntervalMillis();
       }
     } catch (IOException | URISyntaxException e) {
-      LOG.error("FileAccessEvent collect error \n{}", e);
+      LOG.error("FileAccessEvent collect error", e);
     }
     return EMPTY_RESULT;
   }

@@ -99,11 +99,11 @@ public class RuleCmdlets {
     }
 
     public int run(String[] argv) {
-      LOG.info("Args = " + argv.toString());
+      LOG.debug("Args = " + argv.toString());
       try {
         return doSubmit(argv);
       } catch (IOException e) {
-        LOG.error("doSubmit error {}", e);
+        LOG.error("doSubmit {} error", argv, e);
       }
       return -1;
     }
@@ -138,7 +138,7 @@ public class RuleCmdlets {
       try {
         return doList(argv);
       } catch (IOException e) {
-        LOG.error("doList error {}", e);
+        LOG.error("doList {} error", argv, e);
       }
       return -1;
     }

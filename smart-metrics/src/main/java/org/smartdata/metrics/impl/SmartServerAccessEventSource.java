@@ -52,7 +52,7 @@ public class SmartServerAccessEventSource implements FileAccessEventSource {
     try {
       this.eventQueue.put(event);
     } catch (InterruptedException e) {
-      LOG.error("Event queue enqueue error {}", e);
+      LOG.error("Event queue enqueue path={} error", event.getPath(), e);
     }
   }
 
@@ -74,7 +74,7 @@ public class SmartServerAccessEventSource implements FileAccessEventSource {
         //Todo: do not use HDFSFileAccessEvent
         this.outerQueue.put(new FileAccessEvent("", System.currentTimeMillis()));
       } catch (InterruptedException e) {
-        LOG.error("Outer queue enqueue error {}", e);
+        LOG.error("Outer queue enqueue error", e);
       }
     }
   }

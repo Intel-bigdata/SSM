@@ -75,7 +75,7 @@ public class CmdletFactory {
                     smartContext.getConf(),
                     getRpcServerAddress()));
       } catch (IOException e) {
-        LOG.error("smartAction setDfsClient error {}", e);
+        LOG.error("smartAction aid={} setDfsClient error", launchAction.getActionId(), e);
         throw new ActionException(e);
       }
     }

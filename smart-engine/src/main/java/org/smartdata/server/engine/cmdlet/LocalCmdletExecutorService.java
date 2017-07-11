@@ -60,7 +60,7 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     try {
       this.cmdletExecutor.execute(cmdletFactory.createCmdlet(cmdlet));
     } catch (ActionException e) {
-      LOG.error("Failed to create cmdlet from {}\n {}" , cmdlet, e);
+      LOG.error("Failed to execute cmdlet {}" , cmdlet.getCmdletId(), e);
     }
   }
 

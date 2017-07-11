@@ -99,7 +99,7 @@ public class AccessEventFetcher {
           this.manager.onAccessEventsArrived(events);
         }
       } catch (IOException e) {
-        LOG.error("onAccessEventsArrived error", e);
+        LOG.error("FetchTask onAccessEventsArrived error", e);
       }
     }
   }

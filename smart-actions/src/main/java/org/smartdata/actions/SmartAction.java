@@ -124,7 +124,7 @@ public abstract class SmartAction {
       execute();
       this.successful = true;
     } catch (Exception e) {
-      LOG.error("SmartAction run error {}", e);
+      LOG.error("SmartAction execute error", e);
       exception = e;
     } finally {
       reportFinished(exception);
@@ -149,7 +149,7 @@ public abstract class SmartAction {
                 StringEscapeUtils.escapeJava(this.logOs.toString("UTF-8")),
                 exception));
       } catch (IOException e) {
-        LOG.error("Action statusReporter error {}", e);
+        LOG.error("Action statusReporter ActionFinished aid={} error", this.actionId, e);
         this.statusReporter.report(
             new ActionFinished(this.actionId, System.currentTimeMillis(), exception));
       }

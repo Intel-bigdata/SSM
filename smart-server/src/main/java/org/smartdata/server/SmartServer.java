@@ -278,7 +278,7 @@ public class SmartServer {
       stop();
       //join();
     } catch (Exception e) {
-      LOG.error("SmartServer shutdown error {}", e);
+      LOG.error("SmartServer shutdown error", e);
     }
   }
 

@@ -52,7 +52,7 @@ public class InotifyFetchAndApplyTask implements Runnable {
         eventBatch = inotifyEventInputStream.poll();
       }
     } catch (IOException | MissingEventsException | MetaStoreException e) {
-      LOG.error("Inotify Apply Events error {}", e);
+      LOG.error("Inotify Apply Events error", e);
     }
   }
 

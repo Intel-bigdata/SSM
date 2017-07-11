@@ -36,7 +36,7 @@ public abstract class TableEvictor {
       this.adapter.dropTable(accessCountTable.getTableName());
       LOG.debug("Dropped access count table " + accessCountTable.getTableName());
     } catch (MetaStoreException e) {
-      LOG.error("Drop access count table {} fail {}", accessCountTable.getTableName(), e);
+      LOG.error("Drop access count table {} failed", accessCountTable.getTableName(), e);
     }
   }
 
