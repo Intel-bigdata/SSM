@@ -17,25 +17,22 @@
  */
 package org.smartdata.metastore;
 
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.CacheFileAction;
-import org.smartdata.model.CmdletState;
-import org.smartdata.model.ActionInfo;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CachedFileStatus;
-import org.smartdata.model.FileInfo;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.StorageCapacity;
-import org.smartdata.model.StoragePolicy;
-import org.smartdata.model.RuleState;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.FileInfo;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
+import org.smartdata.model.StorageCapacity;
+import org.smartdata.model.StoragePolicy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -211,6 +208,12 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(dbFileInfo.equals(fileInfo));
     dbFileInfo = metaStore.getFile("/tmp/des");
     Assert.assertTrue(dbFileInfo.equals(fileInfo));
+  }
+
+  @Test
+  public void testGetNonExistFile() throws Exception {
+    FileInfo info = metaStore.getFile("/non_exist_file_path");
+    Assert.assertTrue(info == null);
   }
 
   @Test

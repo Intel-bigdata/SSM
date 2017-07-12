@@ -17,7 +17,6 @@
  */
 package org.smartdata.model;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 
 public class FileInfo {
@@ -148,8 +147,9 @@ public class FileInfo {
     this.storagePolicy = storagePolicy;
   }
 
-  public static FileInfo fromHdfsFileStatus(HdfsFileStatus status, String parent) {
-    Builder builder = newBuilder()
+  public static FileInfo fromHdfsFileStatus(HdfsFileStatus status, String path) {
+    return newBuilder()
+        .setPath(path)
         .setFileId(status.getFileId())
         .setLength(status.getLen())
         .setIsdir(status.isDir())
@@ -160,11 +160,8 @@ public class FileInfo {
         .setPermission(status.getPermission().toShort())
         .setOwner(status.getOwner())
         .setGroup(status.getGroup())
-        .setStoragePolicy(status.getStoragePolicy());
-    if (parent != null) {
-      builder.setPath(status.getFullPath(new Path(parent)).toString());
-    }
-    return builder.build();
+        .setStoragePolicy(status.getStoragePolicy())
+        .build();
   }
 
   @Override
