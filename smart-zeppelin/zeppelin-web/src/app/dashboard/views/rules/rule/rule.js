@@ -18,34 +18,58 @@
  */
 angular.module('zeppelinWebApp')
 
-  // .config(['$stateProvider',
-  //   function ($stateProvider) {
-  //     'use strict';
-  //
-  //     $stateProvider
-  //       .state('rule', {
-  //         abstract: true,
-  //         url: '/rules/rule/:ruleId',
-  //         templateUrl: 'views/rules/rule/rule.html',
-  //         controller: 'RuleCtrl',
-  //         resolve: {
-  //           rule0: ['$stateParams', 'models', function ($stateParams, models) {
-  //             return models.$get.rule($stateParams.ruleId);
-  //           }]
-  //         }
-  //       });
-  //   }])
-
 /**
  * This controller is used to obtain rule. All nested views will read status from here.
  */
   .controller('RuleCtrl', RuleCtrl);
-  RuleCtrl.$inject = ['$scope', 'rule0'];
-    function RuleCtrl($scope, rule0) {
-      'use strict';
+  RuleCtrl.$inject = ['$scope', 'rule0', 'helper', '$propertyTableBuilder', 'models'];
+  function RuleCtrl($scope, rule0, helper, $ptb, models) {
+    'use strict';
 
-      $scope.rule = rule0.$data();
-      rule0.$subscribe($scope, function (rule) {
-        $scope.rule = rule;
+    $scope.rule = rule0.$data();
+    rule0.$subscribe($scope, function (rule) {
+      $scope.rule = rule;
+    });
+
+      $scope.ruleSummary = [
+          $ptb.text('ID').done(),
+          $ptb.datetime('Start Time').done()
+        /*
+         $ptb.text('User').done(),
+         $ptb.button('Quick Links').done()
+         */
+      ];
+
+      $scope.$watch('rule', function (rule) {
+          $ptb.$update($scope.ruleSummary, [
+              rule.id,
+              rule.submitTime
+            /*
+             rule.user,
+             [
+             {href: rule.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
+             helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, rule.homeDirectory),
+             helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, rule.logFile)
+             ]
+             */
+          ]);
       });
-    }
+
+      $scope.alerts = [];
+      models.$get.ruleAlerts($scope.rule.id)
+          .then(function (alerts0) {
+              $scope.alerts = alerts0.$data();
+              alerts0.$subscribe($scope, function (alerts) {
+                  $scope.alerts = alerts;
+              });
+          });
+
+      $scope.cmdlets = [];
+      models.$get.ruleCmdlets($scope.rule.id)
+          .then(function (cmdlets0) {
+              $scope.cmdlets = cmdlets0.$data();
+              cmdlets0.$subscribe($scope, function (cmdlets) {
+                  $scope.cmdlets = cmdlets;
+              });
+          });
+  }

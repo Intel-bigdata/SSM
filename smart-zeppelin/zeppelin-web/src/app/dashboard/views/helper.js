@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-angular.module('dashboard')
+angular.module('zeppelinWebApp')
 
 /** Provides widgets/directive related helper functions */
   .factory('helper', ['$filter', '$echarts', function ($filter, $echarts) {

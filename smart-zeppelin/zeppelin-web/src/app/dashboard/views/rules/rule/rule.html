@@ -25,12 +25,6 @@ under the License.
   <h5 ng-bind="rule.ruleText"></h5>
 </div>
 
-<div class="col-md-12">
-  <ul class="nav nav-tabs nav-tabs-underlined" bs-navbar>
-    <li data-match-route="/rules/rule/\d+(/overview)?$">
-      <a href="#/rules/rule/{{rule.id}}">Overview</a>
-    </li>
-  </ul>
+<div ng-include src="'app/dashboard/views/rules/rule/overview.html'">
 </div>
 
-<div ng-view></div>

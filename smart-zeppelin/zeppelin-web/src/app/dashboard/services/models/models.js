@@ -113,6 +113,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
           });
         },
         rule: function (obj) {
+          obj = obj.body;
           angular.merge(obj, {
             status: 'Active',
             ruleName: 'Rule ' + obj.id,
