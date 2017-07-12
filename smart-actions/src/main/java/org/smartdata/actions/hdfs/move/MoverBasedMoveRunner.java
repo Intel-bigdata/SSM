@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.sun.tools.javac.util.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.io.IOUtils;
@@ -61,31 +62,40 @@ public class MoverBasedMoveRunner extends MoveRunner {
   public void move(String file) throws Exception {
     long startTime = Time.now();
     NameNodeConnector nnc = null;
+    final long sleeptime =
+        conf.getLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
+            DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_DEFAULT) * 2000 +
+            conf.getLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY,
+                DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_DEFAULT) * 1000;
     try {
       final Pair pathPair = getNameNodePathsToMove(file);
       //return Mover.run(pathPair, conf, actionStatus);
       LOG.info("Namenode = " + pathPair.ns);
       nnc = new NameNodeConnector(pathPair.ns, conf);
 
-      final Mover m = new Mover(nnc, pathPair.path, conf, actionStatus);
-      final ExitStatus r = m.run();
+      while (true) {
+        final Mover m = new Mover(nnc, pathPair.path, conf, actionStatus);
+        final ExitStatus r = m.run();
 
-      if (r == ExitStatus.SUCCESS) {
-        actionStatus.setMovedBlocks(actionStatus.getTotalBlocks());
-        IOUtils.cleanup(null, nnc);
-      } else if (r != ExitStatus.IN_PROGRESS) {
-        if (r == ExitStatus.NO_MOVE_PROGRESS) {
-          LOG.error("Failed to move some blocks after "
-              + 1 + " retries. Exiting...");
-        } else if (r == ExitStatus.NO_MOVE_BLOCK) {
-          LOG.error("Some blocks can't be moved. Exiting...");
-        } else {
-          LOG.error("Mover failed. Exiting with status " + r + "... ");
+        if (r == ExitStatus.SUCCESS) {
+          actionStatus.setMovedBlocks(actionStatus.getTotalBlocks());
+          IOUtils.cleanup(null, nnc);
+          LOG.info("Mover Successful: all blocks satisfy"
+              + " the specified storage policy. Exiting...");
+          return;
+        } else if (r != ExitStatus.IN_PROGRESS) {
+          if (r == ExitStatus.NO_MOVE_PROGRESS) {
+            LOG.error("Failed to move some blocks after "
+                + 1 + " retries. Exiting...");
+          } else if (r == ExitStatus.NO_MOVE_BLOCK) {
+            LOG.error("Some blocks can't be moved. Exiting...");
+          } else {
+            LOG.error("Mover failed. Exiting with status " + r + "... ");
+          }
+          return;
         }
+        Thread.sleep(sleeptime);
       }
-
-      LOG.info("Mover Successful: all blocks satisfy"
-          + " the specified storage policy. Exiting...");
     } finally {
       IOUtils.cleanup(null, nnc);
       long runningTime = Time.now() - startTime;

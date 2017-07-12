@@ -921,7 +921,7 @@ public class Dispatcher {
   }
 
   /** The sleeping period before checking if block move is completed again */
-  static private long blockMoveWaitTime = 30000L;
+  static private long blockMoveWaitTime = 1000L;
 
   /**
    * Wait for all block move confirmations.

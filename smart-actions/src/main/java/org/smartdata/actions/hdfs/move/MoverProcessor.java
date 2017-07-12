@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
+import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
@@ -99,7 +100,15 @@ class MoverProcessor {
    */
   ExitStatus processNamespace() throws IOException {
     MoverProcessResult result = new MoverProcessResult();
-    HdfsFileStatus status = dfs.getFileInfo(targetPath.toUri().getPath());
+    DirectoryListing files = dfs.listPaths(targetPath.toUri().getPath(),
+      HdfsFileStatus.EMPTY_NAME, true);
+    HdfsFileStatus status = null;
+    for (HdfsFileStatus file : files.getPartialListing()) {
+      if (!file.isDir()) {
+        status = file;
+        break;
+      }
+    }
     if (!status.isSymlink()) { // file
       processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status, result);
     }
@@ -110,7 +119,7 @@ class MoverProcessor {
       if (retryCount.get() == 1) {
         result.setRetryFailed();
         LOG.error("Failed to move some block's after "
-                + 1 + " retries.");
+            + 1 + " retries.");
         return result.getExitStatus();
       } else {
         retryCount.incrementAndGet();
