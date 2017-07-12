@@ -56,4 +56,9 @@ public enum CmdletState {
         || state.equals(DISABLED)
         || state.equals(FAILED);
   }
+
+  @Override
+  public String toString() {
+    return String.format("CmdletState{value=%s} %s", value, super.toString());
+  }
 }
