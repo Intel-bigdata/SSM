@@ -17,7 +17,7 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 

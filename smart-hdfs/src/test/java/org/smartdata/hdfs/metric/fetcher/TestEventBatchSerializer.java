@@ -57,7 +57,7 @@ public class TestEventBatchSerializer {
             .build();
     Event rename =
         new Event.RenameEvent.Builder().dstPath("/file4").srcPath("/file3").timestamp(5).build();
-    Event append = new Event.AppendEvent.Builder().newBlock(true).path("/file5").build();
+    Event append = new Event.AppendEvent.Builder().path("/file5").build();
     Event unlink = new Event.UnlinkEvent.Builder().path("/file6").timestamp(6).build();
 //    Event truncate = new Event.TruncateEvent("/file7", 1024, 16);
     List<Event> events = Arrays.asList(close, create, meta, rename, append, unlink);

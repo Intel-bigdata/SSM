@@ -19,7 +19,7 @@ package org.smartdata.server.engine.cmdlet;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.*;
 
 import org.junit.After;
