@@ -66,7 +66,14 @@ HOSTNAME=$(hostname)
 SMART_SERVER=org.smartdata.server.SmartDaemon
 JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
 JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
-JAVA_OPTS+=" -XX:MaxPermSize=256m"
+
+JAVA_VERSION=$($SMART_RUNNER -version 2>&1 | awk -F '.' '/version/ {print $2}')
+
+if [[ "$JAVA_VERSION" -ge 8 ]]; then
+  JAVA_OPTS+=" -XX:MaxMetaspaceSize=256m"
+else
+  JAVA_OPTS+=" -XX:MaxPermSize=256m"
+fi
 
 addJarInDir "${SMART_HOME}/smart-server/target/lib"
 addNonTestJarInDir "${SMART_HOME}/smart-server/target"
