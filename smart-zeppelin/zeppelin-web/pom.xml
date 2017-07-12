@@ -143,7 +143,7 @@
                   </configuration>
                 </execution>
 
-                <execution>
+                <!--<execution>
                   <id>yarn test</id>
                   <goals>
                     <goal>yarn</goal>
@@ -152,7 +152,7 @@
                   <configuration>
                     <arguments>run test</arguments>
                   </configuration>
-                </execution>
+                </execution>-->
 
               </executions>
             </plugin>
