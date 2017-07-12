@@ -22,22 +22,22 @@ public class ActionFinished implements StatusMessage {
   private long timestamp;
   private String result;
   private String log;
-  private Exception exception;
+  private Throwable throwable;
 
-  public ActionFinished(long actionId, long timestamp, Exception e) {
-    this(actionId, timestamp, "", "",e);
+  public ActionFinished(long actionId, long timestamp, Throwable t) {
+    this(actionId, timestamp, "", "", t);
   }
 
   public ActionFinished(long actionId, long timestamp, String result, String log) {
     this(actionId, timestamp, result, log,null);
   }
 
-  public ActionFinished(long actionId, long timestamp, String result, String log, Exception exception) {
+  public ActionFinished(long actionId, long timestamp, String result, String log, Throwable throwable) {
     this.actionId = actionId;
     this.timestamp = timestamp;
     this.result = result;
     this.log = log;
-    this.exception = exception;
+    this.throwable = throwable;
   }
 
   public String getResult() {
@@ -72,20 +72,20 @@ public class ActionFinished implements StatusMessage {
     this.timestamp = timestamp;
   }
 
-  public Exception getException() {
-    return exception;
+  public Throwable getThrowable() {
+    return throwable;
   }
 
-  public void setException(Exception exception) {
-    this.exception = exception;
+  public void setThrowable(Throwable throwable) {
+    this.throwable = throwable;
   }
 
   @Override
   public String toString() {
-    if (exception == null) {
+    if (throwable == null) {
       return String.format("Action %s finished at %s", actionId, timestamp);
     } else {
-      return String.format("Action %s finished at %s with exception %s", actionId, timestamp, exception);
+      return String.format("Action %s finished at %s with exception %s", actionId, timestamp, throwable);
     }
   }
 }

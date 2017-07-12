@@ -465,7 +465,7 @@ public class CmdletManager extends AbstractService {
       actionInfo.setLog(finished.getLog());
       actionInfo.setProgress(1.0F);
       unLockFileIfNeeded(actionInfo);
-      if (finished.getException() != null) {
+      if (finished.getThrowable() != null) {
         actionInfo.setSuccessful(false);
       } else {
         actionInfo.setSuccessful(true);

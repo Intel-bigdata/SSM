@@ -119,17 +119,17 @@ public abstract class SmartAction {
   protected abstract void execute() throws Exception;
 
   final public void run() {
-    Exception exception = null;
+    Throwable throwable = null;
     try {
       reportStart();
       execute();
       this.successful = true;
-    } catch (Exception e) {
-      LOG.error("SmartAction execute error", e);
-      exception = e;
-      appendLog(ExceptionUtils.getFullStackTrace(e));
+    } catch (Throwable t) {
+      LOG.error("SmartAction execute error ", t);
+      throwable = t;
+      appendLog(ExceptionUtils.getFullStackTrace(t));
     } finally {
-      reportFinished(exception);
+      reportFinished(throwable);
       this.stop();
     }
   }
@@ -140,7 +140,7 @@ public abstract class SmartAction {
     }
   }
 
-  private void reportFinished(Exception exception) {
+  private void reportFinished(Throwable throwable) {
     if (this.statusReporter != null) {
       try {
         this.statusReporter.report(
@@ -149,11 +149,11 @@ public abstract class SmartAction {
                 System.currentTimeMillis(),
                 StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
                 StringEscapeUtils.escapeJava(this.logOs.toString("UTF-8")),
-                exception));
+                throwable));
       } catch (IOException e) {
         LOG.error("Action statusReporter ActionFinished aid={} error", this.actionId, e);
         this.statusReporter.report(
-            new ActionFinished(this.actionId, System.currentTimeMillis(), exception));
+            new ActionFinished(this.actionId, System.currentTimeMillis(), throwable));
       }
     }
   }
