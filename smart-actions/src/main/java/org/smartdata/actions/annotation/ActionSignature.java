@@ -15,25 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs;
+package org.smartdata.actions.annotation;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.smartdata.actions.annotation.ActionSignature;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/**
- * An action to do all-ssd for a file.
- */
-@ActionSignature(
-  actionId = "allssd",
-  displayName = "allssd",
-  usage = HdfsAction.FILE_PATH + " $file "
-)
-public class AllSsdFileAction extends MoveFileAction {
-  private static final Logger LOG = LoggerFactory.getLogger(AllSsdFileAction.class);
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface ActionSignature {
+  String actionId();
 
-  @Override
-  public String getStoragePolicy() {
-    return "ALL_SSD";
-  }
+  String displayName();
+
+  String usage() default "";
+
+  String comment() default "";
 }

@@ -19,6 +19,7 @@ package org.smartdata.actions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.annotation.ActionSignature;
 import org.smartdata.model.ActionDescriptor;
 
 import java.io.IOException;
@@ -30,8 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ActionRegistry {
   static final Logger LOG = LoggerFactory.getLogger(ActionRegistry.class);
-
-  private static Map<String, Class> allActions = new ConcurrentHashMap<>();
+  private static Map<String, Class<? extends SmartAction>> allActions = new ConcurrentHashMap<>();
 
   static {
     try {
@@ -40,11 +40,11 @@ public class ActionRegistry {
         allActions.putAll(fact.getSupportedActions());
       }
     } catch (ServiceConfigurationError e) {
-      LOG.error("Loading actions fail from factory");
+      LOG.error("Load actions failed from factory");
     }
   }
 
-  public static Set<String> registeredActions() {
+  static Set<String> registeredActions() {
     return Collections.unmodifiableSet(allActions.keySet());
   }
 
@@ -53,10 +53,12 @@ public class ActionRegistry {
   }
 
   public static List<ActionDescriptor> supportedActions() throws IOException {
-    //TODO add more information for list ActionDescriptor
     ArrayList<ActionDescriptor> actionDescriptors = new ArrayList<>();
-    for (String name : registeredActions()) {
-      actionDescriptors.add(new ActionDescriptor(name, name, "", ""));
+    for (Class<? extends SmartAction> clazz : allActions.values()) {
+      ActionSignature signature = clazz.getAnnotation(ActionSignature.class);
+      if (signature != null) {
+        actionDescriptors.add(fromSignature(signature));
+      }
     }
     return actionDescriptors;
   }
@@ -66,12 +68,17 @@ public class ActionRegistry {
       throw new ActionException("Unregistered action " + name);
     }
     try {
-      SmartAction smartAction = (SmartAction) allActions.get(name).newInstance();
+      SmartAction smartAction = allActions.get(name).newInstance();
       smartAction.setName(name);
       return smartAction;
     } catch (Exception e) {
       LOG.error("Create {} action failed", name, e);
       throw new ActionException(e);
     }
+  }
+
+  private static ActionDescriptor fromSignature(ActionSignature signature) {
+    return new ActionDescriptor(
+        signature.actionId(), signature.displayName(), signature.usage(), signature.comment());
   }
 }

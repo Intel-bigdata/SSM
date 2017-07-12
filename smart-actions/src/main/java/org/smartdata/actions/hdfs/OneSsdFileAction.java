@@ -19,10 +19,16 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.annotation.ActionSignature;
 
 /**
  * An action to do one-ssd for a file.
  */
+@ActionSignature(
+  actionId = "onessd",
+  displayName = "onessd",
+  usage = HdfsAction.FILE_PATH + " $file "
+)
 public class OneSsdFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(OneSsdFileAction.class);
 
