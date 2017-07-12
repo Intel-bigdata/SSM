@@ -38,7 +38,7 @@ angular.module('zeppelinWebApp')
 
             function updateHotTable(hotFiles) {
                 $scope.hotfilesTable.rows = $stb.$update($scope.hotfilesTable.rows,
-                    _.map(hotFiles, function (file) {
+                    _.map(hotFiles.body, function (file) {
                         return {
                             id: file.fid,
                             filePath: file.path,

@@ -17,6 +17,22 @@
     specific language governing permissions and limitations
     under the License.
     -->
+  <div class="row">
+    <div class="col-md-6 col-sm-6">
+    </div>
+    <div class="col-md-3 col-sm-6 text-right">
+      <!--FILTER-->
+    </div>
+    <div class="col-md-3 hidden-sm hidden-xs">
+      <searchbox
+        ng-show="hotfilesTable.rows && hotfilesTable.rows.length > 0"
+        ng-model="search" placeholder="Search hottest files in last hour"></searchbox>
+    </div>
+  </div>
+  <!-- end of control toolbar -->
+</div>
+
+<div class="col-md-12">
     <sortable-table
             caption="Hottest files in last hour"
             columns-bind="hotfilesTable.cols"
