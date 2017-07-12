@@ -483,7 +483,7 @@ public class MetaStore {
 
   public void dropTable(String tableName) throws MetaStoreException {
     try {
-      LOG.info("Drop table = {}", tableName);
+      LOG.debug("Drop table = {}", tableName);
       metaStoreHelper.dropTable(tableName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -492,7 +492,7 @@ public class MetaStore {
 
   public void dropView(String viewName) throws MetaStoreException {
     try {
-      LOG.info("Drop view = {}", viewName);
+      LOG.debug("Drop view = {}", viewName);
       metaStoreHelper.dropView(viewName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -501,7 +501,7 @@ public class MetaStore {
 
   public void execute(String sql) throws MetaStoreException {
     try {
-      LOG.info("Execute sql = {}", sql);
+      LOG.debug("Execute sql = {}", sql);
       metaStoreHelper.execute(sql);
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -518,7 +518,7 @@ public class MetaStore {
   public List<String> executeFilesPathQuery(
       String sql) throws MetaStoreException {
     try {
-      LOG.info("ExecuteFilesPathQuer sql = {}", sql);
+      LOG.debug("ExecuteFilesPathQuer sql = {}", sql);
       return metaStoreHelper.getFilesPath(sql);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
