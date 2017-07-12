@@ -1,4 +1,3 @@
-<div class="col-md-12">
     <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -17,32 +16,16 @@
     specific language governing permissions and limitations
     under the License.
     -->
-  <!-- control toolbar -->
-  <div class="row">
-    <div class="col-md-6 col-sm-6">
-    </div>
-    <div class="col-md-3 col-sm-6 text-right">
-      <!--FILTER-->
-    </div>
-    <div class="col-md-3 hidden-sm hidden-xs">
-      <searchbox
-        ng-show="filesTable.rows && filesTable.rows.length > 0"
-        ng-model="search" placeholder="Search files in cache"></searchbox>
+<div class="modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content {{size}}">
+      <div class="modal-body"><h4 ng-if="title" class="modal-title" ng-bind="title"></h4> <h5 style="font-weight: 400"
+                                                                                              ng-bind="content"></h5>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-primary" ng-click="close(1)" ng-bind="text.yesButton"></button>
+        <button type="button" class="btn btn-sm btn-default" ng-click="close(0)" ng-bind="text.noButton"></button>
+      </div>
     </div>
   </div>
-  <!-- end of control toolbar -->
-</div>
-
-<div class="col-md-12">
-    <sortable-table
-            caption="Files in cache"
-            columns-bind="filesTable.cols"
-            records-bind="filesTable.rows"
-            search-bind="search"
-            pagination="10">
-        <div class="table-no-data">
-            <h2 class="glyphicon glyphicon-bullhorn"></h2>
-            <h4>No file is in cache</h4>
-        </div>
-    </sortable-table>
 </div>

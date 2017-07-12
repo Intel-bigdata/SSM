@@ -39,7 +39,7 @@ angular.module('zeppelinWebApp')
 
             function updateTable(cachedFiles) {
                 $scope.filesTable.rows = $stb.$update($scope.filesTable.rows,
-                    _.map(cachedFiles, function (file) {
+                    _.map(cachedFiles.body, function (file) {
                         return {
                             id: file.fid,
                             filePath: file.path,

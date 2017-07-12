@@ -78,7 +78,7 @@ import './components/helium/helium.service.js';
 
 
 import './app/dashboard/i18n.js';
-import './app/dashing/0.4.8/dist/dashing.min.js';
+import './app/dashing/dashing.min.js';
 import './app/dashboard/services/locator.js';
 import './app/dashboard/services/restapi.js';
 import './app/dashboard/services/health_check_service.js';

@@ -26,28 +26,7 @@ angular.module('dashing', [
   'dashing.filters.any',
   'dashing.filters.duration'
 ]);
-angular.module('dashing').run(['$templateCache',
-  function($templateCache) {
-    $templateCache.put('charts/metrics_sparkline_td.html', '<metrics caption="{{caption}}" ng-attr-help="{{help}}" value="{{current}}" unit="{{unit}}" sub-text="{{subText}}" class="metrics-thicker-bottom"> </metrics> <sparkline-chart options-bind="options" datasource-bind="data"> </sparkline-chart>');
-    $templateCache.put('dialogs/confirmation.html', '<div class="modal" tabindex="-1" role="dialog" aria-hidden="true"> <div class="modal-dialog"> <div class="modal-content {{size}}"> <div class="modal-body"> <h4 ng-if="title" class="modal-title" ng-bind="title"></h4> <h5 style="font-weight: 400" ng-bind="content"></h5> </div> <div class="modal-footer"> <button type="button" class="btn btn-sm btn-primary" ng-click="close(1)" ng-bind="text.yesButton"> </button> <button type="button" class="btn btn-sm btn-default" ng-click="close(0)" ng-bind="text.noButton"> </button> </div> </div> </div> </div>');
-    $templateCache.put('dialogs/notification.html', '<div class="modal" tabindex="-1" role="dialog" aria-hidden="true"> <div class="modal-dialog"> <div class="modal-content {{size}}"> <div class="modal-body"> <h4 ng-if="title" class="modal-title" ng-bind="title"></h4> <h5 style="font-weight: 400" ng-bind-html="content"></h5> </div> <div class="modal-footer"> <button type="button" class="btn btn-sm btn-default" ng-click="close(0)" ng-bind="text.closeButton"> </button> </div> </div> </div> </div>');
-    $templateCache.put('forms/datepicker.html', '<div class="dropdown-menu datepicker" ng-class="\'datepicker-mode-\' + $mode" style="max-width: 320px"> <table style="table-layout: fixed; height: 100%; width: 100%"> <thead> <tr class="text-center dt-header"> <th> <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-left" ng-click="$selectPane(-1)"> <i class="glyphicon glyphicon-triangle-left"></i> </button> </th> <th colspan="{{ rows[0].length - 2 }}"> <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius btn-block text-strong" ng-click="$toggleMode()"> <strong style="text-transform: capitalize" ng-bind="title"></strong> </button> </th> <th> <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-right" ng-click="$selectPane(+1)"> <i class="glyphicon glyphicon-triangle-right"></i> </button> </th> </tr> <tr ng-if="showLabels" ng-bind-html="labels"></tr> </thead> <tbody> <tr ng-repeat="(i, row) in rows track by $index"> <td class="text-center" ng-repeat="(j, el) in row track by $index"> <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius" style="width: 100%; padding: 4px 3px" ng-class="{\'btn-primary\': el.selected, \'btn-info btn-today\': el.isToday && !el.selected}" ng-click="$select(el.date)" ng-disabled="el.disabled"> <span ng-class="{\'text-muted\': el.muted}" ng-bind="el.label"></span> </button> </td> </tr> </tbody> </table> </div>');
-    $templateCache.put('forms/form_controls.html', '<div class="form-group"> <label class="{{labelStyleClass}} control-label text-right"> <span ng-bind="label"></span> <span ng-if="help" style="font-size: 0.9em"> <remark tooltip="{{help}}" type="info"></remark> </span> </label> <ng-switch on="renderAs">  <div ng-switch-when="choices"> <div class="{{controlStyleClass}}"> <ui-select theme="select2" class="form-control" ng-model="$parent.$parent.value" search-enabled="allowSearchInChoices"> <ui-select-match placeholder="{{placeholder}}" allow-clear="{{allowClearSelection}}">{{$select.selected.text}} </ui-select-match> <ui-select-choices repeat="choice in choices|\n          any: {text: $select.search, subtext: $select.search}"> <div ng-class="{\'bold\': $select.selected === choice}" ng-bind-html="choice.text|highlight:$select.search"></div> <small ng-if="choice.subtext" ng-class="{\'bold\': $select.selected === choice}" ng-bind-html="choice.subtext|highlight:$select.search"></small> </ui-select-choices> </ui-select> </div> </div>  <div ng-switch-when="check"> <div class="{{controlStyleClass}} checkbox"> <label> <input type="checkbox" ng-checked="$parent.value" ng-click="$parent.value = !$parent.value"> <span ng-bind="text"></span> </label> </div> </div>  <div ng-switch-when="multi-checks"> <div class="{{controlStyleClass}}"> <label class="checkbox-inline" ng-repeat="choice in choices track by $index"> <input type="checkbox" ng-checked="$parent.value[$index]" ng-click="$parent.value[$index] = !$parent.value[$index]"> <span ng-bind="choice"></span> </label> </div> </div>  <div ng-switch-when="radio"> <div class="{{controlStyleClass}}"> <div class="btn-group btn-group-justified"> <div ng-repeat="choice in choices track by $index" class="btn-group"> <button type="button" class="btn {{buttonStyleClass}} btn-default" ng-class="{\'btn-primary\': choice.value == value}" ng-bind="choice.text" value="{{choice.value}}" ng-click="toggle(choice.value)"></button> </div> </div> </div> </div>  <div ng-switch-when="integer"> <div class="{{controlStyleClass}}" ng-class="{\'has-error\': !pristine && invalid}"> <input type="number" class="form-control input-sm" ng-attr-min="{{min}}" ng-attr-max="{{max}}" ng-model="$parent.value"> </div> </div>  <div ng-switch-when="datetime"> <div class="{{dateControlStyleClass}} has-feedback" ng-class="{\'has-error\': dateInputInvalid}"> <input class="form-control input-sm" type="text" size="10" placeholder="YYYY-MM-DD" data-date-format="yyyy-MM-dd" ng-model="$parent.dateValue" date-type="string" ng-click="fillDefaultDate()" autoclose="true" use-native="true" template-url="forms/datepicker.html" bs-datepicker> <span class="glyphicon glyphicon-calendar form-control-feedback fc-feedback-sm"></span> </div> <div class="{{timeControlStyleClass}} has-feedback" ng-style="{\'padding-left\': timeControlLeftMargin, \'margin-top\': timeControlTopMargin}" ng-class="{\'has-error\': timeInputInvalid}"> <input class="form-control input-sm" type="text" size="8" placeholder="HH:mm:ss" data-time-format="HH:mm:ss" ng-model="$parent.timeValue" time-type="string" hour-step="1" minute-step="1" second-step="1" data-length="3" ng-focus="fillDefaultTime()" use-native="true" arrow-behavior="picker" template-url="forms/timepicker.html" bs-timepicker> <span class="glyphicon glyphicon-time form-control-feedback fc-feedback-sm"></span> </div> </div>  <div ng-switch-when="upload"> <div class="{{controlStyleClass}} has-feedback" ng-class="{\'has-error\': !pristine && invalid}"> <input type="text" readonly="readonly" class="form-control input-sm" placeholder="Click here to select a file" style="cursor: pointer" ng-click="openUpload()" ng-model="$parent.filename">  <span ng-hide="$parent.value" class="glyphicon glyphicon-folder-open form-control-feedback fc-feedback-sm clickable" ngf-select ng-model="$parent.files" accept="{{acceptPattern}}" ngf-accept="\'{{acceptPattern}}\'"></span> <span ng-show="$parent.value" class="glyphicon glyphicon-trash form-control-feedback fc-feedback-sm clickable" ng-click="clearSelection()"></span> </div> </div>  <div ng-switch-default> <div class="{{controlStyleClass}}"> <div ng-class="{\'has-error\': !pristine && invalid}"> <div ng-class="{\'input-group\': choicesMenu}"> <input type="text" class="form-control input-sm" ng-model="$parent.value"> <div ng-if="choicesMenu" class="input-group-btn"> <button type="button" class="btn btn-sm btn-default dropdown-toggle" bs-dropdown="choicesMenu" placement="auto bottom-left" html="true"> <span class="{{choiceIconStyleClass}} clickable"></span> <span ng-if="!hideMenuCaret" class="caret"></span> </button> </div> </div> </div> </div> </div> </ng-switch> </div>');
-    $templateCache.put('forms/searchbox.html', '<div class="form-group has-feedback"> <input type="text" class="form-control" placeholder="{{hint}}" ng-model="ngModel" ng-blur="restoreHint()" ng-focus="hideHint()"> <small class="glyphicon glyphicon-search form-control-feedback"></small> </div>');
-    $templateCache.put('forms/timepicker.html', '<div class="dropdown-menu timepicker" style="min-width: 0; width: auto"> <table height="100%"> <thead> <tr class="text-center"> <th> <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-left" ng-click="$arrowAction(1, 0)"> <i class="glyphicon glyphicon-triangle-top"></i> </button> </th> <th> &nbsp; </th> <th> <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-left" ng-click="$arrowAction(1, 1)"> <i class="glyphicon glyphicon-triangle-top"></i> </button> </th> <th> &nbsp; </th> <th> <button ng-if="showSeconds" tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-left" ng-click="$arrowAction(1, 2)"> <i class="glyphicon glyphicon-triangle-top"></i> </button> </th> </tr> </thead> <tbody> <tr ng-repeat="(i, row) in rows"> <td class="text-center"> <button tabindex="-1" style="width: 100%" type="button" class="btn btn-sm btn-default btn-no-radius" ng-class="{\'btn-primary\': row[0].selected}" ng-click="$select(row[0].date, 0)" ng-disabled="row[0].disabled"> <span ng-class="{\'text-muted\': row[0].muted}" ng-bind="row[0].label"></span> </button> </td> <td> <span class="time-separator" ng-bind="i == midIndex ? timeSeparator : \' \'"></span> </td> <td class="text-center"> <button tabindex="-1" ng-if="row[1].date" style="width: 100%" type="button" class="btn btn-sm btn-default btn-no-radius" ng-class="{\'btn-primary\': row[1].selected}" ng-click="$select(row[1].date, 1)" ng-disabled="row[1].disabled"> <span ng-class="{\'text-muted\': row[1].muted}" ng-bind="row[1].label"></span> </button> </td> <td> <span class="time-separator" ng-bind="i == midIndex ? timeSeparator : \' \'"></span> </td> <td class="text-center"> <button tabindex="-1" ng-if="showSeconds && row[2].date" style="width: 100%" type="button" class="btn btn-sm btn-default btn-no-radius" ng-class="{\'btn-primary\': row[2].selected}" ng-click="$select(row[2].date, 2)" ng-disabled="row[2].disabled"> <span ng-class="{\'text-muted\': row[2].muted}" ng-bind="row[2].label"></span> </button> </td> <td ng-if="showAM"> &nbsp; </td> <td ng-if="showAM"> <button tabindex="-1" ng-show="i == midIndex - !isAM * 1" style="width: 100%" type="button" ng-class="{\'btn-primary\': !!isAM}" class="btn btn-default" ng-click="$switchMeridian()" ng-disabled="el.disabled">AM</button> <button tabindex="-1" ng-show="i == midIndex + 1 - !isAM * 1" style="width: 100%" type="button" ng-class="{\'btn-primary\': !isAM}" class="btn btn-default" ng-click="$switchMeridian()" ng-disabled="el.disabled">PM</button> </td> </tr> </tbody> <tfoot> <tr class="text-center"> <th> <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-left" ng-click="$arrowAction(-1, 0)"> <i class="glyphicon glyphicon-triangle-bottom"></i> </button> </th> <th> &nbsp; </th> <th> <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-left" ng-click="$arrowAction(-1, 1)"> <i class="glyphicon glyphicon-triangle-bottom"></i> </button> </th> <th> &nbsp; </th> <th> <button ng-if="showSeconds" tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-left" ng-click="$arrowAction(-1, 2)"> <i class="glyphicon glyphicon-triangle-bottom"></i> </button> </th> </tr> </tfoot> </table> </div>');
-    $templateCache.put('metrics/metrics.html', '<div class="metrics"> <div> <span class="metrics-caption" ng-bind="caption"></span> <remark ng-if="help" type="{{remarkType}}" tooltip="{{help}}" ng-click="clickHelp()"></remark> </div> <h3 class="metrics-value"> <span ng-bind="value"></span> <ng-switch on="unitPlural && value > 1"> <small ng-switch-when="true" ng-bind="unitPlural"></small> <small ng-switch-default ng-bind="unit"></small> </ng-switch> </h3> <small ng-if="subText" class="metrics-sub-text" ng-bind="subText"></small> </div>');
-    $templateCache.put('progressbar/progressbar.html', '<div style="width: 100%">  <span class="small pull-left" ng-bind="current+\'/\'+max"></span> <span class="small pull-right" ng-bind="usage + \'%\'"></span> </div> <div style="clear: both; height: 1px"></div> <div style="width: 100%" class="progress progress-tiny"> <div ng-style="{\'width\': usage+\'%\'}" class="progress-bar {{usageClass}}"></div> </div>');
-    $templateCache.put('property/number.html', '<div> <span ng-bind="value"></span> <span ng-if="unit" ng-bind="unit"></span> </div>');
-    $templateCache.put('property/property.html', '<ng-switch on="renderer">  <a ng-switch-when="Link" ng-href="{{href}}" ng-bind="text" ng-attr-target="{{target}}"></a>  <button ng-switch-when="Button" ng-if="!hide" type="button" class="btn btn-default {{class}}" ng-bind="text" ng-click="click()" ng-disabled="disabled" ng-attr-bs-tooltip="tooltip"></button>  <tag ng-switch-when="Tag" text="{{text}}" ng-attr-href="{{href}}" ng-attr-condition="{{condition}}" ng-attr-tooltip="{{tooltip}}"></tag>  <indicator ng-switch-when="Indicator" ng-attr-shape="{{shape}}" ng-attr-condition="{{condition}}" ng-attr-tooltip="{{tooltip}}"></indicator>  <progressbar ng-switch-when="ProgressBar" current="{{current}}" max="{{max}}"></progressbar>  <div ng-switch-when="Duration" ng-bind="value|duration"></div>  <div ng-switch-when="DateTime" ng-bind="value|date:\'yyyy-MM-dd HH:mm:ss\'"></div>  <number ng-switch-when="Number" raw="{{raw}}" ng-attr-unit="{{unit}}" ng-attr-precision="{{precision}}" ng-attr-readable="{{readable}}"></number>  <div ng-switch-when="Number1" ng-bind="value|number:1"></div>  <div ng-switch-when="Number2" ng-bind="value|number:2"></div>  <div ng-switch-default ng-bind="value"></div> </ng-switch>');
-    $templateCache.put('remark/remark.html', '<span class="{{styleClass}}" ng-attr-bs-tooltip="tooltip" ng-style="{cursor: tooltip ? \'pointer\': \'default\'}" ng-attr-placement="{{placement}}" ng-attr-trigger="{{trigger}}"></span>');
-    $templateCache.put('state/indicator.html', '<ng-switch on="shape"> <div ng-switch-when="stripe" ng-style="{\'background-color\': colorStyle}" style="display: inline-block; height: 100%; width: 8px; cursor: default" bs-tooltip="tooltip" placement="right auto"></div> <span ng-switch-default ng-style="{\'color\': colorStyle, \'cursor\': cursorStyle}" class="glyphicon glyphicon-stop" bs-tooltip="tooltip"></span> </ng-switch>');
-    $templateCache.put('state/tag.html', '<ng-switch on="!href"> <a ng-switch-when="false" ng-href="{{href}}" class="label label-lg {{labelColorClass}}" ng-bind="text" bs-tooltip="tooltip"></a> <span ng-switch-when="true" class="label label-lg {{labelColorClass}}" ng-style="{\'cursor\': cursorStyle}" ng-bind="text" bs-tooltip="tooltip"></span> </ng-switch>');
-    $templateCache.put('tables/property_table/property_table.html', '<table class="table table-striped table-hover"> <caption ng-if="caption"> {{caption}} <remark ng-if="captionTooltip" tooltip="{{captionTooltip}}" placement="right"></remark> <small ng-if="subCaption" class="visible-md" ng-bind="subCaption"></small> </caption> <tbody> <tr ng-repeat="prop in props track by $index"> <td ng-attr-ng-class="propNameClass"> <span ng-bind="prop.name"></span> <remark ng-if="prop.help" type="question" tooltip="{{prop.help}}"></remark> </td> <td ng-attr-ng-class="propValueClass"> <ng-switch on="prop.hasOwnProperty(\'values\')"> <property ng-switch-when="true" ng-repeat="value in prop.values track by $index" value-bind="value" renderer="{{::prop.renderer}}"></property> <property ng-switch-when="false" value-bind="prop.value" renderer="{{::prop.renderer}}"></property> </ng-switch> </td> </tr> </tbody> </table>');
-    $templateCache.put('tables/sortable_table/sortable_table.html', '<table class="table table-hover" st-table="showing" st-safe-src="records"> <caption ng-if="caption"> {{caption}} <remark ng-if="captionTooltip" tooltip="{{captionTooltip}}" placement="right"></remark> <small ng-if="subCaption" class="visible-md" ng-bind="subCaption"></small> </caption> <thead> <tr ng-if="!hasRecords()"> <th colspan="{{columns.length}}" class="text-center active" ng-transclude></th> </tr> <tr ng-if="hasRecords()"> <th ng-repeat="column in columns track by $index" class="{{::columnStyleClass[$index]}}" ng-attr-st-sort="{{::column.sortKey}}" ng-attr-st-sort-default="{{::column.defaultSort}}"> <span ng-bind="::column.name"></span> <remark ng-if="column.help" type="question" tooltip="{{::column.help}}"></remark> <span ng-if="column.unit" class="unit" ng-bind="::column.unit"></span> </th> </tr> <tr ng-show="false"> <th colspan="{{columns.length}}">  <input type="hidden" st-search>  <div st-pagination st-items-by-page="pagination"></div> </th> </tr> </thead> <tbody style="height: 100%"> <tr ng-repeat="record in showing track by $index" style="display: table-row; height: 100%"> <td ng-repeat="column in columns track by $index" class="{{columnStyleClass[$index]}}" style="height: 100%" ng-style="{\'background-color\': bgColorForStripeFix($index, record)}"> <ng-switch on="isArray(column.key)"> <property ng-switch-when="true" ng-repeat="columnKeyChild in column.key track by $index" value-bind="record[columnKeyChild]" renderer="{{multipleRendererColumnsRenderers[$parent.$index][$index]}}"></property> <property ng-switch-when="false" value-bind="record[column.key]" renderer="{{column.renderer}}"></property> </ng-switch> </td> </tr> <tr ng-if="search && (!showing || !showing.length)"> <td colspan="{{columns.length}}" class="text-center"> <h5 ng-bind="emptySearchResult"></h5> </td> </tr> </tbody> <tfoot ng-if="records.length"> <tr> <td colspan="{{columns.length}}" st-pagination st-items-by-page="pagination" st-template="tables/sortable_table/sortable_table_pagination.html"> </td> </tr> </tfoot> </table>');
-    $templateCache.put('tables/sortable_table/sortable_table_pagination.html', '<div class="pull-left hidden-sm hidden-xs" style="margin-bottom: 10px">  <st-summary></st-summary> </div> <div class="pull-right"> <div ng-if="pages.length >= 2" class="btn-group btn-group-xs tb-pagination"> <button ng-if="pages[0] > 1 + 10" type="button" class="btn btn-default" ng-click="selectPage(1)"> 1 </button> <button ng-if="pages[0] > 1" type="button" class="btn btn-default" ng-click="selectPage(currentPage - 1)"> &laquo;</button> <button type="button" class="btn btn-default" ng-repeat="page in pages track by $index" ng-class="{active: page == currentPage}" ng-click="selectPage(page)"> {{page}} </button> <button ng-if="pages[pages.length - 1] < numPages" type="button" class="btn btn-default" ng-click="selectPage(currentPage + 1)"> &raquo;</button> <button ng-if="pages[pages.length - 1] < numPages - 10" type="button" class="btn btn-default" ng-click="selectPage(numPages)"> {{numPages}} </button> </div> </div>');
-    $templateCache.put('tabset/tabset.html', '<ul class="nav nav-tabs nav-tabs-underlined"> <li ng-repeat="tab in tabs track by $index" ng-class="{active:tab.selected}"> <a href="" ng-click="selectTab($index)" ng-bind="tab.heading"></a> </li> </ul> <div class="tab-content" ng-transclude></div>');
-  }
-]);
+
 angular.module('dashing.util.bootstrap', [])
 .factory('dashing.util.bootstrap', function() {
   return {
@@ -921,7 +900,7 @@ angular.module('dashing.charts.metrics_sparkline', [
   .directive('metricsSparklineChartTd', function() {
     return {
       restrict: 'E',
-      templateUrl: 'charts/metrics_sparkline_td.html',
+      templateUrl: 'app/dashing/charts/metrics_sparkline_td.html',
       scope: {
         caption: '@',
         help: '@',
@@ -1212,7 +1191,7 @@ angular.module('dashing.dialogs', [
       return {
         confirm: function(text, onConfirm) {
           var options = {
-            templateUrl: 'dialogs/confirmation.html',
+            templateUrl: 'app/dashing/dialogs/confirmation.html',
             title: i18n.confirmationDialogTitle,
             text: {
               yesButton: i18n.confirmationYesButtonText,
@@ -1229,7 +1208,7 @@ angular.module('dashing.dialogs', [
         },
         notice: function(text, title) {
           var options = {
-            templateUrl: 'dialogs/notification.html',
+            templateUrl: 'app/dashing/dialogs/notification.html',
             title: title || i18n.notificationDialogTitle,
             text: {
               closeButton: i18n.closeButtonText
@@ -1337,7 +1316,7 @@ angular.module('dashing.forms.form_control', [
       }
       return {
         restrict: 'E',
-        templateUrl: 'forms/form_controls.html',
+        templateUrl: 'app/dashing/forms/form_controls.html',
         replace: true,
         scope: {
           help: '@',
@@ -1479,7 +1458,7 @@ angular.module('dashing.forms.searchbox', [])
   .directive('searchbox', function() {
     return {
       restrict: 'E',
-      templateUrl: 'forms/searchbox.html',
+      templateUrl: 'app/dashing/forms/searchbox.html',
       scope: {
         placeholder: '@',
         ngModel: '='
@@ -1513,7 +1492,7 @@ angular.module('dashing.metrics', [])
   .directive('metrics', function() {
     return {
       restrict: 'E',
-      templateUrl: 'metrics/metrics.html',
+      templateUrl: 'app/dashing/metrics/metrics.html',
       scope: {
         caption: '@',
         value: '@',
@@ -1530,7 +1509,7 @@ angular.module('dashing.progressbar', [])
   .directive('progressbar', function() {
     return {
       restrict: 'E',
-      templateUrl: 'progressbar/progressbar.html',
+      templateUrl: 'app/dashing/progressbar/progressbar.html',
       scope: {
         current: '@',
         max: '@',
@@ -1562,7 +1541,7 @@ angular.module('dashing.property.number', [
     function($filter, util) {
       return {
         restrict: 'E',
-        templateUrl: 'property/number.html',
+        templateUrl: 'app/dashing/property/number.html',
         scope: {
           raw: '@'
         },
@@ -1588,7 +1567,7 @@ angular.module('dashing.property', [
   .directive('property', function() {
     return {
       restrict: 'E',
-      templateUrl: 'property/property.html',
+      templateUrl: 'app/dashing/property/property.html',
       replace: false,
       scope: {
         value: '=valueBind',
@@ -1659,7 +1638,7 @@ angular.module('dashing.remark', [
   .directive('remark', function() {
     return {
       restrict: 'E',
-      templateUrl: 'remark/remark.html',
+      templateUrl: 'app/dashing/remark/remark.html',
       scope: {
         tooltip: '@',
         placement: '@',
@@ -1691,7 +1670,7 @@ angular.module('dashing.state.indicator', [
     function(util) {
       return {
         restrict: 'E',
-        templateUrl: 'state/indicator.html',
+        templateUrl: 'app/dashing/state/indicator.html',
         scope: {
           tooltip: '@',
           shape: '@'
@@ -1718,7 +1697,7 @@ angular.module('dashing.state.tag', [
     function(util) {
       return {
         restrict: 'E',
-        templateUrl: 'state/tag.html',
+        templateUrl: 'app/dashing/state/tag.html',
         scope: {
           href: '@',
           text: '@',
@@ -1744,7 +1723,7 @@ angular.module('dashing.tables.property_table', [])
   .directive('propertyTable', function() {
     return {
       restrict: 'E',
-      templateUrl: 'tables/property_table/property_table.html',
+      templateUrl: 'app/dashing/tables/property_table/property_table.html',
       scope: {
         caption: '@',
         captionTooltip: '@',
@@ -1846,7 +1825,7 @@ angular.module('dashing.tables.sortable_table', [
     function(renderer, util, i18n) {
       return {
         restrict: 'E',
-        templateUrl: 'tables/sortable_table/sortable_table.html',
+        templateUrl: 'app/dashing/tables/sortable_table/sortable_table.html',
         transclude: true,
         scope: {
           caption: '@',
@@ -2142,7 +2121,7 @@ angular.module('dashing.tabset', [])
     function() {
       return {
         restrict: 'E',
-        templateUrl: 'tabset/tabset.html',
+        templateUrl: 'app/dashing/tabset/tabset.html',
         transclude: true,
         scope: true,
         controller: ['$scope',
