@@ -19,10 +19,16 @@ package org.smartdata.actions.hdfs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.annotation.ActionSignature;
 
 /**
  * An action to archive a file.
  */
+@ActionSignature(
+  actionId = "archive",
+  displayName = "archive",
+  usage = HdfsAction.FILE_PATH + " $file "
+)
 public class ArchiveFileAction extends MoveFileAction {
   private static final Logger LOG = LoggerFactory.getLogger(ArchiveFileAction.class);
 

@@ -17,11 +17,16 @@
  */
 package org.smartdata.actions.hdfs;
 
+import org.smartdata.actions.annotation.ActionSignature;
+
 import java.util.Map;
 
-/**
- * Set storage policy
- */
+/** Set storage policy */
+@ActionSignature(
+  actionId = "setstoragepolicy",
+  displayName = "setstoragepolicy",
+  usage = HdfsAction.FILE_PATH + " $file " + SetStoragePolicyAction.STORAGE_POLICY + " $policy"
+)
 public class SetStoragePolicyAction extends HdfsAction {
   public static final String STORAGE_POLICY = "-storagePolicy";
 

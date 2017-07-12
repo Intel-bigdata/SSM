@@ -20,6 +20,7 @@ package org.smartdata.actions.hdfs;
 
 import org.smartdata.actions.ActionException;
 import org.smartdata.actions.Utils;
+import org.smartdata.actions.annotation.ActionSignature;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,14 +28,22 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * An action to write a file with generated content.
- * Can be used to test:
- * 1. storage policy;
- * 2. stripping erasure coded file;
- * 3. small file.
+ * An action to write a file with generated content. Can be used to test: 1. storage policy; 2.
+ * stripping erasure coded file; 3. small file.
  *
- * Arguments: file_path length [buffer_size, default=64k]
+ * <p>Arguments: file_path length [buffer_size, default=64k]
  */
+@ActionSignature(
+  actionId = "write",
+  displayName = "write",
+  usage =
+      HdfsAction.FILE_PATH
+          + " $file "
+          + WriteFileAction.BUF_SIZE
+          + " $size "
+          + WriteFileAction.LENGTH
+          + " $length"
+)
 public class WriteFileAction extends HdfsAction {
   public static final String LENGTH = "-length";
   public static final String BUF_SIZE = "-bufSize";

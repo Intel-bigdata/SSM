@@ -23,12 +23,18 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.smartdata.actions.Utils;
+import org.smartdata.actions.annotation.ActionSignature;
 
 import java.util.Map;
 
 /**
  * An action to un-cache a file.
  */
+@ActionSignature(
+  actionId = "uncache",
+  displayName = "uncache",
+  usage = HdfsAction.FILE_PATH + " $file "
+)
 public class UncacheFileAction extends HdfsAction {
   private String fileName;
 
