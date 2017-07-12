@@ -81,18 +81,14 @@ public class TestAccessCountTableManager extends DBTest {
   private void createTables(Connection connection) throws Exception {
     Statement statement = connection.createStatement();
     statement.execute(AccessCountDao.createTableSQL("expect1"));
+    statement.execute(AccessCountDao.createTableSQL("expect2"));
+    statement.execute(AccessCountDao.createTableSQL("expect3"));
     statement.close();
   }
 
   @Test
   public void testAddAccessCountInfo() throws Exception {
-    MetaStore metaStore = new MetaStore(druidPool);
-    createTables(databaseTester.getConnection().getConnection());
-    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader().getResourceAsStream("files.xml"));
-    databaseTester.setDataSet(dataSet);
-    databaseTester.onSetup();
-    prepareFiles(metaStore);
-    AccessCountTableManager manager = new AccessCountTableManager(metaStore);
+    AccessCountTableManager manager = initTestEnvironment();
     List<FileAccessEvent> accessEvents = new ArrayList<>();
     accessEvents.add(new FileAccessEvent("file1", 0));
     accessEvents.add(new FileAccessEvent("file2", 1));
@@ -104,9 +100,58 @@ public class TestAccessCountTableManager extends DBTest {
     accessEvents.add(new FileAccessEvent("file3", 5000));
 
     manager.onAccessEventsArrived(accessEvents);
-    AccessCountTable accessCountTable = new AccessCountTable(0L, 5000L);
-    ITable actual = databaseTester.getConnection().createTable(accessCountTable.getTableName());
-    ITable expect = databaseTester.getDataSet().getTable("expect1");
+    assertTableEquals(new AccessCountTable(0L, 5000L).getTableName(), "expect1");
+  }
+
+  @Test
+  public void testAccessFileNotInNamespace() throws Exception {
+    AccessCountTableManager manager = initTestEnvironment();
+    List<FileAccessEvent> accessEvents = new ArrayList<>();
+    accessEvents.add(new FileAccessEvent("file1", 0));
+    accessEvents.add(new FileAccessEvent("file2", 1));
+    accessEvents.add(new FileAccessEvent("file2", 2));
+    accessEvents.add(new FileAccessEvent("file3", 2));
+    accessEvents.add(new FileAccessEvent("file3", 3));
+    accessEvents.add(new FileAccessEvent("file3", 4));
+    accessEvents.add(new FileAccessEvent("file4", 5));
+
+    accessEvents.add(new FileAccessEvent("file3", 5000));
+    accessEvents.add(new FileAccessEvent("file3", 10000));
+
+    manager.onAccessEventsArrived(accessEvents);
+    assertTableEquals(new AccessCountTable(0L, 5000L).getTableName(), "expect1");
+    assertTableEquals(new AccessCountTable(5000L, 10000L).getTableName(), "expect2");
+
+    accessEvents.clear();
+    accessEvents.add(new FileAccessEvent("file4", 10001));
+    accessEvents.add(new FileAccessEvent("file4", 10002));
+    accessEvents.add(new FileAccessEvent("file3", 15000));
+    accessEvents.add(new FileAccessEvent("file4", 15001));
+    accessEvents.add(new FileAccessEvent("file3", 20000));
+    manager.onAccessEventsArrived(accessEvents);
+    assertTableEquals(new AccessCountTable(10000L, 15000L).getTableName(), "expect2");
+    assertTableEquals(new AccessCountTable(15000L, 20000L).getTableName(), "expect2");
+
+    insertNewFile(new MetaStore(druidPool), "file4", 4L);
+    accessEvents.clear();
+    accessEvents.add(new FileAccessEvent("file4", 25000));
+    manager.onAccessEventsArrived(accessEvents);
+    assertTableEquals(new AccessCountTable(20000L, 25000L).getTableName(), "expect3");
+  }
+
+  private AccessCountTableManager initTestEnvironment() throws Exception {
+    MetaStore metaStore = new MetaStore(druidPool);
+    createTables(databaseTester.getConnection().getConnection());
+    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader().getResourceAsStream("files.xml"));
+    databaseTester.setDataSet(dataSet);
+    databaseTester.onSetup();
+    prepareFiles(metaStore);
+    return new AccessCountTableManager(metaStore);
+  }
+
+  private void assertTableEquals(String actualTableName, String expectedDataSet) throws Exception {
+    ITable actual = databaseTester.getConnection().createTable(actualTableName);
+    ITable expect = databaseTester.getDataSet().getTable(expectedDataSet);
     SortedTable sortedActual = new SortedTable(actual, new String[] {"fid"});
     sortedActual.setUseComparable(true);
     Assertion.assertEquals(expect, sortedActual);
@@ -130,6 +175,23 @@ public class TestAccessCountTableManager extends DBTest {
               (byte) 0));
     }
     metaStore.insertFiles(statusInternals.toArray(new FileInfo[0]));
+  }
+
+  private void insertNewFile(MetaStore metaStore, String file, Long fid)
+      throws MetaStoreException {
+    FileInfo finfo = new FileInfo(file,
+        fid,
+        123L,
+        false,
+        (short) 1,
+        128 * 1024L,
+        123123123L,
+        123123120L,
+        (short) 1,
+        "root",
+        "admin",
+        (byte) 0);
+    metaStore.insertFile(finfo);
   }
 
   @Test
