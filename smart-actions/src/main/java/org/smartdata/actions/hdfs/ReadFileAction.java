@@ -22,18 +22,22 @@ import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.actions.ActionException;
 import org.smartdata.actions.Utils;
+import org.smartdata.actions.annotation.ActionSignature;
 
 import java.io.IOException;
 import java.util.Map;
 
 /**
  * An action to read a file. The read content will be discarded immediately, not storing onto disk.
- * Can be used to test:
- * 1. cache file;
- * 2. one-ssd/all-ssd file;
+ * Can be used to test: 1. cache file; 2. one-ssd/all-ssd file;
  *
- * Arguments: file_path [buffer_size, default=64k]
+ * <p>Arguments: file_path [buffer_size, default=64k]
  */
+@ActionSignature(
+  actionId = "read",
+  displayName = "read",
+  usage = HdfsAction.FILE_PATH + " $file " + ReadFileAction.BUF_SIZE + " $size"
+)
 public class ReadFileAction extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   private String filePath;

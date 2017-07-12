@@ -22,6 +22,7 @@ import org.apache.hadoop.hdfs.protocol.DatanodeInfoWithStorage;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.smartdata.actions.ActionException;
+import org.smartdata.actions.annotation.ActionSignature;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,11 @@ import java.util.Map;
 /**
  * Check and return file blocks storage location.
  */
+@ActionSignature(
+  actionId = "checkstorage",
+  displayName = "checkstorage",
+  usage = HdfsAction.FILE_PATH + " $file "
+)
 public class CheckStorageAction extends HdfsAction {
   private String fileName;
 

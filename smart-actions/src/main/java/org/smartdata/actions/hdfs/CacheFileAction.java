@@ -28,6 +28,7 @@ import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.actions.ActionType;
 import org.smartdata.actions.Utils;
+import org.smartdata.actions.annotation.ActionSignature;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -36,6 +37,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Move to Cache Action
  */
+@ActionSignature(
+  actionId = "cache",
+  displayName = "cache",
+  usage = HdfsAction.FILE_PATH + " $file "
+)
 public class CacheFileAction extends HdfsAction {
 
   private String fileName;
