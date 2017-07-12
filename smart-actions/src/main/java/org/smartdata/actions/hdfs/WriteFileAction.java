@@ -40,7 +40,7 @@ import java.util.Random;
       HdfsAction.FILE_PATH
           + " $file "
           + WriteFileAction.BUF_SIZE
-          + " $size"
+          + " $size "
           + WriteFileAction.LENGTH
           + " $length"
 )
