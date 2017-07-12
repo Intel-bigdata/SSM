@@ -67,7 +67,7 @@ public class TestCheckStorageAction extends ActionMiniCluster {
       public void report(StatusMessage status) {
         if (status instanceof ActionFinished) {
           ActionFinished finished = (ActionFinished) status;
-          Assert.assertNotNull(finished.getException());
+          Assert.assertNotNull(finished.getThrowable());
         }
       }
     });
