@@ -22,12 +22,44 @@ angular.module('zeppelinWebApp')
  * This controller is used to obtain action. All nested views will read status from here.
  */
   .controller('ActionCtrl', ActionCtrl);
-  ActionCtrl.$inject = ['$scope', 'action0'];
-    function ActionCtrl($scope, action0) {
+  ActionCtrl.$inject = ['$scope', 'action0', '$propertyTableBuilder'];
+    function ActionCtrl($scope, action0, $ptb) {
       'use strict';
 
       $scope.action = action0.$data();
       action0.$subscribe($scope, function (action) {
         $scope.action = action;
+      });
+
+      $scope.actionSummary = [
+          $ptb.text('ID').done(),
+          $ptb.datetime('Create Time').done(),
+          $ptb.datetime('Finish Time').done(),
+          $ptb.duration("Running Time").done(),
+          $ptb.text('Result').done(),
+          $ptb.text('Log').done()
+        /*
+         $ptb.text('User').done(),
+         $ptb.button('Quick Links').done()
+         */
+      ];
+
+      $scope.$watch('action', function (action) {
+          $ptb.$update($scope.actionSummary, [
+              action.actionId,
+              action.createTime,
+              action.finished ? action.finishTime : "",
+              action.uptime,
+              action.result,
+              action.log
+            /*
+             rule.user,
+             [
+             {href: rule.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
+             helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, rule.homeDirectory),
+             helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, rule.logFile)
+             ]
+             */
+          ]);
       });
     }
