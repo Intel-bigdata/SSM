@@ -152,6 +152,15 @@ angular.module('org.apache.hadoop.ssm.models', [])
             pageUrl: locator.action(obj.actionId),
             argument: util.joinArguments(obj.args)
           });
+        },
+        action1: function (obj) {
+          obj = obj.body;
+          return angular.merge(obj, {
+            uptime: obj.finishTime - obj.createTime,
+            status: obj.finished ? 'Finished' : 'Running',
+            pageUrl: locator.action(obj.actionId),
+            argument: util.joinArguments(obj.args)
+          });
         }
       };
 
@@ -172,7 +181,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('actions/list/20', decoder.actions);
         },
         action: function (actionId) {
-          return get('actions/' + actionId + '/info', decoder.action);
+          return get('actions/' + actionId + '/info', decoder.action1);
         },
         actionTypes: function () {
           return get('actions/registry/list', decoder.default)

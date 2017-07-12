@@ -24,12 +24,7 @@ under the License.
   <h5 ng-bind="action.argument"></h5>
 </div>
 
-<div class="col-md-12">
-  <ul class="nav nav-tabs nav-tabs-underlined" bs-navbar>
-    <li data-match-route="/actions/action/\d+(/overview)?$">
-      <a href="#/actions/action/{{action.actionId}}">Overview</a>
-    </li>
-  </ul>
+<div ng-include src="'app/dashboard/views/actions/action/overview.html'">
 </div>
 
-<div ng-view></div>
+

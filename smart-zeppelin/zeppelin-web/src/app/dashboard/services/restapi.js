@@ -107,12 +107,12 @@ angular.module('zeppelinWebApp')
         /** Kill a running application */
         stopRule: function (ruleId) {
           var url = restapiV1Root + 'rules/' + ruleId + "/stop";
-          return $http.delete(url);
+          return $http.post(url);
         },
 
         /** Submit an user defined application with user configuration */
         submitRule: function (args, onComplete) {
-          return self._submitRule(restapiV1Root + 'addrule', args, onComplete);
+          return self._submitRule(restapiV1Root + 'rules/add', args, onComplete);
         },
 
         _submitRule: function (url, args, onComplete) {
@@ -129,7 +129,7 @@ angular.module('zeppelinWebApp')
 
         /** Submit an user defined application with user configuration */
         submitAction: function (action, args, onComplete) {
-          return self._submitAction(restapiV1Root + 'submitaction/' + action, args, onComplete);
+          return self._submitAction(restapiV1Root + 'cmdlets/action/' + action, args, onComplete);
         },
 
         _submitAction: function (url, args, onComplete) {

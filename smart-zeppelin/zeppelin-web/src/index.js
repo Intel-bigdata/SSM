@@ -90,7 +90,6 @@ import './app/dashboard/views/cluster/cluster_hottestFiles';
 import './app/dashboard/views/cluster/cluster_fileInCache';
 import './app/dashboard/views/actions/actions.js';
 import './app/dashboard/views/actions/action/action.js';
-import './app/dashboard/views/actions/action/overview.js';
 import './app/dashboard/views/actions/submit/submit.js';
 import './app/dashboard/views/rules/rules.js';
 import './app/dashboard/views/rules/rule/rule.js';
