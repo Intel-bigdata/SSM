@@ -85,6 +85,10 @@ public class InotifyEventApplier {
   //Todo: times and ec policy id, etc.
   private String getCreateSql(Event.CreateEvent createEvent) throws IOException {
     HdfsFileStatus fileStatus = client.getFileInfo(createEvent.getPath());
+    if (fileStatus == null) {
+      LOG.debug("Can not get HdfsFileStatus for file " + createEvent.getPath());
+      return null;
+    }
     FileInfo fileInfo = FileInfo.fromHdfsFileStatus(fileStatus, null);
     fileInfo.setPath(createEvent.getPath());
     try {
