@@ -19,7 +19,7 @@ package org.smartdata.actions.hdfs;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.junit.Assert;
 import org.junit.Test;

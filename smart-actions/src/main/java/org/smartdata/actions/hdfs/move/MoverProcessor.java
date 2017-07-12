@@ -19,7 +19,7 @@ package org.smartdata.actions.hdfs.move;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.server.balancer.Dispatcher;

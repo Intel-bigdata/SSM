@@ -14,6 +14,14 @@
     <url>http://www.apache.org</url>
   </organization>
 
+  <repositories>
+    <repository>
+      <id>cloudera</id>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+  </repositories>
+
+
   <groupId>org.smartdata</groupId>
   <artifactId>smartdata-project</artifactId>
   <version>0.1-SNAPSHOT</version>
@@ -54,7 +62,7 @@
   <properties>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
-    <hadoop.version>2.7.3</hadoop.version>
+    <hadoop.version>2.6.0-cdh5.10.1</hadoop.version>
     <alluxio.version>1.4.0</alluxio.version>
     <junit.version>4.11</junit.version>
     <scala.version>2.11.8</scala.version>
