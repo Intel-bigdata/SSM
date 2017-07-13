@@ -19,14 +19,14 @@ limitations under the License.
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="#/">
-        <img style="margin-top: -7px;" src="assets/images/zepLogoW.png" width="50" alt="I'm zeppelin" /> Zeppelin
+        <img style="margin-top: -7px;" src="assets/images/zepLogoW.png" width="50" alt="I'm smart" /> Smart
       </a>
     </div>
 
     <div class="collapse navbar-collapse" ng-controller="NavCtrl as navbar">
       <ul class="nav navbar-nav" ng-if="ticket">
         <li class="dropdown notebook-list-dropdown" uib-dropdown>
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>Notebook <span class="caret"></span></a>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>SmartNotebook <span class="caret"></span></a>
           <ul class="dropdown-menu" role="menu">
             <li ng-controller="NotenameCtrl as notenamectrl"><a href="" data-toggle="modal" data-target="#noteNameModal" ng-click="notenamectrl.getInterpreterSettings()"><i class="fa fa-plus"></i> Create new note</a></li>
             <li class="divider"></li>
@@ -45,9 +45,17 @@ limitations under the License.
             </div>
           </ul>
         </li>
-        <li><a href="#/jobmanager">Job</a></li>
+        <!--<li><a href="#/jobmanager">Job</a></li>-->
+        <li class="dropdown" uib-dropdown>
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>Cluster <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#/cluster/hotTestFiles">Hot Files</a></li>
+              <li><a href="#/cluster/fileInCache">file In Cache</a></li>
+            </ul>
+        </li>
+        <li><a href="#/rules">Rules</a></li>
+        <li><a href="#/actions">Actions</a></li>
       </ul>
-
       <ul class="nav navbar-nav navbar-right" style="margin-right:5px;">
         <li class="nav-component" ng-if="ticket">
         <!--TODO(bzz): move to Typeahead https://angular-ui.github.io/bootstrap  -->
@@ -89,12 +97,12 @@ limitations under the License.
             </button>
             <span ng-if="!ticket" style="margin: 5px;"></span>
             <ul class="dropdown-menu">
-              <li><a href="" data-toggle="modal" data-target="#aboutModal">About Zeppelin</a></li>
+              <li><a href="" data-toggle="modal" data-target="#aboutModal">About Smart</a></li>
               <li role="separator" style="margin: 5px 0;" class="divider"></li>
-              <li><a href="#/interpreter">Interpreter</a></li>
-              <li><a href="#/notebookRepos">Notebook Repos</a></li>
+              <!--<li><a href="#/interpreter">Interpreter</a></li>
+              <li><a href="#/notebookRepos">Notebook Repos</a></li>-->
               <li><a href="#/credential">Credential</a></li>
-              <li><a href="#/helium">Helium</a></li>
+              <!--<li><a href="#/helium">Helium</a></li>-->
               <li><a href="#/configuration">Configuration</a></li>
               <li ng-if="ticket.principal && ticket.principal !== 'anonymous'" role="separator" style="margin: 5px 0;" class="divider"></li>
               <li ng-if="ticket.principal && ticket.principal !== 'anonymous'"><a ng-click="navbar.logout()">Logout</a></li>
@@ -118,16 +126,16 @@ limitations under the License.
     <div class="modal-content" id="NoteImportCtrl" ng-init="NoteImportInit">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">About Zeppelin</h4>
+        <h4 class="modal-title">About Smart</h4>
       </div>
       <div class="modal-body">
 
         <div class="row about">
           <div class="hidden-xs col-sm-4 logo">
-            <img src="assets/images/zepLogo.png" alt="Apache Zeppelin" title="Apache Zeppelin" />
+            <img src="assets/images/zepLogo.png" alt="Smart" title="Smart" />
           </div>
           <div class="col-xs-12 col-sm-8 content">
-            <h3>Apache Zeppelin</h3>
+            <h3>Smart</h3>
             <br/>
             <span id="i18n-14">Version</span>
             {{zeppelinVersion}}

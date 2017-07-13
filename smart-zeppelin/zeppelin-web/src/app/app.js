@@ -14,7 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// rootPath of this site, it has a tailing slash /
+var rootPath = function () {
+  var root = location.origin + location.pathname;
+  return root.substring(0, root.lastIndexOf("/") + 1);
+}();
 var zeppelinWebApp = angular.module('zeppelinWebApp', [
   'ngCookies',
   'ngAnimate',
@@ -33,6 +37,12 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
   'ngToast',
   'focus-if',
   'ngResource',
+  'mgcrea.ngStrap',
+  'ui.select',
+  'cfp.loadingBarInterceptor',
+  'ngFileUpload',
+  'dashing',
+  'org.apache.hadoop.ssm.models',
   'ngclipboard'
 ])
   .filter('breakFilter', function() {
@@ -49,6 +59,24 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
     var visBundleLoad = {
       load: ['heliumService', function(heliumService) {
         return heliumService.load;
+      }]
+    };
+
+    var fileInCacheLoad = {
+      load: ['heliumService', function(heliumService) {
+        return heliumService.load;
+      }],
+      cached0: ['models', function (models) {
+        return models.$get.cachedfiles();
+      }]
+    };
+
+    var hotTestFilesLoad = {
+      load: ['heliumService', function(heliumService) {
+        return heliumService.load;
+      }],
+      hotfiles0: ['models', function (models) {
+        return models.$get.hotFiles();
       }]
     };
 
@@ -75,6 +103,67 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/notebook/notebook.html',
         controller: 'NotebookCtrl',
         resolve: visBundleLoad
+      })
+      .when('/cluster/hotTestFiles', {
+        templateUrl: 'app/dashboard/views/cluster/cluster_hottestFiles.html',
+        controller: 'HotFileCtrl',
+        resolve: hotTestFilesLoad
+      })
+      .when('/cluster/fileInCache', {
+        templateUrl: 'app/dashboard/views/cluster/cluster_fileInCache.html',
+        controller: 'FileInCacheCtrl',
+        resolve: fileInCacheLoad
+      })
+      .when('/rules', {
+        templateUrl: 'app/dashboard/views/rules/rules.html',
+        controller: 'RulesCtrl',
+        resolve: {
+         load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          rules0: ['models', function (models) {
+            return models.$get.rules();
+          }]
+        }
+      })
+      .when('/rules/rule/:ruleId', {
+        templateUrl: 'app/dashboard/views/rules/rule/rule.html',
+        controller: 'RuleCtrl',
+        resolve: {
+          load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          rule0: ['$route', 'models', function ($route, models) {
+            return models.$get.rule($route.current.params.ruleId);
+          }]
+        }
+      })
+      .when('/actions', {
+        templateUrl: 'app/dashboard/views/actions/actions.html',
+        controller: 'ActionsCtrl',
+        resolve: {
+          load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          actions0: ['models', function (models) {
+            return models.$get.actions();
+          }],
+          actionTypes: ['models', function (models) {
+            return models.$get.actionTypes();
+          }]
+        }
+      })
+      .when('/actions/action/:actionId', {
+        templateUrl: 'app/dashboard/views/actions/action/action.html',
+        controller: 'ActionCtrl',
+        resolve: {
+          load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          action0: ['$route', 'models', function ($route, models) {
+            return models.$get.action($route.current.params.actionId);
+          }]
+        }
       })
       .when('/jobmanager', {
         templateUrl: 'app/jobmanager/jobmanager.html',
@@ -133,6 +222,38 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       };
     });
     $httpProvider.interceptors.push('httpInterceptor');
+  })
+  .config(['cfpLoadingBarProvider', function (cfpLoadingBarProvider) {
+    cfpLoadingBarProvider.includeSpinner = false;
+    cfpLoadingBarProvider.latencyThreshold = 1000;
+  }])
+
+  // configure angular-strap
+  .config(['$tooltipProvider', function ($tooltipProvider) {
+    angular.extend($tooltipProvider.defaults, {
+      html: true
+    });
+  }])
+
+  // configure dashing
+  .config(['dashing.i18n', function (i18n) {
+    i18n.confirmationYesButtonText = 'OK';
+    i18n.confirmationNoButtonText = 'Cancel';
+  }])
+
+  // disable logging for production
+  .config(['$compileProvider', function ($compileProvider) {
+    $compileProvider.debugInfoEnabled(false);
+  }])
+
+  // constants
+  .constant('conf', {
+    restapiProtocol: 'v1',
+    restapiRoot: 'http://localhost:8080/',
+    restapiQueryInterval: 3 * 1000, // in milliseconds
+    restapiQueryTimeout: 30 * 1000, // in milliseconds
+    restapiTaskLevelMetricsQueryLimit: 100,
+    loginUrl: 'http://localhost:8080/' + 'login'
   })
   .constant('TRASH_FOLDER_ID', '~Trash');
 
