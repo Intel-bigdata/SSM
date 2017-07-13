@@ -271,7 +271,7 @@ public class MetaStore {
       int topNum) throws MetaStoreException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
-      try{
+      try {
         Map<Long, Integer> accessCounts = accessCountDao.getHotFiles(tables, topNum);
         if (accessCounts.size() == 0) {
           return new ArrayList<>();
@@ -280,9 +280,8 @@ public class MetaStore {
         List<FileAccessInfo> result = new ArrayList<>();
         for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
           Long fid = entry.getKey();
-          if (idToPath.containsKey(fid)) {
-            result.add(new FileAccessInfo(fid, idToPath.get(fid),
-                accessCounts.get(fid)));
+          if (idToPath.containsKey(fid) && entry.getValue() > 0) {
+            result.add(new FileAccessInfo(fid, idToPath.get(fid), entry.getValue()));
           }
         }
         return result;
