@@ -54,22 +54,16 @@ public class ReadFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    this.appendLog(
+    appendLog(
         String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
-    try {
-      HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
-      if (fileStatus == null) {
-        this.appendResult("ReadFile Action fails, file doesn't exist!");
-        return;
-      }
-      DFSInputStream dfsInputStream = dfsClient.open(filePath);
-      byte[] buffer = new byte[bufferSize];
-      // read from HDFS
-      while (dfsInputStream.read(buffer, 0, bufferSize) != -1) {
-      }
-      dfsInputStream.close();
-    } catch (IOException e) {
-      throw new ActionException(e);
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
+    if (fileStatus == null) {
+      throw new ActionException("ReadFile Action fails, file doesn't exist!");
     }
+    DFSInputStream dfsInputStream = dfsClient.open(filePath);
+    byte[] buffer = new byte[bufferSize];
+    // read from HDFS
+    while (dfsInputStream.read(buffer, 0, bufferSize) != -1) {}
+    dfsInputStream.close();
   }
 }

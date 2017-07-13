@@ -79,6 +79,6 @@ public class ActionRegistry {
 
   private static ActionDescriptor fromSignature(ActionSignature signature) {
     return new ActionDescriptor(
-        signature.actionId(), signature.displayName(), signature.usage(), signature.comment());
+        signature.actionId(), signature.displayName(), signature.usage(), signature.description());
   }
 }

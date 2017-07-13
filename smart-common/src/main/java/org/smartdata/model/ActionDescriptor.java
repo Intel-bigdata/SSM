@@ -74,7 +74,6 @@ public class ActionDescriptor {
   public String toString() {
     return String.format("ActionDescriptor{actionName=\'%s\', displayName=\'%s\', displayName=\'%s\', usage=\'%s\', " +
         "comment=\'%s\', comment=\'%s\'}", actionName, displayName, usage, comment);
-
   }
 
   public static class Builder {

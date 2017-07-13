@@ -65,30 +65,23 @@ public class WriteFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    this.appendLog(
+    appendLog(
         String.format(
             "Action starts at %s : Write %s with length %s",
             Utils.getFormatedCurrentTime(), filePath, length));
-    try {
-      if (length == -1) {
-        this.appendResult("Write Action provides wrong length!");
-        throw new IOException();
-      }
-      final OutputStream out = dfsClient.create(filePath, true);
-      // generate random data with given length
-      byte[] buffer = new byte[bufferSize];
-      new Random().nextBytes(buffer);
-      this.appendLog(String.format("Generate random data with length %d", length));
-      // write to HDFS
-      for (int pos = 0; pos < length; pos += bufferSize) {
-        long writeLength = pos + bufferSize < length ? bufferSize : length - pos;
-        out.write(buffer, 0, (int)writeLength);
-      }
-      out.close();
-      this.appendLog("Write Successfully!");
-    } catch (IOException e) {
-      this.appendResult("WriteFile Action fails!\n" + e);
-      throw new ActionException(e);
+    if (length == -1) {
+      throw new ActionException("Write Action provides wrong length!");
     }
+    final OutputStream out = dfsClient.create(filePath, true);
+    // generate random data with given length
+    byte[] buffer = new byte[bufferSize];
+    new Random().nextBytes(buffer);
+    appendLog(String.format("Generate random data with length %d", length));
+    for (int pos = 0; pos < length; pos += bufferSize) {
+      long writeLength = pos + bufferSize < length ? bufferSize : length - pos;
+      out.write(buffer, 0, (int) writeLength);
+    }
+    out.close();
+    appendLog("Write Successfully!");
   }
 }
