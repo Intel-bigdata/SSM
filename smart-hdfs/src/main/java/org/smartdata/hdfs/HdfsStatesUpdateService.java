@@ -17,18 +17,25 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.utils.HadoopUtil;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.StatesUpdateService;
+import org.smartdata.utils.HadoopUtil;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,11 +44,12 @@ import java.util.concurrent.ScheduledExecutorService;
  * Polls metrics and events from NameNode
  */
 public class HdfsStatesUpdateService extends StatesUpdateService {
-
+  private static final Path MOVER_ID_PATH = new Path("/system/mover.id");
   private DFSClient client;
   private ScheduledExecutorService executorService;
   private InotifyEventFetcher inotifyEventFetcher;
   private CachedListFetcher cachedListFetcher;
+  private FSDataOutputStream moverIdOutputStream;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(HdfsStatesUpdateService.class);
@@ -61,7 +69,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     SmartContext context = getContext();
     URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
     this.client = new DFSClient(nnUri, context.getConf());
-
+    moverIdOutputStream = checkAndMarkRunning(nnUri, context.getConf());
     this.cleanFileTableContents(metaStore);
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
@@ -84,6 +92,15 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
   @Override
   public void stop() throws IOException {
     LOG.info("Stopping ...");
+    if (moverIdOutputStream != null) {
+      try {
+        moverIdOutputStream.close();
+      } catch (IOException e) {
+        LOG.debug("Close 'mover' ID output stream error", e);
+        // ignore this
+      }
+    }
+
     if (inotifyEventFetcher != null) {
       this.inotifyEventFetcher.stop();
     }
@@ -99,6 +116,27 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
       adapter.execute("DELETE FROM files");
     } catch (MetaStoreException e) {
       throw new IOException("Error while 'DELETE FROM files'", e);
+    }
+  }
+
+  private FSDataOutputStream checkAndMarkRunning(URI namenodeURI, Configuration conf)
+      throws IOException {
+    try {
+      DistributedFileSystem fs = (DistributedFileSystem) FileSystem.get(namenodeURI, conf);
+      if (fs.exists(MOVER_ID_PATH)) {
+        // try appending to it so that it will fail fast if another instance is
+        // running.
+        IOUtils.closeStream(fs.append(MOVER_ID_PATH));
+        fs.delete(MOVER_ID_PATH, true);
+      }
+      FSDataOutputStream fsout = fs.create(MOVER_ID_PATH, false);
+      fs.deleteOnExit(MOVER_ID_PATH);
+      fsout.writeBytes(InetAddress.getLocalHost().getHostName());
+      fsout.hflush();
+      return fsout;
+    } catch (Exception e) {
+      LOG.error("Unable to lock 'mover', please stop 'mover' first.");
+      throw e;
     }
   }
 }
