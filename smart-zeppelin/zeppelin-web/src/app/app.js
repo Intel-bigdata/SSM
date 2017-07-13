@@ -80,15 +80,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       }]
     };
 
-    var actionLoad = {
-        load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-        }],
-        action0: ['$routeParams', 'models', function ($routeParams, models) {
-            return models.$get.action($routeParams.actionId);
-        }]
-    };
-
     $routeProvider
       .when('/', {
         templateUrl: 'app/home/home.html'
@@ -142,8 +133,8 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
           load: ['heliumService', function(heliumService) {
             return heliumService.load;
           }],
-          rule0: ['$routeParams', 'models', function ($routeParams, models) {
-            return models.$get.rule($routeParams.ruleId);
+          rule0: ['$route', 'models', function ($route, models) {
+            return models.$get.rule($route.current.params.ruleId);
           }]
         }
       })
@@ -165,7 +156,14 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       .when('/actions/action/:actionId', {
         templateUrl: 'app/dashboard/views/actions/action/action.html',
         controller: 'ActionCtrl',
-        resolve: actionLoad
+        resolve: {
+          load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          action0: ['$route', 'models', function ($route, models) {
+            return models.$get.action($route.current.params.actionId);
+          }]
+        }
       })
       .when('/jobmanager', {
         templateUrl: 'app/jobmanager/jobmanager.html',

@@ -23,7 +23,7 @@ angular.module('zeppelinWebApp')
 
     return {
       restrict: 'E',
-      templateUrl: 'views/rules/rule/cmdlets_table.html',
+      templateUrl: 'app/dashboard/views/rules/rule/cmdlets_table.html',
       replace: false /* true will got an error */,
       scope: {
         cmdlets: '=cmdletsBind'

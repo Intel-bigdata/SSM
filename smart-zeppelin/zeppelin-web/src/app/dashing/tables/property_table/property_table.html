@@ -27,7 +27,7 @@
       <remark ng-if="prop.help" type="question" tooltip="{{prop.help}}"></remark>
     </td>
     <td ng-attr-ng-class="propValueClass">
-      <ng-switch on="prop.hasOwnProperty(\'values\')">
+      <ng-switch on="prop.hasOwnProperty('values')">
         <property ng-switch-when="true" ng-repeat="value in prop.values track by $index" value-bind="value"
                   renderer="{{::prop.renderer}}"></property>
         <property ng-switch-when="false" value-bind="prop.value" renderer="{{::prop.renderer}}"></property>
