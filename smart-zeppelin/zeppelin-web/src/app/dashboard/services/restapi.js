@@ -110,6 +110,11 @@ angular.module('zeppelinWebApp')
           return $http.post(url);
         },
 
+        deleteRule: function (ruleId) {
+          var url = restapiV1Root + 'rules/' + ruleId + '/delete';
+          return $http.post(url);
+        },
+
         /** Submit an user defined application with user configuration */
         submitRule: function (args, onComplete) {
           return self._submitRule(restapiV1Root + 'rules/add', args, onComplete);

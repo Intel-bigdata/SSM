@@ -109,6 +109,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
             },
             terminate: function () {
               return restapi.stopRule(obj.id);
+            },
+            delete: function () {
+              return restapi.deleteRule(obj.id);
             }
           });
         },
