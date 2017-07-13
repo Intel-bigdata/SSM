@@ -51,8 +51,8 @@ public class InotifyFetchAndApplyTask implements Runnable {
         this.lastId.getAndSet(eventBatch.getTxid());
         eventBatch = inotifyEventInputStream.poll();
       }
-    } catch (IOException | MissingEventsException | MetaStoreException e) {
-      LOG.error("Inotify Apply Events error", e);
+    } catch (Throwable t) {
+      LOG.error("Inotify Apply Events error", t);
     }
   }
 
