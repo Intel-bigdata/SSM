@@ -23,11 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 /**
@@ -75,10 +71,12 @@ public class CmdletRestApi {
 
   @POST
   @Path("/submit")
-  public Response submitCmdlet(String args) {
+  public Response submitCmdlet(@FormParam("actionType") String actionType,
+                               @FormParam("args") String args) {
+    String arg = actionType + ' ' + args;
     try {
       return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletManager()
-          .submitCmdlet(args)).build();
+          .submitCmdlet(arg)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while adding cmdlet", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
