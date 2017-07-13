@@ -140,7 +140,15 @@ SSH_OPTIONS="-o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10s"
 
 function start_smart_server() {
   local servers=localhost
-  ssh ${SSH_OPTIONS} ${servers} cd ${SMART_HOME}; ${SMART_HOME}/bin/start-smart.sh $SMART_VARGS "--daemon" 2>&1 >/dev/null &
+
+  if [[ "${SMART_VARGS}" =~ " -format" ]]; then
+    echo "Start formatting database ..."
+    exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $SMART_VARGS
+    exit $?
+  fi
+
+  echo  "Starting SmartServer ..."
+  ssh ${SSH_OPTIONS} ${servers} "cd ${SMART_HOME}; ${SMART_HOME}/bin/start-smart.sh ${SMART_VARGS} --daemon"
 }
 
 function stop_smart_server() {
@@ -154,9 +162,39 @@ function smart_start_daemon() {
   if [[ -f "${pidfile}" ]]; then
     pid=$(cat "$pidfile")
     if ps -p "${pid}" > /dev/null 2>&1; then
-      return
+      echo "ERROR: Another instance is running, please stop it first."
+      return 1
     fi
+    rm -f "${pidfile}" >/dev/null 2>&1
   fi
+
+  start_daemon "${pidfile}" >/dev/null 2>&1 < /dev/null &
+
+  (( counter=0 ))
+  while [[ ! -f ${pidfile} && ${counter} -le 5 ]]; do
+    sleep 1
+    (( counter++ ))
+  done
+
+  echo $! > "${pidfile}" 2>/dev/null
+  if [[ $? -gt 0 ]]; then
+    echo "ERROR:  Can NOT write pid file ${pidfile}."
+  fi
+
+  disown %+ >/dev/null 2>&1
+  if [[ $? -gt 0 ]]; then
+    echo "ERROR: Cannot disconnect process $!"
+  fi
+  sleep 1
+
+  if ! ps -p $! >/dev/null 2>&1; then
+    return 1
+  fi
+  return 0
+}
+
+function start_daemon() {
+  local pidfile=$1
 
   echo $$ > "${pidfile}" 2>/dev/null
   if [[ $? -gt 0 ]]; then
