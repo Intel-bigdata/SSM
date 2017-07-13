@@ -76,7 +76,7 @@ angular.module('zeppelinWebApp')
             // stopTime: rule.finishTime || '-',
             status: rule.state,
             active: {
-              text: 'Start', class: 'btn-xs', disabled: rule.isRunning,
+              text: 'Start', class: 'btn-xs', disabled: (rule.isRunning || rule.isDelete),
               click: function () {
                 $dialogs.confirm('Are you sure to active this rule?', function () {
                   rule.start();
@@ -98,7 +98,7 @@ angular.module('zeppelinWebApp')
               }
             },
             delete: {
-              text: 'Delete', class: 'btn-xs',
+              text: 'Delete', class: 'btn-xs', disabled: rule.isDelete,
               click: function () {
                 $dialogs.confirm('Are you sure to delete this rule?', function () {
                   rule.delete();
