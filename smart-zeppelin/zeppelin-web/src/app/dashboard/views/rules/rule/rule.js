@@ -31,45 +31,45 @@ angular.module('zeppelinWebApp')
       $scope.rule = rule;
     });
 
-      $scope.ruleSummary = [
-          $ptb.text('ID').done(),
-          $ptb.datetime('Start Time').done()
+    $scope.ruleSummary = [
+        $ptb.text('ID').done(),
+        $ptb.datetime('Start Time').done()
         /*
-         $ptb.text('User').done(),
-         $ptb.button('Quick Links').done()
-         */
-      ];
+        $ptb.text('User').done(),
+        $ptb.button('Quick Links').done()
+        */
+    ];
 
-      $scope.$watch('rule', function (rule) {
-          $ptb.$update($scope.ruleSummary, [
-              rule.id,
-              rule.submitTime
-            /*
-             rule.user,
-             [
-             {href: rule.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
-             helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, rule.homeDirectory),
-             helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, rule.logFile)
-             ]
-             */
-          ]);
-      });
+    $scope.$watch('rule', function (rule) {
+      $ptb.$update($scope.ruleSummary, [
+          rule.id,
+          rule.submitTime
+          /*
+           rule.user,
+           [
+           {href: rule.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
+           helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, rule.homeDirectory),
+           helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, rule.logFile)
+           ]
+           */
+      ]);
+    });
 
-      $scope.alerts = [];
-      models.$get.ruleAlerts($scope.rule.id)
-          .then(function (alerts0) {
-              $scope.alerts = alerts0.$data();
-              alerts0.$subscribe($scope, function (alerts) {
-                  $scope.alerts = alerts;
-              });
+    $scope.alerts = [];
+    models.$get.ruleAlerts($scope.rule.id)
+        .then(function (alerts0) {
+          $scope.alerts = alerts0.$data();
+          alerts0.$subscribe($scope, function (alerts) {
+            $scope.alerts = alerts;
           });
+        });
 
-      $scope.cmdlets = [];
-      models.$get.ruleCmdlets($scope.rule.id)
-          .then(function (cmdlets0) {
-              $scope.cmdlets = cmdlets0.$data();
-              cmdlets0.$subscribe($scope, function (cmdlets) {
-                  $scope.cmdlets = cmdlets;
-              });
+    $scope.cmdlets = [];
+    models.$get.ruleCmdlets($scope.rule.id)
+        .then(function (cmdlets0) {
+          $scope.cmdlets = cmdlets0.$data();
+          cmdlets0.$subscribe($scope, function (cmdlets) {
+            $scope.cmdlets = cmdlets;
           });
+        });
   }
