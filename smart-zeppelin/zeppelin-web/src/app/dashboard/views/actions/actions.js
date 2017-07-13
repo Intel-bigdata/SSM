@@ -19,7 +19,8 @@
 angular.module('zeppelinWebApp')
 
   .controller('ActionsCtrl', ActionsCtrl);
-  ActionsCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'actions0', 'actionTypes'];
+  ActionsCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder',
+    '$dialogs', 'actions0', 'actionTypes'];
   function ActionsCtrl($scope, $modal, $stb, $dialogs, actions0, actionTypes) {
     'use strict';
 

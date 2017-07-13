@@ -116,20 +116,20 @@ angular.module('zeppelinWebApp')
         },
 
         _submitRule: function (url, args, onComplete) {
-            return $http({
-                method: 'POST',
-                url: url,
-                data: $.param({ruleText: args}),
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        }).then(function (response) {
-                if (onComplete) {
-                    onComplete(decodeSuccessResponse(response.data));
-                }
-            }, function (response) {
-                if (onComplete) {
-                    onComplete(decodeErrorResponse(response.data));
-                }
-            });
+          return $http({
+            method: 'POST',
+            url: url,
+            data: $.param({ruleText: args}),
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+          }).then(function (response) {
+            if (onComplete) {
+              onComplete(decodeSuccessResponse(response.data));
+            }
+          }, function (response) {
+            if (onComplete) {
+              onComplete(decodeErrorResponse(response.data));
+            }
+          });
         },
 
         /** Submit an user defined application with user configuration */
@@ -138,13 +138,12 @@ angular.module('zeppelinWebApp')
         },
 
         _submitAction: function (url, action, args, onComplete) {
-          return $http(
-              {
-                method: 'POST',
-                url: url,
-                data: $.param({actionType: action, args:args}),
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-              }).then(function (response) {
+          return $http({
+            method: 'POST',
+            url: url,
+            data: action + ' ' + args,
+            headers: {'Content-Type': 'application/raw'}
+          }).then(function (response) {
             if (onComplete) {
               onComplete(decodeSuccessResponse(response.data));
             }
