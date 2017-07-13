@@ -46,35 +46,29 @@ public class CheckStorageAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    try {
-      HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
-      if (fileStatus == null) {
-        throw new ActionException("File does not exist.");
-      }
-      long length = fileStatus.getLen();
-      List<LocatedBlock> locatedBlocks = dfsClient.getLocatedBlocks(
-          fileName, 0, length).getLocatedBlocks();
-      for (LocatedBlock locatedBlock : locatedBlocks) {
-        StringBuilder blockInfo = new StringBuilder();
-        blockInfo.append("File offset = ")
-            .append(locatedBlock.getStartOffset())
-            .append(", ");
-        blockInfo.append("Block locations = {");
-        for (DatanodeInfo datanodeInfo : locatedBlock.getLocations()) {
-          blockInfo.append(datanodeInfo.getName());
-          if (datanodeInfo instanceof DatanodeInfoWithStorage) {
-            blockInfo.append("[")
-                .append(((DatanodeInfoWithStorage)datanodeInfo).getStorageType())
-                .append("]");
-          }
-          blockInfo.append(" ");
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+    if (fileStatus == null) {
+      throw new ActionException("File does not exist.");
+    }
+    long length = fileStatus.getLen();
+    List<LocatedBlock> locatedBlocks =
+        dfsClient.getLocatedBlocks(fileName, 0, length).getLocatedBlocks();
+    for (LocatedBlock locatedBlock : locatedBlocks) {
+      StringBuilder blockInfo = new StringBuilder();
+      blockInfo.append("File offset = ").append(locatedBlock.getStartOffset()).append(", ");
+      blockInfo.append("Block locations = {");
+      for (DatanodeInfo datanodeInfo : locatedBlock.getLocations()) {
+        blockInfo.append(datanodeInfo.getName());
+        if (datanodeInfo instanceof DatanodeInfoWithStorage) {
+          blockInfo
+              .append("[")
+              .append(((DatanodeInfoWithStorage) datanodeInfo).getStorageType())
+              .append("]");
         }
-        blockInfo.append("}");
-        this.appendResult(blockInfo.toString());
+        blockInfo.append(" ");
       }
-    } catch (Exception e) {
-      this.appendResult("CheckStorageAction failed :" + e);
-      throw new ActionException(e);
+      blockInfo.append("}");
+      appendResult(blockInfo.toString());
     }
   }
 }

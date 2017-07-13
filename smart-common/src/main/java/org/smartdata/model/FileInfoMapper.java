@@ -104,7 +104,6 @@ public class FileInfoMapper {
 
   @Override
   public String toString() {
-
     return String.format("FileInfoMapper{attrMap=%s}", attrMap);
   }
 
