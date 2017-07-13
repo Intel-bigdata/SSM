@@ -153,7 +153,7 @@ function start_smart_server() {
 
 function stop_smart_server() {
   local servers=localhost
-  ssh ${SSH_OPTIONS} ${servers} ${SMART_HOME}/bin/stop-smart.sh "--daemon" 2>&1 >/dev/null &
+  ssh ${SSH_OPTIONS} ${servers} "cd ${SMART_HOME}; ${SMART_HOME}/bin/stop-smart.sh --daemon"
 }
 
 function smart_start_daemon() {
@@ -215,16 +215,27 @@ function smart_stop_daemon() {
     pid=$(cat "$pidfile")
 
     kill "${pid}" >/dev/null 2>&1
-    sleep 5
+    (( counter=0 ))
+    while [[ ${counter} -le 5 ]]; do
+      sleep 1
+      (( counter++ ))
+      ps -p "${pid}" > /dev/null 2>&1
+      if [ "$?" != "0" ]; then
+        echo "Service stopped on node '${HOSTNAME}'"
+        break
+      fi
+    done
+
     if kill -0 "${pid}" > /dev/null 2>&1; then
       echo "Daemon still alive after 5 seconds, Trying to kill it by force."
       kill -9 "${pid}" >/dev/null 2>&1
+      sleep 1
     fi
     if ps -p "${pid}" > /dev/null 2>&1; then
       echo "ERROR: Unable to kill ${pid}"
     fi
     rm -f "$pidfile"
   else
-    echo "Can NOT find PID file $pidfile"
+    echo "Service not found on node '${HOSTNAME}'"
   fi
 }
