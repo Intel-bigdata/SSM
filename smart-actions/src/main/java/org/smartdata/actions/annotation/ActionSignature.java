@@ -31,5 +31,5 @@ public @interface ActionSignature {
 
   String usage() default "";
 
-  String comment() default "";
+  String description() default "";
 }
