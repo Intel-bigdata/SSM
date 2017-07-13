@@ -70,6 +70,13 @@ public class ActionDescriptor {
     this.comment = comment;
   }
 
+  @Override
+  public String toString() {
+    return String.format("ActionDescriptor{actionName=\'%s\', displayName=\'%s\', displayName=\'%s\', usage=\'%s\', " +
+        "comment=\'%s\', comment=\'%s\'}", actionName, displayName, usage, comment);
+
+  }
+
   public static class Builder {
     private String actionName;
     private String displayName; // if not provided, use actionName instead
@@ -102,6 +109,12 @@ public class ActionDescriptor {
 
     public ActionDescriptor build() {
       return new ActionDescriptor(actionName, displayName, usage, comment);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("Builder{actionName=\'%s\', displayName=\'%s\', usage=\'%s\', comment=\'%s\'}",
+          actionName, displayName, usage, comment);
     }
   }
 

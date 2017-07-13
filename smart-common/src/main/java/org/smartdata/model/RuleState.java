@@ -54,4 +54,9 @@ public enum RuleState {
   public int getValue() {
     return value;
   }
+
+  @Override
+  public String toString() {
+    return String.format("RuleState{value=%s} %s", value, super.toString());
+  }
 }

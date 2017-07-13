@@ -206,6 +206,13 @@ public class FileInfo {
     return new Builder();
   }
 
+  @Override
+  public String toString() {
+    return String.format("FileInfo{path=\'%s\', fileId=%s, length=%s, isdir=%s, block_replication=%s, blocksize=%s, modification_time=%s," +
+            " access_time=%s, permission=%s, owner=\'%s\', group=\'%s\', storagePolicy=%s}", path, fileId, length, isdir,
+        block_replication, blocksize, modification_time, access_time, permission, owner, group, storagePolicy);
+  }
+
   public static class Builder {
     private String path;
     private long fileId;
@@ -283,6 +290,14 @@ public class FileInfo {
     public FileInfo build() {
       return new FileInfo(path, fileId, length, isdir, block_replication,
           blocksize, modification_time, access_time, permission,owner,
+          group, storagePolicy);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("Builder{path=\'%s\', fileId=%s, length=%s, isdir=%s, block_replication=%s, blocksize=%s, " +
+              "modification_time=%s, access_time=%s, permission=%s, owner=\'%s\', group=\'%s\', storagePolicy=\'%s\'}",
+          path, fileId, length, isdir, block_replication, blocksize, modification_time, access_time, permission, owner,
           group, storagePolicy);
     }
   }
