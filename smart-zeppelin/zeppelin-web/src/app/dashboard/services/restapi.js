@@ -116,7 +116,12 @@ angular.module('zeppelinWebApp')
         },
 
         _submitRule: function (url, args, onComplete) {
-            return $http.post(url, args).then(function (response) {
+            return $http({
+                method: 'POST',
+                url: url,
+                data: $.param({ruleText: args}),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+        }).then(function (response) {
                 if (onComplete) {
                     onComplete(decodeSuccessResponse(response.data));
                 }
@@ -129,12 +134,17 @@ angular.module('zeppelinWebApp')
 
         /** Submit an user defined application with user configuration */
         submitAction: function (action, args, onComplete) {
-          return self._submitAction(restapiV1Root + 'cmdlets/action/' + action, args, onComplete);
+          return self._submitAction(restapiV1Root + 'cmdlets/submit', action, args, onComplete);
         },
 
-        _submitAction: function (url, args, onComplete) {
-          url += '?args=' + encodeURIComponent(args);
-          return $http.post(url).then(function (response) {
+        _submitAction: function (url, action, args, onComplete) {
+          return $http(
+              {
+                method: 'POST',
+                url: url,
+                data: $.param({actionType: action, args:args}),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+              }).then(function (response) {
             if (onComplete) {
               onComplete(decodeSuccessResponse(response.data));
             }
