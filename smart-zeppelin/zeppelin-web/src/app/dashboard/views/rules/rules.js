@@ -54,7 +54,7 @@ angular.module('zeppelinWebApp')
         // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),
         // group 3/3 (4-col)
         $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.button('Actions').key(['active', 'view', 'stop']).styleClass('col-md-3').done()
+        $stb.button('Actions').key(['active', 'view', 'stop', 'delete']).styleClass('col-md-4').done()
       ],
       rows: null
     };
@@ -76,7 +76,7 @@ angular.module('zeppelinWebApp')
             // stopTime: rule.finishTime || '-',
             status: rule.state,
             active: {
-              text: 'Start', class: 'btn-xs', disabled: rule.isRunning,
+              text: 'Start', class: 'btn-xs', disabled: (rule.isRunning || rule.isDelete),
               click: function () {
                 $dialogs.confirm('Are you sure to active this rule?', function () {
                   rule.start();
@@ -94,6 +94,14 @@ angular.module('zeppelinWebApp')
               click: function () {
                 $dialogs.confirm('Are you sure to stop this rule?', function () {
                   rule.terminate();
+                });
+              }
+            },
+            delete: {
+              text: 'Delete', class: 'btn-xs', disabled: rule.isDelete,
+              click: function () {
+                $dialogs.confirm('Are you sure to delete this rule?', function () {
+                  rule.delete();
                 });
               }
             }

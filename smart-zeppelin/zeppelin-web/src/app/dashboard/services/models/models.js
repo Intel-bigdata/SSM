@@ -102,6 +102,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
             ruleName: 'Rule ' + obj.id,
             isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
             isDead: !(obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
+            isDelete: (obj.state === 'DELETED'),
             // extra methods
             pageUrl: locator.rule(obj.id),
             start: function () {
@@ -109,6 +110,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
             },
             terminate: function () {
               return restapi.stopRule(obj.id);
+            },
+            delete: function () {
+              return restapi.deleteRule(obj.id);
             }
           });
         },
