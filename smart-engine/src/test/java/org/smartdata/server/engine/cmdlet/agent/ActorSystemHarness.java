@@ -28,7 +28,7 @@ public abstract class ActorSystemHarness {
 
   @Before
   public void startActorSystem() {
-    system = ActorSystem.apply("Test", ConfigFactory.load());
+    system = ActorSystem.apply("Test", ConfigFactory.load(AgentConstants.AKKA_CONF_FILE));
   }
 
   @After
