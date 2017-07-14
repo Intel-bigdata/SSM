@@ -1,0 +1,50 @@
+    <!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+    -->
+<div class="dropdown-menu datepicker" ng-class="'datepicker-mode-' + $mode" style="max-width: 320px">
+  <table style="table-layout: fixed; height: 100%; width: 100%">
+    <thead>
+    <tr class="text-center dt-header">
+      <th>
+        <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-left"
+                ng-click="$selectPane(-1)"><i class="glyphicon glyphicon-triangle-left"></i></button>
+      </th>
+      <th colspan="{{ rows[0].length - 2 }}">
+        <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius btn-block text-strong"
+                ng-click="$toggleMode()"><strong style="text-transform: capitalize" ng-bind="title"></strong></button>
+      </th>
+      <th>
+        <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius pull-right"
+                ng-click="$selectPane(+1)"><i class="glyphicon glyphicon-triangle-right"></i></button>
+      </th>
+    </tr>
+    <tr ng-if="showLabels" ng-bind-html="labels"></tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="(i, row) in rows track by $index">
+      <td class="text-center" ng-repeat="(j, el) in row track by $index">
+        <button tabindex="-1" type="button" class="btn btn-sm btn-default btn-no-radius"
+                style="width: 100%; padding: 4px 3px"
+                ng-class="{'btn-primary': el.selected, 'btn-info btn-today': el.isToday && !el.selected}"
+                ng-click="$select(el.date)" ng-disabled="el.disabled"><span ng-class="{'text-muted': el.muted}"
+                                                                            ng-bind="el.label"></span></button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>

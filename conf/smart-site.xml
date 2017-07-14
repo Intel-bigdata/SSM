@@ -23,6 +23,11 @@
         <description>Namenode rpcserver</description>
     </property>
 
+    <!--set the following two configurations as true to fully enable zeppelin-->
+    <property>
+        <name>smart.zeppelin.enable</name>
+        <value>false</value>
+    </property>
     <property>
         <name>smart.zeppelin.web.enable</name>
         <value>false</value>

@@ -75,3 +75,25 @@ import './components/notevarshareService/notevarshare.service.js';
 import './components/rename/rename.controller.js';
 import './components/rename/rename.service.js';
 import './components/helium/helium.service.js';
+
+
+import './app/dashboard/i18n.js';
+import './app/dashing/dashing.min.js';
+import './app/dashboard/services/locator.js';
+import './app/dashboard/services/restapi.js';
+import './app/dashboard/services/health_check_service.js';
+import './app/dashboard/services/login_check.js';
+import './app/dashboard/services/models/models.js';
+
+
+import './app/dashboard/views/cluster/cluster_hottestFiles';
+import './app/dashboard/views/cluster/cluster_fileInCache';
+import './app/dashboard/views/actions/actions.js';
+import './app/dashboard/views/actions/action/action.js';
+import './app/dashboard/views/actions/submit/submit.js';
+import './app/dashboard/views/rules/rules.js';
+import './app/dashboard/views/rules/rule/rule.js';
+import './app/dashboard/views/rules/submit/submit.js';
+import './app/dashboard/views/rules/rule/alerts_table.js';
+import './app/dashboard/views/rules/rule/cmdlets_table.js';
+import './app/dashboard/views/helper.js';
