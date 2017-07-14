@@ -18,7 +18,6 @@
 package org.smartdata.actions;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,68 +122,70 @@ public abstract class SmartAction {
     try {
       reportStart();
       execute();
-      this.successful = true;
+      successful = true;
     } catch (Throwable t) {
       LOG.error("SmartAction execute error ", t);
       throwable = t;
       appendLog(ExceptionUtils.getFullStackTrace(t));
     } finally {
       reportFinished(throwable);
-      this.stop();
+      stop();
     }
   }
 
   private void reportStart() {
-    if (this.statusReporter != null) {
-      this.statusReporter.report(new ActionStarted(this.actionId, System.currentTimeMillis()));
+    if (statusReporter != null) {
+      statusReporter.report(new ActionStarted(actionId, System.currentTimeMillis()));
     }
   }
 
   private void reportFinished(Throwable throwable) {
-    if (this.statusReporter != null) {
+    if (statusReporter != null) {
       try {
-        this.statusReporter.report(
+        statusReporter.report(
             new ActionFinished(
-                this.actionId,
+                actionId,
                 System.currentTimeMillis(),
-                StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
-                StringEscapeUtils.escapeJava(this.logOs.toString("UTF-8")),
+                resultOs.toString("UTF-8"),
+                logOs.toString("UTF-8"),
                 throwable));
       } catch (IOException e) {
         LOG.error("Action statusReporter ActionFinished aid={} error", this.actionId, e);
-        this.statusReporter.report(
-            new ActionFinished(this.actionId, System.currentTimeMillis(), throwable));
+        statusReporter.report(
+            new ActionFinished(actionId, System.currentTimeMillis(), throwable));
       }
     }
   }
 
   protected void appendResult(String result) {
-    this.psResultOs.println(result);
+    psResultOs.println(result);
   }
 
   protected void appendLog(String log) {
-    this.psLogOs.println(log);
+    psLogOs.println(log);
   }
 
   public float getProgress() {
-    if (this.successful) {
+    if (successful) {
       return 1.0F;
     }
     return 0.0F;
   }
 
   public ActionStatus getActionStatus() throws UnsupportedEncodingException {
-    return new ActionStatus(this.actionId, getProgress(),
-      StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
-      StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")));
+    return new ActionStatus(
+        actionId,
+        getProgress(),
+        resultOs.toString("UTF-8"),
+        resultOs.toString("UTF-8"));
   }
 
   private void stop() {
-    this.psLogOs.close();
-    this.psResultOs.close();
+    psLogOs.close();
+    psResultOs.close();
   }
 
   public boolean isSuccessful() {
-    return this.successful;
+    return successful;
   }
 }
