@@ -61,4 +61,8 @@ public class SmartConfKeys {
   // SmartAgent
   public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
   public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
+
+  // SmartClient
+  // Comma delimited directories, access event of files under these directories will not be reported to SSM.
+  public static final String SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY = "smart.client.ignore.access.event.dirs";
 }
