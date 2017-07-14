@@ -57,6 +57,7 @@
     <module>zeppelin-zengine</module>
     <module>zeppelin-display</module>
     <module>spark</module>
+    <module>zeppelin-web</module>
     <module>zeppelin-server</module>
   </modules>
 

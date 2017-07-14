@@ -88,6 +88,15 @@ module.exports = function(config) {
       'bower_components/clipboard/dist/clipboard.js',
       'bower_components/ngclipboard/dist/ngclipboard.js',
       'bower_components/angular-mocks/angular-mocks.js',
+      'bower_components/angular-ui-router/release/angular-ui-router.js',
+      'bower_components/jquery.cookie/jquery.cookie.js',
+      'bower_components/angular-loading-bar/build/loading-bar.js',
+      'bower_components/angular-smart-table/dist/smart-table.js',
+      'bower_components/angular-strap/dist/angular-strap.js',
+      'bower_components/angular-strap/dist/angular-strap.tpl.js',
+      'bower_components/ng-file-upload/ng-file-upload.js',
+      'bower_components/vis/dist/vis.js',
+      'bower_components/angular-ui-select/dist/select.js',
       // endbower
 
       'src/index.js',

@@ -25,12 +25,13 @@ NavCtrl.$inject = [
   'websocketMsgSrv',
   'arrayOrderingSrv',
   'searchService',
-  'TRASH_FOLDER_ID'
+  'TRASH_FOLDER_ID',
+  'conf'
 ];
 
 function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
                  noteListDataFactory, baseUrlSrv, websocketMsgSrv,
-                 arrayOrderingSrv, searchService, TRASH_FOLDER_ID) {
+                 arrayOrderingSrv, searchService, TRASH_FOLDER_ID, conf) {
   var vm = this;
   vm.arrayOrderingSrv = arrayOrderingSrv;
   vm.connected = websocketMsgSrv.isConnected();
@@ -48,7 +49,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
   initController();
 
   function getZeppelinVersion() {
-    $http.get(baseUrlSrv.getRestApiBase() + '/version').success(
+    $http.get(conf.restapiRoot + 'smart/api/' + conf.restapiProtocol + '/system/version').success(
       function(data, status, headers, config) {
         $rootScope.zeppelinVersion = data.body;
       }).error(
