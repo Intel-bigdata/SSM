@@ -19,6 +19,9 @@ package org.smartdata.actions;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
@@ -36,6 +39,8 @@ import java.util.Map;
  * are also meant to extend this.
  */
 public abstract class SmartAction {
+  static final Logger LOG = LoggerFactory.getLogger(SmartAction.class);
+
   private StatusReporter statusReporter;
   private long actionId;
   private Map<String, String> actionArgs;
@@ -114,16 +119,17 @@ public abstract class SmartAction {
   protected abstract void execute() throws Exception;
 
   final public void run() {
-    Exception exception = null;
+    Throwable throwable = null;
     try {
       reportStart();
       execute();
       this.successful = true;
-    } catch (Exception e) {
-      e.printStackTrace();
-      exception = e;
+    } catch (Throwable t) {
+      LOG.error("SmartAction execute error ", t);
+      throwable = t;
+      appendLog(ExceptionUtils.getFullStackTrace(t));
     } finally {
-      reportFinished(exception);
+      reportFinished(throwable);
       this.stop();
     }
   }
@@ -134,7 +140,7 @@ public abstract class SmartAction {
     }
   }
 
-  private void reportFinished(Exception exception) {
+  private void reportFinished(Throwable throwable) {
     if (this.statusReporter != null) {
       try {
         this.statusReporter.report(
@@ -143,11 +149,11 @@ public abstract class SmartAction {
                 System.currentTimeMillis(),
                 StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
                 StringEscapeUtils.escapeJava(this.logOs.toString("UTF-8")),
-                exception));
+                throwable));
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.error("Action statusReporter ActionFinished aid={} error", this.actionId, e);
         this.statusReporter.report(
-            new ActionFinished(this.actionId, System.currentTimeMillis(), exception));
+            new ActionFinished(this.actionId, System.currentTimeMillis(), throwable));
       }
     }
   }

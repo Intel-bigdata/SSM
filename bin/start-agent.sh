@@ -23,9 +23,7 @@ USAGE="Usage: bin/start-agent.sh [--config <conf-dir>] [--debug] ..."
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
 
-echo "Command: $0 $*"
-
-vargs=
+SMART_VARGS=
 while [ $# != 0 ]; do
   case "$1" in
     "--config")
@@ -46,7 +44,7 @@ while [ $# != 0 ]; do
       shift
       ;;
     *)
-      vargs+=" $1"
+      SMART_VARGS+=" $1"
       shift
       ;;
   esac
@@ -55,22 +53,24 @@ done
 . "${bin}/common.sh"
 
 HOSTNAME=$(hostname)
-SMART_LOGFILE="${SMART_LOG_DIR}/smart-${SMART_IDENT_STRING}-${HOSTNAME}.log"
-LOG="${SMART_LOG_DIR}/smart-cli-${SMART_IDENT_STRING}-${HOSTNAME}.out"
-
 SMART_AGENT=org.smartdata.agent.SmartAgent
+JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
+JAVA_OPTS+=" -Dsmart.log.file=SmartAgent.log"
 
 addJarInDir "${SMART_HOME}/lib"
+
+if [ "$SMART_CLASSPATH" = "" ]; then
+  SMART_CLASSPATH="${SMART_CONF_DIR}"
+else
+  SMART_CLASSPATH="${SMART_CONF_DIR}:${SMART_CLASSPATH}"
+fi
 
 if [[ ! -d "${SMART_LOG_DIR}" ]]; then
   echo "Log dir doesn't exist, create ${SMART_LOG_DIR}"
   $(mkdir -p "${SMART_LOG_DIR}")
 fi
 
-# if [[ ! -d "${SMART_PID_DIR}" ]]; then
-#   echo "Pid dir doesn't exist, create ${SMART_PID_DIR}"
-#   $(mkdir -p "${SMART_PID_DIR}")
-# fi
+SMART_VARGS+=" -D smart.conf.dir="${SMART_CONF_DIR}
+SMART_VARGS+=" -D smart.log.dir="${SMART_LOG_DIR}
 
-vargs+=" -D smart.conf.dir="${SMART_CONF_DIR}
-exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_AGENT $vargs
+exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_AGENT $SMART_VARGS

@@ -113,6 +113,11 @@ html, body {
   color: transparent !important;
 }
 
+#action-args > label > span > remark > div {
+  white-space: nowrap;
+  max-width: none;
+}
+
 /* Tune bootstrap-tooltip look and feel (2 rules) */
 .tooltip-inner {
   max-width: none;

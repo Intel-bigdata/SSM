@@ -73,7 +73,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             1024,
             0,
             0,
-            new FsPermission((short) 777),
+            new FsPermission("777"),
             "owner",
             "group",
             new byte[0],
@@ -82,7 +82,8 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             0,
             null,
             (byte) 0);
-    Mockito.when(client.getFileInfo(Matchers.anyString())).thenReturn(status1);
+    Mockito.when(client.getFileInfo(Matchers.startsWith("/file"))).thenReturn(status1);
+    Mockito.when(client.getFileInfo(Matchers.startsWith("/dir"))).thenReturn(getDummyDirStatus("", 1010));
     applier.apply(new Event[] {createEvent});
 
     FileInfo result1 = metaStore.getFile().get(0);
@@ -156,6 +157,100 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Event unlink = new Event.UnlinkEvent.Builder().path("/").timestamp(6).build();
     applier.apply(new Event[] {unlink});
     Assert.assertFalse(metaStore.getFile().size() > 0);
+  }
+
+  @Test
+  public void testApplierRenameEvent() throws Exception {
+    DFSClient client = Mockito.mock(DFSClient.class);
+    InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
+
+    FileInfo[] fileInfos = new FileInfo[] {
+        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dirfile", 7000), "/dirfile"),
+        FileInfo.fromHdfsFileStatus(getDummyDirStatus("/dir", 8000), "/dir"),
+        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dir/file1", 8001), "/dir/file1"),
+        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dir/file2", 8002), "/dir/file2"),
+        FileInfo.fromHdfsFileStatus(getDummyDirStatus("/dir2", 8100), "/dir2"),
+        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dir2/file1", 8101), "/dir2/file1"),
+        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dir2/file2", 8102), "/dir2/file2"),
+    };
+    metaStore.insertFiles(fileInfos);
+    Mockito.when(client.getFileInfo("/dir1")).thenReturn(getDummyDirStatus("/dir1", 8000));
+    Event.RenameEvent dirRenameEvent = new Event.RenameEvent.Builder()
+        .srcPath("/dir")
+        .dstPath("/dir1")
+        .build();
+    applier.apply(new Event[] {dirRenameEvent});
+    Assert.assertTrue(metaStore.getFile("/dir") == null);
+    Assert.assertTrue(metaStore.getFile("/dir/file1") == null);
+    Assert.assertTrue(metaStore.getFile("/dirfile") != null);
+    Assert.assertTrue(metaStore.getFile("/dir1") != null);
+    Assert.assertTrue(metaStore.getFile("/dir1/file1") != null);
+    Assert.assertTrue(metaStore.getFile("/dir2") != null);
+    Assert.assertTrue(metaStore.getFile("/dir2/file1") != null);
+
+    List<Event> events = new ArrayList<>();
+    Event.RenameEvent renameEvent = new Event.RenameEvent.Builder()
+        .srcPath("/file1")
+        .dstPath("/file2")
+        .build();
+    events.add(renameEvent);
+    applier.apply(events);
+    Assert.assertTrue(metaStore.getFile("/file2") == null);
+
+    Mockito.when(client.getFileInfo("/file2")).thenReturn(getDummyFileStatus("/file2", 2000));
+    applier.apply(events);
+    FileInfo info = metaStore.getFile("/file2");
+    Assert.assertTrue(info != null && info.getFileId() == 2000);
+
+    events.clear();
+    renameEvent = new Event.RenameEvent.Builder()
+        .srcPath("/file2")
+        .dstPath("/file3")
+        .build();
+    events.add(renameEvent);
+    applier.apply(events);
+    FileInfo info2 = metaStore.getFile("/file2");
+    Assert.assertTrue(info2 == null);
+    FileInfo info3 = metaStore.getFile("/file3");
+    Assert.assertTrue(info3 != null);
+
+    renameEvent = new Event.RenameEvent.Builder()
+        .srcPath("/file3")
+        .dstPath("/file4")
+        .build();
+    events.clear();
+    events.add(renameEvent);
+    applier.apply(events);
+    FileInfo info4 = metaStore.getFile("/file3");
+    FileInfo info5 = metaStore.getFile("/file4");
+    Assert.assertTrue(info4 == null && info5 != null);
+  }
+
+  private HdfsFileStatus getDummyFileStatus(String file, long fid) {
+    return doGetDummyStatus(file, fid, false);
+  }
+
+  private HdfsFileStatus getDummyDirStatus(String file, long fid) {
+    return doGetDummyStatus(file, fid, true);
+  }
+
+  private HdfsFileStatus doGetDummyStatus(String file, long fid, boolean isdir) {
+    return new HdfsFileStatus(
+        0,
+        isdir,
+        1,
+        1024,
+        0,
+        0,
+        new FsPermission("777"),
+        "owner",
+        "group",
+        new byte[0],
+        file.getBytes(),
+        fid,
+        0,
+        null,
+        (byte) 0);
   }
 
   @After

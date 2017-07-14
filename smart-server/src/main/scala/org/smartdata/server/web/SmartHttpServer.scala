@@ -22,7 +22,9 @@ import java.net.InetSocketAddress
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
+import com.typesafe.config.ConfigFactory
 import org.apache.hadoop.conf.Configuration
+import org.slf4j.{Logger, LoggerFactory}
 import org.smartdata.conf.SmartConfKeys
 import org.smartdata.server.SmartEngine
 
@@ -30,9 +32,10 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class SmartHttpServer(ssmServer: SmartEngine, conf: Configuration) {
-  implicit val system = ActorSystem("my-system")
+  implicit val system = ActorSystem("my-system", ConfigFactory.load("server.conf"))
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
+  private val LOG: Logger = LoggerFactory.getLogger(classOf[SmartHttpServer])
 
   val httpServerAddress: InetSocketAddress = {
     val strings = conf.get(SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_KEY,
@@ -44,7 +47,7 @@ class SmartHttpServer(ssmServer: SmartEngine, conf: Configuration) {
     val route = new RestServices(ssmServer).route
     val bindingFuture = Http().bindAndHandle(route,
         httpServerAddress.getHostString, httpServerAddress.getPort)
-    println(s"Please browse to http://${httpServerAddress.getHostString}:" +
+    LOG.info(s"Please browse to http://${httpServerAddress.getHostString}:" +
       s"${httpServerAddress.getPort} to see the web UI")
     Await.result(bindingFuture, 15.seconds)
   }

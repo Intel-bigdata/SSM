@@ -24,18 +24,19 @@ import org.smartdata.metastore.MetaStoreException;
 
 public abstract class TableEvictor {
   public final Logger LOG = LoggerFactory.getLogger(this.getClass());
-  private MetaStore adapter;
+  private MetaStore metaStore;
 
-  public TableEvictor(MetaStore adapter) {
-    this.adapter = adapter;
+  public TableEvictor(MetaStore metaStore) {
+    this.metaStore = metaStore;
   }
 
   public void dropTable(AccessCountTable accessCountTable) {
     try {
-      this.adapter.dropTable(accessCountTable.getTableName());
+      this.metaStore.dropTable(accessCountTable.getTableName());
+      this.metaStore.deleteAccessCountTable(accessCountTable);
       LOG.debug("Dropped access count table " + accessCountTable.getTableName());
     } catch (MetaStoreException e) {
-      e.printStackTrace();
+      LOG.error("Drop access count table {} failed", accessCountTable.getTableName(), e);
     }
   }
 

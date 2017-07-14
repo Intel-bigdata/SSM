@@ -19,7 +19,7 @@
 # Run SmartServer
 #
 #./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000
-#./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000 -D dfs.smart.default.db.url=jdbc:sqlite:file-sql.db
+#./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000 -D smart.metastore.db.url=jdbc:sqlite:file-sql.db
 
 USAGE="Usage: bin/start-smart.sh [--config <conf-dir>] [--debug] ..."
 
@@ -65,6 +65,15 @@ HOSTNAME=$(hostname)
 
 SMART_SERVER=org.smartdata.server.SmartDaemon
 JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
+JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
+
+JAVA_VERSION=$($SMART_RUNNER -version 2>&1 | awk -F '.' '/version/ {print $2}')
+
+if [[ "$JAVA_VERSION" -ge 8 ]]; then
+  JAVA_OPTS+=" -XX:MaxMetaspaceSize=256m"
+else
+  JAVA_OPTS+=" -XX:MaxPermSize=256m"
+fi
 
 addJarInDir "${SMART_HOME}/smart-server/target/lib"
 addNonTestJarInDir "${SMART_HOME}/smart-server/target"

@@ -17,6 +17,10 @@
  */
 package org.smartdata.actions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.actions.annotation.ActionSignature;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,15 +29,25 @@ import java.util.Map;
  * A common action factory for action providers to use.
  */
 public abstract class AbstractActionFactory implements ActionFactory {
-
+  static final Logger LOG = LoggerFactory.getLogger(AbstractActionFactory.class);
   private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
 
   static {
-    addAction("hello", HelloAction.class);
+    addAction(HelloAction.class);
   }
 
-  protected static void addAction(String actionName, Class<? extends SmartAction> actionClass) {
-    supportedActions.put(actionName, actionClass);
+  protected static void addAction(Class<? extends SmartAction> actionClass) {
+    ActionSignature actionSignature = actionClass.getAnnotation(ActionSignature.class);
+    if (actionSignature != null) {
+      String actionId = actionSignature.actionId();
+      if (!supportedActions.containsKey(actionId)) {
+        supportedActions.put(actionId, actionClass);
+      } else {
+        LOG.error("There is already an Action registered with id {}.", actionId);
+      }
+    } else {
+      LOG.error("Action {} does not has an ActionSignature.", actionClass.getName());
+    }
   }
 
   @Override

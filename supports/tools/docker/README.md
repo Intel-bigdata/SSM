@@ -27,8 +27,12 @@ docker run -p 3306:3306 --name {container_name} -e MYSQL_ROOT_PASSWORD={root_pas
 -  `database_name` Create a new database/schema with given name.
 
 ### HDFS on Docker
+
+**Note that this part is not suggested on OSX (mac), becasue the containers' newtork is limited on OSX.**
+
 Pull a well-known third-party hadoop image from docker store. You can use `hadoop-docker:tag` to specify the Hadoop version (`tag`) you want.
 
+#### Set a HDFS Container
 ```bash
 docker pull sequenceiq/hadoop-docker
 ```
@@ -36,27 +40,56 @@ docker pull sequenceiq/hadoop-docker
 Launch a Hadoop container with a exposed namenode.rpcserver.
 
 ```bash
-docker run -it --add-host=moby:127.0.0.1 -p 9000:9000 --name=hadoop sequenceiq/hadoop-docker /etc/bootstrap.sh -bash
+docker run -it --add-host=moby:127.0.0.1 --ulimit memlock=2024000000:2024000000 -p 9000:9000 --name=hadoop sequenceiq/hadoop-docker /etc/bootstrap.sh -bash
 ```
-Note that we try to launch a interactive docker container. Use the following command to check HDFS status.
+Note that we try to launch a interactive docker container. Use the following command to check HDFS status. We also set `memlock=2024000000` for cache size.
 
 ```
 cd $HADOOP_PREFIX
-bin/hdfs dfs -cat output/*
+bin/hdfs dfs -ls /
 ```
+
+#### Configure HDFS with multiple storage types and cache
 Edit `$HADOOP_PREFIX/etc/hadoop/hdfs-site.xml` and add the property below. This will turn off premission check to avoid `Access denied for user ***. Superuser privilege is required`.
 
-```xml
+```
 <property>
     <name>dfs.permissions.enabled</name>
     <value>false</value>
 </property>
 ```
+
+Create `/tmp/hadoop-root/dfs/data1~3` for different storage types. Delete all content in `/tmp/hadoop-root/dfs/data` and `/tmp/hadoop-root/dfs/name`, then use `bin/hdfs namenode -format` to format HDFS.
+
+Add the following properties to `$HADOOP_PREFIX/etc/hadoop/hdfs-site.xml`.
+
+```
+<property>
+	<name>dfs.datanode.max.locked.memory</name>
+	<value>2024000000</value>
+</property>
+<property>
+	<name>dfs.datanode.data.dir</name>
+	<value>[DISK]/tmp/hadoop-root/dfs/data,[SSD]/tmp/hadoop-root/dfs/data1,[RAM_DISK]/tmp/hadoop-root/dfs/data2,[ARCHIVE]/tmp/hadoop-root/dfs/data3</value>
+</property>
+<property>
+	<name>dfs.blocksize</name>
+	<value>1048576</value>
+	</property>
+<property>
+	<name>dfs.permissions.enabled</name>
+	<value>false</value>
+</property>
+```
+
+
 Restart HDFS.
 ```
 $HADOOP_PREFIX/sbin/stop-dfs.sh
 $HADOOP_PREFIX/sbin/start-dfs.sh
 ```
+
+Use `bin/hdfs dfsadmin -report` to check status.
 
 ## SSM Configuration
 

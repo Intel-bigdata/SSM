@@ -194,6 +194,13 @@ public class ActionInfo {
     return result1;
   }
 
+  @Override
+  public String toString() {
+    return String.format("ActionInfo{actionId=%s, cmdletId=%s, actionName=\'%s\', args=%s, result=\'%s\', log=\'%s\', " +
+            "successful=%s, createTime=%s, finished=%s, progress=%s}", actionId, cmdletId, actionName, args, result, log,
+        successful, createTime, finished, finishTime, progress);
+  }
+
   public static Builder newBuilder() {
     return Builder.create();
   }

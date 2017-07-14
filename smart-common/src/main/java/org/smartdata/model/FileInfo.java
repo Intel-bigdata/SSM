@@ -17,7 +17,6 @@
  */
 package org.smartdata.model;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 
 public class FileInfo {
@@ -148,9 +147,9 @@ public class FileInfo {
     this.storagePolicy = storagePolicy;
   }
 
-  public static FileInfo fromHdfsFileStatus(HdfsFileStatus status, String parent) {
+  public static FileInfo fromHdfsFileStatus(HdfsFileStatus status, String path) {
     return newBuilder()
-        .setPath(status.getFullPath(new Path(parent)).toString())
+        .setPath(path)
         .setFileId(status.getFileId())
         .setLength(status.getLen())
         .setIsdir(status.isDir())
@@ -205,6 +204,13 @@ public class FileInfo {
 
   public static Builder newBuilder() {
     return new Builder();
+  }
+
+  @Override
+  public String toString() {
+    return String.format("FileInfo{path=\'%s\', fileId=%s, length=%s, isdir=%s, block_replication=%s, blocksize=%s, modification_time=%s," +
+            " access_time=%s, permission=%s, owner=\'%s\', group=\'%s\', storagePolicy=%s}", path, fileId, length, isdir,
+        block_replication, blocksize, modification_time, access_time, permission, owner, group, storagePolicy);
   }
 
   public static class Builder {
@@ -284,6 +290,14 @@ public class FileInfo {
     public FileInfo build() {
       return new FileInfo(path, fileId, length, isdir, block_replication,
           blocksize, modification_time, access_time, permission,owner,
+          group, storagePolicy);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("Builder{path=\'%s\', fileId=%s, length=%s, isdir=%s, block_replication=%s, blocksize=%s, " +
+              "modification_time=%s, access_time=%s, permission=%s, owner=\'%s\', group=\'%s\', storagePolicy=\'%s\'}",
+          path, fileId, length, isdir, block_replication, blocksize, modification_time, access_time, permission, owner,
           group, storagePolicy);
     }
   }
