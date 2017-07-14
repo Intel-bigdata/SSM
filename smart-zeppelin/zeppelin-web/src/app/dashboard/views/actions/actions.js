@@ -88,8 +88,8 @@ angular.module('zeppelinWebApp')
             progress: {
                 current: action.progress,
                 max: 1,
-                flag: action.finished ? action.successful : "-",
-                usage: action.progress * 100
+                flag: action.finished ? action.successful : "-"
+                // usage: action.progress * 100
             }
           };
         }));
