@@ -20,6 +20,7 @@ package org.smartdata.server;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
+import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.RuleInfo;
@@ -93,6 +94,9 @@ public class TestSmartAdmin extends TestEmptyMiniSmartCluster {
 
       //test listActionInfoOfLastActions
       admin.listActionInfoOfLastActions(2);
+
+      List<ActionDescriptor> actions = admin.listActionsSupported();
+      assertTrue(actions.size() > 0);
 
       //test client close
       admin.close();
