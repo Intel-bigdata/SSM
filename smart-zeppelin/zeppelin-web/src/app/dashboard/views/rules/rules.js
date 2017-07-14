@@ -86,11 +86,11 @@ angular.module('zeppelinWebApp')
             view: {
               href: rule.pageUrl,
               text: 'Details',
-              class: 'btn-xs btn-primary',
+              class: 'btn-xs btn-info',
               disabled: !rule.isRunning
             },
             stop: {
-              text: 'Stop', class: 'btn-xs', disabled: !rule.isRunning,
+              text: 'Stop', class: 'btn-xs btn-warning', disabled: !rule.isRunning,
               click: function () {
                 $dialogs.confirm('Are you sure to stop this rule?', function () {
                   rule.terminate();
@@ -98,7 +98,7 @@ angular.module('zeppelinWebApp')
               }
             },
             delete: {
-              text: 'Delete', class: 'btn-xs', disabled: rule.isDelete,
+              text: 'Delete', class: 'btn-xs btn-danger', disabled: rule.isDelete,
               click: function () {
                 $dialogs.confirm('Are you sure to delete this rule?', function () {
                   rule.delete();
