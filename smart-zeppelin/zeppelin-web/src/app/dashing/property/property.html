@@ -23,7 +23,7 @@
        ng-attr-tooltip="{{tooltip}}"></tag>
   <indicator ng-switch-when="Indicator" ng-attr-shape="{{shape}}" ng-attr-condition="{{condition}}"
              ng-attr-tooltip="{{tooltip}}"></indicator>
-  <progressbar ng-switch-when="ProgressBar" current="{{current}}" max="{{max}}"></progressbar>
+  <progressbar ng-switch-when="ProgressBar" current="{{current}}" max="{{max}}" flag="{{flag}}"></progressbar>
   <div ng-switch-when="Duration" ng-bind="value|duration"></div>
   <div ng-switch-when="DateTime" ng-bind="value|date:'yyyy-MM-dd HH:mm:ss'"></div>
   <number ng-switch-when="Number" raw="{{raw}}" ng-attr-unit="{{unit}}" ng-attr-precision="{{precision}}"

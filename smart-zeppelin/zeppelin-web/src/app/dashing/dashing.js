@@ -1513,23 +1513,32 @@ angular.module('dashing.progressbar', [])
       scope: {
         current: '@',
         max: '@',
+        flag: '@',
         colorMapperFn: '='
       },
       link: function(scope, elem, attrs) {
         attrs.$observe('current', function(current) {
-          updateUsageAndClass(Number(current), Number(attrs.max));
+          updateUsageAndClass(Number(current), Number(attrs.max), Boolean(attrs.flag));
         });
         attrs.$observe('max', function(max) {
-          updateUsageAndClass(Number(attrs.current), Number(max));
+          updateUsageAndClass(Number(attrs.current), Number(max), Boolean(attrs.flag));
         });
-        function updateUsageAndClass(current, max) {
+        attrs.$observe('flag', function(flag) {
+          updateUsageAndClass(Number(attrs.current), Number(attrs.max), Boolean(flag));
+        });
+        function updateUsageAndClass(current, max, flag) {
           scope.usage = max > 0 ? Math.round(current * 100 / max) : -1;
           scope.usageClass = (scope.colorMapperFn ?
-            scope.colorMapperFn : defaultColorMapperFn)(scope.usage);
+        //     scope.colorMapperFn : defaultColorMapperFn)(scope.usage);
+        // }
+        // function defaultColorMapperFn(usage) {
+        //   return 'progress-bar-' +
+        //     (usage < 50 ? 'info' : (usage < 75 ? 'warning' : 'danger'));
+              scope.colorMapperFn : defaultColorMapperFn)(flag);
         }
-        function defaultColorMapperFn(usage) {
+        function defaultColorMapperFn(flag) {
           return 'progress-bar-' +
-            (usage < 50 ? 'info' : (usage < 75 ? 'warning' : 'danger'));
+              (flag ? "success" : "danger");
         }
       }
     };
