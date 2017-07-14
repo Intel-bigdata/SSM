@@ -100,11 +100,12 @@ public class AccessCountDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String statement =
         String.format(
-            "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
+            "SELECT %s, SUM(%s) as %s FROM (%s) tmp WHERE %s IN (SELECT fid from files) GROUP BY %s ORDER BY %s DESC LIMIT %s",
             AccessCountDao.FILE_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,
             getUnionStatement(tables),
+            AccessCountDao.FILE_FIELD,
             AccessCountDao.FILE_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,
             topNum);

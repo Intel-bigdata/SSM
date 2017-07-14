@@ -52,6 +52,7 @@ public class TestTableAggregator extends DBTest {
     databaseTester.setDataSet(dataSet);
     databaseTester.onSetup();
     MetaStore metaStore = new MetaStore(druidPool);
+    prepareFiles(metaStore);
 
     AccessCountTable result = new AccessCountTable("actual", 0L, 0L, false);
     AccessCountTable table1 = new AccessCountTable("table1", 0L, 0L, false);
