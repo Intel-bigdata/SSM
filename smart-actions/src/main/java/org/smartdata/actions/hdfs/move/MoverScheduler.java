@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -175,18 +176,26 @@ public class MoverScheduler {
     Collections.shuffle(locations);
     final Dispatcher.DBlock db = newDBlock(lb, locations);
 
+    List<Dispatcher.Source> sources = new ArrayList<>();
     for (final StorageType t : diff.existing) {
       for (final MLocation ml : locations) {
         final Dispatcher.Source source = storages.getSource(ml);
         if (ml.storageType == t && source != null) {
-          // try to schedule one replica move.
-          //if (scheduleMoveReplica(db, source, diff.expected)) {
-          //  return true;
-          //}
+          sources.add(source);
+          locations.remove(ml);
+          break;
         }
       }
     }
+    if (scheduleMoveReplicas(db, sources, diff.expected)) {
+      return true;
+    }
     return false;
+  }
+
+  boolean scheduleMoveReplicas(Dispatcher.DBlock db, List<Dispatcher.Source> sources,
+      List<StorageType> targetTypes) {
+
   }
 
   /**
