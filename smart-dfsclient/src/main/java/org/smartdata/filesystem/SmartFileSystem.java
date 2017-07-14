@@ -56,10 +56,10 @@ import java.net.URI;
  * 4. Restart HDFS
  */
 
-public class SmartFileSystem extends DistributedFileSystem{
+public class SmartFileSystem extends DistributedFileSystem {
 
-  SmartClient smartClient;
-  InetSocketAddress smartServerAddress;
+  private SmartClient smartClient;
+  private InetSocketAddress smartServerAddress;
 
   public SmartFileSystem() {
   }
