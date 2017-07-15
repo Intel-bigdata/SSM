@@ -60,6 +60,7 @@ public class SmartFileSystem extends DistributedFileSystem {
 
   private SmartClient smartClient;
   private InetSocketAddress smartServerAddress;
+  private boolean healthy;
 
   public SmartFileSystem() {
   }
@@ -83,6 +84,7 @@ public class SmartFileSystem extends DistributedFileSystem {
           ", address: " + smartServerIp + ", port:" +  smartServerPort);
     }
     this.smartClient = new SmartClient(conf, smartServerAddress);
+    healthy = true;
   }
 
   @Override
@@ -96,19 +98,33 @@ public class SmartFileSystem extends DistributedFileSystem {
 
   private void reportFileAccessEvent(String src) {
     try {
+      // If SSM server is down, reduce the impact to upper layer application.
+      if (!healthy) {
+        return;
+      }
       smartClient.reportFileAccessEvent(new FileAccessEvent(src));
     } catch (IOException e) {
       // Here just ignores that failed to report
-      e.printStackTrace();
-      LOG.error("Cannot report file access event to SmartServer: " + src);
+      healthy = false;
+      LOG.error("Cannot report file access event to SmartServer: " + src
+          + " , for: " + e.getMessage()
+          + " , report mechanism will be disabled now in this instance.");
     }
   }
 
   public void close() throws IOException {
     try {
       super.close();
+    } catch (IOException e) {
+      throw e;
     } finally {
-      this.smartClient.close();
+      try {
+        if (smartClient != null) {
+          this.smartClient.close();
+        }
+      } finally {
+        healthy = false;
+      }
     }
   }
 }
