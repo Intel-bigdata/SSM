@@ -54,6 +54,9 @@ public class ReadFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
+    if (filePath == null) {
+      throw new IllegalArgumentException("File parameter is missing.");
+    }
     appendLog(
         String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);

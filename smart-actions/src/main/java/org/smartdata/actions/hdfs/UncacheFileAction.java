@@ -46,6 +46,9 @@ public class UncacheFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
+    if (fileName == null) {
+      throw new IllegalArgumentException("File parameter is missing! ");
+    }
     this.appendLog(
         String.format(
             "Action starts at %s : %s -> uncache", Utils.getFormatedCurrentTime(), fileName));

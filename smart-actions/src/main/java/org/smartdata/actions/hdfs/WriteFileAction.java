@@ -65,13 +65,16 @@ public class WriteFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
+    if (filePath == null) {
+      throw new IllegalArgumentException("File parameter is missing! ");
+    }
+    if (length == -1) {
+      throw new IllegalArgumentException("Write Action provides wrong length! ");
+    }
     appendLog(
         String.format(
             "Action starts at %s : Write %s with length %s",
             Utils.getFormatedCurrentTime(), filePath, length));
-    if (length == -1) {
-      throw new ActionException("Write Action provides wrong length!");
-    }
     final OutputStream out = dfsClient.create(filePath, true);
     // generate random data with given length
     byte[] buffer = new byte[bufferSize];
