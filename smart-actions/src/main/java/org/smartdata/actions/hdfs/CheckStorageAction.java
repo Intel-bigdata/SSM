@@ -46,6 +46,9 @@ public class CheckStorageAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
+    if (fileName == null) {
+      throw new IllegalArgumentException("File parameter is missing! ");
+    }
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
     if (fileStatus == null) {
       throw new ActionException("File does not exist.");

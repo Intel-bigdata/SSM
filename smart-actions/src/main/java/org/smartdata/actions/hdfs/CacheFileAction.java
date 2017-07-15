@@ -67,6 +67,9 @@ public class CacheFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
+    if (fileName == null) {
+      throw new IllegalArgumentException("File parameter is missing! ");
+    }
     // set cache replication as the replication number of the file if not set
     if (replication == 0) {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
