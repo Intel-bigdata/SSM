@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class InotifyFetchAndApplyTask implements Runnable {
@@ -44,6 +45,7 @@ public class InotifyFetchAndApplyTask implements Runnable {
 
   @Override
   public void run() {
+    LOG.trace("InotifyFetchAndApplyTask run at " +  new Date());
     try {
       EventBatch eventBatch = inotifyEventInputStream.poll();
       while (eventBatch != null) {

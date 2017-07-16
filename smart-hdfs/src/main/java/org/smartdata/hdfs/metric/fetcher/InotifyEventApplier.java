@@ -69,18 +69,29 @@ public class InotifyEventApplier {
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
     switch (event.getEventType()) {
       case CREATE:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.CreateEvent)event).getPath());
         return Arrays.asList(this.getCreateSql((Event.CreateEvent)event));
       case CLOSE:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.CloseEvent)event).getPath());
         return Arrays.asList(this.getCloseSql((Event.CloseEvent)event));
-//      case TRUNCATE:
-//        return this.getTruncateSql((Event.TruncateEvent)event);
       case RENAME:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", src path:" + ((Event.RenameEvent)event).getSrcPath() +
+            ", dest path:" + ((Event.RenameEvent)event).getDstPath());
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.MetadataUpdateEvent)event).getPath());
         return Arrays.asList(this.getMetaDataUpdateSql((Event.MetadataUpdateEvent)event));
       case APPEND:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.AppendEvent)event).getPath());
         return this.getAppendSql((Event.AppendEvent)event);
       case UNLINK:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.UnlinkEvent)event).getPath());
         return this.getUnlinkSql((Event.UnlinkEvent)event);
     }
     return Arrays.asList();

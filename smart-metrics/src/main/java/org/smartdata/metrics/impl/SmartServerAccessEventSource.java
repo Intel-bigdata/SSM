@@ -51,6 +51,7 @@ public class SmartServerAccessEventSource implements FileAccessEventSource {
   public void insertEventFromSmartClient(FileAccessEvent event) {
     try {
       this.eventQueue.put(event);
+      LOG.trace("Access:" + event.getPath());
     } catch (InterruptedException e) {
       LOG.error("Event queue enqueue path={} error", event.getPath(), e);
     }
