@@ -16,7 +16,49 @@ limitations under the License.
     <div class="row">
       <div class="col-md-12">
         <h3 class="new_h3">
-          Configurations
+          Smart Configurations
+        </h3>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        Shows current configurations for Smart Server.<br/>
+        Note: For security reasons, some key/value pairs including passwords would not be shown.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="box width-full">
+  <div>
+    <div class="row configuration">
+      <div class="col-md-12">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th style="width:30%">name</th>
+            <th>value</th>
+          </tr>
+          </thead>
+          <tr ng-repeat="key in conf | sortByKey" >
+            <td>{{key}}</td>
+            <td>
+              <div class="hiding_overflow">
+                {{conf[key]}}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="configurationHead">
+  <div class="header">
+    <div class="row">
+      <div class="col-md-12">
+        <h3 class="new_h3">
+          Zeppelin Configurations
         </h3>
       </div>
     </div>
