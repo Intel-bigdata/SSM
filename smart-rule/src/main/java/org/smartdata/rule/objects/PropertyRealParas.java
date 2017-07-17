@@ -39,34 +39,22 @@ public class PropertyRealParas {
     return values;
   }
 
-  public boolean equals(PropertyRealParas paras) {
-    return property.equals(paras.getProperty())
-        && equalsValue(paras.getValues());
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    PropertyRealParas that = (PropertyRealParas) o;
+
+    if (property != null ? !property.equals(that.property) : that.property != null) return false;
+    return values != null ? values.equals(that.values) : that.values == null;
   }
 
-  public boolean equalsValue(List<Object> v) {
-    if (values == null && v == null) {
-      return true;
-    }
-
-    if (values == null || v == null) {
-      return false;
-    }
-
-    if (values.size() != v.size()) {
-      return false;
-    }
-
-    for (int i = 0; i < v.size(); i++) {
-      if (v.get(i).getClass() != values.get(i).getClass()) {
-        return false;
-      }
-
-      if (!v.get(i).equals(values.get(i))) {
-        return false;
-      }
-    }
-    return true;
+  @Override
+  public int hashCode() {
+    int result = property != null ? property.hashCode() : 0;
+    result = 31 * result + (values != null ? values.hashCode() : 0);
+    return result;
   }
 
   public String formatParameters() {

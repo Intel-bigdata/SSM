@@ -17,7 +17,6 @@
  */
 package org.smartdata.model;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 
 public class FileInfo {
@@ -50,16 +49,6 @@ public class FileInfo {
     this.owner = owner;
     this.group = group;
     this.storagePolicy = storagePolicy;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return super.equals(obj);
-  }
-
-  @Override
-  public int hashCode() {
-    return super.hashCode();
   }
 
   public String getPath() {
@@ -158,9 +147,9 @@ public class FileInfo {
     this.storagePolicy = storagePolicy;
   }
 
-  public static FileInfo fromHdfsFileStatus(HdfsFileStatus status, String parent) {
+  public static FileInfo fromHdfsFileStatus(HdfsFileStatus status, String path) {
     return newBuilder()
-        .setPath(status.getFullPath(new Path(parent)).toString())
+        .setPath(path)
         .setFileId(status.getFileId())
         .setLength(status.getLen())
         .setIsdir(status.isDir())
@@ -175,33 +164,53 @@ public class FileInfo {
         .build();
   }
 
-  public boolean equals(FileInfo fileInfo) {
-    if (this == fileInfo) {
-      return true;
-    }
-    if (fileInfo == null || getClass() != fileInfo.getClass()) {
-      return false;
-    }
-    if (fileId != fileInfo.fileId
-        || length != fileInfo.length
-        || isdir != fileInfo.isdir
-        || block_replication != fileInfo.block_replication
-        || blocksize != fileInfo.blocksize
-        || modification_time != fileInfo.modification_time
-        || access_time != fileInfo.access_time
-        || permission != fileInfo.permission
-        || storagePolicy != fileInfo.storagePolicy) {
-      return false;
-    }
-    if ((path != null ? !path.equals(fileInfo.path) : fileInfo.path != null)
-        || (owner != null ? !owner.equals(fileInfo.owner) : fileInfo.owner != null)) {
-      return false;
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    FileInfo fileInfo = (FileInfo) o;
+
+    if (fileId != fileInfo.fileId) return false;
+    if (length != fileInfo.length) return false;
+    if (isdir != fileInfo.isdir) return false;
+    if (block_replication != fileInfo.block_replication) return false;
+    if (blocksize != fileInfo.blocksize) return false;
+    if (modification_time != fileInfo.modification_time) return false;
+    if (access_time != fileInfo.access_time) return false;
+    if (permission != fileInfo.permission) return false;
+    if (storagePolicy != fileInfo.storagePolicy) return false;
+    if (path != null ? !path.equals(fileInfo.path) : fileInfo.path != null) return false;
+    if (owner != null ? !owner.equals(fileInfo.owner) : fileInfo.owner != null) return false;
     return group != null ? group.equals(fileInfo.group) : fileInfo.group == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = path != null ? path.hashCode() : 0;
+    result = 31 * result + (int) (fileId ^ (fileId >>> 32));
+    result = 31 * result + (int) (length ^ (length >>> 32));
+    result = 31 * result + (isdir ? 1 : 0);
+    result = 31 * result + (int) block_replication;
+    result = 31 * result + (int) (blocksize ^ (blocksize >>> 32));
+    result = 31 * result + (int) (modification_time ^ (modification_time >>> 32));
+    result = 31 * result + (int) (access_time ^ (access_time >>> 32));
+    result = 31 * result + (int) permission;
+    result = 31 * result + (owner != null ? owner.hashCode() : 0);
+    result = 31 * result + (group != null ? group.hashCode() : 0);
+    result = 31 * result + (int) storagePolicy;
+    return result;
   }
 
   public static Builder newBuilder() {
     return new Builder();
+  }
+
+  @Override
+  public String toString() {
+    return String.format("FileInfo{path=\'%s\', fileId=%s, length=%s, isdir=%s, block_replication=%s, blocksize=%s, modification_time=%s," +
+            " access_time=%s, permission=%s, owner=\'%s\', group=\'%s\', storagePolicy=%s}", path, fileId, length, isdir,
+        block_replication, blocksize, modification_time, access_time, permission, owner, group, storagePolicy);
   }
 
   public static class Builder {
@@ -281,6 +290,14 @@ public class FileInfo {
     public FileInfo build() {
       return new FileInfo(path, fileId, length, isdir, block_replication,
           blocksize, modification_time, access_time, permission,owner,
+          group, storagePolicy);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("Builder{path=\'%s\', fileId=%s, length=%s, isdir=%s, block_replication=%s, blocksize=%s, " +
+              "modification_time=%s, access_time=%s, permission=%s, owner=\'%s\', group=\'%s\', storagePolicy=\'%s\'}",
+          path, fileId, length, isdir, block_replication, blocksize, modification_time, access_time, permission, owner,
           group, storagePolicy);
     }
   }

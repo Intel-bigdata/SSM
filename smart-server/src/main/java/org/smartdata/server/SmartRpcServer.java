@@ -23,25 +23,25 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
+import org.smartdata.SmartServiceState;
+import org.smartdata.actions.ActionRegistry;
+import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionDescriptor;
-import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
+import org.smartdata.protocol.AdminServerProto;
 import org.smartdata.protocol.ClientServerProto;
 import org.smartdata.protocol.SmartServerProtocols;
 import org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer;
 import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.SmartServiceState;
-import org.smartdata.protocol.AdminServerProto;
 import org.smartdata.protocol.protobuffer.ServerProtocolsServerSideTranslator;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.RuleState;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -102,7 +102,6 @@ public class SmartRpcServer implements SmartServerProtocols {
    * Start SSM RPC service
    */
   public void start() {
-    // TODO: start clientRpcServer
     if (clientRpcServer != null) {
       clientRpcServer.start();
     }
@@ -234,14 +233,11 @@ public class SmartRpcServer implements SmartServerProtocols {
   @Override
   public long submitCmdlet(String cmd) throws IOException {
     checkIfActive();
-    // TODO: to be implemented
     return ssm.getCmdletManager().submitCmdlet(cmd);
   }
 
   @Override
   public List<ActionDescriptor> listActionsSupported() throws IOException {
-    checkIfActive();
-    // TODO: to be implemented
-    return new ArrayList<>();
+    return ActionRegistry.supportedActions();
   }
 }

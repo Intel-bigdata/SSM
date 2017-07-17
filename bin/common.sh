@@ -132,3 +132,110 @@ fi
 if [[ -z "$SMART_INTERPRETER_REMOTE_RUNNER" ]]; then
   export SMART_INTERPRETER_REMOTE_RUNNER="bin/interpreter.sh"
 fi
+
+
+SMART_SERVER_PID_FILE=/tmp/SmartServer.pid
+
+SSH_OPTIONS="-o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10s"
+
+function start_smart_server() {
+  local servers=localhost
+
+  if [[ "${SMART_VARGS}" =~ " -format" ]]; then
+    echo "Start formatting database ..."
+    exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $SMART_VARGS
+    exit $?
+  fi
+
+  echo  "Starting SmartServer ..."
+  ssh ${SSH_OPTIONS} ${servers} "cd ${SMART_HOME}; ${SMART_HOME}/bin/start-smart.sh ${SMART_VARGS} --daemon"
+}
+
+function stop_smart_server() {
+  local servers=localhost
+  ssh ${SSH_OPTIONS} ${servers} "cd ${SMART_HOME}; ${SMART_HOME}/bin/stop-smart.sh --daemon"
+}
+
+function smart_start_daemon() {
+  local pidfile=$1
+
+  if [[ -f "${pidfile}" ]]; then
+    pid=$(cat "$pidfile")
+    if ps -p "${pid}" > /dev/null 2>&1; then
+      echo "ERROR: Another instance is running, please stop it first."
+      return 1
+    fi
+    rm -f "${pidfile}" >/dev/null 2>&1
+  fi
+
+  start_daemon "${pidfile}" >/dev/null 2>&1 < /dev/null &
+
+  (( counter=0 ))
+  while [[ ! -f ${pidfile} && ${counter} -le 5 ]]; do
+    sleep 1
+    (( counter++ ))
+  done
+
+  echo $! > "${pidfile}" 2>/dev/null
+  if [[ $? -gt 0 ]]; then
+    echo "ERROR:  Can NOT write pid file ${pidfile}."
+  fi
+
+  disown %+ >/dev/null 2>&1
+  if [[ $? -gt 0 ]]; then
+    echo "ERROR: Cannot disconnect process $!"
+  fi
+  sleep 1
+
+  if ! ps -p $! >/dev/null 2>&1; then
+    return 1
+  fi
+  return 0
+}
+
+function start_daemon() {
+  local pidfile=$1
+
+  echo $$ > "${pidfile}" 2>/dev/null
+  if [[ $? -gt 0 ]]; then
+    echo "ERROR: Can NOT write PID file ${pidfile}."
+  fi
+
+  exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $SMART_VARGS
+}
+
+function smart_stop_daemon() {
+  local pidfile=$1
+  shift
+
+  local pid
+  local cur_pid
+
+  if [[ -f "${pidfile}" ]]; then
+    pid=$(cat "$pidfile")
+
+    kill "${pid}" >/dev/null 2>&1
+    (( counter=0 ))
+    while [[ ${counter} -le 5 ]]; do
+      sleep 1
+      (( counter++ ))
+      ps -p "${pid}" > /dev/null 2>&1
+      if [ "$?" != "0" ]; then
+        echo "Service stopped on node '${HOSTNAME}'"
+        break
+      fi
+    done
+
+    if kill -0 "${pid}" > /dev/null 2>&1; then
+      echo "Daemon still alive after 5 seconds, Trying to kill it by force."
+      kill -9 "${pid}" >/dev/null 2>&1
+      sleep 1
+    fi
+    if ps -p "${pid}" > /dev/null 2>&1; then
+      echo "ERROR: Unable to kill ${pid}"
+    fi
+    rm -f "$pidfile"
+  else
+    echo "Service not found on node '${HOSTNAME}'"
+  fi
+}

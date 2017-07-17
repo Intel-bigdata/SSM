@@ -23,7 +23,11 @@ package org.smartdata.conf;
 public class SmartConfKeys {
   public final static String SMART_DFS_ENABLED = "smart.dfs.enabled";
   public final static boolean SMART_DFS_ENABLED_DEFAULT = true;
-  public final static String SMART_CONF_DIR = "smart.conf.dir";
+
+  public final static String SMART_CONF_DIR_KEY = "smart.conf.dir";
+  public final static String SMART_CONF_DIR_DEFAULT = "conf";
+  public final static String SMART_LOG_DIR_KEY = "smart.log.dir";
+  public final static String SMART_LOG_DIR_DEFAULT = "logs";
 
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
 
@@ -51,8 +55,14 @@ public class SmartConfKeys {
 
   public final static String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
   public final static boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = false;
+  public final static String SMART_ENABLE_ZEPPELIN = "smart.zeppelin.enable";
+  public final static boolean SMART_ENABLE_ZEPPELIN_DEFAULT = false;
 
   // SmartAgent
   public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
   public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
+
+  // SmartClient
+  // Comma delimited directories, access event of files under these directories will not be reported to SSM.
+  public static final String SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY = "smart.client.ignore.access.event.dirs";
 }

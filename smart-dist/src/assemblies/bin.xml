@@ -3,20 +3,21 @@
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
     <id>bin</id>
     <formats>
+        <format>dir</format>
         <format>tar.gz</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
             <directory>${basedir}/../bin</directory>
-            <outputDirectory>/smart-data-${project.version}/bin</outputDirectory>
+            <outputDirectory>smart-data-${project.version}/bin</outputDirectory>
             <includes>
                 <include>*.sh</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>${basedir}/../</directory>
-            <outputDirectory>/smart-data-${project.version}</outputDirectory>
+            <outputDirectory>smart-data-${project.version}</outputDirectory>
             <includes>
                 <include>LICENSE.txt</include>
                 <include>README.md</include>
@@ -24,12 +25,32 @@
         </fileSet>
         <fileSet>
             <directory>${basedir}/../conf</directory>
-            <outputDirectory>/smart-data-${project.version}/conf</outputDirectory>
+            <outputDirectory>smart-data-${project.version}/conf</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../smart-zeppelin/interpreter</directory>
+            <outputDirectory>smart-data-${project.version}/interpreter</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../smart-zeppelin/notebook</directory>
+            <outputDirectory>smart-data-${project.version}/notebook</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../smart-zeppelin/zeppelin-web/src/app/visualization</directory>
+            <outputDirectory>smart-data-${project.version}/lib/node_modules/zeppelin-vis</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../smart-zeppelin/zeppelin-web/src/app/tabledata</directory>
+            <outputDirectory>smart-data-${project.version}/lib/node_modules/zeppelin-tabledata</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../smart-zeppelin/zeppelin-web/dist</directory>
+            <outputDirectory>smart-data-${project.version}/dist</outputDirectory>
         </fileSet>
     </fileSets>
     <dependencySets>
         <dependencySet>
-            <outputDirectory>/smart-data-${project.version}/lib</outputDirectory>
+            <outputDirectory>smart-data-${project.version}/lib</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <unpack>false</unpack>
             <scope>runtime</scope>

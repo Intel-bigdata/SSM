@@ -73,6 +73,18 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <profiles>
         <profile>
             <id>dist</id>
@@ -94,6 +106,7 @@
                                     <descriptors>
                                         <descriptor>src/assemblies/bin.xml</descriptor>
                                     </descriptors>
+                                    <attach>false</attach>
                                 </configuration>
                             </execution>
                         </executions>

@@ -25,9 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.FileInfo;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,9 +50,13 @@ public class InotifyEventApplier {
   public void apply(List<Event> events) throws IOException, MetaStoreException {
     List<String> statements = new ArrayList<>();
     for (Event event : events) {
-      String statement = getSqlStatement(event);
-      if (statement != null && !statement.isEmpty()){
-        statements.add(statement);
+      List<String> gen = getSqlStatement(event);
+      if (gen != null && !gen.isEmpty()){
+        for (String s : gen) {
+          if (s != null && s.length() > 0) {
+            statements.add(s);
+          }
+        }
       }
     }
     this.metaStore.execute(statements);
@@ -62,39 +66,52 @@ public class InotifyEventApplier {
     this.apply(Arrays.asList(events));
   }
 
-  private String getSqlStatement(Event event) throws IOException {
+  private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
     switch (event.getEventType()) {
       case CREATE:
-        return this.getCreateSql((Event.CreateEvent)event);
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.CreateEvent)event).getPath());
+        return Arrays.asList(this.getCreateSql((Event.CreateEvent)event));
       case CLOSE:
-        return this.getCloseSql((Event.CloseEvent)event);
-//      case TRUNCATE:
-//        return this.getTruncateSql((Event.TruncateEvent)event);
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.CloseEvent)event).getPath());
+        return Arrays.asList(this.getCloseSql((Event.CloseEvent)event));
       case RENAME:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", src path:" + ((Event.RenameEvent)event).getSrcPath() +
+            ", dest path:" + ((Event.RenameEvent)event).getDstPath());
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
-        return this.getMetaDataUpdateSql((Event.MetadataUpdateEvent)event);
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.MetadataUpdateEvent)event).getPath());
+        return Arrays.asList(this.getMetaDataUpdateSql((Event.MetadataUpdateEvent)event));
       case APPEND:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.AppendEvent)event).getPath());
         return this.getAppendSql((Event.AppendEvent)event);
       case UNLINK:
+        LOG.trace("event type:" + event.getEventType().name() +
+            ", path:" + ((Event.UnlinkEvent)event).getPath());
         return this.getUnlinkSql((Event.UnlinkEvent)event);
     }
-    return "";
+    return Arrays.asList();
   }
 
   //Todo: times and ec policy id, etc.
   private String getCreateSql(Event.CreateEvent createEvent) throws IOException {
     HdfsFileStatus fileStatus = client.getFileInfo(createEvent.getPath());
-    boolean isDir = createEvent.getiNodeType() == Event.CreateEvent.INodeType.DIRECTORY;
-    return String.format(
-        "INSERT INTO `files` (path, fid, block_replication, "
-            + "block_size, is_dir, permission) VALUES ('%s', %s, %s, %s, %s, %s);",
-        createEvent.getPath(),
-        fileStatus.getFileId(),
-        createEvent.getReplication(),
-        createEvent.getDefaultBlockSize(),
-        isDir ? 1 : 0,
-        createEvent.getPerms().toShort());
+    if (fileStatus == null) {
+      LOG.debug("Can not get HdfsFileStatus for file " + createEvent.getPath());
+      return "";
+    }
+    FileInfo fileInfo = FileInfo.fromHdfsFileStatus(fileStatus, createEvent.getPath());
+    try {
+      metaStore.insertFile(fileInfo);
+      return "";
+    } catch (MetaStoreException e) {
+      LOG.error("Insert new created file " + fileInfo.getPath() + " error.", e);
+      throw new IOException(e);
+    }
   }
 
   //Todo: should update mtime? atime?
@@ -111,10 +128,30 @@ public class InotifyEventApplier {
 //        truncateEvent.getFileSize(), truncateEvent.getTimestamp(), truncateEvent.getPath());
 //  }
 
-  private String getRenameSql(Event.RenameEvent renameEvent) {
-    return String.format(
-        "UPDATE files SET path = replace(path, '%s', '%s');",
-        renameEvent.getSrcPath(), renameEvent.getDstPath());
+  private List<String> getRenameSql(Event.RenameEvent renameEvent)
+      throws IOException, MetaStoreException {
+    List<String> ret = new ArrayList<>();
+    HdfsFileStatus status = client.getFileInfo(renameEvent.getDstPath());
+    if (status == null) {
+      LOG.debug("Get rename dest status failed, {} -> {}",
+          renameEvent.getSrcPath(), renameEvent.getDstPath());
+    }
+
+    FileInfo info = metaStore.getFile(renameEvent.getSrcPath());
+    if (info == null) {
+      if (status != null) {
+        info = FileInfo.fromHdfsFileStatus(status, renameEvent.getDstPath());
+        metaStore.insertFile(info);
+      }
+    } else {
+      ret.add(String.format("UPDATE files SET path = replace(path, '%s', '%s') WHERE path = '%s';",
+          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+      if (info.isdir()) {
+        ret.add(String.format("UPDATE files SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
+            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+      }
+    }
+    return ret;
   }
 
   private String getMetaDataUpdateSql(Event.MetadataUpdateEvent metadataUpdateEvent) {
@@ -166,12 +203,12 @@ public class InotifyEventApplier {
     return "";
   }
 
-  private String getAppendSql(Event.AppendEvent appendEvent) {
+  private List<String> getAppendSql(Event.AppendEvent appendEvent) {
     //Do nothing;
-    return "";
+    return Arrays.asList();
   }
 
-  private String getUnlinkSql(Event.UnlinkEvent unlinkEvent) {
-    return String.format("DELETE FROM files WHERE path LIKE '%s%%';", unlinkEvent.getPath());
+  private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) {
+    return Arrays.asList(String.format("DELETE FROM files WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
   }
 }

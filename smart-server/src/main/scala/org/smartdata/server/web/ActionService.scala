@@ -34,6 +34,8 @@ import org.smartdata.server.SmartEngine
 import scala.util.Random
 
 class ActionService(ssmServer: SmartEngine) extends BasicService {
+  private val ACTIONS_TO_SHOW = 100
+  private val HOT_FILES_TO_SHOW = 50
   private val gson: Gson = new Gson()
   private val actions: util.Collection[ActionInfo] = new util.ArrayList[ActionInfo]()
   val builder = new ActionInfo.Builder()
@@ -64,13 +66,13 @@ class ActionService(ssmServer: SmartEngine) extends BasicService {
       } ~
       path("hotfiles") {
         val tables = ssmServer.getStatesManager.getTablesInLast(Constants.ONE_HOUR_IN_MILLIS)
-        complete(gson.toJson(ssmServer.getStatesManager.getHotFiles(tables, 20)))
+        complete(gson.toJson(ssmServer.getStatesManager.getHotFiles(tables, HOT_FILES_TO_SHOW)))
       } ~
       path("actiontypes") {
         complete(gson.toJson(ActionRegistry.supportedActions()))
       } ~
       path("actionlist") {
-        complete(gson.toJson(ssmServer.getCmdletManager.listNewCreatedActions(20)))
+        complete(gson.toJson(ssmServer.getCmdletManager.listNewCreatedActions(ACTIONS_TO_SHOW)))
       } ~
       path("submitaction" / Segment) { actionType =>
         post {

@@ -26,6 +26,7 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.zeppelin.server.SmartZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.smartdata.SmartServiceState;
 import org.smartdata.utils.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
@@ -61,6 +62,11 @@ public class SmartServer {
   private SmartRpcServer rpcServer;
   private SmartZeppelinServer zeppelinServer;
 
+  static {
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
+  }
+
   public SmartServer(SmartConf conf) {
     this.conf = conf;
     this.confMgr = new ConfManager(conf);
@@ -77,7 +83,9 @@ public class SmartServer {
       httpServer = new SmartHttpServer(engine, conf);
       rpcServer = new SmartRpcServer(this, conf);
 
-      zeppelinServer = new SmartZeppelinServer(conf, engine);
+      if (isZeppelinEnabled()) {
+        zeppelinServer = new SmartZeppelinServer(conf, engine);
+      }
     }
   }
 
@@ -176,6 +184,11 @@ public class SmartServer {
     return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
   }
 
+  private boolean isZeppelinEnabled() {
+    return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN,
+        SmartConfKeys.SMART_ENABLE_ZEPPELIN_DEFAULT);
+  }
+
   private void checkSecurityAndLogin() throws IOException {
     if (!isSecurityEnabled()) {
       return;
@@ -215,7 +228,9 @@ public class SmartServer {
     rpcServer.start();
     httpServer.start();
 
-    zeppelinServer.start();
+    if (zeppelinServer != null) {
+      zeppelinServer.start();
+    }
   }
 
   private void startEngines() throws Exception {
@@ -272,7 +287,7 @@ public class SmartServer {
       stop();
       //join();
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.error("SmartServer shutdown error", e);
     }
   }
 
@@ -324,7 +339,20 @@ public class SmartServer {
   public static void main(String[] args) {
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {
-      if (launchWith(args, null) != null) {
+      final SmartServer inst = launchWith(args, null);
+      if (inst != null) {
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+          @Override
+          public void run() {
+            LOG.info("Shutting down SmartServer ... ");
+            try {
+              inst.shutdown();
+             } catch (Exception e) {
+               LOG.error("Error while stopping servlet container", e);
+             }
+             LOG.info("SmartServer was down.");
+           }
+         });
         //Todo: when to break
         while (true) {
           Thread.sleep(1000);

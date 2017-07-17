@@ -19,16 +19,15 @@
 # Run SmartServer
 #
 #./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000
-#./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000 -D dfs.smart.default.db.url=jdbc:sqlite:file-sql.db
+#./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000 -D smart.metastore.db.url=jdbc:sqlite:file-sql.db
 
 USAGE="Usage: bin/start-smart.sh [--config <conf-dir>] [--debug] ..."
 
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
 
-echo "Command: $0 $*"
-
-vargs=
+DAEMON_MOD=
+SMART_VARGS=
 while [ $# != 0 ]; do
   case "$1" in
     "--config")
@@ -48,8 +47,12 @@ while [ $# != 0 ]; do
       JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
       shift
       ;;
+    "--daemon")
+      DAEMON_MOD=1
+      shift
+      ;;
     *)
-      vargs+=" $1"
+      SMART_VARGS+=" $1"
       shift
       ;;
   esac
@@ -59,26 +62,39 @@ done
 
 
 HOSTNAME=$(hostname)
-SMART_LOGFILE="${SMART_LOG_DIR}/smart-${SMART_IDENT_STRING}-${HOSTNAME}.log"
-ZEPPELIN_LOGFILE="${SMART_LOG_DIR}/zeppelin-${SMART_IDENT_STRING}-${HOSTNAME}.log"
-LOG="${SMART_LOG_DIR}/smart-cli-${SMART_IDENT_STRING}-${HOSTNAME}.out"
 
 SMART_SERVER=org.smartdata.server.SmartDaemon
-JAVA_OPTS+=" -Dzeppelin.log.file=${ZEPPELIN_LOGFILE}"
+JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
+JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
+
+JAVA_VERSION=$($SMART_RUNNER -version 2>&1 | awk -F '.' '/version/ {print $2}')
+
+if [[ "$JAVA_VERSION" -ge 8 ]]; then
+  JAVA_OPTS+=" -XX:MaxMetaspaceSize=256m"
+else
+  JAVA_OPTS+=" -XX:MaxPermSize=256m"
+fi
 
 addJarInDir "${SMART_HOME}/smart-server/target/lib"
 addNonTestJarInDir "${SMART_HOME}/smart-server/target"
 addJarInDir "${SMART_HOME}/lib"
+
+if [ "$SMART_CLASSPATH" = "" ]; then
+  SMART_CLASSPATH="${SMART_CONF_DIR}"
+else
+  SMART_CLASSPATH="${SMART_CONF_DIR}:${SMART_CLASSPATH}"
+fi
 
 if [[ ! -d "${SMART_LOG_DIR}" ]]; then
   echo "Log dir doesn't exist, create ${SMART_LOG_DIR}"
   $(mkdir -p "${SMART_LOG_DIR}")
 fi
 
-# if [[ ! -d "${SMART_PID_DIR}" ]]; then
-#   echo "Pid dir doesn't exist, create ${SMART_PID_DIR}"
-#   $(mkdir -p "${SMART_PID_DIR}")
-# fi
+SMART_VARGS+=" -D smart.conf.dir="${SMART_CONF_DIR}
+SMART_VARGS+=" -D smart.log.dir="${SMART_LOG_DIR}
 
-vargs+=" -D smart.conf.dir="${SMART_CONF_DIR}
-exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $vargs
+if [ -z "$DAEMON_MOD" ]; then
+  start_smart_server
+else
+  smart_start_daemon ${SMART_SERVER_PID_FILE}
+fi

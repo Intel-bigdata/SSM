@@ -32,8 +32,8 @@ import java.util.Map;
 
 public class AccessCountDao {
   private DataSource dataSource;
-  public final static String FILE_FIELD = "fid";
-  public final static String ACCESSCOUNT_FIELD = "count";
+  final static String FILE_FIELD = "fid";
+  final static String ACCESSCOUNT_FIELD = "count";
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -59,16 +59,28 @@ public class AccessCountDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql =
         String.format(
-        "delete from access_count_tables where start_time >= ? AND end_time <= ?",
+        "delete from access_count_tables where start_time >= %s AND end_time <= %s",
             startTime,
             endTime);
     jdbcTemplate.update(sql);
+  }
+
+  public void delete(AccessCountTable table) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "delete from access_count_tables where table_name = ?";
+    jdbcTemplate.update(sql, table.getTableName());
   }
 
   public static String createTableSQL(String tableName) {
     return String.format(
         "CREATE TABLE %s (%s INTEGER NOT NULL, %s INTEGER NOT NULL)",
         tableName, FILE_FIELD, ACCESSCOUNT_FIELD);
+  }
+
+  public List<AccessCountTable> getAllSortedTables() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM access_count_tables ORDER BY start_time ASC";
+    return jdbcTemplate.query(sql, new AccessCountRowMapper());
   }
 
   public String aggregateSQLStatement(AccessCountTable destinationTable
@@ -78,15 +90,7 @@ public class AccessCountDao {
     statement.append("SELECT " + AccessCountDao.FILE_FIELD + ", SUM(" +
         AccessCountDao.ACCESSCOUNT_FIELD + ") as " +
         AccessCountDao.ACCESSCOUNT_FIELD + " FROM (");
-    Iterator<AccessCountTable> tableIterator = tablesToAggregate.iterator();
-    while (tableIterator.hasNext()) {
-      AccessCountTable table = tableIterator.next();
-      if (tableIterator.hasNext()) {
-        statement.append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
-      } else {
-        statement.append("SELECT * FROM " + table.getTableName());
-      }
-    }
+    statement.append(getUnionStatement(tablesToAggregate));
     statement.append(") tmp GROUP BY " + AccessCountDao.FILE_FIELD);
     return statement.toString();
   }
@@ -94,23 +98,14 @@ public class AccessCountDao {
   public Map<Long, Integer> getHotFiles(List<AccessCountTable> tables, int topNum)
       throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    Iterator<AccessCountTable> tableIterator = tables.iterator();
-    StringBuilder unioned = new StringBuilder();
-    while (tableIterator.hasNext()) {
-      AccessCountTable table = tableIterator.next();
-      if (tableIterator.hasNext()) {
-        unioned.append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
-      } else {
-        unioned.append("SELECT * FROM " + table.getTableName());
-      }
-    }
     String statement =
         String.format(
-            "SELECT %s, SUM(%s) as %s FROM (%s) tmp GROUP BY %s ORDER BY %s DESC LIMIT %s",
+            "SELECT %s, SUM(%s) as %s FROM (%s) tmp WHERE %s IN (SELECT fid from files) GROUP BY %s ORDER BY %s DESC LIMIT %s",
             AccessCountDao.FILE_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,
-            unioned,
+            getUnionStatement(tables),
+            AccessCountDao.FILE_FIELD,
             AccessCountDao.FILE_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,
             topNum);
@@ -124,16 +119,29 @@ public class AccessCountDao {
     return accessCounts;
   }
 
+  private String getUnionStatement(List<AccessCountTable> tables) {
+    StringBuilder union = new StringBuilder();
+    Iterator<AccessCountTable> tableIterator = tables.iterator();
+    while (tableIterator.hasNext()) {
+      AccessCountTable table = tableIterator.next();
+      if (tableIterator.hasNext()) {
+        union.append("SELECT * FROM " + table.getTableName() + " UNION ALL ");
+      } else {
+        union.append("SELECT * FROM " + table.getTableName());
+      }
+    }
+    return union.toString();
+  }
 
   public void createProportionView(AccessCountTable dest, AccessCountTable source)
       throws SQLException {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);;
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     double percentage =
         ((double) dest.getEndTime() - dest.getStartTime())
             / (source.getEndTime() - source.getStartTime());
     String sql =
         String.format(
-            "CREATE VIEW %s AS SELECT %s, FLOOR(%s.%s * %s) AS %s FROM %s",
+            "CREATE VIEW %s AS SELECT %s, ROUND(%s.%s * %s) AS %s FROM %s",
             dest.getTableName(),
             AccessCountDao.FILE_FIELD,
             source.getTableName(),
@@ -153,12 +161,11 @@ public class AccessCountDao {
   }
 
   class AccessCountRowMapper implements RowMapper<AccessCountTable> {
-
     @Override
     public AccessCountTable mapRow(ResultSet resultSet, int i) throws SQLException {
       AccessCountTable accessCountTable = new AccessCountTable(
-          resultSet.getLong("start_time"),
-          resultSet.getLong("end_time") );
+        resultSet.getLong("start_time"),
+        resultSet.getLong("end_time"));
       return accessCountTable;
     }
   }

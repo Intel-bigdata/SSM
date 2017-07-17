@@ -21,9 +21,8 @@ import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfoWithStorage;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionException;
+import org.smartdata.actions.annotation.ActionSignature;
 
 import java.util.List;
 import java.util.Map;
@@ -31,9 +30,12 @@ import java.util.Map;
 /**
  * Check and return file blocks storage location.
  */
+@ActionSignature(
+  actionId = "checkstorage",
+  displayName = "checkstorage",
+  usage = HdfsAction.FILE_PATH + " $file "
+)
 public class CheckStorageAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(WriteFileAction.class);
-
   private String fileName;
 
   @Override
@@ -44,35 +46,32 @@ public class CheckStorageAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    try {
-      HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
-      if (fileStatus == null) {
-        throw new ActionException("File does not exist.");
-      }
-      long length = fileStatus.getLen();
-      List<LocatedBlock> locatedBlocks = dfsClient.getLocatedBlocks(
-          fileName, 0, length).getLocatedBlocks();
-      for (LocatedBlock locatedBlock : locatedBlocks) {
-        StringBuilder blockInfo = new StringBuilder();
-        blockInfo.append("File offset = ")
-            .append(locatedBlock.getStartOffset())
-            .append(", ");
-        blockInfo.append("Block locations = {");
-        for (DatanodeInfo datanodeInfo : locatedBlock.getLocations()) {
-          blockInfo.append(datanodeInfo.getName());
-          if (datanodeInfo instanceof DatanodeInfoWithStorage) {
-            blockInfo.append("[")
-                .append(((DatanodeInfoWithStorage)datanodeInfo).getStorageType())
-                .append("]");
-          }
-          blockInfo.append(" ");
+    if (fileName == null) {
+      throw new IllegalArgumentException("File parameter is missing! ");
+    }
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+    if (fileStatus == null) {
+      throw new ActionException("File does not exist.");
+    }
+    long length = fileStatus.getLen();
+    List<LocatedBlock> locatedBlocks =
+        dfsClient.getLocatedBlocks(fileName, 0, length).getLocatedBlocks();
+    for (LocatedBlock locatedBlock : locatedBlocks) {
+      StringBuilder blockInfo = new StringBuilder();
+      blockInfo.append("File offset = ").append(locatedBlock.getStartOffset()).append(", ");
+      blockInfo.append("Block locations = {");
+      for (DatanodeInfo datanodeInfo : locatedBlock.getLocations()) {
+        blockInfo.append(datanodeInfo.getName());
+        if (datanodeInfo instanceof DatanodeInfoWithStorage) {
+          blockInfo
+              .append("[")
+              .append(((DatanodeInfoWithStorage) datanodeInfo).getStorageType())
+              .append("]");
         }
-        blockInfo.append("}");
-        this.appendResult(blockInfo.toString());
+        blockInfo.append(" ");
       }
-    } catch (Exception e) {
-      LOG.error("CheckStorageAction failed", e);
-      throw new ActionException(e);
+      blockInfo.append("}");
+      appendResult(blockInfo.toString());
     }
   }
 }

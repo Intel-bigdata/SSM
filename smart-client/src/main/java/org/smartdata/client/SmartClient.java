@@ -21,20 +21,24 @@ package org.smartdata.client;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
-import org.smartdata.protocol.SmartClientProtocol;
-import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.protocol.SmartClientProtocol;
+import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
+import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private final static long VERSION = 1;
   private Configuration conf;
   private SmartClientProtocol server;
   private volatile boolean running = true;
+  private List<String> ignoreAccessEventDirs;
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
@@ -62,13 +66,30 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     ClientProtocolProtoBuffer proxy = RPC.getProxy(
         ClientProtocolProtoBuffer.class, VERSION, address, conf);
     this.server = new ClientProtocolClientSideTranslator(proxy);
+    Collection<String> dirs = conf.getTrimmedStringCollection(
+        SmartConfKeys.SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY);
+    ignoreAccessEventDirs = new ArrayList<>();
+    for (String s : dirs) {
+      ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
+    }
   }
 
   @Override
   public void reportFileAccessEvent(FileAccessEvent event)
       throws IOException {
-    checkOpen();
-    server.reportFileAccessEvent(event);
+    if (!shouldIgnore(event.getPath())) {
+      checkOpen();
+      server.reportFileAccessEvent(event);
+    }
+  }
+
+  private boolean shouldIgnore(String path) {
+    for (String s : ignoreAccessEventDirs) {
+      if (path.startsWith(s)) {
+        return true;
+      }
+    }
+    return false;
   }
 
 

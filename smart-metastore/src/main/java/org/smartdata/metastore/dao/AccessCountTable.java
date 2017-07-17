@@ -17,33 +17,45 @@
  */
 package org.smartdata.metastore.dao;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.smartdata.metastore.utils.TimeGranularity;
+import org.smartdata.metastore.utils.TimeUtils;
+
+import java.util.Random;
 
 public class AccessCountTable {
-  private String tableName;
-  private Long startTime;
-  private Long endTime;
-  private TimeGranularity granularity;
-
-  private boolean isView;
+  private final String tableName;
+  private final Long startTime;
+  private final Long endTime;
+  private final TimeGranularity granularity;
+  private final boolean isView;
 
   public AccessCountTable(Long startTime, Long endTime) {
-    this(startTime, endTime, TimeGranularity.SECOND);
+    this(startTime, endTime, false);
   }
 
-  public AccessCountTable(Long startTime, Long endTime, TimeGranularity granularity) {
-    this("accessCount_" + startTime + "_" + endTime, startTime, endTime, granularity);
+  public AccessCountTable(Long startTime, Long endTime, boolean isView) {
+    this(getTableName(startTime, endTime, isView), startTime, endTime, isView);
   }
 
-  public AccessCountTable(String name, Long startTime, Long endTime, TimeGranularity granularity) {
+  @VisibleForTesting
+  protected AccessCountTable(String name, Long startTime, Long endTime, boolean isView) {
     this.startTime = startTime;
     this.endTime = endTime;
-    this.granularity = granularity;
+    this.granularity = TimeUtils.getGranularity(endTime - startTime);
     this.tableName = name;
-    this.isView = false;
+    this.isView = isView;
   }
 
   public String getTableName() {
+    return tableName;
+  }
+
+  private static String getTableName(Long startTime, Long endTime, boolean isView) {
+    String tableName = "accessCount_" + startTime + "_" + endTime;
+    if (isView) {
+      tableName += "_view_" + Math.abs(new Random().nextInt());
+    }
     return tableName;
   }
 
@@ -85,9 +97,5 @@ public class AccessCountTable {
 
   public boolean isView() {
     return isView;
-  }
-
-  public void setView(boolean view) {
-    isView = view;
   }
 }

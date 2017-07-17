@@ -36,8 +36,8 @@ import java.util.concurrent.Executors;
 
 public class AccessCountTableManager {
   private static final int NUM_DAY_TABLES_TO_KEEP = 30;
-  private static final int NUM_HOUR_TABLES_TO_KEEP = 30;
-  private static final int NUM_MINUTE_TABLES_TO_KEEP = 30;
+  private static final int NUM_HOUR_TABLES_TO_KEEP = 48;
+  private static final int NUM_MINUTE_TABLES_TO_KEEP = 120;
   private static final int NUM_SECOND_TABLES_TO_KEEP = 30;
 
   private MetaStore metaStore;
@@ -85,13 +85,28 @@ public class AccessCountTableManager {
     this.tableDeques.put(TimeGranularity.MINUTE, minuteTableDeque);
     this.tableDeques.put(TimeGranularity.HOUR, hourTableDeque);
     this.tableDeques.put(TimeGranularity.DAY, dayTableDeque);
+    this.recoverTables();
+  }
+
+  private void recoverTables() {
+    try {
+      List<AccessCountTable> tables = metaStore.getAllSortedTables();
+      for (AccessCountTable table : tables) {
+        TimeGranularity timeGranularity = TimeUtils.getGranularity(table.getEndTime() - table.getStartTime());
+        if (tableDeques.containsKey(timeGranularity)) {
+          tableDeques.get(timeGranularity).add(table);
+        }
+      }
+    } catch (MetaStoreException e) {
+      LOG.error(e.toString());
+    }
   }
 
   public void addTable(AccessCountTable accessCountTable) {
     if (LOG.isDebugEnabled()) {
       LOG.debug(accessCountTable.toString());
     }
-    this.secondTableDeque.add(accessCountTable);
+    this.secondTableDeque.addAndNotifyListener(accessCountTable);
   }
 
   public void onAccessEventsArrived(List<FileAccessEvent> accessEvents) {
@@ -140,8 +155,7 @@ public class AccessCountTableManager {
           // We got a table should be spilt here. But sometimes we will split out an
           // table that already exists, so this situation should be avoided.
           if (!tableExists(tableDeques, startTime, table.getEndTime())) {
-            AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime());
-            splitTable.setView(true);
+            AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime(), true);
             metaStore.createProportionView(splitTable, table);
             results.add(splitTable);
             startTime = table.getEndTime();
@@ -156,18 +170,15 @@ public class AccessCountTableManager {
     return results;
   }
 
-  private static boolean tableExists(final Map<TimeGranularity, AccessCountTableDeque> tableDeques,
-    long start, long end) {
+  private static boolean tableExists(
+      final Map<TimeGranularity, AccessCountTableDeque> tableDeques, long start, long end) {
     TimeGranularity granularity = TimeUtils.getGranularity(end - start);
-    AccessCountTable fakeTable = new AccessCountTable(start, end, granularity);
-    if (!tableDeques.containsKey(granularity)) {
-      return false;
-    }
-    return tableDeques.get(granularity).contains(fakeTable);
+    AccessCountTable fakeTable = new AccessCountTable(start, end);
+    return tableDeques.containsKey(granularity) && tableDeques.get(granularity).contains(fakeTable);
   }
 
   @VisibleForTesting
-  protected Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
+  Map<TimeGranularity, AccessCountTableDeque> getTableDeques() {
     return this.tableDeques;
   }
 }

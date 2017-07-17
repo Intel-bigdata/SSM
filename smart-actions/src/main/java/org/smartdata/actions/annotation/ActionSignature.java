@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.integration;
+package org.smartdata.actions.annotation;
 
-import org.junit.Test;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/**
- * Test for SmartZeppelinServer.
- */
-public class TestZeppelinServer extends IntegrationTestBase {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface ActionSignature {
+  String actionId();
 
-  @Test
-  public void test() throws Exception {
-    /*
-    while (true) {
+  String displayName();
 
-    }
-    */
-  }
+  String usage() default "";
+
+  String description() default "";
 }

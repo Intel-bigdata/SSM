@@ -62,7 +62,7 @@ public class TestCmdletExecutor {
     Assert.assertTrue(statusMessages.get(0) instanceof CmdletStatusUpdate);
     Assert.assertTrue(statusMessages.get(1) instanceof ActionStarted);
     Assert.assertTrue(statusMessages.get(2) instanceof ActionFinished);
-    Assert.assertNull(((ActionFinished)statusMessages.get(2)).getException());
+    Assert.assertNull(((ActionFinished)statusMessages.get(2)).getThrowable());
     Assert.assertTrue(((ActionFinished)statusMessages.get(2)).getResult().contains("message"));
     Assert.assertTrue(statusMessages.get(3) instanceof CmdletStatusUpdate);
     Assert.assertEquals(CmdletState.DONE, ((CmdletStatusUpdate)statusMessages.get(3)).getCurrentState());
@@ -101,7 +101,7 @@ public class TestCmdletExecutor {
     Assert.assertTrue(statusMessages.get(0) instanceof CmdletStatusUpdate);
     Assert.assertTrue(statusMessages.get(1) instanceof ActionStarted);
     Assert.assertTrue(statusMessages.get(2) instanceof ActionFinished);
-    Assert.assertNotNull(((ActionFinished)statusMessages.get(2)).getException());
+    Assert.assertNotNull(((ActionFinished)statusMessages.get(2)).getThrowable());
     Assert.assertTrue(statusMessages.get(3) instanceof CmdletStatusUpdate);
     Assert.assertEquals(CmdletState.FAILED, ((CmdletStatusUpdate)statusMessages.get(3)).getCurrentState());
     executor.shutdown();

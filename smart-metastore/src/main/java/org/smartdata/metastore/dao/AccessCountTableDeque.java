@@ -38,7 +38,7 @@ public class AccessCountTableDeque extends ArrayDeque<AccessCountTable> {
     this.tableEvictor = tableEvictor;
   }
 
-  public boolean add(AccessCountTable table) {
+  public boolean addAndNotifyListener(AccessCountTable table) {
     if (!this.isEmpty()) {
       assert table.getEndTime() > this.peekLast().getEndTime();
     }

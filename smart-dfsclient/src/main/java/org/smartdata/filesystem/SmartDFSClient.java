@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.client;
+package org.smartdata.filesystem;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.smartdata.client.SmartClient;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
@@ -30,12 +31,14 @@ import java.net.URI;
 
 public class SmartDFSClient extends DFSClient {
   private SmartClient smartClient = null;
+  private boolean healthy = false;
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeAddress, conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
+      healthy = true;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -47,6 +50,7 @@ public class SmartDFSClient extends DFSClient {
     super(nameNodeUri, conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
+      healthy = true;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -59,6 +63,7 @@ public class SmartDFSClient extends DFSClient {
     super(nameNodeUri, conf, stats);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
+      healthy = true;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -70,6 +75,7 @@ public class SmartDFSClient extends DFSClient {
     super(conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
+      healthy = true;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -80,6 +86,7 @@ public class SmartDFSClient extends DFSClient {
     super(conf);
     try {
       smartClient = new SmartClient(conf);
+      healthy = true;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -113,10 +120,16 @@ public class SmartDFSClient extends DFSClient {
 
   private void reportFileAccessEvent(String src) {
     try {
+      if (!healthy) {
+        return;
+      }
       smartClient.reportFileAccessEvent(new FileAccessEvent(src));
-    } catch (IOException e) {  // Here just ignores that failed to report
-      e.printStackTrace();
-      LOG.error("Can not report file access event to SmartServer: " + src);
+    } catch (IOException e) {
+      // Here just ignores that failed to report
+      LOG.error("Cannot report file access event to SmartServer: " + src
+          + " , for: " + e.getMessage()
+          + " , report mechanism will be disabled now in this instance.");
+      healthy = false;
     }
   }
 
@@ -125,8 +138,15 @@ public class SmartDFSClient extends DFSClient {
     try {
       super.close();
     } catch (IOException e) {
-      smartClient.close();
       throw e;
+    } finally {
+      try {
+        if (smartClient != null) {
+          smartClient.close();
+        }
+      }finally {
+        healthy = false;
+      }
     }
   }
 }

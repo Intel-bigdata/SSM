@@ -70,7 +70,7 @@ import org.apache.zeppelin.notebook.socket.WatcherMessage;
 import org.apache.zeppelin.rest.exception.ForbiddenException;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.Job.Status;
-import org.apache.zeppelin.server.ZeppelinServer;
+import org.apache.zeppelin.server.SmartZeppelinServer;
 import org.apache.zeppelin.ticket.TicketContainer;
 import org.apache.zeppelin.types.InterpreterSettingsList;
 import org.apache.zeppelin.user.AuthenticationInfo;
@@ -128,7 +128,7 @@ public class NotebookServer extends WebSocketServlet
   final Queue<NotebookSocket> watcherSockets = Queues.newConcurrentLinkedQueue();
 
   private Notebook notebook() {
-    return ZeppelinServer.notebook;
+    return SmartZeppelinServer.notebook;
   }
 
   @Override

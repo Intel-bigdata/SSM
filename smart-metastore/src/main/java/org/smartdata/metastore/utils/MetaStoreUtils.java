@@ -200,8 +200,8 @@ public class MetaStoreUtils {
             "  cid INTEGER NOT NULL,\n" +
             "  action_name varchar(4096) NOT NULL,\n" +
             "  args varchar(4096) NOT NULL,\n" +
-            "  result varchar(4096) NOT NULL,\n" +
-            "  log varchar(4096) NOT NULL,\n" +
+            "  result text NOT NULL,\n" +
+            "  log text NOT NULL,\n" +
             "  successful tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL,\n" +
             "  finished tinyint(4) NOT NULL,\n" +

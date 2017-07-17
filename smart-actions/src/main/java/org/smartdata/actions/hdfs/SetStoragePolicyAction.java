@@ -17,17 +17,17 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.smartdata.actions.annotation.ActionSignature;
 
 import java.util.Map;
 
-/**
- * Set storage policy
- */
+/** Set storage policy */
+@ActionSignature(
+  actionId = "setstoragepolicy",
+  displayName = "setstoragepolicy",
+  usage = HdfsAction.FILE_PATH + " $file " + SetStoragePolicyAction.STORAGE_POLICY + " $policy"
+)
 public class SetStoragePolicyAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(
-      SetStoragePolicyAction.class);
   public static final String STORAGE_POLICY = "-storagePolicy";
 
   private String fileName;

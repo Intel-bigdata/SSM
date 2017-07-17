@@ -17,14 +17,17 @@
  */
 package org.smartdata.metastore.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.Constants;
-import org.smartdata.metastore.utils.TimeGranularity;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 public abstract class TableAddOpListener {
+  static final Logger LOG = LoggerFactory.getLogger(TableAddOpListener.class);
+
   AccessCountTableDeque coarseGrainedTableDeque;
   AccessCountTableAggregator tableAggregator;
   ExecutorService executorService;
@@ -52,9 +55,9 @@ public abstract class TableAddOpListener {
               public void run() {
                 try {
                   tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
-                  coarseGrainedTableDeque.add(lastCoarseGrainedTable);
+                  coarseGrainedTableDeque.addAndNotifyListener(lastCoarseGrainedTable);
                 } catch (MetaStoreException e) {
-                  e.printStackTrace();
+                  LOG.error("Add AccessCount Table {} error", lastCoarseGrainedTable.getTableName(), e);
                 }
               }
             });
@@ -76,7 +79,7 @@ public abstract class TableAddOpListener {
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
       Long lastEnd = endTime - (endTime % Constants.ONE_MINUTE_IN_MILLIS);
       Long lastStart = lastEnd - Constants.ONE_MINUTE_IN_MILLIS;
-      return new AccessCountTable(lastStart, lastEnd, TimeGranularity.MINUTE);
+      return new AccessCountTable(lastStart, lastEnd);
     }
   }
 
@@ -92,7 +95,7 @@ public abstract class TableAddOpListener {
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
       Long lastEnd = endTime - (endTime % Constants.ONE_HOUR_IN_MILLIS);
       Long lastStart = lastEnd - Constants.ONE_HOUR_IN_MILLIS;
-      return new AccessCountTable(lastStart, lastEnd, TimeGranularity.HOUR);
+      return new AccessCountTable(lastStart, lastEnd);
     }
   }
 
@@ -108,7 +111,7 @@ public abstract class TableAddOpListener {
     public AccessCountTable lastCoarseGrainedTableFor(Long endTime) {
       Long lastEnd = endTime - (endTime % Constants.ONE_DAY_IN_MILLIS);
       Long lastStart = lastEnd - Constants.ONE_DAY_IN_MILLIS;
-      return new AccessCountTable(lastStart, lastEnd, TimeGranularity.DAY);
+      return new AccessCountTable(lastStart, lastEnd);
     }
   }
 

@@ -70,14 +70,8 @@ class RuleService(ssmServer: SmartEngine) extends BasicService {
       complete("{\"time\" : \"0\", \"error\" : \"\"}")
     } ~
     path("cmdlets") {
-      val smap1 = new util.HashMap[String, String]
-      smap1.put("_FILE_PATH_", "/testCacheFile")
-      val cmdlet1 = new CmdletInfo(0, 1,
-        CmdletState.PENDING, JsonUtil.toJsonString(smap1), 123123333l, 232444444l)
-      val cmdlet2 = new CmdletInfo(1, 1, CmdletState.PENDING,
-        JsonUtil.toJsonString(smap1), 123178333l, 232444994l)
       try {
-        complete(gson.toJson(ssmServer.getCmdletManager.listCmdletsInfo(ruleId, null)))
+        complete(gson.toJson(ssmServer.getCmdletManager.listCmdletsInfo(ruleId)))
       } catch {
         case e: Exception => failWith(e)
       }

@@ -18,6 +18,8 @@
 package org.smartdata.server.engine.data;
 
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.dao.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
@@ -30,6 +32,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class AccessEventFetcher {
+  static final Logger LOG = LoggerFactory.getLogger(AccessEventFetcher.class);
+
   private static final Long DEFAULT_INTERVAL = 1 * 1000L;
   private final ScheduledExecutorService scheduledExecutorService;
   private final Long fetchInterval;
@@ -95,7 +99,7 @@ public class AccessEventFetcher {
           this.manager.onAccessEventsArrived(events);
         }
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.error("FetchTask onAccessEventsArrived error", e);
       }
     }
   }
