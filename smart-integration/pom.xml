@@ -22,12 +22,12 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smartdata-project</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>smart-integration</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -46,44 +46,44 @@
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-dfsclient</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-server</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-engine</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-agent</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-server</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-admin</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
