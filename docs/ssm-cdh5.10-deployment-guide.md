@@ -175,15 +175,18 @@ to change the ation execution paralliem to 50.
 SSM service restart is required after the configuration change. 
 
 
-Trouble Shutting
+Trouble Shooting
 ---------------------------------------------------------------------------------
 All logs will go to SmartSerer.log under /logs directory. 
 
 1. Smart Server can't start successfully
 
    a. Check whether Hadoop HDFS NameNode is running
+   
    b. Check whether MySQL server is running
+   
    c. Check if there is already a SmartDaemon process running
+   
    d. Got to logs under /logs directory, find any useful clues in the log file.
    
 2. UI can not show hot files list 
