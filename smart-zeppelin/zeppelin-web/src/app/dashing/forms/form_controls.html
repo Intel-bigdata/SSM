@@ -1,0 +1,116 @@
+<div class="form-group">
+  <label class="{{labelStyleClass}} control-label text-right">
+    <span ng-bind="label"></span>
+    <span ng-if="help" style="font-size: 0.9em">
+      <remark tooltip="{{help}}" type="info"></remark>
+    </span>
+  </label>
+  <ng-switch on="renderAs">
+    <div ng-switch-when="choices">
+      <div class="{{controlStyleClass}}">
+        <ui-select theme="select2" class="form-control" ng-model="$parent.$parent.value"
+                   search-enabled="allowSearchInChoices">
+          <ui-select-match placeholder="{{placeholder}}" allow-clear="{{allowClearSelection}}">
+            {{$select.selected.text}}
+          </ui-select-match>
+          <ui-select-choices
+            repeat="choice in choices|\n          any: {text: $select.search, subtext: $select.search}">
+            <div ng-class="{'bold': $select.selected === choice}"
+                 ng-bind-html="choice.text|highlight:$select.search"></div>
+            <small ng-if="choice.subtext" ng-class="{'bold': $select.selected === choice}"
+                   ng-bind-html="choice.subtext|highlight:$select.search"></small>
+          </ui-select-choices>
+        </ui-select>
+      </div>
+    </div>
+    <div ng-switch-when="check">
+      <div class="{{controlStyleClass}} checkbox">
+        <label>
+          <input type="checkbox" ng-checked="$parent.value"
+                 ng-click="$parent.value = !$parent.value"/>
+          <span ng-bind="text"></span>
+        </label>
+      </div>
+    </div>
+    <div ng-switch-when="multi-checks">
+      <div class="{{controlStyleClass}}">
+        <label class="checkbox-inline" ng-repeat="choice in choices track by $index">
+          <input type="checkbox" ng-checked="$parent.value[$index]"
+                 ng-click="$parent.value[$index] = !$parent.value[$index]"/>
+          <span ng-bind="choice"></span>
+        </label>
+      </div>
+    </div>
+    <div ng-switch-when="radio">
+      <div class="{{controlStyleClass}}">
+        <div class="btn-group btn-group-justified">
+          <div ng-repeat="choice in choices track by $index" class="btn-group">
+            <button type="button" class="btn {{buttonStyleClass}} btn-default"
+                    ng-class="{'btn-primary': choice.value == value}" ng-bind="choice.text" value="{{choice.value}}"
+                    ng-click="toggle(choice.value)"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div ng-switch-when="integer">
+      <div class="{{controlStyleClass}}" ng-class="{'has-error': !pristine && invalid}">
+        <input type="number"
+               class="form-control input-sm"
+               ng-attr-min="{{min}}"
+               ng-attr-max="{{max}}"
+               ng-model="$parent.value"/>
+      </div>
+    </div>
+    <div ng-switch-when="datetime">
+      <div class="{{dateControlStyleClass}} has-feedback" ng-class="{'has-error': dateInputInvalid}">
+        <input
+          class="form-control input-sm" type="text" size="10" placeholder="YYYY-MM-DD" data-date-format="yyyy-MM-dd"
+          ng-model="$parent.dateValue" date-type="string" ng-click="fillDefaultDate()" autoclose="true"
+          use-native="true"
+          template-url="forms/datepicker.html" bs-datepicker/>
+        <span class="glyphicon glyphicon-calendar form-control-feedback fc-feedback-sm"></span>
+      </div>
+      <div class="{{timeControlStyleClass}} has-feedback"
+           ng-style="{'padding-left': timeControlLeftMargin, 'margin-top': timeControlTopMargin}"
+           ng-class="{'has-error': timeInputInvalid}">
+        <input class="form-control input-sm" type="text" size="8"
+               placeholder="HH:mm:ss" data-time-format="HH:mm:ss"
+               ng-model="$parent.timeValue" time-type="string"
+               hour-step="1" minute-step="1" second-step="1"
+               data-length="3" ng-focus="fillDefaultTime()"
+               use-native="true" arrow-behavior="picker"
+               template-url="forms/timepicker.html" bs-timepicker/>
+        <span class="glyphicon glyphicon-time form-control-feedback fc-feedback-sm"></span>
+      </div>
+    </div>
+    <div ng-switch-when="upload">
+      <div class="{{controlStyleClass}} has-feedback" ng-class="{'has-error': !pristine && invalid}">
+        <input type="text" readonly="readonly" class="form-control input-sm" placeholder="Click here to select a file"
+               style="cursor: pointer" ng-click="openUpload()" ng-model="$parent.filename"/>
+        <span ng-hide="$parent.value"
+              class="glyphicon glyphicon-folder-open form-control-feedback fc-feedback-sm clickable"
+              ngf-select
+              ng-model="$parent.files"
+              accept="{{acceptPattern}}"
+              ngf-accept="'{{acceptPattern}}'"></span>
+        <span ng-show="$parent.value" class="glyphicon glyphicon-trash form-control-feedback fc-feedback-sm clickable"
+              ng-click="clearSelection()"></span></div>
+    </div>
+    <div ng-switch-default>
+      <div class="{{controlStyleClass}}">
+        <div ng-class="{'has-error': !pristine && invalid}">
+          <div ng-class="{'input-group': choicesMenu}">
+            <input type="text" class="form-control input-sm"
+                   ng-model="$parent.value"/>
+            <div ng-if="choicesMenu" class="input-group-btn">
+              <button type="button" class="btn btn-sm btn-default dropdown-toggle" bs-dropdown="choicesMenu"
+                      placement="auto bottom-left" html="true"><span class="{{choiceIconStyleClass}} clickable"></span>
+                <span ng-if="!hideMenuCaret" class="caret"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-switch>
+</div>
