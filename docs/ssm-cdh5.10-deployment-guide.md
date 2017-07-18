@@ -19,7 +19,7 @@ Why JDK 1.7 is preferred
 
 CDH 5.10.1 Configuration
 ----------------------------------------------------------------------------------
-After install CDH5.10.1, please do the following configurations,
+After install CDH5.10.1, please do the following configurations, 
 
 1. Hadoop `core-site.xml`
 
@@ -60,8 +60,28 @@ volumes, here is an example which set the SSD, DISK and Archive volumes,
 </property>
 ```
 
-After all the steps, NameNode restart is required.
+3. Put SSM jars to CHD classpath 
 
+After we switch to the SmartFileSystem from the default HDFS implmentation, we need to put SmartFileSystem
+implementation jars to CDH classpath, so that HDFS, YARN and other upper layer applications can access. Basically
+when SSM compilation is finished, copy all the jar files starts with smart under 
+
+`/smart-dist/target/smart-data-0.1-SNAPSHOT/smart-data-0.1-SNAPSHOT/lib`
+
+to CDH class path. 
+
+After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if 
+the configuration takes effect. You can try TestDFSIO for example, 
+ 1) write data
+ 
+   `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.0.0-alpha2-SNAPSHOT-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
+   
+ 2) read data
+
+`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.0.0-alpha2-SNAPSHOT-tests.jar TestDFSIO –read`
+
+You may want to replace the jar with the version used in the CDH. After the read data opertion, if all the data files are listed 
+on SSM web UI page "hot files" table, then the integration works very well. 
 
 SSM Configuration
 ---------------------------------------------------------------------------------
@@ -96,8 +116,17 @@ SSM Configuration
 
 	`bin/start-smart.sh" --config ./conf --daemon`	
 	
-   `--config <config-dir>` configures where the configuration file directory is
-   `--daemon` means start the SSM server as an daemon process on the server
+   `--config <config-dir>` configures where the configuration file directory is and
+   
+   `--daemon` means start the SSM server as an daemon process on the server.
+   
+   Once you start the SSM server, you can open its web UI by 
+   
+   `http://localhost:7045`
+   
+   If you meet any problem, please open the SmartServer.log under /logs directory. All the
+   trouble shooting clues are there. 
+   
 5. Stop SSM server with command
    If stop SSM server is required, use the script `bin/stop-smart.sh`. Remeber to
    use the exact same parameters to `stop-smart.sh` script as to `start-smart.sh` script.
