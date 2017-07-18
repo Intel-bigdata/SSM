@@ -35,7 +35,18 @@
     "select2": "^4.0.3",
     "github-markdown-css": "^2.4.0",
     "MathJax": "2.7.0",
-    "ngclipboard": "^1.1.1"
+    "ngclipboard": "^1.1.1",
+    "angular-ui-router": "^1.0.5",
+    "moment": "momentjs#^2.18.1",
+    "jquery.cookie": "jquery-cookie#^1.4.1",
+    "angular-loading-bar": "^0.9.0",
+    "angular-smart-table": "^2.1.8",
+    "angular-motion": "^0.4.4",
+    "bootstrap-additions": "^0.3.1",
+    "angular-strap": "^2.3.12",
+    "ng-file-upload": "^12.2.13",
+    "vis": "^4.20.1",
+    "angular-ui-select": "^0.19.8"
   },
   "devDependencies": {
     "angular-mocks": "1.5.0"
