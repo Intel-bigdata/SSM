@@ -99,8 +99,8 @@ SSM Configuration
    `--config <config-dir>` configures where the configuration file directory is
    `--daemon` means start the SSM server as an daemon process on the server
 5. Stop SSM server with command
-   If stop SSM server is required, use the script "bin/stop-smart.sh". Remeber to
-   use the exact same parameters to stop-smart.sh script as to start-smart.sh script.
+   If stop SSM server is required, use the script `bin/stop-smart.sh`. Remeber to
+   use the exact same parameters to `stop-smart.sh` script as to `start-smart.sh` script.
    For exmaple, when you start smart server, you use 
    
    	`bin/start-smart.sh --config ./conf --daemon`
@@ -189,12 +189,14 @@ All logs will go to SmartSerer.log under /logs directory.
 2. UI can not show hot files list 
 
   Possible causes:
+  
   a. Cannot lock system mover locker. You may see something like this in the SmartServer.log file,
-	 2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...
-	 2017-07-15 00:38:29,350 ERROR org.smartdata.hdfs.HdfsStatesUpdateService.checkAndMarkRunning 138: Unable to lock 'mover', please stop 'mover' first.
-	 2017-07-15 00:38:29,350 INFO org.smartdata.server.engine.StatesManager.initStatesUpdaterService 180: Failed to create states updater service.
+  
+	2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...
+	2017-07-15 00:38:29,350 ERROR org.smartdata.hdfs.HdfsStatesUpdateService.checkAndMarkRunning 138: Unable to lock 'mover', please stop 'mover' first.
+	2017-07-15 00:38:29,350 INFO org.smartdata.server.engine.StatesManager.initStatesUpdaterService 180: Failed to create states updater service.
 	 
-	 Make sure there is no system mover running. Try to restart the SSM service will solve the problem. 
+  Make sure there is no system mover running. Try to restart the SSM service will solve the problem. 
 	 
 	 
 Know Issues
