@@ -1,5 +1,4 @@
 Deployment SSM with CDH5.10 Guide
-
 ----------------------------------------------------------------------------------
 Requirements:
 
@@ -8,32 +7,39 @@ Requirements:
 * CDH 5.10.1
 * MySQL Community 5.7.18
 
-----------------------------------------------------------------------------------
+
 Why JDK 1.7 is preferred
+----------------------------------------------------------------------------------
 
   It is because CDH5.10.1 by default support compile and run with JDK 1.7. If you
   want to use JDK1.8, please turn to Cloudera web site for how to support JDK1.8
   in CDH5.10.1.
   For SSM, JDK 1.7 and 1.8 are both supported.
 
-----------------------------------------------------------------------------------
-
 
 CDH 5.10.1 Configuration
 ----------------------------------------------------------------------------------
 After install CDH5.10.1, please do the following configurations,
-1. Hadoop core-site.xml
-Change property "fs.hdfs.impl" value, to point to the Smart Server provided "Smart
+
+1. Hadoop `core-site.xml`
+
+Change property `fs.hdfs.impl` value, to point to the Smart Server provided "Smart
 File System".
+
+```xml
 <property>
   <name>fs.hdfs.impl</name>
   <value>org.smartdata.filesystem.SmartFileSystem</value>
   <description>The FileSystem for hdfs URL</description>
 </property>
+```
 
-2. Hadoop hdfs-site.xml
-Add property "smart.server.rpc.adddress" and "smart.server.rpc.port" to point to 
-installed Smart Server.
+2. Hadoop `hdfs-site.xml`
+
+Add property `smart.server.rpc.adddress` and `smart.server.rpc.port` to point to 
+installed Smart Server.'
+
+```xml
 <property>
   <name>smart.server.rpc.address</name>
   <value>127.0.0.1</value>
@@ -42,15 +48,17 @@ installed Smart Server.
   <name>smart.server.rpc.port</name>
   <value>7042</value>
 </property> 
+```
 
 Make sure you have the correct HDFS storage type applied to HDFS DataNode storage
 volumes, here is an example which set the SSD, DISK and Archive volumes,
 
+```xml
 <property>
  <name>dfs.datanode.data.dir</name>
  <value>[SSD]file:///Users/drankye/workspace/tmp/disk_a,[DISK]file:///Users/drankye/workspace/tmp/disk_b,[ARCHIVE]file:///Users/drankye/workspace/tmp/disk_c</value>
 </property>
-
+```
 
 After all the steps, NameNode restart is required.
 
@@ -64,55 +72,73 @@ SSM Configuration
 3. The configuration files is under conf directory. First open smart-site.xml, configure
    Hadoop cluster NameNode RPC address,
    
+   ```xml
    <name>smart.dfs.namenode.rpcserver</name>
       <value>hdfs://localhost:9000</value>
       <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
+   ```
    
    Then open druid.xml, configure how to access MySQL DB. Basically fill out the
    DB url, username and password are enough. Please be noted that, security support
    will be enabled later. Here is an example, 
+   
+   ```xml
    <properties>
        <entry key="url">jdbc:mysql://localhost/ssm-metastore</entry>
        <entry key="username">root</entry>
        <entry key="password">123456</entry>
 	   ......
    </properties>	   
+   ```
 
 4. Start SSM server with command 
-	"bin/start-smart.sh" --config ./conf --daemon"	    
-   "--config <config-dir>" configures where the configuration file directory is
-   "--daemon" means start the SSM server as an daemon process on the server
+
+	`bin/start-smart.sh" --config ./conf --daemon`	
+	
+   `--config <config-dir>` configures where the configuration file directory is
+   `--daemon` means start the SSM server as an daemon process on the server
 5. Stop SSM server with command
    If stop SSM server is required, use the script "bin/stop-smart.sh". Remeber to
    use the exact same parameters to stop-smart.sh script as to start-smart.sh script.
    For exmaple, when you start smart server, you use 
-   	bin/start-smart.sh" --config ./conf --daemon
+   
+   	`bin/start-smart.sh --config ./conf --daemon`
+	
    Then, when you stop smart server, you should use 
-   	bin/stop-smart.sh" --config ./conf --daemon
+   
+   	`bin/stop-smart.sh --config ./conf --daemon`
    
 SSM Rule Examples
 ---------------------------------------------------------------------------------
 1. Move to SSD rule
-	file: path matches "/test/*" and accessCount(5m) > 3 | allssd
+
+	`file: path matches "/test/*" and accessCount(5m) > 3 | allssd`
+	
 This rule means all the files under /test directory, if it is accessed 3 times during
 last 5 minutes, SSM should trigger an anction to move the file to SSD. Rule engine
 will evalue the condition every MAX{5s,5m/20} internal.
 
 
 2. Move to Archive(Cold) rule
-	file: path matches "/test/*" and age > 5h | archive
+
+	`file: path matches "/test/*" and age > 5h | archive`
+	
 This rule means all the files under /test directory, if it's age is more than 5 hours,
 then move the file to archive storage. 
 
 3. Move one type of file to specific storage
-	file: path matches "/test/*.xml" | allssd
+
+	`file: path matches "/test/*.xml" | allssd`
+   
 This rule will move all XML files under /test directory to SSD. In this rule, not a 
 single date or time value is specified, the rule will be evaluated only 1 time each time
 it's started or restarted. 
 
 4. Specify rule evaluation internal
-	file: every 3s | path matches "/test/*.xml" | allssd
+
+	`file: every 3s | path matches "/test/*.xml" | allssd`
+  
 This rule will move all XML files under /test directory to SSD. The rule engine will
 evaluate whether the condition meets every 3s. 
 
@@ -125,20 +151,26 @@ Performance Tunning
 ---------------------------------------------------------------------------------
 There are two configurable parameters which impact the SSM rule evalute and action 
 execution parallism.
+
 1. smart.rule.executors
+
 Current default value is 5, which means system will concurrently evalue 5 rule state 
 at the same time.
+
 2. smart.cmdlet.executors
+
 Current default value is 10, means there will be 10 actions concurrenlty executed at
 the same time. 
 If the current configuration cannot meet your performance requirements, you can change
 it by define the property in the smart-site.xml under /conf directory. Here is an example
 to change the ation execution paralliem to 50.
 
+```xml
 <property>
   <name>smart.cmdlet.executors</name>
   <value>50</value>
 </property>
+```
 
 SSM service restart is required after the configuration change. 
 
@@ -148,12 +180,14 @@ Trouble Shutting
 All logs will go to SmartSerer.log under /logs directory. 
 
 1. Smart Server can't start successfully
+
    a. Check whether Hadoop HDFS NameNode is running
    b. Check whether MySQL server is running
    c. Check if there is already a SmartDaemon process running
    d. Got to logs under /logs directory, find any useful clues in the log file.
    
 2. UI can not show hot files list 
+
   Possible causes:
   a. Cannot lock system mover locker. You may see something like this in the SmartServer.log file,
 	 2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...
