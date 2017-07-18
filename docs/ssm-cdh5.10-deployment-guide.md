@@ -72,16 +72,16 @@ to CDH class path.
 
 After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if 
 the configuration takes effect. You can try TestDFSIO for example, 
- 1) write data
+
+ 	a. write data
  
    `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.0.0-alpha2-SNAPSHOT-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
    
- 2) read data
+ 	b. read data
 
 `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.0.0-alpha2-SNAPSHOT-tests.jar TestDFSIO –read`
 
-You may want to replace the jar with the version used in the CDH. After the read data opertion, if all the data files are listed 
-on SSM web UI page "hot files" table, then the integration works very well. 
+   You may want to replace the jar with the version used in the CDH. After the read data opertion, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
 
 SSM Configuration
 ---------------------------------------------------------------------------------
