@@ -17,8 +17,9 @@
  */
 package org.smartdata.actions.hdfs;
 
-import org.apache.hadoop.hdfs.DFSInputStream;
-import org.apache.hadoop.hdfs.DFSOutputStream;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +27,10 @@ import org.smartdata.actions.ActionException;
 import org.smartdata.actions.Utils;
 import org.smartdata.actions.annotation.ActionSignature;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.Map;
 
 /**
@@ -71,13 +74,39 @@ public class CopyFileAction extends HdfsAction {
     if (!dfsClient.exists(srcPath)) {
       throw new ActionException("CopyFile Action fails, file doesn't exist!");
     }
+    appendLog(
+        String.format("Copy from %s to %s", srcPath, distPath));
+    if (dfsClient.getFileInfo(srcPath).isDir()) {
+      // Copy the whole directory to dist
+      // TODO dir copy
+      copyFiles(srcPath, distPath);
+    } else {
+      // Copy single file to dir
+      copySingleFile(srcPath, distPath);
+    }
+  }
+
+  private boolean copyFiles(String src, String dist) throws IOException {
+    return true;
+  }
+
+  private boolean copySingleFile(String src, String dist) throws IOException {
     InputStream srcInputStream = null;
     OutputStream distOutStream = null;
+    srcInputStream = dfsClient.open(src);
     try {
-       srcInputStream = dfsClient.open(srcPath);
-       distOutStream = dfsClient.create(distPath, true);
+      if (distPath.startsWith("hdfs")) {
+        // Copy to remote dist
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(URI.create(dist), conf);
+        distOutStream = fs.create(new Path(dist));
+      } else {
+        // Copy to local HDFS
+        distOutStream = dfsClient.create(dist, true);
+      }
       // Copy from src to dist
       IOUtils.copyBytes(srcInputStream, distOutStream, bufferSize, false);
+      return true;
     } finally {
       IOUtils.closeStream(srcInputStream);
       IOUtils.closeStream(distOutStream);
