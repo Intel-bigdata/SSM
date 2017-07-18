@@ -39,12 +39,12 @@ import java.util.Map;
 @ActionSignature(
     actionId = "copy",
     displayName = "copy",
-    usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.REMOTE_URL + " $dist " + CopyFileAction.BUF_SIZE + " $size"
+    usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DIST_PATH + " $dist " + CopyFileAction.BUF_SIZE + " $size"
 )
 public class CopyFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(CopyFileAction.class);
   public static final String BUF_SIZE = "-bufSize";
-  public static final String REMOTE_URL = "-backup";
+  public static final String DIST_PATH = "-dist";
   private String srcPath;
   private String distPath;
   private int bufferSize = 64 * 1024;
@@ -53,8 +53,8 @@ public class CopyFileAction extends HdfsAction {
   public void init(Map<String, String> args) {
     super.init(args);
     this.srcPath = args.get(FILE_PATH);
-    if (args.containsKey(REMOTE_URL)) {
-      this.distPath = args.get(REMOTE_URL);
+    if (args.containsKey(DIST_PATH)) {
+      this.distPath = args.get(DIST_PATH);
     }
     if (args.containsKey(BUF_SIZE)) {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));

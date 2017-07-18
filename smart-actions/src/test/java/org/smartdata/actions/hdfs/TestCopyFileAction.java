@@ -50,7 +50,7 @@ public class TestCopyFileAction extends ActionMiniCluster {
     copyFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(CopyFileAction.FILE_PATH, srcPath + "/" + file1);
-    args.put(CopyFileAction.REMOTE_URL, distPath + "/" + file1);
+    args.put(CopyFileAction.DIST_PATH, distPath + "/" + file1);
     copyFileAction.init(args);
     copyFileAction.run();
     // Check if file exists
