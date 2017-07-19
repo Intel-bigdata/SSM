@@ -133,7 +133,7 @@ public class AccessCountDao {
     return union.toString();
   }
 
-  public void createProportionView(AccessCountTable dest, AccessCountTable source)
+  public void createProportionTable(AccessCountTable dest, AccessCountTable source)
       throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     double percentage =
@@ -141,7 +141,7 @@ public class AccessCountDao {
             / (source.getEndTime() - source.getStartTime());
     String sql =
         String.format(
-            "CREATE VIEW %s AS SELECT %s, ROUND(%s.%s * %s) AS %s FROM %s",
+            "CREATE TABLE %s AS SELECT %s, ROUND(%s.%s * %s) AS %s FROM %s",
             dest.getTableName(),
             AccessCountDao.FILE_FIELD,
             source.getTableName(),

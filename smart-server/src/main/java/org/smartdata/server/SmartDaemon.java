@@ -53,7 +53,7 @@ public class SmartDaemon implements ServerDaemon {
     if (this.hazelcastWorker != null) {
       this.hazelcastWorker.stop();
     }
-    //SmartServer.main(args);
+    SmartServer.main(args);
   }
 
   public static void main(String[] args) {

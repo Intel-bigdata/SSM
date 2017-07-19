@@ -209,7 +209,7 @@ public class RuleExecutor implements Runnable {
           + accTables.size() + " tables:");
       int idx = 1;
       for (AccessCountTable t : accTables) {
-        LOG.debug(idx + ".  " + (t.isView() ? " [VIEW] " : "        ")
+        LOG.debug(idx + ".  " + (t.isEphemeral() ? " [TABLE] " : "        ")
             + t.getTableName() + " ");
       }
     }
@@ -220,8 +220,8 @@ public class RuleExecutor implements Runnable {
 
     for (AccessCountTable t : accTables) {
       tableNames.add(t.getTableName());
-      if (t.isView()) {
-        dynamicCleanups.push("DROP VIEW IF EXISTS " + t.getTableName() + ";");
+      if (t.isEphemeral()) {
+        dynamicCleanups.push("DROP TABLE IF EXISTS " + t.getTableName() + ";");
       }
     }
     return tableNames;
