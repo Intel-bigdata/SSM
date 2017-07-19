@@ -25,6 +25,7 @@
     <module>smart-common</module>
     <module>smart-metrics</module>
     <module>smart-actions</module>
+    <module>smart-alluxio</module>
     <module>smart-metastore</module>
     <module>smart-client</module>
     <module>smart-dfsclient</module>
@@ -37,7 +38,7 @@
     <module>smart-hdfs</module>
     <module>smart-dist</module>
     <module>smart-integration</module>
-      <module>smart-blockec</module>
+    <module>smart-blockec</module>
   </modules>
 
 
