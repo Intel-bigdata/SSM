@@ -55,8 +55,14 @@ public class SmartConfKeys {
 
   public final static String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
   public final static boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = false;
+  public final static String SMART_ENABLE_ZEPPELIN = "smart.zeppelin.enable";
+  public final static boolean SMART_ENABLE_ZEPPELIN_DEFAULT = false;
 
   // SmartAgent
   public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
   public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
+
+  // SmartClient
+  // Comma delimited directories, access event of files under these directories will not be reported to SSM.
+  public static final String SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY = "smart.client.ignore.access.event.dirs";
 }

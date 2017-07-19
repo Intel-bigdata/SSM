@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.smartdata.metastore.DBTest;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.metastore.utils.TimeGranularity;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileInfo;
 
@@ -53,11 +52,12 @@ public class TestTableAggregator extends DBTest {
     databaseTester.setDataSet(dataSet);
     databaseTester.onSetup();
     MetaStore metaStore = new MetaStore(druidPool);
+    prepareFiles(metaStore);
 
-    AccessCountTable result = new AccessCountTable("actual", 0L, 0L, TimeGranularity.MINUTE);
-    AccessCountTable table1 = new AccessCountTable("table1", 0L, 0L, TimeGranularity.SECOND);
-    AccessCountTable table2 = new AccessCountTable("table2", 0L, 0L, TimeGranularity.SECOND);
-    AccessCountTable table3 = new AccessCountTable("table3", 0L, 0L, TimeGranularity.SECOND);
+    AccessCountTable result = new AccessCountTable("actual", 0L, 0L, false);
+    AccessCountTable table1 = new AccessCountTable("table1", 0L, 0L, false);
+    AccessCountTable table2 = new AccessCountTable("table2", 0L, 0L, false);
+    AccessCountTable table3 = new AccessCountTable("table3", 0L, 0L, false);
     String aggregateStatement =
         metaStore.aggregateSQLStatement(result, Lists.newArrayList(table1, table2, table3));
     Statement statement = databaseTester.getConnection().getConnection().createStatement();
@@ -79,9 +79,9 @@ public class TestTableAggregator extends DBTest {
     MetaStore metaStore = new MetaStore(druidPool);
     prepareFiles(metaStore);
 
-    AccessCountTable table1 = new AccessCountTable("table1", 0L, 0L, TimeGranularity.SECOND);
-    AccessCountTable table2 = new AccessCountTable("table2", 0L, 0L, TimeGranularity.SECOND);
-    AccessCountTable table3 = new AccessCountTable("table3", 0L, 0L, TimeGranularity.SECOND);
+    AccessCountTable table1 = new AccessCountTable("table1", 0L, 0L, false);
+    AccessCountTable table2 = new AccessCountTable("table2", 0L, 0L, false);
+    AccessCountTable table3 = new AccessCountTable("table3", 0L, 0L, false);
 
     List<FileAccessInfo> accessInfos =
         metaStore.getHotFiles(Arrays.asList(table1, table2, table3), 1);

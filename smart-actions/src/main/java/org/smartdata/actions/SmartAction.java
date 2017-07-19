@@ -18,7 +18,9 @@
 package org.smartdata.actions;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
@@ -36,6 +38,8 @@ import java.util.Map;
  * are also meant to extend this.
  */
 public abstract class SmartAction {
+  static final Logger LOG = LoggerFactory.getLogger(SmartAction.class);
+
   private StatusReporter statusReporter;
   private long actionId;
   private Map<String, String> actionArgs;
@@ -114,71 +118,74 @@ public abstract class SmartAction {
   protected abstract void execute() throws Exception;
 
   final public void run() {
-    Exception exception = null;
+    Throwable throwable = null;
     try {
       reportStart();
       execute();
-      this.successful = true;
-    } catch (Exception e) {
-      e.printStackTrace();
-      exception = e;
+      successful = true;
+    } catch (Throwable t) {
+      LOG.error("SmartAction execute error ", t);
+      throwable = t;
+      appendLog(ExceptionUtils.getFullStackTrace(t));
     } finally {
-      reportFinished(exception);
-      this.stop();
+      reportFinished(throwable);
+      stop();
     }
   }
 
   private void reportStart() {
-    if (this.statusReporter != null) {
-      this.statusReporter.report(new ActionStarted(this.actionId, System.currentTimeMillis()));
+    if (statusReporter != null) {
+      statusReporter.report(new ActionStarted(actionId, System.currentTimeMillis()));
     }
   }
 
-  private void reportFinished(Exception exception) {
-    if (this.statusReporter != null) {
+  private void reportFinished(Throwable throwable) {
+    if (statusReporter != null) {
       try {
-        this.statusReporter.report(
+        statusReporter.report(
             new ActionFinished(
-                this.actionId,
+                actionId,
                 System.currentTimeMillis(),
-                StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
-                StringEscapeUtils.escapeJava(this.logOs.toString("UTF-8")),
-                exception));
+                resultOs.toString("UTF-8"),
+                logOs.toString("UTF-8"),
+                throwable));
       } catch (IOException e) {
-        e.printStackTrace();
-        this.statusReporter.report(
-            new ActionFinished(this.actionId, System.currentTimeMillis(), exception));
+        LOG.error("Action statusReporter ActionFinished aid={} error", this.actionId, e);
+        statusReporter.report(
+            new ActionFinished(actionId, System.currentTimeMillis(), throwable));
       }
     }
   }
 
   protected void appendResult(String result) {
-    this.psResultOs.println(result);
+    psResultOs.println(result);
   }
 
   protected void appendLog(String log) {
-    this.psLogOs.println(log);
+    psLogOs.println(log);
   }
 
   public float getProgress() {
-    if (this.successful) {
+    if (successful) {
       return 1.0F;
     }
     return 0.0F;
   }
 
   public ActionStatus getActionStatus() throws UnsupportedEncodingException {
-    return new ActionStatus(this.actionId, getProgress(),
-      StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")),
-      StringEscapeUtils.escapeJava(this.resultOs.toString("UTF-8")));
+    return new ActionStatus(
+        actionId,
+        getProgress(),
+        resultOs.toString("UTF-8"),
+        resultOs.toString("UTF-8"));
   }
 
   private void stop() {
-    this.psLogOs.close();
-    this.psResultOs.close();
+    psLogOs.close();
+    psResultOs.close();
   }
 
   public boolean isSuccessful() {
-    return this.successful;
+    return successful;
   }
 }

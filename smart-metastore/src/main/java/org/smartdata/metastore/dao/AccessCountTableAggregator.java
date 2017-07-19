@@ -25,27 +25,20 @@ import org.smartdata.metastore.MetaStoreException;
 import java.util.List;
 
 public class AccessCountTableAggregator {
-  private final MetaStore adapter;
+  private final MetaStore metaStore;
   public static final Logger LOG =
       LoggerFactory.getLogger(AccessCountTableAggregator.class);
 
-  public AccessCountTableAggregator(MetaStore adapter) {
-    this.adapter = adapter;
+  public AccessCountTableAggregator(MetaStore metaStore) {
+    this.metaStore = metaStore;
   }
 
   public void aggregate(AccessCountTable destinationTable,
       List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     if (tablesToAggregate.size() > 0) {
-      String aggregateSQ = adapter.aggregateSQLStatement(destinationTable, tablesToAggregate);
-      this.adapter.execute(aggregateSQ);
-    }
-
-    if (LOG.isDebugEnabled()) {
-      LOG.debug(tablesToAggregate.size() + " tables aggregated into " + destinationTable);
-      for (AccessCountTable table : tablesToAggregate) {
-        LOG.debug("\t" + table);
-      }
+      String aggregateSQ = metaStore.aggregateSQLStatement(destinationTable, tablesToAggregate);
+      metaStore.execute(aggregateSQ);
+      metaStore.insertAccessCountTable(destinationTable);
     }
   }
-
 }

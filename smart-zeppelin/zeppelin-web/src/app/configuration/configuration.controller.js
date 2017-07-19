@@ -14,9 +14,9 @@
 
 angular.module('zeppelinWebApp').controller('ConfigurationCtrl', ConfigurationCtrl);
 
-ConfigurationCtrl.$inject = ['$scope', '$rootScope', '$http', 'baseUrlSrv', 'ngToast'];
+ConfigurationCtrl.$inject = ['$scope', '$rootScope', '$http', 'baseUrlSrv', 'ngToast', 'conf'];
 
-function ConfigurationCtrl($scope, $rootScope, $http, baseUrlSrv, ngToast) {
+function ConfigurationCtrl($scope, $rootScope, $http, baseUrlSrv, ngToast, conf) {
   $scope.configrations = [];
   $scope._ = _;
   ngToast.dismiss();
@@ -46,4 +46,34 @@ function ConfigurationCtrl($scope, $rootScope, $http, baseUrlSrv, ngToast) {
   };
 
   init();
+
+  $scope.conf = [];
+  $scope._ = _;
+  ngToast.dismiss();
+
+  var getConf = function() {
+    $http.get(conf.restapiRoot + 'smart/api/' + conf.restapiProtocol + '/' + 'conf').
+    success(function(data, status, headers, config) {
+      $scope.conf = data.body;
+    }).
+    error(function(data, status, headers, config) {
+      if (status === 401) {
+        ngToast.danger({
+          content: 'You don\'t have permission on this page',
+          verticalPosition: 'bottom',
+          timeout: '3000'
+        });
+        setTimeout(function() {
+          window.location.replace('/');
+        }, 3000);
+      }
+      console.log('Error %o %o', status, data.message);
+    });
+  };
+
+  var initConf = function() {
+    getConf();
+  };
+
+  initConf();
 }

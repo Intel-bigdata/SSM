@@ -27,7 +27,7 @@ public class MockActionStatusReporter implements StatusReporter {
   public void report(StatusMessage status) {
     if (status instanceof ActionFinished) {
       ActionFinished finished = (ActionFinished) status;
-      Assert.assertNull(finished.getException());
+      Assert.assertNull(finished.getThrowable());
     }
   }
 }

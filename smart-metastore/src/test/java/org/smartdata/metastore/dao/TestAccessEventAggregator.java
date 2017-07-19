@@ -47,7 +47,7 @@ public class TestAccessEventAggregator {
             new FileAccessEvent("def", 14000),
             new FileAccessEvent("", 18000)));
 
-    verify(adapter, times(5)).execute(anyString());
+    verify(adapter, times(3)).execute(anyString());
     verify(manager, times(3)).addTable(any(AccessCountTable.class));
   }
 }

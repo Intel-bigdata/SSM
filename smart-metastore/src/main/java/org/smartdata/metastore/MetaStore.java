@@ -271,7 +271,7 @@ public class MetaStore {
       int topNum) throws MetaStoreException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
-      try{
+      try {
         Map<Long, Integer> accessCounts = accessCountDao.getHotFiles(tables, topNum);
         if (accessCounts.size() == 0) {
           return new ArrayList<>();
@@ -280,9 +280,8 @@ public class MetaStore {
         List<FileAccessInfo> result = new ArrayList<>();
         for (Map.Entry<Long, Integer> entry : accessCounts.entrySet()) {
           Long fid = entry.getKey();
-          if (idToPath.containsKey(fid)) {
-            result.add(new FileAccessInfo(fid, idToPath.get(fid),
-                accessCounts.get(fid)));
+          if (idToPath.containsKey(fid) && entry.getValue() > 0) {
+            result.add(new FileAccessInfo(fid, idToPath.get(fid), entry.getValue()));
           }
         }
         return result;
@@ -299,6 +298,30 @@ public class MetaStore {
       }
     } else {
       return new ArrayList<>();
+    }
+  }
+
+  public List<AccessCountTable> getAllSortedTables() throws MetaStoreException {
+    try {
+      return accessCountDao.getAllSortedTables();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAccessCountTable(AccessCountTable table) throws MetaStoreException {
+    try{
+      accessCountDao.delete(table);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertAccessCountTable(AccessCountTable accessCountTable) throws MetaStoreException {
+    try{
+      accessCountDao.insert(accessCountTable);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
@@ -494,6 +517,7 @@ public class MetaStore {
   public List<String> executeFilesPathQuery(
       String sql) throws MetaStoreException {
     try {
+      LOG.debug("ExecuteFilesPathQuer sql = {}", sql);
       return metaStoreHelper.getFilesPath(sql);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();

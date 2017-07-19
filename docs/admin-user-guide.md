@@ -53,66 +53,69 @@ Table - 1 Objects to manipulate
 
 | Object  | Description       | Example                            |
 |---------|-------------------|------------------------------------|
-| File    | Files             | *file.path matches "/fooA/\*.dat"* |
-| Storage | HDFS storage type | SSD, HDD, Cache                    |
+| file    | Files             | *file.path matches "/fooA/\*.dat"* |
 
 Table - 2 Triggers
 
 | Format                                | Description                                             | Example                               |
 |---------------------------------------|---------------------------------------------------------|---------------------------------------|
-| At &lt;time&gt;                       | Execute the rule at the given time                      | -   At “2017-07-29 23:00:00” <br> -   At now |
-| Every &lt;time interval&gt;           | Execute the rule at the given frequency                 | Every 1min                            |
-| From &lt;time&gt; \[To &lt;time&gt;\] | Along with ‘Every’ expression to specify the time scope | -   Every 1day from now <br>  -   Every 1min from now to now + 7day  |
+| at &lt;time&gt;                       | Execute the rule at the given time                      | -   at “2017-07-29 23:00:00” <br> -   at now |
+| every &lt;time interval&gt;           | Execute the rule at the given frequency                 | -   every 1min                            |
+| from &lt;time&gt; \[To &lt;time&gt;\] | Along with ‘every’ expression to specify the time scope | -   every 1day from now <br>  -   every 1min from now to now + 7day  |
 
 
 Table – 3 Conditions
 
 | Ingredient       | Description                                                                              | Example                                  |
 |------------------|------------------------------------------------------------------------------------------|------------------------------------------|
-| Object property  | Object property as condition subject, refer to table-4 to supported object property list | Length &gt; 5MB                          |
-| Time             | -   “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + TimeInterval | -   “2017-07-29 23:00:00” <br>  -   Now  <br>  -   Now + 7day  |
-| Time Interval    | -   Digital + unit <br> -   Time – Time  | -   5sec, 5min, 5hour, 5day, 5mon, 5year <br>  -   Now - “2016-03-19 23:00:00”           |
-| File Size        | Digital + unit                                                                           | 5B, 5kb, 5MB, 5GB, 5TB, 5PB              |
-| String           | Start and ends with “, support escapes                                                   | “abc”, “123”, “Hello world\\n”           |
-| Logical operator | And, or, not                                                                             |                                          |
+| Object property  | Object property as condition subject, refer to table-4 to supported object property list | - length &gt; 5MB                          |
+| Time             | -   “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + TimeInterval | -   “2017-07-29 23:00:00” <br>  -   now  <br>  -   now + 7day  |
+| Time Interval    | -   Digital + unit <br> -   Time – Time  | -   5sec, 5min, 5hour, 5day <br>  -   now - “2016-03-19 23:00:00”           |
+| File Size        | -   Digital + unit                                                                           | - 5B, 5kb, 5MB, 5GB, 5TB, 5PB              |
+| String           | Start and ends with “, support escapes                                                   | - “abc”, “123”, “Hello world\\n”           |
+| Logical operator | and, or, not                                                                             |                                          |
 | Digital operator | +, -, \*, /, %                                                                           |                                          |
-| Compare          | &gt;,&gt;=,&lt;,&lt;=,==,!=                                                              |                                          |
+| Compare          | &gt;, &gt;=, &lt;, &lt;=, ==, !=                                                              |                                          |
 
 Table – 4 Object properties
 
 | Object   | Property                 | Description                                    |
 |----------|--------------------------|------------------------------------------------|
-| File     | path                     | Path in HDFS                                   |
-|          | age                      | Time from last been modified                   |
-|          | atime                    | Time accessed last time                        |
-|          | accessCount(interval)    | Access counts during in the last time interval |
-|          | storagePolicy            | Storage policy of file                         |
-|          | length                   | Length of the file                             |
-|          | isInCache                | Test if file is in cache now                   |
-|          | Owner                    | Owner of the file                              |
-|          | Group                    | File group associated                          |
-| Storage  | Utilization(StorageType) | The utilization of the given storage type      |
+| file     | path                     | Path in HDFS                                   |
+|          | age                      | Time from last been modified                   |
+|          | atime                    | Time accessed last time                        |
+|          | accessCount(interval)    | Access counts during in the last time interval |
+|          | blocksize                | Block size of the file                         |
+|          | storagePolicy            | Storage policy of file                         |
+|          | length                   | Length of the file                             |
+|          | isInCache                | Test if file is in cache now                   |
+|          | mtime                    | Last modification time of the file             |
 
 Table – 5 Commands
 
 | Command(case insensitive) | Description                                               |
 |---------------------------|-----------------------------------------------------------|
-| cache\_file               | Cache file in HDFS Cache                                  |
-| uncache\_file             | Uncache file                                              |
-| one\_ssd                  | Move one copy of file to SSD                              |
-| all\_ssd                  | Move all copies of file to SSD                            |
-| all\_hdd                  | Move file to HDD                                          |
-| one\_hdd                  | Move one copy of file to HDD                              |
+| cache                     | Cache file in HDFS Cache                                  |
+| uncache                   | Uncache file                                              |
+| onessd                    | Move one copy of file to SSD                              |
+| allssd                    | Move all copies of file to SSD                            |
 | archive                   | Move file to ‘Archive’ storage type                       |
+| checkstorage              | Check file block storage type                             |
+| read                      | Read the file and discart the content readed              |
+| write                     | Create the file and fill the content with random value    |
 | user defined actions      | Interface defined for user to implement their own actions |
 
 Here is a rule example,
 
-*file.path matches "/fooA/\*.dat": age &gt; 30d | archive*
+*file with path matches "/fooA/\*.dat": age &gt; 30day | archive*
 
-This example defines a rule that for each file with path matches regular
+This example defines a rule that for each file (specified before key word 'with') with path matches regular
 expression “/fooA/\*.dat”, if the file has been created for more than 30
-days then move the file to archive storage.
+days then move the file to archive storage. The rule can be rewrited in the following way:
+
+*file : path matches "/fooA/\*.dat" and age &gt; 30day | archive*
+
+The boolean expression can also be placed in condition expression.
 
 For those who not sure if the rule is defined correctly or not, an API
 is provided to check whether the rule is valid or not. Please refer to
@@ -131,8 +134,8 @@ deleted. Here is the rule state transition diagram.
 Once a rule is defined and submitted to SSM, the rule is of “**Active”**
 state. When a rule is in this state, SSM will regularly evaluate the
 conditions of the rule, create commands when the conditions are met and
-execute commands. Once all the commands are executed, the rule will
-transit into “**Finished**” state.
+execute commands. Once a rule finishes (rule that only be checked at a
+given time or time interval), the rule will transit into “**Finished**” state.
 
 **Disabled**:
 
@@ -146,9 +149,9 @@ be cancelled.
 
 **Finished**:
 
-If a rule is one time rule or has time constains, once all the commands of the rule are executed, the rule enters
-“**Finished**” state. A finished rule can be deleted permanently from
-the system when it’s in a **“Finished”** state.
+If a rule is one-shot rule or has time constrains, once the time exceeds
+the constrains, the rule enters “**Finished**” state. A finished rule can
+be deleted permanently from the system when it’s in a **“Finished”** state.
 
 **Deleted:**
 
@@ -173,7 +176,7 @@ updated later.
 
   Submit a rule with specified initial state. The initial state can be “active” or “disabled”. If initial state is not specified, then by default rule will be of “active” state.
 
-* void **validateRule**(**String** rule) **throws** IOException;  
+* void **checkRule**(**String** rule) **throws** IOException;
 
   Verify rule
 

@@ -22,6 +22,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReporter;
@@ -41,6 +43,8 @@ import java.util.concurrent.Future;
 //Todo: 1. make this a interface so that we could have different executor implementation
 //      2. add api providing available resource
 public class CmdletExecutor {
+  static final Logger LOG = LoggerFactory.getLogger(CmdletExecutor.class);
+
   private final StatusReporter reporter;
   private final SmartConf smartConf;
   private Map<Long, Future> listenableFutures;
@@ -84,7 +88,7 @@ public class CmdletExecutor {
         try {
           actionStatusList.add(action.getActionStatus());
         } catch (UnsupportedEncodingException e) {
-          e.printStackTrace();
+          LOG.error("Add actionStatus aid={} to actionStatusList error", action.getActionId(), e);
         }
       }
     }

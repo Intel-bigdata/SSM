@@ -17,8 +17,6 @@
  */
 package org.smartdata.metastore.dao;
 
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.DFSUtil;
 import org.dbunit.Assertion;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.ITable;
@@ -33,7 +31,6 @@ import org.smartdata.metastore.utils.Constants;
 import org.smartdata.metastore.utils.TimeGranularity;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileInfo;
-
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -52,7 +49,7 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTableManager manager = new AccessCountTableManager(adapter);
     Long firstDayEnd = 24 * 60 * 60 * 1000L;
     AccessCountTable accessCountTable =
-        new AccessCountTable(firstDayEnd - 5 * 1000, firstDayEnd, TimeGranularity.SECOND);
+        new AccessCountTable(firstDayEnd - 5 * 1000, firstDayEnd);
     manager.addTable(accessCountTable);
 
     Thread.sleep(5000);
@@ -64,19 +61,19 @@ public class TestAccessCountTableManager extends DBTest {
 
     AccessCountTableDeque minute = map.get(TimeGranularity.MINUTE);
     AccessCountTable minuteTable =
-        new AccessCountTable(firstDayEnd - 60 * 1000, firstDayEnd, TimeGranularity.MINUTE);
+        new AccessCountTable(firstDayEnd - 60 * 1000, firstDayEnd);
     Assert.assertTrue(minute.size() == 1);
     Assert.assertEquals(minute.peek(), minuteTable);
 
     AccessCountTableDeque hour = map.get(TimeGranularity.HOUR);
     AccessCountTable hourTable =
-        new AccessCountTable(firstDayEnd - 60 * 60 * 1000, firstDayEnd, TimeGranularity.HOUR);
+        new AccessCountTable(firstDayEnd - 60 * 60 * 1000, firstDayEnd);
     Assert.assertTrue(hour.size() == 1);
     Assert.assertEquals(hour.peek(), hourTable);
 
     AccessCountTableDeque day = map.get(TimeGranularity.DAY);
     AccessCountTable dayTable =
-        new AccessCountTable(firstDayEnd - 24 * 60 * 60 * 1000, firstDayEnd, TimeGranularity.DAY);
+        new AccessCountTable(firstDayEnd - 24 * 60 * 60 * 1000, firstDayEnd);
     Assert.assertTrue(day.size() == 1);
     Assert.assertEquals(day.peek(), dayTable);
   }
@@ -84,18 +81,14 @@ public class TestAccessCountTableManager extends DBTest {
   private void createTables(Connection connection) throws Exception {
     Statement statement = connection.createStatement();
     statement.execute(AccessCountDao.createTableSQL("expect1"));
+    statement.execute(AccessCountDao.createTableSQL("expect2"));
+    statement.execute(AccessCountDao.createTableSQL("expect3"));
     statement.close();
   }
 
   @Test
   public void testAddAccessCountInfo() throws Exception {
-    MetaStore metaStore = new MetaStore(druidPool);
-    createTables(databaseTester.getConnection().getConnection());
-    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader().getResourceAsStream("files.xml"));
-    databaseTester.setDataSet(dataSet);
-    databaseTester.onSetup();
-    prepareFiles(metaStore);
-    AccessCountTableManager manager = new AccessCountTableManager(metaStore);
+    AccessCountTableManager manager = initTestEnvironment();
     List<FileAccessEvent> accessEvents = new ArrayList<>();
     accessEvents.add(new FileAccessEvent("file1", 0));
     accessEvents.add(new FileAccessEvent("file2", 1));
@@ -107,9 +100,58 @@ public class TestAccessCountTableManager extends DBTest {
     accessEvents.add(new FileAccessEvent("file3", 5000));
 
     manager.onAccessEventsArrived(accessEvents);
-    AccessCountTable accessCountTable = new AccessCountTable(0L, 5000L);
-    ITable actual = databaseTester.getConnection().createTable(accessCountTable.getTableName());
-    ITable expect = databaseTester.getDataSet().getTable("expect1");
+    assertTableEquals(new AccessCountTable(0L, 5000L).getTableName(), "expect1");
+  }
+
+  @Test
+  public void testAccessFileNotInNamespace() throws Exception {
+    AccessCountTableManager manager = initTestEnvironment();
+    List<FileAccessEvent> accessEvents = new ArrayList<>();
+    accessEvents.add(new FileAccessEvent("file1", 0));
+    accessEvents.add(new FileAccessEvent("file2", 1));
+    accessEvents.add(new FileAccessEvent("file2", 2));
+    accessEvents.add(new FileAccessEvent("file3", 2));
+    accessEvents.add(new FileAccessEvent("file3", 3));
+    accessEvents.add(new FileAccessEvent("file3", 4));
+    accessEvents.add(new FileAccessEvent("file4", 5));
+
+    accessEvents.add(new FileAccessEvent("file3", 5000));
+    accessEvents.add(new FileAccessEvent("file3", 10000));
+
+    manager.onAccessEventsArrived(accessEvents);
+    assertTableEquals(new AccessCountTable(0L, 5000L).getTableName(), "expect1");
+    assertTableEquals(new AccessCountTable(5000L, 10000L).getTableName(), "expect2");
+
+    accessEvents.clear();
+    accessEvents.add(new FileAccessEvent("file4", 10001));
+    accessEvents.add(new FileAccessEvent("file4", 10002));
+    accessEvents.add(new FileAccessEvent("file3", 15000));
+    accessEvents.add(new FileAccessEvent("file4", 15001));
+    accessEvents.add(new FileAccessEvent("file3", 20000));
+    manager.onAccessEventsArrived(accessEvents);
+    assertTableEquals(new AccessCountTable(10000L, 15000L).getTableName(), "expect2");
+    assertTableEquals(new AccessCountTable(15000L, 20000L).getTableName(), "expect2");
+
+    insertNewFile(new MetaStore(druidPool), "file4", 4L);
+    accessEvents.clear();
+    accessEvents.add(new FileAccessEvent("file4", 25000));
+    manager.onAccessEventsArrived(accessEvents);
+    assertTableEquals(new AccessCountTable(20000L, 25000L).getTableName(), "expect3");
+  }
+
+  private AccessCountTableManager initTestEnvironment() throws Exception {
+    MetaStore metaStore = new MetaStore(druidPool);
+    createTables(databaseTester.getConnection().getConnection());
+    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader().getResourceAsStream("files.xml"));
+    databaseTester.setDataSet(dataSet);
+    databaseTester.onSetup();
+    prepareFiles(metaStore);
+    return new AccessCountTableManager(metaStore);
+  }
+
+  private void assertTableEquals(String actualTableName, String expectedDataSet) throws Exception {
+    ITable actual = databaseTester.getConnection().createTable(actualTableName);
+    ITable expect = databaseTester.getDataSet().getTable(expectedDataSet);
     SortedTable sortedActual = new SortedTable(actual, new String[] {"fid"});
     sortedActual.setUseComparable(true);
     Assertion.assertEquals(expect, sortedActual);
@@ -135,6 +177,23 @@ public class TestAccessCountTableManager extends DBTest {
     metaStore.insertFiles(statusInternals.toArray(new FileInfo[0]));
   }
 
+  private void insertNewFile(MetaStore metaStore, String file, Long fid)
+      throws MetaStoreException {
+    FileInfo finfo = new FileInfo(file,
+        fid,
+        123L,
+        false,
+        (short) 1,
+        128 * 1024L,
+        123123123L,
+        123123120L,
+        (short) 1,
+        "root",
+        "admin",
+        (byte) 0);
+    metaStore.insertFile(finfo);
+  }
+
   @Test
   public void testGetTables() throws MetaStoreException {
     MetaStore adapter = mock(MetaStore.class);
@@ -142,7 +201,7 @@ public class TestAccessCountTableManager extends DBTest {
     Map<TimeGranularity, AccessCountTableDeque> map = new HashMap<>();
     AccessCountTableDeque dayDeque = new AccessCountTableDeque(tableEvictor);
     AccessCountTable firstDay = new AccessCountTable(0L, Constants.ONE_DAY_IN_MILLIS);
-    dayDeque.add(firstDay);
+    dayDeque.addAndNotifyListener(firstDay);
     map.put(TimeGranularity.DAY, dayDeque);
 
     AccessCountTableDeque hourDeque = new AccessCountTableDeque(tableEvictor);
@@ -150,8 +209,8 @@ public class TestAccessCountTableManager extends DBTest {
         new AccessCountTable(23 * Constants.ONE_HOUR_IN_MILLIS, 24 * Constants.ONE_HOUR_IN_MILLIS);
     AccessCountTable secondHour =
         new AccessCountTable(24 * Constants.ONE_HOUR_IN_MILLIS, 25 * Constants.ONE_HOUR_IN_MILLIS);
-    hourDeque.add(firstHour);
-    hourDeque.add(secondHour);
+    hourDeque.addAndNotifyListener(firstHour);
+    hourDeque.addAndNotifyListener(secondHour);
     map.put(TimeGranularity.HOUR, hourDeque);
 
     AccessCountTableDeque minuteDeque = new AccessCountTableDeque(tableEvictor);
@@ -164,8 +223,8 @@ public class TestAccessCountTableManager extends DBTest {
         new AccessCountTable(
             numMins * Constants.ONE_MINUTE_IN_MILLIS,
             (numMins + 1) * Constants.ONE_MINUTE_IN_MILLIS);
-    minuteDeque.add(firstMin);
-    minuteDeque.add(secondMin);
+    minuteDeque.addAndNotifyListener(firstMin);
+    minuteDeque.addAndNotifyListener(secondMin);
     map.put(TimeGranularity.MINUTE, minuteDeque);
 
     AccessCountTableDeque secondDeque = new AccessCountTableDeque(tableEvictor);
@@ -178,8 +237,8 @@ public class TestAccessCountTableManager extends DBTest {
         new AccessCountTable(
             numSeconds * Constants.ONE_SECOND_IN_MILLIS,
             (numSeconds + 5) * Constants.ONE_SECOND_IN_MILLIS);
-    secondDeque.add(firstFiveSeconds);
-    secondDeque.add(secondFiveSeconds);
+    secondDeque.addAndNotifyListener(firstFiveSeconds);
+    secondDeque.addAndNotifyListener(secondFiveSeconds);
     map.put(TimeGranularity.SECOND, secondDeque);
 
     List<AccessCountTable> firstResult =
@@ -227,8 +286,8 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTable secondFiveSeconds =
       new AccessCountTable(5 * Constants.ONE_SECOND_IN_MILLIS,
         10 * Constants.ONE_SECOND_IN_MILLIS);
-    secondDeque.add(firstFiveSeconds);
-    secondDeque.add(secondFiveSeconds);
+    secondDeque.addAndNotifyListener(firstFiveSeconds);
+    secondDeque.addAndNotifyListener(secondFiveSeconds);
     map.put(TimeGranularity.SECOND, secondDeque);
 
     List<AccessCountTable> result = AccessCountTableManager.getTables(map, adapter,
@@ -246,7 +305,7 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTableDeque minute = new AccessCountTableDeque(tableEvictor);
     AccessCountTable firstMinute =
       new AccessCountTable(0L, Constants.ONE_MINUTE_IN_MILLIS);
-    minute.add(firstMinute);
+    minute.addAndNotifyListener(firstMinute);
     map.put(TimeGranularity.MINUTE, minute);
 
     AccessCountTableDeque secondDeque = new AccessCountTableDeque(tableEvictor);
@@ -258,9 +317,9 @@ public class TestAccessCountTableManager extends DBTest {
     AccessCountTable thirdFiveSeconds =
       new AccessCountTable(110 * Constants.ONE_SECOND_IN_MILLIS,
         115 * Constants.ONE_SECOND_IN_MILLIS);
-    secondDeque.add(firstFiveSeconds);
-    secondDeque.add(secondFiveSeconds);
-    secondDeque.add(thirdFiveSeconds);
+    secondDeque.addAndNotifyListener(firstFiveSeconds);
+    secondDeque.addAndNotifyListener(secondFiveSeconds);
+    secondDeque.addAndNotifyListener(thirdFiveSeconds);
     map.put(TimeGranularity.SECOND, secondDeque);
 
     List<AccessCountTable> result = AccessCountTableManager.getTables(map, adapter,

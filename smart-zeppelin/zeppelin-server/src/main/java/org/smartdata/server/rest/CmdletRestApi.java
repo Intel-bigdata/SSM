@@ -38,7 +38,7 @@ import javax.ws.rs.core.Response;
 public class CmdletRestApi {
   private SmartEngine smartEngine;
   private static final Logger logger =
-      LoggerFactory.getLogger(CmdletRestApi.class);
+          LoggerFactory.getLogger(CmdletRestApi.class);
 
   public CmdletRestApi(SmartEngine smartEngine) {
     this.smartEngine = smartEngine;
@@ -50,11 +50,11 @@ public class CmdletRestApi {
     Long longNumber = Long.parseLong(cmdletId);
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().getCmdletInfo(longNumber)).build();
+              smartEngine.getCmdletManager().getCmdletInfo(longNumber)).build();
     } catch (Exception e) {
       logger.error("Exception in CmdletRestApi while getting info", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+              e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -63,13 +63,13 @@ public class CmdletRestApi {
   public Response list() {
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager()
-          .listCmdletsInfo(-1, null))
-          .build();
+              smartEngine.getCmdletManager()
+                      .listCmdletsInfo(-1, null))
+              .build();
     } catch (Exception e) {
       logger.error("Exception in CmdletRestApi while listing cmdlets", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+              e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -78,11 +78,11 @@ public class CmdletRestApi {
   public Response submitCmdlet(String args) {
     try {
       return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletManager()
-          .submitCmdlet(args)).build();
+              .submitCmdlet(args)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while adding cmdlet", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+              e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -96,7 +96,7 @@ public class CmdletRestApi {
     } catch (Exception e) {
       logger.error("Exception in CmdletRestApi while stop cmdlet " + longNumber, e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+              e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 }

@@ -17,6 +17,7 @@
  */
 package org.smartdata.metastore.dao;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.smartdata.model.ActionInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -91,8 +92,7 @@ public class ActionDao {
   public List<ActionInfo> getLatestActions(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     jdbcTemplate.setMaxRows(size);
-    String sql = "select * from actions WHERE finished = 1" +
-        " ORDER by create_time DESC";
+    String sql = "select * from actions ORDER by aid DESC";
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
@@ -170,8 +170,8 @@ public class ActionDao {
     parameters.put("cid", actionInfo.getCmdletId());
     parameters.put("action_name", actionInfo.getActionName());
     parameters.put("args", actionInfo.getArgsJsonString());
-    parameters.put("result", actionInfo.getResult());
-    parameters.put("log", actionInfo.getLog());
+    parameters.put("result", StringEscapeUtils.escapeJava(actionInfo.getResult()));
+    parameters.put("log", StringEscapeUtils.escapeJava(actionInfo.getLog()));
     parameters.put("successful", actionInfo.isSuccessful());
     parameters.put("create_time", actionInfo.getCreateTime());
     parameters.put("finished", actionInfo.isFinished());
@@ -189,8 +189,8 @@ public class ActionDao {
       actionInfo.setCmdletId(resultSet.getLong("cid"));
       actionInfo.setActionName(resultSet.getString("action_name"));
       actionInfo.setArgsFromJsonString(resultSet.getString("args"));
-      actionInfo.setResult(resultSet.getString("result"));
-      actionInfo.setLog(resultSet.getString("log"));
+      actionInfo.setResult(StringEscapeUtils.unescapeJava(resultSet.getString("result")));
+      actionInfo.setLog(StringEscapeUtils.unescapeJava(resultSet.getString("log")));
       actionInfo.setSuccessful(resultSet.getBoolean("successful"));
       actionInfo.setCreateTime(resultSet.getLong("create_time"));
       actionInfo.setFinished(resultSet.getBoolean("finished"));
