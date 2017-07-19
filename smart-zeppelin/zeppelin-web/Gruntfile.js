@@ -136,7 +136,7 @@ module.exports = function(grunt) {
       },
       js: {
         files: [
-          '<%= yeoman.app %>/app/**/*.js',
+          // '<%= yeoman.app %>/app/**/*.js',
           '<%= yeoman.app %>/components/**/*.js'
         ],
         tasks: ['newer:eslint:all'],
@@ -182,7 +182,7 @@ module.exports = function(grunt) {
       all: {
         src: [
           'Gruntfile.js',
-          '<%= yeoman.app %>/app/**/*.js',
+          // '<%= yeoman.app %>/app/**/*.js',
           '<%= yeoman.app %>/components/**/*.js'
         ]
       },
@@ -359,6 +359,11 @@ module.exports = function(grunt) {
           expand: true,
           cwd: '<%= yeoman.app %>',
           dest: '<%= yeoman.dist %>',
+          src: ['app/dashing-deps/0.1.3/roboto/fonts/**/*.{eot,svg,ttf,woff,woff2}']
+        }, {
+          expand: true,
+          cwd: '<%= yeoman.app %>',
+          dest: '<%= yeoman.dist %>',
           src: ['app/**/*.html', 'components/**/*.html']
         }, {
           expand: true,
@@ -373,6 +378,16 @@ module.exports = function(grunt) {
         }, {
           expand: true,
           cwd: 'bower_components/bootstrap/dist',
+          src: 'fonts/*',
+          dest: '<%= yeoman.dist %>'
+        }, {
+          expand: true,
+          cwd: 'bower_components/select2/docs/vendor',
+          src: 'fonts/*',
+          dest: '<%= yeoman.dist %>'
+        }, {
+          expand: true,
+          cwd: 'bower_components/vis/docs',
           src: 'fonts/*',
           dest: '<%= yeoman.dist %>'
         }, {
