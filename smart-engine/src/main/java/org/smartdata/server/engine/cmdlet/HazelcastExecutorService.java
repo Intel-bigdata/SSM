@@ -67,7 +67,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   }
 
   private void initChannels() {
-    for (Member worker : HazelcastUtil.getWorkerMembers(this.instance)) {
+    for (Member worker : HazelcastUtil.getWorkerMembers(instance)) {
       ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
       this.masterToWorkers.put(worker.getUuid(), topic);
       this.scheduledCmdlets.put(worker.getUuid(), new HashSet<Long>());
@@ -76,7 +76,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
 
   public List<StandbyServerInfo> getStandbyServers() {
     List<StandbyServerInfo> infos = new ArrayList<>();
-    for (Member worker : HazelcastUtil.getWorkerMembers(this.instance)) {
+    for (Member worker : HazelcastUtil.getWorkerMembers(instance)) {
       infos.add(new StandbyServerInfo(worker.getUuid(), worker.getAddress().toString()));
     }
     return infos;
@@ -95,10 +95,10 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   @Override
   public void execute(LaunchCmdlet cmdlet) {
     String[] members = masterToWorkers.keySet().toArray(new String[0]);
-    String memeber = members[random.nextInt() % members.length];
-    masterToWorkers.get(memeber).publish(cmdlet);
-    scheduledCmdlets.get(memeber).add(cmdlet.getCmdletId());
-    LOG.info(String.format("Executing cmdlet %s on worker %s", cmdlet.getCmdletId(), members));
+    String member = members[random.nextInt() % members.length];
+    masterToWorkers.get(member).publish(cmdlet);
+    scheduledCmdlets.get(member).add(cmdlet.getCmdletId());
+    LOG.info("Executing cmdlet {} on worker {}", cmdlet.getCmdletId(), members);
   }
 
   @Override
