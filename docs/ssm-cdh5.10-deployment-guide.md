@@ -42,7 +42,7 @@ installed Smart Server.'
 ```xml
 <property>
   <name>smart.server.rpc.address</name>
-  <value>127.0.0.1</value>
+  <value>ssm-server-ip</value>
 </property>
 <property>
   <name>smart.server.rpc.port</name>
@@ -75,13 +75,13 @@ the configuration takes effect. You can try TestDFSIO for example,
 
  	a. write data
  
-   `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.0.0-alpha2-SNAPSHOT-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
+	`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
    
  	b. read data
 
-`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.0.0-alpha2-SNAPSHOT-tests.jar TestDFSIO –read`
+	`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –read`
 
-   You may want to replace the jar with the version used in the CDH. After the read data opertion, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
+   You may want to replace the jar with the version used in your CDH. After the read data opertion, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
 
 SSM Configuration
 ---------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ SSM Configuration
    
    ```xml
    <name>smart.dfs.namenode.rpcserver</name>
-      <value>hdfs://localhost:9000</value>
+      <value>hdfs://namenode-ip:9000</value>
       <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
    ```
@@ -111,10 +111,19 @@ SSM Configuration
 	   ......
    </properties>	   
    ```
+   
+   ssm-metastore is the Database name. You need to create it before first after you installed MySql.
 
+4. Format Database with command
+	
+	`bin/start-smart.sh -format`
+   
+   The script will create all tables required by SSM.
+	
+   
 4. Start SSM server with command 
 
-	`bin/start-smart.sh" --config ./conf --daemon`	
+	`bin/start-smart.sh --config ./conf --daemon`	
 	
    `--config <config-dir>` configures where the configuration file directory is and
    
