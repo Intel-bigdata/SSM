@@ -156,7 +156,7 @@ public class AccessCountTableManager {
           // table that already exists, so this situation should be avoided.
           if (!tableExists(tableDeques, startTime, table.getEndTime())) {
             AccessCountTable splitTable = new AccessCountTable(startTime, table.getEndTime(), true);
-            metaStore.createProportionView(splitTable, table);
+            metaStore.createProportionTable(splitTable, table);
             results.add(splitTable);
             startTime = table.getEndTime();
           }
