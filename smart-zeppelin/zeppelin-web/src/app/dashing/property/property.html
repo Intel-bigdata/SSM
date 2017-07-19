@@ -17,8 +17,8 @@
     under the License.
     -->
 <ng-switch on="renderer"><a ng-switch-when="Link" ng-href="{{href}}" ng-bind="text" ng-attr-target="{{target}}"></a>
-  <button ng-switch-when="Button" ng-if="!hide" type="button" class="btn btn-default {{class}}" ng-bind="text"
-          ng-click="click()" ng-disabled="disabled" ng-attr-bs-tooltip="tooltip"></button>
+  <button ng-switch-when="Button" ng-if="!hide" type="button" class="btn btn-default {{class}}"
+          ng-click="click()" ng-disabled="disabled" ng-attr-bs-tooltip="tooltip"><span class="{{text()}}"></span></button>
   <tag ng-switch-when="Tag" text="{{text}}" ng-attr-href="{{href}}" ng-attr-condition="{{condition}}"
        ng-attr-tooltip="{{tooltip}}"></tag>
   <indicator ng-switch-when="Indicator" ng-attr-shape="{{shape}}" ng-attr-condition="{{condition}}"
