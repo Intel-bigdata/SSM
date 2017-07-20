@@ -17,7 +17,6 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,15 +41,11 @@ import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.balancer.MovedBlocks;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
-import org.apache.hadoop.hdfs.server.protocol.BlocksWithLocations;
-import org.apache.hadoop.hdfs.server.protocol.BlocksWithLocations.BlockWithLocations;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.security.token.Token;
-import org.apache.hadoop.util.HostsFileReader;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
 
 import java.io.BufferedInputStream;
@@ -62,19 +57,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import static org.apache.hadoop.hdfs.protocolPB.PBHelper.vintPrefixed;
 
@@ -83,10 +74,6 @@ import static org.apache.hadoop.hdfs.protocolPB.PBHelper.vintPrefixed;
 public class Dispatcher {
   static final Log LOG = LogFactory.getLog(Dispatcher.class);
 
-  private static final long GB = 1L << 30; // 1GB
-  private static final long MAX_BLOCKS_SIZE_TO_FETCH = 2 * GB;
-
-  private static final int MAX_NO_PENDING_MOVE_ITERATIONS = 5;
   /**
    * the period of time to delay the usage of a DataNode after hitting
    * errors when using it for migrating data
@@ -96,20 +83,8 @@ public class Dispatcher {
   private final NameNodeConnector nnc;
   private final SaslDataTransferClient saslClient;
 
-  /** Set of datanodes to be excluded. */
-  private final Set<String> excludedNodes;
-  /** Restrict to the following nodes. */
-  private final Set<String> includedNodes;
-
-  private final Collection<Source> sources = new HashSet<Source>();
-  private final Collection<StorageGroup> targets = new HashSet<StorageGroup>();
-
-  private final GlobalBlockMap globalBlocks = new GlobalBlockMap();
-  private final MovedBlocks<StorageGroup> movedBlocks;
-
-  /** Map (datanodeUuid,storageType -> StorageGroup) */
-  private final StorageGroupMap<StorageGroup> storageGroupMap
-      = new StorageGroupMap<StorageGroup>();
+  private MovedBlocks<StorageGroup> movedBlocks;
+  private final long movedWinWidth;
 
   private NetworkTopology cluster;
 
@@ -118,62 +93,6 @@ public class Dispatcher {
 
   /** The maximum number of concurrent blocks moves at a datanode */
   private final int maxConcurrentMovesPerNode;
-
-  private static class GlobalBlockMap {
-    private final Map<Block, DBlock> map = new HashMap<Block, DBlock>();
-
-    /**
-     * Get the block from the map;
-     * if the block is not found, create a new block and put it in the map.
-     */
-    private DBlock get(Block b) {
-      DBlock block = map.get(b);
-      if (block == null) {
-        block = new DBlock(b);
-        map.put(b, block);
-      }
-      return block;
-    }
-
-    /** Remove all blocks except for the moved blocks. */
-    private void removeAllButRetain(MovedBlocks<StorageGroup> movedBlocks) {
-      for (Iterator<Block> i = map.keySet().iterator(); i.hasNext();) {
-        if (!movedBlocks.contains(i.next())) {
-          i.remove();
-        }
-      }
-    }
-  }
-
-  public static class StorageGroupMap<G extends StorageGroup> {
-    private static String toKey(String datanodeUuid, StorageType storageType) {
-      return datanodeUuid + ":" + storageType;
-    }
-
-    private final Map<String, G> map = new HashMap<String, G>();
-
-    public G get(String datanodeUuid, StorageType storageType) {
-      return map.get(toKey(datanodeUuid, storageType));
-    }
-
-    public void put(G g) {
-      final String key = toKey(g.getDatanodeInfo().getDatanodeUuid(), g.storageType);
-      final StorageGroup existing = map.put(key, g);
-      Preconditions.checkState(existing == null);
-    }
-
-    int size() {
-      return map.size();
-    }
-
-    void clear() {
-      map.clear();
-    }
-
-    public Collection<G> values() {
-      return map.values();
-    }
-  }
 
   /** This class keeps track of a scheduled block move */
   public class PendingMove {
@@ -195,25 +114,6 @@ public class Dispatcher {
       return bStr + "from " + source.getDisplayName() + " to " +
           target.getDisplayName() + " through " + (proxySource != null ? proxySource
           .datanode : "");
-    }
-
-    /**
-     * Choose a block & a proxy source for this pendingMove whose source &
-     * target have already been chosen.
-     *
-     * @return true if a block and its proxy are chosen; false otherwise
-     */
-    private boolean chooseBlockAndProxy() {
-      // source and target must have the same storage type
-      final StorageType t = source.getStorageType();
-      // iterate all source's blocks until find a good one
-      for (Iterator<DBlock> i = source.getBlockIterator(); i.hasNext();) {
-        if (markMovedIfGoodBlock(i.next(), t)) {
-          i.remove();
-          return true;
-        }
-      }
-      return false;
     }
 
     /**
@@ -377,21 +277,6 @@ public class Dispatcher {
     }
   }
 
-  /** The class represents a desired move. */
-  static class Task {
-    private final StorageGroup target;
-    private long size; // bytes scheduled to move
-
-    Task(StorageGroup target, long size) {
-      this.target = target;
-      this.size = size;
-    }
-
-    long getSize() {
-      return size;
-    }
-  }
-
   /** A group of storages in a datanode with the same storage type. */
   public static class StorageGroup {
     final StorageType storageType;
@@ -415,11 +300,6 @@ public class Dispatcher {
 
     public DatanodeInfo getDatanodeInfo() {
       return datanode.datanode;
-    }
-
-    /** Decide if still need to move more bytes */
-    boolean hasSpaceForScheduling() {
-      return hasSpaceForScheduling(0L);
     }
 
     synchronized boolean hasSpaceForScheduling(long size) {
@@ -576,8 +456,6 @@ public class Dispatcher {
   /** A node that can be the sources of a block move */
   public class Source extends StorageGroup {
 
-    private final List<Task> tasks = new ArrayList<Task>(2);
-    private long blocksToReceive = 0L;
     /**
      * Source blocks point to the objects in {@link org.apache.hadoop.hdfs.server.balancer.Dispatcher#globalBlocks}
      * because we want to keep one copy of a block and be aware that the
@@ -589,187 +467,9 @@ public class Dispatcher {
       super(dn, storageType, maxSize2Move);
     }
 
-    /** Add a task */
-    void addTask(Task task) {
-      Preconditions.checkState(task.target != this,
-          "Source and target are the same storage group " + getDisplayName());
-      incScheduledSize(task.size);
-      tasks.add(task);
-    }
-
-    /** @return an iterator to this source's blocks */
-    Iterator<DBlock> getBlockIterator() {
-      return srcBlocks.iterator();
-    }
-
-    /**
-     * Fetch new blocks of this source from namenode and update this source's
-     * block list & {@link org.apache.hadoop.hdfs.server.balancer.Dispatcher#globalBlocks}.
-     *
-     * @return the total size of the received blocks in the number of bytes.
-     */
-    private long getBlockList() throws IOException {
-      final long size = Math.min(MAX_BLOCKS_SIZE_TO_FETCH, blocksToReceive);
-      final BlocksWithLocations newBlocks = nnc.getBlocks(getDatanodeInfo(), size);
-
-      long bytesReceived = 0;
-      for (BlockWithLocations blk : newBlocks.getBlocks()) {
-        bytesReceived += blk.getBlock().getNumBytes();
-        synchronized (globalBlocks) {
-          final DBlock block = globalBlocks.get(blk.getBlock());
-          synchronized (block) {
-            block.clearLocations();
-
-            // update locations
-            final String[] datanodeUuids = blk.getDatanodeUuids();
-            final StorageType[] storageTypes = blk.getStorageTypes();
-            for (int i = 0; i < datanodeUuids.length; i++) {
-              final StorageGroup g = storageGroupMap.get(
-                  datanodeUuids[i], storageTypes[i]);
-              if (g != null) { // not unknown
-                block.addLocation(g);
-              }
-            }
-          }
-          if (!srcBlocks.contains(block) && isGoodBlockCandidate(block)) {
-            // filter bad candidates
-            srcBlocks.add(block);
-          }
-        }
-      }
-      return bytesReceived;
-    }
-
-    /** Decide if the given block is a good candidate to move or not */
-    private boolean isGoodBlockCandidate(DBlock block) {
-      // source and target must have the same storage type
-      final StorageType sourceStorageType = getStorageType();
-      for (Task t : tasks) {
-        if (Dispatcher.this.isGoodBlockCandidate(this, t.target,
-            sourceStorageType, block)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    /**
-     * Choose a move for the source. The block's source, target, and proxy
-     * are determined too. When choosing proxy and target, source &
-     * target throttling has been considered. They are chosen only when they
-     * have the capacity to support this block move. The block should be
-     * dispatched immediately after this method is returned.
-     *
-     * @return a move that's good for the source to dispatch immediately.
-     */
-    private PendingMove chooseNextMove() {
-      for (Iterator<Task> i = tasks.iterator(); i.hasNext();) {
-        final Task task = i.next();
-        final DDatanode target = task.target.getDDatanode();
-        final PendingMove pendingBlock = new PendingMove(this, task.target);
-        if (target.addPendingBlock(pendingBlock)) {
-          // target is not busy, so do a tentative block allocation
-          if (pendingBlock.chooseBlockAndProxy()) {
-            long blockSize = pendingBlock.block.getNumBytes();
-            incScheduledSize(-blockSize);
-            task.size -= blockSize;
-            if (task.size == 0) {
-              i.remove();
-            }
-            return pendingBlock;
-          } else {
-            // cancel the tentative move
-            target.removePendingBlock(pendingBlock);
-          }
-        }
-      }
-      return null;
-    }
-
     /** Add a pending move */
     public PendingMove addPendingMove(DBlock block, StorageGroup target) {
       return target.addPendingMove(block, new PendingMove(this, target));
-    }
-
-    /** Iterate all source's blocks to remove moved ones */
-    private void removeMovedBlocks() {
-      for (Iterator<DBlock> i = getBlockIterator(); i.hasNext();) {
-        if (movedBlocks.contains(i.next().getBlock())) {
-          i.remove();
-        }
-      }
-    }
-
-    private static final int SOURCE_BLOCKS_MIN_SIZE = 5;
-
-    /** @return if should fetch more blocks from namenode */
-    private boolean shouldFetchMoreBlocks() {
-      return srcBlocks.size() < SOURCE_BLOCKS_MIN_SIZE && blocksToReceive > 0;
-    }
-
-    private static final long MAX_ITERATION_TIME = 20 * 60 * 1000L; // 20 mins
-
-    /**
-     * This method iteratively does the following: it first selects a block to
-     * move, then sends a request to the proxy source to start the block move
-     * when the source's block list falls below a threshold, it asks the
-     * namenode for more blocks. It terminates when it has dispatch enough block
-     * move tasks or it has received enough blocks from the namenode, or the
-     * elapsed time of the iteration has exceeded the max time limit.
-     */
-    private void dispatchBlocks() {
-      final long startTime = Time.monotonicNow();
-      this.blocksToReceive = 2 * getScheduledSize();
-      boolean isTimeUp = false;
-      int noPendingMoveIteration = 0;
-      while (!isTimeUp && getScheduledSize() > 0
-          && (!srcBlocks.isEmpty() || blocksToReceive > 0)) {
-        final PendingMove p = chooseNextMove();
-        if (p != null) {
-          // Reset no pending move counter
-          noPendingMoveIteration=0;
-          executePendingMove(p);
-          continue;
-        }
-
-        // Since we cannot schedule any block to move,
-        // remove any moved blocks from the source block list and
-        removeMovedBlocks(); // filter already moved blocks
-        // check if we should fetch more blocks from the namenode
-        if (shouldFetchMoreBlocks()) {
-          // fetch new blocks
-          try {
-            blocksToReceive -= getBlockList();
-            continue;
-          } catch (IOException e) {
-            LOG.warn("Exception while getting block list", e);
-            return;
-          }
-        } else {
-          // source node cannot find a pending block to move, iteration +1
-          noPendingMoveIteration++;
-          // in case no blocks can be moved for source node's task,
-          // jump out of while-loop after 5 iterations.
-          if (noPendingMoveIteration >= MAX_NO_PENDING_MOVE_ITERATIONS) {
-            resetScheduledSize();
-          }
-        }
-
-        // check if time is up or not
-        if (Time.monotonicNow() - startTime > MAX_ITERATION_TIME) {
-          isTimeUp = true;
-          continue;
-        }
-
-        // Now we can not schedule any block to move and there are
-        // no new blocks added to the source block list, so we wait.
-        try {
-          synchronized (Dispatcher.this) {
-            Dispatcher.this.wait(1000); // wait for targets/sources to be idle
-          }
-        } catch (InterruptedException ignored) {
-        }
-      }
     }
 
     @Override
@@ -783,12 +483,10 @@ public class Dispatcher {
     }
   }
 
-  public Dispatcher(NameNodeConnector nnc, Set<String> includedNodes,
-                    Set<String> excludedNodes, long movedWinWidth, int moverThreads,
-                    int dispatcherThreads, int maxConcurrentMovesPerNode, Configuration conf) {
+  public Dispatcher(NameNodeConnector nnc, long movedWinWidth, int moverThreads,
+      int dispatcherThreads, int maxConcurrentMovesPerNode, Configuration conf) {
     this.nnc = nnc;
-    this.excludedNodes = excludedNodes;
-    this.includedNodes = includedNodes;
+    this.movedWinWidth = movedWinWidth;
     this.movedBlocks = new MovedBlocks<StorageGroup>(movedWinWidth);
 
     this.cluster = NetworkTopology.getInstance(conf);
@@ -807,31 +505,8 @@ public class Dispatcher {
     return nnc.getDistributedFileSystem();
   }
 
-  public StorageGroupMap<StorageGroup> getStorageGroupMap() {
-    return storageGroupMap;
-  }
-
   public NetworkTopology getCluster() {
     return cluster;
-  }
-
-  long bytesToMove() {
-    Preconditions.checkState(
-        storageGroupMap.size() >= sources.size() + targets.size(),
-        "Mismatched number of storage groups (" + storageGroupMap.size()
-            + " < " + sources.size() + " sources + " + targets.size()
-            + " targets)");
-
-    long b = 0L;
-    for (Source src : sources) {
-      b += src.getScheduledSize();
-    }
-    return b;
-  }
-
-  void add(Source source, StorageGroup target) {
-    sources.add(source);
-    targets.add(target);
   }
 
   private boolean shouldIgnore(DatanodeInfo dn) {
@@ -839,15 +514,11 @@ public class Dispatcher {
     final boolean decommissioned = dn.isDecommissioned();
     // ignore decommissioning nodes
     final boolean decommissioning = dn.isDecommissionInProgress();
-    // ignore nodes in exclude list
-    final boolean excluded = Util.isExcluded(excludedNodes, dn);
-    // ignore nodes not in the include list (if include list is not empty)
-    final boolean notIncluded = !Util.isIncluded(includedNodes, dn);
 
-    if (decommissioned || decommissioning || excluded || notIncluded) {
+    if (decommissioned || decommissioning) {
       if (LOG.isTraceEnabled()) {
         LOG.trace("Excluding datanode " + dn + ": " + decommissioned + ", "
-            + decommissioning + ", " + excluded + ", " + notIncluded);
+            + decommissioning);
       }
       return true;
     }
@@ -883,41 +554,6 @@ public class Dispatcher {
         p.dispatch();
       }
     });
-  }
-
-  /**
-   * Dispatch block moves for each source. The thread selects blocks to move &
-   * sends request to proxy source to initiate block move. The process is flow
-   * controlled. Block selection is blocked if there are too many un-confirmed
-   * block moves.
-   *
-   * @return the total number of bytes successfully moved in this iteration.
-   */
-  private void dispatchBlockMoves() throws InterruptedException {
-    final Future<?>[] futures = new Future<?>[sources.size()];
-
-    final Iterator<Source> i = sources.iterator();
-    for (int j = 0; j < futures.length; j++) {
-      final Source s = i.next();
-      futures[j] = dispatchExecutor.submit(new Runnable() {
-        @Override
-        public void run() {
-          s.dispatchBlocks();
-        }
-      });
-    }
-
-    // wait for all dispatcher threads to finish
-    for (Future<?> future : futures) {
-      try {
-        future.get();
-      } catch (ExecutionException e) {
-        LOG.warn("Dispatcher thread failed", e.getCause());
-      }
-    }
-
-    // wait for all block moving to be done
-    waitForMoveCompletion(targets);
   }
 
   /** The sleeping period before checking if block move is completed again */
@@ -966,9 +602,9 @@ public class Dispatcher {
       return false;
     }
     // check if the block is moved or not
-    if (movedBlocks.contains(block.getBlock())) {
+    /*if (movedBlocks.contains(block.getBlock())) {
       return false;
-    }
+    }*/
     final DatanodeInfo targetDatanode = target.getDatanodeInfo();
     if (source.getDatanodeInfo().equals(targetDatanode)) {
       // the block is moved inside same DN
@@ -1047,22 +683,8 @@ public class Dispatcher {
   /** Reset all fields in order to prepare for the next iteration */
   void reset(Configuration conf) {
     cluster = NetworkTopology.getInstance(conf);
-    storageGroupMap.clear();
-    sources.clear();
-    targets.clear();
-    globalBlocks.removeAllButRetain(movedBlocks);
-    movedBlocks.cleanup();
-  }
-
-  /** set the sleeping period for block move completion check */
-  @VisibleForTesting
-  public static void setBlockMoveWaitTime(long time) {
-    blockMoveWaitTime = time;
-  }
-
-  @VisibleForTesting
-  public static void setDelayAfterErrors(long time) {
-    delayAfterErrors = time;
+    movedBlocks = new MovedBlocks<StorageGroup>(movedWinWidth);
+    //movedBlocks.cleanup();
   }
 
   /** shutdown thread pools */
@@ -1071,66 +693,5 @@ public class Dispatcher {
       dispatchExecutor.shutdownNow();
     }
     moveExecutor.shutdownNow();
-  }
-
-  static class Util {
-    /** @return true if data node is part of the excludedNodes. */
-    static boolean isExcluded(Set<String> excludedNodes, DatanodeInfo dn) {
-      return isIn(excludedNodes, dn);
-    }
-
-    /**
-     * @return true if includedNodes is empty or data node is part of the
-     *         includedNodes.
-     */
-    static boolean isIncluded(Set<String> includedNodes, DatanodeInfo dn) {
-      return (includedNodes.isEmpty() || isIn(includedNodes, dn));
-    }
-
-    /**
-     * Match is checked using host name , ip address with and without port
-     * number.
-     * 
-     * @return true if the datanode's transfer address matches the set of nodes.
-     */
-    private static boolean isIn(Set<String> datanodes, DatanodeInfo dn) {
-      return isIn(datanodes, dn.getPeerHostName(), dn.getXferPort())
-          || isIn(datanodes, dn.getIpAddr(), dn.getXferPort())
-          || isIn(datanodes, dn.getHostName(), dn.getXferPort());
-    }
-
-    /** @return true if nodes contains host or host:port */
-    private static boolean isIn(Set<String> nodes, String host, int port) {
-      if (host == null) {
-        return false;
-      }
-      return (nodes.contains(host) || nodes.contains(host + ":" + port));
-    }
-
-    /**
-     * Parse a comma separated string to obtain set of host names
-     * 
-     * @return set of host names
-     */
-    static Set<String> parseHostList(String string) {
-      String[] addrs = StringUtils.getTrimmedStrings(string);
-      return new HashSet<String>(Arrays.asList(addrs));
-    }
-
-    /**
-     * Read set of host names from a file
-     * 
-     * @return set of host names
-     */
-    static Set<String> getHostListFromFile(String fileName, String type) {
-      Set<String> nodes = new HashSet<String>();
-      try {
-        HostsFileReader.readFileToSet(type, fileName, nodes);
-        return StringUtils.getTrimmedStrings(nodes);
-      } catch (IOException e) {
-        throw new IllegalArgumentException(
-            "Failed to read host list from file: " + fileName);
-      }
-    }
   }
 }

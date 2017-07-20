@@ -27,21 +27,15 @@ public class MoverExecutor {
   static final Logger LOG = LoggerFactory.getLogger(MoverExecutor.class);
 
   private Dispatcher dispatcher;
-  private Dispatcher.Source source;
-  private Dispatcher.StorageGroup target;
-  private Dispatcher.DBlock db;
 
-  public MoverExecutor(Dispatcher dispatcher, Dispatcher.DBlock db,
-      Dispatcher.Source source, Dispatcher.StorageGroup target) {
+  public MoverExecutor(Dispatcher dispatcher) {
     this.dispatcher = dispatcher;
-    this.source = source;
-    this.target = target;
-    this.db = db;
   }
 
   // Execute a move action providing source and target
   // TODO: temporarily make use of Dispatcher, may need refactor
-  public boolean executeMove() {
+  public boolean executeMove(Dispatcher.DBlock db, Dispatcher.Source source,
+      Dispatcher.StorageGroup target) {
     final Dispatcher.PendingMove pm = source.addPendingMove(db, target);
     if (pm != null) {
       dispatcher.executePendingMove(pm);

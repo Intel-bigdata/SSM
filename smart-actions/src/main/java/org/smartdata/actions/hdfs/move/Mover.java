@@ -25,12 +25,14 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
+import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Mover tool for SSM.
@@ -41,10 +43,12 @@ public class Mover {
   final Dispatcher dispatcher;
   final StorageMap storages;
   final Path targetPath;
+  final Configuration conf;
 
   private final MoverStatus status;
 
   Mover(NameNodeConnector nnc, Path targetPath, Configuration conf, MoverStatus status) {
+    this.conf = conf;
     final long movedWinWidth = conf.getLong(
         DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_KEY,
         DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_DEFAULT);
@@ -55,8 +59,7 @@ public class Mover {
         DFSConfigKeys.DFS_DATANODE_BALANCE_MAX_NUM_CONCURRENT_MOVES_KEY,
         DFSConfigKeys.DFS_DATANODE_BALANCE_MAX_NUM_CONCURRENT_MOVES_DEFAULT);
 
-    this.dispatcher = new Dispatcher(nnc, Collections.<String> emptySet(),
-        Collections.<String> emptySet(), movedWinWidth, moverThreads, 0,
+    this.dispatcher = new Dispatcher(nnc, movedWinWidth, moverThreads, 0,
         maxConcurrentMovesPerNode, conf);
     this.storages = new StorageMap();
     this.targetPath = targetPath;
@@ -78,11 +81,37 @@ public class Mover {
     }
   }
 
-  ExitStatus run() {
+  ExitStatus run() throws Exception {
     try {
       init();
-      MoverProcessor mp = new MoverProcessor(dispatcher, targetPath, storages, status);
-      return mp.processNamespace();
+      AtomicInteger count = new AtomicInteger(0);
+      final long sleeptime =
+          conf.getLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
+              DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_DEFAULT) * 2000 +
+              conf.getLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY,
+                  DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_DEFAULT) * 1000;
+      while (true) {
+        MoverScheduler mp = new MoverScheduler(dispatcher, targetPath, storages,
+            count, 3, status);
+        ExitStatus r = mp.processNamespace();
+        if (r == ExitStatus.SUCCESS) {
+          LOG.info("Mover Successful: all blocks satisfy"
+              + " the specified storage policy. Exiting...");
+          return r;
+        } else if (r != ExitStatus.IN_PROGRESS) {
+          if (r == ExitStatus.NO_MOVE_PROGRESS) {
+            LOG.error("Failed to move some blocks after "
+                + 1 + " retries. Exiting...");
+          } else if (r == ExitStatus.NO_MOVE_BLOCK) {
+            LOG.error("Some blocks can't be moved. Exiting...");
+          } else {
+            LOG.error("Mover failed. Exiting with status " + r + "... ");
+          }
+          return r;
+        }
+        Thread.sleep(sleeptime);
+        dispatcher.reset(conf);
+      }
     } catch (IllegalArgumentException e) {
       LOG.info(e + ".  Exiting ...");
       return ExitStatus.ILLEGAL_ARGUMENTS;

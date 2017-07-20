@@ -17,20 +17,24 @@
  */
 package org.smartdata.actions.hdfs.move;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.StorageType;
 
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Storage map.
  */
 class StorageMap {
-  private final Dispatcher.StorageGroupMap<Dispatcher.Source> sources
-          = new Dispatcher.StorageGroupMap<>();
-  private final Dispatcher.StorageGroupMap<Dispatcher.StorageGroup> targets
-          = new Dispatcher.StorageGroupMap<>();
+  private final StorageGroupMap<Dispatcher.Source> sources
+          = new StorageGroupMap<>();
+  private final StorageGroupMap<Dispatcher.StorageGroup> targets
+          = new StorageGroupMap<>();
   private final EnumMap<StorageType, List<Dispatcher.StorageGroup>> targetStorageTypeMap
           = new EnumMap<>(StorageType.class);
 
@@ -52,7 +56,7 @@ class StorageMap {
     return get(sources, ml);
   }
 
-  Dispatcher.StorageGroupMap<Dispatcher.StorageGroup> getTargets() {
+  StorageGroupMap<Dispatcher.StorageGroup> getTargets() {
     return targets;
   }
 
@@ -60,11 +64,41 @@ class StorageMap {
     return targets.get(uuid, storageType);
   }
 
-  static <G extends Dispatcher.StorageGroup> G get(Dispatcher.StorageGroupMap<G> map, MLocation ml) {
+  static <G extends Dispatcher.StorageGroup> G get(StorageGroupMap<G> map, MLocation ml) {
     return map.get(ml.datanode.getDatanodeUuid(), ml.storageType);
   }
 
   List<Dispatcher.StorageGroup> getTargetStorages(StorageType t) {
     return targetStorageTypeMap.get(t);
+  }
+
+  public static class StorageGroupMap<G extends Dispatcher.StorageGroup> {
+    private static String toKey(String datanodeUuid, StorageType storageType) {
+      return datanodeUuid + ":" + storageType;
+    }
+
+    private final Map<String, G> map = new HashMap<String, G>();
+
+    public G get(String datanodeUuid, StorageType storageType) {
+      return map.get(toKey(datanodeUuid, storageType));
+    }
+
+    public void put(G g) {
+      final String key = toKey(g.getDatanodeInfo().getDatanodeUuid(), g.storageType);
+      final Dispatcher.StorageGroup existing = map.put(key, g);
+      Preconditions.checkState(existing == null);
+    }
+
+    int size() {
+      return map.size();
+    }
+
+    void clear() {
+      map.clear();
+    }
+
+    public Collection<G> values() {
+      return map.values();
+    }
   }
 }

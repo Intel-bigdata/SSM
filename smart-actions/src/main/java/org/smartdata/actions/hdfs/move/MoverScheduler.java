@@ -28,7 +28,9 @@ import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
+import org.apache.hadoop.hdfs.server.balancer.Matcher;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
+import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +56,7 @@ public class MoverScheduler {
   private AtomicInteger retryCount;
   private Integer maxRetryTimes;
   private final BlockStoragePolicy[] blockStoragePolicies;
+  private final MoverExecutor moverExecutor;
   private final MoverStatus moverStatus;
 
   public MoverScheduler(Dispatcher dispatcher, Path targetPath, StorageMap storages,
@@ -68,6 +71,7 @@ public class MoverScheduler {
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
         BlockStoragePolicySuite.ID_BIT_LENGTH];
     initStoragePolicies();
+    this.moverExecutor = new MoverExecutor(dispatcher);
     this.moverStatus = moverStatus;
   }
 
@@ -176,26 +180,82 @@ public class MoverScheduler {
     Collections.shuffle(locations);
     final Dispatcher.DBlock db = newDBlock(lb, locations);
 
-    List<Dispatcher.Source> sources = new ArrayList<>();
+    boolean successful = false;
     for (final StorageType t : diff.existing) {
       for (final MLocation ml : locations) {
         final Dispatcher.Source source = storages.getSource(ml);
         if (ml.storageType == t && source != null) {
-          sources.add(source);
-          locations.remove(ml);
-          break;
+          // try to schedule one replica move.
+          if (scheduleMoveReplica(db, source, diff.expected)) {
+            successful = true;
+            locations.remove(ml);
+            break;
+            //return true;
+          }
         }
       }
     }
-    if (scheduleMoveReplicas(db, sources, diff.expected)) {
+    return successful;
+    //return false;
+  }
+
+  boolean scheduleMoveReplica(Dispatcher.DBlock db, Dispatcher.Source source,
+                              List<StorageType> targetTypes) {
+    // Match storage on the same node
+    if (chooseTargetInSameNode(db, source, targetTypes)) {
       return true;
+    }
+
+    if (dispatcher.getCluster().isNodeGroupAware()) {
+      if (chooseTarget(db, source, targetTypes, Matcher.SAME_NODE_GROUP)) {
+        return true;
+      }
+    }
+
+    // Then, match nodes on the same rack
+    if (chooseTarget(db, source, targetTypes, Matcher.SAME_RACK)) {
+      return true;
+    }
+    // At last, match all remaining nodes
+    return chooseTarget(db, source, targetTypes, Matcher.ANY_OTHER);
+  }
+
+  /**
+   * Choose the target storage within same Datanode if possible.
+   */
+  boolean chooseTargetInSameNode(Dispatcher.DBlock db, Dispatcher.Source source,
+                                 List<StorageType> targetTypes) {
+    for (StorageType t : targetTypes) {
+      Dispatcher.StorageGroup target = storages.getTarget(source.getDatanodeInfo()
+          .getDatanodeUuid(), t);
+      if (target == null) {
+        continue;
+      }
+      if (moverExecutor.executeMove(db, source, target)) {
+        return true;
+      }
     }
     return false;
   }
 
-  boolean scheduleMoveReplicas(Dispatcher.DBlock db, List<Dispatcher.Source> sources,
-      List<StorageType> targetTypes) {
-
+  boolean chooseTarget(Dispatcher.DBlock db, Dispatcher.Source source,
+                       List<StorageType> targetTypes, Matcher matcher) {
+    final NetworkTopology cluster = dispatcher.getCluster();
+    for (StorageType t : targetTypes) {
+      final List<Dispatcher.StorageGroup> targets = storages.getTargetStorages(t);
+      Collections.shuffle(targets);
+      for (Dispatcher.StorageGroup target : targets) {
+        if (matcher.match(cluster, source.getDatanodeInfo(),
+            target.getDatanodeInfo())) {
+          final Dispatcher.PendingMove pm = source.addPendingMove(db, target);
+          if (pm != null) {
+            dispatcher.executePendingMove(pm);
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   /**
