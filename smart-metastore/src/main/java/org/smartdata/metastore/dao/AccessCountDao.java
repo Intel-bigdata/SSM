@@ -90,7 +90,7 @@ public class AccessCountDao {
     jdbcTemplate.execute(create);
     String insert =
         String.format(
-            "INSERT INTO %s SELECT %s, SUM(%s) AS %s FROM(%s) GROUP BY %s;",
+            "INSERT INTO %s SELECT %s, SUM(%s) AS %s FROM(%s) tmp GROUP BY %s;",
             destinationTable.getTableName(),
             AccessCountDao.FILE_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,
