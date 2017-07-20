@@ -28,23 +28,23 @@ public class AccessCountTable {
   private final Long startTime;
   private final Long endTime;
   private final TimeGranularity granularity;
-  private final boolean isView;
+  private final boolean isEphemeral;
 
   public AccessCountTable(Long startTime, Long endTime) {
     this(startTime, endTime, false);
   }
 
-  public AccessCountTable(Long startTime, Long endTime, boolean isView) {
-    this(getTableName(startTime, endTime, isView), startTime, endTime, isView);
+  public AccessCountTable(Long startTime, Long endTime, boolean isEphemeral) {
+    this(getTableName(startTime, endTime, isEphemeral), startTime, endTime, isEphemeral);
   }
 
   @VisibleForTesting
-  protected AccessCountTable(String name, Long startTime, Long endTime, boolean isView) {
+  protected AccessCountTable(String name, Long startTime, Long endTime, boolean isEphemeral) {
     this.startTime = startTime;
     this.endTime = endTime;
     this.granularity = TimeUtils.getGranularity(endTime - startTime);
     this.tableName = name;
-    this.isView = isView;
+    this.isEphemeral = isEphemeral;
   }
 
   public String getTableName() {
@@ -95,7 +95,7 @@ public class AccessCountTable {
         this.tableName, this.startTime, this.endTime, this.granularity);
   }
 
-  public boolean isView() {
-    return isView;
+  public boolean isEphemeral() {
+    return isEphemeral;
   }
 }

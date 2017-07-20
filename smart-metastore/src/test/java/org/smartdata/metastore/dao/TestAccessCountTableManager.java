@@ -326,7 +326,7 @@ public class TestAccessCountTableManager extends DBTest {
       Constants.ONE_MINUTE_IN_MILLIS);
     Assert.assertTrue(result.size() == 3);
     Assert.assertTrue(result.get(0).equals(firstFiveSeconds));
-    Assert.assertFalse(result.get(0).isView());
+    Assert.assertFalse(result.get(0).isEphemeral());
     Assert.assertTrue(result.get(1).equals(secondFiveSeconds));
     Assert.assertTrue(result.get(2).equals(thirdFiveSeconds));
   }
