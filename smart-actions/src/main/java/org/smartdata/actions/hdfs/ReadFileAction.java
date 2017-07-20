@@ -59,8 +59,7 @@ public class ReadFileAction extends HdfsAction {
     }
     appendLog(
         String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
-    HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
-    if (fileStatus == null) {
+    if (!dfsClient.exists(filePath)) {
       throw new ActionException("ReadFile Action fails, file doesn't exist!");
     }
     DFSInputStream dfsInputStream = dfsClient.open(filePath);
