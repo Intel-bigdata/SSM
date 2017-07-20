@@ -804,13 +804,10 @@ public class MetaStore {
     initializeDataBase();
   }
 
-  public String aggregateSQLStatement(AccessCountTable destinationTable
+  public void aggregateTables(AccessCountTable destinationTable
       , List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     try {
-      return accessCountDao
-          .aggregateSQLStatement(destinationTable, tablesToAggregate);
-    } catch (EmptyResultDataAccessException e) {
-      return null;
+      accessCountDao.aggregateTables(destinationTable, tablesToAggregate);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

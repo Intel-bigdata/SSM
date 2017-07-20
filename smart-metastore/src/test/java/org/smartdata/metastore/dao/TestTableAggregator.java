@@ -37,10 +37,10 @@ public class TestTableAggregator extends DBTest {
 
   private void createTables(IDatabaseConnection connection) throws Exception {
     Statement statement = connection.getConnection().createStatement();
-    statement.execute(AccessCountDao.createTableSQL("table1"));
-    statement.execute(AccessCountDao.createTableSQL("table2"));
-    statement.execute(AccessCountDao.createTableSQL("table3"));
-    statement.execute(AccessCountDao.createTableSQL("expect"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("table1"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("table2"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("table3"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("expect"));
     statement.close();
   }
 
@@ -58,11 +58,7 @@ public class TestTableAggregator extends DBTest {
     AccessCountTable table1 = new AccessCountTable("table1", 0L, 0L, false);
     AccessCountTable table2 = new AccessCountTable("table2", 0L, 0L, false);
     AccessCountTable table3 = new AccessCountTable("table3", 0L, 0L, false);
-    String aggregateStatement =
-        metaStore.aggregateSQLStatement(result, Lists.newArrayList(table1, table2, table3));
-    Statement statement = databaseTester.getConnection().getConnection().createStatement();
-    statement.execute(aggregateStatement);
-    statement.close();
+    metaStore.aggregateTables(result, Lists.newArrayList(table1, table2, table3));
 
     ITable actual = databaseTester.getConnection().createTable(result.getTableName());
     ITable expect = databaseTester.getDataSet().getTable("expect");
