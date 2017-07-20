@@ -82,8 +82,10 @@ angular.module('zeppelinWebApp')
             succeed: action.finished ? action.successful : "-",
             view: {
               href: action.pageUrl,
-              text: 'Show Result',
-              class: 'btn-xs btn-primary'
+              text: function() {
+                return 'glyphicon glyphicon-info-sign';
+              },
+              class: 'btn-xs btn-info'
             },
             progress: {
                 current: action.progress,
