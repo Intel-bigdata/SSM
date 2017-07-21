@@ -122,7 +122,7 @@ SSM Configuration
 
 4. Format Database with command
 	
-	`bin/start-smart.sh --format`
+	`bin/format-database.sh`
    
    The script will create all tables required by SSM.
 	
