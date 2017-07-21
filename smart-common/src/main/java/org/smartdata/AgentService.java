@@ -17,22 +17,25 @@
  */
 package org.smartdata;
 
-public abstract class AbstractService implements SmartService {
-  private SmartContext context;
+import java.io.Serializable;
 
-  public AbstractService() {
-    this(null);
-  }
+/**
+ * AgentService is a message-driven long running service.
+ */
+public abstract class AgentService extends AbstractService {
 
-  public AbstractService(SmartContext context) {
-    this.context = context;
-  }
+  /**
+   * @param message should be one instance of classes declared in getAcceptableMessageTypes below
+   * @throws Exception
+   */
+  public abstract void execute(Message message) throws Exception;
 
-  public SmartContext getContext() {
-    return context;
-  }
+  /**
+   * This must be the same as that returned by {@link Message#getServiceName} below
+   */
+  public abstract String getServiceName();
 
-  public void setContext(SmartContext context) {
-    this.context = context;
+  public interface Message extends Serializable {
+    String getServiceName();
   }
 }
