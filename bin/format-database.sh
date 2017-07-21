@@ -47,25 +47,14 @@ done
 . "${bin}/common.sh"
 
 #---------------------------------------------------------
-# Stop Smart Servers
+#
 
-SMARTSERVERS=$("${SMART_HOME}/bin/smart" getconf SmartServers 2>/dev/null)
+echo -n "Start formatting database ... "
 
-if [ "$?" != "0" ]; then
-    echo "${SMARTSERVERS}"
-    exit 1
+$("${SMART_HOME}/bin/smart" --config "${SMART_CONF_DIR}" formatdatabase 2>/dev/null)
+
+if [ x"$?" = x"0" ]; then
+  echo "[Success]"
+else
+  echo "[Failed]"
 fi
-
-#if [[ -z "${SMARTSERVERS}" ]]; then
-#SMARTSERVERS=$HOSTNAME
-#fi
-
-echo "Stopping SmartServers on [${SMARTSERVERS}]"
-
-. "${SMART_HOME}/bin/smart" \
- --remote \
- --config "${SMART_CONF_DIR}" \
- --hosts "${SMARTSERVERS}" --hostsend \
- --daemon stop ${DEBUG_OPT} \
- smartserver
-
