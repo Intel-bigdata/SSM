@@ -1,7 +1,11 @@
 package org.smartdata.erasurecode;
+import com.sun.xml.internal.stream.util.BufferAllocator;
+import org.apache.hadoop.conf.Configuration;
 import org.smartdata.erasurecode.coder.*;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Random;
 
 /**
  * Created by intel on 17-7-18.
@@ -16,18 +20,107 @@ public class TestXOR {
     private int numDataUnits;
     private int numParityUnits;
     private int numChunksInBlock;
+    private int chunkSize;
+    private boolean startBufferWithZero;
+    private Configuration conf;
+
+    private TestBlock testBlock;
+    protected static Random RAND = new Random();
 
     public void setup() {
-        this.encoderClass = XORErasureEncoder.class;
-        this.decoderClass = XORErasureDecoder.class;
+        encoderClass = XORErasureEncoder.class;
+        decoderClass = XORErasureDecoder.class;
 
-        this.numDataUnits = 10;
-        this.numParityUnits = 1;
-        this.numChunksInBlock = 16;
+        numDataUnits = 10;
+        numParityUnits = 1;
+        numChunksInBlock = 16;
+        chunkSize = 1024;
+        startBufferWithZero = true;
+
+        conf = new Configuration();
+
     }
 
-    public void prepareCoders() {
+    void prepareCoder() {
+        ErasureCoderOptions options = new ErasureCoderOptions(
+                numDataUnits, numParityUnits, true, true);
 
+        encoder = new XORErasureEncoder(options);
+        encoder.setConf(conf);
+        decoder = new XORErasureDecoder(options);
+        decoder.setConf(conf);
+    }
+
+    ECChunk allocateOutputChunk() {
+        byte[] dummy = new byte[chunkSize];
+        ByteBuffer buffer = ByteBuffer.allocate(chunkSize);
+        buffer.limit(chunkSize);
+        buffer.put(dummy);
+        buffer.flip();
+
+        return new ECChunk(buffer);
+    }
+    void encode(ErasureCodingStep codingStep) {
+        // Pretend that we're opening these input blocks and output blocks.
+        ECBlock[] inputBlocks = codingStep.getInputBlocks();
+        ECBlock[] outputBlocks = codingStep.getOutputBlocks();
+        // We allocate input and output chunks accordingly.
+        ECChunk[] inputChunks = new ECChunk[inputBlocks.length];
+        ECChunk[] outputChunks = new ECChunk[outputBlocks.length];
+
+        for (int i = 0; i < numChunksInBlock; ++i) {
+            // Pretend that we're reading input chunks from input blocks.
+            for (int j = 0; j < inputBlocks.length; ++j) {
+                inputChunks[j] = ((TestBlock) inputBlocks[j]).chunks[i];
+            }
+
+            // Pretend that we allocate and will write output results to the blocks.
+            for (int j = 0; j < outputBlocks.length; ++j) {
+                outputChunks[j] = allocateOutputChunk();
+                ((TestBlock) outputBlocks[j]).chunks[i] = outputChunks[j];
+            }
+
+            // Given the input chunks and output chunk buffers, just call it !
+            codingStep.performCoding(inputChunks, outputChunks);
+        }
+
+        codingStep.finish();
+    }
+
+    void decode(ErasureCodingStep codingStep) {
+        // Pretend that we're opening these input blocks and output blocks.
+        ECBlock[] inputBlocks = codingStep.getInputBlocks();
+        ECBlock[] outputBlocks = codingStep.getOutputBlocks();
+        // We allocate input and output chunks accordingly.
+        ECChunk[] inputChunks = new ECChunk[inputBlocks.length];
+        ECChunk[] outputChunks = new ECChunk[outputBlocks.length];
+
+        for (int i = 0; i < numChunksInBlock; ++i) {
+            // Pretend that we're reading input chunks from input blocks.
+            for (int j = 0; j < inputBlocks.length; ++j) {
+                inputChunks[j] = ((TestBlock) inputBlocks[j]).chunks[i];
+            }
+
+            // Pretend that we allocate and will write output results to the blocks.
+            for (int j = 0; j < outputBlocks.length; ++j) {
+                outputChunks[j] = allocateOutputChunk();
+                ((TestBlock) outputBlocks[j]).chunks[i] = outputChunks[j];
+            }
+
+            // Given the input chunks and output chunk buffers, just call it !
+            codingStep.performCoding(inputChunks, outputChunks);
+        }
+
+        codingStep.finish();
+    }
+
+    protected ECChunk[] cloneChunksWithData(ECChunk[] chunks) {
+        ECChunk[] results = new ECChunk[chunks.length];
+        for (int i = 0; i < chunks.length; i++) {
+            results[i] = cloneChunkWithData(chunks[i]);
+        }
+
+        return results;
     }
 
     protected ByteBuffer allocateOutputBuffer(int bufferLen) {
@@ -38,59 +131,140 @@ public class TestXOR {
          * position > 0.
          */
         int startOffset = startBufferWithZero ? 0 : 11; // 11 is arbitrary
-        // int allocLen = startOffset + bufferLen + startOffset;
-        // ByteBuffer buffer = allocator.allocate(allocLen);
-        // buffer.limit(startOffset + bufferLen);
-        // fillDummyData(buffer, startOffset);
-        // startBufferWithZero = ! startBufferWithZero;
+        int allocLen = startOffset + bufferLen + startOffset;
+        ByteBuffer buffer = ByteBuffer.allocate(allocLen);
+        buffer.limit(startOffset + bufferLen);
+        //startBufferWithZero = ! startBufferWithZero;
 
         return buffer;
     }
-
-    public ECBlock generateChunks(ECBlock Block) {
-        Block =
-    }
-
-    public void generateBlocks(ECBlock[] Blocks,boolean isParity) {
-        Blocks = new ECBlock[numDataUnits];
-
-        for(int i = 0; i < numDataUnits; i++){
-            Blocks[i] = new ECBlock(isParity,false);
+    protected ECChunk cloneChunkWithData(ECChunk chunk) {
+        if (chunk == null) {
+            return null;
         }
 
-    }
-    public void main() {
-        // step 1
-        // generate test block
-        // using direct buffer
+        ByteBuffer srcBuffer = chunk.getBuffer();
 
+        byte[] bytesArr = new byte[srcBuffer.remaining()];
+
+        srcBuffer.mark();
+        srcBuffer.get(bytesArr, 0, bytesArr.length);
+        srcBuffer.reset();
+
+        ByteBuffer destBuffer = allocateOutputBuffer(bytesArr.length);
+        int pos = destBuffer.position();
+        destBuffer.put(bytesArr);
+        destBuffer.flip();
+        destBuffer.position(pos);
+
+        return new ECChunk(destBuffer);
+    }
+
+    protected TestBlock[] cloneBlocksWithData(TestBlock[] blocks) {
+        TestBlock[] results = new TestBlock[blocks.length];
+        for (int i = 0; i < blocks.length; ++i) {
+            results[i] = cloneBlockWithData(blocks[i]);
+        }
+
+        return results;
+    }
+
+
+    protected TestBlock cloneBlockWithData(TestBlock block) {
+        ECChunk[] newChunks = cloneChunksWithData(block.getChunks());
+
+        return new TestBlock(numChunksInBlock,newChunks);
+    }
+
+    protected void EraseBlocks(TestBlock[] dataBlocks) {
+        int eraseIndex = 0;
+
+        for(int i = 0; i < numChunksInBlock; ++i){
+            dataBlocks[eraseIndex].chunks[i] = null;
+            dataBlocks[eraseIndex].setErased(true);
+        }
+    }
+
+    protected byte[][] toArrays(ECChunk[] chunks) {
+        byte[][] bytesArr = new byte[chunks.length][];
+
+        for (int i = 0; i < chunks.length; i++) {
+            if (chunks[i] != null) {
+                chunks[i].getBuffer().position(0);
+                bytesArr[i] = chunks[i].toBytesArray();
+            }
+        }
+
+        return bytesArr;
+    }
+
+    protected void compareAndVerify(ECChunk[] erasedChunks,
+                                    ECChunk[] recoveredChunks) {
+        byte[][] erased = toArrays(erasedChunks);
+        byte[][] recovered = toArrays(recoveredChunks);
+        boolean result = Arrays.deepEquals(erased, recovered);
+        if (!result) {
+            System.out.println("Decoding and comparing failed./n");
+        }
+    }
+
+    protected void compareAndVerify(ECBlock[] erasedBlocks,
+                                    ECBlock[] recoveredBlocks) {
+        for (int i = 0; i < erasedBlocks.length; ++i) {
+            compareAndVerify(((TestBlock) erasedBlocks[i]).chunks, ((TestBlock) recoveredBlocks[i]).chunks);
+        }
+    }
+
+    public void run() {
+
+
+        // preapare dataBlocks and Parity Block
+        // for simply purpose, do not use the hdfs block
         setup();
 
-        ECBlock[] DataBlocks = null;
-        ECBlock[] ParityBlocks = null;
+        TestBlock[] dataBlocks = new TestBlock[numDataUnits];
+        TestBlock[] parityBlocks = new TestBlock[numParityUnits];
 
-        generateBlocks(DataBlocks,false);
-        generateBlocks(ParityBlocks,true);
-
-        ECBlockGroup ECBlockGroup = new ECBlockGroup(DataBlocks,ParityBlocks);
-
-        ErasureCodingStep codingStep;
-
-
-        // step 2
-        // prepare XOR encoder/decoder
-        prepareCoders();
+        for (int i = 0; i < numDataUnits; ++i) {
+            dataBlocks[i] = new TestBlock(numChunksInBlock);
+            dataBlocks[i].fillDummyData(chunkSize);
+        }
+        for (int i = 0; i < numParityUnits; ++i) {
+            parityBlocks[i] = new TestBlock(numChunksInBlock);
+            parityBlocks[i].allocateBuffer(chunkSize);
+        }
 
 
-        codingStep = encoder.calculateCoding(blockGroup);
-        performCodingStep(codingStep);
-        // Erase specified sources but return copies of them for later comparing
-        TestBlock[] backupBlocks = backupAndEraseBlocks(clonedDataBlocks, parityBlocks);
+        ECBlockGroup blockGroup = new ECBlockGroup(dataBlocks,parityBlocks);
 
-        // step 3
-        // encode/decode
+        TestBlock[] clonedDataBlocks =
+                cloneBlocksWithData((TestBlock[]) blockGroup.getDataBlocks());
 
-        // step 4
-        // compare backupBlock and outputBlock
+        // prepare coder
+        prepareCoder();
+
+        // encode every chunks
+        ErasureCodingStep codingStep = encoder.calculateCoding(blockGroup);
+
+        TestBlock[] backup = cloneBlocksWithData((TestBlock[])blockGroup.getDataBlocks());
+
+        encode(codingStep);
+
+        // recover dataBlocks
+        EraseBlocks(clonedDataBlocks);
+
+        blockGroup = new ECBlockGroup(clonedDataBlocks, blockGroup.getParityBlocks());
+
+        codingStep = decoder.calculateCoding(blockGroup);
+        decode(codingStep);
+
+        // compare
+
+        compareAndVerify(backup,blockGroup.getDataBlocks());
+
+    }
+    public static void main(String args[]){
+        TestXOR testXOR = new TestXOR();
+        testXOR.run();
     }
 }
