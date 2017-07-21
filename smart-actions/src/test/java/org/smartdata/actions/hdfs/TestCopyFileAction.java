@@ -35,10 +35,10 @@ public class TestCopyFileAction extends ActionMiniCluster {
   public void testLocalFileCopy() throws Exception {
     final String srcPath = "/testCopy";
     final String file1 = "file1";
-    final String distPath = "/backup";
+    final String destPath = "/backup";
     Path srcDir = new Path(srcPath);
     dfs.mkdirs(srcDir);
-    dfs.mkdirs(new Path(distPath));
+    dfs.mkdirs(new Path(destPath));
     // write to DISK
     final FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
     out1.writeChars("testCopy1");
@@ -50,16 +50,37 @@ public class TestCopyFileAction extends ActionMiniCluster {
     copyFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(CopyFileAction.FILE_PATH, srcPath + "/" + file1);
-    args.put(CopyFileAction.DIST_PATH, distPath + "/" + file1);
+    args.put(CopyFileAction.DEST_PATH, destPath + "/" + file1);
     copyFileAction.init(args);
     copyFileAction.run();
     // Check if file exists
-    Assert.assertTrue(dfsClient.exists(distPath + "/" + file1));
+    Assert.assertTrue(dfsClient.exists(destPath + "/" + file1));
   }
 
   @Test
-  public void testDirCopy() throws Exception {
+  public void testRemoteFileCopy() throws Exception {
+    final String srcPath = "/testCopy";
+    final String file1 = "file1";
+    // Destination with "hdfs" prefix
+    final String destPath = dfs.getUri() + "/backup";
+    Path srcDir = new Path(srcPath);
+    dfs.mkdirs(srcDir);
+    dfs.mkdirs(new Path(destPath));
+    // write to DISK
+    final FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
+    out1.writeChars("testCopy1");
+    out1.close();
 
+    CopyFileAction copyFileAction = new CopyFileAction();
+    copyFileAction.setDfsClient(dfsClient);
+    copyFileAction.setContext(smartContext);
+    copyFileAction.setStatusReporter(new MockActionStatusReporter());
+    Map<String, String> args = new HashMap<>();
+    args.put(CopyFileAction.FILE_PATH, srcPath + "/" + file1);
+    args.put(CopyFileAction.DEST_PATH, destPath + "/" + file1);
+    copyFileAction.init(args);
+    copyFileAction.run();
+    // Check if file exists
+    Assert.assertTrue(dfsClient.exists("/backup/" + file1));
   }
-
 }
