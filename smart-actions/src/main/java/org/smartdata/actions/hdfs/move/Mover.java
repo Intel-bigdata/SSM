@@ -25,12 +25,10 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
-import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -72,10 +70,9 @@ public class Mover {
     for(DatanodeStorageReport r : reports) {
       final Dispatcher.DDatanode dn = dispatcher.newDatanode(r.getDatanodeInfo());
       for(StorageType t : StorageType.getMovableTypes()) {
-        final Dispatcher.Source source = dn.addSource(t, Long.MAX_VALUE, dispatcher);
+        final Dispatcher.Source source = dn.addSource(t, dispatcher);
         final long maxRemaining = getMaxRemaining(r, t);
-        final Dispatcher.StorageGroup target = maxRemaining > 0L ? dn.addTarget(t,
-            maxRemaining) : null;
+        final StorageGroup target = maxRemaining > 0L ? dn.addTarget(t) : null;
         storages.add(source, target);
       }
     }

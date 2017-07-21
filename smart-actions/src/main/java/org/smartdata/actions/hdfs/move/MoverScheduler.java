@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -56,7 +55,6 @@ public class MoverScheduler {
   private AtomicInteger retryCount;
   private Integer maxRetryTimes;
   private final BlockStoragePolicy[] blockStoragePolicies;
-  private final MoverExecutor moverExecutor;
   private final MoverStatus moverStatus;
 
   public MoverScheduler(Dispatcher dispatcher, Path targetPath, StorageMap storages,
@@ -71,7 +69,6 @@ public class MoverScheduler {
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
         BlockStoragePolicySuite.ID_BIT_LENGTH];
     initStoragePolicies();
-    this.moverExecutor = new MoverExecutor(dispatcher);
     this.moverStatus = moverStatus;
   }
 
@@ -89,7 +86,7 @@ public class MoverScheduler {
     Dispatcher.DBlock db;
     db = new Dispatcher.DBlock(blk);
     for(MLocation ml : locations) {
-      Dispatcher.StorageGroup source = storages.getSource(ml);
+      StorageGroup source = storages.getSource(ml);
       if (source != null) {
         db.addLocation(source);
       }
@@ -226,14 +223,14 @@ public class MoverScheduler {
   boolean chooseTargetInSameNode(Dispatcher.DBlock db, Dispatcher.Source source,
                                  List<StorageType> targetTypes) {
     for (StorageType t : targetTypes) {
-      Dispatcher.StorageGroup target = storages.getTarget(source.getDatanodeInfo()
+      StorageGroup target = storages.getTarget(source.getDatanodeInfo()
           .getDatanodeUuid(), t);
       if (target == null) {
         continue;
       }
-      if (moverExecutor.executeMove(db, source, target)) {
-        return true;
-      }
+      //if (moverExecutor.executeMove(db, source, target)) {
+      //  return true;
+      //}
     }
     return false;
   }
@@ -242,9 +239,9 @@ public class MoverScheduler {
                        List<StorageType> targetTypes, Matcher matcher) {
     final NetworkTopology cluster = dispatcher.getCluster();
     for (StorageType t : targetTypes) {
-      final List<Dispatcher.StorageGroup> targets = storages.getTargetStorages(t);
+      final List<StorageGroup> targets = storages.getTargetStorages(t);
       Collections.shuffle(targets);
-      for (Dispatcher.StorageGroup target : targets) {
+      for (StorageGroup target : targets) {
         if (matcher.match(cluster, source.getDatanodeInfo(),
             target.getDatanodeInfo())) {
           final Dispatcher.PendingMove pm = source.addPendingMove(db, target);

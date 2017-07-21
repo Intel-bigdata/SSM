@@ -57,13 +57,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -277,96 +272,6 @@ public class Dispatcher {
     }
   }
 
-  /** A group of storages in a datanode with the same storage type. */
-  public static class StorageGroup {
-    final StorageType storageType;
-    final long maxSize2Move;
-    private long scheduledSize = 0L;
-    private DDatanode datanode;
-
-    private StorageGroup(DDatanode datanode, StorageType storageType, long maxSize2Move) {
-      this.datanode = datanode;
-      this.storageType = storageType;
-      this.maxSize2Move = maxSize2Move;
-    }
-
-    public StorageType getStorageType() {
-      return storageType;
-    }
-
-    private DDatanode getDDatanode() {
-      return datanode;
-    }
-
-    public DatanodeInfo getDatanodeInfo() {
-      return datanode.datanode;
-    }
-
-    synchronized boolean hasSpaceForScheduling(long size) {
-      return availableSizeToMove() > size;
-    }
-
-    /** @return the total number of bytes that need to be moved */
-    synchronized long availableSizeToMove() {
-      return maxSize2Move - scheduledSize;
-    }
-
-    /** increment scheduled size */
-    public synchronized void incScheduledSize(long size) {
-      scheduledSize += size;
-    }
-
-    /** @return scheduled size */
-    synchronized long getScheduledSize() {
-      return scheduledSize;
-    }
-
-    /** Reset scheduled size to zero. */
-    synchronized void resetScheduledSize() {
-      scheduledSize = 0L;
-    }
-
-    private PendingMove addPendingMove(DBlock block, final PendingMove pm) {
-      if (getDDatanode().addPendingBlock(pm)) {
-        if (pm.markMovedIfGoodBlock(block, getStorageType())) {
-          incScheduledSize(pm.block.getNumBytes());
-          return pm;
-        } else {
-          getDDatanode().removePendingBlock(pm);
-        }
-      }
-      return null;
-    }
-
-    /** @return the name for display */
-    String getDisplayName() {
-      return datanode + ":" + storageType;
-    }
-
-    @Override
-    public String toString() {
-      return getDisplayName();
-    }
-
-    @Override
-    public int hashCode() {
-      return getStorageType().hashCode() ^ getDatanodeInfo().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      } else if (obj == null || !(obj instanceof StorageGroup)) {
-        return false;
-      } else {
-        final StorageGroup that = (StorageGroup) obj;
-        return this.getStorageType() == that.getStorageType()
-            && this.getDatanodeInfo().equals(that.getDatanodeInfo());
-      }
-    }
-  }
-
   /** A class that keeps track of a datanode. */
   public static class DDatanode {
     final DatanodeInfo datanode;
@@ -385,7 +290,7 @@ public class Dispatcher {
       return getClass().getSimpleName() + ":" + datanode;
     }
 
-    private DDatanode(DatanodeInfo datanode, int maxConcurrentMoves) {
+    public DDatanode(DatanodeInfo datanode, int maxConcurrentMoves) {
       this.datanode = datanode;
       this.maxConcurrentMoves = maxConcurrentMoves;
       this.pendings = new ArrayList<PendingMove>(maxConcurrentMoves);
@@ -401,14 +306,14 @@ public class Dispatcher {
       Preconditions.checkState(existing == null);
     }
 
-    public StorageGroup addTarget(StorageType storageType, long maxSize2Move) {
-      final StorageGroup g = new StorageGroup(this, storageType, maxSize2Move);
+    public StorageGroup addTarget(StorageType storageType) {
+      final StorageGroup g = new StorageGroup(this, storageType);
       put(storageType, g, targetMap);
       return g;
     }
 
-    public Source addSource(StorageType storageType, long maxSize2Move, Dispatcher d) {
-      final Source s = d.new Source(storageType, maxSize2Move, this);
+    public Source addSource(StorageType storageType, Dispatcher d) {
+      final Source s = d.new Source(storageType, this);
       put(storageType, s, sourceMap);
       return s;
     }
@@ -463,13 +368,14 @@ public class Dispatcher {
      */
     private final List<DBlock> srcBlocks = new ArrayList<DBlock>();
 
-    private Source(StorageType storageType, long maxSize2Move, DDatanode dn) {
-      super(dn, storageType, maxSize2Move);
+    private Source(StorageType storageType, DDatanode dn) {
+      super(dn, storageType);
     }
 
     /** Add a pending move */
     public PendingMove addPendingMove(DBlock block, StorageGroup target) {
-      return target.addPendingMove(block, new PendingMove(this, target));
+      return new PendingMove(this, target);
+      //return target.addPendingMove(block, new PendingMove(this, target));
     }
 
     @Override

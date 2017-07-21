@@ -33,18 +33,18 @@ import java.util.Map;
 class StorageMap {
   private final StorageGroupMap<Dispatcher.Source> sources
           = new StorageGroupMap<>();
-  private final StorageGroupMap<Dispatcher.StorageGroup> targets
+  private final StorageGroupMap<StorageGroup> targets
           = new StorageGroupMap<>();
-  private final EnumMap<StorageType, List<Dispatcher.StorageGroup>> targetStorageTypeMap
+  private final EnumMap<StorageType, List<StorageGroup>> targetStorageTypeMap
           = new EnumMap<>(StorageType.class);
 
   StorageMap() {
     for (StorageType t : StorageType.getMovableTypes()) {
-      targetStorageTypeMap.put(t, new LinkedList<Dispatcher.StorageGroup>());
+      targetStorageTypeMap.put(t, new LinkedList<StorageGroup>());
     }
   }
 
-  void add(Dispatcher.Source source, Dispatcher.StorageGroup target) {
+  void add(Dispatcher.Source source, StorageGroup target) {
     sources.put(source);
     if (target != null) {
       targets.put(target);
@@ -56,23 +56,23 @@ class StorageMap {
     return get(sources, ml);
   }
 
-  StorageGroupMap<Dispatcher.StorageGroup> getTargets() {
+  StorageGroupMap<StorageGroup> getTargets() {
     return targets;
   }
 
-  Dispatcher.StorageGroup getTarget(String uuid, StorageType storageType) {
+  StorageGroup getTarget(String uuid, StorageType storageType) {
     return targets.get(uuid, storageType);
   }
 
-  static <G extends Dispatcher.StorageGroup> G get(StorageGroupMap<G> map, MLocation ml) {
+  static <G extends StorageGroup> G get(StorageGroupMap<G> map, MLocation ml) {
     return map.get(ml.datanode.getDatanodeUuid(), ml.storageType);
   }
 
-  List<Dispatcher.StorageGroup> getTargetStorages(StorageType t) {
+  List<StorageGroup> getTargetStorages(StorageType t) {
     return targetStorageTypeMap.get(t);
   }
 
-  public static class StorageGroupMap<G extends Dispatcher.StorageGroup> {
+  public static class StorageGroupMap<G extends StorageGroup> {
     private static String toKey(String datanodeUuid, StorageType storageType) {
       return datanodeUuid + ":" + storageType;
     }
@@ -85,7 +85,7 @@ class StorageMap {
 
     public void put(G g) {
       final String key = toKey(g.getDatanodeInfo().getDatanodeUuid(), g.storageType);
-      final Dispatcher.StorageGroup existing = map.put(key, g);
+      final StorageGroup existing = map.put(key, g);
       Preconditions.checkState(existing == null);
     }
 

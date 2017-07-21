@@ -86,7 +86,7 @@ class MoverProcessor {
     Dispatcher.DBlock db;
     db = new Dispatcher.DBlock(blk);
     for(MLocation ml : locations) {
-      Dispatcher.StorageGroup source = storages.getSource(ml);
+      StorageGroup source = storages.getSource(ml);
       if (source != null) {
         db.addLocation(source);
       }
@@ -223,7 +223,7 @@ class MoverProcessor {
   boolean chooseTargetInSameNode(Dispatcher.DBlock db, Dispatcher.Source source,
                                  List<StorageType> targetTypes) {
     for (StorageType t : targetTypes) {
-      Dispatcher.StorageGroup target = storages.getTarget(source.getDatanodeInfo()
+      StorageGroup target = storages.getTarget(source.getDatanodeInfo()
               .getDatanodeUuid(), t);
       if (target == null) {
         continue;
@@ -241,9 +241,9 @@ class MoverProcessor {
                        List<StorageType> targetTypes, Matcher matcher) {
     final NetworkTopology cluster = dispatcher.getCluster();
     for (StorageType t : targetTypes) {
-      final List<Dispatcher.StorageGroup> targets = storages.getTargetStorages(t);
+      final List<StorageGroup> targets = storages.getTargetStorages(t);
       Collections.shuffle(targets);
-      for (Dispatcher.StorageGroup target : targets) {
+      for (StorageGroup target : targets) {
         if (matcher.match(cluster, source.getDatanodeInfo(),
                 target.getDatanodeInfo())) {
           final Dispatcher.PendingMove pm = source.addPendingMove(db, target);
