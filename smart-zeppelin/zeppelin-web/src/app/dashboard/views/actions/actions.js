@@ -73,7 +73,14 @@ angular.module('zeppelinWebApp')
             // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
             //user: rule.user,
-            actionName: {title: action.actionName, value: action.actionName},
+            actionName: {
+              title: "ID:" + action.actionId + " Cmdlet ID:" + action.cmdletId + " Name:" + action.actionName
+              + " Create Time:" + new Date(action.createTime).toUTCString()
+              + " Finish Time:" + new Date(action.finished ? action.finishTime : "-").toUTCString()
+              + " Running Time:" + action.uptime + "ms"
+              + " Succeed:" + (action.finished ? action.successful : "-"),
+              value: action.actionName
+            },
             createTime: action.createTime,
             finishTime: action.finished ? action.finishTime : "-",
             runningTime: action.uptime,
@@ -103,7 +110,9 @@ angular.module('zeppelinWebApp')
     });
 
     $(function () {
-      $("[data-toggle='tooltip']").tooltip();
+      $("[data-toggle='tooltip']").tooltip({
+        container: body
+      });
     });
   }
 
