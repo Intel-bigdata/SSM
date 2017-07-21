@@ -18,7 +18,7 @@
     -->
 <ng-switch on="renderer"><a ng-switch-when="Link" ng-href="{{href}}" ng-bind="text" ng-attr-target="{{target}}"></a>
   <button ng-switch-when="Button" ng-if="!hide" type="button" class="btn btn-default {{class}}"
-          ng-click="click()" ng-disabled="disabled" ng-attr-bs-tooltip="tooltip"><span class="{{text()}}"></span></button>
+          ng-click="click()" ng-disabled="disabled" ng-attr-bs-tooltip="tooltip"><span class="{{icon()}}"></span></button>
   <tag ng-switch-when="Tag" text="{{text}}" ng-attr-href="{{href}}" ng-attr-condition="{{condition}}"
        ng-attr-tooltip="{{tooltip}}"></tag>
   <indicator ng-switch-when="Indicator" ng-attr-shape="{{shape}}" ng-attr-condition="{{condition}}"
@@ -30,5 +30,5 @@
           ng-attr-readable="{{readable}}"></number>
   <div ng-switch-when="Number1" ng-bind="value|number:1"></div>
   <div ng-switch-when="Number2" ng-bind="value|number:2"></div>
-  <div ng-switch-default ng-bind="value"></div>
+  <div ng-switch-default data-toggle="tooltip" title="{{title}}">{{value}}</div>
 </ng-switch>

@@ -76,7 +76,7 @@ angular.module('zeppelinWebApp')
             // stopTime: rule.finishTime || '-',
             status: rule.state,
             active: {
-              text: function() {
+              icon: function() {
                 if(rule.isRunning) {
                   return 'glyphicon glyphicon-pause';
                 }else {
@@ -99,7 +99,7 @@ angular.module('zeppelinWebApp')
             },
             view: {
               href: rule.pageUrl,
-              text: function() {
+              icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info',
@@ -115,7 +115,7 @@ angular.module('zeppelinWebApp')
             //   }
             // },
             delete: {
-              text: function() {
+              icon: function() {
                 return 'glyphicon glyphicon-trash';
               },
               class: 'btn-xs btn-danger',

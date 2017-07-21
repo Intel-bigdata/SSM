@@ -249,11 +249,11 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
   // constants
   .constant('conf', {
     restapiProtocol: 'v1',
-    restapiRoot: rootPath,
+    restapiRoot: 'http://localhost:8080/',
     restapiQueryInterval: 3 * 1000, // in milliseconds
     restapiQueryTimeout: 30 * 1000, // in milliseconds
     restapiTaskLevelMetricsQueryLimit: 100,
-    loginUrl: rootPath + 'login'
+    loginUrl: 'http://localhost:8080/' + 'login'
   })
   .constant('TRASH_FOLDER_ID', '~Trash');
 
