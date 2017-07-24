@@ -50,7 +50,7 @@ public class TestSmartServer {
     conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
-    ssm = SmartServer.launchWith(conf);
+    // ssm = SmartServer.launchWith(conf);
   }
 
   private void initConf(Configuration conf) {

@@ -20,7 +20,6 @@ package org.smartdata.server;
 
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
@@ -49,19 +48,6 @@ public class TestSmartServerCli {
       String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
       String dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
       conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
-
-      // rpcServer start in SmartServer
-      SmartServer ssm = null;
-      try {
-        ssm = SmartServer.launchWith(conf);
-        Thread.sleep(2000);
-      } catch (Exception e) {
-        Assert.fail("Should work without specifying NN");
-      } finally {
-        if (ssm != null) {
-          ssm.shutdown();
-        }
-      }
 
       conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
           uriList.get(0).toString());
