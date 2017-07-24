@@ -73,7 +73,7 @@ public class MoverBasedMoveRunner extends MoveRunner {
       LOG.info("Namenode = " + pathPair.ns);
       nnc = new NameNodeConnector(pathPair.ns, conf);
 
-      while (true) {
+      //while (true) {
         final Mover m = new Mover(nnc, pathPair.path, conf, actionStatus);
         final ExitStatus r = m.run();
 
@@ -94,8 +94,8 @@ public class MoverBasedMoveRunner extends MoveRunner {
           }
           return;
         }
-        Thread.sleep(sleeptime);
-      }
+        //Thread.sleep(sleeptime);
+      //}
     } finally {
       IOUtils.cleanup(null, nnc);
       long runningTime = Time.now() - startTime;
