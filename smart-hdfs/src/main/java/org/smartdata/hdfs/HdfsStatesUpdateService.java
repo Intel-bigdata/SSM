@@ -135,8 +135,8 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
       fsout.hflush();
       return fsout;
     } catch (Exception e) {
-      LOG.error("Unable to lock 'mover', please stop 'mover' first.");
-      throw e;
+      throw new IOException("Unable to lock 'mover', please stop 'mover' first "
+          + "and make sure SmartServer have write permission on HDFS.", e);
     }
   }
 }
