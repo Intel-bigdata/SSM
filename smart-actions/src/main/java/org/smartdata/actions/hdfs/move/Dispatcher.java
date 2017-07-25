@@ -66,6 +66,8 @@ import static org.apache.hadoop.hdfs.protocolPB.PBHelper.vintPrefixed;
 
 /** Dispatching block replica moves between datanodes. */
 @InterfaceAudience.Private
+// TODO: this class will be abandoned, and some logic and inner class shall be refactored
+// to outer class
 public class Dispatcher {
   static final Log LOG = LogFactory.getLog(Dispatcher.class);
 
@@ -138,43 +140,7 @@ public class Dispatcher {
      * @return true if a proxy is found; otherwise false
      */
     private boolean chooseProxySource() {
-      final DatanodeInfo targetDN = target.getDatanodeInfo();
-      // if source and target are same nodes then no need of proxy
-      if (source.getDatanodeInfo().equals(targetDN) && addTo(source)) {
-        return true;
-      }
-      // if node group is supported, first try add nodes in the same node group
-      if (cluster.isNodeGroupAware()) {
-        for (StorageGroup loc : block.getLocations()) {
-          if (cluster.isOnSameNodeGroup(loc.getDatanodeInfo(), targetDN)
-              && addTo(loc)) {
-            return true;
-          }
-        }
-      }
-      // check if there is replica which is on the same rack with the target
-      for (StorageGroup loc : block.getLocations()) {
-        if (cluster.isOnSameRack(loc.getDatanodeInfo(), targetDN) && addTo(loc)) {
-          return true;
-        }
-      }
-      // find out a non-busy replica
-      for (StorageGroup loc : block.getLocations()) {
-        if (addTo(loc)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    /** add to a proxy source for specific block movement */
-    private boolean addTo(StorageGroup g) {
-      final DDatanode dn = g.getDDatanode();
-      if (dn.addPendingBlock(this)) {
-        proxySource = dn;
-        return true;
-      }
-      return false;
+      return true;
     }
 
     /** Dispatch the move to the proxy source & wait for the response. */
@@ -213,20 +179,19 @@ public class Dispatcher {
         LOG.info("Successfully moved " + this);
       } catch (IOException e) {
         LOG.warn("Failed to move " + this + ": " + e.getMessage());
-        target.getDDatanode().setHasFailure();
+
         // Proxy or target may have some issues, delay before using these nodes
         // further in order to avoid a potential storm of "threads quota
         // exceeded" warnings when the dispatcher gets out of sync with work
         // going on in datanodes.
         proxySource.activateDelay(delayAfterErrors);
-        target.getDDatanode().activateDelay(delayAfterErrors);
+
       } finally {
         IOUtils.closeStream(out);
         IOUtils.closeStream(in);
         IOUtils.closeSocket(sock);
 
         proxySource.removePendingBlock(this);
-        target.getDDatanode().removePendingBlock(this);
 
         synchronized (this) {
           reset();
@@ -307,7 +272,7 @@ public class Dispatcher {
     }
 
     public StorageGroup addTarget(StorageType storageType) {
-      final StorageGroup g = new StorageGroup(this, storageType);
+      final StorageGroup g = new StorageGroup(this.datanode, storageType);
       put(storageType, g, targetMap);
       return g;
     }
@@ -369,7 +334,7 @@ public class Dispatcher {
     private final List<DBlock> srcBlocks = new ArrayList<DBlock>();
 
     private Source(StorageType storageType, DDatanode dn) {
-      super(dn, storageType);
+      super(dn.datanode, storageType);
     }
 
     /** Add a pending move */
@@ -471,7 +436,7 @@ public class Dispatcher {
    */
   public static boolean waitForMoveCompletion(
       Iterable<? extends StorageGroup> targets) {
-    boolean hasFailure = false;
+    /*boolean hasFailure = false;
     for(;;) {
       boolean empty = true;
       for (StorageGroup t : targets) {
@@ -489,7 +454,8 @@ public class Dispatcher {
         Thread.sleep(blockMoveWaitTime);
       } catch (InterruptedException ignored) {
       }
-    }
+    }*/
+    return true;
   }
 
   /**

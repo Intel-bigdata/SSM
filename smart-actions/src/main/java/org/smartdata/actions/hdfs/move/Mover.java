@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Mover tool for SSM.
  */
+//TODO: Mover will be separated into scheduler and executor, so this class will be abandoned
 public class Mover {
   static final Logger LOG = LoggerFactory.getLogger(Mover.class);
 
