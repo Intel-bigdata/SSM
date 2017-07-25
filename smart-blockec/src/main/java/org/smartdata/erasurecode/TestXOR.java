@@ -27,14 +27,14 @@ public class TestXOR {
     private TestBlock testBlock;
     protected static Random RAND = new Random();
 
-    public void setup() {
+    public void setup(int numDataUnits,int numParityUnits) {
         encoderClass = XORErasureEncoder.class;
         decoderClass = XORErasureDecoder.class;
 
-        numDataUnits = 10;
-        numParityUnits = 1;
-        numChunksInBlock = 16;
-        chunkSize = 1024;
+        this.numDataUnits = numDataUnits;
+        this.numParityUnits = numParityUnits;
+        this.numChunksInBlock = 16;
+        this.chunkSize = 1024;
         startBufferWithZero = true;
 
         conf = new Configuration();
@@ -215,12 +215,11 @@ public class TestXOR {
         }
     }
 
-    public void run() {
 
-
+    public void run(int numDataBlocks,int numParityBlocks) {
         // preapare dataBlocks and Parity Block
         // for simply purpose, do not use the hdfs block
-        setup();
+        setup(numDataBlocks,numParityBlocks);
 
         TestBlock[] dataBlocks = new TestBlock[numDataUnits];
         TestBlock[] parityBlocks = new TestBlock[numParityUnits];
@@ -251,6 +250,8 @@ public class TestXOR {
         encode(codingStep);
 
         // recover dataBlocks
+
+        //
         EraseBlocks(clonedDataBlocks);
 
         blockGroup = new ECBlockGroup(clonedDataBlocks, blockGroup.getParityBlocks());
@@ -265,6 +266,7 @@ public class TestXOR {
     }
     public static void main(String args[]){
         TestXOR testXOR = new TestXOR();
-        testXOR.run();
+        testXOR.run(10,1);
+        testXOR.run(6,1);
     }
 }
