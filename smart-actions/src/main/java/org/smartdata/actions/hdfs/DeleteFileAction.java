@@ -39,49 +39,49 @@ import java.util.Map;
 @ActionSignature(
     actionId = "delete",
     displayName = "delete",
-    usage = HdfsAction.FILE_PATH + " $src"
+    usage = HdfsAction.FILE_PATH + " $file"
 )
 
 public class DeleteFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(DeleteFileAction.class);
-  private String srcPath;
+  private String filePath;
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
-    this.srcPath = args.get(FILE_PATH);
+    this.filePath = args.get(FILE_PATH);
   }
 
   @Override
   protected void execute() throws Exception {
-    if (srcPath == null) {
+    if (filePath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
     appendLog(
-        String.format("Action starts at %s : Delete %s", Utils.getFormatedCurrentTime(), srcPath));
+        String.format("Action starts at %s : Delete %s", Utils.getFormatedCurrentTime(), filePath));
     //delete File
-    deleteFile(srcPath);
+    deleteFile(filePath);
   }
 
-  private boolean deleteFile(String src) throws IOException, ActionException {
-    if (src.startsWith("hdfs")) {
+  private boolean deleteFile(String filePath) throws IOException, ActionException {
+    if (filePath.startsWith("hdfs")) {
       //delete in remote cluster
       // TODO read conf from file
       Configuration conf = new Configuration();
       //get FileSystem object
-      FileSystem fs = FileSystem.get(URI.create(src), conf);
-      if (!fs.exists(new Path(src))){
+      FileSystem fs = FileSystem.get(URI.create(filePath), conf);
+      if (!fs.exists(new Path(filePath))){
         throw new ActionException("DeleteFile Action fails, file doesn't exist!");
       }
-      fs.delete(new Path(src), true);
+      fs.delete(new Path(filePath), true);
       return true;
     } else {
       //delete in local cluster
-      if (!dfsClient.exists(srcPath)) {
+      if (!dfsClient.exists(filePath)) {
         throw new ActionException("DeleteFile Action fails, file doesn't exist!");
       }
-      appendLog(String.format("Delete %s", srcPath));
-      return dfsClient.delete(src , true);
+      appendLog(String.format("Delete %s", filePath));
+      return dfsClient.delete(filePath , true);
     }
   }
 }
