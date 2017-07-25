@@ -1,5 +1,4 @@
 package org.smartdata.erasurecode;
-import com.sun.xml.internal.stream.util.BufferAllocator;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.erasurecode.coder.*;
 
