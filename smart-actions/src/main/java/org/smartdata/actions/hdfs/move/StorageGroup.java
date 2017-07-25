@@ -23,9 +23,9 @@ import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 /** A group of storages in a datanode with the same storage type. */
 public class StorageGroup {
   final StorageType storageType;
-  private Dispatcher.DDatanode datanode;
+  private DatanodeInfo datanode;
 
-  StorageGroup(Dispatcher.DDatanode datanode, StorageType storageType) {
+  StorageGroup(DatanodeInfo datanode, StorageType storageType) {
     this.datanode = datanode;
     this.storageType = storageType;
   }
@@ -34,12 +34,8 @@ public class StorageGroup {
     return storageType;
   }
 
-  public Dispatcher.DDatanode getDDatanode() {
-    return datanode;
-  }
-
   public DatanodeInfo getDatanodeInfo() {
-    return datanode.datanode;
+    return datanode;
   }
 
   /** @return the name for display */
