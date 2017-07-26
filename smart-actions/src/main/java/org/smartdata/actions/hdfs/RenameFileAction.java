@@ -37,14 +37,15 @@ import java.util.Map;
  * current cluster.
  * Note that destination should contains filename.
  */
-
 @ActionSignature(
     actionId = "rename",
     displayName = "rename",
-    usage = HdfsAction.FILE_PATH + " $src" + RenameFileAction.DEST_PATH + " $dest"
+    usage = HdfsAction.FILE_PATH + " $src" + RenameFileAction.DEST_PATH +
+        " $dest"
 )
 public class RenameFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(CopyFileAction.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(CopyFileAction.class);
   public static final String DEST_PATH = "-dest";
   private String srcPath;
   private String destPath;
@@ -67,12 +68,14 @@ public class RenameFileAction extends HdfsAction {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
     appendLog(
-        String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), srcPath));
+        String.format("Action starts at %s : Read %s",
+            Utils.getFormatedCurrentTime(), srcPath));
     //rename
     renameSingleFile(srcPath, destPath);
   }
 
-  private boolean renameSingleFile(String src, String dest) throws IOException, ActionException {
+  private boolean renameSingleFile(String src,
+      String dest) throws IOException, ActionException {
     if (dest.startsWith("hdfs") && src.startsWith("hdfs")) {
       //rename file in the same remote cluster
       // TODO read conf from files
@@ -86,12 +89,14 @@ public class RenameFileAction extends HdfsAction {
       return fs.rename(new Path(src), new Path(dest));
     } else if (!dest.startsWith("hdfs") && !src.startsWith("hdfs")) {
       //rename file in local cluster and overwrite
-      if (!dfsClient.exists(src)){
+      if (!dfsClient.exists(src)) {
         throw new ActionException("the source file is not exist");
       }
       dfsClient.rename(src, dest, Options.Rename.NONE);
       return true;
     } else {
+      // TODO handle the case when dest prefixed with the default hdfs uri
+      // while src not, the two path are in the same cluster
       throw new ActionException("the file names are not in the same cluster");
     }
   }

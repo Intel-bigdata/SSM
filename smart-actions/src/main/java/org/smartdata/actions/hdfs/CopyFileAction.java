@@ -42,10 +42,12 @@ import java.util.Map;
 @ActionSignature(
     actionId = "copy",
     displayName = "copy",
-    usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH + " $dest " + CopyFileAction.BUF_SIZE + " $size"
+    usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
+        " $dest " + CopyFileAction.BUF_SIZE + " $size"
 )
 public class CopyFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(CopyFileAction.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(CopyFileAction.class);
   public static final String BUF_SIZE = "-bufSize";
   public static final String DEST_PATH = "-dest";
   private String srcPath;
@@ -73,7 +75,8 @@ public class CopyFileAction extends HdfsAction {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
     appendLog(
-        String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), srcPath));
+        String.format("Action starts at %s : Read %s",
+            Utils.getFormatedCurrentTime(), srcPath));
     if (!dfsClient.exists(srcPath)) {
       throw new ActionException("CopyFile Action fails, file doesn't exist!");
     }
@@ -104,7 +107,11 @@ public class CopyFileAction extends HdfsAction {
       Configuration conf = new Configuration();
       // Get OutPutStream from URL
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
-      return fs.create(new Path(dest));
+      // TODO overwrite or skip
+      // if (fs.exists(new Path(dest))) {
+      //
+      // }
+      return fs.create(new Path(dest), true);
     } else {
       // Copy between different dirs of the same cluster
       return dfsClient.create(dest, true);
