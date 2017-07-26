@@ -67,11 +67,16 @@ public class ListFileAction extends HdfsAction {
   private boolean listDirectory(String src) throws IOException {
     if (!src.startsWith("hdfs")) {
       //list file in local Dir
-      DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
-      HdfsFileStatus[] fileList = listing.getPartialListing();
-      for (int i = 0; i < fileList.length; i++) {
-        appendLog(
-            String.format("%s", fileList[i].getFullPath(new Path(src))));
+      HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(src);
+      if (hdfsFileStatus.isDir()) {
+        DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
+        HdfsFileStatus[] fileList = listing.getPartialListing();
+        for (int i = 0; i < fileList.length; i++) {
+          appendLog(
+              String.format("%s", fileList[i].getFullPath(new Path(src))));
+        }
+      } else {
+        appendLog(String.format("%s", src));
       }
       return true;
     } else {
@@ -79,10 +84,14 @@ public class ListFileAction extends HdfsAction {
       //TODO read conf from files
       Configuration conf = new Configuration();
       FileSystem fs = FileSystem.get(URI.create(src), conf);
-      RemoteIterator<FileStatus> pathIterator = fs.listStatusIterator(new Path(src));
-      while (pathIterator.hasNext()) {
-        appendLog(
-            String.format("%s", pathIterator.next().toString()));
+      if (fs.isDirectory(new Path(src))) {
+        RemoteIterator<FileStatus> pathIterator = fs.listStatusIterator(new Path(src));
+        while (pathIterator.hasNext()) {
+          appendLog(
+              String.format("%s", pathIterator.next().getPath()));
+        }
+      } else {
+        appendLog(String.format("%s", src));
       }
       return true;
     }

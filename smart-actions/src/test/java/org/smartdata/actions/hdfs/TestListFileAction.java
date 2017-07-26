@@ -62,6 +62,15 @@ public class TestListFileAction extends ActionMiniCluster {
     args.put(ListFileAction.FILE_PATH , dfs.getUri() + srcPath);
     listFileAction.init(args);
     listFileAction.run();
+
+    listFileAction = new ListFileAction();
+    listFileAction.setDfsClient(dfsClient);
+    listFileAction.setContext(smartContext);
+    listFileAction.setStatusReporter(new MockActionStatusReporter());
+    args = new HashMap<>();
+    args.put(ListFileAction.FILE_PATH , dfs.getUri() + srcPath + "/" + file1);
+    listFileAction.init(args);
+    listFileAction.run();
   }
 
   @Test
@@ -94,6 +103,15 @@ public class TestListFileAction extends ActionMiniCluster {
     listFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String , String> args = new HashMap<>();
     args.put(ListFileAction.FILE_PATH , srcPath);
+    listFileAction.init(args);
+    listFileAction.run();
+
+    listFileAction = new ListFileAction();
+    listFileAction.setDfsClient(dfsClient);
+    listFileAction.setContext(smartContext);
+    listFileAction.setStatusReporter(new MockActionStatusReporter());
+    args = new HashMap<>();
+    args.put(ListFileAction.FILE_PATH , srcPath + "/" + file1);
     listFileAction.init(args);
     listFileAction.run();
   }
