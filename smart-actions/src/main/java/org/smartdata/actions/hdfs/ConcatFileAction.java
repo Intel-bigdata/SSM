@@ -41,8 +41,8 @@ import java.util.Map;
  * An action to merge a list of file
  */
 @ActionSignature(
-    actionId = "merge",
-    displayName = "merge",
+    actionId = "concat",
+    displayName = "concat",
     usage = HdfsAction.FILE_PATH + " $src" + ConcatFileAction.DEST_PATH + " $dest"
 )
 public class ConcatFileAction extends HdfsAction {
