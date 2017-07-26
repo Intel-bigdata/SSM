@@ -68,14 +68,11 @@ public class ListFileAction extends HdfsAction {
     if (!src.startsWith("hdfs")) {
       //list file in local Dir
       DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
-
       HdfsFileStatus[] fileList = listing.getPartialListing();
-
       for (int i = 0; i < fileList.length; i++) {
         appendLog(
             String.format("%s", fileList[i].getFullPath(new Path(src))));
       }
-
       return true;
     } else {
       //list file in remote Directory
