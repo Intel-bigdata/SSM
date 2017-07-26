@@ -46,7 +46,7 @@ angular.module('zeppelinWebApp')
         $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
         $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
         $stb.text('Cmdlet ID').key('cid').canSort().done(),
-        $stb.text('Name').key('actionName').canSort().done(),
+        $stb.text('Name').key(['actionName']).canSort().done(),
           // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
         // group 2/3 (5-col)
         $stb.datetime('Create Time').key('createTime').canSort().done(),
@@ -73,7 +73,14 @@ angular.module('zeppelinWebApp')
             // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
             //user: rule.user,
-            actionName: action.actionName,
+            actionName: {
+              title: "ID:" + action.actionId + " Cmdlet ID:" + action.cmdletId + " Name:" + action.actionName
+              + " Create Time:" + new Date(action.createTime).toUTCString()
+              + " Finish Time:" + new Date(action.finished ? action.finishTime : "-").toUTCString()
+              + " Running Time:" + action.uptime + "ms"
+              + " Succeed:" + (action.finished ? action.successful : "-"),
+              value: action.actionName
+            },
             createTime: action.createTime,
             finishTime: action.finished ? action.finishTime : "-",
             runningTime: action.uptime,
@@ -82,7 +89,7 @@ angular.module('zeppelinWebApp')
             succeed: action.finished ? action.successful : "-",
             view: {
               href: action.pageUrl,
-              text: function() {
+              icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info'
@@ -100,6 +107,12 @@ angular.module('zeppelinWebApp')
     updateTable(actions0.$data());
     actions0.$subscribe($scope, function (actions) {
       updateTable(actions);
+    });
+
+    $(function () {
+      $("[data-toggle='tooltip']").tooltip({
+        container: body
+      });
     });
   }
 
