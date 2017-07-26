@@ -42,7 +42,7 @@ angular.module('zeppelinWebApp')
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
         $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-        $stb.text('Name').key('ruleName').canSort().done(),
+        $stb.text('Name').key(['ruleName']).canSort().done(),
           // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
         // group 2/3 (5-col)
         $stb.datetime('Submission Time').key('submitTime').canSort().done(),
@@ -67,7 +67,15 @@ angular.module('zeppelinWebApp')
             // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: rule.state, condition: rule.isRunning ? 'good' : '', shape: 'stripe'},
             //user: rule.user,
-            ruleName: rule.ruleName,
+            ruleName: {
+              value: rule.ruleName,
+              title: "ID:" + rule.id + " Name:" + rule.ruleName
+              + " Submission Time:" + new Date(rule.submitTime).toUTCString()
+              + " Last Check Time:" + new Date(rule.lastCheckTime).toUTCString()
+              + " Checked Number:" + rule.numChecked
+              + " Cmdlets Generated:" + rule.numCmdsGen
+              + " Status:" +  rule.state
+            },
             submitTime: rule.submitTime,
             lastCheckTime: rule.lastCheckTime,
             numChecked: rule.numChecked,
@@ -76,7 +84,7 @@ angular.module('zeppelinWebApp')
             // stopTime: rule.finishTime || '-',
             status: rule.state,
             active: {
-              text: function() {
+              icon: function() {
                 if(rule.isRunning) {
                   return 'glyphicon glyphicon-pause';
                 }else {
@@ -99,7 +107,7 @@ angular.module('zeppelinWebApp')
             },
             view: {
               href: rule.pageUrl,
-              text: function() {
+              icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info',
@@ -115,7 +123,7 @@ angular.module('zeppelinWebApp')
             //   }
             // },
             delete: {
-              text: function() {
+              icon: function() {
                 return 'glyphicon glyphicon-trash';
               },
               class: 'btn-xs btn-danger',
