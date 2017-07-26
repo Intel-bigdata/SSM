@@ -17,16 +17,77 @@
  */
 package org.smartdata.actions.hdfs;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.hdfs.protocol.DirectoryListing;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.Utils;
+import org.smartdata.actions.annotation.ActionSignature;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An action to list files in a directory.
  */
+@ActionSignature(
+    actionId = "list",
+    displayName = "list",
+    usage = HdfsAction.FILE_PATH + " $src"
+)
 public class ListFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ListFileAction.class);
+  private String srcPath;
+
+  @Override
+  public void init(Map<String, String> args) {
+    super.init(args);
+    this.srcPath = args.get(FILE_PATH);
+  }
 
   @Override
   protected void execute() throws Exception {
+    if (srcPath == null) {
+      throw new IllegalArgumentException("File parameter is missing.");
+    }
+    appendLog(
+        String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), srcPath));
+    //list the file in directionary
+    listDirectory(srcPath);
+  }
+
+  private boolean listDirectory(String src) throws IOException {
+    if (!src.startsWith("hdfs")) {
+      //list file in local Dir
+      DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
+
+      HdfsFileStatus[] fileList = listing.getPartialListing();
+
+      for (int i = 0; i < fileList.length; i++) {
+        appendLog(
+            String.format("%s", fileList[i].getFullPath(new Path(src))));
+      }
+
+      return true;
+    } else {
+      //list file in remote Directory
+      //TODO read conf from files
+      Configuration conf = new Configuration();
+      FileSystem fs = FileSystem.get(URI.create(src), conf);
+      RemoteIterator<FileStatus> pathIterator = fs.listStatusIterator(new Path(src));
+      while (pathIterator.hasNext()) {
+        appendLog(
+            String.format("%s", pathIterator.next().toString()));
+      }
+      return true;
+    }
   }
 }
