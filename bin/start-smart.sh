@@ -56,7 +56,7 @@ done
 SMARTSERVERS=$("${SMART_HOME}/bin/smart" getconf SmartServers 2>/dev/null)
 
 if [ "$?" != "0" ]; then
-  echo "${SMARTSERVERS}"
+  echo "ERROR: Get SmartServers error: ${SMARTSERVERS}"
   exit 1
 fi
 
@@ -69,5 +69,24 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
     --daemon start ${DEBUG_OPT} \
     smartserver
 else
-  echo "No SmartServers configured in 'hazelcast.xml'."
+  echo "WARN: No SmartServers configured in 'hazelcast.xml'."
+fi
+
+echo
+
+#---------------------------------------------------------
+# Start Smart Agents
+
+AGENTS_FILE="${SMART_CONF_DIR}/agents"
+if [ -f "${AGENTS_FILE}" ]; then
+  AGENT_HOSTS=$(sed 's/#.*$//;/^$/d' "${AGENTS_FILE}" | xargs echo)
+  if [ x"${AGENT_HOSTS}" != x"" ]; then
+    echo "Starting SmartAgents on [${AGENT_HOSTS}]"
+    . "${SMART_HOME}/bin/smart" \
+      --remote \
+      --config "${SMART_CONF_DIR}" \
+      --hosts "${AGENT_HOSTS}" --hostsend \
+      --daemon start ${DEBUG_OPT} \
+      smartagent
+  fi
 fi
