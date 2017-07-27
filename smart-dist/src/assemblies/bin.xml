@@ -11,9 +11,6 @@
         <fileSet>
             <directory>${basedir}/../bin</directory>
             <outputDirectory>smart-data-${project.version}/bin</outputDirectory>
-            <includes>
-                <include>*.sh</include>
-            </includes>
         </fileSet>
         <fileSet>
             <directory>${basedir}/../</directory>
