@@ -42,6 +42,7 @@ public class TestConcatFileAction extends ActionMiniCluster {
     dfs.mkdirs(new Path(srcPath));
     dfs.mkdirs(new Path(target));
     //write to DISK
+    //write 50 Bytes to file1 and 50 Byte to file2. then concat them
     FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
     for (int i = 0; i < 50; i++) {
       out1.writeByte(1);
