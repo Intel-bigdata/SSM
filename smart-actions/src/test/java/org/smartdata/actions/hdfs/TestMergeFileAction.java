@@ -24,17 +24,17 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Test for concatFileAction
+ * Test for MergeFileAction
  */
-public class TestConcatFileAction extends ActionMiniCluster {
+public class TestMergeFileAction extends ActionMiniCluster {
+
   @Test
-  public void testRemoteFileConcat() throws IOException {
-    final String srcPath = "/testConcat";
+  public void testLocalFileMerge() throws Exception {
+    final String srcPath = "/testMerge";
     final String file1 = "file1";
     final String file2 = "file2";
     final String target = "/target";
@@ -42,9 +42,9 @@ public class TestConcatFileAction extends ActionMiniCluster {
     dfs.mkdirs(new Path(srcPath));
     dfs.mkdirs(new Path(target));
     //write to DISK
-    //write 50 Bytes to file1 and 50 Byte to file2. then concat them
+    //write 40 Bytes to file1 and 50 Byte to file2. then concat them
     FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 60; i++) {
       out1.writeByte(1);
     }
     out1.close();
@@ -55,21 +55,21 @@ public class TestConcatFileAction extends ActionMiniCluster {
     }
     out1.close();
 
-    ConcatFileAction concatFileAction = new ConcatFileAction();
-    concatFileAction.setDfsClient(dfsClient);
-    concatFileAction.setContext(smartContext);
-    concatFileAction.setStatusReporter(new MockActionStatusReporter());
+    MergeFileAction mergeFileAction = new MergeFileAction();
+    mergeFileAction.setDfsClient(dfsClient);
+    mergeFileAction.setContext(smartContext);
+    mergeFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
-    args.put(CopyFileAction.FILE_PATH, dfs.getUri() + srcPath + "/" +
+    args.put(MergeFileAction.FILE_PATH, srcPath + "/" +
         file1 + "," + dfs.getUri() + srcPath + "/" + "file2");
-    args.put(ConcatFileAction.DEST_PATH, dfs.getUri() + target);
-    concatFileAction.init(args);
-    concatFileAction.run();
+    args.put(MergeFileAction.DEST_PATH, target);
+    mergeFileAction.init(args);
+    mergeFileAction.run();
 
     Assert.assertTrue(dfsClient.exists(target));
     //read and check file
     FSDataInputStream in = dfs.open(new Path(target),50);
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 60; i++) {
       Assert.assertTrue(in.readByte() == 1);
     }
     for (int i = 0; i < 50; i++) {
@@ -78,8 +78,8 @@ public class TestConcatFileAction extends ActionMiniCluster {
   }
 
   @Test
-  public void testLocalFileConcat() throws IOException {
-    final String srcPath = "/testConcat";
+  public void testRemoteFileMerge() throws Exception {
+    final String srcPath = "/testMerge";
     final String file1 = "file1";
     final String file2 = "file2";
     final String target = "/target";
@@ -87,8 +87,9 @@ public class TestConcatFileAction extends ActionMiniCluster {
     dfs.mkdirs(new Path(srcPath));
     dfs.mkdirs(new Path(target));
     //write to DISK
+    //write 40 Bytes to file1 and 50 Byte to file2. then concat them
     FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 60; i++) {
       out1.writeByte(1);
     }
     out1.close();
@@ -99,21 +100,21 @@ public class TestConcatFileAction extends ActionMiniCluster {
     }
     out1.close();
 
-    ConcatFileAction concatFileAction = new ConcatFileAction();
-    concatFileAction.setDfsClient(dfsClient);
-    concatFileAction.setContext(smartContext);
-    concatFileAction.setStatusReporter(new MockActionStatusReporter());
+    MergeFileAction mergeFileAction = new MergeFileAction();
+    mergeFileAction.setDfsClient(dfsClient);
+    mergeFileAction.setContext(smartContext);
+    mergeFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
-    args.put(CopyFileAction.FILE_PATH, srcPath + "/" +
-        file1 + "," + srcPath + "/" + "file2");
-    args.put(ConcatFileAction.DEST_PATH, target);
-    concatFileAction.init(args);
-    concatFileAction.run();
+    args.put(MergeFileAction.FILE_PATH, dfs.getUri() + srcPath + "/" +
+        file1 + "," + dfs.getUri() + srcPath + "/" + "file2");
+    args.put(MergeFileAction.DEST_PATH, dfs.getUri() + target);
+    mergeFileAction.init(args);
+    mergeFileAction.run();
 
     Assert.assertTrue(dfsClient.exists(target));
     //read and check file
     FSDataInputStream in = dfs.open(new Path(target),50);
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 60; i++) {
       Assert.assertTrue(in.readByte() == 1);
     }
     for (int i = 0; i < 50; i++) {
