@@ -91,15 +91,13 @@ public class MergeFileAction extends HdfsAction {
 
   private boolean mergeFiles(LinkedList<String> srcFiles, String dest) throws IOException {
     InputStream srcInputStream = null;
-    OutputStream destInputStream = null;
+    OutputStream destInputStream = getTargetOutputStream(dest);
     for (String srcEle : srcFileList) {
       srcInputStream = getSourceInputStream(srcEle);
-      destInputStream = getTargetOutputStream(dest);
       IOUtils.copyBytes(srcInputStream, destInputStream, bufferSize, false);
-
       IOUtils.closeStream(srcInputStream);
-      IOUtils.closeStream(destInputStream);
     }
+    IOUtils.closeStream(destInputStream);
     return true;
   }
 
@@ -120,8 +118,14 @@ public class MergeFileAction extends HdfsAction {
       // TODO read conf from files
       Configuration conf = new Configuration();
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
+      if (fs.exists(new Path(target))) {
+        fs.delete(new Path(target), true);
+      }
       return fs.create(new Path(dest), true);
     } else {
+      if (dfsClient.exists(target)) {
+        dfsClient.delete(target, true);
+      }
       return dfsClient.create(dest, true);
     }
   }
