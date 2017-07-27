@@ -56,20 +56,18 @@ done
 SMARTSERVERS=$("${SMART_HOME}/bin/smart" getconf SmartServers 2>/dev/null)
 
 if [ "$?" != "0" ]; then
-    echo "${SMARTSERVERS}"
-    exit 1
+  echo "${SMARTSERVERS}"
+  exit 1
 fi
 
-#if [[ -z "${SMARTSERVERS}" ]]; then
-#SMARTSERVERS=$HOSTNAME
-#fi
-
-echo "Starting SmartServers on [${SMARTSERVERS}]"
-
-. "${SMART_HOME}/bin/smart" \
- --remote \
- --config "${SMART_CONF_DIR}" \
- --hosts "${SMARTSERVERS}" --hostsend \
- --daemon start ${DEBUG_OPT} \
- smartserver
-
+if [ x"${SMARTSERVERS}" != x"" ]; then
+  echo "Starting SmartServers on [${SMARTSERVERS}]"
+  . "${SMART_HOME}/bin/smart" \
+    --remote \
+    --config "${SMART_CONF_DIR}" \
+    --hosts "${SMARTSERVERS}" --hostsend \
+    --daemon start ${DEBUG_OPT} \
+    smartserver
+else
+  echo "No SmartServers configured in 'hazelcast.xml'."
+fi
