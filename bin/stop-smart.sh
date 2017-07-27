@@ -56,16 +56,14 @@ if [ "$?" != "0" ]; then
     exit 1
 fi
 
-#if [[ -z "${SMARTSERVERS}" ]]; then
-#SMARTSERVERS=$HOSTNAME
-#fi
-
-echo "Stopping SmartServers on [${SMARTSERVERS}]"
-
-. "${SMART_HOME}/bin/smart" \
- --remote \
- --config "${SMART_CONF_DIR}" \
- --hosts "${SMARTSERVERS}" --hostsend \
- --daemon stop ${DEBUG_OPT} \
- smartserver
-
+if [ x"${SMARTSERVERS}" != x"" ]; then
+  echo "Stopping SmartServers on [${SMARTSERVERS}]"
+  . "${SMART_HOME}/bin/smart" \
+    --remote \
+    --config "${SMART_CONF_DIR}" \
+    --hosts "${SMARTSERVERS}" --hostsend \
+    --daemon stop ${DEBUG_OPT} \
+    smartserver
+else
+  echo "No SmartServers configured in 'hazelcast.xml'."
+fi
