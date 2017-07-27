@@ -38,6 +38,8 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction(CopyFileAction.class);
     addAction(DeleteFileAction.class);
     addAction(RenameFileAction.class);
+    addAction(ListFileAction.class);
+    addAction(ConcatFileAction.class);
 //    addAction("list", ListFileAction.class);
 //    addAction("fsck", FsckAction.class);
 //    addAction("diskbalance", DiskBalanceAction.class);
