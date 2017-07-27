@@ -86,7 +86,6 @@ SMART_VARGS="$@"
 init_command ${COMMAND}
 
 JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
-JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
 
 JAVA_VERSION=$($SMART_RUNNER -version 2>&1 | awk -F '.' '/version/ {print $2}')
 
@@ -98,6 +97,7 @@ fi
 
 addJarInDir "${SMART_HOME}/smart-server/target/lib"
 addNonTestJarInDir "${SMART_HOME}/smart-server/target"
+addNonTestJarInDir "${SMART_HOME}/smart-agent/target"
 addJarInDir "${SMART_HOME}/lib"
 
 if [ "$SMART_CLASSPATH" = "" ]; then
@@ -142,5 +142,6 @@ else
   else
     local_execute
   fi
+  exit $?
 fi
-exit $?
+
