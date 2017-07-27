@@ -82,7 +82,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
 
     $routeProvider
       .when('/', {
-        templateUrl: 'app/home/home.html'
+        templateUrl: 'app/dashboard/views/cluster/cluster_hottestFiles.html'
       })
       .when('/notebook/:noteId', {
         templateUrl: 'app/notebook/notebook.html',
@@ -250,10 +250,12 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
   .constant('conf', {
     restapiProtocol: 'v1',
     restapiRoot: 'http://localhost:8080/',
+    // restapiRoot: rootPath,
     restapiQueryInterval: 3 * 1000, // in milliseconds
     restapiQueryTimeout: 30 * 1000, // in milliseconds
     restapiTaskLevelMetricsQueryLimit: 100,
     loginUrl: 'http://localhost:8080/' + 'login'
+    // loginUrl: rootPath + 'login'
   })
   .constant('TRASH_FOLDER_ID', '~Trash');
 
