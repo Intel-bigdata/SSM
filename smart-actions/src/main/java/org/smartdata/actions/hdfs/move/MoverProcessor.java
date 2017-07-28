@@ -33,6 +33,10 @@ import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.model.actions.hdfs.MLocation;
+import org.smartdata.model.actions.hdfs.Source;
+import org.smartdata.model.actions.hdfs.StorageGroup;
+import org.smartdata.model.actions.hdfs.StorageMap;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -81,10 +85,10 @@ class MoverProcessor {
     }
   }
 
-  Dispatcher.DBlock newDBlock(LocatedBlock lb, List<MLocation> locations) {
+  DBlock newDBlock(LocatedBlock lb, List<MLocation> locations) {
     Block blk = lb.getBlock().getLocalBlock();
-    Dispatcher.DBlock db;
-    db = new Dispatcher.DBlock(blk);
+    DBlock db;
+    db = new DBlock(blk);
     for(MLocation ml : locations) {
       StorageGroup source = storages.getSource(ml);
       if (source != null) {
@@ -180,12 +184,12 @@ class MoverProcessor {
   boolean scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb) {
     final List<MLocation> locations = MLocation.toLocations(lb);
     Collections.shuffle(locations);
-    final Dispatcher.DBlock db = newDBlock(lb, locations);
+    final DBlock db = newDBlock(lb, locations);
 
     for (final StorageType t : diff.existing) {
       for (final MLocation ml : locations) {
-        final Dispatcher.Source source = storages.getSource(ml);
-        if (ml.storageType == t && source != null) {
+        final Source source = storages.getSource(ml);
+        if (ml.getStorageType() == t && source != null) {
           // try to schedule one replica move.
           if (scheduleMoveReplica(db, source, diff.expected)) {
             return true;
@@ -196,7 +200,7 @@ class MoverProcessor {
     return false;
   }
 
-  boolean scheduleMoveReplica(Dispatcher.DBlock db, Dispatcher.Source source,
+  boolean scheduleMoveReplica(DBlock db, Source source,
                               List<StorageType> targetTypes) {
     // Match storage on the same node
     if (chooseTargetInSameNode(db, source, targetTypes)) {
@@ -220,7 +224,7 @@ class MoverProcessor {
   /**
    * Choose the target storage within same Datanode if possible.
    */
-  boolean chooseTargetInSameNode(Dispatcher.DBlock db, Dispatcher.Source source,
+  boolean chooseTargetInSameNode(DBlock db, Source source,
                                  List<StorageType> targetTypes) {
     for (StorageType t : targetTypes) {
       StorageGroup target = storages.getTarget(source.getDatanodeInfo()
@@ -228,7 +232,7 @@ class MoverProcessor {
       if (target == null) {
         continue;
       }
-      final Dispatcher.PendingMove pm = source.addPendingMove(db, target);
+      final Dispatcher.PendingMove pm = new Dispatcher.PendingMove(source, target);
       if (pm != null) {
         dispatcher.executePendingMove(pm);
         return true;
@@ -237,7 +241,7 @@ class MoverProcessor {
     return false;
   }
 
-  boolean chooseTarget(Dispatcher.DBlock db, Dispatcher.Source source,
+  boolean chooseTarget(DBlock db, Source source,
                        List<StorageType> targetTypes, Matcher matcher) {
     final NetworkTopology cluster = dispatcher.getCluster();
     for (StorageType t : targetTypes) {

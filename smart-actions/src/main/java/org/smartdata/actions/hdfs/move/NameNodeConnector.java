@@ -19,7 +19,6 @@ package org.smartdata.actions.hdfs.move;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsServerDefaults;
@@ -43,7 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * The class provides utilities for accessing a NameNode.
  */
-@InterfaceAudience.Private
 public class NameNodeConnector implements Closeable {
   private static final Log LOG = LogFactory.getLog(NameNodeConnector.class);
 
