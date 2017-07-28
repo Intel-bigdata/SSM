@@ -16,6 +16,7 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.token.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.model.actions.hdfs.StorageGroup;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -106,7 +107,7 @@ class ReplicaMove {
   /** Send a block replace request to the output stream */
   private void sendRequest(DataOutputStream out, ExtendedBlock eb,
       Token<BlockTokenIdentifier> accessToken) throws IOException {
-    new Sender(out).replaceBlock(eb, target.storageType, accessToken,
+    new Sender(out).replaceBlock(eb, target.getStorageType(), accessToken,
         source.getDatanodeInfo().getDatanodeUuid(), source.getDatanodeInfo());
   }
 

@@ -29,6 +29,8 @@ import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.ActionMiniCluster;
+import org.smartdata.model.actions.hdfs.SchedulePlan;
+import org.smartdata.model.actions.hdfs.StorageGroup;
 
 import java.net.URI;
 import java.util.HashSet;

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.model.actions.hdfs;
 
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -28,12 +28,12 @@ import java.util.List;
  * A class to manage the datanode, storage type and size information of a block
  * replication.
  */
-class MLocation {
+public class MLocation {
   final DatanodeInfo datanode;
   final StorageType storageType;
   final long size;
 
-  MLocation(DatanodeInfo datanode, StorageType storageType, long size) {
+  public MLocation(DatanodeInfo datanode, StorageType storageType, long size) {
     this.datanode = datanode;
     this.storageType = storageType;
     this.size = size;
@@ -44,7 +44,7 @@ class MLocation {
    * @param lb
    * @return
    */
-  static List<MLocation> toLocations(LocatedBlock lb) {
+  public static List<MLocation> toLocations(LocatedBlock lb) {
     final DatanodeInfo[] datanodeInfos = lb.getLocations();
     final StorageType[] storageTypes = lb.getStorageTypes();
     final long size = lb.getBlockSize();
@@ -53,5 +53,9 @@ class MLocation {
       locations.add(new MLocation(datanodeInfos[i], storageTypes[i], size));
     }
     return locations;
+  }
+
+  public StorageType getStorageType() {
+    return storageType;
   }
 }

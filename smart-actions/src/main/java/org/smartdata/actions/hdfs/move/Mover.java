@@ -27,6 +27,9 @@ import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.model.actions.hdfs.Source;
+import org.smartdata.model.actions.hdfs.StorageGroup;
+import org.smartdata.model.actions.hdfs.StorageMap;
 
 import java.io.IOException;
 import java.util.List;
@@ -69,9 +72,9 @@ public class Mover {
   void init() throws IOException {
     final List<DatanodeStorageReport> reports = dispatcher.init();
     for(DatanodeStorageReport r : reports) {
-      final Dispatcher.DDatanode dn = dispatcher.newDatanode(r.getDatanodeInfo());
+      final DDatanode dn = dispatcher.newDatanode(r.getDatanodeInfo());
       for(StorageType t : StorageType.getMovableTypes()) {
-        final Dispatcher.Source source = dn.addSource(t, dispatcher);
+        final Source source = dn.addSource(t, dispatcher);
         final long maxRemaining = getMaxRemaining(r, t);
         final StorageGroup target = maxRemaining > 0L ? dn.addTarget(t) : null;
         storages.add(source, target);
