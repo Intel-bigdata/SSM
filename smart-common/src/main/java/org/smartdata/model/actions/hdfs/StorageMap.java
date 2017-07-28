@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.model.actions.hdfs;
 
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.StorageType;
@@ -30,21 +30,21 @@ import java.util.Map;
 /**
  * Storage map.
  */
-class StorageMap {
-  private final StorageGroupMap<Dispatcher.Source> sources
+public class StorageMap {
+  private final StorageGroupMap<Source> sources
           = new StorageGroupMap<>();
   private final StorageGroupMap<StorageGroup> targets
           = new StorageGroupMap<>();
   private final EnumMap<StorageType, List<StorageGroup>> targetStorageTypeMap
           = new EnumMap<>(StorageType.class);
 
-  StorageMap() {
+  public StorageMap() {
     for (StorageType t : StorageType.getMovableTypes()) {
       targetStorageTypeMap.put(t, new LinkedList<StorageGroup>());
     }
   }
 
-  void add(Dispatcher.Source source, StorageGroup target) {
+  public void add(Source source, StorageGroup target) {
     sources.put(source);
     if (target != null) {
       targets.put(target);
@@ -52,23 +52,23 @@ class StorageMap {
     }
   }
 
-  Dispatcher.Source getSource(MLocation ml) {
+  public Source getSource(MLocation ml) {
     return get(sources, ml);
   }
 
-  StorageGroupMap<StorageGroup> getTargets() {
+  public StorageGroupMap<StorageGroup> getTargets() {
     return targets;
   }
 
-  StorageGroup getTarget(String uuid, StorageType storageType) {
+  public StorageGroup getTarget(String uuid, StorageType storageType) {
     return targets.get(uuid, storageType);
   }
 
-  static <G extends StorageGroup> G get(StorageGroupMap<G> map, MLocation ml) {
+  public static <G extends StorageGroup> G get(StorageGroupMap<G> map, MLocation ml) {
     return map.get(ml.datanode.getDatanodeUuid(), ml.storageType);
   }
 
-  List<StorageGroup> getTargetStorages(StorageType t) {
+  public List<StorageGroup> getTargetStorages(StorageType t) {
     return targetStorageTypeMap.get(t);
   }
 
@@ -84,7 +84,7 @@ class StorageMap {
     }
 
     public void put(G g) {
-      final String key = toKey(g.getDatanodeInfo().getDatanodeUuid(), g.storageType);
+      final String key = toKey(g.getDatanodeInfo().getDatanodeUuid(), g.getStorageType());
       final StorageGroup existing = map.put(key, g);
       Preconditions.checkState(existing == null);
     }

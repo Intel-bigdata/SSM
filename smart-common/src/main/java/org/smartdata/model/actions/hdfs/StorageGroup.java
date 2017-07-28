@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.model.actions.hdfs;
 
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 
 /** A group of storages in a datanode with the same storage type. */
 public class StorageGroup {
-  final StorageType storageType;
+  private final StorageType storageType;
   private DatanodeInfo datanode;
 
-  StorageGroup(DatanodeInfo datanode, StorageType storageType) {
+  public StorageGroup(DatanodeInfo datanode, StorageType storageType) {
     this.datanode = datanode;
     this.storageType = storageType;
   }
@@ -39,7 +39,7 @@ public class StorageGroup {
   }
 
   /** @return the name for display */
-  String getDisplayName() {
+  public String getDisplayName() {
     return datanode + ":" + storageType;
   }
 
