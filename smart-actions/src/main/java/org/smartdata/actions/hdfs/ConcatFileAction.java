@@ -21,17 +21,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionException;
 import org.smartdata.actions.Utils;
 import org.smartdata.actions.annotation.ActionSignature;
-import sun.awt.image.ImageWatched;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -43,12 +38,12 @@ import java.util.Map;
 @ActionSignature(
     actionId = "concat",
     displayName = "concat",
-    usage = HdfsAction.FILE_PATH + " $src" + ConcatFileAction.DEST_PATH + " $dest"
+    usage = HdfsAction.FILE_PATH + " $src " + ConcatFileAction.DEST_PATH + " $dest"
 )
 public class ConcatFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ConcatFileAction.class);
   public static final String DEST_PATH = "-dest";
-  private LinkedList<String> FILE_LIST;
+  private LinkedList<String> srcPathList;
   private String targetPath;
 
   @Override
@@ -57,7 +52,7 @@ public class ConcatFileAction extends HdfsAction {
     String inputSrcPath = args.get(FILE_PATH);
     //init the linkedList
     String[] srcArray = inputSrcPath.split(",");
-    FILE_LIST = new LinkedList<>(Arrays.asList(srcArray));
+    srcPathList = new LinkedList<>(Arrays.asList(srcArray));
     if (args.containsKey(DEST_PATH)) {
       this.targetPath = args.get(DEST_PATH);
     }
@@ -65,10 +60,10 @@ public class ConcatFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    if (FILE_LIST == null || FILE_LIST.size() == 0) {
+    if (srcPathList == null || srcPathList.size() == 0) {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
-    if (FILE_LIST.size() == 1) {
+    if (srcPathList.size() == 1) {
       throw new IllegalArgumentException("Don't accept only one source file");
     }
     if (targetPath == null) {
@@ -76,10 +71,10 @@ public class ConcatFileAction extends HdfsAction {
     }
 
     appendLog(
-        String.format("Action starts at %s : Read %s",
-            Utils.getFormatedCurrentTime(), targetPath));
+        String.format("Action starts at %s : Concat %s to %s",
+            Utils.getFormatedCurrentTime(), srcPathList, targetPath));
     //Merge the files
-    concatFiles(FILE_LIST, targetPath);
+    concatFiles(srcPathList, targetPath);
   }
 
   private boolean concatFiles(LinkedList<String> allFiles, String target) throws IOException {
