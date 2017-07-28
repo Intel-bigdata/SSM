@@ -15,20 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.server.engine.cmdlet.action;
 
-/**
- * Smart agent based move runner.
- */
-public class AgentBasedMoveRunner extends MoveRunner {
+import org.smartdata.server.engine.cmdlet.message.LaunchAction;
 
-  @Override
-  public void move(String file) throws Exception {
+import java.util.List;
 
-  }
+public interface ActionPreProcessor {
 
-  @Override
-  public void move(String[] files) throws Exception {
+  List<String> getSupportedActions();
 
-  }
+  void processAction(LaunchAction action);
 }
