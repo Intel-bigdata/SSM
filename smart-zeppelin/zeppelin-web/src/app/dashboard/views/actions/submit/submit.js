@@ -34,7 +34,7 @@ angular.module('zeppelinWebApp')
       };
 
       $scope.updateUsage = function (model) {
-        $scope.data.actions.forEach(function (type) {
+        actionTypes.body.forEach(function (type) {
           if (type.actionName === model) {
             $scope.usage = 'Usage: ' + type.usage;
           }
