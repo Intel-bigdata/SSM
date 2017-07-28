@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionException;
 import org.smartdata.actions.Utils;
 import org.smartdata.actions.annotation.ActionSignature;
 
@@ -41,14 +40,14 @@ import java.util.Map;
 @ActionSignature(
     actionId = "merge",
     displayName = "merge",
-    usage = HdfsAction.FILE_PATH + " $src" + MergeFileAction.DEST_PATH + " $dest" +
+    usage = HdfsAction.FILE_PATH + "  $src " + MergeFileAction.DEST_PATH + " $dest " +
         MergeFileAction.BUF_SIZE + " $size"
 )
 public class MergeFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(MergeFileAction.class);
   public static final String DEST_PATH = "-dest";
   public static final String BUF_SIZE = "-bufSize";
-  private LinkedList<String> srcFileList;
+  private LinkedList<String> srcPathList;
   private int bufferSize = 64 * 1024;
   private String target;
 
@@ -59,7 +58,7 @@ public class MergeFileAction extends HdfsAction {
     String allSrcPath = args.get(FILE_PATH);
 
     String[] allSrcPathArr = allSrcPath.split(",");
-    srcFileList = new LinkedList<String>(Arrays.asList(allSrcPathArr));
+    srcPathList = new LinkedList<String>(Arrays.asList(allSrcPathArr));
 
     if (args.containsKey(DEST_PATH)) {
       this.target = args.get(DEST_PATH);
@@ -71,28 +70,28 @@ public class MergeFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    if (srcFileList == null || srcFileList.size() == 0) {
+    if (srcPathList == null || srcPathList.size() == 0) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
     if (target == null) {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
-    if (srcFileList.size() == 1) {
+    if (srcPathList.size() == 1) {
       throw new IllegalArgumentException("Don't accept only one source file");
     }
 
     appendLog(
-        String.format("Action starts at %s : Read %s",
-            Utils.getFormatedCurrentTime(), srcFileList));
+        String.format("Action starts at %s : Merge %s to %s",
+            Utils.getFormatedCurrentTime(), srcPathList, target));
 
     //Merge
-    mergeFiles(srcFileList,target);
+    mergeFiles(srcPathList,target);
   }
 
   private boolean mergeFiles(LinkedList<String> srcFiles, String dest) throws IOException {
     InputStream srcInputStream = null;
     OutputStream destInputStream = getTargetOutputStream(dest);
-    for (String srcEle : srcFileList) {
+    for (String srcEle : srcPathList) {
       srcInputStream = getSourceInputStream(srcEle);
       IOUtils.copyBytes(srcInputStream, destInputStream, bufferSize, false);
       IOUtils.closeStream(srcInputStream);
