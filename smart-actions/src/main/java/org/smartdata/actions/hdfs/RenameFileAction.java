@@ -40,7 +40,7 @@ import java.util.Map;
 @ActionSignature(
     actionId = "rename",
     displayName = "rename",
-    usage = HdfsAction.FILE_PATH + " $src" + RenameFileAction.DEST_PATH +
+    usage = HdfsAction.FILE_PATH + " $src " + RenameFileAction.DEST_PATH +
         " $dest"
 )
 public class RenameFileAction extends HdfsAction {
@@ -68,8 +68,8 @@ public class RenameFileAction extends HdfsAction {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
     appendLog(
-        String.format("Action starts at %s : Read %s",
-            Utils.getFormatedCurrentTime(), srcPath));
+        String.format("Action starts at %s : Rename %s to %s",
+            Utils.getFormatedCurrentTime(), srcPath, destPath));
     //rename
     renameSingleFile(srcPath, destPath);
   }

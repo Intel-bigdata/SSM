@@ -31,8 +31,6 @@ import org.smartdata.actions.annotation.ActionSignature;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,7 +57,7 @@ public class ListFileAction extends HdfsAction {
       throw new IllegalArgumentException("File parameter is missing.");
     }
     appendLog(
-        String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), srcPath));
+        String.format("Action starts at %s : List %s", Utils.getFormatedCurrentTime(), srcPath));
     //list the file in directionary
     listDirectory(srcPath);
   }
