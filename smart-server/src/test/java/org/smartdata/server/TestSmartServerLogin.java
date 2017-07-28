@@ -1,6 +1,6 @@
 package org.smartdata.server;
 
-import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.kerby.util.NetworkUtil;

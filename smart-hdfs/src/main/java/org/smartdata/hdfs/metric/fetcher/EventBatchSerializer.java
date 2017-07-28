@@ -133,7 +133,7 @@ public class EventBatchSerializer {
             .setType(InotifyProtos.EventType.EVENT_APPEND)
             .setContents(InotifyProtos.AppendEventProto.newBuilder()
               .setPath(re2.getPath())
-              .setNewBlock(re2.toNewBlock()).build().toByteString())
+              .build().toByteString())
             .build());
           break;
         case UNLINK:
@@ -230,7 +230,6 @@ public class EventBatchSerializer {
           InotifyProtos.AppendEventProto append =
             InotifyProtos.AppendEventProto.parseFrom(p.getContents());
           events.add(new Event.AppendEvent.Builder().path(append.getPath())
-            .newBlock(append.hasNewBlock() && append.getNewBlock())
             .build());
           break;
         case EVENT_UNLINK:

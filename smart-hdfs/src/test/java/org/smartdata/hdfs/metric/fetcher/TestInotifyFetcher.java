@@ -115,8 +115,7 @@ public class TestInotifyFetcher {
       os.write(new byte[BLOCK_SIZE]);
       os.close(); // CloseOp -> CloseEvent
       // AddOp -> AppendEvent
-      os = client.append("/file2", BLOCK_SIZE, EnumSet.of(CreateFlag.APPEND),
-        null, null);
+      os = client.append("/file2", BLOCK_SIZE, null, null);
       os.write(new byte[BLOCK_SIZE]);
       os.close(); // CloseOp -> CloseEvent
       Thread.sleep(10); // so that the atime will get updated on the next line
@@ -144,8 +143,6 @@ public class TestInotifyFetcher {
         "user::rwx,user:foo:rw-,group::r--,other::---", true));
       client.removeAcl("/file5"); // SetAclOp -> MetadataUpdateEvent
       client.rename("/file5", "/dir"); // RenameOldOp -> RenameEvent
-      //TruncateOp -> TruncateEvent
-      client.truncate("/truncate_file", BLOCK_SIZE);
 
       while (applierForTest.getEvents().size() != 21) {
         Thread.sleep(100);

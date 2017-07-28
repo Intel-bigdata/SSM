@@ -158,7 +158,13 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       }
 
       if (working) {
-        initStatesUpdaterService();
+        try {
+          initStatesUpdaterService();
+        } catch (IOException e) {
+          throw new ReconfigureException(property, newVal,
+              StatesUpdaterServiceFactory.getStatesUpdaterName(getContext().getConf()),
+              e);
+        }
       }
     }
   }
@@ -169,7 +175,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
         SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
   }
 
-  private synchronized void initStatesUpdaterService() {
+  private synchronized void initStatesUpdaterService() throws IOException {
     try {
       statesUpdaterService = StatesUpdaterServiceFactory
           .createStatesUpdaterService(getContext().getConf(),
@@ -177,7 +183,8 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       statesUpdaterService.init();
     } catch (IOException e) {
       statesUpdaterService = null;
-      LOG.info("Failed to create states updater service.");
+      LOG.info("Failed to create states updater service.", e);
+      throw e;
     }
 
     if (working) {
@@ -186,6 +193,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       } catch (IOException e) {
         LOG.info("Failed to start states updater service.");
         statesUpdaterService = null;
+        throw e;
       }
     }
   }

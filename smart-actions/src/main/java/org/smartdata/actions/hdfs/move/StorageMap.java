@@ -17,7 +17,7 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.server.balancer.Dispatcher;
 
 import java.util.EnumMap;
