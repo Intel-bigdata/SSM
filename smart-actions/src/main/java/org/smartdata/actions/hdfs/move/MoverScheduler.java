@@ -248,11 +248,13 @@ public class MoverScheduler {
       for (StorageGroup target : targets) {
         if (matcher.match(cluster, source.getDatanodeInfo(),
             target.getDatanodeInfo())) {
-          final PendingMove pm = new PendingMove(source, target);
-          if (pm != null) {
-            dispatcher.executePendingMove(pm);
-            return true;
-          }
+//          final PendingMove pm = new PendingMove(source, target);
+//          if (pm != null) {
+//            dispatcher.executePendingMove(pm);
+//            return true;
+//          }
+          dispatcher.executePendingMove();
+          return true;
         }
       }
     }

@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.util.Time;
-import org.smartdata.actions.hdfs.move.Dispatcher.PendingMove;
 import org.smartdata.model.actions.hdfs.Source;
 import org.smartdata.model.actions.hdfs.StorageGroup;
 
