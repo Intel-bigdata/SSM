@@ -88,144 +88,144 @@ public class Dispatcher {
   /** The maximum number of concurrent blocks moves at a datanode */
   private final int maxConcurrentMovesPerNode;
 
-  /** This class keeps track of a scheduled block move */
-  public class PendingMove {
-    private DBlock block;
-    private Source source;
-    private DDatanode proxySource;
-    private StorageGroup target;
-
-    public PendingMove(Source source, StorageGroup target) {
-      this.source = source;
-      this.target = target;
-    }
-
-    @Override
-    public String toString() {
-      final Block b = block != null ? block.getBlock() : null;
-      String bStr = b != null ? (b + " with size=" + b.getNumBytes() + " ")
-          : " ";
-      return bStr + "from " + source.getDisplayName() + " to " +
-          target.getDisplayName() + " through " + (proxySource != null ? proxySource
-          .datanode : "");
-    }
-
-    /**
-     * @return true if the given block is good for the tentative move.
-     */
-    private boolean markMovedIfGoodBlock(DBlock block, StorageType targetStorageType) {
-      synchronized (block) {
-        synchronized (movedBlocks) {
-          if (isGoodBlockCandidate(source, target, targetStorageType, block)) {
-            this.block = block;
-            if (chooseProxySource()) {
-              movedBlocks.put(block);
-              if (LOG.isDebugEnabled()) {
-                LOG.debug("Decided to move " + this);
-              }
-              return true;
-            }
-          }
-        }
-      }
-      return false;
-    }
-
-    /**
-     * Choose a proxy source.
-     *
-     * @return true if a proxy is found; otherwise false
-     */
-    private boolean chooseProxySource() {
-      return true;
-    }
-
-    /** Dispatch the move to the proxy source & wait for the response. */
-    public void dispatch() {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Start moving " + this);
-      }
-
-      Socket sock = new Socket();
-      DataOutputStream out = null;
-      DataInputStream in = null;
-      try {
-        sock.connect(
-            NetUtils.createSocketAddr(target.getDatanodeInfo().getXferAddr()),
-            HdfsServerConstants.READ_TIMEOUT);
-
-        sock.setKeepAlive(true);
-
-        OutputStream unbufOut = sock.getOutputStream();
-        InputStream unbufIn = sock.getInputStream();
-        ExtendedBlock eb = new ExtendedBlock(nnc.getBlockpoolID(),
-            block.getBlock());
-        final KeyManager km = nnc.getKeyManager();
-        Token<BlockTokenIdentifier> accessToken = km.getAccessToken(eb);
-        IOStreamPair saslStreams = saslClient.socketSend(sock, unbufOut,
-            unbufIn, km, accessToken, target.getDatanodeInfo());
-        unbufOut = saslStreams.out;
-        unbufIn = saslStreams.in;
-        out = new DataOutputStream(new BufferedOutputStream(unbufOut,
-            HdfsConstants.IO_FILE_BUFFER_SIZE));
-        in = new DataInputStream(new BufferedInputStream(unbufIn,
-            HdfsConstants.IO_FILE_BUFFER_SIZE));
-
-        sendRequest(out, eb, accessToken);
-        receiveResponse(in);
-        LOG.info("Successfully moved " + this);
-      } catch (IOException e) {
-        LOG.warn("Failed to move " + this + ": " + e.getMessage());
-
-        // Proxy or target may have some issues, delay before using these nodes
-        // further in order to avoid a potential storm of "threads quota
-        // exceeded" warnings when the dispatcher gets out of sync with work
-        // going on in datanodes.
-        proxySource.activateDelay(delayAfterErrors);
-
-      } finally {
-        IOUtils.closeStream(out);
-        IOUtils.closeStream(in);
-        IOUtils.closeSocket(sock);
-
-        proxySource.removePendingBlock(this);
-
-        synchronized (this) {
-          reset();
-        }
-        synchronized (Dispatcher.this) {
-          Dispatcher.this.notifyAll();
-        }
-      }
-    }
-
-    /** Send a block replace request to the output stream */
-    private void sendRequest(DataOutputStream out, ExtendedBlock eb,
-        Token<BlockTokenIdentifier> accessToken) throws IOException {
-      new Sender(out).replaceBlock(eb, target.getStorageType(), accessToken,
-          source.getDatanodeInfo().getDatanodeUuid(), proxySource.datanode);
-    }
-
-    /** Receive a block copy response from the input stream */
-    private void receiveResponse(DataInputStream in) throws IOException {
-      BlockOpResponseProto response =
-          BlockOpResponseProto.parseFrom(vintPrefixed(in));
-      while (response.getStatus() == Status.IN_PROGRESS) {
-        // read intermediate responses
-        response = BlockOpResponseProto.parseFrom(vintPrefixed(in));
-      }
-      String logInfo = "block move is failed";
-      DataTransferProtoUtil.checkBlockOpStatus(response, logInfo);
-    }
-
-    /** reset the object */
-    private void reset() {
-      block = null;
-      source = null;
-      proxySource = null;
-      target = null;
-    }
-  }
+//  /** This class keeps track of a scheduled block move */
+//  public class PendingMove {
+//    private DBlock block;
+//    private Source source;
+//    private DDatanode proxySource;
+//    private StorageGroup target;
+//
+//    public PendingMove(Source source, StorageGroup target) {
+//      this.source = source;
+//      this.target = target;
+//    }
+//
+//    @Override
+//    public String toString() {
+//      final Block b = block != null ? block.getBlock() : null;
+//      String bStr = b != null ? (b + " with size=" + b.getNumBytes() + " ")
+//          : " ";
+//      return bStr + "from " + source.getDisplayName() + " to " +
+//          target.getDisplayName() + " through " + (proxySource != null ? proxySource
+//          .datanode : "");
+//    }
+//
+//    /**
+//     * @return true if the given block is good for the tentative move.
+//     */
+//    private boolean markMovedIfGoodBlock(DBlock block, StorageType targetStorageType) {
+//      synchronized (block) {
+//        synchronized (movedBlocks) {
+//          if (isGoodBlockCandidate(source, target, targetStorageType, block)) {
+//            this.block = block;
+//            if (chooseProxySource()) {
+//              movedBlocks.put(block);
+//              if (LOG.isDebugEnabled()) {
+//                LOG.debug("Decided to move " + this);
+//              }
+//              return true;
+//            }
+//          }
+//        }
+//      }
+//      return false;
+//    }
+//
+//    /**
+//     * Choose a proxy source.
+//     *
+//     * @return true if a proxy is found; otherwise false
+//     */
+//    private boolean chooseProxySource() {
+//      return true;
+//    }
+//
+//    /** Dispatch the move to the proxy source & wait for the response. */
+//    public void dispatch() {
+//      if (LOG.isDebugEnabled()) {
+//        LOG.debug("Start moving " + this);
+//      }
+//
+//      Socket sock = new Socket();
+//      DataOutputStream out = null;
+//      DataInputStream in = null;
+//      try {
+//        sock.connect(
+//            NetUtils.createSocketAddr(target.getDatanodeInfo().getXferAddr()),
+//            HdfsServerConstants.READ_TIMEOUT);
+//
+//        sock.setKeepAlive(true);
+//
+//        OutputStream unbufOut = sock.getOutputStream();
+//        InputStream unbufIn = sock.getInputStream();
+//        ExtendedBlock eb = new ExtendedBlock(nnc.getBlockpoolID(),
+//            block.getBlock());
+//        final KeyManager km = nnc.getKeyManager();
+//        Token<BlockTokenIdentifier> accessToken = km.getAccessToken(eb);
+//        IOStreamPair saslStreams = saslClient.socketSend(sock, unbufOut,
+//            unbufIn, km, accessToken, target.getDatanodeInfo());
+//        unbufOut = saslStreams.out;
+//        unbufIn = saslStreams.in;
+//        out = new DataOutputStream(new BufferedOutputStream(unbufOut,
+//            HdfsConstants.IO_FILE_BUFFER_SIZE));
+//        in = new DataInputStream(new BufferedInputStream(unbufIn,
+//            HdfsConstants.IO_FILE_BUFFER_SIZE));
+//
+//        sendRequest(out, eb, accessToken);
+//        receiveResponse(in);
+//        LOG.info("Successfully moved " + this);
+//      } catch (IOException e) {
+//        LOG.warn("Failed to move " + this + ": " + e.getMessage());
+//
+//        // Proxy or target may have some issues, delay before using these nodes
+//        // further in order to avoid a potential storm of "threads quota
+//        // exceeded" warnings when the dispatcher gets out of sync with work
+//        // going on in datanodes.
+//        proxySource.activateDelay(delayAfterErrors);
+//
+//      } finally {
+//        IOUtils.closeStream(out);
+//        IOUtils.closeStream(in);
+//        IOUtils.closeSocket(sock);
+//
+//        proxySource.removePendingBlock(this);
+//
+//        synchronized (this) {
+//          reset();
+//        }
+//        synchronized (Dispatcher.this) {
+//          Dispatcher.this.notifyAll();
+//        }
+//      }
+//    }
+//
+//    /** Send a block replace request to the output stream */
+//    private void sendRequest(DataOutputStream out, ExtendedBlock eb,
+//        Token<BlockTokenIdentifier> accessToken) throws IOException {
+//      new Sender(out).replaceBlock(eb, target.getStorageType(), accessToken,
+//          source.getDatanodeInfo().getDatanodeUuid(), proxySource.datanode);
+//    }
+//
+//    /** Receive a block copy response from the input stream */
+//    private void receiveResponse(DataInputStream in) throws IOException {
+//      BlockOpResponseProto response =
+//          BlockOpResponseProto.parseFrom(vintPrefixed(in));
+//      while (response.getStatus() == Status.IN_PROGRESS) {
+//        // read intermediate responses
+//        response = BlockOpResponseProto.parseFrom(vintPrefixed(in));
+//      }
+//      String logInfo = "block move is failed";
+//      DataTransferProtoUtil.checkBlockOpStatus(response, logInfo);
+//    }
+//
+//    /** reset the object */
+//    private void reset() {
+//      block = null;
+//      source = null;
+//      proxySource = null;
+//      target = null;
+//    }
+//  }
 
   public Dispatcher(NameNodeConnector nnc, long movedWinWidth, int moverThreads,
       int dispatcherThreads, int maxConcurrentMovesPerNode, Configuration conf) {
@@ -290,14 +290,14 @@ public class Dispatcher {
     return new DDatanode(datanode, maxConcurrentMovesPerNode);
   }
 
-  public void executePendingMove(final PendingMove p) {
+  public void executePendingMove() {
     // move the block
-    moveExecutor.execute(new Runnable() {
-      @Override
-      public void run() {
-        p.dispatch();
-      }
-    });
+//    moveExecutor.execute(new Runnable() {
+//      @Override
+//      public void run() {
+//        p.dispatch();
+//      }
+//    });
   }
 
   /** The sleeping period before checking if block move is completed again */
