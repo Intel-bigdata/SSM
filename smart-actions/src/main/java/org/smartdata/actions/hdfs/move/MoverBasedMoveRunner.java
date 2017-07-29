@@ -29,6 +29,7 @@ import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.model.actions.hdfs.SchedulePlan;
 
 import java.net.URI;
 import java.text.DateFormat;
@@ -56,6 +57,16 @@ public class MoverBasedMoveRunner extends MoveRunner {
   public MoverBasedMoveRunner(Configuration conf, MoverStatus actionStatus) {
     this.conf = conf;
     this.actionStatus = actionStatus;
+  }
+
+  @Override
+  public void move(String file, SchedulePlan plan) throws Exception {
+    if (plan == null) {
+      move(file);
+    } else {
+      MoverExecutor executor = new MoverExecutor(conf, 10, 20);
+      executor.executeMove(plan);
+    }
   }
 
   @Override

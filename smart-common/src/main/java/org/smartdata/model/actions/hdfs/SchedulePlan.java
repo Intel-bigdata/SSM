@@ -83,6 +83,16 @@ public class SchedulePlan {
     blockIds.add(block.getBlockId());
   }
 
+  public void addPlan(long blockId, String srcDatanodeUuid, StorageType srcStorageType,
+      String dstDataNodeIpAddr, int dstDataNodeXferPort, StorageType dstStorageType) {
+    blockIds.add(blockId);
+    sourceUuids.add(srcDatanodeUuid);
+    sourceStoragetypes.add(srcStorageType);
+    targetIpAddrs.add(dstDataNodeIpAddr);
+    targetXferPorts.add(dstDataNodeXferPort);
+    targetStorageTypes.add(dstStorageType);
+  }
+
   public List<String> getSourceUuids() {
     return sourceUuids;
   }
