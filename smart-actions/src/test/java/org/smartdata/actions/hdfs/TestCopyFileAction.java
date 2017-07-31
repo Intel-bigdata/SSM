@@ -98,7 +98,7 @@ public class TestCopyFileAction extends ActionMiniCluster {
   }
 
   @Test
-  public void testlocalSplitFileCopy() throws Exception {
+  public void testlocalCoptWithOffset() throws Exception {
     final String srcPath = "/testCopy";
     final String file1 = "file1";
     // Destination with "hdfs" prefix
@@ -136,7 +136,7 @@ public class TestCopyFileAction extends ActionMiniCluster {
   }
 
   @Test
-  public void testLocalSplitFileCopy() throws Exception {
+  public void testLocalCopyWithOffset() throws Exception {
     final String srcPath = "/testCopy";
     final String file1 = "file1";
     // Destination with "hdfs" prefix
