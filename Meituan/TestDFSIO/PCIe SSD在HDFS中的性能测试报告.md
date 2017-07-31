@@ -5,16 +5,16 @@ PCIe SSD在HDFS中的性能测试报告
 ---------------
 
 1. 集群配置
-为简化测试环境，使用两台物理机，一个NameNode和一个DataNode，DataNode仅挂载一块磁盘，HDFS备份数为1。
+	为简化测试环境，使用两台物理机，一个NameNode和一个DataNode，DataNode仅挂载一块磁盘，HDFS备份数为1。
 
 2. Hadoop版本
-Hadoop 2.7.1
+	Hadoop 2.7.1
 
 3. 网络
-网卡带宽为20000Mb/s
+	网卡带宽为20000Mb/s
 
 4. 磁盘
-分别对挂载SATA HDD和PCIe SSD的情况进行对比测试
+	分别对挂载SATA HDD和PCIe SSD的情况进行对比测试
 * SATA HDD: Seagate ST2000NM0011
 * PCIe SSD: Intel P3700
 
