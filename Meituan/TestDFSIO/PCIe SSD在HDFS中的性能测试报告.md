@@ -15,8 +15,8 @@ Hadoop 2.7.1
 
 4. 磁盘
 分别对挂载SATA HDD和PCIe SSD的情况进行对比测试
-SATA HDD: Seagate ST2000NM0011
-PCIe SSD: Intel P3700
+* SATA HDD: Seagate ST2000NM0011
+* PCIe SSD: Intel P3700
 
 测试方法
 ---------------
