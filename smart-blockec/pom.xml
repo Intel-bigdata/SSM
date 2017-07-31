@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>smartdata-project</artifactId>
+        <groupId>org.smartdata</groupId>
+        <version>0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>smart-blockec</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20170516</version>
+        </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-common</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace-core4</artifactId>
+            <version>4.1.0-incubating</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>2.7.3</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>2.7.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-core</artifactId>
+            <version>1.11.45</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!--
+        Include all files in src/main/resources.  By default, do not apply property
+        substitution (filtering=false), but do apply property substitution to
+        common-version-info.properties (filtering=true).  This will substitute the
+        version information correctly, but prevent Maven from altering other files
+        like core-default.xml.
+        -->
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>org.apache.hadoop.test.TimedOutTestsListener</value>
+                        </property>
+                    </properties>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>.idea/**</exclude>
+                        <exclude>src/main/conf/*</exclude>
+                        <exclude>dev-support/jdiff/**</exclude>
+                        <exclude>src/main/native/*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <openssl.prefix></openssl.prefix>
+                <openssl.lib></openssl.lib>
+                <openssl.include></openssl.include>
+                <require.isal>false</require.isal>
+                <isal.prefix></isal.prefix>
+                <isal.lib></isal.lib>
+                <require.openssl>false</require.openssl>
+                <runningWithNative>true</runningWithNative>
+                <bundle.openssl.in.bin>false</bundle.openssl.in.bin>
+                <extra.libhadoop.rpath></extra.libhadoop.rpath>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>enforce-os</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireOS>
+                                            <family>mac</family>
+                                            <family>unix</family>
+                                            <message>native build only supported on Mac or Unix</message>
+                                        </requireOS>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>javah</goal>
+                                </goals>
+                                <configuration>
+                                    <javahPath>${env.JAVA_HOME}/bin/javah</javahPath>
+                                    <javahClassNames>
+                                        <javahClassName>org.smartdata.erasurecode.ErasureCodeNative</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.NativeCodeLoader</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.rawcoder.NativeRSRawEncoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.rawcoder.NativeRSRawDecoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawEncoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawDecoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.NativeCrc32</javahClassName>
+                                    </javahClassNames>
+                                    <javahOutputDirectory>${project.build.directory}/native/javah</javahOutputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-maven-plugins</artifactId>
+                        <executions>
+                            <execution>
+                                <id>cmake-compile</id>
+                                <phase>compile</phase>
+                                <goals><goal>cmake-compile</goal></goals>
+                                <configuration>
+                                    <source>${basedir}/src</source>
+                                    <vars>
+                                        <GENERATED_JAVAH>${project.build.directory}/native/javah</GENERATED_JAVAH>
+                                        <JVM_ARCH_DATA_MODEL>${sun.arch.data.model}</JVM_ARCH_DATA_MODEL>
+                                        <REQUIRE_ISAL>${require.isal} </REQUIRE_ISAL>
+                                        <CUSTOM_ISAL_PREFIX>${isal.prefix} </CUSTOM_ISAL_PREFIX>
+                                        <CUSTOM_ISAL_LIB>${isal.lib} </CUSTOM_ISAL_LIB>
+                                        <REQUIRE_OPENSSL>${require.openssl} </REQUIRE_OPENSSL>
+                                        <CUSTOM_OPENSSL_PREFIX>${openssl.prefix} </CUSTOM_OPENSSL_PREFIX>
+                                        <CUSTOM_OPENSSL_LIB>${openssl.lib} </CUSTOM_OPENSSL_LIB>
+                                        <CUSTOM_OPENSSL_INCLUDE>${openssl.include} </CUSTOM_OPENSSL_INCLUDE>
+                                        <EXTRA_LIBHADOOP_RPATH>${extra.libhadoop.rpath}</EXTRA_LIBHADOOP_RPATH>
+                                    </vars>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>test_bulk_crc32</id>
+                                <goals><goal>cmake-test</goal></goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <binary>${project.build.directory}/native/test_bulk_crc32</binary>
+                                    <timeout>1200</timeout>
+                                    <results>${project.build.directory}/native-results</results>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>erasure_code_test</id>
+                                <goals><goal>cmake-test</goal></goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <binary>${project.build.directory}/native/erasure_code_test</binary>
+                                    <timeout>300</timeout>
+                                    <results>${project.build.directory}/native-results</results>
+                                    <skipIfMissing>true</skipIfMissing>
+                                    <env>
+                                        <LD_LIBRARY_PATH>${LD_LIBRARY_PATH}:${isal.lib}:${isal.prefix}:/usr/lib</LD_LIBRARY_PATH>
+                                    </env>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>native-win</id>
+            <activation>
+                <os>
+                    <family>Windows</family>
+                </os>
+            </activation>
+            <properties>
+                <require.isal>false</require.isal>
+                <isal.prefix></isal.prefix>
+                <isal.lib></isal.lib>
+                <openssl.prefix></openssl.prefix>
+                <openssl.lib></openssl.lib>
+                <openssl.include></openssl.include>
+                <require.openssl>false</require.openssl>
+                <runningWithNative>true</runningWithNative>
+                <bundle.openssl.in.bin>false</bundle.openssl.in.bin>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>enforce-os</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireOS>
+                                            <family>windows</family>
+                                            <message>native-win build only supported on Windows</message>
+                                        </requireOS>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>javah</goal>
+                                </goals>
+                                <configuration>
+                                    <javahPath>${env.JAVA_HOME}/bin/javah</javahPath>
+                                    <javahClassNames>
+                                        <javahClassName>org.smartdata.erasurecode.ErasureCodeNative</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.NativeCodeLoader</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.rawcoder.NativeRSRawEncoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.rawcoder.NativeRSRawDecoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawEncoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawDecoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.util.NativeCrc32</javahClassName>
+                                    </javahClassNames>
+                                    <javahOutputDirectory>${project.build.directory}/native/javah</javahOutputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>compile-ms-winutils</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>msbuild</executable>
+                                    <arguments>
+                                        <argument>${basedir}/src/main/winutils/winutils.sln</argument>
+                                        <argument>/nologo</argument>
+                                        <argument>/p:Configuration=Release</argument>
+                                        <argument>/p:OutDir=${project.build.directory}/bin/</argument>
+                                        <argument>/p:IntermediateOutputPath=${project.build.directory}/winutils/</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>compile-ms-native-dll</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>msbuild</executable>
+                                    <arguments>
+                                        <argument>${basedir}/src/main/native/native.sln</argument>
+                                        <argument>/nologo</argument>
+                                        <argument>/p:Configuration=Release</argument>
+                                        <argument>/p:OutDir=${project.build.directory}/bin/</argument>
+                                        <argument>/p:CustomOpensslPrefix=${openssl.prefix}</argument>
+                                        <argument>/p:CustomOpensslLib=${openssl.lib}</argument>
+                                        <argument>/p:CustomOpensslInclude=${openssl.include}</argument>
+                                        <argument>/p:RequireOpenssl=${require.openssl}</argument>
+                                        <argument>/p:RequireIsal=${require.isal}</argument>
+                                        <argument>/p:CustomIsalPrefix=${isal.prefix}</argument>
+                                        <argument>/p:CustomIsalLib=${isal.lib}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
+</project>
+
