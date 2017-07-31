@@ -17,6 +17,7 @@
  */
 package org.smartdata.actions.hdfs;
 
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
@@ -55,6 +56,12 @@ public class TestCopyFileAction extends ActionMiniCluster {
     copyFileAction.run();
     // Check if file exists
     Assert.assertTrue(dfsClient.exists(destPath + "/" + file1));
+    final FSDataInputStream in1 = dfs.open(new Path(destPath + "/" + file1));
+    String readString = "";
+    for (int i = 0; i < 9; i++) {
+      readString = readString + in1.readChar();
+    }
+    Assert.assertTrue(readString.equals("testCopy1"));
   }
 
   @Test
@@ -82,5 +89,87 @@ public class TestCopyFileAction extends ActionMiniCluster {
     copyFileAction.run();
     // Check if file exists
     Assert.assertTrue(dfsClient.exists("/backup/" + file1));
+    final FSDataInputStream in1 = dfs.open(new Path(destPath + "/" + file1));
+    String readString = "";
+    for (int i = 0; i < 9; i++) {
+      readString = readString + in1.readChar();
+    }
+    Assert.assertTrue(readString.equals("testCopy1"));
+  }
+
+  @Test
+  public void testlocalSplitFileCopy() throws Exception {
+    final String srcPath = "/testCopy";
+    final String file1 = "file1";
+    // Destination with "hdfs" prefix
+    final String destPath = dfs.getUri() + "/backup";
+    Path srcDir = new Path(srcPath);
+    dfs.mkdirs(srcDir);
+    dfs.mkdirs(new Path(destPath));
+    // write to DISK
+    final FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
+    for (int i = 0; i < 50; i++) {
+      out1.writeByte(1);
+    }
+    for (int i = 0; i < 50; i++) {
+      out1.writeByte(2);
+    }
+    out1.close();
+
+    CopyFileAction copyFileAction = new CopyFileAction();
+    copyFileAction.setDfsClient(dfsClient);
+    copyFileAction.setContext(smartContext);
+    copyFileAction.setStatusReporter(new MockActionStatusReporter());
+    Map<String, String> args = new HashMap<>();
+    args.put(CopyFileAction.FILE_PATH, srcPath + "/" + file1);
+    args.put(CopyFileAction.DEST_PATH, destPath + "/" + file1);
+    args.put(CopyFileAction.OFFSET_INDEX, "50");
+    args.put(copyFileAction.LENGTH, "50");
+    copyFileAction.init(args);
+    copyFileAction.run();
+    // Check if file exists
+    Assert.assertTrue(dfsClient.exists("/backup/" + file1));
+    final FSDataInputStream in1 = dfs.open(new Path(destPath + "/" + file1));
+    for (int i = 0; i < 50; i++) {
+      Assert.assertTrue(in1.readByte() == 2);
+    }
+  }
+
+  @Test
+  public void testLocalSplitFileCopy() throws Exception {
+    final String srcPath = "/testCopy";
+    final String file1 = "file1";
+    // Destination with "hdfs" prefix
+    final String destPath = "/backup";
+    Path srcDir = new Path(srcPath);
+    dfs.mkdirs(srcDir);
+    dfs.mkdirs(new Path(destPath));
+    // write to DISK
+    final FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
+    for (int i = 0; i < 50; i++) {
+      out1.writeByte(1);
+    }
+    for (int i = 0; i < 50; i++) {
+      out1.writeByte(2);
+    }
+    out1.close();
+
+    CopyFileAction copyFileAction = new CopyFileAction();
+    copyFileAction.setDfsClient(dfsClient);
+    copyFileAction.setContext(smartContext);
+    copyFileAction.setStatusReporter(new MockActionStatusReporter());
+    Map<String, String> args = new HashMap<>();
+    args.put(CopyFileAction.FILE_PATH, srcPath + "/" + file1);
+    args.put(CopyFileAction.DEST_PATH, destPath + "/" + file1);
+    args.put(CopyFileAction.OFFSET_INDEX, "50");
+    args.put(copyFileAction.LENGTH, "50");
+    copyFileAction.init(args);
+    copyFileAction.run();
+    // Check if file exists
+    Assert.assertTrue(dfsClient.exists("/backup/" + file1));
+    final FSDataInputStream in1 = dfs.open(new Path(destPath + "/" + file1));
+    for (int i = 0; i < 50; i++) {
+      Assert.assertTrue(in1.readByte() == 2);
+    }
   }
 }
