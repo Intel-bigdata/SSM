@@ -45,8 +45,8 @@ import java.util.Map;
     actionId = "copy",
     displayName = "copy",
     usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
-        " $dest " + CopyFileAction.BUF_SIZE + " $size" + CopyFileAction.OFFSET_INDEX +
-        " $offset" + CopyFileAction.LENGTH + " $length"
+        " $dest "  + CopyFileAction.OFFSET_INDEX + " $offset" + CopyFileAction.LENGTH +
+        " $length" + CopyFileAction.BUF_SIZE + " $size"
 )
 public class CopyFileAction extends HdfsAction {
   private static final Logger LOG =
