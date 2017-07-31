@@ -6,9 +6,6 @@ SSD测试计划
 ------------
 
 
-----------
-
-
 ### 测试环境
 
 #### 节点： 1 Namenode + 2 Datanode
@@ -18,7 +15,7 @@ SSD测试计划
 
 ### Workload
 * HDFS测试：
-每项测试均对HDD、P3700和Optane分别测试得到三组对比值，数据集大小均为**100GB**。==Shortcircuit选项打开。==
+每项测试均对HDD、P3700和Optane分别测试得到三组对比值，数据集大小均为**100GB**。**Shortcircuit选项打开**。
 
 1. TestDFSIO write, read
 2. Teragen, Terasort, Teraread, Teravalidate
@@ -31,6 +28,6 @@ SSD测试计划
 第二阶段：
 ------------
 
-----------
+
 
 
