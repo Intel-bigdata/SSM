@@ -1,15 +1,19 @@
 package org.smartdata.erasurecode;
 import org.apache.hadoop.conf.Configuration;
 import org.smartdata.erasurecode.coder.*;
+import org.smartdata.erasurecode.rawcoder.*;
 
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 /**
  * Created by intel on 17-7-18.
  */
-public class TestXOR {
+public class testBlockEC {
     protected Class<? extends ErasureCoder> encoderClass;
     protected Class<? extends ErasureCoder> decoderClass;
 
@@ -26,6 +30,23 @@ public class TestXOR {
     private TestBlock testBlock;
     protected static Random RAND = new Random();
 
+    enum CODER {
+        DUMMY_CODER("Dummy coder"),
+        XOR_CODER("XOR java coder"),
+        RS_CODER("Reed-Solomon Java coder");
+
+        private final String name;
+
+        CODER(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
     public void setup(int numDataUnits,int numParityUnits) {
         encoderClass = XORErasureEncoder.class;
         decoderClass = XORErasureDecoder.class;
@@ -37,17 +58,61 @@ public class TestXOR {
         startBufferWithZero = true;
 
         conf = new Configuration();
+        conf.set()
 
     }
 
-    void prepareCoder() {
-        ErasureCoderOptions options = new ErasureCoderOptions(
-                numDataUnits, numParityUnits, true, true);
+    void createEncoder(int index) {
+        try {
+            ErasureCoderOptions options = new ErasureCoderOptions(
+                    numDataUnits, numParityUnits, true, true);
 
-        encoder = new XORErasureEncoder(options);
-        encoder.setConf(conf);
-        decoder = new XORErasureDecoder(options);
-        decoder.setConf(conf);
+            switch (index) {
+                case 0:
+                    encoderClass = DummyErasureEncoder.class;
+                    break;
+                case 1:
+                    encoderClass = XORErasureEncoder.class;
+                    break;
+                case 2:
+                    encoderClass = RSErasureEncoder.class;
+                    break;
+            }
+            Constructor<? extends ErasureCoder> constructor =
+                    (Constructor<? extends ErasureCoder>)
+                            encoderClass.getConstructor(ErasureCoderOptions.class);
+            encoder = constructor.newInstance(options);
+            encoder.setConf(conf);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create encoder", e);
+        }
+    }
+
+    void createDecoder(int index) {
+        try {
+            ErasureCoderOptions options = new ErasureCoderOptions(
+                    numDataUnits, numParityUnits, true, true);
+
+            switch (index) {
+                case 0:
+                    encoderClass = DummyErasureDecoder.class;
+                    break;
+                case 1:
+                    encoderClass = XORErasureDecoder.class;
+                    break;
+                case 2:
+                    encoderClass = RSErasureDecoder.class;
+                    break;
+
+            }
+            Constructor<? extends ErasureCoder> constructor =
+                    (Constructor<? extends ErasureCoder>)
+                            encoderClass.getConstructor(ErasureCoderOptions.class);
+            decoder = constructor.newInstance(options);
+            decoder.setConf(conf);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create decoder", e);
+        }
     }
 
     ECChunk allocateOutputChunk() {
@@ -215,7 +280,7 @@ public class TestXOR {
     }
 
 
-    public void run(int numDataBlocks,int numParityBlocks) {
+    public void run(CODER coder,int numDataBlocks,int numParityBlocks) {
         // preapare dataBlocks and Parity Block
         // for simply purpose, do not use the hdfs block
         setup(numDataBlocks,numParityBlocks);
@@ -239,7 +304,8 @@ public class TestXOR {
                 cloneBlocksWithData((TestBlock[]) blockGroup.getDataBlocks());
 
         // prepare coder
-        prepareCoder();
+        createEncoder(coder.ordinal());
+        createDecoder(coder.ordinal());
 
         // encode every chunks
         ErasureCodingStep codingStep = encoder.calculateCoding(blockGroup);
@@ -250,7 +316,6 @@ public class TestXOR {
 
         // recover dataBlocks
 
-        //
         EraseBlocks(clonedDataBlocks);
 
         blockGroup = new ECBlockGroup(clonedDataBlocks, blockGroup.getParityBlocks());
@@ -263,9 +328,31 @@ public class TestXOR {
         compareAndVerify(backup,blockGroup.getDataBlocks());
 
     }
-    public static void main(String args[]){
-        TestXOR testXOR = new TestXOR();
-        testXOR.run(10,1);
-        testXOR.run(6,1);
+
+    private static void printAvailableCoders() {
+        StringBuilder sb = new StringBuilder(
+                "Available coders with coderIndex:\n");
+        for (CODER coder : CODER.values()) {
+            sb.append(coder.ordinal()).append(":").append(coder).append("\n");
+        }
+        System.out.println(sb.toString());
+    }
+
+    private static void usage(String message) {
+        if (message != null) {
+            System.out.println(message);
+        }
+        System.out.println(
+                "Usage: testBlockEC  <coderIndex> " +
+                        "<numDataUnits> <numParityUnits> [chunkSize]");
+        printAvailableCoders();
+        System.exit(1);
+    }
+
+    public static void main(String args[]) {
+        testBlockEC testBlockEC = new testBlockEC();
+        int coderIndex = 3;
+        testBlockEC.run(CODER.values()[coderIndex],10,1);
+        testBlockEC.run(CODER.values()[coderIndex],6,1);
     }
 }
