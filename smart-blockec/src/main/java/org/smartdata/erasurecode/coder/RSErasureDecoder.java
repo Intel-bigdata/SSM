@@ -19,6 +19,7 @@ package org.smartdata.erasurecode.coder;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.smartdata.erasurecode.*;
+import org.smartdata.erasurecode.rawcoder.RSRawDecoder;
 import org.smartdata.erasurecode.rawcoder.RawErasureDecoder;
 
 /**
@@ -49,6 +50,7 @@ public class RSErasureDecoder extends ErasureDecoder {
     if (rsRawDecoder == null) {
       rsRawDecoder = CodecUtil.createRawDecoder(getConf(),
           ErasureCodeConstants.RS_DEFAULT_CODEC_NAME, getOptions());
+
     }
     return rsRawDecoder;
   }

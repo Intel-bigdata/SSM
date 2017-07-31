@@ -20,6 +20,7 @@ package org.smartdata.erasurecode.coder;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.smartdata.erasurecode.*;
 import org.smartdata.erasurecode.rawcoder.RawErasureDecoder;
+import org.smartdata.erasurecode.rawcoder.XORRawDecoder;
 
 /**
  * Xor erasure decoder that decodes a block group.

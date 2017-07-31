@@ -33,8 +33,9 @@ public class testBlockEC {
     enum CODER {
         DUMMY_CODER("Dummy coder"),
         XOR_CODER("XOR java coder"),
-        RS_CODER("Reed-Solomon Java coder");
-
+        RS_CODER("Reed-Solomon Java coder"),
+        Native_XOR_CODER("Native ISA-L XOR coder"),
+        Native_RS_CODER("Native ISA-L Reed-Solomon coder");
         private final String name;
 
         CODER(String name) {
@@ -47,18 +48,12 @@ public class testBlockEC {
         }
     }
 
-    public void setup(int numDataUnits,int numParityUnits) {
-        encoderClass = XORErasureEncoder.class;
-        decoderClass = XORErasureDecoder.class;
-
+    public void setup(int numDataUnits, int numParityUnits,int chunkSize) {
         this.numDataUnits = numDataUnits;
         this.numParityUnits = numParityUnits;
         this.numChunksInBlock = 16;
-        this.chunkSize = 1024;
+        this.chunkSize = chunkSize;
         startBufferWithZero = true;
-
-        conf = new Configuration();
-        conf.set()
 
     }
 
@@ -77,12 +72,17 @@ public class testBlockEC {
                 case 2:
                     encoderClass = RSErasureEncoder.class;
                     break;
+                case 3:
+                    encoderClass = NativeXORErasureEncoder.class;
+                    break;
+                case 4:
+                    encoderClass = NativeRSErasureEncoder.class;
+                    break;
             }
             Constructor<? extends ErasureCoder> constructor =
                     (Constructor<? extends ErasureCoder>)
                             encoderClass.getConstructor(ErasureCoderOptions.class);
             encoder = constructor.newInstance(options);
-            encoder.setConf(conf);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create encoder", e);
         }
@@ -103,13 +103,17 @@ public class testBlockEC {
                 case 2:
                     encoderClass = RSErasureDecoder.class;
                     break;
-
+                case 3:
+                    encoderClass = NativeXORErasureDecoder.class;
+                    break;
+                case 4:
+                    encoderClass = NativeRSErasureDecoder.class;
+                    break;
             }
             Constructor<? extends ErasureCoder> constructor =
                     (Constructor<? extends ErasureCoder>)
                             encoderClass.getConstructor(ErasureCoderOptions.class);
             decoder = constructor.newInstance(options);
-            decoder.setConf(conf);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create decoder", e);
         }
@@ -124,59 +128,7 @@ public class testBlockEC {
 
         return new ECChunk(buffer);
     }
-    void encode(ErasureCodingStep codingStep) {
-        // Pretend that we're opening these input blocks and output blocks.
-        ECBlock[] inputBlocks = codingStep.getInputBlocks();
-        ECBlock[] outputBlocks = codingStep.getOutputBlocks();
-        // We allocate input and output chunks accordingly.
-        ECChunk[] inputChunks = new ECChunk[inputBlocks.length];
-        ECChunk[] outputChunks = new ECChunk[outputBlocks.length];
 
-        for (int i = 0; i < numChunksInBlock; ++i) {
-            // Pretend that we're reading input chunks from input blocks.
-            for (int j = 0; j < inputBlocks.length; ++j) {
-                inputChunks[j] = ((TestBlock) inputBlocks[j]).chunks[i];
-            }
-
-            // Pretend that we allocate and will write output results to the blocks.
-            for (int j = 0; j < outputBlocks.length; ++j) {
-                outputChunks[j] = allocateOutputChunk();
-                ((TestBlock) outputBlocks[j]).chunks[i] = outputChunks[j];
-            }
-
-            // Given the input chunks and output chunk buffers, just call it !
-            codingStep.performCoding(inputChunks, outputChunks);
-        }
-
-        codingStep.finish();
-    }
-
-    void decode(ErasureCodingStep codingStep) {
-        // Pretend that we're opening these input blocks and output blocks.
-        ECBlock[] inputBlocks = codingStep.getInputBlocks();
-        ECBlock[] outputBlocks = codingStep.getOutputBlocks();
-        // We allocate input and output chunks accordingly.
-        ECChunk[] inputChunks = new ECChunk[inputBlocks.length];
-        ECChunk[] outputChunks = new ECChunk[outputBlocks.length];
-
-        for (int i = 0; i < numChunksInBlock; ++i) {
-            // Pretend that we're reading input chunks from input blocks.
-            for (int j = 0; j < inputBlocks.length; ++j) {
-                inputChunks[j] = ((TestBlock) inputBlocks[j]).chunks[i];
-            }
-
-            // Pretend that we allocate and will write output results to the blocks.
-            for (int j = 0; j < outputBlocks.length; ++j) {
-                outputChunks[j] = allocateOutputChunk();
-                ((TestBlock) outputBlocks[j]).chunks[i] = outputChunks[j];
-            }
-
-            // Given the input chunks and output chunk buffers, just call it !
-            codingStep.performCoding(inputChunks, outputChunks);
-        }
-
-        codingStep.finish();
-    }
 
     protected ECChunk[] cloneChunksWithData(ECChunk[] chunks) {
         ECChunk[] results = new ECChunk[chunks.length];
@@ -202,6 +154,7 @@ public class testBlockEC {
 
         return buffer;
     }
+
     protected ECChunk cloneChunkWithData(ECChunk chunk) {
         if (chunk == null) {
             return null;
@@ -237,16 +190,22 @@ public class testBlockEC {
     protected TestBlock cloneBlockWithData(TestBlock block) {
         ECChunk[] newChunks = cloneChunksWithData(block.getChunks());
 
-        return new TestBlock(numChunksInBlock,newChunks);
+        return new TestBlock(numChunksInBlock, newChunks);
     }
 
-    protected void EraseBlocks(TestBlock[] dataBlocks) {
-        int eraseIndex = 0;
+    protected ECBlockGroup EraseBlocks(ECBlockGroup blockGroup) {
+        TestBlock[] erasedBlocks = (TestBlock[]) blockGroup.getDataBlocks();
 
-        for(int i = 0; i < numChunksInBlock; ++i){
-            dataBlocks[eraseIndex].chunks[i] = null;
-            dataBlocks[eraseIndex].setErased(true);
+        int eraseIndex = 3;
+
+        for (int i = 0; i < numChunksInBlock; ++i) {
+            erasedBlocks[eraseIndex].chunks[i] = null;
+            erasedBlocks[eraseIndex].setErased(true);
         }
+
+        blockGroup = new ECBlockGroup(erasedBlocks, blockGroup.getParityBlocks());
+        return blockGroup;
+
     }
 
     protected byte[][] toArrays(ECChunk[] chunks) {
@@ -270,20 +229,20 @@ public class testBlockEC {
         if (!result) {
             System.out.println("Decoding and comparing failed./n");
         }
-    }
-
-    protected void compareAndVerify(ECBlock[] erasedBlocks,
-                                    ECBlock[] recoveredBlocks) {
-        for (int i = 0; i < erasedBlocks.length; ++i) {
-            compareAndVerify(((TestBlock) erasedBlocks[i]).chunks, ((TestBlock) recoveredBlocks[i]).chunks);
+        else {
+            System.out.println("Compare and verify success");
         }
     }
 
+    protected void compareAndVerify(ECBlock[] originBlocks,
+                                    ECBlock[] recoveredBlocks) {
+        for (int i = 0; i < originBlocks.length; ++i) {
+            compareAndVerify(((TestBlock) originBlocks[i]).chunks, ((TestBlock) recoveredBlocks[i]).chunks);
+        }
+    }
 
-    public void run(CODER coder,int numDataBlocks,int numParityBlocks) {
-        // preapare dataBlocks and Parity Block
-        // for simply purpose, do not use the hdfs block
-        setup(numDataBlocks,numParityBlocks);
+    private ECBlockGroup fillData(int numDataUnits,int numParityUnits) {
+
 
         TestBlock[] dataBlocks = new TestBlock[numDataUnits];
         TestBlock[] parityBlocks = new TestBlock[numParityUnits];
@@ -297,36 +256,70 @@ public class testBlockEC {
             parityBlocks[i].allocateBuffer(chunkSize);
         }
 
+        ECBlockGroup blockGroup = new ECBlockGroup(dataBlocks, parityBlocks);
+        return blockGroup;
 
-        ECBlockGroup blockGroup = new ECBlockGroup(dataBlocks,parityBlocks);
+    }
 
-        TestBlock[] clonedDataBlocks =
-                cloneBlocksWithData((TestBlock[]) blockGroup.getDataBlocks());
+    public void doEncode( ECBlockGroup blockGroup) {
 
-        // prepare coder
-        createEncoder(coder.ordinal());
-        createDecoder(coder.ordinal());
 
-        // encode every chunks
         ErasureCodingStep codingStep = encoder.calculateCoding(blockGroup);
 
-        TestBlock[] backup = cloneBlocksWithData((TestBlock[])blockGroup.getDataBlocks());
+        // Pretend that we're opening these input blocks and output blocks.
+        ECBlock[] inputBlocks = codingStep.getInputBlocks();
+        ECBlock[] outputBlocks = codingStep.getOutputBlocks();
+        // We allocate input and output chunks accordingly.
+        ECChunk[] inputChunks = new ECChunk[inputBlocks.length];
+        ECChunk[] outputChunks = new ECChunk[outputBlocks.length];
 
-        encode(codingStep);
+        for (int i = 0; i < numChunksInBlock; ++i) {
+            // Pretend that we're reading input chunks from input blocks.
+            for (int j = 0; j < inputBlocks.length; ++j) {
+                inputChunks[j] = ((TestBlock) inputBlocks[j]).chunks[i];
+            }
 
-        // recover dataBlocks
+            // Pretend that we allocate and will write output results to the blocks.
+            for (int j = 0; j < outputBlocks.length; ++j) {
+                outputChunks[j] = allocateOutputChunk();
+                ((TestBlock) outputBlocks[j]).chunks[i] = outputChunks[j];
+            }
 
-        EraseBlocks(clonedDataBlocks);
+            // Given the input chunks and output chunk buffers, just call it !
+            codingStep.performCoding(inputChunks, outputChunks);
+        }
 
-        blockGroup = new ECBlockGroup(clonedDataBlocks, blockGroup.getParityBlocks());
+        codingStep.finish();
 
-        codingStep = decoder.calculateCoding(blockGroup);
-        decode(codingStep);
+    }
 
-        // compare
+    public void doDecode( ECBlockGroup blockGroup) {
 
-        compareAndVerify(backup,blockGroup.getDataBlocks());
+        ErasureCodingStep codingStep = decoder.calculateCoding(blockGroup);
+        // Pretend that we're opening these input blocks and output blocks.
+        ECBlock[] inputBlocks = codingStep.getInputBlocks();
+        ECBlock[] outputBlocks = codingStep.getOutputBlocks();
+        // We allocate input and output chunks accordingly.
+        ECChunk[] inputChunks = new ECChunk[inputBlocks.length];
+        ECChunk[] outputChunks = new ECChunk[outputBlocks.length];
 
+        for (int i = 0; i < numChunksInBlock; ++i) {
+            // Pretend that we're reading input chunks from input blocks.
+            for (int j = 0; j < inputBlocks.length; ++j) {
+                inputChunks[j] = ((TestBlock) inputBlocks[j]).chunks[i];
+            }
+
+            // Pretend that we allocate and will write output results to the blocks.
+            for (int j = 0; j < outputBlocks.length; ++j) {
+                outputChunks[j] = allocateOutputChunk();
+                ((TestBlock) outputBlocks[j]).chunks[i] = outputChunks[j];
+            }
+
+            // Given the input chunks and output chunk buffers, just call it !
+            codingStep.performCoding(inputChunks, outputChunks);
+        }
+
+        codingStep.finish();
     }
 
     private static void printAvailableCoders() {
@@ -349,10 +342,84 @@ public class testBlockEC {
         System.exit(1);
     }
 
+    private boolean checkECSchema() {
+        return true;
+    }
+
+    private void run(int coderIndex,int numDataUnits, int numParityUnits,int chunkSize) {
+        setup(numDataUnits, numParityUnits,chunkSize);
+
+        ECBlockGroup blockGroup = fillData(numDataUnits,numParityUnits);
+
+        TestBlock[] backup = cloneBlocksWithData((TestBlock[])blockGroup.getDataBlocks());
+
+        CODER coder = CODER.values()[coderIndex];
+
+        createEncoder(coder.ordinal());
+        createDecoder(coder.ordinal());
+
+        doEncode(blockGroup);
+
+        blockGroup = new ECBlockGroup(backup,blockGroup.getParityBlocks());
+
+        blockGroup = EraseBlocks(blockGroup);
+
+        doDecode(blockGroup);
+
+        compareAndVerify(backup,blockGroup.getDataBlocks());
+    }
     public static void main(String args[]) {
         testBlockEC testBlockEC = new testBlockEC();
-        int coderIndex = 3;
-        testBlockEC.run(CODER.values()[coderIndex],10,1);
-        testBlockEC.run(CODER.values()[coderIndex],6,1);
+        String opType = null;
+        int coderIndex = 0;
+        int numDataUnits = 6;
+        int numParityUnits = 1;
+        int chunkSize = 1024;
+        if (args.length > 0) {
+            try {
+                coderIndex = Integer.parseInt(args[0]);
+                if (coderIndex < 0 || coderIndex > CODER.values().length) {
+                    usage("Invalid coder index, should be [0-" +
+                            (CODER.values().length - 1) + "]");
+                }
+            } catch (NumberFormatException e) {
+                usage("Malformed coder index, " + e.getMessage());
+            }
+        } else {
+            usage(null);
+        }
+        if (args.length > 1) {
+            try {
+                numDataUnits = Integer.parseInt(args[1]);
+                if (numDataUnits < 0) {
+                    usage("Invalid numDataUnits");
+                }
+            } catch (NumberFormatException e) {
+                usage("Malformed numDataUnits");
+            }
+        }
+        if (args.length > 2) {
+            try {
+                numParityUnits = Integer.parseInt(args[2]);
+                if (numParityUnits < 0) {
+                    usage("Invalid numParityUnits");
+                }
+            } catch (NumberFormatException e) {
+                usage("Malformed numParityUnits");
+            }
+        }
+
+        if (args.length > 3) {
+            try {
+                chunkSize = Integer.parseInt(args[3]);
+                if (chunkSize < 0) {
+                    usage("Invalid numParityUnits");
+                }
+            } catch (NumberFormatException e) {
+                usage("Malformed numParityUnits");
+            }
+        }
+
+        testBlockEC.run(coderIndex,numDataUnits,numParityUnits,chunkSize);
     }
 }
