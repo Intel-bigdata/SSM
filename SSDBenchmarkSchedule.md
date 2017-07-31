@@ -8,9 +8,9 @@ SSD测试计划
 
 ### 测试环境
 
-#### 节点： 1 Namenode + 2 Datanode
-#### 磁盘： 每个节点挂载 1 HDD+1 P3700 + 1 Optane
-#### Hadoop version: trunk (3.0.0-beta1-SNAPSHOT)
+* 节点： 1 Namenode + 2 Datanode
+* 磁盘： 每个节点挂载 1 HDD+1 P3700 + 1 Optane
+* Hadoop version: trunk (3.0.0-beta1-SNAPSHOT)
 
 ### 测试指标
 
