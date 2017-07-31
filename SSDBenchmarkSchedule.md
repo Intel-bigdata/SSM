@@ -12,6 +12,12 @@ SSD测试计划
 #### 磁盘： 每个节点挂载 1 HDD+1 P3700 + 1 Optane
 #### Hadoop version: trunk (3.0.0-beta1-SNAPSHOT)
 
+### 测试指标
+
+* End-to-end execution time
+* Disk bandwith, disk latency
+* CPU utilization
+* Network IO
 
 ### Workload
 * HDFS测试：
