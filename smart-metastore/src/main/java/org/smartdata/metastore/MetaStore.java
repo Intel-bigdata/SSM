@@ -291,8 +291,8 @@ public class MetaStore {
         throw new MetaStoreException(e);
       } finally {
         for (AccessCountTable accessCountTable : tables) {
-          if (accessCountTable.isView()) {
-            this.dropView(accessCountTable.getTableName());
+          if (accessCountTable.isEphemeral()) {
+            this.dropTable(accessCountTable.getTableName());
           }
         }
       }
@@ -470,11 +470,11 @@ public class MetaStore {
     }
   }
 
-  public void createProportionView(AccessCountTable dest,
+  public void createProportionTable(AccessCountTable dest,
       AccessCountTable source)
       throws MetaStoreException {
     try {
-      accessCountDao.createProportionView(dest, source);
+      accessCountDao.createProportionTable(dest, source);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -484,15 +484,6 @@ public class MetaStore {
     try {
       LOG.debug("Drop table = {}", tableName);
       metaStoreHelper.dropTable(tableName);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
-  public void dropView(String viewName) throws MetaStoreException {
-    try {
-      LOG.debug("Drop view = {}", viewName);
-      metaStoreHelper.dropView(viewName);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -813,13 +804,10 @@ public class MetaStore {
     initializeDataBase();
   }
 
-  public String aggregateSQLStatement(AccessCountTable destinationTable
+  public void aggregateTables(AccessCountTable destinationTable
       , List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     try {
-      return accessCountDao
-          .aggregateSQLStatement(destinationTable, tablesToAggregate);
-    } catch (EmptyResultDataAccessException e) {
-      return null;
+      accessCountDao.aggregateTables(destinationTable, tablesToAggregate);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
