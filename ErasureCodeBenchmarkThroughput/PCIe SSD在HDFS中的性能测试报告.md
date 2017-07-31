@@ -44,13 +44,17 @@ ErasureCodeBenchmarkThroughput能够输出读写数据的吞吐量（单位MB/s�
 ![enter description here][1]
 		
 2．LOG输出结果
-以下截取了clienttrace的部分LOG数据（附件中包含了完整的LOG）：
+以下截取了clienttrace的部分LOG数据（附件中包含了完整的LOG\
+
 (1) HDD
+
 * 写入：
 2017-07-27 17:58:39,722 INFO org.apache.hadoop.hdfs.server.datanode.DataNode.clienttrace: src: /192.168.50.14:47042, dest: /192.168.50.14:9866, bytes: **671088640**, op: HDFS_WRITE, cliID: DFSClient_NONMAPREDUCE_-196230956_1, offset: 0, srvID: 7ab73c7d-a782-4388-bdf6-0b7b79b13ca9, blockid: BP-1486068274-192.168.50.7-1501068641236:blk_1073742048_1224, duration(ns): **5102260263**
 * 读取：
 2017-07-27 18:20:35,726 DEBUG org.apache.hadoop.hdfs.server.datanode.DataNode.clienttrace: src: /192.168.50.14:9866, dest: /192.168.50.14:47358, bytes: **676331520**, op: HDFS_READ, cliID: DFSClient_NONMAPREDUCE_-2091751233_1, offset: 0, srvID: 7ab73c7d-a782-4388-bdf6-0b7b79b13ca9, blockid: BP-1486068274-192.168.50.7-1501068641236:blk_1073742048_1224, duration(ns): **4562161072**
+
 (2) SSD
+
 * 写入：
 2017-07-27 18:44:03,843 INFO org.apache.hadoop.hdfs.server.datanode.DataNode.clienttrace: src: /192.168.50.14:47398, dest: /192.168.50.14:9866, bytes: **671088640**, op: HDFS_WRITE, cliID: DFSClient_NONMAPREDUCE_1550518481_1, offset: 0, srvID: 7ab73c7d-a782-4388-bdf6-0b7b79b13ca9, blockid: BP-1486068274-192.168.50.7-1501068641236:blk_1073742205_1381, duration(ns): **1659875242**
 * 读取：
