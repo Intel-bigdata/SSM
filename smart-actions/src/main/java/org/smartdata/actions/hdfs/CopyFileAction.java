@@ -27,9 +27,11 @@ import org.smartdata.actions.ActionException;
 import org.smartdata.actions.Utils;
 import org.smartdata.actions.annotation.ActionSignature;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.Map;
 
@@ -43,15 +45,20 @@ import java.util.Map;
     actionId = "copy",
     displayName = "copy",
     usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
-        " $dest " + CopyFileAction.BUF_SIZE + " $size"
+        " $dest "  + CopyFileAction.OFFSET_INDEX + " $offset" + CopyFileAction.LENGTH +
+        " $length" + CopyFileAction.BUF_SIZE + " $size"
 )
 public class CopyFileAction extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CopyFileAction.class);
   public static final String BUF_SIZE = "-bufSize";
   public static final String DEST_PATH = "-dest";
+  public static final String OFFSET_INDEX = "-offset";
+  public static final String LENGTH = "-length";
   private String srcPath;
   private String destPath;
+  private long offset = 0;
+  private long length = 0;
   private int bufferSize = 64 * 1024;
 
   @Override
@@ -63,6 +70,12 @@ public class CopyFileAction extends HdfsAction {
     }
     if (args.containsKey(BUF_SIZE)) {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
+    }
+    if (args.containsKey(OFFSET_INDEX)) {
+      offset = Integer.valueOf(args.get(OFFSET_INDEX));
+    }
+    if (args.containsKey(LENGTH)) {
+      length = Integer.valueOf(args.get(LENGTH));
     }
   }
 
@@ -82,21 +95,78 @@ public class CopyFileAction extends HdfsAction {
     }
     appendLog(
         String.format("Copy from %s to %s", srcPath, destPath));
-    copySingleFile(srcPath, destPath);
+    if (offset == 0 && length == 0) {
+      copySingleFile(srcPath, destPath);
+    }
+    if (length != 0) {
+      copyWithOffset(srcPath, destPath, bufferSize, offset, length);
+    }
   }
 
   private boolean copySingleFile(String src, String dest) throws IOException {
-    InputStream srcInputStream = null;
-    OutputStream destOutStream = null;
+    //get The file size of source file
+    long fileSize = getFileSize(src);
+    return copyWithOffset(src,dest,2048,0,fileSize);
+  }
+
+  private boolean copyWithOffset(String src, String dest, int bufferSize, long offset, long length) throws IOException {
+    InputStream in = null;
+    OutputStream out = null;
+
     try {
-      srcInputStream = dfsClient.open(src);
-      destOutStream = getDestOutPutStream(dest);
-      // Copy from src to dest
-      IOUtils.copyBytes(srcInputStream, destOutStream, bufferSize, false);
+      in = getSrcInputStream(src);
+      out = getDestOutPutStream(dest);
+
+      PrintStream ps = out instanceof PrintStream ? (PrintStream) out : null;
+      //skip offset
+      in.skip(offset);
+
+      byte[] buf = new byte[bufferSize];
+      long bytesRemaining = length;
+
+      while (bytesRemaining > 0L) {
+        int bytesToRead = (int) (bytesRemaining < (long) buf.length ? bytesRemaining : (long) buf.length);
+        int bytesRead = in.read(buf, 0, bytesToRead);
+        if (bytesRead == -1) {
+          break;
+        }
+        out.write(buf, 0, bytesRead);
+        bytesRemaining -= (long) bytesRead;
+      }
+
       return true;
     } finally {
-      IOUtils.closeStream(srcInputStream);
-      IOUtils.closeStream(destOutStream);
+      if (out != null) {
+        out.close();
+      }
+      if (in != null) {
+        in.close();
+      }
+    }
+  }
+
+  private long getFileSize(String fileName) throws IOException {
+    if (fileName.startsWith("hdfs")) {
+      // TODO read conf from files
+      Configuration conf = new Configuration();
+      // Get InputStream from URL
+      FileSystem fs = FileSystem.get(URI.create(fileName), conf);
+      return fs.getFileStatus(new Path(fileName)).getLen();
+    } else {
+      return dfsClient.getFileInfo(fileName).getLen();
+    }
+  }
+
+  private InputStream getSrcInputStream(String src) throws IOException {
+    if (src.startsWith("hdfs")) {
+      // Copy between different remote clusters
+      // TODO read conf from files
+      Configuration conf = new Configuration();
+      // Get InputStream from URL
+      FileSystem fs = FileSystem.get(URI.create(src), conf);
+      return fs.open(new Path(src));
+    } else {
+      return dfsClient.open(src);
     }
   }
 
