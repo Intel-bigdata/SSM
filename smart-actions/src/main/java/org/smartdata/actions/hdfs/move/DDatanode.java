@@ -68,7 +68,7 @@ public class DDatanode {
     return g;
   }
 
-  public Source addSource(StorageType storageType, Dispatcher d) {
+  public Source addSource(StorageType storageType) {
     final Source s = new Source(storageType, this.getDatanodeInfo());
     put(storageType, s, sourceMap);
     return s;

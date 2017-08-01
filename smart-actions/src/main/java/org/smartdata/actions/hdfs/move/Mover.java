@@ -74,7 +74,7 @@ public class Mover {
     for(DatanodeStorageReport r : reports) {
       final DDatanode dn = dispatcher.newDatanode(r.getDatanodeInfo());
       for(StorageType t : StorageType.getMovableTypes()) {
-        final Source source = dn.addSource(t, dispatcher);
+        final Source source = dn.addSource(t);
         final long maxRemaining = getMaxRemaining(r, t);
         final StorageGroup target = maxRemaining > 0L ? dn.addTarget(t) : null;
         storages.add(source, target);

@@ -17,11 +17,13 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
+import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
+import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,12 +83,32 @@ public class DataNodeInfoFetcher {
     public void run() {
       try {
         final List<DatanodeStorageReport> reports = init();
-        for(DatanodeStorageReport r : reports) {
-          // TODO: store data abstracted from reports to MetaStore
-        }
+//        for(DatanodeStorageReport r : reports) {
+//          // TODO: store data abstracted from reports to MetaStore
+//          final DDatanode dn = new DDatanode(r.getDatanodeInfo());
+//          for(StorageType t : StorageType.getMovableTypes()) {
+//            final Source source = dn.addSource(t, Long.MAX_VALUE, dispatcher);
+//            final long maxRemaining = getMaxRemaining(r, t);
+//            final StorageGroup target = maxRemaining > 0L ? dn.addTarget(t,
+//                maxRemaining) : null;
+//            storages.add(source, target);
+//          }
+//        }
       } catch (IOException e) {
         LOG.error("Process datanode report error", e);
       }
+    }
+
+    private static long getMaxRemaining(DatanodeStorageReport report, StorageType t) {
+      long max = 0L;
+      for(StorageReport r : report.getStorageReports()) {
+        if (r.getStorage().getStorageType() == t) {
+          if (r.getRemaining() > max) {
+            max = r.getRemaining();
+          }
+        }
+      }
+      return max;
     }
 
     /**

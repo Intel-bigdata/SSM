@@ -83,6 +83,19 @@ public class SchedulePlan {
     blockIds.add(block.getBlockId());
   }
 
+  public void addPlan(StorageGroup source, StorageGroup target, long blockId) {
+    DatanodeInfo sourceDatanode = source.getDatanodeInfo();
+    sourceUuids.add(sourceDatanode.getDatanodeUuid());
+    sourceStoragetypes.add(source.getStorageType());
+
+    DatanodeInfo targetDatanode = target.getDatanodeInfo();
+    targetIpAddrs.add(targetDatanode.getIpAddr());
+    targetXferPorts.add(targetDatanode.getXferPort());
+    targetStorageTypes.add(target.getStorageType());
+
+    blockIds.add(blockId);
+  }
+
   public void addPlan(long blockId, String srcDatanodeUuid, StorageType srcStorageType,
       String dstDataNodeIpAddr, int dstDataNodeXferPort, StorageType dstStorageType) {
     blockIds.add(blockId);
