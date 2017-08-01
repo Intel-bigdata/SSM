@@ -23,27 +23,24 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
-public class TestFileDiffDAO extends TestDaoUtil{
-  private FileDiffDAO fileDiffDAO;
+public class TestFileDiffDao extends TestDaoUtil{
+  private FileDiffDao fileDiffDao;
 
   @Before
   public void initFileDiffDAO() throws Exception {
     initDao();
-    fileDiffDAO = new FileDiffDAO(druidPool.getDataSource());
+    fileDiffDao = new FileDiffDao(druidPool.getDataSource());
   }
 
   @After
   public void closeFileDiffDAO() throws Exception {
     closeDao();
-    fileDiffDAO = null;
+    fileDiffDao = null;
   }
 
   @Test
@@ -54,8 +51,8 @@ public class TestFileDiffDAO extends TestDaoUtil{
     fileDiff.setApplied(true);
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setCreate_time(1);
-    fileDiffDAO.insert(fileDiff);
-    Assert.assertTrue(fileDiffDAO.getById(1).equals(fileDiff));
+    fileDiffDao.insert(fileDiff);
+    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
   }
 
   @Test
@@ -75,8 +72,8 @@ public class TestFileDiffDAO extends TestDaoUtil{
     fileDiffs[1].setDiffType(FileDiffType.APPEND);
     fileDiffs[1].setCreate_time(1);
 
-    fileDiffDAO.insert(fileDiffs);
-    List<FileDiff> fileInfoList = fileDiffDAO.getALL();
+    fileDiffDao.insert(fileDiffs);
+    List<FileDiff> fileInfoList = fileDiffDao.getALL();
     for (int i = 0; i < 2; i++) {
       Assert.assertTrue(fileInfoList.get(i).equals(fileDiffs[i]));
     }
@@ -90,11 +87,11 @@ public class TestFileDiffDAO extends TestDaoUtil{
     fileDiff.setApplied(true);
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setCreate_time(1);
-    fileDiffDAO.insert(fileDiff);
+    fileDiffDao.insert(fileDiff);
 
-    fileDiffDAO.update(1,false);
+    fileDiffDao.update(1,false);
     fileDiff.setApplied(false);
 
-    Assert.assertTrue(fileDiffDAO.getById(1).equals(fileDiff));
+    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
   }
 }
