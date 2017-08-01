@@ -47,6 +47,7 @@
       </activation>
       <modules>
         <module>smart-alluxio</module>
+        <module>smart-blockec</module>
       </modules>
     </profile>
   </profiles>
