@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionException;
 import org.smartdata.actions.Utils;
 import org.smartdata.actions.annotation.ActionSignature;
 
@@ -31,35 +30,38 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
- * An action to copy a single file from src to destination.
- * If dest doesn't contains "hdfs" prefix, then destination will be set to
- * current cluster, i.e., copy between dirs in current cluster.
- * Note that destination should contains filename.
+ * action to Merge File
  */
 @ActionSignature(
-    actionId = "copy",
-    displayName = "copy",
-    usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
-        " $dest " + CopyFileAction.BUF_SIZE + " $size"
+    actionId = "merge",
+    displayName = "merge",
+    usage = HdfsAction.FILE_PATH + "  $src " + MergeFileAction.DEST_PATH + " $dest " +
+        MergeFileAction.BUF_SIZE + " $size"
 )
-public class CopyFileAction extends HdfsAction {
-  private static final Logger LOG =
-      LoggerFactory.getLogger(CopyFileAction.class);
-  public static final String BUF_SIZE = "-bufSize";
+public class MergeFileAction extends HdfsAction {
+  private static final Logger LOG = LoggerFactory.getLogger(MergeFileAction.class);
   public static final String DEST_PATH = "-dest";
-  private String srcPath;
-  private String destPath;
+  public static final String BUF_SIZE = "-bufSize";
+  private LinkedList<String> srcPathList;
   private int bufferSize = 64 * 1024;
+  private String target;
+
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
-    this.srcPath = args.get(FILE_PATH);
+    String allSrcPath = args.get(FILE_PATH);
+
+    String[] allSrcPathArr = allSrcPath.split(",");
+    srcPathList = new LinkedList<String>(Arrays.asList(allSrcPathArr));
+
     if (args.containsKey(DEST_PATH)) {
-      this.destPath = args.get(DEST_PATH);
+      this.target = args.get(DEST_PATH);
     }
     if (args.containsKey(BUF_SIZE)) {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
@@ -68,52 +70,61 @@ public class CopyFileAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    if (srcPath == null) {
+    if (srcPathList == null || srcPathList.size() == 0) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-    if (destPath == null) {
+    if (target == null) {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : Read %s",
-            Utils.getFormatedCurrentTime(), srcPath));
-    if (!dfsClient.exists(srcPath)) {
-      throw new ActionException("CopyFile Action fails, file doesn't exist!");
+    if (srcPathList.size() == 1) {
+      throw new IllegalArgumentException("Don't accept only one source file");
     }
+
     appendLog(
-        String.format("Copy from %s to %s", srcPath, destPath));
-    copySingleFile(srcPath, destPath);
+        String.format("Action starts at %s : Merge %s to %s",
+            Utils.getFormatedCurrentTime(), srcPathList, target));
+
+    //Merge
+    mergeFiles(srcPathList,target);
   }
 
-  private boolean copySingleFile(String src, String dest) throws IOException {
+  private boolean mergeFiles(LinkedList<String> srcFiles, String dest) throws IOException {
     InputStream srcInputStream = null;
-    OutputStream destOutStream = null;
-    try {
-      srcInputStream = dfsClient.open(src);
-      destOutStream = getDestOutPutStream(dest);
-      // Copy from src to dest
-      IOUtils.copyBytes(srcInputStream, destOutStream, bufferSize, false);
-      return true;
-    } finally {
+    OutputStream destInputStream = getTargetOutputStream(dest);
+    for (String srcEle : srcPathList) {
+      srcInputStream = getSourceInputStream(srcEle);
+      IOUtils.copyBytes(srcInputStream, destInputStream, bufferSize, false);
       IOUtils.closeStream(srcInputStream);
-      IOUtils.closeStream(destOutStream);
     }
+    IOUtils.closeStream(destInputStream);
+    return true;
   }
 
-  private OutputStream getDestOutPutStream(String dest) throws IOException {
-    if (dest.startsWith("hdfs")) {
-      // Copy between different clusters
+  private InputStream getSourceInputStream(String src) throws IOException {
+    if (src.startsWith("hdfs")) {
+      //get stream of source
       // TODO read conf from files
       Configuration conf = new Configuration();
-      // Get OutPutStream from URL
+      FileSystem fs = FileSystem.get(URI.create(src), conf);
+      return fs.open(new Path(src));
+    } else {
+      return dfsClient.open(src);
+    }
+  }
+
+  private OutputStream getTargetOutputStream(String dest) throws IOException {
+    if (dest.startsWith("hdfs")) {
+      // TODO read conf from files
+      Configuration conf = new Configuration();
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
-      // TODO overwrite or skip
-      // if (fs.exists(new Path(dest))) {
-      //
-      // }
+      if (fs.exists(new Path(target))) {
+        fs.delete(new Path(target), true);
+      }
       return fs.create(new Path(dest), true);
     } else {
-      // Copy between different dirs of the same cluster
+      if (dfsClient.exists(target)) {
+        dfsClient.delete(target, true);
+      }
       return dfsClient.create(dest, true);
     }
   }

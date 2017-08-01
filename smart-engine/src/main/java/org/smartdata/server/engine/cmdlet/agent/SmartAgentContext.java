@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,24 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata;
+package org.smartdata.server.engine.cmdlet.agent;
 
-public abstract class AbstractService implements SmartService {
-  private SmartContext context;
+import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.protocol.message.StatusReporter;
 
-  public AbstractService() {
-    this(null);
+public class SmartAgentContext extends SmartContext {
+
+  private final StatusReporter reporter;
+
+  public SmartAgentContext(SmartConf conf, StatusReporter reporter) {
+    super(conf);
+    this.reporter = reporter;
   }
 
-  public AbstractService(SmartContext context) {
-    this.context = context;
+  public StatusReporter getStatusReporter() {
+    return reporter;
   }
 
-  public SmartContext getContext() {
-    return context;
-  }
-
-  public void setContext(SmartContext context) {
-    this.context = context;
-  }
 }

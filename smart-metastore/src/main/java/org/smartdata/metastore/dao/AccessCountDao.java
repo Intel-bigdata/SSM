@@ -71,7 +71,7 @@ public class AccessCountDao {
     jdbcTemplate.update(sql, table.getTableName());
   }
 
-  public static String createTableSQL(String tableName) {
+  public static String createAccessCountTableSQL(String tableName) {
     return String.format(
         "CREATE TABLE %s (%s INTEGER NOT NULL, %s INTEGER NOT NULL)",
         tableName, FILE_FIELD, ACCESSCOUNT_FIELD);
@@ -83,16 +83,21 @@ public class AccessCountDao {
     return jdbcTemplate.query(sql, new AccessCountRowMapper());
   }
 
-  public String aggregateSQLStatement(AccessCountTable destinationTable
-      , List<AccessCountTable> tablesToAggregate) {
-    StringBuilder statement = new StringBuilder();
-    statement.append("CREATE TABLE " + destinationTable.getTableName() + " as ");
-    statement.append("SELECT " + AccessCountDao.FILE_FIELD + ", SUM(" +
-        AccessCountDao.ACCESSCOUNT_FIELD + ") as " +
-        AccessCountDao.ACCESSCOUNT_FIELD + " FROM (");
-    statement.append(getUnionStatement(tablesToAggregate));
-    statement.append(") tmp GROUP BY " + AccessCountDao.FILE_FIELD);
-    return statement.toString();
+  public void aggregateTables(
+      AccessCountTable destinationTable, List<AccessCountTable> tablesToAggregate) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String create = AccessCountDao.createAccessCountTableSQL(destinationTable.getTableName());
+    jdbcTemplate.execute(create);
+    String insert =
+        String.format(
+            "INSERT INTO %s SELECT %s, SUM(%s) AS %s FROM(%s) tmp GROUP BY %s;",
+            destinationTable.getTableName(),
+            AccessCountDao.FILE_FIELD,
+            AccessCountDao.ACCESSCOUNT_FIELD,
+            AccessCountDao.ACCESSCOUNT_FIELD,
+            getUnionStatement(tablesToAggregate),
+            AccessCountDao.FILE_FIELD);
+    jdbcTemplate.execute(insert);
   }
 
   public Map<Long, Integer> getHotFiles(List<AccessCountTable> tables, int topNum)
@@ -139,9 +144,10 @@ public class AccessCountDao {
     double percentage =
         ((double) dest.getEndTime() - dest.getStartTime())
             / (source.getEndTime() - source.getStartTime());
+    jdbcTemplate.execute(AccessCountDao.createAccessCountTableSQL(dest.getTableName()));
     String sql =
         String.format(
-            "CREATE TABLE %s AS SELECT %s, ROUND(%s.%s * %s) AS %s FROM %s",
+            "INSERT INTO %s SELECT %s, ROUND(%s.%s * %s) AS %s FROM %s",
             dest.getTableName(),
             AccessCountDao.FILE_FIELD,
             source.getTableName(),

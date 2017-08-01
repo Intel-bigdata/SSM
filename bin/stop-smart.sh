@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -16,17 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Stop SmartServer
-#
-#./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000
-#./bin/start-smart.sh -D smart.dfs.namenode.rpcserver=hdfs://localhost:9000 -D smart.metastore.db.url=jdbc:sqlite:file-sql.db
-
-USAGE="Usage: bin/stop-smart.sh [--config <conf-dir>] [--debug] ..."
 
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
+HOSTNAME=$(hostname)
 
-DAEMON_MOD=
 SMART_VARGS=
 while [ $# != 0 ]; do
   case "$1" in
@@ -43,14 +37,6 @@ while [ $# != 0 ]; do
       fi
       shift
       ;;
-    "--debug")
-      JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
-      shift
-      ;;
-    "--daemon")
-      DAEMON_MOD=1
-      shift
-      ;;
     *)
       SMART_VARGS+=" $1"
       shift
@@ -60,32 +46,43 @@ done
 
 . "${bin}/common.sh"
 
+#---------------------------------------------------------
+# Stop Smart Servers
 
-HOSTNAME=$(hostname)
+SMARTSERVERS=$("${SMART_HOME}/bin/smart" getconf SmartServers 2>/dev/null)
 
-SMART_SERVER=org.smartdata.server.SmartDaemon
-JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
-
-addJarInDir "${SMART_HOME}/smart-server/target/lib"
-addNonTestJarInDir "${SMART_HOME}/smart-server/target"
-addJarInDir "${SMART_HOME}/lib"
-
-if [ "$SMART_CLASSPATH" = "" ]; then
-  SMART_CLASSPATH="${SMART_CONF_DIR}"
-else
-  SMART_CLASSPATH="${SMART_CONF_DIR}:${SMART_CLASSPATH}"
+if [ "$?" != "0" ]; then
+  echo "ERROR: Get SmartServers error: ${SMARTSERVERS}"
+  exit 1
 fi
 
-if [[ ! -d "${SMART_LOG_DIR}" ]]; then
-  echo "Log dir doesn't exist, create ${SMART_LOG_DIR}"
-  $(mkdir -p "${SMART_LOG_DIR}")
+if [ x"${SMARTSERVERS}" != x"" ]; then
+  echo "Stopping SmartServers on [${SMARTSERVERS}]"
+  . "${SMART_HOME}/bin/smart" \
+    --remote \
+    --config "${SMART_CONF_DIR}" \
+    --hosts "${SMARTSERVERS}" --hostsend \
+    --daemon stop ${DEBUG_OPT} \
+    smartserver
+else
+  echo "No SmartServers configured in 'hazelcast.xml'."
 fi
 
-SMART_VARGS+=" -D smart.conf.dir="${SMART_CONF_DIR}
-SMART_VARGS+=" -D smart.log.dir="${SMART_LOG_DIR}
+echo
 
-if [ -z "$DAEMON_MOD" ]; then
-  stop_smart_server
-else
-  smart_stop_daemon ${SMART_SERVER_PID_FILE}
+#---------------------------------------------------------
+# Stop Smart Agents
+
+AGENTS_FILE="${SMART_CONF_DIR}/agents"
+if [ -f "${AGENTS_FILE}" ]; then
+  AGENT_HOSTS=$(sed 's/#.*$//;/^$/d' "${AGENTS_FILE}" | xargs echo)
+  if [ x"${AGENT_HOSTS}" != x"" ]; then
+    echo "Stopping SmartAgents on [${AGENT_HOSTS}]"
+    . "${SMART_HOME}/bin/smart" \
+      --remote \
+      --config "${SMART_CONF_DIR}" \
+      --hosts "${AGENT_HOSTS}" --hostsend \
+      --daemon stop ${DEBUG_OPT} \
+      smartagent
+  fi
 fi

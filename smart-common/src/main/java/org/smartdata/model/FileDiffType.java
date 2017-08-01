@@ -15,40 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.message;
+package org.smartdata.model;
 
-import org.smartdata.AgentService;
-import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 
-import java.util.List;
+public enum FileDiffType {
+  CREATE(0),
+  DELETE(1),
+  RENAME(2),
+  APPEND(3),
+  MODIFY(4);
 
-public class LaunchCmdlet implements AgentService.Message {
-  private long cmdletId;
-  private List<LaunchAction> launchActions;
+  private int value;
 
-  public LaunchCmdlet(long cmdletId, List<LaunchAction> launchActions) {
-    this.cmdletId = cmdletId;
-    this.launchActions = launchActions;
+  FileDiffType(int value) {
+    this.value = value;
   }
 
-  public long getCmdletId() {
-    return cmdletId;
+  public static FileDiffType fromValue(int value) {
+    for (FileDiffType r : values()) {
+      if (value == r.getValue()) {
+        return r;
+      }
+    }
+    return null;
   }
 
-  public void setCmdletId(long cmdletId) {
-    this.cmdletId = cmdletId;
-  }
-
-  public List<LaunchAction> getLaunchActions() {
-    return launchActions;
-  }
-
-  public void setLaunchActions(List<LaunchAction> launchActions) {
-    this.launchActions = launchActions;
+  public int getValue() {
+    return value;
   }
 
   @Override
-  public String getServiceName() {
-    return AgentCmdletService.NAME;
+  public String toString() {
+    return String.format("FileDiffType{value=%s} %s", value, super.toString());
   }
+
 }
