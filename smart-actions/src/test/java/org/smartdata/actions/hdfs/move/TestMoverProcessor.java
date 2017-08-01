@@ -17,19 +17,35 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSTestUtil;
+import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
+import org.junit.Test;
 import org.smartdata.actions.hdfs.ActionMiniCluster;
+import org.smartdata.model.actions.hdfs.StorageMap;
+
+import java.net.URI;
 
 public class TestMoverProcessor extends ActionMiniCluster {
 
-  private void generateFile(String content) throws Exception {
-    Path dir = new Path(fileDir);
-    dfs.mkdirs(dir);
-    // write to DISK
-    dfs.setStoragePolicy(dir, "HOT");
-    final FSDataOutputStream out = dfs.create(new Path(fileName));
-    out.writeChars(content);
-    out.close();
+  @Test
+  public void testGenPlan() throws Exception {
+    Configuration conf = smartContext.getConf();
+    URI namenode = cluster.getURI();
+
+    String file = "/testfile";
+    int nblocks = 4;
+    DFSTestUtil.createFile(dfs, new Path(file), nblocks * DEFAULT_BLOCK_SIZE, (short) 2, 100);
+    dfs.setStoragePolicy(new Path(file), "ALL_SSD");
+
+    GetMoverSchedulerInfo schedulerInfo = new GetMoverSchedulerInfo(dfsClient);
+    schedulerInfo.run();
+
+    MoverStatus status = new MoverStatus();
+    StorageMap storageMap = schedulerInfo.getStorages();
+    MoverProcessor processor = new MoverProcessor(dfsClient, storageMap, status);
+    ExitStatus exitStatus = processor.processNamespace(new Path(file));
+    exitStatus.getExitCode();
   }
 }

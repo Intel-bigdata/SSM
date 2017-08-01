@@ -34,6 +34,7 @@ import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.actions.hdfs.MLocation;
+import org.smartdata.model.actions.hdfs.SchedulePlan;
 import org.smartdata.model.actions.hdfs.Source;
 import org.smartdata.model.actions.hdfs.StorageGroup;
 import org.smartdata.model.actions.hdfs.StorageMap;
@@ -62,6 +63,9 @@ class MoverProcessor {
   private long remainingBlocks = 0;
   private final MoverStatus moverStatus;
 
+  private SchedulePlan schedulePlan;
+
+
   MoverProcessor(DFSClient dfsClient, StorageMap storages,
       MoverStatus moverStatus) throws IOException {
     this.dfs = dfsClient;
@@ -74,8 +78,7 @@ class MoverProcessor {
   }
 
   private void initStoragePolicies() throws IOException {
-    BlockStoragePolicy[] policies =
-         MoverProcessorHelper.getStoragePolicies();
+    BlockStoragePolicy[] policies = dfs.getStoragePolicies();
 
     for (BlockStoragePolicy policy : policies) {
       this.blockStoragePolicies[policy.getId()] = policy;
@@ -111,27 +114,29 @@ class MoverProcessor {
       }
     }
     if (!status.isSymlink()) { // file
+      schedulePlan = new SchedulePlan();
+      schedulePlan.setFileName(targetPath.toUri().getPath());
       processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status, result);
     }
 
-    // wait for pending move to finish and retry the failed migration
-    boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.getTargets().values());
-    if (hasFailed) {
-      if (retryCount.get() == 1) {
-        result.setRetryFailed();
-        LOG.error("Failed to move some block's after "
-            + 1 + " retries.");
-        return result.getExitStatus();
-      } else {
-        retryCount.incrementAndGet();
-      }
-    } else {
-      // Reset retry count if no failure.
-      retryCount.set(0);
-    }
-    movedBlocks = moverStatus.getTotalBlocks() - remainingBlocks;
-    moverStatus.setMovedBlocks(movedBlocks);
-    result.updateHasRemaining(hasFailed);
+//    // wait for pending move to finish and retry the failed migration
+//    boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.getTargets().values());
+//    if (hasFailed) {
+//      if (retryCount.get() == 1) {
+//        result.setRetryFailed();
+//        LOG.error("Failed to move some block's after "
+//            + 1 + " retries.");
+//        return result.getExitStatus();
+//      } else {
+//        retryCount.incrementAndGet();
+//      }
+//    } else {
+//      // Reset retry count if no failure.
+//      retryCount.set(0);
+//    }
+//    movedBlocks = moverStatus.getTotalBlocks() - remainingBlocks;
+//    moverStatus.setMovedBlocks(movedBlocks);
+//    result.updateHasRemaining(hasFailed);
     return result.getExitStatus();
   }
 
@@ -234,7 +239,8 @@ class MoverProcessor {
 //        dispatcher.executePendingMove(pm);
 //        return true;
 //      }
-      dispatcher.executePendingMove();
+//      dispatcher.executePendingMove();
+      schedulePlan.addPlan(source, target, db.getBlock().getBlockId());
       return true;
     }
     return false;
@@ -254,7 +260,8 @@ class MoverProcessor {
 //            dispatcher.executePendingMove(pm);
 //            return true;
 //          }
-          dispatcher.executePendingMove();
+//          dispatcher.executePendingMove();
+          schedulePlan.addPlan(source, target, db.getBlock().getBlockId());
           return true;
         }
       }
