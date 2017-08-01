@@ -23,6 +23,7 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileInfo;
@@ -104,7 +105,7 @@ public class InotifyEventApplier {
       LOG.debug("Can not get HdfsFileStatus for file " + createEvent.getPath());
       return "";
     }
-    FileInfo fileInfo = FileInfo.fromHdfsFileStatus(fileStatus, createEvent.getPath());
+    FileInfo fileInfo = HadoopUtil.convertFileStatus(fileStatus, createEvent.getPath());
     try {
       metaStore.insertFile(fileInfo);
       return "";
@@ -140,7 +141,7 @@ public class InotifyEventApplier {
     FileInfo info = metaStore.getFile(renameEvent.getSrcPath());
     if (info == null) {
       if (status != null) {
-        info = FileInfo.fromHdfsFileStatus(status, renameEvent.getDstPath());
+        info = HadoopUtil.convertFileStatus(status, renameEvent.getDstPath());
         metaStore.insertFile(info);
       }
     } else {

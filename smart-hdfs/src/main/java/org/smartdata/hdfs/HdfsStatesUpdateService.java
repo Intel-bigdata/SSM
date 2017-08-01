@@ -32,7 +32,6 @@ import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.StatesUpdateService;
-import org.smartdata.utils.HadoopUtil;
 
 import java.io.IOException;
 import java.net.InetAddress;
