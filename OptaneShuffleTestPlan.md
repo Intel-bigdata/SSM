@@ -13,7 +13,7 @@ Test Environment
 
 * Cluster： 1 Namenode + 2 Datanodes
 * HDFS Disk： 5 HDDs on each datanode
-* Memory : 375 GB
+* Memory : 100 GB
 * Shuffle Disk : 1 HDD / 1 P3700 / 1 Optane
 * Hadoop version: trunk (3.0.0-beta1-SNAPSHOT)
 
@@ -21,8 +21,8 @@ Workload
 -----------------
 
 For each workload, three experiments will be done using HDD, P3700 and Optane as shuffle respectively.
-* TeraSort 
-* WordCount
+* TeraSort: 200 GB
+* WordCount: 200 GB
 
 
 Performance Measurement
