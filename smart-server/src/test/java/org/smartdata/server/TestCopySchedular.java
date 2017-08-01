@@ -33,14 +33,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.server.engine.CopyScheduler;
 import org.smartdata.server.engine.CopyTargetTask;
-import org.smartdata.server.engine.DisasterRecoveryManager;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 
-public class TestDisasterRecoveryManage extends TestEmptyMiniSmartCluster{
+public class TestCopySchedular extends TestEmptyMiniSmartCluster{
 
   private static final int DEFAULT_BLOCK_SIZE = 50;
   protected MiniDFSCluster cluster;
@@ -77,7 +76,7 @@ public class TestDisasterRecoveryManage extends TestEmptyMiniSmartCluster{
   }
 
   @Test
-  public void testSplitCopyFile() throws IOException {
+  public void testCopyScheduler() throws IOException {
     final String srcPath = "/testCopy";
     final String file1 = "file1";
     final String destPath = "/backup";
@@ -98,7 +97,7 @@ public class TestDisasterRecoveryManage extends TestEmptyMiniSmartCluster{
     out1.close();
 
     // System.out.println(dfs.getFileStatus(new Path(srcPath + "/" + file1)).getLen());
-    List<CopyTargetTask> copyTargetTaskList = DisasterRecoveryManager.splitCopyFile(srcPath + "/" + file1,
+    List<CopyTargetTask> copyTargetTaskList = CopyScheduler.splitCopyFile(srcPath + "/" + file1,
         destPath + "/" + file1, 1, FileSystem.get(dfs.getUri(), new Configuration()));
 
     System.out.println(copyTargetTaskList);
