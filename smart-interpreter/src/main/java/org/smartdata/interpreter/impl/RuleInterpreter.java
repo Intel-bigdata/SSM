@@ -14,13 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.smartdata.interpreter.impl;
 
-package org.apache.zeppelin.display;
+import org.smartdata.interpreter.SmartInterpreter;
+import org.smartdata.model.RuleState;
+import org.smartdata.server.SmartEngine;
 
-public class AngularObjectBuilder {
+import java.io.IOException;
 
-  public static <T> AngularObject<T> build(String varName, T value, String noteId,
-    String paragraphId) {
-    return new AngularObject<>(varName, value, noteId, paragraphId, null);
-  }
+/**
+ * Created by zhiqiangx on 17-7-31.
+ */
+public class RuleInterpreter extends SmartInterpreter {
+
+    public RuleInterpreter(SmartEngine smartEngine) {
+        super(smartEngine);
+    }
+
+    @Override
+    public String excute(String cmd) throws IOException {
+        long t =getSmartEngine().getRuleManager().submitRule(cmd, RuleState.DISABLED);
+        return "Success to add rule : " + t;
+    }
 }
