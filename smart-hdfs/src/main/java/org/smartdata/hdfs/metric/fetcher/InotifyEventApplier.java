@@ -68,6 +68,7 @@ public class InotifyEventApplier {
 
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
     switch (event.getEventType()) {
+      // TODO parse and save to fileDiff
       case CREATE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CreateEvent)event).getPath());
