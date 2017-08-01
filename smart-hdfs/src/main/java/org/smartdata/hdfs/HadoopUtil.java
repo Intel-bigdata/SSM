@@ -15,11 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.utils;
+package org.smartdata.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.model.FileInfo;
 
 import java.io.IOException;
 import java.net.URI;
@@ -64,5 +66,22 @@ public class HadoopUtil {
     } catch (URISyntaxException e) {
       throw new IOException("Invalid URI Syntax: " + nnRpcAddr, e);
     }
+  }
+
+  public static FileInfo convertFileStatus(HdfsFileStatus status, String path) {
+    return FileInfo.newBuilder()
+      .setPath(path)
+      .setFileId(status.getFileId())
+      .setLength(status.getLen())
+      .setIsdir(status.isDir())
+      .setBlock_replication(status.getReplication())
+      .setBlocksize(status.getBlockSize())
+      .setModification_time(status.getModificationTime())
+      .setAccess_time(status.getAccessTime())
+      .setPermission(status.getPermission().toShort())
+      .setOwner(status.getOwner())
+      .setGroup(status.getGroup())
+      .setStoragePolicy(status.getStoragePolicy())
+      .build();
   }
 }

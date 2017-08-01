@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.model.FileDiff;
@@ -169,13 +170,13 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
 
     FileInfo[] fileInfos = new FileInfo[] {
-        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dirfile", 7000), "/dirfile"),
-        FileInfo.fromHdfsFileStatus(getDummyDirStatus("/dir", 8000), "/dir"),
-        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dir/file1", 8001), "/dir/file1"),
-        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dir/file2", 8002), "/dir/file2"),
-        FileInfo.fromHdfsFileStatus(getDummyDirStatus("/dir2", 8100), "/dir2"),
-        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dir2/file1", 8101), "/dir2/file1"),
-        FileInfo.fromHdfsFileStatus(getDummyFileStatus("/dir2/file2", 8102), "/dir2/file2"),
+        HadoopUtil.convertFileStatus(getDummyFileStatus("/dirfile", 7000), "/dirfile"),
+        HadoopUtil.convertFileStatus(getDummyDirStatus("/dir", 8000), "/dir"),
+        HadoopUtil.convertFileStatus(getDummyFileStatus("/dir/file1", 8001), "/dir/file1"),
+        HadoopUtil.convertFileStatus(getDummyFileStatus("/dir/file2", 8002), "/dir/file2"),
+        HadoopUtil.convertFileStatus(getDummyDirStatus("/dir2", 8100), "/dir2"),
+        HadoopUtil.convertFileStatus(getDummyFileStatus("/dir2/file1", 8101), "/dir2/file1"),
+        HadoopUtil.convertFileStatus(getDummyFileStatus("/dir2/file2", 8102), "/dir2/file2"),
     };
     metaStore.insertFiles(fileInfos);
     Mockito.when(client.getFileInfo("/dir1")).thenReturn(getDummyDirStatus("/dir1", 8000));
