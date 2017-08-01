@@ -12,34 +12,23 @@ Test Environment
 -----------------
 
 * Cluster： 1 Namenode + 2 Datanodes
-* Disk： 5 HDDs on each datanode
+* HDFS Disk： 5 HDDs on each datanode
 * Memory : 375 GB
-* Optane : 375 GB
+* Shuffle Disk : 1 HDD / 1 P3700 / 1 Optane
 * Hadoop version: trunk (3.0.0-beta1-SNAPSHOT)
 
 Workload
 -----------------
 
-Use ErasureCodeBenchmarkThroughput tool to measure the reading performance.
-#### DRAM alone
-* 300 GB uncached data
-* 300 GB cached data
-#### DRAM + Optane
-* 600 GB uncached data
-* 600 GB cached data
+For each workload, three experiments will be done using HDD, P3700 and Optane as shuffle respectively.
+* TeraSort 
+* WordCount
 
 
 Performance Measurement
 -----------------
 
 * End-to-end execution time
-* Throughput of the reading workload
-* Disk bandwidth
-
-
-
-
-
-
-
-
+* CPU utilization
+* Disk bandwidth, latency
+* Network IO
