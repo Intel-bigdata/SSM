@@ -80,10 +80,10 @@ public class MoveFileAction extends HdfsAction {
     dfsClient.setStoragePolicy(fileName, storagePolicy);
 
     // TODO : make MoveRunner configurable
-    if(movePlan == null){
+    if (movePlan == null) {
       OldMoveRunner moveRunner = new OldMoverBasedMoveRunner(getContext().getConf(), this.status);
       moveRunner.move(fileName);
-    }else{
+    } else {
       MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
       moveRunner.move(fileName, movePlan);
     }
