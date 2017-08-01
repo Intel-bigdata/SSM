@@ -49,11 +49,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * A processor to do Mover action.
  */
-class MoverProcessor {
-  static final Logger LOG = LoggerFactory.getLogger(MoverProcessor.class);
+class MoverProcessor2 {
+  static final Logger LOG = LoggerFactory.getLogger(MoverProcessor2.class);
 
   private final DFSClient dfs;
-  private Dispatcher dispatcher;
+  private final Dispatcher dispatcher;
+  private Path targetPath;
   private final StorageMap storages;
   private final AtomicInteger retryCount;
 
@@ -62,9 +63,11 @@ class MoverProcessor {
   private long remainingBlocks = 0;
   private final MoverStatus moverStatus;
 
-  MoverProcessor(DFSClient dfsClient, StorageMap storages,
+  MoverProcessor2(Dispatcher dispatcher, Path targetPath, StorageMap storages,
       MoverStatus moverStatus) throws IOException {
-    this.dfs = dfsClient;
+    this.dispatcher = dispatcher;
+    this.targetPath = targetPath;
+    this.dfs = dispatcher.getDistributedFileSystem().getClient();
     this.storages = storages;
     this.retryCount = new AtomicInteger(1);
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
@@ -75,7 +78,7 @@ class MoverProcessor {
 
   private void initStoragePolicies() throws IOException {
     BlockStoragePolicy[] policies =
-         MoverProcessorHelper.getStoragePolicies();
+         dispatcher.getDistributedFileSystem().getStoragePolicies();
 
     for (BlockStoragePolicy policy : policies) {
       this.blockStoragePolicies[policy.getId()] = policy;
@@ -99,7 +102,7 @@ class MoverProcessor {
    * @return whether there is still remaining migration work for the next
    * round
    */
-  ExitStatus processNamespace(Path targetPath) throws IOException {
+  ExitStatus processNamespace() throws IOException {
     MoverProcessResult result = new MoverProcessResult();
     DirectoryListing files = dfs.listPaths(targetPath.toUri().getPath(),
       HdfsFileStatus.EMPTY_NAME, true);
