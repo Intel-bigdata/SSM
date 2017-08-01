@@ -29,6 +29,7 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileInfo;
 
 import java.util.ArrayList;
@@ -157,6 +158,9 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Event unlink = new Event.UnlinkEvent.Builder().path("/").timestamp(6).build();
     applier.apply(new Event[] {unlink});
     Assert.assertFalse(metaStore.getFile().size() > 0);
+
+    List<FileDiff> fileDiffList = metaStore.getLatestFileDiff();
+    Assert.assertTrue(fileDiffList.size() == 6);
   }
 
   @Test
