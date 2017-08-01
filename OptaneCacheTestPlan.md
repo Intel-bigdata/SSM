@@ -20,7 +20,7 @@ Test Environment
 Workload
 -----------------
 
-Use ErasureCodeBenchmarkThroughput tool to measure the reading performance.
+Use ErasureCodeBenchmarkThroughput tool to measure the reading performance. Each test case will run in two modes: sequential read and random read.
 #### DRAM alone
 * 300 GB uncached data
 * 300 GB cached data
