@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.engine;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
@@ -79,6 +80,7 @@ public class CopyScheduler extends AbstractService {
   public void stop() throws IOException {
     executorService.shutdown();
   }
+
 
   private class ScheduleTask implements Runnable {
 

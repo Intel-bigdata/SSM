@@ -25,6 +25,7 @@ import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.metastore.dao.ActionDao;
 import org.smartdata.metastore.dao.CacheFileDao;
 import org.smartdata.metastore.dao.CmdletDao;
+import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
 import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
@@ -82,6 +83,7 @@ public class MetaStore {
   private UserDao userDao;
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
+  private FileDiffDao fileDiffDao;
   private AccessCountDao accessCountDao;
   private MetaStoreHelper metaStoreHelper;
 
@@ -97,6 +99,7 @@ public class MetaStore {
     storageDao = new StorageDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
+    fileDiffDao = new FileDiffDao(pool.getDataSource());
     metaStoreHelper = new MetaStoreHelper(pool.getDataSource());
   }
 
@@ -772,9 +775,17 @@ public class MetaStore {
     }
   }
 
+  public synchronized boolean insertFileDiff(FileDiff fileDiff)
+      throws MetaStoreException {
+    try {
+      return fileDiffDao.insert(fileDiff) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
-    // TODO fileDao get latest file diffs
-    return new ArrayList<>();
+    return fileDiffDao.getALL();
   }
 
   public void diffStatueUpdate(long did, FileDiffType fileDiffType) throws MetaStoreException {

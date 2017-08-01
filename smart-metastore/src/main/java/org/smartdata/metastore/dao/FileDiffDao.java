@@ -38,14 +38,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FileDiffDAO {
+public class FileDiffDao {
   private DataSource dataSource;
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
-  public FileDiffDAO(DataSource dataSource) {
+  public FileDiffDao(DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
@@ -73,10 +73,12 @@ public class FileDiffDAO {
     jdbcTemplate.update(sql, did);
   }
 
-  public void insert(FileDiff fileDiff) {
+  public long insert(FileDiff fileDiff) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("file_diff");
-    simpleJdbcInsert.execute(toMap(fileDiff));
+    simpleJdbcInsert.usingGeneratedKeyColumns("did");
+    // return did
+    return simpleJdbcInsert.executeAndReturnKey(toMap(fileDiff)).longValue();
   }
 
   public void insert(FileDiff[] fileDiffs) {
@@ -103,7 +105,7 @@ public class FileDiffDAO {
   }
 
   private Map<String, Object> toMap(FileDiff fileDiff) {
-    System.out.println(fileDiff.getDiffType());
+    // System.out.println(fileDiff.getDiffType());
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("did", fileDiff.getDiffId());
     parameters.put("diff_type", fileDiff.getDiffType().getValue());
