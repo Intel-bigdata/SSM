@@ -6,7 +6,7 @@ Purpose
 
 * Verify that Optane can serve as memory for HDFS to expand the memory size for cache
 * By HDFS cache with Optane, HDFS read operation can be accelerated
-* Compare the performance of cache with Optane to that of cache with DRAM
+* Compare the performance of cache with Optane to cache with DRAM
 
 Test Environment
 -----------------
