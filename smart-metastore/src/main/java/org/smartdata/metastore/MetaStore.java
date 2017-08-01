@@ -37,6 +37,8 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileAccessInfo;
+import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
@@ -768,6 +770,15 @@ public class MetaStore {
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
+    // TODO fileDao get latest file diffs
+    return new ArrayList<>();
+  }
+
+  public void diffStatueUpdate(long did, FileDiffType fileDiffType) throws MetaStoreException {
+    // TODO statue update
   }
 
   public void dropAllTables() throws MetaStoreException {
