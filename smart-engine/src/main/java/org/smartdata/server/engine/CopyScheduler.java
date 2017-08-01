@@ -96,7 +96,7 @@ public class CopyScheduler extends AbstractService {
       // Move diffs to running queue
       while (runningDR.size() < MAX_RUNNING_SIZE) {
         FileDiff fileDiff = pendingDR.poll();
-        // TODO Submit cmdlet
+        // TODO parse and Submit cmdlet
         long cid = cmdletManager.submitCmdlet("Test");
         runningDR.add(cid);
       }
