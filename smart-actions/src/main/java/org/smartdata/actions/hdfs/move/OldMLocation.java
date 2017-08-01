@@ -33,7 +33,7 @@ class OldMLocation {
     final StorageType storageType;
     final long size;
 
-    OldMLocation(DatanodeInfo datanode, StorageType storageType, long size) {
+    public OldMLocation(DatanodeInfo datanode, StorageType storageType, long size) {
         this.datanode = datanode;
         this.storageType = storageType;
         this.size = size;

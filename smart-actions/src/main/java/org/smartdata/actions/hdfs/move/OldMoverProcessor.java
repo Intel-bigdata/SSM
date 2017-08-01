@@ -54,7 +54,7 @@ class OldMoverProcessor {
     private long remainingBlocks = 0;
     private final MoverStatus moverStatus;
 
-    OldMoverProcessor(Dispatcher dispatcher, List<Path> targetPaths,
+    public OldMoverProcessor(Dispatcher dispatcher, List<Path> targetPaths,
                    AtomicInteger retryCount, int retryMaxAttempts, OldStorageMap storages,
                    MoverStatus moverStatus)
             throws IOException {
@@ -130,7 +130,7 @@ class OldMoverProcessor {
         return sb.toString();
     }
 
-    Dispatcher.DBlock newDBlock(LocatedBlock lb, List<OldMLocation> locations) {
+    private Dispatcher.DBlock newDBlock(LocatedBlock lb, List<OldMLocation> locations) {
         Block blk = lb.getBlock().getLocalBlock();
         Dispatcher.DBlock db;
         db = new Dispatcher.DBlock(blk);
@@ -147,7 +147,7 @@ class OldMoverProcessor {
      * @return whether there is still remaining migration work for the next
      * round
      */
-    ExitStatus processNamespace() throws IOException {
+    public ExitStatus processNamespace() throws IOException {
         getSnapshottableDirs();
         MoverProcessResult result = new MoverProcessResult();
         for (Path target : targetPaths) {
@@ -279,7 +279,7 @@ class OldMoverProcessor {
         }
     }
 
-    boolean scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb) {
+    private boolean scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb) {
         final List<OldMLocation> locations = OldMLocation.toLocations(lb);
         Collections.shuffle(locations);
         final Dispatcher.DBlock db = newDBlock(lb, locations);
@@ -299,14 +299,14 @@ class OldMoverProcessor {
     }
 
     @VisibleForTesting
-    boolean scheduleMoveReplica(Dispatcher.DBlock db, OldMLocation ml,
+    private boolean scheduleMoveReplica(Dispatcher.DBlock db, OldMLocation ml,
                                 List<StorageType> targetTypes) {
         final Dispatcher.Source source = storages.getSource(ml);
         return source == null ? false : scheduleMoveReplica(db, source,
                 targetTypes);
     }
 
-    boolean scheduleMoveReplica(Dispatcher.DBlock db, Dispatcher.Source source,
+    private boolean scheduleMoveReplica(Dispatcher.DBlock db, Dispatcher.Source source,
                                 List<StorageType> targetTypes) {
         // Match storage on the same node
         if (chooseTargetInSameNode(db, source, targetTypes)) {
@@ -330,7 +330,7 @@ class OldMoverProcessor {
     /**
      * Choose the target storage within same Datanode if possible.
      */
-    boolean chooseTargetInSameNode(Dispatcher.DBlock db, Dispatcher.Source source,
+    private boolean chooseTargetInSameNode(Dispatcher.DBlock db, Dispatcher.Source source,
                                    List<StorageType> targetTypes) {
         for (StorageType t : targetTypes) {
             Dispatcher.DDatanode.StorageGroup target = storages.getTarget(source.getDatanodeInfo()
@@ -347,7 +347,7 @@ class OldMoverProcessor {
         return false;
     }
 
-    boolean chooseTarget(Dispatcher.DBlock db, Dispatcher.Source source,
+    private boolean chooseTarget(Dispatcher.DBlock db, Dispatcher.Source source,
                          List<StorageType> targetTypes, Matcher matcher) {
         final NetworkTopology cluster = dispatcher.getCluster();
         for (StorageType t : targetTypes) {
@@ -370,34 +370,34 @@ class OldMoverProcessor {
     /**
      * Describe the result for MoverProcessor.
      */
-    class MoverProcessResult {
+    private class MoverProcessResult {
         private boolean hasRemaining;
         private boolean noBlockMoved;
         private boolean retryFailed;
 
-        MoverProcessResult() {
+        public MoverProcessResult() {
             hasRemaining = false;
             noBlockMoved = true;
             retryFailed = false;
         }
 
-        boolean isHasRemaining() {
+        public boolean isHasRemaining() {
             return hasRemaining;
         }
 
-        boolean isNoBlockMoved() {
+        public boolean isNoBlockMoved() {
             return noBlockMoved;
         }
 
-        void updateHasRemaining(boolean hasRemaining) {
+        public void updateHasRemaining(boolean hasRemaining) {
             this.hasRemaining |= hasRemaining;
         }
 
-        void setNoBlockMoved(boolean noBlockMoved) {
+        public void setNoBlockMoved(boolean noBlockMoved) {
             this.noBlockMoved = noBlockMoved;
         }
 
-        void setRetryFailed() {
+        public void setRetryFailed() {
             this.retryFailed = true;
         }
 
@@ -408,7 +408,7 @@ class OldMoverProcessor {
          *         cannot be scheduled. Otherwise, return IN_PROGRESS since there
          *         must be some remaining moves.
          */
-        ExitStatus getExitStatus() {
+        public ExitStatus getExitStatus() {
             if (retryFailed) {
                 return ExitStatus.NO_MOVE_PROGRESS;
             } else {
@@ -423,11 +423,11 @@ class OldMoverProcessor {
      * Record and process the difference of storage types between source and
      * destination during Mover.
      */
-    class StorageTypeDiff {
+    private class StorageTypeDiff {
         final List<StorageType> expected;
         final List<StorageType> existing;
 
-        StorageTypeDiff(List<StorageType> expected, StorageType[] existing) {
+        public StorageTypeDiff(List<StorageType> expected, StorageType[] existing) {
             this.expected = new LinkedList<StorageType>(expected);
             this.existing = new LinkedList<StorageType>(Arrays.asList(existing));
         }
@@ -439,7 +439,7 @@ class OldMoverProcessor {
          *         to prevent non-movable storage from being moved.
          * @returns the remaining number of replications to move.
          */
-        int removeOverlap(boolean ignoreNonMovable) {
+        public int removeOverlap(boolean ignoreNonMovable) {
             for(Iterator<StorageType> i = existing.iterator(); i.hasNext(); ) {
                 final StorageType t = i.next();
                 if (expected.remove(t)) {
@@ -453,7 +453,7 @@ class OldMoverProcessor {
             return existing.size() < expected.size() ? existing.size() : expected.size();
         }
 
-        void removeNonMovable(List<StorageType> types) {
+        public void removeNonMovable(List<StorageType> types) {
             for (Iterator<StorageType> i = types.iterator(); i.hasNext(); ) {
                 final StorageType t = i.next();
                 if (!t.isMovable()) {

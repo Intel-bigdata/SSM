@@ -35,13 +35,13 @@ class OldStorageMap {
     private final EnumMap<StorageType, List<Dispatcher.DDatanode.StorageGroup>> targetStorageTypeMap
             = new EnumMap<StorageType, List<Dispatcher.DDatanode.StorageGroup>>(StorageType.class);
 
-    OldStorageMap() {
+    public OldStorageMap() {
         for (StorageType t : StorageType.getMovableTypes()) {
             targetStorageTypeMap.put(t, new LinkedList<Dispatcher.DDatanode.StorageGroup>());
         }
     }
 
-    void add(Dispatcher.Source source, Dispatcher.DDatanode.StorageGroup target) {
+    public void add(Dispatcher.Source source, Dispatcher.DDatanode.StorageGroup target) {
         sources.put(source);
         if (target != null) {
             targets.put(target);
@@ -49,23 +49,23 @@ class OldStorageMap {
         }
     }
 
-    Dispatcher.Source getSource(OldMLocation ml) {
+    public Dispatcher.Source getSource(OldMLocation ml) {
         return get(sources, ml);
     }
 
-    Dispatcher.StorageGroupMap<Dispatcher.DDatanode.StorageGroup> getTargets() {
+    public Dispatcher.StorageGroupMap<Dispatcher.DDatanode.StorageGroup> getTargets() {
         return targets;
     }
 
-    Dispatcher.DDatanode.StorageGroup getTarget(String uuid, StorageType storageType) {
+    public Dispatcher.DDatanode.StorageGroup getTarget(String uuid, StorageType storageType) {
         return targets.get(uuid, storageType);
     }
 
-    static <G extends Dispatcher.DDatanode.StorageGroup> G get(Dispatcher.StorageGroupMap<G> map, OldMLocation ml) {
+    public static <G extends Dispatcher.DDatanode.StorageGroup> G get(Dispatcher.StorageGroupMap<G> map, OldMLocation ml) {
         return map.get(ml.datanode.getDatanodeUuid(), ml.storageType);
     }
 
-    List<Dispatcher.DDatanode.StorageGroup> getTargetStorages(StorageType t) {
+    public List<Dispatcher.DDatanode.StorageGroup> getTargetStorages(StorageType t) {
         return targetStorageTypeMap.get(t);
     }
 }

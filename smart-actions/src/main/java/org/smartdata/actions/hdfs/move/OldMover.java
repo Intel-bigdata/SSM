@@ -51,7 +51,7 @@ public class OldMover {
     final AtomicInteger retryCount;
     private final MoverStatus status;
 
-    OldMover(NameNodeConnector nnc, Configuration conf, AtomicInteger retryCount,
+    public OldMover(NameNodeConnector nnc, Configuration conf, AtomicInteger retryCount,
           MoverStatus status) {
         final long movedWinWidth = conf.getLong(
                 DFSConfigKeys.DFS_MOVER_MOVEDWINWIDTH_KEY,
@@ -75,7 +75,7 @@ public class OldMover {
     }
 
     @VisibleForTesting
-    void init() throws IOException {
+    public void init() throws IOException {
         final List<DatanodeStorageReport> reports = dispatcher.init();
         for(DatanodeStorageReport r : reports) {
             final Dispatcher.DDatanode dn = dispatcher.newDatanode(r.getDatanodeInfo());
@@ -117,7 +117,7 @@ public class OldMover {
         return max;
     }
 
-    static int run(Map<URI, List<Path>> namenodes, Configuration conf,
+    public static int run(Map<URI, List<Path>> namenodes, Configuration conf,
                    MoverStatus status) throws IOException, InterruptedException {
         final long sleeptime =
                 conf.getLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,

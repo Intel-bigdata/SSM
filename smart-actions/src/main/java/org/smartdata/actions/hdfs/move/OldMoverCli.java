@@ -52,7 +52,7 @@ public class OldMoverCli extends Configured implements Tool {
     }
 
     @VisibleForTesting
-    static Map<URI, List<Path>> getNameNodePathsToMove(Configuration conf, String... paths)
+    public static Map<URI, List<Path>> getNameNodePathsToMove(Configuration conf, String... paths)
             throws Exception {
         Map<URI, List<Path>> map = Maps.newHashMap();
         Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
