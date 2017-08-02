@@ -108,11 +108,11 @@ angular.module('zeppelinWebApp')
     actions0.$subscribe($scope, function (actions) {
       updateTable(actions);
     });
-
+/*
     $(function () {
       $("[data-toggle='tooltip']").tooltip({
         container: body
       });
-    });
+    });*/
   }
 
