@@ -22,14 +22,14 @@ limitations under the License.
     </div>
     <div style="float: left; padding-bottom: 10px">
       <span class="labelBtn btn-group">
-      <button type="button"
+      <!--<button type="button"
               class="btn btn-default btn-xs"
               ng-click="runAllParagraphs(note.id)"
               ng-class="{'disabled':isNoteRunning()}"
               tooltip-placement="bottom" uib-tooltip="Run all paragraphs"
               ng-disabled="revisionView">
         <i class="icon-control-play"></i>
-      </button>
+      </button>-->
       <button type="button"
               class="btn btn-default btn-xs"
               ng-click="toggleAllEditor()"
@@ -164,8 +164,7 @@ limitations under the License.
     </span>
 
 <!-- put the delete action by itself for your protection -->
-      <span class="labelBtn" style="vertical-align:middle; display:inline-block;">
-        <!-- if the note is in the trash, remove note permanently -->
+      <!--<span class="labelBtn" style="vertical-align:middle; display:inline-block;">
         <button ng-if="isTrash(note)"
                 type="button"
                 class="btn btn-default btn-xs"
@@ -175,7 +174,6 @@ limitations under the License.
                 ng-disabled="revisionView">
           <i class="icon-trash"></i>
         </button>
-        <!-- if the note is not in the trash, move to trash -->
         <button ng-if="!isTrash(note)"
                 type="button"
                 class="btn btn-default btn-xs"
@@ -185,7 +183,7 @@ limitations under the License.
                 ng-disabled="revisionView">
           <i class="icon-trash"></i>
         </button>
-      </span>
+      </span>-->
 
       <span ng-hide="viewOnly">
       <div class="labelBtn btn-group">
@@ -249,12 +247,12 @@ limitations under the License.
               tooltip-placement="bottom" uib-tooltip="List of shortcut">
           <i class="fa fa-keyboard-o"></i>
         </span>
-        <span class="setting-btn"
+       <!-- <span class="setting-btn"
               type="button"
               ng-click="toggleSetting()"
               tooltip-placement="bottom" uib-tooltip="Interpreter binding">
           <i class="fa fa-cog" ng-style="{color: showSetting ? '#3071A9' : 'black' }"></i>
-        </span>
+        </span>-->
         <span class="setting-btn"
               type="button"
               ng-click="togglePermissions()"

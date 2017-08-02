@@ -374,14 +374,14 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     $scope.killSaveTimer();
     $scope.isNoteDirty = true;
     //console.log('startSaveTimer called ' + $scope.note.id);
-    $scope.saveTimer = $timeout(function() {
+    /*$scope.saveTimer = $timeout(function() {
       $scope.saveNote();
-    }, 10000);
+    }, 10000);*/
   };
 
   angular.element(window).on('beforeunload', function(e) {
     $scope.killSaveTimer();
-    $scope.saveNote();
+    /*$scope.saveNote();*/
   });
 
   $scope.setLookAndFeel = function(looknfeel) {
@@ -1009,7 +1009,7 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
   $scope.$on('$destroy', function() {
     angular.element(window).off('beforeunload');
     $scope.killSaveTimer();
-    $scope.saveNote();
+    /*$scope.saveNote();*/
 
     document.removeEventListener('click', $scope.focusParagraphOnClick);
     document.removeEventListener('keydown', $scope.keyboardShortcut);
