@@ -12,7 +12,7 @@ Use Optane as Cache
 
 ### 2. Test Environment
 
-* Cluster： 1 Namenode + 2 Datanodes
+* Cluster： 1 Namenode + 1 Datanodes
 * Disk： 5 HDDs on each datanode
 * Memory : 375 GB
 * Optane : 375 GB
