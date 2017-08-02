@@ -204,16 +204,6 @@
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>test_bulk_crc32</id>
-                                <goals><goal>cmake-test</goal></goals>
-                                <phase>test</phase>
-                                <configuration>
-                                    <binary>${project.build.directory}/native/test_bulk_crc32</binary>
-                                    <timeout>1200</timeout>
-                                    <results>${project.build.directory}/native-results</results>
-                                </configuration>
-                            </execution>
-                            <execution>
                                 <id>erasure_code_test</id>
                                 <goals><goal>cmake-test</goal></goals>
                                 <phase>test</phase>
@@ -292,7 +282,6 @@
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeRSRawDecoder</javahClassName>
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawEncoder</javahClassName>
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawDecoder</javahClassName>
-                                        <javahClassName>org.smartdata.erasurecode.util.NativeCrc32</javahClassName>
                                     </javahClassNames>
                                     <javahOutputDirectory>${project.build.directory}/native/javah</javahOutputDirectory>
                                 </configuration>
