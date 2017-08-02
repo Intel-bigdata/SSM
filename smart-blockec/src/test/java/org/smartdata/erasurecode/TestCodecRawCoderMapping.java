@@ -17,14 +17,12 @@
  */
 package org.smartdata.erasurecode;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.erasurecode.rawcoder.*;
 import org.smartdata.erasurecode.test.GenericTestUtils;
-
 
 /**
  * Test the codec to raw coder mapping.

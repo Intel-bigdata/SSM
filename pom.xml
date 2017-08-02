@@ -37,20 +37,9 @@
     <module>smart-hdfs</module>
     <module>smart-dist</module>
     <module>smart-integration</module>
+    <module>smart-blockec</module>
   </modules>
 
-  <profiles>
-    <profile>
-      <id>java8</id>
-      <activation>
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <modules>
-        <module>smart-alluxio</module>
-        <module>smart-blockec</module>
-      </modules>
-    </profile>
-  </profiles>
 
   <properties>
     <maven.compiler.source>1.7</maven.compiler.source>
