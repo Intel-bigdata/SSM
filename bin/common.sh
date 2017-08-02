@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -143,17 +143,16 @@ function start_smart_server() {
 
   if [[ "${SMART_VARGS}" =~ " -format" ]]; then
     echo "Start formatting database ..."
-    exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $SMART_VARGS
-    exit $?
+    exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_CLASSNAME $SMART_VARGS
   fi
 
-  echo  "Starting SmartServer ..."
-  ssh ${SSH_OPTIONS} ${servers} "cd ${SMART_HOME}; ${SMART_HOME}/bin/start-smart.sh ${SMART_VARGS} --daemon"
+  echo "Starting SmartServer ..."
+  smart_start_daemon ${SMART_PID_FILE}
 }
 
 function stop_smart_server() {
   local servers=localhost
-  ssh ${SSH_OPTIONS} ${servers} "cd ${SMART_HOME}; ${SMART_HOME}/bin/stop-smart.sh --daemon"
+  smart_stop_daemon ${SMART_PID_FILE}
 }
 
 function smart_start_daemon() {
@@ -201,7 +200,7 @@ function start_daemon() {
     echo "ERROR: Can NOT write PID file ${pidfile}."
   fi
 
-  exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_SERVER $SMART_VARGS
+  exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_CLASSNAME $SMART_VARGS
 }
 
 function smart_stop_daemon() {
@@ -238,4 +237,49 @@ function smart_stop_daemon() {
   else
     echo "Service not found on node '${HOSTNAME}'"
   fi
+}
+
+function init_command() {
+  local subcmd=$1
+  shift
+
+  case ${subcmd} in
+    formatdatabase)
+      SMART_CLASSNAME=org.smartdata.server.SmartDaemon
+      SMART_PID_FILE=/tmp/SmartServer.pid
+      ALLOW_DAEMON_OPT=true
+      SMART_VARGS+=" -format"
+      JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
+    ;;
+    smartserver)
+      SMART_CLASSNAME=org.smartdata.server.SmartDaemon
+      SMART_PID_FILE=/tmp/SmartServer.pid
+      ALLOW_DAEMON_OPT=true
+      JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
+    ;;
+    smartagent)
+      SMART_CLASSNAME=org.smartdata.agent.SmartAgent
+      SMART_PID_FILE=/tmp/SmartAgent.pid
+      ALLOW_DAEMON_OPT=true
+      JAVA_OPTS+=" -Dsmart.log.file=SmartAgent.log"
+    ;;
+    getconf)
+      SMART_CLASSNAME=org.smartdata.server.utils.tools.GetConf
+    ;;
+    *)
+      echo "Unkown command ${subcmd}"
+      exit 1;
+    ;;
+  esac
+}
+
+function remote_execute() {
+  local host=$1
+  shift
+
+  ssh ${SSH_OPTIONS} ${host} "$@"
+}
+
+function local_execute() {
+  exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_CLASSNAME $SMART_VARGS
 }

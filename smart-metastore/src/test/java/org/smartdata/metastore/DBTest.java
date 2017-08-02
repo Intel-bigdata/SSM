@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore;
 
-import org.dbunit.DataSourceDatabaseTester;
 import org.dbunit.IDatabaseTester;
 import org.dbunit.JdbcDatabaseTester;
 import org.junit.After;

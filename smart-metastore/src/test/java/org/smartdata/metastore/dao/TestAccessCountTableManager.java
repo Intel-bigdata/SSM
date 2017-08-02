@@ -80,9 +80,9 @@ public class TestAccessCountTableManager extends DBTest {
 
   private void createTables(Connection connection) throws Exception {
     Statement statement = connection.createStatement();
-    statement.execute(AccessCountDao.createTableSQL("expect1"));
-    statement.execute(AccessCountDao.createTableSQL("expect2"));
-    statement.execute(AccessCountDao.createTableSQL("expect3"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("expect1"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("expect2"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("expect3"));
     statement.close();
   }
 

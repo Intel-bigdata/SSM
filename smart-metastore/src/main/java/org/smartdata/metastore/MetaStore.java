@@ -25,6 +25,7 @@ import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.metastore.dao.ActionDao;
 import org.smartdata.metastore.dao.CacheFileDao;
 import org.smartdata.metastore.dao.CmdletDao;
+import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
 import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
@@ -37,6 +38,7 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileAccessInfo;
+import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
@@ -80,6 +82,7 @@ public class MetaStore {
   private UserDao userDao;
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
+  private FileDiffDao fileDiffDao;
   private AccessCountDao accessCountDao;
   private MetaStoreHelper metaStoreHelper;
 
@@ -95,6 +98,7 @@ public class MetaStore {
     storageDao = new StorageDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
+    fileDiffDao = new FileDiffDao(pool.getDataSource());
     metaStoreHelper = new MetaStoreHelper(pool.getDataSource());
   }
 
@@ -770,6 +774,27 @@ public class MetaStore {
     }
   }
 
+  public synchronized boolean insertFileDiff(FileDiff fileDiff)
+      throws MetaStoreException {
+    try {
+      return fileDiffDao.insert(fileDiff) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public boolean markFillDiffApplied(long did) throws MetaStoreException {
+    try {
+      return fileDiffDao.update(did,true) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
+    return fileDiffDao.getALL();
+  }
+
   public void dropAllTables() throws MetaStoreException {
     Connection conn = getConnection();
     try {
@@ -804,13 +829,10 @@ public class MetaStore {
     initializeDataBase();
   }
 
-  public String aggregateSQLStatement(AccessCountTable destinationTable
+  public void aggregateTables(AccessCountTable destinationTable
       , List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     try {
-      return accessCountDao
-          .aggregateSQLStatement(destinationTable, tablesToAggregate);
-    } catch (EmptyResultDataAccessException e) {
-      return null;
+      accessCountDao.aggregateTables(destinationTable, tablesToAggregate);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
