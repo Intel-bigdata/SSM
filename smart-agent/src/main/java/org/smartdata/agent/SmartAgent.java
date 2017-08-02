@@ -28,28 +28,23 @@ import akka.actor.Props;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Procedure;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.SmartContext;
-import org.smartdata.actions.ActionException;
+import org.smartdata.AgentService;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
+import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
-import org.smartdata.server.engine.cmdlet.CmdletFactory;
-import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import org.smartdata.server.utils.GenericOptionsParser;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
@@ -60,15 +55,16 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SmartAgent {
+public class SmartAgent implements StatusReporter {
   private static final String NAME = "SmartAgent";
   private final static Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
+  private ActorRef agentActor;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
 
-    Configuration conf = new GenericOptionsParser(new SmartConf(), args).getConfiguration();
+    SmartConf conf = (SmartConf) new GenericOptionsParser(new SmartConf(), args).getConfiguration();
     String[] masters = conf.getStrings(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
 
     checkNotNull(masters);
@@ -78,9 +74,9 @@ public class SmartAgent {
         AgentUtils.getMasterActorPaths(masters), conf);
   }
 
-  void start(Config config, String[] masterPath, Configuration conf) {
+  public void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
-    system.actorOf(Props.create(AgentActor.class, conf, this, masterPath), getAgentName());
+    agentActor = system.actorOf(Props.create(AgentActor.class, this, masterPath), getAgentName());
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -93,21 +89,29 @@ public class SmartAgent {
         }
       }
     });
+    Services.init(new SmartAgentContext(conf, this));
+    Services.start();
     system.awaitTermination();
   }
 
-  void close() {
+  public void close() {
+    Services.stop();
     if (system != null && !system.isTerminated()) {
       LOG.info("Shutting down system {}", AgentUtils.getSystemAddres(system));
       system.shutdown();
     }
   }
 
+  @Override
+  public void report(StatusMessage status) {
+    Patterns.ask(agentActor, status, Timeout.apply(5, TimeUnit.SECONDS));
+  }
+
   private String getAgentName() {
     return "agent-" + UUID.randomUUID().toString();
   }
 
-  static class AgentActor extends UntypedActor implements StatusReporter {
+  static class AgentActor extends UntypedActor {
     private final static Logger LOG = LoggerFactory.getLogger(AgentActor.class);
 
     private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
@@ -115,18 +119,12 @@ public class SmartAgent {
 
     private MasterToAgent.AgentId id;
     private ActorRef master;
-    private final SmartConf smartConf;
     private final SmartAgent agent;
     private final String[] masters;
-    private final CmdletExecutor executor;
-    private final CmdletFactory factory;
 
-    public AgentActor(SmartConf smartConf, SmartAgent agent, String[] masters) {
+    public AgentActor(SmartAgent agent, String[] masters) {
       this.agent = agent;
       this.masters = masters;
-      this.smartConf = smartConf;
-      this.executor = new CmdletExecutor(smartConf, this);
-      this.factory = new CmdletFactory(new SmartContext(), this);
     }
 
     @Override
@@ -154,10 +152,7 @@ public class SmartAgent {
           }, new Shutdown(agent));
     }
 
-    @Override
-    public void report(StatusMessage status) {
-      master.tell(status, getSelf());
-    }
+
 
     private class WaitForFindMaster implements Procedure<Object> {
 
@@ -212,19 +207,15 @@ public class SmartAgent {
 
       @Override
       public void apply(Object message) throws Exception {
-        if (message instanceof LaunchCmdlet) {
-          LaunchCmdlet launch = (LaunchCmdlet) message;
-          try{
-            executor.execute(factory.createCmdlet(launch));
-          } catch (ActionException e) {
-            LOG.error("Create cmdlet from {} error", launch, e);
-            report(
-                new CmdletStatusUpdate(
-                    launch.getCmdletId(), System.currentTimeMillis(), CmdletState.FAILED));
+        if (message instanceof AgentService.Message) {
+          try {
+            Services.dispatch((AgentService.Message) message);
+          } catch (Exception e) {
+            LOG.error(e.getMessage());
           }
-        } else if (message instanceof StopCmdlet) {
-          StopCmdlet stop = (StopCmdlet) message;
-          executor.stop(stop.getCmdletId());
+        } else if (message instanceof StatusMessage) {
+          master.tell(message, getSelf());
+          getSender().tell("status reported", getSelf());
         } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {

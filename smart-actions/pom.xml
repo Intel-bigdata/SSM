@@ -22,20 +22,24 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smartdata-project</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>smart-actions</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -75,48 +79,6 @@
                         </goals>
                         <configuration>
                             <outputDirectory>target/lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.github.os72</groupId>
-                <artifactId>protoc-jar-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <protocVersion>${protobuf.version}</protocVersion>
-                            <inputDirectories>
-                                <include>${basedir}/src/main/proto</include>
-                            </inputDirectories>
-                            <outputTargets>
-                                <outputTarget>
-                                    <type>java</type>
-                                    <addSources>none</addSources>
-                                    <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
-                                </outputTarget>
-                            </outputTargets>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-sources/java</source>
-                            </sources>
                         </configuration>
                     </execution>
                 </executions>

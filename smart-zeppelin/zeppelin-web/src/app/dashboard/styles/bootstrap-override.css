@@ -1,0 +1,212 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/* .navbar-fixed-top will occupy50px (regarding current font size) */
+body {
+  padding-top: 50px; /*equals navbar height*/
+}
+
+/* Bugfix: Angular-strap's dropdown menu will not response on clicking footer */
+html, body {
+  height: 100%;
+}
+
+/* Make navbar font more readable (2 rules) */
+.navbar-nav > li {
+  font-weight: 500;
+}
+
+.navbar-nav > li,
+.dropdown-menu > li > a.header-menu {
+  font-size: 1.35rem;
+}
+
+/* More distance to the branding logo at left */
+.navbar-nav > li:first-child {
+  margin-left: 30px;
+}
+
+/* Emphasize active navbar element for dark background (2 rules) */
+.navbar-inverse {
+  background-color: #373a3c;
+}
+
+.navbar-inverse .navbar-nav > li > a:hover {
+  background-color: #444;
+}
+
+/* A extra small breadcrumb (2 rules) */
+.breadcrumb-sm {
+  margin-bottom: 8px;
+}
+
+.breadcrumb-sm > li {
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+/* Alternative breadcrumb style: no rounded corners and shadow on the bottom */
+.breadcrumb-alt {
+  border-radius: 0;
+  box-shadow: 1px 1px 2px #ddd;
+}
+
+/* Bugfix: Remove too large padding after path separator */
+.breadcrumb > li {
+  padding-right: 7px;
+}
+
+.table-inverse {
+  color: #fff;
+  background-color: #292b2c;
+}
+
+/* Increase the distance of table footer and table body */
+.table tfoot > tr > td {
+  padding: 14px 0 0;
+  border-top: 0 solid transparent;
+}
+
+/* Smaller font for table meta */
+.table thead > tr > th {
+  font-size: .9em;
+  vertical-align: top;
+}
+
+/* Larger table caption (2 rules) */
+.table caption,
+.table-caption-ext {
+  color: #000;
+  font-size: 1.2em;
+  font-weight: 500;
+  padding-bottom: 8px;
+}
+
+.table-caption-ext {
+  display: block;
+}
+
+/* glyphicon in a SPAN might be a bit too high than other SPAN text elements */
+.glyphicon {
+  top: 2px;
+}
+
+/* glyphicon placeholder */
+.glyphicon-none:before {
+  /* http://stackoverflow.com/questions/19598336/blank-placeholder-for-bootstrap-glyphicon */
+  content: "\e094";
+  color: transparent !important;
+}
+
+/* Tune bootstrap-tooltip look and feel (2 rules) */
+.tooltip-inner {
+  max-width: none;
+  padding: 5px 10px;
+}
+
+*[bs-tooltip] {
+  cursor: pointer;
+}
+
+/* Active nav-tabs element's background color should not be hardcoded as white. */
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:focus,
+.nav-tabs > li.active > a:hover {
+  background-color: transparent;
+}
+
+/* Smaller font size and spacing for dropdown menu (3 rules) */
+.dropdown-menu {
+  font-size: 0.95em;
+}
+
+.dropdown-menu > li > a {
+  padding-left: 12px;
+  cursor: pointer;
+}
+
+.dropdown-menu > li > a > i {
+  padding-right: 2px;
+}
+
+/* The default padding was too large for xs size */
+.btn.btn-xs.dropdown-toggle {
+  padding: 1px 4px 3px;
+  line-height: 16px;
+}
+
+/* Draw a shadow around panel */
+.panel-shadowed {
+  background: #fff;
+  box-shadow: 1px 2px 3px #ddd;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+/* Fix visual glitches of indicator icon in an input/search box */
+.form-control-feedback {
+  top: 1px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Reduce panel height for a smaller panel */
+.panel-sm .panel-heading, .panel-sm .panel-footer {
+  padding: 4px 8px;
+  font-size: 0.95em;
+}
+
+/* Specify the style for the modal dialog */
+.modal-md {
+  margin-top: 30px;
+}
+
+/* Smaller pager */
+.pager-sm > li > a {
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+/* Make the feedback icon of a form input control clickable (2 rules) */
+.clickable {
+  pointer-events: auto;
+}
+
+.clickable:hover {
+  cursor: pointer;
+}
+
+/* Fix the icon position issue when corresponding input-control is small */
+.form-control-feedback-sm {
+  margin-top: -1px;
+}
+
+/* Make alert padding narrower (2 rules) */
+.alert {
+  padding: 7px 10px;
+}
+
+.alert-dismissable,
+.alert-dismissible {
+  padding-right: 30px;
+}
+
+/* Fix cursor for dropdown menu button */
+a.dropdown-toggle {
+  cursor: pointer;
+}

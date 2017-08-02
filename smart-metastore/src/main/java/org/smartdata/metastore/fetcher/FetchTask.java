@@ -21,7 +21,7 @@ import java.util.ArrayDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import org.smartdata.model.FileInfo;
 
-public abstract class FetchTask implements Runnable{
+public abstract class FetchTask implements Runnable {
   public static long numFilesFetched = 0L;
   public static long numDirectoriesFetched = 0L;
   public static long numPersisted = 0L;

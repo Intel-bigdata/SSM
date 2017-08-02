@@ -35,7 +35,11 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction(CheckStorageAction.class);
 //    addAction("stripec", StripErasureCodeFileAction.class);
 //    addAction("blockec", BlockErasureCodeFileAction.class);
-//    addAction("copy", CopyFileAction.class);
+    addAction(CopyFileAction.class);
+    addAction(DeleteFileAction.class);
+    addAction(RenameFileAction.class);
+    addAction(ListFileAction.class);
+    addAction(ConcatFileAction.class);
 //    addAction("list", ListFileAction.class);
 //    addAction("fsck", FsckAction.class);
 //    addAction("diskbalance", DiskBalanceAction.class);

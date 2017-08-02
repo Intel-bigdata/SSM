@@ -16,7 +16,7 @@
 
   <groupId>org.smartdata</groupId>
   <artifactId>smartdata-project</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>1.0-SNAPSHOT</version>
   <description>Smart Data Project</description>
   <name>SmartData Project</name>
   <packaging>pom</packaging>
@@ -47,6 +47,7 @@
       </activation>
       <modules>
         <module>smart-alluxio</module>
+        <module>smart-blockec</module>
       </modules>
     </profile>
   </profiles>

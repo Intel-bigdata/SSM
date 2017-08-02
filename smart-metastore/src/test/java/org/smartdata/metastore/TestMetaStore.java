@@ -21,7 +21,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.actions.hdfs.CacheFileAction;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionInfo;
@@ -60,31 +59,6 @@ public class TestMetaStore extends TestDaoUtil {
     }
   }
 
-/*  @Test
-  public void testGetAccessCount() throws Exception {
-    Map<Long, Integer> ret = metaStore.getHotFiles(1490932740000l,
-        1490936400000l, null);
-    Assert.assertTrue(ret.get(2l) == 32);
-  }
-
-  @Test
-  public void testGetFileIds() throws Exception {
-    createTables(databaseTester.getConnection());
-    IDataSet dataSet = new XmlDataSet(getClass().getClassLoader()
-      .getResourceAsStream("files.xml"));
-    databaseTester.setDataSet(dataSet);
-    databaseTester.onSetup();
-
-    DBAdapter dbAdapter = new DBAdapter(databaseTester.getConnection().getConnection());
-    List<String> paths = Arrays.asList("file1", "file2", "file3");
-    Map<String, Long> pathToID = dbAdapter.getFileIDs(paths);
-    Assert.assertTrue(pathToID.get("file1") == 101);
-    Assert.assertTrue(pathToID.get("file2") == 102);
-    Assert.assertTrue(pathToID.get("file3") == 103);
-  }
-  */
-
-
   @Test
   public void testHighConcurrency() throws Exception {
     // Multiple threads
@@ -95,7 +69,6 @@ public class TestMetaStore extends TestDaoUtil {
     th2.start();
     th2.join();
   }
-
 
   @Test
   public void testThreadSleepConcurrency() throws Exception {
@@ -147,7 +120,6 @@ public class TestMetaStore extends TestDaoUtil {
 
     public void run() {
       Map<String, String> args = new HashMap();
-      args.put(CacheFileAction.FILE_PATH, "/test/file");
       ActionInfo actionInfo = new ActionInfo(1, 1,
           "cache", args, "Test",
           "Test", true, 123213213l, true, 123123l,
@@ -415,7 +387,6 @@ public class TestMetaStore extends TestDaoUtil {
     CmdletInfo[] commands = {command1, command2};
     metaStore.insertCmdletsTable(commands);
     commandId = metaStore.getMaxCmdletId();
-    System.out.printf("CommandID = %d\n", commandId);
     String cidCondition = ">= 1 ";
     String ridCondition = "= 78 ";
     List<CmdletInfo> com = metaStore
@@ -438,7 +409,6 @@ public class TestMetaStore extends TestDaoUtil {
   @Test
   public void testInsertListActions() throws Exception {
     Map<String, String> args = new HashMap();
-    args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", args, "Test",
         "Test", true, 123213213l, true, 123123l,
@@ -455,7 +425,6 @@ public class TestMetaStore extends TestDaoUtil {
   @Test
   public void testGetNewCreatedActions() throws Exception {
     Map<String, String> args = new HashMap();
-    args.put(CacheFileAction.FILE_PATH, "/test/file");
     List<ActionInfo> actionInfos;
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", args, "Test",
@@ -474,8 +443,6 @@ public class TestMetaStore extends TestDaoUtil {
   public void testGetMaxActionId() throws Exception {
     long currentId = metaStore.getMaxActionId();
     Map<String, String> args = new HashMap();
-    args.put(CacheFileAction.FILE_PATH, "/test/file");
-    System.out.printf("ActionID = %d\n", currentId);
     Assert.assertTrue(currentId == 0);
     ActionInfo actionInfo = new ActionInfo(currentId, 1,
         "cache", args, "Test",
@@ -483,7 +450,6 @@ public class TestMetaStore extends TestDaoUtil {
         100);
     metaStore.insertActionsTable(new ActionInfo[]{actionInfo});
     currentId = metaStore.getMaxActionId();
-    System.out.printf("ActionID = %d\n", currentId);
     Assert.assertTrue(currentId == 1);
     actionInfo = new ActionInfo(currentId, 1,
         "cache", args, "Test",
@@ -491,7 +457,6 @@ public class TestMetaStore extends TestDaoUtil {
         100);
     metaStore.insertActionsTable(new ActionInfo[]{actionInfo});
     currentId = metaStore.getMaxActionId();
-    System.out.printf("ActionID = %d\n", currentId);
     Assert.assertTrue(currentId == 2);
   }
 

@@ -1,0 +1,56 @@
+<div class="col-md-12">
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+  <!-- control toolbar -->
+  <div class="row">
+    <div class="col-md-6">
+      <span class="table-caption-ext pull-left">Workers</span>
+      <!-- dropdown button -->
+      <div ng-if="isSupervisor"
+           class="btn-group btn-group-after-heading">
+        <span class="btn btn-xs btn-default pull-left"
+              ng-click="showAddWorkerDialog()">
+          <span class="fa fa-plus"></span>
+          Add</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 text-right">
+      <!--FILTER-->
+    </div>
+    <div class="col-md-3 hidden-sm hidden-xs">
+      <searchbox ng-model="search" placeholder="Search Workers"></searchbox>
+    </div>
+  </div>
+  <!-- end of control toolbar -->
+</div>
+
+<div class="col-md-12">
+  <sortable-table
+    columns-bind="workersTable.cols"
+    records-bind="workersTable.rows"
+    search-bind="search"
+    pagination="10">
+    <div class="table-no-data">
+      <h2 class="glyphicon glyphicon-bullhorn"></h2>
+      <h4>No worker instance is running</h4>
+
+      <p>Please contact your administrator to launch worker for applications.</p>
+    </div>
+  </sortable-table>
+</div>
