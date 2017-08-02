@@ -88,6 +88,8 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS storages;",
         "DROP TABLE IF EXISTS storage_policy;",
         "DROP TABLE IF EXISTS xattr;",
+        "DROP TABLE IF EXISTS datanode_info;",
+        "DROP TABLE IF EXISTS datanode_storage_info;",
         "DROP TABLE IF EXISTS rules;",
         "DROP TABLE IF EXISTS cmdlets;",
         "DROP TABLE IF EXISTS actions;",
@@ -172,6 +174,28 @@ public class MetaStoreUtils {
             "  namespace varchar(255) NOT NULL,\n" +
             "  name varchar(255) NOT NULL,\n" +
             "  value blob NOT NULL\n" +
+            ") ;",
+
+        "CREATE TABLE datanode_info (\n" +
+            "  uuid varchar(64) NOT NULL,\n" +
+            "  hostname varchar(255) NOT NULL,\n" +   // DatanodeInfo
+            "  ip varchar(16) DEFAULT NULL,\n" +
+            "  port tinyint(4) DEFAULT NULL\n" +
+            "  cache_capacity bigint(20) DEFAULT NULL,\n" +
+            "  cache_used bigint(20) DEFAULT NULL,\n" +
+            "  location varchar(255) DEFAULT NULL,\n" +
+            ") ;",
+
+        "CREATE TABLE datanode_storage_info (\n" +
+            "  uuid varchar(64) NOT NULL,\n" +
+            "  sid tinyint(4) NOT NULL,\n" +          // storage type
+            "  state tinyint(4) NOT NULL,\n" +        // DatanodeStorage.state
+            "  storageid varchar(64) NOT NULL,\n" +   // StorageReport ...
+            "  failed tinyint(1) DEFAULT NULL,\n" +
+            "  capacity bigint(20) DEFAULT NULL,\n" +
+            "  dfs_used bigint(20) DEFAULT NULL,\n" +
+            "  remaining bigint(20) DEFAULT NULL,\n" +
+            "  block_pool_used bigint(20) DEFAULT NULL,\n" +
             ") ;",
 
         "CREATE TABLE rules (\n" +
