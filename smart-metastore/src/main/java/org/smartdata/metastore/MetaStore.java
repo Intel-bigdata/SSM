@@ -39,7 +39,6 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
@@ -784,12 +783,16 @@ public class MetaStore {
     }
   }
 
-  public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
-    return fileDiffDao.getALL();
+  public boolean markFillDiffApplied(long did) throws MetaStoreException {
+    try {
+      return fileDiffDao.update(did,true) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
-  public void diffStatueUpdate(long did, FileDiffType fileDiffType) throws MetaStoreException {
-    // TODO statue update
+  public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
+    return fileDiffDao.getALL();
   }
 
   public void dropAllTables() throws MetaStoreException {
