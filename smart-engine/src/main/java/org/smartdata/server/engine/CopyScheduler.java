@@ -31,9 +31,11 @@ import org.smartdata.model.FileDiff;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -48,7 +50,8 @@ public class CopyScheduler extends AbstractService {
   private CmdletManager cmdletManager;
   private MetaStore metaStore;
   private Queue<FileDiff> pendingDR;
-  private List<Long> runningDR;
+  // <cid, did> Map set
+  private Map<Long, Long> runningDR;
   private String srcBase;
   private String destBase;
   // TODO currently set max running list.size == 1 for test
@@ -60,7 +63,7 @@ public class CopyScheduler extends AbstractService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
 
     this.metaStore = context.getMetaStore();
-    this.runningDR = new ArrayList<>();
+    this.runningDR = new HashMap<>();
     this.pendingDR = new LinkedBlockingQueue<>();
   }
 
@@ -72,11 +75,12 @@ public class CopyScheduler extends AbstractService {
   }
 
   public void diffMerge(List<FileDiff> fileDiffList) {
-
+    // TODO merge diffs and resolve conflicts
   }
 
   @Override
   public void init() throws IOException {
+
   }
 
   @Override
@@ -125,7 +129,6 @@ public class CopyScheduler extends AbstractService {
               fileSystem.getFileStatus(new Path(sourceFile)).getLen());
 
       int numBlocks = blockLocations.length;
-
       if (numBlocks <= blockPerchunk) {
         //if has only one chunk
         copyTargetTaskList.add(new CopyTargetTask(destFile, sourceFile, 0,
@@ -183,9 +186,13 @@ public class CopyScheduler extends AbstractService {
 
     private void runningStatusUpdate() throws MetaStoreException {
       // Status update
-      for (long cid : runningDR) {
-        if (metaStore.getCmdletById(cid).getState() == CmdletState.DONE) {
-          runningDR.remove(cid);
+      for (Iterator<Map.Entry<Long, Long>> it = runningDR.entrySet().iterator(); it.hasNext();) {
+        Map.Entry<Long, Long> entry = it.next();
+        // Check if this cmdlet is finished
+        if (metaStore.getCmdletById(entry.getKey()).getState() == CmdletState.DONE) {
+          // Remove from running list
+          metaStore.markFillDiffApplied(entry.getValue());
+          it.remove();
         }
       }
     }
@@ -197,7 +204,7 @@ public class CopyScheduler extends AbstractService {
         String cmd = cmdParsing(fileDiff, srcBase, destBase);
         CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmd);
         long cid = cmdletManager.submitCmdlet(cmdletDescriptor);
-        runningDR.add(cid);
+        runningDR.put(cid, fileDiff.getDiffId());
       }
     }
 
@@ -213,7 +220,6 @@ public class CopyScheduler extends AbstractService {
         }
         runningStatusUpdate();
         enQueue();
-
       } catch (IOException e) {
         LOG.error("Disaster Recovery Manager schedule error", e);
       } catch (MetaStoreException e) {

@@ -91,7 +91,7 @@ public class FileDiffDao {
     simpleJdbcInsert.executeBatch(maps);
   }
 
-  public int update(int did, boolean newApplied) {
+  public int update(long did, boolean newApplied) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "update file_diff set applied = ? WHERE did = ?";
     return jdbcTemplate.update(sql, newApplied, did);
