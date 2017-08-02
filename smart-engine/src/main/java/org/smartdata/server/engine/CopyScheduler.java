@@ -20,16 +20,17 @@ package org.smartdata.server.engine;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,6 +49,8 @@ public class CopyScheduler extends AbstractService {
   private MetaStore metaStore;
   private Queue<FileDiff> pendingDR;
   private List<Long> runningDR;
+  private String srcBase;
+  private String destBase;
   // TODO currently set max running list.size == 1 for test
   private final int MAX_RUNNING_SIZE = 1;
 
@@ -61,9 +64,11 @@ public class CopyScheduler extends AbstractService {
     this.pendingDR = new LinkedBlockingQueue<>();
   }
 
-  public CopyScheduler(ServerContext context, CmdletManager cmdletManager) {
+  public CopyScheduler(ServerContext context, CmdletManager cmdletManager, String destBase, String srcBase) {
     this(context);
     this.cmdletManager = cmdletManager;
+    this.destBase = destBase;
+    this.srcBase = srcBase;
   }
 
   public void diffMerge(List<FileDiff> fileDiffList) {
@@ -90,10 +95,12 @@ public class CopyScheduler extends AbstractService {
    * @param destFile   destination to save the different chunk of source file
    * @return a list of copy task
    */
-  static public List<CopyTargetTask> splitCopyFile(String sourceFile, String destFile, int blockPerchunk, FileSystem fileSystem)
+  static public List<CopyTargetTask> splitCopyFile(String sourceFile,
+      String destFile, int blockPerchunk, FileSystem fileSystem)
       throws IOException {
     if (blockPerchunk <= 0) {
-      throw new IllegalArgumentException("the block per chunk must more than 0");
+      throw new IllegalArgumentException(
+          "the block per chunk must more than 0");
     }
     if (sourceFile == null) {
       throw new IllegalArgumentException("the source file can't be empty");
@@ -108,11 +115,14 @@ public class CopyScheduler extends AbstractService {
     if ((blockPerchunk > 0) &&
         !fileSystem.getFileStatus(new Path(sourceFile)).isDirectory() &&
         (fileSystem.getFileStatus(new Path(sourceFile)).getLen() >
-            fileSystem.getFileStatus(new Path(sourceFile)).getBlockSize() * blockPerchunk)) {
+            fileSystem.getFileStatus(new Path(sourceFile)).getBlockSize() *
+                blockPerchunk)) {
       //here we can split
       final BlockLocation[] blockLocations;
-      blockLocations = fileSystem.getFileBlockLocations(fileSystem.getFileStatus(new Path(sourceFile)), 0,
-          fileSystem.getFileStatus(new Path(sourceFile)).getLen());
+      blockLocations = fileSystem
+          .getFileBlockLocations(fileSystem.getFileStatus(new Path(sourceFile)),
+              0,
+              fileSystem.getFileStatus(new Path(sourceFile)).getLen());
 
       int numBlocks = blockLocations.length;
 
@@ -120,8 +130,8 @@ public class CopyScheduler extends AbstractService {
         //if has only one chunk
         copyTargetTaskList.add(new CopyTargetTask(destFile, sourceFile, 0,
             fileSystem.getFileStatus(new Path(sourceFile)).getLen()));
-      }else {
-        //has many chunk
+      } else {
+        //has more than one chunk
         int i = 0;
         int chunkCount = 0;
         int position = 0;
@@ -133,17 +143,39 @@ public class CopyScheduler extends AbstractService {
           }
           if (curLength > 0) {
             chunkCount++;
-            CopyTargetTask task = new CopyTargetTask(destFile + "_temp_chunkCount" + chunkCount, sourceFile,
-                position, curLength);
+            CopyTargetTask task =
+                new CopyTargetTask(destFile + "_temp_chunkCount" + chunkCount,
+                    sourceFile,
+                    position, curLength);
             copyTargetTaskList.add(task);
             position += curLength;
           }
         }
       }
-    }else {
+    } else {
       throw new IllegalArgumentException("Incorrect input");
     }
     return copyTargetTaskList;
+  }
+
+  public static String cmdParsing(FileDiff fileDiff, String srcBase,
+      String destBase) {
+    String cmd = String.format("Copy %s", fileDiff.getParameters());
+    // replace srcBase with destBase to get final dest path
+    // TODO support rename and delete
+    int start = cmd.indexOf("-dest");
+    if (start < 0) {
+      return "";
+    }
+    start += 6;
+    int end = cmd.indexOf(' ', start);
+    if (end < 0) {
+      end = cmd.length();
+    }
+    String localPath = cmd.substring(start, end);
+    String destPath = localPath.replace(srcBase, destBase);
+    LOG.info("cmd before add destBase {}, localPath {}", cmd, destPath);
+    return cmd.replace(localPath, destPath);
   }
 
   private class ScheduleTask implements Runnable {
@@ -158,17 +190,16 @@ public class CopyScheduler extends AbstractService {
       }
     }
 
-    private void enQueue() throws IOException {
+    private void enQueue() throws IOException, ParseException {
       // Move diffs to running queue
       while (runningDR.size() < MAX_RUNNING_SIZE) {
         FileDiff fileDiff = pendingDR.poll();
-        // TODO parse and Submit cmdlet
-        long cid = cmdletManager.submitCmdlet("Test");
+        String cmd = cmdParsing(fileDiff, srcBase, destBase);
+        CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmd);
+        long cid = cmdletManager.submitCmdlet(cmdletDescriptor);
         runningDR.add(cid);
       }
     }
-
-
 
     @Override
     public void run() {
@@ -187,6 +218,8 @@ public class CopyScheduler extends AbstractService {
         LOG.error("Disaster Recovery Manager schedule error", e);
       } catch (MetaStoreException e) {
         LOG.error("Disaster Recovery Manager MetaStore error", e);
+      } catch (ParseException e) {
+        LOG.error("Disaster Recovery Manager cmd format error", e);
       }
     }
   }
