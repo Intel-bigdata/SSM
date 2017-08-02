@@ -67,6 +67,13 @@ For each workload, three experiments will be done using HDD, P3700 and Optane as
 * Disk bandwidth, latency
 * Network IO
 
+Use Optane as HDFS Disk
+-----------------
+
+### 1. Purpose
+* Optane serves as HDFS disks in datanodes
+* Compare read/write performance of the workloads running on HDFS with HDD and P3700
+
 
 
 
