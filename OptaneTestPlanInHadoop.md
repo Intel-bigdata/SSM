@@ -12,13 +12,13 @@ Use Optane as HDFS Cache
 
 ### 2. Test Environment
 
-* Cluster： 1 Namenode + 1 Datanodes
+* Cluster： 1 Namenode + 2 Datanodes
 * Disk： 5 HDDs on each datanode
 * Memory : 375 GB
 * Optane : 375 GB
 * Hadoop version: trunk (3.0.0-beta1-SNAPSHOT)
 
-### 3. Workload
+### 3. Benchmark
 
 Use ErasureCodeBenchmarkThroughput tool to measure the reading performance. Each test case will run in two modes: sequential read and random read.
 #### DRAM alone
