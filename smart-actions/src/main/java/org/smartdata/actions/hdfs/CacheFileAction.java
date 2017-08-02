@@ -43,7 +43,6 @@ import java.util.concurrent.LinkedBlockingQueue;
   usage = HdfsAction.FILE_PATH + " $file "
 )
 public class CacheFileAction extends HdfsAction {
-
   private String fileName;
   private LinkedBlockingQueue<String> actionEvents;
   private final String SSMPOOL = "SSMPool";
