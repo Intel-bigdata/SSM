@@ -1,7 +1,7 @@
 Optane Test Plan in Hadoop
 ==============
 
-Use Optane as HDFS Cache
+Use Optane as HDFS Cache (WW.
 -----------------
 
 ### 1. Purpose
@@ -97,3 +97,7 @@ For each test case, three experiments will be done with data on HDD, P3700 and O
 * CPU utilization
 * Disk bandwidth, latency
 * Network IO
+
+
+PS:
+1. SATA SSD 3520 replace HDD
