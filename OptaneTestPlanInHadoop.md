@@ -71,10 +71,27 @@ Use Optane as HDFS Disk
 -----------------
 
 ### 1. Purpose
+
 * Optane serves as HDFS disks in datanodes
 * Compare read/write performance of the workloads running on HDFS with HDD and P3700
 
+### 2. Test Environment
 
+* Cluster： 1 Namenode + 2 Datanodes
+* HDFS Disk： 1 HDD+1 P3700 + 1 Optane on each datanode
+* Hadoop version: trunk (3.0.0-beta1-SNAPSHOT)
 
+### 3. Workload
 
+For each test case, three experiments will be done with data on HDD, P3700 and Optane respectively. The data set size is 100 GB.
 
+* TestDFSIO write, read
+* Teragen, Terasort, Teraread, Teravalidate
+* Wordcount
+
+### 4. Performance Measurement
+
+* End-to-end execution time
+* CPU utilization
+* Disk bandwidth, latency
+* Network IO
