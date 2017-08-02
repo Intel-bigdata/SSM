@@ -14,9 +14,9 @@ before_install:
 
 matrix:
   include:
-    - jdk: "oraclejdk7"
+    - jdk: "openjdk7"
       env: PROFILE=""
-    - jdk: "oraclejdk8"
+    - jdk: "openjdk8"
       env: PROFILE="-Pjava8"
 
 cache:

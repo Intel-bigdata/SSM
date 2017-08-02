@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -16,12 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Run SmartAgent
-
-USAGE="Usage: bin/start-agent.sh [--config <conf-dir>] [--debug] ..."
 
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
+HOSTNAME=$(hostname)
 
 SMART_VARGS=
 while [ $# != 0 ]; do
@@ -39,10 +37,6 @@ while [ $# != 0 ]; do
       fi
       shift
       ;;
-    "--debug")
-      JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8010,server=y,suspend=y"
-      shift
-      ;;
     *)
       SMART_VARGS+=" $1"
       shift
@@ -52,25 +46,15 @@ done
 
 . "${bin}/common.sh"
 
-HOSTNAME=$(hostname)
-SMART_AGENT=org.smartdata.agent.SmartAgent
-JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
-JAVA_OPTS+=" -Dsmart.log.file=SmartAgent.log"
+#---------------------------------------------------------
+#
 
-addJarInDir "${SMART_HOME}/lib"
+echo -n "Start formatting database ... "
 
-if [ "$SMART_CLASSPATH" = "" ]; then
-  SMART_CLASSPATH="${SMART_CONF_DIR}"
+$("${SMART_HOME}/bin/smart" --config "${SMART_CONF_DIR}" formatdatabase 2>/dev/null)
+
+if [ x"$?" = x"0" ]; then
+  echo "[Success]"
 else
-  SMART_CLASSPATH="${SMART_CONF_DIR}:${SMART_CLASSPATH}"
+  echo "[Failed]"
 fi
-
-if [[ ! -d "${SMART_LOG_DIR}" ]]; then
-  echo "Log dir doesn't exist, create ${SMART_LOG_DIR}"
-  $(mkdir -p "${SMART_LOG_DIR}")
-fi
-
-SMART_VARGS+=" -D smart.conf.dir="${SMART_CONF_DIR}
-SMART_VARGS+=" -D smart.log.dir="${SMART_LOG_DIR}
-
-exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_AGENT $SMART_VARGS

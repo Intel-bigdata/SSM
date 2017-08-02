@@ -80,9 +80,9 @@ public class TestAccessCountTableManager extends DBTest {
 
   private void createTables(Connection connection) throws Exception {
     Statement statement = connection.createStatement();
-    statement.execute(AccessCountDao.createTableSQL("expect1"));
-    statement.execute(AccessCountDao.createTableSQL("expect2"));
-    statement.execute(AccessCountDao.createTableSQL("expect3"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("expect1"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("expect2"));
+    statement.execute(AccessCountDao.createAccessCountTableSQL("expect3"));
     statement.close();
   }
 
@@ -326,7 +326,7 @@ public class TestAccessCountTableManager extends DBTest {
       Constants.ONE_MINUTE_IN_MILLIS);
     Assert.assertTrue(result.size() == 3);
     Assert.assertTrue(result.get(0).equals(firstFiveSeconds));
-    Assert.assertFalse(result.get(0).isView());
+    Assert.assertFalse(result.get(0).isEphemeral());
     Assert.assertTrue(result.get(1).equals(secondFiveSeconds));
     Assert.assertTrue(result.get(2).equals(thirdFiveSeconds));
   }

@@ -17,11 +17,10 @@
  */
 package org.smartdata.erasurecode;
 
-
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.erasurecode.rawcoder.*;
 import org.smartdata.erasurecode.test.GenericTestUtils;
 
@@ -30,13 +29,13 @@ import org.smartdata.erasurecode.test.GenericTestUtils;
  */
 public class TestCodecRawCoderMapping {
 
-  private static SmartConf conf;
+  private static Configuration conf;
   private static final int numDataUnit = 6;
   private static final int numParityUnit = 3;
 
   @Before
   public void setup() {
-    conf = new SmartConf();
+    conf = new Configuration();
   }
 
   @Test

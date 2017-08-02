@@ -116,7 +116,7 @@ endif()
 smart_target_link_dual_libraries(smart ${LIB_DL} ${JAVA_JVM_LIBRARY})
 set(LIBSMART_VERSION "1.0.0")
 set_target_properties(smart PROPERTIES SOVERSION ${LIBSMART_VERSION})
-smart_dual_output_directory(smart target/usr/local/lib)
+smart_dual_output_directory(smart lib)
 
 # By embedding '$ORIGIN' into the RPATH of libsmart.so, dlopen will look in
 # the directory containing libsmart.so. However, $ORIGIN is not supported by

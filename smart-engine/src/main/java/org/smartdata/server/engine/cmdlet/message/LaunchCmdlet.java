@@ -17,10 +17,12 @@
  */
 package org.smartdata.server.engine.cmdlet.message;
 
-import java.io.Serializable;
+import org.smartdata.AgentService;
+import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
+
 import java.util.List;
 
-public class LaunchCmdlet implements Serializable {
+public class LaunchCmdlet implements AgentService.Message {
   private long cmdletId;
   private List<LaunchAction> launchActions;
 
@@ -43,5 +45,10 @@ public class LaunchCmdlet implements Serializable {
 
   public void setLaunchActions(List<LaunchAction> launchActions) {
     this.launchActions = launchActions;
+  }
+
+  @Override
+  public String getServiceName() {
+    return AgentCmdletService.NAME;
   }
 }

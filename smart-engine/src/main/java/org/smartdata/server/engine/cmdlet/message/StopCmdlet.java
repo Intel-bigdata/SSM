@@ -17,9 +17,10 @@
  */
 package org.smartdata.server.engine.cmdlet.message;
 
-import java.io.Serializable;
+import org.smartdata.AgentService;
+import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 
-public class StopCmdlet implements Serializable {
+public class StopCmdlet implements AgentService.Message {
   private long cmdletId;
 
   public StopCmdlet(long cmdletId) {
@@ -32,5 +33,10 @@ public class StopCmdlet implements Serializable {
 
   public void setCmdletId(long cmdletId) {
     this.cmdletId = cmdletId;
+  }
+
+  @Override
+  public String getServiceName() {
+    return AgentCmdletService.NAME;
   }
 }

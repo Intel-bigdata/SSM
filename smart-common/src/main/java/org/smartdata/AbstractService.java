@@ -20,6 +20,10 @@ package org.smartdata;
 public abstract class AbstractService implements SmartService {
   private SmartContext context;
 
+  public AbstractService() {
+    this(null);
+  }
+
   public AbstractService(SmartContext context) {
     this.context = context;
   }

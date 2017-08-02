@@ -42,7 +42,7 @@ installed Smart Server.'
 ```xml
 <property>
   <name>smart.server.rpc.address</name>
-  <value>127.0.0.1</value>
+  <value>ssm-server-ip</value>
 </property>
 <property>
   <name>smart.server.rpc.port</name>
@@ -75,26 +75,32 @@ the configuration takes effect. You can try TestDFSIO for example,
 
  	a. write data
  
-   `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.0.0-alpha2-SNAPSHOT-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
+	`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
    
  	b. read data
 
-`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.0.0-alpha2-SNAPSHOT-tests.jar TestDFSIO –read`
+	`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –read`
 
-   You may want to replace the jar with the version used in the CDH. After the read data opertion, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
+   You may want to replace the jar with the version used in your CDH. After the read data opertion, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
 
 SSM Configuration
 ---------------------------------------------------------------------------------
 1. Download SSM branch from Github https://github.com/Intel-bigdata/SSM/tree/CDH5.10-integration
 2. Build SSM using 
    'mvn package -Pdist -DskipTests'
-   More detail information, please refer to BUILDING.txt file. 
-3. The configuration files is under conf directory. First open smart-site.xml, configure
+
+   A tar distribution package will be generated under 'smart-dist/target'.
+   More detail information, please refer to BUILDING.txt file.
+
+3. Modify configurations
+
+   Unzip the distribution package to directory (assuming `${SMART_HOME}`) and switch to the directory, the configuration files are under './conf'. First open smart-site.xml, configure
    Hadoop cluster NameNode RPC address,
    
    ```xml
+   <property>
    <name>smart.dfs.namenode.rpcserver</name>
-      <value>hdfs://localhost:9000</value>
+      <value>hdfs://namenode-ip:9000</value>
       <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
    ```
@@ -111,39 +117,46 @@ SSM Configuration
 	   ......
    </properties>	   
    ```
-
-4. Start SSM server with command 
-
-	`bin/start-smart.sh" --config ./conf --daemon`	
-	
-   `--config <config-dir>` configures where the configuration file directory is and
    
-   `--daemon` means start the SSM server as an daemon process on the server.
+   ssm-metastore is the Database name. You need to create it before first after you installed MySql.
+
+4. Format Database with command
+	
+	`bin/format-database.sh`
+   
+   The script will create all tables required by SSM.
+	
+   
+5. Start SSM server with command
+
+   `./bin/start-smart.sh" --config ./conf`
+
+   `--config <config-dir>` configures where the configuration file directory is. `${SMART_HOME}/conf` is used if not specified.
    
    Once you start the SSM server, you can open its web UI by 
-   
+
    `http://localhost:7045`
-   
+
    If you meet any problem, please open the SmartServer.log under /logs directory. All the
    trouble shooting clues are there. 
    
-5. Stop SSM server with command
+6. Stop SSM server with command
    If stop SSM server is required, use the script `bin/stop-smart.sh`. Remeber to
    use the exact same parameters to `stop-smart.sh` script as to `start-smart.sh` script.
    For exmaple, when you start smart server, you use 
-   
-   	`bin/start-smart.sh --config ./conf --daemon`
-	
+
+   `bin/start-smart.sh --config ./conf`
+
    Then, when you stop smart server, you should use 
-   
-   	`bin/stop-smart.sh --config ./conf --daemon`
-   
+
+   `bin/stop-smart.sh --config ./conf`
+
 SSM Rule Examples
 ---------------------------------------------------------------------------------
 1. Move to SSD rule
 
 	`file: path matches "/test/*" and accessCount(5m) > 3 | allssd`
-	
+
 This rule means all the files under /test directory, if it is accessed 3 times during
 last 5 minutes, SSM should trigger an anction to move the file to SSD. Rule engine
 will evalue the condition every MAX{5s,5m/20} internal.
@@ -152,17 +165,16 @@ will evalue the condition every MAX{5s,5m/20} internal.
 2. Move to Archive(Cold) rule
 
 	`file: path matches "/test/*" and age > 5h | archive`
-	
+
 This rule means all the files under /test directory, if it's age is more than 5 hours,
-then move the file to archive storage. 
+then move the file to archive storage.
 
 3. Move one type of file to specific storage
 
 	`file: path matches "/test/*.xml" | allssd`
-   
-This rule will move all XML files under /test directory to SSD. In this rule, not a 
-single date or time value is specified, the rule will be evaluated only 1 time each time
-it's started or restarted. 
+
+This rule will move all XML files under /test directory to SSD. In this rule, neither a
+single date nor time value is specified, the rule will be evaluated every short time interval (5s by default).
 
 4. Specify rule evaluation internal
 
