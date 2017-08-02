@@ -172,8 +172,7 @@ class MoverProcessor {
       remainingBlocks += remainingReplications;
       if (remainingReplications != 0) {
         if (scheduleMoveBlock(diff, lb)) {
-          result.updateHasRemaining(diff.existing.size() > 1
-                  && diff.expected.size() > 1);
+          result.updateHasRemaining(false);
           // One block scheduled successfully, set noBlockMoved to false
           result.setNoBlockMoved(false);
         } else {
@@ -187,19 +186,20 @@ class MoverProcessor {
     final List<MLocation> locations = MLocation.toLocations(lb);
     Collections.shuffle(locations);
     final DBlock db = newDBlock(lb, locations);
+    boolean needMove = false;
 
-    for (final StorageType t : diff.existing) {
-      for (final MLocation ml : locations) {
-        final Source source = storages.getSource(ml);
-        if (ml.getStorageType() == t && source != null) {
-          // try to schedule one replica move.
-          if (scheduleMoveReplica(db, source, diff.expected)) {
-            return true;
-          }
+    for (int i = 0; i < diff.existing.size(); i++) {
+      StorageType t = diff.existing.get(i);
+      MLocation ml = locations.get(i);
+      final Source source = storages.getSource(ml);
+      if (ml.getStorageType() == t && source != null) {
+        // try to schedule one replica move.
+        if (scheduleMoveReplica(db, source, diff.expected)) {
+          needMove = true;
         }
       }
     }
-    return false;
+    return needMove;
   }
 
   boolean scheduleMoveReplica(DBlock db, Source source,

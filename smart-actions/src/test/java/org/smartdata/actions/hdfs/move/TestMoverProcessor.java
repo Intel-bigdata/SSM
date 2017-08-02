@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
+import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.ActionMiniCluster;
 import org.smartdata.model.actions.hdfs.StorageMap;
@@ -46,6 +47,6 @@ public class TestMoverProcessor extends ActionMiniCluster {
     StorageMap storageMap = schedulerInfo.getStorages();
     MoverProcessor processor = new MoverProcessor(dfsClient, storageMap, status);
     ExitStatus exitStatus = processor.processNamespace(new Path(file));
-    exitStatus.getExitCode();
+    Assert.assertEquals(exitStatus.getExitCode(), ExitStatus.SUCCESS);
   }
 }
