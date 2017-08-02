@@ -174,7 +174,6 @@
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeRSRawDecoder</javahClassName>
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawEncoder</javahClassName>
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawDecoder</javahClassName>
-                                        <javahClassName>org.smartdata.erasurecode.NativeCrc32</javahClassName>
                                     </javahClassNames>
                                     <javahOutputDirectory>${project.build.directory}/native/javah</javahOutputDirectory>
                                 </configuration>
