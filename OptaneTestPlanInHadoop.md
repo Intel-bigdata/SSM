@@ -1,7 +1,7 @@
 Optane Test Plan in Hadoop
 ==============
 
-Use Optane as Cache
+Use Optane as HDFS Cache
 -----------------
 
 ### 1. Purpose
