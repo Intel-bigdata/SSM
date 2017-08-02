@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.model.FileDiff;
 import org.smartdata.server.engine.CopyScheduler;
 import org.smartdata.server.engine.CopyTargetTask;
 
@@ -73,6 +74,17 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster{
     conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
     conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
+  }
+
+  @Test
+  public void testFileDiffParsing() throws Exception {
+    FileDiff fileDiff = new FileDiff();
+    fileDiff.setParameters("-file /root/test -dest /root/test2");
+    String cmd = CopyScheduler.cmdParsing(fileDiff, "/root/", "/lcoalhost:3306/backup/");
+    Assert.assertTrue(cmd.equals("Copy -file /root/test -dest /lcoalhost:3306/backup/test2"));
+    fileDiff.setParameters("-file /root/test -dest /root/test2 -length 1024");
+    cmd = CopyScheduler.cmdParsing(fileDiff, "/root/", "/lcoalhost:3306/backup/");
+    Assert.assertTrue(cmd.equals("Copy -file /root/test -dest /lcoalhost:3306/backup/test2 -length 1024"));
   }
 
   @Test
