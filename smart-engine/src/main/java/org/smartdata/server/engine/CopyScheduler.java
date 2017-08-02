@@ -20,22 +20,19 @@ package org.smartdata.server.engine;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -50,10 +47,7 @@ public class CopyScheduler extends AbstractService {
   private CmdletManager cmdletManager;
   private MetaStore metaStore;
   private Queue<FileDiff> pendingDR;
-  // <cid, did> Map set
-  private Map<Long, Long> runningDR;
-  private String srcBase;
-  private String destBase;
+  private List<Long> runningDR;
   // TODO currently set max running list.size == 1 for test
   private final int MAX_RUNNING_SIZE = 1;
 
@@ -63,24 +57,21 @@ public class CopyScheduler extends AbstractService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
 
     this.metaStore = context.getMetaStore();
-    this.runningDR = new HashMap<>();
+    this.runningDR = new ArrayList<>();
     this.pendingDR = new LinkedBlockingQueue<>();
   }
 
-  public CopyScheduler(ServerContext context, CmdletManager cmdletManager, String destBase, String srcBase) {
+  public CopyScheduler(ServerContext context, CmdletManager cmdletManager) {
     this(context);
     this.cmdletManager = cmdletManager;
-    this.destBase = destBase;
-    this.srcBase = srcBase;
   }
 
   public void diffMerge(List<FileDiff> fileDiffList) {
-    // TODO merge diffs and resolve conflicts
+
   }
 
   @Override
   public void init() throws IOException {
-
   }
 
   @Override
@@ -99,12 +90,10 @@ public class CopyScheduler extends AbstractService {
    * @param destFile   destination to save the different chunk of source file
    * @return a list of copy task
    */
-  static public List<CopyTargetTask> splitCopyFile(String sourceFile,
-      String destFile, int blockPerchunk, FileSystem fileSystem)
+  static public List<CopyTargetTask> splitCopyFile(String sourceFile, String destFile, int blockPerchunk, FileSystem fileSystem)
       throws IOException {
     if (blockPerchunk <= 0) {
-      throw new IllegalArgumentException(
-          "the block per chunk must more than 0");
+      throw new IllegalArgumentException("the block per chunk must more than 0");
     }
     if (sourceFile == null) {
       throw new IllegalArgumentException("the source file can't be empty");
@@ -119,22 +108,20 @@ public class CopyScheduler extends AbstractService {
     if ((blockPerchunk > 0) &&
         !fileSystem.getFileStatus(new Path(sourceFile)).isDirectory() &&
         (fileSystem.getFileStatus(new Path(sourceFile)).getLen() >
-            fileSystem.getFileStatus(new Path(sourceFile)).getBlockSize() *
-                blockPerchunk)) {
+            fileSystem.getFileStatus(new Path(sourceFile)).getBlockSize() * blockPerchunk)) {
       //here we can split
       final BlockLocation[] blockLocations;
-      blockLocations = fileSystem
-          .getFileBlockLocations(fileSystem.getFileStatus(new Path(sourceFile)),
-              0,
-              fileSystem.getFileStatus(new Path(sourceFile)).getLen());
+      blockLocations = fileSystem.getFileBlockLocations(fileSystem.getFileStatus(new Path(sourceFile)), 0,
+          fileSystem.getFileStatus(new Path(sourceFile)).getLen());
 
       int numBlocks = blockLocations.length;
+
       if (numBlocks <= blockPerchunk) {
         //if has only one chunk
         copyTargetTaskList.add(new CopyTargetTask(destFile, sourceFile, 0,
             fileSystem.getFileStatus(new Path(sourceFile)).getLen()));
-      } else {
-        //has more than one chunk
+      }else {
+        //has many chunk
         int i = 0;
         int chunkCount = 0;
         int position = 0;
@@ -146,39 +133,17 @@ public class CopyScheduler extends AbstractService {
           }
           if (curLength > 0) {
             chunkCount++;
-            CopyTargetTask task =
-                new CopyTargetTask(destFile + "_temp_chunkCount" + chunkCount,
-                    sourceFile,
-                    position, curLength);
+            CopyTargetTask task = new CopyTargetTask(destFile + "_temp_chunkCount" + chunkCount, sourceFile,
+                position, curLength);
             copyTargetTaskList.add(task);
             position += curLength;
           }
         }
       }
-    } else {
+    }else {
       throw new IllegalArgumentException("Incorrect input");
     }
     return copyTargetTaskList;
-  }
-
-  public static String cmdParsing(FileDiff fileDiff, String srcBase,
-      String destBase) {
-    String cmd = String.format("Copy %s", fileDiff.getParameters());
-    // replace srcBase with destBase to get final dest path
-    // TODO support rename and delete
-    int start = cmd.indexOf("-dest");
-    if (start < 0) {
-      return "";
-    }
-    start += 6;
-    int end = cmd.indexOf(' ', start);
-    if (end < 0) {
-      end = cmd.length();
-    }
-    String localPath = cmd.substring(start, end);
-    String destPath = localPath.replace(srcBase, destBase);
-    LOG.info("cmd before add destBase {}, localPath {}", cmd, destPath);
-    return cmd.replace(localPath, destPath);
   }
 
   private class ScheduleTask implements Runnable {
@@ -186,27 +151,24 @@ public class CopyScheduler extends AbstractService {
 
     private void runningStatusUpdate() throws MetaStoreException {
       // Status update
-      for (Iterator<Map.Entry<Long, Long>> it = runningDR.entrySet().iterator(); it.hasNext();) {
-        Map.Entry<Long, Long> entry = it.next();
-        // Check if this cmdlet is finished
-        if (metaStore.getCmdletById(entry.getKey()).getState() == CmdletState.DONE) {
-          // Remove from running list
-          metaStore.markFillDiffApplied(entry.getValue());
-          it.remove();
+      for (long cid : runningDR) {
+        if (metaStore.getCmdletById(cid).getState() == CmdletState.DONE) {
+          runningDR.remove(cid);
         }
       }
     }
 
-    private void enQueue() throws IOException, ParseException {
+    private void enQueue() throws IOException {
       // Move diffs to running queue
       while (runningDR.size() < MAX_RUNNING_SIZE) {
         FileDiff fileDiff = pendingDR.poll();
-        String cmd = cmdParsing(fileDiff, srcBase, destBase);
-        CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmd);
-        long cid = cmdletManager.submitCmdlet(cmdletDescriptor);
-        runningDR.put(cid, fileDiff.getDiffId());
+        // TODO parse and Submit cmdlet
+        long cid = cmdletManager.submitCmdlet("Test");
+        runningDR.add(cid);
       }
     }
+
+
 
     @Override
     public void run() {
@@ -220,12 +182,11 @@ public class CopyScheduler extends AbstractService {
         }
         runningStatusUpdate();
         enQueue();
+
       } catch (IOException e) {
         LOG.error("Disaster Recovery Manager schedule error", e);
       } catch (MetaStoreException e) {
         LOG.error("Disaster Recovery Manager MetaStore error", e);
-      } catch (ParseException e) {
-        LOG.error("Disaster Recovery Manager cmd format error", e);
       }
     }
   }
