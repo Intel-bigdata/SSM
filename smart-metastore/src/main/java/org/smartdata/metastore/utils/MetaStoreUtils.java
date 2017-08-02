@@ -216,6 +216,16 @@ public class MetaStoreUtils {
             "  parameters varchar(4096) NOT NULL,\n" +
             "  applied tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL\n" +
+            ") ;",
+        "CREATE TABLE cluster_config (\n" +
+            " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            " node_name varchar(4096) NOT NULL UNIQUE,\n" +
+            " config_path varchar(4096) NOT NULL\n" +
+            ") ;",
+        "CREATE TABLE global_config (\n" +
+            " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            " property_name varchar(4096) NOT NULL UNIQUE,\n" +
+            " property_value varchar(4096 ) NOT NULL\n" +
             ") ;"
     };
     try {
