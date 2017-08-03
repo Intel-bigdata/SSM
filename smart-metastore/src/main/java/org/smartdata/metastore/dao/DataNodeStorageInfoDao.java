@@ -25,10 +25,15 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 public class DataNodeStorageInfoDao {
   private DataSource dataSource;
+
+  private final String TABLE_NAME = "datanode_storage_info";
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -40,25 +45,26 @@ public class DataNodeStorageInfoDao {
 
   public List<DataNodeStorageInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from datanode_storage_info",
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
         new DataNodeStorageInfoRowMapper());
   }
 
   public DataNodeStorageInfo getByUuid(String uuid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from datanode_storage_info where uuid = ?",
+    return jdbcTemplate.queryForObject(
+        "SELECT * FROM "+ TABLE_NAME +" WHERE uuid = ?",
         new Object[]{uuid}, new DataNodeStorageInfoRowMapper());
   }
 
   public void insert(DataNodeStorageInfo dataNodeStorageInfoInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("datanode_storage_info");
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     simpleJdbcInsert.execute(toMap(dataNodeStorageInfoInfo));
   }
 
   public void insert(DataNodeStorageInfo[] dataNodeStorageInfos) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("datanode_storage_info");
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     Map<String, Object>[] maps = new Map[dataNodeStorageInfos.length];
     for (int i = 0; i < dataNodeStorageInfos.length; i++) {
       maps[i] = toMap(dataNodeStorageInfos[i]);
@@ -68,13 +74,13 @@ public class DataNodeStorageInfoDao {
 
   public void delete(String uuid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from datanode_storage_info where uuid = ?";
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE uuid = ?";
     jdbcTemplate.update(sql, uuid);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from datanode_storage_info";
+    final String sql = "DELETE FROM " + TABLE_NAME;
     jdbcTemplate.update(sql);
   }
 
@@ -98,14 +104,14 @@ public class DataNodeStorageInfoDao {
     public DataNodeStorageInfo mapRow(ResultSet resultSet, int i) throws SQLException {
       return DataNodeStorageInfo.newBuilder()
           .setUuid(resultSet.getString("uuid"))
-          .setSid(resultSet.getInt("sid"))
-          .setState(resultSet.getInt("state"))
+          .setSid(resultSet.getShort("sid"))
+          .setState(resultSet.getShort("state"))
           .setStorageId(resultSet.getString("storageid"))
-          .setFailed(resultSet.getInt("failed"))
-          .setCapacity(resultSet.getInt("capacity"))
-          .setDfsUsed(resultSet.getInt("dfs_used"))
-          .setRemaining(resultSet.getInt("remaining"))
-          .setBlockPool(resultSet.getInt("block_pool"))
+          .setFailed(resultSet.getShort("failed"))
+          .setCapacity(resultSet.getLong("capacity"))
+          .setDfsUsed(resultSet.getLong("dfs_used"))
+          .setRemaining(resultSet.getLong("remaining"))
+          .setBlockPool(resultSet.getLong("block_pool"))
           .build();
     }
   }

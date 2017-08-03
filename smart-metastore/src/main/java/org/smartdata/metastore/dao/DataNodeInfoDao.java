@@ -25,10 +25,15 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 public class DataNodeInfoDao {
   private DataSource dataSource;
+
+  private final String TABLE_NAME = "datanode_info";
 
   public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -40,25 +45,26 @@ public class DataNodeInfoDao {
 
   public List<DataNodeInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from datanode_info",
+    return jdbcTemplate.query("SELECT * FROM "+TABLE_NAME,
         new DataNodeInfoRowMapper());
   }
 
   public DataNodeInfo getByUuid(String uuid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from datanode_info where uuid = ?",
+    return jdbcTemplate.queryForObject(
+        "SELECT * FROM " + TABLE_NAME + " WHERE uuid = ?",
         new Object[]{uuid}, new DataNodeInfoRowMapper());
   }
 
   public void insert(DataNodeInfo dataNodeInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("datanode_info");
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     simpleJdbcInsert.execute(toMap(dataNodeInfo));
   }
 
   public void insert(DataNodeInfo[] dataNodeInfos) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("datanode_info");
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     Map<String, Object>[] maps = new Map[dataNodeInfos.length];
     for (int i = 0; i < dataNodeInfos.length; i++) {
       maps[i] = toMap(dataNodeInfos[i]);
@@ -68,13 +74,13 @@ public class DataNodeInfoDao {
 
   public void delete(String uuid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from datanode_info where uuid = ?";
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE uuid = ?";
     jdbcTemplate.update(sql, uuid);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from datanode_info";
+    final String sql = "DELETE from " + TABLE_NAME;
     jdbcTemplate.update(sql);
   }
 
@@ -98,9 +104,9 @@ public class DataNodeInfoDao {
           .setUuid(resultSet.getString("uuid"))
           .setHostName(resultSet.getString("hostname"))
           .setIp(resultSet.getString("ip"))
-          .setPort(resultSet.getInt("port"))
-          .setCacheCapacity(resultSet.getInt("cache_capacity"))
-          .setCacheUsed(resultSet.getInt("cache_used"))
+          .setPort(resultSet.getShort("port"))
+          .setCacheCapacity(resultSet.getLong("cache_capacity"))
+          .setCacheUsed(resultSet.getLong("cache_used"))
           .setLocation(resultSet.getString("location"))
           .build();
     }

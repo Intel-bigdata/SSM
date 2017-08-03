@@ -21,13 +21,13 @@ public class DataNodeInfo {
   private String uuid;
   private String hostname;
   private String ip;
-  private int port;
-  private int cacheCapacity;
-  private int cacheUsed;
+  private short port;
+  private long cacheCapacity;
+  private long cacheUsed;
   private String location;
 
-  public DataNodeInfo(String uuid, String hostname, String ip, int port,
-      int cacheCapacity, int cacheUsed, String location) {
+  public DataNodeInfo(String uuid, String hostname, String ip, short port,
+      long cacheCapacity, long cacheUsed, String location) {
     this.uuid = uuid;
     this.hostname = hostname;
     this.ip = ip;
@@ -62,27 +62,27 @@ public class DataNodeInfo {
     this.ip = ip;
   }
 
-  public int getPort() {
+  public short getPort() {
     return port;
   }
 
-  public void setPort(int port) {
+  public void setPort(short port) {
     this.port = port;
   }
 
-  public int getCacheCapacity() {
+  public long getCacheCapacity() {
     return cacheCapacity;
   }
 
-  public void setCacheCapacity(int cacheCapacity) {
+  public void setCacheCapacity(long cacheCapacity) {
     this.cacheCapacity = cacheCapacity;
   }
 
-  public int getCacheUsed() {
+  public long getCacheUsed() {
     return cacheUsed;
   }
 
-  public void setCacheUsed(int cacheUsed) {
+  public void setCacheUsed(long cacheUsed) {
     this.cacheUsed = cacheUsed;
   }
 
@@ -99,7 +99,7 @@ public class DataNodeInfo {
     int result = (int) (uuid != null ? uuid.hashCode() : 0);
     result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
     result = 31 * result + (ip != null ? ip.hashCode() : 0);
-    result = 31 * result + (int) (port ^ (port >>> 32));
+    result = 31 * result + (int) port;
     result = 31 * result + (int) (cacheCapacity ^ (cacheCapacity >>> 32));
     result = 31 * result + (int) (cacheUsed ^ (cacheUsed >>> 32));
     result = 31 * result + (location != null ? location.hashCode() : 0);
@@ -148,21 +148,17 @@ public class DataNodeInfo {
   }
 
   public static Builder newBuilder() {
-        return Builder.create();
+        return new Builder() ;
     }
 
   public static class Builder {
     private String uuid;
     private String hostname;
     private String ip;
-    private int port;
-    private int cacheCapacity;
-    private int cacheUsed;
+    private short port;
+    private long cacheCapacity;
+    private long cacheUsed;
     private String location;
-
-    public static Builder create() {
-            return new Builder();
-        }
 
     public Builder setUuid(String uuid) {
       this.uuid = uuid;
@@ -176,15 +172,15 @@ public class DataNodeInfo {
       this.ip = ip;
       return this;
     }
-    public Builder setPort(int port) {
+    public Builder setPort(short port) {
       this.port = port;
       return this;
     }
-    public Builder setCacheCapacity(int cacheCapacity) {
+    public Builder setCacheCapacity(long cacheCapacity) {
       this.cacheCapacity = cacheCapacity;
       return this;
     }
-    public Builder setCacheUsed(int cacheUsed) {
+    public Builder setCacheUsed(long cacheUsed) {
       this.cacheUsed = cacheUsed;
       return this;
     }
