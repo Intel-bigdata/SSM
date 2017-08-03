@@ -17,6 +17,8 @@
  */
 package org.smartdata.actions.hdfs.move;
 
+import org.smartdata.model.actions.hdfs.SchedulePlan;
+
 /**
  * Base class for all kinds of move strategies.
  */
@@ -24,5 +26,5 @@ public abstract class MoveRunner {
 
   public abstract void move(String file) throws Exception;
 
-  public abstract void move(String[] files) throws Exception;
+  public abstract void move(String file, SchedulePlan plan) throws Exception;
 }

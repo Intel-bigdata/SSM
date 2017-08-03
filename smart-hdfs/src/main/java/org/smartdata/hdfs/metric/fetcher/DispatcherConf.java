@@ -15,22 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.hdfs.metric.fetcher;
 
-import org.smartdata.model.actions.hdfs.SchedulePlan;
-
-/**
- * HDFS SPS based move runner.
- */
-public class SPSBasedMoveRunner extends MoveRunner {
-
-  @Override
-  public void move(String file) throws Exception {
-
-  }
-
-  @Override
-  public void move(String file, SchedulePlan plan) throws Exception {
-
-  }
+public class DispatcherConf {
+  int maxConcurrentMovesPerNode;
 }

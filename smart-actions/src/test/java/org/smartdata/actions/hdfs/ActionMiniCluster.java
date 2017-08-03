@@ -35,7 +35,7 @@ import java.io.IOException;
  * A MiniCluster for action test.
  */
 public abstract class ActionMiniCluster {
-  private static final int DEFAULT_BLOCK_SIZE = 50;
+  public static final int DEFAULT_BLOCK_SIZE = 50;
   protected MiniDFSCluster cluster;
   protected DistributedFileSystem dfs;
   protected DFSClient dfsClient;

@@ -28,34 +28,31 @@ import java.util.List;
  * A class to manage the datanode, storage type and size information of a block
  * replication.
  */
-public class MLocation {
-  final DatanodeInfo datanode;
-  final StorageType storageType;
-  final long size;
+class OldMLocation {
+    final DatanodeInfo datanode;
+    final StorageType storageType;
+    final long size;
 
-  public MLocation(DatanodeInfo datanode, StorageType storageType, long size) {
-    this.datanode = datanode;
-    this.storageType = storageType;
-    this.size = size;
-  }
-
-  /**
-   * Return a list of MLocation referring to all replications of a block.
-   * @param lb
-   * @return
-   */
-  public static List<MLocation> toLocations(LocatedBlock lb) {
-    final DatanodeInfo[] datanodeInfos = lb.getLocations();
-    final StorageType[] storageTypes = lb.getStorageTypes();
-    final long size = lb.getBlockSize();
-    final List<MLocation> locations = new LinkedList<MLocation>();
-    for (int i = 0; i < datanodeInfos.length; i++) {
-      locations.add(new MLocation(datanodeInfos[i], storageTypes[i], size));
+    public OldMLocation(DatanodeInfo datanode, StorageType storageType, long size) {
+        this.datanode = datanode;
+        this.storageType = storageType;
+        this.size = size;
     }
-    return locations;
-  }
 
-  public StorageType getStorageType() {
-    return storageType;
-  }
+    /**
+     * Return a list of MLocation referring to all replications of a block.
+     * @param lb
+     * @return
+     */
+    static List<OldMLocation> toLocations(LocatedBlock lb) {
+        final DatanodeInfo[] datanodeInfos = lb.getLocations();
+        final StorageType[] storageTypes = lb.getStorageTypes();
+        final long size = lb.getBlockSize();
+        final List<OldMLocation> locations = new LinkedList<OldMLocation>();
+        for (int i = 0; i < datanodeInfos.length; i++) {
+            locations.add(new OldMLocation(datanodeInfos[i], storageTypes[i], size));
+        }
+        return locations;
+    }
 }
+

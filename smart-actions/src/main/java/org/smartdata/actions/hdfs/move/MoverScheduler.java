@@ -22,7 +22,6 @@ import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
-import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
@@ -34,7 +33,6 @@ import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.model.actions.hdfs.SchedulePlan;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,29 +43,29 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A processor to do Mover action.
+ * Scheduler for Mover.
  */
-class MoverProcessor {
-  static final Logger LOG = LoggerFactory.getLogger(MoverProcessor.class);
+public class MoverScheduler {
+  static final Logger LOG = LoggerFactory.getLogger(MoverScheduler.class);
 
   private final DFSClient dfs;
-  private Dispatcher dispatcher;
+  private final Dispatcher dispatcher;
+  private Path targetPath;
   private final StorageMap storages;
-  private final AtomicInteger retryCount;
-
+  private AtomicInteger retryCount;
+  private Integer maxRetryTimes;
   private final BlockStoragePolicy[] blockStoragePolicies;
-  private long movedBlocks = 0;
-  private long remainingBlocks = 0;
   private final MoverStatus moverStatus;
 
-  private SchedulePlan schedulePlan;
-
-
-  MoverProcessor(DFSClient dfsClient, StorageMap storages,
-      MoverStatus moverStatus) throws IOException {
-    this.dfs = dfsClient;
+  public MoverScheduler(Dispatcher dispatcher, Path targetPath, StorageMap storages,
+      AtomicInteger retryCount, Integer maxRetryTimes, MoverStatus moverStatus)
+      throws IOException {
+    this.dispatcher = dispatcher;
+    this.targetPath = targetPath;
+    this.dfs = dispatcher.getDistributedFileSystem().getClient();
     this.storages = storages;
-    this.retryCount = new AtomicInteger(1);
+    this.retryCount = retryCount;
+    this.maxRetryTimes = maxRetryTimes;
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
         BlockStoragePolicySuite.ID_BIT_LENGTH];
     initStoragePolicies();
@@ -75,7 +73,8 @@ class MoverProcessor {
   }
 
   private void initStoragePolicies() throws IOException {
-    BlockStoragePolicy[] policies = dfs.getStoragePolicies();
+    BlockStoragePolicy[] policies =
+        dispatcher.getDistributedFileSystem().getStoragePolicies();
 
     for (BlockStoragePolicy policy : policies) {
       this.blockStoragePolicies[policy.getId()] = policy;
@@ -99,10 +98,10 @@ class MoverProcessor {
    * @return whether there is still remaining migration work for the next
    * round
    */
-  ExitStatus processNamespace(Path targetPath) throws IOException {
+  ExitStatus processNamespace() throws IOException {
     MoverProcessResult result = new MoverProcessResult();
     DirectoryListing files = dfs.listPaths(targetPath.toUri().getPath(),
-      HdfsFileStatus.EMPTY_NAME, true);
+        HdfsFileStatus.EMPTY_NAME, true);
     HdfsFileStatus status = null;
     for (HdfsFileStatus file : files.getPartialListing()) {
       if (!file.isDir()) {
@@ -111,29 +110,25 @@ class MoverProcessor {
       }
     }
     if (!status.isSymlink()) { // file
-      schedulePlan = new SchedulePlan();
-      schedulePlan.setFileName(targetPath.toUri().getPath());
       processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status, result);
     }
 
-//    // wait for pending move to finish and retry the failed migration
-//    boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.getTargets().values());
-//    if (hasFailed) {
-//      if (retryCount.get() == 1) {
-//        result.setRetryFailed();
-//        LOG.error("Failed to move some block's after "
-//            + 1 + " retries.");
-//        return result.getExitStatus();
-//      } else {
-//        retryCount.incrementAndGet();
-//      }
-//    } else {
-//      // Reset retry count if no failure.
-//      retryCount.set(0);
-//    }
-//    movedBlocks = moverStatus.getTotalBlocks() - remainingBlocks;
-//    moverStatus.setMovedBlocks(movedBlocks);
-//    result.updateHasRemaining(hasFailed);
+    // wait for pending move to finish and retry the failed migration
+    boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.getTargets().values());
+    if (hasFailed) {
+      if (retryCount.get() == maxRetryTimes) {
+        result.setRetryFailed();
+        LOG.error("Failed to move some block's after " + maxRetryTimes + " retries.");
+        return result.getExitStatus();
+      } else {
+        retryCount.incrementAndGet();
+      }
+    } else {
+      // Reset retry count if no failure.
+      retryCount.set(0);
+    }
+
+    result.updateHasRemaining(hasFailed);
     return result.getExitStatus();
   }
 
@@ -141,7 +136,7 @@ class MoverProcessor {
    * @return true if it is necessary to run another round of migration
    */
   private void processFile(String fullPath, HdfsLocatedFileStatus status,
-                           MoverProcessResult result) {
+      MoverProcessResult result) {
     byte policyId = status.getStoragePolicy();
     if (policyId == BlockStoragePolicySuite.ID_UNSPECIFIED) {
       return;
@@ -164,12 +159,10 @@ class MoverProcessor {
       LocatedBlock lb = lbs.get(i);
       final StorageTypeDiff diff = new StorageTypeDiff(types, lb.getStorageTypes());
       int remainingReplications = diff.removeOverlap(true);
-      moverStatus.increaseTotalSize(lb.getBlockSize() * remainingReplications);
-      moverStatus.increaseTotalBlocks(remainingReplications);
-      remainingBlocks += remainingReplications;
       if (remainingReplications != 0) {
         if (scheduleMoveBlock(diff, lb)) {
-          result.updateHasRemaining(false);
+          result.updateHasRemaining(diff.existing.size() > 1
+              && diff.expected.size() > 1);
           // One block scheduled successfully, set noBlockMoved to false
           result.setNoBlockMoved(false);
         } else {
@@ -183,20 +176,24 @@ class MoverProcessor {
     final List<MLocation> locations = MLocation.toLocations(lb);
     Collections.shuffle(locations);
     final DBlock db = newDBlock(lb, locations);
-    boolean needMove = false;
 
-    for (int i = 0; i < diff.existing.size(); i++) {
-      StorageType t = diff.existing.get(i);
-      MLocation ml = locations.get(i);
-      final Source source = storages.getSource(ml);
-      if (ml.getStorageType() == t && source != null) {
-        // try to schedule one replica move.
-        if (scheduleMoveReplica(db, source, diff.expected)) {
-          needMove = true;
+    boolean successful = false;
+    for (final StorageType t : diff.existing) {
+      for (final MLocation ml : locations) {
+        final Source source = storages.getSource(ml);
+        if (ml.getStorageType() == t && source != null) {
+          // try to schedule one replica move.
+          if (scheduleMoveReplica(db, source, diff.expected)) {
+            successful = true;
+            locations.remove(ml);
+            break;
+            //return true;
+          }
         }
       }
     }
-    return needMove;
+    return successful;
+    //return false;
   }
 
   boolean scheduleMoveReplica(DBlock db, Source source,
@@ -227,18 +224,13 @@ class MoverProcessor {
                                  List<StorageType> targetTypes) {
     for (StorageType t : targetTypes) {
       StorageGroup target = storages.getTarget(source.getDatanodeInfo()
-              .getDatanodeUuid(), t);
+          .getDatanodeUuid(), t);
       if (target == null) {
         continue;
       }
-//      final Dispatcher.PendingMove pm = new Dispatcher.PendingMove(source, target);
-//      if (pm != null) {
-//        dispatcher.executePendingMove(pm);
-//        return true;
-//      }
-//      dispatcher.executePendingMove();
-      addPlan(source, target, db.getBlock().getBlockId());
-      return true;
+      //if (moverExecutor.executeMove(db, source, target)) {
+      //  return true;
+      //}
     }
     return false;
   }
@@ -251,26 +243,18 @@ class MoverProcessor {
       Collections.shuffle(targets);
       for (StorageGroup target : targets) {
         if (matcher.match(cluster, source.getDatanodeInfo(),
-                target.getDatanodeInfo())) {
-//          final Dispatcher.PendingMove pm = source.addPendingMove(db, target);
+            target.getDatanodeInfo())) {
+//          final PendingMove pm = new PendingMove(source, target);
 //          if (pm != null) {
 //            dispatcher.executePendingMove(pm);
 //            return true;
 //          }
-//          dispatcher.executePendingMove();
-          addPlan(source, target, db.getBlock().getBlockId());
+          dispatcher.executePendingMove();
           return true;
         }
       }
     }
     return false;
-  }
-
-  private void addPlan(StorageGroup source, StorageGroup target, long blockId) {
-    DatanodeInfo sourceDatanode = source.getDatanodeInfo();
-    DatanodeInfo targetDatanode = target.getDatanodeInfo();
-    schedulePlan.addPlan(blockId, sourceDatanode.getDatanodeUuid(), source.getStorageType(),
-        targetDatanode.getIpAddr(), targetDatanode.getXferPort(), target.getStorageType());
   }
 
   /**
@@ -319,8 +303,8 @@ class MoverProcessor {
         return ExitStatus.NO_MOVE_PROGRESS;
       } else {
         return !isHasRemaining() ? ExitStatus.SUCCESS
-                : isNoBlockMoved() ? ExitStatus.NO_MOVE_BLOCK
-                : ExitStatus.IN_PROGRESS;
+            : isNoBlockMoved() ? ExitStatus.NO_MOVE_BLOCK
+            : ExitStatus.IN_PROGRESS;
       }
     }
   }
@@ -371,7 +355,7 @@ class MoverProcessor {
     @Override
     public String toString() {
       return getClass().getSimpleName() + "{expected=" + expected
-              + ", existing=" + existing + "}";
+          + ", existing=" + existing + "}";
     }
   }
 }
