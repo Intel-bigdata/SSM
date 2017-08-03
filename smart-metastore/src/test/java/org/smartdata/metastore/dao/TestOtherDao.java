@@ -75,30 +75,4 @@ public class TestOtherDao extends TestDaoUtil {
     Assert.assertTrue(i == i2);
     Assert.assertTrue(i1 == i + 1);
   }
-
-  @Test
-  public void testXattr() throws SQLException {
-    long fid = 567l;
-    Map<String, byte[]> xAttrMap = new HashMap<>();
-    String name1 = "user.a1";
-    String name2 = "raw.you";
-    Random random = new Random();
-    byte[] value1 = new byte[1024];
-    byte[] value2 = new byte[1024];
-    random.nextBytes(value1);
-    random.nextBytes(value2);
-    xAttrMap.put(name1, value1);
-    xAttrMap.put(name2, value2);
-    Assert.assertTrue(xattrDao.insertXattrTable(fid, xAttrMap));
-    Map<String, byte[]> map = xattrDao.getXattrTable(fid);
-    Assert.assertTrue(map.size() == xAttrMap.size());
-    for (String m : map.keySet()) {
-      Assert.assertArrayEquals(map.get(m), xAttrMap.get(m));
-    }
-  }
-
-  @Test
-  public void testStorage() {
-  }
-
 }
