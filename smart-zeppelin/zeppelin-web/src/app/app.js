@@ -81,9 +81,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
     };
 
     $routeProvider
-      .when('/', {
-        templateUrl: 'app/dashboard/views/cluster/cluster_hottestFiles.html'
-      })
       .when('/notebook/:noteId', {
         templateUrl: 'app/notebook/notebook.html',
         controller: 'NotebookCtrl',
@@ -195,7 +192,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         controller: 'SearchResultCtrl'
       })
       .otherwise({
-        redirectTo: '/'
+        redirectTo: '/notebook/2CM9DW8NW'
       });
 
     ngToastProvider.configure({
