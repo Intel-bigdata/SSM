@@ -17,6 +17,7 @@
  */
 package org.smartdata.model.actions.hdfs;
 
+import com.google.gson.Gson;
 import org.apache.hadoop.fs.StorageType;
 
 import java.net.URI;
@@ -108,5 +109,16 @@ public class SchedulePlan {
 
   public URI getNamenode() {
     return namenode;
+  }
+
+  @Override
+  public String toString() {
+    Gson gson = new Gson();
+    return gson.toJson(this);
+  }
+
+  public static SchedulePlan fromJsonString(String jsonPlan) {
+    Gson gson = new Gson();
+    return gson.fromJson(jsonPlan, SchedulePlan.class);
   }
 }
