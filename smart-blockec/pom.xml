@@ -35,6 +35,12 @@
             <version>20170516</version>
         </dependency>
         <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <scope>test</scope>
@@ -173,6 +179,7 @@
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeRSRawDecoder</javahClassName>
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawEncoder</javahClassName>
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawDecoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.NativeCrc32</javahClassName>
                                     </javahClassNames>
                                     <javahOutputDirectory>${project.build.directory}/native/javah</javahOutputDirectory>
                                 </configuration>
@@ -201,6 +208,16 @@
                                         <CUSTOM_OPENSSL_INCLUDE>${openssl.include} </CUSTOM_OPENSSL_INCLUDE>
                                         <EXTRA_LIBHADOOP_RPATH>${extra.libhadoop.rpath}</EXTRA_LIBHADOOP_RPATH>
                                     </vars>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>test_bulk_crc32</id>
+                                <goals><goal>cmake-test</goal></goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <binary>${project.build.directory}/native/test_bulk_crc32</binary>
+                                    <timeout>1200</timeout>
+                                    <results>${project.build.directory}/native-results</results>
                                 </configuration>
                             </execution>
                             <execution>
@@ -282,6 +299,7 @@
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeRSRawDecoder</javahClassName>
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawEncoder</javahClassName>
                                         <javahClassName>org.smartdata.erasurecode.rawcoder.NativeXORRawDecoder</javahClassName>
+                                        <javahClassName>org.smartdata.erasurecode.util.NativeCrc32</javahClassName>
                                     </javahClassNames>
                                     <javahOutputDirectory>${project.build.directory}/native/javah</javahOutputDirectory>
                                 </configuration>

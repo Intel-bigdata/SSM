@@ -52,15 +52,15 @@ under the License.
                 <span>Action type</span>
               </label>
               <div class="col-sm-9">
-                <select id="actionList" class="form-control" ng-model="data.model">
+                <select id="actionList" class="form-control" ng-model="data.model" ng-change="updateUsage(data.model)">
                   <option ng-repeat="action in data.actions" value="{{action.actionName}}">{{action.displayName}}</option>
                 </select>
               </div>
             </div>
             <!-- input 2 -->
-            <form-control
-              type="text" label="Action arguments"
-              ng-model="launchArgs"></form-control>
+            <form-control id="action-args"
+                          type="text" label="Arguments"
+                          ng-model="launchArgs" help="{{usage}}" style="white-space: nowrap"></form-control>
           </div>
         </form>
       </div>

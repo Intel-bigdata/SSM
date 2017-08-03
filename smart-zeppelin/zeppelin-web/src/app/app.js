@@ -81,9 +81,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
     };
 
     $routeProvider
-      .when('/', {
-        templateUrl: 'app/home/home.html'
-      })
       .when('/notebook/:noteId', {
         templateUrl: 'app/notebook/notebook.html',
         controller: 'NotebookCtrl',
@@ -195,7 +192,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         controller: 'SearchResultCtrl'
       })
       .otherwise({
-        redirectTo: '/'
+        redirectTo: '/notebook/2CM9DW8NW'
       });
 
     ngToastProvider.configure({
@@ -250,10 +247,12 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
   .constant('conf', {
     restapiProtocol: 'v1',
     restapiRoot: 'http://localhost:8080/',
+    // restapiRoot: rootPath,
     restapiQueryInterval: 3 * 1000, // in milliseconds
     restapiQueryTimeout: 30 * 1000, // in milliseconds
     restapiTaskLevelMetricsQueryLimit: 100,
     loginUrl: 'http://localhost:8080/' + 'login'
+    // loginUrl: rootPath + 'login'
   })
   .constant('TRASH_FOLDER_ID', '~Trash');
 

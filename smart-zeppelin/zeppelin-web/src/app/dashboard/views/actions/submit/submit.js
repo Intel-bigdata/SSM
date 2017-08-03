@@ -23,6 +23,7 @@ angular.module('zeppelinWebApp')
       'use strict';
 
       $scope.dialogTitle = 'Submit Action';
+      $scope.usage = 'Usage:';
 
       var submitFn = restapi.submitAction;
       $scope.canSubmit = true;
@@ -30,6 +31,14 @@ angular.module('zeppelinWebApp')
       $scope.data = {
         model: null,
         actions: actionTypes.body
+      };
+
+      $scope.updateUsage = function (model) {
+        actionTypes.body.forEach(function (type) {
+          if (type.actionName === model) {
+            $scope.usage = 'Usage: ' + type.usage;
+          }
+        });
       };
 
       $scope.submit = function () {

@@ -56,7 +56,6 @@
     <module>zeppelin-interpreter</module>
     <module>zeppelin-zengine</module>
     <module>zeppelin-display</module>
-    <module>spark</module>
     <module>zeppelin-server</module>
   </modules>
 

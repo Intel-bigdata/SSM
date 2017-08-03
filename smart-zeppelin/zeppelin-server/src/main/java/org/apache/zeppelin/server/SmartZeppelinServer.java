@@ -327,7 +327,7 @@ public class SmartZeppelinServer {
   }
 
   private void setupNotebookServer(WebAppContext webapp) {
-    notebookWsServer = new NotebookServer();
+    notebookWsServer = new NotebookServer(engine);
 
     String maxTextMessageSize = zconf.getWebsocketMaxTextMessageSize();
     final ServletHolder servletHolder = new ServletHolder(notebookWsServer);

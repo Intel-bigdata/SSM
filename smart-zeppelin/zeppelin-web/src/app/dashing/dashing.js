@@ -1614,12 +1614,13 @@ angular.module('dashing.property', [
                   message: 'Ignore `value.value`, because it is a reversed field.',
                   object: value
                 });
-                delete value.value;
+                // delete value.value;
               }
               angular.merge($scope, value);
             } else if (angular.isNumber(value)) {
               if ($scope.renderer === renderer.NUMBER) {
-                $scope.raw = value;
+                // $scope.raw = value;
+                $scope.raw = value.value;
               }
             }
           });
