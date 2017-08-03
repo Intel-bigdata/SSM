@@ -46,7 +46,7 @@ public class TestEmptyMiniSmartCluster {
   protected String dbFile;
   protected String dbUrl;
 
-  private static final int DEFAULT_BLOCK_SIZE = 100;
+  public static final int DEFAULT_BLOCK_SIZE = 100;
 
   static {
     TestBalancer.initTestSetup();

@@ -15,22 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.model.actions;
 
-import org.smartdata.model.actions.hdfs.SchedulePlan;
+import org.smartdata.model.LaunchAction;
 
-/**
- * HDFS SPS based move runner.
- */
-public class SPSBasedMoveRunner extends MoveRunner {
+import java.util.List;
 
-  @Override
-  public void move(String file) throws Exception {
+public interface ActionPreProcessor {
 
-  }
+  List<String> getSupportedActions();
 
-  @Override
-  public void move(String file, SchedulePlan plan) throws Exception {
+  void beforeExecution(LaunchAction action);
 
-  }
+  void afterExecution(LaunchAction action);
 }

@@ -45,6 +45,8 @@ public class SmartConfKeys {
   // StatesManager
   public static final String SMART_STATES_UPDATE_SERVICE_KEY = "smart.states.update.service";
   public static final String SMART_STATES_UPDATE_SERVICE_DEFAULT = "org.smartdata.hdfs.HdfsStatesUpdateService";
+  public static final String SMART_ACTION_SCHEDULER_SERVICE_KEY = "smart.action.scheduler.service";
+  public static final String SMART_ACTION_SCHEDULER_SERVICE_DEFAULT = "org.smartdata.hdfs.metric.fetcher.MoverPreProcessService";
 
   // RuleManager
   public final static String SMART_RULE_EXECUTORS_KEY = "smart.rule.executors";

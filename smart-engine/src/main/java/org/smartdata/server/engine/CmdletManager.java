@@ -18,6 +18,8 @@
 package org.smartdata.server.engine;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +40,12 @@ import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.server.engine.cmdlet.ActionSchedulerServiceFactory;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
-import org.smartdata.server.engine.cmdlet.message.LaunchAction;
+import org.smartdata.metastore.ActionPreProcessService;
+import org.smartdata.model.actions.ActionPreProcessor;
+import org.smartdata.model.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
@@ -80,6 +85,8 @@ public class CmdletManager extends AbstractService {
   private Map<Long, CmdletInfo> idToCmdlets;
   private Map<Long, ActionInfo> idToActions;
   private Map<String, Long> fileLocks;
+  private ListMultimap<String, ActionPreProcessor> preExecuteProcessor = ArrayListMultimap.create();
+  private List<ActionPreProcessService> preProcessServices = new ArrayList<>();
 
   public CmdletManager(ServerContext context) {
     super(context);
@@ -104,6 +111,17 @@ public class CmdletManager extends AbstractService {
     try {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
+
+      preProcessServices = ActionSchedulerServiceFactory.createServices(
+          getContext().getConf(), getContext(), metaStore, false);
+
+      for (ActionPreProcessService s : preProcessServices) {
+        s.init();
+        List<String> actions = s.getSupportedActions();
+        for (String a : actions) {
+          preExecuteProcessor.put(a, s);
+        }
+      }
     } catch (Exception e) {
       LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
       throw new IOException(e);
@@ -114,10 +132,16 @@ public class CmdletManager extends AbstractService {
   public void start() throws IOException {
     executorService.scheduleAtFixedRate(
         new ScheduleTask(this.dispatcher), 1000, 1000, TimeUnit.MILLISECONDS);
+    for (ActionPreProcessService s : preProcessServices) {
+      s.start();
+    }
   }
 
   @Override
   public void stop() throws IOException {
+    for (int i = preProcessServices.size() - 1; i >=0 ; i--) {
+      preProcessServices.get(i).stop();
+    }
     executorService.shutdown();
     dispatcher.shutDownExcutorServices();
   }
@@ -549,11 +573,20 @@ public class CmdletManager extends AbstractService {
           if (launchCmdlet == null) {
             break;
           } else {
+            cmdletPreExecutionProcess(launchCmdlet);
             dispatcher.dispatch(launchCmdlet);
           }
         } catch (IOException e) {
           LOG.error("Cmdlet dispatcher error", e);
         }
+      }
+    }
+  }
+
+  public void cmdletPreExecutionProcess(LaunchCmdlet cmdlet) {
+    for (LaunchAction action : cmdlet.getLaunchActions()) {
+      for (ActionPreProcessor p : preExecuteProcessor.get(action.getActionType())) {
+        p.beforeExecution(action);
       }
     }
   }

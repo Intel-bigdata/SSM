@@ -26,7 +26,7 @@ import org.smartdata.actions.ActionException;
 import org.smartdata.actions.SmartAction;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.engine.cmdlet.message.LaunchAction;
+import org.smartdata.model.LaunchAction;
 
 import java.util.HashMap;
 

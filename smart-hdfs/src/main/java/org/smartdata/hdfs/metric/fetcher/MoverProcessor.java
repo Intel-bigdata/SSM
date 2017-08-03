@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
@@ -34,6 +34,13 @@ import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.hdfs.move.DBlock;
+import org.smartdata.actions.hdfs.move.Dispatcher;
+import org.smartdata.actions.hdfs.move.MLocation;
+import org.smartdata.actions.hdfs.move.MoverStatus;
+import org.smartdata.actions.hdfs.move.Source;
+import org.smartdata.actions.hdfs.move.StorageGroup;
+import org.smartdata.actions.hdfs.move.StorageMap;
 import org.smartdata.model.actions.hdfs.SchedulePlan;
 
 import java.io.IOException;
@@ -82,7 +89,7 @@ class MoverProcessor {
     }
   }
 
-  DBlock newDBlock(LocatedBlock lb, List<MLocation> locations) {
+  private DBlock newDBlock(LocatedBlock lb, List<MLocation> locations) {
     Block blk = lb.getBlock().getLocalBlock();
     DBlock db;
     db = new DBlock(blk);
@@ -99,7 +106,7 @@ class MoverProcessor {
    * @return whether there is still remaining migration work for the next
    * round
    */
-  ExitStatus processNamespace(Path targetPath) throws IOException {
+  public ExitStatus processNamespace(Path targetPath) throws IOException {
     MoverProcessResult result = new MoverProcessResult();
     DirectoryListing files = dfs.listPaths(targetPath.toUri().getPath(),
       HdfsFileStatus.EMPTY_NAME, true);
@@ -135,6 +142,10 @@ class MoverProcessor {
 //    moverStatus.setMovedBlocks(movedBlocks);
 //    result.updateHasRemaining(hasFailed);
     return result.getExitStatus();
+  }
+
+  public SchedulePlan getSchedulePlan() {
+    return schedulePlan;
   }
 
   /**
@@ -191,7 +202,7 @@ class MoverProcessor {
       final Source source = storages.getSource(ml);
       if (ml.getStorageType() == t && source != null) {
         // try to schedule one replica move.
-        if (scheduleMoveReplica(db, source, diff.expected)) {
+        if (scheduleMoveReplica(db, source, Arrays.asList(diff.expected.get(i)))) {
           needMove = true;
         }
       }
