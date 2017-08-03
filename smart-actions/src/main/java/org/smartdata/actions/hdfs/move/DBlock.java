@@ -19,7 +19,6 @@ package org.smartdata.actions.hdfs.move;
 
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.server.balancer.MovedBlocks;
-import org.smartdata.model.actions.hdfs.StorageGroup;
 
 /** A class for keeping track of block locations in the dispatcher. */
 public class DBlock extends MovedBlocks.Locations<StorageGroup> {

@@ -10,9 +10,6 @@ import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.model.actions.hdfs.Source;
-import org.smartdata.model.actions.hdfs.StorageGroup;
-import org.smartdata.model.actions.hdfs.StorageMap;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
@@ -33,11 +34,7 @@ import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.model.actions.hdfs.MLocation;
 import org.smartdata.model.actions.hdfs.SchedulePlan;
-import org.smartdata.model.actions.hdfs.Source;
-import org.smartdata.model.actions.hdfs.StorageGroup;
-import org.smartdata.model.actions.hdfs.StorageMap;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -240,7 +237,7 @@ class MoverProcessor {
 //        return true;
 //      }
 //      dispatcher.executePendingMove();
-      schedulePlan.addPlan(source, target, db.getBlock().getBlockId());
+      addPlan(source, target, db.getBlock().getBlockId());
       return true;
     }
     return false;
@@ -261,12 +258,19 @@ class MoverProcessor {
 //            return true;
 //          }
 //          dispatcher.executePendingMove();
-          schedulePlan.addPlan(source, target, db.getBlock().getBlockId());
+          addPlan(source, target, db.getBlock().getBlockId());
           return true;
         }
       }
     }
     return false;
+  }
+
+  private void addPlan(StorageGroup source, StorageGroup target, long blockId) {
+    DatanodeInfo sourceDatanode = source.getDatanodeInfo();
+    DatanodeInfo targetDatanode = target.getDatanodeInfo();
+    schedulePlan.addPlan(blockId, sourceDatanode.getDatanodeUuid(), source.getStorageType(),
+        targetDatanode.getIpAddr(), targetDatanode.getXferPort(), target.getStorageType());
   }
 
   /**

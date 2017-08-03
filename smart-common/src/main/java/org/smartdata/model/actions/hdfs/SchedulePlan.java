@@ -18,8 +18,6 @@
 package org.smartdata.model.actions.hdfs;
 
 import org.apache.hadoop.fs.StorageType;
-import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
-import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -68,32 +66,6 @@ public class SchedulePlan {
 
   public void setNamenode(URI namenode) {
     this.namenode = namenode;
-  }
-
-  public void addPlan(StorageGroup source, StorageGroup target, ExtendedBlock block) {
-    DatanodeInfo sourceDatanode = source.getDatanodeInfo();
-    sourceUuids.add(sourceDatanode.getDatanodeUuid());
-    sourceStoragetypes.add(source.getStorageType());
-
-    DatanodeInfo targetDatanode = target.getDatanodeInfo();
-    targetIpAddrs.add(targetDatanode.getIpAddr());
-    targetXferPorts.add(targetDatanode.getXferPort());
-    targetStorageTypes.add(target.getStorageType());
-
-    blockIds.add(block.getBlockId());
-  }
-
-  public void addPlan(StorageGroup source, StorageGroup target, long blockId) {
-    DatanodeInfo sourceDatanode = source.getDatanodeInfo();
-    sourceUuids.add(sourceDatanode.getDatanodeUuid());
-    sourceStoragetypes.add(source.getStorageType());
-
-    DatanodeInfo targetDatanode = target.getDatanodeInfo();
-    targetIpAddrs.add(targetDatanode.getIpAddr());
-    targetXferPorts.add(targetDatanode.getXferPort());
-    targetStorageTypes.add(target.getStorageType());
-
-    blockIds.add(blockId);
   }
 
   public void addPlan(long blockId, String srcDatanodeUuid, StorageType srcStorageType,
