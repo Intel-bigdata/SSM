@@ -32,6 +32,7 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
+import org.smartdata.model.XAttribute;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -474,21 +475,17 @@ public class TestMetaStore extends TestDaoUtil {
   @Test
   public void testInsertXattrTable() throws Exception {
     long fid = 567l;
-    Map<String, byte[]> xAttrMap = new HashMap<>();
-    String name1 = "user.a1";
-    String name2 = "raw.you";
+    List<XAttribute> attributes = new ArrayList<>();
     Random random = new Random();
     byte[] value1 = new byte[1024];
     byte[] value2 = new byte[1024];
     random.nextBytes(value1);
     random.nextBytes(value2);
-    xAttrMap.put(name1, value1);
-    xAttrMap.put(name2, value2);
-    Assert.assertTrue(metaStore.insertXattrTable(fid, xAttrMap));
-    Map<String, byte[]> map = metaStore.getXattrTable(fid);
-    Assert.assertTrue(map.size() == xAttrMap.size());
-    for (String m : map.keySet()) {
-      Assert.assertArrayEquals(map.get(m), xAttrMap.get(m));
-    }
+    attributes.add(new XAttribute("user", "a1", value1));
+    attributes.add(new XAttribute("raw", "you", value2));
+    Assert.assertTrue(metaStore.insertXattrList(fid, attributes));
+    List<XAttribute> result = metaStore.getXattrList(fid);
+    Assert.assertTrue(result.size() == attributes.size());
+    Assert.assertTrue(result.containsAll(attributes));
   }
 }

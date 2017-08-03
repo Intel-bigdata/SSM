@@ -46,6 +46,7 @@ import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.RuleState;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.XAttribute;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
@@ -755,20 +756,19 @@ public class MetaStore {
     }
   }
 
-  public synchronized boolean insertXattrTable(Long fid, Map<String,
-      byte[]> map) throws MetaStoreException {
+  public synchronized boolean insertXattrList(Long fid, List<XAttribute> attributes) throws MetaStoreException {
     try {
-      return xattrDao.insertXattrTable(fid, map);
+      return xattrDao.insertXattrList(fid, attributes);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public Map<String, byte[]> getXattrTable(Long fid) throws MetaStoreException {
+  public List<XAttribute> getXattrList(Long fid) throws MetaStoreException {
     try {
-      return xattrDao.getXattrTable(fid);
+      return xattrDao.getXattrList(fid);
     } catch (EmptyResultDataAccessException e) {
-      return new HashMap<>();
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
