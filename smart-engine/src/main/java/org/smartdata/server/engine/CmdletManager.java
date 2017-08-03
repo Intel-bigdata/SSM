@@ -40,6 +40,7 @@ import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.server.engine.cmdlet.ActionSchedulerServiceFactory;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.metastore.ActionPreProcessService;
@@ -111,7 +112,8 @@ public class CmdletManager extends AbstractService {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
 
-      // TODO: Add services to list preProcessServices
+      preProcessServices = ActionSchedulerServiceFactory.createServices(
+          getContext().getConf(), getContext(), metaStore, true);
 
       for (ActionPreProcessService s : preProcessServices) {
         s.init();

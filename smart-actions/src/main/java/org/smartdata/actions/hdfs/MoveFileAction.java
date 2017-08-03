@@ -79,13 +79,19 @@ public class MoveFileAction extends HdfsAction {
             Utils.getFormatedCurrentTime(), fileName, storagePolicy));
     dfsClient.setStoragePolicy(fileName, storagePolicy);
 
-    // TODO : make MoveRunner configurable
-    if (movePlan == null) {
+    boolean exception = false;
+    if (movePlan != null) {
+      try {
+        MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
+        moveRunner.move(fileName, movePlan);
+      } catch (Exception e) {
+        exception = true;
+      }
+    }
+
+    if (movePlan == null || exception) {
       OldMoveRunner moveRunner = new OldMoverBasedMoveRunner(getContext().getConf(), this.status);
       moveRunner.move(fileName);
-    } else {
-      MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
-      moveRunner.move(fileName, movePlan);
     }
   }
 
