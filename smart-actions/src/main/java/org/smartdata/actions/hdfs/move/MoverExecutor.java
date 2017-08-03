@@ -30,7 +30,6 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.SaslDataTransferClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.actions.hdfs.SchedulePlan;
-import org.smartdata.model.actions.hdfs.StorageGroup;
 
 import java.io.IOException;
 import java.net.URI;

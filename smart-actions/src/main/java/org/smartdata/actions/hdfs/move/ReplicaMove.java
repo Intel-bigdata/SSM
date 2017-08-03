@@ -16,7 +16,6 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.token.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.model.actions.hdfs.StorageGroup;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

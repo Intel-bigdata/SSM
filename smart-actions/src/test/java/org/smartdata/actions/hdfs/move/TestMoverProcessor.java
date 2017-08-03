@@ -24,7 +24,6 @@ import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.ActionMiniCluster;
-import org.smartdata.model.actions.hdfs.StorageMap;
 
 import java.net.URI;
 

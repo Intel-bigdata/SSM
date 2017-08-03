@@ -30,7 +30,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.hdfs.ActionMiniCluster;
 import org.smartdata.model.actions.hdfs.SchedulePlan;
-import org.smartdata.model.actions.hdfs.StorageGroup;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -73,7 +72,7 @@ public class TestMoverExecutor extends ActionMiniCluster {
       for (DatanodeInfo datanodeInfo : lb.getLocations()) {
         StorageGroup source = new StorageGroup(datanodeInfo, StorageType.DISK);
         StorageGroup target = new StorageGroup(datanodeInfo, StorageType.SSD);
-        plan.addPlan(source, target, block);
+        addPlan(plan, source, target, block.getBlockId());
       }
     }
 
@@ -118,7 +117,7 @@ public class TestMoverExecutor extends ActionMiniCluster {
       if (!fileNodes.contains(targetDatanode)) {
         StorageGroup source = new StorageGroup(fileNodes.iterator().next(), StorageType.DISK);
         StorageGroup target = new StorageGroup(targetDatanode, StorageType.SSD);
-        plan.addPlan(source, target, block);
+        addPlan(plan, source, target, block.getBlockId());
         break;
       }
     }
@@ -145,5 +144,12 @@ public class TestMoverExecutor extends ActionMiniCluster {
     }
 //    Assert.assertEquals(1, ssdNum);
 //    Assert.assertEquals(2, hddNum);
+  }
+
+  private void addPlan(SchedulePlan plan, StorageGroup source, StorageGroup target, long blockId) {
+    DatanodeInfo sourceDatanode = source.getDatanodeInfo();
+    DatanodeInfo targetDatanode = target.getDatanodeInfo();
+    plan.addPlan(blockId, sourceDatanode.getDatanodeUuid(), source.getStorageType(),
+        targetDatanode.getIpAddr(), targetDatanode.getXferPort(), target.getStorageType());
   }
 }
