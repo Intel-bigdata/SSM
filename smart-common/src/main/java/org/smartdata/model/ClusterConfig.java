@@ -59,4 +59,24 @@ public class ClusterConfig {
   public String toString() {
     return String.format("ClusterConfig{cid=%s, node_name=\'%s\', config_path=\'%s\'}",cid,node_name,config_path);
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    ClusterConfig that = (ClusterConfig) o;
+
+    if (cid != that.cid) return false;
+    if (node_name != null ? !node_name.equals(that.node_name) : that.node_name != null) return false;
+    return config_path != null ? config_path.equals(that.config_path) : that.config_path == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = (int) (cid ^ (cid >>> 32));
+    result = 31 * result + (node_name != null ? node_name.hashCode() : 0);
+    result = 31 * result + (config_path != null ? config_path.hashCode() : 0);
+    return result;
+  }
 }

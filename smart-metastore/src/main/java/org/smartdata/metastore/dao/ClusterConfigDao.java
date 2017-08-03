@@ -29,6 +29,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.sqlite.JDBC;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -67,6 +68,12 @@ public class ClusterConfigDao {
         new Object[]{cid}, new ClusterConfigRowMapper());
   }
 
+  public ClusterConfig getByName(String name){
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("select * from cluster_config WHERE node_name = ?",
+        new Object[]{name}, new ClusterConfigRowMapper());
+  }
+
   public void delete(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from cluster_config where cid = ?";
@@ -90,7 +97,19 @@ public class ClusterConfigDao {
     simpleJdbcInsert.executeBatch(maps);
   }
 
-  //TODO update
+  public int updateById(int cid, String config_path){
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "update cluster_config set config_path = ? WHERE cid = ?";
+    return jdbcTemplate.update(sql,config_path,cid);
+  }
+
+
+  public int updateByNodeName(String node_name, String config_path){
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "update cluster_config set config_path = ? WHERE node_name = ?";
+    return jdbcTemplate.update(sql,config_path,node_name);
+  }
+
 
   private Map<String, Object> toMap(ClusterConfig clusterConfig) {
     Map<String, Object> parameters = new HashMap<>();
