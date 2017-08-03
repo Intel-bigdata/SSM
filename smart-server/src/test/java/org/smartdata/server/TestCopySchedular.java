@@ -21,18 +21,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
-import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.smartdata.SmartContext;
-import org.smartdata.conf.SmartConf;
+import org.junit.rules.ExpectedException;
 import org.smartdata.model.FileDiff;
 import org.smartdata.server.engine.CopyScheduler;
 import org.smartdata.server.engine.CopyTargetTask;
@@ -40,41 +33,10 @@ import org.smartdata.server.engine.CopyTargetTask;
 import java.io.IOException;
 import java.util.List;
 
-public class TestCopySchedular extends TestEmptyMiniSmartCluster{
+public class TestCopySchedular extends TestEmptyMiniSmartCluster {
 
-  private static final int DEFAULT_BLOCK_SIZE = 50;
-  protected MiniDFSCluster cluster;
-  protected DistributedFileSystem dfs;
-  protected DFSClient dfsClient;
-  protected SmartContext smartContext;
-
-  static {
-    TestBalancer.initTestSetup();
-  }
-
-  @Before
-  public void init() throws Exception {
-    SmartConf conf = new SmartConf();
-    initConf(conf);
-    cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(5)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
-            StorageType.SSD})
-        .build();
-    cluster.waitActive();
-    dfs = cluster.getFileSystem();
-    dfsClient = dfs.getClient();
-    smartContext = new SmartContext(conf);
-  }
-
-  static void initConf(Configuration conf) {
-    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
-  }
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testFileDiffParsing() throws Exception {
@@ -89,6 +51,8 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster{
 
   @Test
   public void testCopyScheduler() throws IOException {
+    DistributedFileSystem dfs = cluster.getFileSystem();
+
     final String srcPath = "/testCopy";
     final String file1 = "file1";
     final String destPath = "/backup";
@@ -114,16 +78,9 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster{
 
     System.out.println(copyTargetTaskList);
 
-    for (int i = 0; i < 3; i++) {
+    // block_size = 100, then only two files
+    for (int i = 0; i < 2; i++) {
       Assert.assertTrue(copyTargetTaskList.get(i).getDest().equals("/backup/file1_temp_chunkCount" + (i + 1)));
     }
   }
-
-  @After
-  public void shutdown() throws IOException {
-    if (cluster != null) {
-      cluster.shutdown();
-    }
-  }
-
 }
