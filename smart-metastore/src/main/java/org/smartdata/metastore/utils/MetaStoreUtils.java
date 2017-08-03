@@ -93,6 +93,7 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS actions;",
         "DROP TABLE IF EXISTS blank_access_count_info;",  // for special cases
         "DROP TABLE IF EXISTS file_diff;",  // incremental diff for disaster recovery
+        "DROP TABLE IF EXISTS global_config",
 
         "CREATE TABLE access_count_tables (\n" +
             "  table_name varchar(255) NOT NULL,\n" +
