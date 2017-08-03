@@ -584,7 +584,7 @@ public class CmdletManager extends AbstractService {
   public void cmdletPreExecutionProcess(LaunchCmdlet cmdlet) {
     for (LaunchAction action : cmdlet.getLaunchActions()) {
       for (ActionPreProcessor p : preExecuteProcessor.get(action.getActionType())) {
-        p.processAction(action);
+        p.beforeExecution(action);
       }
     }
   }
