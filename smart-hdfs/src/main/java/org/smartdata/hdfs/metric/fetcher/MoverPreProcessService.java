@@ -91,7 +91,21 @@ public class MoverPreProcessService extends ActionPreProcessService {
       return;
     }
 
+    String policy = null;
+    switch (action.getActionType()) {
+      case "allssd":
+        policy = "ALL_SSD";
+        break;
+      case "onessd":
+        policy = "ONE_SSD";
+        break;
+      case "archive":
+        policy = "ARCHIVE";
+        break;
+    }
+
     try {
+      client.setStoragePolicy(file, policy);
       ExitStatus exitStatus = processor.processNamespace(new Path(file));
       if (exitStatus == ExitStatus.SUCCESS) {
         SchedulePlan plan = processor.getSchedulePlan();
