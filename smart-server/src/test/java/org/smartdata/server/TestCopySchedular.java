@@ -50,6 +50,35 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster {
   }
 
   @Test
+  public void testForceSync() throws Exception {
+    DistributedFileSystem dfs = cluster.getFileSystem();
+    final String srcPath = "/src";
+    final String destPath = "/dest";
+    dfs.mkdirs(new Path(srcPath));
+    dfs.mkdirs(new Path(destPath));
+    // Write to src
+    for (int i = 0; i < 12; i++) {
+
+    }
+    // Clear file_diffs
+    ssm.getMetaStore();
+    // init forceSync
+
+  }
+
+
+  @Test
+  public void testDiffApplied() throws Exception {
+    DistributedFileSystem dfs = cluster.getFileSystem();
+    final String srcPath = "/src";
+    final String destPath = "/dest";
+    dfs.mkdirs(new Path(srcPath));
+    dfs.mkdirs(new Path(destPath));
+    CopyScheduler copyScheduler = new CopyScheduler(ssm.getContext(), ssm.getCmdletManager(), cluster.getConfiguration())
+  }
+
+
+  @Test
   public void testCopyScheduler() throws IOException {
     DistributedFileSystem dfs = cluster.getFileSystem();
 
