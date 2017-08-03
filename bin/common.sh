@@ -277,7 +277,7 @@ function remote_execute() {
   local host=$1
   shift
 
-  ssh ${SSH_OPTIONS} ${host} "$@"
+  ssh ${SSH_OPTIONS} ${host} "cd ${SMART_HOME} ; $@"
 }
 
 function local_execute() {
