@@ -23,8 +23,11 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
 import java.io.IOException;
@@ -67,19 +70,37 @@ public class InotifyEventApplier {
   }
 
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
+    FileDiff fileDiff = new FileDiff();
+    fileDiff.setCreate_time(System.currentTimeMillis());
+    fileDiff.setApplied(false);
     switch (event.getEventType()) {
+      // TODO parse and save to fileDiff
       case CREATE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CreateEvent)event).getPath());
+        fileDiff.setDiffType(FileDiffType.CREATE);
+        fileDiff.setParameters(String.format("-file %s",
+            ((Event.CreateEvent)event).getPath()));
+        metaStore.insertFileDiff(fileDiff);
         return Arrays.asList(this.getCreateSql((Event.CreateEvent)event));
       case CLOSE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CloseEvent)event).getPath());
+        fileDiff.setDiffType(FileDiffType.APPEND);
+        fileDiff.setParameters(String.format("-file %s -length %s",
+            ((Event.CloseEvent)event).getPath(),
+            ((Event.CloseEvent)event).getFileSize()));
+        metaStore.insertFileDiff(fileDiff);
         return Arrays.asList(this.getCloseSql((Event.CloseEvent)event));
       case RENAME:
         LOG.trace("event type:" + event.getEventType().name() +
             ", src path:" + ((Event.RenameEvent)event).getSrcPath() +
             ", dest path:" + ((Event.RenameEvent)event).getDstPath());
+        fileDiff.setDiffType(FileDiffType.RENAME);
+        fileDiff.setParameters(String.format("-file %s -dest %s",
+            ((Event.RenameEvent)event).getSrcPath(),
+            ((Event.RenameEvent)event).getDstPath()));
+        metaStore.insertFileDiff(fileDiff);
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
         LOG.trace("event type:" + event.getEventType().name() +
@@ -92,6 +113,10 @@ public class InotifyEventApplier {
       case UNLINK:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.UnlinkEvent)event).getPath());
+        fileDiff.setDiffType(FileDiffType.DELETE);
+        fileDiff.setParameters(String.format("-file %s",
+            ((Event.UnlinkEvent)event).getPath()));
+        metaStore.insertFileDiff(fileDiff);
         return this.getUnlinkSql((Event.UnlinkEvent)event);
     }
     return Arrays.asList();
@@ -104,7 +129,7 @@ public class InotifyEventApplier {
       LOG.debug("Can not get HdfsFileStatus for file " + createEvent.getPath());
       return "";
     }
-    FileInfo fileInfo = FileInfo.fromHdfsFileStatus(fileStatus, createEvent.getPath());
+    FileInfo fileInfo = HadoopUtil.convertFileStatus(fileStatus, createEvent.getPath());
     try {
       metaStore.insertFile(fileInfo);
       return "";
@@ -140,7 +165,7 @@ public class InotifyEventApplier {
     FileInfo info = metaStore.getFile(renameEvent.getSrcPath());
     if (info == null) {
       if (status != null) {
-        info = FileInfo.fromHdfsFileStatus(status, renameEvent.getDstPath());
+        info = HadoopUtil.convertFileStatus(status, renameEvent.getDstPath());
         metaStore.insertFile(info);
       }
     } else {

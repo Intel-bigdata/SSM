@@ -52,7 +52,6 @@ public class XattrDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     List<XAttr> list = new LinkedList<>();
     List<Map<String, Object>> maplist = jdbcTemplate.queryForList(sql);
-    int i = 1;
     for (Map<String, Object> map : maplist) {
       XAttr xAttr = new XAttr.Builder()
           .setNameSpace(XAttr.NameSpace.valueOf((String) map.get("namespace")))
@@ -86,10 +85,6 @@ public class XattrDao {
             return map.entrySet().size();
           }
         });
-    if (i.length == map.size()) {
-      return true;
-    } else {
-      return false;
-    }
+    return i.length == map.size();
   }
 }

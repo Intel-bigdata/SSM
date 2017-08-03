@@ -20,8 +20,9 @@ package org.smartdata.metastore.dao;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.smartdata.actions.hdfs.CacheFileAction;
+import org.junit.rules.ExpectedException;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -32,7 +33,8 @@ import java.util.List;
 import java.util.Map;
 
 public class TestActionDao extends TestDaoUtil {
-
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
   private ActionDao actionDao;
 
   @Before
@@ -50,7 +52,6 @@ public class TestActionDao extends TestDaoUtil {
   @Test
   public void testInsertGetAction() throws Exception {
     Map<String, String> args = new HashMap();
-    args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
@@ -59,17 +60,13 @@ public class TestActionDao extends TestDaoUtil {
     ActionInfo dbActionInfo = actionDao.getById(1l);
     Assert.assertTrue(actionInfo.equals(dbActionInfo));
     // Get wrong id
-    try {
-      actionInfo = actionDao.getById(100l);
-    } catch (EmptyResultDataAccessException e) {
-      Assert.assertTrue(true);
-    }
+    expectedException.expect(EmptyResultDataAccessException.class);
+    actionDao.getById(100l);
   }
 
   @Test
   public void testUpdateAction() throws Exception {
     Map<String, String> args = new HashMap();
-    args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
@@ -84,7 +81,6 @@ public class TestActionDao extends TestDaoUtil {
   @Test
   public void testGetNewDeleteAction() throws Exception {
     Map<String, String> args = new HashMap();
-    args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
@@ -107,7 +103,6 @@ public class TestActionDao extends TestDaoUtil {
   @Test
   public void testMaxId() throws Exception {
     Map<String, String> args = new HashMap();
-    args.put(CacheFileAction.FILE_PATH, "/test/file");
     ActionInfo actionInfo = new ActionInfo(1, 1,
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,

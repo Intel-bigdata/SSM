@@ -635,7 +635,10 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   private void setDefaultTimeBasedScheduleInfo() {
     if (timeBasedScheduleInfo == null) {
-      long intval = Math.max(5000, minTimeInverval / 20);
+      long intval = 5000;
+      if (minTimeInverval != Long.MAX_VALUE) {
+        intval = Math.max(intval, minTimeInverval / 20);
+      }
       timeBasedScheduleInfo = new TimeBasedScheduleInfo(getTimeNow(),
           TimeBasedScheduleInfo.FOR_EVER, intval);
     }
