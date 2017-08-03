@@ -14,24 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.smartdata.interpreter.impl;
 
-package org.apache.zeppelin
+import org.smartdata.interpreter.SmartInterpreter;
+import org.smartdata.server.SmartEngine;
 
-import org.openqa.selenium.WebDriver
-import org.scalatest.concurrent.Eventually._
-import org.scalatest.time._
-import org.scalatest.selenium.WebBrowser
-import org.scalatest.{DoNotDiscover, FunSuite}
-import AbstractFunctionalSuite.SERVER_ADDRESS
+import java.io.IOException;
 
-@DoNotDiscover
-class WelcomePageSuite(implicit driver: WebDriver) extends FunSuite with WebBrowser {
+public class ActionInterpreter extends SmartInterpreter {
 
-  test("Welcome sign is correct") {
-    eventually (timeout(Span(180, Seconds))) {
-      go to SERVER_ADDRESS
-      assert(find("welcome").isDefined)
+    public ActionInterpreter(SmartEngine smartEngine) {
+        super(smartEngine);
     }
-  }
 
+    @Override
+    public String excute(String cmd) throws IOException {
+        getSmartEngine().getCmdletManager().submitCmdlet(cmd);
+        return "Success to add action";
+    }
 }
