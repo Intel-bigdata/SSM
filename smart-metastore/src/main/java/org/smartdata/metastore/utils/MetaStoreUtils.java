@@ -94,6 +94,8 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS blank_access_count_info;",  // for special cases
         "DROP TABLE IF EXISTS file_diff;",  // incremental diff for disaster recovery
         "DROP TABLE IF EXISTS global_config",
+        "DROP TABLE IF EXISTS cluster_config",
+
 
         "CREATE TABLE access_count_tables (\n" +
             "  table_name varchar(255) NOT NULL,\n" +
@@ -222,6 +224,11 @@ public class MetaStoreUtils {
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             " property_name varchar(4096) NOT NULL UNIQUE,\n" +
             " property_value varchar(4096 ) NOT NULL\n" +
+            ") ;",
+        "CREATE TABLE cluster_config (\n" +
+            " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            " node_name varchar(4096) NOT NULL UNIQUE,\n" +
+            " config_path varchar(4096) NOT NULL\n" +
             ") ;"
     };
     try {
