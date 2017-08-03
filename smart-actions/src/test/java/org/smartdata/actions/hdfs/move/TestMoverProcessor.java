@@ -47,6 +47,6 @@ public class TestMoverProcessor extends ActionMiniCluster {
     StorageMap storageMap = schedulerInfo.getStorages();
     MoverProcessor processor = new MoverProcessor(dfsClient, storageMap, status);
     ExitStatus exitStatus = processor.processNamespace(new Path(file));
-    Assert.assertEquals(exitStatus.getExitCode(), ExitStatus.SUCCESS);
+    Assert.assertEquals(exitStatus, ExitStatus.SUCCESS);
   }
 }
