@@ -180,10 +180,10 @@ public class MetaStoreUtils {
             "  uuid varchar(64) NOT NULL,\n" +
             "  hostname varchar(255) NOT NULL,\n" +   // DatanodeInfo
             "  ip varchar(16) DEFAULT NULL,\n" +
-            "  port tinyint(4) DEFAULT NULL\n" +
+            "  port tinyint(4) DEFAULT NULL,\n" +
             "  cache_capacity bigint(20) DEFAULT NULL,\n" +
             "  cache_used bigint(20) DEFAULT NULL,\n" +
-            "  location varchar(255) DEFAULT NULL,\n" +
+            "  location varchar(255) DEFAULT NULL\n" +
             ") ;",
 
         "CREATE TABLE datanode_storage_info (\n" +
@@ -195,7 +195,7 @@ public class MetaStoreUtils {
             "  capacity bigint(20) DEFAULT NULL,\n" +
             "  dfs_used bigint(20) DEFAULT NULL,\n" +
             "  remaining bigint(20) DEFAULT NULL,\n" +
-            "  block_pool_used bigint(20) DEFAULT NULL,\n" +
+            "  block_pool_used bigint(20) DEFAULT NULL\n" +
             ") ;",
 
         "CREATE TABLE rules (\n" +

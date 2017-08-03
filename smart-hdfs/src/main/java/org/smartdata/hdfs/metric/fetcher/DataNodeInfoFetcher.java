@@ -24,10 +24,13 @@ import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
-import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.actions.hdfs.move.DDatanode;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.model.actions.hdfs.Source;
+import org.smartdata.model.actions.hdfs.StorageGroup;
+import org.smartdata.model.actions.hdfs.StorageMap;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,6 +48,7 @@ public class DataNodeInfoFetcher {
   private final MetaStore metaStore;
   private final ScheduledExecutorService scheduledExecutorService;
   private ScheduledFuture dnStorageReportProcTaskFuture;
+
   public static final Logger LOG =
       LoggerFactory.getLogger(DataNodeInfoFetcher.class);
 
@@ -73,27 +77,31 @@ public class DataNodeInfoFetcher {
 
   private static class DatanodeStorageReportProcTask implements Runnable {
     private DFSClient client;
-    private NetworkTopology cluster;
+    private StorageMap storages = new StorageMap();
+    private int maxConcurrentMovesPerNode = 5;
 
     public DatanodeStorageReportProcTask(DFSClient client) throws IOException {
       this.client = client;
+    }
+
+    public StorageMap getStorages() {
+      return storages;
     }
 
     @Override
     public void run() {
       try {
         final List<DatanodeStorageReport> reports = init();
-//        for(DatanodeStorageReport r : reports) {
-//          // TODO: store data abstracted from reports to MetaStore
-//          final DDatanode dn = new DDatanode(r.getDatanodeInfo());
-//          for(StorageType t : StorageType.getMovableTypes()) {
-//            final Source source = dn.addSource(t, Long.MAX_VALUE, dispatcher);
-//            final long maxRemaining = getMaxRemaining(r, t);
-//            final StorageGroup target = maxRemaining > 0L ? dn.addTarget(t,
-//                maxRemaining) : null;
-//            storages.add(source, target);
-//          }
-//        }
+        for(DatanodeStorageReport r : reports) {
+          // TODO: store data abstracted from reports to MetaStore
+          final DDatanode dn = new DDatanode(r.getDatanodeInfo(), maxConcurrentMovesPerNode);
+          for(StorageType t : StorageType.getMovableTypes()) {
+            final Source source = dn.addSource(t);
+            final long maxRemaining = getMaxRemaining(r, t);
+            final StorageGroup target = maxRemaining > 0L ? dn.addTarget(t) : null;
+            storages.add(source, target);
+          }
+        }
       } catch (IOException e) {
         LOG.error("Process datanode report error", e);
       }
@@ -125,7 +133,6 @@ public class DataNodeInfoFetcher {
       for (DatanodeStorageReport r : DFSUtil.shuffle(reports)) {
         final DatanodeInfo datanode = r.getDatanodeInfo();
         trimmed.add(r);
-        cluster.add(datanode);
       }
       return trimmed;
     }
