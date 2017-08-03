@@ -94,7 +94,7 @@ public class DataNodeStorageInfoDao {
     parameters.put("capacity", dataNodeStorageInfo.getCapacity());
     parameters.put("dfs_used", dataNodeStorageInfo.getDfsUsed());
     parameters.put("remaining", dataNodeStorageInfo.getRemaining());
-    parameters.put("block_pool", dataNodeStorageInfo.getBlockPool());
+    parameters.put("block_pool_used", dataNodeStorageInfo.getBlockPoolUsed());
     return parameters;
   }
 
@@ -104,14 +104,14 @@ public class DataNodeStorageInfoDao {
     public DataNodeStorageInfo mapRow(ResultSet resultSet, int i) throws SQLException {
       return DataNodeStorageInfo.newBuilder()
           .setUuid(resultSet.getString("uuid"))
-          .setSid(resultSet.getShort("sid"))
-          .setState(resultSet.getShort("state"))
+          .setSid(resultSet.getLong("sid"))
+          .setState(resultSet.getLong("state"))
           .setStorageId(resultSet.getString("storageid"))
-          .setFailed(resultSet.getShort("failed"))
+          .setFailed(resultSet.getLong("failed"))
           .setCapacity(resultSet.getLong("capacity"))
           .setDfsUsed(resultSet.getLong("dfs_used"))
           .setRemaining(resultSet.getLong("remaining"))
-          .setBlockPool(resultSet.getLong("block_pool"))
+          .setBlockPoolUsed(resultSet.getLong("block_pool_used"))
           .build();
     }
   }

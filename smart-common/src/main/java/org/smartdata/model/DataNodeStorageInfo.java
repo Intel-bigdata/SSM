@@ -20,18 +20,18 @@ package org.smartdata.model;
 public class DataNodeStorageInfo {
 
   private String uuid;
-  private short sid;
-  private short state;
+  private long sid;
+  private long state;
   private String storageId;
-  private short failed;
+  private long failed;
   private long capacity;
   private long dfsUsed;
   private long remaining;
-  private long blockPool;
+  private long blockPoolUsed;
 
-  public DataNodeStorageInfo(String uuid, short sid, short state,
-      String storageId, short failed, long capacity,
-      long dfsUsed, long remaining, long blockPool) {
+  public DataNodeStorageInfo(String uuid, long sid, long state,
+      String storageId, long failed, long capacity,
+      long dfsUsed, long remaining, long blockPoolUsed) {
     this.uuid = uuid;
     this.sid = sid;
     this.state = state;
@@ -40,11 +40,43 @@ public class DataNodeStorageInfo {
     this.capacity = capacity;
     this.dfsUsed = dfsUsed;
     this.remaining = remaining;
-    this.blockPool = blockPool;
+    this.blockPoolUsed = blockPoolUsed;
   }
 
-  /**getters & setters**/
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    DataNodeStorageInfo that = (DataNodeStorageInfo) o;
+
+    if (sid != that.sid) return false;
+    if (state != that.state) return false;
+    if (failed != that.failed) return false;
+    if (capacity != that.capacity) return false;
+    if (dfsUsed != that.dfsUsed) return false;
+    if (remaining != that.remaining) return false;
+    if (blockPoolUsed != that.blockPoolUsed) return false;
+    if (uuid != null ? !uuid.equals(that.uuid) : that.uuid != null) return false;
+    return storageId != null ? storageId.equals(that.storageId) : that.storageId == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = uuid != null ? uuid.hashCode() : 0;
+    result = 31 * result + (int) (sid ^ (sid >>> 32));
+    result = 31 * result + (int) (state ^ (state >>> 32));
+    result = 31 * result + (storageId != null ? storageId.hashCode() : 0);
+    result = 31 * result + (int) (failed ^ (failed >>> 32));
+    result = 31 * result + (int) (capacity ^ (capacity >>> 32));
+    result = 31 * result + (int) (dfsUsed ^ (dfsUsed >>> 32));
+    result = 31 * result + (int) (remaining ^ (remaining >>> 32));
+    result = 31 * result + (int) (blockPoolUsed ^ (blockPoolUsed >>> 32));
+    return result;
+  }
+
   public String getUuid() {
+
     return uuid;
   }
 
@@ -52,19 +84,19 @@ public class DataNodeStorageInfo {
     this.uuid = uuid;
   }
 
-  public short getSid() {
+  public long getSid() {
     return sid;
   }
 
-  public void setSid(short sid) {
+  public void setSid(long sid) {
     this.sid = sid;
   }
 
-  public short getState() {
+  public long getState() {
     return state;
   }
 
-  public void setState(short state) {
+  public void setState(long state) {
     this.state = state;
   }
 
@@ -76,11 +108,11 @@ public class DataNodeStorageInfo {
     this.storageId = storageId;
   }
 
-  public short getFailed() {
+  public long getFailed() {
     return failed;
   }
 
-  public void setFailed(short failed) {
+  public void setFailed(long failed) {
     this.failed = failed;
   }
 
@@ -108,66 +140,12 @@ public class DataNodeStorageInfo {
     this.remaining = remaining;
   }
 
-  public long getBlockPool() {
-    return blockPool;
+  public long getBlockPoolUsed() {
+    return blockPoolUsed;
   }
 
-  public void setBlockPool(long blockPool) {
-    this.blockPool = blockPool;
-  }
-
-  @Override
-  public int hashCode() {
-    int result = (int) (uuid != null ? uuid.hashCode() : 0);
-    result = 31 * result + (int) sid;
-    result = 31 * result + (int) state;
-    result = 31 * result + (storageId != null ? storageId.hashCode() : 0);
-    result = 31 * result + (int) failed;
-    result = 31 * result + (int) (capacity ^ (capacity >>> 32));
-    result = 31 * result + (int) (dfsUsed ^ (dfsUsed >>> 32));
-    result = 31 * result + (int) (remaining ^ (remaining >>> 32));
-    result = 31 * result + (int) (blockPool ^ (blockPool >>> 32));
-    return result;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-        return true;
-    }
-    if (!(o instanceof DataNodeStorageInfo)) {
-        return false;
-    }
-  DataNodeStorageInfo dataNodeStorageInfo = (DataNodeStorageInfo) o;
-
-    if (getUuid() != dataNodeStorageInfo.getUuid()) {
-        return false;
-    }
-    if (getSid() != dataNodeStorageInfo.getSid()) {
-        return false;
-    }
-    if (getState() != dataNodeStorageInfo.getState()) {
-        return false;
-    }
-    if (getStorageId() != dataNodeStorageInfo.getStorageId()) {
-        return false;
-    }
-    if (getFailed() != dataNodeStorageInfo.getFailed()) {
-        return false;
-    }
-    if (getCapacity() != dataNodeStorageInfo.getCapacity()) {
-        return false;
-    }
-    if (getDfsUsed() != dataNodeStorageInfo.getDfsUsed()) {
-        return false;
-    }
-    if (getRemaining() != dataNodeStorageInfo.getRemaining()) {
-      return false;
-    }
-    if (getBlockPool() != dataNodeStorageInfo.getBlockPool()) {
-      return false;
-    }
-      return true;
+  public void setBlockPoolUsed(long blockPool) {
+    this.blockPoolUsed = blockPool;
   }
 
   @Override
@@ -176,7 +154,7 @@ public class DataNodeStorageInfo {
         "state=%d, storage_id=%s, failed=%d, capacity=%d, " +
         "dfs_used=%d, remaining=%d, block_pool=%d}",
         uuid, sid, state, storageId, failed,
-        capacity, dfsUsed, remaining, blockPool);
+        capacity, dfsUsed, remaining, blockPoolUsed);
   }
 
   public static Builder newBuilder() {
@@ -185,24 +163,24 @@ public class DataNodeStorageInfo {
 
   public static class Builder {
     private String uuid;
-    private short sid;
-    private short state;
+    private long sid;
+    private long state;
     private String storageId;
-    private short failed;
+    private long failed;
     private long capacity;
     private long dfsUsed;
     private long remaining;
-    private long blockPool;
+    private long blockPoolUsed;
 
     public Builder setUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
-    public Builder setSid(short sid) {
+    public Builder setSid(long sid) {
       this.sid = sid;
       return this;
     }
-    public Builder setState(short state) {
+    public Builder setState(long state) {
       this.state = state;
       return this;
     }
@@ -210,7 +188,7 @@ public class DataNodeStorageInfo {
       this.storageId = storageId;
       return this;
     }
-    public Builder setFailed(short failed) {
+    public Builder setFailed(long failed) {
       this.failed = failed;
       return this;
     }
@@ -226,14 +204,14 @@ public class DataNodeStorageInfo {
       this.remaining = remaining;
       return this;
     }
-    public Builder setBlockPool(long blockPool) {
-      this.blockPool = blockPool;
+    public Builder setBlockPoolUsed(long blockPoolUsed) {
+      this.blockPoolUsed = blockPoolUsed;
       return this;
     }
 
     public DataNodeStorageInfo build() {
       return new DataNodeStorageInfo(uuid, sid, state, storageId, failed,
-          capacity, dfsUsed, remaining, blockPool);
+          capacity, dfsUsed, remaining, blockPoolUsed);
     }
   }
 }

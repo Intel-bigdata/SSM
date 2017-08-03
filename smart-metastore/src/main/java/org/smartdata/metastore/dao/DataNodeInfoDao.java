@@ -104,7 +104,7 @@ public class DataNodeInfoDao {
           .setUuid(resultSet.getString("uuid"))
           .setHostName(resultSet.getString("hostname"))
           .setIp(resultSet.getString("ip"))
-          .setPort(resultSet.getShort("port"))
+          .setPort(resultSet.getInt("port"))
           .setCacheCapacity(resultSet.getLong("cache_capacity"))
           .setCacheUsed(resultSet.getLong("cache_used"))
           .setLocation(resultSet.getString("location"))

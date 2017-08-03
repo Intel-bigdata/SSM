@@ -21,12 +21,12 @@ public class DataNodeInfo {
   private String uuid;
   private String hostname;
   private String ip;
-  private short port;
+  private long port;
   private long cacheCapacity;
   private long cacheUsed;
   private String location;
 
-  public DataNodeInfo(String uuid, String hostname, String ip, short port,
+  public DataNodeInfo(String uuid, String hostname, String ip, long port,
       long cacheCapacity, long cacheUsed, String location) {
     this.uuid = uuid;
     this.hostname = hostname;
@@ -37,8 +37,36 @@ public class DataNodeInfo {
     this.location = location;
   }
 
-  /**getters & setters**/
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    DataNodeInfo that = (DataNodeInfo) o;
+
+    if (port != that.port) return false;
+    if (cacheCapacity != that.cacheCapacity) return false;
+    if (cacheUsed != that.cacheUsed) return false;
+    if (uuid != null ? !uuid.equals(that.uuid) : that.uuid != null) return false;
+    if (hostname != null ? !hostname.equals(that.hostname) : that.hostname != null) return false;
+    if (ip != null ? !ip.equals(that.ip) : that.ip != null) return false;
+    return location != null ? location.equals(that.location) : that.location == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = uuid != null ? uuid.hashCode() : 0;
+    result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
+    result = 31 * result + (ip != null ? ip.hashCode() : 0);
+    result = 31 * result + (int) (port ^ (port >>> 32));
+    result = 31 * result + (int) (cacheCapacity ^ (cacheCapacity >>> 32));
+    result = 31 * result + (int) (cacheUsed ^ (cacheUsed >>> 32));
+    result = 31 * result + (location != null ? location.hashCode() : 0);
+    return result;
+  }
+
   public String getUuid() {
+
     return uuid;
   }
 
@@ -62,11 +90,11 @@ public class DataNodeInfo {
     this.ip = ip;
   }
 
-  public short getPort() {
+  public long getPort() {
     return port;
   }
 
-  public void setPort(short port) {
+  public void setPort(long port) {
     this.port = port;
   }
 
@@ -95,52 +123,6 @@ public class DataNodeInfo {
   }
 
   @Override
-  public int hashCode() {
-    int result = (int) (uuid != null ? uuid.hashCode() : 0);
-    result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
-    result = 31 * result + (ip != null ? ip.hashCode() : 0);
-    result = 31 * result + (int) port;
-    result = 31 * result + (int) (cacheCapacity ^ (cacheCapacity >>> 32));
-    result = 31 * result + (int) (cacheUsed ^ (cacheUsed >>> 32));
-    result = 31 * result + (location != null ? location.hashCode() : 0);
-    return result;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof DataNodeInfo)) {
-      return false;
-    }
-    DataNodeInfo dataNodeInfo = (DataNodeInfo) o;
-
-    if (getUuid() != dataNodeInfo.getUuid()) {
-        return false;
-    }
-    if (getHostname() != dataNodeInfo.getHostname()) {
-        return false;
-    }
-    if (getIp() != dataNodeInfo.getIp()) {
-        return false;
-    }
-    if (getPort() != dataNodeInfo.getPort()) {
-        return false;
-    }
-    if (getCacheCapacity() != dataNodeInfo.getCacheCapacity()) {
-        return false;
-    }
-    if (getCacheUsed() != dataNodeInfo.getCacheUsed()) {
-        return false;
-    }
-    if (getLocation() != dataNodeInfo.getLocation()) {
-        return false;
-    }
-    return true;
-  }
-
-  @Override
   public String toString() {
     return String.format("DataNodeInfo{uuid=%s, hostname=%s, " +
          "ip=%s, port=%d, cache_capacity=%d, cache_used=%d, location=%s}",
@@ -155,7 +137,7 @@ public class DataNodeInfo {
     private String uuid;
     private String hostname;
     private String ip;
-    private short port;
+    private long port;
     private long cacheCapacity;
     private long cacheUsed;
     private String location;
@@ -172,7 +154,7 @@ public class DataNodeInfo {
       this.ip = ip;
       return this;
     }
-    public Builder setPort(short port) {
+    public Builder setPort(long port) {
       this.port = port;
       return this;
     }
