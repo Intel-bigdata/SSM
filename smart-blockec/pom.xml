@@ -52,16 +52,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.5.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.htrace</groupId>
-            <artifactId>htrace-core4</artifactId>
-            <version>4.1.0-incubating</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>2.7.3</version>
@@ -73,11 +63,6 @@
             <artifactId>hadoop-common</artifactId>
             <version>2.7.3</version>
         </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.11.45</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -88,35 +73,7 @@
         version information correctly, but prevent Maven from altering other files
         like core-default.xml.
         -->
-        <plugins>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <properties>
-                        <property>
-                            <name>listener</name>
-                            <value>org.apache.hadoop.test.TimedOutTestsListener</value>
-                        </property>
-                    </properties>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>.idea/**</exclude>
-                        <exclude>src/main/conf/*</exclude>
-                        <exclude>dev-support/jdiff/**</exclude>
-                        <exclude>src/main/native/*</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-
-        </plugins>
     </build>
 
     <profiles>
@@ -126,15 +83,10 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <openssl.prefix></openssl.prefix>
-                <openssl.lib></openssl.lib>
-                <openssl.include></openssl.include>
                 <require.isal>false</require.isal>
                 <isal.prefix></isal.prefix>
                 <isal.lib></isal.lib>
-                <require.openssl>false</require.openssl>
                 <runningWithNative>true</runningWithNative>
-                <bundle.openssl.in.bin>false</bundle.openssl.in.bin>
                 <extra.libhadoop.rpath></extra.libhadoop.rpath>
             </properties>
             <build>
@@ -202,11 +154,6 @@
                                         <REQUIRE_ISAL>${require.isal} </REQUIRE_ISAL>
                                         <CUSTOM_ISAL_PREFIX>${isal.prefix} </CUSTOM_ISAL_PREFIX>
                                         <CUSTOM_ISAL_LIB>${isal.lib} </CUSTOM_ISAL_LIB>
-                                        <REQUIRE_OPENSSL>${require.openssl} </REQUIRE_OPENSSL>
-                                        <CUSTOM_OPENSSL_PREFIX>${openssl.prefix} </CUSTOM_OPENSSL_PREFIX>
-                                        <CUSTOM_OPENSSL_LIB>${openssl.lib} </CUSTOM_OPENSSL_LIB>
-                                        <CUSTOM_OPENSSL_INCLUDE>${openssl.include} </CUSTOM_OPENSSL_INCLUDE>
-                                        <EXTRA_LIBHADOOP_RPATH>${extra.libhadoop.rpath}</EXTRA_LIBHADOOP_RPATH>
                                     </vars>
                                 </configuration>
                             </execution>
@@ -230,7 +177,7 @@
                                     <results>${project.build.directory}/native-results</results>
                                     <skipIfMissing>true</skipIfMissing>
                                     <env>
-                                        <LD_LIBRARY_PATH>${LD_LIBRARY_PATH}:${isal.lib}:${isal.prefix}:/usr/lib</LD_LIBRARY_PATH>
+                                        <LD_LIBRARY_PATH>{$LD_LIBRARY_PATH}:${isal.lib}:${isal.prefix}:/usr/lib</LD_LIBRARY_PATH>
                                     </env>
                                 </configuration>
                             </execution>
@@ -251,12 +198,7 @@
                 <require.isal>false</require.isal>
                 <isal.prefix></isal.prefix>
                 <isal.lib></isal.lib>
-                <openssl.prefix></openssl.prefix>
-                <openssl.lib></openssl.lib>
-                <openssl.include></openssl.include>
-                <require.openssl>false</require.openssl>
                 <runningWithNative>true</runningWithNative>
-                <bundle.openssl.in.bin>false</bundle.openssl.in.bin>
             </properties>
             <build>
                 <plugins>
@@ -340,10 +282,6 @@
                                         <argument>/nologo</argument>
                                         <argument>/p:Configuration=Release</argument>
                                         <argument>/p:OutDir=${project.build.directory}/bin/</argument>
-                                        <argument>/p:CustomOpensslPrefix=${openssl.prefix}</argument>
-                                        <argument>/p:CustomOpensslLib=${openssl.lib}</argument>
-                                        <argument>/p:CustomOpensslInclude=${openssl.include}</argument>
-                                        <argument>/p:RequireOpenssl=${require.openssl}</argument>
                                         <argument>/p:RequireIsal=${require.isal}</argument>
                                         <argument>/p:CustomIsalPrefix=${isal.prefix}</argument>
                                         <argument>/p:CustomIsalLib=${isal.lib}</argument>
