@@ -20,6 +20,9 @@ package org.smartdata.server.engine;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.DirectoryListing;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
@@ -28,6 +31,7 @@ import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffType;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -48,6 +52,7 @@ public class CopyScheduler extends AbstractService {
   private ScheduledExecutorService executorService;
 
   private CmdletManager cmdletManager;
+  private DFSClient dfsClient;
   private MetaStore metaStore;
   private Queue<FileDiff> pendingDR;
   // <cid, did> Map set
@@ -67,11 +72,13 @@ public class CopyScheduler extends AbstractService {
     this.pendingDR = new LinkedBlockingQueue<>();
   }
 
-  public CopyScheduler(ServerContext context, CmdletManager cmdletManager, String destBase, String srcBase) {
+  public CopyScheduler(ServerContext context, CmdletManager cmdletManager,
+      DFSClient dfsClient, String destBase, String srcBase) {
     this(context);
     this.cmdletManager = cmdletManager;
     this.destBase = destBase;
     this.srcBase = srcBase;
+    this.dfsClient = dfsClient;
   }
 
   public void diffMerge(List<FileDiff> fileDiffList) {
@@ -183,6 +190,27 @@ public class CopyScheduler extends AbstractService {
 
   private class ScheduleTask implements Runnable {
 
+    private void forceSync(String src, String dest) throws IOException, MetaStoreException {
+      // TODO check dest statuses to avoid unnecessary copy
+      // Force Sync src and dest
+      dfsClient.getFileInfo(src);
+      HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(src);
+      if (hdfsFileStatus.isDir()) {
+        // Get file list
+        DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
+        HdfsFileStatus[] fileList = listing.getPartialListing();
+        for (int i = 0; i < fileList.length; i++) {
+          // Recursively insert to file_diff
+          forceSync(fileList[i].getFullName(src), fileList[i].getFullName(dest));
+        }
+      } else {
+        // Insert to fill_diff
+        FileDiff fileDiff = new FileDiff();
+        fileDiff.setDiffType(FileDiffType.APPEND);
+        fileDiff.setParameters(String.format("-file %s -dest %s", src, dest));
+        metaStore.insertFileDiff(fileDiff);
+      }
+    }
 
     private void runningStatusUpdate() throws MetaStoreException {
       // Status update
