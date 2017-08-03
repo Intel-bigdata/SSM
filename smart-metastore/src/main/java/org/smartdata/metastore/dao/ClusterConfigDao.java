@@ -68,7 +68,12 @@ public class ClusterConfigDao {
         new Object[]{cid}, new ClusterConfigRowMapper());
   }
 
-  public ClusterConfig getByName(String name){
+  public long getCountByName(String name) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("select COUNT(*) FROM cluster_config WHERE node_name = ?",Long.class);
+  }
+
+  public ClusterConfig getByName(String name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("select * from cluster_config WHERE node_name = ?",
         new Object[]{name}, new ClusterConfigRowMapper());
@@ -84,9 +89,12 @@ public class ClusterConfigDao {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("cluster_config");
     simpleJdbcInsert.usingGeneratedKeyColumns("cid");
-    return simpleJdbcInsert.executeAndReturnKey(toMap(clusterConfig)).longValue();
+    long cid = simpleJdbcInsert.executeAndReturnKey(toMap(clusterConfig)).longValue();
+    clusterConfig.setCid(cid);
+    return cid;
   }
 
+  // TODO slove the increment of key
   public void insert(ClusterConfig[] clusterConfigs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("cluster_config");
