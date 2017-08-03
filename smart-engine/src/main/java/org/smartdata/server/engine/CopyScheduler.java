@@ -81,7 +81,7 @@ public class CopyScheduler extends AbstractService {
   }
 
   public CopyScheduler(ServerContext context, CmdletManager cmdletManager,
-      DFSClient dfsClient, String destBase, String srcBase) {
+      DFSClient dfsClient, String srcBase, String destBase) {
     this(context);
     this.cmdletManager = cmdletManager;
     this.destBase = destBase;
@@ -178,22 +178,31 @@ public class CopyScheduler extends AbstractService {
 
   public static String cmdParsing(FileDiff fileDiff, String srcBase,
       String destBase) {
-    String cmd = String.format("Copy %s", fileDiff.getParameters());
-    // replace srcBase with destBase to get final dest path
-    // TODO support rename and delete
-    int start = cmd.indexOf("-dest");
-    if (start < 0) {
-      return "";
+    // Create and Write
+    if (fileDiff.getDiffType() == FileDiffType.CREATE || fileDiff.getDiffType() == FileDiffType.APPEND ) {
+      String cmd = String.format("copy %s", fileDiff.getParameters());
+      // Locate -file
+      int start = cmd.indexOf("-file");
+      if (start < 0) {
+        return "";
+      }
+      start += 6;
+      int end = cmd.indexOf(' ', start);
+      if (end < 0) {
+        end = cmd.length();
+      }
+      String localPath = cmd.substring(start, end);
+      String destPath = localPath.replace(srcBase, destBase);
+      if (end == cmd.length()) {
+        return String.format("%s -dest %s", cmd, destPath);
+      } else {
+        return String.format("%s -dest %s %s", cmd.substring(0, end), destPath, cmd.substring(end + 1));
+      }
+    } else {
+      String cmd = String.format("rename %s", fileDiff.getParameters());
+      // Locate -dest
+      return cmd.replace(srcBase, destBase);
     }
-    start += 6;
-    int end = cmd.indexOf(' ', start);
-    if (end < 0) {
-      end = cmd.length();
-    }
-    String localPath = cmd.substring(start, end);
-    String destPath = localPath.replace(srcBase, destBase);
-    LOG.info("cmd before add destBase {}, localPath {}", cmd, destPath);
-    return cmd.replace(localPath, destPath);
   }
 
   private class ScheduleTask implements Runnable {
@@ -237,8 +246,10 @@ public class CopyScheduler extends AbstractService {
       // Move diffs to running queue
       while (runningDR.size() < MAX_RUNNING_SIZE) {
         FileDiff fileDiff = pendingDR.poll();
+        LOG.info("filediff {}", fileDiff.getParameters());
         String cmd = cmdParsing(fileDiff, srcBase, destBase);
         CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmd);
+        LOG.info("cmd = {}", cmd);
         long cid = cmdletManager.submitCmdlet(cmdletDescriptor);
         runningDR.put(cid, fileDiff.getDiffId());
       }
