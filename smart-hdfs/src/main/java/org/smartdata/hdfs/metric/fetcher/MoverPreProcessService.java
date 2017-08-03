@@ -41,6 +41,8 @@ public class MoverPreProcessService extends ActionPreProcessService {
   private DFSClient client;
   private MoverStatus moverStatus;
   private MoverProcessor processor;
+  private URI nnUri;
+
   public static final Logger LOG =
       LoggerFactory.getLogger(MoverPreProcessService.class);
 
@@ -49,7 +51,7 @@ public class MoverPreProcessService extends ActionPreProcessService {
   }
 
   public void init() throws IOException {
-    URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
+    nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
     this.client = new DFSClient(nnUri, getContext().getConf());
     moverStatus = new MoverStatus();
   }
@@ -92,6 +94,7 @@ public class MoverPreProcessService extends ActionPreProcessService {
       ExitStatus exitStatus = processor.processNamespace(new Path(file));
       if (exitStatus == ExitStatus.SUCCESS) {
         SchedulePlan plan = processor.getSchedulePlan();
+        plan.setNamenode(nnUri);
         action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
       }
     } catch (IOException e) {
