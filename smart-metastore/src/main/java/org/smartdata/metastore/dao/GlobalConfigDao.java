@@ -89,9 +89,12 @@ public class GlobalConfigDao {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("global_config");
     simpleJdbcInsert.usingGeneratedKeyColumns("cid");
-    return simpleJdbcInsert.executeAndReturnKey(toMaps(globalConfig)).longValue();
+    long cid = simpleJdbcInsert.executeAndReturnKey(toMaps(globalConfig)).longValue();
+    globalConfig.setCid(cid);
+    return cid;
   }
 
+  // TODO slove the increment of key
   public void insert(GlobalConfig[] globalConfigs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("global_config");

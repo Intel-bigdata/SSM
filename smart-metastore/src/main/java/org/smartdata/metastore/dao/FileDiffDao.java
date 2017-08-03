@@ -78,9 +78,12 @@ public class FileDiffDao {
     simpleJdbcInsert.setTableName("file_diff");
     simpleJdbcInsert.usingGeneratedKeyColumns("did");
     // return did
-    return simpleJdbcInsert.executeAndReturnKey(toMap(fileDiff)).longValue();
+    long did = simpleJdbcInsert.executeAndReturnKey(toMap(fileDiff)).longValue();
+    fileDiff.setDiffId(did);
+    return did;
   }
 
+  // TODO slove the increment of key
   public void insert(FileDiff[] fileDiffs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("file_diff");
