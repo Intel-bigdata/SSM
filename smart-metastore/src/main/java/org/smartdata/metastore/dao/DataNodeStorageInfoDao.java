@@ -1,0 +1,113 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.smartdata.metastore.dao;
+
+import org.smartdata.model.DataNodeStorageInfo;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
+public class DataNodeStorageInfoDao {
+  private DataSource dataSource;
+
+  public void setDataSource(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
+  public DataNodeStorageInfoDao(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
+  public List<DataNodeStorageInfo> getAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("select * from datanode_storage_info",
+        new DataNodeStorageInfoRowMapper());
+  }
+
+  public DataNodeStorageInfo getByUuid(String uuid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("select * from datanode_storage_info where uuid = ?",
+        new Object[]{uuid}, new DataNodeStorageInfoRowMapper());
+  }
+
+  public void insert(DataNodeStorageInfo dataNodeStorageInfoInfo) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("datanode_storage_info");
+    simpleJdbcInsert.execute(toMap(dataNodeStorageInfoInfo));
+  }
+
+  public void insert(DataNodeStorageInfo[] dataNodeStorageInfos) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("datanode_storage_info");
+    Map<String, Object>[] maps = new Map[dataNodeStorageInfos.length];
+    for (int i = 0; i < dataNodeStorageInfos.length; i++) {
+      maps[i] = toMap(dataNodeStorageInfos[i]);
+    }
+    simpleJdbcInsert.executeBatch(maps);
+  }
+
+  public void delete(String uuid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "delete from datanode_storage_info where uuid = ?";
+    jdbcTemplate.update(sql, uuid);
+  }
+
+  public void deleteAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "delete from datanode_storage_info";
+    jdbcTemplate.update(sql);
+  }
+
+  private Map<String, Object> toMap(DataNodeStorageInfo dataNodeStorageInfo) {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("uuid", dataNodeStorageInfo.getUuid());
+    parameters.put("sid", dataNodeStorageInfo.getSid());
+    parameters.put("state", dataNodeStorageInfo.getState());
+    parameters.put("storageid", dataNodeStorageInfo.getStorageId());
+    parameters.put("failed", dataNodeStorageInfo.getFailed());
+    parameters.put("capacity", dataNodeStorageInfo.getCapacity());
+    parameters.put("dfs_used", dataNodeStorageInfo.getDfsUsed());
+    parameters.put("remaining", dataNodeStorageInfo.getRemaining());
+    parameters.put("block_pool", dataNodeStorageInfo.getBlockPool());
+    return parameters;
+  }
+
+  class DataNodeStorageInfoRowMapper implements RowMapper<DataNodeStorageInfo> {
+
+    @Override
+    public DataNodeStorageInfo mapRow(ResultSet resultSet, int i) throws SQLException {
+      return DataNodeStorageInfo.newBuilder()
+          .setUuid(resultSet.getString("uuid"))
+          .setSid(resultSet.getInt("sid"))
+          .setState(resultSet.getInt("state"))
+          .setStorageId(resultSet.getString("storageid"))
+          .setFailed(resultSet.getInt("failed"))
+          .setCapacity(resultSet.getInt("capacity"))
+          .setDfsUsed(resultSet.getInt("dfs_used"))
+          .setRemaining(resultSet.getInt("remaining"))
+          .setBlockPool(resultSet.getInt("block_pool"))
+          .build();
+    }
+  }
+}
+
