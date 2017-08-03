@@ -113,7 +113,7 @@ public class CmdletManager extends AbstractService {
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
 
       preProcessServices = ActionSchedulerServiceFactory.createServices(
-          getContext().getConf(), getContext(), metaStore, true);
+          getContext().getConf(), getContext(), metaStore, false);
 
       for (ActionPreProcessService s : preProcessServices) {
         s.init();

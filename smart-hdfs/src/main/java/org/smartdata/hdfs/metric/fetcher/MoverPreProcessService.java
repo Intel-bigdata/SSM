@@ -46,12 +46,13 @@ public class MoverPreProcessService extends ActionPreProcessService {
   public static final Logger LOG =
       LoggerFactory.getLogger(MoverPreProcessService.class);
 
-  public MoverPreProcessService(SmartContext context, MetaStore metaStore) {
+  public MoverPreProcessService(SmartContext context, MetaStore metaStore)
+      throws IOException {
     super(context, metaStore);
+    nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
   }
 
   public void init() throws IOException {
-    nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
     this.client = new DFSClient(nnUri, getContext().getConf());
     moverStatus = new MoverStatus();
   }
