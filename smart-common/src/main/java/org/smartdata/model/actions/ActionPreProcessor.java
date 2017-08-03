@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.action;
+package org.smartdata.model.actions;
 
-import org.smartdata.AbstractService;
-import org.smartdata.SmartContext;
-import org.smartdata.metastore.MetaStore;
+import org.smartdata.model.LaunchAction;
 
-public abstract class ActionPreProcessService extends AbstractService implements ActionPreProcessor {
-  private MetaStore metaStore;
+import java.util.List;
 
-  public ActionPreProcessService(SmartContext context, MetaStore metaStore) {
-    super(context);
-    this.metaStore = metaStore;
-  }
+public interface ActionPreProcessor {
+
+  List<String> getSupportedActions();
+
+  void beforeExecution(LaunchAction action);
+
+  void afterExecution(LaunchAction action);
 }

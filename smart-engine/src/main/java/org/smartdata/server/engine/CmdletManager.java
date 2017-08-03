@@ -42,9 +42,9 @@ import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
-import org.smartdata.server.engine.cmdlet.action.ActionPreProcessService;
-import org.smartdata.server.engine.cmdlet.action.ActionPreProcessor;
-import org.smartdata.server.engine.cmdlet.message.LaunchAction;
+import org.smartdata.metastore.ActionPreProcessService;
+import org.smartdata.model.actions.ActionPreProcessor;
+import org.smartdata.model.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
