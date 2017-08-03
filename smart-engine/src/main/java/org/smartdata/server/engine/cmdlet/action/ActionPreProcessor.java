@@ -25,5 +25,7 @@ public interface ActionPreProcessor {
 
   List<String> getSupportedActions();
 
-  void processAction(LaunchAction action);
+  void beforeExecution(LaunchAction action);
+
+  void afterExecution(LaunchAction action);
 }
