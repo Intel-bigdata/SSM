@@ -28,7 +28,7 @@ import org.smartdata.filesystem.SmartDFSClient;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.engine.cmdlet.message.LaunchAction;
+import org.smartdata.model.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;

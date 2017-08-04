@@ -17,6 +17,7 @@
  */
 package org.smartdata.actions.hdfs;
 
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.actions.ActionType;
@@ -24,6 +25,9 @@ import org.smartdata.actions.Utils;
 import org.smartdata.actions.hdfs.move.MoveRunner;
 import org.smartdata.actions.hdfs.move.MoverBasedMoveRunner;
 import org.smartdata.actions.hdfs.move.MoverStatus;
+import org.smartdata.actions.hdfs.move.OldMoveRunner;
+import org.smartdata.actions.hdfs.move.OldMoverBasedMoveRunner;
+import org.smartdata.model.actions.hdfs.SchedulePlan;
 
 import java.util.Map;
 
@@ -32,10 +36,12 @@ import java.util.Map;
  */
 public class MoveFileAction extends HdfsAction {
   public static final String STORAGE_POLICY = "-storagePolicy";
+  public static final String MOVE_PLAN = "-movePlan";
   private static final Logger LOG = LoggerFactory.getLogger(MoveFileAction.class);
   private MoverStatus status;
   private String storagePolicy;
   private String fileName;
+  private SchedulePlan movePlan;
 
   public MoveFileAction() {
     super();
@@ -53,6 +59,13 @@ public class MoveFileAction extends HdfsAction {
     this.fileName = args.get(FILE_PATH);
     this.storagePolicy = getStoragePolicy() != null ?
         getStoragePolicy() : args.get(STORAGE_POLICY);
+    if (args.containsKey(MOVE_PLAN)) {
+      String plan = args.get(MOVE_PLAN);
+      if (plan != null) {
+        Gson gson = new Gson();
+        movePlan = gson.fromJson(plan, SchedulePlan.class);
+      }
+    }
   }
 
   @Override
@@ -66,9 +79,20 @@ public class MoveFileAction extends HdfsAction {
             Utils.getFormatedCurrentTime(), fileName, storagePolicy));
     dfsClient.setStoragePolicy(fileName, storagePolicy);
 
-    // TODO : make MoveRunner configurable
-    MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
-    moveRunner.move(fileName);
+    boolean exception = false;
+    if (movePlan != null) {
+      try {
+        MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
+        moveRunner.move(fileName, movePlan);
+      } catch (Exception e) {
+        exception = true;
+      }
+    }
+
+    if (movePlan == null || exception) {
+      OldMoveRunner moveRunner = new OldMoverBasedMoveRunner(getContext().getConf(), this.status);
+      moveRunner.move(fileName);
+    }
   }
 
   @Override

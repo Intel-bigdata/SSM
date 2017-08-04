@@ -17,20 +17,12 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import org.smartdata.model.actions.hdfs.SchedulePlan;
+import org.apache.hadoop.hdfs.protocol.Block;
+import org.apache.hadoop.hdfs.server.balancer.MovedBlocks;
 
-/**
- * HDFS SPS based move runner.
- */
-public class SPSBasedMoveRunner extends MoveRunner {
-
-  @Override
-  public void move(String file) throws Exception {
-
-  }
-
-  @Override
-  public void move(String file, SchedulePlan plan) throws Exception {
-
+/** A class for keeping track of block locations in the dispatcher. */
+public class DBlock extends MovedBlocks.Locations<StorageGroup> {
+  public DBlock(Block block) {
+    super(block);
   }
 }

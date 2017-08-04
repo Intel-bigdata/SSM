@@ -17,20 +17,30 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import org.smartdata.model.actions.hdfs.SchedulePlan;
+import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 
-/**
- * HDFS SPS based move runner.
- */
-public class SPSBasedMoveRunner extends MoveRunner {
+/** A node that can be the sources of a block move */
+public class Source extends StorageGroup {
 
-  @Override
-  public void move(String file) throws Exception {
+  /**
+   * Source blocks point to the objects in {@link org.apache.hadoop.hdfs.server.balancer.Dispatcher#globalBlocks}
+   * because we want to keep one copy of a block and be aware that the
+   * locations are changing over time.
+   */
+  //private final List<DBlock> srcBlocks = new ArrayList<DBlock>();
 
+  public Source(StorageType storageType, DatanodeInfo dn) {
+    super(dn, storageType);
   }
 
   @Override
-  public void move(String file, SchedulePlan plan) throws Exception {
+  public int hashCode() {
+    return super.hashCode();
+  }
 
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
   }
 }

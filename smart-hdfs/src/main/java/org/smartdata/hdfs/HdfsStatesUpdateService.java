@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
+import org.smartdata.hdfs.metric.fetcher.DataNodeInfoFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -48,6 +49,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
   private ScheduledExecutorService executorService;
   private InotifyEventFetcher inotifyEventFetcher;
   private CachedListFetcher cachedListFetcher;
+  private DataNodeInfoFetcher dataNodeInfoFetcher;
   private FSDataOutputStream moverIdOutputStream;
 
   public static final Logger LOG =
@@ -74,6 +76,8 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
         metaStore, executorService);
+    this.dataNodeInfoFetcher = new DataNodeInfoFetcher(
+        client, metaStore, executorService);
     LOG.info("Initialized.");
   }
 
@@ -85,6 +89,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     LOG.info("Starting ...");
     this.inotifyEventFetcher.start();
     this.cachedListFetcher.start();
+    this.dataNodeInfoFetcher.start();
     LOG.info("Started. ");
   }
 
@@ -106,6 +111,10 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
 
     if (this.cachedListFetcher != null) {
       this.cachedListFetcher.stop();
+    }
+
+    if (dataNodeInfoFetcher != null) {
+      dataNodeInfoFetcher.stop();
     }
     LOG.info("Stopped.");
   }

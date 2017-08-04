@@ -17,20 +17,9 @@
  */
 package org.smartdata.actions.hdfs.move;
 
-import org.smartdata.model.actions.hdfs.SchedulePlan;
+public abstract class OldMoveRunner {
 
-/**
- * HDFS SPS based move runner.
- */
-public class SPSBasedMoveRunner extends MoveRunner {
+    public abstract void move(String file) throws Exception;
 
-  @Override
-  public void move(String file) throws Exception {
-
-  }
-
-  @Override
-  public void move(String file, SchedulePlan plan) throws Exception {
-
-  }
+    public abstract void move(String[] files) throws Exception;
 }

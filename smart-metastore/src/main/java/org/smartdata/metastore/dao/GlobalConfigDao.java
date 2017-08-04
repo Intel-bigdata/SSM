@@ -89,9 +89,12 @@ public class GlobalConfigDao {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("global_config");
     simpleJdbcInsert.usingGeneratedKeyColumns("cid");
-    return simpleJdbcInsert.executeAndReturnKey(toMaps(globalConfig)).longValue();
+    long cid = simpleJdbcInsert.executeAndReturnKey(toMaps(globalConfig)).longValue();
+    globalConfig.setCid(cid);
+    return cid;
   }
 
+  // TODO slove the increment of key
   public void insert(GlobalConfig[] globalConfigs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("global_config");
@@ -100,6 +103,11 @@ public class GlobalConfigDao {
       maps[i] = toMaps(globalConfigs[i]);
     }
     simpleJdbcInsert.executeBatch(maps);
+  }
+
+  public long getCountByName(String name) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("select COUNT(*) FROM global_config WHERE property_name = ?",Long.class,name);
   }
 
   public int update(String property_name, String property_value) {

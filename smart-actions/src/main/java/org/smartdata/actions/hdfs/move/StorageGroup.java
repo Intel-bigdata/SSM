@@ -19,43 +19,50 @@ package org.smartdata.actions.hdfs.move;
 
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
-import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 
-import java.util.LinkedList;
-import java.util.List;
+/** A group of storages in a datanode with the same storage type. */
+public class StorageGroup {
+  private final StorageType storageType;
+  private DatanodeInfo datanode;
 
-/**
- * A class to manage the datanode, storage type and size information of a block
- * replication.
- */
-public class MLocation {
-  final DatanodeInfo datanode;
-  final StorageType storageType;
-  final long size;
-
-  public MLocation(DatanodeInfo datanode, StorageType storageType, long size) {
+  public StorageGroup(DatanodeInfo datanode, StorageType storageType) {
     this.datanode = datanode;
     this.storageType = storageType;
-    this.size = size;
-  }
-
-  /**
-   * Return a list of MLocation referring to all replications of a block.
-   * @param lb
-   * @return
-   */
-  public static List<MLocation> toLocations(LocatedBlock lb) {
-    final DatanodeInfo[] datanodeInfos = lb.getLocations();
-    final StorageType[] storageTypes = lb.getStorageTypes();
-    final long size = lb.getBlockSize();
-    final List<MLocation> locations = new LinkedList<MLocation>();
-    for (int i = 0; i < datanodeInfos.length; i++) {
-      locations.add(new MLocation(datanodeInfos[i], storageTypes[i], size));
-    }
-    return locations;
   }
 
   public StorageType getStorageType() {
     return storageType;
+  }
+
+  public DatanodeInfo getDatanodeInfo() {
+    return datanode;
+  }
+
+  /** @return the name for display */
+  public String getDisplayName() {
+    return datanode + ":" + storageType;
+  }
+
+  @Override
+  public String toString() {
+    return getDisplayName();
+  }
+
+  @Override
+  public int hashCode() {
+    return getStorageType().hashCode() ^ getDatanodeInfo().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    } else if (obj == null || !(obj instanceof StorageGroup)) {
+      return false;
+    } else {
+      final StorageGroup that = (StorageGroup) obj;
+      return this.getStorageType() == that.getStorageType()
+          && this.getDatanodeInfo().equals(that.getDatanodeInfo());
+    }
   }
 }

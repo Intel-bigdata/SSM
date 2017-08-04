@@ -15,22 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.model;
 
-import org.smartdata.model.actions.hdfs.SchedulePlan;
+import java.io.Serializable;
+import java.util.Map;
 
-/**
- * HDFS SPS based move runner.
- */
-public class SPSBasedMoveRunner extends MoveRunner {
+public class LaunchAction implements Serializable {
+  private long actionId;
+  private String actionType;
+  private Map<String, String> args;
 
-  @Override
-  public void move(String file) throws Exception {
-
+  public LaunchAction(long actionId, String actionType, Map<String, String> args) {
+    this.actionId = actionId;
+    this.actionType = actionType;
+    this.args = args;
   }
 
-  @Override
-  public void move(String file, SchedulePlan plan) throws Exception {
+  public long getActionId() {
+    return actionId;
+  }
 
+  public void setActionId(long actionId) {
+    this.actionId = actionId;
+  }
+
+  public String getActionType() {
+    return actionType;
+  }
+
+  public void setActionType(String actionType) {
+    this.actionType = actionType;
+  }
+
+  public Map<String, String> getArgs() {
+    return args;
+  }
+
+  public void setArgs(Map<String, String> args) {
+    this.args = args;
   }
 }
