@@ -189,11 +189,6 @@
 
         <profile>
             <id>native-win</id>
-            <activation>
-                <os>
-                    <family>Windows</family>
-                </os>
-            </activation>
             <properties>
                 <require.isal>false</require.isal>
                 <isal.prefix></isal.prefix>
