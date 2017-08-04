@@ -27,7 +27,7 @@ import org.smartdata.AbstractService;
 import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.SmartAction;
-import org.smartdata.actions.hdfs.MoveFileAction;
+import org.smartdata.hdfs.action.AbstractMoveFileAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -219,7 +219,7 @@ public class CmdletManager extends AbstractService {
         throw new IOException("Failed to create '" + info.getActionName()
             + "' action instance", e);
       }
-      if (action instanceof MoveFileAction) {
+      if (action instanceof AbstractMoveFileAction) {
         Map<String, String> args = info.getArgs();
         if (args != null && args.size() > 0) {
           String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
@@ -355,7 +355,7 @@ public class CmdletManager extends AbstractService {
     } catch (ActionException e) {
       return;
     }
-    if (action instanceof MoveFileAction) {
+    if (action instanceof AbstractMoveFileAction) {
       Map<String, String> args = actionInfo.getArgs();
       if (args != null && args.size() > 0) {
         String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
@@ -521,13 +521,13 @@ public class CmdletManager extends AbstractService {
   //Todo: remove this implementation
   private void updateStorageIfNeeded(ActionInfo info) throws ActionException {
     SmartAction action = ActionRegistry.createAction(info.getActionName());
-    if (action instanceof MoveFileAction) {
-      String policy = ((MoveFileAction) action).getStoragePolicy();
+    if (action instanceof AbstractMoveFileAction) {
+      String policy = ((AbstractMoveFileAction) action).getStoragePolicy();
       Map<String, String> args = info.getArgs();
       if (policy == null) {
-        policy = args.get(MoveFileAction.STORAGE_POLICY);
+        policy = args.get(AbstractMoveFileAction.STORAGE_POLICY);
       }
-      String path = args.get(MoveFileAction.FILE_PATH);
+      String path = args.get(AbstractMoveFileAction.FILE_PATH);
       try {
         metaStore.updateFileStoragePolicy(path, policy);
       } catch (MetaStoreException e) {

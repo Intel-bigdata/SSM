@@ -44,7 +44,7 @@ public class ActionRegistry {
     }
   }
 
-  static Set<String> registeredActions() {
+  public static Set<String> registeredActions() {
     return Collections.unmodifiableSet(allActions.keySet());
   }
 

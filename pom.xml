@@ -76,6 +76,17 @@
         <module>smart-blockec</module>
       </modules>
     </profile>
+
+    <profile>
+      <id>hadoop-2.7</id>
+      <!-- Default hadoop profile. Uses global properties. -->
+    </profile>
+    <profile>
+      <id>hadoop-2.6</id>
+      <properties>
+        <hadoop.version>2.6.5</hadoop.version>
+      </properties>
+    </profile>
   </profiles>
 
   <dependencyManagement>
