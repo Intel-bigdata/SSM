@@ -98,11 +98,16 @@ public class GlobalConfigDao {
   public void insert(GlobalConfig[] globalConfigs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("global_config");
+    simpleJdbcInsert.usingGeneratedKeyColumns("cid");
     Map<String, Object>[] maps = new Map[globalConfigs.length];
     for (int i = 0; i < globalConfigs.length; i++) {
       maps[i] = toMaps(globalConfigs[i]);
     }
-    simpleJdbcInsert.executeBatch(maps);
+
+    int[] cids = simpleJdbcInsert.executeBatch(maps);
+    for (int i = 0; i < globalConfigs.length; i++) {
+      globalConfigs[i].setCid(cids[i]);
+    }
   }
 
   public long getCountByName(String name) {
