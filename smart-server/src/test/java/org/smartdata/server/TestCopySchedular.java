@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -89,17 +90,15 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster {
     CopyScheduler copyScheduler = new CopyScheduler(ssm.getContext(),
         ssm.getCmdletManager(), client, srcPath, destPath);
     copyScheduler.start();
-    FSDataOutputStream out;
     for (int i = 0; i < 10; i++) {
       // Write 10 files
-      out = dfs.create(new Path(srcPath + i));
-      out.writeChars("testDiffApplied");
-      out.close();
+      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short)1, 1);
     }
     Thread.sleep(1000);
-    int size = 1000;
+    int size;
     List<CmdletInfo> currentCmdlet;
-    while (size != 0) {
+    while (true) {
+      Thread.sleep(1500);
       currentCmdlet = ssm.getCmdletManager().listCmdletsInfo(-1, CmdletState.PENDING);
       size = currentCmdlet.size();
       if (size == 0) {
@@ -108,7 +107,6 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster {
         System.out.printf("Current cmdlet %d\n", size);
         System.out.printf("Top cmdletinfo %s\n", currentCmdlet.get(0));
       }
-      Thread.sleep(1000);
     }
     for (int i = 0; i < 10; i++) {
       // Write 10 files

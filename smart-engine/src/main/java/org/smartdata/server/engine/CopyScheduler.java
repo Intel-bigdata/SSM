@@ -29,8 +29,6 @@ import org.smartdata.AbstractService;
 import org.smartdata.metaservice.CmdletMetaService;
 import org.smartdata.metaservice.CopyMetaService;
 import org.smartdata.metaservice.MetaServiceException;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
@@ -101,7 +99,7 @@ public class CopyScheduler extends AbstractService {
   @Override
   public void start() throws IOException {
     executorService.scheduleAtFixedRate(
-        new ScheduleTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+        new ScheduleTask(), 1000, 200, TimeUnit.MILLISECONDS);
   }
 
   @Override
@@ -179,6 +177,7 @@ public class CopyScheduler extends AbstractService {
   public static String cmdParsing(FileDiff fileDiff, String srcBase,
       String destBase) {
     // Create and Write
+    // TODO should not use string parsing
     if (fileDiff.getDiffType() == FileDiffType.CREATE || fileDiff.getDiffType() == FileDiffType.APPEND ) {
       String cmd = String.format("copy %s", fileDiff.getParameters());
       // Locate -file
@@ -255,16 +254,21 @@ public class CopyScheduler extends AbstractService {
       }
     }
 
+    private void addToPending() throws MetaServiceException {
+      List<FileDiff> latestFileDiff = copyMetaService.getLatestFileDiff();
+      for (FileDiff fileDiff : latestFileDiff) {
+        // TODO filter with src and dest
+        if (!pendingDR.contains(fileDiff) && fileDiff.getParameters().contains(srcBase)) {
+          pendingDR.add(fileDiff);
+        }
+      }
+    }
+
     @Override
     public void run() {
       try {
         // Add new diffs to pending list
-        List<FileDiff> latestFileDiff = copyMetaService.getLatestFileDiff();
-        for (FileDiff fileDiff : latestFileDiff) {
-          if (!pendingDR.contains(fileDiff)) {
-            pendingDR.add(fileDiff);
-          }
-        }
+        addToPending();
         runningStatusUpdate();
         enQueue();
       } catch (IOException | MetaServiceException | ParseException e) {

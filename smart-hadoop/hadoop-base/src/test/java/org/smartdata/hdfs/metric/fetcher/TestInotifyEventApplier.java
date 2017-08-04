@@ -161,7 +161,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Assert.assertFalse(metaStore.getFile().size() > 0);
 
     List<FileDiff> fileDiffList = metaStore.getLatestFileDiff();
-    Assert.assertTrue(fileDiffList.size() == 6);
+    Assert.assertTrue(fileDiffList.size() == 3);
   }
 
   @Test
