@@ -15,12 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.actions.hdfs.move;
+package org.smartdata.hdfs.metric.fetcher;
 
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.util.Time;
+import org.smartdata.actions.hdfs.move.PendingMove;
+import org.smartdata.actions.hdfs.move.Source;
+import org.smartdata.actions.hdfs.move.StorageGroup;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
