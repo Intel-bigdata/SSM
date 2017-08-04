@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A processor to do Mover action.
  */
 class OldMoverProcessor {
-    static final Logger LOG = LoggerFactory.getLogger(MoverProcessor.class);
+    static final Logger LOG = LoggerFactory.getLogger(OldMoverProcessor.class);
 
     private final DFSClient dfs;
     private final Dispatcher dispatcher;
