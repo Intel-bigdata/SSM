@@ -27,7 +27,6 @@
     <module>smart-actions</module>
     <module>smart-metastore</module>
     <module>smart-client</module>
-    <module>smart-dfsclient</module>
     <module>smart-admin</module>
     <module>smart-engine</module>
     <module>smart-server</module>
@@ -37,7 +36,7 @@
     <module>smart-agent</module>
     <module>smart-dist</module>
     <module>smart-integration</module>
-    <module>smart-storage</module>
+    <module>smart-hadoop</module>
   </modules>
 
   <properties>
