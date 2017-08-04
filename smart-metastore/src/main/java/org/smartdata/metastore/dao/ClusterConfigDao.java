@@ -70,7 +70,7 @@ public class ClusterConfigDao {
 
   public long getCountByName(String name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select COUNT(*) FROM cluster_config WHERE node_name = ?",Long.class);
+    return jdbcTemplate.queryForObject("select COUNT(*) FROM cluster_config WHERE node_name = ?",Long.class,name);
   }
 
   public ClusterConfig getByName(String name) {
@@ -98,11 +98,16 @@ public class ClusterConfigDao {
   public void insert(ClusterConfig[] clusterConfigs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("cluster_config");
+    simpleJdbcInsert.usingGeneratedKeyColumns("cid");
     Map<String, Object>[] maps = new Map[clusterConfigs.length];
     for (int i = 0; i < clusterConfigs.length; i++) {
       maps[i] = toMap(clusterConfigs[i]);
     }
-    simpleJdbcInsert.executeBatch(maps);
+    int[] cids = simpleJdbcInsert.executeBatch(maps);
+
+    for (int i = 0; i < clusterConfigs.length; i++) {
+      clusterConfigs[i].setCid(cids[i]);
+    }
   }
 
   public int updateById(int cid, String config_path){

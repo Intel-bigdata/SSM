@@ -26,7 +26,6 @@ import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.hdfs.action.move.DDatanode;
 import org.smartdata.hdfs.action.move.Source;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.hdfs.action.move.StorageMap;
