@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Mover tool for SSM.
  */
 public class OldMover {
-    static final Logger LOG = LoggerFactory.getLogger(Mover.class);
+    static final Logger LOG = LoggerFactory.getLogger(OldMover.class);
 
     static final String MOVER_ID_PATH = "/system/move.id";
 
@@ -132,7 +132,7 @@ public class OldMover {
         try {
             Path moverIdPath = new Path(MOVER_ID_PATH + UUID.randomUUID().toString());
             connectors = NameNodeConnector.newNameNodeConnectors(namenodes,
-                    Mover.class.getSimpleName(), moverIdPath, conf,
+                    OldMover.class.getSimpleName(), moverIdPath, conf,
                     NameNodeConnector.DEFAULT_MAX_IDLE_ITERATIONS);
 
             while (connectors.size() > 0) {
