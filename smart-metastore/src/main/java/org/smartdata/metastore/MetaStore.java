@@ -24,15 +24,18 @@ import org.smartdata.metastore.dao.AccessCountDao;
 import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.metastore.dao.ActionDao;
 import org.smartdata.metastore.dao.CacheFileDao;
+import org.smartdata.metastore.dao.ClusterConfigDao;
 import org.smartdata.metastore.dao.CmdletDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
+import org.smartdata.metastore.dao.GlobalConfigDao;
 import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.dao.RuleDao;
 import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
+import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
@@ -40,6 +43,7 @@ import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
@@ -86,6 +90,8 @@ public class MetaStore {
   private FileDiffDao fileDiffDao;
   private AccessCountDao accessCountDao;
   private MetaStoreHelper metaStoreHelper;
+  private ClusterConfigDao clusterConfigDao;
+  private GlobalConfigDao globalConfigDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -101,6 +107,8 @@ public class MetaStore {
     accessCountDao = new AccessCountDao(pool.getDataSource());
     fileDiffDao = new FileDiffDao(pool.getDataSource());
     metaStoreHelper = new MetaStoreHelper(pool.getDataSource());
+    clusterConfigDao = new ClusterConfigDao(pool.getDataSource());
+    globalConfigDao = new GlobalConfigDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -837,4 +845,65 @@ public class MetaStore {
       throw new MetaStoreException(e);
     }
   }
+
+  public void setClusterConfig(ClusterConfig clusterConfig) throws MetaStoreException {
+    try {
+
+      if (clusterConfigDao.getCountByName(clusterConfig.getNode_name()) == 0) {
+        //insert
+        clusterConfigDao.insert(clusterConfig);
+      } else {
+        //update
+        clusterConfigDao.updateByNodeName(clusterConfig.getNode_name(),clusterConfig.getConfig_path());
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void delClusterConfig(ClusterConfig clusterConfig) throws MetaStoreException {
+    try {
+      if (clusterConfigDao.getCountByName(clusterConfig.getNode_name()) > 0){
+        //insert
+        clusterConfigDao.delete(clusterConfig.getCid());
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<ClusterConfig> listClusterConfig() throws MetaStoreException {
+    try {
+      return clusterConfigDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public GlobalConfig getDefaultGlobalConfigByName(String config_name) throws MetaStoreException {
+    try {
+      if (globalConfigDao.getCountByName(config_name) > 0) {
+        //the property is existed
+        return globalConfigDao.getByPropertyName(config_name);
+      } else {
+        return null;
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void setGlobalConfig(GlobalConfig globalConfig) throws MetaStoreException {
+    try {
+      if (globalConfigDao.getCountByName(globalConfig.getProperty_name()) > 0) {
+        globalConfigDao.update(globalConfig.getProperty_name(), globalConfig.getProperty_value());
+      } else {
+        globalConfigDao.insert(globalConfig);
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+
 }

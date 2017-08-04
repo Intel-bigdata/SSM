@@ -25,9 +25,11 @@ import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.StorageCapacity;
@@ -488,4 +490,37 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(result.size() == attributes.size());
     Assert.assertTrue(result.containsAll(attributes));
   }
+
+  @Test
+  public void testSetClusterConfig() throws MetaStoreException {
+    ClusterConfig clusterConfig = new ClusterConfig(1,"test" , "test1");
+    metaStore.setClusterConfig(clusterConfig);
+    List<ClusterConfig> list = new LinkedList<>();
+    list.add(clusterConfig);
+    Assert.assertTrue(metaStore.listClusterConfig().equals(list));
+    list.get(0).setConfig_path("test2");
+
+    metaStore.setClusterConfig(list.get(0));
+    Assert.assertTrue(metaStore.listClusterConfig().equals(list));
+  }
+
+  @Test
+  public void testDelClusterConfig() throws MetaStoreException {
+    ClusterConfig clusterConfig = new ClusterConfig(1, "test", "test1");
+    metaStore.setClusterConfig(clusterConfig);
+    metaStore.delClusterConfig(clusterConfig);
+    Assert.assertTrue(metaStore.listClusterConfig().size() == 0);
+  }
+
+  @Test
+  public void testSetGlobalConfig() throws MetaStoreException {
+    GlobalConfig globalConfig = new GlobalConfig(1,"test" , "test1");
+    metaStore.setGlobalConfig(globalConfig);
+    Assert.assertTrue(metaStore.getDefaultGlobalConfigByName("test").equals(globalConfig));
+    globalConfig.setProperty_value("test2");
+
+    metaStore.setGlobalConfig(globalConfig);
+    Assert.assertTrue(metaStore.getDefaultGlobalConfigByName("test").equals(globalConfig));
+  }
+
 }

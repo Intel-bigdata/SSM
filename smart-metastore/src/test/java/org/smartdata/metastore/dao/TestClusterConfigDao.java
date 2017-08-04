@@ -62,6 +62,6 @@ public class TestClusterConfigDao extends TestDaoUtil {
     Assert.assertTrue(clusterConfigDao.getCountByName("test") == 0);
     ClusterConfig clusterConfig = new ClusterConfig(1, "test", "test1");
     clusterConfigDao.insert(clusterConfig);
-    Assert.assertTrue(clusterConfigDao.getCountByName("test") == 0);
+    Assert.assertTrue(clusterConfigDao.getCountByName("test") == 1);
   }
 }

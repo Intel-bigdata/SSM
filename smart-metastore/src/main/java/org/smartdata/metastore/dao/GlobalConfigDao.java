@@ -105,6 +105,11 @@ public class GlobalConfigDao {
     simpleJdbcInsert.executeBatch(maps);
   }
 
+  public long getCountByName(String name) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("select COUNT(*) FROM global_config WHERE property_name = ?",Long.class,name);
+  }
+
   public int update(String property_name, String property_value) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "update global_config set property_value = ? WHERE property_name = ?";
