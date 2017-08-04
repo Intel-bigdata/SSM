@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
-            <artifactId>smart-hdfs-base</artifactId>
+            <artifactId>smart-hadoop-base</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
