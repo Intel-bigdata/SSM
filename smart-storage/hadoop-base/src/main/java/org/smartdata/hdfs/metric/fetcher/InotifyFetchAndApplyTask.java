@@ -20,10 +20,8 @@ package org.smartdata.hdfs.metric.fetcher;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
-import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.metastore.MetaStoreException;
 
 import java.io.IOException;
 import java.util.Date;
