@@ -53,18 +53,17 @@ public class TestGlobalConfigDao extends TestDaoUtil{
 
   @Test
   public void testBatchInsert() {
-    GlobalConfig globalConfig = new GlobalConfig();
-    globalConfig.setCid(1);
-    globalConfig.setProperty_name("test");
-    globalConfig.setProperty_value("test1");
-
-
-    GlobalConfig[] globalConfigs = new GlobalConfig[1];
-    globalConfigs[0] = globalConfig;
+    GlobalConfig[] globalConfigs = new GlobalConfig[2];
+    globalConfigs[0] = new GlobalConfig(0, "test1", "test1");
+    globalConfigs[1] = new GlobalConfig(0, "test2", "test2");
 
     globalConfigDao.insert(globalConfigs);
 
-    Assert.assertTrue(globalConfigDao.getById(1).equals(globalConfig));
+    globalConfigs[0].setCid(1);
+    globalConfigs[1].setCid(2);
+
+    Assert.assertTrue(globalConfigDao.getById(1).equals(globalConfigs[0]));
+    Assert.assertTrue(globalConfigDao.getById(2).equals(globalConfigs[1]));
   }
 
   @Test
@@ -80,4 +79,5 @@ public class TestGlobalConfigDao extends TestDaoUtil{
 
     Assert.assertTrue(globalConfigDao.getById(1).equals(globalConfig));
   }
+
 }
