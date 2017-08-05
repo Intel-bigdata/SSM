@@ -76,7 +76,6 @@ public class DataNodeStorageInfo {
   }
 
   public String getUuid() {
-
     return uuid;
   }
 

@@ -27,7 +27,7 @@ public class DataNodeInfo {
   private String location;
 
   public DataNodeInfo(String uuid, String hostname, String ip, int port,
-                      long cacheCapacity, long cacheUsed, String location) {
+      long cacheCapacity, long cacheUsed, String location) {
     this.uuid = uuid;
     this.hostname = hostname;
     this.ip = ip;
@@ -66,7 +66,6 @@ public class DataNodeInfo {
   }
 
   public String getUuid() {
-
     return uuid;
   }
 
