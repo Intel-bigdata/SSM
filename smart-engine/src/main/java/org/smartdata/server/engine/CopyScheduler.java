@@ -64,7 +64,7 @@ public class CopyScheduler extends AbstractService {
   private String srcBase;
   private String destBase;
   // TODO currently set max running list.size == 1 for test
-  private final int MAX_RUNNING_SIZE = 1;
+  private final int MAX_RUNNING_SIZE = 5;
 
   public CopyScheduler(ServerContext context) {
     super(context);
@@ -76,6 +76,10 @@ public class CopyScheduler extends AbstractService {
 
     this.runningDR = new HashMap<>();
     this.pendingDR = new LinkedBlockingQueue<>();
+  }
+
+  public int getQueueSize() {
+    return runningDR.size() + pendingDR.size();
   }
 
   public CopyScheduler(ServerContext context, CmdletManager cmdletManager,
@@ -99,7 +103,7 @@ public class CopyScheduler extends AbstractService {
   @Override
   public void start() throws IOException {
     executorService.scheduleAtFixedRate(
-        new ScheduleTask(), 1000, 200, TimeUnit.MILLISECONDS);
+        new ScheduleTask(), 1000, 1000, TimeUnit.MILLISECONDS);
   }
 
   @Override

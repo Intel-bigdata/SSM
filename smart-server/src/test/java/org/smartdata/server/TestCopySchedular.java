@@ -45,6 +45,7 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster {
 
   @Test
   public void testFileDiffParsing() throws Exception {
+    waitTillSSMExitSafeMode();
     FileDiff fileDiff = new FileDiff();
     fileDiff.setDiffType(FileDiffType.APPEND);
     // Create and write
@@ -58,7 +59,8 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster {
     fileDiff.setDiffType(FileDiffType.RENAME);
     fileDiff.setParameters("-file /root/test -dest /root/test2 -length 1024");
     cmd = CopyScheduler.cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
-    Assert.assertTrue(cmd.equals("rename -file /localhost:3306/backup/test -dest /localhost:3306/backup/test2 -length 1024"));
+    Assert.assertTrue(
+        cmd.equals("rename -file /localhost:3306/backup/test -dest /localhost:3306/backup/test2 -length 1024"));
   }
 
   /*@Test
@@ -81,6 +83,7 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster {
 
   @Test
   public void testDiffApplied() throws Exception {
+    waitTillSSMExitSafeMode();
     DistributedFileSystem dfs = cluster.getFileSystem();
     final String srcPath = "/src/";
     final String destPath = "/dest/";
@@ -92,20 +95,14 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster {
     copyScheduler.start();
     for (int i = 0; i < 10; i++) {
       // Write 10 files
-      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short)1, 1);
+      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
     }
-    Thread.sleep(1000);
-    int size;
-    List<CmdletInfo> currentCmdlet;
     while (true) {
       Thread.sleep(1500);
-      currentCmdlet = ssm.getCmdletManager().listCmdletsInfo(-1, CmdletState.PENDING);
-      size = currentCmdlet.size();
-      if (size == 0) {
+      int current = ssm.getCmdletManager().getCmdletsSizeInCache();
+      System.out.printf("Current running cmdlet number: %d\n", current);
+      if (current == 0) {
         break;
-      } else {
-        System.out.printf("Current cmdlet %d\n", size);
-        System.out.printf("Top cmdletinfo %s\n", currentCmdlet.get(0));
       }
     }
     for (int i = 0; i < 10; i++) {
@@ -144,7 +141,6 @@ public class TestCopySchedular extends TestEmptyMiniSmartCluster {
         destPath + "/" + file1, 1, FileSystem.get(dfs.getUri(), new Configuration()));
 
     System.out.println(copyTargetTaskList);
-
     // block_size = 100, then only two files
     for (int i = 0; i < 2; i++) {
       Assert.assertTrue(copyTargetTaskList.get(i).getDest().equals("/backup/file1_temp_chunkCount" + (i + 1)));
