@@ -20,7 +20,7 @@ package org.smartdata.server.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
-import org.smartdata.actions.ActionRegistry;
+import org.smartdata.action.ActionRegistry;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
