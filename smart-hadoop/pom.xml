@@ -32,7 +32,7 @@
 
     <modules>
         <module>hadoop-base</module>
-        <module>smart-dfsclient</module>
+        <module>smart-hadoop-client</module>
     </modules>
 
     <profiles>

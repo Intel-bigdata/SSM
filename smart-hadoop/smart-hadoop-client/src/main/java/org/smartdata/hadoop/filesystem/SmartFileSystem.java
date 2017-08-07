@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.filesystem;
+package org.smartdata.hadoop.filesystem;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -39,7 +39,7 @@ import java.net.URI;
  *   "Smart  File System".
  *    <property>
  *      <name>fs.hdfs.impl</name>
- *      <value>org.smartdata.filesystem.SmartFileSystem</value>
+ *      <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
  *      <description>The FileSystem for hdfs URL</description>
  *    </property>
  *    2. hdfs-site.xml
