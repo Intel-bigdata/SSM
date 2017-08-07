@@ -18,8 +18,8 @@
 package org.smartdata.actions.alluxio;
 
 import java.io.IOException;
-
-import org.smartdata.actions.hdfs.copy.CopyRunner;
+/*
+import org.smartdata.hdfs.actions.copy.CopyRunner;
 
 public class AlluxioCopyRunner extends CopyRunner {
 
@@ -34,5 +34,5 @@ public class AlluxioCopyRunner extends CopyRunner {
     // TODO Auto-generated method stub
     
   }
-
 }
+*/
