@@ -158,7 +158,7 @@
 
                     <plugin>
                         <groupId>org.smartdata</groupId>
-                        <artifactId>smartdata-maven-plugins</artifactId>
+                        <artifactId>smart-maven-plugins</artifactId>
                         <version>1.0-SNAPSHOT</version>
                         <executions>
                             <execution>
