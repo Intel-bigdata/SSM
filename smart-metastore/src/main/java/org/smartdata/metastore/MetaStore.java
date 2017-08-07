@@ -808,6 +808,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
     return fileDiffDao.getALL();
   }
 
+  @Override
+  public void deleteAllFileDiff() throws MetaStoreException {
+    fileDiffDao.deleteAll();
+  }
+
   public void dropAllTables() throws MetaStoreException {
     Connection conn = getConnection();
     try {

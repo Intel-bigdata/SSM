@@ -376,8 +376,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  @VisibleForTesting
-  int getCmdletsSizeInCache() {
+  public int getCmdletsSizeInCache() {
     return idToCmdlets.size();
   }
 

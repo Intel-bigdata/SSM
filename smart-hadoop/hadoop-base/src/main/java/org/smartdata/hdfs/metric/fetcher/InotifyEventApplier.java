@@ -78,10 +78,10 @@ public class InotifyEventApplier {
       case CREATE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CreateEvent)event).getPath());
-        fileDiff.setDiffType(FileDiffType.CREATE);
+        /*fileDiff.setDiffType(FileDiffType.CREATE);
         fileDiff.setParameters(String.format("-file %s",
             ((Event.CreateEvent)event).getPath()));
-        metaStore.insertFileDiff(fileDiff);
+        metaStore.insertFileDiff(fileDiff);*/
         return Arrays.asList(this.getCreateSql((Event.CreateEvent)event));
       case CLOSE:
         LOG.trace("event type:" + event.getEventType().name() +
