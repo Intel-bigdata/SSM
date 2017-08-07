@@ -127,8 +127,8 @@ public class ClusterConfigDao {
   private Map<String, Object> toMap(ClusterConfig clusterConfig) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cid", clusterConfig.getCid());
-    parameters.put("config_path", clusterConfig.getConfig_path());
-    parameters.put("node_name", clusterConfig.getNode_name());
+    parameters.put("config_path", clusterConfig.getConfigPath());
+    parameters.put("node_name", clusterConfig.getNodeName());
     return parameters;
   }
 
@@ -139,7 +139,7 @@ public class ClusterConfigDao {
       ClusterConfig clusterConfig = new ClusterConfig();
       clusterConfig.setCid(resultSet.getLong("cid"));
       clusterConfig.setConfig_path(resultSet.getString("config_path"));
-      clusterConfig.setNode_name(resultSet.getString("node_name"));
+      clusterConfig.setNodeName(resultSet.getString("node_name"));
 
       return clusterConfig;
     }

@@ -125,8 +125,8 @@ public class GlobalConfigDao {
   private Map<String, Object> toMaps(GlobalConfig globalConfig) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cid", globalConfig.getCid());
-    parameters.put("property_name", globalConfig.getProperty_name());
-    parameters.put("property_value", globalConfig.getProperty_value().toString());
+    parameters.put("property_name", globalConfig.getPropertyName());
+    parameters.put("property_value", globalConfig.getPropertyValue().toString());
     return parameters;
   }
 
@@ -136,8 +136,8 @@ public class GlobalConfigDao {
     public GlobalConfig mapRow(ResultSet resultSet, int i) throws SQLException {
       GlobalConfig globalConfig = new GlobalConfig();
       globalConfig.setCid(resultSet.getLong("cid"));
-      globalConfig.setProperty_name(resultSet.getString("property_name"));
-      globalConfig.setProperty_value(resultSet.getString("property_value"));
+      globalConfig.setPropertyName(resultSet.getString("property_name"));
+      globalConfig.setPropertyValue(resultSet.getString("property_value"));
       return globalConfig;
     }
   }

@@ -19,13 +19,13 @@ package org.smartdata.model;
 
 public class ClusterConfig {
   private long cid;
-  private String node_name;
-  private String config_path;
+  private String nodeName;
+  private String configPath;
 
-  public ClusterConfig(int cid, String node_name, String config_path) {
+  public ClusterConfig(int cid, String nodeName, String configPath) {
     this.cid = cid;
-    this.node_name = node_name;
-    this.config_path = config_path;
+    this.nodeName = nodeName;
+    this.configPath = configPath;
   }
 
   public ClusterConfig() {
@@ -35,29 +35,29 @@ public class ClusterConfig {
     this.cid = cid;
   }
 
-  public void setNode_name(String node_name) {
-    this.node_name = node_name;
+  public void setNodeName(String nodeName) {
+    this.nodeName = nodeName;
   }
 
-  public void setConfig_path(String config_path) {
-    this.config_path = config_path;
+  public void setConfig_path(String configPath) {
+    this.configPath = configPath;
   }
 
   public long getCid() {
     return cid;
   }
 
-  public String getNode_name() {
-    return node_name;
+  public String getNodeName() {
+    return nodeName;
   }
 
-  public String getConfig_path() {
-    return config_path;
+  public String getConfigPath() {
+    return configPath;
   }
 
   @Override
   public String toString() {
-    return String.format("ClusterConfig{cid=%s, node_name=\'%s\', config_path=\'%s\'}",cid,node_name,config_path);
+    return String.format("ClusterConfig{cid=%s, nodeName=\'%s\', configPath=\'%s\'}",cid,nodeName,configPath);
   }
 
   @Override
@@ -68,15 +68,15 @@ public class ClusterConfig {
     ClusterConfig that = (ClusterConfig) o;
 
     if (cid != that.cid) return false;
-    if (node_name != null ? !node_name.equals(that.node_name) : that.node_name != null) return false;
-    return config_path != null ? config_path.equals(that.config_path) : that.config_path == null;
+    if (nodeName != null ? !nodeName.equals(that.nodeName) : that.nodeName != null) return false;
+    return configPath != null ? configPath.equals(that.configPath) : that.configPath == null;
   }
 
   @Override
   public int hashCode() {
     int result = (int) (cid ^ (cid >>> 32));
-    result = 31 * result + (node_name != null ? node_name.hashCode() : 0);
-    result = 31 * result + (config_path != null ? config_path.hashCode() : 0);
+    result = 31 * result + (nodeName != null ? nodeName.hashCode() : 0);
+    result = 31 * result + (configPath != null ? configPath.hashCode() : 0);
     return result;
   }
 }
