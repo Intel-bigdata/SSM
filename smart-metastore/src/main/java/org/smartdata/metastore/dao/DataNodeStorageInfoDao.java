@@ -49,9 +49,9 @@ public class DataNodeStorageInfoDao {
         new DataNodeStorageInfoRowMapper());
   }
 
-  public DataNodeStorageInfo getByUuid(String uuid) {
+  public List<DataNodeStorageInfo> getByUuid(String uuid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject(
+    return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE uuid = ?",
         new Object[]{uuid}, new DataNodeStorageInfoRowMapper());
   }
@@ -68,6 +68,16 @@ public class DataNodeStorageInfoDao {
     Map<String, Object>[] maps = new Map[dataNodeStorageInfos.length];
     for (int i = 0; i < dataNodeStorageInfos.length; i++) {
       maps[i] = toMap(dataNodeStorageInfos[i]);
+    }
+    simpleJdbcInsert.executeBatch(maps);
+  }
+
+  public void insert(List<DataNodeStorageInfo> dataNodeStorageInfos) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName(TABLE_NAME);
+    Map<String, Object>[] maps = new Map[dataNodeStorageInfos.size()];
+    for (int i = 0; i < dataNodeStorageInfos.size(); i++) {
+      maps[i] = toMap(dataNodeStorageInfos.get(i));
     }
     simpleJdbcInsert.executeBatch(maps);
   }
