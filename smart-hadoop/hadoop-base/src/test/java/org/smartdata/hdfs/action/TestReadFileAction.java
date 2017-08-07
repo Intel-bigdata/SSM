@@ -2,6 +2,7 @@ package org.smartdata.hdfs.action;
 
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class TestReadFileAction extends ActionMiniCluster {
+public class TestReadFileAction extends MiniClusterHarness {
   protected void writeFile(String filePath, int length) throws IOException {
     try {
       int bufferSize = 64 * 1024;

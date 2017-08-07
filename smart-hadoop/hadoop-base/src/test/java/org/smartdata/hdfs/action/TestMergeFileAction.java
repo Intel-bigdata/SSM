@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +31,7 @@ import java.util.Map;
 /**
  * Test for MergeFileAction
  */
-public class TestMergeFileAction extends ActionMiniCluster {
+public class TestMergeFileAction extends MiniClusterHarness {
 
   @Test
   public void testLocalFileMerge() throws Exception {

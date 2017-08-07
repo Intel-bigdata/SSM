@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ import java.util.Map;
 /**
  * Test for concatFileAction
  */
-public class TestConcatFileAction extends ActionMiniCluster {
+public class TestConcatFileAction extends MiniClusterHarness {
   @Test
   public void testRemoteFileConcat() throws IOException {
     final String srcPath = "/testConcat";
