@@ -26,14 +26,14 @@ import java.io.IOException;
 public class MiniClusterFactory26 extends MiniClusterFactory {
 
   @Override
-  MiniDFSCluster create(int dataNodes, Configuration conf) throws IOException {
+  public MiniDFSCluster create(int dataNodes, Configuration conf) throws IOException {
     return new MiniDFSCluster.Builder(conf)
       .numDataNodes(dataNodes)
       .build();
   }
 
   @Override
-  MiniDFSCluster createWithStorages(int dataNodes, Configuration conf) throws IOException {
+  public MiniDFSCluster createWithStorages(int dataNodes, Configuration conf) throws IOException {
     return new MiniDFSCluster.Builder(conf)
       .numDataNodes(dataNodes)
       .storagesPerDatanode(3)

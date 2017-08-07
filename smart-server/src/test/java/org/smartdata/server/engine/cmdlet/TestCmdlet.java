@@ -25,6 +25,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.SmartContext;
+import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.hdfs.action.CacheFileAction;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.model.CmdletState;
@@ -37,35 +38,7 @@ import java.util.Map;
 /**
  * Cmdlet Unit Test
  */
-public class TestCmdlet {
-
-  private static final int DEFAULT_BLOCK_SIZE = 50;
-  private MiniDFSCluster cluster;
-  private DFSClient client;
-  private DistributedFileSystem dfs;
-  private SmartConf smartConf = new SmartConf();
-
-  @Before
-  public void createCluster() throws IOException {
-    smartConf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    smartConf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    smartConf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    smartConf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
-    smartConf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
-    cluster = new MiniDFSCluster.Builder(smartConf)
-        .numDataNodes(3)
-        .build();
-    client = cluster.getFileSystem().getClient();
-    dfs = cluster.getFileSystem();
-    cluster.waitActive();
-  }
-
-  @After
-  public void shutdown() throws IOException {
-    if (cluster != null) {
-      cluster.shutdown();
-    }
-  }
+public class TestCmdlet extends MiniClusterHarness {
 
   @Test
   public void testRunCmdlet() throws Exception {
@@ -109,8 +82,8 @@ public class TestCmdlet {
     // actions[1].setContext(new SmartContext(smartConf));
     // actions[1].init(new String[]{"/testMoveFile/file2", "COLD"});
     actions[2] = new CacheFileAction();
-    actions[2].setDfsClient(client);
-    actions[2].setContext(new SmartContext(smartConf));
+    actions[2].setDfsClient(dfsClient);
+    actions[2].setContext(smartContext);
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/testCacheFile");
     actions[2].init(args);

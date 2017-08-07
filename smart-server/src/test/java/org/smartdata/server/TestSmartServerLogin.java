@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
+import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.utils.TestDBUtil;
 
@@ -50,9 +51,7 @@ public class TestSmartServerLogin {
 
   private void initConf() throws Exception {
     conf = new SmartConf();
-    cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3)
-        .build();
+    cluster = MiniClusterFactory.get().create(3, conf);
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());

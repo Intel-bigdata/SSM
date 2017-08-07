@@ -24,7 +24,7 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
-import org.smartdata.hdfs.MiniClusterHarness;
+import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  * Test for OneSsdFileAction.
  */
-public class TestOneSsdFileAction extends MiniClusterHarness {
+public class TestOneSsdFileAction extends MiniClusterWithStoragesHarness {
   @Test
   public void testOneSsd() throws Exception {
     final String file = "/testOneSsd/file";

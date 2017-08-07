@@ -25,7 +25,6 @@ import java.io.IOException;
 public abstract class MiniClusterFactory {
 
   static class DefaultMiniClusterFactory extends MiniClusterFactory {
-
     @Override
     public MiniDFSCluster create(int dataNodes, Configuration conf) throws IOException {
       return new MiniDFSCluster.Builder(conf).numDataNodes(dataNodes).build();
@@ -38,6 +37,7 @@ public abstract class MiniClusterFactory {
     }
   }
 
+  //Todo: Use better init implementation
   public static MiniClusterFactory get()
       throws IllegalAccessException, InstantiationException, ClassNotFoundException {
     Class clazz = null;

@@ -22,7 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
-import org.smartdata.hdfs.MiniClusterHarness;
+import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 import org.smartdata.hdfs.action.move.MoverStatus;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.StatusMessage;
@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * Test for MoveFileAction.
  */
-public class TestMoveFileAction extends MiniClusterHarness {
+public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
   @Test(timeout = 300000)
   public void testParallelMovers() throws Exception {
     final String file1 = "/testParallelMovers/file1";
