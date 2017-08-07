@@ -19,13 +19,13 @@ package org.smartdata.model;
 
 public class GlobalConfig {
   private long cid;
-  private String property_name;
-  private String property_value;
+  private String propertyName;
+  private String propertyValue;
 
-  public GlobalConfig(int cid, String property_name, String property_value) {
+  public GlobalConfig(int cid, String propertyName, String propertyValue) {
     this.cid = cid;
-    this.property_name = property_name;
-    this.property_value = property_value;
+    this.propertyName = propertyName;
+    this.propertyValue = propertyValue;
   }
 
   public GlobalConfig() {
@@ -35,29 +35,29 @@ public class GlobalConfig {
     this.cid = cid;
   }
 
-  public void setProperty_name(String property_name) {
-    this.property_name = property_name;
+  public void setPropertyName(String propertyName) {
+    this.propertyName = propertyName;
   }
 
-  public void setProperty_value(String property_value) {
-    this.property_value = property_value;
+  public void setPropertyValue(String propertyValue) {
+    this.propertyValue = propertyValue;
   }
 
   public long getCid() {
     return cid;
   }
 
-  public String getProperty_name() {
-    return property_name;
+  public String getPropertyName() {
+    return propertyName;
   }
 
-  public String getProperty_value() {
-    return property_value;
+  public String getPropertyValue() {
+    return propertyValue;
   }
 
   @Override
   public String toString() {
-    return String.format("GlobalConfig{cid=%s, property_name=\'%s\', property_value=\'%s\'}",cid,property_name,property_value);
+    return String.format("GlobalConfig{cid=%s, propertyName=\'%s\', propertyValue=\'%s\'}",cid,propertyName,propertyValue);
   }
 
   @Override
@@ -68,15 +68,15 @@ public class GlobalConfig {
     GlobalConfig that = (GlobalConfig) o;
 
     if (cid != that.cid) return false;
-    if (property_name != null ? !property_name.equals(that.property_name) : that.property_name != null) return false;
-    return property_value != null ? property_value.equals(that.property_value) : that.property_value == null;
+    if (propertyName != null ? !propertyName.equals(that.propertyName) : that.propertyName != null) return false;
+    return propertyValue != null ? propertyValue.equals(that.propertyValue) : that.propertyValue == null;
   }
 
   @Override
   public int hashCode() {
     int result = (int) (cid ^ (cid >>> 32));
-    result = 31 * result + (property_name != null ? property_name.hashCode() : 0);
-    result = 31 * result + (property_value != null ? property_value.hashCode() : 0);
+    result = 31 * result + (propertyName != null ? propertyName.hashCode() : 0);
+    result = 31 * result + (propertyValue != null ? propertyValue.hashCode() : 0);
     return result;
   }
 }

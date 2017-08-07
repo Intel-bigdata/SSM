@@ -849,12 +849,12 @@ public class MetaStore {
   public void setClusterConfig(ClusterConfig clusterConfig) throws MetaStoreException {
     try {
 
-      if (clusterConfigDao.getCountByName(clusterConfig.getNode_name()) == 0) {
+      if (clusterConfigDao.getCountByName(clusterConfig.getNodeName()) == 0) {
         //insert
         clusterConfigDao.insert(clusterConfig);
       } else {
         //update
-        clusterConfigDao.updateByNodeName(clusterConfig.getNode_name(),clusterConfig.getConfig_path());
+        clusterConfigDao.updateByNodeName(clusterConfig.getNodeName(),clusterConfig.getConfigPath());
       }
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -863,7 +863,7 @@ public class MetaStore {
 
   public void delClusterConfig(ClusterConfig clusterConfig) throws MetaStoreException {
     try {
-      if (clusterConfigDao.getCountByName(clusterConfig.getNode_name()) > 0){
+      if (clusterConfigDao.getCountByName(clusterConfig.getNodeName()) > 0){
         //insert
         clusterConfigDao.delete(clusterConfig.getCid());
       }
@@ -895,8 +895,8 @@ public class MetaStore {
 
   public void setGlobalConfig(GlobalConfig globalConfig) throws MetaStoreException {
     try {
-      if (globalConfigDao.getCountByName(globalConfig.getProperty_name()) > 0) {
-        globalConfigDao.update(globalConfig.getProperty_name(), globalConfig.getProperty_value());
+      if (globalConfigDao.getCountByName(globalConfig.getPropertyName()) > 0) {
+        globalConfigDao.update(globalConfig.getPropertyName(), globalConfig.getPropertyValue());
       } else {
         globalConfigDao.insert(globalConfig);
       }
