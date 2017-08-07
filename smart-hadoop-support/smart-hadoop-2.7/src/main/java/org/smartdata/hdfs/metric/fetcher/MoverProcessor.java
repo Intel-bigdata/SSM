@@ -54,7 +54,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * A processor to do Mover action.
  */
-class MoverProcessor {
+public class MoverProcessor {
   static final Logger LOG = LoggerFactory.getLogger(MoverProcessor.class);
 
   private final DFSClient dfs;
@@ -70,7 +70,7 @@ class MoverProcessor {
   private SchedulePlan schedulePlan;
 
 
-  MoverProcessor(DFSClient dfsClient, StorageMap storages,
+  public MoverProcessor(DFSClient dfsClient, StorageMap storages,
       MoverStatus moverStatus) throws IOException {
     this.dfs = dfsClient;
     this.storages = storages;

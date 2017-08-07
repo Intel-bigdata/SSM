@@ -44,7 +44,7 @@ import org.smartdata.server.engine.cmdlet.ActionSchedulerServiceFactory;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.metastore.ActionPreProcessService;
-import org.smartdata.model.actions.ActionPreProcessor;
+import org.smartdata.model.action.ActionPreProcessor;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 

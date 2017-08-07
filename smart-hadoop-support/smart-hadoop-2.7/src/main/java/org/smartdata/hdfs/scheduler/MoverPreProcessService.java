@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.metric.fetcher;
+package org.smartdata.hdfs.scheduler;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -28,6 +28,8 @@ import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.MoveFileAction;
 import org.smartdata.hdfs.action.SchedulePlan;
 import org.smartdata.hdfs.action.move.MoverStatus;
+import org.smartdata.hdfs.metric.fetcher.DatanodeStorageReportProcTask;
+import org.smartdata.hdfs.metric.fetcher.MoverProcessor;
 import org.smartdata.metastore.ActionPreProcessService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.LaunchAction;
