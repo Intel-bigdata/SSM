@@ -23,5 +23,5 @@ cache:
   directories:
     - $HOME/.m2
 script:
-  - mvn test
+  - mvn test -Phadoop-2.7
 

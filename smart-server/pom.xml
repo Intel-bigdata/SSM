@@ -36,25 +36,21 @@
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <!--<scope>provided</scope>-->
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metastore</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-dfsclient</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <!--<scope>provided</scope>-->
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metrics</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
@@ -185,10 +181,6 @@
             <artifactId>dashing</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
