@@ -15,11 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action.move;
+package org.smartdata.hdfs;
 
-public abstract class OldMoveRunner {
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 
-    public abstract void move(String file) throws Exception;
+import java.io.IOException;
 
-    public abstract void move(String[] files) throws Exception;
+public class MiniClusterWithStoragesHarness extends MiniClusterHarness {
+  public MiniDFSCluster createCluster(Configuration conf)
+    throws IOException, IllegalAccessException, ClassNotFoundException, InstantiationException {
+    return MiniClusterFactory.get().createWithStorages(5, conf);
+  }
 }

@@ -35,7 +35,7 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.server.TestEmptyMiniSmartCluster;
+import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class TestCmdletManager extends TestEmptyMiniSmartCluster {
+public class TestCmdletManager extends MiniSmartClusterHarness {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 

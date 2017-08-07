@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.metastore.MetaStore;
 
 import java.io.IOException;
@@ -64,16 +65,14 @@ public class TestInotifyFetcher {
   }
 
   @Test(timeout = 60000)
-  public void testFetcher() throws IOException, InterruptedException {
+  public void testFetcher() throws Exception {
     Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
     conf.setBoolean(DFSConfigKeys.DFS_NAMENODE_ACLS_ENABLED_KEY, true);
     // so that we can get an atime change
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_ACCESSTIME_PRECISION_KEY, 1);
 
-    MiniDFSCluster.Builder builder = new MiniDFSCluster.Builder(conf);
-    builder.numDataNodes(2);
-    MiniDFSCluster cluster = builder.build();
+    MiniDFSCluster cluster = MiniClusterFactory.get().create(2, conf);
     try {
       cluster.waitActive();
       DFSClient client = new DFSClient(cluster.getNameNode(0)

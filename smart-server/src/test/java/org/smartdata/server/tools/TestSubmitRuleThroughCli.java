@@ -23,13 +23,13 @@ import org.smartdata.admin.SmartAdmin;
 import org.smartdata.admin.tools.SmartShell;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.metastore.utils.TestDBUtil;
-import org.smartdata.server.TestEmptyMiniSmartCluster;
+import org.smartdata.server.MiniSmartClusterHarness;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
 
-public class TestSubmitRuleThroughCli extends TestEmptyMiniSmartCluster {
+public class TestSubmitRuleThroughCli extends MiniSmartClusterHarness {
 
   @Test
   public void test() throws Exception {
@@ -43,7 +43,7 @@ public class TestSubmitRuleThroughCli extends TestEmptyMiniSmartCluster {
       os.write(rule.getBytes());
       os.close();
 
-      SmartAdmin client = new SmartAdmin(conf);
+      SmartAdmin client = new SmartAdmin(smartContext.getConf());
 
       String[] args = new String[] {
           "submitrule",

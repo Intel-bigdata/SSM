@@ -21,18 +21,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.model.RuleState;
-import org.smartdata.server.TestEmptyMiniSmartCluster;
+import org.smartdata.server.MiniSmartClusterHarness;
 
 import java.io.IOException;
 
-public class TestSubmitRule extends TestEmptyMiniSmartCluster {
+public class TestSubmitRule extends MiniSmartClusterHarness {
 
   @Test
   public void testSubmitRule() throws Exception {
     waitTillSSMExitSafeMode();
 
     String rule = "file: every 1s \n | length > 10 | cache";
-    SmartAdmin client = new SmartAdmin(conf);
+    SmartAdmin client = new SmartAdmin(smartContext.getConf());
 
     long ruleId = 0l;
     ruleId = client.submitRule(rule, RuleState.ACTIVE);
