@@ -19,7 +19,7 @@ package org.smartdata.metastore;
 
 import org.smartdata.AbstractService;
 import org.smartdata.SmartContext;
-import org.smartdata.model.actions.ActionPreProcessor;
+import org.smartdata.model.action.ActionPreProcessor;
 
 public abstract class ActionPreProcessService extends AbstractService implements ActionPreProcessor {
   private MetaStore metaStore;
