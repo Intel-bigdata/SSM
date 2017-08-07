@@ -24,16 +24,16 @@ import java.io.IOException;
  * Created by zhiqiangx on 17-7-31.
  */
 public abstract class SmartInterpreter {
-    private SmartEngine smartEngine;
+  private SmartEngine smartEngine;
 
-    public SmartInterpreter(SmartEngine smartEngine) {
-        this.smartEngine = smartEngine;
-    }
+  public SmartInterpreter(SmartEngine smartEngine) {
+    this.smartEngine = smartEngine;
+  }
 
-    protected SmartEngine getSmartEngine() {
-        return smartEngine;
-    }
+  protected SmartEngine getSmartEngine() {
+    return smartEngine;
+  }
 
-    public abstract String excute(String cmd) throws IOException;
+  public abstract String excute(String cmd) throws IOException;
 
 }

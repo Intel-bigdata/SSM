@@ -23,7 +23,7 @@ import org.smartdata.SmartContext;
 import org.smartdata.actions.ActionException;
 import org.smartdata.actions.ActionRegistry;
 import org.smartdata.actions.SmartAction;
-import org.smartdata.filesystem.SmartDFSClient;
+import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.protocol.message.StatusReporter;

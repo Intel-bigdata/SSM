@@ -17,19 +17,23 @@
 package org.smartdata.interpreter.impl;
 
 import org.smartdata.interpreter.SmartInterpreter;
+import org.smartdata.model.RuleState;
 import org.smartdata.server.SmartEngine;
 
 import java.io.IOException;
 
-public class ActionInterpreter extends SmartInterpreter {
+/**
+ * Interpreter for rule.
+ */
+public class RuleInterpreter extends SmartInterpreter {
 
-    public ActionInterpreter(SmartEngine smartEngine) {
-        super(smartEngine);
-    }
+  public RuleInterpreter(SmartEngine smartEngine) {
+    super(smartEngine);
+  }
 
-    @Override
-    public String excute(String cmd) throws IOException {
-        getSmartEngine().getCmdletManager().submitCmdlet(cmd);
-        return "Success to add action";
-    }
+  @Override
+  public String excute(String cmd) throws IOException {
+    long t = getSmartEngine().getRuleManager().submitRule(cmd, RuleState.DISABLED);
+    return "Success to add rule : " + t;
+  }
 }
