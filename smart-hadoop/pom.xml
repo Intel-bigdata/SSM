@@ -38,6 +38,9 @@
     <profiles>
         <profile>
             <id>hadoop-2.7</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <!-- Default hadoop profile. Uses global properties. -->
             <modules>
                 <module>hadoop-2.7</module>

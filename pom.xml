@@ -79,6 +79,9 @@
     <profile>
       <id>hadoop-2.7</id>
       <!-- Default hadoop profile. Uses global properties. -->
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
     </profile>
     <profile>
       <id>hadoop-2.6</id>
