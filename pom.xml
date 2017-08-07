@@ -71,7 +71,6 @@
       </activation>
       <modules>
         <!--<module>smart-alluxio</module>-->
-        <module>smart-erasurecode</module>
       </modules>
     </profile>
 
