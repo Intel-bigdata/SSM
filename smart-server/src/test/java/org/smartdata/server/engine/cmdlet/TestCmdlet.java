@@ -19,7 +19,6 @@ package org.smartdata.server.engine.cmdlet;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.*;
 
 import org.junit.After;
@@ -34,7 +33,6 @@ import org.smartdata.conf.SmartConf;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
 
 /**
  * Cmdlet Unit Test
@@ -56,9 +54,6 @@ public class TestCmdlet {
     smartConf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
     cluster = new MiniDFSCluster.Builder(smartConf)
         .numDataNodes(3)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
-            StorageType.SSD})
         .build();
     client = cluster.getFileSystem().getClient();
     dfs = cluster.getFileSystem();

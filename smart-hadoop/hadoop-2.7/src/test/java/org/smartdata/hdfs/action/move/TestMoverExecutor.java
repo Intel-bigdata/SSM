@@ -28,7 +28,7 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.hdfs.action.ActionMiniCluster;
+import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.hdfs.action.SchedulePlan;
 
 import java.net.URI;
@@ -37,7 +37,7 @@ import java.util.HashSet;
 /**
  * Test for MoverExecutor.
  */
-public class TestMoverExecutor extends ActionMiniCluster {
+public class TestMoverExecutor extends MiniClusterHarness {
   private final String fileName = "/test/file";
   private final String fileDir = "/test";
 

@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -30,7 +31,7 @@ import java.util.Map;
 /**
  * Test for DeleteFileAction.
  */
-public class TestDeleteFileAction extends ActionMiniCluster{
+public class TestDeleteFileAction extends MiniClusterHarness {
 
   @Test
   public void testLocalFileDelete() throws IOException {

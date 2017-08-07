@@ -20,6 +20,7 @@ package org.smartdata.hdfs.action;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
@@ -32,7 +33,7 @@ import java.util.Map;
 /**
  * Test for CheckStorageAction.
  */
-public class TestCheckStorageAction extends ActionMiniCluster {
+public class TestCheckStorageAction extends MiniClusterHarness {
   @Test
   public void testCheckStorageAction() throws IOException {
     CheckStorageAction checkStorageAction = new CheckStorageAction();

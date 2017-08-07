@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action;
+package org.smartdata.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -34,8 +33,8 @@ import java.io.IOException;
 /**
  * A MiniCluster for action test.
  */
-public abstract class ActionMiniCluster {
-  public static final int DEFAULT_BLOCK_SIZE = 50;
+public abstract class MiniClusterHarness {
+  private static final int DEFAULT_BLOCK_SIZE = 50;
   protected MiniDFSCluster cluster;
   protected DistributedFileSystem dfs;
   protected DFSClient dfsClient;
@@ -49,12 +48,7 @@ public abstract class ActionMiniCluster {
   public void init() throws Exception {
     SmartConf conf = new SmartConf();
     initConf(conf);
-    cluster = new MiniDFSCluster.Builder(conf)
-            .numDataNodes(5)
-            .storagesPerDatanode(3)
-            .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
-                    StorageType.SSD})
-            .build();
+    cluster = createCluster(conf);
     cluster.waitActive();
     dfs = cluster.getFileSystem();
     dfsClient = dfs.getClient();
@@ -67,6 +61,11 @@ public abstract class ActionMiniCluster {
     conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
     conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
+  }
+
+  public MiniDFSCluster createCluster(Configuration conf)
+      throws IOException, IllegalAccessException, ClassNotFoundException, InstantiationException {
+    return MiniClusterFactory.get().create(5, conf);
   }
 
   @After

@@ -1,6 +1,5 @@
 package org.smartdata.server;
 
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.kerby.util.NetworkUtil;
@@ -53,9 +52,6 @@ public class TestSmartServerLogin {
     conf = new SmartConf();
     cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(3)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]
-            {StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE})
         .build();
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
