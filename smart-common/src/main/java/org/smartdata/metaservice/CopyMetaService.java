@@ -15,21 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.metaservice;
 
-import org.smartdata.metaservice.MetaServiceException;
+import org.smartdata.model.FileDiff;
 
-public class MetaStoreException extends MetaServiceException {
+import java.util.List;
 
-  public MetaStoreException(String errorMsg) {
-    super(errorMsg);
-  }
+public interface CopyMetaService extends MetaService {
 
-  public MetaStoreException(String errorMsg, Throwable throwable) {
-    super(errorMsg, throwable);
-  }
+  boolean insertFileDiff(FileDiff fileDiff) throws MetaServiceException;
 
-  public MetaStoreException(Throwable throwable) {
-    super(throwable);
-  }
+  List<FileDiff> getLatestFileDiff() throws MetaServiceException;
+
+  boolean markFileDiffApplied(long did) throws MetaServiceException;
 }

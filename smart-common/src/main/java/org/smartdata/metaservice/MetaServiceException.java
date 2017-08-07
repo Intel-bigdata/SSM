@@ -15,21 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.metaservice;
 
-import org.smartdata.metaservice.MetaServiceException;
+public class MetaServiceException extends Exception {
 
-public class MetaStoreException extends MetaServiceException {
-
-  public MetaStoreException(String errorMsg) {
+  public MetaServiceException(String errorMsg) {
     super(errorMsg);
   }
 
-  public MetaStoreException(String errorMsg, Throwable throwable) {
+  public MetaServiceException(String errorMsg, Throwable throwable) {
     super(errorMsg, throwable);
   }
 
-  public MetaStoreException(Throwable throwable) {
+  public MetaServiceException(Throwable throwable) {
     super(throwable);
   }
 }

@@ -26,6 +26,9 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
+import org.smartdata.metaservice.CmdletMetaService;
+import org.smartdata.metaservice.CopyMetaService;
+import org.smartdata.metaservice.MetaServiceException;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
@@ -53,7 +56,10 @@ public class CopyScheduler extends AbstractService {
 
   private CmdletManager cmdletManager;
   private DFSClient dfsClient;
-  private MetaStore metaStore;
+
+  private CopyMetaService copyMetaService;
+  private CmdletMetaService cmdletMetaService;
+
   private Queue<FileDiff> pendingDR;
   // <cid, did> Map set
   private Map<Long, Long> runningDR;
@@ -67,7 +73,9 @@ public class CopyScheduler extends AbstractService {
 
     this.executorService = Executors.newSingleThreadScheduledExecutor();
 
-    this.metaStore = context.getMetaStore();
+    this.copyMetaService = (CopyMetaService) context.getMetaService();
+    this.cmdletMetaService = (CmdletMetaService) context.getMetaService();
+
     this.runningDR = new HashMap<>();
     this.pendingDR = new LinkedBlockingQueue<>();
   }
@@ -190,7 +198,7 @@ public class CopyScheduler extends AbstractService {
 
   private class ScheduleTask implements Runnable {
 
-    private void forceSync(String src, String dest) throws IOException, MetaStoreException {
+    private void forceSync(String src, String dest) throws IOException, MetaServiceException {
       // TODO check dest statuses to avoid unnecessary copy
       // Force Sync src and dest
       dfsClient.getFileInfo(src);
@@ -208,18 +216,18 @@ public class CopyScheduler extends AbstractService {
         FileDiff fileDiff = new FileDiff();
         fileDiff.setDiffType(FileDiffType.APPEND);
         fileDiff.setParameters(String.format("-file %s -dest %s", src, dest));
-        metaStore.insertFileDiff(fileDiff);
+        copyMetaService.insertFileDiff(fileDiff);
       }
     }
 
-    private void runningStatusUpdate() throws MetaStoreException {
+    private void runningStatusUpdate() throws MetaServiceException {
       // Status update
       for (Iterator<Map.Entry<Long, Long>> it = runningDR.entrySet().iterator(); it.hasNext();) {
         Map.Entry<Long, Long> entry = it.next();
         // Check if this cmdlet is finished
-        if (metaStore.getCmdletById(entry.getKey()).getState() == CmdletState.DONE) {
+        if (cmdletMetaService.getCmdletById(entry.getKey()).getState() == CmdletState.DONE) {
           // Remove from running list
-          metaStore.markFillDiffApplied(entry.getValue());
+          copyMetaService.markFileDiffApplied(entry.getValue());
           it.remove();
         }
       }
@@ -240,7 +248,7 @@ public class CopyScheduler extends AbstractService {
     public void run() {
       try {
         // Add new diffs to pending list
-        List<FileDiff> latestFileDiff = metaStore.getLatestFileDiff();
+        List<FileDiff> latestFileDiff = copyMetaService.getLatestFileDiff();
         for (FileDiff fileDiff : latestFileDiff) {
           if (!pendingDR.contains(fileDiff)) {
             pendingDR.add(fileDiff);
@@ -248,12 +256,8 @@ public class CopyScheduler extends AbstractService {
         }
         runningStatusUpdate();
         enQueue();
-      } catch (IOException e) {
+      } catch (IOException | MetaServiceException | ParseException e) {
         LOG.error("Disaster Recovery Manager schedule error", e);
-      } catch (MetaStoreException e) {
-        LOG.error("Disaster Recovery Manager MetaStore error", e);
-      } catch (ParseException e) {
-        LOG.error("Disaster Recovery Manager cmd format error", e);
       }
     }
   }
