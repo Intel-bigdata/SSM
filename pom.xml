@@ -53,7 +53,6 @@
     <dbunitVersion>2.5.3</dbunitVersion>
     <akka.version>2.3.12</akka.version>
     <akka.config.version>1.2.1</akka.config.version>
-    <akka.http.version>2.0.4</akka.http.version>
     <druid.version>1.0.31</druid.version>
     <spring.version>4.3.9.RELEASE</spring.version>
     <antlr4.version>4.6</antlr4.version>
@@ -140,11 +139,6 @@
         <version>${akka.config.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.hazelcast</groupId>
         <artifactId>hazelcast-all</artifactId>
         <version>${hazelcast.version}</version>
@@ -176,16 +170,6 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-stream-experimental_2.11</artifactId>
-        <version>${akka.http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-http-experimental_2.11</artifactId>
-        <version>${akka.http.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.xerial</groupId>
         <artifactId>sqlite-jdbc</artifactId>
         <version>3.16.1</version>
@@ -214,129 +198,6 @@
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-runtime</artifactId>
         <version>${antlr4.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>angularjs</artifactId>
-        <version>1.4.9</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>jquery</artifactId>
-        <version>2.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>angular-touch</artifactId>
-        <version>1.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>angular-ui-router</artifactId>
-        <version>0.2.15</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>bootstrap</artifactId>
-        <version>3.3.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>d3js</artifactId>
-        <version>3.5.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>momentjs</artifactId>
-        <version>2.10.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>lodash</artifactId>
-        <version>3.10.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>font-awesome</artifactId>
-        <version>4.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>jquery-cookie</artifactId>
-        <version>1.4.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>angular-loading-bar</artifactId>
-        <version>0.8.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>angular</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>angular-smart-table</artifactId>
-        <version>2.1.6</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>angular</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>angular-motion</artifactId>
-        <version>0.4.3</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>bootstrap-additions</artifactId>
-        <version>0.3.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>angular-strap</artifactId>
-        <version>2.3.5</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>angular</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>ui-select</artifactId>
-        <version>0.14.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>ng-file-upload</artifactId>
-        <version>5.0.9</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>vis</artifactId>
-        <version>4.7.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>clipboard.js</artifactId>
-        <version>0.1.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>dashing-deps</artifactId>
-        <version>0.1.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>dashing</artifactId>
-        <version>0.4.8</version>
       </dependency>
 
       <dependency>
@@ -400,11 +261,6 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>net.alchim31.maven</groupId>
-          <artifactId>scala-maven-plugin</artifactId>
-          <version>3.2.2</version>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
