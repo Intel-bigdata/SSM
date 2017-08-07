@@ -82,6 +82,18 @@
         </plugins>
     </build>
 
+
+    <repositories>
+        <repository>
+            <id>local</id>
+            <name>Local Repository</name>
+            <url>/home/intel/.m2/repository</url>
+            <layout>default</layout>
+
+        </repository>
+    </repositories>
+
+
     <profiles>
         <profile>
             <id>native</id>
@@ -144,8 +156,32 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-maven-plugins</artifactId>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <version>2.5.1</version>
+                        <configuration>
+                            <groupId>org.smartdata</groupId>
+                            <artifactId>smart-maven-plugins</artifactId>
+                            <version>1.0-SNAPSHOT</version>
+                            <packaging>jar</packaging>
+                            <file>${basedir}/../smart-maven-plugins/target/smart-maven-plugins-1.0-SNAPSHOT.jar</file>
+                            <generatePom>true</generatePom>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>install-jar-lib</id>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <phase>validate</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.smartdata</groupId>
+                        <artifactId>smart-maven-plugins</artifactId>
+                        <version>1.0-SNAPSHOT</version>
                         <executions>
                             <execution>
                                 <id>cmake-compile</id>

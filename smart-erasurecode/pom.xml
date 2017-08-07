@@ -29,8 +29,11 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>smart-maven-plugins</module>
         <module>smart-erasurecodec</module>
     </modules>
+
+
 
 </project>
 
