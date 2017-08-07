@@ -23,18 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.model.ActionInfo;
-import org.smartdata.model.CachedFileStatus;
-import org.smartdata.model.ClusterConfig;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CmdletState;
-import org.smartdata.model.FileInfo;
-import org.smartdata.model.GlobalConfig;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.RuleState;
-import org.smartdata.model.StorageCapacity;
-import org.smartdata.model.StoragePolicy;
-import org.smartdata.model.XAttribute;
+import org.smartdata.model.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -521,6 +510,88 @@ public class TestMetaStore extends TestDaoUtil {
 
     metaStore.setGlobalConfig(globalConfig);
     Assert.assertTrue(metaStore.getDefaultGlobalConfigByName("test").equals(globalConfig));
+  }
+
+  @Test
+  public void testInsertDataNodeInfo() throws Exception {
+    DataNodeInfo insertInfo1 = new DataNodeInfo(
+        "UUID1", "hostname", "www.ssm.com", 80, 100, 50, "lab");
+    metaStore.insertDataNodeInfo(insertInfo1);
+    List<DataNodeInfo> getInfo1 = metaStore.getDataNodeInfoByUuid("UUID1");
+    Assert.assertTrue(insertInfo1.equals(getInfo1));
+
+    DataNodeInfo insertInfo2 = new DataNodeInfo(
+        "UUID2", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+    DataNodeInfo insertInfo3 = new DataNodeInfo(
+        "UUID3", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+    metaStore.insertDataNodeInfos(new DataNodeInfo[] { insertInfo2, insertInfo3 } );
+    List<DataNodeInfo> getInfo2 = metaStore.getDataNodeInfoByUuid("UUID2");
+    Assert.assertTrue(insertInfo2.equals(getInfo2));
+    List<DataNodeInfo> getInfo3 = metaStore.getDataNodeInfoByUuid("UUID3");
+    Assert.assertTrue(insertInfo3.equals(getInfo3));
+  }
+
+  @Test
+  public void testDeleteDataNodeInfo() throws Exception {
+    DataNodeInfo insertInfo1 = new DataNodeInfo(
+        "UUID1", "hostname", "www.ssm.com", 80, 100, 50, "lab");
+    DataNodeInfo insertInfo2 = new DataNodeInfo(
+        "UUID2", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+    DataNodeInfo insertInfo3 = new DataNodeInfo(
+        "UUID3", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+    metaStore.insertDataNodeInfos(new DataNodeInfo[] { insertInfo1, insertInfo2, insertInfo3 } );
+
+    List<DataNodeInfo> infos = metaStore.getAllDataNodeInfo();
+    Assert.assertTrue(infos.size() == 3);
+
+    metaStore.deleteDataNodeInfo(insertInfo1.getUuid());
+    infos = metaStore.getAllDataNodeInfo();
+    Assert.assertTrue(infos.size() == 2);
+
+    metaStore.deleteAllDataNodeInfo();
+    infos = metaStore.getAllDataNodeInfo();
+    Assert.assertTrue(infos.size() == 0);
+  }
+
+  @Test
+  public void testInsertDataNodeStorageInfo() throws Exception {
+    DataNodeStorageInfo insertInfo1 = new DataNodeStorageInfo("UUID1", 10, 10,
+        "storageid1", 0, 0, 0, 0, 0);
+    metaStore.insertDataNodeStorageInfo(insertInfo1);
+    List<DataNodeStorageInfo> getInfo1 = metaStore.getDataNodeStorageInfoByUuid("UUID1");
+    Assert.assertTrue(insertInfo1.equals(getInfo1.get(0)));
+
+    DataNodeStorageInfo insertInfo2 = new DataNodeStorageInfo("UUID2", 10, 10,
+        "storageid2", 0, 0, 0, 0, 0);
+    DataNodeStorageInfo insertInfo3 = new DataNodeStorageInfo("UUID3", 10, 10,
+        "storageid2", 0, 0, 0, 0, 0);
+    metaStore.insertDataNodeStorageInfos(new DataNodeStorageInfo[] { insertInfo2, insertInfo3 } );
+    List<DataNodeStorageInfo> getInfo2 = metaStore.getDataNodeStorageInfoByUuid("UUID2");
+    Assert.assertTrue(insertInfo2.equals(getInfo2.get(0)));
+    List<DataNodeStorageInfo> getInfo3 = metaStore.getDataNodeStorageInfoByUuid("UUID3");
+    Assert.assertTrue(insertInfo3.equals(getInfo3.get(0)));
+  }
+
+  @Test
+  public void testDeleteDataNodeStorageInfo() throws Exception {
+    DataNodeStorageInfo insertInfo1 = new DataNodeStorageInfo("UUID1", 10, 10,
+        "storageid1", 0, 0, 0, 0, 0);
+    DataNodeStorageInfo insertInfo2 = new DataNodeStorageInfo("UUID2", 10, 10,
+        "storageid2", 0, 0, 0, 0, 0);
+    DataNodeStorageInfo insertInfo3 = new DataNodeStorageInfo("UUID3", 10, 10,
+        "storageid3", 0, 0, 0, 0, 0);
+    metaStore.insertDataNodeStorageInfos(new DataNodeStorageInfo[] { insertInfo1, insertInfo2, insertInfo3 } );
+
+    List<DataNodeStorageInfo> infos = metaStore.getAllDataNodeStorageInfo();
+    Assert.assertTrue(infos.size() == 3);
+
+    metaStore.deleteDataNodeStorageInfo(insertInfo1.getUuid());
+    infos = metaStore.getAllDataNodeStorageInfo();
+    Assert.assertTrue(infos.size() == 2);
+
+    metaStore.deleteAllDataNodeStorageInfo();
+    infos = metaStore.getAllDataNodeStorageInfo();
+    Assert.assertTrue(infos.size() == 0);
   }
 
 }

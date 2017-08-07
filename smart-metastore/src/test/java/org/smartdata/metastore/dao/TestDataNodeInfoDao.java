@@ -45,16 +45,18 @@ public class TestDataNodeInfoDao extends TestDaoUtil {
   @Test
   public void testInsertGetDataInfo() throws Exception {
     DataNodeInfo insertInfo1 = new DataNodeInfo(
-        "uuid", "hostname", "www.ssm.com", 80, 100, 50, "lab");
+        "UUID1", "hostname", "www.ssm.com", 80, 10000, 50, "lab");
     dataNodeInfoDao.insert(insertInfo1);
-    DataNodeInfo getInfo1 = dataNodeInfoDao.getByUuid("uuid");
-    Assert.assertTrue(insertInfo1.equals(getInfo1));
+    List<DataNodeInfo> getInfo1 = dataNodeInfoDao.getByUuid("UUID1");
+    Assert.assertEquals(1,getInfo1.size());
+    Assert.assertTrue(insertInfo1.equals(getInfo1.get(0)));
 
     DataNodeInfo insertInfo2 = new DataNodeInfo(
-        "UUID", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+        "UUID2", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
     dataNodeInfoDao.insert(insertInfo2);
-    DataNodeInfo getInfo2 = dataNodeInfoDao.getByUuid("UUID");
-    Assert.assertTrue(insertInfo2.equals(getInfo2));
+    List<DataNodeInfo> getInfo2 = dataNodeInfoDao.getByUuid("UUID2");
+    Assert.assertEquals(1,getInfo2.size());
+    Assert.assertTrue(insertInfo2.equals(getInfo2.get(0)));
 
     List<DataNodeInfo> infos = dataNodeInfoDao.getAll();
     Assert.assertTrue(infos.size() == 2);
