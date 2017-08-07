@@ -57,7 +57,6 @@ import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.XAttribute;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.model.StorageCapacity;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
