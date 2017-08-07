@@ -24,7 +24,7 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.smartdata.actions.ActionRegistry;
+import org.smartdata.action.ActionRegistry;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.protocol.message.ActionFinished;

@@ -36,7 +36,7 @@
     <module>smart-agent</module>
     <module>smart-dist</module>
     <module>smart-integration</module>
-    <module>smart-hadoop</module>
+    <module>smart-hadoop-support</module>
   </modules>
 
   <properties>
@@ -70,7 +70,7 @@
         <jdk>[1.8,)</jdk>
       </activation>
       <modules>
-        <module>smart-alluxio</module>
+        <!--<module>smart-alluxio</module>-->
         <module>smart-erasurecode</module>
       </modules>
     </profile>
