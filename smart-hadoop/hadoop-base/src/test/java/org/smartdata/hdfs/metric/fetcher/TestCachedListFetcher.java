@@ -31,6 +31,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.SmartContext;
+import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.hdfs.action.CacheFileAction;
 import org.smartdata.hdfs.action.UncacheFileAction;
 import org.smartdata.model.CachedFileStatus;
@@ -68,12 +69,7 @@ public class TestCachedListFetcher extends TestDaoUtil {
     SmartConf conf = new SmartConf();
     initConf(conf);
     fid = 0l;
-    cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(5)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
-            StorageType.SSD})
-        .build();
+    cluster = MiniClusterFactory.get().create(5, conf);
     cluster.waitActive();
     dfs = cluster.getFileSystem();
     dfsClient = dfs.getClient();
