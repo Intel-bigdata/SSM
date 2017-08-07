@@ -16,7 +16,7 @@
 target
 build
 local-repo
-interpreter.json
+*/interpreter.json
 dependency-reduced-pom.xml
 logs
 

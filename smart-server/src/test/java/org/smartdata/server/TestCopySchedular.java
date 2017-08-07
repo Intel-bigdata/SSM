@@ -36,7 +36,7 @@ import org.smartdata.server.engine.CopyTargetTask;
 import java.io.IOException;
 import java.util.List;
 
-public class TestCopySchedular extends TestEmptyMiniSmartCluster {
+public class TestCopySchedular extends MiniSmartClusterHarness {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();

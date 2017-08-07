@@ -24,6 +24,7 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +32,7 @@ import java.util.Map;
 /**
  * Test for ArchiveFileAction.
  */
-public class TestArchiveFileAction extends ActionMiniCluster {
+public class TestArchiveFileAction extends MiniClusterWithStoragesHarness {
   @Test
   public void testArchive() throws Exception {
     final String file = "/testArchive/file";

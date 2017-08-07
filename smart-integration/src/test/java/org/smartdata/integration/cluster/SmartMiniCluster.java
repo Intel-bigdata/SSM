@@ -18,13 +18,13 @@
 package org.smartdata.integration.cluster;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.MiniClusterFactory;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -58,12 +58,7 @@ public class SmartMiniCluster implements SmartCluster {
   public void setUp() throws Exception {
     conf = new SmartConf();
     initConf(conf);
-    cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]
-            {StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE})
-        .build();
+    cluster = MiniClusterFactory.get().createWithStorages(3, conf);
     cluster.waitActive();
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);

@@ -17,21 +17,18 @@
  */
 package org.smartdata.server;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.StorageType;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.balancer.TestBalancer;
 import org.junit.After;
 import org.junit.Before;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.SmartServiceState;
+import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.utils.TestDBUtil;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,54 +36,35 @@ import java.util.List;
 
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY;
 
-public class TestEmptyMiniSmartCluster {
-  protected SmartConf conf;
-  protected MiniDFSCluster cluster;
+public class MiniSmartClusterHarness extends MiniClusterWithStoragesHarness {
   protected SmartServer ssm;
-  protected String dbFile;
-  protected String dbUrl;
+  private String dbFile;
+  private String dbUrl;
 
   public static final int DEFAULT_BLOCK_SIZE = 100;
 
-  static {
-    TestBalancer.initTestSetup();
-  }
-
   @Before
-  public void setUp() throws Exception {
-    conf = new SmartConf();
-    initConf(conf);
-    cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(3)
-        .storagesPerDatanode(3)
-        .storageTypes(new StorageType[]
-            {StorageType.DISK, StorageType.SSD, StorageType.ARCHIVE})
-        .build();
+  @Override
+  public void init() throws Exception {
+    super.init();
+    // Set db used
+    SmartConf conf = smartContext.getConf();
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
     List<URI> uriList = new ArrayList<>(namenodes);
     conf.set(DFS_NAMENODE_HTTP_ADDRESS_KEY, uriList.get(0).toString());
     conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
-        uriList.get(0).toString());
+      uriList.get(0).toString());
 
-    // Set db used
     dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
-    conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
+    smartContext.getConf().set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
     ssm = SmartServer.launchWith(conf);
   }
 
-  private void initConf(Configuration conf) {
-    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
-  }
-
   public void waitTillSSMExitSafeMode() throws Exception {
-    SmartAdmin client = new SmartAdmin(conf);
+    SmartAdmin client = new SmartAdmin(smartContext.getConf());
     long start = System.currentTimeMillis();
     int retry = 5;
     while (true) {
@@ -108,13 +86,11 @@ public class TestEmptyMiniSmartCluster {
   }
 
   @After
-  public void cleanUp() {
+  @Override
+  public void shutdown() throws IOException {
     if (ssm != null) {
       ssm.shutdown();
     }
-
-    if (cluster != null) {
-      cluster.shutdown();
-    }
+    super.shutdown();
   }
 }

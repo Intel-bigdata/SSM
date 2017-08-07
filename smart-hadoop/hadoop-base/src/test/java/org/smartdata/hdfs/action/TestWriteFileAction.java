@@ -21,12 +21,13 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestWriteFileAction extends ActionMiniCluster {
+public class TestWriteFileAction extends MiniClusterHarness {
   protected void writeFile(String filePath, long length) throws IOException {
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.setDfsClient(dfsClient);

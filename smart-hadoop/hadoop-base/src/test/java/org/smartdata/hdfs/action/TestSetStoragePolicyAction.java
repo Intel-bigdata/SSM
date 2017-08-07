@@ -21,6 +21,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -30,7 +31,7 @@ import java.util.Map;
 /**
  * Test for SetStoragePolicyAction.
  */
-public class TestSetStoragePolicyAction extends ActionMiniCluster {
+public class TestSetStoragePolicyAction extends MiniClusterHarness {
   private static final byte MEMORY_STORAGE_POLICY_ID = 15;
   private static final byte ALLSSD_STORAGE_POLICY_ID = 12;
   private static final byte ONESSD_STORAGE_POLICY_ID = 10;
