@@ -28,4 +28,6 @@ public interface CopyMetaService extends MetaService {
   List<FileDiff> getLatestFileDiff() throws MetaServiceException;
 
   boolean markFileDiffApplied(long did) throws MetaServiceException;
+
+  void deleteAllFileDiff() throws MetaServiceException;
 }
