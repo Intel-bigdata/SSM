@@ -119,6 +119,7 @@ public class CopyScheduler extends AbstractService {
   static public List<CopyTargetTask> splitCopyFile(String sourceFile,
       String destFile, int blockPerchunk, FileSystem fileSystem)
       throws IOException {
+
     if (blockPerchunk <= 0) {
       throw new IllegalArgumentException(
           "the block per chunk must more than 0");
@@ -208,29 +209,29 @@ public class CopyScheduler extends AbstractService {
     }
   }
 
-  private class ScheduleTask implements Runnable {
-
-    private void forceSync(String src, String dest) throws IOException, MetaServiceException {
-      // TODO check dest statuses to avoid unnecessary copy
-      // Force Sync src and dest
-      dfsClient.getFileInfo(src);
-      HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(src);
-      if (hdfsFileStatus.isDir()) {
-        // Get file list
-        DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
-        HdfsFileStatus[] fileList = listing.getPartialListing();
-        for (int i = 0; i < fileList.length; i++) {
-          // Recursively insert to file_diff
-          forceSync(fileList[i].getFullName(src), fileList[i].getFullName(dest));
-        }
-      } else {
-        // Insert to fill_diff
-        FileDiff fileDiff = new FileDiff();
-        fileDiff.setDiffType(FileDiffType.APPEND);
-        fileDiff.setParameters(String.format("-file %s -dest %s", src, dest));
-        copyMetaService.insertFileDiff(fileDiff);
+  public void forceSync(String src, String dest) throws IOException, MetaServiceException {
+    // TODO check dest statuses to avoid unnecessary copy
+    // Force Sync src and dest
+    dfsClient.getFileInfo(src);
+    HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(src);
+    if (hdfsFileStatus.isDir()) {
+      // Get file list
+      DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
+      HdfsFileStatus[] fileList = listing.getPartialListing();
+      for (int i = 0; i < fileList.length; i++) {
+        // Recursively insert to file_diff
+        forceSync(fileList[i].getFullName(src), fileList[i].getFullName(dest));
       }
+    } else {
+      // Insert to fill_diff
+      FileDiff fileDiff = new FileDiff();
+      fileDiff.setDiffType(FileDiffType.APPEND);
+      fileDiff.setParameters(String.format("-file %s -dest %s", src, dest));
+      copyMetaService.insertFileDiff(fileDiff);
     }
+  }
+
+  private class ScheduleTask implements Runnable {
 
     private void runningStatusUpdate() throws MetaServiceException {
       // Status update
