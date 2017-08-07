@@ -82,6 +82,18 @@
         </plugins>
     </build>
 
+
+    <repositories>
+        <repository>
+            <id>local</id>
+            <name>Local Repository</name>
+            <url>/home/intel/.m2/repository</url>
+            <layout>default</layout>
+
+        </repository>
+    </repositories>
+
+
     <profiles>
         <profile>
             <id>native</id>
@@ -143,9 +155,11 @@
                             </execution>
                         </executions>
                     </plugin>
+
                     <plugin>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-maven-plugins</artifactId>
+                        <groupId>org.smartdata</groupId>
+                        <artifactId>smartdata-maven-plugins</artifactId>
+                        <version>1.0-SNAPSHOT</version>
                         <executions>
                             <execution>
                                 <id>cmake-compile</id>
