@@ -22,19 +22,19 @@ import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
-import org.smartdata.server.TestEmptyMiniSmartCluster;
+import org.smartdata.server.MiniSmartClusterHarness;
 
 import java.io.IOException;
 import java.util.List;
 
-public class TestGetRuleInfo extends TestEmptyMiniSmartCluster {
+public class TestGetRuleInfo extends MiniSmartClusterHarness {
 
   @Test
   public void testGetSingleRuleInfo() throws Exception {
     waitTillSSMExitSafeMode();
 
     String rule = "file: every 1s \n | length > 10 | cache";
-    SmartAdmin client = new SmartAdmin(conf);
+    SmartAdmin client = new SmartAdmin(smartContext.getConf());
 
     long ruleId = client.submitRule(rule, RuleState.ACTIVE);
     RuleInfo info1 = client.getRuleInfo(ruleId);
@@ -62,7 +62,7 @@ public class TestGetRuleInfo extends TestEmptyMiniSmartCluster {
     waitTillSSMExitSafeMode();
 
     String rule = "file: every 1s \n | length > 10 | cache";
-    SmartAdmin client = new SmartAdmin(conf);
+    SmartAdmin client = new SmartAdmin(smartContext.getConf());
 
     int nRules = 10;
     for (int i = 0; i < nRules; i++) {

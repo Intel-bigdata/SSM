@@ -23,10 +23,10 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.model.CmdletState;
-import org.smartdata.server.TestEmptyMiniSmartCluster;
+import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.CmdletManager;
 
-public class TestMoverScheduler extends TestEmptyMiniSmartCluster {
+public class TestMoverScheduler extends MiniSmartClusterHarness {
 
   @Test
   public void testScheduler() throws Exception {

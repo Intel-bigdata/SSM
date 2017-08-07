@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,7 @@ import java.util.Map;
 /**
  * Test for UncacheFileAction.
  */
-public class TestUncacheFileAction extends ActionMiniCluster {
+public class TestUncacheFileAction extends MiniClusterHarness {
   @Test
   public void testUncacheFile() throws Exception {
     final String file = "/testUncache/file";

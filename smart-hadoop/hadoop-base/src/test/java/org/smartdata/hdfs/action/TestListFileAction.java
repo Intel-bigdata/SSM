@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,7 @@ import java.util.Map;
 /**
  * Test for ListFileAction.
  */
-public class TestListFileAction extends ActionMiniCluster {
+public class TestListFileAction extends MiniClusterHarness {
   @Test
   public void testRemoteFileList() throws Exception {
     final String srcPath = "/testList";

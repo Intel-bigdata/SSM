@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.actions.MockActionStatusReporter;
+import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -30,7 +31,7 @@ import java.util.Map;
 /**
  * Move to Cache Unit Test
  */
-public class TestCacheFile extends ActionMiniCluster {
+public class TestCacheFile extends MiniClusterHarness {
   @Test
   public void testCacheFile() throws IOException {
     final String file = "/testCache/file";

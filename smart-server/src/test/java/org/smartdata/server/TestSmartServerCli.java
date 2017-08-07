@@ -17,13 +17,12 @@
  */
 package org.smartdata.server;
 
-
 import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.utils.TestDBUtil;
 
@@ -32,16 +31,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class TestSmartServerCli {
+public class TestSmartServerCli extends MiniClusterHarness {
 
   @Test
   public void testConfNameNodeRPCAddr() throws Exception {
-    SmartConf config = new SmartConf();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(config)
-        .numDataNodes(3).build();
-
     try {
-      Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(config);
+      Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(smartContext.getConf());
       List<URI> uriList = new ArrayList<>(namenodes);
 
       SmartConf conf = new SmartConf();
