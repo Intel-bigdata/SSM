@@ -517,7 +517,7 @@ public class TestMetaStore extends TestDaoUtil {
     GlobalConfig globalConfig = new GlobalConfig(1,"test" , "test1");
     metaStore.setGlobalConfig(globalConfig);
     Assert.assertTrue(metaStore.getDefaultGlobalConfigByName("test").equals(globalConfig));
-    globalConfig.setProperty_value("test2");
+    globalConfig.setPropertyValue("test2");
 
     metaStore.setGlobalConfig(globalConfig);
     Assert.assertTrue(metaStore.getDefaultGlobalConfigByName("test").equals(globalConfig));
