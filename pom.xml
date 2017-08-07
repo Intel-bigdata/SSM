@@ -22,6 +22,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>smart-maven-plugins</module>
     <module>smart-common</module>
     <module>smart-metrics</module>
     <module>smart-actions</module>
