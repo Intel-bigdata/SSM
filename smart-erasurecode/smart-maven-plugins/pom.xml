@@ -31,8 +31,6 @@
             <version>${maven.plugin-tools.version}</version>
             <scope>provided</scope>
         </dependency>
-
-
     </dependencies>
     <build>
         <plugins>
@@ -58,7 +56,10 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
+
         </plugins>
+
     </build>
+
 
 </project>
