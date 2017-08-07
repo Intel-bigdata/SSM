@@ -57,21 +57,6 @@ public class DataNodeInfoDao {
         new Object[]{uuid}, new DataNodeInfoRowMapper());
   }
 
-  public List<DataNodeInfo> get(String sql) throws SQLException {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    List<DataNodeInfo> list = new LinkedList<>();
-    List<Map<String, Object>> maplist = jdbcTemplate.queryForList(sql);
-    for (Map<String, Object> map : maplist) {
-      list.add(new DataNodeInfo((String) map.get("uuid"),
-          (String) map.get("hostname"), (String) map.get("ip"),
-          (int) map.get("port"),
-          (int) map.get("cache_capacity"),
-          (int) map.get("cache_used"),
-          (String) map.get("location")));
-    }
-    return list;
-  }
-
   public void insert(DataNodeInfo dataNodeInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
