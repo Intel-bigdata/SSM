@@ -47,14 +47,12 @@ public abstract class MiniClusterFactory {
               .getContextClassLoader()
               .loadClass("org.smartdata.hdfs.MiniClusterFactory27");
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
       try {
         clazz =
             Thread.currentThread()
                 .getContextClassLoader()
                 .loadClass("org.smartdata.hdfs.MiniClusterFactory26");
       } catch (ClassNotFoundException e1) {
-        e1.printStackTrace();
       }
     }
     return clazz == null

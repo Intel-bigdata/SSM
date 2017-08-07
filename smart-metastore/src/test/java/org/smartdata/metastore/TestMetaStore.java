@@ -531,7 +531,7 @@ public class TestMetaStore extends TestDaoUtil {
         "UUID1", "hostname", "www.ssm.com", 80, 100, 50, "lab");
     metaStore.insertDataNodeInfo(insertInfo1);
     List<DataNodeInfo> getInfo1 = metaStore.getDataNodeInfoByUuid("UUID1");
-    Assert.assertTrue(insertInfo1.equals(getInfo1));
+    Assert.assertTrue(insertInfo1.equals(getInfo1.get(0)));
 
     DataNodeInfo insertInfo2 = new DataNodeInfo(
         "UUID2", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
@@ -539,9 +539,9 @@ public class TestMetaStore extends TestDaoUtil {
         "UUID3", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
     metaStore.insertDataNodeInfos(new DataNodeInfo[] { insertInfo2, insertInfo3 } );
     List<DataNodeInfo> getInfo2 = metaStore.getDataNodeInfoByUuid("UUID2");
-    Assert.assertTrue(insertInfo2.equals(getInfo2));
+    Assert.assertTrue(insertInfo2.equals(getInfo2.get(0)));
     List<DataNodeInfo> getInfo3 = metaStore.getDataNodeInfoByUuid("UUID3");
-    Assert.assertTrue(insertInfo3.equals(getInfo3));
+    Assert.assertTrue(insertInfo3.equals(getInfo3.get(0)));
   }
 
   @Test
