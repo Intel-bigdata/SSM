@@ -793,7 +793,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
       throw new MetaStoreException(e);
     }
   }
-
+  
   @Override
   public boolean markFileDiffApplied(long did) throws MetaStoreException {
     try {
@@ -806,6 +806,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
   @Override
   public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
     return fileDiffDao.getALL();
+  }
+
+  public void deleteAllFileDiff() throws MetaStoreException {
+    fileDiffDao.deleteAll();
   }
 
   public void dropAllTables() throws MetaStoreException {
