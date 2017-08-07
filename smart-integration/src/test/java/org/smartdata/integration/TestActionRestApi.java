@@ -30,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.smartdata.integration.rest.ActionRestApi.getActionIds;
-import static org.smartdata.integration.rest.ActionRestApi.getActionInfo;
+import static org.smartdata.integration.rest.ActionRestApi.getActionInfoMap;
 import static org.smartdata.integration.rest.ActionRestApi.submitAction;
 import static org.smartdata.integration.rest.CovUtil.getLong;
 import static org.smartdata.integration.rest.RestApiBase.ACTIONROOT;
@@ -123,7 +123,7 @@ public class TestActionRestApi extends IntegrationTestBase {
       aid = getActionIds(cid).get(0);
 
       // get actionInfo
-      actionInfoMap = getActionInfo(aid);
+      actionInfoMap = getActionInfoMap(aid);
       Assert.assertEquals(actionType, actionInfoMap.get("actionName"));
       Assert.assertEquals(aid, getLong(actionInfoMap.get("actionId")));
       Assert.assertEquals(cid, getLong(actionInfoMap.get("cmdletId")));
