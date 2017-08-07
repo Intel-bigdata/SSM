@@ -1,1 +1,0 @@
-Module smart-blockec is a backup of the erasure code in HADOOP-3.0.0-alpha3. 
