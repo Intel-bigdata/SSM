@@ -17,7 +17,9 @@
  */
 package org.smartdata.metastore;
 
-public class MetaStoreException extends Exception {
+import org.smartdata.metaservice.MetaServiceException;
+
+public class MetaStoreException extends MetaServiceException {
 
   public MetaStoreException(String errorMsg) {
     super(errorMsg);

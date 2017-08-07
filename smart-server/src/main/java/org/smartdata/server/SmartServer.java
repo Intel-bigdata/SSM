@@ -39,7 +39,6 @@ import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.utils.GenericOptionsParser;
-import org.smartdata.server.web.SmartHttpServer;
 
 import javax.security.auth.Subject;
 import java.io.File;
@@ -58,7 +57,6 @@ public class SmartServer {
   private ServerContext context;
   private SmartServiceState serviceState = SmartServiceState.SAFEMODE;
 
-  private SmartHttpServer httpServer;
   private SmartRpcServer rpcServer;
   private SmartZeppelinServer zeppelinServer;
 
@@ -80,7 +78,6 @@ public class SmartServer {
 
     if (startupOption == StartupOption.REGULAR) {
       engine = new SmartEngine(context);
-      httpServer = new SmartHttpServer(engine, conf);
       rpcServer = new SmartRpcServer(this, conf);
 
       if (isZeppelinEnabled()) {
@@ -226,7 +223,6 @@ public class SmartServer {
     }
 
     rpcServer.start();
-    httpServer.start();
 
     if (zeppelinServer != null) {
       zeppelinServer.start();
@@ -264,14 +260,6 @@ public class SmartServer {
 
     if (zeppelinServer != null) {
       zeppelinServer.stop();
-    }
-
-    try {
-      if (httpServer != null) {
-        httpServer.stop();
-      }
-    } catch (Exception e) {
-      // ignore to make sure the following services can be closed
     }
 
     try {

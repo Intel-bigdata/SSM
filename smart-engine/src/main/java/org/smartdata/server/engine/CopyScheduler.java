@@ -26,8 +26,9 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.metaservice.CmdletMetaService;
+import org.smartdata.metaservice.CopyMetaService;
+import org.smartdata.metaservice.MetaServiceException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
@@ -53,27 +54,36 @@ public class CopyScheduler extends AbstractService {
 
   private CmdletManager cmdletManager;
   private DFSClient dfsClient;
-  private MetaStore metaStore;
+
+  private CopyMetaService copyMetaService;
+  private CmdletMetaService cmdletMetaService;
+
   private Queue<FileDiff> pendingDR;
   // <cid, did> Map set
   private Map<Long, Long> runningDR;
   private String srcBase;
   private String destBase;
   // TODO currently set max running list.size == 1 for test
-  private final int MAX_RUNNING_SIZE = 1;
+  private final int MAX_RUNNING_SIZE = 5;
 
   public CopyScheduler(ServerContext context) {
     super(context);
 
     this.executorService = Executors.newSingleThreadScheduledExecutor();
 
-    this.metaStore = context.getMetaStore();
+    this.copyMetaService = (CopyMetaService) context.getMetaService();
+    this.cmdletMetaService = (CmdletMetaService) context.getMetaService();
+
     this.runningDR = new HashMap<>();
     this.pendingDR = new LinkedBlockingQueue<>();
   }
 
+  public int getQueueSize() {
+    return runningDR.size() + pendingDR.size();
+  }
+
   public CopyScheduler(ServerContext context, CmdletManager cmdletManager,
-      DFSClient dfsClient, String destBase, String srcBase) {
+      DFSClient dfsClient, String srcBase, String destBase) {
     this(context);
     this.cmdletManager = cmdletManager;
     this.destBase = destBase;
@@ -109,6 +119,7 @@ public class CopyScheduler extends AbstractService {
   static public List<CopyTargetTask> splitCopyFile(String sourceFile,
       String destFile, int blockPerchunk, FileSystem fileSystem)
       throws IOException {
+
     if (blockPerchunk <= 0) {
       throw new IllegalArgumentException(
           "the block per chunk must more than 0");
@@ -170,56 +181,66 @@ public class CopyScheduler extends AbstractService {
 
   public static String cmdParsing(FileDiff fileDiff, String srcBase,
       String destBase) {
-    String cmd = String.format("Copy %s", fileDiff.getParameters());
-    // replace srcBase with destBase to get final dest path
-    // TODO support rename and delete
-    int start = cmd.indexOf("-dest");
-    if (start < 0) {
-      return "";
+    // Create and Write
+    // TODO should not use string parsing
+    if (fileDiff.getDiffType() == FileDiffType.CREATE || fileDiff.getDiffType() == FileDiffType.APPEND ) {
+      String cmd = String.format("copy %s", fileDiff.getParameters());
+      // Locate -file
+      int start = cmd.indexOf("-file");
+      if (start < 0) {
+        return "";
+      }
+      start += 6;
+      int end = cmd.indexOf(' ', start);
+      if (end < 0) {
+        end = cmd.length();
+      }
+      String localPath = cmd.substring(start, end);
+      String destPath = localPath.replace(srcBase, destBase);
+      if (end == cmd.length()) {
+        return String.format("%s -dest %s", cmd, destPath);
+      } else {
+        return String.format("%s -dest %s %s", cmd.substring(0, end), destPath, cmd.substring(end + 1));
+      }
+    } else {
+      String cmd = String.format("rename %s", fileDiff.getParameters());
+      // Locate -dest
+      return cmd.replace(srcBase, destBase);
     }
-    start += 6;
-    int end = cmd.indexOf(' ', start);
-    if (end < 0) {
-      end = cmd.length();
+  }
+
+  public void forceSync(String src, String dest) throws IOException, MetaServiceException {
+    // TODO check dest statuses to avoid unnecessary copy
+    // Force Sync src and dest
+    dfsClient.getFileInfo(src);
+    HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(src);
+    if (hdfsFileStatus.isDir()) {
+      // Get file list
+      DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
+      HdfsFileStatus[] fileList = listing.getPartialListing();
+      for (int i = 0; i < fileList.length; i++) {
+        // Recursively insert to file_diff
+        forceSync(fileList[i].getFullName(src), fileList[i].getFullName(dest));
+      }
+    } else {
+      // Insert to fill_diff
+      FileDiff fileDiff = new FileDiff();
+      fileDiff.setDiffType(FileDiffType.APPEND);
+      fileDiff.setParameters(String.format("-file %s -dest %s", src, dest));
+      copyMetaService.insertFileDiff(fileDiff);
     }
-    String localPath = cmd.substring(start, end);
-    String destPath = localPath.replace(srcBase, destBase);
-    LOG.info("cmd before add destBase {}, localPath {}", cmd, destPath);
-    return cmd.replace(localPath, destPath);
   }
 
   private class ScheduleTask implements Runnable {
 
-    private void forceSync(String src, String dest) throws IOException, MetaStoreException {
-      // TODO check dest statuses to avoid unnecessary copy
-      // Force Sync src and dest
-      dfsClient.getFileInfo(src);
-      HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(src);
-      if (hdfsFileStatus.isDir()) {
-        // Get file list
-        DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
-        HdfsFileStatus[] fileList = listing.getPartialListing();
-        for (int i = 0; i < fileList.length; i++) {
-          // Recursively insert to file_diff
-          forceSync(fileList[i].getFullName(src), fileList[i].getFullName(dest));
-        }
-      } else {
-        // Insert to fill_diff
-        FileDiff fileDiff = new FileDiff();
-        fileDiff.setDiffType(FileDiffType.APPEND);
-        fileDiff.setParameters(String.format("-file %s -dest %s", src, dest));
-        metaStore.insertFileDiff(fileDiff);
-      }
-    }
-
-    private void runningStatusUpdate() throws MetaStoreException {
+    private void runningStatusUpdate() throws MetaServiceException {
       // Status update
       for (Iterator<Map.Entry<Long, Long>> it = runningDR.entrySet().iterator(); it.hasNext();) {
         Map.Entry<Long, Long> entry = it.next();
         // Check if this cmdlet is finished
-        if (metaStore.getCmdletById(entry.getKey()).getState() == CmdletState.DONE) {
+        if (cmdletMetaService.getCmdletById(entry.getKey()).getState() == CmdletState.DONE) {
           // Remove from running list
-          metaStore.markFillDiffApplied(entry.getValue());
+          copyMetaService.markFileDiffApplied(entry.getValue());
           it.remove();
         }
       }
@@ -229,10 +250,22 @@ public class CopyScheduler extends AbstractService {
       // Move diffs to running queue
       while (runningDR.size() < MAX_RUNNING_SIZE) {
         FileDiff fileDiff = pendingDR.poll();
+        LOG.info("filediff {}", fileDiff.getParameters());
         String cmd = cmdParsing(fileDiff, srcBase, destBase);
         CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmd);
+        LOG.info("cmd = {}", cmd);
         long cid = cmdletManager.submitCmdlet(cmdletDescriptor);
         runningDR.put(cid, fileDiff.getDiffId());
+      }
+    }
+
+    private void addToPending() throws MetaServiceException {
+      List<FileDiff> latestFileDiff = copyMetaService.getLatestFileDiff();
+      for (FileDiff fileDiff : latestFileDiff) {
+        // TODO filter with src and dest
+        if (!pendingDR.contains(fileDiff) && fileDiff.getParameters().contains(srcBase)) {
+          pendingDR.add(fileDiff);
+        }
       }
     }
 
@@ -240,20 +273,11 @@ public class CopyScheduler extends AbstractService {
     public void run() {
       try {
         // Add new diffs to pending list
-        List<FileDiff> latestFileDiff = metaStore.getLatestFileDiff();
-        for (FileDiff fileDiff : latestFileDiff) {
-          if (!pendingDR.contains(fileDiff)) {
-            pendingDR.add(fileDiff);
-          }
-        }
+        addToPending();
         runningStatusUpdate();
         enQueue();
-      } catch (IOException e) {
+      } catch (IOException | MetaServiceException | ParseException e) {
         LOG.error("Disaster Recovery Manager schedule error", e);
-      } catch (MetaStoreException e) {
-        LOG.error("Disaster Recovery Manager MetaStore error", e);
-      } catch (ParseException e) {
-        LOG.error("Disaster Recovery Manager cmd format error", e);
       }
     }
   }
