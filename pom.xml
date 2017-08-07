@@ -25,7 +25,7 @@
     <module>smart-maven-plugins</module>
     <module>smart-common</module>
     <module>smart-metrics</module>
-    <module>smart-actions</module>
+    <module>smart-action</module>
     <module>smart-metastore</module>
     <module>smart-client</module>
     <module>smart-admin</module>
@@ -70,7 +70,7 @@
         <jdk>[1.8,)</jdk>
       </activation>
       <modules>
-        <!--<module>smart-alluxio</module>-->
+        <module>smart-alluxio</module>
       </modules>
     </profile>
 
