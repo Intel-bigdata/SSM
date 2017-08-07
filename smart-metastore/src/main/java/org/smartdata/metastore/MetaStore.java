@@ -20,6 +20,8 @@ package org.smartdata.metastore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.metaservice.CmdletMetaService;
+import org.smartdata.metaservice.CopyMetaService;
 import org.smartdata.metastore.dao.AccessCountDao;
 import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.metastore.dao.ActionDao;
@@ -68,7 +70,7 @@ import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
 /**
  * Operations supported for upper functions.
  */
-public class MetaStore {
+public class MetaStore implements CopyMetaService, CmdletMetaService {
   static final Logger LOG = LoggerFactory.getLogger(MetaStore.class);
 
   private DBPool pool = null;
@@ -782,6 +784,7 @@ public class MetaStore {
     }
   }
 
+  @Override
   public synchronized boolean insertFileDiff(FileDiff fileDiff)
       throws MetaStoreException {
     try {
@@ -791,7 +794,8 @@ public class MetaStore {
     }
   }
 
-  public boolean markFillDiffApplied(long did) throws MetaStoreException {
+  @Override
+  public boolean markFileDiffApplied(long did) throws MetaStoreException {
     try {
       return fileDiffDao.update(did,true) >= 0;
     } catch (Exception e) {
@@ -799,6 +803,7 @@ public class MetaStore {
     }
   }
 
+  @Override
   public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
     return fileDiffDao.getALL();
   }

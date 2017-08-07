@@ -15,21 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.metaservice;
 
-import org.smartdata.metaservice.MetaServiceException;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.FileDiff;
 
-public class MetaStoreException extends MetaServiceException {
+import java.util.List;
 
-  public MetaStoreException(String errorMsg) {
-    super(errorMsg);
-  }
+public interface CmdletMetaService extends MetaService {
 
-  public MetaStoreException(String errorMsg, Throwable throwable) {
-    super(errorMsg, throwable);
-  }
+  CmdletInfo getCmdletById(long cid) throws MetaServiceException;
 
-  public MetaStoreException(Throwable throwable) {
-    super(throwable);
-  }
 }
