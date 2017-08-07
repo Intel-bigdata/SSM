@@ -25,8 +25,6 @@ import org.smartdata.actions.Utils;
 import org.smartdata.hdfs.action.move.MoveRunner;
 import org.smartdata.hdfs.action.move.MoverBasedMoveRunner;
 import org.smartdata.hdfs.action.move.MoverStatus;
-import org.smartdata.hdfs.action.move.OldMoveRunner;
-import org.smartdata.hdfs.action.move.OldMoverBasedMoveRunner;
 
 import java.util.Map;
 
@@ -76,20 +74,8 @@ public class MoveFileAction extends AbstractMoveFileAction {
             Utils.getFormatedCurrentTime(), fileName, storagePolicy));
     dfsClient.setStoragePolicy(fileName, storagePolicy);
 
-    boolean exception = false;
-    if (movePlan != null) {
-      try {
-        MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
-        moveRunner.move(fileName, movePlan);
-      } catch (Exception e) {
-        exception = true;
-      }
-    }
-
-    if (movePlan == null || exception) {
-      OldMoveRunner moveRunner = new OldMoverBasedMoveRunner(getContext().getConf(), this.status);
-      moveRunner.move(fileName);
-    }
+    MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
+    moveRunner.move(fileName, movePlan);
   }
 
   @Override

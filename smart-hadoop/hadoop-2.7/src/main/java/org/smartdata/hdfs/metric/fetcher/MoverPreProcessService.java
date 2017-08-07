@@ -100,7 +100,7 @@ public class MoverPreProcessService extends ActionPreProcessService {
         policy = "ONE_SSD";
         break;
       case "archive":
-        policy = "ARCHIVE";
+        policy = "COLD";
         break;
     }
 
