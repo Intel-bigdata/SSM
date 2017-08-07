@@ -49,9 +49,9 @@ public class DataNodeInfoDao {
         new DataNodeInfoRowMapper());
   }
 
-  public DataNodeInfo getByUuid(String uuid) {
+  public List<DataNodeInfo> getByUuid(String uuid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject(
+    return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE uuid = ?",
         new Object[]{uuid}, new DataNodeInfoRowMapper());
   }
@@ -72,6 +72,16 @@ public class DataNodeInfoDao {
     simpleJdbcInsert.executeBatch(maps);
   }
 
+  public void insert(List<DataNodeInfo> dataNodeInfos) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName(TABLE_NAME);
+    Map<String, Object>[] maps = new Map[dataNodeInfos.size()];
+    for (int i = 0; i < dataNodeInfos.size(); i++) {
+      maps[i] = toMap(dataNodeInfos.get(i));
+    }
+    simpleJdbcInsert.executeBatch(maps);
+  }
+
   public void delete(String uuid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME + " WHERE uuid = ?";
@@ -80,7 +90,7 @@ public class DataNodeInfoDao {
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE from " + TABLE_NAME;
+    final String sql = "DELETE FROM " + TABLE_NAME;
     jdbcTemplate.update(sql);
   }
 

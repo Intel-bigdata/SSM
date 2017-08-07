@@ -37,6 +37,8 @@ import org.smartdata.metastore.dao.RuleDao;
 import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
+import org.smartdata.metastore.dao.DataNodeInfoDao;
+import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
 import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
@@ -50,9 +52,11 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.DataNodeInfo;
+import org.smartdata.model.DataNodeStorageInfo;
+import org.smartdata.model.XAttribute;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.model.XAttribute;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
@@ -94,6 +98,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
   private MetaStoreHelper metaStoreHelper;
   private ClusterConfigDao clusterConfigDao;
   private GlobalConfigDao globalConfigDao;
+  private DataNodeInfoDao dataNodeInfoDao;
+  private DataNodeStorageInfoDao dataNodeStorageInfoDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -111,6 +117,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
     metaStoreHelper = new MetaStoreHelper(pool.getDataSource());
     clusterConfigDao = new ClusterConfigDao(pool.getDataSource());
     globalConfigDao = new GlobalConfigDao(pool.getDataSource());
+    dataNodeInfoDao = new DataNodeInfoDao(pool.getDataSource());
+    dataNodeStorageInfoDao = new DataNodeStorageInfoDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -915,5 +923,138 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
     }
   }
 
+  public void insertDataNodeInfo(DataNodeInfo dataNodeInfo)
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.insert(dataNodeInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeInfos(DataNodeInfo[] dataNodeInfos)
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.insert(dataNodeInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeInfos(List<DataNodeInfo> dataNodeInfos)
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.insert(dataNodeInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<DataNodeInfo> getDataNodeInfoByUuid(String uuid)
+      throws MetaStoreException{
+    try {
+      return dataNodeInfoDao.getByUuid(uuid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<DataNodeInfo> getAllDataNodeInfo()
+      throws MetaStoreException{
+    try {
+      return dataNodeInfoDao.getAll();
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteDataNodeInfo(String uuid)
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.delete(uuid);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllDataNodeInfo()
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeStorageInfo(DataNodeStorageInfo dataNodeStorageInfo)
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.insert(dataNodeStorageInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeStorageInfos(DataNodeStorageInfo[] dataNodeStorageInfos)
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.insert(dataNodeStorageInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeStorageInfos(List<DataNodeStorageInfo> dataNodeStorageInfos)
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.insert(dataNodeStorageInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<DataNodeStorageInfo> getDataNodeStorageInfoByUuid(String uuid)
+      throws MetaStoreException{
+    try {
+      return dataNodeStorageInfoDao.getByUuid(uuid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<DataNodeStorageInfo> getAllDataNodeStorageInfo()
+      throws MetaStoreException{
+    try {
+      return dataNodeStorageInfoDao.getAll();
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteDataNodeStorageInfo(String uuid)
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.delete(uuid);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllDataNodeStorageInfo()
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
 
 }
