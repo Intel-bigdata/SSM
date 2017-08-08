@@ -92,14 +92,11 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
     // init forceSync
     copyScheduler.forceSync(srcPath, destPath);
     copyScheduler.start();
-    Thread.sleep(1500);
-    while (true) {
+    while (copyScheduler.getRunningSize() == 0) {
+      Thread.sleep(1000);
+    }
+    while (ssm.getCmdletManager().getActionsSizeInCache() != 0) {
       Thread.sleep(2000);
-      int current = ssm.getCmdletManager().getCmdletsSizeInCache();
-      System.out.printf("Current running cmdlet number: %d\n", current);
-      if (current == 0) {
-        break;
-      }
     }
     for (int i = 0; i < 5; i++) {
       // Write 10 files
@@ -127,14 +124,11 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
       // Write 10 files
       DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
     }
-    Thread.sleep(1500);
-    while (true) {
+    while (copyScheduler.getRunningSize() == 0) {
+      Thread.sleep(1000);
+    }
+    while (ssm.getCmdletManager().getActionsSizeInCache() != 0) {
       Thread.sleep(2000);
-      int current = ssm.getCmdletManager().getCmdletsSizeInCache();
-      System.out.printf("Current running cmdlet number: %d\n", current);
-      if (current == 0) {
-        break;
-      }
     }
     for (int i = 0; i < 5; i++) {
       // Write 10 files
