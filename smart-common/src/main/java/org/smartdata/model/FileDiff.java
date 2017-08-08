@@ -20,9 +20,18 @@ package org.smartdata.model;
 public class FileDiff {
   private long diffId;
   private String parameters;
+  private String src;
   private FileDiffType diffType;
   private boolean applied;
   private long create_time;
+
+  public String getSrc() {
+    return src;
+  }
+
+  public void setSrc(String src) {
+    this.src = src;
+  }
 
   public long getDiffId() {
     return diffId;
@@ -66,44 +75,34 @@ public class FileDiff {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof FileDiff)) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
 
     FileDiff fileDiff = (FileDiff) o;
 
-    if (getDiffId() != fileDiff.getDiffId()) {
-      return false;
-    }
-    if (isApplied() != fileDiff.isApplied()) {
-      return false;
-    }
-    if (getCreate_time() != fileDiff.getCreate_time()) {
-      return false;
-    }
-    if (!getParameters().equals(fileDiff.getParameters())) {
-      return false;
-    }
-    return getDiffType() == fileDiff.getDiffType();
+    if (diffId != fileDiff.diffId) return false;
+    if (applied != fileDiff.applied) return false;
+    if (create_time != fileDiff.create_time) return false;
+    if (parameters != null ? !parameters.equals(fileDiff.parameters) : fileDiff.parameters != null) return false;
+    if (src != null ? !src.equals(fileDiff.src) : fileDiff.src != null) return false;
+    return diffType == fileDiff.diffType;
   }
 
   @Override
   public int hashCode() {
-    int result = (int) (getDiffId() ^ (getDiffId() >>> 32));
-    result = 31 * result + getParameters().hashCode();
-    result = 31 * result + getDiffType().hashCode();
-    result = 31 * result + (isApplied() ? 1 : 0);
-    result = 31 * result + (int) (getCreate_time() ^ (getCreate_time() >>> 32));
+    int result = (int) (diffId ^ (diffId >>> 32));
+    result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
+    result = 31 * result + (src != null ? src.hashCode() : 0);
+    result = 31 * result + (diffType != null ? diffType.hashCode() : 0);
+    result = 31 * result + (applied ? 1 : 0);
+    result = 31 * result + (int) (create_time ^ (create_time >>> 32));
     return result;
   }
 
   @Override
   public String toString() {
     return String.format("FileDiff{diffId=%s, parameters=%s, " +
-            "diffType=%s, applied=%s, create_time=%s}", diffId, parameters,
+            "src=%s, diffType=%s, applied=%s, create_time=%s}", diffId, parameters, src,
         diffType, applied, create_time);
   }
 }

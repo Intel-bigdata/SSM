@@ -240,6 +240,7 @@ public class MetaStoreUtils {
         "CREATE TABLE file_diff (\n" +
             "  did INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  diff_type varchar(4096) NOT NULL,\n" +
+            "  src varchar(4096) NOT NULL,\n" +
             "  parameters varchar(4096) NOT NULL,\n" +
             "  applied tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL\n" +
