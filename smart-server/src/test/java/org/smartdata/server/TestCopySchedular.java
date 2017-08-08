@@ -46,20 +46,22 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     FileDiff fileDiff = new FileDiff();
     fileDiff.setDiffType(FileDiffType.APPEND);
+    fileDiff.setSrc("/root/test");
     // Create and write
-    fileDiff.setParameters("-file /root/test");
+    fileDiff.setParameters("");
     String cmd =
         CopyScheduler.cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
     Assert.assertTrue(
         cmd.equals("copy -file /root/test -dest /localhost:3306/backup/test"));
-    fileDiff.setParameters("-file /root/test -length 1024");
+    // Test Copy
+    fileDiff.setParameters("-length 1024");
     cmd =
         CopyScheduler.cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
     Assert.assertTrue(cmd.equals(
         "copy -file /root/test -dest /localhost:3306/backup/test -length 1024"));
-    // Rename
+    // Test Rename
     fileDiff.setDiffType(FileDiffType.RENAME);
-    fileDiff.setParameters("-file /root/test -dest /root/test2 -length 1024");
+    fileDiff.setParameters("-dest /root/test2 -length 1024");
     cmd =
         CopyScheduler.cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
     Assert.assertTrue(
@@ -144,7 +146,7 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
 
 
   @Test
-  public void testCopyScheduler() throws IOException {
+  public void testSplitCopyFile() throws IOException {
     DistributedFileSystem dfs = cluster.getFileSystem();
 
     final String srcPath = "/testCopy";
