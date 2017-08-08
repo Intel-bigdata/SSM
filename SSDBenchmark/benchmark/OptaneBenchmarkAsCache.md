@@ -28,9 +28,9 @@ Test Result
 * **Random read: cached situation offers 226% higher throughput than uncached situation.**
 * Cached situation has lower performance degrade when running random read vs. sequential read: the throughput is 2.9% down in cached situation, and 17.9% down in uncached situation.
 
-Terasort
-===============
+### 2. Terasort
 
+* Cached situation gives a speed up of x over uncached situation.
 
 
   [1]: ./images/1502176966922.jpg
