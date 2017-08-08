@@ -2,7 +2,18 @@
   "paragraphs": [
     {
       "user": "admin",
-      "config": {},
+      "config": {
+        "colWidth": 12.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "editorMode": "ace/mode/markdown",
+        "editorHide": false,
+        "tableHide": true
+      },
       "settings": {
         "params": {},
         "forms": {}
