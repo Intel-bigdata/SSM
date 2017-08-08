@@ -77,28 +77,28 @@ public class InotifyEventApplier {
       // TODO parse and save to fileDiff
       case CREATE:
         LOG.trace("event type:" + event.getEventType().name() +
-            ", path:" + ((Event.CreateEvent)event).getPath());
+            ", path:" + ((Event.CreateEvent) event).getPath());
         /*fileDiff.setDiffType(FileDiffType.CREATE);
         fileDiff.setParameters(String.format("-file %s",
             ((Event.CreateEvent)event).getPath()));
         metaStore.insertFileDiff(fileDiff);*/
-        return Arrays.asList(this.getCreateSql((Event.CreateEvent)event));
+        return Arrays.asList(this.getCreateSql((Event.CreateEvent) event));
       case CLOSE:
         LOG.trace("event type:" + event.getEventType().name() +
-            ", path:" + ((Event.CloseEvent)event).getPath());
+            ", path:" + ((Event.CloseEvent) event).getPath());
         fileDiff.setDiffType(FileDiffType.APPEND);
-        fileDiff.setParameters(String.format("-file %s -length %s",
-            ((Event.CloseEvent)event).getPath(),
-            ((Event.CloseEvent)event).getFileSize()));
+        fileDiff.setSrc(String.format("%s", ((Event.CloseEvent) event).getPath()));
+        fileDiff.setParameters(String.format("-length %s",
+            ((Event.CloseEvent) event).getFileSize()));
         metaStore.insertFileDiff(fileDiff);
-        return Arrays.asList(this.getCloseSql((Event.CloseEvent)event));
+        return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
       case RENAME:
         LOG.trace("event type:" + event.getEventType().name() +
-            ", src path:" + ((Event.RenameEvent)event).getSrcPath() +
-            ", dest path:" + ((Event.RenameEvent)event).getDstPath());
+            ", src path:" + ((Event.RenameEvent) event).getSrcPath() +
+            ", dest path:" + ((Event.RenameEvent) event).getDstPath());
         fileDiff.setDiffType(FileDiffType.RENAME);
-        fileDiff.setParameters(String.format("-file %s -dest %s",
-            ((Event.RenameEvent)event).getSrcPath(),
+        fileDiff.setSrc(String.format("%s",((Event.RenameEvent)event).getSrcPath()));
+        fileDiff.setParameters(String.format("-dest %s",
             ((Event.RenameEvent)event).getDstPath()));
         metaStore.insertFileDiff(fileDiff);
         return this.getRenameSql((Event.RenameEvent)event);
@@ -114,8 +114,8 @@ public class InotifyEventApplier {
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.UnlinkEvent)event).getPath());
         fileDiff.setDiffType(FileDiffType.DELETE);
-        fileDiff.setParameters(String.format("-file %s",
-            ((Event.UnlinkEvent)event).getPath()));
+        fileDiff.setSrc(String.format("%s",((Event.UnlinkEvent)event).getPath()));
+        fileDiff.setParameters("");
         metaStore.insertFileDiff(fileDiff);
         return this.getUnlinkSql((Event.UnlinkEvent)event);
     }

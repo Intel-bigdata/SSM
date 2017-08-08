@@ -112,6 +112,7 @@ public class FileDiffDao {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("did", fileDiff.getDiffId());
     parameters.put("diff_type", fileDiff.getDiffType().getValue());
+    parameters.put("src", fileDiff.getSrc());
     parameters.put("parameters", fileDiff.getParameters());
     parameters.put("applied", fileDiff.isApplied());
     parameters.put("create_time", fileDiff.getCreate_time());
@@ -127,6 +128,7 @@ public class FileDiffDao {
       fileDiff.setApplied(resultSet.getBoolean("applied"));
       fileDiff.setCreate_time(resultSet.getLong("create_time"));
       fileDiff.setParameters(resultSet.getString("parameters"));
+      fileDiff.setSrc(resultSet.getString("src"));
 
       return fileDiff;
     }
