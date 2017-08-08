@@ -47,6 +47,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Deprecated
 public class CopyScheduler extends AbstractService {
   static final Logger LOG = LoggerFactory.getLogger(CopyScheduler.class);
 

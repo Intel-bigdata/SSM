@@ -36,6 +36,7 @@ import org.smartdata.server.engine.CopyTargetTask;
 import java.io.IOException;
 import java.util.List;
 
+@Deprecated
 public class TestCopySchedular extends MiniSmartClusterHarness {
 
   @Rule
