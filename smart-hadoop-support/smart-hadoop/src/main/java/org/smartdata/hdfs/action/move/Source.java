@@ -15,12 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action;
+package org.smartdata.hdfs.action.move;
 
-public class HdfsActionFactory27 extends HdfsActionFactory {
-  static {
-    addAction(AllSsdFileAction.class);
-    addAction(OneSsdFileAction.class);
-    addAction(ArchiveFileAction.class);
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
+
+/** A node that can be the sources of a block move */
+public class Source extends StorageGroup {
+
+  /**
+   * Source blocks point to the objects in {@link org.apache.hadoop.hdfs.server.balancer.Dispatcher#globalBlocks}
+   * because we want to keep one copy of a block and be aware that the
+   * locations are changing over time.
+   */
+  //private final List<DBlock> srcBlocks = new ArrayList<DBlock>();
+
+  public Source(String storageType, DatanodeInfo dn) {
+    super(dn, storageType);
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
   }
 }

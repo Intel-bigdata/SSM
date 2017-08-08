@@ -18,7 +18,6 @@
 package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
@@ -35,6 +34,7 @@ import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.action.SchedulePlan;
 import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.MLocation;
@@ -91,8 +91,7 @@ public class MoverProcessor {
 
   private DBlock newDBlock(LocatedBlock lb, List<MLocation> locations) {
     Block blk = lb.getBlock().getLocalBlock();
-    DBlock db;
-    db = new DBlock(blk);
+    DBlock db = new DBlock(blk);
     for(MLocation ml : locations) {
       StorageGroup source = storages.getSource(ml);
       if (source != null) {
@@ -162,7 +161,8 @@ public class MoverProcessor {
       LOG.warn("Failed to get the storage policy of file " + fullPath);
       return;
     }
-    List<StorageType> types = policy.chooseStorageTypes(status.getReplication());
+    List<String> types =
+        CompatibilityHelperLoader.getHelper().chooseStorageTypes(policy, status.getReplication());
 
     final LocatedBlocks locatedBlocks = status.getBlockLocations();
     final boolean lastBlkComplete = locatedBlocks.isLastBlockComplete();
@@ -173,7 +173,8 @@ public class MoverProcessor {
         continue;
       }
       LocatedBlock lb = lbs.get(i);
-      final StorageTypeDiff diff = new StorageTypeDiff(types, lb.getStorageTypes());
+      final StorageTypeDiff diff =
+          new StorageTypeDiff(types, CompatibilityHelperLoader.getHelper().getStorageTypes(lb));
       int remainingReplications = diff.removeOverlap(true);
       moverStatus.increaseTotalSize(lb.getBlockSize() * remainingReplications);
       moverStatus.increaseTotalBlocks(remainingReplications);
@@ -197,10 +198,10 @@ public class MoverProcessor {
     boolean needMove = false;
 
     for (int i = 0; i < diff.existing.size(); i++) {
-      StorageType t = diff.existing.get(i);
+      String t = diff.existing.get(i);
       MLocation ml = locations.get(i);
       final Source source = storages.getSource(ml);
-      if (ml.getStorageType() == t && source != null) {
+      if (ml.getStorageType().equals(t) && source != null) {
         // try to schedule one replica move.
         if (scheduleMoveReplica(db, source, Arrays.asList(diff.expected.get(i)))) {
           needMove = true;
@@ -211,7 +212,7 @@ public class MoverProcessor {
   }
 
   boolean scheduleMoveReplica(DBlock db, Source source,
-                              List<StorageType> targetTypes) {
+                              List<String> targetTypes) {
     // Match storage on the same node
     if (chooseTargetInSameNode(db, source, targetTypes)) {
       return true;
@@ -235,8 +236,8 @@ public class MoverProcessor {
    * Choose the target storage within same Datanode if possible.
    */
   boolean chooseTargetInSameNode(DBlock db, Source source,
-                                 List<StorageType> targetTypes) {
-    for (StorageType t : targetTypes) {
+                                 List<String> targetTypes) {
+    for (String t : targetTypes) {
       StorageGroup target = storages.getTarget(source.getDatanodeInfo()
               .getDatanodeUuid(), t);
       if (target == null) {
@@ -255,9 +256,9 @@ public class MoverProcessor {
   }
 
   boolean chooseTarget(DBlock db, Source source,
-                       List<StorageType> targetTypes, Matcher matcher) {
+                       List<String> targetTypes, Matcher matcher) {
     final NetworkTopology cluster = dispatcher.getCluster();
-    for (StorageType t : targetTypes) {
+    for (String t : targetTypes) {
       final List<StorageGroup> targets = storages.getTargetStorages(t);
       Collections.shuffle(targets);
       for (StorageGroup target : targets) {
@@ -341,12 +342,12 @@ public class MoverProcessor {
    * destination during Mover.
    */
   class StorageTypeDiff {
-    final List<StorageType> expected;
-    final List<StorageType> existing;
+    final List<String> expected;
+    final List<String> existing;
 
-    StorageTypeDiff(List<StorageType> expected, StorageType[] existing) {
-      this.expected = new LinkedList<StorageType>(expected);
-      this.existing = new LinkedList<StorageType>(Arrays.asList(existing));
+    StorageTypeDiff(List<String> expected, String[] existing) {
+      this.expected = new LinkedList<String>(expected);
+      this.existing = new LinkedList<String>(Arrays.asList(existing));
     }
 
     /**
@@ -357,8 +358,8 @@ public class MoverProcessor {
      * @returns the remaining number of replications to move.
      */
     int removeOverlap(boolean ignoreNonMovable) {
-      for(Iterator<StorageType> i = existing.iterator(); i.hasNext(); ) {
-        final StorageType t = i.next();
+      for(Iterator<String> i = existing.iterator(); i.hasNext(); ) {
+        final String t = i.next();
         if (expected.remove(t)) {
           i.remove();
         }
@@ -370,10 +371,10 @@ public class MoverProcessor {
       return existing.size() < expected.size() ? existing.size() : expected.size();
     }
 
-    void removeNonMovable(List<StorageType> types) {
-      for (Iterator<StorageType> i = types.iterator(); i.hasNext(); ) {
-        final StorageType t = i.next();
-        if (!t.isMovable()) {
+    void removeNonMovable(List<String> types) {
+      for (Iterator<String> i = types.iterator(); i.hasNext(); ) {
+        final String t = i.next();
+        if (!CompatibilityHelperLoader.getHelper().isMovable(t)) {
           i.remove();
         }
       }

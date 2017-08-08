@@ -17,7 +17,6 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -26,6 +25,7 @@ import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.action.move.Source;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.hdfs.action.move.StorageMap;
@@ -35,14 +35,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatanodeStorageReportProcTask implements Runnable {
+  private static final int maxConcurrentMovesPerNode = 5;
   private DFSClient client;
-  private StorageMap storages = new StorageMap();
-  private int maxConcurrentMovesPerNode = 5;
+  private StorageMap storages;
   public static final Logger LOG =
       LoggerFactory.getLogger(DatanodeStorageReportProcTask.class);
 
   public DatanodeStorageReportProcTask(DFSClient client) throws IOException {
     this.client = client;
+    this.storages = new StorageMap();
   }
 
   public StorageMap getStorages() {
@@ -52,11 +53,11 @@ public class DatanodeStorageReportProcTask implements Runnable {
   @Override
   public void run() {
     try {
-      final List<DatanodeStorageReport> reports = init();
+      final List<DatanodeStorageReport> reports = getDNStorageReports();
       for(DatanodeStorageReport r : reports) {
         // TODO: store data abstracted from reports to MetaStore
         final DDatanode dn = new DDatanode(r.getDatanodeInfo(), maxConcurrentMovesPerNode);
-        for(StorageType t : StorageType.getMovableTypes()) {
+        for(String t : CompatibilityHelperLoader.getHelper().getMovableTypes()) {
           final Source source = dn.addSource(t);
           final long maxRemaining = getMaxRemaining(r, t);
           final StorageGroup target = maxRemaining > 0L ? dn.addTarget(t) : null;
@@ -68,10 +69,10 @@ public class DatanodeStorageReportProcTask implements Runnable {
     }
   }
 
-  private static long getMaxRemaining(DatanodeStorageReport report, StorageType t) {
+  private static long getMaxRemaining(DatanodeStorageReport report, String type) {
     long max = 0L;
     for(StorageReport r : report.getStorageReports()) {
-      if (r.getStorage().getStorageType() == t) {
+      if (CompatibilityHelperLoader.getHelper().getStorageType(r).equals(type)) {
         if (r.getRemaining() > max) {
           max = r.getRemaining();
         }
@@ -85,7 +86,7 @@ public class DatanodeStorageReportProcTask implements Runnable {
    * @return
    * @throws IOException
    */
-  public List<DatanodeStorageReport> init() throws IOException {
+  public List<DatanodeStorageReport> getDNStorageReports() throws IOException {
     final DatanodeStorageReport[] reports =
         client.getDatanodeStorageReport(DatanodeReportType.LIVE);
     final List<DatanodeStorageReport> trimmed = new ArrayList<DatanodeStorageReport>();
