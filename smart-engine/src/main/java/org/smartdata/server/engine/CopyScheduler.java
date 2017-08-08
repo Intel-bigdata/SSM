@@ -238,7 +238,7 @@ public class CopyScheduler extends AbstractService {
 
     private void enQueue() throws IOException, ParseException {
       // Move diffs to running queue
-      while (runningDR.size() < MAX_RUNNING_SIZE) {
+      while (pendingDR.size() > 0 && runningDR.size() < MAX_RUNNING_SIZE) {
         FileDiff fileDiff = pendingDR.poll();
         LOG.info("filediff -file {} {}", fileDiff.getSrc(), fileDiff.getParameters());
         String cmd = cmdParsing(fileDiff, srcBase, destBase);
