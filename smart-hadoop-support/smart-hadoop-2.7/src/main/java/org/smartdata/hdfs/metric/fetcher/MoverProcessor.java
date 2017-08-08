@@ -28,7 +28,6 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
-import org.apache.hadoop.hdfs.server.balancer.Dispatcher;
 import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.hdfs.server.balancer.Matcher;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
@@ -58,7 +57,7 @@ public class MoverProcessor {
   static final Logger LOG = LoggerFactory.getLogger(MoverProcessor.class);
 
   private final DFSClient dfs;
-  private Dispatcher dispatcher;
+  private NetworkTopology networkTopology;
   private final StorageMap storages;
   private final AtomicInteger retryCount;
 
@@ -71,9 +70,10 @@ public class MoverProcessor {
 
 
   public MoverProcessor(DFSClient dfsClient, StorageMap storages,
-      MoverStatus moverStatus) throws IOException {
+      NetworkTopology cluster, MoverStatus moverStatus) throws IOException {
     this.dfs = dfsClient;
     this.storages = storages;
+    this.networkTopology = cluster;
     this.retryCount = new AtomicInteger(1);
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
         BlockStoragePolicySuite.ID_BIT_LENGTH];
@@ -217,7 +217,7 @@ public class MoverProcessor {
       return true;
     }
 
-    if (dispatcher.getCluster().isNodeGroupAware()) {
+    if (networkTopology.isNodeGroupAware()) {
       if (chooseTarget(db, source, targetTypes, Matcher.SAME_NODE_GROUP)) {
         return true;
       }
@@ -256,7 +256,7 @@ public class MoverProcessor {
 
   boolean chooseTarget(DBlock db, Source source,
                        List<StorageType> targetTypes, Matcher matcher) {
-    final NetworkTopology cluster = dispatcher.getCluster();
+    final NetworkTopology cluster = this.networkTopology;
     for (StorageType t : targetTypes) {
       final List<StorageGroup> targets = storages.getTargetStorages(t);
       Collections.shuffle(targets);

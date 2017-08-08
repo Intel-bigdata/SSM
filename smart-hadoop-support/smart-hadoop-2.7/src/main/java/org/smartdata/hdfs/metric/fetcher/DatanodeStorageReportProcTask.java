@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSUtil;
@@ -24,6 +25,7 @@ import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
+import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.action.move.Source;
@@ -36,26 +38,40 @@ import java.util.List;
 
 public class DatanodeStorageReportProcTask implements Runnable {
   private DFSClient client;
-  private StorageMap storages = new StorageMap();
+  private StorageMap storages;
+  private NetworkTopology networkTopology;
+  private Configuration conf;
   private int maxConcurrentMovesPerNode = 5;
   public static final Logger LOG =
       LoggerFactory.getLogger(DatanodeStorageReportProcTask.class);
 
-  public DatanodeStorageReportProcTask(DFSClient client) throws IOException {
+  public DatanodeStorageReportProcTask(DFSClient client, Configuration conf) throws IOException {
     this.client = client;
+    this.conf = conf;
   }
 
   public StorageMap getStorages() {
     return storages;
   }
 
+  public NetworkTopology getNetworkTopology() {
+    return networkTopology;
+  }
+
+  public void reset() {
+    storages = new StorageMap();
+    networkTopology = NetworkTopology.getInstance(conf);
+  }
+
   @Override
   public void run() {
     try {
+      reset();
       final List<DatanodeStorageReport> reports = init();
       for(DatanodeStorageReport r : reports) {
         // TODO: store data abstracted from reports to MetaStore
         final DDatanode dn = new DDatanode(r.getDatanodeInfo(), maxConcurrentMovesPerNode);
+        networkTopology.add(r.getDatanodeInfo());
         for(StorageType t : StorageType.getMovableTypes()) {
           final Source source = dn.addSource(t);
           final long maxRemaining = getMaxRemaining(r, t);
