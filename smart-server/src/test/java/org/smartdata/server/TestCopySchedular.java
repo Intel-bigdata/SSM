@@ -88,13 +88,12 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
     // Clear file_diffs
     Thread.sleep(1500);
     ssm.getMetaStore().deleteAllFileDiff();
-
     // init forceSync
     copyScheduler.forceSync(srcPath, destPath);
     copyScheduler.start();
-    Thread.sleep(2200);
+    Thread.sleep(2500);
     while (true) {
-      Thread.sleep(1500);
+      Thread.sleep(2000);
       int current = ssm.getCmdletManager().getCmdletsSizeInCache();
       System.out.printf("Current running cmdlet number: %d\n", current);
       if (current == 0) {
@@ -127,9 +126,9 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
       // Write 10 files
       DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
     }
-    Thread.sleep(2200);
+    Thread.sleep(2500);
     while (true) {
-      Thread.sleep(1500);
+      Thread.sleep(2000);
       int current = ssm.getCmdletManager().getCmdletsSizeInCache();
       System.out.printf("Current running cmdlet number: %d\n", current);
       if (current == 0) {
