@@ -46,20 +46,22 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     FileDiff fileDiff = new FileDiff();
     fileDiff.setDiffType(FileDiffType.APPEND);
+    fileDiff.setSrc("/root/test");
     // Create and write
-    fileDiff.setParameters("-file /root/test");
+    fileDiff.setParameters("");
     String cmd =
         CopyScheduler.cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
     Assert.assertTrue(
         cmd.equals("copy -file /root/test -dest /localhost:3306/backup/test"));
-    fileDiff.setParameters("-file /root/test -length 1024");
+    // Test Copy
+    fileDiff.setParameters("-length 1024");
     cmd =
         CopyScheduler.cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
     Assert.assertTrue(cmd.equals(
         "copy -file /root/test -dest /localhost:3306/backup/test -length 1024"));
-    // Rename
+    // Test Rename
     fileDiff.setDiffType(FileDiffType.RENAME);
-    fileDiff.setParameters("-file /root/test -dest /root/test2 -length 1024");
+    fileDiff.setParameters("-dest /root/test2 -length 1024");
     cmd =
         CopyScheduler.cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
     Assert.assertTrue(
@@ -86,13 +88,12 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
     // Clear file_diffs
     Thread.sleep(1500);
     ssm.getMetaStore().deleteAllFileDiff();
-
     // init forceSync
     copyScheduler.forceSync(srcPath, destPath);
     copyScheduler.start();
-    Thread.sleep(2200);
+    Thread.sleep(2500);
     while (true) {
-      Thread.sleep(1500);
+      Thread.sleep(2000);
       int current = ssm.getCmdletManager().getCmdletsSizeInCache();
       System.out.printf("Current running cmdlet number: %d\n", current);
       if (current == 0) {
@@ -125,9 +126,9 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
       // Write 10 files
       DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
     }
-    Thread.sleep(2200);
+    Thread.sleep(2500);
     while (true) {
-      Thread.sleep(1500);
+      Thread.sleep(2000);
       int current = ssm.getCmdletManager().getCmdletsSizeInCache();
       System.out.printf("Current running cmdlet number: %d\n", current);
       if (current == 0) {
@@ -144,7 +145,7 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
 
 
   @Test
-  public void testCopyScheduler() throws IOException {
+  public void testSplitCopyFile() throws IOException {
     DistributedFileSystem dfs = cluster.getFileSystem();
 
     final String srcPath = "/testCopy";

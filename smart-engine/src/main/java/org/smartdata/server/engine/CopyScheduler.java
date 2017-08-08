@@ -184,26 +184,15 @@ public class CopyScheduler extends AbstractService {
     // Create and Write
     // TODO should not use string parsing
     if (fileDiff.getDiffType() == FileDiffType.CREATE || fileDiff.getDiffType() == FileDiffType.APPEND ) {
-      String cmd = String.format("copy %s", fileDiff.getParameters());
-      // Locate -file
-      int start = cmd.indexOf("-file");
-      if (start < 0) {
-        return "";
-      }
-      start += 6;
-      int end = cmd.indexOf(' ', start);
-      if (end < 0) {
-        end = cmd.length();
-      }
-      String localPath = cmd.substring(start, end);
-      String destPath = localPath.replace(srcBase, destBase);
-      if (end == cmd.length()) {
+      String cmd = String.format("copy -file %s", fileDiff.getSrc());
+      String destPath = fileDiff.getSrc().replace(srcBase, destBase);
+      if (fileDiff.getParameters().length() == 0) {
         return String.format("%s -dest %s", cmd, destPath);
       } else {
-        return String.format("%s -dest %s %s", cmd.substring(0, end), destPath, cmd.substring(end + 1));
+        return String.format("%s -dest %s %s", cmd, destPath, fileDiff.getParameters());
       }
     } else {
-      String cmd = String.format("rename %s", fileDiff.getParameters());
+      String cmd = String.format("rename -file %s %s", fileDiff.getSrc(), fileDiff.getParameters());
       // Locate -dest
       return cmd.replace(srcBase, destBase);
     }
@@ -226,7 +215,8 @@ public class CopyScheduler extends AbstractService {
       // Insert to fill_diff
       FileDiff fileDiff = new FileDiff();
       fileDiff.setDiffType(FileDiffType.APPEND);
-      fileDiff.setParameters(String.format("-file %s -dest %s", src, dest));
+      fileDiff.setSrc(src);
+      fileDiff.setParameters("");
       copyMetaService.insertFileDiff(fileDiff);
     }
   }
@@ -250,10 +240,10 @@ public class CopyScheduler extends AbstractService {
       // Move diffs to running queue
       while (runningDR.size() < MAX_RUNNING_SIZE) {
         FileDiff fileDiff = pendingDR.poll();
-        LOG.info("filediff {}", fileDiff.getParameters());
+        LOG.info("filediff -file {} {}", fileDiff.getSrc(), fileDiff.getParameters());
         String cmd = cmdParsing(fileDiff, srcBase, destBase);
-        CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmd);
         LOG.info("cmd = {}", cmd);
+        CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmd);
         long cid = cmdletManager.submitCmdlet(cmdletDescriptor);
         runningDR.put(cid, fileDiff.getDiffId());
       }
@@ -262,8 +252,8 @@ public class CopyScheduler extends AbstractService {
     private void addToPending() throws MetaServiceException {
       List<FileDiff> latestFileDiff = copyMetaService.getLatestFileDiff();
       for (FileDiff fileDiff : latestFileDiff) {
-        // TODO filter with src and dest
-        if (!pendingDR.contains(fileDiff) && fileDiff.getParameters().contains(srcBase)) {
+        // TODO filter with dest
+        if (!pendingDR.contains(fileDiff) && fileDiff.getSrc().contains(srcBase)) {
           pendingDR.add(fileDiff);
         }
       }

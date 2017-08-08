@@ -25,7 +25,7 @@
     <module>smart-maven-plugins</module>
     <module>smart-common</module>
     <module>smart-metrics</module>
-    <module>smart-actions</module>
+    <module>smart-action</module>
     <module>smart-metastore</module>
     <module>smart-client</module>
     <module>smart-admin</module>
@@ -36,7 +36,7 @@
     <module>smart-agent</module>
     <module>smart-dist</module>
     <module>smart-integration</module>
-    <module>smart-hadoop</module>
+    <module>smart-hadoop-support</module>
   </modules>
 
   <properties>
@@ -71,7 +71,6 @@
       </activation>
       <modules>
         <module>smart-alluxio</module>
-        <module>smart-erasurecode</module>
       </modules>
     </profile>
 

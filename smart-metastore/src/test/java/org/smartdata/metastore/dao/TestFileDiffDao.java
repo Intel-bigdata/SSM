@@ -48,6 +48,7 @@ public class TestFileDiffDao extends TestDaoUtil{
     FileDiff fileDiff = new FileDiff();
     fileDiff.setDiffId(1);
     fileDiff.setParameters("test");
+    fileDiff.setSrc("test");
     fileDiff.setApplied(true);
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setCreate_time(1);
@@ -61,6 +62,7 @@ public class TestFileDiffDao extends TestDaoUtil{
     fileDiffs[0] = new FileDiff();
     fileDiffs[0].setDiffId(1);
     fileDiffs[0].setParameters("test");
+    fileDiffs[0].setSrc("test");
     fileDiffs[0].setApplied(true);
     fileDiffs[0].setDiffType(FileDiffType.APPEND);
     fileDiffs[0].setCreate_time(1);
@@ -68,6 +70,7 @@ public class TestFileDiffDao extends TestDaoUtil{
     fileDiffs[1] = new FileDiff();
     fileDiffs[1].setDiffId(2);
     fileDiffs[1].setParameters("test");
+    fileDiffs[1].setSrc("test");
     fileDiffs[1].setApplied(true);
     fileDiffs[1].setDiffType(FileDiffType.APPEND);
     fileDiffs[1].setCreate_time(1);
@@ -84,6 +87,7 @@ public class TestFileDiffDao extends TestDaoUtil{
     FileDiff fileDiff = new FileDiff();
     fileDiff.setDiffId(1);
     fileDiff.setParameters("test");
+    fileDiff.setSrc("test");
     fileDiff.setApplied(true);
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setCreate_time(1);

@@ -20,7 +20,7 @@ package org.smartdata.server.rest;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionRegistry;
+import org.smartdata.action.ActionRegistry;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
