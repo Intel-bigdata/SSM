@@ -247,21 +247,23 @@ public class MetaStoreUtils {
             ") ;",
         "CREATE TABLE global_config (\n" +
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            " property_name varchar(4096) NOT NULL UNIQUE,\n" +
-            " property_value varchar(4096 ) NOT NULL\n" +
+            " property_name varchar(3072) NOT NULL UNIQUE,\n" +
+            " property_value varchar(3072) NOT NULL\n" +
             ") ;",
         "CREATE TABLE cluster_config (\n" +
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            " node_name varchar(4096) NOT NULL UNIQUE,\n" +
-            " config_path varchar(4096) NOT NULL\n" +
+            " node_name varchar(3072) NOT NULL UNIQUE,\n" +
+            " config_path varchar(3072) NOT NULL\n" +
             ") ;"
     };
     try {
+      String url = conn.getMetaData().getURL();
+      boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
       for (String s : createEmptyTables) {
-        String url = conn.getMetaData().getURL();
-        if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+        if (mysql) {
           s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
         }
+        LOG.debug(s);
         executeSql(conn, s);
       }
     } catch (Exception e) {

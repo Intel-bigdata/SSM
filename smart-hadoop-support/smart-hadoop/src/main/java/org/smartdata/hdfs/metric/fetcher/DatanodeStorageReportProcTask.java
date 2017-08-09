@@ -17,12 +17,14 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
+import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
@@ -38,21 +40,34 @@ public class DatanodeStorageReportProcTask implements Runnable {
   private static final int maxConcurrentMovesPerNode = 5;
   private DFSClient client;
   private StorageMap storages;
+  private NetworkTopology networkTopology;
+  private Configuration conf;
   public static final Logger LOG =
       LoggerFactory.getLogger(DatanodeStorageReportProcTask.class);
 
-  public DatanodeStorageReportProcTask(DFSClient client) throws IOException {
+  public DatanodeStorageReportProcTask(DFSClient client, Configuration conf) throws IOException {
     this.client = client;
     this.storages = new StorageMap();
+    this.conf = conf;
   }
 
   public StorageMap getStorages() {
     return storages;
   }
 
+  public NetworkTopology getNetworkTopology() {
+    return networkTopology;
+  }
+
+  public void reset() {
+    storages = new StorageMap();
+    networkTopology = NetworkTopology.getInstance(conf);
+  }
+
   @Override
   public void run() {
     try {
+      reset();
       final List<DatanodeStorageReport> reports = getDNStorageReports();
       for(DatanodeStorageReport r : reports) {
         // TODO: store data abstracted from reports to MetaStore
