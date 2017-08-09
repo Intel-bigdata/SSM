@@ -255,6 +255,12 @@ public class MetaStoreUtils {
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             " node_name varchar(3072) NOT NULL UNIQUE,\n" +
             " config_path varchar(3072) NOT NULL\n" +
+            ") ;",
+        "CREATE TABLE back_up (\n" +
+            " rid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            " src varchar(4096) NOT NULL,\n" +
+            " dest varchar(4096) NOT NULL,\n" +
+            " period bigint(20) NOT NULL\n" +
             ") ;"
     };
     try {
