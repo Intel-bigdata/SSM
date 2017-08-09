@@ -813,7 +813,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
 
   @Override
   public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
-    return fileDiffDao.getALL();
+    return fileDiffDao.getAllUnApplied();
   }
 
   @Override

@@ -47,6 +47,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Deprecated
 public class CopyScheduler extends AbstractService {
   static final Logger LOG = LoggerFactory.getLogger(CopyScheduler.class);
 
@@ -63,8 +64,8 @@ public class CopyScheduler extends AbstractService {
   private Map<Long, Long> runningDR;
   private String srcBase;
   private String destBase;
-  // TODO currently set max running list.size == 1 for test
-  private final int MAX_RUNNING_SIZE = 5;
+  // TODO currently set max running list.size == 10 for test
+  private final int MAX_RUNNING_SIZE = 10;
 
   public CopyScheduler(ServerContext context) {
     super(context);
@@ -78,7 +79,7 @@ public class CopyScheduler extends AbstractService {
     this.pendingDR = new LinkedBlockingQueue<>();
   }
 
-  public int getQueueSize() {
+  public int getCachedSize() {
     return runningDR.size() + pendingDR.size();
   }
 
@@ -217,6 +218,7 @@ public class CopyScheduler extends AbstractService {
       fileDiff.setDiffType(FileDiffType.APPEND);
       fileDiff.setSrc(src);
       fileDiff.setParameters("");
+      fileDiff.setCreate_time(System.currentTimeMillis());
       copyMetaService.insertFileDiff(fileDiff);
     }
   }
@@ -253,7 +255,13 @@ public class CopyScheduler extends AbstractService {
       List<FileDiff> latestFileDiff = copyMetaService.getLatestFileDiff();
       for (FileDiff fileDiff : latestFileDiff) {
         // TODO filter with dest
-        if (!pendingDR.contains(fileDiff) && fileDiff.getSrc().contains(srcBase)) {
+        if (runningDR.containsValue(fileDiff.getDiffId())) {
+          continue;
+        }
+        if (pendingDR.contains(fileDiff)) {
+          continue;
+        }
+        if (fileDiff.getSrc().contains(srcBase)) {
           pendingDR.add(fileDiff);
         }
       }
@@ -263,8 +271,8 @@ public class CopyScheduler extends AbstractService {
     public void run() {
       try {
         // Add new diffs to pending list
-        addToPending();
         runningStatusUpdate();
+        addToPending();
         enQueue();
       } catch (IOException | MetaServiceException | ParseException e) {
         LOG.error("Disaster Recovery Manager schedule error", e);

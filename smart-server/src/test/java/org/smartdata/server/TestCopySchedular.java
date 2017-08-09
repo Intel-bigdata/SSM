@@ -33,9 +33,11 @@ import org.smartdata.model.FileDiffType;
 import org.smartdata.server.engine.CopyScheduler;
 import org.smartdata.server.engine.CopyTargetTask;
 
+import javax.swing.table.TableCellRenderer;
 import java.io.IOException;
 import java.util.List;
 
+@Deprecated
 public class TestCopySchedular extends MiniSmartClusterHarness {
 
   @Rule
@@ -69,7 +71,7 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
             "rename -file /localhost:3306/backup/test -dest /localhost:3306/backup/test2 -length 1024"));
   }
 
-  @Test
+  @Test(timeout = 40000)
   public void testForceSync() throws Exception {
     waitTillSSMExitSafeMode();
     DistributedFileSystem dfs = cluster.getFileSystem();
@@ -82,7 +84,7 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
     CopyScheduler copyScheduler = new CopyScheduler(ssm.getContext(),
         ssm.getCmdletManager(), client, srcPath, destPath);
     // Write to src
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 3; i++) {
       DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
     }
     // Clear file_diffs
@@ -91,16 +93,17 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
     // init forceSync
     copyScheduler.forceSync(srcPath, destPath);
     copyScheduler.start();
-    Thread.sleep(1500);
-    while (true) {
-      Thread.sleep(2000);
-      int current = ssm.getCmdletManager().getCmdletsSizeInCache();
-      System.out.printf("Current running cmdlet number: %d\n", current);
-      if (current == 0) {
-        break;
-      }
+    while (copyScheduler.getCachedSize() == 0) {
+      Thread.sleep(100);
     }
-    for (int i = 0; i < 5; i++) {
+    while (ssm.getCmdletManager().getActionsSizeInCache() != 0 ||
+        copyScheduler.getCachedSize() != 0) {
+      System.out.printf("Size of cmdlet %d\n", ssm.getCmdletManager().getActionsSizeInCache());
+      System.out.printf("Size of copy %d\n", copyScheduler.getCachedSize());
+      System.out.println("In Dead Loop!");
+      Thread.sleep(2000);
+    }
+    for (int i = 0; i < 3; i++) {
       // Write 10 files
       Assert.assertTrue(dfs.exists(new Path(destPath + i)));
       System.out.printf("File %d is force copied.\n", i);
@@ -109,7 +112,7 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
   }
 
 
-  @Test
+  @Test(timeout = 40000)
   public void testDiffApplied() throws Exception {
     waitTillSSMExitSafeMode();
     DistributedFileSystem dfs = cluster.getFileSystem();
@@ -122,20 +125,22 @@ public class TestCopySchedular extends MiniSmartClusterHarness {
     CopyScheduler copyScheduler = new CopyScheduler(ssm.getContext(),
         ssm.getCmdletManager(), client, srcPath, destPath);
     copyScheduler.start();
-    for (int i = 0; i < 5; i++) {
+    Thread.sleep(2000);
+    for (int i = 0; i < 3; i++) {
       // Write 10 files
       DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
     }
-    Thread.sleep(1500);
-    while (true) {
-      Thread.sleep(2000);
-      int current = ssm.getCmdletManager().getCmdletsSizeInCache();
-      System.out.printf("Current running cmdlet number: %d\n", current);
-      if (current == 0) {
-        break;
-      }
+    while (copyScheduler.getCachedSize() == 0) {
+      Thread.sleep(100);
     }
-    for (int i = 0; i < 5; i++) {
+    while (ssm.getCmdletManager().getActionsSizeInCache() != 0 ||
+        copyScheduler.getCachedSize() != 0) {
+      Thread.sleep(2000);
+      System.out.printf("Size of cmdlet %d\n", ssm.getCmdletManager().getActionsSizeInCache());
+      System.out.printf("Size of copy %d\n", copyScheduler.getCachedSize());
+      System.out.println("In Dead Loop!");
+    }
+    for (int i = 0; i < 3; i++) {
       // Write 10 files
       Assert.assertTrue(dfs.exists(new Path(destPath + i)));
       System.out.printf("File %d is copied.\n", i);

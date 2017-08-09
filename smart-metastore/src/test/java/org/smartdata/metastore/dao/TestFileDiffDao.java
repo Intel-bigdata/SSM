@@ -76,7 +76,7 @@ public class TestFileDiffDao extends TestDaoUtil{
     fileDiffs[1].setCreate_time(1);
 
     fileDiffDao.insert(fileDiffs);
-    List<FileDiff> fileInfoList = fileDiffDao.getALL();
+    List<FileDiff> fileInfoList = fileDiffDao.getAll();
     for (int i = 0; i < 2; i++) {
       Assert.assertTrue(fileInfoList.get(i).equals(fileDiffs[i]));
     }
@@ -88,14 +88,15 @@ public class TestFileDiffDao extends TestDaoUtil{
     fileDiff.setDiffId(1);
     fileDiff.setParameters("test");
     fileDiff.setSrc("test");
-    fileDiff.setApplied(true);
+    fileDiff.setApplied(false);
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setCreate_time(1);
     fileDiffDao.insert(fileDiff);
 
-    fileDiffDao.update(1,false);
-    fileDiff.setApplied(false);
+    fileDiffDao.update(1,true);
+    fileDiff.setApplied(true);
 
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
+    Assert.assertTrue(fileDiffDao.getAllUnApplied().size() == 0);
   }
 }
