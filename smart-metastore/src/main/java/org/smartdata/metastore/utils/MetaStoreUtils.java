@@ -257,12 +257,13 @@ public class MetaStoreUtils {
             ") ;"
     };
     try {
+      String url = conn.getMetaData().getURL();
+      boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
       for (String s : createEmptyTables) {
-        String url = conn.getMetaData().getURL();
-        if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+        if (mysql) {
           s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
         }
-        LOG.info(s);
+        LOG.debug(s);
         executeSql(conn, s);
       }
     } catch (Exception e) {
