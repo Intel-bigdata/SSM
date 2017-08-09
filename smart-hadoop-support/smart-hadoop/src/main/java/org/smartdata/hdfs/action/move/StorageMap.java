@@ -18,10 +18,9 @@
 package org.smartdata.hdfs.action.move;
 
 import com.google.common.base.Preconditions;
-import org.apache.hadoop.fs.StorageType;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.util.Collection;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,15 +30,15 @@ import java.util.Map;
  * Storage map.
  */
 public class StorageMap {
-  private final StorageGroupMap<Source> sources
-          = new StorageGroupMap<>();
-  private final StorageGroupMap<StorageGroup> targets
-          = new StorageGroupMap<>();
-  private final EnumMap<StorageType, List<StorageGroup>> targetStorageTypeMap
-          = new EnumMap<>(StorageType.class);
+  private final StorageGroupMap<Source> sources;
+  private final StorageGroupMap<StorageGroup> targets;
+  private final Map<String, List<StorageGroup>> targetStorageTypeMap;
 
   public StorageMap() {
-    for (StorageType t : StorageType.getMovableTypes()) {
+    this.sources = new StorageGroupMap<>();
+    this.targets = new StorageGroupMap<>();
+    this.targetStorageTypeMap = new HashMap<>();
+    for (String t : CompatibilityHelperLoader.getHelper().getMovableTypes()) {
       targetStorageTypeMap.put(t, new LinkedList<StorageGroup>());
     }
   }
@@ -60,7 +59,7 @@ public class StorageMap {
     return targets;
   }
 
-  public StorageGroup getTarget(String uuid, StorageType storageType) {
+  public StorageGroup getTarget(String uuid, String storageType) {
     return targets.get(uuid, storageType);
   }
 
@@ -68,18 +67,18 @@ public class StorageMap {
     return map.get(ml.datanode.getDatanodeUuid(), ml.storageType);
   }
 
-  public List<StorageGroup> getTargetStorages(StorageType t) {
+  public List<StorageGroup> getTargetStorages(String t) {
     return targetStorageTypeMap.get(t);
   }
 
   public static class StorageGroupMap<G extends StorageGroup> {
-    private static String toKey(String datanodeUuid, StorageType storageType) {
+    private static String toKey(String datanodeUuid, String storageType) {
       return datanodeUuid + ":" + storageType;
     }
 
     private final Map<String, G> map = new HashMap<String, G>();
 
-    public G get(String datanodeUuid, StorageType storageType) {
+    public G get(String datanodeUuid, String storageType) {
       return map.get(toKey(datanodeUuid, storageType));
     }
 
