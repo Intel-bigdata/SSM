@@ -27,6 +27,7 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
@@ -72,7 +73,7 @@ public class InotifyEventApplier {
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
     FileDiff fileDiff = new FileDiff();
     fileDiff.setCreate_time(System.currentTimeMillis());
-    fileDiff.setApplied(false);
+    fileDiff.setState(FileDiffState.PENDING);
     switch (event.getEventType()) {
       // TODO parse and save to fileDiff
       case CREATE:
