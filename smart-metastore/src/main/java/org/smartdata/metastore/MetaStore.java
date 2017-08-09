@@ -46,6 +46,7 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.RuleInfo;
@@ -803,17 +804,22 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
   }
 
   @Override
-  public boolean markFileDiffApplied(long did) throws MetaStoreException {
+  public boolean markFileDiffApplied(long did, FileDiffState state) throws MetaStoreException {
     try {
-      return fileDiffDao.update(did,true) >= 0;
+      return fileDiffDao.update(did, state) >= 0;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
   @Override
-  public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
-    return fileDiffDao.getAllUnApplied();
+  public List<FileDiff> getPendingDiff() throws MetaStoreException {
+    return fileDiffDao.getPendingDiff();
+  }
+
+  @Override
+  public List<FileDiff> getPendingDiff(long rid) throws MetaStoreException {
+    return fileDiffDao.getPendingDiff(rid);
   }
 
   @Override

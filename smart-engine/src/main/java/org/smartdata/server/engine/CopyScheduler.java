@@ -32,6 +32,7 @@ import org.smartdata.metaservice.MetaServiceException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 
 import java.io.IOException;
@@ -216,6 +217,9 @@ public class CopyScheduler extends AbstractService {
       // Insert to fill_diff
       FileDiff fileDiff = new FileDiff();
       fileDiff.setDiffType(FileDiffType.APPEND);
+      fileDiff.setState(FileDiffState.PENDING);
+      // TODO add rule ID
+      fileDiff.setRuleId(-1);
       fileDiff.setSrc(src);
       fileDiff.setParameters("");
       fileDiff.setCreate_time(System.currentTimeMillis());
@@ -232,7 +236,7 @@ public class CopyScheduler extends AbstractService {
         // Check if this cmdlet is finished
         if (cmdletMetaService.getCmdletById(entry.getKey()).getState() == CmdletState.DONE) {
           // Remove from running list
-          copyMetaService.markFileDiffApplied(entry.getValue());
+          copyMetaService.markFileDiffApplied(entry.getValue(), FileDiffState.APPLIED);
           it.remove();
         }
       }
@@ -252,7 +256,7 @@ public class CopyScheduler extends AbstractService {
     }
 
     private void addToPending() throws MetaServiceException {
-      List<FileDiff> latestFileDiff = copyMetaService.getLatestFileDiff();
+      List<FileDiff> latestFileDiff = copyMetaService.getPendingDiff();
       for (FileDiff fileDiff : latestFileDiff) {
         // TODO filter with dest
         if (runningDR.containsValue(fileDiff.getDiffId())) {

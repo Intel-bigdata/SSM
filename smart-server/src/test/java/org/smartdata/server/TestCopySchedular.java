@@ -33,7 +33,6 @@ import org.smartdata.model.FileDiffType;
 import org.smartdata.server.engine.CopyScheduler;
 import org.smartdata.server.engine.CopyTargetTask;
 
-import javax.swing.table.TableCellRenderer;
 import java.io.IOException;
 import java.util.List;
 

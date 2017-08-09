@@ -22,8 +22,10 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.metaservice.CmdletMetaService;
 import org.smartdata.metaservice.CopyMetaService;
+import org.smartdata.model.RuleInfo;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +38,8 @@ public class CentralizedCopyScheduler extends AbstractService {
 
   private CopyMetaService copyMetaService;
   private CmdletMetaService cmdletMetaService;
+
+  private Map<Long, RuleInfo> backupRules;
 
   public CentralizedCopyScheduler(ServerContext context) {
     super(context);
@@ -63,9 +67,20 @@ public class CentralizedCopyScheduler extends AbstractService {
 
   private class ScheduleTask implements Runnable {
 
+    private void syncRule() {
+      // TODO backup table and dao
+    }
+
     @Override
     public void run() {
+      syncRule();
       // TODO check dryRun copy cmdlets
+      for (RuleInfo ruleInfo : backupRules.values()) {
+        ruleInfo.getId();
+      }
+      // TODO Sync cmdlet
+
+      // TODO check and hanle collision of cmdlet
 
       // TODO Schedule these cmdlets and remove duplicate cmdlets
 
