@@ -380,6 +380,10 @@ public class CmdletManager extends AbstractService {
     return idToCmdlets.size();
   }
 
+  public int getActionsSizeInCache() {
+    return idToActions.size();
+  }
+
   public ActionInfo getActionInfo(long actionID) throws IOException {
     if (idToActions.containsKey(actionID)) {
       return idToActions.get(actionID);

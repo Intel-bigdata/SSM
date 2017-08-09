@@ -49,9 +49,14 @@ public class FileDiffDao {
     this.dataSource = dataSource;
   }
 
-  public List<FileDiff> getALL() {
+  public List<FileDiff> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from file_diff", new FileDiffRowMapper());
+  }
+
+  public List<FileDiff> getAllUnApplied() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("select * from file_diff where applied == 0", new FileDiffRowMapper());
   }
 
   public List<FileDiff> getByIds(List<Long> dids) {
