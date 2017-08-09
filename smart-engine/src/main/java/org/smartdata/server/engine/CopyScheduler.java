@@ -79,8 +79,8 @@ public class CopyScheduler extends AbstractService {
     this.pendingDR = new LinkedBlockingQueue<>();
   }
 
-  public int getRunningSize() {
-    return runningDR.size();
+  public int getCachedSize() {
+    return runningDR.size() + pendingDR.size();
   }
 
   public CopyScheduler(ServerContext context, CmdletManager cmdletManager,
@@ -218,6 +218,7 @@ public class CopyScheduler extends AbstractService {
       fileDiff.setDiffType(FileDiffType.APPEND);
       fileDiff.setSrc(src);
       fileDiff.setParameters("");
+      fileDiff.setCreate_time(System.currentTimeMillis());
       copyMetaService.insertFileDiff(fileDiff);
     }
   }
@@ -270,8 +271,8 @@ public class CopyScheduler extends AbstractService {
     public void run() {
       try {
         // Add new diffs to pending list
-        addToPending();
         runningStatusUpdate();
+        addToPending();
         enQueue();
       } catch (IOException | MetaServiceException | ParseException e) {
         LOG.error("Disaster Recovery Manager schedule error", e);

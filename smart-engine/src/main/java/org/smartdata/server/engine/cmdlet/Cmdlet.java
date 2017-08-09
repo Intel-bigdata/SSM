@@ -100,6 +100,7 @@ public class Cmdlet implements Runnable {
       }
     }
     state = CmdletState.DONE;
+    // TODO catch MetaStoreException and handle
     reportCurrentStatus();
   }
 
