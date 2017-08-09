@@ -18,7 +18,6 @@
 package org.smartdata.hdfs.metric.fetcher;
 
 import com.google.common.base.Preconditions;
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.util.Time;
 import org.smartdata.hdfs.action.move.PendingMove;
@@ -26,17 +25,16 @@ import org.smartdata.hdfs.action.move.Source;
 import org.smartdata.hdfs.action.move.StorageGroup;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** A class that keeps track of a datanode. */
 public class DDatanode {
   final DatanodeInfo datanode;
-  private final EnumMap<StorageType, Source> sourceMap
-      = new EnumMap<StorageType, Source>(StorageType.class);
-  private final EnumMap<StorageType, StorageGroup> targetMap
-      = new EnumMap<StorageType, StorageGroup>(StorageType.class);
-  protected long delayUntil = 0L;
+  private final Map<String, Source> sourceMap;
+  private final Map<String, StorageGroup> targetMap;
+  private long delayUntil = 0L;
   /** blocks being moved but not confirmed yet */
   private final List<PendingMove> pendings;
   private volatile boolean hasFailure = false;
@@ -49,27 +47,29 @@ public class DDatanode {
 
   public DDatanode(DatanodeInfo datanode, int maxConcurrentMoves) {
     this.datanode = datanode;
+    this.sourceMap = new HashMap<>();
+    this.targetMap = new HashMap<>();
     this.maxConcurrentMoves = maxConcurrentMoves;
-    this.pendings = new ArrayList<PendingMove>(maxConcurrentMoves);
+    this.pendings = new ArrayList<>(maxConcurrentMoves);
   }
 
   public DatanodeInfo getDatanodeInfo() {
     return datanode;
   }
 
-  private static <G extends StorageGroup> void put(StorageType storageType,
-      G g, EnumMap<StorageType, G> map) {
+  private static <G extends StorageGroup> void put(String storageType,
+      G g, Map<String, G> map) {
     final StorageGroup existing = map.put(storageType, g);
     Preconditions.checkState(existing == null);
   }
 
-  public StorageGroup addTarget(StorageType storageType) {
+  public StorageGroup addTarget(String storageType) {
     final StorageGroup g = new StorageGroup(this.datanode, storageType);
     put(storageType, g, targetMap);
     return g;
   }
 
-  public Source addSource(StorageType storageType) {
+  public Source addSource(String storageType) {
     final Source s = new Source(storageType, this.getDatanodeInfo());
     put(storageType, s, sourceMap);
     return s;

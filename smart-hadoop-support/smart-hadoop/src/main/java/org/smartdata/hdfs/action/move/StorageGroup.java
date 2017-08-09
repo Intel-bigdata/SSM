@@ -17,20 +17,19 @@
  */
 package org.smartdata.hdfs.action.move;
 
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 
 /** A group of storages in a datanode with the same storage type. */
 public class StorageGroup {
-  private final StorageType storageType;
+  private final String storageType;
   private DatanodeInfo datanode;
 
-  public StorageGroup(DatanodeInfo datanode, StorageType storageType) {
+  public StorageGroup(DatanodeInfo datanode, String storageType) {
     this.datanode = datanode;
     this.storageType = storageType;
   }
 
-  public StorageType getStorageType() {
+  public String getStorageType() {
     return storageType;
   }
 
@@ -61,7 +60,7 @@ public class StorageGroup {
       return false;
     } else {
       final StorageGroup that = (StorageGroup) obj;
-      return this.getStorageType() == that.getStorageType()
+      return this.getStorageType().equals(that.getStorageType())
           && this.getDatanodeInfo().equals(that.getDatanodeInfo());
     }
   }

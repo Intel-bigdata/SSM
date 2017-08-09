@@ -18,7 +18,6 @@
 package org.smartdata.hdfs.action.move;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -122,10 +121,10 @@ public class MoverExecutor {
     generateSourceMap();
 
     List<String> sourceUuids = plan.getSourceUuids();
-    List<StorageType> sourceStorageTypes = plan.getSourceStoragetypes();
+    List<String> sourceStorageTypes = plan.getSourceStoragetypes();
     List<String> targetIpAddrs = plan.getTargetIpAddrs();
     List<Integer> targetXferPorts = plan.getTargetXferPorts();
-    List<StorageType> targetStorageTypes = plan.getTargetStorageTypes();
+    List<String> targetStorageTypes = plan.getTargetStorageTypes();
     List<Long> blockIds = plan.getBlockIds();
 
     for (int planIndex = 0; planIndex < blockIds.size(); planIndex ++) {
@@ -135,10 +134,26 @@ public class MoverExecutor {
       DatanodeInfo sourceDatanode = sourceDatanodeMap.get(sourceUuids.get(planIndex));
       StorageGroup source = new StorageGroup(sourceDatanode, sourceStorageTypes.get(planIndex));
       //build target
-      DatanodeInfo targetDatanode = new DatanodeInfo(targetIpAddrs.get(planIndex),
-          null, null,
-          targetXferPorts.get(planIndex),
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, null);
+      DatanodeInfo targetDatanode =
+          new DatanodeInfo(
+              targetIpAddrs.get(planIndex),
+              null,
+              null,
+              targetXferPorts.get(planIndex),
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              null,
+              null);
       StorageGroup target = new StorageGroup(targetDatanode, targetStorageTypes.get(planIndex));
       // generate single move
       ReplicaMove replicaMove = new ReplicaMove(block, source, target, nnc, saslClient);
@@ -166,8 +181,6 @@ public class MoverExecutor {
       throw new RuntimeException("File does not exist.");
     }
     long length = fileStatus.getLen();
-    List<LocatedBlock> locatedBlocks = dfsClient.getLocatedBlocks(
-        fileName, 0, length).getLocatedBlocks();
-    return locatedBlocks;
+    return dfsClient.getLocatedBlocks(fileName, 0, length).getLocatedBlocks();
   }
 }

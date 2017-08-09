@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.apache.hadoop.util.VersionInfo;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.action.ActionException;
@@ -29,6 +30,7 @@ public class TestActionRegistry {
 
   @Test
   public void testInit() throws IOException {
+    System.out.println(VersionInfo.getBuildVersion());
     Set<String> actionNames = ActionRegistry.registeredActions();
     // System.out.print(actionNames.size());
     Assert.assertTrue(actionNames.size() > 0);
