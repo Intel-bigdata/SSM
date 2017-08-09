@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,21 +37,23 @@ public class DataNodeInfoFetcher {
   private final MetaStore metaStore;
   private final ScheduledExecutorService scheduledExecutorService;
   private ScheduledFuture dnStorageReportProcTaskFuture;
+  private Configuration conf;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(DataNodeInfoFetcher.class);
 
   public DataNodeInfoFetcher(DFSClient client, MetaStore metaStore,
-      ScheduledExecutorService service) {
+      ScheduledExecutorService service, Configuration conf) {
     this.client = client;
     this.metaStore = metaStore;
     this.scheduledExecutorService = service;
+    this.conf = conf;
   }
 
   public void start() throws IOException {
     LOG.info("Starting DataNodeInfoFetcher service ...");
 
-    DatanodeStorageReportProcTask procTask = new DatanodeStorageReportProcTask(client);
+    DatanodeStorageReportProcTask procTask = new DatanodeStorageReportProcTask(client, conf);
     dnStorageReportProcTaskFuture = scheduledExecutorService.scheduleAtFixedRate(
         procTask, 0, DN_STORAGE_REPORT_UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
 

@@ -66,9 +66,10 @@ public class MoverPreProcessService extends ActionPreProcessService {
    */
   public void start() throws IOException {
     // TODO: Will be removed when MetaStore part finished
-    DatanodeStorageReportProcTask task = new DatanodeStorageReportProcTask(client);
+    DatanodeStorageReportProcTask task =
+        new DatanodeStorageReportProcTask(client, getContext().getConf());
     task.run();
-    processor = new MoverProcessor(client, task.getStorages(), moverStatus);
+    processor = new MoverProcessor(client, task.getStorages(), task.getNetworkTopology(), moverStatus);
   }
 
   /**
