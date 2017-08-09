@@ -17,23 +17,24 @@ Benchmarks
 Use ErasureCodeBenchmarkThroughput tool to measure the reading performance. Each test case will run in two modes: sequential read and random read.
 
 ### 2. End-to-end Benchmark
-Use Spark Terasort to test the end-to-end performance.
+Use Terasort to test the end-to-end performance.
 
 Test Result
 -------------------------
 
 ### 1. Micro-benchmark
-![Throughput comparison][1]
+![Throughput comparison using 600GB data][1]
 * **Sequential read: cached situation offers 175% higher throughput than uncached situation.**
 * **Random read: cached situation offers 226% higher throughput than uncached situation.**
 * Cached situation has lower performance degrade when running random read vs. sequential read: the throughput is 2.9% down in cached situation, and 17.9% down in uncached situation.
 
-### 2. Terasort
-
-* Cached situation gives a speed up of x over uncached situation.
-
-
-  [1]: ./images/1502176966922.jpg
+### 2. Spark Terasort
+![End-to-end execution time using 300GB data][2]
+* Cached situation gives a speed up of 1.3x over uncached situation.
 
 
   
+
+
+  [1]: ./images/1502176966922.jpg
+  [2]: ./images/1502271216194.jpg
