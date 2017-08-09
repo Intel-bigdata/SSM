@@ -18,7 +18,6 @@
 package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
-import org.apache.hadoop.fs.StorageType;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -36,12 +35,12 @@ public class SchedulePlan {
 
   // info of source datanode
   private List<String> sourceUuids;
-  private List<StorageType> sourceStoragetypes;
+  private List<String> sourceStoragetypes;
 
   // info of target datanode
   private List<String> targetIpAddrs;
   private List<Integer> targetXferPorts;
-  private List<StorageType> targetStorageTypes;
+  private List<String> targetStorageTypes;
 
   // info of block
   private List<Long> blockIds;
@@ -69,8 +68,8 @@ public class SchedulePlan {
     this.namenode = namenode;
   }
 
-  public void addPlan(long blockId, String srcDatanodeUuid, StorageType srcStorageType,
-      String dstDataNodeIpAddr, int dstDataNodeXferPort, StorageType dstStorageType) {
+  public void addPlan(long blockId, String srcDatanodeUuid, String srcStorageType,
+      String dstDataNodeIpAddr, int dstDataNodeXferPort, String dstStorageType) {
     blockIds.add(blockId);
     sourceUuids.add(srcDatanodeUuid);
     sourceStoragetypes.add(srcStorageType);
@@ -83,7 +82,7 @@ public class SchedulePlan {
     return sourceUuids;
   }
 
-  public List<StorageType> getSourceStoragetypes() {
+  public List<String> getSourceStoragetypes() {
     return sourceStoragetypes;
   }
 
@@ -95,7 +94,7 @@ public class SchedulePlan {
     return targetXferPorts;
   }
 
-  public List<StorageType> getTargetStorageTypes() {
+  public List<String> getTargetStorageTypes() {
     return targetStorageTypes;
   }
 
