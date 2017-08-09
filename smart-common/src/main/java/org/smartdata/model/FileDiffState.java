@@ -15,22 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metaservice;
+package org.smartdata.model;
 
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
+public enum FileDiffState {
+  PENDING(0), // Ready for execution
+  RUNNING(1), // Still running
+  APPLIED(2);
 
-import java.util.List;
+  private int value;
 
-public interface CopyMetaService extends MetaService {
+  FileDiffState(int value) {
+    this.value = value;
+  }
 
-  boolean insertFileDiff(FileDiff fileDiff) throws MetaServiceException;
+  public static FileDiffState fromValue(int value) {
+    for (FileDiffState r : values()) {
+      if (value == r.getValue()) {
+        return r;
+      }
+    }
+    return null;
+  }
 
-  List<FileDiff> getPendingDiff() throws MetaServiceException;
+  public int getValue() {
+    return value;
+  }
 
-  List<FileDiff> getPendingDiff(long rid) throws MetaServiceException;
-
-  boolean markFileDiffApplied(long did, FileDiffState state) throws MetaServiceException;
-
-  void deleteAllFileDiff() throws MetaServiceException;
+  @Override
+  public String toString() {
+    return String.format("FileDiffState{value=%s} %s", value, super.toString());
+  }
 }
