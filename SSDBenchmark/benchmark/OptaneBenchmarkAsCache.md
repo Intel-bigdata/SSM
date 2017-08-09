@@ -30,9 +30,11 @@ Test Result
 
 ### 2. Spark Terasort
 ![End-to-end execution time using 300GB data][2]
-* Cached situation gives a speed up of 1.3x over uncached situation.
+* **Cached situation gives a speed up of 1.3x over uncached situation.**
 
+### 3. MapReduce Terasort
 
+* **Cached situation gives a speed up of x over uncached situation.**
   
 
 
