@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.model.BackUpInfo;
 
+import java.util.List;
+
 public class TestBackUpInfoDao extends TestDaoUtil{
   private BackUpInfoDao backUpInfoDao;
 
@@ -41,7 +43,7 @@ public class TestBackUpInfoDao extends TestDaoUtil{
   }
 
   @Test
-  public void testInsertAndGetSingleRecord(){
+  public void testInsertAndGetSingleRecord() {
     BackUpInfo backUpInfo = new BackUpInfo();
     backUpInfo.setRid(2);
     backUpInfo.setPeriod(1);
@@ -52,5 +54,50 @@ public class TestBackUpInfoDao extends TestDaoUtil{
     Assert.assertTrue(backUpInfoDao.getById(1).equals(backUpInfo));
   }
 
-  
+  @Test
+  public void testBatchInsert() {
+    BackUpInfo[] backUpInfos = new BackUpInfo[2];
+    backUpInfos[0] = new BackUpInfo(0, "test", "test", 1);
+    backUpInfos[1] = new BackUpInfo(0, "test", "test", 1);
+
+    backUpInfoDao.insert(backUpInfos);
+
+    backUpInfos[0].setRid(1);
+    backUpInfos[1].setRid(2);
+
+    Assert.assertTrue(backUpInfoDao.getById(1).equals(backUpInfos[0]));
+    Assert.assertTrue(backUpInfoDao.getById(2).equals(backUpInfos[1]));
+  }
+
+  @Test
+  public void testUpdate(){
+    BackUpInfo backUpInfo = new BackUpInfo();
+    backUpInfo.setRid(1);
+    backUpInfo.setSrc("test");
+    backUpInfo.setDest("test");
+    backUpInfo.setPeriod(1);
+
+    backUpInfoDao.insert(backUpInfo);
+    backUpInfoDao.update(1,2);
+    backUpInfo.setPeriod(2);
+    Assert.assertTrue(backUpInfoDao.getById(1).equals(backUpInfo));
+  }
+
+  @Test
+  public void testgetBySrc(){
+    Assert.assertTrue(backUpInfoDao.getByDest("1").size()==0);
+    BackUpInfo[] backUpInfos = new BackUpInfo[2];
+    backUpInfos[0] = new BackUpInfo(0, "test", "test", 1);
+    backUpInfos[1] = new BackUpInfo(0, "test", "test", 1);
+
+    backUpInfoDao.insert(backUpInfos);
+    backUpInfos[0].setRid(1);
+    backUpInfos[1].setRid(2);
+
+    List<BackUpInfo> list = backUpInfoDao.getBySrc("test");
+    Assert.assertTrue(list.size()==2);
+    Assert.assertTrue(list.get(0).equals(backUpInfos[0]));
+    Assert.assertTrue(list.get(1).equals(backUpInfos[1]));
+    Assert.assertTrue(backUpInfoDao.getCountById(1) == 0);
+  }
 }

@@ -54,10 +54,25 @@ public class BackUpInfoDao {
         new BackUpInfoRowMapper());
   }
 
+  public int getCountById(int rid){
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("select COUNT(*) from back_up where rid = ?",new Object[rid],Integer.class);
+  }
+
   public BackUpInfo getById(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("select * from back_up where rid = ?",
         new Object[]{rid}, new BackUpInfoRowMapper());
+  }
+
+  public List<BackUpInfo> getBySrc(String src) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("select * from back_up where src = ?", new Object[]{src}, new BackUpInfoRowMapper());
+  }
+
+  public List<BackUpInfo> getByDest(String dest) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("select * from back_up where dest = ?", new Object[]{dest}, new BackUpInfoRowMapper());
   }
 
 
@@ -80,11 +95,15 @@ public class BackUpInfoDao {
   public void insert(BackUpInfo[] backUpInfos){
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("back_up");
+    simpleJdbcInsert.usingGeneratedKeyColumns("rid");
     Map<String,Object>[] maps = new Map[backUpInfos.length];
     for (int i = 0; i < backUpInfos.length; i++){
       maps[i] = toMap(backUpInfos[i]);
     }
-    simpleJdbcInsert.executeBatch(maps);
+    int[] rids = simpleJdbcInsert.executeBatch(maps);
+    for (int i = 0; i < backUpInfos.length; i++){
+      backUpInfos[i].setRid(rids[i]);
+    }
   }
 
   public int update(long rid, long period) {
