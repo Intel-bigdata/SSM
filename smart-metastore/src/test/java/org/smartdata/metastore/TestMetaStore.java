@@ -610,9 +610,9 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsertAndListAllBackUpInfo() throws MetaStoreException {
-    BackUpInfo backUpInfo1 = new BackUpInfo(1,"test1","test1",1);
-    BackUpInfo backUpInfo2 = new BackUpInfo(2,"test2","test2",2);
-    BackUpInfo backUpInfo3 = new BackUpInfo(3,"test3","test3",3);
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    BackUpInfo backUpInfo2 = new BackUpInfo(2, "test2", "test2", 2);
+    BackUpInfo backUpInfo3 = new BackUpInfo(3, "test3", "test3", 3);
 
     metaStore.insertBackUpInfo(backUpInfo1);
     metaStore.insertBackUpInfo(backUpInfo2);

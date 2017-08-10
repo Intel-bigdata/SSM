@@ -97,6 +97,7 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS file_diff;",  // incremental diff for disaster recovery
         "DROP TABLE IF EXISTS global_config",
         "DROP TABLE IF EXISTS cluster_config",
+        "DROP TABLE IF EXISTS back_up",
 
 
         "CREATE TABLE access_count_tables (\n" +
