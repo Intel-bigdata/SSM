@@ -32,6 +32,7 @@ import org.smartdata.metaservice.MetaServiceException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 
 import java.io.IOException;
@@ -47,6 +48,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Deprecated
 public class CopyScheduler extends AbstractService {
   static final Logger LOG = LoggerFactory.getLogger(CopyScheduler.class);
 
@@ -63,8 +65,8 @@ public class CopyScheduler extends AbstractService {
   private Map<Long, Long> runningDR;
   private String srcBase;
   private String destBase;
-  // TODO currently set max running list.size == 1 for test
-  private final int MAX_RUNNING_SIZE = 5;
+  // TODO currently set max running list.size == 10 for test
+  private final int MAX_RUNNING_SIZE = 10;
 
   public CopyScheduler(ServerContext context) {
     super(context);
@@ -78,7 +80,7 @@ public class CopyScheduler extends AbstractService {
     this.pendingDR = new LinkedBlockingQueue<>();
   }
 
-  public int getQueueSize() {
+  public int getCachedSize() {
     return runningDR.size() + pendingDR.size();
   }
 
@@ -215,8 +217,12 @@ public class CopyScheduler extends AbstractService {
       // Insert to fill_diff
       FileDiff fileDiff = new FileDiff();
       fileDiff.setDiffType(FileDiffType.APPEND);
+      fileDiff.setState(FileDiffState.PENDING);
+      // TODO add rule ID
+      fileDiff.setRuleId(-1);
       fileDiff.setSrc(src);
       fileDiff.setParameters("");
+      fileDiff.setCreate_time(System.currentTimeMillis());
       copyMetaService.insertFileDiff(fileDiff);
     }
   }
@@ -230,7 +236,7 @@ public class CopyScheduler extends AbstractService {
         // Check if this cmdlet is finished
         if (cmdletMetaService.getCmdletById(entry.getKey()).getState() == CmdletState.DONE) {
           // Remove from running list
-          copyMetaService.markFileDiffApplied(entry.getValue());
+          copyMetaService.markFileDiffApplied(entry.getValue(), FileDiffState.APPLIED);
           it.remove();
         }
       }
@@ -250,10 +256,16 @@ public class CopyScheduler extends AbstractService {
     }
 
     private void addToPending() throws MetaServiceException {
-      List<FileDiff> latestFileDiff = copyMetaService.getLatestFileDiff();
+      List<FileDiff> latestFileDiff = copyMetaService.getPendingDiff();
       for (FileDiff fileDiff : latestFileDiff) {
         // TODO filter with dest
-        if (!pendingDR.contains(fileDiff) && fileDiff.getSrc().contains(srcBase)) {
+        if (runningDR.containsValue(fileDiff.getDiffId())) {
+          continue;
+        }
+        if (pendingDR.contains(fileDiff)) {
+          continue;
+        }
+        if (fileDiff.getSrc().contains(srcBase)) {
           pendingDR.add(fileDiff);
         }
       }
@@ -263,8 +275,8 @@ public class CopyScheduler extends AbstractService {
     public void run() {
       try {
         // Add new diffs to pending list
-        addToPending();
         runningStatusUpdate();
+        addToPending();
         enQueue();
       } catch (IOException | MetaServiceException | ParseException e) {
         LOG.error("Disaster Recovery Manager schedule error", e);

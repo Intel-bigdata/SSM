@@ -15,32 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action;
+package org.smartdata.model;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.smartdata.action.ActionException;
-import org.smartdata.action.ActionRegistry;
+public enum FileDiffState {
+  PENDING(0), // Ready for execution
+  RUNNING(1), // Still running
+  APPLIED(2);
 
-import java.io.IOException;
-import java.util.Set;
+  private int value;
 
-public class TestActionRegistry {
-
-  @Test
-  public void testInit() throws IOException {
-    Set<String> actionNames = ActionRegistry.registeredActions();
-    // System.out.print(actionNames.size());
-    Assert.assertTrue(actionNames.size() > 0);
+  FileDiffState(int value) {
+    this.value = value;
   }
 
-  @Test
-  public void testCreateAction() throws IOException, ActionException {
-    Assert.assertTrue(ActionRegistry.createAction("cache") instanceof CacheFileAction);
-    Set<String> actionNames = ActionRegistry.registeredActions();
-    // create all kinds of actions
-    for (String name : actionNames) {
-      ActionRegistry.createAction(name);
+  public static FileDiffState fromValue(int value) {
+    for (FileDiffState r : values()) {
+      if (value == r.getValue()) {
+        return r;
+      }
     }
+    return null;
+  }
+
+  public int getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("FileDiffState{value=%s} %s", value, super.toString());
   }
 }

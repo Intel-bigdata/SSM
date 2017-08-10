@@ -17,29 +17,32 @@
  */
 package org.smartdata.hdfs.action;
 
-import com.google.gson.Gson;
-import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.util.VersionInfo;
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.action.ActionException;
+import org.smartdata.action.ActionRegistry;
 
-import java.net.URI;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.Set;
 
-public class TestSchedulePlan {
+public class TestActionRegistry {
 
   @Test
-  public void testJsonConvertion() throws Exception {
-    URI nn = new URI("hdfs://localhost:8888");
-    String file = "/test/foofile";
-    SchedulePlan plan = new SchedulePlan(nn, file);
-    plan.addPlan(1L, UUID.randomUUID().toString(), StorageType.ARCHIVE, "127.0.0.1", 10001, StorageType.SSD);
-    plan.addPlan(2L, UUID.randomUUID().toString(), StorageType.ARCHIVE, "127.0.0.1", 10002, StorageType.SSD);
+  public void testInit() throws IOException {
+    System.out.println(VersionInfo.getBuildVersion());
+    Set<String> actionNames = ActionRegistry.registeredActions();
+    // System.out.print(actionNames.size());
+    Assert.assertTrue(actionNames.size() > 0);
+  }
 
-    Gson gson = new Gson();
-    String jsonPlan = gson.toJson(plan);
-
-    SchedulePlan plan2 = gson.fromJson(jsonPlan, SchedulePlan.class);
-    Assert.assertEquals(plan.getFileName(), plan2.getFileName());
-    Assert.assertEquals(plan.getBlockIds(), plan2.getBlockIds());
+  @Test
+  public void testCreateAction() throws IOException, ActionException {
+    Assert.assertTrue(ActionRegistry.createAction("cache") instanceof CacheFileAction);
+    Set<String> actionNames = ActionRegistry.registeredActions();
+    // create all kinds of actions
+    for (String name : actionNames) {
+      ActionRegistry.createAction(name);
+    }
   }
 }

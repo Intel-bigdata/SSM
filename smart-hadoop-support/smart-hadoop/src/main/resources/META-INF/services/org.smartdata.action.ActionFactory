@@ -13,4 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-org.smartdata.hdfs.action.HdfsActionFactory27
+org.smartdata.hdfs.action.HdfsActionFactory

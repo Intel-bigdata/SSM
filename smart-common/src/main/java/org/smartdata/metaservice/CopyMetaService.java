@@ -18,6 +18,7 @@
 package org.smartdata.metaservice;
 
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
 
 import java.util.List;
 
@@ -25,9 +26,11 @@ public interface CopyMetaService extends MetaService {
 
   boolean insertFileDiff(FileDiff fileDiff) throws MetaServiceException;
 
-  List<FileDiff> getLatestFileDiff() throws MetaServiceException;
+  List<FileDiff> getPendingDiff() throws MetaServiceException;
 
-  boolean markFileDiffApplied(long did) throws MetaServiceException;
+  List<FileDiff> getPendingDiff(long rid) throws MetaServiceException;
+
+  boolean markFileDiffApplied(long did, FileDiffState state) throws MetaServiceException;
 
   void deleteAllFileDiff() throws MetaServiceException;
 }

@@ -76,11 +76,11 @@ public class TestCmdlet extends MiniClusterHarness {
     // actions[0] = new AllSsdFileAction();
     // actions[0].setDfsClient(client);
     // actions[0].setContext(new SmartContext(smartConf));
-    // actions[0].init(new String[]{"/testMoveFile/file1"});
+    // actions[0].getDNStorageReports(new String[]{"/testMoveFile/file1"});
     // actions[1] = new MoveFileAction();
     // actions[1].setDfsClient(client);
     // actions[1].setContext(new SmartContext(smartConf));
-    // actions[1].init(new String[]{"/testMoveFile/file2", "COLD"});
+    // actions[1].getDNStorageReports(new String[]{"/testMoveFile/file2", "COLD"});
     actions[2] = new CacheFileAction();
     actions[2].setDfsClient(dfsClient);
     actions[2].setContext(smartContext);

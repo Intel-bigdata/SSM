@@ -25,6 +25,7 @@ import org.smartdata.metaservice.CopyMetaService;
 import org.smartdata.metastore.dao.AccessCountDao;
 import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.metastore.dao.ActionDao;
+import org.smartdata.metastore.dao.BackUpInfoDao;
 import org.smartdata.metastore.dao.CacheFileDao;
 import org.smartdata.metastore.dao.ClusterConfigDao;
 import org.smartdata.metastore.dao.CmdletDao;
@@ -39,6 +40,7 @@ import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.dao.DataNodeInfoDao;
 import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
@@ -46,6 +48,7 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.RuleInfo;
@@ -100,6 +103,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
   private GlobalConfigDao globalConfigDao;
   private DataNodeInfoDao dataNodeInfoDao;
   private DataNodeStorageInfoDao dataNodeStorageInfoDao;
+  private BackUpInfoDao backUpInfoDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -119,6 +123,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
     globalConfigDao = new GlobalConfigDao(pool.getDataSource());
     dataNodeInfoDao = new DataNodeInfoDao(pool.getDataSource());
     dataNodeStorageInfoDao = new DataNodeStorageInfoDao(pool.getDataSource());
+    backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -803,17 +808,22 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
   }
 
   @Override
-  public boolean markFileDiffApplied(long did) throws MetaStoreException {
+  public boolean markFileDiffApplied(long did, FileDiffState state) throws MetaStoreException {
     try {
-      return fileDiffDao.update(did,true) >= 0;
+      return fileDiffDao.update(did, state) >= 0;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
   @Override
-  public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
-    return fileDiffDao.getALL();
+  public List<FileDiff> getPendingDiff() throws MetaStoreException {
+    return fileDiffDao.getPendingDiff();
+  }
+
+  @Override
+  public List<FileDiff> getPendingDiff(long rid) throws MetaStoreException {
+    return fileDiffDao.getPendingDiff(rid);
   }
 
   @Override
@@ -1057,4 +1067,43 @@ public class MetaStore implements CopyMetaService, CmdletMetaService {
     }
   }
 
+  public List<BackUpInfo> listAllBackUpInfo() throws MetaStoreException {
+    try {
+      return backUpInfoDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public BackUpInfo getBackUpInfoById(int id) throws MetaStoreException {
+    try {
+      return backUpInfoDao.getById(id);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllBackUpInfo() throws MetaStoreException {
+    try {
+      backUpInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteBackUpInfoById(int id) throws MetaStoreException {
+    try {
+      backUpInfoDao.delete(id);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertBackUpInfo(BackUpInfo backUpInfo) throws MetaStoreException {
+    try {
+      backUpInfoDao.insert(backUpInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
 }

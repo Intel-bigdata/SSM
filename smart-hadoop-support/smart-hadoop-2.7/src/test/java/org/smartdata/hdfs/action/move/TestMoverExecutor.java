@@ -70,8 +70,8 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     for (LocatedBlock lb : MoverExecutor.getLocatedBlocks(dfsClient, fileName)) {
       ExtendedBlock block = lb.getBlock();
       for (DatanodeInfo datanodeInfo : lb.getLocations()) {
-        StorageGroup source = new StorageGroup(datanodeInfo, StorageType.DISK);
-        StorageGroup target = new StorageGroup(datanodeInfo, StorageType.SSD);
+        StorageGroup source = new StorageGroup(datanodeInfo, StorageType.DISK.toString());
+        StorageGroup target = new StorageGroup(datanodeInfo, StorageType.SSD.toString());
         addPlan(plan, source, target, block.getBlockId());
       }
     }
@@ -115,8 +115,8 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     for (DatanodeStorageReport report : reports) {
       DatanodeInfo targetDatanode = report.getDatanodeInfo();
       if (!fileNodes.contains(targetDatanode)) {
-        StorageGroup source = new StorageGroup(fileNodes.iterator().next(), StorageType.DISK);
-        StorageGroup target = new StorageGroup(targetDatanode, StorageType.SSD);
+        StorageGroup source = new StorageGroup(fileNodes.iterator().next(), StorageType.DISK.toString());
+        StorageGroup target = new StorageGroup(targetDatanode, StorageType.SSD.toString());
         addPlan(plan, source, target, block.getBlockId());
         break;
       }
