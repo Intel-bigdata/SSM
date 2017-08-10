@@ -30,8 +30,8 @@ Test Result
 * Cached situation has lower performance degrade when running random read vs. sequential read.
 
 ### 2. Spark Terasort
-![End-to-end execution time using 300GB data][2]
-* **Cached situation gives a speed up of 1.3x over uncached situation.**
+![Spark Terasort benchmark using 300GB data][2]
+* **Cached situation is 23% faster than uncached situation.**
 
 ### 3. MapReduce Terasort
 
@@ -40,4 +40,4 @@ Test Result
 
 
   [1]: ./images/1502331267181.jpg
-  [2]: ./images/1502271216194.jpg
+  [2]: ./images/1502343336987.jpg
