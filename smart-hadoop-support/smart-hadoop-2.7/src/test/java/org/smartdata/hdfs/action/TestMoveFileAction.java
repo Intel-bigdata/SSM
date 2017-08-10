@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.hdfs.action.move.MoverExecutor;
-import org.smartdata.hdfs.action.move.MoverStatus;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.StatusMessage;
@@ -66,29 +65,27 @@ public class TestMoveFileAction extends MiniClusterHarness {
     moveFileAction1.setDfsClient(dfsClient);
     moveFileAction1.setContext(smartContext);
     moveFileAction1.setStatusReporter(new MockActionStatusReporter());
-
     Map<String, String> args1 = new HashMap();
     args1.put(MoveFileAction.FILE_PATH, dir);
     String storageType1 = "ONE_SSD";
     args1.put(MoveFileAction.STORAGE_POLICY, storageType1);
-    SchedulePlan plan = createPlan(file1, storageType1);
-    args1.put(MoveFileAction.MOVE_PLAN, plan.toString());
+    SchedulePlan plan1 = createPlan(file1, storageType1);
+    args1.put(MoveFileAction.MOVE_PLAN, plan1.toString());
 
     MoveFileAction moveFileAction2 = new MoveFileAction();
     moveFileAction2.setDfsClient(dfsClient);
     moveFileAction2.setContext(smartContext);
     moveFileAction2.setStatusReporter(new MockActionStatusReporter());
-
     Map<String, String> args2 = new HashMap();
     args2.put(MoveFileAction.FILE_PATH, dir);
     String storageType2 = "ONE_SSD";
     args2.put(MoveFileAction.STORAGE_POLICY, storageType2);
-    SchedulePlan plan2 = createPlan(file1, storageType2);
-    args2.put(MoveFileAction.MOVE_PLAN, plan.toString());
+    SchedulePlan plan2 = createPlan(file2, storageType2);
+    args2.put(MoveFileAction.MOVE_PLAN, plan2.toString());
 
+    //init and run
     moveFileAction1.init(args1);
     moveFileAction2.init(args2);
-
     moveFileAction1.run();
     moveFileAction2.run();
   }
@@ -110,7 +107,6 @@ public class TestMoveFileAction extends MiniClusterHarness {
     moveFileAction.setDfsClient(dfsClient);
     moveFileAction.setContext(smartContext);
     moveFileAction.setStatusReporter(new MockActionStatusReporter());
-
     Map<String, String> args = new HashMap();
     args.put(MoveFileAction.FILE_PATH, dir);
     String storageType = "ONE_SSD";
@@ -118,71 +114,11 @@ public class TestMoveFileAction extends MiniClusterHarness {
     SchedulePlan plan = createPlan(file, storageType);
     args.put(MoveFileAction.MOVE_PLAN, plan.toString());
 
+    //init and run
     moveFileAction.init(args);
     moveFileAction.run();
   }
-
-
-
-//  @Test(timeout = 300000)
-//  public void testMoverPercentage() throws Exception {
-//    final String file1 = "/testParallelMovers/file1";
-//    final String file2 = "/testParallelMovers/child/file2";
-//    String dir = "/testParallelMovers";
-//    dfs.mkdirs(new Path(dir));
-//    dfs.mkdirs(new Path("/testParallelMovers/child"));
-//
-//    // write to DISK
-//    dfs.setStoragePolicy(new Path(dir), "HOT");
-//    final FSDataOutputStream out1 = dfs.create(new Path(file1), (short)5);
-//    final String string1 = "testParallelMovers1";
-//    out1.writeChars(string1);
-//    out1.close();
-//    final FSDataOutputStream out2 = dfs.create(new Path(file2));
-//    final String string2 = "testParallelMovers212345678901234567890";
-//    out2.writeChars(string2);
-//    out2.close();
-//
-//    // schedule move to ALL_SSD
-//    long totalSize1 = string1.length()*2*5;
-//    long blockNum1 = 1*5;
-//    long totalSize2 = string2.length()*2*3;
-//    long blockNum2 = 2*3;
-//    scheduleMoverWithPercentage(file1, "ALL_SSD", totalSize1,
-//        blockNum1);
-//
-//    // schedule move to ONE_SSD
-//    totalSize1 = string1.length()*2*4;
-//    blockNum1 = 1*4;
-//    totalSize2 = string2.length()*2*2;
-//    blockNum2 = 2*2;
-//    scheduleMoverWithPercentage(dir, "ONE_SSD", totalSize1 + totalSize2,
-//        blockNum1 + blockNum2);
-//  }
-//
-//  private void scheduleMoverWithPercentage(String dir, String storageType,
-//                                           long totalSize, long totolBlocks) throws Exception {
-//    MoveFileAction moveFileAction = new MoveFileAction();
-//    moveFileAction.setDfsClient(dfsClient);
-//    moveFileAction.setContext(smartContext);
-//    moveFileAction.setStatusReporter(new MockActionStatusReporter());
-//    Map<String, String> args = new HashMap();
-//    args.put(MoveFileAction.FILE_PATH, dir);
-//    args.put(MoveFileAction.STORAGE_POLICY, storageType);
-//    SchedulePlan plan = createPlan(dir, storageType);
-//    args.put(MoveFileAction.MOVE_PLAN, plan.toString());
-//
-//    moveFileAction.init(args);
-//    moveFileAction.run();
-//
-//    MoverStatus moverStatus = moveFileAction.getStatus();
-//    System.out.println("Mover is finished.");
-//    Assert.assertEquals(1.0f, moverStatus.getPercentage(), 0.00001f);
-//    Assert.assertEquals(1.0f, moveFileAction.getProgress(), 0.00001f);
-//    Assert.assertEquals(totalSize, moverStatus.getTotalSize());
-//    Assert.assertEquals(totolBlocks, moverStatus.getTotalBlocks());
-//  }
-
+  
   @Test(timeout = 300000)
   public void testMoveNonexitedFile() throws Exception {
     String dir = "/testParallelMovers";
