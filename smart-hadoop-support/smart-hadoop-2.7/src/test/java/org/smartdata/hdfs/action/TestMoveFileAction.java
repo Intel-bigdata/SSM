@@ -118,7 +118,7 @@ public class TestMoveFileAction extends MiniClusterHarness {
     moveFileAction.init(args);
     moveFileAction.run();
   }
-  
+
   @Test(timeout = 300000)
   public void testMoveNonexitedFile() throws Exception {
     String dir = "/testParallelMovers";
@@ -149,6 +149,7 @@ public class TestMoveFileAction extends MiniClusterHarness {
     final String file1 = "/testParallelMovers/file1";
     Path dir = new Path("/testParallelMovers");
     dfs.mkdirs(dir);
+
     // write to DISK
     dfs.setStoragePolicy(dir, "HOT");
     final FSDataOutputStream out1 = dfs.create(new Path(file1));
@@ -164,7 +165,7 @@ public class TestMoveFileAction extends MiniClusterHarness {
         "This is a block with 50B.");
     out1.close();
 
-    // schedule move to ARCHIVE or SSD
+    // schedule move to SSD
     ArchiveFileAction action1 = new ArchiveFileAction();
     action1.setDfsClient(dfsClient);
     action1.setContext(smartContext);
@@ -179,12 +180,9 @@ public class TestMoveFileAction extends MiniClusterHarness {
   }
 
   private SchedulePlan createPlan(String dir, String storageType) throws Exception {
-
     URI namenode = cluster.getURI();
-
     SchedulePlan plan = new SchedulePlan(namenode, dir);
-
-//     Schedule move in the same node
+    // Schedule move in the same node
     for (LocatedBlock lb : MoverExecutor.getLocatedBlocks(dfsClient, dir)) {
       ExtendedBlock block = lb.getBlock();
       for (DatanodeInfo datanodeInfo : lb.getLocations()) {
@@ -193,7 +191,6 @@ public class TestMoveFileAction extends MiniClusterHarness {
         addPlan(plan, source, target, block.getBlockId());
       }
     }
-
     return plan;
   }
 
