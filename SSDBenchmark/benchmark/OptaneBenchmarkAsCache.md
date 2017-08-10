@@ -23,8 +23,8 @@ Test Result
 -------------------------
 
 ### 1. Micro-benchmark
-Data size : 600GB
 ![Micro benchmark using 600GB data][1]
+* Data size : 600GB
 * **Sequential read: cached situation offers a speed up of 2.78x over uncached situation.**
 * **Random read (the data size read each time is 16MB): cached situation offers a speed up of 3.33x over uncached situation.**
 * **Random read (the data size read each time is 4MB): cached situation offers a speed up of 4.76x over uncached situation.**
@@ -32,10 +32,12 @@ Data size : 600GB
 
 ### 2. Spark Terasort
 ![Spark Terasort benchmark using 300GB data][2]
+* Data size : 300GB
 * **Cached situation offers a speed up of 1.3x over  uncached situation.**
 
 ### 3. MapReduce Terasort
 ![MapReduce Terasort benchmark using 300GB data][3]
+* Data size ： 300GB
 * **Cached situation gives a speed up of 1.22x over uncached situation.**
   
 
