@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.CmdletInfo;
@@ -607,4 +608,43 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(infos.size() == 0);
   }
 
+  @Test
+  public void testInsertAndListAllBackUpInfo() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    BackUpInfo backUpInfo2 = new BackUpInfo(2, "test2", "test2", 2);
+    BackUpInfo backUpInfo3 = new BackUpInfo(3, "test3", "test3", 3);
+
+    metaStore.insertBackUpInfo(backUpInfo1);
+    metaStore.insertBackUpInfo(backUpInfo2);
+    metaStore.insertBackUpInfo(backUpInfo3);
+
+    List<BackUpInfo> backUpInfos = metaStore.listAllBackUpInfo();
+
+    Assert.assertTrue(backUpInfos.get(0).equals(backUpInfo1));
+    Assert.assertTrue(backUpInfos.get(1).equals(backUpInfo2));
+    Assert.assertTrue(backUpInfos.get(2).equals(backUpInfo3));
+  }
+
+  @Test
+  public void testGetBackUpInfoById() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    metaStore.insertBackUpInfo(backUpInfo1);
+
+    Assert.assertTrue(metaStore.getBackUpInfoById(1).equals(backUpInfo1));
+  }
+
+  @Test
+  public void testDeleteBackUpInfo() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    metaStore.insertBackUpInfo(backUpInfo1);
+
+    metaStore.deleteBackUpInfoById(1);
+
+    Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
+
+    metaStore.insertBackUpInfo(backUpInfo1);
+    metaStore.deleteAllBackUpInfo();
+
+    Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
+  }
 }

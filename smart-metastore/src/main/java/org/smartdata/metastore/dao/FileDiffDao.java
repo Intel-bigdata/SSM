@@ -97,7 +97,6 @@ public class FileDiffDao {
     return did;
   }
 
-  // TODO slove the increment of key
   public void insert(FileDiff[] fileDiffs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
