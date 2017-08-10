@@ -20,26 +20,31 @@ package org.smartdata.server.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
+import org.smartdata.metaservice.BackupMetaService;
 import org.smartdata.metaservice.CmdletMetaService;
 import org.smartdata.metaservice.CopyMetaService;
-import org.smartdata.model.RuleInfo;
+import org.smartdata.metaservice.MetaServiceException;
+import org.smartdata.model.BackUpInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class CentralizedCopyScheduler extends AbstractService {
-  static final Logger LOG = LoggerFactory.getLogger(CentralizedCopyScheduler.class);
+  static final Logger LOG =
+      LoggerFactory.getLogger(CentralizedCopyScheduler.class);
 
   private ScheduledExecutorService executorService;
   private CmdletManager cmdletManager;
 
   private CopyMetaService copyMetaService;
   private CmdletMetaService cmdletMetaService;
+  private BackupMetaService backupMetaService;
 
-  private Map<Long, RuleInfo> backupRules;
+  private List<BackUpInfo> backUpInfos;
 
   public CentralizedCopyScheduler(ServerContext context) {
     super(context);
@@ -47,6 +52,7 @@ public class CentralizedCopyScheduler extends AbstractService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.copyMetaService = (CopyMetaService) context.getMetaService();
     this.cmdletMetaService = (CmdletMetaService) context.getMetaService();
+    this.backupMetaService = (BackupMetaService) context.getMetaService();
   }
 
   @Override
@@ -56,31 +62,71 @@ public class CentralizedCopyScheduler extends AbstractService {
 
   @Override
   public void start() throws IOException {
-    executorService.scheduleAtFixedRate(
-        new CentralizedCopyScheduler.ScheduleTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+    // TODO Enable this module later
+    // executorService.scheduleAtFixedRate(
+    //     new CentralizedCopyScheduler.ScheduleTask(), 1000, 1000,
+    //     TimeUnit.MILLISECONDS);
   }
 
   @Override
   public void stop() throws IOException {
-    executorService.shutdown();
+    // TODO Enable this module later
+    // executorService.shutdown();
   }
 
   private class ScheduleTask implements Runnable {
 
     private void syncRule() {
-      // TODO backup table and dao
+      try {
+        backUpInfos = backupMetaService.listAllBackUpInfo();
+      } catch (MetaServiceException e) {
+        LOG.debug("Sync backUpInfos error", e);
+      }
     }
 
     @Override
     public void run() {
       syncRule();
       // TODO check dryRun copy cmdlets
-      for (RuleInfo ruleInfo : backupRules.values()) {
-        ruleInfo.getId();
+      for (BackUpInfo backUpInfo : backUpInfos) {
+        // Go through all backup rules
+        long rid = backUpInfo.getRid();
+        int end = 0;
+        List<CmdletInfo> dryRunCmdlets = null;
+        try {
+          // Get all dry run cmdlets
+          dryRunCmdlets = cmdletMetaService.getCmdletsTableItem(null,
+              String.format("= %d", rid), CmdletState.DRYRUN);
+        } catch (MetaServiceException e) {
+          LOG.debug("Get latest dry run cmdlets error, rid={}", rid, e);
+        }
+        if (dryRunCmdlets == null || dryRunCmdlets.size() == 0) {
+          LOG.debug("rid={}, empty dry run cmdlets ", rid);
+          continue;
+        }
+        // Handle dry run cmdlets
+        // Mark them as pending (runnable) after pre-processing
+        do {
+          try {
+            // TODO optimize this pre-processing
+            // TODO Check namespace for current states
+            cmdletMetaService
+                .updateCmdletStatus(dryRunCmdlets.get(end).getCid(), rid,
+                    CmdletState.PENDING);
+          } catch (MetaServiceException e) {
+            LOG.debug("rid={}, empty dry run cmdlets ", rid);
+          }
+          // Split Copy tasks according to delete and rename
+          String currentParameter = dryRunCmdlets.get(end).getParameters();
+          if (currentParameter.contains("delete") ||
+              currentParameter.contains("rename")) {
+            break;
+          }
+          end++;
+        } while (true);
       }
-      // TODO Sync cmdlet
 
-      // TODO check and hanle collision of cmdlet
+      // TODO check and handle collision of cmdlet
 
       // TODO Schedule these cmdlets and remove duplicate cmdlets
 
