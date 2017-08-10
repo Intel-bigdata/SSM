@@ -20,6 +20,7 @@ package org.smartdata.metastore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.metaservice.BackupMetaService;
 import org.smartdata.metaservice.CmdletMetaService;
 import org.smartdata.metaservice.CopyMetaService;
 import org.smartdata.metastore.dao.AccessCountDao;
@@ -77,7 +78,7 @@ import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
 /**
  * Operations supported for upper functions.
  */
-public class MetaStore implements CopyMetaService, CmdletMetaService {
+public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMetaService {
   static final Logger LOG = LoggerFactory.getLogger(MetaStore.class);
 
   private DBPool pool = null;

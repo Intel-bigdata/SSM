@@ -17,19 +17,20 @@
  */
 package org.smartdata.metaservice;
 
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CmdletState;
+import org.smartdata.model.BackUpInfo;
 
 import java.util.List;
 
-public interface CmdletMetaService extends MetaService {
+public interface BackupMetaService extends MetaService {
 
-  CmdletInfo getCmdletById(long cid) throws MetaServiceException;
+  List<BackUpInfo> listAllBackUpInfo() throws MetaServiceException;
 
-  List<CmdletInfo> getCmdletsTableItem(String cidCondition,
-      String ridCondition, CmdletState state) throws MetaServiceException;
+  BackUpInfo getBackUpInfoById(int id) throws MetaServiceException;
 
-  boolean updateCmdletStatus(long cid, long rid, CmdletState state)
-      throws MetaServiceException;
+  void deleteAllBackUpInfo() throws MetaServiceException;
+
+  void deleteBackUpInfoById(int id) throws MetaServiceException;
+
+  void insertBackUpInfo(BackUpInfo backUpInfo) throws MetaServiceException;
 
 }
