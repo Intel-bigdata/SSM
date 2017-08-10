@@ -23,6 +23,7 @@ Test Result
 -------------------------
 
 ### 1. Micro-benchmark
+Data size : 600GB
 ![Micro benchmark using 600GB data][1]
 * **Sequential read: cached situation offers a speed up of 2.78x over uncached situation.**
 * **Random read (the data size read each time is 16MB): cached situation offers a speed up of 3.33x over uncached situation.**
