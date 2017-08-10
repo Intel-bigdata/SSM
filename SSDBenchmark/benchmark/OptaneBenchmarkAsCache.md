@@ -23,15 +23,15 @@ Test Result
 -------------------------
 
 ### 1. Micro-benchmark
-![Throughput comparison using 600GB data][1]
-* **Sequential read: cached situation offers 175% higher throughput than uncached situation.**
-* **Random read (the data size read each time is 16MB): cached situation offers 226% higher throughput than uncached situation.**
-* **Random read (the data size read each time is 4MB): cached situation offers 382% higher throughput than uncached situation.**
+![Micro benchmark using 600GB data][1]
+* **Sequential read: cached situation offers a speed up of 2.78x over uncached situation.**
+* **Random read (the data size read each time is 16MB): cached situation offers a speed up of 3.33x over uncached situation.**
+* **Random read (the data size read each time is 4MB): cached situation offers a speed up of 4.76x over uncached situation.**
 * Cached situation has lower performance degrade when running random read vs. sequential read.
 
 ### 2. Spark Terasort
 ![Spark Terasort benchmark using 300GB data][2]
-* **Cached situation is 23% faster than uncached situation.**
+* **Cached situation offers a speed up of 1.3x over  uncached situation.**
 
 ### 3. MapReduce Terasort
 
@@ -39,5 +39,5 @@ Test Result
   
 
 
-  [1]: ./images/1502331267181.jpg
+  [1]: ./images/1502345240892.jpg
   [2]: ./images/1502343336987.jpg
