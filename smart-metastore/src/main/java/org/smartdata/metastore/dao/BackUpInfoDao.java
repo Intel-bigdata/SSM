@@ -82,28 +82,20 @@ public class BackUpInfoDao {
     jdbcTemplate.update(sql, rid);
   }
 
-  public long insert(BackUpInfo backUpInfo){
+  public void insert(BackUpInfo backUpInfo){
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("back_up");
-    simpleJdbcInsert.usingGeneratedKeyColumns("rid");
-    // return rid
-    long rid = simpleJdbcInsert.executeAndReturnKey(toMap(backUpInfo)).longValue();
-    backUpInfo.setRid(rid);
-    return rid;
+    simpleJdbcInsert.execute(toMap(backUpInfo));
   }
 
   public void insert(BackUpInfo[] backUpInfos){
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("back_up");
-    simpleJdbcInsert.usingGeneratedKeyColumns("rid");
     Map<String,Object>[] maps = new Map[backUpInfos.length];
     for (int i = 0; i < backUpInfos.length; i++){
       maps[i] = toMap(backUpInfos[i]);
     }
-    int[] rids = simpleJdbcInsert.executeBatch(maps);
-    for (int i = 0; i < backUpInfos.length; i++){
-      backUpInfos[i].setRid(rids[i]);
-    }
+    simpleJdbcInsert.executeBatch(maps);
   }
 
   public int update(long rid, long period) {
