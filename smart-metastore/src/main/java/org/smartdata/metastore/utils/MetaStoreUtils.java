@@ -258,7 +258,7 @@ public class MetaStoreUtils {
             " config_path varchar(3072) NOT NULL\n" +
             ") ;",
         "CREATE TABLE back_up (\n" +
-            " rid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            " rid bigint(20) NOT NULL,\n" +
             " src varchar(4096) NOT NULL,\n" +
             " dest varchar(4096) NOT NULL,\n" +
             " period bigint(20) NOT NULL\n" +

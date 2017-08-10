@@ -45,7 +45,7 @@ public class TestBackUpInfoDao extends TestDaoUtil {
   @Test
   public void testInsertAndGetSingleRecord() {
     BackUpInfo backUpInfo = new BackUpInfo();
-    backUpInfo.setRid(2);
+    backUpInfo.setRid(1);
     backUpInfo.setPeriod(1);
     backUpInfo.setDest("");
     backUpInfo.setSrc("");
@@ -57,13 +57,11 @@ public class TestBackUpInfoDao extends TestDaoUtil {
   @Test
   public void testBatchInsert() {
     BackUpInfo[] backUpInfos = new BackUpInfo[2];
-    backUpInfos[0] = new BackUpInfo(0, "test", "test", 1);
-    backUpInfos[1] = new BackUpInfo(0, "test", "test", 1);
+    backUpInfos[0] = new BackUpInfo(1, "test", "test", 1);
+    backUpInfos[1] = new BackUpInfo(2, "test", "test", 1);
 
     backUpInfoDao.insert(backUpInfos);
 
-    backUpInfos[0].setRid(1);
-    backUpInfos[1].setRid(2);
 
     Assert.assertTrue(backUpInfoDao.getById(1).equals(backUpInfos[0]));
     Assert.assertTrue(backUpInfoDao.getById(2).equals(backUpInfos[1]));
@@ -87,12 +85,10 @@ public class TestBackUpInfoDao extends TestDaoUtil {
   public void testgetBySrc() {
     Assert.assertTrue(backUpInfoDao.getByDest("1").size() == 0);
     BackUpInfo[] backUpInfos = new BackUpInfo[2];
-    backUpInfos[0] = new BackUpInfo(0, "test", "test", 1);
-    backUpInfos[1] = new BackUpInfo(0, "test", "test", 1);
+    backUpInfos[0] = new BackUpInfo(1, "test", "test", 1);
+    backUpInfos[1] = new BackUpInfo(2, "test", "test", 1);
 
     backUpInfoDao.insert(backUpInfos);
-    backUpInfos[0].setRid(1);
-    backUpInfos[1].setRid(2);
     List<BackUpInfo> list = backUpInfoDao.getBySrc("test");
     Assert.assertTrue(list.size() == 2);
     Assert.assertTrue(list.get(0).equals(backUpInfos[0]));
