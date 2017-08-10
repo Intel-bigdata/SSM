@@ -34,10 +34,11 @@ Test Result
 * **Cached situation offers a speed up of 1.3x over  uncached situation.**
 
 ### 3. MapReduce Terasort
-
-* **Cached situation gives a speed up of x over uncached situation.**
+![MapReduce Terasort benchmark using 300GB data][3]
+* **Cached situation gives a speed up of 1.22x over uncached situation.**
   
 
 
   [1]: ./images/1502345240892.jpg
   [2]: ./images/1502343336987.jpg
+  [3]: ./images/1502347373327.jpg
