@@ -18,11 +18,13 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.hdfs.StorageType;
+import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
+import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
@@ -73,5 +75,38 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
   @Override
   public boolean isMovable(String type) {
     return StorageType.valueOf(type).isMovable();
+  }
+
+  @Override
+  public DatanodeInfo newDatanodeInfo(String ipAddress, int xferPort) {
+    return new DatanodeInfo(
+      ipAddress,
+      null,
+      null,
+      xferPort,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      null,
+      null);
+  }
+
+  @Override
+  public InotifyProtos.AppendEventProto getAppendEventProto(Event.AppendEvent event) {
+    return InotifyProtos.AppendEventProto.newBuilder()
+      .setPath(event.getPath()).build();
+  }
+
+  @Override
+  public Event.AppendEvent getAppendEvent(InotifyProtos.AppendEventProto proto) {
+    return new Event.AppendEvent.Builder().path(proto.getPath()).build();
   }
 }

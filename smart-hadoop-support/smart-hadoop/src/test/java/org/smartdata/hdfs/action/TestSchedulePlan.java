@@ -15,7 +15,6 @@
 package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
-import org.apache.hadoop.fs.StorageType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -32,17 +31,17 @@ public class TestSchedulePlan {
     plan.addPlan(
         1L,
         UUID.randomUUID().toString(),
-        StorageType.ARCHIVE.toString(),
+        "ARCHIVE",
         "127.0.0.1",
         10001,
-        StorageType.SSD.toString());
+       "SSD");
     plan.addPlan(
         2L,
         UUID.randomUUID().toString(),
-        StorageType.ARCHIVE.toString(),
+        "ARCHIVE",
         "127.0.0.1",
         10002,
-        StorageType.SSD.toString());
+        "SSD");
 
     Gson gson = new Gson();
     String jsonPlan = gson.toJson(plan);

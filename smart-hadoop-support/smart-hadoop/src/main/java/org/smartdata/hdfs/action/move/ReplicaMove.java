@@ -26,6 +26,7 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.SaslDataTransferClient;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos;
 import org.apache.hadoop.hdfs.protocolPB.PBHelper;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.security.token.block.InvalidBlockTokenException;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.io.IOUtils;
@@ -142,7 +143,27 @@ class ReplicaMove {
       response = DataTransferProtos.BlockOpResponseProto.parseFrom(PBHelper.vintPrefixed(in));
     }
     String logInfo = "block move is failed";
-    DataTransferProtoUtil.checkBlockOpStatus(response, logInfo);
+    checkBlockOpStatus(response, logInfo);
+  }
+
+  public static void checkBlockOpStatus(
+    DataTransferProtos.BlockOpResponseProto response,
+    String logInfo) throws IOException {
+    if (response.getStatus() != DataTransferProtos.Status.SUCCESS) {
+      if (response.getStatus() == DataTransferProtos.Status.ERROR_ACCESS_TOKEN) {
+        throw new InvalidBlockTokenException(
+          "Got access token error"
+            + ", status message " + response.getMessage()
+            + ", " + logInfo
+        );
+      } else {
+        throw new IOException(
+          "Got error"
+            + ", status message " + response.getMessage()
+            + ", " + logInfo
+        );
+      }
+    }
   }
 
   public static int failedMoves(List<ReplicaMove> allMoves) {
