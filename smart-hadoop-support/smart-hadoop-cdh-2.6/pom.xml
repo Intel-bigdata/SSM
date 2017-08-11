@@ -26,12 +26,12 @@
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>smart-hadoop-2.6</artifactId>
+    <artifactId>smart-hadoop-cdh-2.6</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
-        <hadoop.version>2.6.5</hadoop.version>
+        <hadoop.version>2.6.0-cdh5.10.1</hadoop.version>
     </properties>
 
     <dependencies>
@@ -44,6 +44,16 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <version>${hadoop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>

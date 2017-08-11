@@ -18,7 +18,6 @@
 package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.XAttrSetFlag;
@@ -29,6 +28,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,7 +44,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-public class TestInotifyFetcher {
+public abstract class TestInotifyFetcher {
   private static final int BLOCK_SIZE = 1024;
 
   private static class EventApplierForTest extends InotifyEventApplier {
@@ -114,8 +114,7 @@ public class TestInotifyFetcher {
       os.write(new byte[BLOCK_SIZE]);
       os.close(); // CloseOp -> CloseEvent
       // AddOp -> AppendEvent
-      os = client.append("/file2", BLOCK_SIZE, EnumSet.of(CreateFlag.APPEND),
-        null, null);
+      os = append(client, "/file2", BLOCK_SIZE);
       os.write(new byte[BLOCK_SIZE]);
       os.close(); // CloseOp -> CloseEvent
       Thread.sleep(10); // so that the atime will get updated on the next line
@@ -144,7 +143,7 @@ public class TestInotifyFetcher {
       client.removeAcl("/file5"); // SetAclOp -> MetadataUpdateEvent
       client.rename("/file5", "/dir"); // RenameOldOp -> RenameEvent
       //TruncateOp -> TruncateEvent
-      client.truncate("/truncate_file", BLOCK_SIZE);
+      //client.truncate("/truncate_file", BLOCK_SIZE);
 
       while (applierForTest.getEvents().size() != 21) {
         Thread.sleep(100);
@@ -181,4 +180,6 @@ public class TestInotifyFetcher {
       cluster.shutdown();
     }
   }
+
+  public abstract HdfsDataOutputStream append(DFSClient client, String src, int bufferSize) throws IOException;
 }

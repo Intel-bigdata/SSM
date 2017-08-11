@@ -28,6 +28,7 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.DataTransferSaslUtil;
 import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.SaslDataTransferClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.action.SchedulePlan;
 
 import java.io.IOException;
@@ -134,26 +135,7 @@ public class MoverExecutor {
       DatanodeInfo sourceDatanode = sourceDatanodeMap.get(sourceUuids.get(planIndex));
       StorageGroup source = new StorageGroup(sourceDatanode, sourceStorageTypes.get(planIndex));
       //build target
-      DatanodeInfo targetDatanode =
-          new DatanodeInfo(
-              targetIpAddrs.get(planIndex),
-              null,
-              null,
-              targetXferPorts.get(planIndex),
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              null,
-              null);
+      DatanodeInfo targetDatanode = CompatibilityHelperLoader.getHelper().newDatanodeInfo(targetIpAddrs.get(planIndex), targetXferPorts.get(planIndex));
       StorageGroup target = new StorageGroup(targetDatanode, targetStorageTypes.get(planIndex));
       // generate single move
       ReplicaMove replicaMove = new ReplicaMove(block, source, target, nnc, saslClient);
