@@ -29,7 +29,12 @@ public interface CmdletMetaService extends MetaService {
   List<CmdletInfo> getCmdletsTableItem(String cidCondition,
       String ridCondition, CmdletState state) throws MetaServiceException;
 
-  boolean updateCmdletStatus(long cid, long rid, CmdletState state)
+  boolean updateCmdlet(long cid, long rid, CmdletState state)
       throws MetaServiceException;
+
+  boolean updateCmdlet(long cid, String parameters, CmdletState state)
+      throws MetaServiceException;
+
+  void deleteCmdlet(long cid) throws MetaServiceException;
 
 }
