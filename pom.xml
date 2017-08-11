@@ -89,7 +89,7 @@
       </activation>
     </profile>
     <profile>
-      <id>hadoop-2.6</id>
+      <id>hadoop-cdh-2.6</id>
       <properties>
         <hadoop.version>2.6.0-cdh5.10.1</hadoop.version>
       </properties>

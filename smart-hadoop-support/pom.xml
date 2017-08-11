@@ -47,9 +47,9 @@
             </modules>
         </profile>
         <profile>
-            <id>hadoop-2.6</id>
+            <id>hadoop-cdh-2.6</id>
             <modules>
-                <module>smart-hadoop-2.6</module>
+                <module>smart-hadoop-cdh-2.6</module>
             </modules>
         </profile>
     </profiles>
