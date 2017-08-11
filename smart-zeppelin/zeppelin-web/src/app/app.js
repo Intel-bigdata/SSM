@@ -150,6 +150,36 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
           }]
         }
       })
+      .when('/mover', {
+        templateUrl: 'app/dashboard/views/mover/mover.html',
+        controller: 'MoverCtrl',
+        resolve: {
+          load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          actions0: ['models', function (models) {
+            return models.$get.actions();
+          }],
+          actionTypes: ['models', function (models) {
+            return models.$get.actionTypes();
+          }]
+        }
+      })
+      .when('/copy', {
+        templateUrl: 'app/dashboard/views/copy/copy.html',
+        controller: 'CopyCtrl',
+        resolve: {
+          load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          actions0: ['models', function (models) {
+            return models.$get.actions();
+          }],
+          actionTypes: ['models', function (models) {
+            return models.$get.actionTypes();
+          }]
+        }
+      })
       .when('/actions/action/:actionId', {
         templateUrl: 'app/dashboard/views/actions/action/action.html',
         controller: 'ActionCtrl',
@@ -246,13 +276,13 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
   // constants
   .constant('conf', {
     restapiProtocol: 'v1',
-    restapiRoot: 'http://localhost:8080/',
-    // restapiRoot: rootPath,
+    // restapiRoot: 'http://localhost:8080/',
+    restapiRoot: rootPath,
     restapiQueryInterval: 3 * 1000, // in milliseconds
     restapiQueryTimeout: 30 * 1000, // in milliseconds
     restapiTaskLevelMetricsQueryLimit: 100,
-    loginUrl: 'http://localhost:8080/' + 'login'
-    // loginUrl: rootPath + 'login'
+    // loginUrl: 'http://localhost:8080/' + 'login'
+    loginUrl: rootPath + 'login'
   })
   .constant('TRASH_FOLDER_ID', '~Trash');
 
