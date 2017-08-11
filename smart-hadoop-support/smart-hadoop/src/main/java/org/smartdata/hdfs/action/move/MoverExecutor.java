@@ -156,7 +156,7 @@ public class MoverExecutor {
     }
   }
 
-  static List<LocatedBlock> getLocatedBlocks(DFSClient dfsClient, String fileName)
+  public static List<LocatedBlock> getLocatedBlocks(DFSClient dfsClient, String fileName)
       throws IOException {
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
     if (fileStatus == null) {
