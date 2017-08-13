@@ -41,9 +41,15 @@ Test Result
 * **Cached situation gives a speed up of 1.22x over uncached situation.**
 
 ### 4. TestDFSIO
+#### I. End-to-end exection time
 ![enter description here][4]
 ![enter description here][5]
+* Sequential read: Cached situation gives a speed up of 7.1x when data size is 100G, and 4.2x when data size is 500G.
+* Random read: Cached situation gives a speed up of 7.2x when data size is 100G, and 6.4x when data size is 500G.
 
+#### II. Time per map task
+![enter description here][6]
+![enter description here][7]
   
 
 
@@ -52,3 +58,5 @@ Test Result
   [3]: ./images/1502347373327.jpg
   [4]: ./images/1502611015328.jpg
   [5]: ./images/1502611046818.jpg
+  [6]: ./images/1502611201474.jpg
+  [7]: ./images/1502611215657.jpg
