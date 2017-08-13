@@ -39,9 +39,16 @@ Test Result
 ![MapReduce Terasort benchmark using 300GB data][3]
 * Data size ： 300GB
 * **Cached situation gives a speed up of 1.22x over uncached situation.**
+
+### 4. TestDFSIO
+![enter description here][4]
+![enter description here][5]
+
   
 
 
   [1]: ./images/1502345240892.jpg
   [2]: ./images/1502343336987.jpg
   [3]: ./images/1502347373327.jpg
+  [4]: ./images/1502611015328.jpg
+  [5]: ./images/1502611046818.jpg
