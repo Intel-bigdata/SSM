@@ -370,15 +370,11 @@ public class TestMetaStore extends TestDaoUtil {
     CmdletInfo command2 = new CmdletInfo(1, 78,
         CmdletState.PAUSED, "tt", 123178333l, 232444994l);
     metaStore.insertCmdletTable(command2);
-    String cidCondition = ">= 0 ";
-    String ridCondition = "= 78 ";
-    CmdletState state = null;
-    CmdletState state1 = CmdletState.PAUSED;
-    List<CmdletInfo> com = metaStore.getCmdletsTableItem(cidCondition, ridCondition, state);
-    Assert.assertTrue(com.get(0).equals(command2));
-    List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(null,
-        null, state1);
-    Assert.assertTrue(com1.get(0).equals(command2));
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).equals(command1));
+    Assert.assertTrue(metaStore.getCmdletById(command2.getCid()).equals(command2));
+    metaStore.updateCmdlet(command1.getCid(), "TestParameter", CmdletState.DRYRUN);
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).getParameters().equals("TestParameter"));
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).getState().equals(CmdletState.DRYRUN));
   }
 
   @Test
@@ -401,7 +397,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(commandId == commands.length);
     for (CmdletInfo cmd : com) {
       // System.out.printf("Cid = %d \n", cmd.getCid());
-      metaStore.updateCmdletStatus(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
+      metaStore.updateCmdlet(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
     }
     List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 1);
