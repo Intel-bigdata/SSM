@@ -17,10 +17,12 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
@@ -48,4 +50,10 @@ public interface CompatibilityHelper {
   List<String> chooseStorageTypes(BlockStoragePolicy policy, short replication);
 
   boolean isMovable(String type);
+
+  DatanodeInfo newDatanodeInfo(String ipAddress, int xferPort);
+
+  InotifyProtos.AppendEventProto getAppendEventProto(Event.AppendEvent event);
+
+  Event.AppendEvent getAppendEvent(InotifyProtos.AppendEventProto proto);
 }
