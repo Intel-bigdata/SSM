@@ -26,6 +26,10 @@ matrix:
 cache:
   directories:
     - $HOME/.m2
+
+install:
+  - mvn install $PROFILE -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+
 script:
   - mvn test $PROFILE
 
