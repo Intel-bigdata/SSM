@@ -42,6 +42,18 @@
       <artifactId>smart-engine</artifactId>
       <version>1.0-SNAPSHOT</version>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>smart-hadoop-2.7</artifactId>
+          <groupId>org.smartdata</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
+  <repositories>
+    <repository>
+      <id>cloudera</id>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+  </repositories>
 </project>

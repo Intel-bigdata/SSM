@@ -683,56 +683,6 @@
       </repositories>
     </profile>
 
-    <!-- Geode can be enabled by -Pgeode. see https://issues.apache.org/jira/browse/ZEPPELIN-375 -->
-    <profile>
-      <id>geode</id>
-      <modules>
-        <module>geode</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>r</id>
-      <modules>
-        <module>r</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>scalding</id>
-      <modules>
-        <module>scalding</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>beam</id>
-      <modules>
-        <module>beam</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>scio</id>
-      <modules>
-        <module>scio</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>examples</id>
-      <modules>
-        <module>zeppelin-examples</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>helium-dev</id>
-      <modules>
-        <module>helium-dev</module>
-      </modules>
-    </profile>
-
     <profile>
       <id>build-distr</id>
       <activation>
