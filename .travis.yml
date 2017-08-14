@@ -15,13 +15,21 @@ before_install:
 matrix:
   include:
     - jdk: "openjdk7"
-      env: PROFILE=""
+      env: PROFILE="-Phadoop-2.7"
+    - jdk: "openjdk7"
+      env: PROFILE="-Phadoop-cdh-2.6"
     - jdk: "openjdk8"
-      env: PROFILE="-Pjava8"
+      env: PROFILE="-Phadoop-2.7"
+    - jdk: "openjdk8"
+      env: PROFILE="-Phadoop-cdh-2.6"
 
 cache:
   directories:
     - $HOME/.m2
+
+install:
+  - mvn install $PROFILE -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+
 script:
-  - mvn test -Phadoop-2.7
+  - mvn test $PROFILE
 
