@@ -84,53 +84,71 @@ public class CentralizedCopyScheduler extends AbstractService {
       }
     }
 
+    private void handleDeleteChain() {
+      // TODO delete all cmdlets and add a delete cmdlet
+    }
+
+    private void handleRenameChain() {
+      // TODO Copy and merge rename cmdlets
+    }
+
+    private void handleCopyChain() {
+      // TODO Merge and split large files
+
+    }
+
+    private void processCmdletByRule(BackUpInfo backUpInfo) {
+      long rid = backUpInfo.getRid();
+      int end = 0;
+      List<CmdletInfo> dryRunCmdlets = null;
+      try {
+        // Get all dry run cmdlets
+        dryRunCmdlets = cmdletMetaService.getCmdletsTableItem(null,
+            String.format("= %d", rid), CmdletState.DRYRUN);
+      } catch (MetaServiceException e) {
+        LOG.debug("Get latest dry run cmdlets error, rid={}", rid, e);
+      }
+      if (dryRunCmdlets == null || dryRunCmdlets.size() == 0) {
+        LOG.debug("rid={}, empty dry run cmdlets ", rid);
+        return;
+      }
+      // Handle dry run cmdlets
+      // Mark them as pending (runnable) after pre-processing
+      do {
+        try {
+          // TODO optimize this pre-processing
+          // TODO Check namespace for current states
+          cmdletMetaService
+              .updateCmdlet(dryRunCmdlets.get(end).getCid(), rid,
+                  CmdletState.PENDING);
+        } catch (MetaServiceException e) {
+          LOG.debug("rid={}, empty dry run cmdlets ", rid);
+        }
+        // Split Copy tasks according to delete and rename
+        String currentParameter = dryRunCmdlets.get(end).getParameters();
+        if (currentParameter.contains("delete") ||
+            currentParameter.contains("rename")) {
+          break;
+        }
+        end++;
+      } while (true);
+    }
+
     @Override
     public void run() {
       syncRule();
-      // TODO check dryRun copy cmdlets
+      // TODO check dryRun DR (Copy, Rename) cmdlets
       for (BackUpInfo backUpInfo : backUpInfos) {
         // Go through all backup rules
-        long rid = backUpInfo.getRid();
-        int end = 0;
-        List<CmdletInfo> dryRunCmdlets = null;
-        try {
-          // Get all dry run cmdlets
-          dryRunCmdlets = cmdletMetaService.getCmdletsTableItem(null,
-              String.format("= %d", rid), CmdletState.DRYRUN);
-        } catch (MetaServiceException e) {
-          LOG.debug("Get latest dry run cmdlets error, rid={}", rid, e);
-        }
-        if (dryRunCmdlets == null || dryRunCmdlets.size() == 0) {
-          LOG.debug("rid={}, empty dry run cmdlets ", rid);
-          continue;
-        }
-        // Handle dry run cmdlets
-        // Mark them as pending (runnable) after pre-processing
-        do {
-          try {
-            // TODO optimize this pre-processing
-            // TODO Check namespace for current states
-            cmdletMetaService
-                .updateCmdletStatus(dryRunCmdlets.get(end).getCid(), rid,
-                    CmdletState.PENDING);
-          } catch (MetaServiceException e) {
-            LOG.debug("rid={}, empty dry run cmdlets ", rid);
-          }
-          // Split Copy tasks according to delete and rename
-          String currentParameter = dryRunCmdlets.get(end).getParameters();
-          if (currentParameter.contains("delete") ||
-              currentParameter.contains("rename")) {
-            break;
-          }
-          end++;
-        } while (true);
+        processCmdletByRule(backUpInfo);
       }
+    }
 
-      // TODO check and handle collision of cmdlet
-
-      // TODO Schedule these cmdlets and remove duplicate cmdlets
-
-      // TODO Large file split
+    private class FileChain {
+      private String head;
+      private String tail;
+      private List<Long> cmdletChain;
+      private int state;
     }
   }
 }
