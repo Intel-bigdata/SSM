@@ -38,8 +38,8 @@
   </prerequisites>
 
   <properties>
-    <node.version>v6.9.1</node.version>
-    <yarn.version>v0.18.1</yarn.version>
+    <node.version>v6.11.0</node.version>
+    <yarn.version>v0.27.5</yarn.version>
     <npm.version>4.2.0</npm.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -138,7 +138,7 @@
                     <goal>yarn</goal>
                   </goals>
                   <configuration>
-                    <arguments>run build</arguments>
+                    <arguments>run build --force</arguments>
                   </configuration>
                 </execution>
 
