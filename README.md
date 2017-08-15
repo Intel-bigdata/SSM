@@ -95,8 +95,8 @@ SSM will provide a SmartDFSClient that includes both original HDFS DFSClient API
 
 How to Build
 ------------
-Currently SSM support 2 hadoop major versions, hadoop 2.7.X and CDH 5.10.1, which is based on 2.6.0.
-So you build SSM with command
+Currently SSM supports 2 hadoop major versions, hadoop 2.7.X and CDH 5.10.1, which is based on 2.6.0.
+So you can build SSM with command
 
 ```
 mvn package -P dist,hadoop-2.7
