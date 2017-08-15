@@ -24,6 +24,10 @@ Compare CAS+ Optane with HDFS Lazy Persist
 | Case Name | Storage | Dataset | Comment |
 | --------- | ------- | ------- | ------- |
 | 100G_RAM_HDD | 1Optane 5HDDs | 100G | Using HDFS lazy persist mode |
+
+### 4. Performance Measurement
+Throughput of the writing
+
  
  
 
