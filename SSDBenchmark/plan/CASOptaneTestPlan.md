@@ -60,10 +60,7 @@ HBASE WAL
 | Zookeeper |	3.4.6 |
 | YCSB | 0.12.0 |
 | JDK |	JAVA8 |
-| JVM Heap | NameNode: 32GB|
-	         | DataNode: 4GB|
-	         | HMaster: 4GB|
-	         | RegionServer: 64GB|
+| JVM Heap | NameNode:32GB DataNode:4GB HMaster:4GB RegionServer:64GB|
 | GC | G1GC|
 
 ### 3.WorkLoad
