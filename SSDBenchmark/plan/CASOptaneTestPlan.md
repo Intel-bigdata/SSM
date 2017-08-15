@@ -93,6 +93,9 @@ HBASE WAL
 •	Throughput of the writing workload
 •	Disk bandwidths
 
+Alluxios(TODO)
+-----------------
+
 
  
 
