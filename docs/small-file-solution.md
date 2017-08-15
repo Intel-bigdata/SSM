@@ -31,26 +31,26 @@ We want to optimize and solve the small files problem in 3 cases, not only for r
 
 In SSM infrastructure, all user preferences are represented by rules. For foreseeable small files, apply the small file write rule to the files. In this case, SmartDFSClient will replace the existing HDFS Client, be responsible to save the data to HDFS. SmartDFSClient will not directly create small file in NameNode. Instead, it will query SSM server for which container file (a normal HDFS file used for small fiels bucket) will the small file be saved to, then SmartDFSClient will talk to SSM agent who is responsible to save the small file content into the container file.
 
-<img src="./small-file-write.png"/>
+<img src="./img/small-file-write.png"/>
 
 ### 2. Read small file
 
 To read a small file, SSM server has the knowledge about which container file the small file is stored into, when read the small data, SmartDFSClient will first query SSM server to find the corresponding container file, offset into the container file and length of the small file, then passes all these information to the Smart Agent to read the data content from the DataNode.
 
-<img src="./small-file-read.png" />
+<img src="./img/small-file-read.png" />
 
 ### 3. Compact existing small files
 
 There can be many small files written into HDFS already in an existing deployment and users may want to compact all these small files. To achieve this goal, apply the small file compact rule to the files. With the rule set, SSM server will scan the files and directories, schedule tasks to compact small files into big container file, and then delete the original small files. 
 
-<img src="./small-file-compact.png" />
+<img src="./img/small-file-compact.png" />
 
 Architecture
 ============
 
 The following diagram shows the small file write flow.
 
-<img src="./small-file-write-arch.png" width="550" height="350"/>
+<img src="./img/small-file-write-arch.png" width="550" height="350"/>
 
 Here is the writing flow,
 
@@ -79,7 +79,7 @@ If user happens to write a big file through the small file write process, SSM ca
 
 The small file read flow path is very similar to write flow path, except the data content flow direction is different.
 
-<img src="./small-file-read-arch.png"  width="550" height="350"/>
+<img src="./img/small-file-read-arch.png"  width="550" height="350"/>
 
 In additon to write and read, we also provide HDFS compatabile operations as follows. Note all these operations will be done against SSM metastore instead of NameNode since small files meta are kept in the metastore. We don't support append and truncate small files, we can consider such later in future.
 * rename small file

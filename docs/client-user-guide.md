@@ -9,7 +9,7 @@ which includes both HDFS DFSClient functions and new SSM Application
 APIs. Upper level application can use this SmartDFSClient instead of
 original HDFS DFSClient. Here is the diagram.
 
-<img src="./api.png" width="554" height="408" />
+<img src="./img/api.png" width="554" height="408" />
 
 SmartDFSClient API
 ------------
