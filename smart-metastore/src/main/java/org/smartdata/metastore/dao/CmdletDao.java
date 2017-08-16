@@ -118,6 +118,15 @@ public class CmdletDao {
     return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid, rid);
   }
 
+  public int update(long cid, String parameters, int state) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "update cmdlets set " +
+        "parameters = ?, " +
+        "state = ?, " +
+        "state_changed_time = ? where cid = ?";
+    return jdbcTemplate.update(sql, parameters, state, System.currentTimeMillis(), cid);
+  }
+
   public int update(final CmdletInfo CmdletInfo) {
     List<CmdletInfo> CmdletInfos = new ArrayList<>();
     CmdletInfos.add(CmdletInfo);

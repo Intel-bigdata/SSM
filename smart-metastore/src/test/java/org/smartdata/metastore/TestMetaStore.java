@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.CmdletInfo;
@@ -369,15 +370,11 @@ public class TestMetaStore extends TestDaoUtil {
     CmdletInfo command2 = new CmdletInfo(1, 78,
         CmdletState.PAUSED, "tt", 123178333l, 232444994l);
     metaStore.insertCmdletTable(command2);
-    String cidCondition = ">= 0 ";
-    String ridCondition = "= 78 ";
-    CmdletState state = null;
-    CmdletState state1 = CmdletState.PAUSED;
-    List<CmdletInfo> com = metaStore.getCmdletsTableItem(cidCondition, ridCondition, state);
-    Assert.assertTrue(com.get(0).equals(command2));
-    List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(null,
-        null, state1);
-    Assert.assertTrue(com1.get(0).equals(command2));
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).equals(command1));
+    Assert.assertTrue(metaStore.getCmdletById(command2.getCid()).equals(command2));
+    metaStore.updateCmdlet(command1.getCid(), "TestParameter", CmdletState.DRYRUN);
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).getParameters().equals("TestParameter"));
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).getState().equals(CmdletState.DRYRUN));
   }
 
   @Test
@@ -400,7 +397,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(commandId == commands.length);
     for (CmdletInfo cmd : com) {
       // System.out.printf("Cid = %d \n", cmd.getCid());
-      metaStore.updateCmdletStatus(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
+      metaStore.updateCmdlet(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
     }
     List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 1);
@@ -607,4 +604,43 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(infos.size() == 0);
   }
 
+  @Test
+  public void testInsertAndListAllBackUpInfo() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    BackUpInfo backUpInfo2 = new BackUpInfo(2, "test2", "test2", 2);
+    BackUpInfo backUpInfo3 = new BackUpInfo(3, "test3", "test3", 3);
+
+    metaStore.insertBackUpInfo(backUpInfo1);
+    metaStore.insertBackUpInfo(backUpInfo2);
+    metaStore.insertBackUpInfo(backUpInfo3);
+
+    List<BackUpInfo> backUpInfos = metaStore.listAllBackUpInfo();
+
+    Assert.assertTrue(backUpInfos.get(0).equals(backUpInfo1));
+    Assert.assertTrue(backUpInfos.get(1).equals(backUpInfo2));
+    Assert.assertTrue(backUpInfos.get(2).equals(backUpInfo3));
+  }
+
+  @Test
+  public void testGetBackUpInfoById() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    metaStore.insertBackUpInfo(backUpInfo1);
+
+    Assert.assertTrue(metaStore.getBackUpInfoById(1).equals(backUpInfo1));
+  }
+
+  @Test
+  public void testDeleteBackUpInfo() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    metaStore.insertBackUpInfo(backUpInfo1);
+
+    metaStore.deleteBackUpInfoById(1);
+
+    Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
+
+    metaStore.insertBackUpInfo(backUpInfo1);
+    metaStore.deleteAllBackUpInfo();
+
+    Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
+  }
 }

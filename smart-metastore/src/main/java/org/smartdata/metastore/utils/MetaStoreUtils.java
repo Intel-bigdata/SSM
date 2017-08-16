@@ -97,6 +97,7 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS file_diff;",  // incremental diff for disaster recovery
         "DROP TABLE IF EXISTS global_config",
         "DROP TABLE IF EXISTS cluster_config",
+        "DROP TABLE IF EXISTS back_up",
 
 
         "CREATE TABLE access_count_tables (\n" +
@@ -239,10 +240,11 @@ public class MetaStoreUtils {
 
         "CREATE TABLE file_diff (\n" +
             "  did INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "  rid INTEGER NOT NULL,\n" +
             "  diff_type varchar(4096) NOT NULL,\n" +
             "  src varchar(4096) NOT NULL,\n" +
             "  parameters varchar(4096) NOT NULL,\n" +
-            "  applied tinyint(4) NOT NULL,\n" +
+            "  state tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL\n" +
             ") ;",
         "CREATE TABLE global_config (\n" +
@@ -254,15 +256,22 @@ public class MetaStoreUtils {
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             " node_name varchar(3072) NOT NULL UNIQUE,\n" +
             " config_path varchar(3072) NOT NULL\n" +
+            ") ;",
+        "CREATE TABLE back_up (\n" +
+            " rid bigint(20) NOT NULL,\n" +
+            " src varchar(4096) NOT NULL,\n" +
+            " dest varchar(4096) NOT NULL,\n" +
+            " period bigint(20) NOT NULL\n" +
             ") ;"
     };
     try {
+      String url = conn.getMetaData().getURL();
+      boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
       for (String s : createEmptyTables) {
-        String url = conn.getMetaData().getURL();
-        if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+        if (mysql) {
           s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
         }
-        LOG.info(s);
+        LOG.debug(s);
         executeSql(conn, s);
       }
     } catch (Exception e) {

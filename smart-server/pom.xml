@@ -157,11 +157,17 @@
             </dependencies>
         </profile>
         <profile>
-            <id>hadoop-2.6</id>
+            <id>hadoop-cdh-2.6</id>
             <dependencies>
                 <dependency>
                     <groupId>org.smartdata</groupId>
-                    <artifactId>smart-hadoop-2.6</artifactId>
+                    <artifactId>smart-hadoop-cdh-2.6</artifactId>
+                    <version>1.0-SNAPSHOT</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-cdh-2.6</artifactId>
                     <version>1.0-SNAPSHOT</version>
                     <scope>test</scope>
                     <type>test-jar</type>

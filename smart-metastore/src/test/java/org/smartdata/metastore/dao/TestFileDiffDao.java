@@ -22,6 +22,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
@@ -49,7 +50,7 @@ public class TestFileDiffDao extends TestDaoUtil{
     fileDiff.setDiffId(1);
     fileDiff.setParameters("test");
     fileDiff.setSrc("test");
-    fileDiff.setApplied(true);
+    fileDiff.setState(FileDiffState.PENDING);
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setCreate_time(1);
     fileDiffDao.insert(fileDiff);
@@ -63,7 +64,7 @@ public class TestFileDiffDao extends TestDaoUtil{
     fileDiffs[0].setDiffId(1);
     fileDiffs[0].setParameters("test");
     fileDiffs[0].setSrc("test");
-    fileDiffs[0].setApplied(true);
+    fileDiffs[0].setState(FileDiffState.PENDING);
     fileDiffs[0].setDiffType(FileDiffType.APPEND);
     fileDiffs[0].setCreate_time(1);
 
@@ -71,12 +72,12 @@ public class TestFileDiffDao extends TestDaoUtil{
     fileDiffs[1].setDiffId(2);
     fileDiffs[1].setParameters("test");
     fileDiffs[1].setSrc("test");
-    fileDiffs[1].setApplied(true);
+    fileDiffs[1].setState(FileDiffState.PENDING);
     fileDiffs[1].setDiffType(FileDiffType.APPEND);
     fileDiffs[1].setCreate_time(1);
 
     fileDiffDao.insert(fileDiffs);
-    List<FileDiff> fileInfoList = fileDiffDao.getALL();
+    List<FileDiff> fileInfoList = fileDiffDao.getAll();
     for (int i = 0; i < 2; i++) {
       Assert.assertTrue(fileInfoList.get(i).equals(fileDiffs[i]));
     }
@@ -88,14 +89,15 @@ public class TestFileDiffDao extends TestDaoUtil{
     fileDiff.setDiffId(1);
     fileDiff.setParameters("test");
     fileDiff.setSrc("test");
-    fileDiff.setApplied(true);
+    fileDiff.setState(FileDiffState.PENDING);
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setCreate_time(1);
     fileDiffDao.insert(fileDiff);
 
-    fileDiffDao.update(1,false);
-    fileDiff.setApplied(false);
+    fileDiffDao.update(1, FileDiffState.RUNNING);
+    fileDiff.setState(FileDiffState.RUNNING);
 
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
+    Assert.assertTrue(fileDiffDao.getPendingDiff().size() == 0);
   }
 }

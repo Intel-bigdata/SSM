@@ -40,6 +40,8 @@ import org.apache.hadoop.hdfs.protocol.proto.XAttrProtos.XAttrProto.XAttrNamespa
 import org.apache.hadoop.hdfs.protocol.proto.AclProtos.AclEntryProto.AclEntryTypeProto;
 import org.apache.hadoop.hdfs.protocol.proto.AclProtos.AclEntryProto.AclEntryScopeProto;
 import org.apache.hadoop.hdfs.protocol.proto.AclProtos.AclEntryProto.FsActionProto;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -131,9 +133,7 @@ public class EventBatchSerializer {
           Event.AppendEvent re2 = (Event.AppendEvent) e;
           events.add(InotifyProtos.EventProto.newBuilder()
             .setType(InotifyProtos.EventType.EVENT_APPEND)
-            .setContents(InotifyProtos.AppendEventProto.newBuilder()
-              .setPath(re2.getPath())
-              .setNewBlock(re2.toNewBlock()).build().toByteString())
+            .setContents(CompatibilityHelperLoader.getHelper().getAppendEventProto(re2).toByteString())
             .build());
           break;
         case UNLINK:
@@ -229,9 +229,7 @@ public class EventBatchSerializer {
         case EVENT_APPEND:
           InotifyProtos.AppendEventProto append =
             InotifyProtos.AppendEventProto.parseFrom(p.getContents());
-          events.add(new Event.AppendEvent.Builder().path(append.getPath())
-            .newBlock(append.hasNewBlock() && append.getNewBlock())
-            .build());
+          events.add(CompatibilityHelperLoader.getHelper().getAppendEvent(append));
           break;
         case EVENT_UNLINK:
           InotifyProtos.UnlinkEventProto unlink =

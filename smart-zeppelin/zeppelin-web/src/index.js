@@ -97,3 +97,5 @@ import './app/dashboard/views/rules/submit/submit.js';
 import './app/dashboard/views/rules/rule/alerts_table.js';
 import './app/dashboard/views/rules/rule/cmdlets_table.js';
 import './app/dashboard/views/helper.js';
+import './app/dashboard/views/mover/mover.js';
+import './app/dashboard/views/copy/copy.js';
