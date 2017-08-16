@@ -26,16 +26,15 @@ angular.module('zeppelinWebApp')
       cols: [
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-        $stb.text('Cmdlet ID').key('cid').canSort().done(),
-        $stb.datetime('Create Time').key('createTime').canSort().done(),
-        $stb.datetime('Finish Time').key('finishTime').canSort().done(),
-        $stb.duration("Running Time").key('runningTime').canSort().done(),
+        $stb.text('Rule ID').key('cid').canSort().done(),
         $stb.text('File Path').key('filePath').canSort().styleClass('col-md-1').done(),
         $stb.text('Target Path').key('targetPath').canSort().styleClass('col-md-1').done(),
-        $stb.text('Succeed').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+        $stb.text('Status').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+        $stb.duration("Running Time").key('runningTime').canSort().done(),
+        $stb.datetime('Create Time').key('createTime').canSort().done(),
+        $stb.datetime('Finish Time').key('finishTime').canSort().done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-3').done()
+        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
       ],
       rows: null
     };
