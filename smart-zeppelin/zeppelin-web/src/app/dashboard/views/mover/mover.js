@@ -26,17 +26,17 @@ angular.module('zeppelinWebApp')
       cols: [
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-        $stb.text('Cmdlet ID').key('cid').canSort().done(),
-        $stb.datetime('Create Time').key('createTime').canSort().done(),
-        $stb.datetime('Finish Time').key('finishTime').canSort().done(),
-        $stb.duration("Running Time").key('runningTime').canSort().done(),
+        // $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
+        $stb.text('Rule ID').key('cid').canSort().done(),
         $stb.text('File').key('file').canSort().styleClass('col-md-1').done(),
+        $stb.text('File Size').key('fileSize').canSort().styleClass('col-md-1').done(),
         $stb.text('Storage Type').key('sourceType').canSort().styleClass('col-md-1').done(),
         $stb.text('Target Storage Type').key('targetType').canSort().styleClass('col-md-1').done(),
-        $stb.text('Succeed').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+        $stb.datetime('Create Time').key('createTime').canSort().styleClass('col-md-2').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-3').done()
+        $stb.datetime('Finish Time').key('finishTime').canSort().styleClass('col-md-2').done(),
+        $stb.duration("Running Time").key('runningTime').canSort().styleClass('col-md-1').done(),
+        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
       ],
       rows: null
     };
@@ -45,7 +45,6 @@ angular.module('zeppelinWebApp')
       $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
         _.map(actions, function (action) {
           return {
-            id: action.actionId,
             cid: action.cmdletId,
             state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
             createTime: action.createTime,
@@ -66,6 +65,7 @@ angular.module('zeppelinWebApp')
                 // usage: action.progress * 100
             },
             file: "PATH",
+            fileSize: "1M",
             sourceType: "COOL",
             targetType: "ONESSD"
           };
