@@ -247,16 +247,19 @@ public class MetaStoreUtils {
             "  state tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL\n" +
             ") ;",
+
         "CREATE TABLE global_config (\n" +
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            " property_name varchar(3072) NOT NULL UNIQUE,\n" +
+            " property_name varchar(512) NOT NULL UNIQUE,\n" +
             " property_value varchar(3072) NOT NULL\n" +
             ") ;",
+
         "CREATE TABLE cluster_config (\n" +
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            " node_name varchar(3072) NOT NULL UNIQUE,\n" +
+            " node_name varchar(512) NOT NULL UNIQUE,\n" +
             " config_path varchar(3072) NOT NULL\n" +
             ") ;",
+
         "CREATE TABLE back_up (\n" +
             " rid bigint(20) NOT NULL,\n" +
             " src varchar(4096) NOT NULL,\n" +
