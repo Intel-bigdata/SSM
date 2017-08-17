@@ -98,8 +98,7 @@ public class DataNodeInfoDao {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("uuid", dataNodeInfo.getUuid());
     parameters.put("hostname", dataNodeInfo.getHostname());
-    parameters.put("ip", dataNodeInfo.getIp());
-    parameters.put("port", dataNodeInfo.getPort());
+    parameters.put("rpcAddress", dataNodeInfo.getRpcAddress());
     parameters.put("cache_capacity", dataNodeInfo.getCacheCapacity());
     parameters.put("cache_used", dataNodeInfo.getCacheUsed());
     parameters.put("location", dataNodeInfo.getLocation());
@@ -113,8 +112,7 @@ public class DataNodeInfoDao {
       return DataNodeInfo.newBuilder()
           .setUuid(resultSet.getString("uuid"))
           .setHostName(resultSet.getString("hostname"))
-          .setIp(resultSet.getString("ip"))
-          .setPort(resultSet.getInt("port"))
+          .setRpcAddress(resultSet.getString("rpcAddress"))
           .setCacheCapacity(resultSet.getLong("cache_capacity"))
           .setCacheUsed(resultSet.getLong("cache_used"))
           .setLocation(resultSet.getString("location"))

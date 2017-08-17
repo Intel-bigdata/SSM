@@ -83,14 +83,14 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS cached_file;",
         "DROP TABLE IF EXISTS ec_policy;",
         "DROP TABLE IF EXISTS file;",
-        "DROP TABLE IF EXISTS `group`;",
+        "DROP TABLE IF EXISTS user_group;",
         "DROP TABLE IF EXISTS owner;",
         "DROP TABLE IF EXISTS storage;",
         "DROP TABLE IF EXISTS storage_policy;",
         "DROP TABLE IF EXISTS xattr;",
         "DROP TABLE IF EXISTS datanode_info;",
         "DROP TABLE IF EXISTS datanode_storage_info;",
-        "DROP TABLE IF EXISTS rules;",
+        "DROP TABLE IF EXISTS rule;",
         "DROP TABLE IF EXISTS cmdlets;",
         "DROP TABLE IF EXISTS actions;",
         "DROP TABLE IF EXISTS blank_access_count_info;",  // for special cases
@@ -144,7 +144,7 @@ public class MetaStoreUtils {
             "  ec_policy_id smallint(6) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE `group` (\n" +
+        "CREATE TABLE user_group (\n" +
             "  gid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  group_name varchar(255) DEFAULT NULL\n" +
             ") ;",
@@ -183,8 +183,7 @@ public class MetaStoreUtils {
         "CREATE TABLE datanode_info (\n" +
             "  uuid varchar(64) NOT NULL,\n" +
             "  hostname varchar(255) NOT NULL,\n" +   // DatanodeInfo
-            "  ip varchar(16) DEFAULT NULL,\n" +
-            "  port tinyint(4) DEFAULT NULL,\n" +
+            "  rpcAddress varchar(21) DEFAULT NULL,\n" +
             "  cache_capacity bigint(20) DEFAULT NULL,\n" +
             "  cache_used bigint(20) DEFAULT NULL,\n" +
             "  location varchar(255) DEFAULT NULL\n" +
@@ -194,7 +193,7 @@ public class MetaStoreUtils {
             "  uuid varchar(64) NOT NULL,\n" +
             "  sid tinyint(4) NOT NULL,\n" +          // storage type
             "  state tinyint(4) NOT NULL,\n" +        // DatanodeStorage.state
-            "  storageid varchar(64) NOT NULL,\n" +   // StorageReport ...
+            "  storage_id varchar(64) NOT NULL,\n" +   // StorageReport ...
             "  failed tinyint(1) DEFAULT NULL,\n" +
             "  capacity bigint(20) DEFAULT NULL,\n" +
             "  dfs_used bigint(20) DEFAULT NULL,\n" +
@@ -202,9 +201,8 @@ public class MetaStoreUtils {
             "  block_pool_used bigint(20) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE rules (\n" +
+        "CREATE TABLE rule (\n" +
             "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            // TODO: may required later
             // "  name varchar(255) DEFAULT NULL,\n" +
             "  state tinyint(4) NOT NULL,\n" +
             "  rule_text varchar(4096) NOT NULL,\n" +

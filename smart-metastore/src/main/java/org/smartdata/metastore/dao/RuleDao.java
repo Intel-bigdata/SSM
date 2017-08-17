@@ -44,19 +44,19 @@ public class RuleDao {
 
   public List<RuleInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from rules",
+    return jdbcTemplate.query("select * from rule",
         new RuleRowMapper());
   }
 
   public RuleInfo getById(long id) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from rules where id = ?",
+    return jdbcTemplate.queryForObject("select * from rule where id = ?",
         new Object[]{id}, new RuleRowMapper());
   }
 
   public long insert(RuleInfo ruleInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("rules");
+    simpleJdbcInsert.setTableName("rule");
     simpleJdbcInsert.usingGeneratedKeyColumns("id");
     long id = simpleJdbcInsert.executeAndReturnKey(toMap(ruleInfo)).longValue();
     ruleInfo.setId(id);
@@ -66,7 +66,7 @@ public class RuleDao {
   public int update(long ruleId, long lastCheckTime,
       long checkedCount, int cmdletsGen) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update rules set " +
+    String sql = "update rule set " +
         "last_check_time = ?, " +
         "checked_count = ?, " +
         "cmdlets_generated = ? where id = ?";
@@ -76,7 +76,7 @@ public class RuleDao {
   public int update(long ruleId, int rs,
       long lastCheckTime, long checkedCount, int cmdletsGen) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update rules set " +
+    String sql = "update rule set " +
         "state = ?, " +
         "last_check_time = ?, " +
         "checked_count = ?, " +
@@ -86,13 +86,13 @@ public class RuleDao {
 
   public void delete(long id) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from rules where id = ?";
+    final String sql = "delete from rule where id = ?";
     jdbcTemplate.update(sql, id);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from rules";
+    final String sql = "delete from rule";
     jdbcTemplate.update(sql);
   }
 
