@@ -22,6 +22,23 @@
     {
       "id": "local",
       "type": "default",
+      "url": "file:///Users/zhendu/.m2/repository",
+      "releasePolicy": {
+        "enabled": true,
+        "updatePolicy": "daily",
+        "checksumPolicy": "warn"
+      },
+      "snapshotPolicy": {
+        "enabled": true,
+        "updatePolicy": "daily",
+        "checksumPolicy": "warn"
+      },
+      "mirroredRepositories": [],
+      "repositoryManager": false
+    },
+    {
+      "id": "local",
+      "type": "default",
       "url": "file:///root/.m2/repository",
       "releasePolicy": {
         "enabled": true,
