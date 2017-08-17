@@ -109,7 +109,7 @@ public class TestSqliteDB extends TestDaoUtil {
   public void testDBBlankStatements() throws Exception {
     String[] presqls = new String[] {
         "INSERT INTO rule (state, rule_text, submit_time, checked_count, "
-            + "cmdlets_generated) VALUES (0, 'file: every 1s \n" + " | "
+            + "generated_cmdlets) VALUES (0, 'file: every 1s \n" + " | "
             + "accessCount(5s) > 3 | cache', 1494903787619, 0, 0);"
     };
 

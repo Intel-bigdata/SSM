@@ -209,7 +209,7 @@ public class MetaStoreUtils {
             "  submit_time bigint(20) NOT NULL,\n" +
             "  last_check_time bigint(20) DEFAULT NULL,\n" +
             "  checked_count int(11) NOT NULL,\n" +
-            "  cmdlets_generated int(11) NOT NULL\n" +
+            "  generated_cmdlets int(11) NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE cmdlets (\n" +
