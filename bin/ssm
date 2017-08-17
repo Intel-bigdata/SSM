@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-Usage="smart --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend] [--daemon start|stop ] [--remote] <command> <command args>"
+Usage="ssm --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend] [--daemon start|stop ] [--remote] <command> <command args>"
 
 SCRIPT_ARGS="$*"
 
@@ -122,7 +122,7 @@ if [ x"${REMOTE_MODE}" = x"true" ]; then
   for host in $SMART_HOSTS
   do
     echo "Processing on '${host}' ... "
-    remote_execute ${host} ${SMART_HOME}/bin/smart ${REMOTE_COMMAND}
+    remote_execute ${host} ${SMART_HOME}/bin/ssm ${REMOTE_COMMAND}
     if [ "$?" = "0" ]; then
       echo "Processing on '${host}' completed successfully."
     else
