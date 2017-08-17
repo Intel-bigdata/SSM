@@ -22,8 +22,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.integration.cluster.SmartMiniCluster;
 import org.smartdata.integration.cluster.SmartCluster;
+import org.smartdata.integration.cluster.SmartMiniCluster;
 
 /**
  * Integration test base.
@@ -50,7 +50,9 @@ public class IntegrationTestBase {
     }
 
     // Start a Smart server
-    zeppelinPort = 8080;
+    String httpAddr = conf.get(SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_KEY,
+        SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_DEFAULT);
+    zeppelinPort = Integer.parseInt(httpAddr.split(":")[1]);
     conf.setBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN, true);
     smartServer = new IntegrationSmartServer();
     smartServer.setUp(conf);

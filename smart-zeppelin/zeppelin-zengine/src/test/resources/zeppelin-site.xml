@@ -18,19 +18,6 @@
 -->
 
 <configuration>
-
-<property>
-  <name>zeppelin.server.addr</name>
-  <value>0.0.0.0</value>
-  <description>Server address</description>
-</property>
-
-<property>
-  <name>zeppelin.server.port</name>
-  <value>8080</value>
-  <description>Server port.</description>
-</property>
-
 <property>
   <name>zeppelin.notebook.dir</name>
   <value>notebook</value>

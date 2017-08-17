@@ -29,7 +29,7 @@ import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
-import org.smartdata.hdfs.action.SchedulePlan;
+import org.smartdata.model.action.FileMovePlan;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -64,7 +64,7 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     String content = stringBuilder.toString();
     generateFile(content);
 
-    SchedulePlan plan = new SchedulePlan(namenode, fileName);
+    FileMovePlan plan = new FileMovePlan(namenode, fileName);
 
     // Schedule move in the same node
     for (LocatedBlock lb : MoverExecutor.getLocatedBlocks(dfsClient, fileName)) {
@@ -99,7 +99,7 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
 
     generateFile("One-block file");
 
-    SchedulePlan plan = new SchedulePlan(namenode, fileName);
+    FileMovePlan plan = new FileMovePlan(namenode, fileName);
 
     // Schedule move of one replica to another node
     NameNodeConnector nnc = new NameNodeConnector(namenode, conf);
@@ -146,7 +146,7 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
 //    Assert.assertEquals(2, hddNum);
   }
 
-  private void addPlan(SchedulePlan plan, StorageGroup source, StorageGroup target, long blockId) {
+  private void addPlan(FileMovePlan plan, StorageGroup source, StorageGroup target, long blockId) {
     DatanodeInfo sourceDatanode = source.getDatanodeInfo();
     DatanodeInfo targetDatanode = target.getDatanodeInfo();
     plan.addPlan(blockId, sourceDatanode.getDatanodeUuid(), source.getStorageType(),
