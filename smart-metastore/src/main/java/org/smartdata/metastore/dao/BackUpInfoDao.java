@@ -44,53 +44,53 @@ public class BackUpInfoDao {
 
   public List<BackUpInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from back_up", new BackUpInfoRowMapper());
+    return jdbcTemplate.query("select * from backup_file", new BackUpInfoRowMapper());
   }
 
   public List<BackUpInfo> getByIds(List<Long> rids) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from back_up WHERE rid IN (?)",
+    return jdbcTemplate.query("select * from backup_file WHERE rid IN (?)",
         new Object[]{StringUtils.join(rids, ",")},
         new BackUpInfoRowMapper());
   }
 
   public int getCountById(int rid){
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select COUNT(*) from back_up where rid = ?",new Object[rid],Integer.class);
+    return jdbcTemplate.queryForObject("select COUNT(*) from backup_file where rid = ?",new Object[rid],Integer.class);
   }
 
   public BackUpInfo getById(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from back_up where rid = ?",
+    return jdbcTemplate.queryForObject("select * from backup_file where rid = ?",
         new Object[]{rid}, new BackUpInfoRowMapper());
   }
 
   public List<BackUpInfo> getBySrc(String src) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from back_up where src = ?", new Object[]{src}, new BackUpInfoRowMapper());
+    return jdbcTemplate.query("select * from backup_file where src = ?", new Object[]{src}, new BackUpInfoRowMapper());
   }
 
   public List<BackUpInfo> getByDest(String dest) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from back_up where dest = ?", new Object[]{dest}, new BackUpInfoRowMapper());
+    return jdbcTemplate.query("select * from backup_file where dest = ?", new Object[]{dest}, new BackUpInfoRowMapper());
   }
 
 
   public void delete(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from back_up where rid = ?";
+    final String sql = "delete from backup_file where rid = ?";
     jdbcTemplate.update(sql, rid);
   }
 
   public void insert(BackUpInfo backUpInfo){
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("back_up");
+    simpleJdbcInsert.setTableName("backup_file");
     simpleJdbcInsert.execute(toMap(backUpInfo));
   }
 
   public void insert(BackUpInfo[] backUpInfos){
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("back_up");
+    simpleJdbcInsert.setTableName("backup_file");
     Map<String,Object>[] maps = new Map[backUpInfos.length];
     for (int i = 0; i < backUpInfos.length; i++){
       maps[i] = toMap(backUpInfos[i]);
@@ -100,13 +100,13 @@ public class BackUpInfoDao {
 
   public int update(long rid, long period) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update back_up set period = ? WHERE rid = ?";
+    String sql = "update backup_file set period = ? WHERE rid = ?";
     return jdbcTemplate.update(sql, period, rid);
   }
 
   public void deleteAll(){
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE from back_up";
+    final String sql = "DELETE from backup_file";
     jdbcTemplate.execute(sql);
   }
 
