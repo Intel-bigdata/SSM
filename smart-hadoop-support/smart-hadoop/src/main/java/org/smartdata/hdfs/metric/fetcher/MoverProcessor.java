@@ -34,7 +34,7 @@ import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
-import org.smartdata.hdfs.action.SchedulePlan;
+import org.smartdata.model.action.FileMovePlan;
 import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.MoverStatus;
@@ -66,7 +66,7 @@ public class MoverProcessor {
   private long remainingBlocks = 0;
   private final MoverStatus moverStatus;
 
-  private SchedulePlan schedulePlan;
+  private FileMovePlan schedulePlan;
 
 
   public MoverProcessor(DFSClient dfsClient, StorageMap storages,
@@ -117,7 +117,7 @@ public class MoverProcessor {
       }
     }
     if (!status.isSymlink()) { // file
-      schedulePlan = new SchedulePlan();
+      schedulePlan = new FileMovePlan();
       schedulePlan.setFileName(targetPath.toUri().getPath());
       processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status, result);
     }
@@ -143,7 +143,7 @@ public class MoverProcessor {
     return result.getExitStatus();
   }
 
-  public SchedulePlan getSchedulePlan() {
+  public FileMovePlan getSchedulePlan() {
     return schedulePlan;
   }
 

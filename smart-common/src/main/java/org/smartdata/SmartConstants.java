@@ -15,16 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action.move;
+package org.smartdata;
 
-import org.smartdata.hdfs.action.SchedulePlan;
-
-/**
- * Base class for all kinds of move strategies.
- */
-public abstract class MoveRunner {
-
-  public abstract void move(String file) throws Exception;
-
-  public abstract void move(String file, SchedulePlan plan) throws Exception;
+public class SmartConstants {
+  public static final String SMART_STATES_UPDATE_SERVICE_IMPL = "org.smartdata.hdfs.HdfsStatesUpdateService";
+  public static final String SMART_ACTION_SCHEDULER_SERVICE_IMPL = "org.smartdata.hdfs.scheduler.MoverPreProcessService";
 }
