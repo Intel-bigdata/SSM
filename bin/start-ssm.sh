@@ -53,7 +53,7 @@ done
 #---------------------------------------------------------
 # Start Smart Servers
 
-SMARTSERVERS=$("${SMART_HOME}/bin/smart" getconf SmartServers 2>/dev/null)
+SMARTSERVERS=$("${SMART_HOME}/bin/ssm" getconf SmartServers 2>/dev/null)
 
 if [ "$?" != "0" ]; then
   echo "ERROR: Get SmartServers error: ${SMARTSERVERS}"
@@ -62,7 +62,7 @@ fi
 
 if [ x"${SMARTSERVERS}" != x"" ]; then
   echo "Starting SmartServers on [${SMARTSERVERS}]"
-  . "${SMART_HOME}/bin/smart" \
+  . "${SMART_HOME}/bin/ssm" \
     --remote \
     --config "${SMART_CONF_DIR}" \
     --hosts "${SMARTSERVERS}" --hostsend \
@@ -82,7 +82,7 @@ if [ -f "${AGENTS_FILE}" ]; then
   AGENT_HOSTS=$(sed 's/#.*$//;/^$/d' "${AGENTS_FILE}" | xargs echo)
   if [ x"${AGENT_HOSTS}" != x"" ]; then
     echo "Starting SmartAgents on [${AGENT_HOSTS}]"
-    . "${SMART_HOME}/bin/smart" \
+    . "${SMART_HOME}/bin/ssm" \
       --remote \
       --config "${SMART_CONF_DIR}" \
       --hosts "${AGENT_HOSTS}" --hostsend \
