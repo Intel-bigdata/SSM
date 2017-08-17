@@ -35,10 +35,13 @@ public class TestDruid {
         .getResourceAsStream("druid-template.xml");
     Properties p = new Properties();
     p.loadFromXML(in);
+    p.setProperty("url", "jdbc:mysql://localhost/SSMTest");
+    p.setProperty("username","root");
+    p.setProperty("password","314");
 
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    String url = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
-    p.setProperty("url", url);
+    // String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+    // String url = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
+    // p.setProperty("url", url);
 
     DruidPool druidPool = new DruidPool(p);
     MetaStore adapter = new MetaStore(druidPool);

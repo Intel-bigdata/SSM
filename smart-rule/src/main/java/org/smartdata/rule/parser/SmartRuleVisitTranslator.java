@@ -655,7 +655,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     switch (objects.get("Default").getType()) {
       case DIRECTORY:
       case FILE:
-        ret = "SELECT path FROM files";
+        ret = "SELECT path FROM file";
         break;
       default:
         throw new IOException("No operation defined for Object "
@@ -670,7 +670,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       }
       TreeNode root = new OperNode(OperatorType.NONE, actRoot, null);
       actRoot.setParent(root);
-      ret += " WHERE " + doGenerateSql(root, "files").getRet() + ";";
+      ret += " WHERE " + doGenerateSql(root, "file").getRet() + ";";
     }
 
     sqlStatements.add(ret);

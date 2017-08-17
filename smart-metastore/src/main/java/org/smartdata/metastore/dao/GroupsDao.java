@@ -41,27 +41,27 @@ public class GroupsDao {
   public synchronized void addGroup(String groupName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = String.format(
-        "INSERT INTO groups (group_name) VALUES ('%s')", groupName);
+        "INSERT INTO `group` (group_name) VALUES ('%s')", groupName);
     jdbcTemplate.execute(sql);
   }
 
   public synchronized void deleteGroup(String groupName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = String.format(
-        "DELETE FROM groups where group_name = '%s'", groupName);
+        "DELETE FROM `group` where group_name = '%s'", groupName);
     jdbcTemplate.execute(sql);
   }
 
   public int getCountGroups() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject(
-        "SELECT COUNT(*) FROM groups", Integer.class);
+        "SELECT COUNT(*) FROM `group`", Integer.class);
   }
 
   public List<String> listGroup() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     List<String> groups = jdbcTemplate.query(
-        "select group_name from groups",
+        "select group_name from `group`",
         new RowMapper<String>() {
           public String mapRow(ResultSet rs, int rowNum) throws SQLException {
             return rs.getString("group_name");
@@ -72,7 +72,7 @@ public class GroupsDao {
 
   public Map<Integer, String> getGroupsMap() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return toMap(jdbcTemplate.queryForList("SELECT * FROM groups"));
+    return toMap(jdbcTemplate.queryForList("SELECT * FROM `group`"));
   }
 
   private Map<Integer, String> toMap(List<Map<String, Object>> list) {

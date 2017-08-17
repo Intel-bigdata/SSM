@@ -22,8 +22,9 @@
 
 <properties>
     <!-- <entry key="url">jdbc:sqlite:sqlit-db-path</entry> -->
-    <entry key="username">""</entry>
-    <entry key="password">""</entry>
+    <entry key="url">jdbc:mysql://localhost/SSMTest</entry>
+    <entry key="username">root</entry>
+    <entry key="password">314</entry>
 
     <entry key="initialSize">10</entry>
     <entry key="minIdle">4</entry>

@@ -79,13 +79,13 @@ public class MetaStoreUtils {
   public static void initializeDataBase(
       Connection conn) throws MetaStoreException {
     String createEmptyTables[] = new String[]{
-        "DROP TABLE IF EXISTS access_count_tables;",
-        "DROP TABLE IF EXISTS cached_files;",
-        "DROP TABLE IF EXISTS ecpolicys;",
-        "DROP TABLE IF EXISTS files;",
-        "DROP TABLE IF EXISTS groups;",
-        "DROP TABLE IF EXISTS owners;",
-        "DROP TABLE IF EXISTS storages;",
+        "DROP TABLE IF EXISTS access_count_table;",
+        "DROP TABLE IF EXISTS cached_file;",
+        "DROP TABLE IF EXISTS ec_policy;",
+        "DROP TABLE IF EXISTS file;",
+        "DROP TABLE IF EXISTS `group`;",
+        "DROP TABLE IF EXISTS owner;",
+        "DROP TABLE IF EXISTS storage;",
         "DROP TABLE IF EXISTS storage_policy;",
         "DROP TABLE IF EXISTS xattr;",
         "DROP TABLE IF EXISTS datanode_info;",
@@ -100,7 +100,7 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS back_up",
 
 
-        "CREATE TABLE access_count_tables (\n" +
+        "CREATE TABLE access_count_table (\n" +
             "  table_name varchar(255) NOT NULL,\n" +
             "  start_time bigint(20) NOT NULL,\n" +
             "  end_time bigint(20) NOT NULL\n" +
@@ -111,24 +111,24 @@ public class MetaStoreUtils {
             "  count bigint(20) NOT NULL\n" +
             ") ;",
 
-        "CREATE TABLE cached_files (\n" +
+        "CREATE TABLE cached_file (\n" +
             "  fid bigint(20) NOT NULL,\n" +
             "  path varchar(4096) NOT NULL,\n" +
             "  from_time bigint(20) NOT NULL,\n" +
             "  last_access_time bigint(20) NOT NULL,\n" +
-            "  num_accessed int(11) NOT NULL\n" +
+            "  accessed_num int(11) NOT NULL\n" +
             ") ;",
 
-        "CREATE TABLE ecpolicys (\n" +
+        "CREATE TABLE ec_policy (\n" +
             "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  name varchar(255) DEFAULT NULL,\n" +
-            "  cellsize int(11) DEFAULT NULL,\n" +
-            "  numDataUnits int(11) DEFAULT NULL,\n" +
-            "  numParityUnits int(11) DEFAULT NULL,\n" +
-            "  codecName varchar(64) DEFAULT NULL\n" +
+            "  cell_size int(11) DEFAULT NULL,\n" +
+            "  data_unit_num int(11) DEFAULT NULL,\n" +
+            "  parity_unit_num int(11) DEFAULT NULL,\n" +
+            "  codec_name varchar(64) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE files (\n" +
+        "CREATE TABLE file (\n" +
             "  path varchar(4096) NOT NULL,\n" +
             "  fid bigint(20) NOT NULL,\n" +
             "  length bigint(20) DEFAULT NULL,\n" +
@@ -144,17 +144,17 @@ public class MetaStoreUtils {
             "  ec_policy_id smallint(6) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE groups (\n" +
+        "CREATE TABLE `group` (\n" +
             "  gid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  group_name varchar(255) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE owners (\n" +
+        "CREATE TABLE owner (\n" +
             "  oid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  owner_name varchar(255) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE storages (\n" +
+        "CREATE TABLE storage (\n" +
             "  type varchar(255) NOT NULL,\n" +
             "  capacity bigint(20) NOT NULL,\n" +
             "  free bigint(20) NOT NULL\n" +

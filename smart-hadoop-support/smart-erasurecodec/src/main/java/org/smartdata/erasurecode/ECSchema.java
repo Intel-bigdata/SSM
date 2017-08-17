@@ -30,8 +30,8 @@ import java.util.Map;
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
 public final class ECSchema {
-  public static final String NUM_DATA_UNITS_KEY = "numDataUnits";
-  public static final String NUM_PARITY_UNITS_KEY = "numParityUnits";
+  public static final String NUM_DATA_UNITS_KEY = "data_unit_num";
+  public static final String NUM_PARITY_UNITS_KEY = "parity_unit_num";
   public static final String CODEC_NAME_KEY = "org/smartdata/erasurecode/codec";
 
   /**

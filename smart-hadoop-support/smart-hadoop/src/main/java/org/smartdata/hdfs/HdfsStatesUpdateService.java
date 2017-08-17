@@ -121,9 +121,9 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
 
   private void cleanFileTableContents(MetaStore adapter) throws IOException {
     try {
-      adapter.execute("DELETE FROM files");
+      adapter.execute("DELETE FROM file");
     } catch (MetaStoreException e) {
-      throw new IOException("Error while 'DELETE FROM files'", e);
+      throw new IOException("Error while 'DELETE FROM file'", e);
     }
   }
 

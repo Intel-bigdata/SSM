@@ -143,14 +143,14 @@ public class InotifyEventApplier {
   //Todo: should update mtime? atime?
   private String getCloseSql(Event.CloseEvent closeEvent) {
     return String.format(
-        "UPDATE files SET length = %s, modification_time = %s WHERE path = '%s';",
+        "UPDATE file SET length = %s, modification_time = %s WHERE path = '%s';",
         closeEvent.getFileSize(), closeEvent.getTimestamp(), closeEvent.getPath());
   }
 
   //Todo: should update mtime? atime?
 //  private String getTruncateSql(Event.TruncateEvent truncateEvent) {
 //    return String.format(
-//        "UPDATE files SET length = %s, modification_time = %s WHERE path = '%s';",
+//        "UPDATE file SET length = %s, modification_time = %s WHERE path = '%s';",
 //        truncateEvent.getFileSize(), truncateEvent.getTimestamp(), truncateEvent.getPath());
 //  }
 
@@ -170,10 +170,10 @@ public class InotifyEventApplier {
         metaStore.insertFile(info);
       }
     } else {
-      ret.add(String.format("UPDATE files SET path = replace(path, '%s', '%s') WHERE path = '%s';",
+      ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path = '%s';",
           renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
       if (info.isdir()) {
-        ret.add(String.format("UPDATE files SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
+        ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
             renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
       }
     }
@@ -185,18 +185,18 @@ public class InotifyEventApplier {
       case TIMES:
         if (metadataUpdateEvent.getMtime() > 0 && metadataUpdateEvent.getAtime() > 0) {
           return String.format(
-            "UPDATE files SET modification_time = %s, access_time = %s WHERE path = '%s';",
+            "UPDATE file SET modification_time = %s, access_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getMtime(),
             metadataUpdateEvent.getAtime(),
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getMtime() > 0) {
           return String.format(
-            "UPDATE files SET modification_time = %s WHERE path = '%s';",
+            "UPDATE file SET modification_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getMtime(),
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getAtime() > 0) {
           return String.format(
-            "UPDATE files SET access_time = %s WHERE path = '%s';",
+            "UPDATE file SET access_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getAtime(),
             metadataUpdateEvent.getPath());
         } else {
@@ -207,11 +207,11 @@ public class InotifyEventApplier {
         break;
       case PERMS:
         return String.format(
-            "UPDATE files SET permission = %s WHERE path = '%s';",
+            "UPDATE file SET permission = %s WHERE path = '%s';",
             metadataUpdateEvent.getPerms().toShort(), metadataUpdateEvent.getPath());
       case REPLICATION:
         return String.format(
-            "UPDATE files SET block_replication = %s WHERE path = '%s';",
+            "UPDATE file SET block_replication = %s WHERE path = '%s';",
             metadataUpdateEvent.getReplication(), metadataUpdateEvent.getPath());
       case XATTRS:
         //Todo
@@ -235,6 +235,6 @@ public class InotifyEventApplier {
   }
 
   private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) {
-    return Arrays.asList(String.format("DELETE FROM files WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
+    return Arrays.asList(String.format("DELETE FROM file WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
   }
 }

@@ -123,7 +123,7 @@ public class TestSqliteDB extends TestDaoUtil {
         "CREATE TABLE VIR_ACC_CNT_TAB_1_accessCount_5000 "
             + "AS SELECT * FROM blank_access_count_info;",
         "SELECT fid from VIR_ACC_CNT_TAB_1_accessCount_5000;",
-        "SELECT path FROM files WHERE (fid IN (SELECT fid FROM "
+        "SELECT path FROM file WHERE (fid IN (SELECT fid FROM "
             + "VIR_ACC_CNT_TAB_1_accessCount_5000 WHERE ((count > 3))));"
     };
 

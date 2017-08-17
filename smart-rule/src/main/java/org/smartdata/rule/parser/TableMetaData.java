@@ -29,22 +29,22 @@ public class TableMetaData {
 
   static {
     mapJoinableKeys.clear();
-    mapJoinableKeys.put("files-VIR_ACC_CNT_TAB",
+    mapJoinableKeys.put("file-VIR_ACC_CNT_TAB",
         new String[] {"fid", "fid"});
-    mapJoinableKeys.put("files-cached_files",
+    mapJoinableKeys.put("file-cached_file",
         new String[] {"fid", "fid"});
-    mapJoinableKeys.put("files-groups",
+    mapJoinableKeys.put("file-`group`",
         new String[] {"gid", "gid"});
-    mapJoinableKeys.put("files-owners",
+    mapJoinableKeys.put("file-owners",
         new String[] {"oid", "oid"});
     // TODO: others
 
     // TODO: hard code them now
     mapTableColumns.clear();
-    mapTableColumns.put("files", new String[] {
+    mapTableColumns.put("file", new String[] {
         "path", "fid"
     });
-    mapTableColumns.put("storages", new String[] {
+    mapTableColumns.put("storage", new String[] {
         "type", "capacity", "free"
     });
     // TODO: add other tables
