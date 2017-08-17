@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action;
+package org.smartdata.model.action;
 
 import com.google.gson.Gson;
 
@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Plan of MoverScheduler to indicate block, source and target.
  */
-public class SchedulePlan {
+public class FileMovePlan {
   // info of the namenode
   private URI namenode;
 
@@ -45,7 +45,7 @@ public class SchedulePlan {
   // info of block
   private List<Long> blockIds;
 
-  public SchedulePlan(URI namenode, String fileName) {
+  public FileMovePlan(URI namenode, String fileName) {
     this.namenode = namenode;
     this.fileName = fileName;
     sourceUuids = new ArrayList<>();
@@ -56,7 +56,7 @@ public class SchedulePlan {
     blockIds = new ArrayList<>();
   }
 
-  public SchedulePlan() {
+  public FileMovePlan() {
     this(null, null);
   }
 
@@ -116,8 +116,8 @@ public class SchedulePlan {
     return gson.toJson(this);
   }
 
-  public static SchedulePlan fromJsonString(String jsonPlan) {
+  public static FileMovePlan fromJsonString(String jsonPlan) {
     Gson gson = new Gson();
-    return gson.fromJson(jsonPlan, SchedulePlan.class);
+    return gson.fromJson(jsonPlan, FileMovePlan.class);
   }
 }

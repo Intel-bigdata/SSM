@@ -22,9 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionType;
 import org.smartdata.action.Utils;
-import org.smartdata.hdfs.action.move.MoveRunner;
 import org.smartdata.hdfs.action.move.MoverBasedMoveRunner;
 import org.smartdata.hdfs.action.move.MoverStatus;
+import org.smartdata.model.action.FileMovePlan;
 
 import java.util.Map;
 
@@ -36,7 +36,7 @@ public class MoveFileAction extends AbstractMoveFileAction {
   private MoverStatus status;
   private String storagePolicy;
   private String fileName;
-  private SchedulePlan movePlan;
+  private FileMovePlan movePlan;
 
   public MoveFileAction() {
     super();
@@ -58,7 +58,7 @@ public class MoveFileAction extends AbstractMoveFileAction {
       String plan = args.get(MOVE_PLAN);
       if (plan != null) {
         Gson gson = new Gson();
-        movePlan = gson.fromJson(plan, SchedulePlan.class);
+        movePlan = gson.fromJson(plan, FileMovePlan.class);
       }
     }
   }
@@ -66,15 +66,21 @@ public class MoveFileAction extends AbstractMoveFileAction {
   @Override
   protected void execute() throws Exception {
     if (fileName == null) {
-      throw new IllegalArgumentException("File parameter is missing! ");
+      throw new IllegalArgumentException("File parameter is missing!");
     }
+
+    if (movePlan == null) {
+      throw new IllegalArgumentException("File move plan not specified.");
+    }
+
     this.appendLog(
         String.format(
             "Action starts at %s : %s -> %s",
             Utils.getFormatedCurrentTime(), fileName, storagePolicy));
     dfsClient.setStoragePolicy(fileName, storagePolicy);
 
-    MoveRunner moveRunner = new MoverBasedMoveRunner(getContext().getConf(), this.status);
+    MoverBasedMoveRunner moveRunner =
+        new MoverBasedMoveRunner(getContext().getConf(), this.status);
     moveRunner.move(fileName, movePlan);
   }
 

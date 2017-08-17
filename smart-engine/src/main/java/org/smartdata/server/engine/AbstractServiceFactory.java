@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet;
+package org.smartdata.server.engine;
 
 import org.apache.hadoop.conf.Configuration;
+import org.smartdata.AbstractService;
+import org.smartdata.SmartConstants;
 import org.smartdata.SmartContext;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.ActionPreProcessService;
+import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.StatesUpdateService;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -29,16 +31,34 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActionSchedulerServiceFactory {
-  public static List<ActionPreProcessService> createServices(Configuration conf,
+public class AbstractServiceFactory {
+  public static AbstractService createStatesUpdaterService(Configuration conf,
+      SmartContext context, MetaStore metaStore) throws IOException {
+    String source = getStatesUpdaterName(conf);
+    try {
+      Class clazz = Class.forName(source);
+      Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
+      return (StatesUpdateService) c.newInstance(context, metaStore);
+    } catch (ClassNotFoundException | IllegalAccessException
+        | InstantiationException | NoSuchMethodException
+        | InvocationTargetException e) {
+      throw new IOException(e);
+    }
+  }
+
+  public static String getStatesUpdaterName(Configuration conf) {
+    return SmartConstants.SMART_STATES_UPDATE_SERVICE_IMPL;
+  }
+
+  public static List<ActionSchedulerService> createActionSchedulerServices(Configuration conf,
       SmartContext context, MetaStore metaStore, boolean allMustSuccess) throws IOException {
-    List<ActionPreProcessService> services = new ArrayList<>();
-    String[] serviceNames = getServiceNames(conf);
+    List<ActionSchedulerService> services = new ArrayList<>();
+    String[] serviceNames = getActionSchedulerNames(conf);
     for (String name : serviceNames) {
       try {
         Class clazz = Class.forName(name);
         Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
-        services.add((ActionPreProcessService) c.newInstance(context, metaStore));
+        services.add((ActionSchedulerService) c.newInstance(context, metaStore));
       } catch (ClassNotFoundException | IllegalAccessException
           | InstantiationException | NoSuchMethodException
           | InvocationTargetException e) {
@@ -52,8 +72,7 @@ public class ActionSchedulerServiceFactory {
     return services;
   }
 
-  public static String[] getServiceNames(Configuration conf) {
-    return conf.getTrimmedStrings(SmartConfKeys.SMART_ACTION_SCHEDULER_SERVICE_KEY,
-        SmartConfKeys.SMART_ACTION_SCHEDULER_SERVICE_DEFAULT);
+  public static String[] getActionSchedulerNames(Configuration conf) {
+    return SmartConstants.SMART_ACTION_SCHEDULER_SERVICE_IMPL.trim().split("\\s*,\\s*");
   }
 }

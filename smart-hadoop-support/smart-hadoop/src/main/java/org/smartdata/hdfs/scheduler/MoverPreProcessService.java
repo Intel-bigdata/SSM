@@ -26,11 +26,11 @@ import org.smartdata.SmartContext;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.MoveFileAction;
-import org.smartdata.hdfs.action.SchedulePlan;
+import org.smartdata.model.action.FileMovePlan;
 import org.smartdata.hdfs.action.move.MoverStatus;
 import org.smartdata.hdfs.metric.fetcher.DatanodeStorageReportProcTask;
 import org.smartdata.hdfs.metric.fetcher.MoverProcessor;
-import org.smartdata.metastore.ActionPreProcessService;
+import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.LaunchAction;
 
@@ -39,7 +39,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
-public class MoverPreProcessService extends ActionPreProcessService {
+public class MoverPreProcessService extends ActionSchedulerService {
   private DFSClient client;
   private MoverStatus moverStatus;
   private MoverProcessor processor;
@@ -111,7 +111,7 @@ public class MoverPreProcessService extends ActionPreProcessService {
       client.setStoragePolicy(file, policy);
       ExitStatus exitStatus = processor.processNamespace(new Path(file));
       if (exitStatus == ExitStatus.SUCCESS) {
-        SchedulePlan plan = processor.getSchedulePlan();
+        FileMovePlan plan = processor.getSchedulePlan();
         plan.setNamenode(nnUri);
         action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
       }

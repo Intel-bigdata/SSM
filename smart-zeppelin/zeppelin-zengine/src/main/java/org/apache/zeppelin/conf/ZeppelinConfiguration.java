@@ -17,13 +17,6 @@
 
 package org.apache.zeppelin.conf;
 
-import java.io.File;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.ConfigurationNode;
@@ -32,6 +25,13 @@ import org.apache.zeppelin.notebook.repo.GitNotebookRepo;
 import org.apache.zeppelin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Zeppelin configuration.
@@ -520,7 +520,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   public static enum ConfVars {
     ZEPPELIN_HOME("zeppelin.home", "./"),
     ZEPPELIN_ADDR("zeppelin.server.addr", "0.0.0.0"),
-    ZEPPELIN_PORT("zeppelin.server.port", 8080),
+    ZEPPELIN_PORT("zeppelin.server.port", 7045),
     ZEPPELIN_SERVER_CONTEXT_PATH("zeppelin.server.context.path", "/"),
     ZEPPELIN_SSL("zeppelin.ssl", false),
     ZEPPELIN_SSL_PORT("zeppelin.server.ssl.port", 8443),
