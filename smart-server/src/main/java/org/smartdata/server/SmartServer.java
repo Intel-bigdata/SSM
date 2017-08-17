@@ -45,6 +45,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import org.smartdata.tidb.Launch;
+
 /**
  * From this Smart Storage Management begins.
  */
@@ -326,6 +328,16 @@ public class SmartServer {
 
   public static void main(String[] args) {
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
+
+    Thread db=new Thread(new Launch());
+    db.start();
+    try {
+      Thread.sleep(6000);
+    }
+    catch (InterruptedException ex){
+      LOG.error(ex.toString());
+    }
+
     try {
       final SmartServer inst = launchWith(args, null);
       if (inst != null) {
