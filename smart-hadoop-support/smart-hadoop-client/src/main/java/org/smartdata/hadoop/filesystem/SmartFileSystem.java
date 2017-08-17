@@ -20,9 +20,9 @@ package org.smartdata.hadoop.filesystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.smartdata.client.SmartClient;
-import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.hdfs.client.SmartDFSClient;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -57,13 +57,10 @@ import java.net.URI;
  */
 
 public class SmartFileSystem extends DistributedFileSystem {
-
-  private SmartClient smartClient;
+  private SmartDFSClient smartClient;
   private InetSocketAddress smartServerAddress;
+  private boolean verifyChecksum = true;
   private boolean healthy;
-
-  public SmartFileSystem() {
-  }
 
   @Override
   public void initialize(URI uri, Configuration conf) throws IOException {
@@ -83,35 +80,24 @@ public class SmartFileSystem extends DistributedFileSystem {
       throw new IOException("Cannot parse smart server rpc address or port" +
           ", address: " + smartServerIp + ", port:" +  smartServerPort);
     }
-    this.smartClient = new SmartClient(conf, smartServerAddress);
+    this.smartClient = new SmartDFSClient(conf, smartServerAddress);
     healthy = true;
   }
 
   @Override
-  public FSDataInputStream open(Path file, final int bufferSize)
-      throws IOException {
-    FSDataInputStream inputStream = super.open(file, bufferSize);
-    this.statistics.incrementReadOps(1);
-    reportFileAccessEvent(file.toUri().getPath());
-    return inputStream;
+  public FSDataInputStream open(Path path, final int bufferSize)
+    throws IOException {
+    statistics.incrementReadOps(1);
+    Path absF = fixRelativePart(path);
+    final DFSInputStream dfsis = smartClient.open(absF.toUri().getPath(), bufferSize, verifyChecksum);
+    return smartClient.createWrappedInputStream(dfsis);
   }
 
-  private void reportFileAccessEvent(String src) {
-    try {
-      // If SSM server is down, reduce the impact to upper layer application.
-      if (!healthy) {
-        return;
-      }
-      smartClient.reportFileAccessEvent(new FileAccessEvent(src));
-    } catch (IOException e) {
-      // Here just ignores that failed to report
-      healthy = false;
-      LOG.error("Cannot report file access event to SmartServer: " + src
-          + " , for: " + e.getMessage()
-          + " , report mechanism will be disabled now in this instance.");
-    }
+  public void setVerifyChecksum(boolean verifyChecksum) {
+    this.verifyChecksum = verifyChecksum;
   }
 
+  @Override
   public void close() throws IOException {
     try {
       super.close();
