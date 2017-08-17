@@ -48,13 +48,13 @@ public class ActionDao {
 
   public List<ActionInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from actions",
+    return jdbcTemplate.query("select * from action",
         new ActionRowMapper());
   }
 
   public ActionInfo getById(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from actions where aid = ?",
+    return jdbcTemplate.queryForObject("select * from action where aid = ?",
         new Object[]{aid}, new ActionRowMapper());
   }
 
@@ -63,20 +63,20 @@ public class ActionDao {
         new NamedParameterJdbcTemplate(dataSource);
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
     parameterSource.addValue("aids", aids);
-    return namedParameterJdbcTemplate.query("select * from actions WHERE aid IN (:aids)",
+    return namedParameterJdbcTemplate.query("select * from action WHERE aid IN (:aids)",
         parameterSource, new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCid(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from actions where cid = ?",
+    return jdbcTemplate.query("select * from action where cid = ?",
         new Object[]{cid}, new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCondition(String aidCondition,
       String cidCondition) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sqlPrefix = "SELECT * FROM actions WHERE ";
+    String sqlPrefix = "SELECT * FROM action WHERE ";
     String sqlAid = (aidCondition == null) ? "" : "AND aid " + aidCondition;
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlFinal = "";
@@ -92,25 +92,25 @@ public class ActionDao {
   public List<ActionInfo> getLatestActions(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     jdbcTemplate.setMaxRows(size);
-    String sql = "select * from actions ORDER by aid DESC";
+    String sql = "select * from action ORDER by aid DESC";
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
   public void delete(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from actions where aid = ?";
+    final String sql = "delete from action where aid = ?";
     jdbcTemplate.update(sql, aid);
   }
 
   public void insert(ActionInfo actionInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("actions");
+    simpleJdbcInsert.setTableName("action");
     simpleJdbcInsert.execute(toMap(actionInfo));
   }
 
   public void insert(ActionInfo[] actionInfos) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("actions");
+    simpleJdbcInsert.setTableName("action");
     Map<String, Object>[] maps = new Map[actionInfos.length];
     for (int i = 0; i < actionInfos.length; i++) {
       maps[i] = toMap(actionInfos[i]);
@@ -124,7 +124,7 @@ public class ActionDao {
 
   public int[] update(final ActionInfo[] actionInfos) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update actions set " +
+    String sql = "update action set " +
         "result = ?, " +
         "log = ?, " +
         "successful = ?, " +
@@ -156,7 +156,7 @@ public class ActionDao {
   public long getMaxId() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Long ret = jdbcTemplate
-        .queryForObject("select MAX(aid) from actions", Long.class);
+        .queryForObject("select MAX(aid) from action", Long.class);
     if (ret == null) {
       return 0;
     } else {

@@ -91,8 +91,8 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS datanode_info;",
         "DROP TABLE IF EXISTS datanode_storage_info;",
         "DROP TABLE IF EXISTS rule;",
-        "DROP TABLE IF EXISTS cmdlets;",
-        "DROP TABLE IF EXISTS actions;",
+        "DROP TABLE IF EXISTS cmdlet;",
+        "DROP TABLE IF EXISTS action;",
         "DROP TABLE IF EXISTS blank_access_count_info;",  // for special cases
         "DROP TABLE IF EXISTS file_diff;",  // incremental diff for disaster recovery
         "DROP TABLE IF EXISTS global_config",
@@ -203,7 +203,7 @@ public class MetaStoreUtils {
 
         "CREATE TABLE rule (\n" +
             "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            // "  name varchar(255) DEFAULT NULL,\n" +
+            "  name varchar(255) DEFAULT NULL,\n" +
             "  state tinyint(4) NOT NULL,\n" +
             "  rule_text varchar(4096) NOT NULL,\n" +
             "  submit_time bigint(20) NOT NULL,\n" +
@@ -212,7 +212,7 @@ public class MetaStoreUtils {
             "  generated_cmdlets int(11) NOT NULL\n" +
             ") ;",
 
-        "CREATE TABLE cmdlets (\n" +
+        "CREATE TABLE cmdlet (\n" +
             "  cid INTEGER PRIMARY KEY,\n" +
             "  rid INTEGER NOT NULL,\n" +
             "  aids varchar(4096) NOT NULL,\n" +
@@ -222,7 +222,7 @@ public class MetaStoreUtils {
             "  state_changed_time bigint(20) NOT NULL\n" +
             ") ;",
 
-        "CREATE TABLE actions (\n" +
+        "CREATE TABLE action (\n" +
             "  aid INTEGER PRIMARY KEY,\n" +
             "  cid INTEGER NOT NULL,\n" +
             "  action_name varchar(4096) NOT NULL,\n" +
