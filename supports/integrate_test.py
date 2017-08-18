@@ -160,27 +160,30 @@ class IntegrateTest(unittest.TestCase):
         self.assertTrue(len(queue) == 0)
 
     def test_mover_read(self):
-        cid_create = create_file("/testFile")
-        print check_storage("/testFile")
-        cid_move = submit_cmdlet("allssd -file /testFile")
+        # cid_create = create_file("/testFile")
+        # print check_storage("/testFile")
+        # Test with 10 GB file
+        file_path = TEST_FILES[0]
+        cid_move = submit_cmdlet("allssd -file " + file_path)
+        check_storage(file_path)
         # read the file
-        cid_read = read_file("/testFile")
-        #check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid=cid_read) == "DONE")
-        self.assertTrue(wait_for_cmdlet(cid=cid_move) == "DONE")
-        self.assertTrue(wait_for_cmdlet(cid=cid_create) == "DONE")
-
+        cid_read = read_file(file_path)
+        # check the statement of read
+        self.assertTrue(wait_for_cmdlet(cid=cid_read)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_move)['state'] == "DONE")
 
     def test_mover_append(self):
-        cid_create = create_file("/testFile")
-        print check_storage("/testFile")
-        cid_move = submit_cmdlet("allssd -file /testFile")
+        # cid_create = create_file("/testFile")
+        # print check_storage("/testFile")
+        # Test with 10 GB file
+        file_path = TEST_FILES[0]
+        cid_move = submit_cmdlet("allssd -file " + file_path)
+        check_storage(file_path)
         # read the file
         cid_append = read_file("/testFile")
         # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid=cid_append) == "DONE")
-        self.assertTrue(wait_for_cmdlet(cid=cid_move) == "DONE")
-        self.assertTrue(wait_for_cmdlet(cid=cid_create) == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_append)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_move)['state'] == "DONE")
 
     def test_mover_stress(self):
         # TODO launch 100000 move actions
