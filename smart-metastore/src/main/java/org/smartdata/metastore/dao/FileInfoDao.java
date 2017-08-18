@@ -57,19 +57,19 @@ public class FileInfoDao {
 
   public List<FileInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM files",
+    return jdbcTemplate.query("SELECT * FROM file",
         new FileInfoDao.FileInfoRowMapper());
   }
 
   public FileInfo getById(long fid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT * FROM files WHERE fid = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM file WHERE fid = ?",
         new Object[]{fid}, new FileInfoDao.FileInfoRowMapper());
   }
 
   public FileInfo getByPath(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT * FROM files WHERE path = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM file WHERE path = ?",
         new Object[]{path}, new FileInfoDao.FileInfoRowMapper());
   }
 
@@ -78,7 +78,7 @@ public class FileInfoDao {
     NamedParameterJdbcTemplate namedParameterJdbcTemplate =
         new NamedParameterJdbcTemplate(dataSource);
     Map<String, Long> pathToId = new HashMap<>();
-    String sql = "SELECT * FROM files WHERE path IN (:paths)";
+    String sql = "SELECT * FROM file WHERE path IN (:paths)";
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
     parameterSource.addValue("paths", paths);
     List<FileInfo> files = namedParameterJdbcTemplate.query(sql,
@@ -94,7 +94,7 @@ public class FileInfoDao {
     NamedParameterJdbcTemplate namedParameterJdbcTemplate =
         new NamedParameterJdbcTemplate(dataSource);
     Map<Long, String> idToPath = new HashMap<>();
-    String sql = "SELECT * FROM files WHERE fid IN (:ids)";
+    String sql = "SELECT * FROM file WHERE fid IN (:ids)";
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
     parameterSource.addValue("ids", ids);
     List<FileInfo> files = namedParameterJdbcTemplate.query(sql,
@@ -107,14 +107,14 @@ public class FileInfoDao {
 
   public void insert(FileInfo fileInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("files");
+    simpleJdbcInsert.setTableName("file");
     simpleJdbcInsert.execute(toMap(fileInfo,
         mapOwnerIdName, mapGroupIdName));
   }
 
   public void insert(FileInfo[] fileInfos) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("files");
+    simpleJdbcInsert.setTableName("file");
     Map<String, Object>[] maps = new Map[fileInfos.length];
     for (int i = 0; i < fileInfos.length; i++) {
       maps[i] = toMap(fileInfos[i],mapOwnerIdName,mapGroupIdName);
@@ -124,19 +124,19 @@ public class FileInfoDao {
 
   public int update(String path, int storagePolicy) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "UPDATE files SET sid =? WHERE path = ?;";
+    final String sql = "UPDATE file SET sid =? WHERE path = ?;";
     return jdbcTemplate.update(sql, storagePolicy, path);
   }
 
   public void deleteById(long fid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from files where fid = ?";
+    final String sql = "delete from file where fid = ?";
     jdbcTemplate.update(sql, fid);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE from files";
+    final String sql = "DELETE from file";
     jdbcTemplate.execute(sql);
   }
 

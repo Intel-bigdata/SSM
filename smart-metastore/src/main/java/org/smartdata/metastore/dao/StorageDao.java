@@ -45,7 +45,7 @@ public class StorageDao {
 
   public Map<String, StorageCapacity> getStorageTablesItem() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT * FROM storages";
+    String sql = "SELECT * FROM storage";
     List<StorageCapacity> list = jdbcTemplate.query(sql,
         new RowMapper<StorageCapacity>() {
           public StorageCapacity mapRow(ResultSet rs,
@@ -81,7 +81,7 @@ public class StorageDao {
 
   public StorageCapacity getStorageCapacity(String type) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT * FROM storages WHERE type = ?";
+    String sql = "SELECT * FROM storage WHERE type = ?";
     return jdbcTemplate.queryForObject(sql, new Object[]{type},
         new RowMapper<StorageCapacity>() {
           public StorageCapacity mapRow(ResultSet rs,
@@ -123,7 +123,7 @@ public class StorageDao {
           + policyName + "'");
     }
     String sql = String.format(
-        "UPDATE files SET sid = %d WHERE path = '%s';",
+        "UPDATE file SET sid = %d WHERE path = '%s';",
         sid, path);
     return jdbcTemplate.update(sql);
   }
@@ -131,7 +131,7 @@ public class StorageDao {
   public void insertStoragesTable(final StorageCapacity[] storages)
       throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "INSERT INTO storages (type, capacity, free) VALUES (?,?,?);";
+    String sql = "INSERT INTO storage (type, capacity, free) VALUES (?,?,?);";
     jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
           public void setValues(PreparedStatement ps,
@@ -151,7 +151,7 @@ public class StorageDao {
       , Long capacity, Long free) throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = null;
-    String sqlPrefix = "UPDATE storages SET";
+    String sqlPrefix = "UPDATE storage SET";
     String sqlCapacity = (capacity != null) ? ", capacity = '"
         + capacity + "'" : null;
     String sqlFree = (free != null) ? ", free = '" + free + "' " : null;

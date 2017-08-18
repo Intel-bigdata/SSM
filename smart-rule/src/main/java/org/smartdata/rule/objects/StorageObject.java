@@ -32,13 +32,13 @@ public class StorageObject extends SmartObject {
   static {
     properties = new HashMap<>();
     properties.put("capacity", new Property("capacity", ValueType.LONG,
-        Arrays.asList(ValueType.STRING), "storages", "capacity", true,
+        Arrays.asList(ValueType.STRING), "storage", "capacity", true,
         "type = $0"));
     properties.put("free", new Property("free", ValueType.LONG,
-        Arrays.asList(ValueType.STRING), "storages", "free", true,
+        Arrays.asList(ValueType.STRING), "storage", "free", true,
         "type = $0 AND free"));
     properties.put("utilization", new Property("utilization", ValueType.LONG,
-        Arrays.asList(ValueType.STRING), "storages", "free", true,
+        Arrays.asList(ValueType.STRING), "storage", "free", true,
         "type = $0 AND (capacity - free) * 100.0 / capacity"));
   }
 
