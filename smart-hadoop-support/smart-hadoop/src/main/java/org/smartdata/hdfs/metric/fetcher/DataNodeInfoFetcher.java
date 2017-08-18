@@ -19,11 +19,25 @@ package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DFSUtil;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
+import org.apache.hadoop.hdfs.server.protocol.StorageReport;
+import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
+import org.smartdata.hdfs.action.move.Source;
+import org.smartdata.hdfs.action.move.StorageGroup;
+import org.smartdata.hdfs.action.move.StorageMap;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.DataNodeInfo;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -38,12 +52,12 @@ public class DataNodeInfoFetcher {
   private final ScheduledExecutorService scheduledExecutorService;
   private ScheduledFuture dnStorageReportProcTaskFuture;
   private Configuration conf;
-
+  private DataNodeInfoFetchTask procTask;
   public static final Logger LOG =
       LoggerFactory.getLogger(DataNodeInfoFetcher.class);
 
   public DataNodeInfoFetcher(DFSClient client, MetaStore metaStore,
-      ScheduledExecutorService service, Configuration conf) {
+                             ScheduledExecutorService service, Configuration conf) {
     this.client = client;
     this.metaStore = metaStore;
     this.scheduledExecutorService = service;
@@ -53,16 +67,83 @@ public class DataNodeInfoFetcher {
   public void start() throws IOException {
     LOG.info("Starting DataNodeInfoFetcher service ...");
 
-    DatanodeStorageReportProcTask procTask = new DatanodeStorageReportProcTask(client, conf);
+    procTask = new DataNodeInfoFetchTask(client, conf, metaStore);
     dnStorageReportProcTaskFuture = scheduledExecutorService.scheduleAtFixedRate(
         procTask, 0, DN_STORAGE_REPORT_UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
 
     LOG.info("DataNodeInfoFetcher service started.");
   }
 
+  public boolean isFetchFinished() {
+    return this.procTask.isFinished();
+  }
+
   public void stop() {
     if (dnStorageReportProcTaskFuture != null) {
       dnStorageReportProcTaskFuture.cancel(false);
+    }
+  }
+
+  private class DataNodeInfoFetchTask implements Runnable {
+    private DFSClient client;
+    private Configuration conf;
+    private MetaStore metaStore;
+    private volatile boolean isFinished = false;
+    public final Logger LOG =
+        LoggerFactory.getLogger(org.smartdata.hdfs.metric.fetcher.DatanodeStorageReportProcTask.class);
+
+    public DataNodeInfoFetchTask(DFSClient client, Configuration conf, MetaStore metaStore) throws IOException {
+      this.client = client;
+      this.conf = conf;
+      this.metaStore = metaStore;
+    }
+
+    @Override
+    public void run() {
+      try {
+        final List<DatanodeStorageReport> reports = getDNStorageReports();
+        metaStore.deleteAllDataNodeInfo();
+        for(DatanodeStorageReport r : reports){
+          metaStore.insertDataNodeInfo(transform(r.getDatanodeInfo()));
+        }
+        isFinished = true;
+      } catch (IOException e) {
+        LOG.error("Process datanode report error", e);
+      } catch (MetaStoreException e) {
+        e.printStackTrace();
+      }
+    }
+
+    /**
+     * Get live datanode storage reports and then build the network topology.
+     * @return
+     * @throws IOException
+     */
+    public List<DatanodeStorageReport> getDNStorageReports() throws IOException {
+      final DatanodeStorageReport[] reports =
+          client.getDatanodeStorageReport(HdfsConstants.DatanodeReportType.LIVE);
+      final List<DatanodeStorageReport> trimmed = new ArrayList<DatanodeStorageReport>();
+      // create network topology and classify utilization collections:
+      // over-utilized, above-average, below-average and under-utilized.
+      for (DatanodeStorageReport r : DFSUtil.shuffle(reports)) {
+        final DatanodeInfo datanode = r.getDatanodeInfo();
+        trimmed.add(r);
+      }
+      return trimmed;
+    }
+
+    private DataNodeInfo transform(DatanodeInfo datanodeInfo) {
+      return DataNodeInfo.newBuilder().setUuid(datanodeInfo.getDatanodeUuid()).
+          setHostName(datanodeInfo.getHostName()).
+          setRpcAddress(datanodeInfo.getIpAddr() +
+              Integer.toString(datanodeInfo.getIpcPort())).
+          setCacheCapacity(datanodeInfo.getCacheCapacity()).
+          setCacheUsed(datanodeInfo.getCacheUsed()).
+          setLocation(datanodeInfo.getNetworkLocation()).build();
+    }
+
+    public boolean isFinished() {
+      return this.isFinished;
     }
   }
 }
