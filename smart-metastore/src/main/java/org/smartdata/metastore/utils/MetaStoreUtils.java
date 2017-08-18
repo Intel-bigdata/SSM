@@ -34,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -335,7 +336,12 @@ public class MetaStoreUtils {
         }
         return new MetaStore(new DruidPool(p));
       } catch (Exception e) {
-        throw new MetaStoreException(e);
+        if (e instanceof InvalidPropertiesFormatException) {
+          throw new MetaStoreException(
+              "Malformat druid.xml, please check the file.", e);
+        } else {
+          throw new MetaStoreException(e);
+        }
       }
     } else {
       LOG.info("DB connection pool config file " + expectedCpPath
