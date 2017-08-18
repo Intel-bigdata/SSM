@@ -38,7 +38,7 @@ public class DataNodeInfoFetcher {
   private final ScheduledExecutorService scheduledExecutorService;
   private ScheduledFuture dnStorageReportProcTaskFuture;
   private Configuration conf;
-
+  private DatanodeStorageReportProcTask procTask;
   public static final Logger LOG =
       LoggerFactory.getLogger(DataNodeInfoFetcher.class);
 
@@ -53,11 +53,15 @@ public class DataNodeInfoFetcher {
   public void start() throws IOException {
     LOG.info("Starting DataNodeInfoFetcher service ...");
 
-    DatanodeStorageReportProcTask procTask = new DatanodeStorageReportProcTask(client, conf);
+    procTask = new DatanodeStorageReportProcTask(client, conf, metaStore);
     dnStorageReportProcTaskFuture = scheduledExecutorService.scheduleAtFixedRate(
         procTask, 0, DN_STORAGE_REPORT_UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
 
     LOG.info("DataNodeInfoFetcher service started.");
+  }
+
+  public boolean isFetchFinished() {
+    return this.procTask.isFinished();
   }
 
   public void stop() {
