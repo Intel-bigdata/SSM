@@ -21,13 +21,13 @@ MOVE_TYPE = ["onessd", "allssd", "archive"]
 TEST_FILES = ["/test/data_1GB", "/test/data_10MB", "/test/data_64MB"]
 
 
-def check_post_resp():
+def check_post_resp(resp):
     if resp.status_code != 201:
         raise ApiError("Post fails")
 
 
-def check_get_resp():
-    if res.status_code != 200:
+def check_get_resp(resp):
+    if resp.status_code != 200:
         raise ApiError("Get fails")
 
 
@@ -59,8 +59,9 @@ def get_rule(rid):
     return resp.json()["body"]
 
 
-def submit_rule(rid):
-    pass
+def submit_rule(rid_str):
+    resp = requests.post(RULE_ROOT + "/submit", data=rid_str)
+    return resp.json()["body"]
 
 
 def get_action(aid):
@@ -69,15 +70,23 @@ def get_action(aid):
 
 
 def read_file(file_path):
-    pass
+    str = "read -file" + file_path
+    submit_cmdlet(str)
 
 
 def create_file(file_path, length=1024):
-    pass
+    str = "write -file " + file_path + " -length " + length
+    submit_cmdlet(str)
 
 
 def delete_file(file_path, recursivly=True):
-    pass
+    str = "delete -file " + file_path
+    submit_cmdlet(str)
+
+
+def append_to_file(file_path, length=1024):
+    str = "append -file " + file_path + " -length " + length
+    submit_cmdlet(str)
 
 
 def random_move(file_path):
