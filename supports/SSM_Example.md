@@ -52,7 +52,9 @@ hdfs dfs -put smalldata /testFileAccessCount/file5
 ## Rules
 Add rules with GUI. Then, trigger these rules with actions.
 
-**Rule1:** 
+
+### Example 1
+**Rule 1:** 
 
 Watch `/testCache/`, cache files if conditions are satisfied.
 
@@ -60,13 +62,20 @@ Watch `/testCache/`, cache files if conditions are satisfied.
 file : path matches "/testCache/*" and accessCount(40s) > 1 | cache 
 ```
 
-**Tigger Example 1**
+**Tigger Rule 1**
 
 ```
 read -file /testCache/testCacheFile
+read -file /testCache/testCacheFile
 ```
 
-**Rule2:** 
+**Check Result of Rule 1**
+
+Check rule status in rule page (check number and generate cmdlet number), then check cache status through cached file page.
+
+
+### Example 2
+**Rule 2:** 
 
 Watch `/testAllSsd/`, move files to all ssd if conditions are satisified.
 
@@ -75,24 +84,43 @@ file : path matches "/testAllSsd/*" and accessCount(40s) > 1 | allssd
 
 ```
 
-**Tigger Example 2**
+**Tigger Rule 2**
 
 ```
 read -file /testAllSsd/testAllSsdFile
+read -file /testAllSsd/testAllSsdFile
 ```
 
-**Rule3:** 
+**Check Result of Rule 2**
+
+Check rule status in rule page (check number and generate cmdlet number), then check storage type through following command.
+
+```
+checkstorage -file /testAllSsd/testAllSsdFile
+```
+
+
+### Example 3
+**Rule 3:** 
 
 Watch `/testArchive/`, archive files if conditions are satisifyied.
 
 ```
-file : path matches "/testArchive/*" and age > 10min | archive 
+file : path matches "/testArchive/*" and age > 10m | archive 
 ```
 
-**Tigger Example 3**
+**Tigger Rule 3**
 
 ```
--file /testArchive/testArchiveFile
+read -file /testArchive/testArchiveFile
+```
+
+**Check Result of Rule 3**
+
+Wait for 10 minutes, check rule status in rule page (check number and generate cmdlet number), then check storage type through following command.
+
+```
+read -file /testArchive/testArchiveFile
 ```
 
 ## Actions

@@ -19,7 +19,7 @@ PRIMARY_ROOT = REST_ROOT + "/primary"
 
 
 MOVE_TYPE = ["onessd", "allssd", "archive"]
-TEST_FILES = ["/test/data_1GB", "/test/data_10MB", "/test/data_64MB"]
+TEST_FILES = ["/test/data_10GB", "/test/data_1GB", "/test/data_10MB", "/test/data_64MB"]
 
 
 def check_post_resp(resp):
@@ -33,11 +33,17 @@ def check_get_resp(resp):
 
 
 def submit_cmdlet(cmd_str):
+    """
+    submit cmdlet then return cid
+    """
     resp = requests.post(CMDLET_ROOT + "/submit", data=cmd_str)
     return resp.json()["body"]
 
 
 def get_cmdlet(cid):
+    """
+    get cmdlet json with cid
+    """
     resp = requests.get(CMDLET_ROOT + "/" + str(cid) + "/info")
     return resp.json()["body"]
 
@@ -60,9 +66,21 @@ def get_rule(rid):
     return resp.json()["body"]
 
 
-def submit_rule(rid_str):
-    resp = requests.post(RULE_ROOT + "/submit", data=rid_str)
+def submit_rule(rule_str):
+    resp = requests.post(RULE_ROOT + "/submit", data=rule_str)
     return resp.json()["body"]
+
+
+def delete_rule(rid):
+    requests.post(RULE_ROOT + "/" + str(rid) + "/delete")
+
+
+def start_rule(rid):
+    requests.post(RULE_ROOT + "/" + str(rid) + "/start")
+
+
+def stop_rule(rid):
+    requests.post(RULE_ROOT + "/" + str(rid) + "/stop")
 
 
 def get_action(aid):
@@ -116,9 +134,12 @@ class IntegrateTest(unittest.TestCase):
             # Submit cmdlets
             for index in range(len(TEST_FILES)):
                 cmdlet = wait_for_cmdlet(random_move(TEST_FILES[index]))
-                if cmdlet is None:
+                print cmdlet
+                wait_for_cmdlet(check_storage(TEST_FILES[index]))
+                if cmdlet is None or cmdlet['state'] == "FAILED":
                     queue.append(cmdlet['cid'])
             count -= 1
+        print "Failed cids = {}".format(queue)
         self.assertTrue(len(queue) == 0)
 
     def test_mover_parallel(self):
@@ -129,12 +150,13 @@ class IntegrateTest(unittest.TestCase):
         while count > 0:
             # Submit cmdlets
             for index in range(len(TEST_FILES)):
-                queue.add(random_move(TEST_FILES[index]))
+                queue.append(random_move(TEST_FILES[index]))
             # check status
             while len(queue) != 0:
                 print wait_for_cmdlet(queue[0])
                 queue.pop(0)
             count -= 1
+        print "Failed cids = {}".format(queue)
         self.assertTrue(len(queue) == 0)
 
     def test_mover_read(self):
@@ -160,24 +182,47 @@ class IntegrateTest(unittest.TestCase):
         self.assertTrue(wait_for_cmdlet(cid=cid_move) == "DONE")
         self.assertTrue(wait_for_cmdlet(cid=cid_create) == "DONE")
 
+    def test_mover_stress(self):
+        # TODO launch 100000 move actions
+        pass
+
     def test_rule_hot(self):
         # Submit rule
+        rule_str = "file : path matches \"/test/*\" and accessCount(40s) > 1 | allssd"
+        rid = submit_rule(rule_str)
+        start_rule(rid)
+        file_path = TEST_FILES[random.randrange(len(TEST_FILES))]
         # Activate rule
         # Submit read action to trigger rule
+        # Read twice
+        wait_for_cmdlet(read_file(file_path))
+        wait_for_cmdlet(read_file(file_path))
         # Statue check
-        pass
+        rule = get_rule(rid)
+        self.assertTrue(rule['numCmdsGen'] > 0)
+        delete_rule(rid)
 
     def test_rule_cold(self):
         # Submit rule
+        rule_str = "file : path matches \"/testArchive/*\" and age > 4s | archive "
+        rid = submit_rule(rule_str)
+        start_rule(rid)
+        file_path = TEST_FILES[random.randrange(len(TEST_FILES))]
         # Activate rule
         # wait to trigger rule
+        # Read twice
+        wait_for_cmdlet(read_file(file_path))
+        time.sleep(5)
         # Statue check
-        pass
+        rule = get_rule(rid)
+        self.assertTrue(rule['numCmdsGen'] > 0)
+        delete_rule(rid)
 
     def test_rule_delete(self):
         pass
 
-    def test_rule(self):
+    def test_rule_stress(self):
+        # Add 100000 different rules
         pass
 
 
