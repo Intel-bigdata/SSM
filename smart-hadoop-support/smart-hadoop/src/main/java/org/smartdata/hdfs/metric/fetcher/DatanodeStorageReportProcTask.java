@@ -91,9 +91,7 @@ public class DatanodeStorageReportProcTask implements Runnable {
           storages.add(source, target);
         }
       }
-
       metaStore.deleteAllDataNodeInfo();
-
       for(DatanodeStorageReport r : reports){
         metaStore.insertDataNodeInfo(transform(r.getDatanodeInfo()));
       }

@@ -30,7 +30,6 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.TestDaoUtil;
-import org.smartdata.model.DataNodeInfo;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -60,6 +59,15 @@ public class TestDataNodeInfoFetcher extends TestDaoUtil {
         scheduledExecutorService, conf);
   }
 
+  @After
+  public void shutdown() throws Exception {
+    fetcher.stop();
+    fetcher = null;
+    closeDao();
+    if (cluster != null) {
+      cluster.shutdown();
+    }
+  }
 
   @Test
   public void testDataNodeInfoFetcher() throws IOException, InterruptedException,
@@ -69,15 +77,5 @@ public class TestDataNodeInfoFetcher extends TestDaoUtil {
         Thread.sleep(1000);
       }
       Assert.assertEquals(2,metaStore.getAllDataNodeInfo().size());
-  }
-
-  @After
-  public void shutdown() throws Exception {
-    fetcher.stop();
-    fetcher = null;
-    closeDao();
-    if (cluster != null) {
-      cluster.shutdown();
-    }
   }
 }
