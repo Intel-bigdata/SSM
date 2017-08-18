@@ -99,6 +99,8 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS global_config",
         "DROP TABLE IF EXISTS cluster_config",
         "DROP TABLE IF EXISTS backup_file",
+        "DROP TABLE IF EXISTS sys_info",
+        "DROP TABLE IF EXISTS cluster_info",
 
 
         "CREATE TABLE access_count_table (\n" +
@@ -258,6 +260,20 @@ public class MetaStoreUtils {
             " node_name varchar(512) NOT NULL UNIQUE,\n" +
             " config_path varchar(3072) NOT NULL\n" +
             ") ;",
+
+        "CREATE TABLE sys_info (\n" +
+            "  property varchar(512) NOT NULL UNIQUE,\n" +
+            "  value varchar(4096) NOT NULL\n" +
+            ");",
+
+        "CREATE TABLE cluster_info (\n" +
+            "  cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "  name varchar(512) NOT NULL UNIQUE,\n" +
+            "  url varchar(4096) NOT NULL,\n" +
+            "  conf_path varchar(4096) NOT NULL,\n" +
+            "  state varchar(64) NOT NULL,\n" +   // ClusterState
+            "  type varchar(64) NOT NULL\n" +    // ClusterType
+            ");",
 
         "CREATE TABLE backup_file (\n" +
             " rid bigint(20) NOT NULL,\n" +
