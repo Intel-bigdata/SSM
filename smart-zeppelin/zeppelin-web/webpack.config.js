@@ -86,7 +86,7 @@ module.exports = function makeWebpackConfig () {
     app: './src/index.js'
   };
 
-  var serverPort = 8080;
+  var serverPort = 7045;
 
   if(process.env.SERVER_PORT) {
     serverPort = process.env.SERVER_PORT;
