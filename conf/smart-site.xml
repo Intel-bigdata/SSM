@@ -29,7 +29,7 @@
     </property>
     <property>
         <name>smart.hadoop.conf.path</name>     
-        <!-- an example, the last "/" is required
+        <!-- an example
         <value>file:///home/ha/hadoop/etc/hadoop/</value>
         -->
         <value></value>

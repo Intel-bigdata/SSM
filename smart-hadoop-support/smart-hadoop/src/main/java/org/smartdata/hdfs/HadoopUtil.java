@@ -49,7 +49,7 @@ public class HadoopUtil {
     } else {
       URL hadoopConfDir;
       try {
-        if (hadoopConfPath.endsWith("/")) {
+        if (!hadoopConfPath.endsWith("/")) {
           hadoopConfPath += "/";
         }
         hadoopConfDir = new URL(hadoopConfPath);
