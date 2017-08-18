@@ -19,20 +19,19 @@ package org.smartdata.hdfs.scheduler;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.MoveFileAction;
-import org.smartdata.model.action.FileMovePlan;
 import org.smartdata.hdfs.action.move.MoverStatus;
 import org.smartdata.hdfs.metric.fetcher.DatanodeStorageReportProcTask;
 import org.smartdata.hdfs.metric.fetcher.MoverProcessor;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.model.action.FileMovePlan;
 
 import java.io.IOException;
 import java.net.URI;
@@ -109,12 +108,9 @@ public class MoverPreProcessService extends ActionSchedulerService {
 
     try {
       client.setStoragePolicy(file, policy);
-      ExitStatus exitStatus = processor.processNamespace(new Path(file));
-      if (exitStatus == ExitStatus.SUCCESS) {
-        FileMovePlan plan = processor.getSchedulePlan();
-        plan.setNamenode(nnUri);
-        action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
-      }
+      FileMovePlan plan = processor.processNamespace(new Path(file));
+      plan.setNamenode(nnUri);
+      action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
     } catch (IOException e) {
       LOG.error("Exception while processing " + action, e);
     }
