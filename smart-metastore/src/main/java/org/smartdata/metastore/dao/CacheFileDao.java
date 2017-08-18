@@ -94,10 +94,6 @@ public class CacheFileDao {
       maps[i] = toMap(cachedFileStatusList[i]);
     }
     simpleJdbcInsert.executeBatch(maps);
-
-    // SqlParameterSource[] batch = SqlParameterSourceUtils
-    //                                  .createBatch(cachedFileStatusList);
-    // simpleJdbcInsert.executeBatch(batch);
   }
 
   public int update(Long fid, Long lastAccessTime,
