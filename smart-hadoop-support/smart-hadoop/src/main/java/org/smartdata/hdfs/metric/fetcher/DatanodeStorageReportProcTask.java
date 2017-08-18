@@ -31,6 +31,9 @@ import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.action.move.Source;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.hdfs.action.move.StorageMap;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.DataNodeInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,8 +45,17 @@ public class DatanodeStorageReportProcTask implements Runnable {
   private StorageMap storages;
   private NetworkTopology networkTopology;
   private Configuration conf;
+  private MetaStore metaStore;
+  private volatile boolean isFinished = false;
   public static final Logger LOG =
       LoggerFactory.getLogger(DatanodeStorageReportProcTask.class);
+
+  public DatanodeStorageReportProcTask(DFSClient client, Configuration conf, MetaStore metaStore) throws IOException {
+    this.client = client;
+    this.storages = new StorageMap();
+    this.conf = conf;
+    this.metaStore = metaStore;
+  }
 
   public DatanodeStorageReportProcTask(DFSClient client, Configuration conf) throws IOException {
     this.client = client;
@@ -79,8 +91,15 @@ public class DatanodeStorageReportProcTask implements Runnable {
           storages.add(source, target);
         }
       }
+      metaStore.deleteAllDataNodeInfo();
+      for(DatanodeStorageReport r : reports){
+        metaStore.insertDataNodeInfo(transform(r.getDatanodeInfo()));
+      }
+      isFinished = true;
     } catch (IOException e) {
       LOG.error("Process datanode report error", e);
+    } catch (MetaStoreException e) {
+      e.printStackTrace();
     }
   }
 
@@ -112,5 +131,19 @@ public class DatanodeStorageReportProcTask implements Runnable {
       trimmed.add(r);
     }
     return trimmed;
+  }
+
+  private DataNodeInfo transform(DatanodeInfo datanodeInfo) {
+    return DataNodeInfo.newBuilder().setUuid(datanodeInfo.getDatanodeUuid()).
+        setHostName(datanodeInfo.getHostName()).
+        setIp(datanodeInfo.getIpAddr()).
+        setPort(datanodeInfo.getIpcPort()).
+        setCacheCapacity(datanodeInfo.getCacheCapacity()).
+        setCacheUsed(datanodeInfo.getCacheUsed()).
+        setLocation(datanodeInfo.getNetworkLocation()).build();
+  }
+
+  public boolean isFinished() {
+    return this.isFinished;
   }
 }
