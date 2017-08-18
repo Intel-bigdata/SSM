@@ -2,6 +2,7 @@ import requests
 import sys
 import random
 import time
+import unittest
 
 # Server info
 BASE_URL = "http://localhost:8080"
@@ -23,12 +24,12 @@ TEST_FILES = ["/test/data_1GB", "/test/data_10MB", "/test/data_64MB"]
 
 def check_post_resp(resp):
     if resp.status_code != 201:
-        raise ApiError("Post fails")
+        raise IOError("Post fails")
 
 
 def check_get_resp(resp):
     if resp.status_code != 200:
-        raise ApiError("Get fails")
+        raise IOError("Get fails")
 
 
 def submit_cmdlet(cmd_str):
@@ -51,11 +52,11 @@ def wait_for_cmdlet(cid, period=40):
         elif cmdlet['state'] == "DONE" or cmdlet['state'] == "FAILED":
             return cmdlet
         if time.time() >= timeout:
-            return null
+            return None
 
 
 def get_rule(rid):
-    resp = requests.get(RULE_ROOT + "/" + str(cid) + "/info")
+    resp = requests.get(RULE_ROOT + "/" + str(rid) + "/info")
     return resp.json()["body"]
 
 
@@ -65,7 +66,7 @@ def submit_rule(rid_str):
 
 
 def get_action(aid):
-    resp = requests.get(ACTION_ROOT + "/" + str(cid) + "/info")
+    resp = requests.get(ACTION_ROOT + "/" + str(aid) + "/info")
     return resp.json()["body"]
 
 
@@ -91,56 +92,79 @@ def append_to_file(file_path, length=1024):
 
 def random_move(file_path):
     index = random.randrange(len(MOVE_TYPE))
-    resp = requests.post(CMDLET_ROOT + "/submit", data=MOVE_TYPE[index] + " -file  " + file_path)
+    resp = requests.post(CMDLET_ROOT + "/submit",
+                         data=MOVE_TYPE[index] + " -file  " + file_path)
     return resp.json()["body"]
 
 
 def check_storage(file_path):
-    resp = requests.post(CMDLET_ROOT + "/submit", data="checkstorage -file  " + file_path)
+    resp = requests.post(CMDLET_ROOT + "/submit",
+                         data="checkstorage -file  " + file_path)
     cid = resp.json()["body"]
     cmdlet = wait_for_cmdlet(cid)
     aid = cmdlet['aids']
     return get_action(aid[0])
 
 
-def test_mover():
-    # Case 1
-    # Checkstorage
-    # random move sequentially
-    # count = len(MOVE_TYPE)
-    # while count > 0:
-    #     print wait_for_cmdlet(random_move("/test/data_1GB"))
-    #     print wait_for_cmdlet(random_move("/test/data_10MB"))
-    #     print wait_for_cmdlet(random_move("/test/data_64MB"))
-    #     count -= 1
+class IntegrateTest(unittest.TestCase):
+    def test_mover_sequentially(self):
+        # Case 1
+        # random move sequentially
+        queue = []
+        count = len(MOVE_TYPE)
+        while count > 0:
+            # Submit cmdlets
+            for index in range(len(TEST_FILES)):
+                cmdlet = wait_for_cmdlet(random_move(TEST_FILES[index]))
+                if cmdlet is None:
+                    queue.append(cmdlet['cid'])
+            count -= 1
+        self.assertTrue(len(queue) == 0)
 
-    # Parallel random move
-    queue = []
-    count = len(MOVE_TYPE)
-    while count > 0:
-        # Submit cmdlets
-        for index in range(len(TEST_FILES)):
-            queue.add(random_move())
-        # check status
-        while len(queue) != 0:
-            wait_for_cmdlet(queue[0])
-            queue.pop(0)
-        count -= 1
-    # Case 2
-    # Case 3
+    def test_mover_parallel(self):
+        # Case 2
+        # Parallel random move
+        queue = []
+        count = len(MOVE_TYPE)
+        while count > 0:
+            # Submit cmdlets
+            for index in range(len(TEST_FILES)):
+                queue.add(random_move(TEST_FILES[index]))
+            # check status
+            while len(queue) != 0:
+                print wait_for_cmdlet(queue[0])
+                queue.pop(0)
+            count -= 1
+        self.assertTrue(len(queue) == 0)
 
+    def test_mover_read(self):
+        # TODO Read files while moving
+        pass
 
-def test_mover_protection():
-    pass
+    def test_mover_append(self):
+        # TODO Append files while moving
+        pass
 
+    def test_rule_hot(self):
+        # Submit rule
+        # Activate rule
+        # Submit read action to trigger rule
+        # Statue check
+        pass
 
-def test_action():
-    pass
+    def test_rule_cold(self):
+        # Submit rule
+        # Activate rule
+        # wait to trigger rule
+        # Statue check
+        pass
 
+    def test_rule_delete(self):
+        pass
 
-def test_rule():
-    pass
+    def test_rule(self):
+        pass
 
 
 if __name__ == '__main__':
-    test_mover()
+    unittest.main()
