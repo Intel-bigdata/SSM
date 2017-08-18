@@ -135,7 +135,7 @@ public class DataNodeInfoFetcher {
     private DataNodeInfo transform(DatanodeInfo datanodeInfo) {
       return DataNodeInfo.newBuilder().setUuid(datanodeInfo.getDatanodeUuid()).
           setHostName(datanodeInfo.getHostName()).
-          setRpcAddress(datanodeInfo.getIpAddr() +
+          setRpcAddress(datanodeInfo.getIpAddr() + ":" + 
               Integer.toString(datanodeInfo.getIpcPort())).
           setCacheCapacity(datanodeInfo.getCacheCapacity()).
           setCacheUsed(datanodeInfo.getCacheUsed()).
