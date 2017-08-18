@@ -108,8 +108,8 @@ public class TestSqliteDB extends TestDaoUtil {
   @Test
   public void testDBBlankStatements() throws Exception {
     String[] presqls = new String[] {
-        "INSERT INTO rules (state, rule_text, submit_time, checked_count, "
-            + "cmdlets_generated) VALUES (0, 'file: every 1s \n" + " | "
+        "INSERT INTO rule (state, rule_text, submit_time, checked_count, "
+            + "generated_cmdlets) VALUES (0, 'file: every 1s \n" + " | "
             + "accessCount(5s) > 3 | cache', 1494903787619, 0, 0);"
     };
 
@@ -123,7 +123,7 @@ public class TestSqliteDB extends TestDaoUtil {
         "CREATE TABLE VIR_ACC_CNT_TAB_1_accessCount_5000 "
             + "AS SELECT * FROM blank_access_count_info;",
         "SELECT fid from VIR_ACC_CNT_TAB_1_accessCount_5000;",
-        "SELECT path FROM files WHERE (fid IN (SELECT fid FROM "
+        "SELECT path FROM file WHERE (fid IN (SELECT fid FROM "
             + "VIR_ACC_CNT_TAB_1_accessCount_5000 WHERE ((count > 3))));"
     };
 

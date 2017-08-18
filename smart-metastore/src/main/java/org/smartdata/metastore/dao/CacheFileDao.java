@@ -49,19 +49,19 @@ public class CacheFileDao {
 
   public List<CachedFileStatus> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from cached_files",
+    return jdbcTemplate.query("select * from cached_file",
         new CacheFileRowMapper());
   }
 
   public CachedFileStatus getById(long fid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from cached_files where fid = ?",
+    return jdbcTemplate.queryForObject("select * from cached_file where fid = ?",
         new Object[]{fid}, new CacheFileRowMapper());
   }
 
   public List<Long> getFids() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT fid FROM cached_files";
+    String sql = "SELECT fid FROM cached_file";
     List<Long> fids = jdbcTemplate.query(sql,
         new RowMapper<Long>() {
           public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -73,31 +73,34 @@ public class CacheFileDao {
 
   public void insert(CachedFileStatus cachedFileStatus) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("cached_files");
+    simpleJdbcInsert.setTableName("cached_file");
     simpleJdbcInsert.execute(toMap(cachedFileStatus));
   }
 
   public void insert(long fid, String path, long fromTime,
                      long lastAccessTime, int numAccessed) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("cached_files");
+    simpleJdbcInsert.setTableName("cached_file");
     simpleJdbcInsert.execute(toMap(new CachedFileStatus(fid, path,
         fromTime, lastAccessTime, numAccessed)));
   }
 
   public void insert(CachedFileStatus[] cachedFileStatusList) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("cached_files");
-    SqlParameterSource[] batch = SqlParameterSourceUtils
-                                     .createBatch(cachedFileStatusList);
-    simpleJdbcInsert.executeBatch(batch);
+    simpleJdbcInsert.setTableName("cached_file");
+
+    Map<String, Object>[] maps = new Map[cachedFileStatusList.length];
+    for (int i = 0; i < cachedFileStatusList.length; i++) {
+      maps[i] = toMap(cachedFileStatusList[i]);
+    }
+    simpleJdbcInsert.executeBatch(maps);
   }
 
   public int update(Long fid, Long lastAccessTime,
                     Integer numAccessed) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update cached_files set last_access_time = ?, "  +
-                     "num_accessed = ? where fid = ?";
+    String sql = "update cached_file set last_access_time = ?, "  +
+                     "accessed_num = ? where fid = ?";
     return jdbcTemplate.update(sql, lastAccessTime, numAccessed, fid);
   }
 
@@ -135,13 +138,13 @@ public class CacheFileDao {
 
   public void deleteById(long fid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from cached_files where fid = ?";
+    final String sql = "delete from cached_file where fid = ?";
     jdbcTemplate.update(sql, fid);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "DELETE from cached_files";
+    String sql = "DELETE from cached_file";
     jdbcTemplate.execute(sql);
   }
 
@@ -151,7 +154,7 @@ public class CacheFileDao {
     parameters.put("path", cachedFileStatus.getPath());
     parameters.put("from_time", cachedFileStatus.getFromTime());
     parameters.put("last_access_time", cachedFileStatus.getLastAccessTime());
-    parameters.put("num_accessed", cachedFileStatus.getNumAccessed());
+    parameters.put("accessed_num", cachedFileStatus.getNumAccessed());
     return parameters;
   }
 
@@ -165,7 +168,7 @@ public class CacheFileDao {
       cachedFileStatus.setPath(resultSet.getString("path"));
       cachedFileStatus.setFromTime(resultSet.getLong("from_time"));
       cachedFileStatus.setLastAccessTime(resultSet.getLong("last_access_time"));
-      cachedFileStatus.setNumAccessed(resultSet.getInt("num_accessed"));
+      cachedFileStatus.setNumAccessed(resultSet.getInt("accessed_num"));
       return cachedFileStatus;
     }
   }

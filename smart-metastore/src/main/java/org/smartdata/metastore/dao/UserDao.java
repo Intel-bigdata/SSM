@@ -41,21 +41,21 @@ public class UserDao {
 
   public synchronized void addUser(String userName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = String.format("INSERT INTO owners (owner_name) VALUES ('%s')", userName);
+    String sql = String.format("INSERT INTO owner (owner_name) VALUES ('%s')", userName);
     jdbcTemplate.execute(sql);
   }
 
   public synchronized void deleteUser(String user) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = String.format(
-        "DELETE FROM owners where owner_name = '%s'", user);
+        "DELETE FROM owner where owner_name = '%s'", user);
     jdbcTemplate.execute(sql);
   }
 
   public List<String> listUser() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     List<String> user = jdbcTemplate.query(
-        "select owner_name from owners",
+        "select owner_name from owner",
         new RowMapper<String>() {
           public String mapRow(ResultSet rs, int rowNum) throws SQLException {
             return rs.getString("owner_name");
@@ -67,12 +67,12 @@ public class UserDao {
   public int getCountUsers() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject(
-        "SELECT COUNT(*) FROM owners", Integer.class);
+        "SELECT COUNT(*) FROM owner", Integer.class);
   }
 
   public Map<Integer, String> getUsersMap() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return toMap(jdbcTemplate.queryForList("SELECT * FROM owners"));
+    return toMap(jdbcTemplate.queryForList("SELECT * FROM owner"));
   }
 
   private Map<Integer, String> toMap(List<Map<String, Object>> list) {
