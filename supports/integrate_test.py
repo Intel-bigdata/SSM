@@ -72,22 +72,22 @@ def get_action(aid):
 
 def read_file(file_path):
     str = "read -file" + file_path
-    submit_cmdlet(str)
+    return submit_cmdlet(str)
 
 
 def create_file(file_path, length=1024):
     str = "write -file " + file_path + " -length " + length
-    submit_cmdlet(str)
+    return submit_cmdlet(str)
 
 
 def delete_file(file_path, recursivly=True):
     str = "delete -file " + file_path
-    submit_cmdlet(str)
+    return submit_cmdlet(str)
 
 
 def append_to_file(file_path, length=1024):
     str = "append -file " + file_path + " -length " + length
-    submit_cmdlet(str)
+    return submit_cmdlet(str)
 
 
 def random_move(file_path):
@@ -138,12 +138,27 @@ class IntegrateTest(unittest.TestCase):
         self.assertTrue(len(queue) == 0)
 
     def test_mover_read(self):
-        # TODO Read files while moving
-        pass
+        cid_create = create_file("/testFile")
+        print check_storage("/testFile")
+        cid_move = submit_cmdlet("allssd -file /testFile")
+        # read the file
+        cid_read = read_file("/testFile")
+        #check the statement of read
+        self.assertTrue(wait_for_cmdlet(cid=cid_read) == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_move) == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_create) == "DONE")
+
 
     def test_mover_append(self):
-        # TODO Append files while moving
-        pass
+        cid_create = create_file("/testFile")
+        print check_storage("/testFile")
+        cid_move = submit_cmdlet("allssd -file /testFile")
+        # read the file
+        cid_append = read_file("/testFile")
+        # check the statement of read
+        self.assertTrue(wait_for_cmdlet(cid=cid_append) == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_move) == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_create) == "DONE")
 
     def test_rule_hot(self):
         # Submit rule
