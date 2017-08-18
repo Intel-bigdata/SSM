@@ -18,6 +18,8 @@
 package org.smartdata.server.engine;
 
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.SmartConstants;
 import org.smartdata.SmartContext;
@@ -32,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AbstractServiceFactory {
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractServiceFactory.class);
+
   public static AbstractService createStatesUpdaterService(Configuration conf,
       SmartContext context, MetaStore metaStore) throws IOException {
     String source = getStatesUpdaterName(conf);
@@ -41,7 +45,7 @@ public class AbstractServiceFactory {
       return (StatesUpdateService) c.newInstance(context, metaStore);
     } catch (ClassNotFoundException | IllegalAccessException
         | InstantiationException | NoSuchMethodException
-        | InvocationTargetException e) {
+        | InvocationTargetException | NullPointerException e) {
       throw new IOException(e);
     }
   }
@@ -61,11 +65,11 @@ public class AbstractServiceFactory {
         services.add((ActionSchedulerService) c.newInstance(context, metaStore));
       } catch (ClassNotFoundException | IllegalAccessException
           | InstantiationException | NoSuchMethodException
-          | InvocationTargetException e) {
+          | InvocationTargetException | NullPointerException e) {
         if (allMustSuccess) {
           throw new IOException(e);
         } else {
-          // ignore this
+          LOG.warn("Error while create action scheduler service '" + name + "'.", e);
         }
       }
     }
