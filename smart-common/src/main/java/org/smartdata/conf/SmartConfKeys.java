@@ -30,6 +30,7 @@ public class SmartConfKeys {
   public final static String SMART_LOG_DIR_DEFAULT = "logs";
 
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
+  public final static String SMART_HADOOP_CONF_PATH_KEY = "smart.hadoop.conf.path";
 
   //ssm
   public final static String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";

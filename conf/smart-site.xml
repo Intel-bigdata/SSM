@@ -27,5 +27,17 @@
         <name>smart.zeppelin.web.enable</name>
         <value>false</value>
     </property>
+    <property>
+        <name>smart.hadoop.conf.path</name>     
+        <!-- an example, the last "/" is required
+        <value>file:///home/ha/hadoop/etc/hadoop/</value>
+        -->
+        <value></value>
+        <description>Hadoop main cluster configuration file path</description>
+    </property>
+    <property>
+        <name>smart.zeppelin.enable</name>
+        <value>false</value>
+    </property>
 
 </configuration>
