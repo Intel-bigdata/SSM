@@ -33,6 +33,7 @@ import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.StatesUpdateService;
+import org.smartdata.conf.SmartConfKeys;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -68,7 +69,9 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
   public void init() throws IOException {
     LOG.info("Initializing ...");
     SmartContext context = getContext();
+    HadoopUtil.loadHadoopConf(context.getConf());
     URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
+    LOG.debug("Final Namenode URL:" + nnUri.toString());
     this.client = new DFSClient(nnUri, context.getConf());
     moverIdOutputStream = checkAndMarkRunning(nnUri, context.getConf());
     this.cleanFileTableContents(metaStore);
