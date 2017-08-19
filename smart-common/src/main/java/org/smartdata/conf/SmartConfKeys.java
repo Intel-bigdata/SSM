@@ -35,6 +35,8 @@ public class SmartConfKeys {
   //ssm
   public final static String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
   public final static String SMART_SERVER_RPC_ADDRESS_DEFAULT = "0.0.0.0:7042";
+  public final static String SMART_SERVER_RPC_HANDLER_COUNT_KEY = "smart.server.rpc.handler.count";
+  public final static int SMART_SERVER_RPC_HANDLER_COUNT_DEFAULT = 80;
   public final static String SMART_SERVER_HTTP_ADDRESS_KEY = "smart.server.http.address";
   public final static String SMART_SERVER_HTTP_ADDRESS_DEFAULT = "0.0.0.0:7045";
   public final static String SMART_SERVER_HTTPS_ADDRESS_KEY = "smart.server.https.address";
