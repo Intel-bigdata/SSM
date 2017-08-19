@@ -61,10 +61,10 @@ volumes, here is an example which set the SSD, DISK and Archive volumes,
 </property>
 ```
 
-3. Put SSM jars to CHD classpath 
+3. Make sure CDH can access SSM jars
 
-After we switch to the SmartFileSystem from the default HDFS implmentation, we need to put SmartFileSystem
-implementation jars to CDH classpath, so that HDFS, YARN and other upper layer applications can access. Basically
+After we switch to the SmartFileSystem from the default HDFS implmentation, we need to make sure CDH can access SmartFileSystem
+implementation jars, so that HDFS, YARN and other upper layer applications can access. Basically
 when SSM compilation is finished, copy all the jar files starts with smart under 
 
 `/smart-dist/target/smart-data-0.1-SNAPSHOT/smart-data-0.1-SNAPSHOT/lib`
@@ -88,6 +88,7 @@ SSM Configuration
 ---------------------------------------------------------------------------------
 1. Download SSM branch from Github https://github.com/Intel-bigdata/SSM/ 
 2. Build SSM using 
+
    'mvn package -Pdist,web,hadoop-cdh-2.6 -DskipTests'
 
    A tar distribution package will be generated under 'smart-dist/target'.
@@ -95,7 +96,7 @@ SSM Configuration
 
 3. Configure How to acces Hadoop Namenode
 
-  We need to let SSM know where Hadoop Namenode is. There are 2 cases,
+   We need to let SSM know where Hadoop Namenode is. There are 2 cases,
    
    a.  HA Namenode
    
