@@ -57,7 +57,7 @@ public class MoverProcessor {
 
   private final DFSClient dfs;
   private NetworkTopology networkTopology;
-  private final StorageMap storages;
+  private StorageMap storages;
   private final AtomicInteger retryCount;
 
   private final BlockStoragePolicy[] blockStoragePolicies;
@@ -97,11 +97,16 @@ public class MoverProcessor {
     return db;
   }
 
+  public synchronized void updateClusterInfo(StorageMap storages, NetworkTopology cluster) {
+    this.storages = storages;
+    this.networkTopology = cluster;
+  }
+
   /**
    * @return whether there is still remaining migration work for the next
    * round
    */
-  public FileMovePlan processNamespace(Path targetPath) throws IOException {
+  public synchronized FileMovePlan processNamespace(Path targetPath) throws IOException {
     schedulePlan = new FileMovePlan();
     schedulePlan.setFileName(targetPath.toUri().getPath());
     DirectoryListing files = dfs.listPaths(targetPath.toUri().getPath(),

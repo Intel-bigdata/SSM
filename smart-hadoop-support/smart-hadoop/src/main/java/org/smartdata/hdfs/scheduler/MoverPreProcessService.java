@@ -37,12 +37,19 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class MoverPreProcessService extends ActionSchedulerService {
   private DFSClient client;
   private MoverStatus moverStatus;
   private MoverProcessor processor;
   private URI nnUri;
+  private long dnInfoUpdateInterval = 2 * 60 * 1000;
+  private ScheduledExecutorService updateService;
+  private ScheduledFuture updateServiceFuture;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(MoverPreProcessService.class);
@@ -56,6 +63,7 @@ public class MoverPreProcessService extends ActionSchedulerService {
   public void init() throws IOException {
     this.client = new DFSClient(nnUri, getContext().getConf());
     moverStatus = new MoverStatus();
+    updateService = Executors.newScheduledThreadPool(1);
   }
 
   /**
@@ -69,6 +77,10 @@ public class MoverPreProcessService extends ActionSchedulerService {
         new DatanodeStorageReportProcTask(client, getContext().getConf());
     task.run();
     processor = new MoverProcessor(client, task.getStorages(), task.getNetworkTopology(), moverStatus);
+
+    updateServiceFuture = updateService.scheduleAtFixedRate(
+        new UpdateClusterInfoTask(task),
+        dnInfoUpdateInterval, dnInfoUpdateInterval, TimeUnit.MILLISECONDS);
   }
 
   /**
@@ -76,6 +88,9 @@ public class MoverPreProcessService extends ActionSchedulerService {
    * @throws IOException
    */
   public void stop() throws IOException {
+    if (updateServiceFuture != null) {
+      updateServiceFuture.cancel(false);
+    }
   }
 
   private static final List<String> actions = Arrays.asList("allssd", "onessd", "archive");
@@ -118,5 +133,19 @@ public class MoverPreProcessService extends ActionSchedulerService {
 
   public void afterExecution(LaunchAction action) {
 
+  }
+
+  private class UpdateClusterInfoTask implements Runnable {
+    private DatanodeStorageReportProcTask task;
+
+    public UpdateClusterInfoTask(DatanodeStorageReportProcTask task) {
+      this.task = task;
+    }
+
+    @Override
+    public void run() {
+      task.run();
+      processor.updateClusterInfo(task.getStorages(), task.getNetworkTopology());
+    }
   }
 }
