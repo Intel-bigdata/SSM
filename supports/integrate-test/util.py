@@ -125,6 +125,16 @@ def create_random_file(length=1024):
     return file_path
 
 
+def create_random_file_parallel(length=1024):
+    """
+    create a random file in /test/
+    """
+    file_path = "/test/" + random_string()
+    cmdlet_str = "write -file " + \
+                 file_path + " -length " + str(length)
+    return file_path, submit_cmdlet(cmdlet_str)
+
+
 def delete_file(file_path, recursivly=True):
     cmdlet_str = "delete -file " + file_path
     return submit_cmdlet(cmdlet_str)

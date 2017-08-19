@@ -37,37 +37,60 @@ class TestPerformance(unittest.TestCase):
         print "Failed cids = {}".format(queue)
         self.assertTrue(len(queue) == 0)
 
-    def test_200_move_tasks(self):
+    def test_200_move_scheduler(self):
         max_number = 200
         file_paths = []
         cids = []
+        failed_cids = []
         for i in range(max_number):
             # 150 MB files
             file_paths.append(create_random_file(150 * 1024 * 1024))
         for i in range(max_number):
             cids.append(move_randomly(file_paths[i]))
         while len(cids) != 0:
-            wait_for_cmdlet(cids[0])
+            cmd = wait_for_cmdlet(cids[0])
+            if cmd['state'] == 'FAILED':
+                failed_cids.append(cids[0])
             cids.pop(0)
-        self.assertTrue(len(cids) == 0)
+        self.assertTrue(len(failed_cids) == 0)
 
-    def test_500_move_tasks(self):
+    def test_500_move_scheduler(self):
         max_number = 500
         file_paths = []
         cids = []
+        failed_cids = []
         for i in range(max_number):
             # 150 MB files
             file_paths.append(create_random_file(150 * 1024 * 1024))
         for i in range(max_number):
             cids.append(move_randomly(file_paths[i]))
         while len(cids) != 0:
-            wait_for_cmdlet(cids[0])
+            cmd = wait_for_cmdlet(cids[0])
+            if cmd['state'] == 'FAILED':
+                failed_cids.append(cids[0])
             cids.pop(0)
-        self.assertTrue(len(cids) == 0)
+        self.assertTrue(len(failed_cids) == 0)
 
-    def test_mover_stress(self):
-        # TODO launch 100000 move actions
-        pass
+    def test_cmdlet_scheduler(self):
+        max_number = 1000
+        file_paths = []
+        cids = []
+        failed_cids = []
+        for i in range(max_number):
+            # 1 MB files
+            file_path, cid = create_random_file_parallel(1024 * 1024)
+            file_paths.append(file_path)
+            cids.append(cid)
+        for i in range(max_number):
+            cids.append(read_file(file_paths[i]))
+        for i in range(max_number):
+            cids.append(delete_file(file_paths[i]))
+        while len(cids) != 0:
+            cmd = wait_for_cmdlet(cids[0])
+            if cmd['state'] == 'FAILED':
+                failed_cids.append(cids[0])
+            cids.pop(0)
+        self.assertTrue(len(failed_cids) == 0)
 
 
 if __name__ == '__main__':
