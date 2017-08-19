@@ -1,4 +1,4 @@
-# SSM Demo Cases
+# SSM Demo Examples
 
 ## Preparations for Demo
 
