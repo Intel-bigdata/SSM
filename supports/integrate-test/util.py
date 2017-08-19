@@ -27,7 +27,7 @@ TEST_FILES = ["/test/data_10GB",
 
 
 def random_string():
-    return uuid.uuid4()
+    return str(uuid.uuid4())
 
 
 def check_post_resp(resp):
@@ -40,11 +40,11 @@ def check_get_resp(resp):
         raise IOError("Get fails")
 
 
-def submit_cmdlet(cmd_str):
+def submit_cmdlet(cmdlet_str):
     """
     submit cmdlet then return cid
     """
-    resp = requests.post(CMDLET_ROOT + "/submit", data=cmd_str)
+    resp = requests.post(CMDLET_ROOT + "/submit", data=cmdlet_str)
     return resp.json()["body"]
 
 
@@ -98,23 +98,23 @@ def get_action(aid):
 
 
 def read_file(file_path):
-    str = "read -file " + file_path
-    return submit_cmdlet(str)
+    cmdlet_str = "read -file " + file_path
+    return submit_cmdlet(cmdlet_str)
 
 
 def create_file(file_path, length=1024):
-    str = "write -file " + file_path + " -length " + length
-    return submit_cmdlet(str)
+    cmdlet_str = "write -file " + file_path + " -length " + str(length)
+    return submit_cmdlet(cmdlet_str)
 
 
 def delete_file(file_path, recursivly=True):
-    str = "delete -file " + file_path
-    return submit_cmdlet(str)
+    cmdlet_str = "delete -file " + file_path
+    return submit_cmdlet(cmdlet_str)
 
 
 def append_to_file(file_path, length=1024):
-    str = "append -file " + file_path + " -length " + length
-    return submit_cmdlet(str)
+    cmdlet_str = "append -file " + file_path + " -length " + length
+    return submit_cmdlet(cmdlet_str)
 
 
 def random_move_test_file(file_path):
@@ -134,7 +134,7 @@ def check_storage(file_path):
 
 
 def move_random_file(mover_type, length):
-    file_path = "/test/" + random_string
+    file_path = "/test/" + random_string()
     cid_create = create_file(file_path, length)
-    cid_dest = submit_cmdlet(mover_type + " - file " + file_path)
+    cid_dest = submit_cmdlet(mover_type + " -file " + file_path)
     return cid_create, cid_dest

@@ -46,7 +46,7 @@ class TestRule(unittest.TestCase):
 
     def test_rule_scheduled(self):
         # Submit rule
-        # Every day 10 PM
+        # From current to current + 10s
         trigger_time = datetime.now()
         rule_str = "file with path matches" + \
             " \"/test/data_*.dat\"  : " + \
@@ -58,7 +58,7 @@ class TestRule(unittest.TestCase):
         # Create two random files
         for _ in range(2):
             file_path = "test/data_" + \
-                str(random.randInt(1, 99999999)) + ".dat"
+                random_string + ".dat"
             wait_for_cmdlet(create_file(file_path))
         # Activate rule
         start_rule(rid)

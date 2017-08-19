@@ -245,7 +245,7 @@ from util import *
 #     mover_while_doing_overwrite("archive")
 
 
-class IntegrateTest(unittest.TestCase):
+class TestMover(unittest.TestCase):
 
     # move to archive
     def test_mover_archive_10MB(self):
