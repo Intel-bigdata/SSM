@@ -56,8 +56,10 @@ def get_cmdlet(cid):
     return resp.json()["body"]
 
 
-def wait_for_cmdlet(cid, period=120):
-    # Set 40 Seconds
+def wait_for_cmdlet(cid, period=300):
+    """
+    wait at most 300 seconds for cmdlet to be done
+    """
     timeout = time.time() + period
     while True:
         cmdlet = get_cmdlet(cid)
@@ -135,14 +137,14 @@ def check_storage(file_path):
 
 def move_random_file(mover_type, length):
     file_path = "/test/" + random_string()
-    create = wait_for_cmdlet(create_file(file_path, length))
-    dest = wait_for_cmdlet(submit_cmdlet(mover_type + " -file " + file_path))
-    return create['cid'], dest['cid']
+    cmd_create = wait_for_cmdlet(create_file(file_path, length))
+    cmd_move = wait_for_cmdlet(submit_cmdlet(mover_type + " -file " + file_path))
+    return cmd_create,cmd_move 
 
 
 def move_random_file_twice(mover_type_1, mover_type_2, length):
     file_path = "/test/" + random_string()
-    create = wait_for_cmdlet(create_file(file_path, length))
-    dest_1 = wait_for_cmdlet(submit_cmdlet(mover_type_1 + " -file " + file_path))
-    dest_2 = wait_for_cmdlet(submit_cmdlet(mover_type_2 + " -file " + file_path))
-    return create['cid'], dest_1['cid'], dest_2['cid']
+    cmd_create = wait_for_cmdlet(create_file(file_path, length))
+    cmd_move_1 = wait_for_cmdlet(submit_cmdlet(mover_type_1 + " -file " + file_path))
+    cmd_move_2 = wait_for_cmdlet(submit_cmdlet(mover_type_2 + " -file " + file_path))
+    return cmd_create, cmd_move_1, cmd_move_2
