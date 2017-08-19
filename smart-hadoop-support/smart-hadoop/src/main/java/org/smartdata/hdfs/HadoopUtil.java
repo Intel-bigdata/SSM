@@ -105,12 +105,12 @@ public class HadoopUtil {
       throws IOException {
     String nnRpcAddr = null;
 
-    String[] rpcAddrKeys = {
-        // Keep this first, haven't find a predefined key for this property
-        // "fs.defaultFS",
+    String[] rpcAddrKeys = {        
         SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
         DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY,
-        DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY
+        DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY,
+        // Keep this last, haven't find a predefined key for this property
+        "fs.defaultFS"
     };
 
     String[] nnRpcAddrs = new String[rpcAddrKeys.length];
