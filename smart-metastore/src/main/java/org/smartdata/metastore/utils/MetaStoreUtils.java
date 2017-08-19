@@ -102,9 +102,8 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS sys_info",
         "DROP TABLE IF EXISTS cluster_info",
 
-
         "CREATE TABLE access_count_table (\n" +
-            "  table_name varchar(255) NOT NULL,\n" +
+            "  table_name varchar(255) PRIMARY KEY,\n" +
             "  start_time bigint(20) NOT NULL,\n" +
             "  end_time bigint(20) NOT NULL\n" +
             ") ;",
@@ -121,6 +120,8 @@ public class MetaStoreUtils {
             "  last_access_time bigint(20) NOT NULL,\n" +
             "  accessed_num int(11) NOT NULL\n" +
             ") ;",
+        "CREATE INDEX cached_file_fid_idx ON cached_file (fid);",
+        "CREATE INDEX cached_file_path_idx ON cached_file (path);",
 
         "CREATE TABLE ec_policy (\n" +
             "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
@@ -146,6 +147,8 @@ public class MetaStoreUtils {
             "  permission smallint(6) DEFAULT NULL,\n" +
             "  ec_policy_id smallint(6) DEFAULT NULL\n" +
             ") ;",
+        "CREATE INDEX file_fid_idx ON file (fid);",
+        "CREATE INDEX file_path_idx ON file (path);",
 
         "CREATE TABLE user_group (\n" +
             "  gid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
@@ -158,13 +161,13 @@ public class MetaStoreUtils {
             ") ;",
 
         "CREATE TABLE storage (\n" +
-            "  type varchar(255) NOT NULL,\n" +
+            "  type varchar(255) PRIMARY KEY,\n" +
             "  capacity bigint(20) NOT NULL,\n" +
             "  free bigint(20) NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE storage_policy (\n" +
-            "  sid tinyint(4) NOT NULL,\n" +
+            "  sid tinyint(4) PRIMARY KEY,\n" +
             "  policy_name varchar(64) DEFAULT NULL\n" +
             ") ;",
 
@@ -182,9 +185,10 @@ public class MetaStoreUtils {
             "  name varchar(255) NOT NULL,\n" +
             "  value blob NOT NULL\n" +
             ") ;",
+        "CREATE INDEX xattr_fid_idx ON xattr (fid);",
 
         "CREATE TABLE datanode_info (\n" +
-            "  uuid varchar(64) NOT NULL,\n" +
+            "  uuid varchar(64) PRIMARY KEY,\n" +
             "  hostname varchar(255) NOT NULL,\n" +   // DatanodeInfo
             "  rpcAddress varchar(21) DEFAULT NULL,\n" +
             "  cache_capacity bigint(20) DEFAULT NULL,\n" +
@@ -193,7 +197,7 @@ public class MetaStoreUtils {
             ") ;",
 
         "CREATE TABLE datanode_storage_info (\n" +
-            "  uuid varchar(64) NOT NULL,\n" +
+            "  uuid varchar(64) PRIMARY KEY,\n" +
             "  sid tinyint(4) NOT NULL,\n" +          // storage type
             "  state tinyint(4) NOT NULL,\n" +        // DatanodeStorage.state
             "  storage_id varchar(64) NOT NULL,\n" +   // StorageReport ...
@@ -262,7 +266,7 @@ public class MetaStoreUtils {
             ") ;",
 
         "CREATE TABLE sys_info (\n" +
-            "  property varchar(512) NOT NULL UNIQUE,\n" +
+            "  property varchar(512) PRIMARY KEY,\n" +
             "  value varchar(4096) NOT NULL\n" +
             ");",
 
@@ -280,7 +284,8 @@ public class MetaStoreUtils {
             " src varchar(4096) NOT NULL,\n" +
             " dest varchar(4096) NOT NULL,\n" +
             " period bigint(20) NOT NULL\n" +
-            ") ;"
+            ") ;",
+        "CREATE INDEX backup_file_rid_idx ON backup_file (rid);"
     };
     try {
       String url = conn.getMetaData().getURL();
