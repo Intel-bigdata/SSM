@@ -37,40 +37,33 @@ class TestPerformance(unittest.TestCase):
         print "Failed cids = {}".format(queue)
         self.assertTrue(len(queue) == 0)
 
-    def test_mover_read(self):
-        # cid_create = create_file("/testFile")
-        # print check_storage("/testFile")
-        # Test with 10 GB file
-        file_path = TEST_FILES[0]
-        cid_move = submit_cmdlet("allssd -file " + file_path)
-        check_storage(file_path)
-        # read the file
-        cid_read = read_file(file_path)
-        # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid=cid_read)['state'] == "DONE")
-        self.assertTrue(wait_for_cmdlet(cid=cid_move)['state'] == "DONE")
+    def test_200_move_tasks(self):
+        max_number = 200
+        file_paths = []
+        cids = []
+        for i in range(max_number):
+            # 150 MB files
+            file_paths.append(create_random_file(150 * 1024 * 1024))
+        for i in range(max_number):
+            cids.append(move_randomly(file_paths[i]))
+        while len(cids) != 0:
+            wait_for_cmdlet(cids[0])
+            cids.pop(0)
+        self.assertTrue(len(cids) == 0)
 
-    def test_mover_write(self):
-        # cid_create = create_file("/testFile")
-        # print check_storage("/testFile")
-        # Test with 10 GB file
-        file_path = TEST_FILES[0]
-        cid_move = submit_cmdlet("allssd -file " + file_path)
-        check_storage(file_path)
-        # read the file
-        cid_read = read_file(file_path)
-        # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid_read)['state'] == "DONE")
-        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
-
-        file_path = TEST_FILES[1]
-        cid_move = submit_cmdlet("onessd -file " + file_path)
-        check_storage(file_path)
-        # read the file
-        cid_read = read_file(file_path)
-        # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid_read)['state'] == "DONE")
-        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
+    def test_500_move_tasks(self):
+        max_number = 500
+        file_paths = []
+        cids = []
+        for i in range(max_number):
+            # 150 MB files
+            file_paths.append(create_random_file(150 * 1024 * 1024))
+        for i in range(max_number):
+            cids.append(move_randomly(file_paths[i]))
+        while len(cids) != 0:
+            wait_for_cmdlet(cids[0])
+            cids.pop(0)
+        self.assertTrue(len(cids) == 0)
 
     def test_mover_stress(self):
         # TODO launch 100000 move actions

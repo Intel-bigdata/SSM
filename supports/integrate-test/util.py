@@ -114,6 +114,17 @@ def create_file(file_path, length=1024):
     return submit_cmdlet(cmdlet_str)
 
 
+def create_random_file(length=1024):
+    """
+    create a random file in /test/
+    """
+    file_path = "/test/" + random_string()
+    cmdlet_str = "write -file " + \
+                 file_path + " -length " + str(length)
+    wait_for_cmdlet(submit_cmdlet(cmdlet_str))
+    return file_path
+
+
 def delete_file(file_path, recursivly=True):
     cmdlet_str = "delete -file " + file_path
     return submit_cmdlet(cmdlet_str)
@@ -153,3 +164,11 @@ def move_random_file_twice(mover_type_1, mover_type_2, length):
     cmd_move_1 = wait_for_cmdlet(submit_cmdlet(mover_type_1 + " -file " + file_path))
     cmd_move_2 = wait_for_cmdlet(submit_cmdlet(mover_type_2 + " -file " + file_path))
     return cmd_create, cmd_move_1, cmd_move_2
+
+
+def move_randomly(file_path):
+    """
+    Randomly move blocks of a given file
+    """
+    index = random.randrange(len(MOVE_TYPE))
+    return submit_cmdlet(MOVE_TYPE[index] + " -file " + file_path)

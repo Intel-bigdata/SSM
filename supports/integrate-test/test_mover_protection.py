@@ -13,11 +13,21 @@ class TestMoverProtection(unittest.TestCase):
         # read the file
         cid_read = read_file(file_path)
         # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid=cid_read)['state'] == "DONE")
-        self.assertTrue(wait_for_cmdlet(cid=cid_move)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid_read)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
 
     def test_mover_delete(self):
-        pass
+        # cid_create = create_file("/testFile")
+        # print check_storage("/testFile")
+        # Test with 2 GB file
+        file_path = create_random_file(2 * 1024 * 1024 * 1024)
+        cid_move = submit_cmdlet("allssd -file " + file_path)
+        check_storage(file_path)
+        # delete the file
+        cid_delete = delete_file(file_path)
+        # check the statement of read
+        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid_delete)['state'] == "DONE")
 
     def test_mover_append(self):
         pass
