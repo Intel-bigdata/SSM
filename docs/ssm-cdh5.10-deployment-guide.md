@@ -6,6 +6,7 @@ Requirements:
 * JDK 1.7
 * CDH 5.10.1
 * MySQL Community 5.7.18
+* Maven 3.1.1+
 
 
 Why JDK 1.7 is preferred
@@ -68,7 +69,7 @@ when SSM compilation is finished, copy all the jar files starts with smart under
 
 `/smart-dist/target/smart-data-0.1-SNAPSHOT/smart-data-0.1-SNAPSHOT/lib`
 
-to CDH class path. 
+to directory in CDH class path, or add the above path to CDH classpath. 
 
 After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if 
 the configuration takes effect. You can try TestDFSIO for example, 
@@ -85,17 +86,32 @@ the configuration takes effect. You can try TestDFSIO for example,
 
 SSM Configuration
 ---------------------------------------------------------------------------------
-1. Download SSM branch from Github https://github.com/Intel-bigdata/SSM/tree/CDH5.10-integration
+1. Download SSM branch from Github https://github.com/Intel-bigdata/SSM/ 
 2. Build SSM using 
-   'mvn package -Pdist -DskipTests'
+   'mvn package -Pdist,web,hadoop-cdh-2.6 -DskipTests'
 
    A tar distribution package will be generated under 'smart-dist/target'.
-   More detail information, please refer to BUILDING.txt file.
+   More detail information, please refer to BUILDING.txt file. Unzip the distribution package to directory (assuming `${SMART_HOME}`) and switch to the directory, the configuration files are under './conf'. 
 
-3. Modify configurations
+3. Configure How to acces Hadoop Namenode
 
-   Unzip the distribution package to directory (assuming `${SMART_HOME}`) and switch to the directory, the configuration files are under './conf'. First open smart-site.xml, configure
-   Hadoop cluster NameNode RPC address,
+  We need to let SSM know where Hadoop Namenode is. There are 2 cases,
+   
+   a.  HA Namenode
+   
+   open smart-site.xml, configure Hadoop cluster NameNode RPC address,
+   
+   ```xml   
+   <property>
+       <name>smart.hadoop.configuration.path</name>
+       <value>/conf</value>
+       <description>local file path which holds all hadoop configuration files, such as hdfs-site.xml, core-site.xml</description>
+    </property>
+   ``` 
+   
+   b.  Single Namenode
+   
+   open smart-site.xml, configure Hadoop cluster NameNode RPC address,
    
    ```xml
    <property>
@@ -105,31 +121,32 @@ SSM Configuration
    </property>
    ```
    
-   Then open druid.xml, configure how to access MySQL DB. Basically fill out the
-   DB url, username and password are enough. Please be noted that, security support
-   will be enabled later. Here is an example, 
+4. Configure how to access MySQL DB
+
+   You need to install an Mysql instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically fill out the
+   DB url, username and password are enough. Please be noted that, security support will be enabled later. Here is an example, 
    
    ```xml
    <properties>
-       <entry key="url">jdbc:mysql://localhost/ssm-metastore</entry>
+       <entry key="url">jdbc:mysql://localhost/ssm</entry>
        <entry key="username">root</entry>
        <entry key="password">123456</entry>
 	   ......
    </properties>	   
    ```
    
-   ssm-metastore is the Database name. You need to create it before first after you installed MySql.
+   `ssm` is the Database name. 
 
-4. Format Database with command
+5. Format Database
 	
-	`bin/format-database.sh`
+	`bin/init-ssm.sh`
    
    The script will create all tables required by SSM.
 	
    
-5. Start SSM server with command
+6. Start SSM server
 
-   `./bin/start-smart.sh" --config ./conf`
+   `./bin/start-ssm.sh" --config ./conf`
 
    `--config <config-dir>` configures where the configuration file directory is. `${SMART_HOME}/conf` is used if not specified.
    
@@ -140,16 +157,16 @@ SSM Configuration
    If you meet any problem, please open the SmartServer.log under /logs directory. All the
    trouble shooting clues are there. 
    
-6. Stop SSM server with command
-   If stop SSM server is required, use the script `bin/stop-smart.sh`. Remeber to
-   use the exact same parameters to `stop-smart.sh` script as to `start-smart.sh` script.
+7. Stop SSM server
+   If stop SSM server is required, use the script `bin/stop-ssm.sh`. Remeber to
+   use the exact same parameters to `stop-ssm.sh` script as to `start-ssm.sh` script.
    For exmaple, when you start smart server, you use 
 
-   `bin/start-smart.sh --config ./conf`
+   `bin/start-ssm.sh --config ./conf`
 
    Then, when you stop smart server, you should use 
 
-   `bin/stop-smart.sh --config ./conf`
+   `bin/stop-ssm.sh --config ./conf`
 
 SSM Rule Examples
 ---------------------------------------------------------------------------------
