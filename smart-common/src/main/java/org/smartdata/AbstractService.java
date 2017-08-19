@@ -35,4 +35,8 @@ public abstract class AbstractService implements SmartService {
   public void setContext(SmartContext context) {
     this.context = context;
   }
+
+  public boolean inSafeMode() {
+    return false;
+  }
 }

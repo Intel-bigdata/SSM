@@ -85,6 +85,14 @@ public class StatesManager extends AbstractService implements Reconfigurable {
     LOG.info("Initialized.");
   }
 
+  @Override
+  public boolean inSafeMode() {
+    if (statesUpdaterService == null) {
+      return true;
+    }
+    return statesUpdaterService.inSafeMode();
+  }
+
   /**
    * Start daemon threads in StatesManager for function.
    */
