@@ -283,10 +283,10 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
     $scope.$emit('moveParagraphDown', paragraph);
   };
 
-  $scope.insertNew = function(position) {
+  /*$scope.insertNew = function(position) {
     $scope.$emit('insertParagraph', $scope.paragraph.id, position);
   };
-
+*/
   $scope.copyPara = function(position) {
     var editorValue = $scope.getEditorValue();
     if (editorValue) {

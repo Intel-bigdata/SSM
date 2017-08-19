@@ -343,10 +343,10 @@ public class NotebookServer extends WebSocketServlet
             unsubscribeNoteJobInfo(conn);
             break;
           case GET_INTERPRETER_BINDINGS:
-            getInterpreterBindings(conn, messagereceived);
+//            getInterpreterBindings(conn, messagereceived);
             break;
           case SAVE_INTERPRETER_BINDINGS:
-            saveInterpreterBindings(conn, messagereceived);
+//            saveInterpreterBindings(conn, messagereceived);
             break;
           case EDITOR_SETTING:
             getEditorSetting(conn, messagereceived);
@@ -1153,7 +1153,7 @@ public class NotebookServer extends WebSocketServlet
       p.setTitle((String) fromMessage.get("title"));
       p.setText((String) fromMessage.get("paragraph"));
     }
-    note.persist(subject);
+//    note.persist(subject);
 
     SmartInterpreter smartInterpreter = null;
     if (items[0].equals("%action")) {

@@ -63,18 +63,12 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
     };
 
     var fileInCacheLoad = {
-      load: ['heliumService', function(heliumService) {
-        return heliumService.load;
-      }],
       cached0: ['models', function (models) {
         return models.$get.cachedfiles();
       }]
     };
 
     var hotTestFilesLoad = {
-      load: ['heliumService', function(heliumService) {
-        return heliumService.load;
-      }],
       hotfiles0: ['models', function (models) {
         return models.$get.hotFiles();
       }]
@@ -84,7 +78,14 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       .when('/notebook/:noteId', {
         templateUrl: 'app/notebook/notebook.html',
         controller: 'NotebookCtrl',
-        resolve: visBundleLoad
+        resolve: {
+          load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          rules0: ['models', function (models) {
+            return models.$get.rules();
+          }]
+        }
       })
       .when('/notebook/:noteId/paragraph?=:paragraphId', {
         templateUrl: 'app/notebook/notebook.html',
@@ -115,9 +116,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/dashboard/views/rules/rules.html',
         controller: 'RulesCtrl',
         resolve: {
-         load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           rules0: ['models', function (models) {
             return models.$get.rules();
           }]
@@ -127,9 +125,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/dashboard/views/rules/rule/rule.html',
         controller: 'RuleCtrl',
         resolve: {
-          load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           rule0: ['$route', 'models', function ($route, models) {
             return models.$get.rule($route.current.params.ruleId);
           }]
@@ -139,9 +134,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/dashboard/views/actions/actions.html',
         controller: 'ActionsCtrl',
         resolve: {
-          load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           actions0: ['models', function (models) {
             return models.$get.actions();
           }],
@@ -276,12 +268,12 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
   // constants
   .constant('conf', {
     restapiProtocol: 'v1',
-    // restapiRoot: 'http://localhost:8080/',
+    // restapiRoot: 'http://localhost:7045/',
     restapiRoot: rootPath,
     restapiQueryInterval: 3 * 1000, // in milliseconds
     restapiQueryTimeout: 30 * 1000, // in milliseconds
     restapiTaskLevelMetricsQueryLimit: 100,
-    // loginUrl: 'http://localhost:8080/' + 'login'
+    // loginUrl: 'http://localhost:7045/' + 'login'
     loginUrl: rootPath + 'login'
   })
   .constant('TRASH_FOLDER_ID', '~Trash');
