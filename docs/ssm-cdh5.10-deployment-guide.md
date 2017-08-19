@@ -29,7 +29,7 @@ File System".
 ```xml
 <property>
   <name>fs.hdfs.impl</name>
-  <value>org.smartdata.filesystem.SmartFileSystem</value>
+  <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
   <description>The FileSystem for hdfs URL</description>
 </property>
 ```
