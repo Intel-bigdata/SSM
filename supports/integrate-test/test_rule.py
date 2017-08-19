@@ -1,13 +1,12 @@
 import random
 import time
 import unittest
-from datetime import datetime, timedelta
 from util import *
 
 
 class TestRule(unittest.TestCase):
     def test_rule_access_count(self):
-        # Submit rule
+        # Submit rule file : path matches "/test/*" and accessCount(1m) > 1 | allssd
         rule_str = "file : path matches " + \
             "\"/test/*\" and accessCount(1m) > 1 | allssd "
         rid = submit_rule(rule_str)
@@ -29,7 +28,7 @@ class TestRule(unittest.TestCase):
         delete_rule(rid)
 
     def test_rule_age(self):
-        # Submit rule
+        # Submit rule file : path matches "/test/*" and age > 4s | archive 
         rule_str = "file : path matches \"/test/*\" and age > 4s | archive "
         rid = submit_rule(rule_str)
         start_rule(rid)
@@ -45,15 +44,13 @@ class TestRule(unittest.TestCase):
         delete_rule(rid)
 
     def test_rule_scheduled(self):
-        # Submit rule
+        # Submit rule file: every 4s from now to now + 15s | path matches "/test/data*.dat" | onessd
         # From current to current + 10s
-        trigger_time = datetime.now()
-        rule_str = "file with path matches" + \
-            " \"/test/data*.dat\" : " + \
-            "every 4s from \"" + \
-            trigger_time.strftime("%Y-%m-%d %X") + "\" to \"" + \
-            (trigger_time + timedelta(seconds=10)).strftime("%Y-%m-%d %X") + \
-            "\" | onessd "
+        rule_str = "file: " + \
+            "every 4s from now to now + 15s" + \
+            " path matches " + \
+            "\"/test/data*.dat\"" + \
+            " | onessd "
         rid = submit_rule(rule_str)
         # Create two random files
         for _ in range(3):
