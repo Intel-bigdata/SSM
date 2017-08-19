@@ -55,7 +55,7 @@ public class SmartServer {
   private SmartConf conf;
   private SmartEngine engine;
   private ServerContext context;
-  private SmartServiceState serviceState = SmartServiceState.SAFEMODE;
+  private boolean enabled;
 
   private SmartRpcServer rpcServer;
   private SmartZeppelinServer zeppelinServer;
@@ -68,6 +68,7 @@ public class SmartServer {
   public SmartServer(SmartConf conf) {
     this.conf = conf;
     this.confMgr = new ConfManager(conf);
+    this.enabled = false;
   }
 
   public void initWith(StartupOption startupOption) throws Exception {
@@ -217,9 +218,6 @@ public class SmartServer {
 
     if (enabled) {
       startEngines();
-      serviceState = SmartServiceState.ACTIVE;
-    } else {
-      serviceState = SmartServiceState.DISABLED;
     }
 
     rpcServer.start();
@@ -230,15 +228,15 @@ public class SmartServer {
   }
 
   private void startEngines() throws Exception {
+    enabled = true;
     engine.init();
     engine.start();
   }
 
   public void enable() throws IOException {
-    if (serviceState == SmartServiceState.DISABLED) {
+    if (getSSMServiceState() == SmartServiceState.DISABLED) {
       try {
         startEngines();
-        serviceState = SmartServiceState.ACTIVE;
       } catch (Exception e) {
         throw new IOException(e);
       }
@@ -246,11 +244,17 @@ public class SmartServer {
   }
 
   public SmartServiceState getSSMServiceState() {
-    return serviceState;
+    if (!enabled) {
+      return SmartServiceState.DISABLED;
+    } else if (!engine.inSafeMode()) {
+      return SmartServiceState.ACTIVE;
+    } else {
+      return SmartServiceState.SAFEMODE;
+    }
   }
 
   public boolean isActive() {
-    return serviceState == SmartServiceState.ACTIVE;
+    return getSSMServiceState() == SmartServiceState.ACTIVE;
   }
 
   private void stop() throws Exception {

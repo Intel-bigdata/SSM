@@ -72,6 +72,19 @@ public class SmartEngine extends AbstractService {
   }
 
   @Override
+  public boolean inSafeMode() {
+    if (services.isEmpty()) { //Not initiated
+      return true;
+    }
+    for (AbstractService service : services) {
+      if (service.inSafeMode()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
   public void start() throws IOException {
     for (AbstractService s : services) {
       s.start();

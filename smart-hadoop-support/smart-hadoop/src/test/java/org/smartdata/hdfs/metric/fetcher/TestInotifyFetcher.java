@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
 public abstract class TestInotifyFetcher {
@@ -89,7 +90,12 @@ public abstract class TestInotifyFetcher {
       MetaStore metaStore = Mockito.mock(MetaStore.class);
       EventApplierForTest applierForTest = new EventApplierForTest(metaStore, client);
       final InotifyEventFetcher fetcher = new InotifyEventFetcher(client, metaStore,
-          Executors.newScheduledThreadPool(2), applierForTest);
+        Executors.newScheduledThreadPool(2), applierForTest, new Callable() {
+        @Override
+        public Object call() throws Exception {
+          return null; // Do nothing
+        }
+      });
 
       Thread thread = new Thread() {
         public void run() {
