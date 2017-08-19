@@ -464,13 +464,13 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsertStoragePolicyTable() throws Exception {
-    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 3, "COOL"));
-    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 2, "COLD"));
-    String value = metaStore.getStoragePolicyName(3);
-    Assert.assertEquals(metaStore.getStoragePolicyName(2), "COLD");
+    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 53, "COOL"));
+    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 52, "COLD"));
+    String value = metaStore.getStoragePolicyName(53);
+    Assert.assertEquals(metaStore.getStoragePolicyName(52), "COLD");
     int key = metaStore.getStoragePolicyID("COOL");
     Assert.assertEquals(value, "COOL");
-    Assert.assertEquals(key, 3);
+    Assert.assertEquals(key, 53);
   }
 
   @Test
