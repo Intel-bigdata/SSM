@@ -123,7 +123,7 @@ public class HadoopUtil {
       nnRpcAddr = nnRpcAddr == null ? nnRpcAddrs[index] : nnRpcAddr;
     }
 
-    if (nnRpcAddr == null) {
+    if (nnRpcAddr == null || nnRpcAddr.equalsIgnoreCase("file:///")) {
       throw new IOException("Can not find NameNode RPC server address. "
           + "Please configure it through '"
           + SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY + "'.");
