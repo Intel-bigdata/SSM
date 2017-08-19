@@ -30,7 +30,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class SmartServerAccessEventSource implements FileAccessEventSource {
   static final Logger LOG = LoggerFactory.getLogger(SmartServerAccessEventSource.class);
 
-  private static final long DEFAULT_INTERVAL = 5 * 1000; //5 seconds
+  private static final long DEFAULT_INTERVAL = 1000; //5 seconds
   private final SmartServerAccessEventCollector collector;
   private LinkedBlockingQueue<FileAccessEvent> eventQueue;
   private Timer timer;
