@@ -72,10 +72,13 @@ def wait_for_cmdlet(cid, period=300):
 
 
 def get_rule(rid):
-    print rid
     resp = requests.get(RULE_ROOT + "/" + str(rid) + "/info",
-                        data={'ruleId', str(rid)})
-    print resp.json()
+                        data=str(rid))
+    return resp.json()["body"]
+
+
+def list_rule():
+    resp = requests.get(RULE_ROOT + "/list")
     return resp.json()["body"]
 
 

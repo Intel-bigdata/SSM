@@ -45,9 +45,9 @@ class TestRule(unittest.TestCase):
 
     def test_rule_scheduled(self):
         # Submit rule file: every 4s from now to now + 15s | path matches "/test/data*.dat" | onessd
-        # From current to current + 10s
+        # From now to now + 15s
         rule_str = "file: " + \
-            "every 4s from now to now + 15s" + \
+            "every 4s from now to now + 15s |" + \
             " path matches " + \
             "\"/test/data*.dat\"" + \
             " | onessd "
@@ -66,9 +66,15 @@ class TestRule(unittest.TestCase):
         self.assertTrue(rule['numCmdsGen'] > 0)
         delete_rule(rid)
 
-    def test_rule_stress(self):
+    def test_delete_all(self):
         # Add 100000 different rules
-        pass
+        rules = list_rule()
+        for rule in rules:
+            # Delete all rules
+            if rule['state'] != 'DELETED':
+                delete_rule(rule['id'])
+        rules = [r for rule in list_rule() if rule['state'] != 'DELETED']
+        self.assertTrue(len(rules) == 0)
 
 
 if __name__ == '__main__':

@@ -6,8 +6,8 @@ class TestMoverProtection(unittest.TestCase):
     def test_mover_read(self):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
-        # Test with 10 GB file
-        file_path = TEST_FILES[0]
+        # Test with 2 GB file
+        file_path = TEST_FILES[1]
         cid_move = submit_cmdlet("allssd -file " + file_path)
         check_storage(file_path)
         # read the file
@@ -25,8 +25,8 @@ class TestMoverProtection(unittest.TestCase):
     def test_mover_overwrite(self):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
-        # Test with 10 GB file
-        file_path = TEST_FILES[0]
+        # Test with 2 GB file
+        file_path = TEST_FILES[1]
         cid_move = submit_cmdlet("allssd -file " + file_path)
         check_storage(file_path)
         # read the file
