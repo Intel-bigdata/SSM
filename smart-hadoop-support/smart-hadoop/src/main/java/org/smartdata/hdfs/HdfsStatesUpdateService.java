@@ -38,6 +38,7 @@ import org.smartdata.conf.SmartConfKeys;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -46,6 +47,7 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 public class HdfsStatesUpdateService extends StatesUpdateService {
   private static final Path MOVER_ID_PATH = new Path("/system/mover.id");
+  private volatile boolean inSafeMode;
   private DFSClient client;
   private ScheduledExecutorService executorService;
   private InotifyEventFetcher inotifyEventFetcher;
@@ -58,6 +60,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
 
   public HdfsStatesUpdateService(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
+    this.inSafeMode = true;
   }
 
   /**
@@ -78,10 +81,23 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
-        metaStore, executorService);
+        metaStore, executorService, new FetchFinishedCallBack());
     this.dataNodeInfoFetcher = new DataNodeInfoFetcher(
         client, metaStore, executorService, context.getConf());
     LOG.info("Initialized.");
+  }
+
+  private class FetchFinishedCallBack implements Callable<Object> {
+    @Override
+    public Object call() throws Exception {
+      inSafeMode = false;
+      return null;
+    }
+  }
+
+  @Override
+  public boolean inSafeMode() {
+    return inSafeMode;
   }
 
   /**

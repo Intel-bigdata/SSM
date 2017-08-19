@@ -217,7 +217,6 @@ public class SmartServer {
 
     if (enabled) {
       startEngines();
-      serviceState = SmartServiceState.ACTIVE;
     } else {
       serviceState = SmartServiceState.DISABLED;
     }
@@ -238,7 +237,6 @@ public class SmartServer {
     if (serviceState == SmartServiceState.DISABLED) {
       try {
         startEngines();
-        serviceState = SmartServiceState.ACTIVE;
       } catch (Exception e) {
         throw new IOException(e);
       }
@@ -246,11 +244,17 @@ public class SmartServer {
   }
 
   public SmartServiceState getSSMServiceState() {
-    return serviceState;
+    if (serviceState == SmartServiceState.DISABLED) {
+      return serviceState;
+    } else if (engine != null && !engine.inSafeMode()) {
+      return SmartServiceState.ACTIVE;
+    } else {
+      return SmartServiceState.SAFEMODE;
+    }
   }
 
   public boolean isActive() {
-    return serviceState == SmartServiceState.ACTIVE;
+    return getSSMServiceState() == SmartServiceState.ACTIVE;
   }
 
   private void stop() throws Exception {

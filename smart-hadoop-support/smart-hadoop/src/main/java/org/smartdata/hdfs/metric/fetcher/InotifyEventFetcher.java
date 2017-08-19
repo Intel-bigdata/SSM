@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +46,7 @@ public class InotifyEventFetcher {
   private final NamespaceFetcher nameSpaceFetcher;
   private final ScheduledExecutorService scheduledExecutorService;
   private final InotifyEventApplier applier;
+  private Callable fetchFinishedCallback;
   private ScheduledFuture inotifyFetchFuture;
   private ScheduledFuture fetchAndApplyFuture;
   private EventApplyTask eventApplyTask;
@@ -54,15 +56,16 @@ public class InotifyEventFetcher {
       LoggerFactory.getLogger(InotifyEventFetcher.class);
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
-      ScheduledExecutorService service) {
-    this(client, metaStore, service, new InotifyEventApplier(metaStore, client));
+      ScheduledExecutorService service, Callable callBack) {
+    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack);
   }
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
-      ScheduledExecutorService service, InotifyEventApplier applier) {
+      ScheduledExecutorService service, InotifyEventApplier applier, Callable callBack) {
     this.client = client;
     this.applier = applier;
     this.scheduledExecutorService = service;
+    this.fetchFinishedCallback = callBack;
     this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service);
   }
 
@@ -95,7 +98,8 @@ public class InotifyEventFetcher {
         fetchAndApplyFuture = scheduledExecutorService.scheduleAtFixedRate(
           fetchAndApplyTask, 0, 100, TimeUnit.MILLISECONDS);
         LOG.info("Name space fetch finished.");
-      } catch (IOException e) {
+        fetchFinishedCallback.call();
+      } catch (Exception e) {
         e.printStackTrace();
       }
     }
