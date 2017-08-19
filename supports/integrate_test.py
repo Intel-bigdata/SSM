@@ -18,9 +18,14 @@ CONF_ROOT = REST_ROOT + "/conf"
 PRIMARY_ROOT = REST_ROOT + "/primary"
 
 
-MOVE_TYPE = ["onessd", "allssd", "archive"]
-TEST_FILES = ["/test/data_10GB", "/test/data_1GB",
-              "/test/data_10MB", "/test/data_64MB"]
+MOVE_TYPE = ["onessd",
+             "allssd",
+             "archive"]
+TEST_FILES = ["/test/data_10GB",
+              "/test/data_2GB",
+              "/test/data_1GB",
+              "/test/data_10MB",
+              "/test/data_64MB"]
 
 
 def check_post_resp(resp):
@@ -182,9 +187,9 @@ class IntegrateTest(unittest.TestCase):
         cid_move = submit_cmdlet("allssd -file " + file_path)
         check_storage(file_path)
         # read the file
-        cid_write = submit_cmdlet("write -file " + file_path + " -length 2024")
+        cid_create = create_file(file_path)
         # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid=cid_write)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_create)['state'] == "DONE")
         self.assertTrue(wait_for_cmdlet(cid=cid_move)['state'] == "DONE")
 
     def test_mover_stress(self):
