@@ -107,7 +107,7 @@ public class HadoopUtil {
 
     String[] rpcAddrKeys = {
         // Keep this first, haven't find a predefined key for this property
-        "fs.defaultFS",
+        // "fs.defaultFS",
         SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
         DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY,
         DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY
