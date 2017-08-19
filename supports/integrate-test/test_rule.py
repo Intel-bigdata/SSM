@@ -49,15 +49,15 @@ class TestRule(unittest.TestCase):
         # From current to current + 10s
         trigger_time = datetime.now()
         rule_str = "file with path matches" + \
-            " \"/test/data_*.dat\"  : " + \
-            "every 4s from " + \
-            trigger_time.strftime("%Y-%m-%d %X") + " to " + \
+            " \"/test/data*.dat\" : " + \
+            "every 4s from \"" + \
+            trigger_time.strftime("%Y-%m-%d %X") + "\" to \"" + \
             (trigger_time + timedelta(seconds=10)).strftime("%Y-%m-%d %X") + \
-            " | onessd "
+            "\" | onessd "
         rid = submit_rule(rule_str)
         # Create two random files
-        for _ in range(2):
-            file_path = "test/data_" + \
+        for _ in range(3):
+            file_path = "/test/data" + \
                 random_string() + ".dat"
             wait_for_cmdlet(create_file(file_path))
         # Activate rule
