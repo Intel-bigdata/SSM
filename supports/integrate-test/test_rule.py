@@ -58,7 +58,7 @@ class TestRule(unittest.TestCase):
         # Create two random files
         for _ in range(2):
             file_path = "test/data_" + \
-                random_string + ".dat"
+                random_string() + ".dat"
             wait_for_cmdlet(create_file(file_path))
         # Activate rule
         start_rule(rid)

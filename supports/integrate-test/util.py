@@ -56,7 +56,7 @@ def get_cmdlet(cid):
     return resp.json()["body"]
 
 
-def wait_for_cmdlet(cid, period=40):
+def wait_for_cmdlet(cid, period=120):
     # Set 40 Seconds
     timeout = time.time() + period
     while True:
@@ -135,6 +135,14 @@ def check_storage(file_path):
 
 def move_random_file(mover_type, length):
     file_path = "/test/" + random_string()
-    cid_create = create_file(file_path, length)
-    cid_dest = submit_cmdlet(mover_type + " -file " + file_path)
-    return cid_create, cid_dest
+    create = wait_for_cmdlet(create_file(file_path, length))
+    dest = wait_for_cmdlet(submit_cmdlet(mover_type + " -file " + file_path))
+    return create['cid'], dest['cid']
+
+
+def move_random_file_twice(mover_type_1, mover_type_2, length):
+    file_path = "/test/" + random_string()
+    create = wait_for_cmdlet(create_file(file_path, length))
+    dest_1 = wait_for_cmdlet(submit_cmdlet(mover_type_1 + " -file " + file_path))
+    dest_2 = wait_for_cmdlet(submit_cmdlet(mover_type_2 + " -file " + file_path))
+    return create['cid'], dest_1['cid'], dest_2['cid']

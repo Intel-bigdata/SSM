@@ -1,6 +1,9 @@
 # Integrate Test
 
-## Pre-request
+## Pre-requests
 
+### Python Environment
 Python 2.6 or higher
-python requests
+pip install requests
+
+### HDFS Environment
