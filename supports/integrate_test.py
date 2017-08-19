@@ -19,7 +19,8 @@ PRIMARY_ROOT = REST_ROOT + "/primary"
 
 
 MOVE_TYPE = ["onessd", "allssd", "archive"]
-TEST_FILES = ["/test/data_10GB", "/test/data_1GB", "/test/data_10MB", "/test/data_64MB"]
+TEST_FILES = ["/test/data_10GB", "/test/data_1GB",
+              "/test/data_10MB", "/test/data_64MB"]
 
 
 def check_post_resp(resp):
@@ -62,12 +63,13 @@ def wait_for_cmdlet(cid, period=40):
 
 
 def get_rule(rid):
-    resp = requests.get(RULE_ROOT + "/" + str(rid) + "/info")
+    resp = requests.get(RULE_ROOT + "/" + str(rid) + "/info",
+                        data={'ruleId', str(rid)})
     return resp.json()["body"]
 
 
 def submit_rule(rule_str):
-    resp = requests.post(RULE_ROOT + "/submit", data=rule_str)
+    resp = requests.post(RULE_ROOT + "/add", data={'ruleText': rule_str})
     return resp.json()["body"]
 
 
@@ -89,7 +91,7 @@ def get_action(aid):
 
 
 def read_file(file_path):
-    str = "read -file" + file_path
+    str = "read -file " + file_path
     return submit_cmdlet(str)
 
 
@@ -172,7 +174,7 @@ class IntegrateTest(unittest.TestCase):
         self.assertTrue(wait_for_cmdlet(cid=cid_read)['state'] == "DONE")
         self.assertTrue(wait_for_cmdlet(cid=cid_move)['state'] == "DONE")
 
-    def test_mover_append(self):
+    def test_mover_write(self):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 10 GB file
@@ -180,9 +182,9 @@ class IntegrateTest(unittest.TestCase):
         cid_move = submit_cmdlet("allssd -file " + file_path)
         check_storage(file_path)
         # read the file
-        cid_append = read_file("/testFile")
+        cid_write = submit_cmdlet("write -file " + file_path + " -length 2024")
         # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid=cid_append)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid=cid_write)['state'] == "DONE")
         self.assertTrue(wait_for_cmdlet(cid=cid_move)['state'] == "DONE")
 
     def test_mover_stress(self):
@@ -191,15 +193,20 @@ class IntegrateTest(unittest.TestCase):
 
     def test_rule_hot(self):
         # Submit rule
-        rule_str = "file : path matches \"/test/*\" and accessCount(40s) > 1 | allssd"
+        rule_str = "file : path matches \"/test/*\" and accessCount(1m) > 1 | allssd "
         rid = submit_rule(rule_str)
         start_rule(rid)
         file_path = TEST_FILES[random.randrange(len(TEST_FILES))]
         # Activate rule
         # Submit read action to trigger rule
         # Read twice
-        wait_for_cmdlet(read_file(file_path))
-        wait_for_cmdlet(read_file(file_path))
+        cid_r1 = read_file(file_path)
+        cid_r2 = read_file(file_path)
+        cid_r3 = read_file(file_path)
+        wait_for_cmdlet(cid_r1)
+        wait_for_cmdlet(cid_r2)
+        wait_for_cmdlet(cid_r3)
+        time.sleep(15)
         # Statue check
         rule = get_rule(rid)
         self.assertTrue(rule['numCmdsGen'] > 0)
@@ -207,7 +214,7 @@ class IntegrateTest(unittest.TestCase):
 
     def test_rule_cold(self):
         # Submit rule
-        rule_str = "file : path matches \"/testArchive/*\" and age > 4s | archive "
+        rule_str = "file : path matches \"/test/*\" and age > 4s | archive "
         rid = submit_rule(rule_str)
         start_rule(rid)
         file_path = TEST_FILES[random.randrange(len(TEST_FILES))]
