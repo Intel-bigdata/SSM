@@ -54,7 +54,7 @@ angular.module('zeppelinWebApp')
         // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),
         // group 3/3 (4-col)
         $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-4').done()
+        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-1').done()
       ],
       rows: null
     };
@@ -62,6 +62,7 @@ angular.module('zeppelinWebApp')
     function updateTable(rules) {
       $scope.rulesTable.rows = $stb.$update($scope.rulesTable.rows,
         _.map(rules, function (rule) {
+          console.log(rule);
           return {
             id: rule.id,
             // name: {href: pageUrl, text: rule.appName},
@@ -95,13 +96,9 @@ angular.module('zeppelinWebApp')
               disabled: rule.isDelete,
               click: function () {
                 if(!rule.isRunning) {
-                  $dialogs.confirm('Are you sure to active this rule?', function () {
-                    rule.start();
-                  });
+                  rule.start();
                 }else{
-                  $dialogs.confirm('Are you sure to stop this rule?', function () {
-                    rule.terminate();
-                  });
+                  rule.terminate();
                 }
               }
             },
@@ -110,8 +107,7 @@ angular.module('zeppelinWebApp')
               icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
-              class: 'btn-xs btn-info',
-              disabled: !rule.isRunning
+              class: 'btn-xs btn-info'
             },
             // stop: {
             //   text: 'glyphicon glyphicon-stop',

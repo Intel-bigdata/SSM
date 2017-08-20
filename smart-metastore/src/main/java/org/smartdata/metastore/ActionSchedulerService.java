@@ -15,16 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action.move;
+package org.smartdata.metastore;
 
-import org.smartdata.hdfs.action.SchedulePlan;
+import org.smartdata.AbstractService;
+import org.smartdata.SmartContext;
+import org.smartdata.model.action.ActionPreProcessor;
 
-/**
- * Base class for all kinds of move strategies.
- */
-public abstract class MoveRunner {
+public abstract class ActionSchedulerService extends AbstractService implements ActionPreProcessor {
+  private MetaStore metaStore;
 
-  public abstract void move(String file) throws Exception;
-
-  public abstract void move(String file, SchedulePlan plan) throws Exception;
+  public ActionSchedulerService(SmartContext context, MetaStore metaStore) {
+    super(context);
+    this.metaStore = metaStore;
+  }
 }

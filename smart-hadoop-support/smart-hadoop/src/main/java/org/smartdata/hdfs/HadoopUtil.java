@@ -22,24 +22,95 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.FileInfo;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Contain utils related to hadoop cluster.
  */
 public class HadoopUtil {
 
+  public static final Logger LOG =
+      LoggerFactory.getLogger(HadoopUtil.class);
+
+  public static void loadHadoopConf(Configuration conf) {
+
+    String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_PATH_KEY);
+    if (hadoopConfPath == null || hadoopConfPath.isEmpty()) {
+      LOG.info("Hadoop configuration path is not set");
+    } else {
+      URL hadoopConfDir;
+      try {
+        if (!hadoopConfPath.endsWith("/")) {
+          hadoopConfPath += "/";
+        }
+        hadoopConfDir = new URL(hadoopConfPath);
+        Path hadoopConfDirPath = Paths.get(hadoopConfDir.toURI());
+        if (Files.exists(hadoopConfDirPath) &&
+            Files.isDirectory(hadoopConfDirPath)) {
+          LOG.info("Hadoop configuration path = " + hadoopConfPath);
+        } else {
+          LOG.error("Hadoop configuration path [" + hadoopConfPath
+              + "] doesn't exist or is not a directory");
+          return;
+        }
+
+        try {
+          URL coreConfFile = new URL(hadoopConfDir, "core-site.xml");
+          Path coreFilePath = Paths.get(coreConfFile.toURI());
+          if (Files.exists(coreFilePath)) {
+            conf.addResource(coreConfFile);
+            LOG.info("Hadoop configuration file [" +
+                coreConfFile.toExternalForm() + "] is loaded");
+          } else {
+            LOG.error("Hadoop configuration file [" +
+                coreConfFile.toExternalForm() + "] doesn't exist");
+          }
+        } catch (MalformedURLException e1) {
+          LOG.error("Access hadoop configuration file core-site.xml failed " +
+              "for: " + e1.getMessage());
+        }
+
+        try {
+          URL hdfsConfFile = new URL(hadoopConfDir, "hdfs-site.xml");
+          Path hdfsFilePath = Paths.get(hdfsConfFile.toURI());
+          if (Files.exists(hdfsFilePath)) {
+            conf.addResource(hdfsConfFile);
+            LOG.info("Hadoop configuration file [" +
+                hdfsConfFile.toExternalForm() + "] is loaded");
+          } else {
+            LOG.error("Hadoop configuration file [" +
+                hdfsConfFile.toExternalForm() + "] doesn't exist");
+          }
+        } catch (MalformedURLException e1) {
+          LOG.error("Access hadoop configuration file hdfs-site.xml failed " +
+              "for: " + e1.getMessage());
+        }
+      } catch (MalformedURLException | URISyntaxException e) {
+        LOG.error("Access hadoop configuration path [" + hadoopConfPath
+            + "] failed for: " + e.getMessage());
+      }
+    }
+  }
+
   public static URI getNameNodeUri(Configuration conf)
       throws IOException {
     String nnRpcAddr = null;
 
-    String[] rpcAddrKeys = {
-        SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY, // Keep it first
+    String[] rpcAddrKeys = {        
+        SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
         DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY,
-        DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY
+        DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY,
+        // Keep this last, haven't find a predefined key for this property
+        "fs.defaultFS"
     };
 
     String[] nnRpcAddrs = new String[rpcAddrKeys.length];
@@ -47,11 +118,12 @@ public class HadoopUtil {
     int lastNotNullIdx = 0;
     for (int index = 0; index < rpcAddrKeys.length; index++) {
       nnRpcAddrs[index] = conf.get(rpcAddrKeys[index]);
+      LOG.debug("Get namenode URL, key: " + rpcAddrKeys[index] + ", value:" + nnRpcAddrs[index]);
       lastNotNullIdx = nnRpcAddrs[index] == null ? lastNotNullIdx : index;
       nnRpcAddr = nnRpcAddr == null ? nnRpcAddrs[index] : nnRpcAddr;
     }
 
-    if (nnRpcAddr == null) {
+    if (nnRpcAddr == null || nnRpcAddr.equalsIgnoreCase("file:///")) {
       throw new IOException("Can not find NameNode RPC server address. "
           + "Please configure it through '"
           + SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY + "'.");

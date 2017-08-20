@@ -45,13 +45,13 @@ public class TestDataNodeStorageInfoDao extends TestDaoUtil {
   @Test
   public void testInsertGetDataInfo() throws Exception {
     DataNodeStorageInfo insertInfo1 = new DataNodeStorageInfo("uuid", 10, 10,
-        "storageid", 0, 0, 0, 0, 0);
+        "storage_id", 0, 0, 0, 0, 0);
     dataNodeStorageInfoDao.insert(insertInfo1);
     List<DataNodeStorageInfo> getInfo1 = dataNodeStorageInfoDao.getByUuid("uuid");
     Assert.assertTrue(insertInfo1.equals(getInfo1.get(0)));
 
     DataNodeStorageInfo insertInfo2 = new DataNodeStorageInfo("UUID", 10, 10,
-        "STORAGEID", 1, 1, 1, 1, 1);
+        "STORAGE_ID", 1, 1, 1, 1, 1);
     dataNodeStorageInfoDao.insert(insertInfo2);
     List<DataNodeStorageInfo> getInfo2 = dataNodeStorageInfoDao.getByUuid("UUID");
     Assert.assertTrue(insertInfo2.equals(getInfo2.get(0)));

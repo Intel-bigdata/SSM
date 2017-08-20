@@ -27,14 +27,13 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
-import org.apache.hadoop.hdfs.server.balancer.ExitStatus;
 import org.apache.hadoop.hdfs.server.balancer.Matcher;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
-import org.smartdata.hdfs.action.SchedulePlan;
+import org.smartdata.model.action.FileMovePlan;
 import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.MoverStatus;
@@ -58,16 +57,13 @@ public class MoverProcessor {
 
   private final DFSClient dfs;
   private NetworkTopology networkTopology;
-  private final StorageMap storages;
+  private StorageMap storages;
   private final AtomicInteger retryCount;
 
   private final BlockStoragePolicy[] blockStoragePolicies;
   private long movedBlocks = 0;
-  private long remainingBlocks = 0;
   private final MoverStatus moverStatus;
-
-  private SchedulePlan schedulePlan;
-
+  private FileMovePlan schedulePlan;
 
   public MoverProcessor(DFSClient dfsClient, StorageMap storages,
       NetworkTopology cluster, MoverStatus moverStatus) throws IOException {
@@ -101,12 +97,18 @@ public class MoverProcessor {
     return db;
   }
 
+  public synchronized void updateClusterInfo(StorageMap storages, NetworkTopology cluster) {
+    this.storages = storages;
+    this.networkTopology = cluster;
+  }
+
   /**
    * @return whether there is still remaining migration work for the next
    * round
    */
-  public ExitStatus processNamespace(Path targetPath) throws IOException {
-    MoverProcessResult result = new MoverProcessResult();
+  public synchronized FileMovePlan processNamespace(Path targetPath) throws IOException {
+    schedulePlan = new FileMovePlan();
+    schedulePlan.setFileName(targetPath.toUri().getPath());
     DirectoryListing files = dfs.listPaths(targetPath.toUri().getPath(),
       HdfsFileStatus.EMPTY_NAME, true);
     HdfsFileStatus status = null;
@@ -116,42 +118,16 @@ public class MoverProcessor {
         break;
       }
     }
-    if (!status.isSymlink()) { // file
-      schedulePlan = new SchedulePlan();
-      schedulePlan.setFileName(targetPath.toUri().getPath());
-      processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status, result);
+    if (!status.isSymlink()) {
+      processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status);
     }
-
-//    // wait for pending move to finish and retry the failed migration
-//    boolean hasFailed = Dispatcher.waitForMoveCompletion(storages.getTargets().values());
-//    if (hasFailed) {
-//      if (retryCount.get() == 1) {
-//        result.setRetryFailed();
-//        LOG.error("Failed to move some block's after "
-//            + 1 + " retries.");
-//        return result.getExitStatus();
-//      } else {
-//        retryCount.incrementAndGet();
-//      }
-//    } else {
-//      // Reset retry count if no failure.
-//      retryCount.set(0);
-//    }
-//    movedBlocks = moverStatus.getTotalBlocks() - remainingBlocks;
-//    moverStatus.setMovedBlocks(movedBlocks);
-//    result.updateHasRemaining(hasFailed);
-    return result.getExitStatus();
-  }
-
-  public SchedulePlan getSchedulePlan() {
     return schedulePlan;
   }
 
   /**
    * @return true if it is necessary to run another round of migration
    */
-  private void processFile(String fullPath, HdfsLocatedFileStatus status,
-                           MoverProcessResult result) {
+  private void processFile(String fullPath, HdfsLocatedFileStatus status) {
     byte policyId = status.getStoragePolicy();
     if (policyId == BlockStoragePolicySuite.ID_UNSPECIFIED) {
       return;
@@ -178,15 +154,8 @@ public class MoverProcessor {
       int remainingReplications = diff.removeOverlap(true);
       moverStatus.increaseTotalSize(lb.getBlockSize() * remainingReplications);
       moverStatus.increaseTotalBlocks(remainingReplications);
-      remainingBlocks += remainingReplications;
       if (remainingReplications != 0) {
-        if (scheduleMoveBlock(diff, lb)) {
-          result.updateHasRemaining(false);
-          // One block scheduled successfully, set noBlockMoved to false
-          result.setNoBlockMoved(false);
-        } else {
-          result.updateHasRemaining(true);
-        }
+        scheduleMoveBlock(diff, lb);
       }
     }
   }
@@ -283,58 +252,6 @@ public class MoverProcessor {
     DatanodeInfo targetDatanode = target.getDatanodeInfo();
     schedulePlan.addPlan(blockId, sourceDatanode.getDatanodeUuid(), source.getStorageType(),
         targetDatanode.getIpAddr(), targetDatanode.getXferPort(), target.getStorageType());
-  }
-
-  /**
-   * Describe the result for MoverProcessor.
-   */
-  class MoverProcessResult {
-    private boolean hasRemaining;
-    private boolean noBlockMoved;
-    private boolean retryFailed;
-
-    MoverProcessResult() {
-      hasRemaining = false;
-      noBlockMoved = true;
-      retryFailed = false;
-    }
-
-    boolean isHasRemaining() {
-      return hasRemaining;
-    }
-
-    boolean isNoBlockMoved() {
-      return noBlockMoved;
-    }
-
-    void updateHasRemaining(boolean hasRemaining) {
-      this.hasRemaining |= hasRemaining;
-    }
-
-    void setNoBlockMoved(boolean noBlockMoved) {
-      this.noBlockMoved = noBlockMoved;
-    }
-
-    void setRetryFailed() {
-      this.retryFailed = true;
-    }
-
-    /**
-     * @return NO_MOVE_PROGRESS if no progress in move after some retry. Return
-     *         SUCCESS if all moves are success and there is no remaining move.
-     *         Return NO_MOVE_BLOCK if there moves available but all the moves
-     *         cannot be scheduled. Otherwise, return IN_PROGRESS since there
-     *         must be some remaining moves.
-     */
-    ExitStatus getExitStatus() {
-      if (retryFailed) {
-        return ExitStatus.NO_MOVE_PROGRESS;
-      } else {
-        return !isHasRemaining() ? ExitStatus.SUCCESS
-                : isNoBlockMoved() ? ExitStatus.NO_MOVE_BLOCK
-                : ExitStatus.IN_PROGRESS;
-      }
-    }
   }
 
   /**

@@ -38,6 +38,12 @@
   </property>
 
   <property>
+    <name>smart.server.rpc.handler.count</name>
+    <value>80</value>
+    <description>number of handlers in rpc server</description>
+  </property>
+
+  <property>
     <name>smart.server.http.address</name>
     <value>0.0.0.0:7045</value>
     <description>REST server of SSM</description>

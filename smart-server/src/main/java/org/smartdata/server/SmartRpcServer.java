@@ -52,7 +52,7 @@ public class SmartRpcServer implements SmartServerProtocols {
   protected SmartServer ssm;
   protected Configuration conf;
   protected final InetSocketAddress clientRpcAddress;
-  protected int serviceHandlerCount = 1;
+  protected int serviceHandlerCount;
   protected final RPC.Server clientRpcServer;
 
   public SmartRpcServer(SmartServer ssm, Configuration conf) throws IOException {
@@ -69,6 +69,10 @@ public class SmartRpcServer implements SmartServerProtocols {
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
     BlockingService clientSmartPbService = ClientServerProto.protoService
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
+
+    serviceHandlerCount = conf.getInt(
+        SmartConfKeys.SMART_SERVER_RPC_HANDLER_COUNT_KEY,
+        SmartConfKeys.SMART_SERVER_RPC_HANDLER_COUNT_DEFAULT);
 
     // TODO: provide service for SmartClientProtocol and SmartAdminProtocol
     // TODO: in different port and server

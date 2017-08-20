@@ -77,6 +77,8 @@ public class TestSmartServerReConfig {
           uriList.get(0).toString());
       ssm.enable();
 
+      Thread.sleep(2000);
+
       Assert.assertTrue(ssm.getSSMServiceState() == SmartServiceState.ACTIVE);
 
     } finally {

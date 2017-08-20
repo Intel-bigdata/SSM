@@ -47,42 +47,14 @@ done
 . "${bin}/common.sh"
 
 #---------------------------------------------------------
-# Stop Smart Servers
+#
 
-SMARTSERVERS=$("${SMART_HOME}/bin/smart" getconf SmartServers 2>/dev/null)
+echo -n "Start formatting database ... "
 
-if [ "$?" != "0" ]; then
-  echo "ERROR: Get SmartServers error: ${SMARTSERVERS}"
-  exit 1
-fi
+$("${SMART_HOME}/bin/ssm" --config "${SMART_CONF_DIR}" formatdatabase 2>/dev/null)
 
-if [ x"${SMARTSERVERS}" != x"" ]; then
-  echo "Stopping SmartServers on [${SMARTSERVERS}]"
-  . "${SMART_HOME}/bin/smart" \
-    --remote \
-    --config "${SMART_CONF_DIR}" \
-    --hosts "${SMARTSERVERS}" --hostsend \
-    --daemon stop ${DEBUG_OPT} \
-    smartserver
+if [ x"$?" = x"0" ]; then
+  echo "[Success]"
 else
-  echo "No SmartServers configured in 'hazelcast.xml'."
-fi
-
-echo
-
-#---------------------------------------------------------
-# Stop Smart Agents
-
-AGENTS_FILE="${SMART_CONF_DIR}/agents"
-if [ -f "${AGENTS_FILE}" ]; then
-  AGENT_HOSTS=$(sed 's/#.*$//;/^$/d' "${AGENTS_FILE}" | xargs echo)
-  if [ x"${AGENT_HOSTS}" != x"" ]; then
-    echo "Stopping SmartAgents on [${AGENT_HOSTS}]"
-    . "${SMART_HOME}/bin/smart" \
-      --remote \
-      --config "${SMART_CONF_DIR}" \
-      --hosts "${AGENT_HOSTS}" --hostsend \
-      --daemon stop ${DEBUG_OPT} \
-      smartagent
-  fi
+  echo "[Failed]"
 fi

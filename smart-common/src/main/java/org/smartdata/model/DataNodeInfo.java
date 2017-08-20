@@ -20,18 +20,16 @@ package org.smartdata.model;
 public class DataNodeInfo {
   private String uuid;
   private String hostname;
-  private String ip;
-  private int port;
+  private String rpcAddress;
   private long cacheCapacity;
   private long cacheUsed;
   private String location;
 
-  public DataNodeInfo(String uuid, String hostname, String ip, int port,
+  public DataNodeInfo(String uuid, String hostname, String rpcAddress,
       long cacheCapacity, long cacheUsed, String location) {
     this.uuid = uuid;
     this.hostname = hostname;
-    this.ip = ip;
-    this.port = port;
+    this.rpcAddress = rpcAddress;
     this.cacheCapacity = cacheCapacity;
     this.cacheUsed = cacheUsed;
     this.location = location;
@@ -44,12 +42,11 @@ public class DataNodeInfo {
 
     DataNodeInfo that = (DataNodeInfo) o;
 
-    if (port != that.port) return false;
     if (cacheCapacity != that.cacheCapacity) return false;
     if (cacheUsed != that.cacheUsed) return false;
     if (uuid != null ? !uuid.equals(that.uuid) : that.uuid != null) return false;
     if (hostname != null ? !hostname.equals(that.hostname) : that.hostname != null) return false;
-    if (ip != null ? !ip.equals(that.ip) : that.ip != null) return false;
+    if (rpcAddress != null ? !rpcAddress.equals(that.rpcAddress) : that.rpcAddress != null) return false;
     return location != null ? location.equals(that.location) : that.location == null;
   }
 
@@ -57,8 +54,7 @@ public class DataNodeInfo {
   public int hashCode() {
     int result = uuid != null ? uuid.hashCode() : 0;
     result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
-    result = 31 * result + (ip != null ? ip.hashCode() : 0);
-    result = 31 * result + port;
+    result = 31 * result + (rpcAddress != null ? rpcAddress.hashCode() : 0);
     result = 31 * result + (int) (cacheCapacity ^ (cacheCapacity >>> 32));
     result = 31 * result + (int) (cacheUsed ^ (cacheUsed >>> 32));
     result = 31 * result + (location != null ? location.hashCode() : 0);
@@ -81,20 +77,12 @@ public class DataNodeInfo {
     this.hostname = hostname;
   }
 
-  public String getIp() {
-    return ip;
+  public String getRpcAddress() {
+    return rpcAddress;
   }
 
-  public void setIp(String ip) {
-    this.ip = ip;
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
+  public void setRpcAddress(String ip) {
+    this.rpcAddress = rpcAddress;
   }
 
   public long getCacheCapacity() {
@@ -124,8 +112,8 @@ public class DataNodeInfo {
   @Override
   public String toString() {
     return String.format("DataNodeInfo{uuid=\'%s\', hostname=\'%s\', " +
-            "ip=\'%s\', port=%d, cache_capacity=%d, cache_used=%d, location=\'%s\'}",
-        uuid, hostname, ip, port, cacheCapacity, cacheUsed, location);
+            "rpcAddress=\'%s\', cache_capacity=%d, cache_used=%d, location=\'%s\'}",
+        uuid, hostname, rpcAddress, cacheCapacity, cacheUsed, location);
   }
 
   public static Builder newBuilder() {
@@ -135,8 +123,7 @@ public class DataNodeInfo {
   public static class Builder {
     private String uuid;
     private String hostname;
-    private String ip;
-    private int port;
+    private String rpcAddress;
     private long cacheCapacity;
     private long cacheUsed;
     private String location;
@@ -149,12 +136,8 @@ public class DataNodeInfo {
       this.hostname = hostname;
       return this;
     }
-    public Builder setIp(String ip) {
-      this.ip = ip;
-      return this;
-    }
-    public Builder setPort(int port) {
-      this.port = port;
+    public Builder setRpcAddress(String rpcAddress) {
+      this.rpcAddress = rpcAddress;
       return this;
     }
     public Builder setCacheCapacity(long cacheCapacity) {
@@ -170,7 +153,7 @@ public class DataNodeInfo {
       return this;
     }
     public DataNodeInfo build() {
-      return new DataNodeInfo(uuid, hostname, ip, port,
+      return new DataNodeInfo(uuid, hostname, rpcAddress,
           cacheCapacity, cacheUsed, location);
     }
   }

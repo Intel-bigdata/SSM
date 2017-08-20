@@ -16,27 +16,12 @@
  */
 package org.apache.zeppelin.socket;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.google.common.base.Strings;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
@@ -55,8 +40,8 @@ import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.interpreter.remote.RemoteAngularObjectRegistry;
 import org.apache.zeppelin.interpreter.remote.RemoteInterpreterProcessListener;
 import org.apache.zeppelin.interpreter.thrift.InterpreterCompletion;
-import org.apache.zeppelin.notebook.JobListenerFactory;
 import org.apache.zeppelin.notebook.Folder;
+import org.apache.zeppelin.notebook.JobListenerFactory;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
@@ -85,13 +70,27 @@ import org.joda.time.format.DateTimeFormatter;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Queues;
-import com.google.gson.reflect.TypeToken;
 import org.smartdata.interpreter.SmartInterpreter;
 import org.smartdata.interpreter.impl.ActionInterpreter;
 import org.smartdata.interpreter.impl.RuleInterpreter;
 import org.smartdata.server.SmartEngine;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Zeppelin websocket service.
@@ -174,7 +173,7 @@ public class NotebookServer extends WebSocketServlet
       LOG.debug("RECEIVE PRINCIPAL << " + messagereceived.principal);
       LOG.debug("RECEIVE TICKET << " + messagereceived.ticket);
       LOG.debug("RECEIVE ROLES << " + messagereceived.roles);
-      LOG.info("messagereceived.op = " + messagereceived.op);
+      LOG.debug("messagereceived.op = " + messagereceived.op);
       if (LOG.isTraceEnabled()) {
         LOG.trace("RECEIVE MSG = " + messagereceived);
       }
@@ -344,10 +343,10 @@ public class NotebookServer extends WebSocketServlet
             unsubscribeNoteJobInfo(conn);
             break;
           case GET_INTERPRETER_BINDINGS:
-            getInterpreterBindings(conn, messagereceived);
+//            getInterpreterBindings(conn, messagereceived);
             break;
           case SAVE_INTERPRETER_BINDINGS:
-            saveInterpreterBindings(conn, messagereceived);
+//            saveInterpreterBindings(conn, messagereceived);
             break;
           case EDITOR_SETTING:
             getEditorSetting(conn, messagereceived);
@@ -1154,7 +1153,7 @@ public class NotebookServer extends WebSocketServlet
       p.setTitle((String) fromMessage.get("title"));
       p.setText((String) fromMessage.get("paragraph"));
     }
-    note.persist(subject);
+//    note.persist(subject);
 
     SmartInterpreter smartInterpreter = null;
     if (items[0].equals("%action")) {

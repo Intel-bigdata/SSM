@@ -15,18 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action;
+package org.smartdata.model.action;
 
 import com.google.gson.Gson;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Plan of MoverScheduler to indicate block, source and target.
  */
-public class SchedulePlan {
+public class FileMovePlan {
+  public static final String MAX_CONCURRENT_MOVES = "maxConcurrentMoves";
+  public static final String MAX_NUM_RETRIES = "maxNumRetries";
   // info of the namenode
   private URI namenode;
 
@@ -45,7 +49,9 @@ public class SchedulePlan {
   // info of block
   private List<Long> blockIds;
 
-  public SchedulePlan(URI namenode, String fileName) {
+  private Map<String, String> properties;
+
+  public FileMovePlan(URI namenode, String fileName) {
     this.namenode = namenode;
     this.fileName = fileName;
     sourceUuids = new ArrayList<>();
@@ -53,10 +59,11 @@ public class SchedulePlan {
     targetIpAddrs = new ArrayList<>();
     targetXferPorts = new ArrayList<>();
     targetStorageTypes = new ArrayList<>();
+    properties = new HashMap<>();
     blockIds = new ArrayList<>();
   }
 
-  public SchedulePlan() {
+  public FileMovePlan() {
     this(null, null);
   }
 
@@ -110,14 +117,35 @@ public class SchedulePlan {
     return namenode;
   }
 
+  public void addProperty(String property, String value) {
+    if (property != null) {
+      properties.put(property, value);
+    }
+  }
+
+  public String getPropertyValue(String property, String defaultValue) {
+    if (properties.containsKey(property)) {
+      return properties.get(property);
+    }
+    return defaultValue;
+  }
+
+  public int getPropertyValueInt(String property, int defaultValue) {
+    String v = getPropertyValue(property, null);
+    if (v == null) {
+      return defaultValue;
+    }
+    return Integer.parseInt(v);
+  }
+
   @Override
   public String toString() {
     Gson gson = new Gson();
     return gson.toJson(this);
   }
 
-  public static SchedulePlan fromJsonString(String jsonPlan) {
+  public static FileMovePlan fromJsonString(String jsonPlan) {
     Gson gson = new Gson();
-    return gson.fromJson(jsonPlan, SchedulePlan.class);
+    return gson.fromJson(jsonPlan, FileMovePlan.class);
   }
 }

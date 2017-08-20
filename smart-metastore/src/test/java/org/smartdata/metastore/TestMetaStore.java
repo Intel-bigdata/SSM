@@ -464,13 +464,13 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsertStoragePolicyTable() throws Exception {
-    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 3, "COOL"));
-    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 2, "COLD"));
-    String value = metaStore.getStoragePolicyName(3);
-    Assert.assertEquals(metaStore.getStoragePolicyName(2), "COLD");
+    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 53, "COOL"));
+    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 52, "COLD"));
+    String value = metaStore.getStoragePolicyName(53);
+    Assert.assertEquals(metaStore.getStoragePolicyName(52), "COLD");
     int key = metaStore.getStoragePolicyID("COOL");
     Assert.assertEquals(value, "COOL");
-    Assert.assertEquals(key, 3);
+    Assert.assertEquals(key, 53);
   }
 
   @Test
@@ -525,15 +525,15 @@ public class TestMetaStore extends TestDaoUtil {
   @Test
   public void testInsertDataNodeInfo() throws Exception {
     DataNodeInfo insertInfo1 = new DataNodeInfo(
-        "UUID1", "hostname", "www.ssm.com", 80, 100, 50, "lab");
+        "UUID1", "hostname", "www.ssm.com",  100, 50, "lab");
     metaStore.insertDataNodeInfo(insertInfo1);
     List<DataNodeInfo> getInfo1 = metaStore.getDataNodeInfoByUuid("UUID1");
     Assert.assertTrue(insertInfo1.equals(getInfo1.get(0)));
 
     DataNodeInfo insertInfo2 = new DataNodeInfo(
-        "UUID2", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+        "UUID2", "HOSTNAME", "www.ssm.com",  0, 0, null);
     DataNodeInfo insertInfo3 = new DataNodeInfo(
-        "UUID3", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+        "UUID3", "HOSTNAME", "www.ssm.com",  0, 0, null);
     metaStore.insertDataNodeInfos(new DataNodeInfo[] { insertInfo2, insertInfo3 } );
     List<DataNodeInfo> getInfo2 = metaStore.getDataNodeInfoByUuid("UUID2");
     Assert.assertTrue(insertInfo2.equals(getInfo2.get(0)));
@@ -544,11 +544,11 @@ public class TestMetaStore extends TestDaoUtil {
   @Test
   public void testDeleteDataNodeInfo() throws Exception {
     DataNodeInfo insertInfo1 = new DataNodeInfo(
-        "UUID1", "hostname", "www.ssm.com", 80, 100, 50, "lab");
+        "UUID1", "hostname", "www.ssm.com",  100, 50, "lab");
     DataNodeInfo insertInfo2 = new DataNodeInfo(
-        "UUID2", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+        "UUID2", "HOSTNAME", "www.ssm.com",  0, 0, null);
     DataNodeInfo insertInfo3 = new DataNodeInfo(
-        "UUID3", "HOSTNAME", "www.ssm.com", 80, 0, 0, null);
+        "UUID3", "HOSTNAME", "www.ssm.com",  0, 0, null);
     metaStore.insertDataNodeInfos(new DataNodeInfo[] { insertInfo1, insertInfo2, insertInfo3 } );
 
     List<DataNodeInfo> infos = metaStore.getAllDataNodeInfo();

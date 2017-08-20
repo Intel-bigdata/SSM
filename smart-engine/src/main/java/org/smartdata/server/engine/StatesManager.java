@@ -85,6 +85,14 @@ public class StatesManager extends AbstractService implements Reconfigurable {
     LOG.info("Initialized.");
   }
 
+  @Override
+  public boolean inSafeMode() {
+    if (statesUpdaterService == null) {
+      return true;
+    }
+    return statesUpdaterService.inSafeMode();
+  }
+
   /**
    * Start daemon threads in StatesManager for function.
    */
@@ -150,8 +158,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       throws ReconfigureException {
     LOG.debug("Received reconfig event: property={} newVal={}",
         property, newVal);
-    if (SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY.equals(property)
-        || SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY.equals(property)) {
+    if (SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY.equals(property)) {
       if (statesUpdaterService != null) {
         throw new ReconfigureException(
             "States update service already been initialized.");
@@ -165,19 +172,18 @@ public class StatesManager extends AbstractService implements Reconfigurable {
 
   public List<String> getReconfigurableProperties() {
     return Arrays.asList(
-        SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY,
         SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
   }
 
   private synchronized void initStatesUpdaterService() {
     try {
-      statesUpdaterService = StatesUpdaterServiceFactory
+      statesUpdaterService = AbstractServiceFactory
           .createStatesUpdaterService(getContext().getConf(),
               serverContext, serverContext.getMetaStore());
       statesUpdaterService.init();
     } catch (IOException e) {
       statesUpdaterService = null;
-      LOG.info("Failed to create states updater service.");
+      LOG.info("Failed to create states updater service for: " + e.getMessage());
     }
 
     if (working) {

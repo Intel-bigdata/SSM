@@ -15,22 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action.move;
+package org.smartdata.model;
 
-import org.smartdata.hdfs.action.SchedulePlan;
-
-/**
- * HDFS SPS based move runner.
- */
-public class SPSBasedMoveRunner extends MoveRunner {
-
-  @Override
-  public void move(String file) throws Exception {
-
-  }
-
-  @Override
-  public void move(String file, SchedulePlan plan) throws Exception {
-
-  }
+public enum ClusterState {
+  ENABLED,
+  DISABLED
 }

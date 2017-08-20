@@ -34,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -79,29 +80,30 @@ public class MetaStoreUtils {
   public static void initializeDataBase(
       Connection conn) throws MetaStoreException {
     String createEmptyTables[] = new String[]{
-        "DROP TABLE IF EXISTS access_count_tables;",
-        "DROP TABLE IF EXISTS cached_files;",
-        "DROP TABLE IF EXISTS ecpolicys;",
-        "DROP TABLE IF EXISTS files;",
-        "DROP TABLE IF EXISTS groups;",
-        "DROP TABLE IF EXISTS owners;",
-        "DROP TABLE IF EXISTS storages;",
+        "DROP TABLE IF EXISTS access_count_table;",
+        "DROP TABLE IF EXISTS cached_file;",
+        "DROP TABLE IF EXISTS ec_policy;",
+        "DROP TABLE IF EXISTS file;",
+        "DROP TABLE IF EXISTS user_group;",
+        "DROP TABLE IF EXISTS owner;",
+        "DROP TABLE IF EXISTS storage;",
         "DROP TABLE IF EXISTS storage_policy;",
         "DROP TABLE IF EXISTS xattr;",
         "DROP TABLE IF EXISTS datanode_info;",
         "DROP TABLE IF EXISTS datanode_storage_info;",
-        "DROP TABLE IF EXISTS rules;",
-        "DROP TABLE IF EXISTS cmdlets;",
-        "DROP TABLE IF EXISTS actions;",
+        "DROP TABLE IF EXISTS rule;",
+        "DROP TABLE IF EXISTS cmdlet;",
+        "DROP TABLE IF EXISTS action;",
         "DROP TABLE IF EXISTS blank_access_count_info;",  // for special cases
         "DROP TABLE IF EXISTS file_diff;",  // incremental diff for disaster recovery
         "DROP TABLE IF EXISTS global_config",
         "DROP TABLE IF EXISTS cluster_config",
-        "DROP TABLE IF EXISTS back_up",
+        "DROP TABLE IF EXISTS backup_file",
+        "DROP TABLE IF EXISTS sys_info",
+        "DROP TABLE IF EXISTS cluster_info",
 
-
-        "CREATE TABLE access_count_tables (\n" +
-            "  table_name varchar(255) NOT NULL,\n" +
+        "CREATE TABLE access_count_table (\n" +
+            "  table_name varchar(255) PRIMARY KEY,\n" +
             "  start_time bigint(20) NOT NULL,\n" +
             "  end_time bigint(20) NOT NULL\n" +
             ") ;",
@@ -111,24 +113,26 @@ public class MetaStoreUtils {
             "  count bigint(20) NOT NULL\n" +
             ") ;",
 
-        "CREATE TABLE cached_files (\n" +
+        "CREATE TABLE cached_file (\n" +
             "  fid bigint(20) NOT NULL,\n" +
             "  path varchar(4096) NOT NULL,\n" +
             "  from_time bigint(20) NOT NULL,\n" +
             "  last_access_time bigint(20) NOT NULL,\n" +
-            "  num_accessed int(11) NOT NULL\n" +
+            "  accessed_num int(11) NOT NULL\n" +
             ") ;",
+        "CREATE INDEX cached_file_fid_idx ON cached_file (fid);",
+        "CREATE INDEX cached_file_path_idx ON cached_file (path);",
 
-        "CREATE TABLE ecpolicys (\n" +
+        "CREATE TABLE ec_policy (\n" +
             "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  name varchar(255) DEFAULT NULL,\n" +
-            "  cellsize int(11) DEFAULT NULL,\n" +
-            "  numDataUnits int(11) DEFAULT NULL,\n" +
-            "  numParityUnits int(11) DEFAULT NULL,\n" +
-            "  codecName varchar(64) DEFAULT NULL\n" +
+            "  cell_size int(11) DEFAULT NULL,\n" +
+            "  data_unit_num int(11) DEFAULT NULL,\n" +
+            "  parity_unit_num int(11) DEFAULT NULL,\n" +
+            "  codec_name varchar(64) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE files (\n" +
+        "CREATE TABLE file (\n" +
             "  path varchar(4096) NOT NULL,\n" +
             "  fid bigint(20) NOT NULL,\n" +
             "  length bigint(20) DEFAULT NULL,\n" +
@@ -143,25 +147,27 @@ public class MetaStoreUtils {
             "  permission smallint(6) DEFAULT NULL,\n" +
             "  ec_policy_id smallint(6) DEFAULT NULL\n" +
             ") ;",
+        "CREATE INDEX file_fid_idx ON file (fid);",
+        "CREATE INDEX file_path_idx ON file (path);",
 
-        "CREATE TABLE groups (\n" +
+        "CREATE TABLE user_group (\n" +
             "  gid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  group_name varchar(255) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE owners (\n" +
+        "CREATE TABLE owner (\n" +
             "  oid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  owner_name varchar(255) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE storages (\n" +
-            "  type varchar(255) NOT NULL,\n" +
+        "CREATE TABLE storage (\n" +
+            "  type varchar(255) PRIMARY KEY,\n" +
             "  capacity bigint(20) NOT NULL,\n" +
             "  free bigint(20) NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE storage_policy (\n" +
-            "  sid tinyint(4) NOT NULL,\n" +
+            "  sid tinyint(4) PRIMARY KEY,\n" +
             "  policy_name varchar(64) DEFAULT NULL\n" +
             ") ;",
 
@@ -179,22 +185,22 @@ public class MetaStoreUtils {
             "  name varchar(255) NOT NULL,\n" +
             "  value blob NOT NULL\n" +
             ") ;",
+        "CREATE INDEX xattr_fid_idx ON xattr (fid);",
 
         "CREATE TABLE datanode_info (\n" +
-            "  uuid varchar(64) NOT NULL,\n" +
+            "  uuid varchar(64) PRIMARY KEY,\n" +
             "  hostname varchar(255) NOT NULL,\n" +   // DatanodeInfo
-            "  ip varchar(16) DEFAULT NULL,\n" +
-            "  port tinyint(4) DEFAULT NULL,\n" +
+            "  rpcAddress varchar(21) DEFAULT NULL,\n" +
             "  cache_capacity bigint(20) DEFAULT NULL,\n" +
             "  cache_used bigint(20) DEFAULT NULL,\n" +
             "  location varchar(255) DEFAULT NULL\n" +
             ") ;",
 
         "CREATE TABLE datanode_storage_info (\n" +
-            "  uuid varchar(64) NOT NULL,\n" +
+            "  uuid varchar(64) PRIMARY KEY,\n" +
             "  sid tinyint(4) NOT NULL,\n" +          // storage type
             "  state tinyint(4) NOT NULL,\n" +        // DatanodeStorage.state
-            "  storageid varchar(64) NOT NULL,\n" +   // StorageReport ...
+            "  storage_id varchar(64) NOT NULL,\n" +   // StorageReport ...
             "  failed tinyint(1) DEFAULT NULL,\n" +
             "  capacity bigint(20) DEFAULT NULL,\n" +
             "  dfs_used bigint(20) DEFAULT NULL,\n" +
@@ -202,19 +208,18 @@ public class MetaStoreUtils {
             "  block_pool_used bigint(20) DEFAULT NULL\n" +
             ") ;",
 
-        "CREATE TABLE rules (\n" +
+        "CREATE TABLE rule (\n" +
             "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            // TODO: may required later
-            // "  name varchar(255) DEFAULT NULL,\n" +
+            "  name varchar(255) DEFAULT NULL,\n" +
             "  state tinyint(4) NOT NULL,\n" +
             "  rule_text varchar(4096) NOT NULL,\n" +
             "  submit_time bigint(20) NOT NULL,\n" +
             "  last_check_time bigint(20) DEFAULT NULL,\n" +
             "  checked_count int(11) NOT NULL,\n" +
-            "  cmdlets_generated int(11) NOT NULL\n" +
+            "  generated_cmdlets int(11) NOT NULL\n" +
             ") ;",
 
-        "CREATE TABLE cmdlets (\n" +
+        "CREATE TABLE cmdlet (\n" +
             "  cid INTEGER PRIMARY KEY,\n" +
             "  rid INTEGER NOT NULL,\n" +
             "  aids varchar(4096) NOT NULL,\n" +
@@ -224,7 +229,7 @@ public class MetaStoreUtils {
             "  state_changed_time bigint(20) NOT NULL\n" +
             ") ;",
 
-        "CREATE TABLE actions (\n" +
+        "CREATE TABLE action (\n" +
             "  aid INTEGER PRIMARY KEY,\n" +
             "  cid INTEGER NOT NULL,\n" +
             "  action_name varchar(4096) NOT NULL,\n" +
@@ -247,22 +252,40 @@ public class MetaStoreUtils {
             "  state tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL\n" +
             ") ;",
+
         "CREATE TABLE global_config (\n" +
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            " property_name varchar(3072) NOT NULL UNIQUE,\n" +
+            " property_name varchar(512) NOT NULL UNIQUE,\n" +
             " property_value varchar(3072) NOT NULL\n" +
             ") ;",
+
         "CREATE TABLE cluster_config (\n" +
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            " node_name varchar(3072) NOT NULL UNIQUE,\n" +
+            " node_name varchar(512) NOT NULL UNIQUE,\n" +
             " config_path varchar(3072) NOT NULL\n" +
             ") ;",
-        "CREATE TABLE back_up (\n" +
+
+        "CREATE TABLE sys_info (\n" +
+            "  property varchar(512) PRIMARY KEY,\n" +
+            "  value varchar(4096) NOT NULL\n" +
+            ");",
+
+        "CREATE TABLE cluster_info (\n" +
+            "  cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "  name varchar(512) NOT NULL UNIQUE,\n" +
+            "  url varchar(4096) NOT NULL,\n" +
+            "  conf_path varchar(4096) NOT NULL,\n" +
+            "  state varchar(64) NOT NULL,\n" +   // ClusterState
+            "  type varchar(64) NOT NULL\n" +    // ClusterType
+            ");",
+
+        "CREATE TABLE backup_file (\n" +
             " rid bigint(20) NOT NULL,\n" +
             " src varchar(4096) NOT NULL,\n" +
             " dest varchar(4096) NOT NULL,\n" +
             " period bigint(20) NOT NULL\n" +
-            ") ;"
+            ") ;",
+        "CREATE INDEX backup_file_rid_idx ON backup_file (rid);"
     };
     try {
       String url = conn.getMetaData().getURL();
@@ -334,7 +357,12 @@ public class MetaStoreUtils {
         }
         return new MetaStore(new DruidPool(p));
       } catch (Exception e) {
-        throw new MetaStoreException(e);
+        if (e instanceof InvalidPropertiesFormatException) {
+          throw new MetaStoreException(
+              "Malformat druid.xml, please check the file.", e);
+        } else {
+          throw new MetaStoreException(e);
+        }
       }
     } else {
       LOG.info("DB connection pool config file " + expectedCpPath

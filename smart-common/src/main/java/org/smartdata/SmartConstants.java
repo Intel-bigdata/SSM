@@ -15,17 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata;
 
-import org.smartdata.AbstractService;
-import org.smartdata.SmartContext;
-import org.smartdata.model.action.ActionPreProcessor;
-
-public abstract class ActionPreProcessService extends AbstractService implements ActionPreProcessor {
-  private MetaStore metaStore;
-
-  public ActionPreProcessService(SmartContext context, MetaStore metaStore) {
-    super(context);
-    this.metaStore = metaStore;
-  }
+public class SmartConstants {
+  public static final String SMART_STATES_UPDATE_SERVICE_IMPL = "org.smartdata.hdfs.HdfsStatesUpdateService";
+  public static final String SMART_ACTION_SCHEDULER_SERVICE_IMPL = "org.smartdata.hdfs.scheduler.MoverPreProcessService";
 }

@@ -37,12 +37,19 @@ limitations under the License.
         </li>
         <li><a href="#/rules">Rules</a></li>
         <li><a href="#/actions">Actions</a></li>
-        <li><a href="#/mover">Mover</a></li>
-        <li><a href="#/copy">Copy</a></li>
+        <li class="dropdown" uib-dropdown>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>Help <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="app/dashboard/views/rules/submit/help.html" target="_blank">Rule Grammar</a></li>
+            <li><a href="app/dashboard/views/actions/submit/help.html" target="_blank">Action Usage</a></li>
+          </ul>
+        </li>
+        <!--<li><a href="#/mover">Mover</a></li>
+        <li><a href="#/copy">Copy</a></li>-->
       </ul>
       <ul class="nav navbar-nav navbar-right" style="margin-right:5px;">
-        <li class="nav-component" ng-if="ticket">
-        <!--TODO(bzz): move to Typeahead https://angular-ui.github.io/bootstrap  -->
+        <!--<li class="nav-component" ng-if="ticket">
+        &lt;!&ndash;TODO(bzz): move to Typeahead https://angular-ui.github.io/bootstrap  &ndash;&gt;
 
           <form role="search" data-ng-model="navbar.searchForm"
             style="display: inline-block; margin: 0px"
@@ -67,8 +74,9 @@ limitations under the License.
                 </button>
               </span>
             </div>
+            </div>
           </form>
-        </li>
+        </li>-->
         <li style="margin-left: 10px;">
           <div class="dropdown">
             <i ng-if="navbar.connected" class="fa fa-circle server-connected"
