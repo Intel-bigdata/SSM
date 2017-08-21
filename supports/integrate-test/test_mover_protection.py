@@ -14,8 +14,8 @@ class TestMoverProtection(unittest.TestCase):
         # read the file
         cid_read = read_file(file_path)
         # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
         self.assertTrue(wait_for_cmdlet(cid_read)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
 
     def test_mover_delete(self):
         # cid_create = create_file("/testFile")
@@ -27,8 +27,8 @@ class TestMoverProtection(unittest.TestCase):
         # delete the file
         cid_delete = delete_file(file_path)
         # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
         self.assertTrue(wait_for_cmdlet(cid_delete)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
 
     def test_mover_append(self):
         pass
@@ -44,8 +44,8 @@ class TestMoverProtection(unittest.TestCase):
         # overwrite the file
         cid_delete = create_file(file_path, 24 * 1024 * 1024)
         # check the statement of read
-        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
         self.assertTrue(wait_for_cmdlet(cid_delete)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
 
 
 if __name__ == '__main__':
