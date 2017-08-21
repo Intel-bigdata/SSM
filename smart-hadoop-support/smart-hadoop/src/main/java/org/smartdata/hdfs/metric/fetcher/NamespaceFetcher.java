@@ -124,12 +124,14 @@ public class NamespaceFetcher {
         }
 
         if (this.batches.isEmpty()) {
-          this.isFinished = true;
-          long curr = System.currentTimeMillis();
-          LOG.info(String.format(
-              "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
-              (curr - startTime) / 1000,
-              numDirectoriesFetched, numFilesFetched));
+          if (!this.isFinished) {
+            this.isFinished = true;
+            long curr = System.currentTimeMillis();
+            LOG.info(String.format(
+                "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
+                (curr - startTime) / 1000,
+                numDirectoriesFetched, numFilesFetched));
+          }
         }
         return;
       }
