@@ -159,8 +159,8 @@ public class NotebookServer extends WebSocketServlet
 
   @Override
   public void onOpen(NotebookSocket conn) {
-    LOG.info("New connection from {} : {}", conn.getRequest().getRemoteAddr(),
-        conn.getRequest().getRemotePort());
+    /*LOG.info("New connection from {} : {}", conn.getRequest().getRemoteAddr(),
+        conn.getRequest().getRemotePort());*/
     connectedSockets.add(conn);
   }
 
@@ -367,8 +367,8 @@ public class NotebookServer extends WebSocketServlet
 
   @Override
   public void onClose(NotebookSocket conn, int code, String reason) {
-    LOG.info("Closed connection to {} : {}. ({}) {}", conn.getRequest().getRemoteAddr(),
-        conn.getRequest().getRemotePort(), code, reason);
+    /*LOG.info("Closed connection to {} : {}. ({}) {}", conn.getRequest().getRemoteAddr(),
+        conn.getRequest().getRemotePort(), code, reason);*/
     removeConnectionFromAllNote(conn);
     connectedSockets.remove(conn);
     removeUserConnection(conn.getUser(), conn);
