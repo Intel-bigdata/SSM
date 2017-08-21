@@ -26,6 +26,10 @@ TEST_FILES = ["/test/data_10GB",
               "/test/data_10MB"]
 
 
+def random_file_path():
+    return "/test/" + random_string()
+
+
 def random_string():
     return str(uuid.uuid4())
 
@@ -198,34 +202,62 @@ def move_randomly(file_path):
     return submit_cmdlet(MOVE_TYPE[index] + " -file " + file_path)
 
 
-def move_random_task_list(file_name, file_size):
-    """
-    get a random stask list to move a single file
-    """
-    random.seed(int(time.time()))
+def continualy_move(moves, file_path):
+    cids = []
+    for move in moves:
+        cids.append(move_cmdlet(move, file_path))
+    return cids
 
-    cid = create_file(file_name, file_size)
-    check_storage(file_name)
 
+def random_move_list(length=10):
+    moves = []
+    last_move = -1
+    while length > 0:
+        random_index = random.randrange(len(MOVE_TYPE))
+        if random_index != last_move:
+            last_move = random_index
+            moves.append(MOVE_TYPE[random_index])
+            length -= 1
+    return moves
+
+
+def random_move_list_totally(length=10):
+    moves = []
+    last_move = -1
+    while length > 0:
+        random_index = random.randrange(len(MOVE_TYPE))
+        if random_index != last_move:
+            last_move = random_index
+            moves.append(MOVE_TYPE[random_index])
+            length -= 1
+    return moves
+
+
+def move_random_task_list(file_size):
+    """
+    Generate a random file with given size, and
+    generate rand a move list (nearbor move is different).
+    Then, move this file continualy.
+    """
+    file_path = random_file_path()
+    create_file(file_path, file_size)
+    # check_storage(file_path)
     # use a list to save the result
-    cid_list = []
-    av_index = -1
-
-    cmd_list = []
     # record the last task
-    history_task = 6
+    moves = random_move_list(random.randrange(10, 21))
+    return continualy_move(moves, file_path)
 
-    list_length = random.randint(10, 20)
-    i = 0
-    while i == list_length:
-        random_task = random.randint(0, 2)
-        if random_task != history_task:
-            history_task = random_task
-            cmd_list.append(MOVE_TYPE[random_task] + " -file " + file_name)
-            i = i + 1
 
-    while av_index < list_length:
-        av_index = av_index + 1
-        cid_list[av_index] = submit_cmdlet(cmd_list[av_index])
-
-    return cid_list
+def move_random_task_list_totally(file_size):
+    """
+    Generate a random file with given size, and
+    generate rand a move list.
+    Then, move this file continualy.
+    """
+    file_path = random_file_path()
+    create_file(file_path, file_size)
+    # check_storage(file_path)
+    # use a list to save the result
+    # record the last task
+    moves = random_move_list_totally(random.randrange(10, 21))
+    return continualy_move(moves, file_path)
