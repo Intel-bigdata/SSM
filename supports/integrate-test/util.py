@@ -44,6 +44,16 @@ def check_get_resp(resp):
         raise IOError("Get fails")
 
 
+def all_success(cmds):
+    for cmd in cmds:
+        try:
+            if cmd is None or cmd['state'] == "FAILED":
+                return False
+        except Exception:
+            return False
+    return True
+
+
 def move_cmdlet(mover_type, file_path):
     return submit_cmdlet(mover_type + " -file " + file_path)
 
@@ -203,10 +213,10 @@ def move_randomly(file_path):
 
 
 def continualy_move(moves, file_path):
-    cids = []
+    cmds = []
     for move in moves:
-        cids.append(move_cmdlet(move, file_path))
-    return cids
+        cmds.append(wait_for_cmdlet(move_cmdlet(move, file_path)))
+    return cmds
 
 
 def random_move_list(length=10):
@@ -223,13 +233,10 @@ def random_move_list(length=10):
 
 def random_move_list_totally(length=10):
     moves = []
-    last_move = -1
     while length > 0:
         random_index = random.randrange(len(MOVE_TYPE))
-        if random_index != last_move:
-            last_move = random_index
-            moves.append(MOVE_TYPE[random_index])
-            length -= 1
+        moves.append(MOVE_TYPE[random_index])
+        length -= 1
     return moves
 
 
@@ -240,7 +247,7 @@ def move_random_task_list(file_size):
     Then, move this file continualy.
     """
     file_path = random_file_path()
-    create_file(file_path, file_size)
+    wait_for_cmdlet(create_file(file_path, file_size))
     # check_storage(file_path)
     # use a list to save the result
     # record the last task
@@ -255,7 +262,7 @@ def move_random_task_list_totally(file_size):
     Then, move this file continualy.
     """
     file_path = random_file_path()
-    create_file(file_path, file_size)
+    wait_for_cmdlet(create_file(file_path, file_size))
     # check_storage(file_path)
     # use a list to save the result
     # record the last task
