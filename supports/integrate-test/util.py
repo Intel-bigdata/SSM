@@ -40,6 +40,10 @@ def check_get_resp(resp):
         raise IOError("Get fails")
 
 
+def move_cmdlet(mover_type, file_path):
+    return submit_cmdlet(mover_type + " -file " + file_path)
+
+
 def submit_cmdlet(cmdlet_str):
     """
     submit cmdlet then return cid
@@ -69,6 +73,16 @@ def wait_for_cmdlet(cid, period=300):
             return cmdlet
         if time.time() >= timeout:
             return None
+
+
+def wait_for_cmdlets(cids, period=300):
+    failed_cids = []
+    while len(cids) != 0:
+        cmd = wait_for_cmdlet(cids[0])
+        if cmd is None or cmd['state'] == 'FAILED':
+            failed_cids.append(cids[0])
+        cids.pop(0)
+    return failed_cids
 
 
 def get_rule(rid):
@@ -164,15 +178,15 @@ def check_storage(file_path):
 def move_random_file(mover_type, length):
     file_path = "/test/" + random_string()
     cmd_create = wait_for_cmdlet(create_file(file_path, length))
-    cmd_move = wait_for_cmdlet(submit_cmdlet(mover_type + " -file " + file_path))
-    return cmd_create,cmd_move 
+    cmd_move = wait_for_cmdlet(move_cmdlet(mover_type, file_path))
+    return cmd_create, cmd_move
 
 
 def move_random_file_twice(mover_type_1, mover_type_2, length):
     file_path = "/test/" + random_string()
     cmd_create = wait_for_cmdlet(create_file(file_path, length))
-    cmd_move_1 = wait_for_cmdlet(submit_cmdlet(mover_type_1 + " -file " + file_path))
-    cmd_move_2 = wait_for_cmdlet(submit_cmdlet(mover_type_2 + " -file " + file_path))
+    cmd_move_1 = wait_for_cmdlet(move_cmdlet(mover_type_1, file_path))
+    cmd_move_2 = wait_for_cmdlet(move_cmdlet(mover_type_2, file_path))
     return cmd_create, cmd_move_1, cmd_move_2
 
 
