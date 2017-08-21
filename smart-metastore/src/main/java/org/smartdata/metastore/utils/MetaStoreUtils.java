@@ -115,7 +115,7 @@ public class MetaStoreUtils {
 
         "CREATE TABLE cached_file (\n" +
             "  fid bigint(20) NOT NULL,\n" +
-            "  path varchar(4096) NOT NULL,\n" +
+            "  path varchar(1000) NOT NULL,\n" +
             "  from_time bigint(20) NOT NULL,\n" +
             "  last_access_time bigint(20) NOT NULL,\n" +
             "  accessed_num int(11) NOT NULL\n" +
@@ -133,7 +133,7 @@ public class MetaStoreUtils {
             ") ;",
 
         "CREATE TABLE file (\n" +
-            "  path varchar(4096) NOT NULL,\n" +
+            "  path varchar(1000) NOT NULL,\n" +
             "  fid bigint(20) NOT NULL,\n" +
             "  length bigint(20) DEFAULT NULL,\n" +
             "  block_replication smallint(6) DEFAULT NULL,\n" +
