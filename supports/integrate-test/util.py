@@ -196,3 +196,36 @@ def move_randomly(file_path):
     """
     index = random.randrange(len(MOVE_TYPE))
     return submit_cmdlet(MOVE_TYPE[index] + " -file " + file_path)
+
+
+def move_random_task_list(file_name, file_size):
+    """
+    get a random stask list to move a single file
+    """
+    random.seed(int(time.time()))
+
+    cid = create_file(file_name, file_size)
+    check_storage(file_name)
+
+    # use a list to save the result
+    cid_list = []
+    av_index = -1
+
+    cmd_list = []
+    # record the last task
+    history_task = 6
+
+    list_length = random.randint(10, 20)
+    i = 0
+    while i == list_length:
+        random_task = random.randint(0, 2)
+        if random_task != history_task:
+            history_task = random_task
+            cmd_list.append(MOVE_TYPE[random_task] + " -file " + file_name)
+            i = i + 1
+
+    while av_index < list_length:
+        av_index = av_index + 1
+        cid_list[av_index] = submit_cmdlet(cmd_list[av_index])
+
+    return cid_list

@@ -3,7 +3,6 @@ from util import *
 
 
 class TestMover(unittest.TestCase):
-
     # move to archive
     def test_archive_10MB(self):
         cmd_create, cmd_move = move_random_file('archive', 10 * 1024 * 1024)
@@ -131,7 +130,6 @@ class TestMover(unittest.TestCase):
         self.assertTrue(cmd_move_1['state'] == "DONE")
         self.assertTrue(cmd_move_2['state'] == "DONE")
 
-
     def test_onessd_archive_10MB(self):
         cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', 10 * 1024 * 1024)
         self.assertTrue(cmd_create['state'] == "DONE")
@@ -179,6 +177,38 @@ class TestMover(unittest.TestCase):
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move_1['state'] == "DONE")
         self.assertTrue(cmd_move_2['state'] == "DONE")
+
+    def test_random_list_mover_10MB(self):
+        file_path = "/test/test_file_10MB"
+
+        # get the random test list
+        cid_list = move_random_task_list(file_path, 10 * 1024 * 1024)
+
+        # check the result
+        for i in range(len(cid_list)):
+            cmdlet = wait_for_cmdlet(cid_list[i])
+            self.assertTrue(cmdlet['state'] == "DONE")
+
+    def test_random_list_mover_64MB(self):
+        file_path = "/test/test_file_10MB"
+        cid = create_file(file_path, 64 * 1024 * 1024)
+        check_storage(file_path)
+
+        # use a list to save the result
+        cid_list = []
+        av_index = -1
+
+        # get the random test list
+        list_length, task_list = get_random_task_list(file_path)
+
+        while av_index < list_length:
+            av_index = av_index + 1
+            cid_list[av_index] = task_list[av_index]
+
+        # check the result
+        for i in range(list_length):
+            cmdlet = wait_for_cmdlet(cid_list[i])
+            self.assertTrue(cmdlet['state'] == "DONE")
 
 
 if __name__ == '__main__':
