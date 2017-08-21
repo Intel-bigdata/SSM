@@ -29,7 +29,15 @@ public class TikvServer implements Runnable {
         this.args=args;
     }
     public void run(){
-        Tikv kv= Native.loadLibrary("./libtikv.so",Tikv.class);
+        Tikv kv=null;
+        try {
+            kv= (Tikv) Native.loadLibrary("libtikv.so",Tikv.class);
+        }
+        catch (UnsatisfiedLinkError ex){
+            ex.printStackTrace();
+            System.exit(1);
+        }
+
         StringBuffer strbuffer=new StringBuffer();
         strbuffer.append("TiKV");  //@ App::new("TiKV") in start.rs, "TiKV" is the flag name used for parsing
         strbuffer.append(" ");

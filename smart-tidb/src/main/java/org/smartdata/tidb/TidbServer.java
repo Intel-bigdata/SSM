@@ -29,7 +29,14 @@ public class TidbServer implements Runnable{
     }
 
     public void run(){
-        Tidb tidb= Native.loadLibrary("./libtidb.so",Tidb.class);
+        Tidb tidb=null;
+        try {
+            tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
+        }
+        catch (UnsatisfiedLinkError ex){
+            ex.printStackTrace();
+            System.exit(1);
+        }
 
         System.out.println("starting TiDB..");
         tidb.startServer(args);

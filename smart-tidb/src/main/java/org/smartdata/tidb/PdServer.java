@@ -30,8 +30,14 @@ public class PdServer implements Runnable {
     }
 
     public void run(){
-        Pd pd= Native.loadLibrary("./libpd.so",Pd.class);
-
+        Pd pd=null;
+        try {
+            pd = (Pd) Native.loadLibrary("libpd.so", Pd.class);
+        }
+        catch (UnsatisfiedLinkError ex){
+            ex.printStackTrace();
+            System.exit(1);
+        }
         System.out.println("starting PD..");
         pd.startServer(args);
     }

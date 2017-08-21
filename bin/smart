@@ -106,6 +106,9 @@ else
   SMART_CLASSPATH="${SMART_CONF_DIR}:${SMART_CLASSPATH}"
 fi
 
+#shared lib path
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${SMART_HOME}/lib
+
 if [[ ! -d "${SMART_LOG_DIR}" ]]; then
   $(mkdir -p "${SMART_LOG_DIR}")
 fi
