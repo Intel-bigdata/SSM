@@ -35,6 +35,7 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
+import org.smartdata.model.SystemInfo;
 import org.smartdata.model.XAttribute;
 import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
@@ -642,5 +643,30 @@ public class TestMetaStore extends TestDaoUtil {
     metaStore.deleteAllBackUpInfo();
 
     Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
+  }
+
+  @Test
+  public void testInsertSystemInfo() throws MetaStoreException {
+    SystemInfo systemInfo = new SystemInfo("test", "test");
+    metaStore.insertSystemInfo(systemInfo);
+    Assert.assertTrue(metaStore.getSystemInfoByProperty("test").get(0).equals(systemInfo));
+  }
+
+  @Test
+  public void testDeleteSystemInfo() throws MetaStoreException {
+    SystemInfo systemInfo = new SystemInfo("test", "test");
+    metaStore.insertSystemInfo(systemInfo);
+    metaStore.deleteSystemInfoByProperty("test");
+
+    Assert.assertTrue(metaStore.listAllSystemInfo().size() == 0);
+  }
+
+  @Test
+  public void testUpdateSystemInfo() throws MetaStoreException {
+    SystemInfo systemInfo = new SystemInfo("test", "test");
+    metaStore.insertSystemInfo(systemInfo);
+    systemInfo.setValue("test1");
+    metaStore.updateSystemInfoByProperty("test", systemInfo);
+    Assert.assertTrue(metaStore.getSystemInfoByProperty("test").get(0).equals(systemInfo));
   }
 }

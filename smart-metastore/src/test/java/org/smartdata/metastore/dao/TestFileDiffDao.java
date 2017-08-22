@@ -17,16 +17,16 @@
  */
 package org.smartdata.metastore.dao;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
-import org.smartdata.model.FileDiffType;
-import org.smartdata.metastore.utils.TestDaoUtil;
+  import org.junit.After;
+  import org.junit.Assert;
+  import org.junit.Before;
+  import org.junit.Test;
+  import org.smartdata.model.FileDiff;
+  import org.smartdata.model.FileDiffState;
+  import org.smartdata.model.FileDiffType;
+  import org.smartdata.metastore.utils.TestDaoUtil;
 
-import java.util.List;
+  import java.util.List;
 
 
 public class TestFileDiffDao extends TestDaoUtil{
