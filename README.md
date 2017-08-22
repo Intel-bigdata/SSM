@@ -32,18 +32,18 @@ Architecture
 ------------
 SSM overall as follows. Ref. [SSM design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details. Note some of the contents need to be updated according to the lastest implementation.
 
-<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-overall.png" />
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/ssm-overall.png" />
 
 How SSM server and agents collaborate to serve for one specific service, like move HDFS file blocks among storage tiers, copy files to back up cluster or block erasure coding? Please ref. below picture.
 
-<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-overall-2.png" />
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/ssm-overall-2.png" />
 
 The following picture depicts SSM system behaviours.
 
-<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-lifecycle.png" />
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/ssm-lifecycle.png" />
 
 Below figure illustrates how to position SSM in big data ecosystem.
-<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/high-level-architecture.png" />
+<img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/high-level-architecture.png" />
 
 Development Phases
 ------------
@@ -73,17 +73,17 @@ Phase I -- Use Cases
 ### 1. Cache most hot data
 When the files got very hot, they can be moved from fast storage into cache memory to achieve the best read performance. The following shows the example of moving data to memory cache if the data has been read over 3 times during the last 5 minutes
 
-![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/cache-case.png)
+![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/cache-case.png)
 
 ### 2. Move hot data to fast storage
-![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssd-case.png)
+![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/ssd-case.png)
 
 Without SSM, data may always be readed from HDD. With SSM, optimizaitons can be made through rules. As showned in the figure above, data can be moved to faster SSD to achive better performance.
 
 ### 3. Archive cold data
 Files are less likely to be read during the ending of lifecycle, so it’s better to move these cold files into lower performance storage to decrease the cost of data storage. The following shows the example of archiving data that has not been read over 1 times during the last 90 days.
 
-![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/archive-case.png)
+![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/archive-case.png)
 
 Admin Doc
 ------------
@@ -92,6 +92,23 @@ Cluster admininstrator takes the role of SSM rule management. A set of APIs is e
 User Doc
 ------------
 SSM will provide a SmartDFSClient that includes both original HDFS DFSClient APIs and new SSM APIs. Applications can use this SmartDFSClient to benefit from the provided SSM facilities. New SSM APIs include cache file and archive file etc. More APIs will be added later. For detailed information, please refer to [User Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/client-user-guide.md).
+
+How to Build
+------------
+Currently SSM supports 2 hadoop major versions, hadoop 2.7.X and CDH 5.10.1, which is based on 2.6.0.
+So you can build SSM with command
+
+```
+mvn package -P dist,hadoop-2.7
+```
+
+or
+
+```
+mvn package -P dist,hadoop-cdh-2.6
+```
+
+Then there will be a `smart-data-${version}.tar.gz` built out under `smart-dist/target`.
 
 How to Contribute
 ------------

@@ -40,10 +40,9 @@ import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.server.engine.cmdlet.ActionSchedulerServiceFactory;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
-import org.smartdata.metastore.ActionPreProcessService;
+import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.model.action.ActionPreProcessor;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -86,7 +85,7 @@ public class CmdletManager extends AbstractService {
   private Map<Long, ActionInfo> idToActions;
   private Map<String, Long> fileLocks;
   private ListMultimap<String, ActionPreProcessor> preExecuteProcessor = ArrayListMultimap.create();
-  private List<ActionPreProcessService> preProcessServices = new ArrayList<>();
+  private List<ActionSchedulerService> preProcessServices = new ArrayList<>();
 
   public CmdletManager(ServerContext context) {
     super(context);
@@ -112,10 +111,10 @@ public class CmdletManager extends AbstractService {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
 
-      preProcessServices = ActionSchedulerServiceFactory.createServices(
+      preProcessServices = AbstractServiceFactory.createActionSchedulerServices(
           getContext().getConf(), getContext(), metaStore, false);
 
-      for (ActionPreProcessService s : preProcessServices) {
+      for (ActionSchedulerService s : preProcessServices) {
         s.init();
         List<String> actions = s.getSupportedActions();
         for (String a : actions) {
@@ -132,7 +131,7 @@ public class CmdletManager extends AbstractService {
   public void start() throws IOException {
     executorService.scheduleAtFixedRate(
         new ScheduleTask(this.dispatcher), 1000, 1000, TimeUnit.MILLISECONDS);
-    for (ActionPreProcessService s : preProcessServices) {
+    for (ActionSchedulerService s : preProcessServices) {
       s.start();
     }
   }
@@ -505,7 +504,7 @@ public class CmdletManager extends AbstractService {
 
   private void flushCmdletInfo(CmdletInfo info) throws IOException {
     try {
-      metaStore.updateCmdletStatus(info.getCid(), info.getRid(), info.getState());
+      metaStore.updateCmdlet(info.getCid(), info.getRid(), info.getState());
     } catch (MetaStoreException e) {
       LOG.error("Batch Cmdlet Status Update error!", e);
       throw new IOException(e);

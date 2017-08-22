@@ -26,7 +26,7 @@ For easily integration, APIs are exposed as both RPC call and RESTfull
 Http interface. Audience can choose the one which fit for their own
 environment.
 
-<img src="./api.png" width="461" height="295" />
+<img src="./image/api.png" width="461" height="295" />
 
 Define Rule
 -----------
@@ -40,7 +40,7 @@ cluster and adjust its behavior for certain purposes.
 User need to define the rule first based on his/her requirements. A rule
 has the following format,
 
-<img src="./rule-syntax.png" width="481" height="208" />
+<img src="./image/rule-syntax.png" width="481" height="208" />
 
 A rule contains four parts, Object to manipulate, trigger, conditions
 and commands. “:” and “|” are used as the separator to separate
@@ -127,7 +127,7 @@ Use Rule
 A rule has 4 states in the system, active, disabled, finished and
 deleted. Here is the rule state transition diagram.
 
-<img src="./rule-state.png" width="461" height="295" />
+<img src="./image/rule-state.png" width="461" height="295" />
 
 **Active**:
 

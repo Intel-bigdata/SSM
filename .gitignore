@@ -16,7 +16,7 @@
 target
 build
 local-repo
-*/interpreter.json
+**/interpreter.json
 dependency-reduced-pom.xml
 logs
 
@@ -37,6 +37,7 @@ smart-zeppelin/spark/.flattened-pom.xml
 smart-zeppelin/yarn.lock
 smart-zeppelin/zeppelin-display/.flattened-pom.xml
 smart-zeppelin/zeppelin-interpreter/.flattened-pom.xml
+smart-zeppelin/smart-interpreter/.flattened-pom.xml
 smart-zeppelin/zeppelin-server/.flattened-pom.xml
 smart-zeppelin/zeppelin-web/.flattened-pom.xml
 smart-zeppelin/zeppelin-web/.tmp
@@ -49,7 +50,9 @@ smart-zeppelin/zeppelin-web/src/fonts
 smart-zeppelin/zeppelin-web/yarn-error.log
 smart-zeppelin/zeppelin-web/yarn.lock
 smart-zeppelin/zeppelin-zengine/.flattened-pom.xml
+smart-zeppelin/zeppelin-distribution/.flattened-pom.xml 
 
 smart-tidb/src/main/lib/libtikv.so
 smart-tidb/src/main/lib/libpd.so
 smart-tidb/src/main/lib/libtidb.so
+

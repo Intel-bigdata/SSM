@@ -96,8 +96,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-    DFSInputStream is = super.open(src);
-    return is;
+    return super.open(src);
   }
 
   @Override
@@ -114,8 +113,7 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException, UnresolvedLinkException {
-    DFSInputStream is = super.open(src, buffersize, verifyChecksum, stats);
-    return is;
+    return super.open(src, buffersize, verifyChecksum, stats);
   }
 
   private void reportFileAccessEvent(String src) {

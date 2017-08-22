@@ -47,12 +47,12 @@ Case 1. Convert 3x replica file to block EC file
 
 For some existing 3x replication large files, user many want to convert them to block EC files to save storage space. Apply block EC rule to the files or the directories will trigger the conversion in background. 
 
-<img src="./block-ec-convert.png" width="624" height="125" />
+<img src="./image/block-ec-convert.png" width="624" height="125" />
 
 Case 2. Read block EC file 
 -------------------
 
-<img src="./block-ec-read.png" width="437" height="127" />
+<img src="./image/block-ec-read.png" width="437" height="127" />
 
 SmartDFSClient will leverage DFSClient to read file content. If there is no data corrupted, SmartDFSClient will just read data and return the data back to applications directly.
 
@@ -65,12 +65,12 @@ remaining data blocks and parity blocks, run the decode calculation to
 recover the lost data, and return the recovered content to application.
 The decoded content will been thrown away after used.
 
-<img src="./block-ec-read-recovery.png" width="455" height="136" />
+<img src="./image/block-ec-read-recovery.png" width="455" height="136" />
 
 Case 4. Background reconstruct corrupted block EC File
 ----------------------------
 
-<img src="./block-ec-recovery-in-background.png" width="465" height="134" />
+<img src="./image/block-ec-recovery-in-background.png" width="465" height="134" />
 
 SSM server will also schedule regular tasks to check the integrity of each data file and parity file. Once content corruption is detected, SSM server will send tasks to Smart Agent to recover the content in background.
 
@@ -79,7 +79,7 @@ Case 5. Compact Small Files under Directory to Block EC File
 
 When files under directory are all small files, there is no space saving when block EC is applied to each file independently. In this case, we can put Block EC to the whole directory. Files with same owner will be grouped together, only one parity file will be generated for all data blocks in the same group. With this approach, we can save more space than file level EC.
 
-<img src="./block-ec-directory-compact.png" width="461" height="130" />
+<img src="./image/block-ec-directory-compact.png" width="461" height="130" />
 
 Performance Consideration
 =========
@@ -89,7 +89,7 @@ In all above five use cases, write file and read file operation have the same pe
 Architecture
 ============
 
-<img src="./block-ec-arch.png" width="336" height="275" />
+<img src="./image/block-ec-arch.png" width="336" height="275" />
 
 Block EC file is transparent to HDFS. After user applies the block EC rule to HDFS files and directories, for each involved HDFS file, there will be a parity file. SSM server will maintain the relationship between the HDFS data file and parity file into meta data store. For file level continuous block layout EC, following information should be recorded for each data file,
 

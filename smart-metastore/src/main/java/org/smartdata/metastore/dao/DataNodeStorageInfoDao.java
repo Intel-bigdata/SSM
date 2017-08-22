@@ -99,7 +99,7 @@ public class DataNodeStorageInfoDao {
     parameters.put("uuid", dataNodeStorageInfo.getUuid());
     parameters.put("sid", dataNodeStorageInfo.getSid());
     parameters.put("state", dataNodeStorageInfo.getState());
-    parameters.put("storageid", dataNodeStorageInfo.getStorageId());
+    parameters.put("storage_id", dataNodeStorageInfo.getStorageId());
     parameters.put("failed", dataNodeStorageInfo.getFailed());
     parameters.put("capacity", dataNodeStorageInfo.getCapacity());
     parameters.put("dfs_used", dataNodeStorageInfo.getDfsUsed());
@@ -116,7 +116,7 @@ public class DataNodeStorageInfoDao {
           .setUuid(resultSet.getString("uuid"))
           .setSid(resultSet.getLong("sid"))
           .setState(resultSet.getLong("state"))
-          .setStorageId(resultSet.getString("storageid"))
+          .setStorageId(resultSet.getString("storage_id"))
           .setFailed(resultSet.getLong("failed"))
           .setCapacity(resultSet.getLong("capacity"))
           .setDfsUsed(resultSet.getLong("dfs_used"))
