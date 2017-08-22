@@ -142,6 +142,11 @@ def create_file(file_path, length=1024):
     return submit_cmdlet(cmdlet_str)
 
 
+def append_file(file_path, length=1024):
+    cmdlet_str = "append -file " + file_path + " -length " + str(length)
+    return submit_cmdlet(cmdlet_str)
+
+
 def create_random_file(length=1024):
     """
     create a random file in /test/

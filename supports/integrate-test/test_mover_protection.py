@@ -31,7 +31,17 @@ class TestMoverProtection(unittest.TestCase):
         self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
 
     def test_mover_append(self):
-        pass
+        # cid_create = create_file("/testFile")
+        # print check_storage("/testFile")
+        # Test with 2 GB file
+        file_path = create_random_file(1024 * 1024 * 1024)
+        cid_move = submit_cmdlet("allssd -file " + file_path)
+        check_storage(file_path)
+        # append random content to current file
+        cid_append = append_file(file_path, random.randrange(1024, 1024 * 1024 * 2))
+        # check the statement of read
+        self.assertTrue(wait_for_cmdlet(cid_append)['state'] == "DONE")
+        self.assertTrue(wait_for_cmdlet(cid_move)['state'] == "DONE")
 
     def test_mover_overwrite(self):
         # cid_create = create_file("/testFile")

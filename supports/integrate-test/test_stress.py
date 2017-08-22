@@ -74,7 +74,7 @@ class TestPerformance(unittest.TestCase):
         failed_cids = []
         for i in range(max_number):
             # 1 MB files
-            file_path, cid = create_random_file_parallel(1024 * 1024)
+            file_path, cid = create_random_file_parallel(10 * 1024 * 1024)
             file_paths.append(file_path)
             cids.append(cid)
         for i in range(max_number):
