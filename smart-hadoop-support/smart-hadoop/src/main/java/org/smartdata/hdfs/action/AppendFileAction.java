@@ -17,10 +17,15 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.apache.commons.jexl2.Expression;
+import org.apache.commons.jexl2.JexlContext;
+import org.apache.commons.jexl2.JexlEngine;
+import org.apache.commons.jexl2.MapContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
@@ -120,12 +125,28 @@ public class AppendFileAction extends HdfsAction {
       outputStream.close();
 
       InputStream in = dfsClient.open("/appendTestEmptyFile");
-      OutputStream out = dfsClient.append(src, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
 
-      IOUtils.copyBytes(in, out, bufferSize, false);
+      JexlContext ctxt = new MapContext();
+      JexlEngine jexl = new JexlEngine();
+      EnumSet<CreateFlag> enumSet = EnumSet.of(CreateFlag.APPEND);
+      Expression expr = jexl.createExpression("dfsClient.append(src, bufferSize, enumSet,null, null)");
+
+      OutputStream out1 = dfsClient.append(src, bufferSize, enumSet,null, null);
+      ctxt.set("dfsClient", dfsClient);
+      ctxt.set("src", src);
+      ctxt.set("bufferSize", bufferSize);
+      ctxt.set("enumSet", enumSet);
+      // ctxt.set("APPEND",APPEND);
+      // ctxt.set("CreateFlag",CreateFlag.class);
+      // ctxt.set("null",null);
+
+      // OutputStream out1 = (OutputStream) expr.evaluate(ctxt);
+      expr.evaluate(ctxt);
+      // System.out.println(out);
+
+      IOUtils.copyBytes(in, out1, bufferSize, false);
       IOUtils.closeStream(in);
-      IOUtils.closeStream(out);
-
+      IOUtils.closeStream(out1);
     }
 
     return true;
