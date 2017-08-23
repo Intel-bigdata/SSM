@@ -65,7 +65,10 @@ public class TestClusterInfoDao extends TestDaoUtil {
     clusterInfos[0].setCid(1);
     clusterInfos[0].setType("test");
     clusterInfos[0].setState("test");
-    clusterInfos[0]
+    clusterInfos[0].setConfPath("test");
+    clusterInfos[0].setUrl("test");
+    clusterInfos[0].setName("test");
+
 
   }
 }
