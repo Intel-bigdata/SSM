@@ -17,10 +17,15 @@
  */
 package org.smartdata.tidb;
 
-import com.sun.jna.*;
+import com.sun.jna.Library;
+import com.sun.jna.Native;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TidbServer implements Runnable{
-    String args;
+    private String args;
+    private final static Logger LOG = LoggerFactory.getLogger(TidbServer.class);
+
     public interface Tidb extends Library{
         void startServer(String args);
     }
@@ -34,11 +39,10 @@ public class TidbServer implements Runnable{
             tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
         }
         catch (UnsatisfiedLinkError ex){
-            ex.printStackTrace();
-            System.exit(1);
+            LOG.error(ex.getMessage());
         }
 
-        System.out.println("starting TiDB..");
+        LOG.info("Starting TiDB..");
         tidb.startServer(args);
     }
 }

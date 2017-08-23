@@ -334,14 +334,13 @@ public class SmartServer {
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
 
     Thread db=new Thread(new Launch());
-    LOG.info("starting pd, tikv and tidb..");
+    LOG.info("Starting PD, TiKV and TiDB..");
     db.start();
     try {
       Thread.sleep(10000);
-      //db.join();
     }
     catch (InterruptedException ex){
-      LOG.error(ex.toString());
+      LOG.error(ex.getMessage());
     }
 
     try {

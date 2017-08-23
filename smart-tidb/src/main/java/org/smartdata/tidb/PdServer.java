@@ -19,9 +19,13 @@ package org.smartdata.tidb;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PdServer implements Runnable {
-    String args;
+    private String args;
+    private final static Logger LOG = LoggerFactory.getLogger(PdServer.class);
+
     public interface Pd extends Library {
         void startServer(String args);
     }
@@ -35,10 +39,9 @@ public class PdServer implements Runnable {
             pd = (Pd) Native.loadLibrary("libpd.so", Pd.class);
         }
         catch (UnsatisfiedLinkError ex){
-            ex.printStackTrace();
-            System.exit(1);
+            LOG.error(ex.getMessage());
         }
-        System.out.println("starting PD..");
+        LOG.info("Starting PD..");
         pd.startServer(args);
     }
 }
