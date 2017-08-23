@@ -18,31 +18,20 @@
 package org.smartdata.model;
 
 public class SystemInfo {
-  private String property;
-  private String value;
+  private final String property;
+  private final String value;
 
   public SystemInfo(String property, String value) {
     this.property = property;
     this.value = value;
   }
 
-  public SystemInfo() {
-  }
-
   public String getProperty() {
     return property;
   }
 
-  public void setProperty(String property) {
-    this.property = property;
-  }
-
   public String getValue() {
     return value;
-  }
-
-  public void setValue(String value) {
-    this.value = value;
   }
 
   @Override

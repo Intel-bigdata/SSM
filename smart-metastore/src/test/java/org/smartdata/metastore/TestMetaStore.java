@@ -649,7 +649,7 @@ public class TestMetaStore extends TestDaoUtil {
   public void testInsertSystemInfo() throws MetaStoreException {
     SystemInfo systemInfo = new SystemInfo("test", "test");
     metaStore.insertSystemInfo(systemInfo);
-    Assert.assertTrue(metaStore.getSystemInfoByProperty("test").get(0).equals(systemInfo));
+    Assert.assertTrue(metaStore.getSystemInfoByProperty("test").equals(systemInfo));
   }
 
   @Test
@@ -665,8 +665,8 @@ public class TestMetaStore extends TestDaoUtil {
   public void testUpdateSystemInfo() throws MetaStoreException {
     SystemInfo systemInfo = new SystemInfo("test", "test");
     metaStore.insertSystemInfo(systemInfo);
-    systemInfo.setValue("test1");
-    metaStore.updateSystemInfoByProperty("test", systemInfo);
-    Assert.assertTrue(metaStore.getSystemInfoByProperty("test").get(0).equals(systemInfo));
+    SystemInfo newSystemInfo = new SystemInfo("test", "test1");
+    metaStore.updateSystemInfoByProperty("test", newSystemInfo);
+    Assert.assertTrue(metaStore.getSystemInfoByProperty("test").equals(newSystemInfo));
   }
 }

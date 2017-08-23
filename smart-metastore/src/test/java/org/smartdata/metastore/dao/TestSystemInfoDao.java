@@ -46,24 +46,17 @@ public class TestSystemInfoDao extends TestDaoUtil {
 
   @Test
   public void testInsertAndGet() {
-    SystemInfo systemInfo = new SystemInfo();
-    systemInfo.setProperty("test");
-    systemInfo.setValue("test");
+    SystemInfo systemInfo = new SystemInfo("test", "test");
 
     systemInfoDao.insert(systemInfo);
-    Assert.assertTrue(systemInfoDao.getByProperty("test").get(0).equals(systemInfo));
+    Assert.assertTrue(systemInfoDao.getByProperty("test").equals(systemInfo));
   }
 
   @Test
   public void testBatchInsertAndQuery() {
     SystemInfo[] systemInfos = new SystemInfo[2];
-    systemInfos[0] = new SystemInfo();
-    systemInfos[0].setProperty("test");
-    systemInfos[0].setValue("test");
-
-    systemInfos[1] = new SystemInfo();
-    systemInfos[1].setProperty("test1");
-    systemInfos[1].setValue("test1");
+    systemInfos[0] = new SystemInfo("test", "test");
+    systemInfos[1] = new SystemInfo("test1", "test1");
 
     systemInfoDao.insert(systemInfos);
 
@@ -75,13 +68,11 @@ public class TestSystemInfoDao extends TestDaoUtil {
 
   @Test
   public void testUpdate() {
-    SystemInfo systemInfo = new SystemInfo();
-    systemInfo.setValue("test");
-    systemInfo.setProperty("test");
+    SystemInfo systemInfo = new SystemInfo("test", "test");
     systemInfoDao.insert(systemInfo);
 
-    systemInfo.setValue("test1");
-    systemInfoDao.update("test", systemInfo);
-    Assert.assertTrue(systemInfoDao.getByProperty("test").get(0).equals(systemInfo));
+    SystemInfo newSystemInfo = new SystemInfo("test", "test1");
+    systemInfoDao.update("test", newSystemInfo);
+    Assert.assertTrue(systemInfoDao.getByProperty("test").equals(newSystemInfo));
   }
 }

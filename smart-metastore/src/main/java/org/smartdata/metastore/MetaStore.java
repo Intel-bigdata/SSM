@@ -1129,7 +1129,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<SystemInfo> getSystemInfoByProperty(String property) throws MetaStoreException {
+  public SystemInfo getSystemInfoByProperty(String property) throws MetaStoreException {
     try {
       return systemInfoDao.getByProperty(property);
     } catch (Exception e) {
@@ -1155,6 +1155,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void insertSystemInfo(SystemInfo systemInfo) throws MetaStoreException {
     try {
+      if (systemInfoDao.getCountByProperty(systemInfo.getProperty()) != 0){
+        throw new Exception("the system property is already exist");
+      }
       systemInfoDao.insert(systemInfo);
     } catch (Exception e) {
       throw new MetaStoreException(e);

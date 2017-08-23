@@ -56,10 +56,10 @@ public class SystemInfoDao {
     return jdbcTemplate.query("select * from " + TABLE_NAME, new SystemInfoRowMapper());
   }
 
-  public List<SystemInfo> getByProperty(String property) {
+  public SystemInfo getByProperty(String property) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from " + TABLE_NAME + " where property = ?",
-        new Object[]{property}, new SystemInfoRowMapper());
+        new Object[]{property}, new SystemInfoRowMapper()).get(0);
   }
 
   public List<SystemInfo> getByProperties(List<String> properties) {
@@ -99,10 +99,16 @@ public class SystemInfoDao {
     jdbcTemplate.update(sql, systemInfo.getValue(), property);
   }
 
-  public void deleteAll(){
+  public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE from " + TABLE_NAME;
     jdbcTemplate.execute(sql);
+  }
+
+  public int getCountByProperty(String property) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("select COUNT(*) FROM " + TABLE_NAME + " WHERE property = ?",
+        Integer.class, property);
   }
 
 
@@ -118,9 +124,8 @@ public class SystemInfoDao {
 
     @Override
     public SystemInfo mapRow(ResultSet resultSet, int i) throws SQLException {
-      SystemInfo systemInfo = new SystemInfo();
-      systemInfo.setProperty(resultSet.getString("property"));
-      systemInfo.setValue(resultSet.getString("value"));
+      SystemInfo systemInfo = new SystemInfo(resultSet.getString("property"),
+          resultSet.getString("value"));
 
       return systemInfo;
     }
