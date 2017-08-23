@@ -55,7 +55,7 @@ public class TestClusterInfoDao extends TestDaoUtil {
     clusterInfo.setName("test");
     clusterInfoDao.insert(clusterInfo);
 
-    Assert.assertTrue(clusterInfoDao.getById(1).get(0).equals(clusterInfo));
+    Assert.assertTrue(clusterInfoDao.getById(1).equals(clusterInfo));
   }
 
   @Test
@@ -69,6 +69,39 @@ public class TestClusterInfoDao extends TestDaoUtil {
     clusterInfos[0].setUrl("test");
     clusterInfos[0].setName("test");
 
+    clusterInfos[1] = new ClusterInfo();
+    clusterInfos[1].setCid(1);
+    clusterInfos[1].setType("test1");
+    clusterInfos[1].setState("test1");
+    clusterInfos[1].setConfPath("test1");
+    clusterInfos[1].setUrl("test1");
+    clusterInfos[1].setName("test1");
 
+    clusterInfoDao.insert(clusterInfos);
+    clusterInfos[1].setCid(2);
+    List<ClusterInfo> clusterInfoList = clusterInfoDao.getAll();
+    for (int i = 0; i < 2; i++){
+      Assert.assertTrue(clusterInfoList.get(i).equals(clusterInfos[i]));
+    }
+  }
+
+  @Test
+  public void testUpdate() {
+    ClusterInfo clusterInfo = new ClusterInfo();
+    clusterInfo.setCid(1);
+    clusterInfo.setType("test");
+    clusterInfo.setState("test");
+    clusterInfo.setConfPath("test");
+    clusterInfo.setUrl("test");
+    clusterInfo.setName("test");
+
+    clusterInfoDao.insert(clusterInfo);
+    clusterInfo.setState("test1");
+    clusterInfo.setType("test1");
+
+    clusterInfoDao.updateState(1, "test1");
+    clusterInfoDao.updateType(1, "test1");
+
+    Assert.assertTrue(clusterInfoDao.getById(1).equals(clusterInfo));
   }
 }

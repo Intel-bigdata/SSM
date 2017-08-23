@@ -27,6 +27,7 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.ClusterConfig;
+import org.smartdata.model.ClusterInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileInfo;
@@ -642,5 +643,42 @@ public class TestMetaStore extends TestDaoUtil {
     metaStore.deleteAllBackUpInfo();
 
     Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
+  }
+
+  @Test
+  public void testInsertAndListAllClusterInfo() throws MetaStoreException {
+    ClusterInfo clusterInfo1 = new ClusterInfo(1,"test1","test1","test1","test1","test1");
+    ClusterInfo clusterInfo2 = new ClusterInfo(2,"test2","test2","test2","test2","test2");
+
+    metaStore.insertClusterInfo(clusterInfo1);
+    metaStore.insertClusterInfo(clusterInfo2);
+
+    List<ClusterInfo> clusterInfos = metaStore.listAllClusterInfo();
+
+    Assert.assertTrue(clusterInfos.get(0).equals(clusterInfo1));
+    Assert.assertTrue(clusterInfos.get(1).equals(clusterInfo2));
+  }
+
+  @Test
+  public void testGetClusterInfoById() throws MetaStoreException {
+    ClusterInfo clusterInfo = new ClusterInfo(1,"test1","test1","test1","test1","test1");
+    metaStore.insertClusterInfo(clusterInfo);
+
+    Assert.assertTrue(metaStore.getClusterInfoByCid(1).equals(clusterInfo));
+  }
+
+  @Test
+  public void testDelectBackUpInfo() throws MetaStoreException {
+    ClusterInfo clusterInfo = new ClusterInfo(1,"test1","test1","test1","test1","test1");
+    metaStore.insertClusterInfo(clusterInfo);
+
+    metaStore.deleteClusterInfoByCid(1);
+
+    Assert.assertTrue(metaStore.listAllClusterInfo().size() == 0);
+
+    metaStore.insertClusterInfo(clusterInfo);
+    metaStore.deleteAllClusterInfo();
+
+    Assert.assertTrue(metaStore.listAllClusterInfo().size() == 0);
   }
 }

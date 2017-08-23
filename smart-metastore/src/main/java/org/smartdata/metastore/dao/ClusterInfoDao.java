@@ -57,11 +57,11 @@ public class ClusterInfoDao {
     return jdbcTemplate.query("select * from " + TABLE_NAME, new ClusterinfoRowMapper());
   }
 
-  public List<ClusterInfo> getById(long cid) {
+  public ClusterInfo getById(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE cid = ?",
         new Object[]{cid},
-        new ClusterinfoRowMapper());
+        new ClusterinfoRowMapper()).get(0);
   }
 
   public List<ClusterInfo> getByIds(List<Long> cids) {
@@ -87,6 +87,21 @@ public class ClusterInfoDao {
     return cid;
   }
 
+  public void insert(ClusterInfo[] clusterInfos) {
+    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName("cluster_info");
+    simpleJdbcInsert.usingGeneratedKeyColumns("cid");
+    Map<String, Object>[] maps = new Map[clusterInfos.length];
+    for (int i = 0; i < clusterInfos.length; i++) {
+      maps[i] = toMap(clusterInfos[i]);
+    }
+
+    int[] cids = simpleJdbcInsert.executeBatch(maps);
+    for (int i = 0; i < clusterInfos.length; i++) {
+      clusterInfos[i].setCid(cids[i]);
+    }
+  }
+
   public int updateState(long cid, String state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "update " + TABLE_NAME + " set state = ? WHERE cid = ?";
@@ -103,6 +118,12 @@ public class ClusterInfoDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE from " + TABLE_NAME;
     jdbcTemplate.execute(sql);
+  }
+
+  public int getCountByName(String name) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "SELECT COUNT(*) from " + TABLE_NAME + " WHERE name = ?";
+    return jdbcTemplate.queryForObject(sql, Integer.class, name);
   }
 
   private Map<String, Object> toMap(ClusterInfo clusterInfo) {
