@@ -183,7 +183,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('rules/' + ruleId + '/cmdlets', decoder.ruleCmdlets);
         },
         actions: function () {
-          return get('actions/list/20', decoder.actions);
+          return get('actions/list/0', decoder.actions);
         },
         action: function (actionId) {
           return get('actions/' + actionId + '/info', decoder.action1);
