@@ -29,7 +29,7 @@ import org.smartdata.metastore.utils.TestDaoUtil;
 import java.util.List;
 
 
-public class TestFileDiffDao extends TestDaoUtil{
+public class TestFileDiffDao extends TestDaoUtil {
   private FileDiffDao fileDiffDao;
 
   @Before
