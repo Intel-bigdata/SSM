@@ -2,8 +2,10 @@ import unittest
 from util import *
 
 
+FILE_SIZE = 1024 * 1024 * 1024
+
+
 class TestMoverProtection_1GB(unittest.TestCase):
-    FILE_SIZE = 1024 * 1024 * 1024
 
     def test_mover_allssd_read(self):
         # cid_create = create_file("/testFile")

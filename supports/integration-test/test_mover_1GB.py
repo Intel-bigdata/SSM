@@ -2,8 +2,10 @@ import unittest
 from util import *
 
 
+FILE_SIZE = 1024 * 1024 * 1024
+
+
 class TestMover_1GB(unittest.TestCase):
-    FILE_SIZE = 1024 * 1024 * 1024
 
     # move to archive
     def test_archive(self):
