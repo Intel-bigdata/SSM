@@ -39,7 +39,7 @@ bin/start-ssm.sh
 ```
 
 ## Run Test Scripts
-### Test Mover
+### 1. Test Mover
 Run all mover test cases with the following command:
 ```
 python test_mover_10MB.py -v
@@ -48,22 +48,24 @@ python test_mover_1GB.py -v
 python test_mover_2GB.py -v
 ```
 
-### Test Rule
+### 2. Test Rule
 Run all rule test cases with the following command:
 ```
 python test_rule.py -v
 ```
 
-### Test Data Protection
+### 3. Test Data Protection
+
+
 Run all data protection test cases with the following command:
 ```
 python test_data_protection_1GB.py -v
 python test_data_protection_2GB.py -v
 ```
 
-### Corner Cases
+#### Corner Cases of Data Protection
 
-1. Data Protection--Test `append` File during moving
+1. Test `append` File during moving
 Note that `append` cannot be coverd by test scripts. Please use HDFS `appendToFile` command during moving. 
 
 For example, you can create a large file (3GB) and a small file (64MB).
@@ -77,10 +79,10 @@ Then, submit a allssd action (with UI/Restfull API)to move large file to allssd.
 hdfs dfs -appendToFile data_64MB /test/data_3GB
 ```
 
-2. Data Protection--Test File Statue when move fails
+2. Test File Statue when move fails
 Set a very small SSD/ARCHIVE storage on datanode. Then, move a large file to it. Then, you can see only a few or none of blocks are moved to this storage. Check if file are still readable with read action.
 
-### Test Stress/Performance
+### 4. Test Stress/Performance
 Run all stress/performance test cases with the following command:
 ```
 python test_stress.py -v
