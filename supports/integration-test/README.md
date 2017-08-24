@@ -22,6 +22,7 @@ Here `{SSM_Server}` is the IP address of SSM.
 Run this command in HDFS enviroment.
 ```
 HDFS dfs -ls -rm -r /test/
+HDFS dfs -mkdir /test/
 ```
 
 2. Create 10000 files (1MB) in hdfs:/test/
@@ -60,16 +61,23 @@ python test_data_protection_1GB.py -v
 python test_data_protection_2GB.py -v
 ```
 
-**Corner Cases:**
+### Corner Cases
 
-1. Test `Append` File during moving
-Note that `append` cannot be coverd by test script. Please use HDFS `append` command during moving.
-```
-hdfs dfs -appendToFile data_64MB {file_path}
-```
-Then, read file again with read action. Check if move/read fail.
+1. Data Protection--Test `append` File during moving
+Note that `append` cannot be coverd by test scripts. Please use HDFS `appendToFile` command during moving. 
 
-2. Test File Statue when move fails
+For example, you can create a large file (3GB) and a small file (64MB).
+```
+fallocate -l 3G data_3GB
+fallocate -l 64M data_64MB
+hdfs dfs -put data_3GB /test/data_3GB
+```
+Then, submit a allssd action (with UI/Restfull API)to move large file to allssd. During moving you can append a small file to it with `appendToFile` command.
+```
+hdfs dfs -appendToFile data_64MB /test/data_3GB
+```
+
+2. Data Protection--Test File Statue when move fails
 Set a very small SSD/ARCHIVE storage on datanode. Then, move a large file to it. Then, you can see only a few or none of blocks are moved to this storage. Check if file are still readable with read action.
 
 ### Test Stress/Performance
@@ -78,7 +86,7 @@ Run all stress/performance test cases with the following command:
 python test_stress.py -v
 ```
 
-If you want to increase the number of files in `hdfs:/test/`, please remove all delete file actions in test cases.
+If you want to increase the number of files in `hdfs:/test/`, please remove all delete file actions in `test_stress.py`.
 ```
 for i in range(max_number):
     cids.append(delete_file(file_paths[i]))
