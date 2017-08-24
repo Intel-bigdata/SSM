@@ -2,16 +2,18 @@ import unittest
 from util import *
 
 
-class TestMoverProtection(unittest.TestCase):
+class TestMoverProtection_2GB(unittest.TestCase):
+    FILE_SIZE = 2 * 1024 * 1024 * 1024
+
     def test_mover_allssd_read(self):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         # Begin to move file
         cmds = []
         cmds.append(move_cmdlet("allssd", file_path))
-        # read the file d
+        # read the file
         cmds.append(read_file(file_path))
         failed = wait_for_cmdlets(cmds)
         # check the statement of read
@@ -21,7 +23,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         # Begin to move file
         cmds = []
         cmds.append(move_cmdlet("onessd", file_path))
@@ -35,7 +37,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         # Begin to move file
         cmds = []
         cmds.append(move_cmdlet("archive", file_path))
@@ -49,7 +51,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("allssd", file_path))
         check_storage(file_path)
@@ -63,7 +65,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("onessd", file_path))
         check_storage(file_path)
@@ -78,7 +80,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("archive", file_path))
         check_storage(file_path)
@@ -92,7 +94,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("allssd", file_path))
         # append random content to current file
@@ -105,7 +107,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("onessd", file_path))
         # append random content to current file
@@ -118,7 +120,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("archive", file_path))
         # append random content to current file
@@ -131,7 +133,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("allssd", file_path))
         # overwrite the file
@@ -144,7 +146,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("onessd", file_path))
         # overwrite the file
@@ -157,7 +159,7 @@ class TestMoverProtection(unittest.TestCase):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
         # Test with 2 GB file
-        file_path = create_random_file(1024 * 1024 * 1024)
+        file_path = create_random_file(FILE_SIZE)
         cmds = []
         cmds.append(move_cmdlet("archive", file_path))
         # overwrite the file
@@ -165,6 +167,7 @@ class TestMoverProtection(unittest.TestCase):
         failed = wait_for_cmdlets(cmds)
         # check the statement of read
         self.assertTrue(len(failed) == 0)
+
 
 if __name__ == '__main__':
     unittest.main()

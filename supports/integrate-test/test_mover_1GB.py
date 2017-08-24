@@ -2,7 +2,9 @@ import unittest
 from util import *
 
 
-class TestMover(unittest.TestCase):
+class TestMover_1GB(unittest.TestCase):
+    FILE_SIZE = 1024 * 1024 * 1024
+
     # move to archive
     def test_archive_10MB(self):
         cmd_create, cmd_move = move_random_file('archive', 10 * 1024 * 1024)

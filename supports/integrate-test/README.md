@@ -41,7 +41,10 @@ bin/start-ssm.sh
 ### Test Mover
 Run all mover test cases with the following command:
 ```
-python test_mover.py -v
+python test_mover_10MB.py -v
+python test_mover_64MB.py -v
+python test_mover_1GB.py -v
+python test_mover_2GB.py -v
 ```
 
 ### Test Rule
@@ -53,10 +56,12 @@ python test_rule.py -v
 ### Test Data Protection
 Run all data protection test cases with the following command:
 ```
-python test_mover_protection.py -v
+python test_data_protection_1GB.py -v
+python test_data_protection_2GB.py -v
 ```
 
 **Corner Cases:**
+
 1. Test `Append` File during moving
 Note that `append` cannot be coverd by test script. Please use HDFS `append` command during moving.
 ```
