@@ -52,6 +52,7 @@ class TestMoverProtection(unittest.TestCase):
         file_path = create_random_file(1024 * 1024 * 1024)
         cmds = []
         cmds.append(move_cmdlet("allssd", file_path))
+        check_storage(file_path)
         # delete the file
         cmds.append(delete_file(file_path))
         failed = wait_for_cmdlets(cmds)
@@ -65,6 +66,7 @@ class TestMoverProtection(unittest.TestCase):
         file_path = create_random_file(1024 * 1024 * 1024)
         cmds = []
         cmds.append(move_cmdlet("onessd", file_path))
+        check_storage(file_path)
         # delete the file
         cmds.append(delete_file(file_path))
         failed = wait_for_cmdlets(cmds)
@@ -78,6 +80,7 @@ class TestMoverProtection(unittest.TestCase):
         file_path = create_random_file(1024 * 1024 * 1024)
         cmds = []
         cmds.append(move_cmdlet("archive", file_path))
+        check_storage(file_path)
         # delete the file
         cmds.append(delete_file(file_path))
         failed = wait_for_cmdlets(cmds)
