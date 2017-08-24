@@ -28,12 +28,13 @@ NotebookCtrl.$inject = [
   'ngToast',
   'noteActionSrv',
   'noteVarShareService',
-  'TRASH_FOLDER_ID'
+  'TRASH_FOLDER_ID',
+  'rules0'
 ];
 
 function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
                       $http, websocketMsgSrv, baseUrlSrv, $timeout, saveAsService,
-                      ngToast, noteActionSrv, noteVarShareService, TRASH_FOLDER_ID) {
+                      ngToast, noteActionSrv, noteVarShareService, TRASH_FOLDER_ID, rules0) {
 
   ngToast.dismiss();
 
@@ -70,8 +71,13 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
   $scope.currentRevision = 'Head';
   $scope.revisionView = isRevisionPath($location.path());
 
+  $scope.rules = rules0.$data();
+  rules0.$subscribe($scope, function (rules) {
+    $scope.rules = rules;
+  });
   $scope.$on('setConnectedStatus', function(event, param) {
     if (connectedOnce && param) {
+      console.log("setConnectedStatus");
       initNotebook();
     }
     connectedOnce = true;
@@ -374,14 +380,14 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     $scope.killSaveTimer();
     $scope.isNoteDirty = true;
     //console.log('startSaveTimer called ' + $scope.note.id);
-    $scope.saveTimer = $timeout(function() {
+    /*$scope.saveTimer = $timeout(function() {
       $scope.saveNote();
-    }, 10000);
+    }, 10000);*/
   };
 
   angular.element(window).on('beforeunload', function(e) {
     $scope.killSaveTimer();
-    $scope.saveNote();
+    /*$scope.saveNote();*/
   });
 
   $scope.setLookAndFeel = function(looknfeel) {
@@ -1009,7 +1015,7 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
   $scope.$on('$destroy', function() {
     angular.element(window).off('beforeunload');
     $scope.killSaveTimer();
-    $scope.saveNote();
+    /*$scope.saveNote();*/
 
     document.removeEventListener('click', $scope.focusParagraphOnClick);
     document.removeEventListener('keydown', $scope.keyboardShortcut);

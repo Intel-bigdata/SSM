@@ -30,10 +30,13 @@ public class SmartConfKeys {
   public final static String SMART_LOG_DIR_DEFAULT = "logs";
 
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
+  public final static String SMART_HADOOP_CONF_PATH_KEY = "smart.hadoop.conf.path";
 
   //ssm
   public final static String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
   public final static String SMART_SERVER_RPC_ADDRESS_DEFAULT = "0.0.0.0:7042";
+  public final static String SMART_SERVER_RPC_HANDLER_COUNT_KEY = "smart.server.rpc.handler.count";
+  public final static int SMART_SERVER_RPC_HANDLER_COUNT_DEFAULT = 80;
   public final static String SMART_SERVER_HTTP_ADDRESS_KEY = "smart.server.http.address";
   public final static String SMART_SERVER_HTTP_ADDRESS_DEFAULT = "0.0.0.0:7045";
   public final static String SMART_SERVER_HTTPS_ADDRESS_KEY = "smart.server.https.address";
@@ -43,8 +46,6 @@ public class SmartConfKeys {
   public final static String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
 
   // StatesManager
-  public static final String SMART_STATES_UPDATE_SERVICE_KEY = "smart.states.update.service";
-  public static final String SMART_STATES_UPDATE_SERVICE_DEFAULT = "org.smartdata.hdfs.HdfsStatesUpdateService";
 
   // RuleManager
   public final static String SMART_RULE_EXECUTORS_KEY = "smart.rule.executors";

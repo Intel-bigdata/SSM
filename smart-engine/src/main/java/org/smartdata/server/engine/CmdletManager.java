@@ -18,14 +18,16 @@
 package org.smartdata.server.engine;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
-import org.smartdata.actions.ActionException;
-import org.smartdata.actions.ActionRegistry;
-import org.smartdata.actions.SmartAction;
-import org.smartdata.actions.hdfs.MoveFileAction;
+import org.smartdata.action.ActionException;
+import org.smartdata.action.ActionRegistry;
+import org.smartdata.action.SmartAction;
+import org.smartdata.hdfs.action.AbstractMoveFileAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -40,7 +42,9 @@ import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
-import org.smartdata.server.engine.cmdlet.message.LaunchAction;
+import org.smartdata.metastore.ActionSchedulerService;
+import org.smartdata.model.action.ActionPreProcessor;
+import org.smartdata.model.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
@@ -80,6 +84,8 @@ public class CmdletManager extends AbstractService {
   private Map<Long, CmdletInfo> idToCmdlets;
   private Map<Long, ActionInfo> idToActions;
   private Map<String, Long> fileLocks;
+  private ListMultimap<String, ActionPreProcessor> preExecuteProcessor = ArrayListMultimap.create();
+  private List<ActionSchedulerService> preProcessServices = new ArrayList<>();
 
   public CmdletManager(ServerContext context) {
     super(context);
@@ -104,6 +110,17 @@ public class CmdletManager extends AbstractService {
     try {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
+
+      preProcessServices = AbstractServiceFactory.createActionSchedulerServices(
+          getContext().getConf(), getContext(), metaStore, false);
+
+      for (ActionSchedulerService s : preProcessServices) {
+        s.init();
+        List<String> actions = s.getSupportedActions();
+        for (String a : actions) {
+          preExecuteProcessor.put(a, s);
+        }
+      }
     } catch (Exception e) {
       LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
       throw new IOException(e);
@@ -114,10 +131,16 @@ public class CmdletManager extends AbstractService {
   public void start() throws IOException {
     executorService.scheduleAtFixedRate(
         new ScheduleTask(this.dispatcher), 1000, 1000, TimeUnit.MILLISECONDS);
+    for (ActionSchedulerService s : preProcessServices) {
+      s.start();
+    }
   }
 
   @Override
   public void stop() throws IOException {
+    for (int i = preProcessServices.size() - 1; i >=0 ; i--) {
+      preProcessServices.get(i).stop();
+    }
     executorService.shutdown();
     dispatcher.shutDownExcutorServices();
   }
@@ -195,7 +218,7 @@ public class CmdletManager extends AbstractService {
         throw new IOException("Failed to create '" + info.getActionName()
             + "' action instance", e);
       }
-      if (action instanceof MoveFileAction) {
+      if (action instanceof AbstractMoveFileAction) {
         Map<String, String> args = info.getArgs();
         if (args != null && args.size() > 0) {
           String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
@@ -331,7 +354,7 @@ public class CmdletManager extends AbstractService {
     } catch (ActionException e) {
       return;
     }
-    if (action instanceof MoveFileAction) {
+    if (action instanceof AbstractMoveFileAction) {
       Map<String, String> args = actionInfo.getArgs();
       if (args != null && args.size() > 0) {
         String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
@@ -352,9 +375,12 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  @VisibleForTesting
-  int getCmdletsSizeInCache() {
+  public int getCmdletsSizeInCache() {
     return idToCmdlets.size();
+  }
+
+  public int getActionsSizeInCache() {
+    return idToActions.size();
   }
 
   public ActionInfo getActionInfo(long actionID) throws IOException {
@@ -478,7 +504,7 @@ public class CmdletManager extends AbstractService {
 
   private void flushCmdletInfo(CmdletInfo info) throws IOException {
     try {
-      metaStore.updateCmdletStatus(info.getCid(), info.getRid(), info.getState());
+      metaStore.updateCmdlet(info.getCid(), info.getRid(), info.getState());
     } catch (MetaStoreException e) {
       LOG.error("Batch Cmdlet Status Update error!", e);
       throw new IOException(e);
@@ -497,13 +523,13 @@ public class CmdletManager extends AbstractService {
   //Todo: remove this implementation
   private void updateStorageIfNeeded(ActionInfo info) throws ActionException {
     SmartAction action = ActionRegistry.createAction(info.getActionName());
-    if (action instanceof MoveFileAction) {
-      String policy = ((MoveFileAction) action).getStoragePolicy();
+    if (action instanceof AbstractMoveFileAction) {
+      String policy = ((AbstractMoveFileAction) action).getStoragePolicy();
       Map<String, String> args = info.getArgs();
       if (policy == null) {
-        policy = args.get(MoveFileAction.STORAGE_POLICY);
+        policy = args.get(AbstractMoveFileAction.STORAGE_POLICY);
       }
-      String path = args.get(MoveFileAction.FILE_PATH);
+      String path = args.get(AbstractMoveFileAction.FILE_PATH);
       try {
         metaStore.updateFileStoragePolicy(path, policy);
       } catch (MetaStoreException e) {
@@ -549,11 +575,20 @@ public class CmdletManager extends AbstractService {
           if (launchCmdlet == null) {
             break;
           } else {
+            cmdletPreExecutionProcess(launchCmdlet);
             dispatcher.dispatch(launchCmdlet);
           }
         } catch (IOException e) {
           LOG.error("Cmdlet dispatcher error", e);
         }
+      }
+    }
+  }
+
+  public void cmdletPreExecutionProcess(LaunchCmdlet cmdlet) {
+    for (LaunchAction action : cmdlet.getLaunchActions()) {
+      for (ActionPreProcessor p : preExecuteProcessor.get(action.getActionType())) {
+        p.beforeExecution(action);
       }
     }
   }

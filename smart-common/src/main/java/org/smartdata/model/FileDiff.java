@@ -19,9 +19,11 @@ package org.smartdata.model;
 
 public class FileDiff {
   private long diffId;
-  private String parameters;
+  private long ruleId;
   private FileDiffType diffType;
-  private boolean applied;
+  private String src;
+  private String parameters;
+  private FileDiffState state;
   private long create_time;
 
   public long getDiffId() {
@@ -32,12 +34,12 @@ public class FileDiff {
     this.diffId = diffId;
   }
 
-  public String getParameters() {
-    return parameters;
+  public long getRuleId() {
+    return ruleId;
   }
 
-  public void setParameters(String parameters) {
-    this.parameters = parameters;
+  public void setRuleId(long ruleId) {
+    this.ruleId = ruleId;
   }
 
   public FileDiffType getDiffType() {
@@ -48,12 +50,29 @@ public class FileDiff {
     this.diffType = diffType;
   }
 
-  public boolean isApplied() {
-    return applied;
+  public String getSrc() {
+    return src;
   }
 
-  public void setApplied(boolean applied) {
-    this.applied = applied;
+  public void setSrc(String src) {
+    this.src = src;
+  }
+
+
+  public String getParameters() {
+    return parameters;
+  }
+
+  public void setParameters(String parameters) {
+    this.parameters = parameters;
+  }
+
+  public FileDiffState getState() {
+    return state;
+  }
+
+  public void setState(FileDiffState state) {
+    this.state = state;
   }
 
   public long getCreate_time() {
@@ -66,36 +85,27 @@ public class FileDiff {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof FileDiff)) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
 
     FileDiff fileDiff = (FileDiff) o;
 
-    if (getDiffId() != fileDiff.getDiffId()) {
-      return false;
-    }
-    if (isApplied() != fileDiff.isApplied()) {
-      return false;
-    }
-    if (getCreate_time() != fileDiff.getCreate_time()) {
-      return false;
-    }
-    if (!getParameters().equals(fileDiff.getParameters())) {
-      return false;
-    }
-    return getDiffType() == fileDiff.getDiffType();
+    if (diffId != fileDiff.diffId) return false;
+    if (state != fileDiff.state) return false;
+    if (create_time != fileDiff.create_time) return false;
+    if (parameters != null ? !parameters.equals(fileDiff.parameters) : fileDiff.parameters != null) return false;
+    if (src != null ? !src.equals(fileDiff.src) : fileDiff.src != null) return false;
+    return diffType == fileDiff.diffType;
   }
 
   @Override
   public int hashCode() {
     int result = (int) (getDiffId() ^ (getDiffId() >>> 32));
-    result = 31 * result + getParameters().hashCode();
+    result = 31 * result + (int) (getRuleId() ^ (getRuleId() >>> 32));
     result = 31 * result + getDiffType().hashCode();
-    result = 31 * result + (isApplied() ? 1 : 0);
+    result = 31 * result + getSrc().hashCode();
+    result = 31 * result + getParameters().hashCode();
+    result = 31 * result + getState().hashCode();
     result = 31 * result + (int) (getCreate_time() ^ (getCreate_time() >>> 32));
     return result;
   }
@@ -103,7 +113,7 @@ public class FileDiff {
   @Override
   public String toString() {
     return String.format("FileDiff{diffId=%s, parameters=%s, " +
-            "diffType=%s, applied=%s, create_time=%s}", diffId, parameters,
-        diffType, applied, create_time);
+            "src=%s, diffType=%s, state=%s, create_time=%s}", diffId, parameters, src,
+        diffType, state.getValue(), create_time);
   }
 }

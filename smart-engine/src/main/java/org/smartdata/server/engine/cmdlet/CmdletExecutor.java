@@ -24,7 +24,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.SmartAction;
+import org.smartdata.action.SmartAction;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.protocol.message.ActionStatusReport;

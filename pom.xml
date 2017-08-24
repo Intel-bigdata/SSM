@@ -16,41 +16,35 @@
 
   <groupId>org.smartdata</groupId>
   <artifactId>smartdata-project</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
   <description>Smart Data Project</description>
   <name>SmartData Project</name>
   <packaging>pom</packaging>
 
+  <repositories>
+    <repository>
+      <id>cloudera</id>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+  </repositories>
+
   <modules>
+    <module>smart-maven-plugins</module>
     <module>smart-common</module>
     <module>smart-metrics</module>
-    <module>smart-actions</module>
+    <module>smart-action</module>
     <module>smart-metastore</module>
     <module>smart-client</module>
-    <module>smart-dfsclient</module>
     <module>smart-admin</module>
     <module>smart-engine</module>
     <module>smart-server</module>
     <module>smart-rule</module>
     <module>smart-zeppelin</module>
     <module>smart-agent</module>
-    <module>smart-hdfs</module>
     <module>smart-dist</module>
     <module>smart-integration</module>
+    <module>smart-hadoop-support</module>
   </modules>
-
-  <profiles>
-    <profile>
-      <id>java8</id>
-      <activation>
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <modules>
-        <module>smart-alluxio</module>
-        <module>smart-blockec</module>
-      </modules>
-    </profile>
-  </profiles>
 
   <properties>
     <maven.compiler.source>1.7</maven.compiler.source>
@@ -66,7 +60,6 @@
     <dbunitVersion>2.5.3</dbunitVersion>
     <akka.version>2.3.12</akka.version>
     <akka.config.version>1.2.1</akka.config.version>
-    <akka.http.version>2.0.4</akka.http.version>
     <druid.version>1.0.31</druid.version>
     <spring.version>4.3.9.RELEASE</spring.version>
     <antlr4.version>4.6</antlr4.version>
@@ -76,6 +69,32 @@
     <test.build.dir>${project.build.directory}/test-dir</test.build.dir>
     <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
   </properties>
+
+  <profiles>
+    <profile>
+      <id>java8</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <modules>
+        <module>smart-alluxio-support</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>hadoop-2.7</id>
+      <!-- Default hadoop profile. Uses global properties. -->
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+    </profile>
+    <profile>
+      <id>hadoop-cdh-2.6</id>
+      <properties>
+        <hadoop.version>2.6.0-cdh5.10.1</hadoop.version>
+      </properties>
+    </profile>
+  </profiles>
 
   <dependencyManagement>
     <!-- These dependencies may cause conflicts, so move into dependencyManagement -->
@@ -126,11 +145,6 @@
         <version>${akka.config.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.hazelcast</groupId>
         <artifactId>hazelcast-all</artifactId>
         <version>${hazelcast.version}</version>
@@ -162,16 +176,6 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-stream-experimental_2.11</artifactId>
-        <version>${akka.http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-http-experimental_2.11</artifactId>
-        <version>${akka.http.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.xerial</groupId>
         <artifactId>sqlite-jdbc</artifactId>
         <version>3.16.1</version>
@@ -200,129 +204,6 @@
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-runtime</artifactId>
         <version>${antlr4.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>angularjs</artifactId>
-        <version>1.4.9</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>jquery</artifactId>
-        <version>2.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>angular-touch</artifactId>
-        <version>1.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>angular-ui-router</artifactId>
-        <version>0.2.15</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>bootstrap</artifactId>
-        <version>3.3.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>d3js</artifactId>
-        <version>3.5.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>momentjs</artifactId>
-        <version>2.10.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>lodash</artifactId>
-        <version>3.10.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>font-awesome</artifactId>
-        <version>4.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>jquery-cookie</artifactId>
-        <version>1.4.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>angular-loading-bar</artifactId>
-        <version>0.8.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>angular</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>angular-smart-table</artifactId>
-        <version>2.1.6</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>angular</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>angular-motion</artifactId>
-        <version>0.4.3</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>bootstrap-additions</artifactId>
-        <version>0.3.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>angular-strap</artifactId>
-        <version>2.3.5</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>angular</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>ui-select</artifactId>
-        <version>0.14.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>ng-file-upload</artifactId>
-        <version>5.0.9</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>vis</artifactId>
-        <version>4.7.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>clipboard.js</artifactId>
-        <version>0.1.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>dashing-deps</artifactId>
-        <version>0.1.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>dashing</artifactId>
-        <version>0.4.8</version>
       </dependency>
 
       <dependency>
@@ -385,41 +266,36 @@
 
   <build>
     <pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>3.2.2</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
-      </plugin>
-      <plugin>
-        <groupId>org.antlr</groupId>
-        <artifactId>antlr4-maven-plugin</artifactId>
-        <version>4.6</version>
-      </plugin>
-      <plugin>
-        <groupId>com.github.os72</groupId>
-        <artifactId>protoc-jar-maven-plugin</artifactId>
-        <version>3.2.0</version>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.0.0</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.20</version>
-        <configuration>
-          <argLine>-Xmx1024m -XX:MaxPermSize=256m</argLine>
-        </configuration>
-      </plugin>
-    </plugins>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>2.10</version>
+        </plugin>
+        <plugin>
+          <groupId>org.antlr</groupId>
+          <artifactId>antlr4-maven-plugin</artifactId>
+          <version>4.6</version>
+        </plugin>
+        <plugin>
+          <groupId>com.github.os72</groupId>
+          <artifactId>protoc-jar-maven-plugin</artifactId>
+          <version>3.2.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.20</version>
+          <configuration>
+            <argLine>-Xmx1024m -XX:MaxPermSize=256m</argLine>
+          </configuration>
+        </plugin>
+      </plugins>
     </pluginManagement>
 
     <plugins>

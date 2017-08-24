@@ -1,5 +1,5 @@
 <dataset>
-    <table name="files">
+    <table name="file">
         <column>path</column>
         <column>fid</column>
         <row>

@@ -42,7 +42,7 @@ angular.module('zeppelinWebApp')
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
         $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-        $stb.text('Name').key('ruleName').canSort().done(),
+        $stb.text('Name').key(['ruleName']).canSort().done(),
           // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
         // group 2/3 (5-col)
         $stb.datetime('Submission Time').key('submitTime').canSort().done(),
@@ -54,7 +54,7 @@ angular.module('zeppelinWebApp')
         // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),
         // group 3/3 (4-col)
         $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.button('Actions').key(['active', 'view', 'stop', 'delete']).styleClass('col-md-4').done()
+        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-1').done()
       ],
       rows: null
     };
@@ -62,12 +62,21 @@ angular.module('zeppelinWebApp')
     function updateTable(rules) {
       $scope.rulesTable.rows = $stb.$update($scope.rulesTable.rows,
         _.map(rules, function (rule) {
+          console.log(rule);
           return {
             id: rule.id,
             // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: rule.state, condition: rule.isRunning ? 'good' : '', shape: 'stripe'},
             //user: rule.user,
-            ruleName: rule.ruleName,
+            ruleName: {
+              value: rule.ruleName,
+              title: "ID:" + rule.id + " Name:" + rule.ruleName
+              + " Submission Time:" + new Date(rule.submitTime).toUTCString()
+              + " Last Check Time:" + new Date(rule.lastCheckTime).toUTCString()
+              + " Checked Number:" + rule.numChecked
+              + " Cmdlets Generated:" + rule.numCmdsGen
+              + " Status:" +  rule.state
+            },
             submitTime: rule.submitTime,
             lastCheckTime: rule.lastCheckTime,
             numChecked: rule.numChecked,
@@ -76,29 +85,45 @@ angular.module('zeppelinWebApp')
             // stopTime: rule.finishTime || '-',
             status: rule.state,
             active: {
-              text: 'Start', class: 'btn-xs', disabled: (rule.isRunning || rule.isDelete),
+              icon: function() {
+                if(rule.isRunning) {
+                  return 'glyphicon glyphicon-pause';
+                }else {
+                  return 'glyphicon glyphicon-play';
+                }
+              },
+              class: 'btn-xs',
+              disabled: rule.isDelete,
               click: function () {
-                $dialogs.confirm('Are you sure to active this rule?', function () {
+                if(!rule.isRunning) {
                   rule.start();
-                });
+                }else{
+                  rule.terminate();
+                }
               }
             },
             view: {
               href: rule.pageUrl,
-              text: 'Details',
-              class: 'btn-xs btn-info',
-              disabled: !rule.isRunning
+              icon: function() {
+                return 'glyphicon glyphicon-info-sign';
+              },
+              class: 'btn-xs btn-info'
             },
-            stop: {
-              text: 'Stop', class: 'btn-xs btn-warning', disabled: !rule.isRunning,
-              click: function () {
-                $dialogs.confirm('Are you sure to stop this rule?', function () {
-                  rule.terminate();
-                });
-              }
-            },
+            // stop: {
+            //   text: 'glyphicon glyphicon-stop',
+            //   class: 'btn-xs btn-warning', disabled: !rule.isRunning,
+            //   click: function () {
+            //     $dialogs.confirm('Are you sure to stop this rule?', function () {
+            //       rule.terminate();
+            //     });
+            //   }
+            // },
             delete: {
-              text: 'Delete', class: 'btn-xs btn-danger', disabled: rule.isDelete,
+              icon: function() {
+                return 'glyphicon glyphicon-trash';
+              },
+              class: 'btn-xs btn-danger',
+              disabled: rule.isDelete,
               click: function () {
                 $dialogs.confirm('Are you sure to delete this rule?', function () {
                   rule.delete();

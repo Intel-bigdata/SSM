@@ -19,7 +19,7 @@ package org.smartdata.server.engine.cmdlet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.actions.ActionException;
+import org.smartdata.action.ActionException;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConf;

@@ -20,31 +20,45 @@ package org.smartdata.metastore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.metaservice.BackupMetaService;
+import org.smartdata.metaservice.CmdletMetaService;
+import org.smartdata.metaservice.CopyMetaService;
 import org.smartdata.metastore.dao.AccessCountDao;
 import org.smartdata.metastore.dao.AccessCountTable;
 import org.smartdata.metastore.dao.ActionDao;
+import org.smartdata.metastore.dao.BackUpInfoDao;
 import org.smartdata.metastore.dao.CacheFileDao;
+import org.smartdata.metastore.dao.ClusterConfigDao;
 import org.smartdata.metastore.dao.CmdletDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
+import org.smartdata.metastore.dao.GlobalConfigDao;
 import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.dao.RuleDao;
 import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
+import org.smartdata.metastore.dao.DataNodeInfoDao;
+import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
+import org.smartdata.model.BackUpInfo;
+import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffType;
+import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.DataNodeInfo;
+import org.smartdata.model.DataNodeStorageInfo;
+import org.smartdata.model.XAttribute;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -64,7 +78,7 @@ import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
 /**
  * Operations supported for upper functions.
  */
-public class MetaStore {
+public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMetaService {
   static final Logger LOG = LoggerFactory.getLogger(MetaStore.class);
 
   private DBPool pool = null;
@@ -86,6 +100,11 @@ public class MetaStore {
   private FileDiffDao fileDiffDao;
   private AccessCountDao accessCountDao;
   private MetaStoreHelper metaStoreHelper;
+  private ClusterConfigDao clusterConfigDao;
+  private GlobalConfigDao globalConfigDao;
+  private DataNodeInfoDao dataNodeInfoDao;
+  private DataNodeStorageInfoDao dataNodeStorageInfoDao;
+  private BackUpInfoDao backUpInfoDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -101,6 +120,11 @@ public class MetaStore {
     accessCountDao = new AccessCountDao(pool.getDataSource());
     fileDiffDao = new FileDiffDao(pool.getDataSource());
     metaStoreHelper = new MetaStoreHelper(pool.getDataSource());
+    clusterConfigDao = new ClusterConfigDao(pool.getDataSource());
+    globalConfigDao = new GlobalConfigDao(pool.getDataSource());
+    dataNodeInfoDao = new DataNodeInfoDao(pool.getDataSource());
+    dataNodeStorageInfoDao = new DataNodeStorageInfoDao(pool.getDataSource());
+    backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -614,10 +638,19 @@ public class MetaStore {
     }
   }
 
-  public boolean updateCmdletStatus(long cid, long rid, CmdletState state)
+  public boolean updateCmdlet(long cid, long rid, CmdletState state)
       throws MetaStoreException {
     try {
       return cmdletDao.update(cid, rid, state.getValue()) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public boolean updateCmdlet(long cid, String parameters, CmdletState state)
+    throws MetaStoreException {
+    try {
+      return cmdletDao.update(cid, parameters, state.getValue()) >= 0;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -756,25 +789,25 @@ public class MetaStore {
     }
   }
 
-  public synchronized boolean insertXattrTable(Long fid, Map<String,
-      byte[]> map) throws MetaStoreException {
+  public synchronized boolean insertXattrList(Long fid, List<XAttribute> attributes) throws MetaStoreException {
     try {
-      return xattrDao.insertXattrTable(fid, map);
+      return xattrDao.insertXattrList(fid, attributes);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public Map<String, byte[]> getXattrTable(Long fid) throws MetaStoreException {
+  public List<XAttribute> getXattrList(Long fid) throws MetaStoreException {
     try {
-      return xattrDao.getXattrTable(fid);
+      return xattrDao.getXattrList(fid);
     } catch (EmptyResultDataAccessException e) {
-      return new HashMap<>();
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
+  @Override
   public synchronized boolean insertFileDiff(FileDiff fileDiff)
       throws MetaStoreException {
     try {
@@ -784,12 +817,28 @@ public class MetaStore {
     }
   }
 
-  public List<FileDiff> getLatestFileDiff() throws MetaStoreException {
-    return fileDiffDao.getALL();
+  @Override
+  public boolean markFileDiffApplied(long did, FileDiffState state) throws MetaStoreException {
+    try {
+      return fileDiffDao.update(did, state) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
-  public void diffStatueUpdate(long did, FileDiffType fileDiffType) throws MetaStoreException {
-    // TODO statue update
+  @Override
+  public List<FileDiff> getPendingDiff() throws MetaStoreException {
+    return fileDiffDao.getPendingDiff();
+  }
+
+  @Override
+  public List<FileDiff> getPendingDiff(long rid) throws MetaStoreException {
+    return fileDiffDao.getPendingDiff(rid);
+  }
+
+  @Override
+  public void deleteAllFileDiff() throws MetaStoreException {
+    fileDiffDao.deleteAll();
   }
 
   public void dropAllTables() throws MetaStoreException {
@@ -830,6 +879,239 @@ public class MetaStore {
       , List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     try {
       accessCountDao.aggregateTables(destinationTable, tablesToAggregate);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void setClusterConfig(ClusterConfig clusterConfig) throws MetaStoreException {
+    try {
+
+      if (clusterConfigDao.getCountByName(clusterConfig.getNodeName()) == 0) {
+        //insert
+        clusterConfigDao.insert(clusterConfig);
+      } else {
+        //update
+        clusterConfigDao.updateByNodeName(clusterConfig.getNodeName(),clusterConfig.getConfigPath());
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void delClusterConfig(ClusterConfig clusterConfig) throws MetaStoreException {
+    try {
+      if (clusterConfigDao.getCountByName(clusterConfig.getNodeName()) > 0){
+        //insert
+        clusterConfigDao.delete(clusterConfig.getCid());
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<ClusterConfig> listClusterConfig() throws MetaStoreException {
+    try {
+      return clusterConfigDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public GlobalConfig getDefaultGlobalConfigByName(String config_name) throws MetaStoreException {
+    try {
+      if (globalConfigDao.getCountByName(config_name) > 0) {
+        //the property is existed
+        return globalConfigDao.getByPropertyName(config_name);
+      } else {
+        return null;
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void setGlobalConfig(GlobalConfig globalConfig) throws MetaStoreException {
+    try {
+      if (globalConfigDao.getCountByName(globalConfig.getPropertyName()) > 0) {
+        globalConfigDao.update(globalConfig.getPropertyName(), globalConfig.getPropertyValue());
+      } else {
+        globalConfigDao.insert(globalConfig);
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeInfo(DataNodeInfo dataNodeInfo)
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.insert(dataNodeInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeInfos(DataNodeInfo[] dataNodeInfos)
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.insert(dataNodeInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeInfos(List<DataNodeInfo> dataNodeInfos)
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.insert(dataNodeInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<DataNodeInfo> getDataNodeInfoByUuid(String uuid)
+      throws MetaStoreException{
+    try {
+      return dataNodeInfoDao.getByUuid(uuid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<DataNodeInfo> getAllDataNodeInfo()
+      throws MetaStoreException{
+    try {
+      return dataNodeInfoDao.getAll();
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteDataNodeInfo(String uuid)
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.delete(uuid);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllDataNodeInfo()
+      throws MetaStoreException {
+    try {
+      dataNodeInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeStorageInfo(DataNodeStorageInfo dataNodeStorageInfo)
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.insert(dataNodeStorageInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeStorageInfos(DataNodeStorageInfo[] dataNodeStorageInfos)
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.insert(dataNodeStorageInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertDataNodeStorageInfos(List<DataNodeStorageInfo> dataNodeStorageInfos)
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.insert(dataNodeStorageInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<DataNodeStorageInfo> getDataNodeStorageInfoByUuid(String uuid)
+      throws MetaStoreException{
+    try {
+      return dataNodeStorageInfoDao.getByUuid(uuid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<DataNodeStorageInfo> getAllDataNodeStorageInfo()
+      throws MetaStoreException{
+    try {
+      return dataNodeStorageInfoDao.getAll();
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteDataNodeStorageInfo(String uuid)
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.delete(uuid);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllDataNodeStorageInfo()
+      throws MetaStoreException {
+    try {
+      dataNodeStorageInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<BackUpInfo> listAllBackUpInfo() throws MetaStoreException {
+    try {
+      return backUpInfoDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public BackUpInfo getBackUpInfoById(int id) throws MetaStoreException {
+    try {
+      return backUpInfoDao.getById(id);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllBackUpInfo() throws MetaStoreException {
+    try {
+      backUpInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteBackUpInfoById(int id) throws MetaStoreException {
+    try {
+      backUpInfoDao.delete(id);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertBackUpInfo(BackUpInfo backUpInfo) throws MetaStoreException {
+    try {
+      backUpInfoDao.insert(backUpInfo);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

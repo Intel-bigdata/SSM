@@ -13,7 +13,8 @@
  */
 
 .notebookContent {
-  padding-top: 36px;
+  padding-top: 56px !important;
+  height: 94%;
 }
 
 .revision  {

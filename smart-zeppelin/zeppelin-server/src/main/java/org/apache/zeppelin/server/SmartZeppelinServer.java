@@ -117,6 +117,13 @@ public class SmartZeppelinServer {
 
     this.zconf = ZeppelinConfiguration.create();
 
+    // set     ZEPPELIN_ADDR and ZEPPELIN_PORT
+    String httpAddr = conf.get(SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_KEY,
+        SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_DEFAULT);
+    String[] ipport = httpAddr.split(":");
+    System.setProperty(ConfVars.ZEPPELIN_ADDR.getVarName(), ipport[0]);
+    System.setProperty(ConfVars.ZEPPELIN_PORT.getVarName(), ipport[1]);
+
     // set zeppelin log dir
     String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR_KEY, SmartConfKeys.SMART_LOG_DIR_DEFAULT);
     String zeppelinLogFile = logDir + "/zeppelin.log";
@@ -327,7 +334,7 @@ public class SmartZeppelinServer {
   }
 
   private void setupNotebookServer(WebAppContext webapp) {
-    notebookWsServer = new NotebookServer();
+    notebookWsServer = new NotebookServer(engine);
 
     String maxTextMessageSize = zconf.getWebsocketMaxTextMessageSize();
     final ServletHolder servletHolder = new ServletHolder(notebookWsServer);

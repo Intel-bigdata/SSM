@@ -24,14 +24,20 @@ import org.junit.Test;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
+import org.smartdata.model.XAttribute;
+import org.smartdata.model.DataNodeInfo;
+import org.smartdata.model.DataNodeStorageInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -364,15 +370,11 @@ public class TestMetaStore extends TestDaoUtil {
     CmdletInfo command2 = new CmdletInfo(1, 78,
         CmdletState.PAUSED, "tt", 123178333l, 232444994l);
     metaStore.insertCmdletTable(command2);
-    String cidCondition = ">= 0 ";
-    String ridCondition = "= 78 ";
-    CmdletState state = null;
-    CmdletState state1 = CmdletState.PAUSED;
-    List<CmdletInfo> com = metaStore.getCmdletsTableItem(cidCondition, ridCondition, state);
-    Assert.assertTrue(com.get(0).equals(command2));
-    List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(null,
-        null, state1);
-    Assert.assertTrue(com1.get(0).equals(command2));
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).equals(command1));
+    Assert.assertTrue(metaStore.getCmdletById(command2.getCid()).equals(command2));
+    metaStore.updateCmdlet(command1.getCid(), "TestParameter", CmdletState.DRYRUN);
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).getParameters().equals("TestParameter"));
+    Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).getState().equals(CmdletState.DRYRUN));
   }
 
   @Test
@@ -395,7 +397,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(commandId == commands.length);
     for (CmdletInfo cmd : com) {
       // System.out.printf("Cid = %d \n", cmd.getCid());
-      metaStore.updateCmdletStatus(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
+      metaStore.updateCmdlet(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
     }
     List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 1);
@@ -462,33 +464,183 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsertStoragePolicyTable() throws Exception {
-    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 3, "COOL"));
-    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 2, "COLD"));
-    String value = metaStore.getStoragePolicyName(3);
-    Assert.assertEquals(metaStore.getStoragePolicyName(2), "COLD");
+    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 53, "COOL"));
+    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 52, "COLD"));
+    String value = metaStore.getStoragePolicyName(53);
+    Assert.assertEquals(metaStore.getStoragePolicyName(52), "COLD");
     int key = metaStore.getStoragePolicyID("COOL");
     Assert.assertEquals(value, "COOL");
-    Assert.assertEquals(key, 3);
+    Assert.assertEquals(key, 53);
   }
 
   @Test
   public void testInsertXattrTable() throws Exception {
     long fid = 567l;
-    Map<String, byte[]> xAttrMap = new HashMap<>();
-    String name1 = "user.a1";
-    String name2 = "raw.you";
+    List<XAttribute> attributes = new ArrayList<>();
     Random random = new Random();
     byte[] value1 = new byte[1024];
     byte[] value2 = new byte[1024];
     random.nextBytes(value1);
     random.nextBytes(value2);
-    xAttrMap.put(name1, value1);
-    xAttrMap.put(name2, value2);
-    Assert.assertTrue(metaStore.insertXattrTable(fid, xAttrMap));
-    Map<String, byte[]> map = metaStore.getXattrTable(fid);
-    Assert.assertTrue(map.size() == xAttrMap.size());
-    for (String m : map.keySet()) {
-      Assert.assertArrayEquals(map.get(m), xAttrMap.get(m));
-    }
+    attributes.add(new XAttribute("user", "a1", value1));
+    attributes.add(new XAttribute("raw", "you", value2));
+    Assert.assertTrue(metaStore.insertXattrList(fid, attributes));
+    List<XAttribute> result = metaStore.getXattrList(fid);
+    Assert.assertTrue(result.size() == attributes.size());
+    Assert.assertTrue(result.containsAll(attributes));
+  }
+
+  @Test
+  public void testSetClusterConfig() throws MetaStoreException {
+    ClusterConfig clusterConfig = new ClusterConfig(1,"test" , "test1");
+    metaStore.setClusterConfig(clusterConfig);
+    List<ClusterConfig> list = new LinkedList<>();
+    list.add(clusterConfig);
+    Assert.assertTrue(metaStore.listClusterConfig().equals(list));
+    list.get(0).setConfig_path("test2");
+
+    metaStore.setClusterConfig(list.get(0));
+    Assert.assertTrue(metaStore.listClusterConfig().equals(list));
+  }
+
+  @Test
+  public void testDelClusterConfig() throws MetaStoreException {
+    ClusterConfig clusterConfig = new ClusterConfig(1, "test", "test1");
+    metaStore.setClusterConfig(clusterConfig);
+    metaStore.delClusterConfig(clusterConfig);
+    Assert.assertTrue(metaStore.listClusterConfig().size() == 0);
+  }
+
+  @Test
+  public void testSetGlobalConfig() throws MetaStoreException {
+    GlobalConfig globalConfig = new GlobalConfig(1,"test" , "test1");
+    metaStore.setGlobalConfig(globalConfig);
+    Assert.assertTrue(metaStore.getDefaultGlobalConfigByName("test").equals(globalConfig));
+    globalConfig.setPropertyValue("test2");
+
+    metaStore.setGlobalConfig(globalConfig);
+    Assert.assertTrue(metaStore.getDefaultGlobalConfigByName("test").equals(globalConfig));
+  }
+
+  @Test
+  public void testInsertDataNodeInfo() throws Exception {
+    DataNodeInfo insertInfo1 = new DataNodeInfo(
+        "UUID1", "hostname", "www.ssm.com",  100, 50, "lab");
+    metaStore.insertDataNodeInfo(insertInfo1);
+    List<DataNodeInfo> getInfo1 = metaStore.getDataNodeInfoByUuid("UUID1");
+    Assert.assertTrue(insertInfo1.equals(getInfo1.get(0)));
+
+    DataNodeInfo insertInfo2 = new DataNodeInfo(
+        "UUID2", "HOSTNAME", "www.ssm.com",  0, 0, null);
+    DataNodeInfo insertInfo3 = new DataNodeInfo(
+        "UUID3", "HOSTNAME", "www.ssm.com",  0, 0, null);
+    metaStore.insertDataNodeInfos(new DataNodeInfo[] { insertInfo2, insertInfo3 } );
+    List<DataNodeInfo> getInfo2 = metaStore.getDataNodeInfoByUuid("UUID2");
+    Assert.assertTrue(insertInfo2.equals(getInfo2.get(0)));
+    List<DataNodeInfo> getInfo3 = metaStore.getDataNodeInfoByUuid("UUID3");
+    Assert.assertTrue(insertInfo3.equals(getInfo3.get(0)));
+  }
+
+  @Test
+  public void testDeleteDataNodeInfo() throws Exception {
+    DataNodeInfo insertInfo1 = new DataNodeInfo(
+        "UUID1", "hostname", "www.ssm.com",  100, 50, "lab");
+    DataNodeInfo insertInfo2 = new DataNodeInfo(
+        "UUID2", "HOSTNAME", "www.ssm.com",  0, 0, null);
+    DataNodeInfo insertInfo3 = new DataNodeInfo(
+        "UUID3", "HOSTNAME", "www.ssm.com",  0, 0, null);
+    metaStore.insertDataNodeInfos(new DataNodeInfo[] { insertInfo1, insertInfo2, insertInfo3 } );
+
+    List<DataNodeInfo> infos = metaStore.getAllDataNodeInfo();
+    Assert.assertTrue(infos.size() == 3);
+
+    metaStore.deleteDataNodeInfo(insertInfo1.getUuid());
+    infos = metaStore.getAllDataNodeInfo();
+    Assert.assertTrue(infos.size() == 2);
+
+    metaStore.deleteAllDataNodeInfo();
+    infos = metaStore.getAllDataNodeInfo();
+    Assert.assertTrue(infos.size() == 0);
+  }
+
+  @Test
+  public void testInsertDataNodeStorageInfo() throws Exception {
+    DataNodeStorageInfo insertInfo1 = new DataNodeStorageInfo("UUID1", 10, 10,
+        "storageid1", 0, 0, 0, 0, 0);
+    metaStore.insertDataNodeStorageInfo(insertInfo1);
+    List<DataNodeStorageInfo> getInfo1 = metaStore.getDataNodeStorageInfoByUuid("UUID1");
+    Assert.assertTrue(insertInfo1.equals(getInfo1.get(0)));
+
+    DataNodeStorageInfo insertInfo2 = new DataNodeStorageInfo("UUID2", 10, 10,
+        "storageid2", 0, 0, 0, 0, 0);
+    DataNodeStorageInfo insertInfo3 = new DataNodeStorageInfo("UUID3", 10, 10,
+        "storageid2", 0, 0, 0, 0, 0);
+    metaStore.insertDataNodeStorageInfos(new DataNodeStorageInfo[] { insertInfo2, insertInfo3 } );
+    List<DataNodeStorageInfo> getInfo2 = metaStore.getDataNodeStorageInfoByUuid("UUID2");
+    Assert.assertTrue(insertInfo2.equals(getInfo2.get(0)));
+    List<DataNodeStorageInfo> getInfo3 = metaStore.getDataNodeStorageInfoByUuid("UUID3");
+    Assert.assertTrue(insertInfo3.equals(getInfo3.get(0)));
+  }
+
+  @Test
+  public void testDeleteDataNodeStorageInfo() throws Exception {
+    DataNodeStorageInfo insertInfo1 = new DataNodeStorageInfo("UUID1", 10, 10,
+        "storageid1", 0, 0, 0, 0, 0);
+    DataNodeStorageInfo insertInfo2 = new DataNodeStorageInfo("UUID2", 10, 10,
+        "storageid2", 0, 0, 0, 0, 0);
+    DataNodeStorageInfo insertInfo3 = new DataNodeStorageInfo("UUID3", 10, 10,
+        "storageid3", 0, 0, 0, 0, 0);
+    metaStore.insertDataNodeStorageInfos(new DataNodeStorageInfo[] { insertInfo1, insertInfo2, insertInfo3 } );
+
+    List<DataNodeStorageInfo> infos = metaStore.getAllDataNodeStorageInfo();
+    Assert.assertTrue(infos.size() == 3);
+
+    metaStore.deleteDataNodeStorageInfo(insertInfo1.getUuid());
+    infos = metaStore.getAllDataNodeStorageInfo();
+    Assert.assertTrue(infos.size() == 2);
+
+    metaStore.deleteAllDataNodeStorageInfo();
+    infos = metaStore.getAllDataNodeStorageInfo();
+    Assert.assertTrue(infos.size() == 0);
+  }
+
+  @Test
+  public void testInsertAndListAllBackUpInfo() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    BackUpInfo backUpInfo2 = new BackUpInfo(2, "test2", "test2", 2);
+    BackUpInfo backUpInfo3 = new BackUpInfo(3, "test3", "test3", 3);
+
+    metaStore.insertBackUpInfo(backUpInfo1);
+    metaStore.insertBackUpInfo(backUpInfo2);
+    metaStore.insertBackUpInfo(backUpInfo3);
+
+    List<BackUpInfo> backUpInfos = metaStore.listAllBackUpInfo();
+
+    Assert.assertTrue(backUpInfos.get(0).equals(backUpInfo1));
+    Assert.assertTrue(backUpInfos.get(1).equals(backUpInfo2));
+    Assert.assertTrue(backUpInfos.get(2).equals(backUpInfo3));
+  }
+
+  @Test
+  public void testGetBackUpInfoById() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    metaStore.insertBackUpInfo(backUpInfo1);
+
+    Assert.assertTrue(metaStore.getBackUpInfoById(1).equals(backUpInfo1));
+  }
+
+  @Test
+  public void testDeleteBackUpInfo() throws MetaStoreException {
+    BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
+    metaStore.insertBackUpInfo(backUpInfo1);
+
+    metaStore.deleteBackUpInfoById(1);
+
+    Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
+
+    metaStore.insertBackUpInfo(backUpInfo1);
+    metaStore.deleteAllBackUpInfo();
+
+    Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
   }
 }

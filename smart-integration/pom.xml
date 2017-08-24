@@ -22,12 +22,12 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smartdata-project</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>smart-integration</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -45,45 +45,52 @@
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
-            <artifactId>smart-dfsclient</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>smart-hadoop-client</artifactId>
+            <version>1.2-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-server</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.2-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-engine</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.2-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-agent</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.2-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-server</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.2-SNAPSHOT</version>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-hadoop</artifactId>
+            <version>1.2-SNAPSHOT</version>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.2-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-admin</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.2-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -102,11 +109,36 @@
             <version>4.4.4</version>
             <scope>test</scope>
         </dependency>
-        <!--<dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2</version>
-            <scope>test</scope>
-        </dependency>-->
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>hadoop-2.7</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <!-- Default hadoop profile. Uses global properties. -->
+            <dependencies>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-2.7</artifactId>
+                    <version>1.2-SNAPSHOT</version>
+                    <scope>test</scope>
+                    <type>test-jar</type>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hadoop-cdh-2.6</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-cdh-2.6</artifactId>
+                    <version>1.2-SNAPSHOT</version>
+                    <scope>test</scope>
+                    <type>test-jar</type>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

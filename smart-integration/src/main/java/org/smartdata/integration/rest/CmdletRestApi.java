@@ -22,6 +22,8 @@ import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
 
+import java.util.List;
+
 public class CmdletRestApi extends RestApiBase {
 
   /**
@@ -70,5 +72,9 @@ public class CmdletRestApi extends RestApiBase {
     cmdletInfo.then().body("status", Matchers.equalTo("OK"));
     JsonPath path = cmdletInfo.jsonPath().setRoot("body");
     return path;
+  }
+
+  public static List<Long> getCmdletActionIds(long cmdletId) {
+    return getCmdletInfo(cmdletId).getList("aids", Long.class);
   }
 }

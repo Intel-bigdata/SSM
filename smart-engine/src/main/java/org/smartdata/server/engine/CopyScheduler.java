@@ -17,178 +17,138 @@
  */
 package org.smartdata.server.engine;
 
-import org.apache.hadoop.fs.BlockLocation;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.metaservice.BackupMetaService;
+import org.smartdata.metaservice.CmdletMetaService;
+import org.smartdata.metaservice.CopyMetaService;
+import org.smartdata.metaservice.MetaServiceException;
+import org.smartdata.model.BackUpInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
-import org.smartdata.model.FileDiff;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class CopyScheduler extends AbstractService {
-  static final Logger LOG = LoggerFactory.getLogger(CopyScheduler.class);
+  static final Logger LOG =
+      LoggerFactory.getLogger(CopyScheduler.class);
 
   private ScheduledExecutorService executorService;
-
   private CmdletManager cmdletManager;
-  private MetaStore metaStore;
-  private Queue<FileDiff> pendingDR;
-  private List<Long> runningDR;
-  // TODO currently set max running list.size == 1 for test
-  private final int MAX_RUNNING_SIZE = 1;
+
+  private CopyMetaService copyMetaService;
+  private CmdletMetaService cmdletMetaService;
+  private BackupMetaService backupMetaService;
+
+  private List<BackUpInfo> backUpInfos;
 
   public CopyScheduler(ServerContext context) {
     super(context);
 
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-
-    this.metaStore = context.getMetaStore();
-    this.runningDR = new ArrayList<>();
-    this.pendingDR = new LinkedBlockingQueue<>();
-  }
-
-  public CopyScheduler(ServerContext context, CmdletManager cmdletManager) {
-    this(context);
-    this.cmdletManager = cmdletManager;
-  }
-
-  public void diffMerge(List<FileDiff> fileDiffList) {
-
+    this.copyMetaService = (CopyMetaService) context.getMetaService();
+    this.cmdletMetaService = (CmdletMetaService) context.getMetaService();
+    this.backupMetaService = (BackupMetaService) context.getMetaService();
   }
 
   @Override
   public void init() throws IOException {
+
   }
 
   @Override
   public void start() throws IOException {
-    executorService.scheduleAtFixedRate(
-        new ScheduleTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+    // TODO Enable this module later
+    // executorService.scheduleAtFixedRate(
+    //     new CopyScheduler.ScheduleTask(), 1000, 1000,
+    //     TimeUnit.MILLISECONDS);
   }
 
   @Override
   public void stop() throws IOException {
-    executorService.shutdown();
-  }
-
-  /**
-   * @param sourceFile the source file we want to copy
-   * @param destFile   destination to save the different chunk of source file
-   * @return a list of copy task
-   */
-  static public List<CopyTargetTask> splitCopyFile(String sourceFile, String destFile, int blockPerchunk, FileSystem fileSystem)
-      throws IOException {
-    if (blockPerchunk <= 0) {
-      throw new IllegalArgumentException("the block per chunk must more than 0");
-    }
-    if (sourceFile == null) {
-      throw new IllegalArgumentException("the source file can't be empty");
-    }
-    if (destFile == null) {
-      throw new IllegalArgumentException("the dest file can't be empty");
-    }
-
-    List<CopyTargetTask> copyTargetTaskList = new LinkedList<>();
-
-    //split only in source file is large than a chunk
-    if ((blockPerchunk > 0) &&
-        !fileSystem.getFileStatus(new Path(sourceFile)).isDirectory() &&
-        (fileSystem.getFileStatus(new Path(sourceFile)).getLen() >
-            fileSystem.getFileStatus(new Path(sourceFile)).getBlockSize() * blockPerchunk)) {
-      //here we can split
-      final BlockLocation[] blockLocations;
-      blockLocations = fileSystem.getFileBlockLocations(fileSystem.getFileStatus(new Path(sourceFile)), 0,
-          fileSystem.getFileStatus(new Path(sourceFile)).getLen());
-
-      int numBlocks = blockLocations.length;
-
-      if (numBlocks <= blockPerchunk) {
-        //if has only one chunk
-        copyTargetTaskList.add(new CopyTargetTask(destFile, sourceFile, 0,
-            fileSystem.getFileStatus(new Path(sourceFile)).getLen()));
-      }else {
-        //has many chunk
-        int i = 0;
-        int chunkCount = 0;
-        int position = 0;
-        while (i < numBlocks) {
-          //the length we need to set in copy task
-          long curLength = 0;
-          for (int j = 0; j < blockPerchunk && i < numBlocks; ++j, ++i) {
-            curLength += blockLocations[i].getLength();
-          }
-          if (curLength > 0) {
-            chunkCount++;
-            CopyTargetTask task = new CopyTargetTask(destFile + "_temp_chunkCount" + chunkCount, sourceFile,
-                position, curLength);
-            copyTargetTaskList.add(task);
-            position += curLength;
-          }
-        }
-      }
-    }else {
-      throw new IllegalArgumentException("Incorrect input");
-    }
-    return copyTargetTaskList;
+    // TODO Enable this module later
+    // executorService.shutdown();
   }
 
   private class ScheduleTask implements Runnable {
 
+    private void syncRule() {
+      try {
+        backUpInfos = backupMetaService.listAllBackUpInfo();
+      } catch (MetaServiceException e) {
+        LOG.debug("Sync backUpInfos error", e);
+      }
+    }
 
-    private void runningStatusUpdate() throws MetaStoreException {
-      // Status update
-      for (long cid : runningDR) {
-        if (metaStore.getCmdletById(cid).getState() == CmdletState.DONE) {
-          runningDR.remove(cid);
+    private void handleDeleteChain() {
+      // TODO delete all cmdlets and add a delete cmdlet
+    }
+
+    private void handleRenameChain() {
+      // TODO Copy and merge rename cmdlets
+    }
+
+    private void handleCopyChain() {
+      // TODO Merge and split large files
+
+    }
+
+    private void processCmdletByRule(BackUpInfo backUpInfo) {
+      long rid = backUpInfo.getRid();
+      int end = 0;
+      List<CmdletInfo> dryRunCmdlets = null;
+      try {
+        // Get all dry run cmdlets
+        dryRunCmdlets = cmdletMetaService.getCmdletsTableItem(null,
+            String.format("= %d", rid), CmdletState.DRYRUN);
+      } catch (MetaServiceException e) {
+        LOG.debug("Get latest dry run cmdlets error, rid={}", rid, e);
+      }
+      if (dryRunCmdlets == null || dryRunCmdlets.size() == 0) {
+        LOG.debug("rid={}, empty dry run cmdlets ", rid);
+        return;
+      }
+      // Handle dry run cmdlets
+      // Mark them as pending (runnable) after pre-processing
+      do {
+        try {
+          // TODO optimize this pre-processing
+          // TODO Check namespace for current states
+          cmdletMetaService
+              .updateCmdlet(dryRunCmdlets.get(end).getCid(), rid,
+                  CmdletState.PENDING);
+        } catch (MetaServiceException e) {
+          LOG.debug("rid={}, empty dry run cmdlets ", rid);
         }
-      }
+        // Split Copy tasks according to delete and rename
+        String currentParameter = dryRunCmdlets.get(end).getParameters();
+        if (currentParameter.contains("delete") ||
+            currentParameter.contains("rename")) {
+          break;
+        }
+        end++;
+      } while (true);
     }
-
-    private void enQueue() throws IOException {
-      // Move diffs to running queue
-      while (runningDR.size() < MAX_RUNNING_SIZE) {
-        FileDiff fileDiff = pendingDR.poll();
-        // TODO parse and Submit cmdlet
-        long cid = cmdletManager.submitCmdlet("Test");
-        runningDR.add(cid);
-      }
-    }
-
-
 
     @Override
     public void run() {
-      try {
-        // Add new diffs to pending list
-        List<FileDiff> latestFileDiff = metaStore.getLatestFileDiff();
-        for (FileDiff fileDiff : latestFileDiff) {
-          if (!pendingDR.contains(fileDiff)) {
-            pendingDR.add(fileDiff);
-          }
-        }
-        runningStatusUpdate();
-        enQueue();
-
-      } catch (IOException e) {
-        LOG.error("Disaster Recovery Manager schedule error", e);
-      } catch (MetaStoreException e) {
-        LOG.error("Disaster Recovery Manager MetaStore error", e);
+      syncRule();
+      // TODO check dryRun DR (Copy, Rename) cmdlets
+      for (BackUpInfo backUpInfo : backUpInfos) {
+        // Go through all backup rules
+        processCmdletByRule(backUpInfo);
       }
     }
-  }
 
+    private class FileChain {
+      private String head;
+      private String tail;
+      private List<Long> cmdletChain;
+      private int state;
+    }
+  }
 }

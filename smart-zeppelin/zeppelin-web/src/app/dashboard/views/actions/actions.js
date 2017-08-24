@@ -46,7 +46,7 @@ angular.module('zeppelinWebApp')
         $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
         $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
         $stb.text('Cmdlet ID').key('cid').canSort().done(),
-        $stb.text('Name').key('actionName').canSort().done(),
+        $stb.text('Name').key(['actionName']).canSort().done(),
           // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
         // group 2/3 (5-col)
         $stb.datetime('Create Time').key('createTime').canSort().done(),
@@ -59,7 +59,7 @@ angular.module('zeppelinWebApp')
         // group 3/3 (4-col)
         $stb.text('Succeed').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-3').done()
+        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
       ],
       rows: null
     };
@@ -73,7 +73,14 @@ angular.module('zeppelinWebApp')
             // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
             //user: rule.user,
-            actionName: action.actionName,
+            actionName: {
+              title: "ID:" + action.actionId + " Cmdlet ID:" + action.cmdletId + " Name:" + action.actionName
+              + " Create Time:" + new Date(action.createTime).toUTCString()
+              + " Finish Time:" + new Date(action.finished ? action.finishTime : "-").toUTCString()
+              + " Running Time:" + action.uptime + "ms"
+              + " Succeed:" + (action.finished ? action.successful : "-"),
+              value: action.actionName
+            },
             createTime: action.createTime,
             finishTime: action.finished ? action.finishTime : "-",
             runningTime: action.uptime,
@@ -82,8 +89,10 @@ angular.module('zeppelinWebApp')
             succeed: action.finished ? action.successful : "-",
             view: {
               href: action.pageUrl,
-              text: 'Show Result',
-              class: 'btn-xs btn-primary'
+              icon: function() {
+                return 'glyphicon glyphicon-info-sign';
+              },
+              class: 'btn-xs btn-info'
             },
             progress: {
                 current: action.progress,
@@ -99,5 +108,11 @@ angular.module('zeppelinWebApp')
     actions0.$subscribe($scope, function (actions) {
       updateTable(actions);
     });
+/*
+    $(function () {
+      $("[data-toggle='tooltip']").tooltip({
+        container: body
+      });
+    });*/
   }
 

@@ -24,7 +24,7 @@ import com.hazelcast.core.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.actions.ActionException;
+import org.smartdata.action.ActionException;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
