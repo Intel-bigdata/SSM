@@ -2,278 +2,80 @@ import unittest
 from util import *
 
 
-class TestMover(unittest.TestCase):
+class TestMover_64MB(unittest.TestCase):
     FILE_SIZE = 64 * 1024 * 1024
 
     # move to archive
-    def test_archive_10MB(self):
-        cmd_create, cmd_move = move_random_file('archive', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_archive_64MB(self):
-        cmd_create, cmd_move = move_random_file('archive', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_archive_1GB(self):
-        cmd_create, cmd_move = move_random_file('archive', 1024 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_archive_2GB(self):
-        cmd_create, cmd_move = move_random_file('archive',
-                                                2 * 1024 * 1024 * 1024)
+    def test_archive(self):
+        cmd_create, cmd_move = move_random_file('archive', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move['state'] == "DONE")
 
     # move to onessd
-    def test_onessd_10MB(self):
-        cmd_create, cmd_move = move_random_file('onessd', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_onessd_64MB(self):
-        cmd_create, cmd_move = move_random_file('onessd', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_onessd_1GB(self):
-        cmd_create, cmd_move = move_random_file('onessd', 1024 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_onessd_2GB(self):
-        cmd_create, cmd_move = move_random_file('onessd',
-                                                2 * 1024 * 1024 * 1024)
+    def test_onessd(self):
+        cmd_create, cmd_move = move_random_file('onessd', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move['state'] == "DONE")
 
     # move to allssd
-    def test_allssd_10MB(self):
-        cmd_create, cmd_move = move_random_file('allssd', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_allssd_64MB(self):
-        cmd_create, cmd_move = move_random_file('allssd', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_allssd_1GB(self):
-        cmd_create, cmd_move = move_random_file('allssd', 1024 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move['state'] == "DONE")
-
-    def test_allssd_2GB(self):
-        cmd_create, cmd_move = move_random_file('allssd',
-                                                2 * 1024 * 1024 * 1024)
+    def test_allssd(self):
+        cmd_create, cmd_move = move_random_file('allssd', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move['state'] == "DONE")
 
     # move to archive then onessd
-    def test_archive_onessd_10MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'onessd', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_archive_onessd_64MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'onessd', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_archive_onessd_1GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'onessd', 1024 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_archive_onessd_2GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'onessd', 2 *1024 * 1024 * 1024)
+    def test_archive_onessd(self):
+        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'onessd', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move_1['state'] == "DONE")
         self.assertTrue(cmd_move_2['state'] == "DONE")
 
     # move to archive then allssd
-    def test_archive_allssd_10MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'allssd', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_archive_allssd_64MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'allssd', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_archive_allssd_1GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'allssd', 1024 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_archive_allssd_2GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'allssd', 2 * 1024 * 1024 * 1024)
+    def test_archive_allssd(self):
+        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('archive', 'allssd', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move_1['state'] == "DONE")
         self.assertTrue(cmd_move_2['state'] == "DONE")
 
     # move to onessd then archive
-    def test_onessd_archive_10MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_onessd_archive_64MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_onessd_archive_1GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', 1024 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_onessd_archive_2GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', 2 * 1024 * 1024 * 1024)
+    def test_onessd_archive(self):
+        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move_1['state'] == "DONE")
         self.assertTrue(cmd_move_2['state'] == "DONE")
 
     # move to onessd then allssd
-    def test_onessd_allssd_10MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'allssd', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_onessd_archive_64MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_onessd_archive_1GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', 1024 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    # move to onessd then archive
-    def test_onessd_archive_2GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'archive', 2 * 1024 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_allssd_onessd_10MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'onessd', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_allssd_onessd_64MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'onessd', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_allssd_onessd_1GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'onessd', 1024 * 1024 * 1024)
+    def test_onessd_allssd(self):
+        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('onessd', 'allssd', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move_1['state'] == "DONE")
         self.assertTrue(cmd_move_2['state'] == "DONE")
 
     # move to allssd then onessd
-    def test_allssd_onessd_2GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'onessd', 2 * 1024 * 1024 * 1024)
+    def test_allssd_onessd(self):
+        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'onessd', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move_1['state'] == "DONE")
         self.assertTrue(cmd_move_2['state'] == "DONE")
 
-    def test_allssd_archive_10MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'archive', 10 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_allssd_archive_64MB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'archive', 64 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_allssd_archive_1GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'archive', 1014 * 1024 * 1024)
-        self.assertTrue(cmd_create['state'] == "DONE")
-        self.assertTrue(cmd_move_1['state'] == "DONE")
-        self.assertTrue(cmd_move_2['state'] == "DONE")
-
-    def test_allssd_archive_2GB(self):
-        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'archive', 2 * 1014 * 1024 * 1024)
+    # move to allssd then archive
+    def test_allssd_archive(self):
+        cmd_create, cmd_move_1, cmd_move_2 = move_random_file_twice('allssd', 'archive', FILE_SIZE)
         self.assertTrue(cmd_create['state'] == "DONE")
         self.assertTrue(cmd_move_1['state'] == "DONE")
         self.assertTrue(cmd_move_2['state'] == "DONE")
 
     # move randomly and continually
-    def test_random_list_mover_10MB(self):
+    def test_random_list_mover(self):
         # get the random test list
-        cmds = move_random_task_list(10 * 1024 * 1024)
-        # check the result
-        self.assertTrue(all_success(cmds))
-
-    def test_random_list_mover_64MB(self):
-        # get the random test list
-        cmds = move_random_task_list(10 * 1024 * 1024)
-        # check the result
-        # check the result
-        self.assertTrue(all_success(cmds))
-
-    def test_random_list_mover_1GB(self):
-        # get the random test list
-        cmds = move_random_task_list(1024 * 1024 * 1024)
-        # check the result
-        # check the result
-        self.assertTrue(all_success(cmds))
-
-    def test_random_list_mover_2GB(self):
-        # get the random test list
-        cmds = move_random_task_list(2 * 1024 * 1024 * 1024)
-        # check the result
+        cmds = move_random_task_list(FILE_SIZE)
         # check the result
         self.assertTrue(all_success(cmds))
 
     # move randomly and continually, nearby mover type can be the same
-    def test_random_list_mover_totally_10MB(self):
+    def test_random_list_mover_totally(self):
         # get the random test list
-        cmds = move_random_task_list_totally(10 * 1024 * 1024)
-        # check the result
-        # check the result
-        self.assertTrue(all_success(cmds))
-
-    def test_random_list_mover_totally_64MB(self):
-        # get the random test list
-        cmds = move_random_task_list_totally(10 * 1024 * 1024)
-        # check the result
-        # check the result
-        self.assertTrue(all_success(cmds))
-
-    def test_random_list_mover_totally_1GB(self):
-        # get the random test list
-        cmds = move_random_task_list_totally(1024 * 1024 * 1024)
-        # check the result
-        # check the result
-        self.assertTrue(all_success(cmds))
-
-    def test_random_list_mover_totally_2GB(self):
-        # get the random test list
-        cmds = move_random_task_list_totally(2 * 1024 * 1024 * 1024)
+        cmds = move_random_task_list_totally(FILE_SIZE)
         # check the result
         # check the result
         self.assertTrue(all_success(cmds))
