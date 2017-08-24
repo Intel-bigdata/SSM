@@ -19,10 +19,11 @@ PRIMARY_ROOT = REST_ROOT + "/primary"
 MOVE_TYPE = ["onessd",
              "allssd",
              "archive"]
-TEST_FILES = ["/test/data_2GB",
-              "/test/data_1GB",
-              "/test/data_64MB",
-              "/test/data_10MB"]
+
+# TEST_FILES = ["/test/data_2GB",
+#               "/test/data_1GB",
+#               "/test/data_64MB",
+#               "/test/data_10MB"]
 
 
 def random_file_path():

@@ -50,7 +50,9 @@ class TestRule(unittest.TestCase):
         # From now to now + 15s
         # Create 3 random files
         for _ in range(3):
-            create_random_file(10 * 1024 * 1024)
+            file_path = "/test/data" + \
+                random_string() + ".dat"
+            wait_for_cmdlet(create_file(file_path, 10 * 1024 * 1024))
         # submit rule
         rule_str = "file: " + \
             "every 4s from now to now + 15s |" + \
