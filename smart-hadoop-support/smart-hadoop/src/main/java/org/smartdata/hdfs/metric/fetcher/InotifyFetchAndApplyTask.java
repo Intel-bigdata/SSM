@@ -22,6 +22,9 @@ import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.SmartConstants;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.model.SystemInfo;
 
 import java.io.IOException;
 import java.util.Date;
@@ -31,12 +34,14 @@ public class InotifyFetchAndApplyTask implements Runnable {
   static final Logger LOG = LoggerFactory.getLogger(InotifyFetchAndApplyTask.class);
 
   private final AtomicLong lastId;
+  private final MetaStore metaStore;
   private final InotifyEventApplier applier;
   private DFSInotifyEventInputStream inotifyEventInputStream;
 
-  public InotifyFetchAndApplyTask(DFSClient client, InotifyEventApplier applier, long startId)
+  public InotifyFetchAndApplyTask(DFSClient client,  MetaStore metaStore, InotifyEventApplier applier, long startId)
       throws IOException {
     this.applier = applier;
+    this.metaStore = metaStore;
     this.lastId = new AtomicLong(startId);
     this.inotifyEventInputStream = client.getInotifyEventStream(startId);
   }
@@ -47,8 +52,11 @@ public class InotifyFetchAndApplyTask implements Runnable {
     try {
       EventBatch eventBatch = inotifyEventInputStream.poll();
       while (eventBatch != null) {
-        this.applier.apply(eventBatch.getEvents());
-        this.lastId.getAndSet(eventBatch.getTxid());
+        applier.apply(eventBatch.getEvents());
+        lastId.getAndSet(eventBatch.getTxid());
+        metaStore.updateAndInsertIfNotExist(
+            new SystemInfo(
+                SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID, String.valueOf(lastId.get())));
         eventBatch = inotifyEventInputStream.poll();
       }
     } catch (Throwable t) {
