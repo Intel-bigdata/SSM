@@ -196,11 +196,7 @@ public abstract class TestInotifyFetcher extends TestDaoUtil {
                   metaStore
                       .getSystemInfoByProperty(SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID)
                       .getValue())));
-    } catch (Exception t) {
-      t.printStackTrace();
-    }
-
-    finally {
+    } finally {
       cluster.shutdown();
       closeDao();
     }
