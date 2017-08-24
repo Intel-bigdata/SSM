@@ -38,6 +38,7 @@ import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.dao.RuleDao;
 import org.smartdata.metastore.dao.StorageDao;
+import org.smartdata.metastore.dao.SystemInfoDao;
 import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.dao.DataNodeInfoDao;
@@ -60,6 +61,7 @@ import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
+import org.smartdata.model.SystemInfo;
 import org.smartdata.model.XAttribute;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
@@ -108,6 +110,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private DataNodeStorageInfoDao dataNodeStorageInfoDao;
   private BackUpInfoDao backUpInfoDao;
   private ClusterInfoDao clusterInfoDao;
+  private SystemInfoDao systemInfoDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -129,6 +132,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     dataNodeStorageInfoDao = new DataNodeStorageInfoDao(pool.getDataSource());
     backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
+    systemInfoDao = new SystemInfoDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -1124,14 +1128,31 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public List<ClusterInfo> listAllClusterInfo() throws MetaStoreException {
     try {
       return clusterInfoDao.getAll();
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<SystemInfo> listAllSystemInfo() throws MetaStoreException {
+    try {
+      return systemInfoDao.getAll();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
+
   public ClusterInfo getClusterInfoByCid(long id) throws MetaStoreException {
     try {
       return clusterInfoDao.getById(id);
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public SystemInfo getSystemInfoByProperty(String property) throws MetaStoreException {
+    try {
+      return systemInfoDao.getByProperty(property);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1140,6 +1161,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteAllClusterInfo() throws MetaStoreException {
     try {
       clusterInfoDao.deleteAll();
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void updateSystemInfoByProperty(String property, SystemInfo systemInfo) throws MetaStoreException {
+    try {
+      systemInfoDao.update(property, systemInfo);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1148,6 +1177,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteClusterInfoByCid(long cid) throws MetaStoreException {
     try {
       clusterInfoDao.delete(cid);
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteSystemInfoByProperty(String property) throws MetaStoreException {
+    try {
+      systemInfoDao.delete(property);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1159,6 +1196,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         throw new Exception("name has already exist");
       }
       clusterInfoDao.insert(clusterInfo);
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+      
+  public void insertSystemInfo(SystemInfo systemInfo) throws MetaStoreException {
+    try {
+      if (systemInfoDao.getCountByProperty(systemInfo.getProperty()) != 0){
+        throw new Exception("the system property is already exist");
+      }
+      systemInfoDao.insert(systemInfo);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

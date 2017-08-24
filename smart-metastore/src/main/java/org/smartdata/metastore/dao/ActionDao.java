@@ -36,6 +36,7 @@ import java.util.Map;
 
 public class ActionDao {
 
+  private String TABLE_NAME = "action";
   private DataSource dataSource;
 
   public void setDataSource(DataSource dataSource) {
@@ -48,13 +49,14 @@ public class ActionDao {
 
   public List<ActionInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from action",
+    return jdbcTemplate.query("select * from " + TABLE_NAME,
         new ActionRowMapper());
   }
 
   public ActionInfo getById(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from action where aid = ?",
+    return jdbcTemplate.queryForObject("select * from " +
+            TABLE_NAME + " where aid = ?",
         new Object[]{aid}, new ActionRowMapper());
   }
 
@@ -63,20 +65,22 @@ public class ActionDao {
         new NamedParameterJdbcTemplate(dataSource);
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
     parameterSource.addValue("aids", aids);
-    return namedParameterJdbcTemplate.query("select * from action WHERE aid IN (:aids)",
+    return namedParameterJdbcTemplate.query("select * from " +
+            TABLE_NAME + " WHERE aid IN (:aids)",
         parameterSource, new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCid(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from action where cid = ?",
+    return jdbcTemplate.query("select * from " +
+            TABLE_NAME + " where cid = ?",
         new Object[]{cid}, new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCondition(String aidCondition,
       String cidCondition) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sqlPrefix = "SELECT * FROM action WHERE ";
+    String sqlPrefix = "SELECT * FROM " + TABLE_NAME + " WHERE ";
     String sqlAid = (aidCondition == null) ? "" : "AND aid " + aidCondition;
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlFinal = "";
@@ -91,26 +95,28 @@ public class ActionDao {
 
   public List<ActionInfo> getLatestActions(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    jdbcTemplate.setMaxRows(size);
-    String sql = "select * from action ORDER by aid DESC";
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select * from " + TABLE_NAME + " ORDER by aid DESC";
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
   public void delete(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from action where aid = ?";
+    final String sql = "delete from " + TABLE_NAME + " where aid = ?";
     jdbcTemplate.update(sql, aid);
   }
 
   public void insert(ActionInfo actionInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("action");
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     simpleJdbcInsert.execute(toMap(actionInfo));
   }
 
   public void insert(ActionInfo[] actionInfos) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("action");
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     Map<String, Object>[] maps = new Map[actionInfos.length];
     for (int i = 0; i < actionInfos.length; i++) {
       maps[i] = toMap(actionInfos[i]);
@@ -124,7 +130,7 @@ public class ActionDao {
 
   public int[] update(final ActionInfo[] actionInfos) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update action set " +
+    String sql = "update " + TABLE_NAME + " set " +
         "result = ?, " +
         "log = ?, " +
         "successful = ?, " +
@@ -156,7 +162,7 @@ public class ActionDao {
   public long getMaxId() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Long ret = jdbcTemplate
-        .queryForObject("select MAX(aid) from action", Long.class);
+        .queryForObject("select MAX(aid) from " + TABLE_NAME, Long.class);
     if (ret == null) {
       return 0;
     } else {
