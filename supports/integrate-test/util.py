@@ -19,8 +19,7 @@ PRIMARY_ROOT = REST_ROOT + "/primary"
 MOVE_TYPE = ["onessd",
              "allssd",
              "archive"]
-TEST_FILES = ["/test/data_10GB",
-              "/test/data_2GB",
+TEST_FILES = ["/test/data_2GB",
               "/test/data_1GB",
               "/test/data_64MB",
               "/test/data_10MB"]
@@ -132,6 +131,11 @@ def get_action(aid):
     return resp.json()["body"]
 
 
+def list_action():
+    resp = requests.get(ACTION_ROOT + "/list")
+    return resp.json()["body"]
+
+
 def read_file(file_path):
     cmdlet_str = "read -file " + file_path
     return submit_cmdlet(cmdlet_str)
@@ -143,8 +147,9 @@ def create_file(file_path, length=1024):
 
 
 def append_file(file_path, length=1024):
-    cmdlet_str = "append -file " + file_path + " -length " + str(length)
-    return submit_cmdlet(cmdlet_str)
+    # cmdlet_str = "append -file " + file_path + " -length " + str(length)
+    # return submit_cmdlet(cmdlet_str)
+    pass
 
 
 def create_random_file(length=1024):

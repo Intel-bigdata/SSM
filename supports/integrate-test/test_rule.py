@@ -1,4 +1,3 @@
-import random
 import time
 import unittest
 from util import *
@@ -6,21 +5,21 @@ from util import *
 
 class TestRule(unittest.TestCase):
     def test_rule_access_count(self):
-        # Submit rule file : path matches "/test/*" and accessCount(1m) > 1 | allssd
+        # rule:
+        # file : path matches "/test/*" and accessCount(1m) > 1 | allssd
         rule_str = "file : path matches " + \
             "\"/test/*\" and accessCount(1m) > 1 | allssd "
         rid = submit_rule(rule_str)
         start_rule(rid)
-        file_path = TEST_FILES[random.randrange(len(TEST_FILES))]
+        file_path = create_random_file(10 * 1024 * 1024)
         # Activate rule
         # Submit read action to trigger rule
-        # Read twice
-        cid_r1 = read_file(file_path)
-        cid_r2 = read_file(file_path)
-        cid_r3 = read_file(file_path)
-        wait_for_cmdlet(cid_r1)
-        wait_for_cmdlet(cid_r2)
-        wait_for_cmdlet(cid_r3)
+        # Read three times
+        cmds = []
+        cmds.append(read_file(file_path))
+        cmds.append(read_file(file_path))
+        cmds.append(read_file(file_path))
+        wait_for_cmdlets(cmds)
         time.sleep(15)
         # Statue check
         rule = get_rule(rid)
@@ -28,14 +27,14 @@ class TestRule(unittest.TestCase):
         delete_rule(rid)
 
     def test_rule_age(self):
-        # Submit rule file : path matches "/test/*" and age > 4s | archive 
+        # rule:
+        # file : path matches "/test/*" and age > 4s | archive
         rule_str = "file : path matches \"/test/*\" and age > 4s | archive "
         rid = submit_rule(rule_str)
         start_rule(rid)
-        file_path = TEST_FILES[random.randrange(len(TEST_FILES))]
+        file_path = create_random_file(10 * 1024 * 1024)
         # Activate rule
         # wait to trigger rule
-        # Read twice
         wait_for_cmdlet(read_file(file_path))
         time.sleep(5)
         # Statue check
@@ -44,7 +43,8 @@ class TestRule(unittest.TestCase):
         delete_rule(rid)
 
     def test_rule_scheduled(self):
-        # Submit rule file: every 4s from now to now + 15s | path matches "/test/data*.dat" | onessd
+        # rule:
+        # file: every 4s from now to now + 15s | path matches "/test/data*.dat" | onessd
         # From now to now + 15s
         rule_str = "file: " + \
             "every 4s from now to now + 15s |" + \
@@ -65,16 +65,6 @@ class TestRule(unittest.TestCase):
         rule = get_rule(rid)
         self.assertTrue(rule['numCmdsGen'] > 0)
         delete_rule(rid)
-
-    def test_delete_all(self):
-        # Add 100000 different rules
-        rules = list_rule()
-        for rule in rules:
-            # Delete all rules
-            if rule['state'] != 'DELETED':
-                delete_rule(rule['id'])
-        rules = [r for rule in list_rule() if rule['state'] != 'DELETED']
-        self.assertTrue(len(rules) == 0)
 
 
 if __name__ == '__main__':
