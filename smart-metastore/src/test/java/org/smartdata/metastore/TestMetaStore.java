@@ -647,8 +647,8 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testInsertAndListAllClusterInfo() throws MetaStoreException {
-    ClusterInfo clusterInfo1 = new ClusterInfo(1,"test1","test1","test1","test1","test1");
-    ClusterInfo clusterInfo2 = new ClusterInfo(2,"test2","test2","test2","test2","test2");
+    ClusterInfo clusterInfo1 = new ClusterInfo(1, "test1", "test1", "test1", "test1", "test1");
+    ClusterInfo clusterInfo2 = new ClusterInfo(2, "test2", "test2", "test2", "test2", "test2");
 
     metaStore.insertClusterInfo(clusterInfo1);
     metaStore.insertClusterInfo(clusterInfo2);
@@ -661,7 +661,7 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testGetClusterInfoById() throws MetaStoreException {
-    ClusterInfo clusterInfo = new ClusterInfo(1,"test1","test1","test1","test1","test1");
+    ClusterInfo clusterInfo = new ClusterInfo(1, "test1", "test1", "test1", "test1", "test1");
     metaStore.insertClusterInfo(clusterInfo);
 
     Assert.assertTrue(metaStore.getClusterInfoByCid(1).equals(clusterInfo));
@@ -669,7 +669,7 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testDelectBackUpInfo() throws MetaStoreException {
-    ClusterInfo clusterInfo = new ClusterInfo(1,"test1","test1","test1","test1","test1");
+    ClusterInfo clusterInfo = new ClusterInfo(1, "test1", "test1", "test1", "test1", "test1");
     metaStore.insertClusterInfo(clusterInfo);
 
     metaStore.deleteClusterInfoByCid(1);

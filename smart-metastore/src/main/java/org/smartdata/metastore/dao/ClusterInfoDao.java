@@ -81,7 +81,6 @@ public class ClusterInfoDao {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
     simpleJdbcInsert.usingGeneratedKeyColumns("cid");
-    //return cid
     long cid = simpleJdbcInsert.executeAndReturnKey(toMap(clusterInfo)).longValue();
     clusterInfo.setCid(cid);
     return cid;
@@ -114,7 +113,7 @@ public class ClusterInfoDao {
     return jdbcTemplate.update(sql, type, cid);
   }
 
-  public void deleteAll(){
+  public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE from " + TABLE_NAME;
     jdbcTemplate.execute(sql);
