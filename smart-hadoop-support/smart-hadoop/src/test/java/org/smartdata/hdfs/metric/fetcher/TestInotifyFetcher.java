@@ -33,8 +33,10 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.smartdata.SmartConstants;
 import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,7 +47,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
-public abstract class TestInotifyFetcher {
+public abstract class TestInotifyFetcher extends TestDaoUtil {
   private static final int BLOCK_SIZE = 1024;
 
   private static class EventApplierForTest extends InotifyEventApplier {
@@ -67,6 +69,7 @@ public abstract class TestInotifyFetcher {
 
   @Test(timeout = 60000)
   public void testFetcher() throws Exception {
+    initDao();
     Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
     conf.setBoolean(DFSConfigKeys.DFS_NAMENODE_ACLS_ENABLED_KEY, true);
@@ -79,15 +82,7 @@ public abstract class TestInotifyFetcher {
       DFSClient client = new DFSClient(cluster.getNameNode(0)
         .getNameNodeAddress(), conf);
 
-      FileSystem fs = cluster.getFileSystem(0);
-      DFSTestUtil.createFile(fs, new Path("/file"), BLOCK_SIZE, (short) 1, 0L);
-      DFSTestUtil.createFile(fs, new Path("/file3"), BLOCK_SIZE, (short) 1, 0L);
-      DFSTestUtil.createFile(fs, new Path("/file5"), BLOCK_SIZE, (short) 1, 0L);
-      DFSTestUtil.createFile(fs, new Path("/truncate_file"),
-        BLOCK_SIZE * 2, (short) 1, 0L);
-      fs.mkdirs(new Path("/tmp"), new FsPermission("777"));
-
-      MetaStore metaStore = Mockito.mock(MetaStore.class);
+      MetaStore metaStore = new MetaStore(druidPool);
       EventApplierForTest applierForTest = new EventApplierForTest(metaStore, client);
       final InotifyEventFetcher fetcher = new InotifyEventFetcher(client, metaStore,
         Executors.newScheduledThreadPool(2), applierForTest, new Callable() {
@@ -96,6 +91,16 @@ public abstract class TestInotifyFetcher {
           return null; // Do nothing
         }
       });
+
+      Assert.assertFalse(InotifyEventFetcher.canContinueFromLastTxid(client, 1024L));
+
+      FileSystem fs = cluster.getFileSystem(0);
+      DFSTestUtil.createFile(fs, new Path("/file"), BLOCK_SIZE, (short) 1, 0L);
+      DFSTestUtil.createFile(fs, new Path("/file3"), BLOCK_SIZE, (short) 1, 0L);
+      DFSTestUtil.createFile(fs, new Path("/file5"), BLOCK_SIZE, (short) 1, 0L);
+      DFSTestUtil.createFile(fs, new Path("/truncate_file"),
+        BLOCK_SIZE * 2, (short) 1, 0L);
+      fs.mkdirs(new Path("/tmp"), new FsPermission("777"));
 
       Thread thread = new Thread() {
         public void run() {
@@ -182,8 +187,22 @@ public abstract class TestInotifyFetcher {
       Assert.assertTrue(events.get(20).getEventType() == Event.EventType.RENAME);
 //      Assert.assertTrue(events.get(21).getEventType() == Event.EventType.TRUNCATE);
       fetcher.stop();
-    } finally {
+
+      Assert.assertTrue(metaStore.containSystemInfo(SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID));
+      Assert.assertTrue(
+          InotifyEventFetcher.canContinueFromLastTxid(
+              client,
+              Long.parseLong(
+                  metaStore
+                      .getSystemInfoByProperty(SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID)
+                      .getValue())));
+    } catch (Exception t) {
+      t.printStackTrace();
+    }
+
+    finally {
       cluster.shutdown();
+      closeDao();
     }
   }
 

@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -75,19 +76,23 @@ public class InotifyEventFetcher {
 
   public void start() throws IOException {
     Long lastTxid = getLastTxid();
-    if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(lastTxid)) {
+    if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)) {
       startFromLastTxid(lastTxid);
     } else {
       startWithFetchingNameSpace();
     }
   }
 
-  private boolean canContinueFromLastTxid(Long lastId) {
+  @VisibleForTesting
+  static boolean canContinueFromLastTxid(DFSClient client, Long lastId) {
     try {
+      if (client.getNamenode().getCurrentEditLogTxid() == lastId) {
+        return true;
+      }
       DFSInotifyEventInputStream is = client.getInotifyEventStream(lastId);
-      EventBatch batch = is.poll();
-      return batch != null;
-    } catch (IOException | MissingEventsException e) {
+      EventBatch eventBatch = is.poll();
+      return eventBatch != null;
+    } catch (Exception e) {
       e.printStackTrace();
       return false;
     }

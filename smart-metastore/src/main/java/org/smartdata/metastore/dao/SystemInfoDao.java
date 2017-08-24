@@ -69,7 +69,8 @@ public class SystemInfoDao {
   }
 
   public SystemInfo getByProperty(String property) {
-    return list(property).get(0);
+    List<SystemInfo> infos = list(property);
+    return infos.isEmpty() ? null : infos.get(0);
   }
 
   public List<SystemInfo> getByProperties(List<String> properties) {
