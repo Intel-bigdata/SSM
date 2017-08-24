@@ -702,7 +702,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public List<ActionInfo> getNewCreatedActionsTableItem(
       int size) throws MetaStoreException {
-    if (size <= 0) {
+    if (size < 0) {
       return new ArrayList<>();
     }
     try {
