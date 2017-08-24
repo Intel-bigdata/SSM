@@ -73,6 +73,7 @@ class TestMoverProtection(unittest.TestCase):
         # check the statement of read
         self.assertTrue(len(failed) == 0)
 
+
     def test_mover_archive_delete(self):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
