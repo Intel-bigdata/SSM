@@ -37,6 +37,7 @@ import java.util.Map;
 public class CmdletDao {
 
   private DataSource dataSource;
+  private String TABLE_NAME = "cmdlet";
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -48,33 +49,33 @@ public class CmdletDao {
 
   public List<CmdletInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from cmdlet",
+    return jdbcTemplate.query("select * from " + TABLE_NAME,
         new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByIds(List<Long> aids) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from cmdlet WHERE aid IN (?)",
+    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE aid IN (?)",
         new Object[]{StringUtils.join(aids, ",")},
         new CmdletRowMapper());
   }
 
   public CmdletInfo getById(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from cmdlet where cid = ?",
+    return jdbcTemplate.queryForObject("select * from " + TABLE_NAME + " where cid = ?",
         new Object[]{cid}, new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByRid(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from cmdlet where rid = ?",
+    return jdbcTemplate.query("select * from " + TABLE_NAME + " where rid = ?",
         new Object[]{rid}, new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByCondition(String cidCondition,
       String ridCondition, CmdletState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sqlPrefix = "SELECT * FROM cmdlet WHERE ";
+    String sqlPrefix = "SELECT * FROM " + TABLE_NAME + " WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
     String sqlRid = (ridCondition == null) ? "" : "AND rid " + ridCondition;
     String sqlState = (state == null) ? "" : "AND state = " + state.getValue();
@@ -90,19 +91,19 @@ public class CmdletDao {
 
   public void delete(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from cmdlet where cid = ?";
+    final String sql = "delete from " + TABLE_NAME + " where cid = ?";
     jdbcTemplate.update(sql, cid);
   }
 
   public void insert(CmdletInfo CmdletInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("cmdlet");
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     simpleJdbcInsert.execute(toMap(CmdletInfo));
   }
 
   public void insert(CmdletInfo[] CmdletInfos) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("cmdlet");
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     Map<String, Object>[] maps = new Map[CmdletInfos.length];
     for (int i = 0; i < CmdletInfos.length; i++) {
       maps[i] = toMap(CmdletInfos[i]);
@@ -112,7 +113,7 @@ public class CmdletDao {
 
   public int update(long cid, long rid, int state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update cmdlet set " +
+    String sql = "update " + TABLE_NAME + " set " +
         "state = ?, " +
         "state_changed_time = ? where cid = ? AND rid = ?";
     return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid, rid);
@@ -120,7 +121,7 @@ public class CmdletDao {
 
   public int update(long cid, String parameters, int state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update cmdlet set " +
+    String sql = "update " + TABLE_NAME + " set " +
         "parameters = ?, " +
         "state = ?, " +
         "state_changed_time = ? where cid = ?";
@@ -135,7 +136,7 @@ public class CmdletDao {
 
   public int[] update(final List<CmdletInfo> CmdletInfos) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update cmdlet set " +
+    String sql = "update " + TABLE_NAME + " set " +
         "state = ?, " +
         "state_changed_time = ? " +
         "where cid = ?";
@@ -157,7 +158,7 @@ public class CmdletDao {
   public long getMaxId() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Long ret = jdbcTemplate
-        .queryForObject("select MAX(cid) from cmdlet", Long.class);
+        .queryForObject("select MAX(cid) from " + TABLE_NAME, Long.class);
     if (ret == null) {
       return 0;
     } else {

@@ -78,7 +78,7 @@ public class WriteFileAction extends HdfsAction {
     byte[] buffer = new byte[bufferSize];
     new Random().nextBytes(buffer);
     appendLog(String.format("Generate random data with length %d", length));
-    for (int pos = 0; pos < length; pos += bufferSize) {
+    for (long pos = 0; pos < length; pos += bufferSize) {
       long writeLength = pos + bufferSize < length ? bufferSize : length - pos;
       out.write(buffer, 0, (int) writeLength);
     }

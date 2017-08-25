@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metaservice.BackupMetaService;
@@ -29,6 +28,7 @@ import org.smartdata.metastore.dao.ActionDao;
 import org.smartdata.metastore.dao.BackUpInfoDao;
 import org.smartdata.metastore.dao.CacheFileDao;
 import org.smartdata.metastore.dao.ClusterConfigDao;
+import org.smartdata.metastore.dao.ClusterInfoDao;
 import org.smartdata.metastore.dao.CmdletDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
@@ -44,6 +44,7 @@ import org.smartdata.metastore.dao.DataNodeInfoDao;
 import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.ClusterConfig;
+import org.smartdata.model.ClusterInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
@@ -76,7 +77,6 @@ import java.util.Map;
 
 import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
 
-
 /**
  * Operations supported for upper functions.
  */
@@ -107,6 +107,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private DataNodeInfoDao dataNodeInfoDao;
   private DataNodeStorageInfoDao dataNodeStorageInfoDao;
   private BackUpInfoDao backUpInfoDao;
+  private ClusterInfoDao clusterInfoDao;
   private SystemInfoDao systemInfoDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
@@ -128,6 +129,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     dataNodeInfoDao = new DataNodeInfoDao(pool.getDataSource());
     dataNodeStorageInfoDao = new DataNodeStorageInfoDao(pool.getDataSource());
     backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
+    clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
   }
 
@@ -702,7 +704,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public List<ActionInfo> getNewCreatedActionsTableItem(
       int size) throws MetaStoreException {
-    if (size <= 0) {
+    if (size < 0) {
       return new ArrayList<>();
     }
     try {
@@ -1121,10 +1123,27 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<ClusterInfo> listAllClusterInfo() throws MetaStoreException {
+    try {
+      return clusterInfoDao.getAll();
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<SystemInfo> listAllSystemInfo() throws MetaStoreException {
     try {
       return systemInfoDao.getAll();
     } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+
+  public ClusterInfo getClusterInfoByCid(long id) throws MetaStoreException {
+    try {
+      return clusterInfoDao.getById(id);
+      } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
@@ -1141,6 +1160,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     try {
       return systemInfoDao.containsProperty(property);
     } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllClusterInfo() throws MetaStoreException {
+    try {
+      clusterInfoDao.deleteAll();
+      } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
@@ -1163,6 +1190,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteClusterInfoByCid(long cid) throws MetaStoreException {
+    try {
+      clusterInfoDao.delete(cid);
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteSystemInfoByProperty(String property) throws MetaStoreException {
     try {
       systemInfoDao.delete(property);
@@ -1171,6 +1206,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void insertClusterInfo(ClusterInfo clusterInfo) throws MetaStoreException {
+    try {
+      if (clusterInfoDao.getCountByName(clusterInfo.getName()) != 0){
+        throw new Exception("name has already exist");
+      }
+      clusterInfoDao.insert(clusterInfo);
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+      
   public void insertSystemInfo(SystemInfo systemInfo) throws MetaStoreException {
     try {
       if (systemInfoDao.containsProperty(systemInfo.getProperty())){
