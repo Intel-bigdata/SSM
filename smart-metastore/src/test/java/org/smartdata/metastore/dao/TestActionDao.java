@@ -85,13 +85,13 @@ public class TestActionDao extends TestDaoUtil {
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
         100);
-    List<ActionInfo> actionInfoList = actionDao.getLatestActions(10);
+    List<ActionInfo> actionInfoList = actionDao.getLatestActions(0);
     // Get from empty table
     Assert.assertTrue(actionInfoList.size() == 0);
     actionDao.insert(actionInfo);
     actionInfo.setActionId(2);
     actionDao.insert(actionInfo);
-    actionInfoList = actionDao.getLatestActions(10);
+    actionInfoList = actionDao.getLatestActions(0);
     Assert.assertTrue(actionInfoList.size() == 2);
     actionInfoList = actionDao.getByIds(Arrays.asList(new Long[]{1l, 2l}));
     Assert.assertTrue(actionInfoList.size() == 2);

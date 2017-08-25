@@ -29,6 +29,7 @@ import org.smartdata.metastore.dao.ActionDao;
 import org.smartdata.metastore.dao.BackUpInfoDao;
 import org.smartdata.metastore.dao.CacheFileDao;
 import org.smartdata.metastore.dao.ClusterConfigDao;
+import org.smartdata.metastore.dao.ClusterInfoDao;
 import org.smartdata.metastore.dao.CmdletDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
@@ -37,12 +38,14 @@ import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.dao.RuleDao;
 import org.smartdata.metastore.dao.StorageDao;
+import org.smartdata.metastore.dao.SystemInfoDao;
 import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.dao.DataNodeInfoDao;
 import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.ClusterConfig;
+import org.smartdata.model.ClusterInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
@@ -58,6 +61,7 @@ import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
+import org.smartdata.model.SystemInfo;
 import org.smartdata.model.XAttribute;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
@@ -105,6 +109,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private DataNodeInfoDao dataNodeInfoDao;
   private DataNodeStorageInfoDao dataNodeStorageInfoDao;
   private BackUpInfoDao backUpInfoDao;
+  private ClusterInfoDao clusterInfoDao;
+  private SystemInfoDao systemInfoDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -125,6 +131,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     dataNodeInfoDao = new DataNodeInfoDao(pool.getDataSource());
     dataNodeStorageInfoDao = new DataNodeStorageInfoDao(pool.getDataSource());
     backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
+    clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
+    systemInfoDao = new SystemInfoDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -698,7 +706,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public List<ActionInfo> getNewCreatedActionsTableItem(
       int size) throws MetaStoreException {
-    if (size <= 0) {
+    if (size < 0) {
       return new ArrayList<>();
     }
     try {
@@ -1112,6 +1120,93 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void insertBackUpInfo(BackUpInfo backUpInfo) throws MetaStoreException {
     try {
       backUpInfoDao.insert(backUpInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<ClusterInfo> listAllClusterInfo() throws MetaStoreException {
+    try {
+      return clusterInfoDao.getAll();
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<SystemInfo> listAllSystemInfo() throws MetaStoreException {
+    try {
+      return systemInfoDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+
+  public ClusterInfo getClusterInfoByCid(long id) throws MetaStoreException {
+    try {
+      return clusterInfoDao.getById(id);
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public SystemInfo getSystemInfoByProperty(String property) throws MetaStoreException {
+    try {
+      return systemInfoDao.getByProperty(property);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllClusterInfo() throws MetaStoreException {
+    try {
+      clusterInfoDao.deleteAll();
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void updateSystemInfoByProperty(String property, SystemInfo systemInfo) throws MetaStoreException {
+    try {
+      systemInfoDao.update(property, systemInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteClusterInfoByCid(long cid) throws MetaStoreException {
+    try {
+      clusterInfoDao.delete(cid);
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteSystemInfoByProperty(String property) throws MetaStoreException {
+    try {
+      systemInfoDao.delete(property);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertClusterInfo(ClusterInfo clusterInfo) throws MetaStoreException {
+    try {
+      if (clusterInfoDao.getCountByName(clusterInfo.getName()) != 0){
+        throw new Exception("name has already exist");
+      }
+      clusterInfoDao.insert(clusterInfo);
+      } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+      
+  public void insertSystemInfo(SystemInfo systemInfo) throws MetaStoreException {
+    try {
+      if (systemInfoDao.getCountByProperty(systemInfo.getProperty()) != 0){
+        throw new Exception("the system property is already exist");
+      }
+      systemInfoDao.insert(systemInfo);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
