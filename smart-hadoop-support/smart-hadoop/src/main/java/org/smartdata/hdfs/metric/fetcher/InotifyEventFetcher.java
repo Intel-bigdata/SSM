@@ -93,7 +93,6 @@ public class InotifyEventFetcher {
       EventBatch eventBatch = is.poll();
       return eventBatch != null;
     } catch (Exception e) {
-      e.printStackTrace();
       return false;
     }
   }
@@ -104,7 +103,6 @@ public class InotifyEventFetcher {
           metaStore.getSystemInfoByProperty(SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID);
       return info != null ? Long.parseLong(info.getValue()) : -1L;
     } catch (MetaStoreException e) {
-      e.printStackTrace();
       return -1L;
     }
   }
@@ -130,7 +128,7 @@ public class InotifyEventFetcher {
     try {
       finishedCallback.call();
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.error("Call back failed", e);
     }
   }
 
@@ -155,13 +153,13 @@ public class InotifyEventFetcher {
         LOG.info("Name space fetch finished.");
         finishedCallback.call();
       } catch (Exception e) {
-        e.printStackTrace();
+        LOG.error("Call back failed", e);
       }
     }
 
     @Override
     public void onFailure(Throwable throwable) {
-      throwable.printStackTrace();
+      LOG.error("NameSpaceFetcher failed", throwable);
     }
   }
 
