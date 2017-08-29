@@ -85,7 +85,6 @@
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
             <version>1.2-SNAPSHOT</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
@@ -108,6 +107,11 @@
             <artifactId>httpcore</artifactId>
             <version>4.4.4</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
         </dependency>
     </dependencies>
 
