@@ -27,6 +27,8 @@ import org.smartdata.metaservice.MetaServiceException;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.FileDiff;
+import org.smartdata.server.engine.cmdlet.Cmdlet;
 
 import java.io.IOException;
 import java.util.List;
@@ -83,6 +85,19 @@ public class CopyScheduler extends AbstractService {
         LOG.debug("Sync backUpInfos error", e);
       }
     }
+
+    private boolean diffMerge(List<FileDiff> fileDiffs) {
+      // TODO merge diffs
+      for (FileDiff fileDiff: fileDiffs) {
+
+        fileDiff.getDiffType();
+
+        fileDiff.getSrc();
+
+      }
+      return true;
+    }
+
 
     private void handleDeleteChain() {
       // TODO delete all cmdlets and add a delete cmdlet
