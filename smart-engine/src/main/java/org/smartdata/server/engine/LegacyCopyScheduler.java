@@ -93,10 +93,6 @@ public class LegacyCopyScheduler extends AbstractService {
     this.dfsClient = dfsClient;
   }
 
-  public void diffMerge(List<FileDiff> fileDiffList) {
-    // TODO merge diffs and resolve conflicts
-  }
-
   @Override
   public void init() throws IOException {
 

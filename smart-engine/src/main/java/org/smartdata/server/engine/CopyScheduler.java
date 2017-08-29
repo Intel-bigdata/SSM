@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.engine;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
@@ -29,11 +30,11 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;
-import org.smartdata.server.engine.cmdlet.Cmdlet;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -80,7 +81,29 @@ public class CopyScheduler extends AbstractService {
     // executorService.shutdown();
   }
 
+  public void forceSync(String src, String dest) throws IOException, MetaServiceException {
+    // TODO check dest statuses to avoid unnecessary copy
+    // Force Sync src and dest
+    // TODO get namespace from file table
+    // Classify files according to rules and back_up
+    // Add filediffs to file diff table
+  }
+
   private class ScheduleTask implements Runnable {
+
+    private Map<Long, FileDiff> fileDiffBatch;
+
+    /**
+     * @param sourceFile the source file we want to copy
+     * @param destFile   destination to save the different chunk of source file
+     * @return a list of copy task
+     */
+    public List<CopyTargetTask> splitCopyFile(String sourceFile,
+        String destFile)
+        throws IOException {
+      // TODO split large file in cmdlet into multiple small files
+    }
+
 
     private void syncRule() {
       try {
@@ -94,7 +117,7 @@ public class CopyScheduler extends AbstractService {
       return "";
     }
 
-    private void diffMerge(List<FileDiff> fileDiffs) {
+    private void diffMerge(List<FileDiff> fileDiffs) throws MetaServiceException {
       // Merge all existing fileDiffs into fileChains
       Map<String, FileChain> fileChainMap = new HashMap<>();
       for (FileDiff fileDiff: fileDiffs) {
@@ -121,9 +144,28 @@ public class CopyScheduler extends AbstractService {
       }
     }
 
-    private void handleFileChain(FileChain fileChain) {
-      
-      copyMetaService.markFileDiffApplied();
+    private void handleFileChain(FileChain fileChain) throws MetaServiceException {
+      Map<String, String> parameters = new HashMap<>();
+      List<FileDiff> resultSet = new ArrayList<>();
+      for (Long fid: fileChain.getFillDiffChain()) {
+        // TODO Append
+        FileDiff fileDiff = new FileDiff();
+        FileDiff currFileDiff = fileDiffBatch.get(fid);
+        if (currFileDiff.getDiffType() == FileDiffType.APPEND) {
+          // Add length to current
+          fileDiff.setParameters("");
+        } else if (currFileDiff.getDiffType() == FileDiffType.DELETE) {
+          FileDiff deleteFileDiff = new FileDiff();
+          copyMetaService.insertFileDiff(deleteFileDiff);
+        } else if (currFileDiff.getDiffType() == FileDiffType.RENAME) {
+          fileDiff.setSrc("");
+        }
+      }
+      // copyMetaService.markFileDiffApplied();
+      // Insert filediff into tables
+      for (FileDiff fileDiff: resultSet) {
+        copyMetaService.insertFileDiff(fileDiff);
+      }
     }
 
 
@@ -189,6 +231,14 @@ public class CopyScheduler extends AbstractService {
       public FileChain(String curr) {
         this();
         this.head = curr;
+      }
+
+      public List<Long> getFillDiffChain() {
+        return fillDiffChain;
+      }
+
+      public void setFillDiffChain(List<Long> fillDiffChain) {
+        this.fillDiffChain = fillDiffChain;
       }
     }
   }
