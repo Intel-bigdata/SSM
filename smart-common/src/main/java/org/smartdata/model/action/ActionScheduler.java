@@ -17,15 +17,50 @@
  */
 package org.smartdata.model.action;
 
+import org.smartdata.model.ActionInfo;
 import org.smartdata.model.LaunchAction;
 
 import java.util.List;
 
-public interface ActionPreProcessor {
+public interface ActionScheduler {
 
   List<String> getSupportedActions();
 
-  void beforeExecution(LaunchAction action);
+  /**
+   * Called when new action submitted to CmdletManager.
+   *
+   * @param actionInfo
+   * @return acceptable if true, or discard
+   */
+  boolean onSubmit(ActionInfo actionInfo);
 
-  void afterExecution(LaunchAction action);
+  /**
+   * Trying to schedule an action for Dispatch.
+   * @param actionInfo
+   * @param action
+   * @return
+   */
+  ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action);
+
+  /**
+   * Called after and an Cmdlet get scheduled.
+   *
+   * @param actionInfo
+   * @param result
+   */
+  void postSchedule(ActionInfo actionInfo, ScheduleResult result);
+
+  /**
+   *  Called just before dispatch for execution.
+   *
+   * @param action
+   */
+  void onPreDispatch(LaunchAction action);
+
+  /**
+   *  Called when action finished execution.
+   *
+   * @param actionInfo
+   */
+  void onActionFinished(ActionInfo actionInfo);
 }
