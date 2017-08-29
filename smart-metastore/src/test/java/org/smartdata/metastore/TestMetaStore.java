@@ -704,7 +704,15 @@ public class TestMetaStore extends TestDaoUtil {
     SystemInfo systemInfo = new SystemInfo("test", "test");
     metaStore.insertSystemInfo(systemInfo);
     SystemInfo newSystemInfo = new SystemInfo("test", "test1");
-    metaStore.updateSystemInfoByProperty("test", newSystemInfo);
+    metaStore.updateSystemInfo(newSystemInfo);
     Assert.assertTrue(metaStore.getSystemInfoByProperty("test").equals(newSystemInfo));
+  }
+
+  @Test
+  public void testUpdateAndInsertSystemInfo() throws MetaStoreException {
+    SystemInfo systemInfo = new SystemInfo("test", "test");
+    metaStore.updateAndInsertIfNotExist(systemInfo);
+    Assert.assertTrue(metaStore.containSystemInfo("test"));
+    Assert.assertTrue(metaStore.getSystemInfoByProperty("test").equals(systemInfo));
   }
 }

@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metaservice.BackupMetaService;
@@ -77,7 +76,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
-
 
 /**
  * Operations supported for upper functions.
@@ -1158,6 +1156,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public boolean containSystemInfo(String property) throws MetaStoreException {
+    try {
+      return systemInfoDao.containsProperty(property);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteAllClusterInfo() throws MetaStoreException {
     try {
       clusterInfoDao.deleteAll();
@@ -1166,9 +1172,19 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void updateSystemInfoByProperty(String property, SystemInfo systemInfo) throws MetaStoreException {
+  public void updateSystemInfo(SystemInfo systemInfo) throws MetaStoreException {
     try {
-      systemInfoDao.update(property, systemInfo);
+      systemInfoDao.update(systemInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void updateAndInsertIfNotExist(SystemInfo systemInfo) throws MetaStoreException {
+    try {
+      if (systemInfoDao.update(systemInfo) <= 0) {
+        systemInfoDao.insert(systemInfo);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1203,8 +1219,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       
   public void insertSystemInfo(SystemInfo systemInfo) throws MetaStoreException {
     try {
-      if (systemInfoDao.getCountByProperty(systemInfo.getProperty()) != 0){
-        throw new Exception("the system property is already exist");
+      if (systemInfoDao.containsProperty(systemInfo.getProperty())){
+        throw new Exception("The system property already exists");
       }
       systemInfoDao.insert(systemInfo);
     } catch (Exception e) {
