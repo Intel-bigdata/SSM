@@ -88,6 +88,7 @@ public class InotifyEventApplier {
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CloseEvent) event).getPath());
         fileDiff.setDiffType(FileDiffType.APPEND);
+        // TODO add previous length
         fileDiff.setSrc(String.format("%s", ((Event.CloseEvent) event).getPath()));
         fileDiff.setParameters(String.format("-length %s",
             ((Event.CloseEvent) event).getFileSize()));

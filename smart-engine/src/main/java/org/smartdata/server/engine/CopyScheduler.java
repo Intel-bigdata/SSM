@@ -28,10 +28,14 @@ import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffType;
 import org.smartdata.server.engine.cmdlet.Cmdlet;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -86,31 +90,42 @@ public class CopyScheduler extends AbstractService {
       }
     }
 
-    private boolean diffMerge(List<FileDiff> fileDiffs) {
-      // TODO merge diffs
+    private String getDestFromParameter(String parameter) {
+      return "";
+    }
+
+    private void diffMerge(List<FileDiff> fileDiffs) {
+      // Merge all existing fileDiffs into fileChains
+      Map<String, FileChain> fileChainMap = new HashMap<>();
       for (FileDiff fileDiff: fileDiffs) {
-
-        fileDiff.getDiffType();
-
-        fileDiff.getSrc();
-
+        FileChain fileChain;
+        String src = fileDiff.getSrc();
+        if (fileChainMap.containsKey(src)) {
+          fileChain = fileChainMap.get(src);
+        } else {
+          fileChain = new FileChain();
+          fileChainMap.put(src, fileChain);
+        }
+        if (fileDiff.getDiffType() == FileDiffType.RENAME) {
+          String dest = getDestFromParameter(fileDiff.getParameters());
+          fileChain.tail = dest;
+          // Update key in map
+          fileChainMap.remove(src);
+          fileChainMap.put(dest, fileChain);
+        }
+        fileChain.fillDiffChain.add(fileDiff.getDiffId());
       }
-      return true;
+      // Handle fileChains
+      for (FileChain fileChain: fileChainMap.values()) {
+        handleFileChain(fileChain);
+      }
     }
 
-
-    private void handleDeleteChain() {
-      // TODO delete all cmdlets and add a delete cmdlet
+    private void handleFileChain(FileChain fileChain) {
+      
+      copyMetaService.markFileDiffApplied();
     }
 
-    private void handleRenameChain() {
-      // TODO Copy and merge rename cmdlets
-    }
-
-    private void handleCopyChain() {
-      // TODO Merge and split large files
-
-    }
 
     private void processCmdletByRule(BackUpInfo backUpInfo) {
       long rid = backUpInfo.getRid();
@@ -162,8 +177,19 @@ public class CopyScheduler extends AbstractService {
     private class FileChain {
       private String head;
       private String tail;
-      private List<Long> cmdletChain;
+      private List<Long> fillDiffChain;
       private int state;
+
+      FileChain() {
+        this.fillDiffChain = new ArrayList<>();
+        this.tail = null;
+        this.head = null;
+      }
+
+      public FileChain(String curr) {
+        this();
+        this.head = curr;
+      }
     }
   }
 }
