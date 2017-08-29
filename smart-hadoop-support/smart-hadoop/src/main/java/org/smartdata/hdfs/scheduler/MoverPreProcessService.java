@@ -30,8 +30,10 @@ import org.smartdata.hdfs.metric.fetcher.DatanodeStorageReportProcTask;
 import org.smartdata.hdfs.metric.fetcher.MoverProcessor;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.model.ActionInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.FileMovePlan;
+import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
 import java.net.URI;
@@ -98,14 +100,14 @@ public class MoverPreProcessService extends ActionSchedulerService {
     return actions;
   }
 
-  public void beforeExecution(LaunchAction action) {
+  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     if (!actions.contains(action.getActionType())) {
-      return;
+      return ScheduleResult.SUCCESS;
     }
 
     String file = action.getArgs().get(HdfsAction.FILE_PATH);
     if (file == null) {
-      return;
+      return ScheduleResult.FAIL;
     }
 
     String policy = null;
@@ -126,12 +128,24 @@ public class MoverPreProcessService extends ActionSchedulerService {
       FileMovePlan plan = processor.processNamespace(new Path(file));
       plan.setNamenode(nnUri);
       action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
+      return ScheduleResult.SUCCESS;
     } catch (IOException e) {
       LOG.error("Exception while processing " + action, e);
+      return ScheduleResult.FAIL;
     }
   }
 
-  public void afterExecution(LaunchAction action) {
+  public void postSchedule(ActionInfo actionInfo, ScheduleResult result) {
+  }
+
+  public void onPreDispatch(LaunchAction action) {
+  }
+
+  public boolean onSubmit(ActionInfo actionInfo) {
+    return true;
+  }
+
+  public void onActionFinished(ActionInfo actionInfo) {
 
   }
 

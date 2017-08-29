@@ -15,17 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore;
+package org.smartdata.model.action;
 
-import org.smartdata.AbstractService;
-import org.smartdata.SmartContext;
-import org.smartdata.model.action.ActionScheduler;
+// TODO: to be implemented
+public interface CmdletScheduler {
 
-public abstract class ActionSchedulerService extends AbstractService implements ActionScheduler {
-  private MetaStore metaStore;
+  boolean onSubmitCmdlet();
+  boolean postSubmitCmdlet();
 
-  public ActionSchedulerService(SmartContext context, MetaStore metaStore) {
-    super(context);
-    this.metaStore = metaStore;
-  }
+  ScheduleResult onSchedule();
+  void postSchedule();
+
+  void onDispatch();
+
+  void onActionMessage();
+  void onCmdletFinished();
 }

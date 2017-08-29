@@ -22,14 +22,15 @@ package org.smartdata.model;
  */
 public enum CmdletState {
   NOTINITED(0),
-  PENDING(1), // Ready for execution
+  PENDING(1), // Ready for schedule
   EXECUTING(2), // Still running
   PAUSED(3),
   DONE(4), // Execution successful
   CANCELLED(5),
   DISABLED(6), // Disable this Cmdlet, kill all executing actions
-  DRYRUN(7), // TODO Don't Run, but keep status
-  FAILED(8);  // Running cmdlet failed
+  DRYRUN(7),   // TODO Don't Run, but keep status
+  FAILED(8),   // Running cmdlet failed
+  SCHEDULED(9);
 
   private int value;
 
