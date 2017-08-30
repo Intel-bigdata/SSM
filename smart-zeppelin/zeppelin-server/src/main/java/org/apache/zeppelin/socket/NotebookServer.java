@@ -267,6 +267,12 @@ public class NotebookServer extends WebSocketServlet
           case COMMIT_PARAGRAPH:
             LOG.info("COMMIT_PARAGRAPH..........................");
             break;
+          case ADD_RULE:
+            updateParagraph(conn, userAndRoles, notebook, messagereceived, "rule");
+            break;
+          case RUN_ACTION:
+            updateParagraph(conn, userAndRoles, notebook, messagereceived, "action");
+            break;
           case RUN_PARAGRAPH:
             updateParagraph(conn, userAndRoles, notebook, messagereceived);
 //            runParagraph(conn, userAndRoles, notebook, messagereceived);
@@ -1177,6 +1183,74 @@ public class NotebookServer extends WebSocketServlet
     if (note.isPersonalizedMode()) {
       Map<String, Paragraph> userParagraphMap =
           note.getParagraph(paragraphId).getUserParagraphMap();
+      broadcastParagraphs(userParagraphMap);
+    } else {
+      broadcastParagraph(note, p);
+    }
+  }
+
+  private void updateParagraph(NotebookSocket conn, HashSet<String> userAndRoles,
+                               Notebook notebook, Message fromMessage, String type
+                               ) throws IOException {
+    String paragraphId = (String) fromMessage.get("id");
+    if (paragraphId == null) {
+      LOG.error("paragraphId is null.");
+      return;
+    }
+
+    Map<String, Object> params = (Map<String, Object>) fromMessage.get("params");
+    Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+    NotebookAuthorization notebookAuthorization = notebook.getNotebookAuthorization();
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "write", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
+      return;
+    }
+
+    String text = (String) fromMessage.get("paragraph");
+
+    Paragraph p = note.getParagraph(paragraphId);
+
+    if (note.isPersonalizedMode()) {
+      p = p.getUserParagraphMap().get(subject.getUser());
+    }
+
+    p.settings.setParams(params);
+    p.setConfig(config);
+    p.setTitle((String) fromMessage.get("title"));
+    p.setText((String) fromMessage.get("paragraph"));
+
+    subject = new AuthenticationInfo(fromMessage.principal);
+    if (note.isPersonalizedMode()) {
+      p = p.getUserParagraph(subject.getUser());
+      p.settings.setParams(params);
+      p.setConfig(config);
+      p.setTitle((String) fromMessage.get("title"));
+      p.setText((String) fromMessage.get("paragraph"));
+    }
+//    note.persist(subject);
+
+    SmartInterpreter smartInterpreter = null;
+    if (type.equals("action")) {
+      smartInterpreter = new ActionInterpreter(smartEngine);
+    } else if (type.equals("rule")) {
+      smartInterpreter = new RuleInterpreter(smartEngine);
+    }
+    try {
+      String result = smartInterpreter.excute(text);
+      p.setStatus(Status.FINISHED);
+      p.setResult(new InterpreterResult(InterpreterResult.Code.SUCCESS, "%html " + result));
+    } catch (IOException e) {
+      p.setReturn(new InterpreterResult(InterpreterResult.Code.ERROR, e.getMessage()), e);
+      p.setStatus(Status.ERROR);
+    }
+
+    if (note.isPersonalizedMode()) {
+      Map<String, Paragraph> userParagraphMap =
+              note.getParagraph(paragraphId).getUserParagraphMap();
       broadcastParagraphs(userParagraphMap);
     } else {
       broadcastParagraph(note, p);
