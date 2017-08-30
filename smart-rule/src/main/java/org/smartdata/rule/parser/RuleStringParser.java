@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.rule.TranslateResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

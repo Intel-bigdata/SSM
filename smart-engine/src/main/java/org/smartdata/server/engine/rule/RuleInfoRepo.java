@@ -22,7 +22,7 @@ import org.smartdata.model.RuleState;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.rule.parser.RuleStringParser;
-import org.smartdata.rule.parser.TranslateResult;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.data.ExecutionContext;
