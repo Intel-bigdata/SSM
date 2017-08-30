@@ -26,8 +26,10 @@ import org.smartdata.model.RuleState;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.dao.AccessCountTable;
-import org.smartdata.rule.parser.TimeBasedScheduleInfo;
-import org.smartdata.rule.parser.TranslateResult;
+import org.smartdata.model.rule.RuleExecutorPlugin;
+import org.smartdata.model.rule.RuleExecutorPluginManager;
+import org.smartdata.model.rule.TimeBasedScheduleInfo;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.data.ExecutionContext;
 
@@ -233,6 +235,8 @@ public class RuleExecutor implements Runnable {
       exitSchedule();
     }
 
+    List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
+
     long rid = ctx.getRuleId();
     try {
       long startCheckTime = System.currentTimeMillis();
@@ -240,7 +244,20 @@ public class RuleExecutor implements Runnable {
         exitSchedule();
       }
 
+      long endCheckTime;
+      int numCmdSubmitted = 0;
+      List<String> files = new ArrayList<>();
+
       RuleInfo info = ruleManager.getRuleInfo(rid);
+
+      boolean doExec = true;
+      for (RuleExecutorPlugin plugin : plugins) {
+        doExec &= plugin.preExecution(info, tr);
+        if (!doExec) {
+          break;
+        }
+      }
+
       RuleState state = info.getState();
       if (exited || state == RuleState.DELETED || state == RuleState.FINISHED
           || state == RuleState.DISABLED) {
@@ -260,9 +277,16 @@ public class RuleExecutor implements Runnable {
       }
 
 
-      List<String> files = executeFileRuleQuery();
-      long endCheckTime = System.currentTimeMillis();
-      int numCmdSubmitted = submitCmdlets(files, rid);
+      if (doExec) {
+        files = executeFileRuleQuery();
+      }
+      endCheckTime = System.currentTimeMillis();
+      if (doExec) {
+        for (RuleExecutorPlugin plugin : plugins) {
+          files = plugin.preSubmitCmdlet(info, files);
+        }
+        numCmdSubmitted = submitCmdlets(files, rid);
+      }
       ruleManager.updateRuleInfo(rid, null,
           System.currentTimeMillis(), 1, numCmdSubmitted);
       if (exited) {

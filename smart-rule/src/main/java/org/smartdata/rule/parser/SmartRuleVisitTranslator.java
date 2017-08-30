@@ -21,6 +21,8 @@ package org.smartdata.rule.parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.rule.TimeBasedScheduleInfo;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;
 import org.smartdata.rule.objects.PropertyRealParas;
