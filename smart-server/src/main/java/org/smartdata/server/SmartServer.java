@@ -127,6 +127,19 @@ public class SmartServer {
   }
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
+    SmartServer ssm = new SmartServer(conf);
+
+    if (ssm.isTidbEnabled()) {
+      Thread db = new Thread(new Launch());
+      LOG.info("Starting PD, TiKV and TiDB..");
+      db.start();
+      try {
+        Thread.sleep(12000);
+      } catch (InterruptedException ex) {
+        LOG.error(ex.getMessage());
+      }
+    }
+
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
@@ -134,7 +147,6 @@ public class SmartServer {
       return null;
     }
 
-    SmartServer ssm = new SmartServer(conf);
     try {
       ssm.initWith(startOption);
       ssm.run();
@@ -187,6 +199,10 @@ public class SmartServer {
   private boolean isZeppelinEnabled() {
     return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN,
         SmartConfKeys.SMART_ENABLE_ZEPPELIN_DEFAULT);
+  }
+
+  private boolean isTidbEnabled() {
+    return conf.getBoolean(SmartConfKeys.SMART_TIDB_ENABLED,SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
   }
 
   private void checkSecurityAndLogin() throws IOException {
@@ -332,16 +348,6 @@ public class SmartServer {
 
   public static void main(String[] args) {
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
-
-    Thread db=new Thread(new Launch());
-    LOG.info("Starting PD, TiKV and TiDB..");
-    db.start();
-    try {
-      Thread.sleep(10000);
-    }
-    catch (InterruptedException ex){
-      LOG.error(ex.getMessage());
-    }
 
     try {
       final SmartServer inst = launchWith(args, null);

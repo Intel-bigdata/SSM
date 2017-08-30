@@ -17,6 +17,8 @@
  */
 package org.smartdata.conf;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 /**
  * This class contains the configure keys needed by SSM.
  */
@@ -66,4 +68,8 @@ public class SmartConfKeys {
   // SmartClient
   // Comma delimited directories, access event of files under these directories will not be reported to SSM.
   public static final String SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY = "smart.client.ignore.access.event.dirs";
+
+  //Tidb
+  public final static String SMART_TIDB_ENABLED = "smart.tidb.enable";
+  public final static boolean SMART_TIDB_ENABLED_DEFAULT = false;
 }
