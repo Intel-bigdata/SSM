@@ -29,6 +29,7 @@ import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 
 import java.io.IOException;
@@ -93,24 +94,23 @@ public class CopyScheduler extends AbstractService {
 
     private Map<Long, FileDiff> fileDiffBatch;
 
-    /**
-     * @param sourceFile the source file we want to copy
-     * @param destFile   destination to save the different chunk of source file
-     * @return a list of copy task
-     */
-    public List<CopyTargetTask> splitCopyFile(String sourceFile,
-        String destFile)
-        throws IOException {
-      // TODO split large file in cmdlet into multiple small files
-    }
-
-
     private void syncRule() {
       try {
         backUpInfos = backupMetaService.listAllBackUpInfo();
       } catch (MetaServiceException e) {
         LOG.debug("Sync backUpInfos error", e);
       }
+    }
+
+    private void syncFileDiff() {
+      List pendingDiffs = null;
+      try {
+        pendingDiffs = copyMetaService.getPendingDiff();
+        diffMerge(pendingDiffs);
+      } catch (MetaServiceException e) {
+        LOG.debug("Sync fileDiffs error", e);
+      }
+
     }
 
     private String getDestFromParameter(String parameter) {
@@ -145,21 +145,25 @@ public class CopyScheduler extends AbstractService {
     }
 
     private void handleFileChain(FileChain fileChain) throws MetaServiceException {
-      Map<String, String> parameters = new HashMap<>();
       List<FileDiff> resultSet = new ArrayList<>();
       for (Long fid: fileChain.getFillDiffChain()) {
-        // TODO Append
+        // TODO get parameter map from parameters string
+        Map<String, String> parameters = new HashMap<>();
+        // Current append diff
         FileDiff fileDiff = new FileDiff();
         FileDiff currFileDiff = fileDiffBatch.get(fid);
         if (currFileDiff.getDiffType() == FileDiffType.APPEND) {
-          // Add length to current
-          fileDiff.setParameters("");
+          // TODO Add incremental length to current
+          fileDiff.setParameters(parameters.get("length"));
         } else if (currFileDiff.getDiffType() == FileDiffType.DELETE) {
           FileDiff deleteFileDiff = new FileDiff();
-          copyMetaService.insertFileDiff(deleteFileDiff);
+          // TODO add deleteFileDiff content
+          deleteFileDiff.setSrc(currFileDiff.getSrc());
+          resultSet.add(deleteFileDiff);
         } else if (currFileDiff.getDiffType() == FileDiffType.RENAME) {
           fileDiff.setSrc("");
         }
+        copyMetaService.markFileDiffApplied(fid, FileDiffState.MERGED);
       }
       // copyMetaService.markFileDiffApplied();
       // Insert filediff into tables
@@ -208,8 +212,11 @@ public class CopyScheduler extends AbstractService {
 
     @Override
     public void run() {
+      // Sync backup rules
       syncRule();
-      // TODO check dryRun DR (Copy, Rename) cmdlets
+      // Sync/schedule file diffs
+      syncFileDiff();
+      // Schedule backup cmdlets
       for (BackUpInfo backUpInfo : backUpInfos) {
         // Go through all backup rules
         processCmdletByRule(backUpInfo);
