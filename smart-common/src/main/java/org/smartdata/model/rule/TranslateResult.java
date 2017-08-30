@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.rule.parser;
+package org.smartdata.model.rule;
 
 import org.smartdata.model.CmdletDescriptor;
 
