@@ -279,6 +279,9 @@ public class RuleExecutor implements Runnable {
 
       if (doExec) {
         files = executeFileRuleQuery();
+        if (exited) {
+          exitSchedule();
+        }
       }
       endCheckTime = System.currentTimeMillis();
       if (doExec) {
