@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.engine;
 
-import org.apache.commons.collections.map.HashedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
@@ -35,7 +34,6 @@ import org.smartdata.model.FileDiffType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -44,19 +42,19 @@ import java.util.concurrent.ScheduledExecutorService;
 public class CopyScheduler extends AbstractService {
   static final Logger LOG =
       LoggerFactory.getLogger(CopyScheduler.class);
-
+  // Fixed rate scheduler
   private ScheduledExecutorService executorService;
   private CmdletManager cmdletManager;
-
+  // Metastore service
   private CopyMetaService copyMetaService;
   private CmdletMetaService cmdletMetaService;
   private BackupMetaService backupMetaService;
-
+  // Global variables
   private List<BackUpInfo> backUpInfos;
+
 
   public CopyScheduler(ServerContext context) {
     super(context);
-
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.copyMetaService = (CopyMetaService) context.getMetaService();
     this.cmdletMetaService = (CmdletMetaService) context.getMetaService();
@@ -87,7 +85,7 @@ public class CopyScheduler extends AbstractService {
     // Force Sync src and dest
     // TODO get namespace from file table
     // Classify files according to rules and back_up
-    // Add filediffs to file diff table
+    // Add file diffs to file diff table
   }
 
   private class ScheduleTask implements Runnable {
@@ -103,14 +101,14 @@ public class CopyScheduler extends AbstractService {
     }
 
     private void syncFileDiff() {
-      List pendingDiffs = null;
+      fileDiffBatch = new HashMap<>();
+      List<FileDiff> pendingDiffs = null;
       try {
         pendingDiffs = copyMetaService.getPendingDiff();
         diffMerge(pendingDiffs);
       } catch (MetaServiceException e) {
         LOG.debug("Sync fileDiffs error", e);
       }
-
     }
 
     private String getDestFromParameter(String parameter) {
@@ -123,6 +121,8 @@ public class CopyScheduler extends AbstractService {
       for (FileDiff fileDiff: fileDiffs) {
         FileChain fileChain;
         String src = fileDiff.getSrc();
+        fileDiffBatch.put(fileDiff.getDiffId(), fileDiff);
+        // Get or create fileChain
         if (fileChainMap.containsKey(src)) {
           fileChain = fileChainMap.get(src);
         } else {
@@ -136,9 +136,10 @@ public class CopyScheduler extends AbstractService {
           fileChainMap.remove(src);
           fileChainMap.put(dest, fileChain);
         }
+        // Add file diff to fileChain
         fileChain.fillDiffChain.add(fileDiff.getDiffId());
       }
-      // Handle fileChains
+      // Handle all existing fileChains
       for (FileChain fileChain: fileChainMap.values()) {
         handleFileChain(fileChain);
       }
@@ -166,7 +167,7 @@ public class CopyScheduler extends AbstractService {
         copyMetaService.markFileDiffApplied(fid, FileDiffState.MERGED);
       }
       // copyMetaService.markFileDiffApplied();
-      // Insert filediff into tables
+      // Insert file diffs into tables
       for (FileDiff fileDiff: resultSet) {
         copyMetaService.insertFileDiff(fileDiff);
       }
