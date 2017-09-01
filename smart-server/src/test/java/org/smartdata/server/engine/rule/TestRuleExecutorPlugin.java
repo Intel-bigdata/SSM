@@ -53,7 +53,7 @@ public class TestRuleExecutorPlugin extends MiniSmartClusterHarness {
     Assert.assertTrue(plugin.getNumOnRuleExecutorExit() == 0);
 
     client.disableRule(ruleId, true);
-    Thread.sleep(2100);
+    Thread.sleep(1100);
     int numPreExecution = plugin.getNumPreExecution();
     int numPreSubmitCmdlet = plugin.getNumPreSubmitCmdlet();
     Thread.sleep(2500);
@@ -70,10 +70,10 @@ public class TestRuleExecutorPlugin extends MiniSmartClusterHarness {
   }
 
   private class TestPlugin implements RuleExecutorPlugin {
-    private int numOnNewRuleExecutor = 0;
-    private int numPreExecution = 0;
-    private int numPreSubmitCmdlet = 0;
-    private int numOnRuleExecutorExit = 0;
+    private volatile int numOnNewRuleExecutor = 0;
+    private volatile int numPreExecution = 0;
+    private volatile int numPreSubmitCmdlet = 0;
+    private volatile int numOnRuleExecutorExit = 0;
 
     public TestPlugin() {
     }
