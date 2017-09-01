@@ -22,6 +22,16 @@ import org.smartdata.model.RuleInfo;
 import java.util.List;
 
 public interface RuleExecutorPlugin {
+
+  /**
+   * Called just before an RuleExecutor been generated and submitted to
+   * thread pool for execution. Only called once per instance.
+   *
+   * @param ruleInfo
+   * @param tResult
+   */
+  void onNewRuleExecutor(final RuleInfo ruleInfo, TranslateResult tResult);
+
   /**
    * Called just before rule executor begin to execute rule.
    *
@@ -29,7 +39,7 @@ public interface RuleExecutorPlugin {
    * @param tResult
    * @return continue this execution if true.
    */
-  boolean preExecution(RuleInfo ruleInfo, TranslateResult tResult);
+  boolean preExecution(final RuleInfo ruleInfo, TranslateResult tResult);
 
   /**
    * Called after rule condition checked.
@@ -37,5 +47,12 @@ public interface RuleExecutorPlugin {
    * @param objects the result of checking rule condition.
    * @return object list that will be used for Cmdlet submission.
    */
-  List<String> preSubmitCmdlet(RuleInfo ruleInfo, List<String> objects);
+  List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects);
+
+  /**
+   * Called when an RuleExecutor exits. Called only once per instance.
+   *
+   * @param ruleInfo
+   */
+  void onRuleExecutorExit(final RuleInfo ruleInfo);
 }
