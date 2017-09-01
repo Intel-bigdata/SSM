@@ -72,7 +72,7 @@ public class TestSystemInfoDao extends TestDaoUtil {
     systemInfoDao.insert(systemInfo);
 
     SystemInfo newSystemInfo = new SystemInfo("test", "test1");
-    systemInfoDao.update("test", newSystemInfo);
+    systemInfoDao.update(newSystemInfo);
     Assert.assertTrue(systemInfoDao.getByProperty("test").equals(newSystemInfo));
   }
 }

@@ -26,7 +26,7 @@ import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import java.util.ArrayList;
 import java.util.List;
 
-//Todo: extract the schedule implementation
+//Todo: extract the onSchedule implementation
 public class CmdletDispatcher {
   private Logger LOG = LoggerFactory.getLogger(CmdletDispatcher.class);
   private List<CmdletExecutorService> executorServices;

@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -29,8 +30,10 @@ import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.SmartConstants;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.SystemInfo;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -46,7 +49,8 @@ public class InotifyEventFetcher {
   private final NamespaceFetcher nameSpaceFetcher;
   private final ScheduledExecutorService scheduledExecutorService;
   private final InotifyEventApplier applier;
-  private Callable fetchFinishedCallback;
+  private final MetaStore metaStore;
+  private Callable finishedCallback;
   private ScheduledFuture inotifyFetchFuture;
   private ScheduledFuture fetchAndApplyFuture;
   private EventApplyTask eventApplyTask;
@@ -64,12 +68,46 @@ public class InotifyEventFetcher {
       ScheduledExecutorService service, InotifyEventApplier applier, Callable callBack) {
     this.client = client;
     this.applier = applier;
+    this.metaStore = metaStore;
     this.scheduledExecutorService = service;
-    this.fetchFinishedCallback = callBack;
+    this.finishedCallback = callBack;
     this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service);
   }
 
   public void start() throws IOException {
+    Long lastTxid = getLastTxid();
+    if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)) {
+      startFromLastTxid(lastTxid);
+    } else {
+      startWithFetchingNameSpace();
+    }
+  }
+
+  @VisibleForTesting
+  static boolean canContinueFromLastTxid(DFSClient client, Long lastId) {
+    try {
+      if (client.getNamenode().getCurrentEditLogTxid() == lastId) {
+        return true;
+      }
+      DFSInotifyEventInputStream is = client.getInotifyEventStream(lastId);
+      EventBatch eventBatch = is.poll();
+      return eventBatch != null;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private Long getLastTxid() {
+    try {
+      SystemInfo info =
+          metaStore.getSystemInfoByProperty(SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID);
+      return info != null ? Long.parseLong(info.getValue()) : -1L;
+    } catch (MetaStoreException e) {
+      return -1L;
+    }
+  }
+
+  private void startWithFetchingNameSpace() throws IOException {
     ListeningExecutorService listeningExecutorService = MoreExecutors.listeningDecorator(scheduledExecutorService);
     inotifyFile = new File("/tmp/inotify" + new Random().nextLong());
     queueFile = new QueueFile(inotifyFile);
@@ -77,48 +115,63 @@ public class InotifyEventFetcher {
     LOG.info("Start fetching namespace with current edit log txid = " + startId);
     nameSpaceFetcher.startFetch();
     inotifyFetchFuture = scheduledExecutorService.scheduleAtFixedRate(
-        new InotifyFetchTask(queueFile, client, startId), 0, 100, TimeUnit.MILLISECONDS);
+      new InotifyFetchTask(queueFile, client, startId), 0, 100, TimeUnit.MILLISECONDS);
     eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile, startId);
     ListenableFuture<?> future = listeningExecutorService.submit(eventApplyTask);
     Futures.addCallback(future, new NameSpaceFetcherCallBack(), scheduledExecutorService);
     LOG.info("Start apply iNotify events.");
   }
 
+  private void startFromLastTxid(long lastId) throws IOException {
+    LOG.info("Skipped fetching Name Space, start applying inotify events from " + lastId);
+    submitFetchAndApplyTask(lastId);
+    try {
+      finishedCallback.call();
+    } catch (Exception e) {
+      LOG.error("Call back failed", e);
+    }
+  }
+
+  private void submitFetchAndApplyTask(long lastId) throws IOException {
+    fetchAndApplyFuture =
+        scheduledExecutorService.scheduleAtFixedRate(
+            new InotifyFetchAndApplyTask(client, metaStore, applier, lastId),
+            0,
+            100,
+            TimeUnit.MILLISECONDS);
+  }
+
   private class NameSpaceFetcherCallBack implements FutureCallback<Object> {
 
     @Override
     public void onSuccess(@Nullable Object o) {
-      long lastId = eventApplyTask.getLastId();
       inotifyFetchFuture.cancel(false);
       nameSpaceFetcher.stop();
       try {
         queueFile.close();
-        InotifyFetchAndApplyTask fetchAndApplyTask =
-          new InotifyFetchAndApplyTask(client, applier, lastId);
-        fetchAndApplyFuture = scheduledExecutorService.scheduleAtFixedRate(
-          fetchAndApplyTask, 0, 100, TimeUnit.MILLISECONDS);
+        submitFetchAndApplyTask(eventApplyTask.getLastId());
         LOG.info("Name space fetch finished.");
-        fetchFinishedCallback.call();
+        finishedCallback.call();
       } catch (Exception e) {
-        e.printStackTrace();
+        LOG.error("Call back failed", e);
       }
     }
 
     @Override
     public void onFailure(Throwable throwable) {
-      throwable.printStackTrace();
+      LOG.error("NameSpaceFetcher failed", throwable);
     }
   }
 
   public void stop() {
     if (inotifyFile != null) {
-      this.inotifyFile.delete();
+      inotifyFile.delete();
     }
     if (inotifyFetchFuture != null) {
-      this.inotifyFetchFuture.cancel(false);
+      inotifyFetchFuture.cancel(false);
     }
-    if (this.fetchAndApplyFuture != null){
-      this.fetchAndApplyFuture.cancel(false);
+    if (fetchAndApplyFuture != null){
+      fetchAndApplyFuture.cancel(false);
     }
   }
 

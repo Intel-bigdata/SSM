@@ -19,9 +19,9 @@ package org.smartdata.metastore;
 
 import org.smartdata.AbstractService;
 import org.smartdata.SmartContext;
-import org.smartdata.model.action.ActionPreProcessor;
+import org.smartdata.model.action.ActionScheduler;
 
-public abstract class ActionSchedulerService extends AbstractService implements ActionPreProcessor {
+public abstract class ActionSchedulerService extends AbstractService implements ActionScheduler {
   private MetaStore metaStore;
 
   public ActionSchedulerService(SmartContext context, MetaStore metaStore) {
