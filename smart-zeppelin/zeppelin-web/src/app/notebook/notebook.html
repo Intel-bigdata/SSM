@@ -12,11 +12,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <!-- Here the controller <NotebookCtrl> is not needed because explicitly set in the app.js (route) -->
-<div id="actionbar" ng-include src="'app/notebook/notebook-actionBar.html'"></div>
+<!--<div id="actionbar" ng-include src="'app/notebook/notebook-actionBar.html'"></div>-->
 <div id="content" class="notebookContent" style="height: 100%;background-color: white;">
-  <div class="col-md-4" style="height: 100%; overflow: hidden;">
+  <div class="col-xs-4 box" style="height: 100%; overflow: hidden;">
     <ul class="list-group" style="height: 100%; overflow-y: auto;">
-      <li class="list-group-item disabled" style="border: 0px solid transparent">Rule List</li>
+      <h4>Rule List</h4>
       <li ng-repeat="rule in rules" class="list-group-item" style="border: 0px solid transparent">
         {{rule.ruleText}}
       </li>
@@ -28,14 +28,14 @@ limitations under the License.
        ng-controller="ParagraphCtrl"
        ng-init="init(currentParagraph, note)"
        ng-class="columnWidthClass(currentParagraph.config.colWidth)"
-       style="margin: 0; padding: 0; height: 100%">
+       style="margin: 0; padding: 0; height: 50%;">
     <div id="{{currentParagraph.id}}_paragraphColumn"
          ng-include src="'app/notebook/paragraph/paragraph.html'"
          ng-class="{'paragraph-space box paragraph-margin': !asIframe, 'focused': paragraphFocused,
                     'lastEmptyParagraph': !paragraph.text && !paragraph.result}"
          ng-hide="currentParagraph.config.tableHide && viewOnly"
          ng-dblclick="paragraphOnDoubleClick(currentParagraph.id);"
-    style="height: 100%">
+    style="height: 100%; overflow-y: auto;">
     </div>
   </div>
   <div style="clear:both;height:10px"></div>
