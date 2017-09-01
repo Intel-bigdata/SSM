@@ -162,7 +162,12 @@ public class CopyScheduler extends AbstractService {
           deleteFileDiff.setSrc(currFileDiff.getSrc());
           resultSet.add(deleteFileDiff);
         } else if (currFileDiff.getDiffType() == FileDiffType.RENAME) {
-          fileDiff.setSrc("");
+          FileDiff renameFileDiff = new FileDiff();
+          // TODO add deleteFileDiff content
+          renameFileDiff.setSrc(currFileDiff.getSrc());
+          resultSet.add(renameFileDiff);
+          // Set current append src as renamed src
+          fileDiff.setSrc(currFileDiff.getSrc());
         }
         copyMetaService.markFileDiffApplied(fid, FileDiffState.MERGED);
       }

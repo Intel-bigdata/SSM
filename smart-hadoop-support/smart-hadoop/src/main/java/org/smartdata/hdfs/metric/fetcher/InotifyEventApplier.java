@@ -34,6 +34,7 @@ import org.smartdata.model.FileInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -74,6 +75,7 @@ public class InotifyEventApplier {
     FileDiff fileDiff = new FileDiff();
     fileDiff.setCreate_time(System.currentTimeMillis());
     fileDiff.setState(FileDiffState.PENDING);
+    fileDiff.setParameters(new HashMap<String, String>());
     switch (event.getEventType()) {
       // TODO parse and save to fileDiff
       case CREATE:
@@ -90,8 +92,8 @@ public class InotifyEventApplier {
         fileDiff.setDiffType(FileDiffType.APPEND);
         // TODO add previous length
         fileDiff.setSrc(String.format("%s", ((Event.CloseEvent) event).getPath()));
-        fileDiff.setParameters(String.format("-length %s",
-            ((Event.CloseEvent) event).getFileSize()));
+        Long fileSize = ((Event.CloseEvent) event).getFileSize();
+        fileDiff.getParameters().put("length", String.valueOf(fileSize));
         metaStore.insertFileDiff(fileDiff);
         return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
       case RENAME:
@@ -100,8 +102,8 @@ public class InotifyEventApplier {
             ", dest path:" + ((Event.RenameEvent) event).getDstPath());
         fileDiff.setDiffType(FileDiffType.RENAME);
         fileDiff.setSrc(String.format("%s",((Event.RenameEvent)event).getSrcPath()));
-        fileDiff.setParameters(String.format("-dest %s",
-            ((Event.RenameEvent)event).getDstPath()));
+        fileDiff.getParameters().put("dest",
+            ((Event.RenameEvent)event).getDstPath());
         metaStore.insertFileDiff(fileDiff);
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
@@ -116,8 +118,7 @@ public class InotifyEventApplier {
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.UnlinkEvent)event).getPath());
         fileDiff.setDiffType(FileDiffType.DELETE);
-        fileDiff.setSrc(String.format("%s",((Event.UnlinkEvent)event).getPath()));
-        fileDiff.setParameters("");
+        fileDiff.setSrc(String.format("%s", ((Event.UnlinkEvent)event).getPath()));
         metaStore.insertFileDiff(fileDiff);
         return this.getUnlinkSql((Event.UnlinkEvent)event);
     }
