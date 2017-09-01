@@ -107,17 +107,17 @@ public class TestActionDao extends TestDaoUtil {
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
         100);
-    List<ActionInfo> actionInfoList = actionDao.getLatestActionListByFinishAndSuccess(0, false, true);
+    List<ActionInfo> actionInfoList = actionDao.getLatestActionListByFinishAndSuccess("cache",0, false, true);
     //Get from empty table
     Assert.assertTrue(actionInfoList.size() == 0);
     actionDao.insert(actionInfo);
     actionInfo.setActionId(2);
     actionDao.insert(actionInfo);
-    actionInfoList = actionDao.getLatestActionListByFinishAndSuccess(0, false, true);
+    actionInfoList = actionDao.getLatestActionListByFinishAndSuccess("cache", 0, false, true);
     Assert.assertTrue(actionInfoList.size() == 2);
     actionInfoList = actionDao.getByIds(Arrays.asList(new Long[]{1l, 2l}));
     Assert.assertTrue(actionInfoList.size() == 2);
-    actionInfoList = actionDao.getLatestActionListByFinishAndSuccess(1, false, true);
+    actionInfoList = actionDao.getLatestActionListByFinishAndSuccess("cache", 1, false, true);
     Assert.assertTrue(actionInfoList.size() == 1);
   }
 
@@ -128,17 +128,17 @@ public class TestActionDao extends TestDaoUtil {
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
         100);
-    List<ActionInfo> actionInfoList = actionDao.getLatestActionListByFinish(0, true);
+    List<ActionInfo> actionInfoList = actionDao.getLatestActionListByFinish("cache",0, true);
     //Get from empty table
     Assert.assertTrue(actionInfoList.size() == 0);
     actionDao.insert(actionInfo);
     actionInfo.setActionId(2);
     actionDao.insert(actionInfo);
-    actionInfoList = actionDao.getLatestActionListByFinish(0, true);
+    actionInfoList = actionDao.getLatestActionListByFinish("cache", 0, true);
     Assert.assertTrue(actionInfoList.size() == 2);
     actionInfoList = actionDao.getByIds(Arrays.asList(new Long[]{1l, 2l}));
     Assert.assertTrue(actionInfoList.size() == 2);
-    actionInfoList = actionDao.getLatestActionListByFinish(1, true);
+    actionInfoList = actionDao.getLatestActionListByFinish("cache", 1, true);
     Assert.assertTrue(actionInfoList.size() == 1);
   }
 
@@ -149,17 +149,17 @@ public class TestActionDao extends TestDaoUtil {
         "cache", args, "Test",
         "Test", false, 123213213l, true, 123123l,
         100);
-    List<ActionInfo> actionInfoList = actionDao.getLatestActionListBySuccess(0, false);
+    List<ActionInfo> actionInfoList = actionDao.getLatestActionListBySuccess("cache", 0, false);
     //Get from empty table
     Assert.assertTrue(actionInfoList.size() == 0);
     actionDao.insert(actionInfo);
     actionInfo.setActionId(2);
     actionDao.insert(actionInfo);
-    actionInfoList = actionDao.getLatestActionListBySuccess(0, false);
+    actionInfoList = actionDao.getLatestActionListBySuccess("cache", 0, false);
     Assert.assertTrue(actionInfoList.size() == 2);
     actionInfoList = actionDao.getByIds(Arrays.asList(new Long[]{1l, 2l}));
     Assert.assertTrue(actionInfoList.size() == 2);
-    actionInfoList = actionDao.getLatestActionListBySuccess(1, false);
+    actionInfoList = actionDao.getLatestActionListBySuccess("cache", 1, false);
     Assert.assertTrue(actionInfoList.size() == 1);
   }
 

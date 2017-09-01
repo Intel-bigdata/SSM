@@ -716,13 +716,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<ActionInfo> getNewCreatedActionsTableItemByFinishedAndSuccess(
+  public List<ActionInfo> getNewCreatedActionsTableItemByStatus(String actionType,
       int size, boolean successful, boolean finished) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
     try {
-      return actionDao.getLatestActionListByFinishAndSuccess(size, successful, finished);
+      return actionDao.getLatestActionListByFinishAndSuccess(actionType, size, successful, finished);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {
@@ -730,13 +730,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<ActionInfo> getNewCreatedActionsTableItemByFinished(
+  public List<ActionInfo> getNewCreatedActionsByStatus(String actionType,
       int size, boolean finished) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
     try {
-      return actionDao.getLatestActionListByFinish(size, finished);
+      return actionDao.getLatestActionListByFinish(actionType, size, finished);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {
@@ -744,13 +744,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<ActionInfo> getNewCreatedActionsTableItemBySuccess(
-      int size, boolean successful, boolean finished) throws MetaStoreException {
+  public List<ActionInfo> getNewCreatedActionsTableItemByStatus(String actionType,
+      int size, boolean successful) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
     try {
-      return actionDao.getLatestActionListBySuccess(size, successful);
+      return actionDao.getLatestActionListBySuccess(actionType, size, successful);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {
