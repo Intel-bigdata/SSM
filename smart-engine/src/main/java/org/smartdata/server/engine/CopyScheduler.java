@@ -19,17 +19,21 @@ package org.smartdata.server.engine;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.AbstractService;
 import org.smartdata.metaservice.BackupMetaService;
 import org.smartdata.metaservice.CmdletMetaService;
 import org.smartdata.metaservice.CopyMetaService;
 import org.smartdata.metaservice.MetaServiceException;
+import org.smartdata.metastore.ActionSchedulerService;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.model.ActionInfo;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
+import org.smartdata.model.LaunchAction;
+import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,7 +43,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class CopyScheduler extends AbstractService {
+public class CopyScheduler extends ActionSchedulerService {
   static final Logger LOG =
       LoggerFactory.getLogger(CopyScheduler.class);
   // Fixed rate scheduler
@@ -53,12 +57,37 @@ public class CopyScheduler extends AbstractService {
   private List<BackUpInfo> backUpInfos;
 
 
-  public CopyScheduler(ServerContext context) {
-    super(context);
+  public CopyScheduler(ServerContext context, MetaStore metaStore) {
+    super(context, metaStore);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.copyMetaService = (CopyMetaService) context.getMetaService();
     this.cmdletMetaService = (CmdletMetaService) context.getMetaService();
     this.backupMetaService = (BackupMetaService) context.getMetaService();
+  }
+
+  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
+    return null;
+  }
+
+
+  public List<String> getSupportedActions() {
+    return null;
+  }
+
+  public boolean onSubmit(ActionInfo actionInfo) {
+    return true;
+  }
+
+  public void postSchedule(ActionInfo actionInfo, ScheduleResult result) {
+
+  }
+
+  public void onPreDispatch(LaunchAction action) {
+
+  }
+
+  public void onActionFinished(ActionInfo actionInfo) {
+
   }
 
   @Override
@@ -111,10 +140,6 @@ public class CopyScheduler extends AbstractService {
       }
     }
 
-    private String getDestFromParameter(String parameter) {
-      return "";
-    }
-
     private void diffMerge(List<FileDiff> fileDiffs) throws MetaServiceException {
       // Merge all existing fileDiffs into fileChains
       Map<String, FileChain> fileChainMap = new HashMap<>();
@@ -130,7 +155,7 @@ public class CopyScheduler extends AbstractService {
           fileChainMap.put(src, fileChain);
         }
         if (fileDiff.getDiffType() == FileDiffType.RENAME) {
-          String dest = getDestFromParameter(fileDiff.getParameters());
+          String dest = fileDiff.getParameters().get("dest");
           fileChain.tail = dest;
           // Update key in map
           fileChainMap.remove(src);
@@ -149,13 +174,13 @@ public class CopyScheduler extends AbstractService {
       List<FileDiff> resultSet = new ArrayList<>();
       for (Long fid: fileChain.getFillDiffChain()) {
         // TODO get parameter map from parameters string
-        Map<String, String> parameters = new HashMap<>();
         // Current append diff
         FileDiff fileDiff = new FileDiff();
+        fileDiff.setParameters(new HashMap<String, String>());
         FileDiff currFileDiff = fileDiffBatch.get(fid);
         if (currFileDiff.getDiffType() == FileDiffType.APPEND) {
           // TODO Add incremental length to current
-          fileDiff.setParameters(parameters.get("length"));
+          fileDiff.getParameters().put("length", currFileDiff.getParameters().get("length"));
         } else if (currFileDiff.getDiffType() == FileDiffType.DELETE) {
           FileDiff deleteFileDiff = new FileDiff();
           // TODO add deleteFileDiff content
