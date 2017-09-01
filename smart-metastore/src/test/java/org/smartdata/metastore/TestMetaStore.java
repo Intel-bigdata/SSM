@@ -440,7 +440,7 @@ public class TestMetaStore extends TestDaoUtil {
     metaStore.insertActionTable(actionInfo);
     actionInfos = metaStore.getNewCreatedActionsTableItem(1);
     Assert.assertTrue(actionInfos.size() == 1);
-    actionInfos = metaStore.getNewCreatedActionsTableItemByFinished(1, true, true);
+    actionInfos = metaStore.getNewCreatedActionsTableItemByFinishedAndSuccess(1, true, true);
     Assert.assertTrue(actionInfos.size() == 1);
     actionInfos = metaStore.getNewCreatedActionsTableItem(2);
     Assert.assertTrue(actionInfos.size() == 2);

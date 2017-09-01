@@ -102,13 +102,31 @@ public class ActionDao {
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
-  public List<ActionInfo> getLatestActionListByStatue(int size, boolean successful, boolean isfinished) {
+  public List<ActionInfo> getLatestActionListByFinishAndSuccess(int size, boolean successful, boolean isfinished) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);
     }
     String sql = "select * from " + TABLE_NAME + " where successful = ? and finished = ? ORDER by aid DESC";
     return jdbcTemplate.query(sql, new ActionRowMapper(), successful, isfinished);
+  }
+
+  public List<ActionInfo> getLatestActionListBySuccess(int size, boolean successful) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select * from " + TABLE_NAME + " where successful = ? ORDER by aid DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper(), successful);
+  }
+
+  public List<ActionInfo> getLatestActionListByFinish(int size, boolean isfinished) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select * from " + TABLE_NAME + " where finished = ? ORDER by aid DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper(), isfinished);
   }
 
   public void delete(long aid) {
