@@ -49,10 +49,13 @@ public class TestRuleManager extends TestDaoUtil {
     metaStore = new MetaStore(druidPool);
     ServerContext serverContext = new ServerContext(smartConf, metaStore);
     ruleManager = new RuleManager(serverContext, null, null);
+    ruleManager.init();
+    ruleManager.start();
   }
 
   @After
   public void close() throws Exception {
+    ruleManager.stop();
     ruleManager = null;
     metaStore = null;
     closeDao();
