@@ -1091,7 +1091,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public BackUpInfo getBackUpInfoById(int id) throws MetaStoreException {
+  public BackUpInfo getBackUpInfoById(long id) throws MetaStoreException {
     try {
       return backUpInfoDao.getById(id);
     } catch (Exception e) {
@@ -1107,7 +1107,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void deleteBackUpInfoById(int id) throws MetaStoreException {
+  public void deleteBackUpInfoById(long id) throws MetaStoreException {
     try {
       backUpInfoDao.delete(id);
     } catch (Exception e) {
