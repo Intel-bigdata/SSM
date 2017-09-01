@@ -34,6 +34,7 @@ import org.smartdata.server.engine.LegacyCopyScheduler;
 import org.smartdata.server.engine.CopyTargetTask;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 @Deprecated
@@ -49,22 +50,24 @@ public class TestLegacyCopyScheduler extends MiniSmartClusterHarness {
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setSrc("/root/test");
     // Create and write
-    fileDiff.setParameters("");
+    fileDiff.setParameters(new HashMap<String, String>());
     String cmd =
         LegacyCopyScheduler
             .cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
     Assert.assertTrue(
         cmd.equals("copy -file /root/test -dest /localhost:3306/backup/test"));
     // Test Copy
-    fileDiff.setParameters("-length 1024");
+    fileDiff.getParameters().put("-length", "1024");
     cmd =
         LegacyCopyScheduler
             .cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");
     Assert.assertTrue(cmd.equals(
         "copy -file /root/test -dest /localhost:3306/backup/test -length 1024"));
     // Test Rename
+    fileDiff.getParameters().clear();
     fileDiff.setDiffType(FileDiffType.RENAME);
-    fileDiff.setParameters("-dest /root/test2 -length 1024");
+    fileDiff.getParameters().put("-dest", "/root/test2");
+    fileDiff.getParameters().put("-length", "1024");
     cmd =
         LegacyCopyScheduler
             .cmdParsing(fileDiff, "/root/", "/localhost:3306/backup/");

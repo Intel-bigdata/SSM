@@ -90,10 +90,10 @@ public class InotifyEventApplier {
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CloseEvent) event).getPath());
         fileDiff.setDiffType(FileDiffType.APPEND);
-        // TODO add previous length
+        // TODO add offset
         fileDiff.setSrc(String.format("%s", ((Event.CloseEvent) event).getPath()));
         Long fileSize = ((Event.CloseEvent) event).getFileSize();
-        fileDiff.getParameters().put("length", String.valueOf(fileSize));
+        fileDiff.getParameters().put("-length", String.valueOf(fileSize));
         metaStore.insertFileDiff(fileDiff);
         return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
       case RENAME:
@@ -102,7 +102,7 @@ public class InotifyEventApplier {
             ", dest path:" + ((Event.RenameEvent) event).getDstPath());
         fileDiff.setDiffType(FileDiffType.RENAME);
         fileDiff.setSrc(String.format("%s",((Event.RenameEvent)event).getSrcPath()));
-        fileDiff.getParameters().put("dest",
+        fileDiff.getParameters().put("-dest",
             ((Event.RenameEvent)event).getDstPath());
         metaStore.insertFileDiff(fileDiff);
         return this.getRenameSql((Event.RenameEvent)event);

@@ -50,7 +50,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     FileDiff fileDiff = new FileDiff();
     fileDiff.setDiffId(1);
     fileDiff.setParameters(new HashMap<String, String>());
-    fileDiff.getParameters().put("test", "test");
+    fileDiff.getParameters().put("-test", "test");
     fileDiff.setSrc("test");
     fileDiff.setState(FileDiffState.PENDING);
     fileDiff.setDiffType(FileDiffType.APPEND);

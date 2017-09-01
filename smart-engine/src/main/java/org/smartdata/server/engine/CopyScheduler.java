@@ -155,7 +155,7 @@ public class CopyScheduler extends ActionSchedulerService {
           fileChainMap.put(src, fileChain);
         }
         if (fileDiff.getDiffType() == FileDiffType.RENAME) {
-          String dest = fileDiff.getParameters().get("dest");
+          String dest = fileDiff.getParameters().get("-dest");
           fileChain.tail = dest;
           // Update key in map
           fileChainMap.remove(src);
@@ -180,7 +180,7 @@ public class CopyScheduler extends ActionSchedulerService {
         FileDiff currFileDiff = fileDiffBatch.get(fid);
         if (currFileDiff.getDiffType() == FileDiffType.APPEND) {
           // TODO Add incremental length to current
-          fileDiff.getParameters().put("length", currFileDiff.getParameters().get("length"));
+          fileDiff.getParameters().put("-length", currFileDiff.getParameters().get("-length"));
         } else if (currFileDiff.getDiffType() == FileDiffType.DELETE) {
           FileDiff deleteFileDiff = new FileDiff();
           // TODO add deleteFileDiff content

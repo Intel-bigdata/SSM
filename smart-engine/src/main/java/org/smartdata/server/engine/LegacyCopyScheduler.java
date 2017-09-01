@@ -184,13 +184,13 @@ public class LegacyCopyScheduler extends AbstractService {
     if (fileDiff.getDiffType() == FileDiffType.CREATE || fileDiff.getDiffType() == FileDiffType.APPEND ) {
       String cmd = String.format("copy -file %s", fileDiff.getSrc());
       String destPath = fileDiff.getSrc().replace(srcBase, destBase);
-      if (fileDiff.getParameters().length() == 0) {
+      if (fileDiff.getParameters().size() == 0) {
         return String.format("%s -dest %s", cmd, destPath);
       } else {
-        return String.format("%s -dest %s %s", cmd, destPath, fileDiff.getParameters());
+        return String.format("%s -dest %s%s", cmd, destPath, fileDiff.getParametersString());
       }
     } else {
-      String cmd = String.format("rename -file %s %s", fileDiff.getSrc(), fileDiff.getParameters());
+      String cmd = String.format("rename -file %s%s", fileDiff.getSrc(), fileDiff.getParametersString());
       // Locate -dest
       return cmd.replace(srcBase, destBase);
     }
@@ -217,7 +217,7 @@ public class LegacyCopyScheduler extends AbstractService {
       // TODO add rule ID
       fileDiff.setRuleId(-1);
       fileDiff.setSrc(src);
-      fileDiff.setParameters("");
+      fileDiff.setParameters(new HashMap<String, String>());
       fileDiff.setCreate_time(System.currentTimeMillis());
       copyMetaService.insertFileDiff(fileDiff);
     }
@@ -242,7 +242,7 @@ public class LegacyCopyScheduler extends AbstractService {
       // Move diffs to running queue
       while (pendingDR.size() > 0 && runningDR.size() < MAX_RUNNING_SIZE) {
         FileDiff fileDiff = pendingDR.poll();
-        LOG.info("filediff -file {} {}", fileDiff.getSrc(), fileDiff.getParameters());
+        LOG.info("filediff -file {} {}", fileDiff.getSrc(), fileDiff.getParametersString());
         String cmd = cmdParsing(fileDiff, srcBase, destBase);
         LOG.info("cmd = {}", cmd);
         CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmd);

@@ -20,6 +20,7 @@ package org.smartdata.model;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.util.Iterator;
 import java.util.Map;
 
 public class FileDiff {
@@ -83,6 +84,18 @@ public class FileDiff {
         }.getType());
   }
 
+  public String getParametersString() {
+    StringBuffer ret = new StringBuffer();
+    if (parameters.containsKey("-dest")) {
+      ret.append(String.format(" -dest %s", parameters.get("-dest")));
+      parameters.remove("-dest");
+    }
+    for (Iterator<Map.Entry<String, String>> it = parameters.entrySet().iterator(); it.hasNext();) {
+      Map.Entry<String, String> entry = it.next();
+        ret.append(String.format(" %s %s", entry.getKey(), entry.getValue()));
+    }
+    return ret.toString();
+  }
 
 
   public FileDiffState getState() {
