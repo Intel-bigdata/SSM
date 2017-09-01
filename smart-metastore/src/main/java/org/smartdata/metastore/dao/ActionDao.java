@@ -102,6 +102,15 @@ public class ActionDao {
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
+  public List<ActionInfo> getLatestActionListByStatue(int size, boolean successful, boolean isfinished) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select * from " + TABLE_NAME + " where successful = ? and finished = ? ORDER by aid DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper(), successful, isfinished);
+  }
+
   public void delete(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from " + TABLE_NAME + " where aid = ?";

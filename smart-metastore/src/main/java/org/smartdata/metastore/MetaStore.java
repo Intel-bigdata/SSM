@@ -716,6 +716,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<ActionInfo> getNewCreatedActionsTableItemByFinished(
+      int size, boolean successful, boolean finished) throws MetaStoreException {
+    if (size < 0) {
+      return new ArrayList<>();
+    }
+    try {
+      return actionDao.getLatestActionListByStatue(size, successful, finished);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+
   public List<ActionInfo> getActionsTableItem(
       List<Long> aids) throws MetaStoreException {
     if (aids == null || aids.size() == 0) {

@@ -101,6 +101,27 @@ public class TestActionDao extends TestDaoUtil {
   }
 
   @Test
+  public void testGetLatestActionListByStatue() {
+    Map<String, String> args = new HashMap<>();
+    ActionInfo actionInfo = new ActionInfo(1, 1,
+        "cache", args, "Test",
+        "Test", false, 123213213l, true, 123123l,
+        100);
+    List<ActionInfo> actionInfoList = actionDao.getLatestActionListByStatue(0, false, true);
+    //Get from empty table
+    Assert.assertTrue(actionInfoList.size() == 0);
+    actionDao.insert(actionInfo);
+    actionInfo.setActionId(2);
+    actionDao.insert(actionInfo);
+    actionInfoList = actionDao.getLatestActionListByStatue(0, false, true);
+    Assert.assertTrue(actionInfoList.size() == 2);
+    actionInfoList = actionDao.getByIds(Arrays.asList(new Long[]{1l, 2l}));
+    Assert.assertTrue(actionInfoList.size() == 2);
+    actionInfoList = actionDao.getLatestActionListByStatue(1, false, true);
+    Assert.assertTrue(actionInfoList.size() == 1);
+  }
+
+  @Test
   public void testMaxId() throws Exception {
     Map<String, String> args = new HashMap();
     ActionInfo actionInfo = new ActionInfo(1, 1,
