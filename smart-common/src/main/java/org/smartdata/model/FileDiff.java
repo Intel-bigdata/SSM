@@ -17,12 +17,18 @@
  */
 package org.smartdata.model;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.Iterator;
+import java.util.Map;
+
 public class FileDiff {
   private long diffId;
   private long ruleId;
   private FileDiffType diffType;
   private String src;
-  private String parameters;
+  private Map<String, String> parameters;
   private FileDiffState state;
   private long create_time;
 
@@ -58,14 +64,39 @@ public class FileDiff {
     this.src = src;
   }
 
-
-  public String getParameters() {
+  public Map<String, String> getParameters() {
     return parameters;
   }
 
-  public void setParameters(String parameters) {
+  public void setParameters(Map<String, String>  parameters) {
     this.parameters = parameters;
   }
+
+  public String getParametersJsonString() {
+    Gson gson = new Gson();
+    return gson.toJson(parameters);
+  }
+
+  public void setParametersFromJsonString(String jsonParameters) {
+    Gson gson = new Gson();
+    parameters = gson.fromJson(jsonParameters,
+        new TypeToken<Map<String, String>>() {
+        }.getType());
+  }
+
+  public String getParametersString() {
+    StringBuffer ret = new StringBuffer();
+    if (parameters.containsKey("-dest")) {
+      ret.append(String.format(" -dest %s", parameters.get("-dest")));
+      parameters.remove("-dest");
+    }
+    for (Iterator<Map.Entry<String, String>> it = parameters.entrySet().iterator(); it.hasNext();) {
+      Map.Entry<String, String> entry = it.next();
+        ret.append(String.format(" %s %s", entry.getKey(), entry.getValue()));
+    }
+    return ret.toString();
+  }
+
 
   public FileDiffState getState() {
     return state;
