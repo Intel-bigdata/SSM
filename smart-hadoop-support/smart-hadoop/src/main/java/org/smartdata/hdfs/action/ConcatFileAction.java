@@ -33,7 +33,9 @@ import java.util.LinkedList;
 import java.util.Map;
 
 /**
- * An action to merge a list of file, the source file is separated by comma, and the target file will be overwrited
+ * An action to merge a list of file,
+ * the source file is separated by comma,
+ * and the target file will be over writen
  */
 @ActionSignature(
     actionId = "concat",
