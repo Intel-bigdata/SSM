@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.smartdata.server.engine;
+package org.smartdata.hdfs.scheduler;
 
 public class CopyTargetTask {
   private String dest;

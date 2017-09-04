@@ -15,16 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine;
+package org.smartdata.hdfs.scheduler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.metaservice.BackupMetaService;
-import org.smartdata.metaservice.CmdletMetaService;
-import org.smartdata.metaservice.CopyMetaService;
-import org.smartdata.metaservice.MetaServiceException;
+import org.smartdata.SmartContext;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CmdletInfo;
@@ -48,21 +46,15 @@ public class CopyScheduler extends ActionSchedulerService {
       LoggerFactory.getLogger(CopyScheduler.class);
   // Fixed rate scheduler
   private ScheduledExecutorService executorService;
-  private CmdletManager cmdletManager;
-  // Metastore service
-  private CopyMetaService copyMetaService;
-  private CmdletMetaService cmdletMetaService;
-  private BackupMetaService backupMetaService;
   // Global variables
+  private MetaStore metaStore;
   private List<BackUpInfo> backUpInfos;
 
 
-  public CopyScheduler(ServerContext context, MetaStore metaStore) {
+  public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
+    this.metaStore = metaStore;
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.copyMetaService = (CopyMetaService) context.getMetaService();
-    this.cmdletMetaService = (CmdletMetaService) context.getMetaService();
-    this.backupMetaService = (BackupMetaService) context.getMetaService();
   }
 
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
@@ -109,7 +101,7 @@ public class CopyScheduler extends ActionSchedulerService {
     // executorService.shutdown();
   }
 
-  public void forceSync(String src, String dest) throws IOException, MetaServiceException {
+  public void forceSync(String src, String dest) throws IOException, MetaStoreException {
     // TODO check dest statuses to avoid unnecessary copy
     // Force Sync src and dest
     // TODO get namespace from file table
@@ -123,8 +115,8 @@ public class CopyScheduler extends ActionSchedulerService {
 
     private void syncRule() {
       try {
-        backUpInfos = backupMetaService.listAllBackUpInfo();
-      } catch (MetaServiceException e) {
+        backUpInfos = metaStore.listAllBackUpInfo();
+      } catch (MetaStoreException e) {
         LOG.debug("Sync backUpInfos error", e);
       }
     }
@@ -133,14 +125,14 @@ public class CopyScheduler extends ActionSchedulerService {
       fileDiffBatch = new HashMap<>();
       List<FileDiff> pendingDiffs = null;
       try {
-        pendingDiffs = copyMetaService.getPendingDiff();
+        pendingDiffs = metaStore.getPendingDiff();
         diffMerge(pendingDiffs);
-      } catch (MetaServiceException e) {
+      } catch (MetaStoreException e) {
         LOG.debug("Sync fileDiffs error", e);
       }
     }
 
-    private void diffMerge(List<FileDiff> fileDiffs) throws MetaServiceException {
+    private void diffMerge(List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
       Map<String, FileChain> fileChainMap = new HashMap<>();
       for (FileDiff fileDiff: fileDiffs) {
@@ -170,7 +162,7 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
 
-    private void handleFileChain(FileChain fileChain) throws MetaServiceException {
+    private void handleFileChain(FileChain fileChain) throws MetaStoreException {
       List<FileDiff> resultSet = new ArrayList<>();
       for (Long fid: fileChain.getFillDiffChain()) {
         // TODO get parameter map from parameters string
@@ -194,12 +186,12 @@ public class CopyScheduler extends ActionSchedulerService {
           // Set current append src as renamed src
           fileDiff.setSrc(currFileDiff.getSrc());
         }
-        copyMetaService.markFileDiffApplied(fid, FileDiffState.MERGED);
+        metaStore.markFileDiffApplied(fid, FileDiffState.MERGED);
       }
       // copyMetaService.markFileDiffApplied();
       // Insert file diffs into tables
       for (FileDiff fileDiff: resultSet) {
-        copyMetaService.insertFileDiff(fileDiff);
+        metaStore.insertFileDiff(fileDiff);
       }
     }
 
@@ -210,9 +202,9 @@ public class CopyScheduler extends ActionSchedulerService {
       List<CmdletInfo> dryRunCmdlets = null;
       try {
         // Get all dry run cmdlets
-        dryRunCmdlets = cmdletMetaService.getCmdletsTableItem(null,
+        dryRunCmdlets = metaStore.getCmdletsTableItem(null,
             String.format("= %d", rid), CmdletState.DRYRUN);
-      } catch (MetaServiceException e) {
+      } catch (MetaStoreException e) {
         LOG.debug("Get latest dry run cmdlets error, rid={}", rid, e);
       }
       if (dryRunCmdlets == null || dryRunCmdlets.size() == 0) {
@@ -225,10 +217,10 @@ public class CopyScheduler extends ActionSchedulerService {
         try {
           // TODO optimize this pre-processing
           // TODO Check namespace for current states
-          cmdletMetaService
+          metaStore
               .updateCmdlet(dryRunCmdlets.get(end).getCid(), rid,
                   CmdletState.PENDING);
-        } catch (MetaServiceException e) {
+        } catch (MetaStoreException e) {
           LOG.debug("rid={}, empty dry run cmdlets ", rid);
         }
         // Split Copy tasks according to delete and rename
