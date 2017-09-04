@@ -17,8 +17,6 @@
  */
 package org.smartdata.conf;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 /**
  * This class contains the configure keys needed by SSM.
  */
