@@ -61,7 +61,7 @@ public class ActionRestApi {
   @Path("/list/{listNumber}")
   public Response actionList(@PathParam("listNumber") String listNumber) {
     Integer intNumber = Integer.parseInt(listNumber);
-    intNumber = intNumber > 0 ? intNumber : Integer.MAX_VALUE;
+    intNumber = intNumber > 0 ? intNumber : 0;
     try {
       return new JsonResponse<>(Response.Status.OK,
           smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();

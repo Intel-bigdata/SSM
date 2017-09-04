@@ -27,10 +27,12 @@ import org.smartdata.model.RuleState;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.rule.RuleExecutorPluginManager;
 import org.smartdata.rule.parser.RuleStringParser;
-import org.smartdata.rule.parser.TranslateResult;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
+import org.smartdata.server.engine.rule.FileCopyDrPlugin;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
 
@@ -72,6 +74,8 @@ public class RuleManager extends AbstractService {
     this.cmdletManager = cmdletManager;
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
+
+    RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
   }
 
   /**

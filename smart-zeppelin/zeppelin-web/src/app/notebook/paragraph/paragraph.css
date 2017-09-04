@@ -156,7 +156,7 @@ table.dataTable.table-condensed .sorting_desc:after {
 }
 
 .paragraphAsIframe .title {
-  width: 80%;
+  width: 30%;
   font-weight: bold;
   font-family: 'Roboto', sans-serif;
   font-size: 17px !important;

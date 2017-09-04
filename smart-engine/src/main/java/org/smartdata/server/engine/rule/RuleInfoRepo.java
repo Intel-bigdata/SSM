@@ -17,17 +17,20 @@
  */
 package org.smartdata.server.engine.rule;
 
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.RuleState;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
+import org.smartdata.model.rule.RuleExecutorPlugin;
+import org.smartdata.model.rule.RuleExecutorPluginManager;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.RuleStringParser;
-import org.smartdata.rule.parser.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -130,6 +133,10 @@ public class RuleInfoRepo {
           ruleInfo.getSubmitTime());
       TranslateResult tr = executor != null ? executor.getTranslateResult() :
           new RuleStringParser(ruleInfo.getRuleText(), transCtx).translate();
+      List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
+      for (RuleExecutorPlugin plugin : plugins) {
+        plugin.onNewRuleExecutor(ruleInfo, tr);
+      }
       executor = new RuleExecutor(
           ruleManager, ctx, tr, ruleManager.getMetaStore());
       return executor;
@@ -140,7 +147,15 @@ public class RuleInfoRepo {
   private void markWorkExit() {
     if (executor != null) {
       executor.setExited();
+      notifyRuleExecutorExit();
       //System.out.println(executor + " -> disabled");
+    }
+  }
+
+  private void notifyRuleExecutorExit() {
+    List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
+    for (RuleExecutorPlugin plugin : plugins) {
+      plugin.onRuleExecutorExit(ruleInfo);
     }
   }
 
