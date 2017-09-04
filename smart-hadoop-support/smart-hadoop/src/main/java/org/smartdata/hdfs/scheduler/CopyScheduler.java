@@ -202,7 +202,7 @@ public class CopyScheduler extends ActionSchedulerService {
       List<CmdletInfo> dryRunCmdlets = null;
       try {
         // Get all dry run cmdlets
-        dryRunCmdlets = metaStore.getCmdletsTableItem(null,
+        dryRunCmdlets = metaStore.getCmdlets(null,
             String.format("= %d", rid), CmdletState.DRYRUN);
       } catch (MetaStoreException e) {
         LOG.debug("Get latest dry run cmdlets error, rid={}", rid, e);

@@ -97,11 +97,11 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
       }
     }
 
-    List<CmdletInfo> com = ssm.getMetaStore().getCmdletsTableItem(null,
+    List<CmdletInfo> com = ssm.getMetaStore().getCmdlets(null,
       null, CmdletState.DONE);
     Assert.assertTrue(com.size() == 1);
     Assert.assertTrue(com.get(0).getState() == CmdletState.DONE);
-    List<ActionInfo> result = ssm.getMetaStore().getActionsTableItem(null, null);
+    List<ActionInfo> result = ssm.getMetaStore().getActions(null, null);
     Assert.assertTrue(result.size() == 3);
   }
 
@@ -166,7 +166,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     cmdletManager.start();
     cmdletManager.submitCmdlet("hello");
     verify(metaStore, times(1)).insertCmdletTable(any(CmdletInfo.class));
-    verify(metaStore, times(1)).insertActionsTable(any(ActionInfo[].class));
+    verify(metaStore, times(1)).insertActions(any(ActionInfo[].class));
 
     Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
     Thread.sleep(1000);
