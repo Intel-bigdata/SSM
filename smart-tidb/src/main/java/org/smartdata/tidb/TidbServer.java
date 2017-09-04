@@ -29,6 +29,7 @@ public class TidbServer implements Runnable{
     public interface Tidb extends Library{
         void startServer(String args);
     }
+
     public TidbServer(String args){
         this.args=args;
     }

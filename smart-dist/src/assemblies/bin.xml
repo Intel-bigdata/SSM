@@ -51,6 +51,9 @@
         <fileSet>
             <directory>${basedir}/../smart-tidb/src/main/resources/</directory>
             <outputDirectory>smart-data-${project.version}/lib/</outputDirectory>
+            <includes>
+                <include>*.so</include>
+            </includes>
         </fileSet>
     </fileSets>
     <dependencySets>

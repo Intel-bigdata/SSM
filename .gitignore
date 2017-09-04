@@ -52,4 +52,5 @@ smart-zeppelin/zeppelin-web/yarn.lock
 smart-zeppelin/zeppelin-zengine/.flattened-pom.xml
 smart-zeppelin/zeppelin-distribution/.flattened-pom.xml
 
-smart-tidb/src/main/lib/*.so
+smart-tidb/src/main/resources/*.so
+

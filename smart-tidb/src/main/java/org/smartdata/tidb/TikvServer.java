@@ -29,24 +29,27 @@ public class TikvServer implements Runnable {
     public interface Tikv extends Library {
         void startServer(String args);
     }
+
     public TikvServer(String args){
         this.args=args;
     }
+
     public void run(){
-        Tikv kv=null;
+        Tikv tikv=null;
         try {
-            kv= (Tikv) Native.loadLibrary("libtikv.so",Tikv.class);
+            tikv= (Tikv) Native.loadLibrary("libtikv.so",Tikv.class);
         }
         catch (UnsatisfiedLinkError ex){
             LOG.error(ex.getMessage());
         }
 
         StringBuffer strbuffer=new StringBuffer();
-        strbuffer.append("TiKV");  //@ App::new("TiKV") in start.rs, "TiKV" is the flag name used for parsing
+        //According to start.rs in pingcap's tidb source code, "TiKV" is the flag name used for parsing
+        strbuffer.append("TiKV");
         strbuffer.append(" ");
         strbuffer.append(args);
 
         LOG.info("Starting TiKV..");
-        kv.startServer(strbuffer.toString());
+        tikv.startServer(strbuffer.toString());
     }
 }

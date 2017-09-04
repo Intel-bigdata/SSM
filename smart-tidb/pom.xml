@@ -29,4 +29,55 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <!--<resources>-->
+            <!--<resource>-->
+                <!--<directory>${basedir}/src/main/resources</directory>-->
+                <!--<excludes>-->
+                    <!--<exclude>*.so</exclude>-->
+                    <!--<exclude>*.jar</exclude>-->
+                <!--</excludes>-->
+                <!--<filtering>false</filtering>-->
+            <!--</resource>-->
+        <!--</resources>-->
+        <plugins>
+            <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <executions>
+                    <execution>
+                        <id>unzip</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>unzip</executable>
+                            <arguments>
+                                <argument>-o</argument>
+                                <argument>${basedir}/src/main/resources/lib.jar</argument>
+                                <argument>-d</argument>
+                                <argument>${basedir}/src/main/resources/</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>rm</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>rm</executable>
+                            <arguments>
+                                <argument>-r</argument>
+                                <argument>${basedir}/src/main/resources/META-INF/</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

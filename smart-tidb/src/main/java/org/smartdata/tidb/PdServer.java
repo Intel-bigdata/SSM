@@ -29,6 +29,7 @@ public class PdServer implements Runnable {
     public interface Pd extends Library {
         void startServer(String args);
     }
+
     public PdServer(String args) {
         this.args=args;
     }
@@ -41,6 +42,7 @@ public class PdServer implements Runnable {
         catch (UnsatisfiedLinkError ex){
             LOG.error(ex.getMessage());
         }
+
         LOG.info("Starting PD..");
         pd.startServer(args);
     }

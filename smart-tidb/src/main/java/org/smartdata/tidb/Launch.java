@@ -26,27 +26,22 @@ public class Launch implements Runnable {
     public void run() {
         String pdArgs=new String("--data-dir=pd --log-file=logs/pd.log");
         String tikvArgs=new String("--pd=127.0.0.1:2379 --data-dir=tikv --log-file=logs/tikv.log");
-//        String tidbArgs= new String("--store=tikv --path=127.0.0.1:2379 --log-file=logs/tidb.log");
+        //String tidbArgs= new String("--store=tikv --path=127.0.0.1:2379 --log-file=logs/tidb.log");
         String tidbArgs= new String("--log-file=logs/tidb.log");
 
         PdServer pdServer=new PdServer(pdArgs);
         TikvServer tikvServer=new TikvServer(tikvArgs);
         TidbServer tidbServer=new TidbServer(tidbArgs);
 
-        //TODO synchronize the threads
         Thread pdThread=new Thread(pdServer);
         pdThread.start();
-        Thread tikvThread=new Thread(tikvServer);
         try {
-            tikvThread.sleep(4000);
+            Thread.sleep(4000);
+            Thread tikvThread=new Thread(tikvServer);
             tikvThread.start();
+            Thread.sleep(6000);
             Thread tidbThread = new Thread(tidbServer);
-            tidbThread.sleep(6000);
             tidbThread.start();
-
-            pdThread.join();
-            tikvThread.join();
-            tidbThread.join();
         }
         catch (InterruptedException ex){
             LOG.error(ex.getMessage());
