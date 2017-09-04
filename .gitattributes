@@ -10,9 +10,10 @@
 *.js     text eol=lf
 *.sql    text eol=lf
 *.sh     text eol=lf
+
 *.bat    text eol=crlf
+
 *.cmd    text eol=crlf
 *.vcxproj text merge=union eol=crlf
 *.csproj text merge=union eol=crlf
 *.sln    text merge=union eol=crlf
-libtikv.so filter=lfs diff=lfs merge=lfs -text
