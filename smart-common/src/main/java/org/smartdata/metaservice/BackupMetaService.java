@@ -25,11 +25,11 @@ public interface BackupMetaService extends MetaService {
 
   List<BackUpInfo> listAllBackUpInfo() throws MetaServiceException;
 
-  BackUpInfo getBackUpInfoById(int id) throws MetaServiceException;
+  BackUpInfo getBackUpInfoById(long id) throws MetaServiceException;
 
   void deleteAllBackUpInfo() throws MetaServiceException;
 
-  void deleteBackUpInfoById(int id) throws MetaServiceException;
+  void deleteBackUpInfoById(long id) throws MetaServiceException;
 
   void insertBackUpInfo(BackUpInfo backUpInfo) throws MetaServiceException;
 
