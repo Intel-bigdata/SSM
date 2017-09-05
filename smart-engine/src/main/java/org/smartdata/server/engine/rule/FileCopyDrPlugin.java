@@ -20,6 +20,7 @@ package org.smartdata.server.engine.rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.SyncAction;
+import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.BackUpInfo;
@@ -46,14 +47,24 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
 
   public void onNewRuleExecutor(final RuleInfo ruleInfo, TranslateResult tResult) {
     long ruleId = ruleInfo.getId();
+    List<String> pathsCheck;
+    String dirs;
     CmdletDescriptor des = tResult.getCmdDescriptor();
     for (int i = 0; i < des.actionSize(); i++) {
-      if (des.getActionName(i).equals("sync")) {  // TODO: replace with the actual sync action name
+      if (des.getActionName(i).equals("sync")) {
         BackUpInfo backUpInfo = new BackUpInfo();
-        backUpInfo.setRid(ruleId);
-        backUpInfo.setSrc(StringUtil.join(",", tResult.getGlobPathCheck()));
-        backUpInfo.setDest(des.getActionArgs(i).get(SyncAction.DEST));
+        pathsCheck = tResult.getGlobPathCheck();
+        dirs = getPathMatches(pathsCheck);
+        backUpInfo.setSrc(dirs);
+        String dest = des.getActionArgs(i).get(SyncAction.DEST);
+        if (!dest.endsWith("/")) {
+          dest += "/";
+        }
+        backUpInfo.setDest(dest);
         backUpInfo.setPeriod(tResult.getTbScheduleInfo().getEvery());
+
+        Map<String, String> args = des.getActionArgs(i);
+        args.put(SyncAction.SRC, dirs);
 
         synchronized (backups) {
           if (!backups.containsKey(ruleId)) {
@@ -76,12 +87,50 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
     }
   }
 
+  private String getPathMatches(List<String> paths) {
+    StringBuilder sb = new StringBuilder("");
+    for (String p : paths) {
+      String dir = StringUtil.getBaseDir(p);
+      if (dir == null || dir.length() == 0) {
+        continue;
+      }
+      if (sb.length() != 0) {
+        sb.append(",");
+      }
+      sb.append(dir + "/");
+    }
+    return sb.toString();
+  }
+
   public boolean preExecution(final RuleInfo ruleInfo, TranslateResult tResult) {
     return true;
   }
 
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
     return objects;
+  }
+
+  public CmdletDescriptor preSubmitCmdletDescriptor(final RuleInfo ruleInfo, TranslateResult tResult,
+      CmdletDescriptor descriptor) {
+    String file = descriptor.getCmdletParameter(HdfsAction.FILE_PATH);
+    Map<String, String> args;
+    for (int i = 0; i < descriptor.actionSize(); i++) {
+      if (descriptor.getActionName(i).equals("sync")) {
+        args = descriptor.getActionArgs(i);
+        String src = args.get(SyncAction.SRC);
+        args.put(SyncAction.SRC, file);
+        String dest = args.get(SyncAction.DEST);
+        String[] paths = src.split(",");
+        for (String p : paths) {
+          if (file.startsWith(p)) {
+            dest += file.replaceFirst(p, "");
+            break;
+          }
+        }
+        args.put(SyncAction.DEST, dest);
+      }
+    }
+    return descriptor;
   }
 
   public void onRuleExecutorExit(final RuleInfo ruleInfo) {

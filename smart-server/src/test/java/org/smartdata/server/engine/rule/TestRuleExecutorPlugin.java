@@ -20,6 +20,7 @@ package org.smartdata.server.engine.rule;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
+import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.rule.RuleExecutorPlugin;
@@ -90,6 +91,11 @@ public class TestRuleExecutorPlugin extends MiniSmartClusterHarness {
     public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
       numPreSubmitCmdlet++;
       return objects;
+    }
+
+    public CmdletDescriptor preSubmitCmdletDescriptor(final RuleInfo ruleInfo, TranslateResult tResult,
+        CmdletDescriptor descriptor) {
+      return descriptor;
     }
 
     public void onRuleExecutorExit(final RuleInfo ruleInfo) {
