@@ -84,6 +84,15 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
     return objects;
   }
 
+  public CmdletDescriptor preSubmitCmdletDescriptor(final RuleInfo ruleInfo, TranslateResult tResult,
+      CmdletDescriptor descriptor) {
+    for (int i = 0; i < descriptor.actionSize(); i++) {
+      if (descriptor.getActionName(i).equals("sync")) {
+
+      }
+    }
+  }
+
   public void onRuleExecutorExit(final RuleInfo ruleInfo) {
     long ruleId = ruleInfo.getId();
     List<BackUpInfo> infos = backups.get(ruleId);

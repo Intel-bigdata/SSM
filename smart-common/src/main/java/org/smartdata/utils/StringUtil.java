@@ -43,4 +43,8 @@ public class StringUtil {
     }
     return sb.toString();
   }
+
+  public static String basePath(String path) {
+
+  }
 }

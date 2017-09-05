@@ -24,7 +24,7 @@ import org.smartdata.model.RuleState;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
 import org.smartdata.model.rule.TranslateResult;
-import org.smartdata.rule.parser.RuleStringParser;
+import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.data.ExecutionContext;
@@ -132,7 +132,7 @@ public class RuleInfoRepo {
       TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
           ruleInfo.getSubmitTime());
       TranslateResult tr = executor != null ? executor.getTranslateResult() :
-          new RuleStringParser(ruleInfo.getRuleText(), transCtx).translate();
+          new SmartRuleStringParser(ruleInfo.getRuleText(), transCtx).translate();
       List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
       for (RuleExecutorPlugin plugin : plugins) {
         plugin.onNewRuleExecutor(ruleInfo, tr);
