@@ -30,6 +30,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
@@ -103,11 +104,15 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   public void forceSync(String src, String dest) throws IOException, MetaStoreException {
-    // TODO check dest statuses to avoid unnecessary copy
-    // Force Sync src and dest
-    // TODO get namespace from file table
-    // Classify files according to rules and back_up
-    // Add file diffs to file diff table
+    List<FileInfo> srcFiles = metaStore.getFilesByPrefix(src);
+    for (FileInfo fileInfo: srcFiles) {
+      if (fileInfo.isdir()) {
+        continue;
+      }
+      String fullPath = fileInfo.getPath();
+      // TODO Replace src with dest
+      // New diff
+    }
   }
 
   private class ScheduleTask implements Runnable {
