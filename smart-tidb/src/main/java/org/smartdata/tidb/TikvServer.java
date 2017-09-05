@@ -43,7 +43,7 @@ public class TikvServer implements Runnable {
     }
 
     StringBuffer strbuffer = new StringBuffer();
-    //According to start.rs in pingcap's tidb source code, "TiKV" is the flag name used for parsing
+    //According to start.rs in pingcap's tikv source code, "TiKV" is the flag name used for parsing
     strbuffer.append("TiKV");
     strbuffer.append(" ");
     strbuffer.append(args);
