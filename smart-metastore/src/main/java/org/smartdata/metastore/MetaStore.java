@@ -883,6 +883,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public FileDiff getFileDiff(long did) throws MetaStoreException {
+    try {
+      return fileDiffDao.getById(did);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   @Override
   public boolean markFileDiffApplied(long did,
       FileDiffState state) throws MetaStoreException {
