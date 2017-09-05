@@ -23,27 +23,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PdServer implements Runnable {
-    private String args;
-    private final static Logger LOG = LoggerFactory.getLogger(PdServer.class);
+  private String args;
+  private final static Logger LOG = LoggerFactory.getLogger(PdServer.class);
 
-    public interface Pd extends Library {
-        void startServer(String args);
+  public interface Pd extends Library {
+    void startServer(String args);
+  }
+
+  public PdServer(String args) {
+    this.args = args;
+  }
+
+  public void run() {
+    Pd pd = null;
+    try {
+      pd = (Pd) Native.loadLibrary("libpd.so", Pd.class);
+    } catch (UnsatisfiedLinkError ex) {
+      LOG.error(ex.getMessage());
     }
 
-    public PdServer(String args) {
-        this.args=args;
-    }
-
-    public void run(){
-        Pd pd=null;
-        try {
-            pd = (Pd) Native.loadLibrary("libpd.so", Pd.class);
-        }
-        catch (UnsatisfiedLinkError ex){
-            LOG.error(ex.getMessage());
-        }
-
-        LOG.info("Starting PD..");
-        pd.startServer(args);
-    }
+    LOG.info("Starting PD..");
+    pd.startServer(args);
+  }
 }

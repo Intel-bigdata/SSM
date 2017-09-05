@@ -14,10 +14,10 @@
     <packaging>jar</packaging>
 
     <dependencies>
-       <dependency>
-           <groupId>net.java.dev.jna</groupId>
-           <artifactId>jna</artifactId>
-           <version>4.1.0</version>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
@@ -31,16 +31,6 @@
     </dependencies>
 
     <build>
-        <!--<resources>-->
-            <!--<resource>-->
-                <!--<directory>${basedir}/src/main/resources</directory>-->
-                <!--<excludes>-->
-                    <!--<exclude>*.so</exclude>-->
-                    <!--<exclude>*.jar</exclude>-->
-                <!--</excludes>-->
-                <!--<filtering>false</filtering>-->
-            <!--</resource>-->
-        <!--</resources>-->
         <plugins>
             <plugin>
                 <artifactId>exec-maven-plugin</artifactId>

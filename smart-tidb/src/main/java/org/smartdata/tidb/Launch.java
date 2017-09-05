@@ -21,30 +21,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Launch implements Runnable {
-    private final static Logger LOG = LoggerFactory.getLogger(Launch.class);
+  private final static Logger LOG = LoggerFactory.getLogger(Launch.class);
 
-    public void run() {
-        String pdArgs=new String("--data-dir=pd --log-file=logs/pd.log");
-        String tikvArgs=new String("--pd=127.0.0.1:2379 --data-dir=tikv --log-file=logs/tikv.log");
-        //String tidbArgs= new String("--store=tikv --path=127.0.0.1:2379 --log-file=logs/tidb.log");
-        String tidbArgs= new String("--log-file=logs/tidb.log");
+  public void run() {
+    String pdArgs = new String("--data-dir=pd --log-file=logs/pd.log");
+    String tikvArgs = new String("--pd=127.0.0.1:2379 --data-dir=tikv --log-file=logs/tikv.log");
+    //String tidbArgs = new String("--store=tikv --path=127.0.0.1:2379 --log-file=logs/tidb.log");
+    String tidbArgs = new String("--log-file=logs/tidb.log");
 
-        PdServer pdServer=new PdServer(pdArgs);
-        TikvServer tikvServer=new TikvServer(tikvArgs);
-        TidbServer tidbServer=new TidbServer(tidbArgs);
+    PdServer pdServer = new PdServer(pdArgs);
+    TikvServer tikvServer = new TikvServer(tikvArgs);
+    TidbServer tidbServer = new TidbServer(tidbArgs);
 
-        Thread pdThread=new Thread(pdServer);
-        pdThread.start();
-        try {
-            Thread.sleep(4000);
-            Thread tikvThread=new Thread(tikvServer);
-            tikvThread.start();
-            Thread.sleep(6000);
-            Thread tidbThread = new Thread(tidbServer);
-            tidbThread.start();
-        }
-        catch (InterruptedException ex){
-            LOG.error(ex.getMessage());
-        }
+    Thread pdThread = new Thread(pdServer);
+    pdThread.start();
+    try {
+      Thread.sleep(4000);
+      Thread tikvThread = new Thread(tikvServer);
+      tikvThread.start();
+      Thread.sleep(6000);
+      Thread tidbThread = new Thread(tidbServer);
+      tidbThread.start();
+    } catch (InterruptedException ex) {
+      LOG.error(ex.getMessage());
     }
+  }
 }

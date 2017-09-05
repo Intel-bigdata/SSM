@@ -22,28 +22,27 @@ import com.sun.jna.Native;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TidbServer implements Runnable{
-    private String args;
-    private final static Logger LOG = LoggerFactory.getLogger(TidbServer.class);
+public class TidbServer implements Runnable {
+  private String args;
+  private final static Logger LOG = LoggerFactory.getLogger(TidbServer.class);
 
-    public interface Tidb extends Library{
-        void startServer(String args);
+  public interface Tidb extends Library {
+    void startServer(String args);
+  }
+
+  public TidbServer(String args) {
+    this.args = args;
+  }
+
+  public void run() {
+    Tidb tidb = null;
+    try {
+      tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
+    } catch (UnsatisfiedLinkError ex) {
+      LOG.error(ex.getMessage());
     }
 
-    public TidbServer(String args){
-        this.args=args;
-    }
-
-    public void run(){
-        Tidb tidb=null;
-        try {
-            tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
-        }
-        catch (UnsatisfiedLinkError ex){
-            LOG.error(ex.getMessage());
-        }
-
-        LOG.info("Starting TiDB..");
-        tidb.startServer(args);
-    }
+    LOG.info("Starting TiDB..");
+    tidb.startServer(args);
+  }
 }

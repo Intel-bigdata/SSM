@@ -23,33 +23,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TikvServer implements Runnable {
-    private String args;
-    private final static Logger LOG = LoggerFactory.getLogger(TikvServer.class);
+  private String args;
+  private final static Logger LOG = LoggerFactory.getLogger(TikvServer.class);
 
-    public interface Tikv extends Library {
-        void startServer(String args);
+  public interface Tikv extends Library {
+    void startServer(String args);
+  }
+
+  public TikvServer(String args) {
+    this.args = args;
+  }
+
+  public void run() {
+    Tikv tikv = null;
+    try {
+      tikv = (Tikv) Native.loadLibrary("libtikv.so", Tikv.class);
+    } catch (UnsatisfiedLinkError ex) {
+      LOG.error(ex.getMessage());
     }
 
-    public TikvServer(String args){
-        this.args=args;
-    }
+    StringBuffer strbuffer = new StringBuffer();
+    //According to start.rs in pingcap's tidb source code, "TiKV" is the flag name used for parsing
+    strbuffer.append("TiKV");
+    strbuffer.append(" ");
+    strbuffer.append(args);
 
-    public void run(){
-        Tikv tikv=null;
-        try {
-            tikv= (Tikv) Native.loadLibrary("libtikv.so",Tikv.class);
-        }
-        catch (UnsatisfiedLinkError ex){
-            LOG.error(ex.getMessage());
-        }
-
-        StringBuffer strbuffer=new StringBuffer();
-        //According to start.rs in pingcap's tidb source code, "TiKV" is the flag name used for parsing
-        strbuffer.append("TiKV");
-        strbuffer.append(" ");
-        strbuffer.append(args);
-
-        LOG.info("Starting TiKV..");
-        tikv.startServer(strbuffer.toString());
-    }
+    LOG.info("Starting TiKV..");
+    tikv.startServer(strbuffer.toString());
+  }
 }

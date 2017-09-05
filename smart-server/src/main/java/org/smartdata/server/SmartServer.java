@@ -127,9 +127,7 @@ public class SmartServer {
   }
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
-    SmartServer ssm = new SmartServer(conf);
-
-    if (ssm.isTidbEnabled()) {
+    if (isTidbEnabled(conf)) {
       Thread db = new Thread(new Launch());
       LOG.info("Starting PD, TiKV and TiDB..");
       db.start();
@@ -147,6 +145,7 @@ public class SmartServer {
       return null;
     }
 
+    SmartServer ssm = new SmartServer(conf);
     try {
       ssm.initWith(startOption);
       ssm.run();
@@ -201,7 +200,7 @@ public class SmartServer {
         SmartConfKeys.SMART_ENABLE_ZEPPELIN_DEFAULT);
   }
 
-  private boolean isTidbEnabled() {
+  private static boolean isTidbEnabled(SmartConf conf) {
     return conf.getBoolean(SmartConfKeys.SMART_TIDB_ENABLED,SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
   }
 
@@ -348,7 +347,6 @@ public class SmartServer {
 
   public static void main(String[] args) {
     int errorCode = 0;  // if SSM exit normally then the errorCode is 0
-
     try {
       final SmartServer inst = launchWith(args, null);
       if (inst != null) {
