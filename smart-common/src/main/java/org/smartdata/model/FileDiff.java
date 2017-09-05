@@ -20,6 +20,7 @@ package org.smartdata.model;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -31,6 +32,23 @@ public class FileDiff {
   private Map<String, String> parameters;
   private FileDiffState state;
   private long create_time;
+
+  public FileDiff() {
+    this.create_time = System.currentTimeMillis();
+    this.parameters = new HashMap<>();
+  }
+
+  public FileDiff(FileDiffType diffType) {
+    this();
+    this.diffType = diffType;
+    this.state = FileDiffState.PENDING;
+  }
+
+  public FileDiff(FileDiffType diffType, FileDiffState state) {
+    this();
+    this.diffType = diffType;
+    this.state = state;
+  }
 
   public long getDiffId() {
     return diffId;

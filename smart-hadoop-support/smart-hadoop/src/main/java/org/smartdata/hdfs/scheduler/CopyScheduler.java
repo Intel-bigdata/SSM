@@ -30,6 +30,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class CopyScheduler extends ActionSchedulerService {
   static final Logger LOG =
@@ -90,28 +92,37 @@ public class CopyScheduler extends ActionSchedulerService {
   @Override
   public void start() throws IOException {
     // TODO Enable this module later
-    // executorService.scheduleAtFixedRate(
-    //     new CopyScheduler.ScheduleTask(), 1000, 1000,
-    //     TimeUnit.MILLISECONDS);
+    executorService.scheduleAtFixedRate(
+        new CopyScheduler.ScheduleTask(), 1000, 1000,
+        TimeUnit.MILLISECONDS);
   }
 
   @Override
   public void stop() throws IOException {
     // TODO Enable this module later
-    // executorService.shutdown();
+    executorService.shutdown();
   }
 
   public void forceSync(String src, String dest) throws IOException, MetaStoreException {
-    // TODO check dest statuses to avoid unnecessary copy
-    // Force Sync src and dest
-    // TODO get namespace from file table
-    // Classify files according to rules and back_up
-    // Add file diffs to file diff table
+    List<FileInfo> srcFiles = metaStore.getFilesByPrefix(src);
+    for (FileInfo fileInfo: srcFiles) {
+      if (fileInfo.isdir()) {
+        continue;
+      }
+      String fullPath = fileInfo.getPath();
+      // TODO Replace src with dest
+      // New diff
+    }
   }
 
   private class ScheduleTask implements Runnable {
 
     private Map<Long, FileDiff> fileDiffBatch;
+    private Map<String, FileChain> fileChainMap;
+
+    public ScheduleTask() {
+      fileChainMap = new HashMap<>();
+    }
 
     private void syncRule() {
       try {
@@ -134,7 +145,6 @@ public class CopyScheduler extends ActionSchedulerService {
 
     private void diffMerge(List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
-      Map<String, FileChain> fileChainMap = new HashMap<>();
       for (FileDiff fileDiff: fileDiffs) {
         FileChain fileChain;
         String src = fileDiff.getSrc();
@@ -151,36 +161,41 @@ public class CopyScheduler extends ActionSchedulerService {
           fileChain.tail = dest;
           // Update key in map
           fileChainMap.remove(src);
-          fileChainMap.put(dest, fileChain);
+          if (fileChainMap.containsKey(dest)) {
+            // Merge with existing chain
+            // Delete then rename and append
+            fileChainMap.get(dest).merge(fileChain);
+            fileChain = fileChainMap.get(dest);
+          } else {
+            fileChainMap.put(dest, fileChain);
+          }
+        } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
+          fileChain.tail = src;
+          // Remove key in map
+          fileChain.delete();
+          // fileChainMap.remove(src);
         }
         // Add file diff to fileChain
-        fileChain.fillDiffChain.add(fileDiff.getDiffId());
-      }
-      // Handle all existing fileChains
-      for (FileChain fileChain: fileChainMap.values()) {
-        handleFileChain(fileChain);
+        fileChain.fileDiffChain.add(fileDiff.getDiffId());
       }
     }
 
-    private void handleFileChain(FileChain fileChain) throws MetaStoreException {
+    /*private void handleFileChain(FileChain fileChain) throws MetaStoreException {
       List<FileDiff> resultSet = new ArrayList<>();
-      for (Long fid: fileChain.getFillDiffChain()) {
-        // TODO get parameter map from parameters string
+      for (Long fid: fileChain.getFileDiffChain()) {
         // Current append diff
         FileDiff fileDiff = new FileDiff();
         fileDiff.setParameters(new HashMap<String, String>());
         FileDiff currFileDiff = fileDiffBatch.get(fid);
-        if (currFileDiff.getDiffType() == FileDiffType.APPEND) {
-          // TODO Add incremental length to current
-          fileDiff.getParameters().put("-length", currFileDiff.getParameters().get("-length"));
-        } else if (currFileDiff.getDiffType() == FileDiffType.DELETE) {
+        // if (currFileDiff.getDiffType() == FileDiffType.APPEND) {
+        //   fileDiff.getParameters().put("-length", currFileDiff.getParameters().get("-length"));
+        // }
+        if (currFileDiff.getDiffType() == FileDiffType.DELETE) {
           FileDiff deleteFileDiff = new FileDiff();
-          // TODO add deleteFileDiff content
           deleteFileDiff.setSrc(currFileDiff.getSrc());
           resultSet.add(deleteFileDiff);
         } else if (currFileDiff.getDiffType() == FileDiffType.RENAME) {
           FileDiff renameFileDiff = new FileDiff();
-          // TODO add deleteFileDiff content
           renameFileDiff.setSrc(currFileDiff.getSrc());
           resultSet.add(renameFileDiff);
           // Set current append src as renamed src
@@ -193,7 +208,7 @@ public class CopyScheduler extends ActionSchedulerService {
       for (FileDiff fileDiff: resultSet) {
         metaStore.insertFileDiff(fileDiff);
       }
-    }
+    }*/
 
 
     private void processCmdletByRule(BackUpInfo backUpInfo) {
@@ -249,11 +264,11 @@ public class CopyScheduler extends ActionSchedulerService {
     private class FileChain {
       private String head;
       private String tail;
-      private List<Long> fillDiffChain;
+      private List<Long> fileDiffChain;
       private int state;
 
       FileChain() {
-        this.fillDiffChain = new ArrayList<>();
+        this.fileDiffChain = new ArrayList<>();
         this.tail = null;
         this.head = null;
       }
@@ -263,12 +278,27 @@ public class CopyScheduler extends ActionSchedulerService {
         this.head = curr;
       }
 
-      public List<Long> getFillDiffChain() {
-        return fillDiffChain;
+      public List<Long> getFileDiffChain() {
+        return fileDiffChain;
       }
 
-      public void setFillDiffChain(List<Long> fillDiffChain) {
-        this.fillDiffChain = fillDiffChain;
+      public void setFileDiffChain(List<Long> fileDiffChain) {
+        this.fileDiffChain = fileDiffChain;
+      }
+
+      public void rename(String src, String dest) {
+        tail = dest;
+      }
+
+      public void delete() throws MetaStoreException {
+        for (long did: fileDiffChain) {
+          metaStore.markFileDiffApplied(did, FileDiffState.APPLIED);
+        }
+        fileDiffChain.clear();
+      }
+
+      public void merge(FileChain previousChain) {
+
       }
     }
   }
