@@ -28,7 +28,7 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
-import org.smartdata.rule.parser.RuleStringParser;
+import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
@@ -128,7 +128,7 @@ public class RuleManager extends AbstractService {
 
   private TranslateResult doCheckRule(String rule, TranslationContext ctx)
       throws IOException {
-    RuleStringParser parser = new RuleStringParser(rule, ctx);
+    SmartRuleStringParser parser = new SmartRuleStringParser(rule, ctx);
     return parser.translate();
   }
 
