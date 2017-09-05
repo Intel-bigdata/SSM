@@ -839,7 +839,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
         // TODO: Handle not
         if (p.getPropertyName().equals("path")) {
-          ValueNode pathStrNode = (ValueNode)(vNode.getParent().getPeer());
+          ValueNode pathStrNode = (ValueNode)(vNode.getPeer());
           VisitResult pathVr = pathStrNode.eval();
           String pathStr = (String)pathVr.getValue();
           pathCheckGlob.add(pathStr);
