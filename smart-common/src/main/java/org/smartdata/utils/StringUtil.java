@@ -22,6 +22,10 @@ package org.smartdata.utils;
 import java.util.Iterator;
 
 public class StringUtil {
+  private static final String DIR_SEP = "/";
+  private static final String[] GLOBS = new String[] {
+      "*", "?"
+  };
 
   public static String join(CharSequence delimiter,
       Iterable<? extends CharSequence> elements) {
@@ -44,7 +48,28 @@ public class StringUtil {
     return sb.toString();
   }
 
-  public static String basePath(String path) {
+  public static String getBaseDir(String path) {
+    if (path == null) {
+      return null;
+    }
 
+    int last = path.lastIndexOf(DIR_SEP);
+    if (last == -1) {
+      return null;
+    }
+
+    int first = path.length();
+    for (String g : GLOBS) {
+      int gIdx = path.indexOf(g);
+      if (gIdx >= 0) {
+        first = gIdx < first ? gIdx : first;
+      }
+    }
+
+    last = path.substring(0, first).lastIndexOf(DIR_SEP);
+    if (last == -1) {
+      return null;
+    }
+    return path.substring(0, last);
   }
 }
