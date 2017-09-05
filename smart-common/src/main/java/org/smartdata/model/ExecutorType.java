@@ -15,32 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet;
+package org.smartdata.model;
 
-import org.smartdata.model.ExecutorType;
-import org.smartdata.server.engine.CmdletManager;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-
-public abstract class CmdletExecutorService {
-  protected CmdletManager cmdletManager;
-  private ExecutorType executorType;
-
-  public CmdletExecutorService(CmdletManager cmdletManager, ExecutorType executorType) {
-    this.cmdletManager = cmdletManager;
-    this.executorType = executorType;
-  }
-
-  public abstract boolean isLocalService();
-
-  public abstract boolean canAcceptMore();
-
-  public abstract void execute(LaunchCmdlet cmdlet);
-
-  public abstract void stop(long cmdletId);
-
-  public abstract void shutdown();
-
-  public ExecutorType getExecutorType() {
-    return executorType;
-  }
+public enum ExecutorType {
+  LOCAL,
+  REMOTE_SSM,
+  AGENT
 }
