@@ -39,7 +39,7 @@ public class TikvServer implements Runnable {
     try {
       tikv = (Tikv) Native.loadLibrary("libtikv.so", Tikv.class);
     } catch (UnsatisfiedLinkError ex) {
-      LOG.error(ex.getMessage());
+      LOG.error("libtikv.so is not found!");
     }
 
     StringBuffer strbuffer = new StringBuffer();

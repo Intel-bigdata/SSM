@@ -39,7 +39,7 @@ public class PdServer implements Runnable {
     try {
       pd = (Pd) Native.loadLibrary("libpd.so", Pd.class);
     } catch (UnsatisfiedLinkError ex) {
-      LOG.error(ex.getMessage());
+      LOG.error("libpd.so is not found!");
     }
 
     LOG.info("Starting PD..");

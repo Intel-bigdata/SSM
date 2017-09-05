@@ -39,7 +39,7 @@ public class TidbServer implements Runnable {
     try {
       tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
     } catch (UnsatisfiedLinkError ex) {
-      LOG.error(ex.getMessage());
+      LOG.error("libtidb.so is not found!");
     }
 
     LOG.info("Starting TiDB..");
