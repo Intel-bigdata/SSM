@@ -530,6 +530,37 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      int actionNum) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, actionNum);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      int actionNum, boolean finished) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, actionNum, finished);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      boolean successful, int actionNum) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, successful, actionNum);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+
   public List<ActionInfo> listNewCreatedActions(int actionNum) throws IOException {
     try {
       Map<Long, ActionInfo> actionInfos = new HashMap<>();
