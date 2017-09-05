@@ -19,6 +19,7 @@ package org.smartdata.server.engine.rule;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.action.SyncAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.BackUpInfo;
@@ -26,6 +27,7 @@ import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
+import org.smartdata.utils.StringUtil;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -46,11 +48,11 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
     long ruleId = ruleInfo.getId();
     CmdletDescriptor des = tResult.getCmdDescriptor();
     for (int i = 0; i < des.actionSize(); i++) {
-      if (des.getActionName(i).equals("")) {  // TODO: replace with the actual sync action name
+      if (des.getActionName(i).equals("sync")) {  // TODO: replace with the actual sync action name
         BackUpInfo backUpInfo = new BackUpInfo();
         backUpInfo.setRid(ruleId);
-        backUpInfo.setSrc("");
-        backUpInfo.setDest("");
+        backUpInfo.setSrc(StringUtil.join(",", tResult.getGlobPathCheck()));
+        backUpInfo.setDest(des.getActionArgs(i).get(SyncAction.DEST));
         backUpInfo.setPeriod(tResult.getTbScheduleInfo().getEvery());
 
         synchronized (backups) {
