@@ -20,6 +20,7 @@ package org.smartdata.server.engine.cmdlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
+import org.smartdata.model.ExecutorType;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConf;
@@ -38,7 +39,7 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
   private ScheduledExecutorService executorService;
 
   public LocalCmdletExecutorService(SmartConf smartConf, CmdletManager cmdletManager) {
-    super(cmdletManager);
+    super(cmdletManager, ExecutorType.LOCAL);
     this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
     this.cmdletExecutor = new CmdletExecutor(smartConf, this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
