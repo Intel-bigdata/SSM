@@ -33,6 +33,17 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <excludes>
+                        <exclude>*.so</exclude>
+                        <exclude>libtidb.jar</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>exec-maven-plugin</artifactId>
                 <groupId>org.codehaus.mojo</groupId>
                 <executions>
@@ -46,7 +57,7 @@
                             <executable>unzip</executable>
                             <arguments>
                                 <argument>-o</argument>
-                                <argument>${basedir}/src/main/resources/lib.jar</argument>
+                                <argument>${basedir}/src/main/resources/libtidb.jar</argument>
                                 <argument>-d</argument>
                                 <argument>${basedir}/src/main/resources/</argument>
                             </arguments>
