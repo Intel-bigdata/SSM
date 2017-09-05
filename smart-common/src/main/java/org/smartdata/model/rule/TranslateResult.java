@@ -19,6 +19,7 @@ package org.smartdata.model.rule;
 
 import org.smartdata.model.CmdletDescriptor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,12 +35,13 @@ public class TranslateResult {
   private TimeBasedScheduleInfo tbScheduleInfo;
   private CmdletDescriptor cmdDescriptor;
   private int[] condPosition;
+  private List<String> globPathCheck = new ArrayList<>();
 
 
   public TranslateResult(List<String> sqlStatements,
       List<String> tempTableNames, Map<String, List<Object>> dynamicParameters,
       int retSqlIndex, TimeBasedScheduleInfo tbScheduleInfo,
-      CmdletDescriptor cmdDescriptor, int[] condPosition) {
+      CmdletDescriptor cmdDescriptor, int[] condPosition, List<String> globPathCheck) {
     this.sqlStatements = sqlStatements;
     this.staticTempTables = tempTableNames;
     this.dynamicParameters = dynamicParameters;
@@ -47,6 +49,7 @@ public class TranslateResult {
     this.tbScheduleInfo = tbScheduleInfo;
     this.cmdDescriptor = cmdDescriptor;
     this.condPosition = condPosition;
+    this.globPathCheck = globPathCheck;
   }
 
   public CmdletDescriptor getCmdDescriptor() {
@@ -91,5 +94,9 @@ public class TranslateResult {
 
   public void setCondPosition(int[] condPosition) {
     this.condPosition = condPosition;
+  }
+
+  public List<String> getGlobPathCheck() {
+    return globPathCheck;
   }
 }
