@@ -75,6 +75,18 @@ public class FileDiffDao {
         new FileDiffRowMapper());
   }
 
+  public List<String> getSyncPath(int size) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select DISTINCT src from " + TABLE_NAME +
+        " where state=?";
+    return jdbcTemplate
+        .queryForList(sql, String.class, FileDiffState.RUNNING.getValue());
+  }
+
+
   public FileDiff getById(long did) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("select * from " + TABLE_NAME + " where did = ?",

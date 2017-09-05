@@ -882,6 +882,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<String> getSyncPath(int size) throws MetaStoreException {
+    return fileDiffDao.getSyncPath(size);
+  }
+
   @Override
   public List<FileDiff> getPendingDiff() throws MetaStoreException {
     return fileDiffDao.getPendingDiff();
