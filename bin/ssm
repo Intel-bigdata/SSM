@@ -19,6 +19,9 @@
 
 Usage="ssm --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend] [--daemon start|stop ] [--remote] <command> <command args>"
 
+#The tikv server will fail to start if http_proxy is set
+unset http_proxy
+
 SCRIPT_ARGS="$*"
 
 bin=$(dirname "${BASH_SOURCE-$0}")
