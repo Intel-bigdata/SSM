@@ -102,7 +102,6 @@ public class CopyScheduler extends ActionSchedulerService {
     return ScheduleResult.SUCCESS;
   }
 
-
   public List<String> getSupportedActions() {
     return actions;
   }

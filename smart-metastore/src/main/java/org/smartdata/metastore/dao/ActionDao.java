@@ -154,6 +154,12 @@ public class ActionDao {
     jdbcTemplate.update(sql, aid);
   }
 
+  public void deleteAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE from " + TABLE_NAME;
+    jdbcTemplate.execute(sql);
+  }
+
   public void insert(ActionInfo actionInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
