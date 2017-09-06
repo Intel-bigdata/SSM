@@ -110,10 +110,12 @@ public class InotifyEventApplier {
     }
     FileInfo fileInfo = HadoopUtil.convertFileStatus(fileStatus, createEvent.getPath());
     try {
-      if (!fileInfo.isdir() && fileInfo.getLength() != 0) {
+      if (!fileInfo.isdir()) {
+        // ignore dir
         FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
         fileDiff.setSrc(fileInfo.getPath());
         fileDiff.getParameters().put("-offset", String.valueOf(0));
+        // Note that "-length 0" means create an empty file
         fileDiff.getParameters().put("-length", String.valueOf(fileInfo.getLength()));
         metaStore.insertFileDiff(fileDiff);
       }
