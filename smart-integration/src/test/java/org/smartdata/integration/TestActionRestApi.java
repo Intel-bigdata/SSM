@@ -141,7 +141,7 @@ public class TestActionRestApi extends IntegrationTestBase {
     actionList.jsonPath().getList("body.actionId", Long.class).contains(aid);
 
     // check action type list
-    actionList = RestAssured.get(ACTIONROOT + "/type/" + actionType + "/0");
+    actionList = RestAssured.get(ACTIONROOT + "/type/0/" + actionType);
     actionList.then().body("status", Matchers.equalTo("OK"));
     actionList.jsonPath().getList("body.actionId", Long.class).contains(aid);
 

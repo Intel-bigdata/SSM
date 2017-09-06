@@ -73,9 +73,9 @@ public class ActionRestApi {
   }
 
   @GET
-  @Path("/type/{actionName}/{listNumber}")
-  public Response actionList(@PathParam("actionName") String actionName,
-      @PathParam("listNumber") String listNumber) {
+  @Path("/type/{listNumber}/{actionName}")
+  public Response actionList(@PathParam("listNumber") String listNumber,
+      @PathParam("actionName") String actionName) {
     Integer intNumber = Integer.parseInt(listNumber);
     intNumber = intNumber > 0 ? intNumber : 0;
     try {
