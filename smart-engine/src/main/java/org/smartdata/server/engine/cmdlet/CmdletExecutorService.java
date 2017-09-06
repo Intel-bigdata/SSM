@@ -17,15 +17,17 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.smartdata.model.ExecutorType;
 import org.smartdata.server.engine.CmdletManager;
-import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 public abstract class CmdletExecutorService {
   protected CmdletManager cmdletManager;
+  private ExecutorType executorType;
 
-  public CmdletExecutorService(CmdletManager cmdletManager) {
+  public CmdletExecutorService(CmdletManager cmdletManager, ExecutorType executorType) {
     this.cmdletManager = cmdletManager;
+    this.executorType = executorType;
   }
 
   public abstract boolean isLocalService();
@@ -37,4 +39,8 @@ public abstract class CmdletExecutorService {
   public abstract void stop(long cmdletId);
 
   public abstract void shutdown();
+
+  public ExecutorType getExecutorType() {
+    return executorType;
+  }
 }

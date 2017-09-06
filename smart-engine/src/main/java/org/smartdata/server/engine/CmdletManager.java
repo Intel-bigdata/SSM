@@ -194,7 +194,7 @@ public class CmdletManager extends AbstractService {
 
     try {
       metaStore.insertCmdletTable(cmdletInfo);
-      metaStore.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+      metaStore.insertActions(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("Submit Command {} to DB error!", cmdletInfo);
       try {
@@ -396,9 +396,9 @@ public class CmdletManager extends AbstractService {
     List<CmdletInfo> result = new ArrayList<>();
     try {
       if (rid == -1) {
-        result.addAll(metaStore.getCmdletsTableItem(null, null, cmdletState));
+        result.addAll(metaStore.getCmdlets(null, null, cmdletState));
       } else {
-        result.addAll(metaStore.getCmdletsTableItem(null, String.format("= %d", rid), cmdletState));
+        result.addAll(metaStore.getCmdlets(null, String.format("= %d", rid), cmdletState));
       }
     } catch (MetaStoreException e) {
       LOG.error("List CmdletInfo from DB error! Conditions rid {}", rid, e);
@@ -416,7 +416,7 @@ public class CmdletManager extends AbstractService {
     Map<Long, CmdletInfo> result = new HashMap<>();
     try {
       String ridCondition = rid == -1 ? null : String.format("= %d", rid);
-      for (CmdletInfo info : metaStore.getCmdletsTableItem(null, ridCondition, null)) {
+      for (CmdletInfo info : metaStore.getCmdlets(null, ridCondition, null)) {
         result.put(info.getCid(), info);
       }
     } catch (MetaStoreException e) {
@@ -530,10 +530,41 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      int actionNum) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, actionNum);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      int actionNum, boolean finished) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, actionNum, finished);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      boolean successful, int actionNum) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, successful, actionNum);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+
   public List<ActionInfo> listNewCreatedActions(int actionNum) throws IOException {
     try {
       Map<Long, ActionInfo> actionInfos = new HashMap<>();
-      for (ActionInfo info : metaStore.getNewCreatedActionsTableItem(actionNum)) {
+      for (ActionInfo info : metaStore.getNewCreatedActions(actionNum)) {
         actionInfos.put(info.getActionId(), info);
       }
       actionInfos.putAll(idToActions);
@@ -648,7 +679,7 @@ public class CmdletManager extends AbstractService {
 
   private void flushActionInfos(List<ActionInfo> infos) throws IOException {
     try {
-      metaStore.updateActionsTable(infos.toArray(new ActionInfo[infos.size()]));
+      metaStore.updateActions(infos.toArray(new ActionInfo[infos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("Write CacheObject to DB error!", e);
       throw new IOException(e);

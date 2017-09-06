@@ -39,7 +39,7 @@ import java.util.Map;
 /**
  * Parser a rule string and translate it.
  */
-public class RuleStringParser {
+public class SmartRuleStringParser {
   private String rule;
   private TranslationContext ctx = null;
 
@@ -50,6 +50,7 @@ public class RuleStringParser {
     optCond.put("archive", "storagePolicy != \"COLD\"");
     optCond.put("cache", "not inCache");
     optCond.put("uncache", "inCache");
+    optCond.put("sync", "unsynced");
   }
 
   List<RecognitionException> parseErrors = new ArrayList<RecognitionException>();
@@ -70,7 +71,7 @@ public class RuleStringParser {
     }
   }
 
-  public RuleStringParser(String rule, TranslationContext ctx) {
+  public SmartRuleStringParser(String rule, TranslationContext ctx) {
     this.rule = rule;
     this.ctx = ctx;
   }

@@ -18,6 +18,7 @@
 package org.smartdata.server.engine.cmdlet.agent;
 
 import org.smartdata.conf.SmartConf;
+import org.smartdata.model.ExecutorType;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -29,7 +30,7 @@ public class AgentExecutorService extends CmdletExecutorService {
   private AgentMaster master;
 
   public AgentExecutorService(SmartConf conf, CmdletManager cmdletManager) {
-    super(cmdletManager);
+    super(cmdletManager, ExecutorType.AGENT);
     this.master = new AgentMaster(conf, cmdletManager);
   }
 

@@ -15,22 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metaservice;
+package org.smartdata.action;
 
-import org.smartdata.model.BackUpInfo;
+import org.smartdata.action.annotation.ActionSignature;
 
-import java.util.List;
+/**
+ * Sync action is an abstract action for backup and copy
+ * Users can submit a sync action with detailed src path and
+ * dest path, e.g., "sync -src /test/1 -dest hdfs:/remoteIP:port/test/1"
+ */
+@ActionSignature(
+    actionId = "sync",
+    displayName = "sync",
+    usage = SyncAction.SRC + " $src" + SyncAction.DEST + " $dest"
+)
+public class SyncAction extends SmartAction {
+  // related to fileDiff.src
+  public static final String SRC = "-src";
+  // related to remote cluster and fileDiff.src
+  public static final String DEST = "-dest";
 
-public interface BackupMetaService extends MetaService {
-
-  List<BackUpInfo> listAllBackUpInfo() throws MetaServiceException;
-
-  BackUpInfo getBackUpInfoById(long id) throws MetaServiceException;
-
-  void deleteAllBackUpInfo() throws MetaServiceException;
-
-  void deleteBackUpInfoById(long id) throws MetaServiceException;
-
-  void insertBackUpInfo(BackUpInfo backUpInfo) throws MetaServiceException;
-
+  @Override
+  protected void execute() throws Exception {
+  }
 }

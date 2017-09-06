@@ -15,22 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metaservice;
+package org.smartdata.model;
 
-import org.smartdata.model.BackUpInfo;
-
-import java.util.List;
-
-public interface BackupMetaService extends MetaService {
-
-  List<BackUpInfo> listAllBackUpInfo() throws MetaServiceException;
-
-  BackUpInfo getBackUpInfoById(long id) throws MetaServiceException;
-
-  void deleteAllBackUpInfo() throws MetaServiceException;
-
-  void deleteBackUpInfoById(long id) throws MetaServiceException;
-
-  void insertBackUpInfo(BackUpInfo backUpInfo) throws MetaServiceException;
-
+public enum ExecutorType {
+  LOCAL,
+  REMOTE_SSM,
+  AGENT
 }
