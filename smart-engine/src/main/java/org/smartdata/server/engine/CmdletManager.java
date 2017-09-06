@@ -349,12 +349,15 @@ public class CmdletManager extends AbstractService {
     if (cmdletInfo == null) {
       return null;
     }
+    Map<String, String> args;
     List<LaunchAction> launchActions = new ArrayList<>();
     for (Long aid : cmdletInfo.getAids()) {
       if (idToActions.containsKey(aid)) {
         ActionInfo toLaunch = idToActions.get(aid);
+        args =  new HashMap<>();
+        args.putAll(toLaunch.getArgs());
         launchActions.add(
-            new LaunchAction(toLaunch.getActionId(), toLaunch.getActionName(), toLaunch.getArgs()));
+            new LaunchAction(toLaunch.getActionId(), toLaunch.getActionName(), args));
       }
     }
     return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);

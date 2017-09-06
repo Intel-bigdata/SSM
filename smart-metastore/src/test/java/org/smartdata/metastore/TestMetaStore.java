@@ -426,6 +426,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(actionInfos.get(0).equals(actionInfo));
   }
 
+
   @Test
   public void testGetNewCreatedActions() throws Exception {
     Map<String, String> args = new HashMap();
@@ -438,6 +439,8 @@ public class TestMetaStore extends TestDaoUtil {
     actionInfo.setActionId(2);
     metaStore.insertActionTable(actionInfo);
     actionInfos = metaStore.getNewCreatedActionsTableItem(1);
+    Assert.assertTrue(actionInfos.size() == 1);
+    actionInfos = metaStore.getNewCreatedActionsTableItemByStatus("cache",1, true, true);
     Assert.assertTrue(actionInfos.size() == 1);
     actionInfos = metaStore.getNewCreatedActionsTableItem(2);
     Assert.assertTrue(actionInfos.size() == 2);

@@ -17,6 +17,9 @@
  * under the License.
  */
 /* bolder text */
+body {
+  margin: 0px !important;
+}
 .bold {
   font-weight: 500;
 }
