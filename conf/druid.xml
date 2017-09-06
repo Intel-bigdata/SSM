@@ -22,6 +22,7 @@
 
 <properties>
     <!-- <entry key="url">jdbc:sqlite:sqlit-db-path</entry> -->
+    <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> default url for Tidb-->
     <entry key="username">""</entry>
     <entry key="password">""</entry>
 

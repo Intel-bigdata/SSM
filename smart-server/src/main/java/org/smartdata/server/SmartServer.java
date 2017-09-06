@@ -45,6 +45,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import org.smartdata.tidb.Launch;
+
 /**
  * From this Smart Storage Management begins.
  */
@@ -125,6 +127,17 @@ public class SmartServer {
   }
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
+    if (isTidbEnabled(conf)) {
+      Thread db = new Thread(new Launch());
+      LOG.info("Starting PD, TiKV and TiDB..");
+      db.start();
+      try {
+        Thread.sleep(12000);
+      } catch (InterruptedException ex) {
+        LOG.error(ex.getMessage());
+      }
+    }
+
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
@@ -185,6 +198,10 @@ public class SmartServer {
   private boolean isZeppelinEnabled() {
     return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN,
         SmartConfKeys.SMART_ENABLE_ZEPPELIN_DEFAULT);
+  }
+
+  private static boolean isTidbEnabled(SmartConf conf) {
+    return conf.getBoolean(SmartConfKeys.SMART_TIDB_ENABLED,SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
   }
 
   private void checkSecurityAndLogin() throws IOException {
