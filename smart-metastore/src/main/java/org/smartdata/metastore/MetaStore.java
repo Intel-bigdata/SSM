@@ -732,6 +732,20 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
+      int size) throws MetaStoreException {
+    if (size < 0) {
+      return new ArrayList<>();
+    }
+    try {
+      return actionDao.getLatestActions(actionName, size);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<ActionInfo> getNewCreatedActions(String actionName,
       int size, boolean successful,
       boolean finished) throws MetaStoreException {
     if (size < 0) {
@@ -760,13 +774,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<ActionInfo> getNewCreatedActions(String actionType,
+  public List<ActionInfo> getNewCreatedActions(String actionName,
       boolean successful, int size) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
     try {
-      return actionDao.getLatestActions(actionType, size, successful);
+      return actionDao.getLatestActions(actionName, size, successful);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {
