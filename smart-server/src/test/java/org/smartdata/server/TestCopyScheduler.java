@@ -57,8 +57,11 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
     }
     List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
     Assert.assertTrue(actionInfos.size() == 3);
-    Thread.sleep(1000);
+    Thread.sleep(3000);
+    for (int i = 0; i < 3; i++) {
+      // Write 10 files
+      Assert.assertTrue(dfs.exists(new Path(destPath + i)));
+      System.out.printf("File %d is copied.\n", i);
+    }
   }
-
-
 }
