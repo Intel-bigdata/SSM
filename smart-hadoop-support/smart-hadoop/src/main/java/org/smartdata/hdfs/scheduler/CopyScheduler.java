@@ -72,12 +72,12 @@ public class CopyScheduler extends ActionSchedulerService {
     if (!actionInfo.getActionName().equals("sync")) {
       return ScheduleResult.FAIL;
     }
+    String srcDir = action.getArgs().get("-src");
     String path = action.getArgs().get("-file");
-    String dest = action.getArgs().get("-dest");
+    String destDir = action.getArgs().get("-dest");
     if (!fileChainMap.containsKey(path)) {
       return ScheduleResult.FAIL;
     }
-    // action.getArgs().remove("-file");
     long fid = fileChainMap.get(path).popTop();
     FileDiff fileDiff = null;
     try {
@@ -88,13 +88,17 @@ public class CopyScheduler extends ActionSchedulerService {
     switch (fileDiff.getDiffType()) {
       case APPEND:
         action.setActionType("copy");
+        action.getArgs().put("-dest", path.replace(srcDir, destDir));
         break;
       case DELETE:
         action.setActionType("delete");
-        action.getArgs().put("-file", dest);
+        action.getArgs().put("-file", path.replace(srcDir, destDir));
         break;
       case RENAME:
         action.setActionType("rename");
+        action.getArgs().put("-file", path.replace(srcDir, destDir));
+        // TODO scope check
+        action.getArgs().put("-dest", fileDiff.getParameters().get("-dest").replace(srcDir, destDir));
         break;
       default:
         break;

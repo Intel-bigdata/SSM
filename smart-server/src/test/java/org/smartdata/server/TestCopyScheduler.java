@@ -75,10 +75,10 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   public void testSyncScheduler() throws Exception {
     waitTillSSMExitSafeMode();
     MetaStore metaStore = ssm.getMetaStore();
-    metaStore.deleteAllFileDiff();
-    metaStore.deleteAllFileInfo();
-    metaStore.deleteAllCmdlets();
-    metaStore.deleteAllActions();
+    // metaStore.deleteAllFileDiff();
+    // metaStore.deleteAllFileInfo();
+    // metaStore.deleteAllCmdlets();
+    // metaStore.deleteAllActions();
     DistributedFileSystem dfs = cluster.getFileSystem();
     final String srcPath = "/src/";
     final String destPath = "/dest/";
@@ -94,7 +94,7 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
     // Submit sync action
     for (int i = 0; i < 3; i++) {
       // Create test files
-      cmdletManager.submitCmdlet("sync -file /src/" + i + " -dest /dest/" + i);
+      cmdletManager.submitCmdlet("sync -file /src/" + i + " -src " + srcPath + " -dest " + destPath);
     }
     List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
     Assert.assertTrue(actionInfos.size() == 3);
@@ -110,10 +110,10 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   public void testCopyDelete() throws Exception {
     waitTillSSMExitSafeMode();
     MetaStore metaStore = ssm.getMetaStore();
-    metaStore.deleteAllFileDiff();
-    metaStore.deleteAllFileInfo();
-    metaStore.deleteAllCmdlets();
-    metaStore.deleteAllActions();
+    // metaStore.deleteAllFileDiff();
+    // metaStore.deleteAllFileInfo();
+    // metaStore.deleteAllCmdlets();
+    // metaStore.deleteAllActions();
     DistributedFileSystem dfs = cluster.getFileSystem();
     final String srcPath = "/src/";
     final String destPath = "/dest/";
@@ -131,7 +131,7 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
     // Submit sync action
     for (int i = 0; i < 3; i++) {
       // Create test files
-      cmdletManager.submitCmdlet("sync -file /src/" + i + " -dest /dest/" + i);
+      cmdletManager.submitCmdlet("sync -file /src/" + i + " -src " + srcPath + " -dest " + destPath);
     }
     List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
     Assert.assertTrue(actionInfos.size() == 3);
