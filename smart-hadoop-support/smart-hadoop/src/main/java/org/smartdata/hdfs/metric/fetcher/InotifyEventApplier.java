@@ -27,7 +27,6 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
@@ -71,11 +70,7 @@ public class InotifyEventApplier {
   }
 
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
-    FileDiff fileDiff = new FileDiff();
-    fileDiff.setCreate_time(System.currentTimeMillis());
-    fileDiff.setState(FileDiffState.PENDING);
     switch (event.getEventType()) {
-      // TODO parse and save to fileDiff
       case CREATE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CreateEvent) event).getPath());
@@ -87,21 +82,11 @@ public class InotifyEventApplier {
       case CLOSE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CloseEvent) event).getPath());
-        fileDiff.setDiffType(FileDiffType.APPEND);
-        fileDiff.setSrc(String.format("%s", ((Event.CloseEvent) event).getPath()));
-        fileDiff.setParameters(String.format("-length %s",
-            ((Event.CloseEvent) event).getFileSize()));
-        metaStore.insertFileDiff(fileDiff);
         return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
       case RENAME:
         LOG.trace("event type:" + event.getEventType().name() +
             ", src path:" + ((Event.RenameEvent) event).getSrcPath() +
             ", dest path:" + ((Event.RenameEvent) event).getDstPath());
-        fileDiff.setDiffType(FileDiffType.RENAME);
-        fileDiff.setSrc(String.format("%s",((Event.RenameEvent)event).getSrcPath()));
-        fileDiff.setParameters(String.format("-dest %s",
-            ((Event.RenameEvent)event).getDstPath()));
-        metaStore.insertFileDiff(fileDiff);
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
         LOG.trace("event type:" + event.getEventType().name() +
@@ -114,10 +99,6 @@ public class InotifyEventApplier {
       case UNLINK:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.UnlinkEvent)event).getPath());
-        fileDiff.setDiffType(FileDiffType.DELETE);
-        fileDiff.setSrc(String.format("%s",((Event.UnlinkEvent)event).getPath()));
-        fileDiff.setParameters("");
-        metaStore.insertFileDiff(fileDiff);
         return this.getUnlinkSql((Event.UnlinkEvent)event);
     }
     return Arrays.asList();
@@ -141,7 +122,23 @@ public class InotifyEventApplier {
   }
 
   //Todo: should update mtime? atime?
-  private String getCloseSql(Event.CloseEvent closeEvent) {
+  private String getCloseSql(Event.CloseEvent closeEvent) throws IOException {
+    FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+    fileDiff.setSrc(closeEvent.getPath());
+    long newLen = closeEvent.getFileSize();
+    long currLen = 0l;
+    // TODO make sure offset is correct
+    try {
+      currLen = metaStore.getFile(closeEvent.getPath()).getLength();
+      if (currLen != newLen) {
+        fileDiff.getParameters().put("-offset", String.valueOf(currLen));
+        fileDiff.getParameters().put("-length", String.valueOf(newLen - currLen));
+        metaStore.insertFileDiff(fileDiff);
+      }
+    } catch (MetaStoreException e) {
+      LOG.error("Insert file diff " + fileDiff.getSrc() + " error.", e);
+      throw new IOException(e);
+    }
     return String.format(
         "UPDATE file SET length = %s, modification_time = %s WHERE path = '%s';",
         closeEvent.getFileSize(), closeEvent.getTimestamp(), closeEvent.getPath());
@@ -158,6 +155,11 @@ public class InotifyEventApplier {
       throws IOException, MetaStoreException {
     List<String> ret = new ArrayList<>();
     HdfsFileStatus status = client.getFileInfo(renameEvent.getDstPath());
+    FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
+    fileDiff.setSrc(renameEvent.getSrcPath());
+    fileDiff.getParameters().put("-dest",
+        renameEvent.getDstPath());
+    metaStore.insertFileDiff(fileDiff);
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}",
           renameEvent.getSrcPath(), renameEvent.getDstPath());
@@ -234,7 +236,10 @@ public class InotifyEventApplier {
     return Arrays.asList();
   }
 
-  private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) {
+  private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) throws MetaStoreException {
+    FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+    fileDiff.setSrc(unlinkEvent.getPath());
+    metaStore.insertFileDiff(fileDiff);
     return Arrays.asList(String.format("DELETE FROM file WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
   }
 }

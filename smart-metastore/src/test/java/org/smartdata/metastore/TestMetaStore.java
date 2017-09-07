@@ -100,13 +100,13 @@ public class TestMetaStore extends TestDaoUtil {
       for (int i = 0; i < 100; i++) {
         try {
           List<ActionInfo> actionInfoList = metaStore
-              .getActionsTableItem(Arrays.asList(new Long[]{(long) i}));
+              .getActions(Arrays.asList(new Long[]{(long) i}));
           actionInfoList.get(0).setFinished(true);
           actionInfoList.get(0).setFinishTime(System.currentTimeMillis());
           sleep(5);
-          metaStore.updateActionsTable(
+          metaStore.updateActions(
               actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
-          metaStore.getActionsTableItem(null, null);
+          metaStore.getActions(null, null);
         } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
@@ -135,7 +135,7 @@ public class TestMetaStore extends TestDaoUtil {
       for (int i = 0; i < 100; i++) {
         actionInfo.setActionId(i);
         try {
-          metaStore.insertActionTable(actionInfo);
+          metaStore.insertAction(actionInfo);
         } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
@@ -154,11 +154,11 @@ public class TestMetaStore extends TestDaoUtil {
     public void run() {
       for (int i = 0; i < 100; i++) {
         try {
-          List<ActionInfo> actionInfoList = metaStore.getActionsTableItem(Arrays.asList(new Long[]{(long) i}));
+          List<ActionInfo> actionInfoList = metaStore.getActions(Arrays.asList(new Long[]{(long) i}));
           actionInfoList.get(0).setFinished(true);
           actionInfoList.get(0).setFinishTime(System.currentTimeMillis());
-          metaStore.updateActionsTable(actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
-          metaStore.getActionsTableItem(null, null);
+          metaStore.updateActions(actionInfoList.toArray(new ActionInfo[actionInfoList.size()]));
+          metaStore.getActions(null, null);
         } catch (MetaStoreException e) {
           System.out.println(e.getMessage());
           Assert.assertTrue(false);
@@ -394,19 +394,19 @@ public class TestMetaStore extends TestDaoUtil {
     String cidCondition = ">= 1 ";
     String ridCondition = "= 78 ";
     List<CmdletInfo> com = metaStore
-        .getCmdletsTableItem(cidCondition, ridCondition, CmdletState.PENDING);
+        .getCmdlets(cidCondition, ridCondition, CmdletState.PENDING);
     commandId = metaStore.getMaxCmdletId();
     Assert.assertTrue(commandId == commands.length);
     for (CmdletInfo cmd : com) {
       // System.out.printf("Cid = %d \n", cmd.getCid());
       metaStore.updateCmdlet(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
     }
-    List<CmdletInfo> com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
+    List<CmdletInfo> com1 = metaStore.getCmdlets(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 1);
 
     Assert.assertTrue(com1.get(0).getState().equals(CmdletState.DONE));
     metaStore.deleteCmdlet(command2.getCid());
-    com1 = metaStore.getCmdletsTableItem(cidCondition, ridCondition, CmdletState.DONE);
+    com1 = metaStore.getCmdlets(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 0);
   }
 
@@ -417,12 +417,12 @@ public class TestMetaStore extends TestDaoUtil {
         "cache", args, "Test",
         "Test", true, 123213213l, true, 123123l,
         100);
-    metaStore.insertActionsTable(new ActionInfo[]{actionInfo});
-    List<ActionInfo> actionInfos = metaStore.getActionsTableItem(null, null);
+    metaStore.insertActions(new ActionInfo[]{actionInfo});
+    List<ActionInfo> actionInfos = metaStore.getActions(null, null);
     Assert.assertTrue(actionInfos.size() == 1);
     actionInfo.setResult("Finished");
-    metaStore.updateActionsTable(new ActionInfo[]{actionInfo});
-    actionInfos = metaStore.getActionsTableItem(null, null);
+    metaStore.updateActions(new ActionInfo[]{actionInfo});
+    actionInfos = metaStore.getActions(null, null);
     Assert.assertTrue(actionInfos.get(0).equals(actionInfo));
   }
 
@@ -435,14 +435,14 @@ public class TestMetaStore extends TestDaoUtil {
         "cache", args, "Test",
         "Test", true, 123213213l, true, 123123l,
         100);
-    metaStore.insertActionTable(actionInfo);
+    metaStore.insertAction(actionInfo);
     actionInfo.setActionId(2);
-    metaStore.insertActionTable(actionInfo);
-    actionInfos = metaStore.getNewCreatedActionsTableItem(1);
+    metaStore.insertAction(actionInfo);
+    actionInfos = metaStore.getNewCreatedActions(1);
     Assert.assertTrue(actionInfos.size() == 1);
-    actionInfos = metaStore.getNewCreatedActionsTableItemByStatus("cache",1, true, true);
+    actionInfos = metaStore.getNewCreatedActions("cache",1, true, true);
     Assert.assertTrue(actionInfos.size() == 1);
-    actionInfos = metaStore.getNewCreatedActionsTableItem(2);
+    actionInfos = metaStore.getNewCreatedActions(2);
     Assert.assertTrue(actionInfos.size() == 2);
   }
 
@@ -455,22 +455,22 @@ public class TestMetaStore extends TestDaoUtil {
         "cache", args, "Test",
         "Test", true, 123213213l, true, 123123l,
         100);
-    metaStore.insertActionsTable(new ActionInfo[]{actionInfo});
+    metaStore.insertActions(new ActionInfo[]{actionInfo});
     currentId = metaStore.getMaxActionId();
     Assert.assertTrue(currentId == 1);
     actionInfo = new ActionInfo(currentId, 1,
         "cache", args, "Test",
         "Test", true, 123213213l, true, 123123l,
         100);
-    metaStore.insertActionsTable(new ActionInfo[]{actionInfo});
+    metaStore.insertActions(new ActionInfo[]{actionInfo});
     currentId = metaStore.getMaxActionId();
     Assert.assertTrue(currentId == 2);
   }
 
   @Test
   public void testInsertStoragePolicyTable() throws Exception {
-    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 53, "COOL"));
-    metaStore.insertStoragePolicyTable(new StoragePolicy((byte) 52, "COLD"));
+    metaStore.insertStoragePolicy(new StoragePolicy((byte) 53, "COOL"));
+    metaStore.insertStoragePolicy(new StoragePolicy((byte) 52, "COLD"));
     String value = metaStore.getStoragePolicyName(53);
     Assert.assertEquals(metaStore.getStoragePolicyName(52), "COLD");
     int key = metaStore.getStoragePolicyID("COOL");
@@ -677,7 +677,7 @@ public class TestMetaStore extends TestDaoUtil {
     ClusterInfo clusterInfo = new ClusterInfo(1, "test1", "test1", "test1", "test1", "test1");
     metaStore.insertClusterInfo(clusterInfo);
 
-    metaStore.deleteClusterInfoByCid(1);
+    metaStore.deleteClusterInfo(1);
 
     Assert.assertTrue(metaStore.listAllClusterInfo().size() == 0);
 
@@ -697,7 +697,7 @@ public class TestMetaStore extends TestDaoUtil {
   public void testDeleteSystemInfo() throws MetaStoreException {
     SystemInfo systemInfo = new SystemInfo("test", "test");
     metaStore.insertSystemInfo(systemInfo);
-    metaStore.deleteSystemInfoByProperty("test");
+    metaStore.deleteSystemInfo("test");
 
     Assert.assertTrue(metaStore.listAllSystemInfo().size() == 0);
   }

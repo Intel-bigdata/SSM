@@ -17,6 +17,7 @@
  */
 package org.smartdata.model.rule;
 
+import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.RuleInfo;
 
 import java.util.List;
@@ -48,6 +49,15 @@ public interface RuleExecutorPlugin {
    * @return object list that will be used for Cmdlet submission.
    */
   List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects);
+
+  /**
+   * Called right before the CmdletDescriptor been submitted to CmdletManager.
+   *
+   * @param descriptor
+   * @return the descriptor that will be used to submit to CmdletManager
+   */
+  CmdletDescriptor preSubmitCmdletDescriptor(final RuleInfo ruleInfo, TranslateResult tResult,
+      CmdletDescriptor descriptor);
 
   /**
    * Called when an RuleExecutor exits. Called only once per instance.
