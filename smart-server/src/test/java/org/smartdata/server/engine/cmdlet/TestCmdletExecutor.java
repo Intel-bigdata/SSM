@@ -128,7 +128,7 @@
 //    Assert.assertTrue(ssm
 //        .getCmdletExecutor()
 //        .listCmdletsInfo(1, null).size() == 0);
-//    // Test delete all cmdlets under rid = 1
+//    // Test clear all cmdlets under rid = 1
 //    ssm.getCmdletExecutor().submitCmdlet(
 //        new CmdletDescriptor("allssd -file /testMoveFile/file1", 1));
 //    ssm.getCmdletExecutor().submitCmdlet(
