@@ -1247,14 +1247,7 @@ public class NotebookServer extends WebSocketServlet
       p.setReturn(new InterpreterResult(InterpreterResult.Code.ERROR, e.getMessage()), e);
       p.setStatus(Status.ERROR);
     }
-
-    if (note.isPersonalizedMode()) {
-      Map<String, Paragraph> userParagraphMap =
-              note.getParagraph(paragraphId).getUserParagraphMap();
-      broadcastParagraphs(userParagraphMap);
-    } else {
-      broadcastParagraph(note, p);
-    }
+    conn.send(serializeMessage(new Message(OP.PARAGRAPH).put("paragraph", p)));
   }
 
   private void cloneNote(NotebookSocket conn, HashSet<String> userAndRoles, Notebook notebook,
