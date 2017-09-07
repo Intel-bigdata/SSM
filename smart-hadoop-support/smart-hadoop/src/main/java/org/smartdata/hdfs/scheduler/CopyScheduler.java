@@ -76,7 +76,7 @@ public class CopyScheduler extends ActionSchedulerService {
     if (!fileChainMap.containsKey(path)) {
       return ScheduleResult.FAIL;
     }
-    action.getArgs().remove("-file");
+    // action.getArgs().remove("-file");
     long fid = fileChainMap.get(path).popTop();
     FileDiff fileDiff = null;
     try {
@@ -101,7 +101,6 @@ public class CopyScheduler extends ActionSchedulerService {
     action.getArgs().putAll(fileDiff.getParameters());
     return ScheduleResult.SUCCESS;
   }
-
 
   public List<String> getSupportedActions() {
     return actions;
