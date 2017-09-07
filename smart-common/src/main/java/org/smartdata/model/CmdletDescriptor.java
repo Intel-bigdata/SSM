@@ -108,6 +108,10 @@ public class CmdletDescriptor {
     return map;
   }
 
+  public void addActionArgs(int index, String key, String value) {
+    actionArgs.get(index).put(key, value);
+  }
+
   public int actionSize() {
     return actionNames.size();
   }
