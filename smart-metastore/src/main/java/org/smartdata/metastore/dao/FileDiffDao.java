@@ -63,9 +63,15 @@ public class FileDiffDao {
 
   public List<FileDiff> getPendingDiff(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE did = ?",
+    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE did = ? and state = 0",
         new Object[]{rid},
         new FileDiffRowMapper());
+  }
+
+  public List<FileDiff> getPendingDiff(String prefix) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("SELECT * FROM file where path LIKE ? and state = 0",
+        new FileDiffRowMapper(), prefix + "%");
   }
 
   public List<FileDiff> getByIds(List<Long> dids) {

@@ -584,8 +584,26 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       if (ruleInfo.getRuleText().contains("allssd") ||
           ruleInfo.getRuleText().contains("onessd") ||
           ruleInfo.getRuleText().contains("archive")) {
-        detailedRuleInfos.add(new DetailedRuleInfo(ruleInfo));
+        DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add mover progress
+        List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
+        int currPos = 0;
+        for (CmdletInfo cmdletInfo: cmdletInfos) {
+          if (cmdletInfo.getState().getValue() <= 2) {
+            break;
+          }
+          currPos += 1;
+        }
+        int countRunning = 0;
+        for (int i = 0; i < cmdletInfos.size(); i++ ) {
+          if (cmdletInfos.get(i).getState().getValue() <= 2) {
+            countRunning += 1;
+          }
+        }
+        detailedRuleInfo
+            .setBaseProgress(cmdletInfos.size() - currPos);
+        detailedRuleInfo.setRunningProgress(countRunning);
+        detailedRuleInfos.add(detailedRuleInfo);
       }
     }
     return detailedRuleInfos;
@@ -595,14 +613,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public List<DetailedRuleInfo> listSyncRules() throws MetaStoreException {
     List<RuleInfo> ruleInfos = getRuleInfo();
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
-    for (RuleInfo ruleInfo: ruleInfos) {
+    for (RuleInfo ruleInfo : ruleInfos) {
       if (ruleInfo.getRuleText().contains("sync")) {
         DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add sync progress
         BackUpInfo backUpInfo = getBackUpInfo(ruleInfo.getId());
         // Get total matched files
-        detailedRuleInfo.setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
-        // detailedRuleInfo.setRunningProgress();
+        detailedRuleInfo
+            .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+        detailedRuleInfo.setRunningProgress(
+            fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
         detailedRuleInfos.add(detailedRuleInfo);
       }
     }
