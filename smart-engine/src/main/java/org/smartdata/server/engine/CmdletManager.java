@@ -575,6 +575,16 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+
+  public List<ActionInfo> getActions(long rid, int size) throws IOException {
+    try {
+      return metaStore.getActions(rid, size);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions by rid and size from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
   /**
    * Delete all cmdlets related with rid
    * @param rid
