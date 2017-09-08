@@ -260,6 +260,27 @@ public class TestMetaStore extends TestDaoUtil {
   }
 
   @Test
+  public void testMoveSyncRules() throws Exception {
+    String rule = "file : accessCount(10m) > 20 \n\n"
+        + "and length() > 3 | ";
+    long submitTime = System.currentTimeMillis();
+    RuleInfo ruleInfo = new RuleInfo(0, submitTime,
+        rule + "sync -dest /dest/", RuleState.ACTIVE, 0, 0, 0);
+    metaStore.insertNewRule(ruleInfo);
+    metaStore.insertBackUpInfo(new BackUpInfo(ruleInfo.getId(), "/src/", "/dest/", 100));
+    metaStore.insertNewRule(new RuleInfo(1, submitTime,
+        rule + "allssd", RuleState.ACTIVE, 0, 0, 0));
+    metaStore.insertNewRule(new RuleInfo(2, submitTime,
+        rule + "archive", RuleState.ACTIVE, 0, 0, 0));
+    metaStore.insertNewRule(new RuleInfo(2, submitTime,
+        rule + "onessd", RuleState.ACTIVE, 0, 0, 0));
+    metaStore.insertNewRule(new RuleInfo(2, submitTime,
+        rule + "cache", RuleState.ACTIVE, 0, 0, 0));
+    Assert.assertTrue(metaStore.listMoveRules().size() == 3);
+    Assert.assertTrue(metaStore.listSyncRules().size() == 1);
+  }
+
+  @Test
   public void testUpdateCachedFiles() throws Exception {
     metaStore.insertCachedFiles(80L, "testPath", 1000L,
         2000L, 100);

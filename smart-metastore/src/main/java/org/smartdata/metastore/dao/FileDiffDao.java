@@ -70,7 +70,7 @@ public class FileDiffDao {
 
   public List<FileDiff> getPendingDiff(String prefix) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM file where path LIKE ? and state = 0",
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " where src LIKE ? and state = 0",
         new FileDiffRowMapper(), prefix + "%");
   }
 
