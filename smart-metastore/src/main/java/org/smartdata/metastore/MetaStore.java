@@ -349,6 +349,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteAllFileInfo() throws MetaStoreException {
+    try {
+      fileInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<AccessCountTable> getAllSortedTables() throws MetaStoreException {
     try {
       return accessCountDao.getAllSortedTables();
@@ -611,6 +619,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteAllRules() throws MetaStoreException {
+    try {
+      ruleDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+
   public synchronized void insertCmdletsTable(CmdletInfo[] commands)
       throws MetaStoreException {
     try {
@@ -677,6 +694,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteAllCmdlets() throws MetaStoreException {
+    try {
+      cmdletDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteCmdlet(long cid) throws MetaStoreException {
     try {
       cmdletDao.delete(cid);
@@ -699,6 +724,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     LOG.debug("Insert Action ID {}", actionInfo.getActionId());
     try {
       actionDao.insert(actionInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllActions() throws MetaStoreException {
+    try {
+      actionDao.deleteAll();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

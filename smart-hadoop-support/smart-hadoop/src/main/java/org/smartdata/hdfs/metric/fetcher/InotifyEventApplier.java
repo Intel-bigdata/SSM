@@ -70,14 +70,11 @@ public class InotifyEventApplier {
   }
 
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
+    LOG.debug("Even Type = {}", event.getEventType().toString());
     switch (event.getEventType()) {
       case CREATE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CreateEvent) event).getPath());
-        /*fileDiff.setDiffType(FileDiffType.CREATE);
-        fileDiff.setParameters(String.format("-file %s",
-            ((Event.CreateEvent)event).getPath()));
-        metaStore.insertFileDiff(fileDiff);*/
         return Arrays.asList(this.getCreateSql((Event.CreateEvent) event));
       case CLOSE:
         LOG.trace("event type:" + event.getEventType().name() +
@@ -113,6 +110,15 @@ public class InotifyEventApplier {
     }
     FileInfo fileInfo = HadoopUtil.convertFileStatus(fileStatus, createEvent.getPath());
     try {
+      if (!fileInfo.isdir()) {
+        // ignore dir
+        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+        fileDiff.setSrc(fileInfo.getPath());
+        fileDiff.getParameters().put("-offset", String.valueOf(0));
+        // Note that "-length 0" means create an empty file
+        fileDiff.getParameters().put("-length", String.valueOf(fileInfo.getLength()));
+        metaStore.insertFileDiff(fileDiff);
+      }
       metaStore.insertFile(fileInfo);
       return "";
     } catch (MetaStoreException e) {
@@ -129,7 +135,12 @@ public class InotifyEventApplier {
     long currLen = 0l;
     // TODO make sure offset is correct
     try {
-      currLen = metaStore.getFile(closeEvent.getPath()).getLength();
+      FileInfo fileInfo = metaStore.getFile(closeEvent.getPath());
+      if (fileInfo == null) {
+        currLen = 0;
+      } else {
+        currLen = fileInfo.getLength();
+      }
       if (currLen != newLen) {
         fileDiff.getParameters().put("-offset", String.valueOf(currLen));
         fileDiff.getParameters().put("-length", String.valueOf(newLen - currLen));
