@@ -49,6 +49,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
@@ -573,6 +574,39 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+
+  public List<DetailedRuleInfo> listMoveRules() throws MetaStoreException {
+    List<RuleInfo> ruleInfos = getRuleInfo();
+    List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
+    for (RuleInfo ruleInfo: ruleInfos) {
+      if (ruleInfo.getRuleText().contains("allssd") ||
+          ruleInfo.getRuleText().contains("onessd") ||
+          ruleInfo.getRuleText().contains("archive")) {
+        detailedRuleInfos.add(new DetailedRuleInfo(ruleInfo));
+        // Add mover progress
+      }
+    }
+    return detailedRuleInfos;
+  }
+
+
+  public List<DetailedRuleInfo> listSyncRules() throws MetaStoreException {
+    List<RuleInfo> ruleInfos = getRuleInfo();
+    List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
+    for (RuleInfo ruleInfo: ruleInfos) {
+      if (ruleInfo.getRuleText().contains("sync")) {
+        DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
+        // Add sync progress
+        BackUpInfo backUpInfo = getBackUpInfo(ruleInfo.getId());
+        // Get total matched files
+        detailedRuleInfo.setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+        // detailedRuleInfo.setRunningProgress();
+        detailedRuleInfos.add(detailedRuleInfo);
+      }
+    }
+    return detailedRuleInfos;
   }
 
   public synchronized boolean insertNewRule(RuleInfo info)
@@ -1219,9 +1253,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public BackUpInfo getBackUpInfoById(long id) throws MetaStoreException {
+  public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
-      return backUpInfoDao.getById(id);
+      return backUpInfoDao.getByRid(rid);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

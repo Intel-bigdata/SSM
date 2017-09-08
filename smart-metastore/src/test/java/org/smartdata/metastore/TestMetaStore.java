@@ -631,7 +631,7 @@ public class TestMetaStore extends TestDaoUtil {
     BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
     metaStore.insertBackUpInfo(backUpInfo1);
 
-    Assert.assertTrue(metaStore.getBackUpInfoById(1).equals(backUpInfo1));
+    Assert.assertTrue(metaStore.getBackUpInfo(1).equals(backUpInfo1));
   }
 
   @Test
