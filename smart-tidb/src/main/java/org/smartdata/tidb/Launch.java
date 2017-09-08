@@ -26,8 +26,8 @@ public class Launch implements Runnable {
   public void run() {
     String pdArgs = new String("--data-dir=pd --log-file=logs/pd.log");
     String tikvArgs = new String("--pd=127.0.0.1:2379 --data-dir=tikv --log-file=logs/tikv.log");
-    //String tidbArgs = new String("--store=tikv --path=127.0.0.1:2379 --log-file=logs/tidb.log");
-    String tidbArgs = new String("--log-file=logs/tidb.log");
+    String tidbArgs = new String("--store=tikv --path=127.0.0.1:2379 --log-file=logs/tidb.log");
+    //String tidbArgs = new String("--log-file=logs/tidb.log");
 
     PdServer pdServer = new PdServer(pdArgs);
     TikvServer tikvServer = new TikvServer(tikvArgs);
