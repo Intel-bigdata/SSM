@@ -44,7 +44,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class MoverPreProcessService extends ActionSchedulerService {
+public class MoverScheduler extends ActionSchedulerService {
   private DFSClient client;
   private MoverStatus moverStatus;
   private MoverProcessor processor;
@@ -54,9 +54,9 @@ public class MoverPreProcessService extends ActionSchedulerService {
   private ScheduledFuture updateServiceFuture;
 
   public static final Logger LOG =
-      LoggerFactory.getLogger(MoverPreProcessService.class);
+      LoggerFactory.getLogger(MoverScheduler.class);
 
-  public MoverPreProcessService(SmartContext context, MetaStore metaStore)
+  public MoverScheduler(SmartContext context, MetaStore metaStore)
       throws IOException {
     super(context, metaStore);
     nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
