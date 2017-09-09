@@ -15,14 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata;
+package org.smartdata.server.engine;
 
-public class SmartConstants {
-  public static final String SMART_HDFS_STATES_UPDATE_SERVICE_IMPL = "org.smartdata.hdfs.HdfsStatesUpdateService";
+public enum ServiceMode {
+  DEFAULT(0),
+  HDFS(1),
+  ALLUXIO(2),
+  OTHER(3);
 
-  public static final String SMART_ALLUXIO_STATES_UPDATE_SERVICE_IMPL = "org.smartdata.alluxio.AlluxioStatesUpdateService";
+  private int value;
 
-  public static final String SMART_ACTION_SCHEDULER_SERVICE_IMPL = "org.smartdata.hdfs.scheduler.MoverScheduler, org.smartdata.hdfs.scheduler.CopyScheduler";
+  ServiceMode(int value) {
+    this.value = value;
+  }
 
-  public static final String SMART_HADOOP_LAST_INOTIFY_TXID = "smart_hadoop_last_inotify_txid";
+  public static ServiceMode fromValue(int v) {
+    for (ServiceMode s : values()) {
+      if (s.getValue() == v) {
+        return s;
+      }
+    }
+    return null;
+  }
+
+  public int getValue() {
+    return value;
+  }
+
+  public String getName() {
+    return toString();
+  }
 }
