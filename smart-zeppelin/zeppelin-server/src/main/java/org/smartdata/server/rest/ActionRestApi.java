@@ -73,8 +73,24 @@ public class ActionRestApi {
   }
 
   @GET
-  @Path("/type/{listNumber}/{actionName}")
+  @Path("/list/{listNumber}/{ruleId}")
   public Response actionList(@PathParam("listNumber") String listNumber,
+      @PathParam("ruleId") String ruleId) {
+    Integer intNumber = Integer.parseInt(listNumber);
+    intNumber = intNumber > 0 ? intNumber : 0;
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager().getActions(Long.valueOf(ruleId), intNumber)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ActionRestApi while listing action types", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+  @GET
+  @Path("/type/{listNumber}/{actionName}")
+  public Response actionTypeList(@PathParam("listNumber") String listNumber,
       @PathParam("actionName") String actionName) {
     Integer intNumber = Integer.parseInt(listNumber);
     intNumber = intNumber > 0 ? intNumber : 0;

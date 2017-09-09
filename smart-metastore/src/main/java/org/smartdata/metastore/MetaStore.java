@@ -66,6 +66,7 @@ import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.dao.EmptyResultDataAccessException;
 
+import javax.swing.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -847,6 +848,33 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  public List<ActionInfo> getActions(long rid, int size) throws MetaStoreException {
+    List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(rid);
+    List<ActionInfo> runningActions = new ArrayList<>();
+    List<ActionInfo> finishedActions = new ArrayList<>();
+    int total = 0;
+    for (CmdletInfo cmdletInfo:cmdletInfos) {
+      if (total >= size) {
+        break;
+      }
+      List<Long> aids = cmdletInfo.getAids();
+      for (Long aid : aids) {
+        if (total >= size) {
+          break;
+        }
+        ActionInfo actionInfo = getActionById(aid);
+        if(actionInfo.isFinished()) {
+          finishedActions.add(actionInfo);
+        } else {
+          runningActions.add(actionInfo);
+        }
+        total ++;
+      }
+    }
+    runningActions.addAll(finishedActions);
+    return runningActions;
   }
 
   public ActionInfo getActionById(long aid) throws MetaStoreException {
