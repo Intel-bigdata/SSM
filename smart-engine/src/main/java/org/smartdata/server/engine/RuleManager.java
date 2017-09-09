@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.conf.SmartConfKeys;
@@ -184,6 +185,22 @@ public class RuleManager extends AbstractService {
   public RuleInfo getRuleInfo(long ruleID) throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     return infoRepo.getRuleInfo();
+  }
+
+  public List<DetailedRuleInfo> listRulesMoveInfo() throws IOException {
+    try {
+      return metaStore.listMoveRules();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
+  }
+
+  public List<DetailedRuleInfo> listRulesSyncInfo() throws IOException {
+    try {
+      return metaStore.listSyncRules();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
   }
 
   public List<RuleInfo> listRulesInfo() throws IOException {
