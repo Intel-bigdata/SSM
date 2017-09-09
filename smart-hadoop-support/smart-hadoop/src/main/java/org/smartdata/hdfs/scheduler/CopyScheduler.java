@@ -235,7 +235,7 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
 
-    private void addToPending() {
+    private void addToRunning() {
       for (FileChain fileChain: fileChainMap.values()) {
         try {
           fileChain.addTopRunning();
@@ -320,7 +320,7 @@ public class CopyScheduler extends ActionSchedulerService {
       // Sync backup rules
       // Sync/schedule file diffs
       syncFileDiff();
-      addToPending();
+      addToRunning();
     }
 
     private class FileChain {
