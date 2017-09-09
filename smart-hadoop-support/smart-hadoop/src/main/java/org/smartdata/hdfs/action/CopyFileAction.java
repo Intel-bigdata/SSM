@@ -115,7 +115,6 @@ public class CopyFileAction extends HdfsAction {
       in = getSrcInputStream(src);
       out = getDestOutPutStream(dest);
 
-      PrintStream ps = out instanceof PrintStream ? (PrintStream) out : null;
       //skip offset
       in.skip(offset);
 

@@ -20,7 +20,9 @@ package org.smartdata.model;
 public enum FileDiffState {
   PENDING(0), // Ready for execution
   RUNNING(1), // Still running
-  APPLIED(2);
+  APPLIED(2),
+  MERGED(3),
+  DELETED(4);
 
   private int value;
 

@@ -32,6 +32,7 @@ import org.smartdata.metastore.dao.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
+import org.smartdata.model.FileInfo;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
@@ -149,6 +150,14 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   public List<CachedFileStatus> getCachedFileStatus() throws IOException {
     try {
       return serverContext.getMetaStore().getCachedFileStatus();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
+  }
+
+  public FileInfo getFileInfo(String path) throws IOException {
+    try {
+      return serverContext.getMetaStore().getFile(path);
     } catch (MetaStoreException e) {
       throw new IOException(e);
     }

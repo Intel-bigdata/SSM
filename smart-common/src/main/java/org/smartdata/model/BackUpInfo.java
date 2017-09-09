@@ -21,7 +21,7 @@ public class BackUpInfo {
   private long rid;
   private String src;
   private String dest;
-  private long period;
+  private long period; // in milli-seconds
 
 
   public BackUpInfo(long rid, String src, String dest, long period) {

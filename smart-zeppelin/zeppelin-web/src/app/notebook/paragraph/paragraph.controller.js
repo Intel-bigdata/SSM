@@ -29,12 +29,13 @@ ParagraphCtrl.$inject = [
   'baseUrlSrv',
   'ngToast',
   'saveAsService',
-  'noteVarShareService'
+  'noteVarShareService',
+  'restapi'
 ];
 
 function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $location,
                        $timeout, $compile, $http, $q, websocketMsgSrv,
-                       baseUrlSrv, ngToast, saveAsService, noteVarShareService) {
+                       baseUrlSrv, ngToast, saveAsService, noteVarShareService, restapi) {
   var ANGULAR_FUNCTION_OBJECT_NAME_PREFIX = '_Z_ANGULAR_FUNC_';
   $rootScope.keys = Object.keys;
   $scope.parentNote = null;
@@ -156,6 +157,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
   };
 
   $scope.$on('updateParagraphOutput', function(event, data) {
+    console.log("HHhhhhhhhh");
     if ($scope.paragraph.id === data.paragraphId) {
       if (!$scope.paragraph.results) {
         $scope.paragraph.results = {};
@@ -172,6 +174,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
       };
 
       if (update) {
+        console.log("-----broadcast!------");
         $rootScope.$broadcast(
           'updateResult',
           $scope.paragraph.results.msg[data.index],

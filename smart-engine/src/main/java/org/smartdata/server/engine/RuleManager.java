@@ -22,15 +22,18 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.rule.parser.RuleStringParser;
-import org.smartdata.rule.parser.TranslateResult;
+import org.smartdata.model.rule.RuleExecutorPluginManager;
+import org.smartdata.rule.parser.SmartRuleStringParser;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
+import org.smartdata.server.engine.rule.FileCopyDrPlugin;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
 
@@ -72,6 +75,8 @@ public class RuleManager extends AbstractService {
     this.cmdletManager = cmdletManager;
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
+
+    RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
   }
 
   /**
@@ -124,7 +129,7 @@ public class RuleManager extends AbstractService {
 
   private TranslateResult doCheckRule(String rule, TranslationContext ctx)
       throws IOException {
-    RuleStringParser parser = new RuleStringParser(rule, ctx);
+    SmartRuleStringParser parser = new SmartRuleStringParser(rule, ctx);
     return parser.translate();
   }
 
@@ -180,6 +185,22 @@ public class RuleManager extends AbstractService {
   public RuleInfo getRuleInfo(long ruleID) throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     return infoRepo.getRuleInfo();
+  }
+
+  public List<DetailedRuleInfo> listRulesMoveInfo() throws IOException {
+    try {
+      return metaStore.listMoveRules();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
+  }
+
+  public List<DetailedRuleInfo> listRulesSyncInfo() throws IOException {
+    try {
+      return metaStore.listSyncRules();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
   }
 
   public List<RuleInfo> listRulesInfo() throws IOException {

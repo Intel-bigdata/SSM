@@ -19,6 +19,9 @@
 
 Usage="ssm --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend] [--daemon start|stop ] [--remote] <command> <command args>"
 
+#The tikv server will fail to start if http_proxy is set
+unset http_proxy
+
 SCRIPT_ARGS="$*"
 
 bin=$(dirname "${BASH_SOURCE-$0}")
@@ -105,6 +108,9 @@ if [ "$SMART_CLASSPATH" = "" ]; then
 else
   SMART_CLASSPATH="${SMART_CONF_DIR}:${SMART_CLASSPATH}"
 fi
+
+#shared lib path
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${SMART_HOME}/lib
 
 if [[ ! -d "${SMART_LOG_DIR}" ]]; then
   $(mkdir -p "${SMART_LOG_DIR}")

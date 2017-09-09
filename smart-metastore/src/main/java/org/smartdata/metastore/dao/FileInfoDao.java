@@ -61,6 +61,12 @@ public class FileInfoDao {
         new FileInfoDao.FileInfoRowMapper());
   }
 
+  public List<FileInfo> getFilesByPrefix(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("SELECT * FROM file where path LIKE ?",
+        new FileInfoDao.FileInfoRowMapper(), path + "%");
+  }
+
   public FileInfo getById(long fid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM file WHERE fid = ?",
