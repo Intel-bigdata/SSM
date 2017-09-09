@@ -21,10 +21,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.smartdata.action.annotation.ActionSignature;
+
 import alluxio.AlluxioURI;
 import alluxio.client.file.FileSystemUtils;
 import alluxio.client.file.URIStatus;
 
+@ActionSignature(
+    actionId = "persist",
+    displayName = "persist",
+    usage = AlluxioAction.FILE_PATH + " $file "
+)
 public class PersistAction extends AlluxioAction {
   private List<String> exceptionMessages;
 
