@@ -19,6 +19,13 @@ package org.smartdata.alluxio.action;
 
 import java.util.Map;
 
+import org.smartdata.action.annotation.ActionSignature;
+
+@ActionSignature(
+    actionId = "free",
+    displayName = "free",
+    usage = AlluxioAction.FILE_PATH + " $file "
+)
 public class FreeAction extends AlluxioAction{
   @Override
   public void init(Map<String, String> args) {

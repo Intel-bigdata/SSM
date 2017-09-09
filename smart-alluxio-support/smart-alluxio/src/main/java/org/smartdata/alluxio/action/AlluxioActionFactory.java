@@ -17,30 +17,19 @@
  */
 package org.smartdata.alluxio.action;
 
-import java.util.Map;
+import org.smartdata.action.AbstractActionFactory;
 
-import org.smartdata.action.annotation.ActionSignature;
+/**
+ * Built-in smart actions for HDFS system.
+ */
+public class AlluxioActionFactory extends AbstractActionFactory {
 
-import alluxio.client.file.options.SetAttributeOptions;
-
-@ActionSignature(
-    actionId = "pin",
-    displayName = "pin",
-    usage = AlluxioAction.FILE_PATH + " $file "
-)
-public class PinAction extends AlluxioAction {
-
-  @Override
-  public void init(Map<String, String> args) {
-    super.init(args);
-    this.actionType = AlluxioActionType.PIN;
-  }
-
-  @Override
-  protected void execute() throws Exception {
-    LOG.info("Executing Alluxio action: PinAction, path:" + uri.toString());
-    SetAttributeOptions options = SetAttributeOptions.defaults().setPinned(true);
-    alluxioFs.setAttribute(uri, options);
-    LOG.info("File " + uri + " was successfully pinned.");
+  static {
+    addAction(FreeAction.class);
+    addAction(LoadAction.class);
+    addAction(PersistAction.class);
+    addAction(PinAction.class);
+    addAction(SetTTLAction.class);
+    addAction(UnpinAction.class);
   }
 }
