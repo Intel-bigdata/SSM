@@ -29,8 +29,15 @@ public class SmartConfKeys {
   public final static String SMART_LOG_DIR_KEY = "smart.log.dir";
   public final static String SMART_LOG_DIR_DEFAULT = "logs";
 
+  public final static String SMART_SERVICE_MODE_KEY = "smart.service.mode";
+  public final static String SMART_SERVICE_MODE_DEFAULT = "HDFS";
+  
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
   public final static String SMART_HADOOP_CONF_PATH_KEY = "smart.hadoop.conf.path";
+
+  // confKeys for alluxio
+  public final static String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
+  public final static String SMART_ALLUXIO_CONF_DIR_KEY = "smart.alluxio.conf.dir";
 
   //ssm
   public final static String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";

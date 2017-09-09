@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.SmartConstants;
 import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdateService;
@@ -37,8 +38,8 @@ public class AbstractServiceFactory {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractServiceFactory.class);
 
   public static AbstractService createStatesUpdaterService(Configuration conf,
-      SmartContext context, MetaStore metaStore) throws IOException {
-    String source = getStatesUpdaterName(conf);
+      ServerContext context, MetaStore metaStore) throws IOException {
+    String source = getStatesUpdaterName(context.getServiceMode());
     try {
       Class clazz = Class.forName(source);
       Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
@@ -50,8 +51,15 @@ public class AbstractServiceFactory {
     }
   }
 
-  public static String getStatesUpdaterName(Configuration conf) {
-    return SmartConstants.SMART_STATES_UPDATE_SERVICE_IMPL;
+  public static String getStatesUpdaterName(ServiceMode mode) {
+    switch (mode) {
+    case HDFS:
+      return SmartConstants.SMART_HDFS_STATES_UPDATE_SERVICE_IMPL;
+    case ALLUXIO:
+      return SmartConstants.SMART_ALLUXIO_STATES_UPDATE_SERVICE_IMPL;
+    default:
+      return SmartConstants.SMART_HDFS_STATES_UPDATE_SERVICE_IMPL;
+    }
   }
 
   public static List<ActionSchedulerService> createActionSchedulerServices(Configuration conf,
