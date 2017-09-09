@@ -51,7 +51,7 @@ public class TestBackUpInfoDao extends TestDaoUtil {
     backUpInfo.setSrc("");
     backUpInfoDao.insert(backUpInfo);
 
-    Assert.assertTrue(backUpInfoDao.getById(1).equals(backUpInfo));
+    Assert.assertTrue(backUpInfoDao.getByRid(1).equals(backUpInfo));
   }
 
   @Test
@@ -63,8 +63,8 @@ public class TestBackUpInfoDao extends TestDaoUtil {
     backUpInfoDao.insert(backUpInfos);
 
 
-    Assert.assertTrue(backUpInfoDao.getById(1).equals(backUpInfos[0]));
-    Assert.assertTrue(backUpInfoDao.getById(2).equals(backUpInfos[1]));
+    Assert.assertTrue(backUpInfoDao.getByRid(1).equals(backUpInfos[0]));
+    Assert.assertTrue(backUpInfoDao.getByRid(2).equals(backUpInfos[1]));
   }
 
   @Test
@@ -78,7 +78,7 @@ public class TestBackUpInfoDao extends TestDaoUtil {
     backUpInfoDao.insert(backUpInfo);
     backUpInfoDao.update(1, 2);
     backUpInfo.setPeriod(2);
-    Assert.assertTrue(backUpInfoDao.getById(1).equals(backUpInfo));
+    Assert.assertTrue(backUpInfoDao.getByRid(1).equals(backUpInfo));
   }
 
   @Test
@@ -93,6 +93,6 @@ public class TestBackUpInfoDao extends TestDaoUtil {
     Assert.assertTrue(list.size() == 2);
     Assert.assertTrue(list.get(0).equals(backUpInfos[0]));
     Assert.assertTrue(list.get(1).equals(backUpInfos[1]));
-    Assert.assertTrue(backUpInfoDao.getCountById(1) == 0);
+    Assert.assertTrue(backUpInfoDao.getCountByRid(1) == 0);
   }
 }
