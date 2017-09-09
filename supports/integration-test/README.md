@@ -3,19 +3,19 @@
 
 ## Pre-requests
 ### Python Environment
-Python 2.6 or higher, `requests`.
+Python 2 (2.6 or higher) with `requests` installed.
 ```
 python --version
 pip install requests
 ```
 
 ### HDFS and SSM Environment
-Make sure SSM and HDFS are correctly installed. Before executing test script, please make sure SSM address is correctly configured in `util.py`.
+Make sure SSM and HDFS are correctly installed. Before executing test scripts, please set SSM's IP address in `util.py`.
 ```
 BASE_URL = "http://{SSM_Server}:7045"
 ```
 
-Here `{SSM_Server}` is the IP address of SSM.
+`{SSM_Server}` is the IP address of SSM.
 
 ## Init/Rest Test Environment
 1. Remove all files in hdfs:/test/

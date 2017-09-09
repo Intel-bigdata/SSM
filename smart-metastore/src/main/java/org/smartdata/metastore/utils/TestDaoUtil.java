@@ -19,12 +19,14 @@ package org.smartdata.metastore.utils;
 
 import org.smartdata.metastore.DruidPool;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Properties;
 
 
 public class TestDaoUtil {
   protected DruidPool druidPool;
+  protected String dbFile;
   protected String url;
 
   public void initDao() throws Exception {
@@ -33,7 +35,7 @@ public class TestDaoUtil {
     Properties p = new Properties();
     p.loadFromXML(in);
 
-    String dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+    dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     url = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
     p.setProperty("url", url);
 
@@ -41,6 +43,10 @@ public class TestDaoUtil {
   }
 
   public void closeDao() throws Exception {
+    File db = new File(dbFile);
+    if (db.exists()) {
+      db.delete();
+    }
     if (druidPool != null) {
       druidPool.close();
     }

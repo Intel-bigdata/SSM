@@ -37,6 +37,8 @@ public class TableMetaData {
         new String[] {"gid", "gid"});
     mapJoinableKeys.put("file-owner",
         new String[] {"oid", "oid"});
+    mapJoinableKeys.put("file-file_diff",
+        new String[] {"path", "DISTINCT src"});
     // TODO: others
 
     // TODO: hard code them now

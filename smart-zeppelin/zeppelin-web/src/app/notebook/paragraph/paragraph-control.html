@@ -78,18 +78,6 @@ limitations under the License.
           </a>
         </li>
         <li>
-          <a ng-click="moveUp(paragraph)" ng-hide="$first"><span class="icon-arrow-up shortcut-icon"></span>Move up
-            <span class="shortcut-keys">Ctrl+{{ isMac ? 'Option' : 'Alt'}}+K</span></a>
-        </li>
-        <li>
-          <a ng-click="moveDown(paragraph)" ng-hide="$last"><span class="icon-arrow-down shortcut-icon"></span>Move down
-            <span class="shortcut-keys">Ctrl+{{ isMac ? 'Option' : 'Alt'}}+J</span></a>
-        </li>
-        <li>
-          <a ng-click="copyParagraph(getEditorValue())"><span class="fa fa-copy shortcut-icon"></span>Clone paragraph
-            <span class="shortcut-keys">Ctrl+Shift+C</span></a>
-        </li>
-        <li>
           <!-- paragraph handler -->
           <a ng-click="hideTitle(paragraph)"
              ng-show="paragraph.config.title"><span class="fa fa-font shortcut-icon"></span>Hide title
@@ -118,11 +106,6 @@ limitations under the License.
         <li>
           <a ng-click="clearParagraphOutput(paragraph)"><span class="fa fa-eraser shortcut-icon"></span>Clear output
             <span class="shortcut-keys">Ctrl+{{ isMac ? 'Option' : 'Alt'}}+L</span></a>
-        </li>
-        <li>
-          <!-- remove paragraph -->
-          <a ng-click="removeParagraph(paragraph)" ng-hide="$last"><span class="fa fa-times shortcut-icon"></span>Remove
-            <span class="shortcut-keys">Ctrl+{{ isMac ? 'Option' : 'Alt'}}+D</span></a>
         </li>
       </ul>
     </span>

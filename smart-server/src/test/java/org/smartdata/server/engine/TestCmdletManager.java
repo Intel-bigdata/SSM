@@ -67,7 +67,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
   }
 
   @Test
-  public void testAPI() throws Exception {
+  public void testSubmitAPI() throws Exception {
     waitTillSSMExitSafeMode();
 
     DistributedFileSystem dfs = cluster.getFileSystem();
@@ -86,22 +86,21 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     cmdletManager.submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions(10);
-    Assert.assertTrue(actionInfos.size() >= 0);
+    Assert.assertTrue(actionInfos.size() > 0);
 
-    while (true) {
-      Thread.sleep(2000);
-      int current = cmdletManager.getCmdletsSizeInCache();
+    do {
+      Thread.sleep(1500);
+      int current = cmdletManager.getCmdletsSizeInCache() + cmdletManager.getActionsSizeInCache();
       System.out.printf("Current running cmdlet number: %d\n", current);
       if (current == 0) {
         break;
       }
-    }
-
-    List<CmdletInfo> com = ssm.getMetaStore().getCmdletsTableItem(null,
+    } while(true);
+    List<CmdletInfo> com = ssm.getMetaStore().getCmdlets(null,
       null, CmdletState.DONE);
-    Assert.assertTrue(com.size() == 1);
+    Assert.assertTrue(com.size() >= 1);
     Assert.assertTrue(com.get(0).getState() == CmdletState.DONE);
-    List<ActionInfo> result = ssm.getMetaStore().getActionsTableItem(null, null);
+    List<ActionInfo> result = ssm.getMetaStore().getActions(null, null);
     Assert.assertTrue(result.size() == 3);
   }
 
@@ -166,7 +165,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     cmdletManager.start();
     cmdletManager.submitCmdlet("hello");
     verify(metaStore, times(1)).insertCmdletTable(any(CmdletInfo.class));
-    verify(metaStore, times(1)).insertActionsTable(any(ActionInfo[].class));
+    verify(metaStore, times(1)).insertActions(any(ActionInfo[].class));
 
     Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
     Thread.sleep(1000);

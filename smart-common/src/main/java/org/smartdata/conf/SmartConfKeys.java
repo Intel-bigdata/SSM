@@ -29,8 +29,15 @@ public class SmartConfKeys {
   public final static String SMART_LOG_DIR_KEY = "smart.log.dir";
   public final static String SMART_LOG_DIR_DEFAULT = "logs";
 
+  public final static String SMART_SERVICE_MODE_KEY = "smart.service.mode";
+  public final static String SMART_SERVICE_MODE_DEFAULT = "HDFS";
+  
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
   public final static String SMART_HADOOP_CONF_PATH_KEY = "smart.hadoop.conf.path";
+
+  // confKeys for alluxio
+  public final static String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
+  public final static String SMART_ALLUXIO_CONF_DIR_KEY = "smart.alluxio.conf.dir";
 
   //ssm
   public final static String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
@@ -66,4 +73,8 @@ public class SmartConfKeys {
   // SmartClient
   // Comma delimited directories, access event of files under these directories will not be reported to SSM.
   public static final String SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY = "smart.client.ignore.access.event.dirs";
+
+  //Tidb
+  public final static String SMART_TIDB_ENABLED = "smart.tidb.enable";
+  public final static boolean SMART_TIDB_ENABLED_DEFAULT = false;
 }

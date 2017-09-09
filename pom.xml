@@ -44,6 +44,7 @@
     <module>smart-dist</module>
     <module>smart-integration</module>
     <module>smart-hadoop-support</module>
+    <module>smart-tidb</module>
   </modules>
 
   <properties>

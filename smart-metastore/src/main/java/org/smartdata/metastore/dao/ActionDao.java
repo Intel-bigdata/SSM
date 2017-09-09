@@ -102,10 +102,62 @@ public class ActionDao {
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
+  public List<ActionInfo> getLatestActions(String actionName, int size) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select * from " + TABLE_NAME +
+        " where action_name = ? ORDER by aid DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper(), actionName);
+  }
+
+  public List<ActionInfo> getLatestActions(String actionName, int size,
+      boolean successful, boolean finished) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select * from " + TABLE_NAME +
+        " where action_name = ? and successful = ? and finished = ? ORDER by aid DESC";
+    return jdbcTemplate
+        .query(sql, new ActionRowMapper(), actionName, successful, finished);
+  }
+
+  public List<ActionInfo> getLatestActions(String actionName, boolean successful,
+      int size) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select * from " + TABLE_NAME +
+        " where action_name = ? and successful = ? ORDER by aid DESC";
+    return jdbcTemplate
+        .query(sql, new ActionRowMapper(), actionName, successful);
+  }
+
+  public List<ActionInfo> getLatestActions(String actionType, int size,
+      boolean finished) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select * from " + TABLE_NAME +
+        " where action_name = ? and finished = ? ORDER by aid DESC";
+    return jdbcTemplate
+        .query(sql, new ActionRowMapper(), actionType, finished);
+  }
+
   public void delete(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "delete from " + TABLE_NAME + " where aid = ?";
     jdbcTemplate.update(sql, aid);
+  }
+
+  public void deleteAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE from " + TABLE_NAME;
+    jdbcTemplate.execute(sql);
   }
 
   public void insert(ActionInfo actionInfo) {
@@ -176,13 +228,14 @@ public class ActionDao {
     parameters.put("cid", actionInfo.getCmdletId());
     parameters.put("action_name", actionInfo.getActionName());
     parameters.put("args", actionInfo.getArgsJsonString());
-    parameters.put("result", StringEscapeUtils.escapeJava(actionInfo.getResult()));
+    parameters
+        .put("result", StringEscapeUtils.escapeJava(actionInfo.getResult()));
     parameters.put("log", StringEscapeUtils.escapeJava(actionInfo.getLog()));
     parameters.put("successful", actionInfo.isSuccessful());
     parameters.put("create_time", actionInfo.getCreateTime());
     parameters.put("finished", actionInfo.isFinished());
     parameters.put("finish_time", actionInfo.getFinishTime());
-    parameters.put("progress", (int)(actionInfo.getProgress()));
+    parameters.put("progress", (int) (actionInfo.getProgress()));
     return parameters;
   }
 
@@ -195,8 +248,10 @@ public class ActionDao {
       actionInfo.setCmdletId(resultSet.getLong("cid"));
       actionInfo.setActionName(resultSet.getString("action_name"));
       actionInfo.setArgsFromJsonString(resultSet.getString("args"));
-      actionInfo.setResult(StringEscapeUtils.unescapeJava(resultSet.getString("result")));
-      actionInfo.setLog(StringEscapeUtils.unescapeJava(resultSet.getString("log")));
+      actionInfo.setResult(
+          StringEscapeUtils.unescapeJava(resultSet.getString("result")));
+      actionInfo
+          .setLog(StringEscapeUtils.unescapeJava(resultSet.getString("log")));
       actionInfo.setSuccessful(resultSet.getBoolean("successful"));
       actionInfo.setCreateTime(resultSet.getLong("create_time"));
       actionInfo.setFinished(resultSet.getBoolean("finished"));
@@ -205,5 +260,4 @@ public class ActionDao {
       return actionInfo;
     }
   }
-
 }

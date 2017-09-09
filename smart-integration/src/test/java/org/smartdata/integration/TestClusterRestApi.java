@@ -18,10 +18,16 @@
 package org.smartdata.integration;
 
 import io.restassured.RestAssured;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.integration.rest.RestApiBase;
+
+import static org.smartdata.integration.rest.ClusterRestApi.getFileInfo;
+import static org.smartdata.integration.rest.CmdletRestApi.submitCmdlet;
+import static org.smartdata.integration.rest.CmdletRestApi.waitCmdletComplete;
 
 /**
  * Test for ClusterRestApi.
@@ -33,5 +39,15 @@ public class TestClusterRestApi extends IntegrationTestBase {
     String json = response.asString();
     response.then().body("message", Matchers.equalTo("Namenode URL"));
     response.then().body("body", Matchers.containsString("localhost"));
+  }
+
+  @Test
+  public void testGetFileInfo() throws Exception {
+    long cid = submitCmdlet("write -file /hello -length 1011");
+    waitCmdletComplete(cid);
+    Thread.sleep(2000);
+
+    JsonPath jsonPath = getFileInfo("/hello");
+    Assert.assertEquals(jsonPath.getLong("length"), 1011);
   }
 }

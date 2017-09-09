@@ -128,7 +128,7 @@
 //    Assert.assertTrue(ssm
 //        .getCmdletExecutor()
 //        .listCmdletsInfo(1, null).size() == 0);
-//    // Test delete all cmdlets under rid = 1
+//    // Test clear all cmdlets under rid = 1
 //    ssm.getCmdletExecutor().submitCmdlet(
 //        new CmdletDescriptor("allssd -file /testMoveFile/file1", 1));
 //    ssm.getCmdletExecutor().submitCmdlet(
@@ -208,14 +208,14 @@
 //        break;
 //      }
 //    }
-//    List<CmdletInfo> com = metaStore.getCmdletsTableItem(null,
+//    List<CmdletInfo> com = metaStore.getCmdlets(null,
 //        null, CmdletState.DONE);
 //    System.out.printf("CmdletInfos Size = %d\n", com.size());
 //    // Check Status
 //    Assert.assertTrue(com.size() == 1);
 //    Assert.assertTrue(com.get(0).getState() == CmdletState.DONE);
 //    List<ActionInfo> actionInfos = metaStore
-//        .getActionsTableItem(null, null);
+//        .getActions(null, null);
 //    System.out.printf("ActionInfos Size = %d\n", actionInfos.size());
 //    Assert.assertTrue(actionInfos.size() == 3);
 //  }

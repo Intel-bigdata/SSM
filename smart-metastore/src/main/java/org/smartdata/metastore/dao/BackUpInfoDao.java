@@ -54,12 +54,12 @@ public class BackUpInfoDao {
         new BackUpInfoRowMapper());
   }
 
-  public int getCountById(int rid){
+  public int getCountByRid(int rid){
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("select COUNT(*) from backup_file where rid = ?",new Object[rid],Integer.class);
   }
 
-  public BackUpInfo getById(long rid) {
+  public BackUpInfo getByRid(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("select * from backup_file where rid = ?",
         new Object[]{rid}, new BackUpInfoRowMapper());
