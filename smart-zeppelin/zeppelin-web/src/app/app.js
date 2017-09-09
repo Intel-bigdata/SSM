@@ -133,6 +133,26 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
           }]
         }
       })
+      .when('/movers', {
+        templateUrl: 'app/dashboard/views/mover/mover.html',
+        controller: 'MoverCtrl',
+        resolve: {
+          movers0: ['models', function (models) {
+            return models.$get.movers();
+          }]
+        }
+      })
+      .when('/movers/mover/:ruleId', {
+        templateUrl: 'app/dashboard/views/mover/detail/moverActions.html',
+        controller: 'MoverActionsCtrl',
+        resolve: {
+          moverActions0: ['$route', 'models', function ($route, models) {
+            console.log('-------------mover------');
+            console.log(models.$get.moverActions($route.current.params.ruleId));
+            return models.$get.moverActions($route.current.params.ruleId);
+          }]
+        }
+      })
       .when('/actions', {
         templateUrl: 'app/dashboard/views/actions/actions.html',
         controller: 'ActionsCtrl',
@@ -145,33 +165,12 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
           }]
         }
       })
-      .when('/mover', {
-        templateUrl: 'app/dashboard/views/mover/mover.html',
-        controller: 'MoverCtrl',
-        resolve: {
-          load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
-          actions0: ['models', function (models) {
-            return models.$get.actions();
-          }],
-          actionTypes: ['models', function (models) {
-            return models.$get.actionTypes();
-          }]
-        }
-      })
-      .when('/copy', {
+      .when('/copys', {
         templateUrl: 'app/dashboard/views/copy/copy.html',
         controller: 'CopyCtrl',
         resolve: {
-          load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           actions0: ['models', function (models) {
             return models.$get.actions();
-          }],
-          actionTypes: ['models', function (models) {
-            return models.$get.actionTypes();
           }]
         }
       })
@@ -179,9 +178,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/dashboard/views/actions/action/action.html',
         controller: 'ActionCtrl',
         resolve: {
-          load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           action0: ['$route', 'models', function ($route, models) {
             return models.$get.action($route.current.params.actionId);
           }]
