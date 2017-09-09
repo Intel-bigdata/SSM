@@ -56,6 +56,7 @@ public class CopyScheduler extends ActionSchedulerService {
   private ScheduledExecutorService executorService;
   // Global variables
   private MetaStore metaStore;
+  private Map<String, Long> fileLock;
   private Map<Long, Long> actionDiffMap;
   private Map<String, ScheduleTask.FileChain> fileChainMap;
 
@@ -63,6 +64,7 @@ public class CopyScheduler extends ActionSchedulerService {
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
     this.metaStore = metaStore;
+    this.fileLock = new ConcurrentHashMap<>();
     this.actionDiffMap = new ConcurrentHashMap<>();
     this.fileChainMap = new HashMap<>();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
@@ -79,6 +81,10 @@ public class CopyScheduler extends ActionSchedulerService {
       return ScheduleResult.FAIL;
     }
     long fid = fileChainMap.get(path).popTop();
+    if (fid == -1) {
+      // FileChain is already empty
+      return ScheduleResult.FAIL;
+    } 
     FileDiff fileDiff = null;
     try {
       fileDiff = metaStore.getFileDiff(fid);
@@ -204,10 +210,16 @@ public class CopyScheduler extends ActionSchedulerService {
           ActionInfo actionInfo = metaStore.getActionById(entry.getKey());
           if(actionInfo.isSuccessful()) {
             metaStore.markFileDiffApplied(entry.getValue(), FileDiffState.APPLIED);
+            FileDiff fileDiff = metaStore.getFileDiff(entry.getValue());
+            // Remove lock
+            fileLock.remove(fileDiff.getSrc());
+            // Add to pending list
+            fileChainMap.get(fileDiff.getSrc()).addTopRunning();
             it.remove();
           }
         } catch (MetaStoreException e) {
-          e.printStackTrace();
+          LOG.error("Sync diff actions status fails, key " + entry.getKey() +
+              " value " + entry.getValue(), e);
         }
       }
     }
@@ -223,6 +235,17 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
 
+    private void addToRunning() {
+      for (FileChain fileChain: fileChainMap.values()) {
+        try {
+          fileChain.addTopRunning();
+        } catch (MetaStoreException e) {
+          LOG.debug("Add fileDiffs to Pending list error", e);
+          continue;
+        }
+      }
+    }
+
     private void diffMerge(List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
       for (FileDiff fileDiff : fileDiffs) {
@@ -234,6 +257,7 @@ public class CopyScheduler extends ActionSchedulerService {
           fileChain = fileChainMap.get(src);
         } else {
           fileChain = new FileChain();
+          fileChain.setFilePath(src);
           fileChainMap.put(src, fileChain);
         }
         if (fileDiff.getDiffType() == FileDiffType.RENAME) {
@@ -294,13 +318,14 @@ public class CopyScheduler extends ActionSchedulerService {
     public void run() {
       syncActions();
       // Sync backup rules
-      // syncRule();
       // Sync/schedule file diffs
       syncFileDiff();
+      addToRunning();
     }
 
     private class FileChain {
       private String head;
+      private String filePath;
       private String tail;
       private List<Long> fileDiffChain;
       private int state;
@@ -314,6 +339,14 @@ public class CopyScheduler extends ActionSchedulerService {
       public FileChain(String curr) {
         this();
         this.head = curr;
+      }
+
+      public String getFilePath() {
+        return filePath;
+      }
+
+      public void setFilePath(String filePath) {
+        this.filePath = filePath;
       }
 
       public List<Long> getFileDiffChain() {
@@ -346,6 +379,18 @@ public class CopyScheduler extends ActionSchedulerService {
         long fid = fileDiffChain.get(0);
         fileDiffChain.remove(0);
         return fid;
+      }
+
+      public void addTopRunning() throws MetaStoreException {
+        if (fileLock.containsKey(filePath)) {
+          return;
+        }
+        if (fileDiffChain.size() == 0) {
+          return;
+        }
+        long fid = fileDiffChain.get(0);
+        metaStore.markFileDiffApplied(fid, FileDiffState.RUNNING);
+        fileLock.put(filePath, fid);
       }
     }
   }
