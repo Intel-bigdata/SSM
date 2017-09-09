@@ -19,62 +19,56 @@
 angular.module('zeppelinWebApp')
 
   .controller('MoverCtrl', MoverCtrl);
-  MoverCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'actions0', 'actionTypes'];
-  function MoverCtrl($scope, $modal, $stb, $dialogs, actions0, actionTypes) {
+  MoverCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'movers0'];
+  function MoverCtrl($scope, $modal, $stb, $dialogs, movers0) {
 
-    $scope.actionsTable = {
+    $scope.moversTable = {
       cols: [
         // group 1/3 (4-col)
-        $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        // $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-        $stb.text('Rule ID').key('cid').canSort().done(),
-        $stb.text('File').key('file').canSort().styleClass('col-md-1').done(),
-        $stb.text('File Size').key('fileSize').canSort().styleClass('col-md-1').done(),
-        $stb.text('Storage Type').key('sourceType').canSort().styleClass('col-md-1').done(),
-        $stb.text('Target Storage Type').key('targetType').canSort().styleClass('col-md-1').done(),
-        $stb.datetime('Create Time').key('createTime').canSort().styleClass('col-md-2').done(),
+        $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
+        $stb.text('ID').key('id').canSort().done(),
+        $stb.text('Text').key(['ruleText']).done(),
+        $stb.text('Running Progress').key('runningProgress').done(),
+        $stb.text('Base Progress').key('baseProgress').done(),
+        $stb.text('Checked Number').key('numChecked').canSort().styleClass('hidden-sm hidden-xs').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.datetime('Finish Time').key('finishTime').canSort().styleClass('col-md-2').done(),
-        $stb.duration("Running Time").key('runningTime').canSort().styleClass('col-md-1').done(),
+        $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
       ],
       rows: null
     };
 
-    function updateTable(actions) {
-      $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
-        _.map(actions, function (action) {
+    function updateTable(movers) {
+      $scope.moversTable.rows = $stb.$update($scope.moversTable.rows,
+        _.map(movers, function (mover) {
           return {
-            cid: action.cmdletId,
-            state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
-            createTime: action.createTime,
-            finishTime: action.finished ? action.finishTime : "-",
-            runningTime: action.uptime,
-            succeed: action.finished ? action.successful : "-",
+            id: mover.id,
+            // name: {href: pageUrl, text: rule.appName},
+            state: {tooltip: mover.state, condition: mover.isRunning ? 'good' : '', shape: 'stripe'},
+            //user: rule.user,
+            ruleText: mover.ruleText,
+            runningProgress: mover.runningProgress,
+            baseProgress: mover.baseProgress,
+            numChecked: mover.numChecked,
+            progress: {
+              current: mover.runningProgress,
+              max: 1
+            },
+            status: mover.state,
             view: {
-              href: action.pageUrl,
+              href: mover.pageUrl,
               icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info'
-            },
-            progress: {
-                current: action.progress,
-                max: 1,
-                flag: action.finished ? action.successful : "-"
-                // usage: action.progress * 100
-            },
-            file: "PATH",
-            fileSize: "1M",
-            sourceType: "COOL",
-            targetType: "ONESSD"
+            }
           };
         }));
     }
 
-    updateTable(actions0.$data());
-    actions0.$subscribe($scope, function (actions) {
-      updateTable(actions);
+    updateTable(movers0.$data());
+    movers0.$subscribe($scope, function (movers) {
+      updateTable(movers);
     });
   }
 

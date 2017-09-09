@@ -62,7 +62,6 @@ angular.module('zeppelinWebApp')
     function updateTable(rules) {
       $scope.rulesTable.rows = $stb.$update($scope.rulesTable.rows,
         _.map(rules, function (rule) {
-          console.log(rule);
           return {
             id: rule.id,
             // name: {href: pageUrl, text: rule.appName},
