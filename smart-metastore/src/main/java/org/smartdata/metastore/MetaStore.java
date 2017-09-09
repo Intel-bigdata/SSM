@@ -49,6 +49,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
@@ -66,6 +67,7 @@ import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.dao.EmptyResultDataAccessException;
 
+import javax.swing.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -575,6 +577,59 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+
+  public List<DetailedRuleInfo> listMoveRules() throws MetaStoreException {
+    List<RuleInfo> ruleInfos = getRuleInfo();
+    List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
+    for (RuleInfo ruleInfo: ruleInfos) {
+      if (ruleInfo.getRuleText().contains("allssd") ||
+          ruleInfo.getRuleText().contains("onessd") ||
+          ruleInfo.getRuleText().contains("archive")) {
+        DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
+        // Add mover progress
+        List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
+        int currPos = 0;
+        for (CmdletInfo cmdletInfo: cmdletInfos) {
+          if (cmdletInfo.getState().getValue() <= 2) {
+            break;
+          }
+          currPos += 1;
+        }
+        int countRunning = 0;
+        for (int i = 0; i < cmdletInfos.size(); i++ ) {
+          if (cmdletInfos.get(i).getState().getValue() <= 2) {
+            countRunning += 1;
+          }
+        }
+        detailedRuleInfo
+            .setBaseProgress(cmdletInfos.size() - currPos);
+        detailedRuleInfo.setRunningProgress(countRunning);
+        detailedRuleInfos.add(detailedRuleInfo);
+      }
+    }
+    return detailedRuleInfos;
+  }
+
+
+  public List<DetailedRuleInfo> listSyncRules() throws MetaStoreException {
+    List<RuleInfo> ruleInfos = getRuleInfo();
+    List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
+    for (RuleInfo ruleInfo : ruleInfos) {
+      if (ruleInfo.getRuleText().contains("sync")) {
+        DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
+        // Add sync progress
+        BackUpInfo backUpInfo = getBackUpInfo(ruleInfo.getId());
+        // Get total matched files
+        detailedRuleInfo
+            .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+        detailedRuleInfo.setRunningProgress(
+            fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
+        detailedRuleInfos.add(detailedRuleInfo);
+      }
+    }
+    return detailedRuleInfos;
+  }
+
   public synchronized boolean insertNewRule(RuleInfo info)
       throws MetaStoreException {
     try {
@@ -847,6 +902,33 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  public List<ActionInfo> getActions(long rid, int size) throws MetaStoreException {
+    List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(rid);
+    List<ActionInfo> runningActions = new ArrayList<>();
+    List<ActionInfo> finishedActions = new ArrayList<>();
+    int total = 0;
+    for (CmdletInfo cmdletInfo:cmdletInfos) {
+      if (total >= size) {
+        break;
+      }
+      List<Long> aids = cmdletInfo.getAids();
+      for (Long aid : aids) {
+        if (total >= size) {
+          break;
+        }
+        ActionInfo actionInfo = getActionById(aid);
+        if(actionInfo.isFinished()) {
+          finishedActions.add(actionInfo);
+        } else {
+          runningActions.add(actionInfo);
+        }
+        total ++;
+      }
+    }
+    runningActions.addAll(finishedActions);
+    return runningActions;
   }
 
   public ActionInfo getActionById(long aid) throws MetaStoreException {
@@ -1219,9 +1301,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public BackUpInfo getBackUpInfoById(long id) throws MetaStoreException {
+  public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
-      return backUpInfoDao.getById(id);
+      return backUpInfoDao.getByRid(rid);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

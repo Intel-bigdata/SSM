@@ -64,7 +64,8 @@ public class FileObject extends SmartObject {
             "(SELECT policy_name FROM storage_policy WHERE sid = file.sid)"));
     properties.put("unsynced",
         new Property("unsynced", ValueType.BOOLEAN,
-            null, "file_diff", null, false));
+            null, "file_diff", null, false,
+            "state = 1"));
   }
 
   public FileObject() {

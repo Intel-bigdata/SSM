@@ -20,7 +20,6 @@ package org.smartdata.server.engine.rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.SyncAction;
-import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.BackUpInfo;
@@ -63,7 +62,9 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
         backUpInfo.setDest(dest);
         backUpInfo.setPeriod(tResult.getTbScheduleInfo().getEvery());
 
-        des.addActionArgs(i, SyncAction.SRC, dirs);
+        des.addActionArg(i, SyncAction.SRC, dirs);
+
+        LOG.debug("Rule executor added for rule {} src={}  dest={}", ruleInfo, dirs, dest);
 
         synchronized (backups) {
           if (!backups.containsKey(ruleId)) {
@@ -111,24 +112,6 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
 
   public CmdletDescriptor preSubmitCmdletDescriptor(final RuleInfo ruleInfo, TranslateResult tResult,
       CmdletDescriptor descriptor) {
-    String file = descriptor.getCmdletParameter(HdfsAction.FILE_PATH);
-    Map<String, String> args;
-    for (int i = 0; i < descriptor.actionSize(); i++) {
-      if (descriptor.getActionName(i).equals("sync")) {
-        args = descriptor.getActionArgs(i);
-        String src = args.get(SyncAction.SRC);
-        args.put(SyncAction.SRC, file);
-        String dest = args.get(SyncAction.DEST);
-        String[] paths = src.split(",");
-        for (String p : paths) {
-          if (file.startsWith(p)) {
-            dest += file.replaceFirst(p, "");
-            break;
-          }
-        }
-        args.put(SyncAction.DEST, dest);
-      }
-    }
     return descriptor;
   }
 

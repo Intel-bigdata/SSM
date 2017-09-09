@@ -108,8 +108,18 @@ public class CmdletDescriptor {
     return map;
   }
 
-  public void addActionArgs(int index, String key, String value) {
+  public void addActionArg(int index, String key, String value) {
     actionArgs.get(index).put(key, value);
+  }
+
+  public String deleteActionArg(int index, String key) {
+    Map<String, String> args = actionArgs.get(index);
+    String value = null;
+    if (args.containsKey(key)) {
+      value = args.get(key);
+      args.remove(key);
+    }
+    return value;
   }
 
   public int actionSize() {
