@@ -54,6 +54,16 @@
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
+            <artifactId>smart-alluxio</artifactId>
+            <version>1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-alluxio-client</artifactId>
+            <version>1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
             <artifactId>smart-admin</artifactId>
             <version>1.2-SNAPSHOT</version>
             <scope>test</scope>
@@ -110,7 +120,12 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
         </dependency>
-
+        <dependency>
+           <groupId>org.alluxio</groupId>
+           <artifactId>alluxio-core-client</artifactId>
+           <version>${alluxio.version}</version>
+           <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.dbunit</groupId>
             <artifactId>dbunit</artifactId>
