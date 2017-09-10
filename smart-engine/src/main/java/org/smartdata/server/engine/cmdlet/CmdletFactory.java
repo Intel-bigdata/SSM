@@ -17,12 +17,15 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import alluxio.client.file.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.action.SmartAction;
+import org.smartdata.alluxio.AlluxioUtil;
+import org.smartdata.alluxio.action.AlluxioAction;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.client.SmartDFSClient;
@@ -78,6 +81,17 @@ public class CmdletFactory {
         LOG.error("smartAction aid={} setDfsClient error", launchAction.getActionId(), e);
         throw new ActionException(e);
       }
+    }
+    else if(smartAction instanceof AlluxioAction) {
+      FileSystem fs;
+      try {
+        fs =  AlluxioUtil.getAlluxioFs(smartContext);
+      } catch (Exception e) {
+        LOG.error("smartAction aid={} alluxio filesystem error", launchAction.getActionId(), e);
+        throw new ActionException(e);
+      }
+      ((AlluxioAction)smartAction).setFileSystem(fs);
+
     }
     return smartAction;
   }

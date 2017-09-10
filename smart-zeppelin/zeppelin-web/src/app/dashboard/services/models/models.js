@@ -32,6 +32,15 @@ angular.module('org.apache.hadoop.ssm.models', [])
           }
           return obj[prop];
         },
+        getProgress: function (base, ruinning) {
+          var result;
+          if (base === 0) {
+            result = 0;
+          } else {
+            result = ruinning / base;
+          }
+          return result;
+        },
         parseIntFromQueryPathTail: function (path) {
           return Number(_.last(path.split('.')).replace(/[^0-9]/g, ''));
         },
@@ -96,6 +105,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
         rules: function (objs) {
           return decoder._asAssociativeArray(objs, decoder.ruleSummary, 'id');
         },
+        movers: function (objs) {
+          return decoder._asAssociativeArray(objs, decoder.moverSummary, 'id');
+        },
         ruleSummary: function (obj) {
           return angular.merge(obj, {
             // extra properties
@@ -116,12 +128,18 @@ angular.module('org.apache.hadoop.ssm.models', [])
             }
           });
         },
+        moverSummary: function (obj) {
+          console.log(obj);
+          return angular.merge(obj, {
+            isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
+            pageUrl: locator.mover(obj.id),
+            progress: util.getProgress(obj.baseProgress, obj.runningProgress)
+          });
+        },
         rule: function (obj) {
           obj = obj.body;
           angular.merge(obj, {
-            status: 'Active',
             ruleName: 'Rule ' + obj.id,
-            isRunning: true,
           });
           return obj;
         },
@@ -181,6 +199,12 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         ruleCmdlets: function (ruleId) {
           return get('rules/' + ruleId + '/cmdlets', decoder.ruleCmdlets);
+        },
+        movers: function () {
+          return get('rules/list/move', decoder.movers);
+        },
+        moverActions: function (ruleId) {
+          return get('actions/list/0/' + ruleId , decoder.actions);
         },
         actions: function () {
           return get('actions/list/0', decoder.actions);
