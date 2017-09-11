@@ -1,4 +1,4 @@
-///**
+// /**
 // * Licensed to the Apache Software Foundation (ASF) under one
 // * or more contributor license agreements.  See the NOTICE file
 // * distributed with this work for additional information
@@ -15,25 +15,25 @@
 // * See the License for the specific language governing permissions and
 // * limitations under the License.
 // */
-//package org.smartdata.server;
+// package org.smartdata.server;
 //
-//import org.apache.hadoop.hdfs.DFSTestUtil;
-//import org.apache.hadoop.hdfs.DistributedFileSystem;
-//import org.apache.hadoop.fs.Path;
-//import org.junit.Assert;
-//import org.junit.Test;
-//import org.smartdata.admin.SmartAdmin;
-//import org.smartdata.metastore.MetaStore;
-//import org.smartdata.model.ActionInfo;
-//import org.smartdata.model.FileDiff;
-//import org.smartdata.model.FileDiffState;
-//import org.smartdata.model.FileDiffType;
-//import org.smartdata.model.RuleState;
-//import org.smartdata.server.engine.CmdletManager;
+// import org.apache.hadoop.hdfs.DFSTestUtil;
+// import org.apache.hadoop.hdfs.DistributedFileSystem;
+// import org.apache.hadoop.fs.Path;
+// import org.junit.Assert;
+// import org.junit.Test;
+// import org.smartdata.admin.SmartAdmin;
+// import org.smartdata.metastore.MetaStore;
+// import org.smartdata.model.ActionInfo;
+// import org.smartdata.model.FileDiff;
+// import org.smartdata.model.FileDiffState;
+// import org.smartdata.model.FileDiffType;
+// import org.smartdata.model.RuleState;
+// import org.smartdata.server.engine.CmdletManager;
 //
-//import java.util.List;
+// import java.util.List;
 //
-//public class TestCopyScheduler extends MiniSmartClusterHarness {
+// public class TestCopyScheduler extends MiniSmartClusterHarness {
 //
 //   @Test
 //   public void testDelete() throws Exception {
@@ -85,7 +85,8 @@
 //      Thread.sleep(1000);
 //    } while(admin.getRuleInfo(ruleId).getNumCmdsGen() <= 2);
 //    List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
-//    // Assert.assertTrue(actionInfos.size() == 3);
+//    Assert.assertTrue(actionInfos.size() >= 3);
+//    Thread.sleep(1200);
 //    for (int i = 0; i < 3; i++) {
 //      // Write 10 files
 //      Assert.assertTrue(dfs.exists(new Path(destPath + i)));
@@ -160,7 +161,7 @@
 //      cmdletManager.submitCmdlet("sync -file /src/" + i + " -src " + srcPath + " -dest " + destPath);
 //    }
 //    List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
-//    Assert.assertTrue(actionInfos.size() == 3);
+//    Assert.assertTrue(actionInfos.size() >= 3);
 //    Thread.sleep(3000);
 //    for (int i = 0; i < 3; i++) {
 //      // Write 10 files
@@ -168,4 +169,4 @@
 //      System.out.printf("File %d is copied.\n", i);
 //    }
 //  }
-//}
+// }
