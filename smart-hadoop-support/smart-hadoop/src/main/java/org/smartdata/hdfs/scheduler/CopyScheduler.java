@@ -120,6 +120,10 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   public boolean onSubmit(ActionInfo actionInfo) {
+    String path = actionInfo.getArgs().get("-file");
+    if (fileLock.containsKey(path)) {
+      return false;
+    }
     return true;
   }
 
