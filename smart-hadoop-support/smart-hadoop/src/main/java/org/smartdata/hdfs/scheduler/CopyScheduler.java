@@ -120,6 +120,10 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   public boolean onSubmit(ActionInfo actionInfo) {
+    String path = actionInfo.getArgs().get("-file");
+    if (fileLock.containsKey(path)) {
+      return false;
+    }
     return true;
   }
 
@@ -378,6 +382,9 @@ public class CopyScheduler extends ActionSchedulerService {
         }
         long fid = fileDiffChain.get(0);
         fileDiffChain.remove(0);
+        if (fileDiffChain.size() == 0) {
+          fileChainMap.remove(filePath);
+        }
         return fid;
       }
 
