@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.action.SyncAction;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -39,7 +40,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,9 +74,9 @@ public class CopyScheduler extends ActionSchedulerService {
     if (!actionInfo.getActionName().equals("sync")) {
       return ScheduleResult.FAIL;
     }
-    String srcDir = action.getArgs().get("-src");
+    String srcDir = action.getArgs().get(SyncAction.SRC);
     String path = action.getArgs().get("-file");
-    String destDir = action.getArgs().get("-dest");
+    String destDir = action.getArgs().get(SyncAction.DEST);
     if (!fileChainMap.containsKey(path)) {
       return ScheduleResult.FAIL;
     }
@@ -105,7 +105,9 @@ public class CopyScheduler extends ActionSchedulerService {
         action.setActionType("rename");
         action.getArgs().put("-file", path.replace(srcDir, destDir));
         // TODO scope check
-        action.getArgs().put("-dest", fileDiff.getParameters().get("-dest").replace(srcDir, destDir));
+        String remoteDest = fileDiff.getParameters().get("-dest");
+        action.getArgs().put("-dest", remoteDest.replace(srcDir, destDir));
+        fileDiff.getParameters().remove("-dest");
         break;
       default:
         break;
@@ -294,15 +296,15 @@ public class CopyScheduler extends ActionSchedulerService {
           String dest = fileDiff.getParameters().get("-dest");
           fileChain.tail = dest;
           // Update key in map
-          fileChainMap.remove(src);
-          if (fileChainMap.containsKey(dest)) {
-            // Merge with existing chain
-            // Delete then rename and append
-            fileChainMap.get(dest).merge(fileChain);
-            fileChain = fileChainMap.get(dest);
-          } else {
-            fileChainMap.put(dest, fileChain);
-          }
+          // fileChainMap.remove(src);
+          // if (fileChainMap.containsKey(dest)) {
+          //   // Merge with existing chain
+          //   // Delete then rename and append
+          //   fileChainMap.get(dest).merge(fileChain);
+          //   fileChain = fileChainMap.get(dest);
+          // } else {
+          //   fileChainMap.put(dest, fileChain);
+          // }
         } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
           fileChain.tail = src;
           // Remove key in map
