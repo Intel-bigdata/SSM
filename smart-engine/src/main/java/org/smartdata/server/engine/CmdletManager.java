@@ -181,6 +181,12 @@ public class CmdletManager extends AbstractService {
         submitTime);
     List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     for (ActionInfo actionInfo : actionInfos) {
+      for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+        if (!p.onSubmit(actionInfo)) {
+          throw new IOException(
+              String.format("Action rejected by scheduler", actionInfo));
+        }
+      }
       cmdletInfo.addAction(actionInfo.getActionId());
     }
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
@@ -673,6 +679,10 @@ public class CmdletManager extends AbstractService {
         actionInfo.setSuccessful(true);
         updateStorageIfNeeded(actionInfo);
       }
+      for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+        p.onActionFinished(actionInfo);
+      }
+
     } else {
       // Updating action status which is not pending or running
     }
