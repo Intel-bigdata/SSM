@@ -25,12 +25,35 @@ import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
+import org.smartdata.model.FileDiffType;
 import org.smartdata.model.RuleState;
 import org.smartdata.server.engine.CmdletManager;
 
 import java.util.List;
 
 public class TestCopyScheduler extends MiniSmartClusterHarness {
+
+  @Test
+  public void testDelete() throws Exception {
+    waitTillSSMExitSafeMode();
+    FileDiff fileDiff =
+        new FileDiff(FileDiffType.DELETE, FileDiffState.RUNNING);
+    fileDiff.setSrc("/src/1");
+    MetaStore metaStore = ssm.getMetaStore();
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+    metaStore.insertFileDiff(fileDiff);
+    long ruleId = admin.submitRule(
+        "file: every 1s | path matches \"/src/*\"| sync -dest /dest/",
+        RuleState.ACTIVE);
+    do {
+      Thread.sleep(1000);
+    } while (admin.getRuleInfo(ruleId).getNumCmdsGen() == 0);
+    Assert
+        .assertTrue(cmdletManager.listNewCreatedActions("sync", 0).size() > 0);
+  }
 
  // @Test (timeout = 40000)
  // public void testWithSyncRule() throws Exception {
