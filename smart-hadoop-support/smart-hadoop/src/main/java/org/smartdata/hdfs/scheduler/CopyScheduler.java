@@ -84,7 +84,8 @@ public class CopyScheduler extends ActionSchedulerService {
     if (fid == -1) {
       // FileChain is already empty
       return ScheduleResult.FAIL;
-    } 
+    }
+    fileLock.put(path, fid);
     FileDiff fileDiff = null;
     try {
       fileDiff = metaStore.getFileDiff(fid);
@@ -137,6 +138,22 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   public void onActionFinished(ActionInfo actionInfo) {
+    // Remove lock
+    FileDiff fileDiff = null;
+    if(actionInfo.isSuccessful()) {
+      try {
+        long did = actionDiffMap.get(actionInfo.getActionId());
+        metaStore.markFileDiffApplied(did, FileDiffState.APPLIED);
+        fileDiff = metaStore.getFileDiff(did);
+        // Add to pending list
+        fileChainMap.get(fileDiff.getSrc()).addTopRunning();
+      } catch (MetaStoreException e) {
+        LOG.error("Mark sync action failed!", e);
+      }
+    }
+    if (fileDiff != null) {
+      fileLock.remove(fileDiff.getSrc());
+    }
   }
 
   @Override
@@ -320,7 +337,7 @@ public class CopyScheduler extends ActionSchedulerService {
     
     @Override
     public void run() {
-      syncActions();
+      // syncActions();
       // Sync backup rules
       // Sync/schedule file diffs
       syncFileDiff();
@@ -397,7 +414,7 @@ public class CopyScheduler extends ActionSchedulerService {
         }
         long fid = fileDiffChain.get(0);
         metaStore.markFileDiffApplied(fid, FileDiffState.RUNNING);
-        fileLock.put(filePath, fid);
+        // fileLock.put(filePath, fid);
       }
     }
   }
