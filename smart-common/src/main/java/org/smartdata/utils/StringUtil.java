@@ -70,6 +70,12 @@ public class StringUtil {
     if (last == -1) {
       return null;
     }
-    return path.substring(0, last);
+    return path.substring(0, last + 1);
+  }
+
+  public static String globString2SqlLike(String str) {
+    str = str.replace("*", "%");
+    str = str.replace("?", "_");
+    return str;
   }
 }
