@@ -34,6 +34,7 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
@@ -587,6 +588,15 @@ public class CmdletManager extends AbstractService {
       return metaStore.getActions(rid, size);
     } catch (MetaStoreException e) {
       LOG.error("Get Finished Actions by rid and size from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<DetailedFileAction> getFileActions(long rid, int size) throws IOException {
+    try {
+      return metaStore.listFileActions(rid, size);
+    } catch (MetaStoreException e) {
+      LOG.error("Get File Actions by rid and size from DB error", e);
       throw new IOException(e);
     }
   }
