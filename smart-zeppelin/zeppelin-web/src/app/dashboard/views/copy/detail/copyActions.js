@@ -63,7 +63,7 @@ angular.module('zeppelinWebApp')
                 flag: action.finished ? action.successful : "-"
                 // usage: action.progress * 100
             },
-            filePath: action.src,
+            filePath: action.filePath,
             targetPath: action.target
           };
         }));
