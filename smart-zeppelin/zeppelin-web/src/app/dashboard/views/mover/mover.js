@@ -26,11 +26,10 @@ angular.module('zeppelinWebApp')
       cols: [
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
-        $stb.text('ID').key('id').canSort().done(),
-        $stb.text('Text').key(['ruleText']).done(),
-        $stb.text('Running Progress').key('runningProgress').done(),
-        $stb.text('Base Progress').key('baseProgress').done(),
-        $stb.text('Checked Number').key('numChecked').canSort().styleClass('hidden-sm hidden-xs').done(),
+        $stb.text('Rule ID').key('id').canSort().done(),
+        $stb.text('Mover Rule').key(['moverRule']).done(),
+        $stb.text('Moving Files').key('movingFiles').done(),
+        $stb.text('All Files').key('allFiles').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
         $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
@@ -46,10 +45,9 @@ angular.module('zeppelinWebApp')
             // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: mover.state, condition: mover.isRunning ? 'good' : '', shape: 'stripe'},
             //user: rule.user,
-            ruleText: mover.ruleText,
-            runningProgress: mover.runningProgress,
-            baseProgress: mover.baseProgress,
-            numChecked: mover.numChecked,
+            moverRule: mover.ruleText,
+            movingFiles: mover.runningProgress,
+            allFiles: mover.baseProgress,
             progress: {
               current: mover.runningProgress,
               max: 1
