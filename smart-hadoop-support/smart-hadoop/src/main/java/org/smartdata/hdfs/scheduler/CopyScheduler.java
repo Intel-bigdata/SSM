@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.action.SyncAction;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -39,7 +40,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,6 +56,7 @@ public class CopyScheduler extends ActionSchedulerService {
   private ScheduledExecutorService executorService;
   // Global variables
   private MetaStore metaStore;
+  private Map<String, Long> fileLock;
   private Map<Long, Long> actionDiffMap;
   private Map<String, ScheduleTask.FileChain> fileChainMap;
 
@@ -63,6 +64,7 @@ public class CopyScheduler extends ActionSchedulerService {
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
     this.metaStore = metaStore;
+    this.fileLock = new ConcurrentHashMap<>();
     this.actionDiffMap = new ConcurrentHashMap<>();
     this.fileChainMap = new HashMap<>();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
@@ -72,13 +74,18 @@ public class CopyScheduler extends ActionSchedulerService {
     if (!actionInfo.getActionName().equals("sync")) {
       return ScheduleResult.FAIL;
     }
-    String srcDir = action.getArgs().get("-src");
+    String srcDir = action.getArgs().get(SyncAction.SRC);
     String path = action.getArgs().get("-file");
-    String destDir = action.getArgs().get("-dest");
+    String destDir = action.getArgs().get(SyncAction.DEST);
     if (!fileChainMap.containsKey(path)) {
       return ScheduleResult.FAIL;
     }
     long fid = fileChainMap.get(path).popTop();
+    if (fid == -1) {
+      // FileChain is already empty
+      return ScheduleResult.FAIL;
+    }
+    fileLock.put(path, fid);
     FileDiff fileDiff = null;
     try {
       fileDiff = metaStore.getFileDiff(fid);
@@ -98,7 +105,9 @@ public class CopyScheduler extends ActionSchedulerService {
         action.setActionType("rename");
         action.getArgs().put("-file", path.replace(srcDir, destDir));
         // TODO scope check
-        action.getArgs().put("-dest", fileDiff.getParameters().get("-dest").replace(srcDir, destDir));
+        String remoteDest = fileDiff.getParameters().get("-dest");
+        action.getArgs().put("-dest", remoteDest.replace(srcDir, destDir));
+        fileDiff.getParameters().remove("-dest");
         break;
       default:
         break;
@@ -114,6 +123,12 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   public boolean onSubmit(ActionInfo actionInfo) {
+    String path = actionInfo.getArgs().get("-file");
+    System.out.println("Submit file" + path + fileLock.keySet());
+    LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
+    if (fileLock.containsKey(path)) {
+      return false;
+    }
     return true;
   }
 
@@ -127,6 +142,29 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   public void onActionFinished(ActionInfo actionInfo) {
+    // Remove lock
+    FileDiff fileDiff = null;
+    if(actionInfo.isFinished()) {
+      try {
+        long did = actionDiffMap.get(actionInfo.getActionId());
+        metaStore.markFileDiffApplied(did, FileDiffState.APPLIED);
+        fileDiff = metaStore.getFileDiff(did);
+        // Add to pending list
+        if (fileChainMap.containsKey(fileDiff.getSrc())) {
+          fileChainMap.get(fileDiff.getSrc()).addTopRunning();
+        }
+        if (actionDiffMap.containsKey(actionInfo.getActionId())) {
+          actionDiffMap.remove(actionInfo.getActionId());
+        }
+      } catch (MetaStoreException e) {
+        LOG.error("Mark sync action in metastore failed!", e);
+      } catch (Exception e) {
+        LOG.error("Sync action error", e);
+      }
+    }
+    if (fileDiff != null && fileLock.containsKey(fileDiff.getSrc())) {
+      fileLock.remove(fileDiff.getSrc());
+    }
   }
 
   @Override
@@ -197,20 +235,26 @@ public class CopyScheduler extends ActionSchedulerService {
 
     private Map<Long, FileDiff> fileDiffBatch;
 
-    private void syncActions() {
-      for (Iterator<Map.Entry<Long, Long>> it = actionDiffMap.entrySet().iterator(); it.hasNext();) {
-        Map.Entry<Long, Long> entry = it.next();
-        try {
-          ActionInfo actionInfo = metaStore.getActionById(entry.getKey());
-          if(actionInfo.isSuccessful()) {
-            metaStore.markFileDiffApplied(entry.getValue(), FileDiffState.APPLIED);
-            it.remove();
-          }
-        } catch (MetaStoreException e) {
-          e.printStackTrace();
-        }
-      }
-    }
+    // private void syncActions() {
+    //   for (Iterator<Map.Entry<Long, Long>> it = actionDiffMap.entrySet().iterator(); it.hasNext();) {
+    //     Map.Entry<Long, Long> entry = it.next();
+    //     try {
+    //       ActionInfo actionInfo = metaStore.getActionById(entry.getKey());
+    //       if(actionInfo.isFinished()) {
+    //         metaStore.markFileDiffApplied(entry.getValue(), FileDiffState.APPLIED);
+    //         FileDiff fileDiff = metaStore.getFileDiff(entry.getValue());
+    //         // Remove lock
+    //         fileLock.remove(fileDiff.getSrc());
+    //         // Add to pending list
+    //         fileChainMap.get(fileDiff.getSrc()).addTopRunning();
+    //         it.remove();
+    //       }
+    //     } catch (MetaStoreException e) {
+    //       LOG.error("Sync diff actions status fails, key " + entry.getKey() +
+    //           " value " + entry.getValue(), e);
+    //     }
+    //   }
+    // }
 
     private void syncFileDiff() {
       fileDiffBatch = new HashMap<>();
@@ -220,6 +264,17 @@ public class CopyScheduler extends ActionSchedulerService {
         diffMerge(pendingDiffs);
       } catch (MetaStoreException e) {
         LOG.debug("Sync fileDiffs error", e);
+      }
+    }
+
+    private void addToRunning() {
+      for (FileChain fileChain: fileChainMap.values()) {
+        try {
+          fileChain.addTopRunning();
+        } catch (MetaStoreException e) {
+          LOG.debug("Add fileDiffs to Pending list error", e);
+          continue;
+        }
       }
     }
 
@@ -234,21 +289,22 @@ public class CopyScheduler extends ActionSchedulerService {
           fileChain = fileChainMap.get(src);
         } else {
           fileChain = new FileChain();
+          fileChain.setFilePath(src);
           fileChainMap.put(src, fileChain);
         }
         if (fileDiff.getDiffType() == FileDiffType.RENAME) {
           String dest = fileDiff.getParameters().get("-dest");
           fileChain.tail = dest;
           // Update key in map
-          fileChainMap.remove(src);
-          if (fileChainMap.containsKey(dest)) {
-            // Merge with existing chain
-            // Delete then rename and append
-            fileChainMap.get(dest).merge(fileChain);
-            fileChain = fileChainMap.get(dest);
-          } else {
-            fileChainMap.put(dest, fileChain);
-          }
+          // fileChainMap.remove(src);
+          // if (fileChainMap.containsKey(dest)) {
+          //   // Merge with existing chain
+          //   // Delete then rename and append
+          //   fileChainMap.get(dest).merge(fileChain);
+          //   fileChain = fileChainMap.get(dest);
+          // } else {
+          //   fileChainMap.put(dest, fileChain);
+          // }
         } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
           fileChain.tail = src;
           // Remove key in map
@@ -289,18 +345,19 @@ public class CopyScheduler extends ActionSchedulerService {
         metaStore.insertFileDiff(fileDiff);
       }
     }*/
-    
+
     @Override
     public void run() {
-      syncActions();
+      // syncActions();
       // Sync backup rules
-      // syncRule();
       // Sync/schedule file diffs
       syncFileDiff();
+      addToRunning();
     }
 
     private class FileChain {
       private String head;
+      private String filePath;
       private String tail;
       private List<Long> fileDiffChain;
       private int state;
@@ -314,6 +371,14 @@ public class CopyScheduler extends ActionSchedulerService {
       public FileChain(String curr) {
         this();
         this.head = curr;
+      }
+
+      public String getFilePath() {
+        return filePath;
+      }
+
+      public void setFilePath(String filePath) {
+        this.filePath = filePath;
       }
 
       public List<Long> getFileDiffChain() {
@@ -345,7 +410,22 @@ public class CopyScheduler extends ActionSchedulerService {
         }
         long fid = fileDiffChain.get(0);
         fileDiffChain.remove(0);
+        if (fileDiffChain.size() == 0) {
+          fileChainMap.remove(filePath);
+        }
         return fid;
+      }
+
+      public void addTopRunning() throws MetaStoreException {
+        if (fileLock.containsKey(filePath)) {
+          return;
+        }
+        if (fileDiffChain.size() == 0) {
+          return;
+        }
+        long fid = fileDiffChain.get(0);
+        metaStore.markFileDiffApplied(fid, FileDiffState.RUNNING);
+        // fileLock.put(filePath, fid);
       }
     }
   }

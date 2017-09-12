@@ -19,8 +19,15 @@ package org.smartdata.alluxio.action;
 
 import java.util.Map;
 
+import org.smartdata.action.annotation.ActionSignature;
+
 import alluxio.client.file.options.SetAttributeOptions;
 
+@ActionSignature(
+    actionId = "unpin",
+    displayName = "unpin",
+    usage = AlluxioAction.FILE_PATH + " $file "
+)
 public class UnpinAction extends AlluxioAction {
 
   @Override

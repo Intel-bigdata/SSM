@@ -15,14 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata;
+package org.smartdata.alluxio.action;
 
-public class SmartConstants {
-  public static final String SMART_HDFS_STATES_UPDATE_SERVICE_IMPL = "org.smartdata.hdfs.HdfsStatesUpdateService";
+import org.smartdata.action.AbstractActionFactory;
 
-  public static final String SMART_ALLUXIO_STATES_UPDATE_SERVICE_IMPL = "org.smartdata.alluxio.AlluxioStatesUpdateService";
+/**
+ * Built-in smart actions for HDFS system.
+ */
+public class AlluxioActionFactory extends AbstractActionFactory {
 
-  public static final String SMART_ACTION_SCHEDULER_SERVICE_IMPL = "org.smartdata.hdfs.scheduler.MoverScheduler, org.smartdata.hdfs.scheduler.CopyScheduler";
-
-  public static final String SMART_HADOOP_LAST_INOTIFY_TXID = "smart_hadoop_last_inotify_txid";
+  static {
+    addAction(FreeAction.class);
+    addAction(LoadAction.class);
+    addAction(PersistAction.class);
+    addAction(PinAction.class);
+    addAction(SetTTLAction.class);
+    addAction(UnpinAction.class);
+  }
 }

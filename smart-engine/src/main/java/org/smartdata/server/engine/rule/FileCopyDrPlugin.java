@@ -29,6 +29,8 @@ import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.utils.StringUtil;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,14 +48,23 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
 
   public void onNewRuleExecutor(final RuleInfo ruleInfo, TranslateResult tResult) {
     long ruleId = ruleInfo.getId();
-    List<String> pathsCheck;
-    String dirs;
+    List<String> pathsCheckGlob = tResult.getGlobPathCheck();
+    if (pathsCheckGlob.size() == 0) {
+      pathsCheckGlob = Arrays.asList("/*");
+    }
+    List<String> pathsCheck = getPathMatchesList(pathsCheckGlob);
+    String dirs = StringUtil.join(",", pathsCheck);
+
     CmdletDescriptor des = tResult.getCmdDescriptor();
     for (int i = 0; i < des.actionSize(); i++) {
       if (des.getActionName(i).equals("sync")) {
+
+        List<String> statements = tResult.getSqlStatements();
+        String before = statements.get(statements.size() - 1);
+        String after = before.replace(";", " UNION " + referenceNonExists(tResult, pathsCheck));
+        statements.set(statements.size() - 1, after);
+
         BackUpInfo backUpInfo = new BackUpInfo();
-        pathsCheck = tResult.getGlobPathCheck();
-        dirs = getPathMatches(pathsCheck);
         backUpInfo.setSrc(dirs);
         String dest = des.getActionArgs(i).get(SyncAction.DEST);
         if (!dest.endsWith("/")) {
@@ -64,7 +75,7 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
 
         des.addActionArg(i, SyncAction.SRC, dirs);
 
-        LOG.debug("Rule executor added for rule {} src={}  dest={}", ruleInfo, dirs, dest);
+        LOG.debug("Rule executor added for sync rule {} src={}  dest={}", ruleInfo, dirs, dest);
 
         synchronized (backups) {
           if (!backups.containsKey(ruleId)) {
@@ -87,19 +98,26 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
     }
   }
 
-  private String getPathMatches(List<String> paths) {
-    StringBuilder sb = new StringBuilder("");
+  private List<String> getPathMatchesList(List<String> paths) {
+    List<String> ret = new ArrayList<>();
     for (String p : paths) {
       String dir = StringUtil.getBaseDir(p);
-      if (dir == null || dir.length() == 0) {
+      if (dir == null) {
         continue;
       }
-      if (sb.length() != 0) {
-        sb.append(",");
-      }
-      sb.append(dir + "/");
+      ret.add(dir);
     }
-    return sb.toString();
+    return ret;
+  }
+
+  private String referenceNonExists(TranslateResult tr, List<String> dirs) {
+    String temp = "SELECT src FROM file_diff WHERE "
+        + "state = 1 AND diff_type IN (1,2) AND (%s);";
+    String srcs = "src LIKE '" + dirs.get(0) + "%'";
+    for (int i = 1; i < dirs.size(); i++) {
+      srcs +=  " OR src LIKE '" + dirs.get(i) + "%'";
+    }
+    return String.format(temp, srcs);
   }
 
   public boolean preExecution(final RuleInfo ruleInfo, TranslateResult tResult) {

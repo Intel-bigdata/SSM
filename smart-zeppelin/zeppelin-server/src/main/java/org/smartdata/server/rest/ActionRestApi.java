@@ -89,6 +89,24 @@ public class ActionRestApi {
   }
 
   @GET
+  @Path("/filelist/{listNumber}/{ruleId}")
+  public Response actionFileList(@PathParam("listNumber") String listNumber,
+      @PathParam("ruleId") String ruleId) {
+    Integer intNumber = Integer.parseInt(listNumber);
+    intNumber = intNumber > 0 ? intNumber : 0;
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager().getFileActions(Long.valueOf(ruleId), intNumber)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ActionRestApi while listing file actions", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+
+
+  @GET
   @Path("/type/{listNumber}/{actionName}")
   public Response actionTypeList(@PathParam("listNumber") String listNumber,
       @PathParam("actionName") String actionName) {

@@ -15,34 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.alluxio.action;
+package org.smartdata.alluxio;
 
-import java.util.Map;
+import java.io.IOException;
 
+import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConfKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.action.SmartAction;
 
-import alluxio.AlluxioURI;
+import alluxio.Configuration;
+import alluxio.PropertyKey;
 import alluxio.client.file.FileSystem;
+import alluxio.client.file.FileSystemContext;
 
-public abstract class AlluxioAction extends SmartAction {
-  protected static final Logger LOG = LoggerFactory.getLogger(AlluxioAction.class);
-  public static final String FILE_PATH = "-path";
+/**
+ * Contain utils related to alluxio cluster.
+ */
+public class AlluxioUtil {
 
-  protected AlluxioURI uri;
-  protected AlluxioActionType actionType;
-  protected FileSystem alluxioFs;
+  public static final Logger LOG =
+      LoggerFactory.getLogger(AlluxioUtil.class);
 
-  @Override
-  public void init(Map<String, String> args) {
-    super.init(args);
-    this.uri = new AlluxioURI(args.get(FILE_PATH));
-    this.alluxioFs = FileSystem.Factory.get();
+  public static FileSystem getAlluxioFs(SmartContext context) throws IOException {
+    String alluxioMaster = context.getConf().get(
+        SmartConfKeys.SMART_ALLUXIO_MASTER_HOSTNAME_KEY, "localhost");
+    Configuration.set(PropertyKey.MASTER_HOSTNAME, alluxioMaster);  
+    FileSystemContext fsContext = FileSystemContext.create();
+    return FileSystem.Factory.get(fsContext);  
   }
   
-  public void setFileSystem(FileSystem fs) {
-    this.alluxioFs = fs;
-  }
-
+ 
 }
