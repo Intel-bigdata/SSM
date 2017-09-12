@@ -28,6 +28,7 @@ angular.module('zeppelinWebApp')
         $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
         $stb.text('Rule ID').key('cid').canSort().done(),
         $stb.text('File Path').key('filePath').canSort().styleClass('col-md-1').done(),
+        $stb.text('Source Path').key('sourcePath').canSort().styleClass('col-md-1').done(),
         $stb.text('Target Path').key('targetPath').canSort().styleClass('col-md-1').done(),
         $stb.text('Status').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.duration("Running Time").key('runningTime').canSort().done(),
@@ -64,6 +65,7 @@ angular.module('zeppelinWebApp')
                 // usage: action.progress * 100
             },
             filePath: action.filePath,
+            sourcePath: action.src,
             targetPath: action.target
           };
         }));
