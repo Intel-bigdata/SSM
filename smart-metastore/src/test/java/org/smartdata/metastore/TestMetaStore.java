@@ -261,6 +261,21 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testMoveSyncRules() throws Exception {
+    String pathString = "/src/1";
+    long length = 123L;
+    boolean isDir = false;
+    int blockReplication = 1;
+    long blockSize = 128 * 1024L;
+    long modTime = 123123123L;
+    long accessTime = 123123120L;
+    String owner = "root";
+    String group = "admin";
+    long fileId = 56l;
+    byte storagePolicy = 0;
+    FileInfo fileInfo = new FileInfo(pathString, fileId, length,
+        isDir, (short) blockReplication, blockSize, modTime, accessTime,
+        (short) 1, owner, group, storagePolicy);
+    metaStore.insertFile(fileInfo);
     String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | ";
     long submitTime = System.currentTimeMillis();
