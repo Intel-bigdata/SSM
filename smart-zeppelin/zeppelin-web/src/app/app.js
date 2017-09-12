@@ -147,8 +147,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         controller: 'MoverActionsCtrl',
         resolve: {
           moverActions0: ['$route', 'models', function ($route, models) {
-            console.log('-------------mover------');
-            console.log(models.$get.moverActions($route.current.params.ruleId));
             return models.$get.moverActions($route.current.params.ruleId);
           }]
         }
@@ -169,8 +167,17 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/dashboard/views/copy/copy.html',
         controller: 'CopyCtrl',
         resolve: {
-          actions0: ['models', function (models) {
-            return models.$get.actions();
+          copys0: ['models', function (models) {
+            return models.$get.copys();
+          }]
+        }
+      })
+      .when('/copys/copy/:ruleId', {
+        templateUrl: 'app/dashboard/views/copy/detail/copyActions.html',
+        controller: 'CopyActionsCtrl',
+        resolve: {
+          copyActions0: ['$route', 'models', function ($route, models) {
+            return models.$get.copyActions($route.current.params.ruleId);
           }]
         }
       })

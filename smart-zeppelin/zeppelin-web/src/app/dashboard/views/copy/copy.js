@@ -19,65 +19,56 @@
 angular.module('zeppelinWebApp')
 
   .controller('CopyCtrl', CopyCtrl);
-  CopyCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'actions0', 'actionTypes'];
-  function CopyCtrl($scope, $modal, $stb, $dialogs, actions0, actionTypes) {
+CopyCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'copys0'];
+  function CopyCtrl($scope, $modal, $stb, $dialogs, copys0) {
 
-    $scope.actionsTable = {
+    $scope.copysTable = {
       cols: [
         // group 1/3 (4-col)
-        $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        $stb.text('Rule ID').key('cid').canSort().done(),
-        $stb.text('File Path').key('filePath').canSort().styleClass('col-md-1').done(),
-        $stb.text('Target Path').key('targetPath').canSort().styleClass('col-md-1').done(),
-        $stb.text('Status').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.duration("Running Time").key('runningTime').canSort().done(),
-        $stb.datetime('Create Time').key('createTime').canSort().done(),
-        $stb.datetime('Finish Time').key('finishTime').canSort().done(),
+        $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
+        $stb.text('ID').key('id').canSort().done(),
+        $stb.text('Text').key(['ruleText']).done(),
+        $stb.text('Running Progress').key('runningProgress').done(),
+        $stb.text('Base Progress').key('baseProgress').done(),
+        $stb.text('Checked Number').key('numChecked').canSort().styleClass('hidden-sm hidden-xs').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
+        $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
       ],
       rows: null
     };
 
-    function updateTable(actions) {
-      $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
-        _.map(actions, function (action) {
+    function updateTable(copys) {
+      $scope.copysTable.rows = $stb.$update($scope.copysTable.rows,
+        _.map(copys, function (copy) {
           return {
-            id: action.actionId,
-            cid: action.cmdletId,
-            state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
-            createTime: action.createTime,
-            finishTime: action.finished ? action.finishTime : "-",
-            runningTime: action.uptime,
-            succeed: action.finished ? action.successful : "-",
+            id: copy.id,
+            // name: {href: pageUrl, text: rule.appName},
+            state: {tooltip: copy.state, condition: copy.isRunning ? 'good' : '', shape: 'stripe'},
+            //user: rule.user,
+            ruleText: copy.ruleText,
+            runningProgress: copy.runningProgress,
+            baseProgress: copy.baseProgress,
+            numChecked: copy.numChecked,
+            progress: {
+              current: copy.runningProgress,
+              max: 1
+            },
+            status: copy.state,
             view: {
-              href: action.pageUrl,
+              href: copy.pageUrl,
               icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info'
-            },
-            progress: {
-                current: action.progress,
-                max: 1,
-                flag: action.finished ? action.successful : "-"
-                // usage: action.progress * 100
-            },
-            filePath: "FilePath",
-            targetPath: "TargetPath"
+            }
           };
         }));
     }
 
-    updateTable(actions0.$data());
-    actions0.$subscribe($scope, function (actions) {
-      updateTable(actions);
+    updateTable(copys0.$data());
+    copys0.$subscribe($scope, function (copys) {
+      updateTable(copys);
     });
-/*
-    $(function () {
-      $("[data-toggle='tooltip']").tooltip({
-        container: body
-      });
-    });*/
   }
 
