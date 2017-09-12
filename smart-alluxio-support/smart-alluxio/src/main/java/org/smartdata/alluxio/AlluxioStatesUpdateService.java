@@ -54,7 +54,7 @@ public class AlluxioStatesUpdateService extends StatesUpdateService {
   public void init() throws IOException {
     LOG.info("Initializing ...");
     SmartContext context = getContext();
-    this.alluxioFs = FileSystem.Factory.get();
+    this.alluxioFs = AlluxioUtil.getAlluxioFs(context);
     this.executorService = Executors.newScheduledThreadPool(4);
     this.namespaceFetcher = new AlluxioNamespaceFetcher(alluxioFs, metaStore,
         AlluxioNamespaceFetcher.DEFAULT_INTERVAL, executorService);
