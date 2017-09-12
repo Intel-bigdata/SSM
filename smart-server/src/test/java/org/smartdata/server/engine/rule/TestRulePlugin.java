@@ -48,7 +48,8 @@ public class TestRulePlugin extends MiniSmartClusterHarness {
     try {
       admin.submitRule("file : path matches \"/user/*\" | cache", RuleState.DISABLED);
       Assert.fail("Should not success.");
-    } catch (IOException e) {
+    } catch (Exception e) {
+      Assert.assertTrue(e.getMessage().contains("MUST ACTIVE"));
     }
     Assert.assertTrue(adding + 1 == plugin.getAdding());
     Assert.assertTrue(added + 1 == plugin.getAdded());
