@@ -20,13 +20,7 @@ under the License.
   <!-- control toolbar -->
   <div class="row">
     <div class="col-md-6 col-sm-6">
-      <span class="table-caption-ext pull-left">Actions</span>
-      <!--<span class="btn btn-xs btn-default pull-left"
-            html="true" ng-click="openSubmitActionDialog()">
-        <span class="fa fa-plus"></span>
-        Add
-        <span></span>
-      </span>-->
+      <span class="table-caption-ext pull-left">Copy</span>
     </div>
     <div class="col-md-3 col-sm-6 text-right">
       <!--FILTER-->
@@ -34,7 +28,7 @@ under the License.
     <div class="col-md-3 hidden-sm hidden-xs">
       <searchbox
         ng-show="actionsTable.rows && actionsTable.rows.length > 0"
-        ng-model="search" placeholder="Search Actions"></searchbox>
+        ng-model="search" placeholder="Search copy"></searchbox>
     </div>
   </div>
   <!-- end of control toolbar -->
@@ -48,9 +42,7 @@ under the License.
     pagination="10">
     <div class="table-no-data">
       <h2 class="glyphicon glyphicon-bullhorn"></h2>
-      <h4>No action is running</h4>
-
-      <p>Please submit a action first.</p>
+      <h4>No copy action is running</h4>
     </div>
   </sortable-table>
 </div>

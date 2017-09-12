@@ -49,6 +49,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
@@ -577,6 +578,30 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<DetailedFileAction> listFileActions(long rid, int size) throws MetaStoreException {
+    List<ActionInfo> actionInfos = getActions(rid, size);
+    List<DetailedFileAction> detailedFileActions = new ArrayList<>();
+
+    for (ActionInfo actionInfo: actionInfos) {
+      DetailedFileAction detailedFileAction = new DetailedFileAction(actionInfo);
+      String filePath = actionInfo.getArgs().get("-file");
+      FileInfo fileInfo = getFile(filePath);
+      detailedFileAction.setFileLength(fileInfo.getLength());
+      detailedFileAction.setFilePath(filePath);
+      if (actionInfo.getActionName().contains("allssd") ||
+          actionInfo.getActionName().contains("onessd") ||
+          actionInfo.getActionName().contains("archive")) {
+        detailedFileAction.setTarget(actionInfo.getActionName());
+        detailedFileAction.setSrc(mapStoragePolicyIdName.get(fileInfo.getStoragePolicy()));
+      } else {
+        detailedFileAction.setSrc(actionInfo.getArgs().get("-src"));
+        detailedFileAction.setTarget(actionInfo.getArgs().get("-dest"));
+      }
+      detailedFileActions.add(detailedFileAction);
+    }
+    return detailedFileActions;
+  }
+
 
   public List<DetailedRuleInfo> listMoveRules() throws MetaStoreException {
     List<RuleInfo> ruleInfos = getRuleInfo();
@@ -620,10 +645,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Add sync progress
         BackUpInfo backUpInfo = getBackUpInfo(ruleInfo.getId());
         // Get total matched files
-        detailedRuleInfo
-            .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
-        detailedRuleInfo.setRunningProgress(
-            fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
+        if (backUpInfo != null) {
+          detailedRuleInfo
+                  .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+          detailedRuleInfo.setRunningProgress(
+                  fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
+        } else {
+          detailedRuleInfo
+                  .setBaseProgress(0);
+          detailedRuleInfo.setRunningProgress(0);
+        }
         detailedRuleInfos.add(detailedRuleInfo);
       }
     }
@@ -1304,6 +1335,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
       return backUpInfoDao.getByRid(rid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
