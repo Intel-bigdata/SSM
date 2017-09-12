@@ -216,10 +216,10 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('rules/list/sync', decoder.copys);
         },
         moverActions: function (ruleId) {
-          return get('actions/list/0/' + ruleId , decoder.actions);
+          return get('actions/filelist/0/' + ruleId , decoder.actions);
         },
         copyActions: function (ruleId) {
-          return get('actions/list/0/' + ruleId , decoder.actions);
+          return get('actions/filelist/0/' + ruleId , decoder.actions);
         },
         actions: function () {
           return get('actions/list/0', decoder.actions);
