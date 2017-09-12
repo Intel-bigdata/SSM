@@ -61,6 +61,13 @@ public class FileDiffDao {
     return jdbcTemplate.query("select * from " + TABLE_NAME + " where state = 0", new FileDiffRowMapper());
   }
 
+  public List<FileDiff> getByState(FileDiffState fileDiffState) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate
+        .query("select * from " + TABLE_NAME + " where state = ?",
+            new Object[]{fileDiffState.getValue()}, new FileDiffRowMapper());
+  }
+
   public List<FileDiff> getPendingDiff(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE did = ? and state = 0",
