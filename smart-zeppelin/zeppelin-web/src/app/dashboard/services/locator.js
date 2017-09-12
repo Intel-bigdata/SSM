@@ -35,6 +35,9 @@ angular.module('zeppelinWebApp')
       mover: function (ruleId) {
         return '#/movers/mover/' + ruleId;
       },
+      copy: function (ruleId) {
+        return '#/copys/copy/' + ruleId;
+      },
       action: function (actionId) {
         return '#/actions/action/' + actionId;
       }

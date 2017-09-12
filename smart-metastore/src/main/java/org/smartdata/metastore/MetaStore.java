@@ -645,10 +645,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Add sync progress
         BackUpInfo backUpInfo = getBackUpInfo(ruleInfo.getId());
         // Get total matched files
-        detailedRuleInfo
-            .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
-        detailedRuleInfo.setRunningProgress(
-            fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
+        if (backUpInfo != null) {
+          detailedRuleInfo
+                  .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+          detailedRuleInfo.setRunningProgress(
+                  fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
+        } else {
+          detailedRuleInfo
+                  .setBaseProgress(0);
+          detailedRuleInfo.setRunningProgress(0);
+        }
         detailedRuleInfos.add(detailedRuleInfo);
       }
     }
@@ -1329,6 +1335,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
       return backUpInfoDao.getByRid(rid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

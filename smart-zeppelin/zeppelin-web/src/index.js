@@ -95,3 +95,6 @@ import './app/dashboard/views/rules/rule/cmdlets_table.js';
 import './app/dashboard/views/helper.js';
 import './app/dashboard/views/mover/mover.js';
 import './app/dashboard/views/copy/copy.js';
+import './app/dashboard/views/mover/detail/moverActions.js';
+import './app/dashboard/views/copy/detail/copyActions.js';
+
