@@ -122,7 +122,7 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
         LOG.debug("Primary len={}, remote len={}", fileInfo.getLength(), offSet);
         continue;
       }
-      FileDiff fileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.RUNNING);
+      FileDiff fileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
       fileDiff.setSrc(fullPath);
       // Append changes to remote files
       fileDiff.getParameters().put("-length", String.valueOf(fileInfo.getLength() - offSet));
