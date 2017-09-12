@@ -586,6 +586,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       DetailedFileAction detailedFileAction = new DetailedFileAction(actionInfo);
       String filePath = actionInfo.getArgs().get("-file");
       FileInfo fileInfo = getFile(filePath);
+      if (fileInfo == null) {
+        LOG.debug("Namespace is not sync! File {} not in file table!", filePath);
+        continue;
+      }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
       if (actionInfo.getActionName().contains("allssd") ||
