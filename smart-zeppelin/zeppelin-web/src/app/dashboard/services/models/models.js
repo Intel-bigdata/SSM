@@ -108,6 +108,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
         movers: function (objs) {
           return decoder._asAssociativeArray(objs, decoder.moverSummary, 'id');
         },
+        copys: function (objs) {
+          return decoder._asAssociativeArray(objs, decoder.copySummary, 'id');
+        },
         ruleSummary: function (obj) {
           return angular.merge(obj, {
             // extra properties
@@ -129,11 +132,17 @@ angular.module('org.apache.hadoop.ssm.models', [])
           });
         },
         moverSummary: function (obj) {
-          console.log(obj);
           return angular.merge(obj, {
             isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
             pageUrl: locator.mover(obj.id),
-            progress: util.getProgress(obj.baseProgress, obj.runningProgress)
+            progress: Math.round(obj.baseProgress / obj.runningProgress * 100) / 100.00
+          });
+        },
+        copySummary: function (obj) {
+          return angular.merge(obj, {
+            isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
+            pageUrl: locator.copy(obj.id),
+            progress: Math.round(obj.baseProgress / obj.runningProgress * 100) / 100.00
           });
         },
         rule: function (obj) {
@@ -203,7 +212,13 @@ angular.module('org.apache.hadoop.ssm.models', [])
         movers: function () {
           return get('rules/list/move', decoder.movers);
         },
+        copys: function () {
+          return get('rules/list/sync', decoder.copys);
+        },
         moverActions: function (ruleId) {
+          return get('actions/list/0/' + ruleId , decoder.actions);
+        },
+        copyActions: function (ruleId) {
           return get('actions/list/0/' + ruleId , decoder.actions);
         },
         actions: function () {
