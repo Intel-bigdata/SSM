@@ -936,6 +936,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getActions(long rid, int size) throws MetaStoreException {
+    if (size <= 0) {
+      size = Integer.MAX_VALUE;
+    }
     List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(rid);
     List<ActionInfo> runningActions = new ArrayList<>();
     List<ActionInfo> finishedActions = new ArrayList<>();
@@ -1046,6 +1049,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public FileDiff getFileDiff(long did) throws MetaStoreException {
     try {
       return fileDiffDao.getById(did);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<FileDiff> getFileDiffs(FileDiffState fileDiffState) throws MetaStoreException {
+    try {
+      return fileDiffDao.getByState(fileDiffState);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

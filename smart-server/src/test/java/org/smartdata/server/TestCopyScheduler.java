@@ -34,6 +34,31 @@ import org.smartdata.server.engine.CmdletManager;
 import java.util.List;
 
 public class TestCopyScheduler extends MiniSmartClusterHarness {
+  // @Test
+  // public void testForceSync() throws Exception {
+  //   waitTillSSMExitSafeMode();
+  //   MetaStore metaStore = ssm.getMetaStore();
+  //   SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+  //   CmdletManager cmdletManager = ssm.getCmdletManager();
+  //   DistributedFileSystem dfs = cluster.getFileSystem();
+  //   final String srcPath = "/src/";
+  //   final String destPath = "/dest/";
+  //   dfs.mkdirs(new Path(srcPath));
+  //   dfs.mkdirs(new Path(destPath));
+  //   // Write to src
+  //   for (int i = 0; i < 3; i++) {
+  //     // Create test files
+  //     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+  //   }
+  //   // Clear file diffs
+  //   metaStore.deleteAllFileDiff();
+  //   // Submit rules and trigger forceSync
+  //   long ruleId = admin.submitRule(
+  //       "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
+  //       RuleState.ACTIVE);
+  //   Thread.sleep(1000);
+  //   Assert.assertTrue(metaStore.getFileDiffs(FileDiffState.RUNNING).size() > 0);
+  // }
 
  //  @Test
  //  public void testDelete() throws Exception {

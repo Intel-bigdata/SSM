@@ -17,9 +17,6 @@
  */
 package org.smartdata.hdfs.scheduler;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -31,12 +28,10 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -185,50 +180,6 @@ public class CopyScheduler extends ActionSchedulerService {
     executorService.shutdown();
   }
 
-  public void forceSync(String src, String dest) throws IOException, MetaStoreException {
-    List<FileInfo> srcFiles = metaStore.getFilesByPrefix(src);
-    for (FileInfo fileInfo : srcFiles) {
-      if (fileInfo.isdir()) {
-        // Ignore directory
-        continue;
-      }
-      String fullPath = fileInfo.getPath();
-      String remotePath = fullPath.replace(src, dest);
-      long offSet = fileCompare(fileInfo, remotePath);
-      if (offSet >= fileInfo.getLength()) {
-        LOG.debug("Primary len={}, remote len={}", fileInfo.getLength(), offSet);
-        continue;
-      }
-      FileDiff fileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.RUNNING);
-      fileDiff.setSrc(fullPath);
-      // Append changes to remote files
-      fileDiff.getParameters().put("-length", String.valueOf(fileInfo.getLength() - offSet));
-      fileDiff.getParameters().put("-offset", String.valueOf(offSet));
-      fileDiff.setRuleId(-1);
-      metaStore.insertFileDiff(fileDiff);
-    }
-  }
-
-  private long fileCompare(FileInfo fileInfo, String dest) throws MetaStoreException {
-    // Primary
-    long localLen = fileInfo.getLength();
-    // TODO configuration
-    Configuration conf = new Configuration();
-    // Get InputStream from URL
-    FileSystem fs = null;
-    try {
-      fs = FileSystem.get(URI.create(dest), conf);
-      long remoteLen = fs.getFileStatus(new Path(dest)).getLen();
-      // Remote
-      if (localLen == remoteLen) {
-        return localLen;
-      } else {
-        return remoteLen;
-      }
-    } catch (IOException e) {
-      return 0;
-    }
-  }
 
 
   private class ScheduleTask implements Runnable {
