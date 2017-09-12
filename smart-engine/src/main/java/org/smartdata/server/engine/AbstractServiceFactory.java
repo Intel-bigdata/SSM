@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.SmartConstants;
 import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
@@ -39,7 +40,7 @@ public class AbstractServiceFactory {
 
   public static AbstractService createStatesUpdaterService(Configuration conf,
       ServerContext context, MetaStore metaStore) throws IOException {
-    String source = getStatesUpdaterName(context.getServiceMode());
+    String source = getStatesUpdaterName(getServiceMode(context.getConf()));
     try {
       Class clazz = Class.forName(source);
       Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
@@ -65,12 +66,14 @@ public class AbstractServiceFactory {
   public static List<ActionSchedulerService> createActionSchedulerServices(Configuration conf,
       SmartContext context, MetaStore metaStore, boolean allMustSuccess) throws IOException {
     List<ActionSchedulerService> services = new ArrayList<>();
-    String[] serviceNames = getActionSchedulerNames(conf);
+    String[] serviceNames = getActionSchedulerNames(conf, getServiceMode(context.getConf()));
     for (String name : serviceNames) {
       try {
-        Class clazz = Class.forName(name);
-        Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
-        services.add((ActionSchedulerService) c.newInstance(context, metaStore));
+        if (!name.isEmpty()) {
+          Class clazz = Class.forName(name);
+          Constructor c = clazz.getConstructor(SmartContext.class, MetaStore.class);
+          services.add((ActionSchedulerService) c.newInstance(context, metaStore));
+        }
       } catch (ClassNotFoundException | IllegalAccessException
           | InstantiationException | NoSuchMethodException
           | InvocationTargetException | NullPointerException e) {
@@ -84,7 +87,28 @@ public class AbstractServiceFactory {
     return services;
   }
 
-  public static String[] getActionSchedulerNames(Configuration conf) {
-    return SmartConstants.SMART_ACTION_SCHEDULER_SERVICE_IMPL.trim().split("\\s*,\\s*");
+  public static String[] getActionSchedulerNames(Configuration conf, ServiceMode mode) {
+    switch (mode) {
+      case HDFS:
+        return SmartConstants.SMART_HDFS_ACTION_SCHEDULER_SERVICE_IMPL.trim().split("\\s*,\\s*");
+      case ALLUXIO:
+        return SmartConstants.SMART_ALLUXIO_ACTION_SCHEDULER_SERVICE_IMPL.trim().split("\\s*,\\s*");
+      default:
+        return SmartConstants.SMART_HDFS_ACTION_SCHEDULER_SERVICE_IMPL.trim().split("\\s*,\\s*");
+    }
   }
+
+  public static ServiceMode getServiceMode(SmartConf conf) {
+    String serviceModeStr = conf.get(SmartConfKeys.SMART_SERVICE_MODE_KEY,
+        SmartConfKeys.SMART_SERVICE_MODE_DEFAULT);
+    try {
+      return ServiceMode.valueOf(serviceModeStr.trim().toUpperCase());
+    } catch (IllegalStateException e) {
+      String errorMsg = "Illegal service mode '" + serviceModeStr + "' set in property: "+
+          SmartConfKeys.SMART_SERVICE_MODE_KEY + "!";
+      LOG.error(errorMsg);
+      throw e;
+    }
+  }
+
 }
