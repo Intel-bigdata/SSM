@@ -579,6 +579,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<DetailedFileAction> listFileActions(long rid, int size) throws MetaStoreException {
+    if (mapStoragePolicyIdName == null) {
+      updateCache();
+    }
     List<ActionInfo> actionInfos = getActions(rid, size);
     List<DetailedFileAction> detailedFileActions = new ArrayList<>();
 
@@ -596,7 +599,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           actionInfo.getActionName().contains("onessd") ||
           actionInfo.getActionName().contains("archive")) {
         detailedFileAction.setTarget(actionInfo.getActionName());
-        detailedFileAction.setSrc(mapStoragePolicyIdName.get(fileInfo.getStoragePolicy()));
+        detailedFileAction.setSrc(mapStoragePolicyIdName.get(
+            (int) fileInfo.getStoragePolicy()));
       } else {
         detailedFileAction.setSrc(actionInfo.getArgs().get("-src"));
         detailedFileAction.setTarget(actionInfo.getArgs().get("-dest"));
@@ -652,8 +656,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         if (backUpInfo != null) {
           detailedRuleInfo
                   .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
-          detailedRuleInfo.setRunningProgress(
-                  fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
+          int count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
+          count += fileDiffDao.getByState(FileDiffState.RUNNING).size();
+          detailedRuleInfo.setRunningProgress(count);
         } else {
           detailedRuleInfo
                   .setBaseProgress(0);
