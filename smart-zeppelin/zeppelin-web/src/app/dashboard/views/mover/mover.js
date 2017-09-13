@@ -32,7 +32,7 @@ angular.module('zeppelinWebApp')
         $stb.text('All Files').key('allFiles').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
         $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
+        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-1').done()
       ],
       rows: null
     };
@@ -53,12 +53,42 @@ angular.module('zeppelinWebApp')
               max: 1
             },
             status: mover.state,
+            active: {
+              icon: function() {
+                if(mover.isRunning) {
+                  return 'glyphicon glyphicon-pause';
+                }else {
+                  return 'glyphicon glyphicon-play';
+                }
+              },
+              class: 'btn-xs',
+              disabled: mover.isDelete,
+              click: function () {
+                if(!mover.isRunning) {
+                  mover.start();
+                }else{
+                  mover.terminate();
+                }
+              }
+            },
             view: {
               href: mover.pageUrl,
               icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info'
+            },
+            delete: {
+              icon: function() {
+                return 'glyphicon glyphicon-trash';
+              },
+              class: 'btn-xs btn-danger',
+              disabled: mover.isDelete,
+              click: function () {
+                $dialogs.confirm('Are you sure to delete this rule?', function () {
+                  mover.delete();
+                });
+              }
             }
           };
         }));
