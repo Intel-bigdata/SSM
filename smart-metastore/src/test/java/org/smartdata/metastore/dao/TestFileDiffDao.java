@@ -73,7 +73,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiffs[1] = new FileDiff();
     fileDiffs[1].setDiffId(2);
     fileDiffs[1].setParameters(new HashMap<String, String>());
-    fileDiffs[1].setSrc("test");
+    fileDiffs[1].setSrc("src");
     fileDiffs[1].setState(FileDiffState.PENDING);
     fileDiffs[1].setDiffType(FileDiffType.APPEND);
     fileDiffs[1].setCreate_time(1);
@@ -85,6 +85,8 @@ public class TestFileDiffDao extends TestDaoUtil {
     }
     List<String> paths = fileDiffDao.getSyncPath(0);
     Assert.assertTrue(paths.size() == 1);
+    Assert.assertTrue(fileDiffDao.getPendingDiff("src").size() == 1);
+    Assert.assertTrue(fileDiffDao.getByState("test", FileDiffState.RUNNING).size() == 1);
   }
 
   @Test
