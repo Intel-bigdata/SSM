@@ -25,13 +25,16 @@ import org.apache.hadoop.fs.Path;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.annotation.ActionSignature;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Random;
 
 @ActionSignature(
   actionId = "append",
   displayName = "append",
-  usage = HdfsAction.FILE_PATH + " $src" + AppendFileAction.LENGTH + " $length" + AppendFileAction.BUF_SIZE + " $size"
+  usage = HdfsAction.FILE_PATH + " $src" +
+      AppendFileAction.LENGTH + " $length" +
+      AppendFileAction.BUF_SIZE + " $size"
 )
 public class AppendFileAction extends HdfsAction {
   static final String BUF_SIZE = "-bufSize";
@@ -65,7 +68,7 @@ public class AppendFileAction extends HdfsAction {
       Path path = new Path(srcPath);
       FileSystem fileSystem = path.getFileSystem(conf);
       if (!fileSystem.exists(path)) {
-        throw new ActionException("CopyFile Action fails, file doesn't exist!");
+        throw new ActionException("Append Action fails, file doesn't exist!");
       }
       Random random = new Random();
       FSDataOutputStream os = null;
@@ -73,7 +76,7 @@ public class AppendFileAction extends HdfsAction {
         os = fileSystem.append(path, bufferSize);
         long remaining = length;
         while (remaining > 0) {
-          int toAppend = (int)Math.min(remaining, bufferSize);
+          int toAppend = (int) Math.min(remaining, bufferSize);
           byte[] bytes = new byte[toAppend];
           random.nextBytes(bytes);
           os.write(bytes);
