@@ -76,7 +76,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
 
     $routeProvider
       .when("/",{
-        redirectTo: '/cluster/hotTestFiles'
+        redirectTo: '/notebook/2CM9DW8NW'
       })
       .when('/notebook/:noteId', {
         templateUrl: 'app/notebook/notebook.html',
