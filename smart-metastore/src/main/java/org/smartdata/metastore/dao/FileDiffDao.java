@@ -68,6 +68,15 @@ public class FileDiffDao {
             new Object[]{fileDiffState.getValue()}, new FileDiffRowMapper());
   }
 
+  public List<FileDiff> getByState(String prefix, FileDiffState fileDiffState) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate
+        .query(
+            "select * from " + TABLE_NAME + " where src LIKE ? and state = ?",
+            new Object[]{prefix + "%", fileDiffState.getValue()},
+            new FileDiffRowMapper());
+  }
+
   public List<FileDiff> getPendingDiff(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE did = ? and state = 0",
@@ -94,7 +103,7 @@ public class FileDiffDao {
       jdbcTemplate.setMaxRows(size);
     }
     String sql = "select DISTINCT src from " + TABLE_NAME +
-        " where state=?";
+        " where state = ?";
     return jdbcTemplate
         .queryForList(sql, String.class, FileDiffState.RUNNING.getValue());
   }
