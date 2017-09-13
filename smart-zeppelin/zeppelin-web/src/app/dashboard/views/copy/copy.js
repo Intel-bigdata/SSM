@@ -26,14 +26,13 @@ CopyCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'co
       cols: [
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
-        $stb.text('ID').key('id').canSort().done(),
-        $stb.text('Text').key(['ruleText']).done(),
-        $stb.text('Running Progress').key('runningProgress').done(),
-        $stb.text('Base Progress').key('baseProgress').done(),
-        $stb.text('Checked Number').key('numChecked').canSort().styleClass('hidden-sm hidden-xs').done(),
+        $stb.text('Rule ID').key('id').canSort().done(),
+        $stb.text('Sync Rule').key(['syncRule']).done(),
+        $stb.text('Syncing Files').key('syncingFiles').done(),
+        $stb.text('All Files').key('allFiles').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
         $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
+        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-1').done()
       ],
       rows: null
     };
@@ -46,21 +45,50 @@ CopyCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'co
             // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: copy.state, condition: copy.isRunning ? 'good' : '', shape: 'stripe'},
             //user: rule.user,
-            ruleText: copy.ruleText,
-            runningProgress: copy.runningProgress,
-            baseProgress: copy.baseProgress,
-            numChecked: copy.numChecked,
+            syncRule: copy.ruleText,
+            syncingFiles: copy.runningProgress,
+            allFiles: copy.baseProgress,
             progress: {
               current: copy.runningProgress,
               max: 1
             },
             status: copy.state,
+            active: {
+              icon: function() {
+                if(copy.isRunning) {
+                  return 'glyphicon glyphicon-pause';
+                }else {
+                  return 'glyphicon glyphicon-play';
+                }
+              },
+              class: 'btn-xs',
+              disabled: copy.isDelete,
+              click: function () {
+                if(!copy.isRunning) {
+                  copy.start();
+                }else{
+                  copy.terminate();
+                }
+              }
+            },
             view: {
               href: copy.pageUrl,
               icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info'
+            },
+            delete: {
+              icon: function() {
+                return 'glyphicon glyphicon-trash';
+              },
+              class: 'btn-xs btn-danger',
+              disabled: copy.isDelete,
+              click: function () {
+                $dialogs.confirm('Are you sure to delete this rule?', function () {
+                  copy.delete();
+                });
+              }
             }
           };
         }));
