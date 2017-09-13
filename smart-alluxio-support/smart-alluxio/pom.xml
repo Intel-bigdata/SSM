@@ -49,15 +49,27 @@
             <version>1.2-SNAPSHOT</version>
         </dependency>
         <dependency>
-           <groupId>org.alluxio</groupId>
-           <artifactId>alluxio-core-client</artifactId>
-           <version>${alluxio.version}</version>
+            <groupId>org.alluxio</groupId>
+            <artifactId>alluxio-core-client</artifactId>
+            <version>${alluxio.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
-           <groupId>org.alluxio</groupId>
-           <artifactId>alluxio-minicluster</artifactId>
-           <version>${alluxio.version}</version>
-           <scope>test</scope>
+            <groupId>org.alluxio</groupId>
+            <artifactId>alluxio-minicluster</artifactId>
+            <version>${alluxio.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
