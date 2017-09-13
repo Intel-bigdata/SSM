@@ -131,20 +131,6 @@
             </dependencies>
         </profile>
         <profile>
-            <id>alluxio</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <!-- Default hadoop profile. Uses global properties. -->
-            <dependencies>
-                <dependency>
-                    <groupId>org.smartdata</groupId>
-                    <artifactId>smart-alluxio</artifactId>
-                    <version>1.2-SNAPSHOT</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <id>dist</id>
             <build>
                 <plugins>
