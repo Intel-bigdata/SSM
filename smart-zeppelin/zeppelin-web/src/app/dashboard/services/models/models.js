@@ -32,12 +32,12 @@ angular.module('org.apache.hadoop.ssm.models', [])
           }
           return obj[prop];
         },
-        getProgress: function (base, ruinning) {
+        getProgress: function (base, running) {
           var result;
-          if (base === 0) {
-            result = 0;
+          if (running === 0 || base === 0) {
+            result = 1;
           } else {
-            result = ruinning / base;
+            result = Math.round((base - running) / base * 100) / 100.00;
           }
           return result;
         },
@@ -135,14 +135,32 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return angular.merge(obj, {
             isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
             pageUrl: locator.mover(obj.id),
-            progress: Math.round(obj.baseProgress / obj.runningProgress * 100) / 100.00
+            progress: util.getProgress(obj.baseProgress, obj.runningProgress),
+            start: function () {
+              return restapi.startRule(obj.id);
+            },
+            terminate: function () {
+              return restapi.stopRule(obj.id);
+            },
+            delete: function () {
+              return restapi.deleteRule(obj.id);
+            }
           });
         },
         copySummary: function (obj) {
           return angular.merge(obj, {
             isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
             pageUrl: locator.copy(obj.id),
-            progress: Math.round(obj.baseProgress / obj.runningProgress * 100) / 100.00
+            progress: util.getProgress(obj.baseProgress, obj.runningProgress),
+            start: function () {
+              return restapi.startRule(obj.id);
+            },
+            terminate: function () {
+              return restapi.stopRule(obj.id);
+            },
+            delete: function () {
+              return restapi.deleteRule(obj.id);
+            }
           });
         },
         rule: function (obj) {
@@ -216,10 +234,10 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('rules/list/sync', decoder.copys);
         },
         moverActions: function (ruleId) {
-          return get('actions/list/0/' + ruleId , decoder.actions);
+          return get('actions/filelist/0/' + ruleId , decoder.actions);
         },
         copyActions: function (ruleId) {
-          return get('actions/list/0/' + ruleId , decoder.actions);
+          return get('actions/filelist/0/' + ruleId , decoder.actions);
         },
         actions: function () {
           return get('actions/list/0', decoder.actions);

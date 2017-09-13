@@ -579,6 +579,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<DetailedFileAction> listFileActions(long rid, int size) throws MetaStoreException {
+    if (mapStoragePolicyIdName == null) {
+      updateCache();
+    }
     List<ActionInfo> actionInfos = getActions(rid, size);
     List<DetailedFileAction> detailedFileActions = new ArrayList<>();
 
@@ -586,13 +589,18 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       DetailedFileAction detailedFileAction = new DetailedFileAction(actionInfo);
       String filePath = actionInfo.getArgs().get("-file");
       FileInfo fileInfo = getFile(filePath);
+      if (fileInfo == null) {
+        LOG.debug("Namespace is not sync! File {} not in file table!", filePath);
+        continue;
+      }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
       if (actionInfo.getActionName().contains("allssd") ||
           actionInfo.getActionName().contains("onessd") ||
           actionInfo.getActionName().contains("archive")) {
         detailedFileAction.setTarget(actionInfo.getActionName());
-        detailedFileAction.setSrc(mapStoragePolicyIdName.get(fileInfo.getStoragePolicy()));
+        detailedFileAction.setSrc(mapStoragePolicyIdName.get(
+            (int) fileInfo.getStoragePolicy()));
       } else {
         detailedFileAction.setSrc(actionInfo.getArgs().get("-src"));
         detailedFileAction.setTarget(actionInfo.getArgs().get("-dest"));
@@ -648,8 +656,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         if (backUpInfo != null) {
           detailedRuleInfo
                   .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
-          detailedRuleInfo.setRunningProgress(
-                  fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
+          int count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
+          count += fileDiffDao.getByState(FileDiffState.RUNNING).size();
+          detailedRuleInfo.setRunningProgress(count);
         } else {
           detailedRuleInfo
                   .setBaseProgress(0);
@@ -936,6 +945,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getActions(long rid, int size) throws MetaStoreException {
+    if (size <= 0) {
+      size = Integer.MAX_VALUE;
+    }
     List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(rid);
     List<ActionInfo> runningActions = new ArrayList<>();
     List<ActionInfo> finishedActions = new ArrayList<>();
@@ -1046,6 +1058,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public FileDiff getFileDiff(long did) throws MetaStoreException {
     try {
       return fileDiffDao.getById(did);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<FileDiff> getFileDiffs(FileDiffState fileDiffState) throws MetaStoreException {
+    try {
+      return fileDiffDao.getByState(fileDiffState);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
