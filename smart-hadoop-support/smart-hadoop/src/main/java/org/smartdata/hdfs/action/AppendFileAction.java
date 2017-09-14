@@ -46,7 +46,11 @@ public class AppendFileAction extends HdfsAction {
 
   @Override
   public void init(Map<String, String> args) {
-    this.conf = getContext().getConf();
+    try {
+      this.conf = getContext().getConf();
+    } catch (NullPointerException e) {
+      this.conf = new Configuration();
+    }
     super.init(args);
     this.srcPath = args.get(FILE_PATH);
     if (args.containsKey(BUF_SIZE)) {
