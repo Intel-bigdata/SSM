@@ -49,7 +49,7 @@ CopyCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'co
             syncingFiles: copy.runningProgress,
             allFiles: copy.baseProgress,
             progress: {
-              current: copy.runningProgress,
+              current: copy.progress,
               max: 1
             },
             status: copy.state,

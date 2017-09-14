@@ -26,7 +26,7 @@ angular.module('zeppelinWebApp')
       cols: [
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        $stb.text('Rule ID').key('cid').canSort().done(),
+        $stb.text('Cmdlet ID').key('cid').canSort().done(),
         $stb.text('File Path').key('filePath').canSort().styleClass('col-md-1').done(),
         $stb.text('Source Path').key('sourcePath').canSort().styleClass('col-md-1').done(),
         $stb.text('Target Path').key('targetPath').canSort().styleClass('col-md-1').done(),
