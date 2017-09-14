@@ -21,16 +21,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.action.ActionRegistry;
+import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
-import org.smartdata.rule.parser.SmartRuleStringParser;
+import org.smartdata.model.rule.RulePluginManager;
 import org.smartdata.model.rule.TranslateResult;
+import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
@@ -102,6 +103,9 @@ public class RuleManager extends AbstractService {
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
     RuleInfo ruleInfo = builder.build();
+
+    RulePluginManager.onAddingNewRule(ruleInfo, tr);
+
     try {
       metaStore.insertNewRule(ruleInfo);
     } catch (MetaStoreException e) {
@@ -111,6 +115,8 @@ public class RuleManager extends AbstractService {
     RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, metaStore);
     mapRules.put(ruleInfo.getId(), infoRepo);
     submitRuleToScheduler(infoRepo.launchExecutor(this));
+
+    RulePluginManager.onNewRuleAdded(ruleInfo, tr);
 
     return ruleInfo.getId();
   }

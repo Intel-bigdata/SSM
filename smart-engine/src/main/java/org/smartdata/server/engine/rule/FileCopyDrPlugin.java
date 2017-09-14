@@ -73,6 +73,7 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
         statements.set(statements.size() - 1, after);
 
         BackUpInfo backUpInfo = new BackUpInfo();
+        backUpInfo.setRid(ruleId);
         backUpInfo.setSrc(dirs);
         String dest = des.getActionArgs(i).get(SyncAction.DEST);
         if (!dest.endsWith("/")) {

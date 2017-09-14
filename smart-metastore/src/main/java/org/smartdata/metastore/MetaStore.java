@@ -579,6 +579,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<DetailedFileAction> listFileActions(long rid, int size) throws MetaStoreException {
+    if (mapStoragePolicyIdName == null) {
+      updateCache();
+    }
     List<ActionInfo> actionInfos = getActions(rid, size);
     List<DetailedFileAction> detailedFileActions = new ArrayList<>();
 
@@ -587,8 +590,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       String filePath = actionInfo.getArgs().get("-file");
       FileInfo fileInfo = getFile(filePath);
       if (fileInfo == null) {
-        LOG.debug("Namespace is not sync! File {} not in file table!", filePath);
-        continue;
+        // LOG.debug("Namespace is not sync! File {} not in file table!", filePath);
+        // Add a mock fileInfo
+        fileInfo = new FileInfo(filePath, 0L, 0L, false,
+            (short) 0, 0L, 0L, 0L, (short) 0,
+            "root", "root", (byte) 0);
       }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
@@ -596,7 +602,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           actionInfo.getActionName().contains("onessd") ||
           actionInfo.getActionName().contains("archive")) {
         detailedFileAction.setTarget(actionInfo.getActionName());
-        detailedFileAction.setSrc(mapStoragePolicyIdName.get(fileInfo.getStoragePolicy()));
+        detailedFileAction.setSrc(mapStoragePolicyIdName.get(
+            (int) fileInfo.getStoragePolicy()));
       } else {
         detailedFileAction.setSrc(actionInfo.getArgs().get("-src"));
         detailedFileAction.setTarget(actionInfo.getArgs().get("-dest"));
@@ -652,8 +659,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         if (backUpInfo != null) {
           detailedRuleInfo
                   .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
-          detailedRuleInfo.setRunningProgress(
-                  fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size());
+          int count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
+          count += fileDiffDao.getByState(backUpInfo.getSrc(), FileDiffState.RUNNING).size();
+          detailedRuleInfo.setRunningProgress(count);
         } else {
           detailedRuleInfo
                   .setBaseProgress(0);
