@@ -18,6 +18,7 @@
 package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -174,13 +175,15 @@ public class CopyFileAction extends HdfsAction {
       Configuration conf = new Configuration();
       // Get OutPutStream from URL
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
-      // TODO overwrite or skip
-      // if (fs.exists(new Path(dest))) {
-      //
-      // }
+      if (fs.exists(new Path(dest))) {
+        return fs.append(new Path(dest));
+      }
       return fs.create(new Path(dest), true);
     } else {
       // Copy between different dirs of the same cluster
+      if (dfsClient.exists(dest)) {
+        // TODO local append
+      }
       return dfsClient.create(dest, true);
     }
   }
