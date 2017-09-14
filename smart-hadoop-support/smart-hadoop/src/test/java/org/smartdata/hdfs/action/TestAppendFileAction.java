@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TestAppendFileAction extends MiniClusterHarness {
-  protected void appendFile(String src, long length) {
+  private void appendFile(String src, long length) {
     Map<String, String> args = new HashMap<>();
     args.put(AppendFileAction.FILE_PATH, src);
     args.put(AppendFileAction.LENGTH, "" + length);
@@ -61,7 +61,7 @@ public class TestAppendFileAction extends MiniClusterHarness {
 
   @Test
   public void testAppendNonExistFile() {
-    Map<String, String> args = new HashMap();
+    Map<String, String> args = new HashMap<>();
     args.put(WriteFileAction.FILE_PATH, "/Test");
     AppendFileAction appendFileAction = new AppendFileAction();
     appendFileAction.init(args);
