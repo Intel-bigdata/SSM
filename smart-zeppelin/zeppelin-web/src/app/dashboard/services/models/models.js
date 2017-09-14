@@ -37,7 +37,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
           if (running === 0 || base === 0) {
             result = 1;
           } else {
-            result = Math.round((base - running) / base * 100) / 100.00;
+            result = Math.round((base - running) * 100 / base) /100;
           }
           return result;
         },
