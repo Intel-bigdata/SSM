@@ -22,6 +22,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.action.ActionException;
+import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.StatusMessage;
@@ -32,10 +34,34 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TestAppendFileAction extends MiniClusterHarness {
+  private void appendFile(String src, long length) {
+    Map<String, String> args = new HashMap<>();
+    args.put(AppendFileAction.FILE_PATH, src);
+    args.put(AppendFileAction.LENGTH, "" + length);
+    AppendFileAction appendFileAction = new AppendFileAction();
+    appendFileAction.setDfsClient(dfsClient);
+    appendFileAction.setContext(smartContext);
+    appendFileAction.init(args);
+    appendFileAction.setConf(smartContext.getConf());
+    appendFileAction.setStatusReporter(new MockActionStatusReporter());
+    appendFileAction.run();
+  }
+
+  @Test
+  public void testInit() throws IOException {
+    Map<String, String> args = new HashMap<>();
+    args.put(AppendFileAction.FILE_PATH, "/Test");
+    args.put(AppendFileAction.LENGTH, "100000000000000");
+    AppendFileAction appendFileAction = new AppendFileAction();
+    appendFileAction.init(args);
+    appendFileAction.setStatusReporter(new MockActionStatusReporter());
+    args.put(AppendFileAction.BUF_SIZE, "1024");
+    appendFileAction.init(args);
+  }
 
   @Test
   public void testAppendNonExistFile() {
-    Map<String, String> args = new HashMap();
+    Map<String, String> args = new HashMap<>();
     args.put(WriteFileAction.FILE_PATH, "/Test");
     AppendFileAction appendFileAction = new AppendFileAction();
     appendFileAction.init(args);
@@ -57,16 +83,8 @@ public class TestAppendFileAction extends MiniClusterHarness {
     int size = 1024;
     int appendLength = 1024;
     DFSTestUtil.createFile(dfs, src, size, (short)3, 0xFEED);
-    Map<String, String> args = new HashMap();
-    args.put(WriteFileAction.FILE_PATH, "/srcFile");
-    args.put(WriteFileAction.LENGTH, String.valueOf(appendLength));
-    args.put(WriteFileAction.BUF_SIZE, String.valueOf(100));
-    AppendFileAction appendFileAction = new AppendFileAction();
-    appendFileAction.init(args);
-    appendFileAction.setConf(smartContext.getConf());
-    appendFileAction.run();
+    appendFile("/srcFile", 1024);
     FileStatus fileStatus = dfs.getFileStatus(src);
     Assert.assertEquals(size + appendLength, fileStatus.getLen());
   }
-
 }
