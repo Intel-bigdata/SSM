@@ -20,10 +20,15 @@ package org.smartdata.alluxio.action;
 
 import static org.junit.Assert.*;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import alluxio.Configuration;
+import alluxio.PropertyKey;
+import alluxio.master.file.FileSystemMaster;
+import alluxio.util.io.PathUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +49,10 @@ public class TestAlluxioActions {
   public void setUp() throws Exception {
     mLocalAlluxioCluster = new LocalAlluxioCluster(2);
     mLocalAlluxioCluster.initConfiguration();
+    Configuration.set(PropertyKey.WEB_RESOURCES,
+            PathUtils.concatPath(System.getProperty("user.dir"), "src/test/webapp"));
     mLocalAlluxioCluster.start();
-    fs = FileSystem.Factory.get();
+    fs = mLocalAlluxioCluster.getClient();
   }
 
   @After
@@ -173,8 +180,8 @@ public class TestAlluxioActions {
 
     // check file not pinned
     URIStatus status1 = fs.getStatus(new AlluxioURI("/dir1/file1"));
-    Set<Long> pinSet1 = mLocalAlluxioCluster.getMaster().getInternalMaster()
-        .getFileSystemMaster().getPinIdList();
+    Set<Long> pinSet1 = mLocalAlluxioCluster.getLocalAlluxioMaster().getMasterProcess()
+        .getMaster(FileSystemMaster.class).getPinIdList();
     assertFalse(pinSet1.contains(status1.getFileId()));
 
     // run pin action
@@ -185,8 +192,8 @@ public class TestAlluxioActions {
     pinAction.execute();
 
     // check file pinned
-    Set<Long> pinSet2 = mLocalAlluxioCluster.getMaster().getInternalMaster()
-        .getFileSystemMaster().getPinIdList();
+    Set<Long> pinSet2 = mLocalAlluxioCluster.getLocalAlluxioMaster().getMasterProcess()
+        .getMaster(FileSystemMaster.class).getPinIdList();
     assertTrue(pinSet2.contains(status1.getFileId()));
 
     // run unpin action
@@ -197,8 +204,8 @@ public class TestAlluxioActions {
     unpinAction.execute();
 
     // check file unpinned
-    Set<Long> pinSet3 = mLocalAlluxioCluster.getMaster().getInternalMaster()
-        .getFileSystemMaster().getPinIdList();
+    Set<Long> pinSet3 = mLocalAlluxioCluster.getLocalAlluxioMaster().getMasterProcess()
+        .getMaster(FileSystemMaster.class).getPinIdList();
     assertFalse(pinSet3.contains(status1.getFileId()));
 
   }

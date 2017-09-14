@@ -121,12 +121,6 @@
             <artifactId>sqlite-jdbc</artifactId>
         </dependency>
         <dependency>
-           <groupId>org.alluxio</groupId>
-           <artifactId>alluxio-core-client</artifactId>
-           <version>${alluxio.version}</version>
-           <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.dbunit</groupId>
             <artifactId>dbunit</artifactId>
             <scope>test</scope>

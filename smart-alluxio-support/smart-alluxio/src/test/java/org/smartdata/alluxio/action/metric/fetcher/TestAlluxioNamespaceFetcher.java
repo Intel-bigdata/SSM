@@ -19,12 +19,15 @@
 package org.smartdata.alluxio.action.metric.fetcher;
 
 import alluxio.AlluxioURI;
+import alluxio.Configuration;
+import alluxio.PropertyKey;
 import alluxio.client.WriteType;
 import alluxio.client.file.FileOutStream;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.exception.AlluxioException;
 import alluxio.master.LocalAlluxioCluster;
+import alluxio.util.io.PathUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,8 +54,10 @@ public class TestAlluxioNamespaceFetcher extends TestDaoUtil {
   public void setUp() throws Exception {
     mLocalAlluxioCluster = new LocalAlluxioCluster(2);
     mLocalAlluxioCluster.initConfiguration();
+    Configuration.set(PropertyKey.WEB_RESOURCES,
+            PathUtils.concatPath(System.getProperty("user.dir"), "src/test/webapp"));
     mLocalAlluxioCluster.start();
-    fs = FileSystem.Factory.get();
+    fs = mLocalAlluxioCluster.getClient();
     initDao();
     metaStore = new MetaStore(druidPool);
   }
