@@ -134,7 +134,7 @@ public class SmartServer {
       LOG.info("Starting PD, TiKV and TiDB..");
       db.start();
       try {
-        Thread.sleep(30000);
+        Thread.sleep(24000);
       } catch (InterruptedException ex) {
         LOG.error(ex.getMessage());
       }

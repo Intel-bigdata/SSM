@@ -165,8 +165,8 @@ public class RuleExecutor implements Runnable {
     if (tableNames.size() <= 1) {
       String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
           tableNames.get(0);
-      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM "
-          + tableName + ";";
+      sqlFinal = "CREATE TABLE " + newTable + "(fid INTEGER NOT NULL, count INTEGER NOT NULL);" +
+              "INSERT INTO " + newTable + " SELECT * FROM " + tableName + ";";
     } else {
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
       String sqlUnion = "SELECT fid, count FROM "
@@ -181,8 +181,8 @@ public class RuleExecutor implements Runnable {
               "" :
               "HAVING SUM(count) " + countFilter;
       String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM ("
-          + sqlRe + ") as t;";
+      sqlFinal = "CREATE TABLE " + newTable + "(fid INTEGER NOT NULL, count INTEGER NOT NULL);" +
+              "INSERT INTO " + newTable + " SELECT * FROM (" + sqlRe + ") temp;";
     }
     return sqlFinal;
   }
