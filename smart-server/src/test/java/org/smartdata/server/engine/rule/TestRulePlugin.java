@@ -36,23 +36,27 @@ public class TestRulePlugin extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
 
     SimplePlugin plugin = new SimplePlugin();
-    RulePluginManager.addPlugin(plugin);
-    int adding = plugin.getAdding();
-    int added = plugin.getAdded();
-
-    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    admin.submitRule("file : path matches \"/home/*\" | cache", RuleState.ACTIVE);
-    Assert.assertTrue(adding + 1 == plugin.getAdding());
-    Assert.assertTrue(added + 1 == plugin.getAdded());
-
     try {
-      admin.submitRule("file : path matches \"/user/*\" | cache", RuleState.DISABLED);
-      Assert.fail("Should not success.");
-    } catch (Exception e) {
-      Assert.assertTrue(e.getMessage().contains("MUST ACTIVE"));
+      RulePluginManager.addPlugin(plugin);
+      int adding = plugin.getAdding();
+      int added = plugin.getAdded();
+
+      SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+      admin.submitRule("file : path matches \"/home/*\" | cache", RuleState.ACTIVE);
+      Assert.assertTrue(adding + 1 == plugin.getAdding());
+      Assert.assertTrue(added + 1 == plugin.getAdded());
+
+      try {
+        admin.submitRule("file : path matches \"/user/*\" | cache", RuleState.DISABLED);
+        Assert.fail("Should not success.");
+      } catch (Exception e) {
+        Assert.assertTrue(e.getMessage().contains("MUST ACTIVE"));
+      }
+      Assert.assertTrue(adding + 1 == plugin.getAdding());
+      Assert.assertTrue(added + 1 == plugin.getAdded());
+    } finally {
+      RulePluginManager.deletePlugin(plugin);
     }
-    Assert.assertTrue(adding + 1 == plugin.getAdding());
-    Assert.assertTrue(added + 1 == plugin.getAdded());
   }
 
   private class SimplePlugin implements RulePlugin {
