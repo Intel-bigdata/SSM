@@ -173,12 +173,11 @@ public class CopyFileAction extends HdfsAction {
       Configuration conf = new Configuration();
       // Get OutPutStream from URL
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
+      int replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
       try {
-        int replication = fs.getServerDefaults(new Path(dest)).getReplication();
+        replication = fs.getServerDefaults(new Path(dest)).getReplication();
         if (replication != DFSConfigKeys.DFS_REPLICATION_DEFAULT) {
           LOG.debug("Remote Replications =" + replication);
-          conf.setInt(DFSConfigKeys.DFS_REPLICATION_KEY, replication);
-          fs = FileSystem.get(URI.create(dest), conf);
         }
       } catch (IOException e) {
         LOG.debug("Get Server default replication error!", e);
@@ -186,7 +185,7 @@ public class CopyFileAction extends HdfsAction {
       if (fs.exists(new Path(dest))) {
         return fs.append(new Path(dest));
       }
-      return fs.create(new Path(dest), true);
+      return fs.create(new Path(dest), (short) replication);
     } else {
       // Copy between different dirs of the same cluster
       if (dfsClient.exists(dest)) {
