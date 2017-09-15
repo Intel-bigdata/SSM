@@ -20,10 +20,12 @@ package org.smartdata.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.model.FileInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.model.FileInfo;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -37,13 +39,51 @@ import java.nio.file.Paths;
  * Contain utils related to hadoop cluster.
  */
 public class HadoopUtil {
+  public static final String HDFS_CONF_DIR = "hdfs";
 
   public static final Logger LOG =
       LoggerFactory.getLogger(HadoopUtil.class);
 
-  public static void loadHadoopConf(Configuration conf) {
+  /**
+   * HDFS cluster's configuration should be placed in the following directory:
+   *    ${SMART_CONF_DIR_KEY}/hdfs/${namenode host}
+   *
+   * For example, ${SMART_CONF_DIR_KEY}=/var/ssm/conf, nameNodeUrl="hdfs://nnhost:9000",
+   *    then, its config files should be placed in "/var/ssm/conf/hdfs/nnhost".
+   *
+   * @param ssmConf
+   * @param nameNodeUrl
+   * @param conf
+   */
+  public static void loadHadoopConf(SmartConf ssmConf, URL nameNodeUrl, Configuration conf) {
+    String ssmConfDir = ssmConf.get(SmartConfKeys.SMART_CONF_DIR_KEY);
+    if (ssmConfDir == null || ssmConfDir.equals("")) {
+      return;
+    }
+    loadHadoopConf(ssmConfDir, nameNodeUrl, conf);
+  }
 
-    String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_PATH_KEY);
+  public static void loadHadoopConf(String ssmConfDir, URL nameNodeUrl, Configuration conf) {
+    if (nameNodeUrl == null || nameNodeUrl.getHost() == null) {
+      return;
+    }
+
+    String dir;
+    if (ssmConfDir.endsWith("/")) {
+      dir = ssmConfDir + HDFS_CONF_DIR + "/" + nameNodeUrl.getHost();
+    } else {
+      dir = ssmConfDir + "/" + HDFS_CONF_DIR + "/" + nameNodeUrl.getHost();
+    }
+    loadHadoopConf(conf, dir);
+  }
+
+  /**
+   * Load hadoop configure files in the given directory to 'conf'.
+   *
+   * @param conf
+   * @param hadoopConfPath directory that hadoop config files located.
+   */
+  public static void loadHadoopConf(Configuration conf, String hadoopConfPath) {
     if (hadoopConfPath == null || hadoopConfPath.isEmpty()) {
       LOG.info("Hadoop configuration path is not set");
     } else {

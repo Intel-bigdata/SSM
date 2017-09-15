@@ -33,7 +33,6 @@ public class SmartConfKeys {
   public final static String SMART_SERVICE_MODE_DEFAULT = "HDFS";
   
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
-  public final static String SMART_HADOOP_CONF_PATH_KEY = "smart.hadoop.conf.path";
 
   // confKeys for alluxio
   public final static String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
