@@ -32,7 +32,6 @@ import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.DataNodeInfoFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.StatesUpdateService;
 
 import java.io.IOException;
@@ -79,7 +78,6 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     LOG.debug("Final Namenode URL:" + nnUri.toString());
     this.client = new DFSClient(nnUri, context.getConf());
     moverIdOutputStream = checkAndMarkRunning(nnUri, context.getConf());
-    this.cleanFileTableContents(metaStore);
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
@@ -138,14 +136,6 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
       dataNodeInfoFetcher.stop();
     }
     LOG.info("Stopped.");
-  }
-
-  private void cleanFileTableContents(MetaStore adapter) throws IOException {
-    try {
-      adapter.execute("DELETE FROM file");
-    } catch (MetaStoreException e) {
-      throw new IOException("Error while 'DELETE FROM file'", e);
-    }
   }
 
   private FSDataOutputStream checkAndMarkRunning(URI namenodeURI, Configuration conf)
