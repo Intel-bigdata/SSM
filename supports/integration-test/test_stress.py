@@ -33,6 +33,32 @@ class TestPerformance(unittest.TestCase):
         failed_cids = wait_for_cmdlets(cids)
         self.assertTrue(len(failed_cids) == 0)
 
+    # def test_backup_scheduler_1000(self):
+    #     max_number = 1000
+    #     file_paths = []
+    #     cids = []
+    #     for i in range(max_number):
+    #         # 150 MB files
+    #         file_paths.append(create_random_file(1024 * 1024))
+    #     for i in range(max_number):
+    #         cids.append(append_file(file_path,
+    #                     random.randrange(1024, 1024 * 1024 * 20)))
+    #     failed_cids = wait_for_cmdlets(cids)
+    #     self.assertTrue(len(failed_cids) == 0)
+
+    # def test_backup_scheduler_10000(self):
+    #     max_number = 10000
+    #     file_paths = []
+    #     cids = []
+    #     for i in range(max_number):
+    #         # 150 MB files
+    #         file_paths.append(create_random_file(1024 * 1024))
+    #     for i in range(max_number):
+    #         cids.append(append_file(file_path,
+    #                     random.randrange(1024, 1024 * 1024 * 20)))
+    #     failed_cids = wait_for_cmdlets(cids)
+    #     self.assertTrue(len(failed_cids) == 0)
+
     def test_cmdlet_scheduler_1000(self):
         max_number = 1000
         file_paths = []
