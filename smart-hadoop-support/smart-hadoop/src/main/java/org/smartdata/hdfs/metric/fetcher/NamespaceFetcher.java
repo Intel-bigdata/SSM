@@ -22,6 +22,7 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.fetcher.FetchTask;
@@ -45,6 +46,7 @@ public class NamespaceFetcher {
   private ScheduledFuture consumerFuture;
   private FileStatusConsumer consumer;
   private FetchTask fetchTask;
+  private MetaStore metaStore;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(NamespaceFetcher.class);
@@ -67,9 +69,15 @@ public class NamespaceFetcher {
     this.consumer = new FileStatusConsumer(metaStore, fetchTask);
     this.fetchInterval = fetchInterval;
     this.scheduledExecutorService = service;
+    this.metaStore = metaStore;
   }
 
   public void startFetch() throws IOException {
+    try {
+      metaStore.deleteAllFileInfo();
+    } catch (MetaStoreException e) {
+      throw new IOException("Error while reset files", e);
+    }
     this.fetchTaskFuture = this.scheduledExecutorService.scheduleAtFixedRate(
         fetchTask, 0, fetchInterval, TimeUnit.MILLISECONDS);
     this.consumerFuture = this.scheduledExecutorService.scheduleAtFixedRate(
