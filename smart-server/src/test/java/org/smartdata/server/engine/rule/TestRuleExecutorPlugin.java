@@ -20,6 +20,7 @@ package org.smartdata.server.engine.rule;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
+import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.rule.RuleExecutorPlugin;
@@ -36,37 +37,41 @@ public class TestRuleExecutorPlugin extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
 
     TestPlugin plugin = new TestPlugin();
-    RuleExecutorPluginManager.addPlugin(plugin);
-    RuleExecutorPluginManager.addPlugin(plugin);
+    try {
+      RuleExecutorPluginManager.addPlugin(plugin);
+      RuleExecutorPluginManager.addPlugin(plugin);
 
-    String rule = "file: every 1s \n | length > 10 | cache";
-    SmartAdmin client = new SmartAdmin(smartContext.getConf());
+      String rule = "file: every 1s \n | length > 10 | cache";
+      SmartAdmin client = new SmartAdmin(smartContext.getConf());
 
-    long ruleId = 0l;
-    ruleId = client.submitRule(rule, RuleState.ACTIVE);
+      long ruleId = 0l;
+      ruleId = client.submitRule(rule, RuleState.ACTIVE);
 
-    Assert.assertEquals(plugin.getNumOnNewRuleExecutor(), 1);
-    Thread.sleep(3000);
-    Assert.assertEquals(plugin.getNumOnNewRuleExecutor(), 1);
-    Assert.assertTrue(plugin.getNumPreExecution() >= 2);
-    Assert.assertTrue(plugin.getNumPreSubmitCmdlet() >= 2);
-    Assert.assertTrue(plugin.getNumOnRuleExecutorExit() == 0);
+      Assert.assertEquals(plugin.getNumOnNewRuleExecutor(), 1);
+      Thread.sleep(3000);
+      Assert.assertEquals(plugin.getNumOnNewRuleExecutor(), 1);
+      Assert.assertTrue(plugin.getNumPreExecution() >= 2);
+      Assert.assertTrue(plugin.getNumPreSubmitCmdlet() >= 2);
+      Assert.assertTrue(plugin.getNumOnRuleExecutorExit() == 0);
 
-    client.disableRule(ruleId, true);
-    Thread.sleep(1100);
-    int numPreExecution = plugin.getNumPreExecution();
-    int numPreSubmitCmdlet = plugin.getNumPreSubmitCmdlet();
-    Thread.sleep(2500);
-    Assert.assertTrue(plugin.getNumOnNewRuleExecutor() == 1);
-    Assert.assertTrue(plugin.getNumPreExecution() == numPreExecution);
-    Assert.assertTrue(plugin.getNumPreSubmitCmdlet() == numPreSubmitCmdlet);
-    Assert.assertTrue(plugin.getNumOnRuleExecutorExit() == 1);
+      client.disableRule(ruleId, true);
+      Thread.sleep(1100);
+      int numPreExecution = plugin.getNumPreExecution();
+      int numPreSubmitCmdlet = plugin.getNumPreSubmitCmdlet();
+      Thread.sleep(2500);
+      Assert.assertTrue(plugin.getNumOnNewRuleExecutor() == 1);
+      Assert.assertTrue(plugin.getNumPreExecution() == numPreExecution);
+      Assert.assertTrue(plugin.getNumPreSubmitCmdlet() == numPreSubmitCmdlet);
+      Assert.assertTrue(plugin.getNumOnRuleExecutorExit() == 1);
 
-    RuleExecutorPluginManager.deletePlugin(plugin);
-    client.activateRule(ruleId);
-    Thread.sleep(500);
-    Assert.assertTrue(plugin.getNumOnNewRuleExecutor() == 1);
-    Assert.assertTrue(plugin.getNumPreExecution() == numPreExecution);
+      RuleExecutorPluginManager.deletePlugin(plugin);
+      client.activateRule(ruleId);
+      Thread.sleep(500);
+      Assert.assertTrue(plugin.getNumOnNewRuleExecutor() == 1);
+      Assert.assertTrue(plugin.getNumPreExecution() == numPreExecution);
+    } finally {
+      RuleExecutorPluginManager.deletePlugin(plugin);
+    }
   }
 
   private class TestPlugin implements RuleExecutorPlugin {
@@ -90,6 +95,11 @@ public class TestRuleExecutorPlugin extends MiniSmartClusterHarness {
     public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
       numPreSubmitCmdlet++;
       return objects;
+    }
+
+    public CmdletDescriptor preSubmitCmdletDescriptor(final RuleInfo ruleInfo, TranslateResult tResult,
+        CmdletDescriptor descriptor) {
+      return descriptor;
     }
 
     public void onRuleExecutorExit(final RuleInfo ruleInfo) {

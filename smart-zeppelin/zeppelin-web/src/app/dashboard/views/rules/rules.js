@@ -39,20 +39,13 @@ angular.module('zeppelinWebApp')
 
     $scope.rulesTable = {
       cols: [
-        // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
         $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
         $stb.text('Name').key(['ruleName']).canSort().done(),
-          // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
-        // group 2/3 (5-col)
         $stb.datetime('Submission Time').key('submitTime').canSort().done(),
         $stb.datetime('Last Check Time').key('lastCheckTime').canSort().done(),
-        $stb.text('Checked Number').key('numChecked').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.text('Cmdlets Generated').key('numCmdsGen').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        // $stb.datetime('Start Time').key('startTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        // $stb.datetime('Stop Time').key('stopTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),
-        // group 3/3 (4-col)
+        $stb.text('Checked Number').key('numChecked').canSort().styleClass('hidden-sm hidden-xs').done(),
+        $stb.text('Cmdlets Generated').key('numCmdsGen').canSort().styleClass('hidden-sm hidden-xs').done(),
         $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-1').done()
       ],
@@ -62,7 +55,6 @@ angular.module('zeppelinWebApp')
     function updateTable(rules) {
       $scope.rulesTable.rows = $stb.$update($scope.rulesTable.rows,
         _.map(rules, function (rule) {
-          console.log(rule);
           return {
             id: rule.id,
             // name: {href: pageUrl, text: rule.appName},

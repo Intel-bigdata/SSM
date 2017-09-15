@@ -19,6 +19,7 @@ package org.smartdata;
 
 import org.smartdata.conf.SmartConf;
 
+
 /**
  * SSM context for running an action.
  */
@@ -41,4 +42,5 @@ public class SmartContext {
   public void setConf(SmartConf conf) {
     this.conf = conf;
   }
+  
 }

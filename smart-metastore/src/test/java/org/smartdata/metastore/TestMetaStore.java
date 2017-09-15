@@ -43,6 +43,7 @@ import org.smartdata.model.DataNodeStorageInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -257,6 +258,53 @@ public class TestMetaStore extends TestDaoUtil {
 
     List<RuleInfo> infos = metaStore.getRuleInfo();
     Assert.assertTrue(infos.size() == 2);
+  }
+
+  @Test
+  public void testMoveSyncRules() throws Exception {
+    String pathString = "/src/1";
+    long length = 123L;
+    boolean isDir = false;
+    int blockReplication = 1;
+    long blockSize = 128 * 1024L;
+    long modTime = 123123123L;
+    long accessTime = 123123120L;
+    String owner = "root";
+    String group = "admin";
+    long fileId = 56l;
+    byte storagePolicy = 0;
+    FileInfo fileInfo = new FileInfo(pathString, fileId, length,
+        isDir, (short) blockReplication, blockSize, modTime, accessTime,
+        (short) 1, owner, group, storagePolicy);
+    metaStore.insertFile(fileInfo);
+    Map<String, String> args = new HashMap();
+    args.put("-file", "/src/1");
+    String rule = "file : accessCount(10m) > 20 \n\n"
+        + "and length() > 3 | ";
+    long submitTime = System.currentTimeMillis();
+    RuleInfo ruleInfo = new RuleInfo(0, submitTime,
+        rule + "sync -dest /dest/", RuleState.ACTIVE, 0, 0, 0);
+    metaStore.insertNewRule(ruleInfo);
+    metaStore.insertBackUpInfo(new BackUpInfo(ruleInfo.getId(), "/src/", "/dest/", 100));
+    metaStore.insertNewRule(new RuleInfo(1, submitTime,
+        rule + "allssd", RuleState.ACTIVE, 0, 0, 0));
+    metaStore.insertNewRule(new RuleInfo(2, submitTime,
+        rule + "archive", RuleState.ACTIVE, 0, 0, 0));
+    metaStore.insertNewRule(new RuleInfo(2, submitTime,
+        rule + "onessd", RuleState.ACTIVE, 0, 0, 0));
+    metaStore.insertNewRule(new RuleInfo(2, submitTime,
+        rule + "cache", RuleState.ACTIVE, 0, 0, 0));
+    Assert.assertTrue(metaStore.listMoveRules().size() == 3);
+    Assert.assertTrue(metaStore.listSyncRules().size() == 1);
+    CmdletInfo cmdletInfo = new CmdletInfo(1, ruleInfo.getId(),
+        CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+    cmdletInfo.setAids(Collections.singletonList(1l));
+    metaStore.insertCmdletTable(cmdletInfo);
+    metaStore.insertAction(new ActionInfo(1, 1,
+        "allssd", args, "Test",
+        "Test", true, 123213213l, true, 123123l,
+        100));
+    Assert.assertTrue(metaStore.listFileActions(ruleInfo.getId(), 0).size() >= 0);
   }
 
   @Test
@@ -631,7 +679,7 @@ public class TestMetaStore extends TestDaoUtil {
     BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
     metaStore.insertBackUpInfo(backUpInfo1);
 
-    Assert.assertTrue(metaStore.getBackUpInfoById(1).equals(backUpInfo1));
+    Assert.assertTrue(metaStore.getBackUpInfo(1).equals(backUpInfo1));
   }
 
   @Test

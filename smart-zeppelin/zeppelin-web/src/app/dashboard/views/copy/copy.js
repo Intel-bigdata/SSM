@@ -19,65 +19,84 @@
 angular.module('zeppelinWebApp')
 
   .controller('CopyCtrl', CopyCtrl);
-  CopyCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'actions0', 'actionTypes'];
-  function CopyCtrl($scope, $modal, $stb, $dialogs, actions0, actionTypes) {
+CopyCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'copys0'];
+  function CopyCtrl($scope, $modal, $stb, $dialogs, copys0) {
 
-    $scope.actionsTable = {
+    $scope.copysTable = {
       cols: [
         // group 1/3 (4-col)
-        $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        $stb.text('Rule ID').key('cid').canSort().done(),
-        $stb.text('File Path').key('filePath').canSort().styleClass('col-md-1').done(),
-        $stb.text('Target Path').key('targetPath').canSort().styleClass('col-md-1').done(),
-        $stb.text('Status').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.duration("Running Time").key('runningTime').canSort().done(),
-        $stb.datetime('Create Time').key('createTime').canSort().done(),
-        $stb.datetime('Finish Time').key('finishTime').canSort().done(),
+        $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
+        $stb.text('Rule ID').key('id').canSort().done(),
+        $stb.text('Sync Rule').key(['syncRule']).done(),
+        $stb.text('Syncing Files').key('syncingFiles').done(),
+        $stb.text('All Files').key('allFiles').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
+        $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-1').done()
       ],
       rows: null
     };
 
-    function updateTable(actions) {
-      $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
-        _.map(actions, function (action) {
+    function updateTable(copys) {
+      $scope.copysTable.rows = $stb.$update($scope.copysTable.rows,
+        _.map(copys, function (copy) {
           return {
-            id: action.actionId,
-            cid: action.cmdletId,
-            state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
-            createTime: action.createTime,
-            finishTime: action.finished ? action.finishTime : "-",
-            runningTime: action.uptime,
-            succeed: action.finished ? action.successful : "-",
+            id: copy.id,
+            // name: {href: pageUrl, text: rule.appName},
+            state: {tooltip: copy.state, condition: copy.isRunning ? 'good' : '', shape: 'stripe'},
+            //user: rule.user,
+            syncRule: copy.ruleText,
+            syncingFiles: copy.runningProgress,
+            allFiles: copy.baseProgress,
+            progress: {
+              current: copy.progress,
+              max: 1
+            },
+            status: copy.state,
+            active: {
+              icon: function() {
+                if(copy.isRunning) {
+                  return 'glyphicon glyphicon-pause';
+                }else {
+                  return 'glyphicon glyphicon-play';
+                }
+              },
+              class: 'btn-xs',
+              disabled: copy.isDelete,
+              click: function () {
+                if(!copy.isRunning) {
+                  copy.start();
+                }else{
+                  copy.terminate();
+                }
+              }
+            },
             view: {
-              href: action.pageUrl,
+              href: copy.pageUrl,
               icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info'
             },
-            progress: {
-                current: action.progress,
-                max: 1,
-                flag: action.finished ? action.successful : "-"
-                // usage: action.progress * 100
-            },
-            filePath: "FilePath",
-            targetPath: "TargetPath"
+            delete: {
+              icon: function() {
+                return 'glyphicon glyphicon-trash';
+              },
+              class: 'btn-xs btn-danger',
+              disabled: copy.isDelete,
+              click: function () {
+                $dialogs.confirm('Are you sure to delete this rule?', function () {
+                  copy.delete();
+                });
+              }
+            }
           };
         }));
     }
 
-    updateTable(actions0.$data());
-    actions0.$subscribe($scope, function (actions) {
-      updateTable(actions);
+    updateTable(copys0.$data());
+    copys0.$subscribe($scope, function (copys) {
+      updateTable(copys);
     });
-/*
-    $(function () {
-      $("[data-toggle='tooltip']").tooltip({
-        container: body
-      });
-    });*/
   }
 

@@ -40,5 +40,9 @@ public abstract class AlluxioAction extends SmartAction {
     this.uri = new AlluxioURI(args.get(FILE_PATH));
     this.alluxioFs = FileSystem.Factory.get();
   }
+  
+  public void setFileSystem(FileSystem fs) {
+    this.alluxioFs = fs;
+  }
 
 }

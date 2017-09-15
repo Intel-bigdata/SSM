@@ -14,10 +14,6 @@ before_install:
 
 matrix:
   include:
-    - jdk: "openjdk7"
-      env: PROFILE="-Phadoop-2.7"
-    - jdk: "openjdk7"
-      env: PROFILE="-Phadoop-cdh-2.6"
     - jdk: "openjdk8"
       env: PROFILE="-Phadoop-2.7"
     - jdk: "openjdk8"

@@ -32,6 +32,15 @@ angular.module('org.apache.hadoop.ssm.models', [])
           }
           return obj[prop];
         },
+        getProgress: function (base, running) {
+          var result;
+          if (running === 0 || base === 0) {
+            result = 1;
+          } else {
+            result = Math.round((base - running) * 100 / base) /100;
+          }
+          return result;
+        },
         parseIntFromQueryPathTail: function (path) {
           return Number(_.last(path.split('.')).replace(/[^0-9]/g, ''));
         },
@@ -96,6 +105,12 @@ angular.module('org.apache.hadoop.ssm.models', [])
         rules: function (objs) {
           return decoder._asAssociativeArray(objs, decoder.ruleSummary, 'id');
         },
+        movers: function (objs) {
+          return decoder._asAssociativeArray(objs, decoder.moverSummary, 'id');
+        },
+        copys: function (objs) {
+          return decoder._asAssociativeArray(objs, decoder.copySummary, 'id');
+        },
         ruleSummary: function (obj) {
           return angular.merge(obj, {
             // extra properties
@@ -116,12 +131,42 @@ angular.module('org.apache.hadoop.ssm.models', [])
             }
           });
         },
+        moverSummary: function (obj) {
+          return angular.merge(obj, {
+            isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
+            pageUrl: locator.mover(obj.id),
+            progress: util.getProgress(obj.baseProgress, obj.runningProgress),
+            start: function () {
+              return restapi.startRule(obj.id);
+            },
+            terminate: function () {
+              return restapi.stopRule(obj.id);
+            },
+            delete: function () {
+              return restapi.deleteRule(obj.id);
+            }
+          });
+        },
+        copySummary: function (obj) {
+          return angular.merge(obj, {
+            isRunning: (obj.state === 'ACTIVE' || obj.state === 'DRYRUN'),
+            pageUrl: locator.copy(obj.id),
+            progress: util.getProgress(obj.baseProgress, obj.runningProgress),
+            start: function () {
+              return restapi.startRule(obj.id);
+            },
+            terminate: function () {
+              return restapi.stopRule(obj.id);
+            },
+            delete: function () {
+              return restapi.deleteRule(obj.id);
+            }
+          });
+        },
         rule: function (obj) {
           obj = obj.body;
           angular.merge(obj, {
-            status: 'Active',
             ruleName: 'Rule ' + obj.id,
-            isRunning: true,
           });
           return obj;
         },
@@ -181,6 +226,18 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         ruleCmdlets: function (ruleId) {
           return get('rules/' + ruleId + '/cmdlets', decoder.ruleCmdlets);
+        },
+        movers: function () {
+          return get('rules/list/move', decoder.movers);
+        },
+        copys: function () {
+          return get('rules/list/sync', decoder.copys);
+        },
+        moverActions: function (ruleId) {
+          return get('actions/filelist/0/' + ruleId , decoder.actions);
+        },
+        copyActions: function (ruleId) {
+          return get('actions/filelist/0/' + ruleId , decoder.actions);
         },
         actions: function () {
           return get('actions/list/0', decoder.actions);

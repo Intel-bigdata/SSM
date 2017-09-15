@@ -49,6 +49,8 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.DetailedFileAction;
+import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
@@ -66,6 +68,7 @@ import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.dao.EmptyResultDataAccessException;
 
+import javax.swing.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -279,6 +282,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<FileInfo> getFilesByPrefix(String path) throws MetaStoreException {
+    updateCache();
+    try {
+      return fileInfoDao.getFilesByPrefix(path);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public Map<String, Long> getFileIDs(Collection<String> paths)
       throws MetaStoreException {
     try {
@@ -335,6 +349,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       }
     } else {
       return new ArrayList<>();
+    }
+  }
+
+  public void deleteAllFileInfo() throws MetaStoreException {
+    try {
+      fileInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
@@ -556,6 +578,101 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<DetailedFileAction> listFileActions(long rid, int size) throws MetaStoreException {
+    if (mapStoragePolicyIdName == null) {
+      updateCache();
+    }
+    List<ActionInfo> actionInfos = getActions(rid, size);
+    List<DetailedFileAction> detailedFileActions = new ArrayList<>();
+
+    for (ActionInfo actionInfo: actionInfos) {
+      DetailedFileAction detailedFileAction = new DetailedFileAction(actionInfo);
+      String filePath = actionInfo.getArgs().get("-file");
+      FileInfo fileInfo = getFile(filePath);
+      if (fileInfo == null) {
+        // LOG.debug("Namespace is not sync! File {} not in file table!", filePath);
+        // Add a mock fileInfo
+        fileInfo = new FileInfo(filePath, 0L, 0L, false,
+            (short) 0, 0L, 0L, 0L, (short) 0,
+            "root", "root", (byte) 0);
+      }
+      detailedFileAction.setFileLength(fileInfo.getLength());
+      detailedFileAction.setFilePath(filePath);
+      if (actionInfo.getActionName().contains("allssd") ||
+          actionInfo.getActionName().contains("onessd") ||
+          actionInfo.getActionName().contains("archive")) {
+        detailedFileAction.setTarget(actionInfo.getActionName());
+        detailedFileAction.setSrc(mapStoragePolicyIdName.get(
+            (int) fileInfo.getStoragePolicy()));
+      } else {
+        detailedFileAction.setSrc(actionInfo.getArgs().get("-src"));
+        detailedFileAction.setTarget(actionInfo.getArgs().get("-dest"));
+      }
+      detailedFileActions.add(detailedFileAction);
+    }
+    return detailedFileActions;
+  }
+
+
+  public List<DetailedRuleInfo> listMoveRules() throws MetaStoreException {
+    List<RuleInfo> ruleInfos = getRuleInfo();
+    List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
+    for (RuleInfo ruleInfo: ruleInfos) {
+      if (ruleInfo.getRuleText().contains("allssd") ||
+          ruleInfo.getRuleText().contains("onessd") ||
+          ruleInfo.getRuleText().contains("archive")) {
+        DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
+        // Add mover progress
+        List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
+        int currPos = 0;
+        for (CmdletInfo cmdletInfo: cmdletInfos) {
+          if (cmdletInfo.getState().getValue() <= 2) {
+            break;
+          }
+          currPos += 1;
+        }
+        int countRunning = 0;
+        for (int i = 0; i < cmdletInfos.size(); i++ ) {
+          if (cmdletInfos.get(i).getState().getValue() <= 2) {
+            countRunning += 1;
+          }
+        }
+        detailedRuleInfo
+            .setBaseProgress(cmdletInfos.size() - currPos);
+        detailedRuleInfo.setRunningProgress(countRunning);
+        detailedRuleInfos.add(detailedRuleInfo);
+      }
+    }
+    return detailedRuleInfos;
+  }
+
+
+  public List<DetailedRuleInfo> listSyncRules() throws MetaStoreException {
+    List<RuleInfo> ruleInfos = getRuleInfo();
+    List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
+    for (RuleInfo ruleInfo : ruleInfos) {
+      if (ruleInfo.getRuleText().contains("sync")) {
+        DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
+        // Add sync progress
+        BackUpInfo backUpInfo = getBackUpInfo(ruleInfo.getId());
+        // Get total matched files
+        if (backUpInfo != null) {
+          detailedRuleInfo
+                  .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+          int count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
+          count += fileDiffDao.getByState(backUpInfo.getSrc(), FileDiffState.RUNNING).size();
+          detailedRuleInfo.setRunningProgress(count);
+        } else {
+          detailedRuleInfo
+                  .setBaseProgress(0);
+          detailedRuleInfo.setRunningProgress(0);
+        }
+        detailedRuleInfos.add(detailedRuleInfo);
+      }
+    }
+    return detailedRuleInfos;
+  }
+
   public synchronized boolean insertNewRule(RuleInfo info)
       throws MetaStoreException {
     try {
@@ -599,6 +716,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
+
+  public void deleteAllRules() throws MetaStoreException {
+    try {
+      ruleDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
 
   public synchronized void insertCmdletsTable(CmdletInfo[] commands)
       throws MetaStoreException {
@@ -666,6 +792,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteAllCmdlets() throws MetaStoreException {
+    try {
+      cmdletDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteCmdlet(long cid) throws MetaStoreException {
     try {
       cmdletDao.delete(cid);
@@ -693,6 +827,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteAllActions() throws MetaStoreException {
+    try {
+      actionDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public synchronized void updateActions(ActionInfo[] actionInfos)
       throws MetaStoreException {
     if (actionInfos == null || actionInfos.length == 0) {
@@ -713,6 +855,20 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
     try {
       return actionDao.getLatestActions(size);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<ActionInfo> getNewCreatedActions(String actionName,
+      int size) throws MetaStoreException {
+    if (size < 0) {
+      return new ArrayList<>();
+    }
+    try {
+      return actionDao.getLatestActions(actionName, size);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {
@@ -749,13 +905,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<ActionInfo> getNewCreatedActions(String actionType,
+  public List<ActionInfo> getNewCreatedActions(String actionName,
       boolean successful, int size) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
     try {
-      return actionDao.getLatestActions(actionType, size, successful);
+      return actionDao.getLatestActions(actionName, size, successful);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {
@@ -789,6 +945,36 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  public List<ActionInfo> getActions(long rid, int size) throws MetaStoreException {
+    if (size <= 0) {
+      size = Integer.MAX_VALUE;
+    }
+    List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(rid);
+    List<ActionInfo> runningActions = new ArrayList<>();
+    List<ActionInfo> finishedActions = new ArrayList<>();
+    int total = 0;
+    for (CmdletInfo cmdletInfo:cmdletInfos) {
+      if (total >= size) {
+        break;
+      }
+      List<Long> aids = cmdletInfo.getAids();
+      for (Long aid : aids) {
+        if (total >= size) {
+          break;
+        }
+        ActionInfo actionInfo = getActionById(aid);
+        if(actionInfo.isFinished()) {
+          finishedActions.add(actionInfo);
+        } else {
+          runningActions.add(actionInfo);
+        }
+        total ++;
+      }
+    }
+    runningActions.addAll(finishedActions);
+    return runningActions;
   }
 
   public ActionInfo getActionById(long aid) throws MetaStoreException {
@@ -872,6 +1058,22 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public FileDiff getFileDiff(long did) throws MetaStoreException {
+    try {
+      return fileDiffDao.getById(did);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<FileDiff> getFileDiffs(FileDiffState fileDiffState) throws MetaStoreException {
+    try {
+      return fileDiffDao.getByState(fileDiffState);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   @Override
   public boolean markFileDiffApplied(long did,
       FileDiffState state) throws MetaStoreException {
@@ -880,6 +1082,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  public List<String> getSyncPath(int size) throws MetaStoreException {
+    return fileDiffDao.getSyncPath(size);
   }
 
   @Override
@@ -1149,9 +1355,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public BackUpInfo getBackUpInfoById(long id) throws MetaStoreException {
+  public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
-      return backUpInfoDao.getById(id);
+      return backUpInfoDao.getByRid(rid);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

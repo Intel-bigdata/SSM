@@ -19,62 +19,84 @@
 angular.module('zeppelinWebApp')
 
   .controller('MoverCtrl', MoverCtrl);
-  MoverCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'actions0', 'actionTypes'];
-  function MoverCtrl($scope, $modal, $stb, $dialogs, actions0, actionTypes) {
+  MoverCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'movers0'];
+  function MoverCtrl($scope, $modal, $stb, $dialogs, movers0) {
 
-    $scope.actionsTable = {
+    $scope.moversTable = {
       cols: [
         // group 1/3 (4-col)
-        $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        // $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-        $stb.text('Rule ID').key('cid').canSort().done(),
-        $stb.text('File').key('file').canSort().styleClass('col-md-1').done(),
-        $stb.text('File Size').key('fileSize').canSort().styleClass('col-md-1').done(),
-        $stb.text('Storage Type').key('sourceType').canSort().styleClass('col-md-1').done(),
-        $stb.text('Target Storage Type').key('targetType').canSort().styleClass('col-md-1').done(),
-        $stb.datetime('Create Time').key('createTime').canSort().styleClass('col-md-2').done(),
+        $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
+        $stb.text('Rule ID').key('id').canSort().done(),
+        $stb.text('Mover Rule').key(['moverRule']).done(),
+        $stb.text('Moving Files').key('movingFiles').done(),
+        $stb.text('All Files').key('allFiles').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.datetime('Finish Time').key('finishTime').canSort().styleClass('col-md-2').done(),
-        $stb.duration("Running Time").key('runningTime').canSort().styleClass('col-md-1').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
+        $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-1').done()
       ],
       rows: null
     };
 
-    function updateTable(actions) {
-      $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
-        _.map(actions, function (action) {
+    function updateTable(movers) {
+      $scope.moversTable.rows = $stb.$update($scope.moversTable.rows,
+        _.map(movers, function (mover) {
           return {
-            cid: action.cmdletId,
-            state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
-            createTime: action.createTime,
-            finishTime: action.finished ? action.finishTime : "-",
-            runningTime: action.uptime,
-            succeed: action.finished ? action.successful : "-",
+            id: mover.id,
+            // name: {href: pageUrl, text: rule.appName},
+            state: {tooltip: mover.state, condition: mover.isRunning ? 'good' : '', shape: 'stripe'},
+            //user: rule.user,
+            moverRule: mover.ruleText,
+            movingFiles: mover.runningProgress,
+            allFiles: mover.baseProgress,
+            progress: {
+              current: mover.progress,
+              max: 1
+            },
+            status: mover.state,
+            active: {
+              icon: function() {
+                if(mover.isRunning) {
+                  return 'glyphicon glyphicon-pause';
+                }else {
+                  return 'glyphicon glyphicon-play';
+                }
+              },
+              class: 'btn-xs',
+              disabled: mover.isDelete,
+              click: function () {
+                if(!mover.isRunning) {
+                  mover.start();
+                }else{
+                  mover.terminate();
+                }
+              }
+            },
             view: {
-              href: action.pageUrl,
+              href: mover.pageUrl,
               icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
               class: 'btn-xs btn-info'
             },
-            progress: {
-                current: action.progress,
-                max: 1,
-                flag: action.finished ? action.successful : "-"
-                // usage: action.progress * 100
-            },
-            file: "PATH",
-            fileSize: "1M",
-            sourceType: "COOL",
-            targetType: "ONESSD"
+            delete: {
+              icon: function() {
+                return 'glyphicon glyphicon-trash';
+              },
+              class: 'btn-xs btn-danger',
+              disabled: mover.isDelete,
+              click: function () {
+                $dialogs.confirm('Are you sure to delete this rule?', function () {
+                  mover.delete();
+                });
+              }
+            }
           };
         }));
     }
 
-    updateTable(actions0.$data());
-    actions0.$subscribe($scope, function (actions) {
-      updateTable(actions);
+    updateTable(movers0.$data());
+    movers0.$subscribe($scope, function (movers) {
+      updateTable(movers);
     });
   }
 

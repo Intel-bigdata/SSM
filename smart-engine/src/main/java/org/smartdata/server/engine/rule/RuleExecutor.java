@@ -53,7 +53,7 @@ public class RuleExecutor implements Runnable {
   private volatile boolean exited = false;
   private long exitTime;
   private Stack<String> dynamicCleanups = new Stack<>();
-  public static final Logger LOG =
+  private static final Logger LOG =
       LoggerFactory.getLogger(RuleExecutor.class.getName());
 
   private static Pattern varPattern = Pattern.compile(
@@ -288,7 +288,7 @@ public class RuleExecutor implements Runnable {
         for (RuleExecutorPlugin plugin : plugins) {
           files = plugin.preSubmitCmdlet(info, files);
         }
-        numCmdSubmitted = submitCmdlets(files, rid);
+        numCmdSubmitted = submitCmdlets(info, files);
       }
       ruleManager.updateRuleInfo(rid, null,
           System.currentTimeMillis(), 1, numCmdSubmitted);
@@ -321,18 +321,23 @@ public class RuleExecutor implements Runnable {
     temp[1] += "The exception is created deliberately";
   }
 
-  private int submitCmdlets(List<String> files, long ruleId) {
+  private int submitCmdlets(RuleInfo ruleInfo, List<String> files) {
+    long ruleId = ruleInfo.getId();
     if (files == null || files.size() == 0
         || ruleManager.getCmdletManager() == null) {
       return 0;
     }
     int nSubmitted = 0;
+    List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
     String template = tr.getCmdDescriptor().toCmdletString();
     for (String file : files) {
       if (!exited) {
         try {
           CmdletDescriptor cmd = new CmdletDescriptor(template, ruleId);
           cmd.setCmdletParameter(CmdletDescriptor.HDFS_FILE_PATH, file);
+          for (RuleExecutorPlugin plugin : plugins) {
+            cmd = plugin.preSubmitCmdletDescriptor(ruleInfo, tr, cmd);
+          }
           ruleManager.getCmdletManager().submitCmdlet(cmd);
           nSubmitted++;
         } catch (IOException e) {

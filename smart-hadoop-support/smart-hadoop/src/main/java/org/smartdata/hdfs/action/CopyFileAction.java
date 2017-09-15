@@ -20,6 +20,7 @@ package org.smartdata.hdfs.action;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
@@ -29,7 +30,6 @@ import org.smartdata.action.annotation.ActionSignature;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.net.URI;
 import java.util.Map;
 
@@ -144,7 +144,6 @@ public class CopyFileAction extends HdfsAction {
 
   private long getFileSize(String fileName) throws IOException {
     if (fileName.startsWith("hdfs")) {
-      // TODO read conf from files
       Configuration conf = new Configuration();
       // Get InputStream from URL
       FileSystem fs = FileSystem.get(URI.create(fileName), conf);
@@ -174,13 +173,25 @@ public class CopyFileAction extends HdfsAction {
       Configuration conf = new Configuration();
       // Get OutPutStream from URL
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
-      // TODO overwrite or skip
-      // if (fs.exists(new Path(dest))) {
-      //
-      // }
+      try {
+        int replication = fs.getServerDefaults(new Path(dest)).getReplication();
+        if (replication != DFSConfigKeys.DFS_REPLICATION_DEFAULT) {
+          LOG.debug("Remote Replications =" + replication);
+          conf.setInt(DFSConfigKeys.DFS_REPLICATION_KEY, replication);
+          fs = FileSystem.get(URI.create(dest), conf);
+        }
+      } catch (IOException e) {
+        LOG.debug("Get Server default replication error!", e);
+      }
+      if (fs.exists(new Path(dest))) {
+        return fs.append(new Path(dest));
+      }
       return fs.create(new Path(dest), true);
     } else {
       // Copy between different dirs of the same cluster
+      if (dfsClient.exists(dest)) {
+        // TODO local append
+      }
       return dfsClient.create(dest, true);
     }
   }

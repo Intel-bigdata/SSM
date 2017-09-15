@@ -34,6 +34,7 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
@@ -181,6 +182,12 @@ public class CmdletManager extends AbstractService {
         submitTime);
     List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     for (ActionInfo actionInfo : actionInfos) {
+      for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+        if (!p.onSubmit(actionInfo)) {
+          throw new IOException(
+              String.format("Action rejected by scheduler", actionInfo));
+        }
+      }
       cmdletInfo.addAction(actionInfo.getActionId());
     }
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
@@ -530,6 +537,37 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      int actionNum) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, actionNum);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      int actionNum, boolean finished) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, actionNum, finished);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      boolean successful, int actionNum) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, successful, actionNum);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+
   public List<ActionInfo> listNewCreatedActions(int actionNum) throws IOException {
     try {
       Map<Long, ActionInfo> actionInfos = new HashMap<>();
@@ -540,6 +578,25 @@ public class CmdletManager extends AbstractService {
       return Lists.newArrayList(actionInfos.values());
     } catch (MetaStoreException e) {
       LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+
+  public List<ActionInfo> getActions(long rid, int size) throws IOException {
+    try {
+      return metaStore.getActions(rid, size);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions by rid and size from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<DetailedFileAction> getFileActions(long rid, int size) throws IOException {
+    try {
+      return metaStore.listFileActions(rid, size);
+    } catch (MetaStoreException e) {
+      LOG.error("Get File Actions by rid and size from DB error", e);
       throw new IOException(e);
     }
   }
@@ -632,6 +689,10 @@ public class CmdletManager extends AbstractService {
         actionInfo.setSuccessful(true);
         updateStorageIfNeeded(actionInfo);
       }
+      for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+        p.onActionFinished(actionInfo);
+      }
+
     } else {
       // Updating action status which is not pending or running
     }

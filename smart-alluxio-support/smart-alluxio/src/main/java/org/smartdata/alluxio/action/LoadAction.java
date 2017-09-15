@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.smartdata.action.annotation.ActionSignature;
+
 import alluxio.AlluxioURI;
 import alluxio.Constants;
 import alluxio.client.ReadType;
@@ -28,6 +30,11 @@ import alluxio.client.file.FileInStream;
 import alluxio.client.file.URIStatus;
 import alluxio.client.file.options.OpenFileOptions;
 
+@ActionSignature(
+    actionId = "load",
+    displayName = "load",
+    usage = AlluxioAction.FILE_PATH + " $file "
+)
 public class LoadAction extends AlluxioAction {
 
   private List<String> exceptionMessages;
