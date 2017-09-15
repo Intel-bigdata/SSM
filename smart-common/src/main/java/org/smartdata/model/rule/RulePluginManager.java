@@ -41,7 +41,7 @@ public class RulePluginManager {
     }
   }
 
-  public synchronized static void deletePlugin(RuleExecutorPlugin plugin) {
+  public synchronized static void deletePlugin(RulePlugin plugin) {
     if (plugins.contains(plugin)) {
       plugins.remove(plugin);
     }
