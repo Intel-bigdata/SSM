@@ -55,9 +55,7 @@ python test_rule.py -v
 ```
 
 ### 3. Test Data Protection
-
-
-Run all data protection test cases with the following command:
+Run all data protection test cases (read, delete, append and overwrite files during moving) with the following command:
 ```
 python test_data_protection_1GB.py -v
 python test_data_protection_2GB.py -v
@@ -65,21 +63,7 @@ python test_data_protection_2GB.py -v
 
 #### Corner Cases of Data Protection
 
-1. Test `append` File during moving
-Note that `append` cannot be coverd by test scripts. Please use HDFS `appendToFile` command during moving. 
-
-For example, you can create a large file (3GB) and a small file (64MB).
-```
-fallocate -l 3G data_3GB
-fallocate -l 64M data_64MB
-hdfs dfs -put data_3GB /test/data_3GB
-```
-Then, submit a allssd action (with UI/Restfull API)to move large file to allssd. During moving you can append a small file to it with `appendToFile` command.
-```
-hdfs dfs -appendToFile data_64MB /test/data_3GB
-```
-
-2. Test File Statue when move fails
+1. Test File Statue when move fails
 Set a very small SSD/ARCHIVE storage on datanode. Then, move a large file to it. Then, you can see only a few or none of blocks are moved to this storage. Check if file are still readable with read action.
 
 ### 4. Test Stress/Performance
