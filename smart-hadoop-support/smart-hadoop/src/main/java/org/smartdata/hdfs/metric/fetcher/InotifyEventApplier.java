@@ -118,6 +118,7 @@ public class InotifyEventApplier {
         // Note that "-length 0" means create an empty file
         fileDiff.getParameters()
             .put("-length", String.valueOf(fileInfo.getLength()));
+        // TODO add metadata according to HadoopUtil.convertFileStatus
         metaStore.insertFileDiff(fileDiff);
       }
       metaStore.insertFile(fileInfo);
@@ -142,6 +143,7 @@ public class InotifyEventApplier {
     if (inBackup(closeEvent.getPath())) {
       FileInfo fileInfo = metaStore.getFile(closeEvent.getPath());
       if (fileInfo == null) {
+        // TODO add metadata
         currLen = 0;
       } else {
         currLen = fileInfo.getLength();
