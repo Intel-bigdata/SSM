@@ -208,8 +208,8 @@ public class InotifyEventApplier {
       case TIMES:
         if (metadataUpdateEvent.getMtime() > 0 && metadataUpdateEvent.getAtime() > 0) {
           if (fileDiff != null) {
-            fileDiff.getParameters().put("modification_time", "" + metadataUpdateEvent.getMtime());
-            fileDiff.getParameters().put("access_time", "" + metadataUpdateEvent.getMtime());
+            fileDiff.getParameters().put("-modification_time", "" + metadataUpdateEvent.getMtime());
+            fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getMtime());
             metaStore.insertFileDiff(fileDiff);
           }
           return String.format(
@@ -219,7 +219,7 @@ public class InotifyEventApplier {
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getMtime() > 0) {
           if (fileDiff != null) {
-            fileDiff.getParameters().put("modification_time", "" + metadataUpdateEvent.getMtime());
+            fileDiff.getParameters().put("-modification_time", "" + metadataUpdateEvent.getMtime());
             metaStore.insertFileDiff(fileDiff);
           }
           return String.format(
@@ -228,7 +228,7 @@ public class InotifyEventApplier {
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getAtime() > 0) {
           if (fileDiff != null) {
-            fileDiff.getParameters().put("access_time", "" + metadataUpdateEvent.getMtime());
+            fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getMtime());
             metaStore.insertFileDiff(fileDiff);
           }
           return String.format(
@@ -239,11 +239,15 @@ public class InotifyEventApplier {
           return "";
         }
       case OWNER:
+        if (fileDiff != null) {
+          fileDiff.getParameters().put("-owner", "" + metadataUpdateEvent.getOwnerName());
+          metaStore.insertFileDiff(fileDiff);
+        }
         //Todo
         break;
       case PERMS:
         if (fileDiff != null) {
-          fileDiff.getParameters().put("permission", "" + metadataUpdateEvent.getPerms().toShort());
+          fileDiff.getParameters().put("-permission", "" + metadataUpdateEvent.getPerms().toShort());
           metaStore.insertFileDiff(fileDiff);
         }
         return String.format(
@@ -251,7 +255,7 @@ public class InotifyEventApplier {
             metadataUpdateEvent.getPerms().toShort(), metadataUpdateEvent.getPath());
       case REPLICATION:
         if (fileDiff != null) {
-          fileDiff.getParameters().put("block_replication", "" + metadataUpdateEvent.getReplication());
+          fileDiff.getParameters().put("-block_replication", "" + metadataUpdateEvent.getReplication());
           metaStore.insertFileDiff(fileDiff);
         }
         return String.format(
