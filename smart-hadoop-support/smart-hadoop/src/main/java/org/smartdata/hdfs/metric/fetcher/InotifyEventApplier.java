@@ -110,21 +110,31 @@ public class InotifyEventApplier {
     }
     FileInfo fileInfo = HadoopUtil.convertFileStatus(fileStatus, createEvent.getPath());
     try {
-      if (!fileInfo.isdir()) {
-        // ignore dir
-        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
-        fileDiff.setSrc(fileInfo.getPath());
-        fileDiff.getParameters().put("-offset", String.valueOf(0));
-        // Note that "-length 0" means create an empty file
-        fileDiff.getParameters().put("-length", String.valueOf(fileInfo.getLength()));
-        metaStore.insertFileDiff(fileDiff);
+      if (inBackup(fileInfo.getPath())) {
+        if (!fileInfo.isdir()) {
+          // ignore dir
+          FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+          fileDiff.setSrc(fileInfo.getPath());
+          fileDiff.getParameters().put("-offset", String.valueOf(0));
+          // Note that "-length 0" means create an empty file
+          fileDiff.getParameters()
+              .put("-length", String.valueOf(fileInfo.getLength()));
+          metaStore.insertFileDiff(fileDiff);
+        }
+        metaStore.insertFile(fileInfo);
       }
-      metaStore.insertFile(fileInfo);
       return "";
     } catch (MetaStoreException e) {
       LOG.error("Insert new created file " + fileInfo.getPath() + " error.", e);
       throw new IOException(e);
     }
+  }
+
+  private boolean inBackup(String src) throws MetaStoreException {
+    if (metaStore.srcInbackup(src)) {
+      return true;
+    }
+    return false;
   }
 
   //Todo: should update mtime? atime?
@@ -135,16 +145,19 @@ public class InotifyEventApplier {
     long currLen = 0l;
     // TODO make sure offset is correct
     try {
-      FileInfo fileInfo = metaStore.getFile(closeEvent.getPath());
-      if (fileInfo == null) {
-        currLen = 0;
-      } else {
-        currLen = fileInfo.getLength();
-      }
-      if (currLen != newLen) {
-        fileDiff.getParameters().put("-offset", String.valueOf(currLen));
-        fileDiff.getParameters().put("-length", String.valueOf(newLen - currLen));
-        metaStore.insertFileDiff(fileDiff);
+      if (inBackup(closeEvent.getPath())) {
+        FileInfo fileInfo = metaStore.getFile(closeEvent.getPath());
+        if (fileInfo == null) {
+          currLen = 0;
+        } else {
+          currLen = fileInfo.getLength();
+        }
+        if (currLen != newLen) {
+          fileDiff.getParameters().put("-offset", String.valueOf(currLen));
+          fileDiff.getParameters()
+              .put("-length", String.valueOf(newLen - currLen));
+          metaStore.insertFileDiff(fileDiff);
+        }
       }
     } catch (MetaStoreException e) {
       LOG.error("Insert file diff " + fileDiff.getSrc() + " error.", e);
@@ -167,15 +180,17 @@ public class InotifyEventApplier {
     List<String> ret = new ArrayList<>();
     HdfsFileStatus status = client.getFileInfo(renameEvent.getDstPath());
     FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
-    fileDiff.setSrc(renameEvent.getSrcPath());
-    fileDiff.getParameters().put("-dest",
-        renameEvent.getDstPath());
-    metaStore.insertFileDiff(fileDiff);
+    if (inBackup(renameEvent.getSrcPath())) {
+      fileDiff.setSrc(renameEvent.getSrcPath());
+      fileDiff.getParameters().put("-dest",
+          renameEvent.getDstPath());
+      metaStore.insertFileDiff(fileDiff);
+      // TODO backup src and dest joint
+    }
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}",
           renameEvent.getSrcPath(), renameEvent.getDstPath());
     }
-
     FileInfo info = metaStore.getFile(renameEvent.getSrcPath());
     if (info == null) {
       if (status != null) {

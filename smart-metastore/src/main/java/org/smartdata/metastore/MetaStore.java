@@ -68,15 +68,16 @@ import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.dao.EmptyResultDataAccessException;
 
-import javax.swing.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
 
@@ -93,6 +94,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private Map<Integer, String> mapStoragePolicyIdName = null;
   private Map<String, Integer> mapStoragePolicyNameId = null;
   private Map<String, StorageCapacity> mapStorageCapacity = null;
+  private Set<String> setBackSrc = null;
   private RuleDao ruleDao;
   private CmdletDao cmdletDao;
   private ActionDao actionDao;
@@ -1355,6 +1357,18 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public boolean srcInbackup(String src) throws MetaStoreException {
+    if (setBackSrc == null) {
+      setBackSrc = new HashSet<>();
+      List<BackUpInfo> backUpInfos = listAllBackUpInfo();
+      for (BackUpInfo backUpInfo:backUpInfos) {
+        setBackSrc.add(backUpInfo.getSrc());
+      }
+      return setBackSrc.contains(src);
+    }
+    return setBackSrc.contains(src);
+  }
+
   public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
       return backUpInfoDao.getByRid(rid);
@@ -1368,14 +1382,19 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteAllBackUpInfo() throws MetaStoreException {
     try {
       backUpInfoDao.deleteAll();
+      setBackSrc.clear();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public void deleteBackUpInfoById(long id) throws MetaStoreException {
+  public void deleteBackUpInfo(long rid) throws MetaStoreException {
     try {
-      backUpInfoDao.delete(id);
+      BackUpInfo backUpInfo = getBackUpInfo(rid);
+      if (backUpInfoDao.getBySrc(backUpInfo.getSrc()).size() == 1) {
+        setBackSrc.remove(backUpInfo.getSrc());
+      }
+      backUpInfoDao.delete(rid);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1385,6 +1404,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       BackUpInfo backUpInfo) throws MetaStoreException {
     try {
       backUpInfoDao.insert(backUpInfo);
+      setBackSrc.add(backUpInfo.getSrc());
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

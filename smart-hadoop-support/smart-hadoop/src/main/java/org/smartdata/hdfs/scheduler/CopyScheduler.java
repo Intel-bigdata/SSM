@@ -51,8 +51,11 @@ public class CopyScheduler extends ActionSchedulerService {
   private ScheduledExecutorService executorService;
   // Global variables
   private MetaStore metaStore;
+  // <File path, file diff id>
   private Map<String, Long> fileLock;
+  // <actionId, file diff id>
   private Map<Long, Long> actionDiffMap;
+  // <File path, FileChain object>
   private Map<String, ScheduleTask.FileChain> fileChainMap;
 
 
@@ -234,7 +237,11 @@ public class CopyScheduler extends ActionSchedulerService {
       for (FileDiff fileDiff : fileDiffs) {
         FileChain fileChain;
         String src = fileDiff.getSrc();
-        fileDiffBatch.put(fileDiff.getDiffId(), fileDiff);
+        // Skip applying file diffs
+        if (actionDiffMap.containsValue(fileDiff.getDiffId())) {
+          continue;
+        }
+        // fileDiffBatch.put(fileDiff.getDiffId(), fileDiff);
         // Get or create fileChain
         if (fileChainMap.containsKey(src)) {
           fileChain = fileChainMap.get(src);

@@ -95,9 +95,11 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
         List<BackUpInfo> infos = backups.get(ruleId);
         synchronized (infos) {
           try {
-            // Trigger forceSync
-            forceSync(dirs, dest);
-            metaStore.deleteBackUpInfoById(ruleId);
+            // clear current file_diff
+            metaStore.deleteAllFileDiff();
+            // Trigger baseSync
+            baseSync(dirs, dest);
+            metaStore.deleteBackUpInfo(ruleId);
             metaStore.insertBackUpInfo(backUpInfo);
             infos.add(backUpInfo);
           } catch (MetaStoreException e) {
@@ -109,7 +111,7 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
     }
   }
 
-  private void forceSync(String src, String dest) throws MetaStoreException {
+  private void baseSync(String src, String dest) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(src);
     for (FileInfo fileInfo : srcFiles) {
       if (fileInfo.isdir()) {
@@ -204,7 +206,7 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
 
         if (infos.size() == 0) {
           backups.remove(ruleId);
-          metaStore.deleteBackUpInfoById(ruleId);
+          metaStore.deleteBackUpInfo(ruleId);
         }
       } catch (MetaStoreException e) {
         LOG.error("Remove backup info error:" + ruleInfo, e);
