@@ -240,7 +240,7 @@ public class MetaStoreUtils {
             "  create_time bigint(20) NOT NULL,\n" +
             "  finished tinyint(4) NOT NULL,\n" +
             "  finish_time bigint(20) NOT NULL,\n" +
-            "  progress INTEGER NOT NULL\n" +
+            "  progress float NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE file_diff (\n" +
