@@ -102,32 +102,27 @@ public class InotifyEventApplier {
   }
 
   //Todo: times and ec policy id, etc.
-  private String getCreateSql(Event.CreateEvent createEvent) throws IOException {
+  private String getCreateSql(Event.CreateEvent createEvent) throws IOException, MetaStoreException {
     HdfsFileStatus fileStatus = client.getFileInfo(createEvent.getPath());
     if (fileStatus == null) {
       LOG.debug("Can not get HdfsFileStatus for file " + createEvent.getPath());
       return "";
     }
     FileInfo fileInfo = HadoopUtil.convertFileStatus(fileStatus, createEvent.getPath());
-    try {
-      if (inBackup(fileInfo.getPath())) {
-        if (!fileInfo.isdir()) {
-          // ignore dir
-          FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
-          fileDiff.setSrc(fileInfo.getPath());
-          fileDiff.getParameters().put("-offset", String.valueOf(0));
-          // Note that "-length 0" means create an empty file
-          fileDiff.getParameters()
-              .put("-length", String.valueOf(fileInfo.getLength()));
-          metaStore.insertFileDiff(fileDiff);
-        }
-        metaStore.insertFile(fileInfo);
+    if (inBackup(fileInfo.getPath())) {
+      if (!fileInfo.isdir()) {
+        // ignore dir
+        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+        fileDiff.setSrc(fileInfo.getPath());
+        fileDiff.getParameters().put("-offset", String.valueOf(0));
+        // Note that "-length 0" means create an empty file
+        fileDiff.getParameters()
+            .put("-length", String.valueOf(fileInfo.getLength()));
+        metaStore.insertFileDiff(fileDiff);
       }
-      return "";
-    } catch (MetaStoreException e) {
-      LOG.error("Insert new created file " + fileInfo.getPath() + " error.", e);
-      throw new IOException(e);
+      metaStore.insertFile(fileInfo);
     }
+    return "";
   }
 
   private boolean inBackup(String src) throws MetaStoreException {
@@ -138,30 +133,25 @@ public class InotifyEventApplier {
   }
 
   //Todo: should update mtime? atime?
-  private String getCloseSql(Event.CloseEvent closeEvent) throws IOException {
+  private String getCloseSql(Event.CloseEvent closeEvent) throws IOException, MetaStoreException {
     FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
     fileDiff.setSrc(closeEvent.getPath());
     long newLen = closeEvent.getFileSize();
     long currLen = 0l;
     // TODO make sure offset is correct
-    try {
-      if (inBackup(closeEvent.getPath())) {
-        FileInfo fileInfo = metaStore.getFile(closeEvent.getPath());
-        if (fileInfo == null) {
-          currLen = 0;
-        } else {
-          currLen = fileInfo.getLength();
-        }
-        if (currLen != newLen) {
-          fileDiff.getParameters().put("-offset", String.valueOf(currLen));
-          fileDiff.getParameters()
-              .put("-length", String.valueOf(newLen - currLen));
-          metaStore.insertFileDiff(fileDiff);
-        }
+    if (inBackup(closeEvent.getPath())) {
+      FileInfo fileInfo = metaStore.getFile(closeEvent.getPath());
+      if (fileInfo == null) {
+        currLen = 0;
+      } else {
+        currLen = fileInfo.getLength();
       }
-    } catch (MetaStoreException e) {
-      LOG.error("Insert file diff " + fileDiff.getSrc() + " error.", e);
-      throw new IOException(e);
+      if (currLen != newLen) {
+        fileDiff.getParameters().put("-offset", String.valueOf(currLen));
+        fileDiff.getParameters()
+            .put("-length", String.valueOf(newLen - currLen));
+        metaStore.insertFileDiff(fileDiff);
+      }
     }
     return String.format(
         "UPDATE file SET length = %s, modification_time = %s WHERE path = '%s';",
@@ -185,7 +175,6 @@ public class InotifyEventApplier {
       fileDiff.getParameters().put("-dest",
           renameEvent.getDstPath());
       metaStore.insertFileDiff(fileDiff);
-      // TODO backup src and dest joint
     }
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}",
@@ -208,21 +197,40 @@ public class InotifyEventApplier {
     return ret;
   }
 
-  private String getMetaDataUpdateSql(Event.MetadataUpdateEvent metadataUpdateEvent) {
+  private String getMetaDataUpdateSql(Event.MetadataUpdateEvent metadataUpdateEvent) throws MetaStoreException {
+
+    FileDiff fileDiff = null;
+    if (inBackup(metadataUpdateEvent.getPath())) {
+      fileDiff = new FileDiff(FileDiffType.METADATA);
+      fileDiff.setSrc(metadataUpdateEvent.getPath());
+    }
     switch (metadataUpdateEvent.getMetadataType()) {
       case TIMES:
         if (metadataUpdateEvent.getMtime() > 0 && metadataUpdateEvent.getAtime() > 0) {
+          if (fileDiff != null) {
+            fileDiff.getParameters().put("modification_time", "" + metadataUpdateEvent.getMtime());
+            fileDiff.getParameters().put("access_time", "" + metadataUpdateEvent.getMtime());
+            metaStore.insertFileDiff(fileDiff);
+          }
           return String.format(
             "UPDATE file SET modification_time = %s, access_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getMtime(),
             metadataUpdateEvent.getAtime(),
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getMtime() > 0) {
+          if (fileDiff != null) {
+            fileDiff.getParameters().put("modification_time", "" + metadataUpdateEvent.getMtime());
+            metaStore.insertFileDiff(fileDiff);
+          }
           return String.format(
             "UPDATE file SET modification_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getMtime(),
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getAtime() > 0) {
+          if (fileDiff != null) {
+            fileDiff.getParameters().put("access_time", "" + metadataUpdateEvent.getMtime());
+            metaStore.insertFileDiff(fileDiff);
+          }
           return String.format(
             "UPDATE file SET access_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getAtime(),
@@ -234,10 +242,18 @@ public class InotifyEventApplier {
         //Todo
         break;
       case PERMS:
+        if (fileDiff != null) {
+          fileDiff.getParameters().put("permission", "" + metadataUpdateEvent.getPerms().toShort());
+          metaStore.insertFileDiff(fileDiff);
+        }
         return String.format(
             "UPDATE file SET permission = %s WHERE path = '%s';",
             metadataUpdateEvent.getPerms().toShort(), metadataUpdateEvent.getPath());
       case REPLICATION:
+        if (fileDiff != null) {
+          fileDiff.getParameters().put("block_replication", "" + metadataUpdateEvent.getReplication());
+          metaStore.insertFileDiff(fileDiff);
+        }
         return String.format(
             "UPDATE file SET block_replication = %s WHERE path = '%s';",
             metadataUpdateEvent.getReplication(), metadataUpdateEvent.getPath());
