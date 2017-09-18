@@ -70,6 +70,7 @@
     <gson.version>2.2</gson.version>
     <test.build.dir>${project.build.directory}/test-dir</test.build.dir>
     <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
+    <kerby.version>1.0.1</kerby.version>
   </properties>
 
   <profiles>
