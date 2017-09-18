@@ -21,6 +21,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
@@ -30,11 +31,13 @@ import java.util.List;
 
 public class TestRuleExecutor extends TestDaoUtil {
   private MetaStoreHelper metaStoreHelper;
+  private MetaStore adapter;
 
   @Before
   public void initActionDao() throws Exception {
     initDao();
     metaStoreHelper = new MetaStoreHelper(druidPool.getDataSource());
+    adapter = new MetaStore(druidPool);
   }
 
   @After
@@ -57,7 +60,7 @@ public class TestRuleExecutor extends TestDaoUtil {
     metaStoreHelper.execute(sql);
     metaStoreHelper.dropTable("actual");*/
     // Test single element
-    sql = RuleExecutor.generateSQL(tableNames, newTable, countFilter);
+    sql = RuleExecutor.generateSQL(tableNames, newTable, countFilter, adapter);
     try {
       metaStoreHelper.execute(sql);
       metaStoreHelper.dropTable(newTable);
@@ -66,7 +69,7 @@ public class TestRuleExecutor extends TestDaoUtil {
     }
     // Test multiple elements
     tableNames.add("blank_access_count_info");
-    sql = RuleExecutor.generateSQL(tableNames, newTable, countFilter);
+    sql = RuleExecutor.generateSQL(tableNames, newTable, countFilter, adapter);
     try {
       metaStoreHelper.execute(sql);
       metaStoreHelper.dropTable(newTable);
