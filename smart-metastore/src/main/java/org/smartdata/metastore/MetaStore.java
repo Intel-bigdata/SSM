@@ -1391,10 +1391,12 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteBackUpInfo(long rid) throws MetaStoreException {
     try {
       BackUpInfo backUpInfo = getBackUpInfo(rid);
-      if (backUpInfoDao.getBySrc(backUpInfo.getSrc()).size() == 1) {
-        setBackSrc.remove(backUpInfo.getSrc());
+      if (backUpInfo != null) {
+        if (backUpInfoDao.getBySrc(backUpInfo.getSrc()).size() == 1) {
+          setBackSrc.remove(backUpInfo.getSrc());
+        }
+        backUpInfoDao.delete(rid);
       }
-      backUpInfoDao.delete(rid);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
