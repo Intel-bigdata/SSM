@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
+import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.inotify.Event;
@@ -26,6 +27,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
@@ -161,7 +163,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Assert.assertTrue(actualPaths.containsAll(expectedPaths));
 
     Event unlink = new Event.UnlinkEvent.Builder().path("/").timestamp(6).build();
-    applier.apply(new Event[] {unlink});
+    applier.apply(new Event[]{unlink});
     Assert.assertFalse(metaStore.getFile().size() > 0);
 
     List<FileDiff> fileDiffList = metaStore.getPendingDiff();
@@ -169,11 +171,45 @@ public class TestInotifyEventApplier extends TestDaoUtil {
   }
 
   @Test
+  public void testApplierCreateEvent() throws Exception {
+    DFSClient client = Mockito.mock(DFSClient.class);
+    InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
+
+    HdfsFileStatus status1 =
+        new HdfsFileStatus(
+            0,
+            false,
+            1,
+            123,
+            0,
+            0,
+            new FsPermission("777"),
+            "test",
+            "group",
+            new byte[0],
+            new byte[0],
+            1010,
+            0,
+            null,
+            (byte) 0);
+    Mockito.when(client.getFileInfo("/file1")).thenReturn(status1);
+
+    List<Event> events = new ArrayList<>();
+    Event.CreateEvent createEvent = new Event.CreateEvent.Builder().path("/file1").defaultBlockSize(123).ownerName("test")
+        .replication(2).perms(new FsPermission(FsAction.NONE, FsAction.NONE, FsAction.NONE)).build();
+    events.add(createEvent);
+    Mockito.when(client.getFileInfo("/file1")).thenReturn(status1);
+    applier.apply(events);
+
+    Assert.assertTrue(metaStore.getFile("/file1").getOwner().equals("test"));
+  }
+
+  @Test
   public void testApplierRenameEvent() throws Exception {
     DFSClient client = Mockito.mock(DFSClient.class);
     InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
 
-    FileInfo[] fileInfos = new FileInfo[] {
+    FileInfo[] fileInfos = new FileInfo[]{
         HadoopUtil.convertFileStatus(getDummyFileStatus("/dirfile", 7000), "/dirfile"),
         HadoopUtil.convertFileStatus(getDummyDirStatus("/dir", 8000), "/dir"),
         HadoopUtil.convertFileStatus(getDummyFileStatus("/dir/file1", 8001), "/dir/file1"),
