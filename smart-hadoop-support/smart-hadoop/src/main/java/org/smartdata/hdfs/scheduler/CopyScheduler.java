@@ -246,7 +246,6 @@ public class CopyScheduler extends ActionSchedulerService {
           fileChain.tail = src;
           // Remove key in map
           fileChain.clear();
-          // fileChainMap.remove(src);
         }
         // Add file diff to fileChain
         fileChain.fileDiffChain.add(fileDiff.getDiffId());
