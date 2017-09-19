@@ -23,7 +23,7 @@ public enum FileDiffType {
   DELETE(1),
   RENAME(2),
   APPEND(3),
-  MODIFY(4);
+  METADATA(4);
 
   private int value;
 
