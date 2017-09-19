@@ -1364,11 +1364,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       for (BackUpInfo backUpInfo : backUpInfos) {
         setBackSrc.add(backUpInfo.getSrc());
       }
-      LOG.info("Backup src = {}, result {}", src, setBackSrc.contains(src));
-      return setBackSrc.contains(src);
     }
-    LOG.info("Backup src = {}, result {}", src, setBackSrc.contains(src));
-    return setBackSrc.contains(src);
+    LOG.info("Backup src = {}, setBackSrc {}", src, setBackSrc);
+    for (String srcDir : setBackSrc) {
+      if (src.startsWith(srcDir)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
