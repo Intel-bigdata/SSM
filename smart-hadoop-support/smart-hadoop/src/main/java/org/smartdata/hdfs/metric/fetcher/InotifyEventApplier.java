@@ -121,8 +121,8 @@ public class InotifyEventApplier {
         // TODO add metadata according to HadoopUtil.convertFileStatus
         metaStore.insertFileDiff(fileDiff);
       }
-      metaStore.insertFile(fileInfo);
     }
+    metaStore.insertFile(fileInfo);
     return "";
   }
 
@@ -285,9 +285,11 @@ public class InotifyEventApplier {
   }
 
   private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) throws MetaStoreException {
-    FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
-    fileDiff.setSrc(unlinkEvent.getPath());
-    metaStore.insertFileDiff(fileDiff);
+    if (inBackup(unlinkEvent.getPath())) {
+      FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+      fileDiff.setSrc(unlinkEvent.getPath());
+      metaStore.insertFileDiff(fileDiff);
+    }
     return Arrays.asList(String.format("DELETE FROM file WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
   }
 }

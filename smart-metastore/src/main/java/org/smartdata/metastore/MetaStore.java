@@ -1404,6 +1404,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       BackUpInfo backUpInfo) throws MetaStoreException {
     try {
       backUpInfoDao.insert(backUpInfo);
+      if (setBackSrc == null) {
+        setBackSrc = new HashSet<>();
+      }
       setBackSrc.add(backUpInfo.getSrc());
     } catch (Exception e) {
       throw new MetaStoreException(e);

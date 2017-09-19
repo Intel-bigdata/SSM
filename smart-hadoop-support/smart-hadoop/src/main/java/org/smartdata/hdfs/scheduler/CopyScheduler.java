@@ -189,27 +189,6 @@ public class CopyScheduler extends ActionSchedulerService {
 
     private Map<Long, FileDiff> fileDiffBatch;
 
-    // private void syncActions() {
-    //   for (Iterator<Map.Entry<Long, Long>> it = actionDiffMap.entrySet().iterator(); it.hasNext();) {
-    //     Map.Entry<Long, Long> entry = it.next();
-    //     try {
-    //       ActionInfo actionInfo = metaStore.getActionById(entry.getKey());
-    //       if(actionInfo.isFinished()) {
-    //         metaStore.markFileDiffApplied(entry.getValue(), FileDiffState.APPLIED);
-    //         FileDiff fileDiff = metaStore.getFileDiff(entry.getValue());
-    //         // Remove lock
-    //         fileLock.remove(fileDiff.getSrc());
-    //         // Add to pending list
-    //         fileChainMap.get(fileDiff.getSrc()).addTopRunning();
-    //         it.remove();
-    //       }
-    //     } catch (MetaStoreException e) {
-    //       LOG.error("Sync diff actions status fails, key " + entry.getKey() +
-    //           " value " + entry.getValue(), e);
-    //     }
-    //   }
-    // }
-
     private void syncFileDiff() {
       fileDiffBatch = new HashMap<>();
       List<FileDiff> pendingDiffs = null;
@@ -306,9 +285,6 @@ public class CopyScheduler extends ActionSchedulerService {
 
     @Override
     public void run() {
-      // syncActions();
-      // Sync backup rules
-      // Sync/schedule file diffs
       syncFileDiff();
       addToRunning();
     }
