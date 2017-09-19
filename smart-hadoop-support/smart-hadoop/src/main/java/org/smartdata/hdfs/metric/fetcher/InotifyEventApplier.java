@@ -126,6 +126,7 @@ public class InotifyEventApplier {
         fileDiff.getParameters().put("-access_time", "" + fileInfo.getAccess_time());
         //add owner to filediff
         fileDiff.getParameters().put("-owner", "" + fileInfo.getOwner());
+        fileDiff.getParameters().put("-group", "" + fileInfo.getGroup());
         //add Permission to filediff
         fileDiff.getParameters().put("-permission", "" + fileInfo.getPermission());
         //add replication count to file diff
