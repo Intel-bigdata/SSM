@@ -685,7 +685,8 @@ public class TestMetaStore extends TestDaoUtil {
   public void testDeleteBackUpInfo() throws MetaStoreException {
     BackUpInfo backUpInfo1 = new BackUpInfo(1, "test1", "test1", 1);
     metaStore.insertBackUpInfo(backUpInfo1);
-
+    Assert.assertTrue(metaStore.srcInbackup("test1/dfafdsaf"));
+    Assert.assertFalse(metaStore.srcInbackup("test2"));
     metaStore.deleteBackUpInfo(1);
 
     Assert.assertTrue(metaStore.listAllBackUpInfo().size() == 0);
