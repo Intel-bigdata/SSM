@@ -5,9 +5,9 @@
     <!--<entry key="username"></entry>-->
     <!--<entry key="password"></entry>-->
 
-    <entry key="initialSize">10</entry>
-    <entry key="minIdle">4</entry>
-    <entry key="maxActive">50</entry>
+    <entry key="initialSize">1</entry>
+    <entry key="minIdle">1</entry>
+    <entry key="maxActive">1</entry>
 
     <entry key="maxWait">60000</entry>
     <entry key="timeBetweenEvictionRunsMillis">90000</entry>
