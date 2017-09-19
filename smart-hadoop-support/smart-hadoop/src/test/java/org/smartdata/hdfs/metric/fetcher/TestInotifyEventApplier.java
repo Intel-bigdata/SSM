@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileInfo;
 
@@ -53,6 +54,9 @@ public class TestInotifyEventApplier extends TestDaoUtil {
   @Test
   public void testApplier() throws Exception {
     DFSClient client = Mockito.mock(DFSClient.class);
+
+    BackUpInfo backUpInfo = new BackUpInfo(1L, "/file", "remote/dest/", 10);
+    metaStore.insertBackUpInfo(backUpInfo);
     InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
 
     Event.CreateEvent createEvent =
@@ -161,7 +165,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Assert.assertFalse(metaStore.getFile().size() > 0);
 
     List<FileDiff> fileDiffList = metaStore.getPendingDiff();
-    Assert.assertTrue(fileDiffList.size() == 4);
+    Assert.assertTrue(fileDiffList.size() == 3);
   }
 
   @Test
