@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.model.BackUpInfo;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.List;
 
@@ -52,6 +53,22 @@ public class TestBackUpInfoDao extends TestDaoUtil {
     backUpInfoDao.insert(backUpInfo);
 
     Assert.assertTrue(backUpInfoDao.getByRid(1).equals(backUpInfo));
+  }
+
+  @Test
+  public void testDelete() {
+    backUpInfoDao.delete(1L);
+    BackUpInfo[] backUpInfos = new BackUpInfo[2];
+    backUpInfos[0] = new BackUpInfo(1, "test", "test", 1);
+    backUpInfos[1] = new BackUpInfo(2, "test", "test", 1);
+
+    backUpInfoDao.insert(backUpInfos);
+    backUpInfoDao.delete(1L);
+    Assert.assertTrue(backUpInfoDao.getByRid(2).equals(backUpInfos[1]));
+    try {
+      backUpInfoDao.getByRid(1);
+    } catch (EmptyResultDataAccessException e) {
+    }
   }
 
   @Test
