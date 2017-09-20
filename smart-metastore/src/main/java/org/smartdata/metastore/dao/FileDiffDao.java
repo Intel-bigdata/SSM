@@ -97,6 +97,13 @@ public class FileDiffDao {
         new FileDiffRowMapper());
   }
 
+  public List<FileDiff> getByFileName(String fileName) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE src = ?",
+        new Object[]{fileName}, new FileDiffRowMapper());
+  }
+
+
   public List<String> getSyncPath(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     if (size != 0) {
