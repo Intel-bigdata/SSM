@@ -25,9 +25,8 @@ import org.smartdata.SmartContext;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.MoveFileAction;
-import org.smartdata.hdfs.action.move.MoverStatus;
 import org.smartdata.hdfs.metric.fetcher.DatanodeStorageReportProcTask;
-import org.smartdata.hdfs.metric.fetcher.MoverProcessor;
+import org.smartdata.hdfs.metric.fetcher.MovePlanMaker;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
@@ -46,8 +45,8 @@ import java.util.concurrent.TimeUnit;
 
 public class MoverScheduler extends ActionSchedulerService {
   private DFSClient client;
-  private MoverStatus moverStatus;
-  private MoverProcessor processor;
+  private MovePlanStatistics statistics;
+  private MovePlanMaker planMaker;
   private URI nnUri;
   private long dnInfoUpdateInterval = 2 * 60 * 1000;
   private ScheduledExecutorService updateService;
@@ -64,7 +63,7 @@ public class MoverScheduler extends ActionSchedulerService {
 
   public void init() throws IOException {
     this.client = new DFSClient(nnUri, getContext().getConf());
-    moverStatus = new MoverStatus();
+    statistics = new MovePlanStatistics();
     updateService = Executors.newScheduledThreadPool(1);
   }
 
@@ -78,7 +77,7 @@ public class MoverScheduler extends ActionSchedulerService {
     DatanodeStorageReportProcTask task =
         new DatanodeStorageReportProcTask(client, getContext().getConf());
     task.run();
-    processor = new MoverProcessor(client, task.getStorages(), task.getNetworkTopology(), moverStatus);
+    planMaker = new MovePlanMaker(client, task.getStorages(), task.getNetworkTopology(), statistics);
 
     updateServiceFuture = updateService.scheduleAtFixedRate(
         new UpdateClusterInfoTask(task),
@@ -125,7 +124,7 @@ public class MoverScheduler extends ActionSchedulerService {
 
     try {
       client.setStoragePolicy(file, policy);
-      FileMovePlan plan = processor.processNamespace(new Path(file));
+      FileMovePlan plan = planMaker.processNamespace(new Path(file));
       plan.setNamenode(nnUri);
       action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
       return ScheduleResult.SUCCESS;
@@ -159,7 +158,7 @@ public class MoverScheduler extends ActionSchedulerService {
     @Override
     public void run() {
       task.run();
-      processor.updateClusterInfo(task.getStorages(), task.getNetworkTopology());
+      planMaker.updateClusterInfo(task.getStorages(), task.getNetworkTopology());
     }
   }
 }

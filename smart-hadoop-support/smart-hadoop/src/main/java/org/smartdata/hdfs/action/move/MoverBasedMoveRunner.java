@@ -51,7 +51,7 @@ public class MoverBasedMoveRunner {
   public void move(String file, FileMovePlan plan) throws Exception {
     int maxMoves = plan.getPropertyValueInt(FileMovePlan.MAX_CONCURRENT_MOVES, 10);
     int maxRetries = plan.getPropertyValueInt(FileMovePlan.MAX_NUM_RETRIES, 10);
-    MoverExecutor executor = new MoverExecutor(conf, maxRetries, maxMoves);
+    MoverExecutor executor = new MoverExecutor(actionStatus, conf, maxRetries, maxMoves);
     executor.executeMove(plan);
   }
 }
