@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.action;
 
+import com.alibaba.druid.sql.dialect.oracle.ast.clause.OracleWithSubqueryEntry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -50,8 +51,56 @@ public class MetaFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(MetaFileAction.class);
   public static final String OWNER_NAME = "-owername";
   public static final String GROUP_NAME = "-groupname";
-  private String srcPath;
+  public static final String BLOCK_REPLICATION = "-replication";
+  public static final String PERMISSION = "-permission";
+  public static final String MTIME = "-mtime";
+  public static final String ATIME = "-atime";
 
+  private String srcPath;
+  private String ownerName;
+  private String groupName;
+  private short replication;
+  private short permission;
+  private long aTime;
+  private long mTime;
+
+
+  @Override
+  public void init(Map<String, String> args) {
+    super.init(args);
+    srcPath = args.get(FILE_PATH);
+
+    ownerName = null;
+    groupName = null;
+    replication = -1;
+    permission = -1;
+    aTime = -1;
+    mTime = -1;
+
+    if (args.containsKey(OWNER_NAME)) {
+      this.ownerName = args.get(OWNER_NAME);
+    }
+
+    if (args.containsKey(GROUP_NAME)) {
+      this.groupName = args.get(GROUP_NAME);
+    }
+
+    if (args.containsKey(BLOCK_REPLICATION)){
+      this.replication = Short.parseShort(args.get(BLOCK_REPLICATION));
+    }
+
+    if (args.containsKey(PERMISSION)) {
+      this.permission = Short.parseShort(args.get(PERMISSION));
+    }
+
+    if (args.containsKey(MTIME)) {
+      this.mTime = Long.parseLong(args.get(MTIME));
+    }
+
+    if (args.containsKey(ATIME)) {
+      this.aTime = Long.parseLong(args.get(ATIME));
+    }
+  }
 
   @Override
   protected void execute() throws Exception {
@@ -59,7 +108,9 @@ public class MetaFileAction extends HdfsAction {
       throw new IllegalArgumentException("File src is missing.");
     }
 
+    FileInfo fileInfo = new FileInfo(srcPath, 0, 0, false, replication, 0, mTime, aTime, permission, ownerName, groupName, (byte) 1);
 
+    changeFileMetaData(srcPath, fileInfo);
   }
 
   private boolean changeFileMetaData(String srcFile, FileInfo fileInfo) throws IOException {
@@ -94,6 +145,7 @@ public class MetaFileAction extends HdfsAction {
         fs.setTimes(new Path(srcFile), fileInfo.getModification_time()
             , fs.getFileStatus(new Path(srcFile)).getAccessTime());
       }
+
 
       
 
