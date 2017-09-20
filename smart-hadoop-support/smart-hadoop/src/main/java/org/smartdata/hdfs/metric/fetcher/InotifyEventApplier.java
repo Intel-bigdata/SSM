@@ -109,8 +109,10 @@ public class InotifyEventApplier {
       return "";
     }
     FileInfo fileInfo = HadoopUtil.convertFileStatus(fileStatus, createEvent.getPath());
+
     if (inBackup(fileInfo.getPath())) {
       if (!fileInfo.isdir()) {
+
         // ignore dir
         FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
         fileDiff.setSrc(fileInfo.getPath());
@@ -118,7 +120,17 @@ public class InotifyEventApplier {
         // Note that "-length 0" means create an empty file
         fileDiff.getParameters()
             .put("-length", String.valueOf(fileInfo.getLength()));
-        // TODO add metadata according to HadoopUtil.convertFileStatus
+
+        //add modification_time and access_time to filediff
+        fileDiff.getParameters().put("-modification_time", "" + fileInfo.getModification_time());
+        fileDiff.getParameters().put("-access_time", "" + fileInfo.getAccess_time());
+        //add owner to filediff
+        fileDiff.getParameters().put("-owner", "" + fileInfo.getOwner());
+        fileDiff.getParameters().put("-group", "" + fileInfo.getGroup());
+        //add Permission to filediff
+        fileDiff.getParameters().put("-permission", "" + fileInfo.getPermission());
+        //add replication count to file diff
+        fileDiff.getParameters().put("-block_replication", "" + fileInfo.getBlock_replication());
         metaStore.insertFileDiff(fileDiff);
       }
     }
@@ -211,7 +223,7 @@ public class InotifyEventApplier {
         if (metadataUpdateEvent.getMtime() > 0 && metadataUpdateEvent.getAtime() > 0) {
           if (fileDiff != null) {
             fileDiff.getParameters().put("-modification_time", "" + metadataUpdateEvent.getMtime());
-            fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getMtime());
+            fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getAtime());
             metaStore.insertFileDiff(fileDiff);
           }
           return String.format(
@@ -230,7 +242,7 @@ public class InotifyEventApplier {
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getAtime() > 0) {
           if (fileDiff != null) {
-            fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getMtime());
+            fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getAtime());
             metaStore.insertFileDiff(fileDiff);
           }
           return String.format(
