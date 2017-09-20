@@ -17,12 +17,18 @@
  */
 package org.smartdata.server.engine.data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.server.engine.data.net.NetUtil;
 import org.smartdata.server.engine.data.net.Peer;
 import org.smartdata.server.engine.data.net.PeerServer;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DataXceiverServer implements Runnable {
   private final PeerServer peerServer;
@@ -30,28 +36,48 @@ public class DataXceiverServer implements Runnable {
   private SmartConf conf;
   ThreadGroup threadGroup = null;
 
-  public DataXceiverServer(SmartConf conf, PeerServer peerServer) {
+  private final Map<Peer, Thread> peers = new HashMap<>();
+  private static final Logger LOG = LoggerFactory.getLogger(DataXceiverServer.class);
+
+  public DataXceiverServer(SmartConf conf, PeerServer peerServer, ThreadGroup threadGroup) {
     this.conf = conf;
     this.peerServer = peerServer;
+    this.threadGroup = threadGroup;
     maxNumHandler = conf.getInt(SmartConfKeys.SMART_AGENT_MAX_DATA_HANDLER_COUNT_KEY,
         SmartConfKeys.SMART_AGNET_MAX_DATA_HANDLER_COUNT_DEFAULT);
   }
 
   public void initServer() {
-    threadGroup = new ThreadGroup("dataXceiverServer");
-    threadGroup.setDaemon(true); // auto destroy when empty
   }
 
 
   @Override
   public void run() {
     Peer peer = null;
-    while (true) {
+    boolean closed = false;
+    while (!closed) {
       try {
         peer = peerServer.accept();
-      } catch (IOException e) {
+        int activeCount = threadGroup.activeCount();
+        if (activeCount > maxNumHandler) {
+          throw new IOException("Active handlers exceeds the maximum limit " + maxNumHandler);
+        }
 
+      } catch (SocketTimeoutException e) {
+      } catch (IOException e) {
+        NetUtil.cleanup(LOG, peer);
+      } catch (OutOfMemoryError e) {
+        NetUtil.cleanup(LOG, peer);
+      } catch (Throwable t) {
+        LOG.error("Error happened:", t);
+        closed = true;
       }
+    }
+
+    try {
+      peerServer.close();
+    } catch (IOException e) {
+      LOG.warn("Exception while closing ", e);
     }
   }
 }

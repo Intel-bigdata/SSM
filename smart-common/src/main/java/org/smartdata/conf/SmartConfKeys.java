@@ -81,6 +81,8 @@ public class SmartConfKeys {
   public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
   public final static String SMART_AGENT_MAX_DATA_HANDLER_COUNT_KEY = "smart.agent.max.data.handler.count";
   public final static int SMART_AGNET_MAX_DATA_HANDLER_COUNT_DEFAULT = 2048;
+  public final static String SMART_AGENT_DATA_SERVER_PORT_KEY = "smart.agent.data.server.port";
+  public final static int SMART_AGENT_DATA_SERVER_PORT_DEFAULT = 7050;
 
   // SmartClient
   // Comma delimited directories, access event of files under these directories will not be reported to SSM.
