@@ -131,7 +131,6 @@ public class InotifyEventApplier {
         fileDiff.getParameters().put("-permission", "" + fileInfo.getPermission());
         //add replication count to file diff
         fileDiff.getParameters().put("-block_replication", "" + fileInfo.getBlock_replication());
-
         metaStore.insertFileDiff(fileDiff);
       }
     }

@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,6 +35,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.TestDaoUtil;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
 import java.util.ArrayList;
@@ -175,11 +177,14 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     DFSClient client = Mockito.mock(DFSClient.class);
     InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
 
+    BackUpInfo backUpInfo = new BackUpInfo(1L, "/file1", "remote/dest/", 10);
+    metaStore.insertBackUpInfo(backUpInfo);
+
     HdfsFileStatus status1 =
         new HdfsFileStatus(
             0,
             false,
-            1,
+            2,
             123,
             0,
             0,
@@ -202,6 +207,16 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     applier.apply(events);
 
     Assert.assertTrue(metaStore.getFile("/file1").getOwner().equals("test"));
+    //judge file diff
+    List<FileDiff> fileDiffs = metaStore.getFileDiffsByFileName("/file1");
+
+    Assert.assertTrue(fileDiffs.size() > 0);
+    for (FileDiff fileDiff : fileDiffs) {
+      if (fileDiff.getDiffType().equals(FileDiffType.APPEND)) {
+        //find create diff and compare
+        Assert.assertTrue(fileDiff.getParameters().get("-owner").equals("test"));
+      }
+    }
   }
 
   @Test
