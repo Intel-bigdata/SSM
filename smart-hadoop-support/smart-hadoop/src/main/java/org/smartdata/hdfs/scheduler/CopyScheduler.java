@@ -110,6 +110,11 @@ public class CopyScheduler extends ActionSchedulerService {
         action.getArgs().put("-dest", remoteDest.replace(srcDir, destDir));
         fileDiff.getParameters().remove("-dest");
         break;
+      case METADATA:
+        // TODO enable metadata action
+        action.setActionType("metadata");
+        action.getArgs().put("-file", path.replace(srcDir, destDir));
+        break;
       default:
         break;
     }
@@ -254,7 +259,7 @@ public class CopyScheduler extends ActionSchedulerService {
           // }
         } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
           fileChain.tail = src;
-          // Remove key in map
+          // Remove all append and meta diff in chain
           fileChain.clear();
         }
         // Add file diff to fileChain
@@ -262,36 +267,6 @@ public class CopyScheduler extends ActionSchedulerService {
         fileDiffMap.put(fileDiff.getDiffId(), fileDiff);
       }
     }
-
-    /*private void handleFileChain(FileChain fileChain) throws MetaStoreException {
-      List<FileDiff> resultSet = new ArrayList<>();
-      for (Long fid: fileChain.getFileDiffChain()) {
-        // Current append diff
-        FileDiff fileDiff = new FileDiff();
-        fileDiff.setParameters(new HashMap<String, String>());
-        FileDiff currFileDiff = fileDiffBatch.get(fid);
-        // if (currFileDiff.getDiffType() == FileDiffType.APPEND) {
-        //   fileDiff.getParameters().put("-length", currFileDiff.getParameters().get("-length"));
-        // }
-        if (currFileDiff.getDiffType() == FileDiffType.DELETE) {
-          FileDiff deleteFileDiff = new FileDiff();
-          deleteFileDiff.setSrc(currFileDiff.getSrc());
-          resultSet.add(deleteFileDiff);
-        } else if (currFileDiff.getDiffType() == FileDiffType.RENAME) {
-          FileDiff renameFileDiff = new FileDiff();
-          renameFileDiff.setSrc(currFileDiff.getSrc());
-          resultSet.add(renameFileDiff);
-          // Set current append src as renamed src
-          fileDiff.setSrc(currFileDiff.getSrc());
-        }
-        metaStore.markFileDiffApplied(fid, FileDiffState.MERGED);
-      }
-      // copyMetaService.markFileDiffApplied();
-      // Insert file diffs into tables
-      for (FileDiff fileDiff: resultSet) {
-        metaStore.insertFileDiff(fileDiff);
-      }
-    }*/
 
     @Override
     public void run() {
@@ -305,6 +280,8 @@ public class CopyScheduler extends ActionSchedulerService {
 
     private class FileChain {
       private String head;
+      private long currLength;
+      private int currPos;
       private String filePath;
       private String tail;
       private List<Long> fileDiffChain;
@@ -312,6 +289,8 @@ public class CopyScheduler extends ActionSchedulerService {
 
       FileChain() {
         this.fileDiffChain = new ArrayList<>();
+        currLength = 0;
+        currPos = 0;
         this.tail = null;
         this.head = null;
       }
@@ -351,6 +330,20 @@ public class CopyScheduler extends ActionSchedulerService {
       public void merge(FileChain previousChain) {
 
       }
+
+      public void addToChain(FileDiff fileDiff) {
+        if (fileDiff.getDiffType() == FileDiffType.APPEND) {
+          currPos++;
+        }
+
+      }
+
+      private void mergeAppend() {
+
+      }
+
+      private void mergeMeta() {}
+
 
       public long popTop() {
         if (fileDiffChain.size() == 0) {
