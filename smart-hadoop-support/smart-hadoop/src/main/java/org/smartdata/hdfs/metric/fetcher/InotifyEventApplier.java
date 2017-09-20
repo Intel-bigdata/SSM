@@ -297,16 +297,10 @@ public class InotifyEventApplier {
   }
 
   private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) throws MetaStoreException {
-    List<FileInfo> fileInfos = metaStore.getFilesByPrefix(unlinkEvent.getPath());
-    for (FileInfo fileInfo:fileInfos) {
-      if (fileInfo.isdir()) {
-        continue;
-      }
-      if (inBackup(unlinkEvent.getPath())) {
-        FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
-        fileDiff.setSrc(unlinkEvent.getPath());
-        metaStore.insertFileDiff(fileDiff);
-      }
+    if (inBackup(unlinkEvent.getPath())) {
+      FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+      fileDiff.setSrc(unlinkEvent.getPath());
+      metaStore.insertFileDiff(fileDiff);
     }
     return Arrays.asList(String.format("DELETE FROM file WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
   }

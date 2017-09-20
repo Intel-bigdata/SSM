@@ -1369,10 +1369,12 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     if (setBackSrc == null) {
       setBackSrc = new HashSet<>();
       List<BackUpInfo> backUpInfos = listAllBackUpInfo();
-      for (BackUpInfo backUpInfo : backUpInfos) {
+      for (BackUpInfo backUpInfo:backUpInfos) {
         setBackSrc.add(backUpInfo.getSrc());
       }
+      return setBackSrc.contains(src);
     }
+
     // LOG.info("Backup src = {}, setBackSrc {}", src, setBackSrc);
     for (String srcDir : setBackSrc) {
       if (src.startsWith(srcDir)) {
@@ -1404,14 +1406,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteBackUpInfo(long rid) throws MetaStoreException {
     try {
       BackUpInfo backUpInfo = getBackUpInfo(rid);
-      if (backUpInfo != null) {
-        if (backUpInfoDao.getBySrc(backUpInfo.getSrc()).size() == 1) {
-          if (setBackSrc != null) {
-            setBackSrc.remove(backUpInfo.getSrc());
-          }
-        }
-        backUpInfoDao.delete(rid);
+      if (backUpInfoDao.getBySrc(backUpInfo.getSrc()).size() == 1) {
+        setBackSrc.remove(backUpInfo.getSrc());
       }
+      backUpInfoDao.delete(rid);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
