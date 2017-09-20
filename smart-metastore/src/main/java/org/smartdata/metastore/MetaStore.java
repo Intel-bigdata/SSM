@@ -1068,14 +1068,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<FileDiff> getFileDiffsByFileName(String fileName) throws MetaStoreException {
-    try {
-      return fileDiffDao.getByFileName(fileName);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
   public List<FileDiff> getFileDiffs(FileDiffState fileDiffState) throws MetaStoreException {
     try {
       return fileDiffDao.getByState(fileDiffState);
