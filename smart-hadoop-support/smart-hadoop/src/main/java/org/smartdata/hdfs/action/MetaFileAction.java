@@ -18,8 +18,10 @@
 package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +77,26 @@ public class MetaFileAction extends HdfsAction {
         fs.setOwner(new Path(srcFile), fs.getFileStatus(new Path(srcFile)).getOwner(), fileInfo.getGroup());
       }
 
+      if (fileInfo.getBlock_replication() != -1) {
+        fs.setReplication(new Path(srcFile), fileInfo.getBlock_replication());
+      }
+
+      if (fileInfo.getPermission() != -1) {
+        fs.setPermission(new Path(srcFile), new FsPermission(fileInfo.getPermission()));
+      }
+
+      if (fileInfo.getAccess_time() != -1) {
+        fs.setTimes(new Path(srcFile), fs.getFileStatus(new Path(srcFile)).getModificationTime()
+            , fileInfo.getAccess_time());
+      }
+
+      if (fileInfo.getModification_time() != -1) {
+        fs.setTimes(new Path(srcFile), fileInfo.getModification_time()
+            , fs.getFileStatus(new Path(srcFile)).getAccessTime());
+      }
+
+      
+
       return true;
     } else {
 
@@ -82,6 +104,5 @@ public class MetaFileAction extends HdfsAction {
       return true;
     }
 
-    return false;
   }
 }
