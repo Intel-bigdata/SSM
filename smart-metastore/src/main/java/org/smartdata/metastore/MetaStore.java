@@ -1373,7 +1373,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         setBackSrc.add(backUpInfo.getSrc());
       }
     }
-    LOG.info("Backup src = {}, setBackSrc {}", src, setBackSrc);
+    // LOG.info("Backup src = {}, setBackSrc {}", src, setBackSrc);
     for (String srcDir : setBackSrc) {
       if (src.startsWith(srcDir)) {
         return true;

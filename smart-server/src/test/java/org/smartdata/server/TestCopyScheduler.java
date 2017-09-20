@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
@@ -34,33 +35,33 @@ import org.smartdata.server.engine.CmdletManager;
 import java.util.List;
 
 public class TestCopyScheduler extends MiniSmartClusterHarness {
-  // @Test
-  // public void testForceSync() throws Exception {
-  //   waitTillSSMExitSafeMode();
-  //   MetaStore metaStore = ssm.getMetaStore();
-  //   SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-  //   CmdletManager cmdletManager = ssm.getCmdletManager();
-  //   DistributedFileSystem dfs = cluster.getFileSystem();
-  //   final String srcPath = "/src/";
-  //   final String destPath = "/dest/";
-  //   dfs.mkdirs(new Path(srcPath));
-  //   dfs.mkdirs(new Path(destPath));
-  //   // Write to src
-  //   for (int i = 0; i < 3; i++) {
-  //     // Create test files
-  //     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
-  //   }
-  //   // Clear file diffs
-  //   metaStore.deleteAllFileDiff();
-  //   // Submit rules and trigger forceSync
-  //   long ruleId = admin.submitRule(
-  //       "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
-  //       RuleState.ACTIVE);
-  //   Thread.sleep(1000);
-  //   Assert.assertTrue(metaStore.getFileDiffs(FileDiffState.RUNNING).size() > 0);
-  // }
-
  //  @Test
+ //  public void testForceSync() throws Exception {
+ //    waitTillSSMExitSafeMode();
+ //    MetaStore metaStore = ssm.getMetaStore();
+ //    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //    CmdletManager cmdletManager = ssm.getCmdletManager();
+ //    DistributedFileSystem dfs = cluster.getFileSystem();
+ //    final String srcPath = "/src/";
+ //    final String destPath = "/dest/";
+ //    dfs.mkdirs(new Path(srcPath));
+ //    dfs.mkdirs(new Path(destPath));
+ //    // Write to src
+ //    for (int i = 0; i < 3; i++) {
+ //      // Create test files
+ //      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+ //    }
+ //    // Clear file diffs
+ //    metaStore.deleteAllFileDiff();
+ //    // Submit rules and trigger forceSync
+ //    long ruleId = admin.submitRule(
+ //        "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
+ //        RuleState.ACTIVE);
+ //    Thread.sleep(1000);
+ //    Assert.assertTrue(metaStore.getFileDiffs(FileDiffState.RUNNING).size() > 0);
+ //  }
+ //
+ //  @Test (timeout = 60000)
  //  public void testDelete() throws Exception {
  //    waitTillSSMExitSafeMode();
  //    FileDiff fileDiff =
@@ -81,7 +82,7 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
  //        .assertTrue(cmdletManager.listNewCreatedActions("sync", 0).size() > 0);
  //  }
  //
- //  @Test
+ //  @Test (timeout = 60000)
  //  public void testRename() throws Exception {
  //    waitTillSSMExitSafeMode();
  //    FileDiff fileDiff =
@@ -155,6 +156,8 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
  //   DistributedFileSystem dfs = cluster.getFileSystem();
  //   final String srcPath = "/src/";
  //   final String destPath = "/dest/";
+ //   BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
+ //   metaStore.insertBackUpInfo(backUpInfo);
  //   dfs.mkdirs(new Path(srcPath));
  //   dfs.mkdirs(new Path(destPath));
  //   // Write to src
@@ -193,6 +196,8 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
  //   DistributedFileSystem dfs = cluster.getFileSystem();
  //   final String srcPath = "/src/";
  //   final String destPath = "/dest/";
+ //   BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
+ //   metaStore.insertBackUpInfo(backUpInfo);
  //   dfs.mkdirs(new Path(srcPath));
  //   dfs.mkdirs(new Path(destPath));
  //   // Write to src

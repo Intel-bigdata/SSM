@@ -252,6 +252,7 @@ public class MetaStoreUtils {
             "  state tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL\n" +
             ") ;",
+        "CREATE INDEX file_diff_idx ON file_diff (src);",
 
         "CREATE TABLE global_config (\n" +
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
