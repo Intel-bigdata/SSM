@@ -37,6 +37,7 @@ public class DataXceiverServer implements Runnable {
   ThreadGroup threadGroup = null;
 
   private final Map<Peer, Thread> peers = new HashMap<>();
+  private final Map<Peer, DataXceiver> peersXceiver = new HashMap<>();
   private static final Logger LOG = LoggerFactory.getLogger(DataXceiverServer.class);
 
   public DataXceiverServer(SmartConf conf, PeerServer peerServer, ThreadGroup threadGroup) {
@@ -63,6 +64,7 @@ public class DataXceiverServer implements Runnable {
           throw new IOException("Active handlers exceeds the maximum limit " + maxNumHandler);
         }
 
+        new Daemon(threadGroup, new DataXceiver()).start();
       } catch (SocketTimeoutException e) {
       } catch (IOException e) {
         NetUtil.cleanup(LOG, peer);
