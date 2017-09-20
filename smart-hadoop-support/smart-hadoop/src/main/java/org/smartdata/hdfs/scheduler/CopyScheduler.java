@@ -57,6 +57,8 @@ public class CopyScheduler extends ActionSchedulerService {
   private Map<Long, Long> actionDiffMap;
   // <File path, FileChain object>
   private Map<String, ScheduleTask.FileChain> fileChainMap;
+  // <did, file diff>
+  private Map<Long, FileDiff> fileDiffMap;
 
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
@@ -65,6 +67,7 @@ public class CopyScheduler extends ActionSchedulerService {
     this.fileLock = new ConcurrentHashMap<>();
     this.actionDiffMap = new ConcurrentHashMap<>();
     this.fileChainMap = new HashMap<>();
+    this.fileDiffMap = new ConcurrentHashMap<>();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
   }
 
@@ -154,6 +157,9 @@ public class CopyScheduler extends ActionSchedulerService {
         if (actionDiffMap.containsKey(actionInfo.getActionId())) {
           actionDiffMap.remove(actionInfo.getActionId());
         }
+        if (fileDiffMap.containsKey(fileDiff.getDiffId())) {
+          fileDiffMap.remove(fileDiff.getDiffId());
+        }
       } catch (MetaStoreException e) {
         LOG.error("Mark sync action in metastore failed!", e);
       } catch (Exception e) {
@@ -201,6 +207,9 @@ public class CopyScheduler extends ActionSchedulerService {
     }
 
     private void addToRunning() {
+      if (fileDiffMap.size() == 0) {
+        return;
+      }
       for (FileChain fileChain: fileChainMap.values()) {
         try {
           fileChain.addTopRunning();
@@ -213,11 +222,12 @@ public class CopyScheduler extends ActionSchedulerService {
 
     private void diffMerge(List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
+      LOG.debug("Size of Pending diffs", fileDiffs.size());
       for (FileDiff fileDiff : fileDiffs) {
         FileChain fileChain;
         String src = fileDiff.getSrc();
         // Skip applying file diffs
-        if (actionDiffMap.containsValue(fileDiff.getDiffId())) {
+        if (fileDiffMap.containsValue(fileDiff.getDiffId())) {
           continue;
         }
         // fileDiffBatch.put(fileDiff.getDiffId(), fileDiff);
@@ -249,6 +259,7 @@ public class CopyScheduler extends ActionSchedulerService {
         }
         // Add file diff to fileChain
         fileChain.fileDiffChain.add(fileDiff.getDiffId());
+        fileDiffMap.put(fileDiff.getDiffId(), fileDiff);
       }
     }
 
@@ -284,8 +295,12 @@ public class CopyScheduler extends ActionSchedulerService {
 
     @Override
     public void run() {
-      syncFileDiff();
-      addToRunning();
+      try {
+        syncFileDiff();
+        addToRunning();
+      } catch (Exception e) {
+        LOG.error("CopyScheduler Run Error", e);
+      }
     }
 
     private class FileChain {
