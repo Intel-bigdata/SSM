@@ -17,26 +17,18 @@
  */
 package org.smartdata.hdfs.action;
 
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.OracleWithSubqueryEntry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.model.FileInfo;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -45,13 +37,17 @@ import java.util.Map;
 @ActionSignature(
     actionId = "metadata",
     displayName = "metadata",
-    usage = HdfsAction.FILE_PATH + " $src "
+    usage = HdfsAction.FILE_PATH + " $src " + MetaFileAction.OWNER_NAME + " $ownername " +
+        MetaFileAction.GROUP_NAME + " $groupname " + MetaFileAction.BLOCK_REPLICATION + " $replication " +
+        MetaFileAction.PERMISSION + " $permisstion " + MetaFileAction.MTIME + " $mtime " +
+        MetaFileAction.ATIME + " $atime"
 )
 public class MetaFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(MetaFileAction.class);
   public static final String OWNER_NAME = "-owername";
   public static final String GROUP_NAME = "-groupname";
   public static final String BLOCK_REPLICATION = "-replication";
+  //only support input like 777
   public static final String PERMISSION = "-permission";
   public static final String MTIME = "-mtime";
   public static final String ATIME = "-atime";
@@ -90,7 +86,8 @@ public class MetaFileAction extends HdfsAction {
     }
 
     if (args.containsKey(PERMISSION)) {
-      this.permission = Short.parseShort(args.get(PERMISSION));
+      FsPermission fsPermission = new FsPermission(args.get(PERMISSION));
+      this.permission = fsPermission.toShort();
     }
 
     if (args.containsKey(MTIME)) {
@@ -146,12 +143,32 @@ public class MetaFileAction extends HdfsAction {
             , fs.getFileStatus(new Path(srcFile)).getAccessTime());
       }
 
-
-      
-
       return true;
     } else {
+      //change file metadata in local cluster
+      if (fileInfo.getOwner() != null) {
+        dfsClient.setOwner(srcFile, fileInfo.getOwner(), dfsClient.getFileInfo(srcFile).getGroup());
+      }
 
+      if (fileInfo.getGroup() != null) {
+        dfsClient.setOwner(srcFile, dfsClient.getFileInfo(srcFile).getOwner(), fileInfo.getGroup());
+      }
+
+      if (fileInfo.getBlock_replication() != -1) {
+        dfsClient.setReplication(srcFile, fileInfo.getBlock_replication());
+      }
+
+      if (fileInfo.getPermission() != -1) {
+        dfsClient.setPermission(srcFile, new FsPermission(fileInfo.getPermission()));
+      }
+
+      if (fileInfo.getAccess_time() != -1) {
+        dfsClient.setTimes(srcFile, dfsClient.getFileInfo(srcFile).getModificationTime(), fileInfo.getAccess_time());
+      }
+
+      if (fileInfo.getModification_time() != -1) {
+        dfsClient.setTimes(srcFile, fileInfo.getModification_time(), dfsClient.getFileInfo(srcFile).getAccessTime());
+      }
 
       return true;
     }
