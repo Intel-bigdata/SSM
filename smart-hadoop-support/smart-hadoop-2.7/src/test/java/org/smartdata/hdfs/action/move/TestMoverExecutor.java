@@ -77,7 +77,8 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     }
 
     // Do move executor
-    MoverExecutor moverExecutor = new MoverExecutor(conf, 10, 500);
+    MoverStatus status = new MoverStatus();
+    MoverExecutor moverExecutor = new MoverExecutor(status, conf, 10, 500);
     int failedMoves = moverExecutor.executeMove(plan);
     Assert.assertEquals(0, failedMoves);
 
@@ -123,7 +124,8 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     }
 
     // Do mover executor
-    MoverExecutor moverExecutor = new MoverExecutor(conf, 10, 500);
+    MoverStatus status = new MoverStatus();
+    MoverExecutor moverExecutor = new MoverExecutor(status, conf, 10, 500);
     int failedMoves = moverExecutor.executeMove(plan);
     Assert.assertEquals(0, failedMoves);
 
