@@ -15,41 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action.move;
+package org.smartdata.hdfs.scheduler;
 
-/**
- * ActionStatus of Mover tool.
- */
-public class MoverStatus {
-  private int totalBlocks; // each replica is counted as a block
-  private int movedBlocks;
+public class MovePlanStatistics {
+  private long totalBlocks;
+  private long totalSize;
 
-  public MoverStatus() {
+  public MovePlanStatistics() {
     totalBlocks = 0;
-    movedBlocks = 0;
+    totalSize = 0;
   }
 
-  public float getPercentage() {
-    if (totalBlocks == 0) {
-      return 0;
-    }
-    return movedBlocks * 1.0F / totalBlocks;
+  public MovePlanStatistics(long totalBlocks, long totalSize) {
+    this.totalBlocks = totalBlocks;
+    this.totalSize = totalSize;
   }
 
-  public int getTotalBlocks() {
+  public void increaseTotalBlocks(int numBlocks) {
+    totalBlocks += numBlocks;
+  }
+
+  public void increaseTotalSize(long size) {
+    totalSize += size;
+  }
+
+  public long getTotalBlocks() {
     return totalBlocks;
   }
 
-  public void setTotalBlocks(int blocks) {
-    totalBlocks = blocks;
-  }
-
-  synchronized public int increaseMovedBlocks(int blocks) {
-    movedBlocks += blocks;
-    return movedBlocks;
-  }
-
-  public int getMovedBlocks() {
-    return movedBlocks;
+  public long getTotalSize() {
+    return totalSize;
   }
 }

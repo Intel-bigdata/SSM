@@ -59,6 +59,7 @@ public class MoveFileAction extends AbstractMoveFileAction {
       if (plan != null) {
         Gson gson = new Gson();
         movePlan = gson.fromJson(plan, FileMovePlan.class);
+        status.setTotalBlocks(movePlan.getBlockIds().size());
       }
     }
   }
