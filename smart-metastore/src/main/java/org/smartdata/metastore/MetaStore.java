@@ -1085,7 +1085,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   @Override
-  public boolean markFileDiffApplied(long did,
+  public boolean updateFileDiff(long did,
       FileDiffState state) throws MetaStoreException {
     try {
       return fileDiffDao.update(did, state) >= 0;
@@ -1093,6 +1093,25 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
+
+  public boolean updateFileDiff(long did,
+      FileDiffState state, String parameters) throws MetaStoreException {
+    try {
+      return fileDiffDao.update(did, state, parameters) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public boolean updateFileDiff(long did,
+      String src) throws MetaStoreException {
+    try {
+      return fileDiffDao.update(did, src) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
 
   public List<String> getSyncPath(int size) throws MetaStoreException {
     return fileDiffDao.getSyncPath(size);

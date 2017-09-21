@@ -154,6 +154,20 @@ public class FileDiffDao {
     return jdbcTemplate.update(sql, state.getValue(), did);
   }
 
+  public int update(long did, String src) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "update " + TABLE_NAME + " set src = ? WHERE did = ?";
+    return jdbcTemplate.update(sql, src, did);
+  }
+
+  public int update(long did, FileDiffState state,
+       String parameters) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "update " + TABLE_NAME + " set state = ?, "
+        + "parameters = ? WHERE did = ?";
+    return jdbcTemplate.update(sql, state.getValue(), parameters, did);
+  }
+
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
