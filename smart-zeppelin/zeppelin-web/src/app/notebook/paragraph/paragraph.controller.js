@@ -207,6 +207,8 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
     return $scope.editor;
   };
 
+
+
   $scope.$watch($scope.getEditor, function(newValue, oldValue) {
     if (!$scope.editor) {
       return;
@@ -236,6 +238,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
   };
 
   $scope.runParagraph = function(data) {
+    $scope.paragraph.config.enabled = false;
     websocketMsgSrv.runParagraph($scope.paragraph.id, $scope.paragraph.title,
       data, $scope.paragraph.config, $scope.paragraph.settings.params);
     $scope.originalText = angular.copy(data);
@@ -567,6 +570,9 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
       });
 
       $scope.editor.getSession().on('change', function(e, editSession) {
+        $scope.paragraph.status = 'READY';
+        $scope.paragraph.results = null;
+        $scope.paragraph.config.enabled = true;
         autoAdjustEditorHeight(_editor);
       });
 
