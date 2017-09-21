@@ -43,15 +43,15 @@ public class TestMetaDataAction extends MiniClusterHarness {
     FSDataOutputStream out = dfs.create(new Path(srcPath + "/" + file));
     out.close();
 
-    MetaFileAction metaFileAction = new MetaFileAction();
+    MetaDataAction metaFileAction = new MetaDataAction();
     metaFileAction.setDfsClient(dfsClient);
     metaFileAction.setContext(smartContext);
     metaFileAction.setStatusReporter(new MockActionStatusReporter());
 
     Map<String, String> args = new HashMap<>();
-    args.put(MetaFileAction.FILE_PATH, srcPath + "/" + file);
-    args.put(MetaFileAction.OWNER_NAME, "test");
-    args.put(MetaFileAction.PERMISSION, "777");
+    args.put(MetaDataAction.FILE_PATH, srcPath + "/" + file);
+    args.put(MetaDataAction.OWNER_NAME, "test");
+    args.put(MetaDataAction.PERMISSION, "777");
 
     metaFileAction.init(args);
     metaFileAction.run();
@@ -69,15 +69,15 @@ public class TestMetaDataAction extends MiniClusterHarness {
     FSDataOutputStream out = dfs.create(new Path(srcPath + "/" + file));
     out.close();
 
-    MetaFileAction metaFileAction = new MetaFileAction();
+    MetaDataAction metaFileAction = new MetaDataAction();
     metaFileAction.setDfsClient(dfsClient);
     metaFileAction.setContext(smartContext);
     metaFileAction.setStatusReporter(new MockActionStatusReporter());
 
     Map<String, String> args = new HashMap<>();
-    args.put(MetaFileAction.FILE_PATH, dfs.getUri() + srcPath + "/" + file);
-    args.put(MetaFileAction.OWNER_NAME, "test");
-    args.put(MetaFileAction.PERMISSION, "777");
+    args.put(MetaDataAction.FILE_PATH, dfs.getUri() + srcPath + "/" + file);
+    args.put(MetaDataAction.OWNER_NAME, "test");
+    args.put(MetaDataAction.PERMISSION, "777");
 
     metaFileAction.init(args);
     metaFileAction.run();

@@ -37,13 +37,13 @@ import java.util.Map;
 @ActionSignature(
     actionId = "metadata",
     displayName = "metadata",
-    usage = HdfsAction.FILE_PATH + " $src " + MetaFileAction.OWNER_NAME + " $ownername " +
-        MetaFileAction.GROUP_NAME + " $groupname " + MetaFileAction.BLOCK_REPLICATION + " $replication " +
-        MetaFileAction.PERMISSION + " $permisstion " + MetaFileAction.MTIME + " $mtime " +
-        MetaFileAction.ATIME + " $atime"
+    usage = HdfsAction.FILE_PATH + " $src " + MetaDataAction.OWNER_NAME + " $ownername " +
+        MetaDataAction.GROUP_NAME + " $groupname " + MetaDataAction.BLOCK_REPLICATION + " $replication " +
+        MetaDataAction.PERMISSION + " $permisstion " + MetaDataAction.MTIME + " $mtime " +
+        MetaDataAction.ATIME + " $atime"
 )
-public class MetaFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(MetaFileAction.class);
+public class MetaDataAction extends HdfsAction {
+  private static final Logger LOG = LoggerFactory.getLogger(MetaDataAction.class);
   public static final String OWNER_NAME = "-owername";
   public static final String GROUP_NAME = "-groupname";
   public static final String BLOCK_REPLICATION = "-replication";
