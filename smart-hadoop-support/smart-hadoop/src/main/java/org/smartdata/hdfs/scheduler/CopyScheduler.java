@@ -66,7 +66,6 @@ public class CopyScheduler extends ActionSchedulerService {
   // Merge count length threshold
   private long mergeCountTh = 10;
 
-
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
     this.metaStore = metaStore;
@@ -222,6 +221,14 @@ public class CopyScheduler extends ActionSchedulerService {
   //     fileLock.remove(fileName);
   //   }
   // }
+
+  public int unSyncFile() {
+    return fileDiffChainMap.size();
+  }
+
+  public int lockedFile() {
+    return fileLock.size();
+  }
 
 
   private class ScheduleTask implements Runnable {
@@ -382,7 +389,7 @@ public class CopyScheduler extends ActionSchedulerService {
         fileDiff.getParameters().put("-length", "" + totalLength);
         // Update fileDiff in metastore
         metaStore.updateFileDiff(fileDiff.getDiffId(),
-            FileDiffState.RUNNING, fileDiff.getParametersJsonString());
+            FileDiffState.PENDING, fileDiff.getParametersJsonString());
         // Unlock file
         fileLock.remove(filePath);
         currAppendLength = 0;
@@ -391,6 +398,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
       @VisibleForTesting
       void mergeDelete() throws MetaStoreException {
+        // TODO if create diff is in append
         for (long did : diffChain) {
           metaStore.updateFileDiff(did, FileDiffState.APPLIED);
         }

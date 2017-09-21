@@ -65,7 +65,7 @@ public class FileObject extends SmartObject {
     properties.put("unsynced",
         new Property("unsynced", ValueType.BOOLEAN,
             null, "file_diff", null, false,
-            "state = 1"));
+            "state = 0"));
   }
 
   public FileObject() {
