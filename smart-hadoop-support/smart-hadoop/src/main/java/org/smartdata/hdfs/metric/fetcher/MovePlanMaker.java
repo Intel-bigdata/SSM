@@ -119,6 +119,7 @@ public class MovePlanMaker {
       }
     }
     if (!status.isSymlink()) {
+      schedulePlan.setFileLength(status.getLen());
       processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status);
     }
     return schedulePlan;
@@ -152,7 +153,11 @@ public class MovePlanMaker {
       final StorageTypeDiff diff =
           new StorageTypeDiff(types, CompatibilityHelperLoader.getHelper().getStorageTypes(lb));
       int remainingReplications = diff.removeOverlap(true);
-      statistics.increaseTotalSize(lb.getBlockSize() * remainingReplications);
+      long toMove = lb.getBlockSize() * remainingReplications;
+      schedulePlan.addSizeToMove(toMove);
+      schedulePlan.incBlocksToMove();
+      schedulePlan.addFileLengthToMove(lb.getBlockSize());
+      statistics.increaseTotalSize(toMove);
       statistics.increaseTotalBlocks(remainingReplications);
       if (remainingReplications != 0) {
         scheduleMoveBlock(diff, lb);

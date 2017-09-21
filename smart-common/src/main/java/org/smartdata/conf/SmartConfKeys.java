@@ -65,6 +65,10 @@ public class SmartConfKeys {
   public final static String SMART_ENABLE_ZEPPELIN = "smart.zeppelin.enable";
   public final static boolean SMART_ENABLE_ZEPPELIN_DEFAULT = false;
 
+  // Action
+  public final static String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
+  public final static long SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
+
   // SmartAgent
   public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
   public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
