@@ -17,11 +17,13 @@
  */
 package org.smartdata.hdfs.scheduler;
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.MoveFileAction;
@@ -51,6 +53,8 @@ public class MoverScheduler extends ActionSchedulerService {
   private long dnInfoUpdateInterval = 2 * 60 * 1000;
   private ScheduledExecutorService updateService;
   private ScheduledFuture updateServiceFuture;
+  private long throttleInMb;
+  private RateLimiter rateLimiter = null;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(MoverScheduler.class);
@@ -59,6 +63,12 @@ public class MoverScheduler extends ActionSchedulerService {
       throws IOException {
     super(context, metaStore);
     nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
+    throttleInMb = getContext().getConf()
+        .getLong(SmartConfKeys.SMART_ACTION_MOVE_THROTTLE_MB_KEY,
+            SmartConfKeys.SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT);
+    if (throttleInMb > 0) {
+      rateLimiter = RateLimiter.create(throttleInMb);
+    }
   }
 
   public void init() throws IOException {
@@ -125,6 +135,18 @@ public class MoverScheduler extends ActionSchedulerService {
     try {
       client.setStoragePolicy(file, policy);
       FileMovePlan plan = planMaker.processNamespace(new Path(file));
+      if (rateLimiter != null) {
+        // Two possible understandings here: file level and replica level
+        int len = (int)(plan.getFileLengthToMove() >> 20);
+        if (len > 0) {
+          if (!rateLimiter.tryAcquire(len)) {
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Cancel Scheduling action {} due to throttling. {}", actionInfo, plan);
+            }
+            return ScheduleResult.RETRY;
+          }
+        }
+      }
       plan.setNamenode(nnUri);
       action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
       return ScheduleResult.SUCCESS;
@@ -157,8 +179,12 @@ public class MoverScheduler extends ActionSchedulerService {
 
     @Override
     public void run() {
-      task.run();
-      planMaker.updateClusterInfo(task.getStorages(), task.getNetworkTopology());
+      try {
+        task.run();
+        planMaker.updateClusterInfo(task.getStorages(), task.getNetworkTopology());
+      } catch (Throwable t) {
+        LOG.warn("Exception when updating cluster info ", t);
+      }
     }
   }
 }
