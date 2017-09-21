@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.scheduler;
 
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -59,6 +60,10 @@ public class CopyScheduler extends ActionSchedulerService {
   private Map<String, ScheduleTask.FileChain> fileChainMap;
   // <did, file diff>
   private Map<Long, FileDiff> fileDiffMap;
+  // Merge append length threshold
+  private long mergeLenTh = DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT * 3;
+  // Merge count length threshold
+  private long mergeCountTh = 10;
 
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
@@ -280,17 +285,19 @@ public class CopyScheduler extends ActionSchedulerService {
 
     private class FileChain {
       private String head;
-      private long currLength;
-      private int currPos;
+      private long currAppendLength;
+      private int currAppend;
       private String filePath;
       private String tail;
       private List<Long> fileDiffChain;
+      private List<Long> appendChain;
       private int state;
 
       FileChain() {
         this.fileDiffChain = new ArrayList<>();
-        currLength = 0;
-        currPos = 0;
+        this.appendChain = new ArrayList<>();
+        this.currAppendLength = 0;
+        this.currAppend = 0;
         this.tail = null;
         this.head = null;
       }
@@ -331,18 +338,53 @@ public class CopyScheduler extends ActionSchedulerService {
 
       }
 
-      public void addToChain(FileDiff fileDiff) {
+      public void addToChain(FileDiff fileDiff) throws MetaStoreException {
+        long did = fileDiff.getDiffId();
+        fileDiffChain.add(did);
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
-          currPos++;
+          appendChain.add(did);
+          currAppendLength += Long.valueOf(fileDiff.getParameters().get("-length"));
         }
-
+        if (currAppendLength >= mergeLenTh || currAppend >= mergeCountTh) {
+          mergeAppend();
+        }
       }
 
-      private void mergeAppend() {
+      private void mergeAppend() throws MetaStoreException {
+        if (fileLock.containsKey(filePath)) {
+          return;
+        }
+        // Lock file
+        fileLock.put(filePath, -1L);
+        long offset = Integer.MAX_VALUE;
+        long length = 0;
+        long lastAppend = -1;
+        for (long did : fileDiffChain) {
+          FileDiff fileDiff = metaStore.getFileDiff(did);
+          if (fileDiff != null && fileDiff.getDiffType() == FileDiffType.APPEND) {
+            long currOffset = Long.valueOf(fileDiff.getParameters().get("-offset"));
+            length += Long.valueOf(fileDiff.getParameters().get("-length"));
+            metaStore.markFileDiffApplied(did, FileDiffState.APPLIED);
+            if (offset > currOffset) {
+              offset = currOffset;
+            }
+            lastAppend = did;
+          }
+        }
+        FileDiff fileDiff = metaStore.getFileDiff(lastAppend);
+        fileDiff.getParameters().put("-offset", "" + offset);
+        fileDiff.getParameters().put("-length", "" + length);
+        fileDiff.setState(FileDiffState.RUNNING);
+        // Update fileDiff
 
+
+        // Unlock file
+        fileLock.remove(filePath);
       }
 
-      private void mergeMeta() {}
+      private void mergeMeta() {
+
+      }
 
 
       public long popTop() {
@@ -350,6 +392,9 @@ public class CopyScheduler extends ActionSchedulerService {
           return -1;
         }
         long fid = fileDiffChain.get(0);
+        if (appendChain.size() > 0 && fid == appendChain.get(0)) {
+
+        }
         fileDiffChain.remove(0);
         if (fileDiffChain.size() == 0) {
           fileChainMap.remove(filePath);
