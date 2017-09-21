@@ -171,7 +171,7 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
 
   private String referenceNonExists(TranslateResult tr, List<String> dirs) {
     String temp = "SELECT src FROM file_diff WHERE "
-        + "state = 1 AND diff_type IN (1,2) AND (%s);";
+        + "state = 0 AND diff_type IN (1,2) AND (%s);";
     String srcs = "src LIKE '" + dirs.get(0) + "%'";
     for (int i = 1; i < dirs.size(); i++) {
       srcs +=  " OR src LIKE '" + dirs.get(i) + "%'";
