@@ -116,7 +116,6 @@ public class CopyScheduler extends ActionSchedulerService {
         fileDiff.getParameters().remove("-dest");
         break;
       case METADATA:
-        // TODO enable metadata action
         action.setActionType("metadata");
         action.getArgs().put("-file", path.replace(srcDir, destDir));
         break;
@@ -158,7 +157,7 @@ public class CopyScheduler extends ActionSchedulerService {
     if(actionInfo.isFinished()) {
       try {
         long did = actionDiffMap.get(actionInfo.getActionId());
-        metaStore.markFileDiffApplied(did, FileDiffState.APPLIED);
+        metaStore.updateFileDiff(did, FileDiffState.APPLIED);
         fileDiff = metaStore.getFileDiff(did);
         // Add to pending list
         if (fileChainMap.containsKey(fileDiff.getSrc())) {
@@ -249,26 +248,7 @@ public class CopyScheduler extends ActionSchedulerService {
           fileChain.setFilePath(src);
           fileChainMap.put(src, fileChain);
         }
-        if (fileDiff.getDiffType() == FileDiffType.RENAME) {
-          String dest = fileDiff.getParameters().get("-dest");
-          fileChain.tail = dest;
-          // Update key in map
-          // fileChainMap.remove(src);
-          // if (fileChainMap.containsKey(dest)) {
-          //   // Merge with existing chain
-          //   // Delete then rename and append
-          //   fileChainMap.get(dest).merge(fileChain);
-          //   fileChain = fileChainMap.get(dest);
-          // } else {
-          //   fileChainMap.put(dest, fileChain);
-          // }
-        } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
-          fileChain.tail = src;
-          // Remove all append and meta diff in chain
-          fileChain.clear();
-        }
-        // Add file diff to fileChain
-        fileChain.fileDiffChain.add(fileDiff.getDiffId());
+        fileChain.addToChain(fileDiff);
         fileDiffMap.put(fileDiff.getDiffId(), fileDiff);
       }
     }
@@ -284,27 +264,24 @@ public class CopyScheduler extends ActionSchedulerService {
     }
 
     private class FileChain {
-      private String head;
       private long currAppendLength;
-      private int currAppend;
       private String filePath;
-      private String tail;
       private List<Long> fileDiffChain;
       private List<Long> appendChain;
+      private List<String> nameChain;
       private int state;
 
       FileChain() {
         this.fileDiffChain = new ArrayList<>();
         this.appendChain = new ArrayList<>();
+        this.nameChain = new ArrayList<>();
         this.currAppendLength = 0;
-        this.currAppend = 0;
-        this.tail = null;
-        this.head = null;
       }
 
-      public FileChain(String curr) {
+      public FileChain(String filePath) {
         this();
-        this.head = curr;
+        this.filePath = filePath;
+        this.nameChain.add(filePath);
       }
 
       public String getFilePath() {
@@ -323,48 +300,55 @@ public class CopyScheduler extends ActionSchedulerService {
         this.fileDiffChain = fileDiffChain;
       }
 
-      public void rename(String src, String dest) {
-        tail = dest;
-      }
-
       public void clear() throws MetaStoreException {
         for (long did : fileDiffChain) {
-          metaStore.markFileDiffApplied(did, FileDiffState.APPLIED);
+          metaStore.updateFileDiff(did, FileDiffState.APPLIED);
         }
         fileDiffChain.clear();
       }
 
       public void merge(FileChain previousChain) {
-
       }
 
       public void addToChain(FileDiff fileDiff) throws MetaStoreException {
         long did = fileDiff.getDiffId();
-        fileDiffChain.add(did);
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
+          if (currAppendLength >= mergeLenTh || appendChain.size() >= mergeCountTh) {
+            mergeAppend();
+          }
+          // Add Append to Append Chain
           appendChain.add(did);
+          // Increase Append length
           currAppendLength += Long.valueOf(fileDiff.getParameters().get("-length"));
+        } else if (fileDiff.getDiffType() == FileDiffType.RENAME) {
+          // Add New Name to Name Chain
+          nameChain.add(fileDiff.getParameters().get("-dest"));
+        } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
+          clear();
+          if (nameChain.size() > 1) {
+            fileDiff.setSrc(nameChain.get(0));
+            metaStore.updateFileDiff(did, nameChain.get(0));
+          }
         }
-        if (currAppendLength >= mergeLenTh || currAppend >= mergeCountTh) {
-          mergeAppend();
-        }
+        fileDiffChain.add(did);
       }
 
       private void mergeAppend() throws MetaStoreException {
         if (fileLock.containsKey(filePath)) {
           return;
         }
-        // Lock file
+        // Lock file to avoid File Chain being processed
         fileLock.put(filePath, -1L);
         long offset = Integer.MAX_VALUE;
         long length = 0;
         long lastAppend = -1;
-        for (long did : fileDiffChain) {
+        for (long did : appendChain) {
           FileDiff fileDiff = metaStore.getFileDiff(did);
-          if (fileDiff != null && fileDiff.getDiffType() == FileDiffType.APPEND) {
+          if (fileDiff != null && fileDiff.getState().getValue() != 2) {
             long currOffset = Long.valueOf(fileDiff.getParameters().get("-offset"));
+            // Re-compute append length
             length += Long.valueOf(fileDiff.getParameters().get("-length"));
-            metaStore.markFileDiffApplied(did, FileDiffState.APPLIED);
+            metaStore.updateFileDiff(did, FileDiffState.APPLIED);
             if (offset > currOffset) {
               offset = currOffset;
             }
@@ -374,16 +358,23 @@ public class CopyScheduler extends ActionSchedulerService {
         FileDiff fileDiff = metaStore.getFileDiff(lastAppend);
         fileDiff.getParameters().put("-offset", "" + offset);
         fileDiff.getParameters().put("-length", "" + length);
-        fileDiff.setState(FileDiffState.RUNNING);
-        // Update fileDiff
-
-
+        // Update fileDiff in metastore
+        metaStore.updateFileDiff(fileDiff.getDiffId(),
+            FileDiffState.RUNNING, fileDiff.getParametersJsonString());
         // Unlock file
         fileLock.remove(filePath);
+        currAppendLength = 0;
+        appendChain.clear();
       }
 
       private void mergeMeta() {
+        if (fileLock.containsKey(filePath)) {
+          return;
+        }
+      }
 
+      private void renameChain() {
+        // Rename action will effect all append actions
       }
 
 
@@ -393,7 +384,7 @@ public class CopyScheduler extends ActionSchedulerService {
         }
         long fid = fileDiffChain.get(0);
         if (appendChain.size() > 0 && fid == appendChain.get(0)) {
-
+          appendChain.remove(0);
         }
         fileDiffChain.remove(0);
         if (fileDiffChain.size() == 0) {
@@ -410,7 +401,7 @@ public class CopyScheduler extends ActionSchedulerService {
           return;
         }
         long fid = fileDiffChain.get(0);
-        metaStore.markFileDiffApplied(fid, FileDiffState.RUNNING);
+        metaStore.updateFileDiff(fid, FileDiffState.RUNNING);
         // fileLock.put(filePath, fid);
       }
     }
