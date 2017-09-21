@@ -47,7 +47,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.smartdata.tidb.Launch;
+import org.smartdata.tidb.LaunchDB;
 
 /**
  * From this Smart Storage Management begins.
@@ -130,11 +130,13 @@ public class SmartServer {
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
     if (isTidbEnabled(conf)) {
-      Thread db = new Thread(new Launch());
+      LaunchDB launchDB = new LaunchDB();
+      Thread db = new Thread(launchDB);
       LOG.info("Starting PD, TiKV and TiDB..");
       db.start();
       try {
-        Thread.sleep(24000);
+        while (!launchDB.isCompleted())
+          Thread.sleep(100);
       } catch (InterruptedException ex) {
         LOG.error(ex.getMessage());
       }
