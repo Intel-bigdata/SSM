@@ -66,7 +66,7 @@ public class TruncateAction extends HdfsAction {
       throw new IllegalArgumentException("Length is missing");
     }
 
-    truncateClusterFile(srcPath, length);
+    System.out.println(truncateClusterFile(srcPath, length));
   }
 
   private boolean truncateClusterFile(String srcFile, long length) throws IOException {
@@ -74,7 +74,7 @@ public class TruncateAction extends HdfsAction {
       // TODO read conf from files
       Configuration conf = new Configuration();
       DistributedFileSystem fs = new DistributedFileSystem();
-      fs.initialize(URI.create("srcFile"), conf);
+      fs.initialize(URI.create(srcFile), conf);
 
       //check the length
       long oldLength = fs.getFileStatus(new Path(srcFile)).getLen();
@@ -82,7 +82,8 @@ public class TruncateAction extends HdfsAction {
       if (length > oldLength) {
         throw new IllegalArgumentException("Length is illegal");
       } else {
-        return fs.truncate(new Path(srcFile), length);
+        fs.truncate(new Path(srcFile), length);
+        return true;
       }
     } else {
       long oldLength = dfsClient.getFileInfo(srcFile).getLen();
@@ -90,7 +91,8 @@ public class TruncateAction extends HdfsAction {
       if (length > oldLength) {
         throw new IllegalArgumentException("Length is illegal");
       } else {
-        return dfsClient.truncate(srcFile, length);
+        dfsClient.truncate(srcFile, length);
+        return true;
       }
     }
   }
