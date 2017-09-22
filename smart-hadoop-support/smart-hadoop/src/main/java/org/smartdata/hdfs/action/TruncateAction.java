@@ -83,8 +83,7 @@ public class TruncateAction extends HdfsAction {
       if (length > oldLength) {
         throw new IllegalArgumentException("Length is illegal");
       } else {
-        fs.truncate(new Path(srcFile), length);
-        return true;
+        return CompatibilityHelperLoader.getHelper().truncate(fs, srcPath, length);
       }
     } else {
       long oldLength = dfsClient.getFileInfo(srcFile).getLen();
