@@ -124,6 +124,9 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
           }]
         }
       })
+      .when('/rule/grammar', {
+        templateUrl: 'app/dashboard/views/rules/submit/help.html'
+      })
       .when('/rules/rule/:ruleId', {
         templateUrl: 'app/dashboard/views/rules/rule/rule.html',
         controller: 'RuleCtrl',
@@ -162,6 +165,9 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
             return models.$get.actionTypes();
           }]
         }
+      })
+      .when('/action/usage', {
+        templateUrl: 'app/dashboard/views/actions/submit/help.html'
       })
       .when('/copys', {
         templateUrl: 'app/dashboard/views/copy/copy.html',
