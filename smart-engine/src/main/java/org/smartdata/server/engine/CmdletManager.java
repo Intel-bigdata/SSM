@@ -286,6 +286,11 @@ public class CmdletManager extends AbstractService {
               idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
               cmdlet.setState(CmdletState.SCHEDULED);
               scheduledCmdlet.add(id);
+            } else if (result == ScheduleResult.FAIL) {
+              cmdlet.updateState(CmdletState.CANCELLED);
+              CmdletStatusUpdate msg =new CmdletStatusUpdate(cmdlet.getCid(),
+                  cmdlet.getStateChangedTime(), cmdlet.getState());
+              onCmdletStatusUpdate(msg);
             }
             maxScheduled--;
             break;
@@ -643,7 +648,6 @@ public class CmdletManager extends AbstractService {
       cmdletInfo.setState(state);
       //The cmdlet is already finished or terminated, remove status from memory.
       if (CmdletState.isTerminalState(state)) {
-        //Todo: recover cmdlet?
         cmdletFinished(cmdletId);
       }
     } else {
