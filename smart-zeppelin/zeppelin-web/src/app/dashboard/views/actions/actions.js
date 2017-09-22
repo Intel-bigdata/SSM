@@ -49,7 +49,7 @@ angular.module('zeppelinWebApp')
         $stb.datetime('Create Time').key('createTime').canSort().done(),
         $stb.datetime('Finish Time').key('finishTime').canSort().done(),
         $stb.duration("Running Time").key('runningTime').canSort().done(),
-        $stb.text('State').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+        $stb.text('Status').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
         $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
       ],
@@ -73,7 +73,7 @@ angular.module('zeppelinWebApp')
             createTime: action.createTime,
             finishTime: action.finished ? action.finishTime : "-",
             runningTime: action.uptime,
-            succeed: action.finished ? action.successful ? "Successed" : "Fiald" : "-",
+            succeed: action.finished ? action.successful ? "Successful" : "Fiald" : "-",
             view: {
               href: action.pageUrl,
               icon: function() {
