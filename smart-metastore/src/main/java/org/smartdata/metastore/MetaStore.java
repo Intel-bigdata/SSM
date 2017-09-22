@@ -1071,6 +1071,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public List<FileDiff> getFileDiffsByFileName(String fileName) throws MetaStoreException {
     try {
       return fileDiffDao.getByFileName(fileName);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
