@@ -21,15 +21,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.hdfs.action.SchedulePlan;
+import org.smartdata.model.action.FileMovePlan;
 
-import java.io.IOException;
 import java.net.URI;
 
 /**
  * HDFS move based move runner.
  */
-public class MoverBasedMoveRunner extends MoveRunner {
+public class MoverBasedMoveRunner {
   private static final Logger LOG = LoggerFactory.getLogger(MoverBasedMoveRunner.class);
   private Configuration conf;
   private MoverStatus actionStatus;
@@ -49,18 +48,10 @@ public class MoverBasedMoveRunner extends MoveRunner {
     this.actionStatus = actionStatus;
   }
 
-  @Override
-  public void move(String file, SchedulePlan plan) throws Exception {
-    if (plan == null) {
-      move(file);
-    } else {
-      MoverExecutor executor = new MoverExecutor(conf, 10, 20);
-      executor.executeMove(plan);
-    }
-  }
-
-  @Override
-  public void move(String file) throws Exception {
-    throw new IOException("Mover plan not specified.");
+  public void move(String file, FileMovePlan plan) throws Exception {
+    int maxMoves = plan.getPropertyValueInt(FileMovePlan.MAX_CONCURRENT_MOVES, 10);
+    int maxRetries = plan.getPropertyValueInt(FileMovePlan.MAX_NUM_RETRIES, 10);
+    MoverExecutor executor = new MoverExecutor(conf, maxRetries, maxMoves);
+    executor.executeMove(plan);
   }
 }

@@ -61,11 +61,33 @@ public class FileDiffDao {
     return jdbcTemplate.query("select * from " + TABLE_NAME + " where state = 0", new FileDiffRowMapper());
   }
 
+  public List<FileDiff> getByState(FileDiffState fileDiffState) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate
+        .query("select * from " + TABLE_NAME + " where state = ?",
+            new Object[]{fileDiffState.getValue()}, new FileDiffRowMapper());
+  }
+
+  public List<FileDiff> getByState(String prefix, FileDiffState fileDiffState) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate
+        .query(
+            "select * from " + TABLE_NAME + " where src LIKE ? and state = ?",
+            new Object[]{prefix + "%", fileDiffState.getValue()},
+            new FileDiffRowMapper());
+  }
+
   public List<FileDiff> getPendingDiff(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE did = ?",
+    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE did = ? and state = 0",
         new Object[]{rid},
         new FileDiffRowMapper());
+  }
+
+  public List<FileDiff> getPendingDiff(String prefix) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " where src LIKE ? and state = 0",
+        new FileDiffRowMapper(), prefix + "%");
   }
 
   public List<FileDiff> getByIds(List<Long> dids) {
@@ -74,6 +96,18 @@ public class FileDiffDao {
         new Object[]{StringUtils.join(dids, ",")},
         new FileDiffRowMapper());
   }
+
+  public List<String> getSyncPath(int size) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (size != 0) {
+      jdbcTemplate.setMaxRows(size);
+    }
+    String sql = "select DISTINCT src from " + TABLE_NAME +
+        " where state = ?";
+    return jdbcTemplate
+        .queryForList(sql, String.class, FileDiffState.RUNNING.getValue());
+  }
+
 
   public FileDiff getById(long did) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
@@ -127,7 +161,7 @@ public class FileDiffDao {
     parameters.put("rid", fileDiff.getRuleId());
     parameters.put("diff_type", fileDiff.getDiffType().getValue());
     parameters.put("src", fileDiff.getSrc());
-    parameters.put("parameters", fileDiff.getParameters());
+    parameters.put("parameters", fileDiff.getParametersJsonString());
     parameters.put("state", fileDiff.getState().getValue());
     parameters.put("create_time", fileDiff.getCreate_time());
     return parameters;
@@ -141,7 +175,7 @@ public class FileDiffDao {
       fileDiff.setRuleId(resultSet.getLong("rid"));
       fileDiff.setDiffType(FileDiffType.fromValue((int) resultSet.getByte("diff_type")));
       fileDiff.setSrc(resultSet.getString("src"));
-      fileDiff.setParameters(resultSet.getString("parameters"));
+      fileDiff.setParametersFromJsonString(resultSet.getString("parameters"));
       fileDiff.setState(FileDiffState.fromValue((int) resultSet.getByte("state")));
       fileDiff.setCreate_time(resultSet.getLong("create_time"));
       return fileDiff;

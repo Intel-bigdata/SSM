@@ -146,4 +146,30 @@ public class RuleRestApi {
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
+
+  @GET
+  @Path("/list/move")
+  public Response ruleMoveList() {
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getRuleManager().listRulesMoveInfo()).build();
+    } catch (Exception e) {
+      logger.error("Exception in RuleRestApi while listing Move rules", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+  @GET
+  @Path("/list/sync")
+  public Response ruleSyncList() {
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getRuleManager().listRulesSyncInfo()).build();
+    } catch (Exception e) {
+      logger.error("Exception in RuleRestApi while listing Sync rules", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
 }

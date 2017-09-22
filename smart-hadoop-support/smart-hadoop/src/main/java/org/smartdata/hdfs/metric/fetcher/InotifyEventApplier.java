@@ -27,7 +27,6 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
@@ -71,37 +70,20 @@ public class InotifyEventApplier {
   }
 
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
-    FileDiff fileDiff = new FileDiff();
-    fileDiff.setCreate_time(System.currentTimeMillis());
-    fileDiff.setState(FileDiffState.PENDING);
+    LOG.debug("Even Type = {}", event.getEventType().toString());
     switch (event.getEventType()) {
-      // TODO parse and save to fileDiff
       case CREATE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CreateEvent) event).getPath());
-        /*fileDiff.setDiffType(FileDiffType.CREATE);
-        fileDiff.setParameters(String.format("-file %s",
-            ((Event.CreateEvent)event).getPath()));
-        metaStore.insertFileDiff(fileDiff);*/
         return Arrays.asList(this.getCreateSql((Event.CreateEvent) event));
       case CLOSE:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CloseEvent) event).getPath());
-        fileDiff.setDiffType(FileDiffType.APPEND);
-        fileDiff.setSrc(String.format("%s", ((Event.CloseEvent) event).getPath()));
-        fileDiff.setParameters(String.format("-length %s",
-            ((Event.CloseEvent) event).getFileSize()));
-        metaStore.insertFileDiff(fileDiff);
         return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
       case RENAME:
         LOG.trace("event type:" + event.getEventType().name() +
             ", src path:" + ((Event.RenameEvent) event).getSrcPath() +
             ", dest path:" + ((Event.RenameEvent) event).getDstPath());
-        fileDiff.setDiffType(FileDiffType.RENAME);
-        fileDiff.setSrc(String.format("%s",((Event.RenameEvent)event).getSrcPath()));
-        fileDiff.setParameters(String.format("-dest %s",
-            ((Event.RenameEvent)event).getDstPath()));
-        metaStore.insertFileDiff(fileDiff);
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
         LOG.trace("event type:" + event.getEventType().name() +
@@ -114,10 +96,6 @@ public class InotifyEventApplier {
       case UNLINK:
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.UnlinkEvent)event).getPath());
-        fileDiff.setDiffType(FileDiffType.DELETE);
-        fileDiff.setSrc(String.format("%s",((Event.UnlinkEvent)event).getPath()));
-        fileDiff.setParameters("");
-        metaStore.insertFileDiff(fileDiff);
         return this.getUnlinkSql((Event.UnlinkEvent)event);
     }
     return Arrays.asList();
@@ -132,6 +110,15 @@ public class InotifyEventApplier {
     }
     FileInfo fileInfo = HadoopUtil.convertFileStatus(fileStatus, createEvent.getPath());
     try {
+      if (!fileInfo.isdir()) {
+        // ignore dir
+        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+        fileDiff.setSrc(fileInfo.getPath());
+        fileDiff.getParameters().put("-offset", String.valueOf(0));
+        // Note that "-length 0" means create an empty file
+        fileDiff.getParameters().put("-length", String.valueOf(fileInfo.getLength()));
+        metaStore.insertFileDiff(fileDiff);
+      }
       metaStore.insertFile(fileInfo);
       return "";
     } catch (MetaStoreException e) {
@@ -141,16 +128,37 @@ public class InotifyEventApplier {
   }
 
   //Todo: should update mtime? atime?
-  private String getCloseSql(Event.CloseEvent closeEvent) {
+  private String getCloseSql(Event.CloseEvent closeEvent) throws IOException {
+    FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+    fileDiff.setSrc(closeEvent.getPath());
+    long newLen = closeEvent.getFileSize();
+    long currLen = 0l;
+    // TODO make sure offset is correct
+    try {
+      FileInfo fileInfo = metaStore.getFile(closeEvent.getPath());
+      if (fileInfo == null) {
+        currLen = 0;
+      } else {
+        currLen = fileInfo.getLength();
+      }
+      if (currLen != newLen) {
+        fileDiff.getParameters().put("-offset", String.valueOf(currLen));
+        fileDiff.getParameters().put("-length", String.valueOf(newLen - currLen));
+        metaStore.insertFileDiff(fileDiff);
+      }
+    } catch (MetaStoreException e) {
+      LOG.error("Insert file diff " + fileDiff.getSrc() + " error.", e);
+      throw new IOException(e);
+    }
     return String.format(
-        "UPDATE files SET length = %s, modification_time = %s WHERE path = '%s';",
+        "UPDATE file SET length = %s, modification_time = %s WHERE path = '%s';",
         closeEvent.getFileSize(), closeEvent.getTimestamp(), closeEvent.getPath());
   }
 
   //Todo: should update mtime? atime?
 //  private String getTruncateSql(Event.TruncateEvent truncateEvent) {
 //    return String.format(
-//        "UPDATE files SET length = %s, modification_time = %s WHERE path = '%s';",
+//        "UPDATE file SET length = %s, modification_time = %s WHERE path = '%s';",
 //        truncateEvent.getFileSize(), truncateEvent.getTimestamp(), truncateEvent.getPath());
 //  }
 
@@ -158,6 +166,11 @@ public class InotifyEventApplier {
       throws IOException, MetaStoreException {
     List<String> ret = new ArrayList<>();
     HdfsFileStatus status = client.getFileInfo(renameEvent.getDstPath());
+    FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
+    fileDiff.setSrc(renameEvent.getSrcPath());
+    fileDiff.getParameters().put("-dest",
+        renameEvent.getDstPath());
+    metaStore.insertFileDiff(fileDiff);
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}",
           renameEvent.getSrcPath(), renameEvent.getDstPath());
@@ -170,10 +183,10 @@ public class InotifyEventApplier {
         metaStore.insertFile(info);
       }
     } else {
-      ret.add(String.format("UPDATE files SET path = replace(path, '%s', '%s') WHERE path = '%s';",
+      ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path = '%s';",
           renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
       if (info.isdir()) {
-        ret.add(String.format("UPDATE files SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
+        ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
             renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
       }
     }
@@ -185,18 +198,18 @@ public class InotifyEventApplier {
       case TIMES:
         if (metadataUpdateEvent.getMtime() > 0 && metadataUpdateEvent.getAtime() > 0) {
           return String.format(
-            "UPDATE files SET modification_time = %s, access_time = %s WHERE path = '%s';",
+            "UPDATE file SET modification_time = %s, access_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getMtime(),
             metadataUpdateEvent.getAtime(),
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getMtime() > 0) {
           return String.format(
-            "UPDATE files SET modification_time = %s WHERE path = '%s';",
+            "UPDATE file SET modification_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getMtime(),
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getAtime() > 0) {
           return String.format(
-            "UPDATE files SET access_time = %s WHERE path = '%s';",
+            "UPDATE file SET access_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getAtime(),
             metadataUpdateEvent.getPath());
         } else {
@@ -207,11 +220,11 @@ public class InotifyEventApplier {
         break;
       case PERMS:
         return String.format(
-            "UPDATE files SET permission = %s WHERE path = '%s';",
+            "UPDATE file SET permission = %s WHERE path = '%s';",
             metadataUpdateEvent.getPerms().toShort(), metadataUpdateEvent.getPath());
       case REPLICATION:
         return String.format(
-            "UPDATE files SET block_replication = %s WHERE path = '%s';",
+            "UPDATE file SET block_replication = %s WHERE path = '%s';",
             metadataUpdateEvent.getReplication(), metadataUpdateEvent.getPath());
       case XATTRS:
         //Todo
@@ -234,7 +247,10 @@ public class InotifyEventApplier {
     return Arrays.asList();
   }
 
-  private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) {
-    return Arrays.asList(String.format("DELETE FROM files WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
+  private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) throws MetaStoreException {
+    FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+    fileDiff.setSrc(unlinkEvent.getPath());
+    metaStore.insertFileDiff(fileDiff);
+    return Arrays.asList(String.format("DELETE FROM file WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
   }
 }

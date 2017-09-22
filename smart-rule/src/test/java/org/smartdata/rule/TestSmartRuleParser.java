@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.smartdata.rule.parser.SmartRuleLexer;
 import org.smartdata.rule.parser.SmartRuleParser;
 import org.smartdata.rule.parser.SmartRuleVisitTranslator;
-import org.smartdata.rule.parser.TranslateResult;
+import org.smartdata.model.rule.TranslateResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

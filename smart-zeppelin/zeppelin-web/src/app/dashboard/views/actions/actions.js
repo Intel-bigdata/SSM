@@ -59,7 +59,7 @@ angular.module('zeppelinWebApp')
         // group 3/3 (4-col)
         $stb.text('Succeed').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-3').done()
+        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
       ],
       rows: null
     };
@@ -108,11 +108,5 @@ angular.module('zeppelinWebApp')
     actions0.$subscribe($scope, function (actions) {
       updateTable(actions);
     });
-/*
-    $(function () {
-      $("[data-toggle='tooltip']").tooltip({
-        container: body
-      });
-    });*/
   }
 

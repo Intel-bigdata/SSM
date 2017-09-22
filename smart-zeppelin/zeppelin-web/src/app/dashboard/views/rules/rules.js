@@ -39,22 +39,15 @@ angular.module('zeppelinWebApp')
 
     $scope.rulesTable = {
       cols: [
-        // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
         $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
         $stb.text('Name').key(['ruleName']).canSort().done(),
-          // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
-        // group 2/3 (5-col)
         $stb.datetime('Submission Time').key('submitTime').canSort().done(),
         $stb.datetime('Last Check Time').key('lastCheckTime').canSort().done(),
-        $stb.text('Checked Number').key('numChecked').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.text('Cmdlets Generated').key('numCmdsGen').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        // $stb.datetime('Start Time').key('startTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        // $stb.datetime('Stop Time').key('stopTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),
-        // group 3/3 (4-col)
+        $stb.text('Checked Number').key('numChecked').canSort().styleClass('hidden-sm hidden-xs').done(),
+        $stb.text('Cmdlets Generated').key('numCmdsGen').canSort().styleClass('hidden-sm hidden-xs').done(),
         $stb.text('Status').key('status').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-4').done()
+        $stb.button('Actions').key(['active', 'view', 'delete']).styleClass('col-md-1').done()
       ],
       rows: null
     };
@@ -95,13 +88,9 @@ angular.module('zeppelinWebApp')
               disabled: rule.isDelete,
               click: function () {
                 if(!rule.isRunning) {
-                  $dialogs.confirm('Are you sure to active this rule?', function () {
-                    rule.start();
-                  });
+                  rule.start();
                 }else{
-                  $dialogs.confirm('Are you sure to stop this rule?', function () {
-                    rule.terminate();
-                  });
+                  rule.terminate();
                 }
               }
             },
@@ -110,8 +99,7 @@ angular.module('zeppelinWebApp')
               icon: function() {
                 return 'glyphicon glyphicon-info-sign';
               },
-              class: 'btn-xs btn-info',
-              disabled: !rule.isRunning
+              class: 'btn-xs btn-info'
             },
             // stop: {
             //   text: 'glyphicon glyphicon-stop',

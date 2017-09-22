@@ -15,9 +15,9 @@
 package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
-import org.apache.hadoop.fs.StorageType;
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.model.action.FileMovePlan;
 
 import java.net.URI;
 import java.util.UUID;
@@ -28,26 +28,26 @@ public class TestSchedulePlan {
   public void testJsonConvertion() throws Exception {
     URI nn = new URI("hdfs://localhost:8888");
     String file = "/test/foofile";
-    SchedulePlan plan = new SchedulePlan(nn, file);
+    FileMovePlan plan = new FileMovePlan(nn, file);
     plan.addPlan(
         1L,
         UUID.randomUUID().toString(),
-        StorageType.ARCHIVE.toString(),
+        "ARCHIVE",
         "127.0.0.1",
         10001,
-        StorageType.SSD.toString());
+       "SSD");
     plan.addPlan(
         2L,
         UUID.randomUUID().toString(),
-        StorageType.ARCHIVE.toString(),
+        "ARCHIVE",
         "127.0.0.1",
         10002,
-        StorageType.SSD.toString());
+        "SSD");
 
     Gson gson = new Gson();
     String jsonPlan = gson.toJson(plan);
 
-    SchedulePlan plan2 = gson.fromJson(jsonPlan, SchedulePlan.class);
+    FileMovePlan plan2 = gson.fromJson(jsonPlan, FileMovePlan.class);
     Assert.assertEquals(plan.getFileName(), plan2.getFileName());
     Assert.assertEquals(plan.getBlockIds(), plan2.getBlockIds());
   }

@@ -1,9 +1,11 @@
 {
   "paragraphs": [
     {
+      "title": "Add Rule",
       "user": "admin",
       "config": {
-        "colWidth": 12.0,
+        "colWidth": 8.0,
+        "title": "true",
         "enabled": true,
         "results": {},
         "editorSetting": {
@@ -12,7 +14,8 @@
         },
         "editorMode": "ace/mode/markdown",
         "editorHide": false,
-        "tableHide": true
+        "tableHide": false,
+        "showEditor": true
       },
       "settings": {
         "params": {},
@@ -20,7 +23,35 @@
       },
       "apps": [],
       "jobName": "paragraph_1499342884369_1856856416",
-      "id": "20170706-200804_1163568004",
+      "id": "add_rule",
+      "dateCreated": "Jul 6, 2017 8:08:04 PM",
+      "status": "READY",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Run Action",
+      "user": "admin",
+      "config": {
+        "colWidth": 8.0,
+        "title": "true",
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "editorMode": "ace/mode/markdown",
+        "editorHide": false,
+        "tableHide": false,
+        "showEditor": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1499342884369_1856856416",
+      "id": "run_action",
       "dateCreated": "Jul 6, 2017 8:08:04 PM",
       "status": "READY",
       "progressUpdateIntervalMs": 500

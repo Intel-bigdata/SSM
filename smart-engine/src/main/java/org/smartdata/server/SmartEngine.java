@@ -21,10 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
+import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
@@ -69,6 +71,19 @@ public class SmartEngine extends AbstractService {
     for (AbstractService s : services) {
       s.init();
     }
+  }
+
+  @Override
+  public boolean inSafeMode() {
+    if (services.isEmpty()) { //Not initiated
+      return true;
+    }
+    for (AbstractService service : services) {
+      if (service.inSafeMode()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -123,4 +138,6 @@ public class SmartEngine extends AbstractService {
   public CmdletManager getCmdletManager() {
     return cmdletManager;
   }
+  
+  
 }

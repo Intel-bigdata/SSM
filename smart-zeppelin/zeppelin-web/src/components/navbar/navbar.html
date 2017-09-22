@@ -26,8 +26,8 @@ limitations under the License.
 
     <div class="collapse navbar-collapse" ng-controller="NavCtrl as navbar">
       <ul class="nav navbar-nav" ng-if="ticket">
-
-        <li><a href="#/notebook/2CM9DW8NW">SmartNotebook</a></li>
+        <!--TODO(zzq):  add smartnotebook. -->
+        <li><a href="#/notebook/2CM9DW8NW">Smart Notebook</a></li>
         <li class="dropdown" uib-dropdown>
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>Cluster <span class="caret"></span></a>
             <ul class="dropdown-menu">
@@ -35,38 +35,19 @@ limitations under the License.
               <li><a href="#/cluster/fileInCache">file In Cache</a></li>
             </ul>
         </li>
-        <li><a href="#/rules">Rules</a></li>
+        <li><a href="#/rules">User Rules</a></li>
         <li><a href="#/actions">Actions</a></li>
+        <li><a href="#/movers">Storage Mover</a></li>
+        <li><a href="#/copys">Data Sync</a></li>
+        <li class="dropdown" uib-dropdown>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>Help <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="app/dashboard/views/rules/submit/help.html" target="_blank">Rule Grammar</a></li>
+            <li><a href="app/dashboard/views/actions/submit/help.html" target="_blank">Action Usage</a></li>
+          </ul>
+        </li>
       </ul>
       <ul class="nav navbar-nav navbar-right" style="margin-right:5px;">
-        <li class="nav-component" ng-if="ticket">
-        <!--TODO(bzz): move to Typeahead https://angular-ui.github.io/bootstrap  -->
-
-          <form role="search" data-ng-model="navbar.searchForm"
-            style="display: inline-block; margin: 0px"
-             class="navbar-form"
-             ng-submit="navbar.search(navbar.searchForm.searchTerm)">
-            <div class="input-group">
-              <input
-                type="text"
-                ng-model="navbar.searchForm.searchTerm"
-                id="searchTermId"
-                ng-disabled="!navbar.connected"
-                class="form-control"
-                placeholder="Search your Notes"
-              />
-              <span class="input-group-btn">
-                <button
-                  type="submit"
-                  class="btn btn-default"
-                  ng-disabled="!navbar.connected || !navbar.searchForm.searchTerm"
-                >
-                  <i class="glyphicon glyphicon-search"></i>
-                </button>
-              </span>
-            </div>
-          </form>
-        </li>
         <li style="margin-left: 10px;">
           <div class="dropdown">
             <i ng-if="navbar.connected" class="fa fa-circle server-connected"
@@ -81,10 +62,6 @@ limitations under the License.
             <ul class="dropdown-menu">
               <li><a href="" data-toggle="modal" data-target="#aboutModal">About Smart Storage Manager</a></li>
               <li role="separator" style="margin: 5px 0;" class="divider"></li>
-              <!--<li><a href="#/interpreter">Interpreter</a></li>
-              <li><a href="#/notebookRepos">Notebook Repos</a></li>-->
-              <!--<li><a href="#/credential">Credential</a></li>-->
-              <!--<li><a href="#/helium">Helium</a></li>-->
               <li><a href="#/configuration">Configuration</a></li>
               <li ng-if="ticket.principal && ticket.principal !== 'anonymous'" role="separator" style="margin: 5px 0;" class="divider"></li>
               <li ng-if="ticket.principal && ticket.principal !== 'anonymous'"><a ng-click="navbar.logout()">Logout</a></li>

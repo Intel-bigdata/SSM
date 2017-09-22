@@ -21,6 +21,8 @@ package org.smartdata.rule.parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.rule.TimeBasedScheduleInfo;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;
 import org.smartdata.rule.objects.PropertyRealParas;
@@ -53,6 +55,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   private TranslationContext transCtx = null;
   private int[] condPostion;
   private long minTimeInverval = Long.MAX_VALUE;
+  private List<String> pathCheckGlob = new ArrayList<>();
 
   public SmartRuleVisitTranslator() {
   }
@@ -655,7 +658,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     switch (objects.get("Default").getType()) {
       case DIRECTORY:
       case FILE:
-        ret = "SELECT path FROM files";
+        ret = "SELECT path FROM file";
         break;
       default:
         throw new IOException("No operation defined for Object "
@@ -670,7 +673,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       }
       TreeNode root = new OperNode(OperatorType.NONE, actRoot, null);
       actRoot.setParent(root);
-      ret += " WHERE " + doGenerateSql(root, "files").getRet() + ";";
+      ret += " WHERE " + doGenerateSql(root, "file").getRet() + ";";
     }
 
     sqlStatements.add(ret);
@@ -678,7 +681,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
     return new TranslateResult(sqlStatements,
         tempTableNames, dynamicParameters, sqlStatements.size() - 1,
-        timeBasedScheduleInfo, cmdDescriptor, condPostion);
+        timeBasedScheduleInfo, cmdDescriptor, condPostion, pathCheckGlob);
   }
 
   private class NodeTransResult {
@@ -833,8 +836,17 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       } else {
         PropertyRealParas realParas = vr.getRealParas();
         Property p = realParas.getProperty();
+
+        // TODO: Handle not
+        if (p.getPropertyName().equals("path")) {
+          ValueNode pathStrNode = (ValueNode)(vNode.getPeer());
+          VisitResult pathVr = pathStrNode.eval();
+          String pathStr = (String)pathVr.getValue();
+          pathCheckGlob.add(pathStr);
+        }
+
         // TODO: hard code now, abstract later
-        if (p.getPropertyName() == "accessCount") {
+        if (p.getPropertyName().equals("accessCount")) {
           String rid = "";
           if (transCtx != null) {
             rid = transCtx.getRuleId() + "_";

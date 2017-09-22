@@ -486,8 +486,8 @@ public abstract class TestCoderBase {
   protected void dumpSetting() {
     if (allowDump) {
       StringBuilder sb = new StringBuilder("Erasure coder test settings:\n");
-      sb.append(" numDataUnits=").append(numDataUnits);
-      sb.append(" numParityUnits=").append(numParityUnits);
+      sb.append(" data_unit_num=").append(numDataUnits);
+      sb.append(" parity_unit_num=").append(numParityUnits);
       sb.append(" chunkSize=").append(chunkSize).append("\n");
 
       sb.append(" erasedDataIndexes=").

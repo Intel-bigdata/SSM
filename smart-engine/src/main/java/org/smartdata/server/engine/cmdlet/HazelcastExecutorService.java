@@ -27,6 +27,7 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.model.ExecutorType;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.StandbyServerInfo;
@@ -55,7 +56,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   private ITopic<StatusMessage> statusTopic;
 
   public HazelcastExecutorService(CmdletManager cmdletManager) {
-    super(cmdletManager);
+    super(cmdletManager, ExecutorType.REMOTE_SSM);
     this.random = new Random();
     this.scheduledCmdlets = new HashMap<>();
     this.masterToWorkers = new HashMap<>();

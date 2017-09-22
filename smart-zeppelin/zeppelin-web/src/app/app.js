@@ -63,28 +63,32 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
     };
 
     var fileInCacheLoad = {
-      load: ['heliumService', function(heliumService) {
-        return heliumService.load;
-      }],
       cached0: ['models', function (models) {
         return models.$get.cachedfiles();
       }]
     };
 
     var hotTestFilesLoad = {
-      load: ['heliumService', function(heliumService) {
-        return heliumService.load;
-      }],
       hotfiles0: ['models', function (models) {
         return models.$get.hotFiles();
       }]
     };
 
     $routeProvider
+      .when("/",{
+        redirectTo: '/notebook/2CM9DW8NW'
+      })
       .when('/notebook/:noteId', {
         templateUrl: 'app/notebook/notebook.html',
         controller: 'NotebookCtrl',
-        resolve: visBundleLoad
+        resolve: {
+          load: ['heliumService', function(heliumService) {
+            return heliumService.load;
+          }],
+          rules0: ['models', function (models) {
+            return models.$get.rules();
+          }]
+        }
       })
       .when('/notebook/:noteId/paragraph?=:paragraphId', {
         templateUrl: 'app/notebook/notebook.html',
@@ -115,9 +119,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/dashboard/views/rules/rules.html',
         controller: 'RulesCtrl',
         resolve: {
-         load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           rules0: ['models', function (models) {
             return models.$get.rules();
           }]
@@ -127,11 +128,26 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/dashboard/views/rules/rule/rule.html',
         controller: 'RuleCtrl',
         resolve: {
-          load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           rule0: ['$route', 'models', function ($route, models) {
             return models.$get.rule($route.current.params.ruleId);
+          }]
+        }
+      })
+      .when('/movers', {
+        templateUrl: 'app/dashboard/views/mover/mover.html',
+        controller: 'MoverCtrl',
+        resolve: {
+          movers0: ['models', function (models) {
+            return models.$get.movers();
+          }]
+        }
+      })
+      .when('/movers/mover/:ruleId', {
+        templateUrl: 'app/dashboard/views/mover/detail/moverActions.html',
+        controller: 'MoverActionsCtrl',
+        resolve: {
+          moverActions0: ['$route', 'models', function ($route, models) {
+            return models.$get.moverActions($route.current.params.ruleId);
           }]
         }
       })
@@ -139,9 +155,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/dashboard/views/actions/actions.html',
         controller: 'ActionsCtrl',
         resolve: {
-          load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           actions0: ['models', function (models) {
             return models.$get.actions();
           }],
@@ -150,13 +163,28 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
           }]
         }
       })
+      .when('/copys', {
+        templateUrl: 'app/dashboard/views/copy/copy.html',
+        controller: 'CopyCtrl',
+        resolve: {
+          copys0: ['models', function (models) {
+            return models.$get.copys();
+          }]
+        }
+      })
+      .when('/copys/copy/:ruleId', {
+        templateUrl: 'app/dashboard/views/copy/detail/copyActions.html',
+        controller: 'CopyActionsCtrl',
+        resolve: {
+          copyActions0: ['$route', 'models', function ($route, models) {
+            return models.$get.copyActions($route.current.params.ruleId);
+          }]
+        }
+      })
       .when('/actions/action/:actionId', {
         templateUrl: 'app/dashboard/views/actions/action/action.html',
         controller: 'ActionCtrl',
         resolve: {
-          load: ['heliumService', function(heliumService) {
-            return heliumService.load;
-          }],
           action0: ['$route', 'models', function ($route, models) {
             return models.$get.action($route.current.params.actionId);
           }]
@@ -192,7 +220,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         controller: 'SearchResultCtrl'
       })
       .otherwise({
-        redirectTo: '/notebook/2CM9DW8NW'
+        redirectTo: '/'
       });
 
     ngToastProvider.configure({
@@ -246,13 +274,13 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
   // constants
   .constant('conf', {
     restapiProtocol: 'v1',
-    restapiRoot: 'http://localhost:8080/',
-    // restapiRoot: rootPath,
+    // restapiRoot: 'http://localhost:7045/',
+    restapiRoot: rootPath,
     restapiQueryInterval: 3 * 1000, // in milliseconds
     restapiQueryTimeout: 30 * 1000, // in milliseconds
     restapiTaskLevelMetricsQueryLimit: 100,
-    loginUrl: 'http://localhost:8080/' + 'login'
-    // loginUrl: rootPath + 'login'
+    // loginUrl: 'http://localhost:7045/' + 'login'
+    loginUrl: rootPath + 'login'
   })
   .constant('TRASH_FOLDER_ID', '~Trash');
 

@@ -26,8 +26,10 @@ import org.smartdata.model.RuleState;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.dao.AccessCountTable;
-import org.smartdata.rule.parser.TimeBasedScheduleInfo;
-import org.smartdata.rule.parser.TranslateResult;
+import org.smartdata.model.rule.RuleExecutorPlugin;
+import org.smartdata.model.rule.RuleExecutorPluginManager;
+import org.smartdata.model.rule.TimeBasedScheduleInfo;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.data.ExecutionContext;
 
@@ -51,7 +53,7 @@ public class RuleExecutor implements Runnable {
   private volatile boolean exited = false;
   private long exitTime;
   private Stack<String> dynamicCleanups = new Stack<>();
-  public static final Logger LOG =
+  private static final Logger LOG =
       LoggerFactory.getLogger(RuleExecutor.class.getName());
 
   private static Pattern varPattern = Pattern.compile(
@@ -154,17 +156,22 @@ public class RuleExecutor implements Runnable {
     String countFilter = "";
     List<String> tableNames =
         getAccessCountTablesDuringLast(interval);
-    return generateSQL(tableNames, newTable, countFilter);
+    return generateSQL(tableNames, newTable, countFilter, adapter);
   }
 
   @VisibleForTesting
-  static String  generateSQL(List<String> tableNames, String newTable, String countFilter) {
-    String sqlFinal;
+  static String  generateSQL(List<String> tableNames, String newTable, String countFilter, MetaStore adapter) {
+    String sqlFinal,sqlCreate;
     if (tableNames.size() <= 1) {
       String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
           tableNames.get(0);
-      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM "
-          + tableName + ";";
+      sqlCreate = "CREATE TABLE " + newTable + "(fid INTEGER NOT NULL, count INTEGER NOT NULL);";
+      try {
+        adapter.execute(sqlCreate);
+      } catch (MetaStoreException e) {
+        LOG.error("Cannot create table " + newTable, e);
+      }
+      sqlFinal = "INSERT INTO " + newTable + " SELECT * FROM " + tableName + ";";
     } else {
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
       String sqlUnion = "SELECT fid, count FROM "
@@ -179,8 +186,13 @@ public class RuleExecutor implements Runnable {
               "" :
               "HAVING SUM(count) " + countFilter;
       String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM ("
-          + sqlRe + ") as t;";
+      sqlCreate = "CREATE TABLE " + newTable + "(fid INTEGER NOT NULL, count INTEGER NOT NULL);";
+      try {
+        adapter.execute(sqlCreate);
+      } catch (MetaStoreException e) {
+        LOG.error("Cannot create table " + newTable, e);
+      }
+      sqlFinal = "INSERT INTO " + newTable + " SELECT * FROM (" + sqlRe + ") temp;";
     }
     return sqlFinal;
   }
@@ -233,6 +245,8 @@ public class RuleExecutor implements Runnable {
       exitSchedule();
     }
 
+    List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
+
     long rid = ctx.getRuleId();
     try {
       long startCheckTime = System.currentTimeMillis();
@@ -240,7 +254,20 @@ public class RuleExecutor implements Runnable {
         exitSchedule();
       }
 
+      long endCheckTime;
+      int numCmdSubmitted = 0;
+      List<String> files = new ArrayList<>();
+
       RuleInfo info = ruleManager.getRuleInfo(rid);
+
+      boolean doExec = true;
+      for (RuleExecutorPlugin plugin : plugins) {
+        doExec &= plugin.preExecution(info, tr);
+        if (!doExec) {
+          break;
+        }
+      }
+
       RuleState state = info.getState();
       if (exited || state == RuleState.DELETED || state == RuleState.FINISHED
           || state == RuleState.DISABLED) {
@@ -260,9 +287,19 @@ public class RuleExecutor implements Runnable {
       }
 
 
-      List<String> files = executeFileRuleQuery();
-      long endCheckTime = System.currentTimeMillis();
-      int numCmdSubmitted = submitCmdlets(files, rid);
+      if (doExec) {
+        files = executeFileRuleQuery();
+        if (exited) {
+          exitSchedule();
+        }
+      }
+      endCheckTime = System.currentTimeMillis();
+      if (doExec) {
+        for (RuleExecutorPlugin plugin : plugins) {
+          files = plugin.preSubmitCmdlet(info, files);
+        }
+        numCmdSubmitted = submitCmdlets(info, files);
+      }
       ruleManager.updateRuleInfo(rid, null,
           System.currentTimeMillis(), 1, numCmdSubmitted);
       if (exited) {
@@ -294,18 +331,23 @@ public class RuleExecutor implements Runnable {
     temp[1] += "The exception is created deliberately";
   }
 
-  private int submitCmdlets(List<String> files, long ruleId) {
+  private int submitCmdlets(RuleInfo ruleInfo, List<String> files) {
+    long ruleId = ruleInfo.getId();
     if (files == null || files.size() == 0
         || ruleManager.getCmdletManager() == null) {
       return 0;
     }
     int nSubmitted = 0;
+    List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
     String template = tr.getCmdDescriptor().toCmdletString();
     for (String file : files) {
       if (!exited) {
         try {
           CmdletDescriptor cmd = new CmdletDescriptor(template, ruleId);
           cmd.setCmdletParameter(CmdletDescriptor.HDFS_FILE_PATH, file);
+          for (RuleExecutorPlugin plugin : plugins) {
+            cmd = plugin.preSubmitCmdletDescriptor(ruleInfo, tr, cmd);
+          }
           ruleManager.getCmdletManager().submitCmdlet(cmd);
           nSubmitted++;
         } catch (IOException e) {

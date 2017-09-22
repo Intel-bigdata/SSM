@@ -37,13 +37,17 @@ import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
+import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.utils.GenericOptionsParser;
 
 import javax.security.auth.Subject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+
+import org.smartdata.tidb.LaunchDB;
 
 /**
  * From this Smart Storage Management begins.
@@ -55,7 +59,7 @@ public class SmartServer {
   private SmartConf conf;
   private SmartEngine engine;
   private ServerContext context;
-  private SmartServiceState serviceState = SmartServiceState.SAFEMODE;
+  private boolean enabled;
 
   private SmartRpcServer rpcServer;
   private SmartZeppelinServer zeppelinServer;
@@ -68,6 +72,7 @@ public class SmartServer {
   public SmartServer(SmartConf conf) {
     this.conf = conf;
     this.confMgr = new ConfManager(conf);
+    this.enabled = false;
   }
 
   public void initWith(StartupOption startupOption) throws Exception {
@@ -75,7 +80,7 @@ public class SmartServer {
 
     MetaStore metaStore = MetaStoreUtils.getDBAdapter(conf);
     context = new ServerContext(conf, metaStore);
-
+    initServiceMode(conf);
     if (startupOption == StartupOption.REGULAR) {
       engine = new SmartEngine(context);
       rpcServer = new SmartRpcServer(this, conf);
@@ -124,6 +129,19 @@ public class SmartServer {
   }
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
+    if (isTidbEnabled(conf)) {
+      LaunchDB launchDB = new LaunchDB();
+      Thread db = new Thread(launchDB);
+      LOG.info("Starting PD, TiKV and TiDB..");
+      db.start();
+      try {
+        while (!launchDB.isCompleted())
+          Thread.sleep(100);
+      } catch (InterruptedException ex) {
+        LOG.error(ex.getMessage());
+      }
+    }
+
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
@@ -186,6 +204,10 @@ public class SmartServer {
         SmartConfKeys.SMART_ENABLE_ZEPPELIN_DEFAULT);
   }
 
+  private static boolean isTidbEnabled(SmartConf conf) {
+    return conf.getBoolean(SmartConfKeys.SMART_TIDB_ENABLED,SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
+  }
+
   private void checkSecurityAndLogin() throws IOException {
     if (!isSecurityEnabled()) {
       return;
@@ -217,9 +239,6 @@ public class SmartServer {
 
     if (enabled) {
       startEngines();
-      serviceState = SmartServiceState.ACTIVE;
-    } else {
-      serviceState = SmartServiceState.DISABLED;
     }
 
     rpcServer.start();
@@ -230,15 +249,15 @@ public class SmartServer {
   }
 
   private void startEngines() throws Exception {
+    enabled = true;
     engine.init();
     engine.start();
   }
 
   public void enable() throws IOException {
-    if (serviceState == SmartServiceState.DISABLED) {
+    if (getSSMServiceState() == SmartServiceState.DISABLED) {
       try {
         startEngines();
-        serviceState = SmartServiceState.ACTIVE;
       } catch (Exception e) {
         throw new IOException(e);
       }
@@ -246,11 +265,17 @@ public class SmartServer {
   }
 
   public SmartServiceState getSSMServiceState() {
-    return serviceState;
+    if (!enabled) {
+      return SmartServiceState.DISABLED;
+    } else if (!engine.inSafeMode()) {
+      return SmartServiceState.ACTIVE;
+    } else {
+      return SmartServiceState.SAFEMODE;
+    }
   }
 
   public boolean isActive() {
-    return serviceState == SmartServiceState.ACTIVE;
+    return getSSMServiceState() == SmartServiceState.ACTIVE;
   }
 
   private void stop() throws Exception {
@@ -292,6 +317,20 @@ public class SmartServer {
     public String getName() {
       return name;
     }
+  }
+
+  private void initServiceMode(SmartConf conf) {
+    String serviceModeStr = conf.get(SmartConfKeys.SMART_SERVICE_MODE_KEY,
+        SmartConfKeys.SMART_SERVICE_MODE_DEFAULT);
+    try {
+      context.setServiceMode(ServiceMode.valueOf(serviceModeStr.trim().toUpperCase()));
+    } catch (IllegalStateException e) {
+      String errorMsg = "Illegal service mode '" + serviceModeStr + "' set in property: "+
+          SmartConfKeys.SMART_SERVICE_MODE_KEY + "!";
+      LOG.error(errorMsg);
+      throw e;
+    }
+    LOG.info("Initialized service mode: "+ context.getServiceMode().getName() + ".");
   }
 
   private static StartupOption parseArguments(String args[]) {

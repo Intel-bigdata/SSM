@@ -27,6 +27,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.DataNodeInfoFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
@@ -37,6 +38,7 @@ import org.smartdata.metastore.StatesUpdateService;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -45,6 +47,7 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 public class HdfsStatesUpdateService extends StatesUpdateService {
   private static final Path MOVER_ID_PATH = new Path("/system/mover.id");
+  private volatile boolean inSafeMode;
   private DFSClient client;
   private ScheduledExecutorService executorService;
   private InotifyEventFetcher inotifyEventFetcher;
@@ -57,6 +60,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
 
   public HdfsStatesUpdateService(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
+    this.inSafeMode = true;
   }
 
   /**
@@ -68,17 +72,34 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
   public void init() throws IOException {
     LOG.info("Initializing ...");
     SmartContext context = getContext();
+    String hadoopConfPath = getContext().getConf()
+        .get(SmartConfKeys.SMART_CONF_DIR_KEY);
+    HadoopUtil.loadHadoopConf(context.getConf(), hadoopConfPath);
     URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
+    LOG.debug("Final Namenode URL:" + nnUri.toString());
     this.client = new DFSClient(nnUri, context.getConf());
     moverIdOutputStream = checkAndMarkRunning(nnUri, context.getConf());
     this.cleanFileTableContents(metaStore);
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
-        metaStore, executorService);
+        metaStore, executorService, new FetchFinishedCallBack());
     this.dataNodeInfoFetcher = new DataNodeInfoFetcher(
         client, metaStore, executorService, context.getConf());
     LOG.info("Initialized.");
+  }
+
+  private class FetchFinishedCallBack implements Callable<Object> {
+    @Override
+    public Object call() throws Exception {
+      inSafeMode = false;
+      return null;
+    }
+  }
+
+  @Override
+  public boolean inSafeMode() {
+    return inSafeMode;
   }
 
   /**
@@ -121,9 +142,9 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
 
   private void cleanFileTableContents(MetaStore adapter) throws IOException {
     try {
-      adapter.execute("DELETE FROM files");
+      adapter.execute("DELETE FROM file");
     } catch (MetaStoreException e) {
-      throw new IOException("Error while 'DELETE FROM files'", e);
+      throw new IOException("Error while 'DELETE FROM file'", e);
     }
   }
 

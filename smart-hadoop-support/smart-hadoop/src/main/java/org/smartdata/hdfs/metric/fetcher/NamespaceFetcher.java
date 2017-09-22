@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class NamespaceFetcher {
-  private static final Long DEFAULT_INTERVAL = 100L;
+  private static final Long DEFAULT_INTERVAL = 1L;
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final long fetchInterval;
@@ -124,12 +124,14 @@ public class NamespaceFetcher {
         }
 
         if (this.batches.isEmpty()) {
-          this.isFinished = true;
-          long curr = System.currentTimeMillis();
-          LOG.info(String.format(
-              "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
-              (curr - startTime) / 1000,
-              numDirectoriesFetched, numFilesFetched));
+          if (!this.isFinished) {
+            this.isFinished = true;
+            long curr = System.currentTimeMillis();
+            LOG.info(String.format(
+                "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
+                (curr - startTime) / 1000,
+                numDirectoriesFetched, numFilesFetched));
+          }
         }
         return;
       }

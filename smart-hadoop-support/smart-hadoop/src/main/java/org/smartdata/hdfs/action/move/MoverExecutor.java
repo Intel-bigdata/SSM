@@ -28,7 +28,8 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.DataTransferSaslUtil;
 import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.SaslDataTransferClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.hdfs.action.SchedulePlan;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
+import org.smartdata.model.action.FileMovePlan;
 
 import java.io.IOException;
 import java.net.URI;
@@ -71,7 +72,7 @@ public class MoverExecutor {
    * @return number of failed moves
    * @throws Exception
    */
-  public int executeMove(SchedulePlan plan) throws Exception {
+  public int executeMove(FileMovePlan plan) throws Exception {
     parseSchedulePlan(plan);
 
     moveExecutor = Executors.newFixedThreadPool(maxConcurrentMoves);
@@ -106,7 +107,7 @@ public class MoverExecutor {
     return "MoverExecutor <" + namenode + ":" + fileName + ">";
   }
 
-  private void parseSchedulePlan(SchedulePlan plan) throws IOException {
+  private void parseSchedulePlan(FileMovePlan plan) throws IOException {
     if (plan == null) {
       throw new RuntimeException("Schedule plan for mover is null");
     }
@@ -134,26 +135,7 @@ public class MoverExecutor {
       DatanodeInfo sourceDatanode = sourceDatanodeMap.get(sourceUuids.get(planIndex));
       StorageGroup source = new StorageGroup(sourceDatanode, sourceStorageTypes.get(planIndex));
       //build target
-      DatanodeInfo targetDatanode =
-          new DatanodeInfo(
-              targetIpAddrs.get(planIndex),
-              null,
-              null,
-              targetXferPorts.get(planIndex),
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              null,
-              null);
+      DatanodeInfo targetDatanode = CompatibilityHelperLoader.getHelper().newDatanodeInfo(targetIpAddrs.get(planIndex), targetXferPorts.get(planIndex));
       StorageGroup target = new StorageGroup(targetDatanode, targetStorageTypes.get(planIndex));
       // generate single move
       ReplicaMove replicaMove = new ReplicaMove(block, source, target, nnc, saslClient);
@@ -174,7 +156,7 @@ public class MoverExecutor {
     }
   }
 
-  static List<LocatedBlock> getLocatedBlocks(DFSClient dfsClient, String fileName)
+  public static List<LocatedBlock> getLocatedBlocks(DFSClient dfsClient, String fileName)
       throws IOException {
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
     if (fileStatus == null) {

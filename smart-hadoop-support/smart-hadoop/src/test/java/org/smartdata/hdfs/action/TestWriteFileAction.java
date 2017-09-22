@@ -33,7 +33,7 @@ public class TestWriteFileAction extends MiniClusterHarness {
     writeFileAction.setDfsClient(dfsClient);
     writeFileAction.setContext(smartContext);
     writeFileAction.setStatusReporter(new MockActionStatusReporter());
-    Map<String, String> args = new HashMap();
+    Map<String, String> args = new HashMap<>();
     args.put(WriteFileAction.FILE_PATH, filePath);
     args.put(WriteFileAction.LENGTH, "" + length);
     writeFileAction.init(args);
@@ -42,7 +42,7 @@ public class TestWriteFileAction extends MiniClusterHarness {
 
   @Test
   public void testInit() throws IOException {
-    Map<String, String> args = new HashMap();
+    Map<String, String> args = new HashMap<>();
     args.put(WriteFileAction.FILE_PATH, "/Test");
     args.put(WriteFileAction.LENGTH, "100000000000000");
     WriteFileAction writeFileAction = new WriteFileAction();

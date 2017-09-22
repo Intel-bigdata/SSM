@@ -33,6 +33,12 @@ public class ClusterRestApi extends RuleRestApi {
     return resp.jsonPath().setRoot("body");
   }
 
+  public static JsonPath getFileInfo(String path) {
+    Response resp = RestAssured.with().body(path).get(PRIMCLUSTERROOT + "/fileinfo");
+    resp.then().body("status", equalTo("OK"));
+    return resp.jsonPath().setRoot("body");
+  }
+
   /**
    * Get list of file paths that been cached.
    * @return

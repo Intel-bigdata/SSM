@@ -73,7 +73,9 @@ public class TestFileInfoDao extends TestDaoUtil {
     FileInfo fileInfo1 = new FileInfo(path, fileId + 1, length, isDir, blockReplication,
         blockSize, modTime, accessTime, permission, owner, group, storagePolicy);
     fileInfoDao.insert(fileInfo1);
-    List<FileInfo> fileInfos = fileInfoDao.getAll();
+    List<FileInfo> fileInfos = fileInfoDao.getFilesByPrefix("/testaaFile");
+    Assert.assertTrue(fileInfos.size() == 0);
+    fileInfos = fileInfoDao.getFilesByPrefix("/testFile");
     Assert.assertTrue(fileInfos.size() == 2);
     fileInfoDao.deleteById(fileId);
     fileInfos = fileInfoDao.getAll();

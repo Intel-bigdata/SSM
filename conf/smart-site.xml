@@ -27,5 +27,25 @@
         <name>smart.zeppelin.web.enable</name>
         <value>false</value>
     </property>
+    <property>
+        <name>smart.hadoop.conf.path</name>     
+        <!-- an example
+        <value>file:///home/ha/hadoop/etc/hadoop/</value>
+        -->
+        <value></value>
+        <description>Hadoop main cluster configuration file path</description>
+    </property>
+    <property>
+        <name>smart.zeppelin.enable</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>smart.tidb.enable</name>
+        <value>false</value>
+        <description>
+            This decides whether Tidb is enabled and used as metastore.
+            If it is enabled, the jdbc url configured in druid.xml must be a valid service address of Tidb.
+        </description>
+    </property>
 
 </configuration>

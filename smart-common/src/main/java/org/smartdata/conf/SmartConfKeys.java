@@ -29,11 +29,20 @@ public class SmartConfKeys {
   public final static String SMART_LOG_DIR_KEY = "smart.log.dir";
   public final static String SMART_LOG_DIR_DEFAULT = "logs";
 
+  public final static String SMART_SERVICE_MODE_KEY = "smart.service.mode";
+  public final static String SMART_SERVICE_MODE_DEFAULT = "HDFS";
+  
   public final static String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
+
+  // confKeys for alluxio
+  public final static String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
+  public final static String SMART_ALLUXIO_CONF_DIR_KEY = "smart.alluxio.conf.dir";
 
   //ssm
   public final static String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
   public final static String SMART_SERVER_RPC_ADDRESS_DEFAULT = "0.0.0.0:7042";
+  public final static String SMART_SERVER_RPC_HANDLER_COUNT_KEY = "smart.server.rpc.handler.count";
+  public final static int SMART_SERVER_RPC_HANDLER_COUNT_DEFAULT = 80;
   public final static String SMART_SERVER_HTTP_ADDRESS_KEY = "smart.server.http.address";
   public final static String SMART_SERVER_HTTP_ADDRESS_DEFAULT = "0.0.0.0:7045";
   public final static String SMART_SERVER_HTTPS_ADDRESS_KEY = "smart.server.https.address";
@@ -43,10 +52,6 @@ public class SmartConfKeys {
   public final static String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
 
   // StatesManager
-  public static final String SMART_STATES_UPDATE_SERVICE_KEY = "smart.states.update.service";
-  public static final String SMART_STATES_UPDATE_SERVICE_DEFAULT = "org.smartdata.hdfs.HdfsStatesUpdateService";
-  public static final String SMART_ACTION_SCHEDULER_SERVICE_KEY = "smart.action.scheduler.service";
-  public static final String SMART_ACTION_SCHEDULER_SERVICE_DEFAULT = "org.smartdata.hdfs.scheduler.MoverPreProcessService";
 
   // RuleManager
   public final static String SMART_RULE_EXECUTORS_KEY = "smart.rule.executors";
@@ -67,4 +72,8 @@ public class SmartConfKeys {
   // SmartClient
   // Comma delimited directories, access event of files under these directories will not be reported to SSM.
   public static final String SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY = "smart.client.ignore.access.event.dirs";
+
+  //Tidb
+  public final static String SMART_TIDB_ENABLED = "smart.tidb.enable";
+  public final static boolean SMART_TIDB_ENABLED_DEFAULT = false;
 }

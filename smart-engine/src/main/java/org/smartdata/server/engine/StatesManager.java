@@ -32,6 +32,7 @@ import org.smartdata.metastore.dao.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
+import org.smartdata.model.FileInfo;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
@@ -83,6 +84,14 @@ public class StatesManager extends AbstractService implements Reconfigurable {
           getReconfigurableProperties(), this);
     }
     LOG.info("Initialized.");
+  }
+
+  @Override
+  public boolean inSafeMode() {
+    if (statesUpdaterService == null) {
+      return true;
+    }
+    return statesUpdaterService.inSafeMode();
   }
 
   /**
@@ -146,12 +155,19 @@ public class StatesManager extends AbstractService implements Reconfigurable {
     }
   }
 
+  public FileInfo getFileInfo(String path) throws IOException {
+    try {
+      return serverContext.getMetaStore().getFile(path);
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
+  }
+
   public void reconfigureProperty(String property, String newVal)
       throws ReconfigureException {
     LOG.debug("Received reconfig event: property={} newVal={}",
         property, newVal);
-    if (SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY.equals(property)
-        || SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY.equals(property)) {
+    if (SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY.equals(property)) {
       if (statesUpdaterService != null) {
         throw new ReconfigureException(
             "States update service already been initialized.");
@@ -165,19 +181,18 @@ public class StatesManager extends AbstractService implements Reconfigurable {
 
   public List<String> getReconfigurableProperties() {
     return Arrays.asList(
-        SmartConfKeys.SMART_STATES_UPDATE_SERVICE_KEY,
         SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
   }
 
   private synchronized void initStatesUpdaterService() {
     try {
-      statesUpdaterService = StatesUpdaterServiceFactory
+      statesUpdaterService = AbstractServiceFactory
           .createStatesUpdaterService(getContext().getConf(),
               serverContext, serverContext.getMetaStore());
       statesUpdaterService.init();
     } catch (IOException e) {
       statesUpdaterService = null;
-      LOG.info("Failed to create states updater service.");
+      LOG.info("Failed to create states updater service for: " + e.getMessage());
     }
 
     if (working) {

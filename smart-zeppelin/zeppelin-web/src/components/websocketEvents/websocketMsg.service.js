@@ -160,8 +160,14 @@ function websocketMsgSrv($rootScope, websocketEvents) {
     },
 
     runParagraph: function(paragraphId, paragraphTitle, paragraphData, paragraphConfig, paragraphParams) {
+      var op = '';
+      if (paragraphId === 'add_rule') {
+        op = 'ADD_RULE';
+      } else if (paragraphId === 'run_action') {
+        op = 'RUN_ACTION';
+      }
       websocketEvents.sendNewEvent({
-        op: 'RUN_PARAGRAPH',
+        op: op,
         data: {
           id: paragraphId,
           title: paragraphTitle,

@@ -34,17 +34,18 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.DetailedFileAction;
+import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.server.engine.cmdlet.ActionSchedulerServiceFactory;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
-import org.smartdata.metastore.ActionPreProcessService;
-import org.smartdata.model.action.ActionPreProcessor;
+import org.smartdata.metastore.ActionSchedulerService;
+import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
@@ -53,6 +54,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -80,13 +82,16 @@ public class CmdletManager extends AbstractService {
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
 
-  private Queue<CmdletInfo> pendingCmdlet;
+  private List<Long> pendingCmdlet;
+  private List<Long> schedulingCmdlet;
+  private Queue<Long> scheduledCmdlet;
+  private Map<Long, LaunchCmdlet> idToLaunchCmdlet;
   private List<Long> runningCmdlets;
   private Map<Long, CmdletInfo> idToCmdlets;
   private Map<Long, ActionInfo> idToActions;
   private Map<String, Long> fileLocks;
-  private ListMultimap<String, ActionPreProcessor> preExecuteProcessor = ArrayListMultimap.create();
-  private List<ActionPreProcessService> preProcessServices = new ArrayList<>();
+  private ListMultimap<String, ActionScheduler> schedulers = ArrayListMultimap.create();
+  private List<ActionSchedulerService> schedulerServices = new ArrayList<>();
 
   public CmdletManager(ServerContext context) {
     super(context);
@@ -95,7 +100,10 @@ public class CmdletManager extends AbstractService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.dispatcher = new CmdletDispatcher(context, this);
     this.runningCmdlets = new ArrayList<>();
-    this.pendingCmdlet = new LinkedBlockingQueue<>();
+    this.pendingCmdlet = new LinkedList<>();
+    this.schedulingCmdlet = new LinkedList<>();
+    this.scheduledCmdlet = new LinkedBlockingQueue<>();
+    this.idToLaunchCmdlet = new HashMap<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
     this.fileLocks = new ConcurrentHashMap<>();
@@ -112,14 +120,14 @@ public class CmdletManager extends AbstractService {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
 
-      preProcessServices = ActionSchedulerServiceFactory.createServices(
+      schedulerServices = AbstractServiceFactory.createActionSchedulerServices(
           getContext().getConf(), getContext(), metaStore, false);
 
-      for (ActionPreProcessService s : preProcessServices) {
+      for (ActionSchedulerService s : schedulerServices) {
         s.init();
         List<String> actions = s.getSupportedActions();
         for (String a : actions) {
-          preExecuteProcessor.put(a, s);
+          schedulers.put(a, s);
         }
       }
     } catch (Exception e) {
@@ -132,15 +140,15 @@ public class CmdletManager extends AbstractService {
   public void start() throws IOException {
     executorService.scheduleAtFixedRate(
         new ScheduleTask(this.dispatcher), 1000, 1000, TimeUnit.MILLISECONDS);
-    for (ActionPreProcessService s : preProcessServices) {
+    for (ActionSchedulerService s : schedulerServices) {
       s.start();
     }
   }
 
   @Override
   public void stop() throws IOException {
-    for (int i = preProcessServices.size() - 1; i >=0 ; i--) {
-      preProcessServices.get(i).stop();
+    for (int i = schedulerServices.size() - 1; i >=0 ; i--) {
+      schedulerServices.get(i).stop();
     }
     executorService.shutdown();
     dispatcher.shutDownExcutorServices();
@@ -174,6 +182,12 @@ public class CmdletManager extends AbstractService {
         submitTime);
     List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     for (ActionInfo actionInfo : actionInfos) {
+      for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+        if (!p.onSubmit(actionInfo)) {
+          throw new IOException(
+              String.format("Action rejected by scheduler", actionInfo));
+        }
+      }
       cmdletInfo.addAction(actionInfo.getActionId());
     }
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
@@ -187,7 +201,7 @@ public class CmdletManager extends AbstractService {
 
     try {
       metaStore.insertCmdletTable(cmdletInfo);
-      metaStore.insertActionsTable(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+      metaStore.insertActions(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("Submit Command {} to DB error!", cmdletInfo);
       try {
@@ -200,10 +214,13 @@ public class CmdletManager extends AbstractService {
       }
       throw new IOException(e);
     }
-    pendingCmdlet.add(cmdletInfo);
-    idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
+
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
+    }
+    idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
+    synchronized (pendingCmdlet) {
+      pendingCmdlet.add(cmdletInfo.getCid());
     }
     return cmdletInfo.getCid();
   }
@@ -239,21 +256,135 @@ public class CmdletManager extends AbstractService {
     return filesToLock.keySet();
   }
 
-  public LaunchCmdlet getNextCmdletToRun() throws IOException {
-    CmdletInfo cmdletInfo = pendingCmdlet.poll();
+  public void scheduleCmdlet() throws IOException {
+    int maxScheduled = 10;
+
+    synchronized (pendingCmdlet) {
+      if (pendingCmdlet.size() > 0) {
+        schedulingCmdlet.addAll(pendingCmdlet);
+        pendingCmdlet.clear();
+      }
+    }
+
+    Iterator<Long> it = schedulingCmdlet.iterator();
+    while (maxScheduled > 0 && it.hasNext()) {
+      long id = it.next();
+      CmdletInfo cmdlet = idToCmdlets.get(id);
+      synchronized (cmdlet) {
+        switch (cmdlet.getState()) {
+          case DISABLED:
+            it.remove();
+            break;
+
+          case PENDING:
+            LaunchCmdlet launchCmdlet = createLaunchCmdlet(cmdlet);
+            ScheduleResult result = scheduleCmdletActions(cmdlet, launchCmdlet);
+            if (result != ScheduleResult.RETRY) {
+              it.remove();
+            }
+            if (result == ScheduleResult.SUCCESS) {
+              idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
+              cmdlet.setState(CmdletState.SCHEDULED);
+              scheduledCmdlet.add(id);
+            }
+            maxScheduled--;
+            break;
+        }
+      }
+    }
+  }
+
+  private ScheduleResult scheduleCmdletActions(CmdletInfo info, LaunchCmdlet launchCmdlet) {
+    List<Long> actIds = info.getAids();
+    int idx = 0;
+    int schIdx = 0;
+    ActionInfo actionInfo;
+    LaunchAction launchAction;
+    List<ActionScheduler> actSchedulers;
+    ScheduleResult scheduleResult = ScheduleResult.SUCCESS;
+    for (idx = 0; idx < actIds.size(); idx++) {
+      actionInfo = idToActions.get(actIds.get(idx));
+      launchAction = launchCmdlet.getLaunchActions().get(idx);
+      actSchedulers = schedulers.get(actionInfo.getActionName());
+      if (actSchedulers == null || actSchedulers.size() == 0) {
+        continue;
+      }
+
+      for (schIdx = 0; schIdx < actSchedulers.size(); schIdx++) {
+        ActionScheduler s = actSchedulers.get(schIdx);
+        scheduleResult = s.onSchedule(actionInfo, launchAction);
+        if (scheduleResult != ScheduleResult.SUCCESS) {
+          break;
+        }
+      }
+
+      if (scheduleResult != ScheduleResult.SUCCESS) {
+        break;
+      }
+    }
+
+    if (scheduleResult == ScheduleResult.SUCCESS) {
+      idx--;
+      schIdx--;
+    }
+    postscheduleCmdletActions(actIds, scheduleResult, idx, schIdx);
+    return scheduleResult;
+  }
+
+  private void postscheduleCmdletActions(List<Long> actions, ScheduleResult result,
+      int lastAction, int lastScheduler) {
+    List<ActionScheduler> actSchedulers;
+    for (int aidx = lastAction; aidx >= 0 ; aidx--) {
+      ActionInfo info = idToActions.get(actions.get(aidx));
+      actSchedulers = schedulers.get(info.getActionName());
+      if (actSchedulers == null || actSchedulers.size() == 0) {
+        continue;
+      }
+      if (lastScheduler < 0) {
+        lastScheduler = actSchedulers.size() - 1;
+      }
+
+      for (int sidx = lastScheduler; sidx >= 0; sidx--) {
+        actSchedulers.get(sidx).postSchedule(info, result);
+      }
+
+      lastScheduler = -1;
+    }
+  }
+
+  private LaunchCmdlet createLaunchCmdlet(CmdletInfo cmdletInfo) {
     if (cmdletInfo == null) {
       return null;
     }
+    Map<String, String> args;
     List<LaunchAction> launchActions = new ArrayList<>();
     for (Long aid : cmdletInfo.getAids()) {
       if (idToActions.containsKey(aid)) {
         ActionInfo toLaunch = idToActions.get(aid);
+        args =  new HashMap<>();
+        args.putAll(toLaunch.getArgs());
         launchActions.add(
-            new LaunchAction(toLaunch.getActionId(), toLaunch.getActionName(), toLaunch.getArgs()));
+            new LaunchAction(toLaunch.getActionId(), toLaunch.getActionName(), args));
       }
     }
-    runningCmdlets.add(cmdletInfo.getCid());
     return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
+  }
+
+  public LaunchCmdlet getNextCmdletToRun() throws IOException {
+    if (scheduledCmdlet.size() == 0) {
+      scheduleCmdlet();
+    }
+    Long cmdletId = scheduledCmdlet.poll();
+    if (cmdletId == null) {
+      return null;
+    }
+    CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+    if (cmdletInfo == null) {
+      return null;
+    }
+    LaunchCmdlet launchCmdlet = idToLaunchCmdlet.get(cmdletId);
+    runningCmdlets.add(cmdletInfo.getCid());
+    return launchCmdlet;
   }
 
   public CmdletInfo getCmdletInfo(long cid) throws IOException {
@@ -272,9 +403,9 @@ public class CmdletManager extends AbstractService {
     List<CmdletInfo> result = new ArrayList<>();
     try {
       if (rid == -1) {
-        result.addAll(metaStore.getCmdletsTableItem(null, null, cmdletState));
+        result.addAll(metaStore.getCmdlets(null, null, cmdletState));
       } else {
-        result.addAll(metaStore.getCmdletsTableItem(null, String.format("= %d", rid), cmdletState));
+        result.addAll(metaStore.getCmdlets(null, String.format("= %d", rid), cmdletState));
       }
     } catch (MetaStoreException e) {
       LOG.error("List CmdletInfo from DB error! Conditions rid {}", rid, e);
@@ -292,7 +423,7 @@ public class CmdletManager extends AbstractService {
     Map<Long, CmdletInfo> result = new HashMap<>();
     try {
       String ridCondition = rid == -1 ? null : String.format("= %d", rid);
-      for (CmdletInfo info : metaStore.getCmdletsTableItem(null, ridCondition, null)) {
+      for (CmdletInfo info : metaStore.getCmdlets(null, ridCondition, null)) {
         result.put(info.getCid(), info);
       }
     } catch (MetaStoreException e) {
@@ -314,11 +445,20 @@ public class CmdletManager extends AbstractService {
   public void disableCmdlet(long cid) throws IOException {
     if (idToCmdlets.containsKey(cid)) {
       CmdletInfo info = idToCmdlets.get(cid);
-      if (pendingCmdlet.contains(info)) {
-        pendingCmdlet.remove(info);
+      synchronized (info) {
         info.setState(CmdletState.DISABLED);
-        this.cmdletFinished(cid);
       }
+      synchronized (pendingCmdlet) {
+        if (pendingCmdlet.contains(cid)) {
+          pendingCmdlet.remove(cid);
+          this.cmdletFinished(cid);
+        }
+      }
+
+      if (scheduledCmdlet.contains(cid)) {
+        scheduledCmdlet.remove(cid);
+      }
+
       // Wait status update from status reporter, so need to update to MetaStore
       if (runningCmdlets.contains(cid)) {
         dispatcher.stop(cid);
@@ -346,6 +486,7 @@ public class CmdletManager extends AbstractService {
       unLockFileIfNeeded(actionInfo);
     }
     flushActionInfos(removed);
+    idToLaunchCmdlet.remove(cmdletId);
   }
 
   private void unLockFileIfNeeded(ActionInfo actionInfo) {
@@ -396,16 +537,66 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      int actionNum) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, actionNum);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      int actionNum, boolean finished) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, actionNum, finished);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<ActionInfo> listNewCreatedActions(String actionName,
+      boolean successful, int actionNum) throws IOException {
+    try {
+      return metaStore.getNewCreatedActions(actionName, successful, actionNum);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+
   public List<ActionInfo> listNewCreatedActions(int actionNum) throws IOException {
     try {
       Map<Long, ActionInfo> actionInfos = new HashMap<>();
-      for (ActionInfo info : metaStore.getNewCreatedActionsTableItem(actionNum)) {
+      for (ActionInfo info : metaStore.getNewCreatedActions(actionNum)) {
         actionInfos.put(info.getActionId(), info);
       }
       actionInfos.putAll(idToActions);
       return Lists.newArrayList(actionInfos.values());
     } catch (MetaStoreException e) {
       LOG.error("Get Finished Actions from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+
+  public List<ActionInfo> getActions(long rid, int size) throws IOException {
+    try {
+      return metaStore.getActions(rid, size);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Finished Actions by rid and size from DB error", e);
+      throw new IOException(e);
+    }
+  }
+
+  public List<DetailedFileAction> getFileActions(long rid, int size) throws IOException {
+    try {
+      return metaStore.listFileActions(rid, size);
+    } catch (MetaStoreException e) {
+      LOG.error("Get File Actions by rid and size from DB error", e);
       throw new IOException(e);
     }
   }
@@ -486,11 +677,11 @@ public class CmdletManager extends AbstractService {
   private void onActionFinished(ActionFinished finished) throws IOException, ActionException {
     if (idToActions.containsKey(finished.getActionId())) {
       ActionInfo actionInfo = idToActions.get(finished.getActionId());
+      actionInfo.setProgress(1.0F);
       actionInfo.setFinished(true);
       actionInfo.setFinishTime(finished.getTimestamp());
       actionInfo.setResult(finished.getResult());
       actionInfo.setLog(finished.getLog());
-      actionInfo.setProgress(1.0F);
       unLockFileIfNeeded(actionInfo);
       if (finished.getThrowable() != null) {
         actionInfo.setSuccessful(false);
@@ -498,6 +689,10 @@ public class CmdletManager extends AbstractService {
         actionInfo.setSuccessful(true);
         updateStorageIfNeeded(actionInfo);
       }
+      for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+        p.onActionFinished(actionInfo);
+      }
+
     } else {
       // Updating action status which is not pending or running
     }
@@ -505,7 +700,7 @@ public class CmdletManager extends AbstractService {
 
   private void flushCmdletInfo(CmdletInfo info) throws IOException {
     try {
-      metaStore.updateCmdletStatus(info.getCid(), info.getRid(), info.getState());
+      metaStore.updateCmdlet(info.getCid(), info.getRid(), info.getState());
     } catch (MetaStoreException e) {
       LOG.error("Batch Cmdlet Status Update error!", e);
       throw new IOException(e);
@@ -514,7 +709,7 @@ public class CmdletManager extends AbstractService {
 
   private void flushActionInfos(List<ActionInfo> infos) throws IOException {
     try {
-      metaStore.updateActionsTable(infos.toArray(new ActionInfo[infos.size()]));
+      metaStore.updateActions(infos.toArray(new ActionInfo[infos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("Write CacheObject to DB error!", e);
       throw new IOException(e);
@@ -588,8 +783,8 @@ public class CmdletManager extends AbstractService {
 
   public void cmdletPreExecutionProcess(LaunchCmdlet cmdlet) {
     for (LaunchAction action : cmdlet.getLaunchActions()) {
-      for (ActionPreProcessor p : preExecuteProcessor.get(action.getActionType())) {
-        p.beforeExecution(action);
+      for (ActionScheduler p : schedulers.get(action.getActionType())) {
+        p.onPreDispatch(action);
       }
     }
   }

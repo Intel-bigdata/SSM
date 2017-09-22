@@ -34,34 +34,38 @@ public class FileObject extends SmartObject {
   static {
     properties = new HashMap<>();
     properties.put("path",
-        new Property("path", ValueType.STRING, null, "files", "path", false));
+        new Property("path", ValueType.STRING, null, "file", "path", false));
     properties.put("accessCount",
         new Property("accessCount", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
     properties.put("length",
         new Property("length", ValueType.LONG,
-            null, "files", "length", false));
+            null, "file", "length", false));
     properties.put("blocksize",
         new Property("blocksize", ValueType.LONG,
-            null, "files", "block_size", false));
+            null, "file", "block_size", false));
     properties.put("inCache",
         new Property("inCache", ValueType.BOOLEAN,
-            null, "cached_files", null, false));
+            null, "cached_file", null, false));
     properties.put("age",
         new Property("age", ValueType.TIMEINTVAL,
-            null, "files", null, false,
+            null, "file", null, false,
             "($NOW - modification_time)"));
     properties.put("mtime",
         new Property("mtime", ValueType.TIMEPOINT,
-            null, "files", "modification_time", false));
+            null, "file", "modification_time", false));
     properties.put("atime",
         new Property("atime", ValueType.TIMEPOINT,
-            null, "files", "access_time", false));
+            null, "file", "access_time", false));
     properties.put("storagePolicy",
         new Property("storagePolicy", ValueType.STRING,
-            null, "files", null, false,
-            "(SELECT policy_name FROM storage_policy WHERE sid = files.sid)"));
+            null, "file", null, false,
+            "(SELECT policy_name FROM storage_policy WHERE sid = file.sid)"));
+    properties.put("unsynced",
+        new Property("unsynced", ValueType.BOOLEAN,
+            null, "file_diff", null, false,
+            "state = 1"));
   }
 
   public FileObject() {
