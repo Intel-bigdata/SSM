@@ -55,7 +55,8 @@ public class HadoopUtil {
    * @param nameNodeUrl
    * @param conf
    */
-  public static void loadHadoopConf(SmartConf ssmConf, URL nameNodeUrl, Configuration conf) {
+  public static void loadHadoopConf(SmartConf ssmConf, URL nameNodeUrl, Configuration conf)
+      throws IOException {
     String ssmConfDir = ssmConf.get(SmartConfKeys.SMART_CONF_DIR_KEY);
     if (ssmConfDir == null || ssmConfDir.equals("")) {
       return;
@@ -63,7 +64,8 @@ public class HadoopUtil {
     loadHadoopConf(ssmConfDir, nameNodeUrl, conf);
   }
 
-  public static void loadHadoopConf(String ssmConfDir, URL nameNodeUrl, Configuration conf) {
+  public static void loadHadoopConf(String ssmConfDir, URL nameNodeUrl, Configuration conf)
+      throws IOException {
     if (nameNodeUrl == null || nameNodeUrl.getHost() == null) {
       return;
     }
@@ -83,24 +85,28 @@ public class HadoopUtil {
    * @param conf
    * @param hadoopConfPath directory that hadoop config files located.
    */
-  public static void loadHadoopConf(Configuration conf, String hadoopConfPath) {
+  public static void loadHadoopConf(Configuration conf, String hadoopConfPath)
+      throws IOException {
     if (hadoopConfPath == null || hadoopConfPath.isEmpty()) {
-      LOG.info("Hadoop configuration path is not set");
+      LOG.debug("Hadoop configuration path is not set");
     } else {
       URL hadoopConfDir;
       try {
         if (!hadoopConfPath.endsWith("/")) {
           hadoopConfPath += "/";
         }
-        hadoopConfDir = new URL(hadoopConfPath);
+        try {
+          hadoopConfDir = new URL(hadoopConfPath);
+        } catch (MalformedURLException e) {
+          hadoopConfDir = new URL("file://" + hadoopConfPath);
+        }
         Path hadoopConfDirPath = Paths.get(hadoopConfDir.toURI());
         if (Files.exists(hadoopConfDirPath) &&
             Files.isDirectory(hadoopConfDirPath)) {
-          LOG.info("Hadoop configuration path = " + hadoopConfPath);
+          LOG.debug("Hadoop configuration path = " + hadoopConfPath);
         } else {
-          LOG.error("Hadoop configuration path [" + hadoopConfPath
+          throw new IOException("Hadoop configuration path [" + hadoopConfPath
               + "] doesn't exist or is not a directory");
-          return;
         }
 
         try {
@@ -108,15 +114,14 @@ public class HadoopUtil {
           Path coreFilePath = Paths.get(coreConfFile.toURI());
           if (Files.exists(coreFilePath)) {
             conf.addResource(coreConfFile);
-            LOG.info("Hadoop configuration file [" +
+            LOG.debug("Hadoop configuration file [" +
                 coreConfFile.toExternalForm() + "] is loaded");
           } else {
-            LOG.error("Hadoop configuration file [" +
+            throw new IOException("Hadoop configuration file [" +
                 coreConfFile.toExternalForm() + "] doesn't exist");
           }
         } catch (MalformedURLException e1) {
-          LOG.error("Access hadoop configuration file core-site.xml failed " +
-              "for: " + e1.getMessage());
+          throw new IOException("Access hadoop configuration file core-site.xml failed", e1);
         }
 
         try {
@@ -124,19 +129,18 @@ public class HadoopUtil {
           Path hdfsFilePath = Paths.get(hdfsConfFile.toURI());
           if (Files.exists(hdfsFilePath)) {
             conf.addResource(hdfsConfFile);
-            LOG.info("Hadoop configuration file [" +
+            LOG.debug("Hadoop configuration file [" +
                 hdfsConfFile.toExternalForm() + "] is loaded");
           } else {
-            LOG.error("Hadoop configuration file [" +
+            throw new IOException("Hadoop configuration file [" +
                 hdfsConfFile.toExternalForm() + "] doesn't exist");
           }
         } catch (MalformedURLException e1) {
-          LOG.error("Access hadoop configuration file hdfs-site.xml failed " +
-              "for: " + e1.getMessage());
+          throw new IOException("Access hadoop configuration file hdfs-site.xml failed", e1);
         }
-      } catch (MalformedURLException | URISyntaxException e) {
-        LOG.error("Access hadoop configuration path [" + hadoopConfPath
-            + "] failed for: " + e.getMessage());
+      } catch (URISyntaxException e) {
+        throw new IOException("Access hadoop configuration path [" + hadoopConfPath
+            + "] failed" + e);
       }
     }
   }
