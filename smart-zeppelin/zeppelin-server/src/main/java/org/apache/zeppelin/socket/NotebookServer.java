@@ -715,7 +715,7 @@ public class NotebookServer extends WebSocketServlet
   private void sendNote(NotebookSocket conn, HashSet<String> userAndRoles, Notebook notebook,
       Message fromMessage) throws IOException {
 
-    LOG.info("New operation from {} : {} : {} : {} : {}", conn.getRequest().getRemoteAddr(),
+    LOG.debug("New operation from {} : {} : {} : {} : {}", conn.getRequest().getRemoteAddr(),
         conn.getRequest().getRemotePort(), fromMessage.principal, fromMessage.op,
         fromMessage.get("id"));
 
