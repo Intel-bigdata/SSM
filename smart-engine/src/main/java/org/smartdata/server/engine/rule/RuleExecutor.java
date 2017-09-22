@@ -161,7 +161,7 @@ public class RuleExecutor implements Runnable {
 
   @VisibleForTesting
   static String  generateSQL(List<String> tableNames, String newTable, String countFilter, MetaStore adapter) {
-    String sqlFinal,sqlCreate;
+    String sqlFinal, sqlCreate;
     if (tableNames.size() <= 1) {
       String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
           tableNames.get(0);
