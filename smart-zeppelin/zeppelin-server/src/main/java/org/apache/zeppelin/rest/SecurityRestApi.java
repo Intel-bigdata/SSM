@@ -84,7 +84,7 @@ public class SecurityRestApi {
     data.put("ticket", ticket);
 
     response = new JsonResponse(Response.Status.OK, "", data);
-    LOG.warn(response.toString());
+    LOG.debug(response.toString());
     return response.build();
   }
 
