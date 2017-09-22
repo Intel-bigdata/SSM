@@ -223,7 +223,7 @@ public class InotifyEventApplier {
         if (metadataUpdateEvent.getMtime() > 0 && metadataUpdateEvent.getAtime() > 0) {
           if (fileDiff != null) {
             fileDiff.getParameters().put("-modification_time", "" + metadataUpdateEvent.getMtime());
-            fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getAtime());
+            // fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getAtime());
             metaStore.insertFileDiff(fileDiff);
           }
           return String.format(
@@ -241,10 +241,10 @@ public class InotifyEventApplier {
             metadataUpdateEvent.getMtime(),
             metadataUpdateEvent.getPath());
         } else if (metadataUpdateEvent.getAtime() > 0) {
-          if (fileDiff != null) {
-            fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getAtime());
-            metaStore.insertFileDiff(fileDiff);
-          }
+          // if (fileDiff != null) {
+          //   fileDiff.getParameters().put("-access_time", "" + metadataUpdateEvent.getAtime());
+          //   metaStore.insertFileDiff(fileDiff);
+          // }
           return String.format(
             "UPDATE file SET access_time = %s WHERE path = '%s';",
             metadataUpdateEvent.getAtime(),
