@@ -47,20 +47,23 @@ public class LaunchDB implements Runnable {
     Thread pdThread = new Thread(pdServer);
     pdThread.start();
     try {
-      while (!pdServer.isReady())
+      while (!pdServer.isReady()) {
         Thread.sleep(100);
+      }
       LOG.info("Pd server is ready.");
 
       Thread tikvThread = new Thread(tikvServer);
       tikvThread.start();
-      while (!tikvServer.isReady())
+      while (!tikvServer.isReady()) {
         Thread.sleep(100);
+      }
       LOG.info("Tikv server is ready.");
 
       Thread tidbThread = new Thread(tidbServer);
       tidbThread.start();
-      while (!tidbServer.isReady())
+      while (!tidbServer.isReady()) {
         Thread.sleep(100);
+      }
       LOG.info("Tidb server is ready.");
       dbReady = true;
     } catch (InterruptedException ex) {
