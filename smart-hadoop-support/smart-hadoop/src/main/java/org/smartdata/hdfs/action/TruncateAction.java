@@ -24,6 +24,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.io.IOException;
 import java.net.URI;
@@ -91,8 +92,7 @@ public class TruncateAction extends HdfsAction {
       if (length > oldLength) {
         throw new IllegalArgumentException("Length is illegal");
       } else {
-        dfsClient.truncate(srcFile, length);
-        return true;
+        return CompatibilityHelperLoader.getHelper().truncate(dfsClient, srcPath, length);
       }
     }
   }

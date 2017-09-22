@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
@@ -108,5 +109,10 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
   @Override
   public Event.AppendEvent getAppendEvent(InotifyProtos.AppendEventProto proto) {
     return new Event.AppendEvent.Builder().path(proto.getPath()).build();
+  }
+
+  @Override
+  public boolean truncate(DFSClient client, String src, long newLength) throws IOException {
+    throw new UnsupportedOperationException("Hadoop 2.6 does not support truncate.");
   }
 }

@@ -18,6 +18,7 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -114,5 +115,10 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return new Event.AppendEvent.Builder().path(proto.getPath())
       .newBlock(proto.hasNewBlock() && proto.getNewBlock())
       .build();
+  }
+
+  @Override
+  public boolean truncate(DFSClient client, String src, long newLength) throws IOException {
+    return client.truncate(src, newLength);
   }
 }
