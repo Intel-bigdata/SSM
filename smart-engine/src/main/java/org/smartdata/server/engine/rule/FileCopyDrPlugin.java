@@ -95,11 +95,12 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
         List<BackUpInfo> infos = backups.get(ruleId);
         synchronized (infos) {
           try {
-            // clear current file_diff
-            metaStore.deleteAllFileDiff();
-            // Trigger baseSync
-            baseSync(dirs, dest);
             metaStore.deleteBackUpInfo(ruleId);
+            // Add base Sync tag
+            FileDiff fileDiff = new FileDiff(FileDiffType.BASESYNC);
+            fileDiff.setSrc(backUpInfo.getSrc());
+            fileDiff.getParameters().put("-dest", backUpInfo.getDest());
+            metaStore.insertFileDiff(fileDiff);
             metaStore.insertBackUpInfo(backUpInfo);
             infos.add(backUpInfo);
           } catch (MetaStoreException e) {
@@ -110,52 +111,6 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
       }
     }
   }
-
-  private void baseSync(String src, String dest) throws MetaStoreException {
-    List<FileInfo> srcFiles = metaStore.getFilesByPrefix(src);
-    for (FileInfo fileInfo : srcFiles) {
-      if (fileInfo.isdir()) {
-        // Ignore directory
-        continue;
-      }
-      String fullPath = fileInfo.getPath();
-      String remotePath = fullPath.replace(src, dest);
-      long offSet = fileCompare(fileInfo, remotePath);
-      if (offSet >= fileInfo.getLength()) {
-        LOG.debug("Primary len={}, remote len={}", fileInfo.getLength(), offSet);
-        continue;
-      }
-      FileDiff fileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
-      fileDiff.setSrc(fullPath);
-      // Append changes to remote files
-      fileDiff.getParameters().put("-length", String.valueOf(fileInfo.getLength() - offSet));
-      fileDiff.getParameters().put("-offset", String.valueOf(offSet));
-      fileDiff.setRuleId(-1);
-      metaStore.insertFileDiff(fileDiff);
-    }
-  }
-
-  private long fileCompare(FileInfo fileInfo, String dest) throws MetaStoreException {
-    // Primary
-    long localLen = fileInfo.getLength();
-    // TODO configuration
-    Configuration conf = new Configuration();
-    // Get InputStream from URL
-    FileSystem fs = null;
-    try {
-      fs = FileSystem.get(URI.create(dest), conf);
-      long remoteLen = fs.getFileStatus(new Path(dest)).getLen();
-      // Remote
-      if (localLen == remoteLen) {
-        return localLen;
-      } else {
-        return remoteLen;
-      }
-    } catch (IOException e) {
-      return 0;
-    }
-  }
-
 
   private List<String> getPathMatchesList(List<String> paths) {
     List<String> ret = new ArrayList<>();
