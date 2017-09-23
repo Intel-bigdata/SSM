@@ -26,7 +26,6 @@ angular.module('zeppelinWebApp')
       cols: [
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        $stb.text('Cmdlet ID').key('cid').canSort().done(),
         $stb.text('File Path').key('filePath').canSort().styleClass('col-md-1').done(),
         $stb.text('Source Path').key('sourcePath').canSort().styleClass('col-md-1').done(),
         $stb.text('Target Path').key('targetPath').canSort().styleClass('col-md-1').done(),
@@ -44,8 +43,6 @@ angular.module('zeppelinWebApp')
       $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
         _.map(actions, function (action) {
           return {
-            id: action.actionId,
-            cid: action.cmdletId,
             state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
             createTime: action.createTime,
             finishTime: action.finished ? action.finishTime : "-",

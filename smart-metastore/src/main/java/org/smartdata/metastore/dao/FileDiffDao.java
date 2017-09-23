@@ -97,6 +97,13 @@ public class FileDiffDao {
         new FileDiffRowMapper());
   }
 
+  public List<FileDiff> getByFileName(String fileName) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE src = ?",
+        new Object[]{fileName}, new FileDiffRowMapper());
+  }
+
+
   public List<String> getSyncPath(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     if (size != 0) {
@@ -145,6 +152,20 @@ public class FileDiffDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "update " + TABLE_NAME + " set state = ? WHERE did = ?";
     return jdbcTemplate.update(sql, state.getValue(), did);
+  }
+
+  public int update(long did, String src) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "update " + TABLE_NAME + " set src = ? WHERE did = ?";
+    return jdbcTemplate.update(sql, src, did);
+  }
+
+  public int update(long did, FileDiffState state,
+       String parameters) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "update " + TABLE_NAME + " set state = ?, "
+        + "parameters = ? WHERE did = ?";
+    return jdbcTemplate.update(sql, state.getValue(), parameters, did);
   }
 
 

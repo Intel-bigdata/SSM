@@ -77,7 +77,6 @@ class TestMoverProtection_2GB(unittest.TestCase):
         # check the statement of read
         self.assertTrue(len(failed) == 0)
 
-
     def test_mover_archive_delete(self):
         # cid_create = create_file("/testFile")
         # print check_storage("/testFile")
@@ -92,44 +91,47 @@ class TestMoverProtection_2GB(unittest.TestCase):
         # check the statement of read
         self.assertTrue(len(failed) == 0)
 
-    # def test_mover_allssd_append(self):
-    #     # cid_create = create_file("/testFile")
-    #     # print check_storage("/testFile")
-    #     # Test with 2 GB file
-    #     file_path = create_random_file(FILE_SIZE)
-    #     cmds = []
-    #     cmds.append(move_cmdlet("allssd", file_path))
-    #     # append random content to current file
-    #     cmds.append(append_file(file_path, random.randrange(1024, 1024 * 1024 * 2)))
-    #     failed = wait_for_cmdlets(cmds)
-    #     # check the statement of read
-    #     self.assertTrue(len(failed) == 0)
+    def test_mover_allssd_append(self):
+        # cid_create = create_file("/testFile")
+        # print check_storage("/testFile")
+        # Test with 2 GB file
+        file_path = create_random_file(FILE_SIZE)
+        cmds = []
+        cmds.append(move_cmdlet("allssd", file_path))
+        # append random content to current file
+        cmds.append(append_file(file_path,
+                    random.randrange(1024, 1024 * 1024 * 2)))
+        failed = wait_for_cmdlets(cmds)
+        # check the statement of read
+        self.assertTrue(len(failed) == 0)
 
-    # def test_mover_onessd_append(self):
-    #     # cid_create = create_file("/testFile")
-    #     # print check_storage("/testFile")
-    #     # Test with 2 GB file
-    #     file_path = create_random_file(FILE_SIZE)
-    #     cmds = []
-    #     cmds.append(move_cmdlet("onessd", file_path))
-    #     # append random content to current file
-    #     cmds.append(append_file(file_path, random.randrange(1024, 1024 * 1024 * 2)))
-    #     failed = wait_for_cmdlets(cmds)
-    #     # check the statement of read
-    #     self.assertTrue(len(failed) == 0)
+    def test_mover_onessd_append(self):
+        # cid_create = create_file("/testFile")
+        # print check_storage("/testFile")
+        # Test with 2 GB file
+        file_path = create_random_file(FILE_SIZE)
+        cmds = []
+        cmds.append(move_cmdlet("onessd", file_path))
+        # append random content to current file
+        cmds.append(append_file(file_path,
+                    random.randrange(1024, 1024 * 1024 * 2)))
+        failed = wait_for_cmdlets(cmds)
+        # check the statement of read
+        self.assertTrue(len(failed) == 0)
 
-    # def test_mover_archive_append(self):
-    #     # cid_create = create_file("/testFile")
-    #     # print check_storage("/testFile")
-    #     # Test with 2 GB file
-    #     file_path = create_random_file(FILE_SIZE)
-    #     cmds = []
-    #     cmds.append(move_cmdlet("archive", file_path))
-    #     # append random content to current file
-    #     cmds.append(append_file(file_path, random.randrange(1024, 1024 * 1024 * 2)))
-    #     failed = wait_for_cmdlets(cmds)
-    #     # check the statement of read
-    #     self.assertTrue(len(failed) == 0)
+    def test_mover_archive_append(self):
+        # cid_create = create_file("/testFile")
+        # print check_storage("/testFile")
+        # Test with 2 GB file
+        file_path = create_random_file(FILE_SIZE)
+        cmds = []
+        cmds.append(move_cmdlet("archive", file_path))
+        # append random content to current file
+        cmds.append(append_file(file_path,
+                    random.randrange(1024, 1024 * 1024 * 2)))
+        failed = wait_for_cmdlets(cmds)
+        # check the statement of read
+        self.assertTrue(len(failed) == 0)
 
     def test_mover_allssd_overwrite(self):
         # cid_create = create_file("/testFile")

@@ -20,7 +20,6 @@ package org.smartdata.hdfs.action.move;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
-import org.apache.hadoop.hdfs.protocol.datatransfer.DataTransferProtoUtil;
 import org.apache.hadoop.hdfs.protocol.datatransfer.IOStreamPair;
 import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.SaslDataTransferClient;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos;
@@ -183,6 +182,19 @@ class ReplicaMove {
       }
     }
     return true;
+  }
+
+  public static void countStatus(List<ReplicaMove> allMoves, int[] ret) {
+    ret[0] = 0;
+    ret[1] = 0;
+    for (ReplicaMove move : allMoves) {
+      if (move.status.isFinished()) {
+        ret[0] += 1;
+        if (move.status.isSuccessful()) {
+          ret[1] += 1;
+        }
+      }
+    }
   }
 
   /**

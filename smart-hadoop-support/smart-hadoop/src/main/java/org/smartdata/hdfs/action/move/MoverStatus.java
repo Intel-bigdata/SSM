@@ -21,77 +21,35 @@ package org.smartdata.hdfs.action.move;
  * ActionStatus of Mover tool.
  */
 public class MoverStatus {
-  private long totalBlocks;
-  private long totalSize;
-  private long movedBlocks;
-  private boolean totalValueSet;
+  private int totalBlocks; // each replica is counted as a block
+  private int movedBlocks;
 
   public MoverStatus() {
     totalBlocks = 0;
-    totalSize = 0;
     movedBlocks = 0;
-    totalValueSet = false;
   }
 
-  synchronized public float getPercentage() {
-    if (!totalValueSet) {
+  public float getPercentage() {
+    if (totalBlocks == 0) {
       return 0;
     }
     return movedBlocks * 1.0F / totalBlocks;
   }
 
-  synchronized public long getTotalSize() {
-    return totalSize;
-  }
-
-  synchronized public long getTotalBlocks() {
+  public int getTotalBlocks() {
     return totalBlocks;
   }
 
-  synchronized public void setTotalBlocks(long blocks) {
-    if (totalValueSet) {
-      return;
-    }
+  public void setTotalBlocks(int blocks) {
     totalBlocks = blocks;
   }
 
-  synchronized public long increaseTotalBlocks(long blocks) {
-    if (totalValueSet) {
-      return totalBlocks;
-    }
-    totalBlocks += blocks;
-    return totalBlocks;
-  }
-
-  synchronized public void setTotalSize(long size) {
-    if (totalValueSet) {
-      return;
-    }
-    totalSize = size;
-  }
-
-  synchronized public long increaseTotalSize(long size) {
-    if (totalValueSet) {
-      return totalSize;
-    }
-    totalSize += size;
-    return totalSize;
-  }
-
-  synchronized public long increaseMovedBlocks(long blocks) {
+  synchronized public int increaseMovedBlocks(int blocks) {
     movedBlocks += blocks;
     return movedBlocks;
   }
 
-  synchronized public void setMovedBlocks(long blocks) {
-    movedBlocks = blocks;
-  }
-
-  synchronized public long getMovedBlocks() {
+  public int getMovedBlocks() {
     return movedBlocks;
-  }
-
-  synchronized public void completeTotalValueSet() {
-    totalValueSet = true;
   }
 }

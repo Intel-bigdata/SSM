@@ -240,7 +240,7 @@ public class MetaStoreUtils {
             "  create_time bigint(20) NOT NULL,\n" +
             "  finished tinyint(4) NOT NULL,\n" +
             "  finish_time bigint(20) NOT NULL,\n" +
-            "  progress INTEGER NOT NULL\n" +
+            "  progress float NOT NULL\n" +
             ") ;",
 
         "CREATE TABLE file_diff (\n" +
@@ -252,6 +252,7 @@ public class MetaStoreUtils {
             "  state tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL\n" +
             ") ;",
+        "CREATE INDEX file_diff_idx ON file_diff (src);",
 
         "CREATE TABLE global_config (\n" +
             " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +

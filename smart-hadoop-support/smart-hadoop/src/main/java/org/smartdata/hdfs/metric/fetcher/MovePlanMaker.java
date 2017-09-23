@@ -33,10 +33,10 @@ import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
+import org.smartdata.hdfs.scheduler.MovePlanStatistics;
 import org.smartdata.model.action.FileMovePlan;
 import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.MLocation;
-import org.smartdata.hdfs.action.move.MoverStatus;
 import org.smartdata.hdfs.action.move.Source;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.hdfs.action.move.StorageMap;
@@ -52,8 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * A processor to do Mover action.
  */
-public class MoverProcessor {
-  static final Logger LOG = LoggerFactory.getLogger(MoverProcessor.class);
+public class MovePlanMaker {
+  static final Logger LOG = LoggerFactory.getLogger(MovePlanMaker.class);
 
   private final DFSClient dfs;
   private NetworkTopology networkTopology;
@@ -62,11 +62,11 @@ public class MoverProcessor {
 
   private final BlockStoragePolicy[] blockStoragePolicies;
   private long movedBlocks = 0;
-  private final MoverStatus moverStatus;
+  private final MovePlanStatistics statistics;
   private FileMovePlan schedulePlan;
 
-  public MoverProcessor(DFSClient dfsClient, StorageMap storages,
-      NetworkTopology cluster, MoverStatus moverStatus) throws IOException {
+  public MovePlanMaker(DFSClient dfsClient, StorageMap storages,
+      NetworkTopology cluster, MovePlanStatistics statistics) throws IOException {
     this.dfs = dfsClient;
     this.storages = storages;
     this.networkTopology = cluster;
@@ -74,7 +74,7 @@ public class MoverProcessor {
     this.blockStoragePolicies = new BlockStoragePolicy[1 <<
         BlockStoragePolicySuite.ID_BIT_LENGTH];
     initStoragePolicies();
-    this.moverStatus = moverStatus;
+    this.statistics = statistics;
   }
 
   private void initStoragePolicies() throws IOException {
@@ -119,6 +119,7 @@ public class MoverProcessor {
       }
     }
     if (!status.isSymlink()) {
+      schedulePlan.setFileLength(status.getLen());
       processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status);
     }
     return schedulePlan;
@@ -152,8 +153,12 @@ public class MoverProcessor {
       final StorageTypeDiff diff =
           new StorageTypeDiff(types, CompatibilityHelperLoader.getHelper().getStorageTypes(lb));
       int remainingReplications = diff.removeOverlap(true);
-      moverStatus.increaseTotalSize(lb.getBlockSize() * remainingReplications);
-      moverStatus.increaseTotalBlocks(remainingReplications);
+      long toMove = lb.getBlockSize() * remainingReplications;
+      schedulePlan.addSizeToMove(toMove);
+      schedulePlan.incBlocksToMove();
+      schedulePlan.addFileLengthToMove(lb.getBlockSize());
+      statistics.increaseTotalSize(toMove);
+      statistics.increaseTotalBlocks(remainingReplications);
       if (remainingReplications != 0) {
         scheduleMoveBlock(diff, lb);
       }

@@ -20,14 +20,11 @@ MOVE_TYPE = ["onessd",
              "allssd",
              "archive"]
 
-# TEST_FILES = ["/test/data_2GB",
-#               "/test/data_1GB",
-#               "/test/data_64MB",
-#               "/test/data_10MB"]
+TEST_DIR = "/test/"
 
 
 def random_file_path():
-    return "/test/" + random_string()
+    return TEST_DIR + random_string()
 
 
 def random_string():
@@ -147,17 +144,11 @@ def create_file(file_path, length=1024):
     return submit_cmdlet(cmdlet_str)
 
 
-def append_file(file_path, length=1024):
-    # cmdlet_str = "append -file " + file_path + " -length " + str(length)
-    # return submit_cmdlet(cmdlet_str)
-    pass
-
-
 def create_random_file(length=1024):
     """
     create a random file in /test/
     """
-    file_path = "/test/" + random_string()
+    file_path = TEST_DIR + random_string()
     cmdlet_str = "write -file " + \
                  file_path + " -length " + str(length)
     wait_for_cmdlet(submit_cmdlet(cmdlet_str))
@@ -168,7 +159,7 @@ def create_random_file_parallel(length=1024):
     """
     create a random file in /test/
     """
-    file_path = "/test/" + random_string()
+    file_path = TEST_DIR + random_string()
     cmdlet_str = "write -file " + \
                  file_path + " -length " + str(length)
     return file_path, submit_cmdlet(cmdlet_str)
@@ -179,7 +170,10 @@ def delete_file(file_path, recursivly=True):
     return submit_cmdlet(cmdlet_str)
 
 
-def append_to_file(file_path, length=1024):
+def append_file(file_path, length=1024):
+    """
+    append random content to file_path
+    """
     cmdlet_str = "append -file " + file_path + " -length " + length
     return submit_cmdlet(cmdlet_str)
 
@@ -201,14 +195,14 @@ def check_storage(file_path):
 
 
 def move_random_file(mover_type, length):
-    file_path = "/test/" + random_string()
+    file_path = TEST_DIR + random_string()
     cmd_create = wait_for_cmdlet(create_file(file_path, length))
     cmd_move = wait_for_cmdlet(move_cmdlet(mover_type, file_path))
     return cmd_create, cmd_move
 
 
 def move_random_file_twice(mover_type_1, mover_type_2, length):
-    file_path = "/test/" + random_string()
+    file_path = TEST_DIR + random_string()
     cmd_create = wait_for_cmdlet(create_file(file_path, length))
     cmd_move_1 = wait_for_cmdlet(move_cmdlet(mover_type_1, file_path))
     cmd_move_2 = wait_for_cmdlet(move_cmdlet(mover_type_2, file_path))
@@ -231,6 +225,10 @@ def continualy_move(moves, file_path):
 
 
 def random_move_list(length=10):
+    """
+    Generate a rabdin move list with given length.
+    Note that neighbor moves must be different.
+    """
     moves = []
     last_move = -1
     while length > 0:
@@ -243,6 +241,9 @@ def random_move_list(length=10):
 
 
 def random_move_list_totally(length=10):
+    """
+    Generate a rabdin move list with given length.
+    """
     moves = []
     while length > 0:
         random_index = random.randrange(len(MOVE_TYPE))

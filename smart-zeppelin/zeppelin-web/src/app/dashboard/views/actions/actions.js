@@ -45,19 +45,11 @@ angular.module('zeppelinWebApp')
         // group 1/3 (4-col)
         $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
         $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-        $stb.text('Cmdlet ID').key('cid').canSort().done(),
         $stb.text('Name').key(['actionName']).canSort().done(),
-          // $stb.link('Name').key('name').canSort('name.text').styleClass('col-md-1').done(),
-        // group 2/3 (5-col)
         $stb.datetime('Create Time').key('createTime').canSort().done(),
         $stb.datetime('Finish Time').key('finishTime').canSort().done(),
         $stb.duration("Running Time").key('runningTime').canSort().done(),
-
-          // $stb.datetime('Start Time').key('startTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        // $stb.datetime('Stop Time').key('stopTime').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        // $stb.text('User').key('user').canSort().styleClass('col-md-2').done(),
-        // group 3/3 (4-col)
-        $stb.text('Succeed').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
+        $stb.text('Status').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
         $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
       ],
@@ -69,10 +61,7 @@ angular.module('zeppelinWebApp')
         _.map(actions, function (action) {
           return {
             id: action.actionId,
-            cid: action.cmdletId,
-            // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
-            //user: rule.user,
             actionName: {
               title: "ID:" + action.actionId + " Cmdlet ID:" + action.cmdletId + " Name:" + action.actionName
               + " Create Time:" + new Date(action.createTime).toUTCString()
@@ -84,9 +73,7 @@ angular.module('zeppelinWebApp')
             createTime: action.createTime,
             finishTime: action.finished ? action.finishTime : "-",
             runningTime: action.uptime,
-            // startTime: rule.startTime,
-            // stopTime: rule.finishTime || '-',
-            succeed: action.finished ? action.successful : "-",
+            succeed: action.finished ? action.successful ? "Successful" : "Fiald" : "-",
             view: {
               href: action.pageUrl,
               icon: function() {

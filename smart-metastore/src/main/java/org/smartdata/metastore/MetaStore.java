@@ -68,15 +68,16 @@ import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.dao.EmptyResultDataAccessException;
 
-import javax.swing.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
 
@@ -93,6 +94,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private Map<Integer, String> mapStoragePolicyIdName = null;
   private Map<String, Integer> mapStoragePolicyNameId = null;
   private Map<String, StorageCapacity> mapStorageCapacity = null;
+  private Set<String> setBackSrc = null;
   private RuleDao ruleDao;
   private CmdletDao cmdletDao;
   private ActionDao actionDao;
@@ -1066,6 +1068,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<FileDiff> getFileDiffsByFileName(String fileName) throws MetaStoreException {
+    try {
+      return fileDiffDao.getByFileName(fileName);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<FileDiff> getFileDiffs(FileDiffState fileDiffState) throws MetaStoreException {
     try {
       return fileDiffDao.getByState(fileDiffState);
@@ -1075,7 +1087,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   @Override
-  public boolean markFileDiffApplied(long did,
+  public boolean updateFileDiff(long did,
       FileDiffState state) throws MetaStoreException {
     try {
       return fileDiffDao.update(did, state) >= 0;
@@ -1083,6 +1095,25 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
+
+  public boolean updateFileDiff(long did,
+      FileDiffState state, String parameters) throws MetaStoreException {
+    try {
+      return fileDiffDao.update(did, state, parameters) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public boolean updateFileDiff(long did,
+      String src) throws MetaStoreException {
+    try {
+      return fileDiffDao.update(did, src) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
 
   public List<String> getSyncPath(int size) throws MetaStoreException {
     return fileDiffDao.getSyncPath(size);
@@ -1355,6 +1386,23 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public boolean srcInbackup(String src) throws MetaStoreException {
+    if (setBackSrc == null) {
+      setBackSrc = new HashSet<>();
+      List<BackUpInfo> backUpInfos = listAllBackUpInfo();
+      for (BackUpInfo backUpInfo : backUpInfos) {
+        setBackSrc.add(backUpInfo.getSrc());
+      }
+    }
+    // LOG.info("Backup src = {}, setBackSrc {}", src, setBackSrc);
+    for (String srcDir : setBackSrc) {
+      if (src.startsWith(srcDir)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
       return backUpInfoDao.getByRid(rid);
@@ -1368,14 +1416,23 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteAllBackUpInfo() throws MetaStoreException {
     try {
       backUpInfoDao.deleteAll();
+      setBackSrc.clear();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public void deleteBackUpInfoById(long id) throws MetaStoreException {
+  public void deleteBackUpInfo(long rid) throws MetaStoreException {
     try {
-      backUpInfoDao.delete(id);
+      BackUpInfo backUpInfo = getBackUpInfo(rid);
+      if (backUpInfo != null) {
+        if (backUpInfoDao.getBySrc(backUpInfo.getSrc()).size() == 1) {
+          if (setBackSrc != null) {
+            setBackSrc.remove(backUpInfo.getSrc());
+          }
+        }
+        backUpInfoDao.delete(rid);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1385,6 +1442,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       BackUpInfo backUpInfo) throws MetaStoreException {
     try {
       backUpInfoDao.insert(backUpInfo);
+      if (setBackSrc == null) {
+        setBackSrc = new HashSet<>();
+      }
+      setBackSrc.add(backUpInfo.getSrc());
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

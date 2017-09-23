@@ -27,6 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 
 import java.io.IOException;
 
@@ -49,6 +50,9 @@ public abstract class MiniClusterHarness {
     SmartConf conf = new SmartConf();
     initConf(conf);
     cluster = createCluster(conf);
+    // Add namenode URL to smartContext
+    conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
+        "hdfs://" + cluster.getNameNode().getNameNodeAddressHostPortString());
     cluster.waitActive();
     dfs = cluster.getFileSystem();
     dfsClient = dfs.getClient();

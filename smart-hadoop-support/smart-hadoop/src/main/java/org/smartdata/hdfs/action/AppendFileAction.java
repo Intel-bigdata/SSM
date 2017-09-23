@@ -22,8 +22,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.smartdata.action.ActionException;
+import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 
 import java.io.IOException;
 import java.util.Map;
@@ -48,8 +52,11 @@ public class AppendFileAction extends HdfsAction {
   public void init(Map<String, String> args) {
     try {
       this.conf = getContext().getConf();
+      String nameNodeURL = this.conf.get(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
+      conf.set(DFSConfigKeys.FS_DEFAULT_NAME_KEY, nameNodeURL);
     } catch (NullPointerException e) {
       this.conf = new Configuration();
+      appendLog("Conf error!, NameNode URL is not configured!");
     }
     super.init(args);
     this.srcPath = args.get(FILE_PATH);
@@ -71,9 +78,14 @@ public class AppendFileAction extends HdfsAction {
     if (srcPath != null && !srcPath.isEmpty()) {
       Path path = new Path(srcPath);
       FileSystem fileSystem = path.getFileSystem(conf);
+      appendLog(
+          String.format("Action starts at %s : Read %s",
+              Utils.getFormatedCurrentTime(), srcPath));
       if (!fileSystem.exists(path)) {
         throw new ActionException("Append Action fails, file doesn't exist!");
       }
+      appendLog(
+          String.format("Append to %s", srcPath));
       Random random = new Random();
       FSDataOutputStream os = null;
       try {

@@ -22,7 +22,8 @@ public enum FileDiffState {
   RUNNING(1), // Still running
   APPLIED(2),
   MERGED(3),
-  DELETED(4);
+  DELETED(4),
+  FAILED(5);
 
   private int value;
 

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.conf.SmartConfKeys;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,9 +59,18 @@ public class CopyFileAction extends HdfsAction {
   private long offset = 0;
   private long length = 0;
   private int bufferSize = 64 * 1024;
+  private Configuration conf;
 
   @Override
   public void init(Map<String, String> args) {
+    try {
+      this.conf = getContext().getConf();
+      String nameNodeURL = this.conf.get(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
+      conf.set(DFSConfigKeys.FS_DEFAULT_NAME_KEY, nameNodeURL);
+    } catch (NullPointerException e) {
+      this.conf = new Configuration();
+      appendLog("Conf error!, NameNode URL is not configured!");
+    }
     super.init(args);
     this.srcPath = args.get(FILE_PATH);
     if (args.containsKey(DEST_PATH)) {
@@ -144,7 +154,6 @@ public class CopyFileAction extends HdfsAction {
 
   private long getFileSize(String fileName) throws IOException {
     if (fileName.startsWith("hdfs")) {
-      Configuration conf = new Configuration();
       // Get InputStream from URL
       FileSystem fs = FileSystem.get(URI.create(fileName), conf);
       return fs.getFileStatus(new Path(fileName)).getLen();
@@ -156,8 +165,6 @@ public class CopyFileAction extends HdfsAction {
   private InputStream getSrcInputStream(String src) throws IOException {
     if (src.startsWith("hdfs")) {
       // Copy between different remote clusters
-      // TODO read conf from files
-      Configuration conf = new Configuration();
       // Get InputStream from URL
       FileSystem fs = FileSystem.get(URI.create(src), conf);
       return fs.open(new Path(src));
@@ -169,16 +176,13 @@ public class CopyFileAction extends HdfsAction {
   private OutputStream getDestOutPutStream(String dest) throws IOException {
     if (dest.startsWith("hdfs")) {
       // Copy between different clusters
-      // TODO read conf from files
-      Configuration conf = new Configuration();
       // Get OutPutStream from URL
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
+      int replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
       try {
-        int replication = fs.getServerDefaults(new Path(dest)).getReplication();
+        replication = fs.getServerDefaults(new Path(dest)).getReplication();
         if (replication != DFSConfigKeys.DFS_REPLICATION_DEFAULT) {
           LOG.debug("Remote Replications =" + replication);
-          conf.setInt(DFSConfigKeys.DFS_REPLICATION_KEY, replication);
-          fs = FileSystem.get(URI.create(dest), conf);
         }
       } catch (IOException e) {
         LOG.debug("Get Server default replication error!", e);
@@ -186,12 +190,12 @@ public class CopyFileAction extends HdfsAction {
       if (fs.exists(new Path(dest))) {
         return fs.append(new Path(dest));
       }
-      return fs.create(new Path(dest), true);
+      return fs.create(new Path(dest), (short) replication);
     } else {
       // Copy between different dirs of the same cluster
-      if (dfsClient.exists(dest)) {
-        // TODO local append
-      }
+      // TODO local append
+      // if (dfsClient.exists(dest)) {
+      // }
       return dfsClient.create(dest, true);
     }
   }

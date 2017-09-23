@@ -15,39 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.model;
+package org.smartdata.hdfs.scheduler;
 
+public class MovePlanStatistics {
+  private long totalBlocks;
+  private long totalSize;
 
-public enum FileDiffType {
-  CREATE(0),
-  DELETE(1),
-  RENAME(2),
-  APPEND(3),
-  METADATA(4),
-  BASESYNC(5);
-
-  private int value;
-
-  FileDiffType(int value) {
-    this.value = value;
+  public MovePlanStatistics() {
+    totalBlocks = 0;
+    totalSize = 0;
   }
 
-  public static FileDiffType fromValue(int value) {
-    for (FileDiffType r : values()) {
-      if (value == r.getValue()) {
-        return r;
-      }
-    }
-    return null;
+  public MovePlanStatistics(long totalBlocks, long totalSize) {
+    this.totalBlocks = totalBlocks;
+    this.totalSize = totalSize;
   }
 
-  public int getValue() {
-    return value;
+  public void increaseTotalBlocks(int numBlocks) {
+    totalBlocks += numBlocks;
   }
 
-  @Override
-  public String toString() {
-    return String.format("FileDiffType{value=%s} %s", value, super.toString());
+  public void increaseTotalSize(long size) {
+    totalSize += size;
   }
 
+  public long getTotalBlocks() {
+    return totalBlocks;
+  }
+
+  public long getTotalSize() {
+    return totalSize;
+  }
 }

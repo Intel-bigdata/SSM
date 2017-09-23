@@ -104,6 +104,13 @@ public class CmdletInfo {
     this.state = state;
   }
 
+  public void updateState(CmdletState state) {
+    if (this.state != state) {
+      this.state = state;
+      this.stateChangedTime = System.currentTimeMillis();
+    }
+  }
+
   public String getParameters() {
     return parameters;
   }

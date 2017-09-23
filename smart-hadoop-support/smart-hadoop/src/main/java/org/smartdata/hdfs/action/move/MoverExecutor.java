@@ -59,8 +59,11 @@ public class MoverExecutor {
 
   private Map<Long, Block> sourceBlockMap;
   private Map<String, DatanodeInfo> sourceDatanodeMap;
+  private MoverStatus status;
 
-  public MoverExecutor(Configuration conf, int maxRetryTimes, int maxConcurrentMoves) {
+  public MoverExecutor(MoverStatus status, Configuration conf,
+      int maxRetryTimes, int maxConcurrentMoves) {
+    this.status = status;
     this.conf = conf;
     this.maxRetryTimes = maxRetryTimes;
     this.maxConcurrentMoves = maxConcurrentMoves;
@@ -87,9 +90,17 @@ public class MoverExecutor {
           }
         });
       }
-      while (!ReplicaMove.allMoveFinished(allMoves)) {
+
+      int[] stat = new int[2];
+      while (true) {
+        ReplicaMove.countStatus(allMoves, stat);
+        if (stat[0] == allMoves.size()) {
+          status.increaseMovedBlocks(stat[1]);
+          break;
+        }
         Thread.sleep(1000);
       }
+
       int remaining = ReplicaMove.refreshMoverList(allMoves);
       if (allMoves.size() == 0) {
         LOG.info("{} succeeded", this);
@@ -135,7 +146,8 @@ public class MoverExecutor {
       DatanodeInfo sourceDatanode = sourceDatanodeMap.get(sourceUuids.get(planIndex));
       StorageGroup source = new StorageGroup(sourceDatanode, sourceStorageTypes.get(planIndex));
       //build target
-      DatanodeInfo targetDatanode = CompatibilityHelperLoader.getHelper().newDatanodeInfo(targetIpAddrs.get(planIndex), targetXferPorts.get(planIndex));
+      DatanodeInfo targetDatanode = CompatibilityHelperLoader.getHelper()
+          .newDatanodeInfo(targetIpAddrs.get(planIndex), targetXferPorts.get(planIndex));
       StorageGroup target = new StorageGroup(targetDatanode, targetStorageTypes.get(planIndex));
       // generate single move
       ReplicaMove replicaMove = new ReplicaMove(block, source, target, nnc, saslClient);
