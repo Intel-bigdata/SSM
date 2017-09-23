@@ -37,17 +37,17 @@ import java.util.Map;
 @ActionSignature(
     actionId = "metadata",
     displayName = "metadata",
-    usage = HdfsAction.FILE_PATH + " $src " + MetaDataAction.OWNER_NAME + " $ownername " +
-        MetaDataAction.GROUP_NAME + " $groupname " + MetaDataAction.BLOCK_REPLICATION + " $replication " +
-        MetaDataAction.PERMISSION + " $permisstion " + MetaDataAction.MTIME + " $mtime " +
+    usage = HdfsAction.FILE_PATH + " $src " + MetaDataAction.OWNER_NAME + " $owner " +
+        MetaDataAction.GROUP_NAME + " $group " + MetaDataAction.BLOCK_REPLICATION + " $replication " +
+        MetaDataAction.PERMISSION + " $permission " + MetaDataAction.MTIME + " $mtime " +
         MetaDataAction.ATIME + " $atime"
 )
 public class MetaDataAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(MetaDataAction.class);
-  public static final String OWNER_NAME = "-owername";
-  public static final String GROUP_NAME = "-groupname";
+  public static final String OWNER_NAME = "-owner";
+  public static final String GROUP_NAME = "-group";
   public static final String BLOCK_REPLICATION = "-replication";
-  //only support input like 777
+  // only support input like 777
   public static final String PERMISSION = "-permission";
   public static final String MTIME = "-mtime";
   public static final String ATIME = "-atime";
@@ -59,7 +59,6 @@ public class MetaDataAction extends HdfsAction {
   private short permission;
   private long aTime;
   private long mTime;
-
 
   @Override
   public void init(Map<String, String> args) {
@@ -76,24 +75,19 @@ public class MetaDataAction extends HdfsAction {
     if (args.containsKey(OWNER_NAME)) {
       this.ownerName = args.get(OWNER_NAME);
     }
-
     if (args.containsKey(GROUP_NAME)) {
       this.groupName = args.get(GROUP_NAME);
     }
-
-    if (args.containsKey(BLOCK_REPLICATION)){
+    if (args.containsKey(BLOCK_REPLICATION)) {
       this.replication = Short.parseShort(args.get(BLOCK_REPLICATION));
     }
-
     if (args.containsKey(PERMISSION)) {
       FsPermission fsPermission = new FsPermission(args.get(PERMISSION));
       this.permission = fsPermission.toShort();
     }
-
     if (args.containsKey(MTIME)) {
       this.mTime = Long.parseLong(args.get(MTIME));
     }
-
     if (args.containsKey(ATIME)) {
       this.aTime = Long.parseLong(args.get(ATIME));
     }
@@ -105,7 +99,20 @@ public class MetaDataAction extends HdfsAction {
       throw new IllegalArgumentException("File src is missing.");
     }
 
-    FileInfo fileInfo = new FileInfo(srcPath, 0, 0, false, replication, 0, mTime, aTime, permission, ownerName, groupName, (byte) 1);
+    FileInfo fileInfo =
+        new FileInfo(
+            srcPath,
+            0,
+            0,
+            false,
+            replication,
+            0,
+            mTime,
+            aTime,
+            permission,
+            ownerName,
+            groupName,
+            (byte) 1);
 
     changeFileMetaData(srcPath, fileInfo);
   }
@@ -113,68 +120,74 @@ public class MetaDataAction extends HdfsAction {
   private boolean changeFileMetaData(String srcFile, FileInfo fileInfo) throws IOException {
     try {
       if (srcFile.startsWith("hdfs")) {
-        //change file metadata in remote cluster
+        // change file metadata in remote cluster
         // TODO read conf from files
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(URI.create(srcFile), conf);
 
         if (fileInfo.getOwner() != null) {
-          fs.setOwner(new Path(srcFile), fileInfo.getOwner(), fs.getFileStatus(new Path(srcFile)).getGroup());
+          fs.setOwner(
+              new Path(srcFile),
+              fileInfo.getOwner(),
+              fs.getFileStatus(new Path(srcFile)).getGroup());
         }
-
         if (fileInfo.getGroup() != null) {
-          fs.setOwner(new Path(srcFile), fs.getFileStatus(new Path(srcFile)).getOwner(), fileInfo.getGroup());
+          fs.setOwner(
+              new Path(srcFile),
+              fs.getFileStatus(new Path(srcFile)).getOwner(),
+              fileInfo.getGroup());
         }
-
         if (fileInfo.getBlock_replication() != -1) {
           fs.setReplication(new Path(srcFile), fileInfo.getBlock_replication());
         }
-
         if (fileInfo.getPermission() != -1) {
           fs.setPermission(new Path(srcFile), new FsPermission(fileInfo.getPermission()));
         }
-
         if (fileInfo.getAccess_time() != -1) {
-          fs.setTimes(new Path(srcFile), fs.getFileStatus(new Path(srcFile)).getModificationTime()
-              , fileInfo.getAccess_time());
+          fs.setTimes(
+              new Path(srcFile),
+              fs.getFileStatus(new Path(srcFile)).getModificationTime(),
+              fileInfo.getAccess_time());
         }
-
         if (fileInfo.getModification_time() != -1) {
-          fs.setTimes(new Path(srcFile), fileInfo.getModification_time()
-              , fs.getFileStatus(new Path(srcFile)).getAccessTime());
+          fs.setTimes(
+              new Path(srcFile),
+              fileInfo.getModification_time(),
+              fs.getFileStatus(new Path(srcFile)).getAccessTime());
         }
-
         return true;
       } else {
-        //change file metadata in local cluster
+        // change file metadata in local cluster
         if (fileInfo.getOwner() != null) {
-          dfsClient.setOwner(srcFile, fileInfo.getOwner(), dfsClient.getFileInfo(srcFile).getGroup());
+          dfsClient.setOwner(
+              srcFile, fileInfo.getOwner(), dfsClient.getFileInfo(srcFile).getGroup());
         }
-
         if (fileInfo.getGroup() != null) {
-          dfsClient.setOwner(srcFile, dfsClient.getFileInfo(srcFile).getOwner(), fileInfo.getGroup());
+          dfsClient.setOwner(
+              srcFile, dfsClient.getFileInfo(srcFile).getOwner(), fileInfo.getGroup());
         }
-
         if (fileInfo.getBlock_replication() != -1) {
           dfsClient.setReplication(srcFile, fileInfo.getBlock_replication());
         }
-
         if (fileInfo.getPermission() != -1) {
           dfsClient.setPermission(srcFile, new FsPermission(fileInfo.getPermission()));
         }
-
         if (fileInfo.getAccess_time() != -1) {
-          dfsClient.setTimes(srcFile, dfsClient.getFileInfo(srcFile).getModificationTime(), fileInfo.getAccess_time());
+          dfsClient.setTimes(
+              srcFile,
+              dfsClient.getFileInfo(srcFile).getModificationTime(),
+              fileInfo.getAccess_time());
         }
-
         if (fileInfo.getModification_time() != -1) {
-          dfsClient.setTimes(srcFile, fileInfo.getModification_time(), dfsClient.getFileInfo(srcFile).getAccessTime());
+          dfsClient.setTimes(
+              srcFile,
+              fileInfo.getModification_time(),
+              dfsClient.getFileInfo(srcFile).getAccessTime());
         }
-
         return true;
       }
-    }catch (Exception e){
-      LOG.debug("Metadata can not be change in this way!", e);
+    } catch (Exception e) {
+      LOG.debug("Metadata cannot be applied", e);
     }
     return false;
   }

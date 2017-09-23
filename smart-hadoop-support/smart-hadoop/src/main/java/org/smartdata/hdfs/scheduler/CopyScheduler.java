@@ -159,6 +159,11 @@ public class CopyScheduler extends ActionSchedulerService {
     System.out.println("Submit file" + path + fileLock.keySet());
     LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
     if (fileLock.containsKey(path)) {
+      // File is locked
+      return false;
+    }
+    if (!fileDiffChainMap.containsKey(path)) {
+      // File Chain is not ready
       return false;
     }
     return true;
@@ -241,10 +246,6 @@ public class CopyScheduler extends ActionSchedulerService {
     if (fileDiffChainMap.containsKey(src)) {
       fileDiffChainMap.get(src).markAllDiffs();
       fileDiffChainMap.remove(src);
-      // Unlock file
-      if (fileLock.containsKey(src)) {
-        fileLock.remove(src);
-      }
     }
     List<FileDiff> fileDiffs = metaStore.getFileDiffsByFileName(src);
     for (FileDiff fileDiff :fileDiffs) {
@@ -449,6 +450,9 @@ public class CopyScheduler extends ActionSchedulerService {
           mergeRename(fileDiff);
         } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
           mergeDelete(fileDiff);
+        } else {
+          // Metadata
+          diffChain.add(did);
         }
       }
 
