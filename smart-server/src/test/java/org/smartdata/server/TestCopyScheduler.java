@@ -22,6 +22,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.theories.Theories;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
@@ -32,6 +33,7 @@ import org.smartdata.model.FileDiffType;
 import org.smartdata.model.RuleState;
 import org.smartdata.server.engine.CmdletManager;
 
+import java.io.File;
 import java.util.List;
 
 public class TestCopyScheduler extends MiniSmartClusterHarness {
@@ -80,14 +82,20 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
     for (int i = 0; i < 3; i++) {
       // Create test files
       DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+      Thread.sleep(1000);
       dfs.delete(new Path(srcPath + i), false);
     }
-    do {
-      Thread.sleep(1500);
-    } while (metaStore.getPendingDiff().size() >= 4);
-    List<FileDiff> fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
+    Thread.sleep(1200);
+    List<FileDiff> fileDiffs;
+    fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
+    while(fileDiffs.size() != 0) {
+      Thread.sleep(1000);
+      for (FileDiff fileDiff:fileDiffs) {
+        System.out.println(fileDiff.toString());
+      }
+      fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
+    }
     // File is not created, so clear all fileDiff
-    Assert.assertTrue(fileDiffs.size() == 0);
   }
 
   @Test
