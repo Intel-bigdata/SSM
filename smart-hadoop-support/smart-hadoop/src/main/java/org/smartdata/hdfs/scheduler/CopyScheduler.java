@@ -114,6 +114,12 @@ public class CopyScheduler extends ActionSchedulerService {
     if (fileDiff == null) {
       return ScheduleResult.FAIL;
     }
+    if (fileDiff.getState() != FileDiffState.PENDING) {
+      // If file diff is applied or failed
+      fileDiffChainMap.get(path).removeHead();
+      fileLock.remove(path);
+      return ScheduleResult.FAIL;
+    }
     switch (fileDiff.getDiffType()) {
       case APPEND:
         action.setActionType("copy");
@@ -491,7 +497,7 @@ public class CopyScheduler extends ActionSchedulerService {
       @VisibleForTesting
       void mergeDelete(FileDiff fileDiff) throws MetaStoreException {
         boolean isCreate = false;
-        for (long did : diffChain) {
+        for (long did : appendChain) {
           FileDiff diff = metaStore.getFileDiff(did);
           if (diff.getParameters().containsKey("-offset")) {
             if (diff.getParameters().get("-offset").equals("0")) {
@@ -500,7 +506,7 @@ public class CopyScheduler extends ActionSchedulerService {
           }
           metaStore.updateFileDiff(did, FileDiffState.APPLIED);
         }
-        diffChain.clear();
+        appendChain.clear();
         if (!isCreate) {
           if (nameChain.size() > 1) {
             fileDiff.setSrc(nameChain.get(0));
