@@ -256,7 +256,9 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
    } while(admin.getRuleInfo(ruleId).getNumCmdsGen() <= 2);
    List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
    Assert.assertTrue(actionInfos.size() >= 3);
-   Thread.sleep(1200);
+   do {
+     Thread.sleep(800);
+   } while(metaStore.getPendingDiff().size() != 0);
    for (int i = 0; i < 3; i++) {
      // Check 3 files
      Assert.assertTrue(dfs.exists(new Path(destPath + i)));
