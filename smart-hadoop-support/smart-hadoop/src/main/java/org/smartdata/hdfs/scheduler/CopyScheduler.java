@@ -183,9 +183,6 @@ public class CopyScheduler extends ActionSchedulerService {
             // Remove from chain top
             fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
           }
-          if (fileLock.containsKey(fileDiff.getSrc())) {
-            fileLock.remove(fileDiff.getSrc());
-          }
           metaStore.updateFileDiff(did, FileDiffState.APPLIED);
           if (fileDiffMap.containsKey(did)) {
             fileDiffMap.remove(did);
@@ -201,6 +198,9 @@ public class CopyScheduler extends ActionSchedulerService {
               fileDiffMap.put(did, curr + 1);
             }
           }
+        }
+        if (fileLock.containsKey(fileDiff.getSrc())) {
+          fileLock.remove(fileDiff.getSrc());
         }
       } catch (MetaStoreException e) {
         LOG.error("Mark sync action in metastore failed!", e);

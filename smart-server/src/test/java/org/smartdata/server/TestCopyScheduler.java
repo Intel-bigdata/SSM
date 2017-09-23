@@ -121,6 +121,30 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
     }
   }
 
+  @Test (timeout = 45000)
+  public void failRetry() throws Exception {
+    waitTillSSMExitSafeMode();
+    MetaStore metaStore = ssm.getMetaStore();
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+    long ruleId = admin.submitRule(
+        "file: every 1s | path matches \"/src/*\"| sync -dest /dest/",
+        RuleState.ACTIVE);
+    FileDiff fileDiff =
+        new FileDiff(FileDiffType.RENAME, FileDiffState.PENDING);
+    fileDiff.setSrc("/src/1");
+    fileDiff.getParameters().put("-dest", "/src/2");
+    metaStore.insertFileDiff(fileDiff);
+    Thread.sleep(1200);
+    while (metaStore.getPendingDiff().size() != 0) {
+      Thread.sleep(1000);
+    }
+    fileDiff = metaStore.getFileDiffsByFileName("/src/1").get(0);
+    Assert
+        .assertTrue(fileDiff.getState() == FileDiffState.FAILED);
+    Thread.sleep(20000);
+  }
+
 
   @Test
   public void testForceSync() throws Exception {
