@@ -437,18 +437,13 @@ public class CopyScheduler extends ActionSchedulerService {
           appendChain.add(did);
           // Increase Append length
           currAppendLength += Long.valueOf(fileDiff.getParameters().get("-length"));
+          diffChain.add(did);
         } else if (fileDiff.getDiffType() == FileDiffType.RENAME) {
           // Add New Name to Name Chain
           mergeRename(fileDiff);
         } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
-          mergeDelete();
-          if (nameChain.size() > 1) {
-            fileDiff.setSrc(nameChain.get(0));
-            // Delete raw is enough
-            metaStore.updateFileDiff(did, nameChain.get(0));
-          }
+          mergeDelete(fileDiff);
         }
-        diffChain.add(did);
       }
 
       @VisibleForTesting
@@ -494,12 +489,28 @@ public class CopyScheduler extends ActionSchedulerService {
       }
 
       @VisibleForTesting
-      void mergeDelete() throws MetaStoreException {
-        // TODO if create diff is in append
+      void mergeDelete(FileDiff fileDiff) throws MetaStoreException {
+        boolean isCreate = false;
         for (long did : diffChain) {
+          FileDiff diff = metaStore.getFileDiff(did);
+          if (diff.getParameters().containsKey("-offset")) {
+            if (diff.getParameters().get("-offset").equals("0")) {
+              isCreate = true;
+            }
+          }
           metaStore.updateFileDiff(did, FileDiffState.APPLIED);
         }
         diffChain.clear();
+        if (!isCreate) {
+          if (nameChain.size() > 1) {
+            fileDiff.setSrc(nameChain.get(0));
+            // Delete raw is enough
+            metaStore.updateFileDiff(fileDiff.getDiffId(), nameChain.get(0));
+          }
+          diffChain.add(fileDiff.getDiffId());
+        } else {
+          metaStore.updateFileDiff(fileDiff.getDiffId(), FileDiffState.APPLIED);
+        }
       }
 
       @VisibleForTesting
@@ -523,12 +534,24 @@ public class CopyScheduler extends ActionSchedulerService {
         fileLock.put(filePath, -1L);
         String newName = fileDiff.getParameters().get("-dest");
         nameChain.add(newName);
+        boolean isCreate = false;
         for (long did : appendChain) {
           FileDiff appendFileDiff = metaStore.getFileDiff(did);
+          if (fileDiff.getParameters().containsKey("-offset")) {
+            if (fileDiff.getParameters().get("-offset").equals("0")) {
+              isCreate = true;
+            }
+          }
           if (appendFileDiff != null && appendFileDiff.getState().getValue() != 2) {
             appendFileDiff.setSrc(newName);
             metaStore.updateFileDiff(did, newName);
           }
+        }
+        // Insert rename fileDiff to head
+        if (!isCreate) {
+          diffChain.add(0, fileDiff.getDiffId());
+        } else {
+          metaStore.updateFileDiff(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }
         // Unlock file
         fileLock.remove(filePath);

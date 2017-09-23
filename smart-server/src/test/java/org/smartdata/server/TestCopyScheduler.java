@@ -86,7 +86,8 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
       Thread.sleep(1500);
     } while (metaStore.getPendingDiff().size() >= 4);
     List<FileDiff> fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
-    Assert.assertTrue(fileDiffs.size() == 3);
+    // File is not created, so clear all fileDiff
+    Assert.assertTrue(fileDiffs.size() == 0);
   }
 
   @Test
