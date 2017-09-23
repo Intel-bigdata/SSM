@@ -174,7 +174,7 @@ def append_file(file_path, length=1024):
     """
     append random content to file_path
     """
-    cmdlet_str = "append -file " + file_path + " -length " + length
+    cmdlet_str = "append -file " + file_path + " -length " + str(length)
     return submit_cmdlet(cmdlet_str)
 
 

@@ -247,7 +247,7 @@ public class MetaStoreUtils {
             "  did INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
             "  rid INTEGER NOT NULL,\n" +
             "  diff_type varchar(4096) NOT NULL,\n" +
-            "  src varchar(4096) NOT NULL,\n" +
+            "  src varchar(1000) NOT NULL,\n" +
             "  parameters varchar(4096) NOT NULL,\n" +
             "  state tinyint(4) NOT NULL,\n" +
             "  create_time bigint(20) NOT NULL\n" +
