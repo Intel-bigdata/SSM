@@ -193,9 +193,9 @@ public class CopyFileAction extends HdfsAction {
       return fs.create(new Path(dest), (short) replication);
     } else {
       // Copy between different dirs of the same cluster
-      if (dfsClient.exists(dest)) {
-        // TODO local append
-      }
+      // TODO local append
+      // if (dfsClient.exists(dest)) {
+      // }
       return dfsClient.create(dest, true);
     }
   }
