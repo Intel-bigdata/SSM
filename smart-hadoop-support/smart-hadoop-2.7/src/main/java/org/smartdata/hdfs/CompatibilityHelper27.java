@@ -17,7 +17,10 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -31,6 +34,7 @@ import org.apache.hadoop.security.token.Token;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,5 +118,15 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return new Event.AppendEvent.Builder().path(proto.getPath())
       .newBlock(proto.hasNewBlock() && proto.getNewBlock())
       .build();
+  }
+
+  @Override
+  public boolean truncate(DFSClient client, String src, long newLength) throws IOException {
+    return client.truncate(src, newLength);
+  }
+
+  @Override
+  public boolean truncate(DistributedFileSystem fileSystem, String src, long newLength) throws IOException {
+    return fileSystem.truncate(new Path(src), newLength);
   }
 }
