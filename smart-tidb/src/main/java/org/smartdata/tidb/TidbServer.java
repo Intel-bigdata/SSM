@@ -23,25 +23,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TidbServer implements Runnable {
-  private String args;
-  private final static Logger LOG = LoggerFactory.getLogger(TidbServer.class);
-
   public interface Tidb extends Library {
     void startServer(String args);
+
+    boolean isTidbServerReady();
   }
+
+  private String args;
+  private Tidb tidb;
+  private final static Logger LOG = LoggerFactory.getLogger(TidbServer.class);
 
   public TidbServer(String args) {
     this.args = args;
-  }
-
-  public void run() {
-    Tidb tidb = null;
     try {
       tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
     } catch (UnsatisfiedLinkError ex) {
       LOG.error("libtidb.so is not found!");
     }
+  }
 
+  public boolean isReady() {
+    return tidb.isTidbServerReady();
+  }
+
+  public void run() {
     LOG.info("Starting TiDB..");
     tidb.startServer(args);
   }

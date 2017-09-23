@@ -23,25 +23,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PdServer implements Runnable {
-  private String args;
-  private final static Logger LOG = LoggerFactory.getLogger(PdServer.class);
-
   public interface Pd extends Library {
     void startServer(String args);
+
+    boolean isPdServerReady();
   }
+
+  private String args;
+  private Pd pd;
+  private final static Logger LOG = LoggerFactory.getLogger(PdServer.class);
 
   public PdServer(String args) {
     this.args = args;
-  }
-
-  public void run() {
-    Pd pd = null;
     try {
       pd = (Pd) Native.loadLibrary("libpd.so", Pd.class);
     } catch (UnsatisfiedLinkError ex) {
       LOG.error("libpd.so is not found!");
     }
+  }
 
+  public boolean isReady() {
+    return pd.isPdServerReady();
+  }
+
+  public void run() {
     LOG.info("Starting PD..");
     pd.startServer(args);
   }

@@ -156,17 +156,22 @@ public class RuleExecutor implements Runnable {
     String countFilter = "";
     List<String> tableNames =
         getAccessCountTablesDuringLast(interval);
-    return generateSQL(tableNames, newTable, countFilter);
+    return generateSQL(tableNames, newTable, countFilter, adapter);
   }
 
   @VisibleForTesting
-  static String  generateSQL(List<String> tableNames, String newTable, String countFilter) {
-    String sqlFinal;
+  static String  generateSQL(List<String> tableNames, String newTable, String countFilter, MetaStore adapter) {
+    String sqlFinal, sqlCreate;
     if (tableNames.size() <= 1) {
       String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
           tableNames.get(0);
-      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM "
-          + tableName + ";";
+      sqlCreate = "CREATE TABLE " + newTable + "(fid INTEGER NOT NULL, count INTEGER NOT NULL);";
+      try {
+        adapter.execute(sqlCreate);
+      } catch (MetaStoreException e) {
+        LOG.error("Cannot create table " + newTable, e);
+      }
+      sqlFinal = "INSERT INTO " + newTable + " SELECT * FROM " + tableName + ";";
     } else {
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
       String sqlUnion = "SELECT fid, count FROM "
@@ -181,8 +186,13 @@ public class RuleExecutor implements Runnable {
               "" :
               "HAVING SUM(count) " + countFilter;
       String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
-      sqlFinal = "CREATE TABLE " + newTable + " AS SELECT * FROM ("
-          + sqlRe + ") as t;";
+      sqlCreate = "CREATE TABLE " + newTable + "(fid INTEGER NOT NULL, count INTEGER NOT NULL);";
+      try {
+        adapter.execute(sqlCreate);
+      } catch (MetaStoreException e) {
+        LOG.error("Cannot create table " + newTable, e);
+      }
+      sqlFinal = "INSERT INTO " + newTable + " SELECT * FROM (" + sqlRe + ") temp;";
     }
     return sqlFinal;
   }

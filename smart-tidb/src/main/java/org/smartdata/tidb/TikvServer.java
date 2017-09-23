@@ -23,27 +23,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TikvServer implements Runnable {
-  private String args;
-  private final static Logger LOG = LoggerFactory.getLogger(TikvServer.class);
-
   public interface Tikv extends Library {
     void startServer(String args);
+
+    boolean isTikvServerReady();
   }
+
+  private String args;
+  private Tikv tikv;
+  private final static Logger LOG = LoggerFactory.getLogger(TikvServer.class);
 
   public TikvServer(String args) {
     this.args = args;
-  }
-
-  public void run() {
-    Tikv tikv = null;
     try {
       tikv = (Tikv) Native.loadLibrary("libtikv.so", Tikv.class);
     } catch (UnsatisfiedLinkError ex) {
       LOG.error("libtikv.so is not found!");
     }
+  }
 
+  public boolean isReady() {
+    return tikv.isTikvServerReady();
+  }
+
+  public void run() {
     StringBuffer strbuffer = new StringBuffer();
-    //According to start.rs in pingcap's tikv source code, "TiKV" is the flag name used for parsing
+    //According to start.rs in our tikv source code, "TiKV" is the flag name used for parsing
     strbuffer.append("TiKV");
     strbuffer.append(" ");
     strbuffer.append(args);
