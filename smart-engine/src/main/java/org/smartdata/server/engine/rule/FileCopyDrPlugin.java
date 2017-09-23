@@ -17,9 +17,6 @@
  */
 package org.smartdata.server.engine.rule;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.SyncAction;
@@ -28,16 +25,12 @@ import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.utils.StringUtil;
 
-import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
