@@ -37,312 +37,314 @@ import java.io.File;
 import java.util.List;
 
 public class TestCopyScheduler extends MiniSmartClusterHarness {
-  @Test
-  public void appendMerge() throws Exception {
-    waitTillSSMExitSafeMode();
-    MetaStore metaStore = ssm.getMetaStore();
-    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    DistributedFileSystem dfs = cluster.getFileSystem();
-    final String srcPath = "/src/";
-    final String destPath = "/dest/";
-    BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
-    metaStore.insertBackUpInfo(backUpInfo);
-    dfs.mkdirs(new Path(srcPath));
-    dfs.mkdirs(new Path(destPath));
-    // Write to src
-    for (int i = 0; i < 3; i++) {
-      // Create test files
-      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
-      for (int j = 0; j < 10; j++) {
-        DFSTestUtil.appendFile(dfs, new Path(srcPath + i), 1024);
-      }
-    }
-    do {
-      Thread.sleep(1500);
-    } while (metaStore.getPendingDiff().size() >= 30);
-    List<FileDiff> fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
-    Assert.assertTrue(fileDiffs.size() < 30);
-  }
-
-  @Test
-  public void deleteMerge() throws Exception {
-    waitTillSSMExitSafeMode();
-    MetaStore metaStore = ssm.getMetaStore();
-    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    DistributedFileSystem dfs = cluster.getFileSystem();
-    final String srcPath = "/src/";
-    final String destPath = "/dest/";
-    BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
-    metaStore.insertBackUpInfo(backUpInfo);
-    dfs.mkdirs(new Path(srcPath));
-    dfs.mkdirs(new Path(destPath));
-    // Write to src
-    for (int i = 0; i < 3; i++) {
-      // Create test files
-      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
-      Thread.sleep(1000);
-      dfs.delete(new Path(srcPath + i), false);
-    }
-    Thread.sleep(1200);
-    List<FileDiff> fileDiffs;
-    fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
-    while(fileDiffs.size() != 0) {
-      Thread.sleep(1000);
-      for (FileDiff fileDiff:fileDiffs) {
-        System.out.println(fileDiff.toString());
-      }
-      fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
-    }
-    // File is not created, so clear all fileDiff
-  }
-
-  @Test
-  public void renameMerge() throws Exception {
-    waitTillSSMExitSafeMode();
-    MetaStore metaStore = ssm.getMetaStore();
-    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    DistributedFileSystem dfs = cluster.getFileSystem();
-    final String srcPath = "/src/";
-    final String destPath = "/dest/";
-    BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
-    metaStore.insertBackUpInfo(backUpInfo);
-    dfs.mkdirs(new Path(srcPath));
-    dfs.mkdirs(new Path(destPath));
-    // Write to src
-    for (int i = 0; i < 3; i++) {
-      // Create test files
-      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
-      dfs.rename(new Path(srcPath + i), new Path(srcPath + i + 10));
-      // Rename target ends with 10
-      DFSTestUtil.appendFile(dfs, new Path(srcPath + i + 10), 1024);
-    }
-    do {
-      Thread.sleep(1500);
-    } while (metaStore.getPendingDiff().size() <= 9);
-    List<FileDiff> fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
-    for (FileDiff fileDiff: fileDiffs) {
-      if (fileDiff.getDiffType() == FileDiffType.APPEND) {
-        Assert.assertTrue(fileDiff.getSrc().endsWith("10"));
-      }
-    }
-  }
-
-  @Test (timeout = 45000)
-  public void failRetry() throws Exception {
-    waitTillSSMExitSafeMode();
-    MetaStore metaStore = ssm.getMetaStore();
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    long ruleId = admin.submitRule(
-        "file: every 1s | path matches \"/src/*\"| sync -dest /dest/",
-        RuleState.ACTIVE);
-    FileDiff fileDiff =
-        new FileDiff(FileDiffType.RENAME, FileDiffState.PENDING);
-    fileDiff.setSrc("/src/1");
-    fileDiff.getParameters().put("-dest", "/src/2");
-    metaStore.insertFileDiff(fileDiff);
-    Thread.sleep(1200);
-    while (metaStore.getPendingDiff().size() != 0) {
-      Thread.sleep(1000);
-    }
-    fileDiff = metaStore.getFileDiffsByFileName("/src/1").get(0);
-    Assert
-        .assertTrue(fileDiff.getState() == FileDiffState.FAILED);
-    Thread.sleep(20000);
-  }
-
-
-  @Test
-  public void testForceSync() throws Exception {
-    waitTillSSMExitSafeMode();
-    MetaStore metaStore = ssm.getMetaStore();
-    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    DistributedFileSystem dfs = cluster.getFileSystem();
-    final String srcPath = "/src/";
-    final String destPath = "/dest/";
-    dfs.mkdirs(new Path(srcPath));
-    dfs.mkdirs(new Path(destPath));
-    // Write to src
-    for (int i = 0; i < 3; i++) {
-      // Create test files
-      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
-    }
-    // Clear file diffs
-    metaStore.deleteAllFileDiff();
-    // Submit rules and trigger forceSync
-    long ruleId = admin.submitRule(
-        "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
-        RuleState.ACTIVE);
-    Thread.sleep(1000);
-    Assert.assertTrue(metaStore.getFileDiffs(FileDiffState.PENDING).size() > 0);
-  }
-
-  @Test (timeout = 60000)
-  public void testDelete() throws Exception {
-    waitTillSSMExitSafeMode();
-    MetaStore metaStore = ssm.getMetaStore();
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    long ruleId = admin.submitRule(
-        "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
-        RuleState.ACTIVE);
-    FileDiff fileDiff =
-        new FileDiff(FileDiffType.DELETE, FileDiffState.PENDING);
-    fileDiff.setSrc("/src/1");
-    metaStore.insertFileDiff(fileDiff);
-    Thread.sleep(1200);
-    do {
-      Thread.sleep(1000);
-    } while (admin.getRuleInfo(ruleId).getNumCmdsGen() == 0);
-    Assert
-        .assertTrue(cmdletManager.listNewCreatedActions("sync", 0).size() > 0);
-  }
-
-  @Test (timeout = 60000)
-  public void testRename() throws Exception {
-    waitTillSSMExitSafeMode();
-    MetaStore metaStore = ssm.getMetaStore();
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    long ruleId = admin.submitRule(
-        "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
-        RuleState.ACTIVE);
-    FileDiff fileDiff =
-        new FileDiff(FileDiffType.RENAME, FileDiffState.PENDING);
-    fileDiff.setSrc("/src/1");
-    fileDiff.getParameters().put("-dest", "/src/2");
-    metaStore.insertFileDiff(fileDiff);
-    Thread.sleep(1200);
-    do {
-      Thread.sleep(1000);
-    } while (admin.getRuleInfo(ruleId).getNumCmdsGen() == 0);
-    Assert
-        .assertTrue(cmdletManager.listNewCreatedActions("sync", 0).size() > 0);
-    Thread.sleep(20000);
-  }
-
- @Test (timeout = 40000)
- public void testWithSyncRule() throws Exception {
-   waitTillSSMExitSafeMode();
-   MetaStore metaStore = ssm.getMetaStore();
-   SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-   CmdletManager cmdletManager = ssm.getCmdletManager();
-   // metaStore.deleteAllFileDiff();
-   // metaStore.deleteAllFileInfo();
-   // metaStore.deleteAllCmdlets();
-   // metaStore.deleteAllActions();
-   // metaStore.deleteAllRules();
-   DistributedFileSystem dfs = cluster.getFileSystem();
-   final String srcPath = "/src/";
-   final String destPath = "/dest/";
-   // Submit sync rule
-   long ruleId = admin.submitRule(
-       "file: every 1s | path matches \"/src/*\"| sync -dest " + destPath,
-       RuleState.ACTIVE);
-   Thread.sleep(1000);
-   dfs.mkdirs(new Path(srcPath));
-   dfs.mkdirs(new Path(destPath));
-   // Write to src
-   for (int i = 0; i < 3; i++) {
-     // Create test files
-     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
-   }
-   do {
-     Thread.sleep(1000);
-   } while(admin.getRuleInfo(ruleId).getNumCmdsGen() <= 2);
-   List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
-   Assert.assertTrue(actionInfos.size() >= 3);
-   do {
-     Thread.sleep(800);
-   } while(metaStore.getPendingDiff().size() != 0);
-   for (int i = 0; i < 3; i++) {
-     // Check 3 files
-     Assert.assertTrue(dfs.exists(new Path(destPath + i)));
-     System.out.printf("File %d is copied.\n", i);
-   }
- }
-
-
- @Test (timeout = 60000)
- public void testCopy() throws Exception {
-   waitTillSSMExitSafeMode();
-   MetaStore metaStore = ssm.getMetaStore();
-   // metaStore.deleteAllFileDiff();
-   // metaStore.deleteAllFileInfo();
-   // metaStore.deleteAllCmdlets();
-   // metaStore.deleteAllActions();
-   DistributedFileSystem dfs = cluster.getFileSystem();
-   final String srcPath = "/src/";
-   final String destPath = "/dest/";
-   BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
-   metaStore.insertBackUpInfo(backUpInfo);
-   dfs.mkdirs(new Path(srcPath));
-   dfs.mkdirs(new Path(destPath));
-   // Write to src
-   for (int i = 0; i < 3; i++) {
-     // Create test files
-     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
-   }
-   Thread.sleep(1000);
-   CmdletManager cmdletManager = ssm.getCmdletManager();
-   // Submit sync action
-   for (int i = 0; i < 3; i++) {
-     // Create test files
-     cmdletManager.submitCmdlet("sync -file /src/" + i + " -src " + srcPath + " -dest " + destPath);
-   }
-   List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
-   Assert.assertTrue(actionInfos.size() >= 3);
-   do {
-     Thread.sleep(1000);
-
-   } while(cmdletManager.getActionsSizeInCache() + cmdletManager.getCmdletsSizeInCache() > 0);
-   for (int i = 0; i < 3; i++) {
-     // Write 10 files
-     Assert.assertTrue(dfs.exists(new Path(destPath + i)));
-     System.out.printf("File %d is copied.\n", i);
-   }
- }
-
- @Test (timeout = 40000)
- public void testCopyDelete() throws Exception {
-   waitTillSSMExitSafeMode();
-   MetaStore metaStore = ssm.getMetaStore();
-   // metaStore.deleteAllFileDiff();
-   // metaStore.deleteAllFileInfo();
-   // metaStore.deleteAllCmdlets();
-   // metaStore.deleteAllActions();
-   DistributedFileSystem dfs = cluster.getFileSystem();
-   final String srcPath = "/src/";
-   final String destPath = "/dest/";
-   BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
-   metaStore.insertBackUpInfo(backUpInfo);
-   dfs.mkdirs(new Path(srcPath));
-   dfs.mkdirs(new Path(destPath));
-   // Write to src
-   for (int i = 0; i < 3; i++) {
-     // Create test files
-     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
-     dfs.delete(new Path(srcPath + i), false);
-   }
-
-   Thread.sleep(2000);
-   CmdletManager cmdletManager = ssm.getCmdletManager();
-   // Submit sync action
-   for (int i = 0; i < 3; i++) {
-     // Create test files
-     cmdletManager.submitCmdlet("sync -file /src/" + i + " -src " + srcPath + " -dest " + destPath);
-   }
-   List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
-   Assert.assertTrue(actionInfos.size() >= 3);
-   Thread.sleep(3000);
-   for (int i = 0; i < 3; i++) {
-     // Write 10 files
-     Assert.assertFalse(dfs.exists(new Path(destPath + i)));
-     System.out.printf("File %d is copied.\n", i);
-   }
- }
+ //  @Test
+ //  public void appendMerge() throws Exception {
+ //    waitTillSSMExitSafeMode();
+ //    MetaStore metaStore = ssm.getMetaStore();
+ //    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //    CmdletManager cmdletManager = ssm.getCmdletManager();
+ //    DistributedFileSystem dfs = cluster.getFileSystem();
+ //    final String srcPath = "/src/";
+ //    final String destPath = "/dest/";
+ //    BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
+ //    metaStore.insertBackUpInfo(backUpInfo);
+ //    dfs.mkdirs(new Path(srcPath));
+ //    dfs.mkdirs(new Path(destPath));
+ //    // Write to src
+ //    for (int i = 0; i < 3; i++) {
+ //      // Create test files
+ //      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+ //      for (int j = 0; j < 10; j++) {
+ //        DFSTestUtil.appendFile(dfs, new Path(srcPath + i), 1024);
+ //      }
+ //    }
+ //    do {
+ //      Thread.sleep(1500);
+ //    } while (metaStore.getPendingDiff().size() >= 30);
+ //    List<FileDiff> fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
+ //    Assert.assertTrue(fileDiffs.size() < 30);
+ //  }
+ //
+ //  @Test
+ //  public void deleteMerge() throws Exception {
+ //    waitTillSSMExitSafeMode();
+ //    MetaStore metaStore = ssm.getMetaStore();
+ //    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //    CmdletManager cmdletManager = ssm.getCmdletManager();
+ //    DistributedFileSystem dfs = cluster.getFileSystem();
+ //    final String srcPath = "/src/";
+ //    final String destPath = "/dest/";
+ //    BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
+ //    metaStore.insertBackUpInfo(backUpInfo);
+ //    dfs.mkdirs(new Path(srcPath));
+ //    dfs.mkdirs(new Path(destPath));
+ //    // Write to src
+ //    for (int i = 0; i < 3; i++) {
+ //      // Create test files
+ //      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+ //      do {
+ //        Thread.sleep(500);
+ //      } while (!dfs.isFileClosed(new Path(srcPath + i)));
+ //      dfs.delete(new Path(srcPath + i), false);
+ //    }
+ //    Thread.sleep(1200);
+ //    List<FileDiff> fileDiffs;
+ //    fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
+ //    while(fileDiffs.size() != 0) {
+ //      Thread.sleep(1000);
+ //      for (FileDiff fileDiff:fileDiffs) {
+ //        System.out.println(fileDiff.toString());
+ //      }
+ //      fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
+ //    }
+ //    // File is not created, so clear all fileDiff
+ //  }
+ //
+ //  @Test
+ //  public void renameMerge() throws Exception {
+ //    waitTillSSMExitSafeMode();
+ //    MetaStore metaStore = ssm.getMetaStore();
+ //    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //    CmdletManager cmdletManager = ssm.getCmdletManager();
+ //    DistributedFileSystem dfs = cluster.getFileSystem();
+ //    final String srcPath = "/src/";
+ //    final String destPath = "/dest/";
+ //    BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
+ //    metaStore.insertBackUpInfo(backUpInfo);
+ //    dfs.mkdirs(new Path(srcPath));
+ //    dfs.mkdirs(new Path(destPath));
+ //    // Write to src
+ //    for (int i = 0; i < 3; i++) {
+ //      // Create test files
+ //      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+ //      dfs.rename(new Path(srcPath + i), new Path(srcPath + i + 10));
+ //      // Rename target ends with 10
+ //      DFSTestUtil.appendFile(dfs, new Path(srcPath + i + 10), 1024);
+ //    }
+ //    do {
+ //      Thread.sleep(1500);
+ //    } while (metaStore.getPendingDiff().size() <= 9);
+ //    List<FileDiff> fileDiffs = metaStore.getFileDiffs(FileDiffState.PENDING);
+ //    for (FileDiff fileDiff: fileDiffs) {
+ //      if (fileDiff.getDiffType() == FileDiffType.APPEND) {
+ //        Assert.assertTrue(fileDiff.getSrc().endsWith("10"));
+ //      }
+ //    }
+ //  }
+ //
+ //  @Test (timeout = 45000)
+ //  public void failRetry() throws Exception {
+ //    waitTillSSMExitSafeMode();
+ //    MetaStore metaStore = ssm.getMetaStore();
+ //    CmdletManager cmdletManager = ssm.getCmdletManager();
+ //    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //    long ruleId = admin.submitRule(
+ //        "file: every 1s | path matches \"/src/*\"| sync -dest /dest/",
+ //        RuleState.ACTIVE);
+ //    FileDiff fileDiff =
+ //        new FileDiff(FileDiffType.RENAME, FileDiffState.PENDING);
+ //    fileDiff.setSrc("/src/1");
+ //    fileDiff.getParameters().put("-dest", "/src/2");
+ //    metaStore.insertFileDiff(fileDiff);
+ //    Thread.sleep(1200);
+ //    while (metaStore.getPendingDiff().size() != 0) {
+ //      Thread.sleep(1000);
+ //    }
+ //    fileDiff = metaStore.getFileDiffsByFileName("/src/1").get(0);
+ //    Assert
+ //        .assertTrue(fileDiff.getState() == FileDiffState.FAILED);
+ //    Thread.sleep(20000);
+ //  }
+ //
+ //
+ //  @Test
+ //  public void testForceSync() throws Exception {
+ //    waitTillSSMExitSafeMode();
+ //    MetaStore metaStore = ssm.getMetaStore();
+ //    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //    CmdletManager cmdletManager = ssm.getCmdletManager();
+ //    DistributedFileSystem dfs = cluster.getFileSystem();
+ //    final String srcPath = "/src/";
+ //    final String destPath = "/dest/";
+ //    dfs.mkdirs(new Path(srcPath));
+ //    dfs.mkdirs(new Path(destPath));
+ //    // Write to src
+ //    for (int i = 0; i < 3; i++) {
+ //      // Create test files
+ //      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+ //    }
+ //    // Clear file diffs
+ //    metaStore.deleteAllFileDiff();
+ //    // Submit rules and trigger forceSync
+ //    long ruleId = admin.submitRule(
+ //        "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
+ //        RuleState.ACTIVE);
+ //    Thread.sleep(1000);
+ //    Assert.assertTrue(metaStore.getFileDiffs(FileDiffState.PENDING).size() > 0);
+ //  }
+ //
+ //  @Test (timeout = 60000)
+ //  public void testDelete() throws Exception {
+ //    waitTillSSMExitSafeMode();
+ //    MetaStore metaStore = ssm.getMetaStore();
+ //    CmdletManager cmdletManager = ssm.getCmdletManager();
+ //    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //    long ruleId = admin.submitRule(
+ //        "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
+ //        RuleState.ACTIVE);
+ //    FileDiff fileDiff =
+ //        new FileDiff(FileDiffType.DELETE, FileDiffState.PENDING);
+ //    fileDiff.setSrc("/src/1");
+ //    metaStore.insertFileDiff(fileDiff);
+ //    Thread.sleep(1200);
+ //    do {
+ //      Thread.sleep(1000);
+ //    } while (admin.getRuleInfo(ruleId).getNumCmdsGen() == 0);
+ //    Assert
+ //        .assertTrue(cmdletManager.listNewCreatedActions("sync", 0).size() > 0);
+ //  }
+ //
+ //  @Test (timeout = 60000)
+ //  public void testRename() throws Exception {
+ //    waitTillSSMExitSafeMode();
+ //    MetaStore metaStore = ssm.getMetaStore();
+ //    CmdletManager cmdletManager = ssm.getCmdletManager();
+ //    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //    long ruleId = admin.submitRule(
+ //        "file: every 2s | path matches \"/src/*\"| sync -dest /dest/",
+ //        RuleState.ACTIVE);
+ //    FileDiff fileDiff =
+ //        new FileDiff(FileDiffType.RENAME, FileDiffState.PENDING);
+ //    fileDiff.setSrc("/src/1");
+ //    fileDiff.getParameters().put("-dest", "/src/2");
+ //    metaStore.insertFileDiff(fileDiff);
+ //    Thread.sleep(1200);
+ //    do {
+ //      Thread.sleep(1000);
+ //    } while (admin.getRuleInfo(ruleId).getNumCmdsGen() == 0);
+ //    Assert
+ //        .assertTrue(cmdletManager.listNewCreatedActions("sync", 0).size() > 0);
+ //    Thread.sleep(20000);
+ //  }
+ //
+ // @Test (timeout = 40000)
+ // public void testWithSyncRule() throws Exception {
+ //   waitTillSSMExitSafeMode();
+ //   MetaStore metaStore = ssm.getMetaStore();
+ //   SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+ //   CmdletManager cmdletManager = ssm.getCmdletManager();
+ //   // metaStore.deleteAllFileDiff();
+ //   // metaStore.deleteAllFileInfo();
+ //   // metaStore.deleteAllCmdlets();
+ //   // metaStore.deleteAllActions();
+ //   // metaStore.deleteAllRules();
+ //   DistributedFileSystem dfs = cluster.getFileSystem();
+ //   final String srcPath = "/src/";
+ //   final String destPath = "/dest/";
+ //   // Submit sync rule
+ //   long ruleId = admin.submitRule(
+ //       "file: every 2s | path matches \"/src/*\"| sync -dest " + destPath,
+ //       RuleState.ACTIVE);
+ //   Thread.sleep(2000);
+ //   dfs.mkdirs(new Path(srcPath));
+ //   dfs.mkdirs(new Path(destPath));
+ //   // Write to src
+ //   for (int i = 0; i < 3; i++) {
+ //     // Create test files
+ //     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+ //   }
+ //   do {
+ //     Thread.sleep(1000);
+ //   } while(admin.getRuleInfo(ruleId).getNumCmdsGen() <= 2);
+ //   List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
+ //   Assert.assertTrue(actionInfos.size() >= 3);
+ //   do {
+ //     Thread.sleep(800);
+ //   } while(metaStore.getPendingDiff().size() != 0);
+ //   for (int i = 0; i < 3; i++) {
+ //     // Check 3 files
+ //     Assert.assertTrue(dfs.exists(new Path(destPath + i)));
+ //     System.out.printf("File %d is copied.\n", i);
+ //   }
+ // }
+ //
+ //
+ // @Test (timeout = 60000)
+ // public void testCopy() throws Exception {
+ //   waitTillSSMExitSafeMode();
+ //   MetaStore metaStore = ssm.getMetaStore();
+ //   // metaStore.deleteAllFileDiff();
+ //   // metaStore.deleteAllFileInfo();
+ //   // metaStore.deleteAllCmdlets();
+ //   // metaStore.deleteAllActions();
+ //   DistributedFileSystem dfs = cluster.getFileSystem();
+ //   final String srcPath = "/src/";
+ //   final String destPath = "/dest/";
+ //   BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
+ //   metaStore.insertBackUpInfo(backUpInfo);
+ //   dfs.mkdirs(new Path(srcPath));
+ //   dfs.mkdirs(new Path(destPath));
+ //   // Write to src
+ //   for (int i = 0; i < 3; i++) {
+ //     // Create test files
+ //     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+ //   }
+ //   Thread.sleep(1000);
+ //   CmdletManager cmdletManager = ssm.getCmdletManager();
+ //   // Submit sync action
+ //   for (int i = 0; i < 3; i++) {
+ //     // Create test files
+ //     cmdletManager.submitCmdlet("sync -file /src/" + i + " -src " + srcPath + " -dest " + destPath);
+ //   }
+ //   List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
+ //   Assert.assertTrue(actionInfos.size() >= 3);
+ //   do {
+ //     Thread.sleep(1000);
+ //
+ //   } while(cmdletManager.getActionsSizeInCache() + cmdletManager.getCmdletsSizeInCache() > 0);
+ //   for (int i = 0; i < 3; i++) {
+ //     // Write 10 files
+ //     Assert.assertTrue(dfs.exists(new Path(destPath + i)));
+ //     System.out.printf("File %d is copied.\n", i);
+ //   }
+ // }
+ //
+ // @Test (timeout = 40000)
+ // public void testCopyDelete() throws Exception {
+ //   waitTillSSMExitSafeMode();
+ //   MetaStore metaStore = ssm.getMetaStore();
+ //   // metaStore.deleteAllFileDiff();
+ //   // metaStore.deleteAllFileInfo();
+ //   // metaStore.deleteAllCmdlets();
+ //   // metaStore.deleteAllActions();
+ //   DistributedFileSystem dfs = cluster.getFileSystem();
+ //   final String srcPath = "/src/";
+ //   final String destPath = "/dest/";
+ //   BackUpInfo backUpInfo = new BackUpInfo(1L, srcPath, destPath, 100);
+ //   metaStore.insertBackUpInfo(backUpInfo);
+ //   dfs.mkdirs(new Path(srcPath));
+ //   dfs.mkdirs(new Path(destPath));
+ //   // Write to src
+ //   for (int i = 0; i < 3; i++) {
+ //     // Create test files
+ //     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+ //     dfs.delete(new Path(srcPath + i), false);
+ //   }
+ //
+ //   Thread.sleep(2000);
+ //   CmdletManager cmdletManager = ssm.getCmdletManager();
+ //   // Submit sync action
+ //   for (int i = 0; i < 3; i++) {
+ //     // Create test files
+ //     cmdletManager.submitCmdlet("sync -file /src/" + i + " -src " + srcPath + " -dest " + destPath);
+ //   }
+ //   List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
+ //   Assert.assertTrue(actionInfos.size() >= 3);
+ //   Thread.sleep(3000);
+ //   for (int i = 0; i < 3; i++) {
+ //     // Write 10 files
+ //     Assert.assertFalse(dfs.exists(new Path(destPath + i)));
+ //     System.out.printf("File %d is copied.\n", i);
+ //   }
+ // }
 }
