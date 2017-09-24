@@ -44,7 +44,7 @@ public class SystemRestApi {
   @GET
   @Path("/version")
   public Response version() {
-    return new JsonResponse<>(Response.Status.OK, "SSM version", "1.2-SNAPSHOT").build();
+    return new JsonResponse<>(Response.Status.OK, "SSM version", "1.2.0").build();
   }
 
   @GET

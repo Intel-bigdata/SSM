@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smartdata-project</artifactId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>smart-rule</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
     </dependencies>
 

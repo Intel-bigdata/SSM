@@ -22,14 +22,14 @@
   <parent>
     <artifactId>smart-zeppelin</artifactId>
     <groupId>org.smartdata</groupId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
     <relativePath>..</relativePath>
   </parent>
 
   <groupId>org.smartdata</groupId>
   <artifactId>smart-zeppelin-server</artifactId>
   <packaging>jar</packaging>
-  <version>1.2-SNAPSHOT</version>
+  <version>1.2.0</version>
   <name>Zeppelin: Server</name>
 
   <properties>
@@ -83,7 +83,7 @@
     <dependency>
       <groupId>org.smartdata</groupId>
       <artifactId>smart-interpreter</artifactId>
-      <version>1.2-SNAPSHOT</version>
+      <version>1.2.0</version>
     </dependency>
 
     <dependency>

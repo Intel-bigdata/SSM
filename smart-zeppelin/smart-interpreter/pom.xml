@@ -21,14 +21,14 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smart-zeppelin</artifactId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2.0</version>
         <relativePath>..</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.smartdata</groupId>
     <artifactId>smart-interpreter</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
     <name>Interpreter</name>
 
@@ -36,7 +36,7 @@
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-engine</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
             <!--Work around for https://issues.apache.org/jira/browse/MNG-1388 -->
             <exclusions>
                 <exclusion>

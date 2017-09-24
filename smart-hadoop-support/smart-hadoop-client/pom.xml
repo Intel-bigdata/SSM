@@ -22,25 +22,25 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smart-hadoop-support</artifactId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2.0</version>
         <relativePath>..</relativePath>
     </parent>
 
     <artifactId>smart-hadoop-client</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metrics</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -70,12 +70,12 @@
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-client</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-admin</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

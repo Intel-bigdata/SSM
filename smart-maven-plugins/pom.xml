@@ -6,7 +6,7 @@
 
     <groupId>org.smartdata</groupId>
     <artifactId>smart-maven-plugins</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>maven-plugin</packaging>
 
     <properties>

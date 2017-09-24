@@ -20,12 +20,12 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smart-hadoop-support</artifactId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2.0</version>
         <relativePath>..</relativePath>
     </parent>
 
     <artifactId>smart-erasurecodec</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -162,9 +162,9 @@
                         <configuration>
                             <groupId>org.smartdata</groupId>
                             <artifactId>smart-maven-plugins</artifactId>
-                            <version>1.2-SNAPSHOT</version>
+                            <version>1.2.0</version>
                             <packaging>jar</packaging>
-                            <file>${basedir}/../smart-maven-plugins/target/smart-maven-plugins-1.2-SNAPSHOT.jar</file>
+                            <file>${basedir}/../smart-maven-plugins/target/smart-maven-plugins-1.2.0.jar</file>
                             <generatePom>true</generatePom>
                         </configuration>
                         <executions>
@@ -181,7 +181,7 @@
                     <plugin>
                         <groupId>org.smartdata</groupId>
                         <artifactId>smart-maven-plugins</artifactId>
-                        <version>1.2-SNAPSHOT</version>
+                        <version>1.2.0</version>
                         <executions>
                             <execution>
                                 <id>cmake-compile</id>

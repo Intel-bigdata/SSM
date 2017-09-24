@@ -16,7 +16,7 @@
 
   <groupId>org.smartdata</groupId>
   <artifactId>smartdata-project</artifactId>
-  <version>1.2-SNAPSHOT</version>
+  <version>1.2.0</version>
   <description>Smart Data Project</description>
   <name>SmartData Project</name>
   <packaging>pom</packaging>

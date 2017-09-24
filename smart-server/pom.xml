@@ -23,49 +23,49 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smartdata-project</artifactId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>smart-server</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metastore</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metrics</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-engine</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-action</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-rule</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-zeppelin-server</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -89,13 +89,13 @@
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-admin</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-hadoop</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
@@ -140,7 +140,7 @@
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-tidb</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
     </dependencies>
 
@@ -155,7 +155,7 @@
                 <dependency>
                     <groupId>org.smartdata</groupId>
                     <artifactId>smart-hadoop-2.7</artifactId>
-                    <version>1.2-SNAPSHOT</version>
+                    <version>1.2.0</version>
                     <scope>test</scope>
                     <type>test-jar</type>
                 </dependency>
@@ -167,13 +167,13 @@
                 <dependency>
                     <groupId>org.smartdata</groupId>
                     <artifactId>smart-hadoop-cdh-2.6</artifactId>
-                    <version>1.2-SNAPSHOT</version>
+                    <version>1.2.0</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.smartdata</groupId>
                     <artifactId>smart-hadoop-cdh-2.6</artifactId>
-                    <version>1.2-SNAPSHOT</version>
+                    <version>1.2.0</version>
                     <scope>test</scope>
                     <type>test-jar</type>
                 </dependency>
