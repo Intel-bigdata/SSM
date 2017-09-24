@@ -151,6 +151,7 @@ public class CachedListFetcher {
         while (cacheDirectives.hasNext()) {
           CacheDirectiveInfo currentInfo = cacheDirectives.next().getInfo();
           paths.add(currentInfo.getPath().toString());
+          LOG.debug("File in HDFS cache: " + currentInfo.getPath().toString());
         }
         // Delete all records to avoid conflict
         // metaStore.deleteAllCachedFile();
@@ -160,12 +161,12 @@ public class CachedListFetcher {
           clearAll();
           return;
         }
-        for (int i = 0; i < pathFid.size(); i++) {
-          long fid = pathFid.get(paths.get(i));
+        for (String p : pathFid.keySet()) {
+          long fid = pathFid.get(p);
           newFileSet.add(fid);
           if (!fileSet.contains(fid)) {
             cachedFileStatuses.add(new CachedFileStatus(fid,
-                paths.get(i), Time.now(), Time.now(), 0));
+                p, Time.now(), Time.now(), 0));
           }
         }
         if (cachedFileStatuses.size() != 0) {
