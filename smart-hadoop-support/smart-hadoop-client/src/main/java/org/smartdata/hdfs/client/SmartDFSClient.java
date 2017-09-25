@@ -23,21 +23,26 @@ import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.smartdata.client.SmartClient;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SmartDFSClient extends DFSClient {
   private SmartClient smartClient = null;
   private boolean healthy = false;
+  private List<String> smallFileDirs = new ArrayList<>();
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeAddress, conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
+      initSmallFileDirs(conf);
       healthy = true;
     } catch (IOException e) {
       super.close();
@@ -50,6 +55,7 @@ public class SmartDFSClient extends DFSClient {
     super(nameNodeUri, conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
+      initSmallFileDirs(conf);
       healthy = true;
     } catch (IOException e) {
       super.close();
@@ -63,6 +69,7 @@ public class SmartDFSClient extends DFSClient {
     super(nameNodeUri, conf, stats);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
+      initSmallFileDirs(conf);
       healthy = true;
     } catch (IOException e) {
       super.close();
@@ -75,6 +82,7 @@ public class SmartDFSClient extends DFSClient {
     super(conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
+      initSmallFileDirs(conf);
       healthy = true;
     } catch (IOException e) {
       super.close();
@@ -86,6 +94,7 @@ public class SmartDFSClient extends DFSClient {
     super(conf);
     try {
       smartClient = new SmartClient(conf);
+      initSmallFileDirs(conf);
       healthy = true;
     } catch (IOException e) {
       super.close();
@@ -93,10 +102,35 @@ public class SmartDFSClient extends DFSClient {
     }
   }
 
+  private void initSmallFileDirs(Configuration conf) {
+    String[] dirs = conf.getTrimmedStrings(SmartConfKeys.SMART_SMALL_FILE_DIRS_KEY);
+    if (dirs == null || dirs.length == 0) {
+      return;
+    }
+    for (String dir : dirs) {
+      dir = dir + (dir.endsWith("/") ? "" : "/");
+      smallFileDirs.add(dir);
+    }
+  }
+
+  private boolean isInSmallFileDir(String file) {
+    for (String dir : smallFileDirs) {
+      if (file.startsWith(dir)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void createSmallFileDFSInputStream() {
+  }
+
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-    return super.open(src);
+    if (!isInSmallFileDir(src)) {
+      return super.open(src);
+    }
   }
 
   @Override

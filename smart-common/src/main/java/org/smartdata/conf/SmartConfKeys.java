@@ -91,4 +91,7 @@ public class SmartConfKeys {
   //Tidb
   public final static String SMART_TIDB_ENABLED = "smart.tidb.enable";
   public final static boolean SMART_TIDB_ENABLED_DEFAULT = false;
+
+  // Small files
+  public final static String SMART_SMALL_FILE_DIRS_KEY = "smart.small.file.dirs";
 }
