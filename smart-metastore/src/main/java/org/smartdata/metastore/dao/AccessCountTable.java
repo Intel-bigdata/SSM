@@ -89,6 +89,16 @@ public class AccessCountTable {
   }
 
   @Override
+  public int hashCode() {
+    int result = tableName.hashCode();
+    result = 31 * result + startTime.hashCode();
+    result = 31 * result + endTime.hashCode();
+    result = 31 * result + granularity.hashCode();
+    result = 31 * result + (isEphemeral ? 1 : 0);
+    return result;
+  }
+
+  @Override
   public String toString() {
     return String.format(
         "AccessCountTable %s starts from %s ends with %s and granularity is %s",

@@ -22,11 +22,14 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.Constants;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public abstract class TableAddOpListener {
   static final Logger LOG = LoggerFactory.getLogger(TableAddOpListener.class);
+  private Set<AccessCountTable> tablesUnderAggregating;
 
   AccessCountTableDeque coarseGrainedTableDeque;
   AccessCountTableAggregator tableAggregator;
@@ -39,6 +42,7 @@ public abstract class TableAddOpListener {
     this.coarseGrainedTableDeque = deque;
     this.tableAggregator = aggregator;
     this.executorService = executorService;
+    this.tablesUnderAggregating = new HashSet<>();
   }
 
   public void tableAdded(AccessCountTableDeque fineGrainedTableDeque, AccessCountTable table) {
@@ -48,14 +52,17 @@ public abstract class TableAddOpListener {
       final List<AccessCountTable> tablesToAggregate =
           fineGrainedTableDeque.getTables(
               lastCoarseGrainedTable.getStartTime(), lastCoarseGrainedTable.getEndTime());
-      if (tablesToAggregate.size() > 0) {
-        this.executorService.submit(
+      if (tablesToAggregate.size() > 0 &&
+          !tablesUnderAggregating.contains(lastCoarseGrainedTable)) {
+        tablesUnderAggregating.add(lastCoarseGrainedTable);
+        executorService.submit(
             new Runnable() {
               @Override
               public void run() {
                 try {
                   tableAggregator.aggregate(lastCoarseGrainedTable, tablesToAggregate);
                   coarseGrainedTableDeque.addAndNotifyListener(lastCoarseGrainedTable);
+                  tablesUnderAggregating.remove(lastCoarseGrainedTable);
                 } catch (MetaStoreException e) {
                   LOG.error("Add AccessCount Table {} error", lastCoarseGrainedTable.getTableName(), e);
                 }
