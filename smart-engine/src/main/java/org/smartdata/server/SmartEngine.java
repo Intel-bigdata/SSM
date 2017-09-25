@@ -21,12 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.model.Utilization;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
-import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
@@ -138,6 +137,9 @@ public class SmartEngine extends AbstractService {
   public CmdletManager getCmdletManager() {
     return cmdletManager;
   }
-  
-  
+
+  // TODO: implementation
+  public Utilization getUtilization(String resourceName) {
+    return new Utilization(0, 0);
+  }
 }
