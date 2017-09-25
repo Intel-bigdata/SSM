@@ -28,6 +28,7 @@ import org.smartdata.server.rest.message.JsonResponse;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -85,6 +86,20 @@ public class ClusterRestApi {
           smartEngine.getStatesManager().getHotFiles(tables, 20)).build();
     } catch (Exception e) {
       logger.error("Exception in ClusterRestApi while listing hot files", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+  @GET
+  @Path("/primary/utilization/{resourceName}")
+  public Response utilization(@PathParam("resourceName") String resourceName) {
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getUtilization(resourceName)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while getting [" + resourceName
+          + "] utilization", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
