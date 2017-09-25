@@ -17,6 +17,7 @@
  */
 package org.smartdata.metastore;
 
+import org.apache.hadoop.fs.StorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metaservice.BackupMetaService;
@@ -1338,6 +1339,32 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public long getStoreCapacityOfDifferentStorageType(StorageType storageType) throws MetaStoreException {
+    try {
+      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(storageType.ordinal());
+      long allCapacity = 0;
+      for (DataNodeStorageInfo info : lists) {
+        allCapacity = allCapacity + info.getCapacity();
+      }
+      return allCapacity;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public long getStoreFreeOfDifferentStorageType(StorageType storageType) throws MetaStoreException {
+    try {
+      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(storageType.ordinal());
+      long allFree = 0;
+      for (DataNodeStorageInfo info : lists) {
+        allFree = allFree + info.getRemaining();
+      }
+      return allFree;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<DataNodeStorageInfo> getDataNodeStorageInfoByUuid(String uuid)
       throws MetaStoreException {
     try {
@@ -1348,6 +1375,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
+
 
   public List<DataNodeStorageInfo> getAllDataNodeStorageInfo()
       throws MetaStoreException {

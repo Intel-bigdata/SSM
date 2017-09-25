@@ -17,6 +17,8 @@
  */
 package org.smartdata.model;
 
+import org.apache.hadoop.fs.StorageType;
+
 public class DataNodeStorageInfo {
 
   private String uuid;
@@ -34,6 +36,20 @@ public class DataNodeStorageInfo {
       long dfsUsed, long remaining, long blockPoolUsed) {
     this.uuid = uuid;
     this.sid = sid;
+    this.state = state;
+    this.storageId = storageId;
+    this.failed = failed;
+    this.capacity = capacity;
+    this.dfsUsed = dfsUsed;
+    this.remaining = remaining;
+    this.blockPoolUsed = blockPoolUsed;
+  }
+
+  public DataNodeStorageInfo(String uuid, StorageType storageType, long state,
+      String storageId, long failed, long capacity,
+      long dfsUsed, long remaining, long blockPoolUsed) {
+    this.uuid = uuid;
+    this.sid = storageType.ordinal();
     this.state = state;
     this.storageId = storageId;
     this.failed = failed;
@@ -89,6 +105,10 @@ public class DataNodeStorageInfo {
 
   public void setSid(long sid) {
     this.sid = sid;
+  }
+
+  public void setSid(StorageType storageType) {
+    this.sid = storageType.ordinal();
   }
 
   public long getState() {
