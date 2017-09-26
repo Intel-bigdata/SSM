@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore;
 
-import org.apache.hadoop.fs.StorageType;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -220,25 +219,25 @@ public class TestMetaStore extends TestDaoUtil {
 
   @Test
   public void testGetStoreCapacityOfDifferentStorageType() throws Exception {
-    DataNodeStorageInfo info1 = new DataNodeStorageInfo("1", StorageType.SSD,1,"1",1,1,1,1,1);
-    DataNodeStorageInfo info2 = new DataNodeStorageInfo("2", StorageType.SSD,2,"2",2,2,2,2,2);
+    DataNodeStorageInfo info1 = new DataNodeStorageInfo("1", "ssd",1,"1",1,1,1,1,1);
+    DataNodeStorageInfo info2 = new DataNodeStorageInfo("2", "ssd",2,"2",2,2,2,2,2);
 
     metaStore.insertDataNodeStorageInfo(info1);
     metaStore.insertDataNodeStorageInfo(info2);
 
-    long capacity = metaStore.getStoreCapacityOfDifferentStorageType(StorageType.SSD);
+    long capacity = metaStore.getStoreCapacityOfDifferentStorageType("ssd");
     Assert.assertTrue(capacity == 3);
   }
 
   @Test
   public void testGetStoreFreeOfDifferentStorageType() throws Exception {
-    DataNodeStorageInfo info1 = new DataNodeStorageInfo("1", StorageType.SSD,1,"1",1,1,1,1,1);
-    DataNodeStorageInfo info2 = new DataNodeStorageInfo("2", StorageType.SSD,2,"2",2,2,2,2,2);
+    DataNodeStorageInfo info1 = new DataNodeStorageInfo("1", "ssd",1,"1",1,1,1,1,1);
+    DataNodeStorageInfo info2 = new DataNodeStorageInfo("2", "ssd",2,"2",2,2,2,2,2);
 
     metaStore.insertDataNodeStorageInfo(info1);
     metaStore.insertDataNodeStorageInfo(info2);
 
-    long free = metaStore.getStoreFreeOfDifferentStorageType(StorageType.SSD);
+    long free = metaStore.getStoreFreeOfDifferentStorageType("ssd");
     Assert.assertTrue(free == 3);
   }
 
