@@ -21,12 +21,15 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
+import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
+import org.apache.hadoop.hdfs.server.namenode.CachePool;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.StorageCapacity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -148,11 +151,37 @@ public class CachedListFetcher {
           return;
         }
         List<String> paths = new ArrayList<>();
+        long cacheUsage = 0;
         while (cacheDirectives.hasNext()) {
-          CacheDirectiveInfo currentInfo = cacheDirectives.next().getInfo();
+          CacheDirectiveEntry cacheDirectiveEntry = cacheDirectives.next();
+          CacheDirectiveInfo currentInfo = cacheDirectiveEntry.getInfo();
           paths.add(currentInfo.getPath().toString());
+          cacheUsage = cacheUsage + cacheDirectiveEntry.getStats().getBytesCached();
           LOG.debug("File in HDFS cache: " + currentInfo.getPath().toString());
         }
+
+        //get the size of SSM cache pool
+        RemoteIterator<CachePoolEntry> cachePoolList = dfsClient.listCachePools();
+
+        long cacheMaxSize = 0;
+        while (cachePoolList.hasNext()) {
+          CachePoolEntry cachePoolEntry = cachePoolList.next();
+          if (cachePoolEntry.getInfo().getPoolName().equals("SSMPool")) {
+            cacheMaxSize = cachePoolEntry.getInfo().getLimit();
+          }
+        }
+
+        //add cache information into metastore
+        if (!metaStore.judgeTheRecordIfExist("cache")) {
+          StorageCapacity storageCapacity = new StorageCapacity("cache", cacheMaxSize, cacheMaxSize - cacheUsage);
+          //insert
+          StorageCapacity storageCapacityList[] = new StorageCapacity[1];
+          storageCapacityList[0] = storageCapacity;
+          metaStore.insertStoragesTable(storageCapacityList);
+        } else {
+          metaStore.updateStoragesTable("cache", cacheMaxSize, cacheMaxSize - cacheUsage);
+        }
+
         // Delete all records to avoid conflict
         // metaStore.deleteAllCachedFile();
         // Insert new records into DB
