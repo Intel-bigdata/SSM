@@ -21,6 +21,7 @@ import org.smartdata.model.DataNodeStorageInfo;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.sqlite.JDBC;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -54,6 +55,12 @@ public class DataNodeStorageInfoDao {
     return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE uuid = ?",
         new Object[]{uuid}, new DataNodeStorageInfoRowMapper());
+  }
+
+  public List<DataNodeStorageInfo> getBySid(int sid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE sid = ?",
+        new Object[]{sid}, new DataNodeStorageInfoRowMapper());
   }
 
   public void insert(DataNodeStorageInfo dataNodeStorageInfoInfo) {
