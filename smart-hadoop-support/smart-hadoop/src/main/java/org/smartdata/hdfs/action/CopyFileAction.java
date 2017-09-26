@@ -80,10 +80,10 @@ public class CopyFileAction extends HdfsAction {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
     if (args.containsKey(OFFSET_INDEX)) {
-      offset = Integer.valueOf(args.get(OFFSET_INDEX));
+      offset = Long.valueOf(args.get(OFFSET_INDEX));
     }
     if (args.containsKey(LENGTH)) {
-      length = Integer.valueOf(args.get(LENGTH));
+      length = Long.valueOf(args.get(LENGTH));
     }
   }
 
@@ -114,7 +114,7 @@ public class CopyFileAction extends HdfsAction {
   private boolean copySingleFile(String src, String dest) throws IOException {
     //get The file size of source file
     long fileSize = getFileSize(src);
-    return copyWithOffset(src,dest,2048,0,fileSize);
+    return copyWithOffset(src,dest,bufferSize,0,fileSize);
   }
 
   private boolean copyWithOffset(String src, String dest, int bufferSize, long offset, long length) throws IOException {
