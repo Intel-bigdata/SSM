@@ -151,7 +151,7 @@ public class StorageDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT COUNT(*) FROM storage WHERE type = ?";
 
-    return jdbcTemplate.queryForObject(sql, Integer.class);
+    return jdbcTemplate.queryForObject(sql, Integer.class, type);
   }
 
   public synchronized boolean updateStoragesTable(String type
