@@ -35,7 +35,7 @@ import java.util.Map;
  */
 @ActionSignature(
     actionId = "truncate",
-    displayName = "metadata",
+    displayName = "truncate",
     usage = HdfsAction.FILE_PATH + " $src " + TruncateAction.LENGTH + " $length"
 )
 public class TruncateAction extends HdfsAction {

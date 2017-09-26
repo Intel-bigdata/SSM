@@ -217,6 +217,29 @@ public class TestMetaStore extends TestDaoUtil {
         .getCapacity() == 12343333l);
   }
 
+  @Test
+  public void testGetStoreCapacityOfDifferentStorageType() throws Exception {
+    DataNodeStorageInfo info1 = new DataNodeStorageInfo("1", "ssd",1,"1",1,1,1,1,1);
+    DataNodeStorageInfo info2 = new DataNodeStorageInfo("2", "ssd",2,"2",2,2,2,2,2);
+
+    metaStore.insertDataNodeStorageInfo(info1);
+    metaStore.insertDataNodeStorageInfo(info2);
+
+    long capacity = metaStore.getStoreCapacityOfDifferentStorageType("ssd");
+    Assert.assertTrue(capacity == 3);
+  }
+
+  @Test
+  public void testGetStoreFreeOfDifferentStorageType() throws Exception {
+    DataNodeStorageInfo info1 = new DataNodeStorageInfo("1", "ssd",1,"1",1,1,1,1,1);
+    DataNodeStorageInfo info2 = new DataNodeStorageInfo("2", "ssd",2,"2",2,2,2,2,2);
+
+    metaStore.insertDataNodeStorageInfo(info1);
+    metaStore.insertDataNodeStorageInfo(info2);
+
+    long free = metaStore.getStoreFreeOfDifferentStorageType("ssd");
+    Assert.assertTrue(free == 3);
+  }
 
   @Test
   public void testGetStorageCapacity() throws Exception {

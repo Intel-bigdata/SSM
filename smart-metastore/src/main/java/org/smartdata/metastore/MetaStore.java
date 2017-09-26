@@ -1338,6 +1338,66 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public long getStoreCapacityOfDifferentStorageType(String storageType) throws MetaStoreException {
+    try {
+      int sid = 0;
+
+      if (storageType.equals("ram")) {
+        sid = 0;
+      }
+
+      if (storageType.equals("ssd")) {
+        sid = 1;
+      }
+
+      if (storageType.equals("disk")) {
+        sid = 2;
+      }
+
+      if (storageType.equals("archive")) {
+        sid = 3;
+      }
+      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(sid);
+      long allCapacity = 0;
+      for (DataNodeStorageInfo info : lists) {
+        allCapacity = allCapacity + info.getCapacity();
+      }
+      return allCapacity;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public long getStoreFreeOfDifferentStorageType(String storageType) throws MetaStoreException {
+    try {
+      int sid = 0;
+
+      if (storageType.equals("ram")) {
+        sid = 0;
+      }
+
+      if (storageType.equals("ssd")) {
+        sid = 1;
+      }
+
+      if (storageType.equals("disk")) {
+        sid = 2;
+      }
+
+      if (storageType.equals("archive")) {
+        sid = 3;
+      }
+      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(sid);
+      long allFree = 0;
+      for (DataNodeStorageInfo info : lists) {
+        allFree = allFree + info.getRemaining();
+      }
+      return allFree;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<DataNodeStorageInfo> getDataNodeStorageInfoByUuid(String uuid)
       throws MetaStoreException {
     try {
@@ -1348,6 +1408,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
+
 
   public List<DataNodeStorageInfo> getAllDataNodeStorageInfo()
       throws MetaStoreException {

@@ -17,6 +17,7 @@
  */
 package org.smartdata.model;
 
+
 public class DataNodeStorageInfo {
 
   private String uuid;
@@ -34,6 +35,36 @@ public class DataNodeStorageInfo {
       long dfsUsed, long remaining, long blockPoolUsed) {
     this.uuid = uuid;
     this.sid = sid;
+    this.state = state;
+    this.storageId = storageId;
+    this.failed = failed;
+    this.capacity = capacity;
+    this.dfsUsed = dfsUsed;
+    this.remaining = remaining;
+    this.blockPoolUsed = blockPoolUsed;
+  }
+
+  public DataNodeStorageInfo(String uuid, String storageType, long state,
+      String storageId, long failed, long capacity,
+      long dfsUsed, long remaining, long blockPoolUsed) {
+    this.uuid = uuid;
+
+    if (storageType.equals("ram")){
+      this.sid = 0;
+    }
+
+    if (storageType.equals("ssd")){
+      this.sid = 1;
+    }
+
+    if (storageType.equals("disk")){
+      this.sid = 2;
+    }
+
+    if (storageType.equals("archive")) {
+      this.sid = 3;
+    }
+
     this.state = state;
     this.storageId = storageId;
     this.failed = failed;
@@ -89,6 +120,24 @@ public class DataNodeStorageInfo {
 
   public void setSid(long sid) {
     this.sid = sid;
+  }
+
+  public void setSid(String storageType) {
+    if (storageType.equals("ram")){
+      this.sid = 0;
+    }
+
+    if (storageType.equals("ssd")){
+      this.sid = 1;
+    }
+
+    if (storageType.equals("disk")){
+      this.sid = 2;
+    }
+
+    if (storageType.equals("archive")) {
+      this.sid = 3;
+    }
   }
 
   public long getState() {
