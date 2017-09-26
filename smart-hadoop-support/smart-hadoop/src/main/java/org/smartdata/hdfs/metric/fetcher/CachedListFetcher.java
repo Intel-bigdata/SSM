@@ -172,8 +172,15 @@ public class CachedListFetcher {
         }
 
         //add cache information into metastore
-
-
+        if (!metaStore.judgeTheRecordIfExist("cache")) {
+          StorageCapacity storageCapacity = new StorageCapacity("cache", cacheMaxSize, cacheMaxSize - cacheUsage);
+          //insert
+          StorageCapacity storageCapacityList[] = new StorageCapacity[1];
+          storageCapacityList[0] = storageCapacity;
+          metaStore.insertStoragesTable(storageCapacityList);
+        } else {
+          metaStore.updateStoragesTable("cache", cacheMaxSize, cacheMaxSize - cacheUsage);
+        }
 
         // Delete all records to avoid conflict
         // metaStore.deleteAllCachedFile();
