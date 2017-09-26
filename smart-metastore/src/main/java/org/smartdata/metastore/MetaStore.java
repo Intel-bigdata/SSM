@@ -1338,7 +1338,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  //need to be trigger when DataNodeStorageInfo table is changed
+  //need to be triggered when DataNodeStorageInfo table is changed
   public void updateStorageTable(String storageType, long capacity, long free) throws MetaStoreException {
     try {
       if (!judgeTheRecordIfExist(storageType)) {
@@ -1366,7 +1366,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
-  //need to be trigger when DataNodeStorageInfo table is changed
+
+  //need to be triggered when DataNodeStorageInfo table is changed
   public long getStoreCapacityOfDifferentStorageType(String storageType) throws MetaStoreException {
     try {
       int sid = 0;
@@ -1396,8 +1397,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
-  
-  //need to be trigger when DataNodeStorageInfo table is changed
+
+  //need to be triggered when DataNodeStorageInfo table is changed
   public long getStoreFreeOfDifferentStorageType(String storageType) throws MetaStoreException {
     try {
       int sid = 0;
