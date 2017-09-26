@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore;
 
-import org.apache.hadoop.fs.StorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.metaservice.BackupMetaService;
@@ -1339,9 +1338,26 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public long getStoreCapacityOfDifferentStorageType(StorageType storageType) throws MetaStoreException {
+  public long getStoreCapacityOfDifferentStorageType(String storageType) throws MetaStoreException {
     try {
-      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(storageType.ordinal());
+      int sid = 0;
+
+      if (storageType.equals("ram")) {
+        sid = 0;
+      }
+
+      if (storageType.equals("ssd")) {
+        sid = 1;
+      }
+
+      if (storageType.equals("disk")) {
+        sid = 2;
+      }
+
+      if (storageType.equals("archive")) {
+        sid = 3;
+      }
+      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(sid);
       long allCapacity = 0;
       for (DataNodeStorageInfo info : lists) {
         allCapacity = allCapacity + info.getCapacity();
@@ -1352,9 +1368,26 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public long getStoreFreeOfDifferentStorageType(StorageType storageType) throws MetaStoreException {
+  public long getStoreFreeOfDifferentStorageType(String storageType) throws MetaStoreException {
     try {
-      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(storageType.ordinal());
+      int sid = 0;
+
+      if (storageType.equals("ram")) {
+        sid = 0;
+      }
+
+      if (storageType.equals("ssd")) {
+        sid = 1;
+      }
+
+      if (storageType.equals("disk")) {
+        sid = 2;
+      }
+
+      if (storageType.equals("archive")) {
+        sid = 3;
+      }
+      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(sid);
       long allFree = 0;
       for (DataNodeStorageInfo info : lists) {
         allFree = allFree + info.getRemaining();
