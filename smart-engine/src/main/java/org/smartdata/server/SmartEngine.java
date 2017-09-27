@@ -140,6 +140,5 @@ public class SmartEngine extends AbstractService {
 
   public Utilization getUtilization(String resourceName) throws IOException {
     return getStatesManager().getStorageUtilization(resourceName);
-
   }
 }

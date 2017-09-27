@@ -167,7 +167,6 @@ public class StatesManager extends AbstractService implements Reconfigurable {
         StorageCapacity storageCapacity = serverContext.getMetaStore().getStorageCapacity("cache");
         return new Utilization(storageCapacity.getCapacity(), storageCapacity.getCapacity() - storageCapacity.getFree());
       }
-
     } catch (MetaStoreException e) {
       throw new IOException(e);
     }
