@@ -67,6 +67,8 @@ public class CopyScheduler extends ActionSchedulerService {
   private Map<String, ScheduleTask.FileChain> fileDiffChainMap;
   // <did, Fail times>
   private Map<Long, Integer> fileDiffMap;
+  // BaseSync queue
+  private Map<String, String> baseSyncQueue;
   // Merge append length threshold
   private long mergeLenTh = DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT * 3;
   // Merge count length threshold
@@ -80,6 +82,7 @@ public class CopyScheduler extends ActionSchedulerService {
     this.actionDiffMap = new ConcurrentHashMap<>();
     this.fileDiffChainMap = new HashMap<>();
     this.fileDiffMap = new ConcurrentHashMap<>();
+    this.baseSyncQueue = new ConcurrentHashMap<>();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
   }
 
@@ -223,6 +226,10 @@ public class CopyScheduler extends ActionSchedulerService {
         LOG.error("Sync action error", e);
       }
     }
+  }
+
+  private void batchDirectSync() throws MetaStoreException {
+    
   }
 
   private void baseSync(String srcDir, String destDir) throws MetaStoreException {
