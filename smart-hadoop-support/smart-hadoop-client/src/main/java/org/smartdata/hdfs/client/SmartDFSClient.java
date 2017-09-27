@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.SmartDFSInputStream;
 import org.smartdata.client.SmartClient;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
@@ -131,13 +132,19 @@ public class SmartDFSClient extends DFSClient {
     if (!isInSmallFileDir(src)) {
       return super.open(src);
     }
+    return new SmartDFSInputStream(this, src, true);
   }
 
   @Override
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum)
       throws IOException, UnresolvedLinkException {
-    DFSInputStream is = super.open(src, buffersize, verifyChecksum);
+    DFSInputStream is;
+    if (!isInSmallFileDir(src)) {
+      is = super.open(src, buffersize, verifyChecksum);
+    } else {
+      is = new SmartDFSInputStream(this, src, true);
+    }
     reportFileAccessEvent(src);
     return is;
   }
@@ -147,7 +154,7 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException, UnresolvedLinkException {
-    return super.open(src, buffersize, verifyChecksum, stats);
+    return open(src, buffersize, verifyChecksum);
   }
 
   private void reportFileAccessEvent(String src) {
