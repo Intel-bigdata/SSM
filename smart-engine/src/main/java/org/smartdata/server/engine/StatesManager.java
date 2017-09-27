@@ -33,6 +33,8 @@ import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.StorageCapacity;
+import org.smartdata.model.Utilization;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
@@ -150,6 +152,22 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   public List<CachedFileStatus> getCachedFileStatus() throws IOException {
     try {
       return serverContext.getMetaStore().getCachedFileStatus();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
+  }
+
+  public Utilization getStorageUtilization(String resourceName) throws IOException {
+    try {
+      if (!resourceName.equals("cache")) {
+        long capacity = serverContext.getMetaStore().getStoreCapacityOfDifferentStorageType(resourceName);
+        long free = serverContext.getMetaStore().getStoreFreeOfDifferentStorageType(resourceName);
+        return new Utilization(capacity, capacity - free);
+      } else {
+        StorageCapacity storageCapacity = serverContext.getMetaStore().getStorageCapacity("cache");
+        return new Utilization(storageCapacity.getCapacity(), storageCapacity.getCapacity() - storageCapacity.getFree());
+      }
+
     } catch (MetaStoreException e) {
       throw new IOException(e);
     }
