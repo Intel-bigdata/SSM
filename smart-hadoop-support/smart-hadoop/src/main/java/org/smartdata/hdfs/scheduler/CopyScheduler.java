@@ -43,6 +43,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,6 +70,8 @@ public class CopyScheduler extends ActionSchedulerService {
   private Map<Long, Integer> fileDiffMap;
   // BaseSync queue
   private Map<String, String> baseSyncQueue;
+  // Batch size
+  private int batchSize = 15;
   // Merge append length threshold
   private long mergeLenTh = DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT * 3;
   // Merge count length threshold
@@ -93,12 +96,8 @@ public class CopyScheduler extends ActionSchedulerService {
     String srcDir = action.getArgs().get(SyncAction.SRC);
     String path = action.getArgs().get("-file");
     String destDir = action.getArgs().get(SyncAction.DEST);
-    if (fileLock.containsKey(path)) {
-      // File is currently under sync
-      return ScheduleResult.FAIL;
-    }
-    if (!fileDiffChainMap.containsKey(path)) {
-      // File Chain is not ready
+    // Check again to avoid corner cases
+    if (isFileLocked(path)) {
       return ScheduleResult.FAIL;
     }
     long fid = fileDiffChainMap.get(path).getHead();
@@ -157,23 +156,34 @@ public class CopyScheduler extends ActionSchedulerService {
     return actions;
   }
 
+
+  private boolean isFileLocked(String path) {
+    if (fileLock.containsKey(path)) {
+      // File is locked
+      return true;
+    }
+    if (baseSyncQueue.containsKey(path)) {
+      // File is in base sync queue
+      return true;
+    }
+    if (!fileDiffChainMap.containsKey(path)) {
+      // File Chain is not ready
+      return true;
+    }
+    if (fileDiffChainMap.get(path).size() == 0) {
+      // File Chain is empty
+      return true;
+    }
+    return false;
+  }
+
+
   public boolean onSubmit(ActionInfo actionInfo) {
     String path = actionInfo.getArgs().get("-file");
     System.out.println("Submit file" + path + fileLock.keySet());
     LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
-    if (fileLock.containsKey(path)) {
-      // File is locked
-      return false;
-    }
-    if (!fileDiffChainMap.containsKey(path)) {
-      // File Chain is not ready
-      return false;
-    }
-    if (fileDiffChainMap.get(path).size() == 0) {
-      // File Chain is empty
-      return false;
-    }
-    return true;
+    // If locked then false
+    return !isFileLocked(path);
   }
 
   public void postSchedule(ActionInfo actionInfo, ScheduleResult result) {
@@ -229,7 +239,19 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private void batchDirectSync() throws MetaStoreException {
-    
+    int index = 0;
+    if (baseSyncQueue.size() == 0) {
+      return;
+    }
+    for (Iterator<Map.Entry<String, String>> it = baseSyncQueue.entrySet().iterator(); it.hasNext();) {
+      if (index >= batchSize) {
+        break;
+      }
+      Map.Entry<String, String> entry = it.next();
+      directSync(entry.getKey(), entry.getValue());
+      it.remove();
+      index ++;
+    }
   }
 
   private void baseSync(String srcDir, String destDir) throws MetaStoreException {
@@ -240,15 +262,21 @@ public class CopyScheduler extends ActionSchedulerService {
         continue;
       }
       String src = fileInfo.getPath();
-      // TODO maybe too long for large directory
-      directSync(src, srcDir, destDir);
+      String dest = src.replace(srcDir, destDir);
+      baseSyncQueue.put(src, dest);
+      // directSync(src, dest);
     }
     LOG.info("Base Sync: All files have been added to sync queue!");
+    batchDirectSync();
   }
 
 
   private void directSync(String src, String srcDir, String destDir) throws MetaStoreException {
     String dest = src.replace(srcDir, destDir);
+    directSync(src, dest);
+  }
+
+  private void directSync(String src, String dest) throws MetaStoreException {
     FileInfo fileInfo = metaStore.getFile(src);
     if (fileInfo == null) {
       // Primary file doesn't exist
@@ -354,20 +382,6 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
 
-    // private void addToRunning() {
-    //   if (fileDiffMap.size() == 0) {
-    //     return;
-    //   }
-    //   for (FileChain fileChain: fileDiffChainMap.values()) {
-    //     try {
-    //       fileChain.addTopRunning();
-    //     } catch (MetaStoreException e) {
-    //       LOG.debug("Add fileDiffs to Pending list error", e);
-    //       continue;
-    //     }
-    //   }
-    // }
-
     private void diffPreProcessing(List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
       LOG.debug("Size of Pending diffs", fileDiffs.size());
@@ -387,6 +401,10 @@ public class CopyScheduler extends ActionSchedulerService {
         if (fileDiffMap.containsKey(fileDiff.getDiffId())) {
           continue;
         }
+        if (baseSyncQueue.containsKey(fileDiff.getSrc())) {
+          // Will be directly sync
+          continue;
+        }
         // Get or create fileChain
         if (fileDiffChainMap.containsKey(src)) {
           fileChain = fileDiffChainMap.get(src);
@@ -402,6 +420,7 @@ public class CopyScheduler extends ActionSchedulerService {
     @Override
     public void run() {
       try {
+        batchDirectSync();
         syncFileDiff();
         // addToRunning();
       } catch (Exception e) {
