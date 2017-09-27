@@ -138,8 +138,7 @@ public class SmartEngine extends AbstractService {
     return cmdletManager;
   }
 
-  // TODO: implementation
-  public Utilization getUtilization(String resourceName) {
-    return new Utilization(0, 0);
+  public Utilization getUtilization(String resourceName) throws IOException {
+    return getStatesManager().getStorageUtilization(resourceName);
   }
 }
