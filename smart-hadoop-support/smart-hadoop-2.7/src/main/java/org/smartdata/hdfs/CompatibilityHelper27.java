@@ -29,6 +29,7 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
 
@@ -128,5 +129,11 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
   @Override
   public boolean truncate(DistributedFileSystem fileSystem, String src, long newLength) throws IOException {
     return fileSystem.truncate(new Path(src), newLength);
+  }
+
+  @Override
+  public int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage) {
+    StorageType storageType = datanodeStorage.getStorageType();
+    return storageType.ordinal();
   }
 }

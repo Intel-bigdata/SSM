@@ -23,17 +23,13 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
-import org.apache.hadoop.hdfs.server.protocol.StorageReport;
-import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
-import org.smartdata.hdfs.action.move.Source;
-import org.smartdata.hdfs.action.move.StorageGroup;
-import org.smartdata.hdfs.action.move.StorageMap;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.DataNodeInfo;
+import org.smartdata.model.DataNodeStorageInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -103,8 +99,27 @@ public class DataNodeInfoFetcher {
       try {
         final List<DatanodeStorageReport> reports = getDNStorageReports();
         metaStore.deleteAllDataNodeInfo();
-        for(DatanodeStorageReport r : reports){
+        for(DatanodeStorageReport r : reports) {
           metaStore.insertDataNodeInfo(transform(r.getDatanodeInfo()));
+          //insert record in DataNodeStorageInfoTable
+          for (int i = 0; i < r.getStorageReports().length; i++) {
+            long sid = CompatibilityHelperLoader.getHelper().getSidInDatanodeStorageReport(
+                r.getStorageReports()[i].getStorage());
+            String uuid = r.getDatanodeInfo().getDatanodeUuid();
+            long state = r.getStorageReports()[i].getStorage().getState().ordinal();
+            String storageId = r.getStorageReports()[i].getStorage().getStorageID();
+            long fail = 1;
+            if (r.getStorageReports()[i].isFailed() == false) {
+              fail = 0;
+            }
+            long capacity = r.getStorageReports()[i].getCapacity();
+            long dfsUsed = r.getStorageReports()[i].getDfsUsed();
+            long remaining = r.getStorageReports()[i].getRemaining();
+            long blockPoolUsed = r.getStorageReports()[i].getBlockPoolUsed();
+            DataNodeStorageInfo dataNodeStorageInfo = new DataNodeStorageInfo(uuid, sid, state
+                , storageId, fail, capacity,dfsUsed,remaining,blockPoolUsed);
+            metaStore.insertDataNodeStorageInfo(dataNodeStorageInfo);
+          }
         }
         isFinished = true;
       } catch (IOException e) {
