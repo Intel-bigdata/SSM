@@ -166,6 +166,10 @@ public class CopyScheduler extends ActionSchedulerService {
       // File Chain is not ready
       return false;
     }
+    if (fileDiffChainMap.get(path).size() == 0) {
+      // File Chain is empty
+      return false;
+    }
     return true;
   }
 
@@ -232,6 +236,7 @@ public class CopyScheduler extends ActionSchedulerService {
       // TODO maybe too long for large directory
       directSync(src, srcDir, destDir);
     }
+    LOG.info("Base Sync: All files have been added to sync queue!");
   }
 
 
@@ -336,7 +341,7 @@ public class CopyScheduler extends ActionSchedulerService {
       List<FileDiff> pendingDiffs = null;
       try {
         pendingDiffs = metaStore.getPendingDiff();
-        diffMerge(pendingDiffs);
+        diffPreProcessing(pendingDiffs);
       } catch (MetaStoreException e) {
         LOG.debug("Sync fileDiffs error", e);
       }
@@ -356,9 +361,13 @@ public class CopyScheduler extends ActionSchedulerService {
     //   }
     // }
 
-    private void diffMerge(List<FileDiff> fileDiffs) throws MetaStoreException {
+    private void diffPreProcessing(List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
       LOG.debug("Size of Pending diffs", fileDiffs.size());
+      if (fileDiffs.size() == 0) {
+        LOG.debug("All Backup directories are synced");
+        return;
+      }
       for (FileDiff fileDiff : fileDiffs) {
         if (fileDiff.getDiffType() == FileDiffType.BASESYNC) {
           metaStore.updateFileDiff(fileDiff.getDiffId(), FileDiffState.MERGED);
@@ -432,6 +441,10 @@ public class CopyScheduler extends ActionSchedulerService {
 
       public void setDiffChain(List<Long> diffChain) {
         this.diffChain = diffChain;
+      }
+
+      public int size() {
+        return diffChain.size();
       }
 
       public void addToChain(FileDiff fileDiff) throws MetaStoreException {

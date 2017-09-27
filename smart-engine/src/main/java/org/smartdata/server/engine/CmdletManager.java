@@ -290,6 +290,19 @@ public class CmdletManager extends AbstractService {
               cmdlet.updateState(CmdletState.CANCELLED);
               CmdletStatusUpdate msg =new CmdletStatusUpdate(cmdlet.getCid(),
                   cmdlet.getStateChangedTime(), cmdlet.getState());
+              // Mark all actions as finished and successful
+              List<ActionInfo> removed = new ArrayList<>();
+              ActionInfo actionInfo;
+              for (Long aid: cmdlet.getAids()) {
+                actionInfo = idToActions.get(aid);
+                // Set all action as finished
+                actionInfo.setProgress(1.0F);
+                actionInfo.setFinished(true);
+                actionInfo.setFinishTime(System.currentTimeMillis());
+                unLockFileIfNeeded(actionInfo);
+                idToActions.remove(aid);
+              }
+              flushActionInfos(removed);
               onCmdletStatusUpdate(msg);
             }
             maxScheduled--;
