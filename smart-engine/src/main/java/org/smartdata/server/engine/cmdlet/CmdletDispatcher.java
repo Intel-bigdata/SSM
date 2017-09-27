@@ -20,6 +20,7 @@ package org.smartdata.server.engine.cmdlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.*;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
@@ -35,7 +36,12 @@ public class CmdletDispatcher {
   public CmdletDispatcher(SmartContext smartContext, CmdletManager cmdletManager) {
     //Todo: make service configurable
     this.executorServices = new ArrayList<>();
-    this.executorServices.add(new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager));
+    boolean disableLocal = smartContext.getConf().getBoolean(
+        SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
+        SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT);
+    if (!disableLocal) {
+      this.executorServices.add(new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager));
+    }
     this.index = 0;
   }
 
