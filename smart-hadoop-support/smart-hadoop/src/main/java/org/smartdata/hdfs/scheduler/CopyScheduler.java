@@ -70,13 +70,13 @@ public class CopyScheduler extends ActionSchedulerService {
   private Map<Long, Integer> fileDiffMap;
   // BaseSync queue
   private Map<String, String> baseSyncQueue;
-  // Batch size
-  private int batchSize = 15;
   // Merge append length threshold
   private long mergeLenTh = DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT * 3;
   // Merge count length threshold
   private long mergeCountTh = 10;
   private int retryTh = 3;
+  // Check interval of executorService
+  private long checkInterval = 500;
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -239,18 +239,20 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private void batchDirectSync() throws MetaStoreException {
-    int index = 0;
+    long currentTime;
+    // Use half of check interval to batchSync
+    long maxCheckTime = System.currentTimeMillis() + checkInterval / 2;
     if (baseSyncQueue.size() == 0) {
       return;
     }
     for (Iterator<Map.Entry<String, String>> it = baseSyncQueue.entrySet().iterator(); it.hasNext();) {
-      if (index >= batchSize) {
+      currentTime = System.currentTimeMillis();
+      if (currentTime >= maxCheckTime) {
         break;
       }
       Map.Entry<String, String> entry = it.next();
       directSync(entry.getKey(), entry.getValue());
       it.remove();
-      index ++;
     }
   }
 
@@ -350,7 +352,7 @@ public class CopyScheduler extends ActionSchedulerService {
   public void start() throws IOException {
     // TODO Enable this module later
     executorService.scheduleAtFixedRate(
-        new CopyScheduler.ScheduleTask(), 0, 500,
+        new CopyScheduler.ScheduleTask(), 0, checkInterval,
         TimeUnit.MILLISECONDS);
   }
 
