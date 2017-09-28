@@ -240,9 +240,10 @@ public class CopyScheduler extends ActionSchedulerService {
 
   private void batchDirectSync() throws MetaStoreException {
     long currentTime;
-    // Use half of check interval to batchSync
-    long maxCheckTime = System.currentTimeMillis() + checkInterval / 2;
+    // Use 90% of check interval to batchSync
+    long maxCheckTime = System.currentTimeMillis() + checkInterval * 9 / 10;
     if (baseSyncQueue.size() == 0) {
+      LOG.info("Base Sync size = 0! All files are Synced");
       return;
     }
     for (Iterator<Map.Entry<String, String>> it = baseSyncQueue.entrySet().iterator(); it.hasNext();) {
@@ -258,6 +259,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
   private void baseSync(String srcDir, String destDir) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(srcDir);
+    LOG.debug("Base Sync {} files", srcFiles.size());
     for (FileInfo fileInfo : srcFiles) {
       if (fileInfo.isdir()) {
         // Ignore directory
