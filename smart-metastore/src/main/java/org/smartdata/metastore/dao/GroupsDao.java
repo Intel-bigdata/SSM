@@ -61,7 +61,7 @@ public class GroupsDao {
   public List<String> listGroup() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     List<String> groups = jdbcTemplate.query(
-        "select group_name from user_group",
+        "SELECT group_name FROM user_group",
         new RowMapper<String>() {
           public String mapRow(ResultSet rs, int rowNum) throws SQLException {
             return rs.getString("group_name");

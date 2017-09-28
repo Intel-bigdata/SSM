@@ -24,13 +24,8 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metrics.FileAccessEvent;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 public class AccessEventAggregator {
   private final MetaStore adapter;
@@ -47,7 +42,7 @@ public class AccessEventAggregator {
   }
 
   public AccessEventAggregator(MetaStore adapter,
-      AccessCountTableManager manager, long aggregationGranularity) {
+                               AccessCountTableManager manager, long aggregationGranularity) {
     this.adapter = adapter;
     this.accessCountTableManager = manager;
     this.aggregationGranularity = aggregationGranularity;

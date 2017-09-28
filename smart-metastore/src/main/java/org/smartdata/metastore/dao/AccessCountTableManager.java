@@ -18,19 +18,15 @@
 package org.smartdata.metastore.dao;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.TimeGranularity;
 import org.smartdata.metastore.utils.TimeUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.metastore.MetaStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -171,7 +167,7 @@ public class AccessCountTableManager {
   }
 
   private static boolean tableExists(
-      final Map<TimeGranularity, AccessCountTableDeque> tableDeques, long start, long end) {
+          final Map<TimeGranularity, AccessCountTableDeque> tableDeques, long start, long end) {
     TimeGranularity granularity = TimeUtils.getGranularity(end - start);
     AccessCountTable fakeTable = new AccessCountTable(start, end);
     return tableDeques.containsKey(granularity) && tableDeques.get(granularity).contains(fakeTable);

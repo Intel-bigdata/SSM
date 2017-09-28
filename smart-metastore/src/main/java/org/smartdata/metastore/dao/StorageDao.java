@@ -49,7 +49,7 @@ public class StorageDao {
     List<StorageCapacity> list = jdbcTemplate.query(sql,
         new RowMapper<StorageCapacity>() {
           public StorageCapacity mapRow(ResultSet rs,
-              int rowNum) throws SQLException {
+                                        int rowNum) throws SQLException {
             return new StorageCapacity(rs.getString("type"),
                 rs.getLong("capacity"), rs.getLong("free"));
           }
@@ -67,7 +67,7 @@ public class StorageDao {
     List<StoragePolicy> list = jdbcTemplate.query(sql,
         new RowMapper<StoragePolicy>() {
           public StoragePolicy mapRow(ResultSet rs,
-              int rowNum) throws SQLException {
+                                      int rowNum) throws SQLException {
             return new StoragePolicy(rs.getByte("sid"),
                 rs.getString("policy_name"));
           }
@@ -85,7 +85,7 @@ public class StorageDao {
     return jdbcTemplate.queryForObject(sql, new Object[]{type},
         new RowMapper<StorageCapacity>() {
           public StorageCapacity mapRow(ResultSet rs,
-              int rowNum) throws SQLException {
+                                        int rowNum) throws SQLException {
             return new StorageCapacity(rs.getString("type"),
                 rs.getLong("capacity"), rs.getLong("free"));
           }
