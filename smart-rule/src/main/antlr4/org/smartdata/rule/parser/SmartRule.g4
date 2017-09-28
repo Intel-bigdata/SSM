@@ -186,7 +186,7 @@ FILETRUNCATE: 'FileTruncate' ;
 
 
 TIMEINTVALCONST
-    : ([1-9] [0-9]* ('s' | 'm' | 'h' | 'd' | 'sec' | 'min' | 'hour' | 'day'))+ ;
+    : ([1-9] [0-9]* ('ms' | 's' | 'm' | 'h' | 'd' | 'sec' | 'min' | 'hour' | 'day'))+ ;
 
 TIMEPOINTCONST
     : '"' [1-9][0-9][0-9][0-9] '-' [0-9][0-9] '-' [0-9][0-9] ' '+ [0-9][0-9] ':' [0-9][0-9] ':' [0-9][0-9] '"'
