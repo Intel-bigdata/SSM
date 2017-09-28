@@ -26,6 +26,8 @@ import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
 
@@ -63,4 +65,6 @@ public interface CompatibilityHelper {
   boolean truncate(DFSClient client, String src, long newLength) throws IOException;
 
   boolean truncate(DistributedFileSystem fileSystem, String src, long newLength) throws IOException;
+
+  int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage);
 }

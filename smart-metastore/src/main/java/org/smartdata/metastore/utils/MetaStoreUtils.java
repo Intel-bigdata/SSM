@@ -197,7 +197,7 @@ public class MetaStoreUtils {
             ") ;",
 
         "CREATE TABLE datanode_storage_info (\n" +
-            "  uuid varchar(64) PRIMARY KEY,\n" +
+            "  uuid varchar(64) NOT NULL,\n" +
             "  sid tinyint(4) NOT NULL,\n" +          // storage type
             "  state tinyint(4) NOT NULL,\n" +        // DatanodeStorage.state
             "  storage_id varchar(64) NOT NULL,\n" +   // StorageReport ...

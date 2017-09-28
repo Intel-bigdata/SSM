@@ -28,6 +28,8 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
 
@@ -121,5 +123,11 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
   @Override
   public boolean truncate(DistributedFileSystem fs, String src, long newLength) throws IOException {
     throw new UnsupportedOperationException("Hadoop 2.6 does not support truncate.");
+  }
+
+  @Override
+  public int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage) {
+    StorageType storageType = datanodeStorage.getStorageType();
+    return storageType.ordinal();
   }
 }
