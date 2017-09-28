@@ -139,7 +139,7 @@ public class CmdletManager extends AbstractService {
   @Override
   public void start() throws IOException {
     executorService.scheduleAtFixedRate(
-        new ScheduleTask(this.dispatcher), 1000, 1000, TimeUnit.MILLISECONDS);
+        new ScheduleTask(this.dispatcher), 200, 100, TimeUnit.MILLISECONDS);
     for (ActionSchedulerService s : schedulerServices) {
       s.start();
     }
