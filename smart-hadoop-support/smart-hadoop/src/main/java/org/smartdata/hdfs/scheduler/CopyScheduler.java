@@ -507,15 +507,15 @@ public class CopyScheduler extends ActionSchedulerService {
       public void addToChain(FileDiff fileDiff) throws MetaStoreException {
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
-          // if (currAppendLength >= mergeLenTh ||
-          //     appendChain.size() >= mergeCountTh) {
-          //   mergeAppend();
-          // }
+          if (currAppendLength >= mergeLenTh ||
+              appendChain.size() >= mergeCountTh) {
+            mergeAppend();
+          }
           // Add Append to Append Chain
           appendChain.add(did);
           // Increase Append length
-          // currAppendLength +=
-          //     Long.valueOf(fileDiff.getParameters().get("-length"));
+          currAppendLength +=
+              Long.valueOf(fileDiff.getParameters().get("-length"));
           diffChain.add(did);
         } else if (fileDiff.getDiffType() == FileDiffType.RENAME) {
           // Add New Name to Name Chain
