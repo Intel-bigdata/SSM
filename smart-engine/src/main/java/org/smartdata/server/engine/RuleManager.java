@@ -179,7 +179,7 @@ public class RuleManager extends AbstractService {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     infoRepo.disable();
     if (dropPendingCmdlets && getCmdletManager() != null) {
-      getCmdletManager().deleteCmdletByRule(ruleID);
+      getCmdletManager().dropRuleCmdlets(ruleID);
     }
   }
 
