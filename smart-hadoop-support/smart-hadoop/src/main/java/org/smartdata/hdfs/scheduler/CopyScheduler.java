@@ -76,7 +76,9 @@ public class CopyScheduler extends ActionSchedulerService {
   private long mergeCountTh = 10;
   private int retryTh = 3;
   // Check interval of executorService
-  private long checkInterval = 500;
+  private long checkInterval = 150;
+  // Overwrite remove during base Sync
+  private boolean overwrite = true;
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -307,6 +309,7 @@ public class CopyScheduler extends ActionSchedulerService {
       fileDiff = new FileDiff(FileDiffType.DELETE, FileDiffState.PENDING);
       fileDiff.setSrc(src);
       metaStore.insertFileDiff(fileDiff);
+      offSet = 0;
     }
     // Copy tails to remote
     fileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
@@ -319,6 +322,10 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private long fileCompare(FileInfo fileInfo, String dest) throws MetaStoreException {
+    if (this.overwrite) {
+      // Overwrite remote
+      return 0;
+    }
     // Primary
     long localLen = fileInfo.getLength();
     Configuration conf = null;
@@ -638,18 +645,6 @@ public class CopyScheduler extends ActionSchedulerService {
         }
         diffChain.clear();
       }
-
-      // public void addTopRunning() throws MetaStoreException {
-      //   if (fileLock.containsKey(filePath)) {
-      //     return;
-      //   }
-      //   if (diffChain.size() == 0) {
-      //     return;
-      //   }
-      //   long fid = diffChain.get(0);
-      //   metaStore.updateFileDiff(fid, FileDiffState.RUNNING);
-      //   // fileLock.put(filePath, fid);
-      // }
     }
   }
 }
