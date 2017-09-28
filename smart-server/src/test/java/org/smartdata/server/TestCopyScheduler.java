@@ -23,7 +23,6 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.experimental.theories.Theories;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
@@ -31,10 +30,10 @@ import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.server.engine.CmdletManager;
 
-import java.io.File;
 import java.util.List;
 
 public class TestCopyScheduler extends MiniSmartClusterHarness {
@@ -181,6 +180,32 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   //   Assert.assertTrue(metaStore.getFileDiffs(FileDiffState.PENDING).size() > 0);
   // }
   //
+  // @Test(timeout = 40000)
+  // public void batchSync() throws Exception {
+  //   waitTillSSMExitSafeMode();
+  //   MetaStore metaStore = ssm.getMetaStore();
+  //   SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+  //   CmdletManager cmdletManager = ssm.getCmdletManager();
+  //   DistributedFileSystem dfs = cluster.getFileSystem();
+  //   final String srcPath = "/src/";
+  //   final String destPath = "/dest/";
+  //   FileInfo fileInfo;
+  //   long now = System.currentTimeMillis();
+  //   for (int i = 0; i < 100; i++) {
+  //     fileInfo = new FileInfo(srcPath + i, i,  1024, false, (short)3,
+  //         1024, now, now, (short) 1, null, null, (byte)3);
+  //     metaStore.insertFile(fileInfo);
+  //     Thread.sleep(100);
+  //   }
+  //   long ruleId =
+  //       admin.submitRule(
+  //           "file: every 2s | path matches \"/src/*\"| sync -dest /dest/", RuleState.ACTIVE);
+  //   Thread.sleep(2200);
+  //   do {
+  //     Thread.sleep(1000);
+  //   } while (admin.getRuleInfo(ruleId).getNumCmdsGen() <= 30);
+  // }
+  //
   // @Test(timeout = 60000)
   // public void testDelete() throws Exception {
   //   waitTillSSMExitSafeMode();
@@ -251,6 +276,7 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   //   Thread.sleep(1000);
   //   FileStatus fileStatus = dfs.getFileStatus(new Path(destPath + 1));
   //   Assert.assertTrue(fileStatus.getLen() == 1024);
+  //   // TODO 777->551
   //   Assert.assertTrue(fileStatus.getPermission().toShort() == (short) 551);
   // }
   //
