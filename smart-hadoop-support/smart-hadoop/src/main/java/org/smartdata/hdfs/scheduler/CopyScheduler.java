@@ -77,6 +77,8 @@ public class CopyScheduler extends ActionSchedulerService {
   private int retryTh = 3;
   // Check interval of executorService
   private long checkInterval = 150;
+  // Base sync batch insert size
+  private int batchSize = 300;
   // Overwrite remove during base Sync
   private boolean overwrite = true;
 
@@ -197,7 +199,7 @@ public class CopyScheduler extends ActionSchedulerService {
   public void onActionFinished(ActionInfo actionInfo) {
     // Remove lock
     FileDiff fileDiff = null;
-    if(actionInfo.isFinished()) {
+    if (actionInfo.isFinished()) {
       try {
         long did = actionDiffMap.get(actionInfo.getActionId());
         // Remove for action diff map
@@ -222,7 +224,8 @@ public class CopyScheduler extends ActionSchedulerService {
             int curr = fileDiffMap.get(did);
             if (curr >= retryTh) {
               metaStore.updateFileDiff(did, FileDiffState.FAILED);
-              directSync(fileDiff.getSrc(), actionInfo.getArgs().get(SyncAction.SRC),
+              directSync(fileDiff.getSrc(),
+                  actionInfo.getArgs().get(SyncAction.SRC),
                   actionInfo.getArgs().get(SyncAction.DEST));
             } else {
               fileDiffMap.put(did, curr + 1);
@@ -241,25 +244,34 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private void batchDirectSync() throws MetaStoreException {
-    long currentTime;
+    int index = 0;
     // Use 90% of check interval to batchSync
-    long maxCheckTime = System.currentTimeMillis() + checkInterval * 9 / 10;
     if (baseSyncQueue.size() == 0) {
-      LOG.info("Base Sync size = 0! All files are Synced");
+      LOG.debug("Base Sync size = 0!");
       return;
     }
-    for (Iterator<Map.Entry<String, String>> it = baseSyncQueue.entrySet().iterator(); it.hasNext();) {
-      currentTime = System.currentTimeMillis();
-      if (currentTime >= maxCheckTime) {
+    List<FileDiff> batchFileDiffs = new ArrayList<>();
+    FileDiff fileDiff;
+    for (Iterator<Map.Entry<String, String>> it =
+        baseSyncQueue.entrySet().iterator(); it.hasNext(); ) {
+      if (index >= batchSize) {
         break;
       }
       Map.Entry<String, String> entry = it.next();
-      directSync(entry.getKey(), entry.getValue());
+      fileDiff = directSync(entry.getKey(), entry.getValue());
+      if (fileDiff != null) {
+        batchFileDiffs.add(fileDiff);
+      }
       it.remove();
+      index++;
     }
+    // Batch Insert
+    metaStore.insertFileDiffs(
+        batchFileDiffs.toArray(new FileDiff[batchFileDiffs.size()]));
   }
 
-  private void baseSync(String srcDir, String destDir) throws MetaStoreException {
+  private void baseSync(String srcDir,
+      String destDir) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(srcDir);
     LOG.debug("Base Sync {} files", srcFiles.size());
     for (FileInfo fileInfo : srcFiles) {
@@ -277,16 +289,21 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
 
-  private void directSync(String src, String srcDir, String destDir) throws MetaStoreException {
+  private void directSync(String src, String srcDir,
+      String destDir) throws MetaStoreException {
     String dest = src.replace(srcDir, destDir);
-    directSync(src, dest);
+    FileDiff fileDiff = directSync(src, dest);
+    if (fileDiff != null) {
+      metaStore.insertFileDiff(fileDiff);
+    }
   }
 
-  private void directSync(String src, String dest) throws MetaStoreException {
+  private FileDiff directSync(String src,
+      String dest) throws MetaStoreException {
     FileInfo fileInfo = metaStore.getFile(src);
     if (fileInfo == null) {
       // Primary file doesn't exist
-      return;
+      return null;
     }
     // Mark all related diff as Merged
     if (fileDiffChainMap.containsKey(src)) {
@@ -294,7 +311,7 @@ public class CopyScheduler extends ActionSchedulerService {
       fileDiffChainMap.remove(src);
     }
     List<FileDiff> fileDiffs = metaStore.getFileDiffsByFileName(src);
-    for (FileDiff fileDiff :fileDiffs) {
+    for (FileDiff fileDiff : fileDiffs) {
       if (fileDiff.getState() == FileDiffState.PENDING) {
         metaStore.updateFileDiff(fileDiff.getDiffId(), FileDiffState.MERGED);
       }
@@ -303,7 +320,7 @@ public class CopyScheduler extends ActionSchedulerService {
     long offSet = fileCompare(fileInfo, dest);
     if (offSet == fileInfo.getLength()) {
       LOG.debug("Primary len={}, remote len={}", fileInfo.getLength(), offSet);
-      return;
+      return null;
     } else if (offSet > fileInfo.getLength()) {
       // Remove dirty remote file
       fileDiff = new FileDiff(FileDiffType.DELETE, FileDiffState.PENDING);
@@ -315,13 +332,15 @@ public class CopyScheduler extends ActionSchedulerService {
     fileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
     fileDiff.setSrc(src);
     // Append changes to remote files
-    fileDiff.getParameters().put("-length", String.valueOf(fileInfo.getLength() - offSet));
+    fileDiff.getParameters()
+        .put("-length", String.valueOf(fileInfo.getLength() - offSet));
     fileDiff.getParameters().put("-offset", String.valueOf(offSet));
     fileDiff.setRuleId(-1);
-    metaStore.insertFileDiff(fileDiff);
+    return fileDiff;
   }
 
-  private long fileCompare(FileInfo fileInfo, String dest) throws MetaStoreException {
+  private long fileCompare(FileInfo fileInfo,
+      String dest) throws MetaStoreException {
     if (this.overwrite) {
       // Overwrite remote
       return 0;
@@ -393,11 +412,12 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
 
-    private void diffPreProcessing(List<FileDiff> fileDiffs) throws MetaStoreException {
+    private void diffPreProcessing(
+        List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
       LOG.debug("Size of Pending diffs", fileDiffs.size());
-      if (fileDiffs.size() == 0) {
-        LOG.debug("All Backup directories are synced");
+      if (fileDiffs.size() == 0 && baseSyncQueue.size() == 0) {
+        LOG.info("All Backup directories are synced");
         return;
       }
       for (FileDiff fileDiff : fileDiffs) {
@@ -487,13 +507,15 @@ public class CopyScheduler extends ActionSchedulerService {
       public void addToChain(FileDiff fileDiff) throws MetaStoreException {
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
-          if (currAppendLength >= mergeLenTh || appendChain.size() >= mergeCountTh) {
-            mergeAppend();
-          }
+          // if (currAppendLength >= mergeLenTh ||
+          //     appendChain.size() >= mergeCountTh) {
+          //   mergeAppend();
+          // }
           // Add Append to Append Chain
           appendChain.add(did);
           // Increase Append length
-          currAppendLength += Long.valueOf(fileDiff.getParameters().get("-length"));
+          // currAppendLength +=
+          //     Long.valueOf(fileDiff.getParameters().get("-length"));
           diffChain.add(did);
         } else if (fileDiff.getDiffType() == FileDiffType.RENAME) {
           // Add New Name to Name Chain
@@ -519,7 +541,8 @@ public class CopyScheduler extends ActionSchedulerService {
         for (long did : appendChain) {
           FileDiff fileDiff = metaStore.getFileDiff(did);
           if (fileDiff != null && fileDiff.getState().getValue() != 2) {
-            long currOffset = Long.valueOf(fileDiff.getParameters().get("-offset"));
+            long currOffset =
+                Long.valueOf(fileDiff.getParameters().get("-offset"));
             if (offset > currOffset) {
               offset = currOffset;
             }
@@ -529,7 +552,8 @@ public class CopyScheduler extends ActionSchedulerService {
             }
             metaStore.updateFileDiff(did, FileDiffState.APPLIED);
             // Add current file length to length
-            totalLength += Long.valueOf(fileDiff.getParameters().get("-length"));
+            totalLength +=
+                Long.valueOf(fileDiff.getParameters().get("-length"));
             lastAppend = did;
           }
         }
@@ -602,7 +626,8 @@ public class CopyScheduler extends ActionSchedulerService {
               isCreate = true;
             }
           }
-          if (appendFileDiff != null && appendFileDiff.getState().getValue() != 2) {
+          if (appendFileDiff != null &&
+              appendFileDiff.getState().getValue() != 2) {
             appendFileDiff.setSrc(newName);
             metaStore.updateFileDiff(did, newName);
           }
