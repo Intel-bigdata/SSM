@@ -253,6 +253,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         hotFiles: function () {
           return get('cluster/primary/hotfiles', decoder.default)
+        },
+        storageUsage: function (resourceName) {
+          return get('cluster/primary/utilization/' + resourceName, decoder.default)
         }
       };
 

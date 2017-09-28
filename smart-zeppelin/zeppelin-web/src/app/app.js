@@ -120,7 +120,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         controller: 'RulesCtrl',
         resolve: {
           rules0: ['models', function (models) {
-            return models.$get.rules();
+            return models.$get.ru1les();
           }]
         }
       })
@@ -224,6 +224,24 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       .when('/search/:searchTerm', {
         templateUrl: 'app/search/result-list.html',
         controller: 'SearchResultCtrl'
+      })
+      .when('/storage', {
+        templateUrl: 'app/dashboard/views/cluster/storage/storage.html',
+        controller: 'StorageCtrl',
+        resolve: {
+          cache: ['models', function (models) {
+            return models.$get.storageUsage('cache');
+          }],
+          ssd: ['models', function (models) {
+            return models.$get.storageUsage('ssd');
+          }],
+          disk: ['models', function (models) {
+            return models.$get.storageUsage('disk');
+          }],
+          archive: ['models', function (models) {
+            return models.$get.storageUsage('archive');
+          }]
+        }
       })
       .otherwise({
         redirectTo: '/'
