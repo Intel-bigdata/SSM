@@ -829,6 +829,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteCmdletActions(long cmdletId) throws MetaStoreException {
+    try {
+      actionDao.deleteCmdletActions(cmdletId);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteAllActions() throws MetaStoreException {
     try {
       actionDao.deleteAll();

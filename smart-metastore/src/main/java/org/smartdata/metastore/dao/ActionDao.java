@@ -154,6 +154,12 @@ public class ActionDao {
     jdbcTemplate.update(sql, aid);
   }
 
+  public void deleteCmdletActions(long cid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE cid = ?";
+    jdbcTemplate.update(sql, cid);
+  }
+
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE from " + TABLE_NAME;

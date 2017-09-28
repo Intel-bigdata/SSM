@@ -272,6 +272,7 @@ public class CmdletManager extends AbstractService {
       CmdletInfo cmdlet = idToCmdlets.get(id);
       synchronized (cmdlet) {
         switch (cmdlet.getState()) {
+          case CANCELLED:
           case DISABLED:
             it.remove();
             break;
@@ -464,7 +465,7 @@ public class CmdletManager extends AbstractService {
     if (idToCmdlets.containsKey(cid)) {
       CmdletInfo info = idToCmdlets.get(cid);
       synchronized (info) {
-        info.setState(CmdletState.DISABLED);
+        info.updateState(CmdletState.DISABLED);
       }
       synchronized (pendingCmdlet) {
         if (pendingCmdlet.contains(cid)) {
@@ -480,6 +481,20 @@ public class CmdletManager extends AbstractService {
       // Wait status update from status reporter, so need to update to MetaStore
       if (runningCmdlets.contains(cid)) {
         dispatcher.stop(cid);
+      }
+    }
+  }
+
+  /**
+   * Drop all unfinished cmdlets.
+   *
+   * @param ruleId
+   * @throws IOException
+   */
+  public void dropRuleCmdlets(long ruleId) throws IOException {
+    for (CmdletInfo info : idToCmdlets.values()) {
+      if (info.getRid() == ruleId && !CmdletState.isTerminalState(info.getState())) {
+        deleteCmdlet(info.getCid());
       }
     }
   }
@@ -529,6 +544,7 @@ public class CmdletManager extends AbstractService {
     this.disableCmdlet(cid);
     try {
       metaStore.deleteCmdlet(cid);
+      metaStore.deleteCmdletActions(cid);
     } catch (MetaStoreException e) {
       LOG.error("Delete Cmdlet {} from DB error!", cid, e);
       throw new IOException(e);
