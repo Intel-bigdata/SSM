@@ -72,6 +72,7 @@ public class TestSmartRuleParser {
     rules.add("file : accessCount(10min) > 20 | cache");
     rules.add("file: every 5s from now to now + 10d | length > 3 | cache");
     rules.add("file: every 5s | length > 100mb | onessd");
+    rules.add("file: every 50ms | length > 100mb | onessd");
     rules.add("file : every 1s | age > 100day | cache");
     rules.add("file : every 1s | mtime > \"2016-09-13 12:05:06\" | cache");
     rules.add("file : every 1s | mtime > now - 70day | cache");

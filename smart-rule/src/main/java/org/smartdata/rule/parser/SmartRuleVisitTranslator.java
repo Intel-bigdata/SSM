@@ -566,6 +566,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         case "s":
         case "sec":
           intval += value * 1000;
+        case "ms":
+          intval += value;
           break;
       }
       start += m.group().length();
