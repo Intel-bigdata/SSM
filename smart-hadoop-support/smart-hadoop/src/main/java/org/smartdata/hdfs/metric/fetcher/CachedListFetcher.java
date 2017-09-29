@@ -146,12 +146,26 @@ public class CachedListFetcher {
         RemoteIterator<CacheDirectiveEntry> cacheDirectives =
             dfsClient.listCacheDirectives(filter);
         // Add new cache files to DB
+        //get the size of SSM cache pool
+        RemoteIterator<CachePoolEntry> cachePoolList = dfsClient.listCachePools();
+        long cacheMaxSize = 0;
+        while (cachePoolList.hasNext()) {
+          CachePoolEntry cachePoolEntry = cachePoolList.next();
+          if (cachePoolEntry.getInfo().getPoolName().equals("SSMPool")) {
+            cacheMaxSize = cachePoolEntry.getInfo().getLimit();
+          }
+        }
+        long cacheUsage = 0;
         if (!cacheDirectives.hasNext()) {
+          StorageCapacity storageCapacity = new StorageCapacity("cache",cacheMaxSize,cacheMaxSize-cacheUsage);
+          StorageCapacity storageCapacityList[] = new StorageCapacity[1];
+          storageCapacityList[0] = storageCapacity;
+          metaStore.insertStoragesTable(storageCapacityList);
           clearAll();
           return;
         }
         List<String> paths = new ArrayList<>();
-        long cacheUsage = 0;
+
         while (cacheDirectives.hasNext()) {
           CacheDirectiveEntry cacheDirectiveEntry = cacheDirectives.next();
           CacheDirectiveInfo currentInfo = cacheDirectiveEntry.getInfo();
@@ -160,16 +174,6 @@ public class CachedListFetcher {
           LOG.debug("File in HDFS cache: " + currentInfo.getPath().toString());
         }
 
-        //get the size of SSM cache pool
-        RemoteIterator<CachePoolEntry> cachePoolList = dfsClient.listCachePools();
-
-        long cacheMaxSize = 0;
-        while (cachePoolList.hasNext()) {
-          CachePoolEntry cachePoolEntry = cachePoolList.next();
-          if (cachePoolEntry.getInfo().getPoolName().equals("SSMPool")) {
-            cacheMaxSize = cachePoolEntry.getInfo().getLimit();
-          }
-        }
 
         //add cache information into metastore
         if (!metaStore.judgeTheRecordIfExist("cache")) {
