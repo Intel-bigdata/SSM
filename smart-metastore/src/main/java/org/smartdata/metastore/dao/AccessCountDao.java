@@ -59,7 +59,7 @@ public class AccessCountDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql =
         String.format(
-        "delete from access_count_table where start_time >= %s AND end_time <= %s",
+        "DELETE FROM access_count_table WHERE start_time >= %s AND end_time <= %s",
             startTime,
             endTime);
     jdbcTemplate.update(sql);
@@ -67,7 +67,7 @@ public class AccessCountDao {
 
   public void delete(AccessCountTable table) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from access_count_table where table_name = ?";
+    final String sql = "DELETE FROM access_count_table WHERE table_name = ?";
     jdbcTemplate.update(sql, table.getTableName());
   }
 
@@ -84,7 +84,7 @@ public class AccessCountDao {
   }
 
   public void aggregateTables(
-      AccessCountTable destinationTable, List<AccessCountTable> tablesToAggregate) {
+          AccessCountTable destinationTable, List<AccessCountTable> tablesToAggregate) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String create = AccessCountDao.createAccessCountTableSQL(destinationTable.getTableName());
     jdbcTemplate.execute(create);

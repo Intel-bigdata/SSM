@@ -19,23 +19,13 @@ package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.model.ClusterInfo;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
-import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
-import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.sqlite.JDBC;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,26 +44,26 @@ public class ClusterInfoDao {
 
   public List<ClusterInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME, new ClusterinfoRowMapper());
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME, new ClusterinfoRowMapper());
   }
 
   public ClusterInfo getById(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE cid = ?",
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE cid = ?",
         new Object[]{cid},
         new ClusterinfoRowMapper()).get(0);
   }
 
   public List<ClusterInfo> getByIds(List<Long> cids) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE cid IN (?)",
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE cid IN (?)",
         new Object[]{StringUtils.join(cids, ",")},
         new ClusterinfoRowMapper());
   }
 
   public void delete(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from " + TABLE_NAME + " where cid = ?";
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE cid = ?";
     jdbcTemplate.update(sql, cid);
   }
 
@@ -103,25 +93,25 @@ public class ClusterInfoDao {
 
   public int updateState(long cid, String state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update " + TABLE_NAME + " set state = ? WHERE cid = ?";
+    String sql = "UPDATE " + TABLE_NAME + " SET state = ? WHERE cid = ?";
     return jdbcTemplate.update(sql, state, cid);
   }
 
   public int updateType(long cid, String type) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update " + TABLE_NAME + " set type = ? WHERE cid = ?";
+    String sql = "UPDATE " + TABLE_NAME + " SET type = ? WHERE cid = ?";
     return jdbcTemplate.update(sql, type, cid);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE from " + TABLE_NAME;
+    final String sql = "DELETE FROM " + TABLE_NAME;
     jdbcTemplate.execute(sql);
   }
 
   public int getCountByName(String name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "SELECT COUNT(*) from " + TABLE_NAME + " WHERE name = ?";
+    final String sql = "SELECT COUNT(*) FROM " + TABLE_NAME + " WHERE name = ?";
     return jdbcTemplate.queryForObject(sql, Integer.class, name);
   }
 

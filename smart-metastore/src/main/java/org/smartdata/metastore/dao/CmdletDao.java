@@ -18,8 +18,8 @@
 package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.model.CmdletState;
 import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -49,31 +49,31 @@ public class CmdletDao {
 
   public List<CmdletInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME,
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
         new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByIds(List<Long> aids) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME + " WHERE aid IN (?)",
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE aid IN (?)",
         new Object[]{StringUtils.join(aids, ",")},
         new CmdletRowMapper());
   }
 
   public CmdletInfo getById(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from " + TABLE_NAME + " where cid = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE cid = ?",
         new Object[]{cid}, new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByRid(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME + " where rid = ?",
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE rid = ?",
         new Object[]{rid}, new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByCondition(String cidCondition,
-      String ridCondition, CmdletState state) {
+                                         String ridCondition, CmdletState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sqlPrefix = "SELECT * FROM " + TABLE_NAME + " WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
@@ -91,13 +91,13 @@ public class CmdletDao {
 
   public void delete(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from " + TABLE_NAME + " where cid = ?";
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE cid = ?";
     jdbcTemplate.update(sql, cid);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE from " + TABLE_NAME;
+    final String sql = "DELETE FROM " + TABLE_NAME;
     jdbcTemplate.execute(sql);
   }
 
@@ -119,33 +119,33 @@ public class CmdletDao {
 
   public int update(long cid, long rid, int state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update " + TABLE_NAME + " set " +
+    String sql = "UPDATE " + TABLE_NAME + " SET " +
         "state = ?, " +
-        "state_changed_time = ? where cid = ? AND rid = ?";
+        "state_changed_time = ? WHERE cid = ? AND rid = ?";
     return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid, rid);
   }
 
   public int update(long cid, String parameters, int state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update " + TABLE_NAME + " set " +
+    String sql = "UPDATE " + TABLE_NAME + " SET " +
         "parameters = ?, " +
         "state = ?, " +
-        "state_changed_time = ? where cid = ?";
+        "state_changed_time = ? WHERE cid = ?";
     return jdbcTemplate.update(sql, parameters, state, System.currentTimeMillis(), cid);
   }
 
   public int update(final CmdletInfo CmdletInfo) {
-    List<CmdletInfo> CmdletInfos = new ArrayList<>();
+    List<org.smartdata.model.CmdletInfo> CmdletInfos = new ArrayList<>();
     CmdletInfos.add(CmdletInfo);
     return update(CmdletInfos)[0];
   }
 
   public int[] update(final List<CmdletInfo> CmdletInfos) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update " + TABLE_NAME + " set " +
+    String sql = "UPDATE " + TABLE_NAME + " SET " +
         "state = ?, " +
         "state_changed_time = ? " +
-        "where cid = ?";
+        "WHERE cid = ?";
     return jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
           public void setValues(PreparedStatement ps,
@@ -164,7 +164,7 @@ public class CmdletDao {
   public long getMaxId() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Long ret = jdbcTemplate
-        .queryForObject("select MAX(cid) from " + TABLE_NAME, Long.class);
+        .queryForObject("SELECT MAX(cid) FROM " + TABLE_NAME, Long.class);
     if (ret == null) {
       return 0;
     } else {

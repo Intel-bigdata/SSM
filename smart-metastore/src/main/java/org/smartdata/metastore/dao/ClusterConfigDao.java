@@ -19,22 +19,13 @@ package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.model.ClusterConfig;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
-import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.sqlite.JDBC;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,36 +43,36 @@ public class ClusterConfigDao {
 
   public List<ClusterConfig> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from cluster_config", new ClusterConfigRowMapper());
+    return jdbcTemplate.query("SELECT * FROM cluster_config", new ClusterConfigRowMapper());
   }
 
   public List<ClusterConfig> getByIds(List<Long> cids) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from cluster_config WHERE cid IN (?)",
+    return jdbcTemplate.query("SELECT * FROM cluster_config WHERE cid IN (?)",
         new Object[]{StringUtils.join(cids, ",")},
         new ClusterConfigRowMapper());
   }
 
   public ClusterConfig getById(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from cluster_config WHERE cid = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM cluster_config WHERE cid = ?",
         new Object[]{cid}, new ClusterConfigRowMapper());
   }
 
   public long getCountByName(String name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select COUNT(*) FROM cluster_config WHERE node_name = ?",Long.class,name);
+    return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM cluster_config WHERE node_name = ?",Long.class,name);
   }
 
   public ClusterConfig getByName(String name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from cluster_config WHERE node_name = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM cluster_config WHERE node_name = ?",
         new Object[]{name}, new ClusterConfigRowMapper());
   }
 
   public void delete(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from cluster_config where cid = ?";
+    final String sql = "DELETE FROM cluster_config WHERE cid = ?";
     jdbcTemplate.update(sql, cid);
   }
 
@@ -112,14 +103,14 @@ public class ClusterConfigDao {
 
   public int updateById(int cid, String config_path){
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "update cluster_config set config_path = ? WHERE cid = ?";
+    final String sql = "UPDATE cluster_config SET config_path = ? WHERE cid = ?";
     return jdbcTemplate.update(sql,config_path,cid);
   }
 
 
   public int updateByNodeName(String node_name, String config_path){
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "update cluster_config set config_path = ? WHERE node_name = ?";
+    final String sql = "UPDATE cluster_config SET config_path = ? WHERE node_name = ?";
     return jdbcTemplate.update(sql,config_path,node_name);
   }
 
