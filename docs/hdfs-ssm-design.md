@@ -8,7 +8,7 @@ Architecture
 
 SSM polls metrics from NameNode. These metrics are analyzed by SSM as specified by rules, and if conditions of some rule are fulfilled then it will execute the corresponding actions. 
 
-SSM uses SQL database to maintain data polled as well as other internal data. Some of the data are required for SSM states recovery, so SSM will checkpoint them into HDFS in time.
+SSM uses SQL database to maintain data polled as well as other internal data. 
 
 ### HA Support
 HA is supported. The design will be coming soon.
