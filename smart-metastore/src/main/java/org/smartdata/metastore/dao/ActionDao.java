@@ -49,7 +49,7 @@ public class ActionDao {
 
   public List<ActionInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME,
+    return jdbcTemplate.query("SELECT * from " + TABLE_NAME,
         new ActionRowMapper());
   }
 
