@@ -56,7 +56,7 @@ public class ActionDao {
   public ActionInfo getById(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM " +
-            TABLE_NAME + " WHERE aid = ?",
+        TABLE_NAME + " WHERE aid = ?",
         new Object[]{aid}, new ActionRowMapper());
   }
 
@@ -66,14 +66,14 @@ public class ActionDao {
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
     parameterSource.addValue("aids", aids);
     return namedParameterJdbcTemplate.query("SELECT * FROM " +
-            TABLE_NAME + " WHERE aid IN (:aids)",
+        TABLE_NAME + " WHERE aid IN (:aids)",
         parameterSource, new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCid(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("SELECT * FROM " +
-            TABLE_NAME + " WHERE cid = ?",
+        TABLE_NAME + " WHERE cid = ?",
         new Object[]{cid}, new ActionRowMapper());
   }
 
