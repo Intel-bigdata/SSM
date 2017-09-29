@@ -63,7 +63,7 @@ public class FileInfoDao {
 
   public List<FileInfo> getFilesByPrefix(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM file where path LIKE ?",
+    return jdbcTemplate.query("SELECT * FROM file WHERE path LIKE ?",
         new FileInfoDao.FileInfoRowMapper(), path + "%");
   }
 
@@ -136,13 +136,13 @@ public class FileInfoDao {
 
   public void deleteById(long fid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from file where fid = ?";
+    final String sql = "DELETE FROM file WHERE fid = ?";
     jdbcTemplate.update(sql, fid);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE from file";
+    final String sql = "DELETE FROM file";
     jdbcTemplate.execute(sql);
   }
 
