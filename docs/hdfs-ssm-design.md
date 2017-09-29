@@ -4,7 +4,7 @@
 
 Architecture
 ------------
-![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/architecture.png)
+![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/architecture.png)
 
 SSM polls metrics from NameNode. These metrics are analyzed by SSM as specified by rules, and if conditions of some rule are fulfilled then it will execute the corresponding actions. 
 
