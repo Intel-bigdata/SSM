@@ -87,4 +87,8 @@ public class CmdletDispatcher {
       service.shutdown();
     }
   }
+
+  public int getNumberOfExecutorServices() {
+    return executorServices.size();
+  }
 }

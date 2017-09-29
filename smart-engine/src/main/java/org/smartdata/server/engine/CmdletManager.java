@@ -97,7 +97,7 @@ public class CmdletManager extends AbstractService {
     super(context);
 
     this.metaStore = context.getMetaStore();
-    this.executorService = Executors.newSingleThreadScheduledExecutor();
+    this.executorService = Executors.newScheduledThreadPool(2);
     this.dispatcher = new CmdletDispatcher(context, this);
     this.runningCmdlets = new ArrayList<>();
     this.pendingCmdlet = new LinkedList<>();
@@ -138,8 +138,9 @@ public class CmdletManager extends AbstractService {
 
   @Override
   public void start() throws IOException {
+    executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50,  TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(
-        new ScheduleTask(this.dispatcher), 200, 100, TimeUnit.MILLISECONDS);
+        new DispatchTask(this.dispatcher), 200, 100, TimeUnit.MILLISECONDS);
     for (ActionSchedulerService s : schedulerServices) {
       s.start();
     }
@@ -256,8 +257,8 @@ public class CmdletManager extends AbstractService {
     return filesToLock.keySet();
   }
 
-  public void scheduleCmdlet() throws IOException {
-    int maxScheduled = 10;
+  public int scheduleCmdlet() throws IOException {
+    int nScheduled = 0;
 
     synchronized (pendingCmdlet) {
       if (pendingCmdlet.size() > 0) {
@@ -267,7 +268,7 @@ public class CmdletManager extends AbstractService {
     }
 
     Iterator<Long> it = schedulingCmdlet.iterator();
-    while (maxScheduled > 0 && it.hasNext()) {
+    while (it.hasNext()) {
       long id = it.next();
       CmdletInfo cmdlet = idToCmdlets.get(id);
       synchronized (cmdlet) {
@@ -287,6 +288,7 @@ public class CmdletManager extends AbstractService {
               idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
               cmdlet.setState(CmdletState.SCHEDULED);
               scheduledCmdlet.add(id);
+              nScheduled++;
             } else if (result == ScheduleResult.FAIL) {
               cmdlet.updateState(CmdletState.CANCELLED);
               CmdletStatusUpdate msg =new CmdletStatusUpdate(cmdlet.getCid(),
@@ -306,11 +308,11 @@ public class CmdletManager extends AbstractService {
               flushActionInfos(removed);
               onCmdletStatusUpdate(msg);
             }
-            maxScheduled--;
             break;
         }
       }
     }
+    return nScheduled;
   }
 
   private ScheduleResult scheduleCmdletActions(CmdletInfo info, LaunchCmdlet launchCmdlet) {
@@ -390,9 +392,6 @@ public class CmdletManager extends AbstractService {
   }
 
   public LaunchCmdlet getNextCmdletToRun() throws IOException {
-    if (scheduledCmdlet.size() == 0) {
-      scheduleCmdlet();
-    }
     Long cmdletId = scheduledCmdlet.poll();
     if (cmdletId == null) {
       return null;
@@ -796,9 +795,27 @@ public class CmdletManager extends AbstractService {
   }
 
   private class ScheduleTask implements Runnable {
+    public ScheduleTask() {
+    }
+
+    @Override
+    public void run() {
+      try {
+        int nScheduled;
+        do {
+          nScheduled = scheduleCmdlet();
+        } while (nScheduled != 0);
+      } catch (IOException e) {
+        LOG.error("Exception when Scheduling Cmdlet. "
+            + scheduledCmdlet.size() + " cmdlets are pending for dispatch.", e);
+      }
+    }
+  }
+
+  private class DispatchTask implements Runnable {
     private final CmdletDispatcher dispatcher;
 
-    public ScheduleTask(CmdletDispatcher dispatcher) {
+    public DispatchTask(CmdletDispatcher dispatcher) {
       this.dispatcher = dispatcher;
     }
 
