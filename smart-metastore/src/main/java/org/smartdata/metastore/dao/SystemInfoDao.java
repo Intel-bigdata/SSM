@@ -53,7 +53,7 @@ public class SystemInfoDao {
 
   public List<SystemInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME, new SystemInfoRowMapper());
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME, new SystemInfoRowMapper());
   }
 
   public boolean containsProperty(String property) {
@@ -63,7 +63,7 @@ public class SystemInfoDao {
   private List<SystemInfo> list(String property) {
     return new JdbcTemplate(dataSource)
         .query(
-            "select * from " + TABLE_NAME + " where property = ?",
+            "SELECT * FROM " + TABLE_NAME + " WHERE property = ?",
             new Object[] {property},
             new SystemInfoRowMapper());
   }
@@ -75,14 +75,14 @@ public class SystemInfoDao {
 
   public List<SystemInfo> getByProperties(List<String> properties) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from " + TABLE_NAME + " where property IN (?)",
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE property IN (?)",
         new Object[]{StringUtils.join(properties, ",")},
         new SystemInfoRowMapper());
   }
 
   public void delete(String property) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from " + TABLE_NAME + " where property = ?";
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE property = ?";
     jdbcTemplate.update(sql, property);
   }
 
@@ -106,13 +106,13 @@ public class SystemInfoDao {
 
   public int update(SystemInfo systemInfo) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update " + TABLE_NAME + " set value = ? WHERE property = ?";
+    String sql = "UPDATE " + TABLE_NAME + " SET value = ? WHERE property = ?";
     return jdbcTemplate.update(sql, systemInfo.getValue(), systemInfo.getProperty());
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE from " + TABLE_NAME;
+    final String sql = "DELETE FROM " + TABLE_NAME;
     jdbcTemplate.execute(sql);
   }
 

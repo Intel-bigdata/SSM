@@ -51,37 +51,37 @@ public class GlobalConfigDao {
 
   public List<GlobalConfig> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from global_config", new GlobalConfigRowMapper());
+    return jdbcTemplate.query("SELECT * FROM global_config", new GlobalConfigRowMapper());
   }
 
   public List<GlobalConfig> getByIds(List<Long> cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("select * from global_config WHERE cid IN (?)",
+    return jdbcTemplate.query("SELECT * FROM global_config WHERE cid IN (?)",
         new Object[]{StringUtils.join(cid, ",")},
         new GlobalConfigRowMapper());
   }
 
   public GlobalConfig getById(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from global_config WHERE cid = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM global_config WHERE cid = ?",
         new Object[]{cid}, new GlobalConfigRowMapper());
   }
 
   public GlobalConfig getByPropertyName(String property_name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select * from global_config WHERE property_name = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM global_config WHERE property_name = ?",
         new Object[]{property_name}, new GlobalConfigRowMapper());
   }
 
   public void deleteByName(String property_name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from global_config where property_name = ?";
+    final String sql = "DELETE FROM global_config WHERE property_name = ?";
     jdbcTemplate.update(sql, property_name);
   }
 
   public void delete(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "delete from global_config where cid = ?";
+    final String sql = "DELETE FROM global_config WHERE cid = ?";
     jdbcTemplate.update(sql, cid);
   }
 
@@ -112,12 +112,12 @@ public class GlobalConfigDao {
 
   public long getCountByName(String name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("select COUNT(*) FROM global_config WHERE property_name = ?",Long.class,name);
+    return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM global_config WHERE property_name = ?",Long.class,name);
   }
 
   public int update(String property_name, String property_value) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "update global_config set property_value = ? WHERE property_name = ?";
+    String sql = "UPDATE global_config SET property_value = ? WHERE property_name = ?";
     return jdbcTemplate.update(sql, property_value, property_name);
   }
 
