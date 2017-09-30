@@ -51,7 +51,6 @@ public class DataXceiverServer implements Runnable {
   public void initServer() {
   }
 
-
   @Override
   public void run() {
     Peer peer = null;

@@ -15,17 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.data;
+package org.smartdata.server.engine.cmdlet.agent;
 
-public class DataXceiver implements Runnable {
+import org.smartdata.AgentService;
 
-  public DataXceiver() {
-    
+import java.io.IOException;
+
+public class AgentDataXService extends AgentService {
+  public static final String NAME = "AgentDataXService";
+
+  public AgentDataXService() {
   }
 
-  public void run() {
+  @Override
+  public void init() throws IOException {
+    SmartAgentContext context = (SmartAgentContext) getContext();
+  }
 
+  @Override
+  public void start() throws IOException {
+  }
+
+  @Override
+  public void stop() throws IOException {
   }
 
 
+  @Override
+  public void execute(Message message) throws Exception {
+    // 
+  }
+
+  @Override
+  public String getServiceName() {
+    return NAME;
+  }
 }
