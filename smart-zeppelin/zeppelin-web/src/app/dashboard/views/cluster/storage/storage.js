@@ -16,29 +16,36 @@ import PiechartVisualization from '../../../../visualization/builtins/visualizat
 angular.module('zeppelinWebApp').controller('StorageCtrl', StorageCtrl);
 StorageCtrl.$inject = ['$scope', 'cache', 'ssd', 'disk', 'archive'];
 function StorageCtrl($scope, cache, ssd, disk, archive) {
+  var targetEls = new Array();
   var tableData = {
     columns: [
       {name: "usage", index: 0, aggr: "sum"},
       {name: "value", index: 1, aggr: "sum"}
     ],
-    comment: "",
-    rows: [
-      ["used", 0],
-      ["free", 0]
-    ]
+    comment: ""
   };
   var config = {};
 
+  var getGB = function (value) {
+    var result = (value / (1024 * 1024 * 1024)).toFixed(2);
+    return result;
+  }
+
   var initPieChart = function(targetEl, data) {
+    console.log(targetEls.length);
+    if (data.total === 0) {
+      targetEl.remove();
+      return;
+    }
     //get pie chart data.
     var rows = [];
-    rows[0] = ['Used', data.used];
-    rows[1] = ['free', data.total - data.used];
+    rows[0] = ['Used(G)', getGB(data.used)];
+    rows[1] = ['Free(G)', getGB(data.total - data.used)];
     tableData.rows = rows;
-    console.log('tableData', tableData);
 
     //generate pie chart.
-    targetEl.height(336);
+    targetEl.height(536);
+    targetEls.push(targetEl);
     var builtInViz = new PiechartVisualization(targetEl, config);
     var transformation = builtInViz.getTransformation();
     var transformed = transformation.transform(tableData);
@@ -54,4 +61,5 @@ function StorageCtrl($scope, cache, ssd, disk, archive) {
   initPieChart(angular.element('#ssd'), ssd.body);
   initPieChart(angular.element('#disk'), disk.body);
   initPieChart(angular.element('#archive'), archive.body);
+
 }

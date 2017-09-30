@@ -120,7 +120,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         controller: 'RulesCtrl',
         resolve: {
           rules0: ['models', function (models) {
-            return models.$get.ru1les();
+            return models.$get.rules();
           }]
         }
       })
