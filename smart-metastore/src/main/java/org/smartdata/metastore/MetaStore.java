@@ -829,6 +829,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteCmdletActions(long cmdletId) throws MetaStoreException {
+    try {
+      actionDao.deleteCmdletActions(cmdletId);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteAllActions() throws MetaStoreException {
     try {
       actionDao.deleteAll();
@@ -1055,6 +1063,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throws MetaStoreException {
     try {
       return fileDiffDao.insert(fileDiff) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public synchronized void insertFileDiffs(FileDiff[] fileDiffs)
+      throws MetaStoreException {
+    try {
+      fileDiffDao.insert(fileDiffs);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
