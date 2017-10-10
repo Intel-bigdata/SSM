@@ -829,6 +829,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteCmdletActions(long cmdletId) throws MetaStoreException {
+    try {
+      actionDao.deleteCmdletActions(cmdletId);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteAllActions() throws MetaStoreException {
     try {
       actionDao.deleteAll();
@@ -1055,6 +1063,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throws MetaStoreException {
     try {
       return fileDiffDao.insert(fileDiff) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public synchronized void insertFileDiffs(FileDiff[] fileDiffs)
+      throws MetaStoreException {
+    try {
+      fileDiffDao.insert(fileDiffs);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1338,6 +1355,97 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  //need to be triggered when DataNodeStorageInfo table is changed
+  public void updateStorageTable(String storageType, long capacity, long free) throws MetaStoreException {
+    try {
+      if (!judgeTheRecordIfExist(storageType)) {
+        StorageCapacity storageCapacity = new StorageCapacity(storageType, capacity, free);
+        //insert
+        StorageCapacity storageCapacityList[] = new StorageCapacity[1];
+        storageCapacityList[0] = storageCapacity;
+        insertStoragesTable(storageCapacityList);
+      } else {
+        updateStoragesTable(storageType, capacity, free);
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public boolean judgeTheRecordIfExist(String storageType) throws MetaStoreException {
+    try {
+      if (storageDao.getCountOfStorageType(storageType) < 1) {
+        return false;
+      } else {
+        return true;
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  //need to be triggered when DataNodeStorageInfo table is changed
+  public long getStoreCapacityOfDifferentStorageType(String storageType) throws MetaStoreException {
+    try {
+      int sid = 0;
+
+      if (storageType.equals("ram")) {
+        sid = 0;
+      }
+
+      if (storageType.equals("ssd")) {
+        sid = 1;
+      }
+
+      if (storageType.equals("disk")) {
+        sid = 2;
+      }
+
+      if (storageType.equals("archive")) {
+        sid = 3;
+      }
+      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(sid);
+      long allCapacity = 0;
+      for (DataNodeStorageInfo info : lists) {
+        allCapacity = allCapacity + info.getCapacity();
+      }
+      return allCapacity;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  //need to be triggered when DataNodeStorageInfo table is changed
+  public long getStoreFreeOfDifferentStorageType(String storageType) throws MetaStoreException {
+    try {
+      int sid = 0;
+
+      if (storageType.equals("ram")) {
+        sid = 0;
+      }
+
+      if (storageType.equals("ssd")) {
+        sid = 1;
+      }
+
+      if (storageType.equals("disk")) {
+        sid = 2;
+      }
+
+      if (storageType.equals("archive")) {
+        sid = 3;
+      }
+      List<DataNodeStorageInfo> lists = dataNodeStorageInfoDao.getBySid(sid);
+      long allFree = 0;
+      for (DataNodeStorageInfo info : lists) {
+        allFree = allFree + info.getRemaining();
+      }
+      return allFree;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<DataNodeStorageInfo> getDataNodeStorageInfoByUuid(String uuid)
       throws MetaStoreException {
     try {
@@ -1348,6 +1456,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
+
 
   public List<DataNodeStorageInfo> getAllDataNodeStorageInfo()
       throws MetaStoreException {

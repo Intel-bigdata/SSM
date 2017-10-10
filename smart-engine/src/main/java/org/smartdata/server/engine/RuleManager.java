@@ -162,7 +162,7 @@ public class RuleManager extends AbstractService {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     try {
       if (dropPendingCmdlets && getCmdletManager() != null) {
-        getCmdletManager().deleteCmdletByRule(infoRepo.getRuleInfo().getId());
+        getCmdletManager().deleteCmdletByRule(ruleID);
       }
     } finally {
       infoRepo.delete();
@@ -178,6 +178,9 @@ public class RuleManager extends AbstractService {
       throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     infoRepo.disable();
+    if (dropPendingCmdlets && getCmdletManager() != null) {
+      getCmdletManager().dropRuleCmdlets(ruleID);
+    }
   }
 
   private RuleInfoRepo checkIfExists(long ruleID) throws IOException {

@@ -11,13 +11,15 @@ To overcome the challenge, we introduced a comprehensive end-to-end solution, ak
 High Level Goals
 ------------
 ### 1. Enhancement for HDFS-HSM and HDFS-Cache
-**Automatically** and **smartly** adjusting storage policies and options in favor of data temperature. Note this is approaching completion.
+**Automatically** and **smartly** adjusting storage policies and options in favor of data temperature. Already released.
 ### 2. Support block level erasure coding
 Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also **Hadoop 2.x**. Ref. the [block level erasure coding design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/block-level-ec.md).
 ### 3. Small files support and compaction
 Optimizing NameNode to support even larger namespace, eliminating the inodes of small files from memory. Support both write and read. Ref. the [HDFS small files support design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/small-file-solution.md).
-### 4. Cluster Disaster Recovery
-Supporting transparent fail-over for applications. Here is the [HDFS disaster recovery design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/disaster-recovery.md) document. 
+### 4. Cluster Data Copy and Disaster Recovery
+Supporting transparent fail-over for applications. Here is the [HDFS disaster recovery design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/disaster-recovery.md) document. The 1st stage already released. 
+### 5. Transparent HDFS Data Compression
+Supporting transparent HDFS data compression, note it's not Hadoop compression, which needs to be explictly called by applications and frameworks like MR. Under prototyping and design coming soon. 
 
 High Level Considerations
 ------------
@@ -60,6 +62,7 @@ HDFS-SSM development is separated into 3 major phases. Currently the Phase 1 wor
 * Small files support and compaction;
 * Cluster disaster recovery;
 * Support block level erasure coding;
+* Transparent HDFS data compression;
 * To support the new desired actions, enhance the SSM framework and infrastructure.
 
 **Phase 3.** Optimize further for computing frameworks and workloads benefiting from SSM offerings and facilities:

@@ -68,6 +68,8 @@ public class SmartConfKeys {
   // Action
   public final static String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
   public final static long SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
+  public final static String SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY = "smart.action.local.execution.disabled";
+  public final static boolean SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT = false;
 
   // SmartAgent
   public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";

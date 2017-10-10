@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class TestDataNodeInfoFetcher extends TestDaoUtil {
+public abstract class TestDataNodeInfoFetcher extends TestDaoUtil {
 
   private MetaStore metaStore;
   protected MiniDFSCluster cluster;

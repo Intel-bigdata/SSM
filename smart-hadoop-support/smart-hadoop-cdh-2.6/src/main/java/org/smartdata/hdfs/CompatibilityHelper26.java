@@ -17,6 +17,8 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
@@ -26,11 +28,14 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -108,5 +113,21 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
   @Override
   public Event.AppendEvent getAppendEvent(InotifyProtos.AppendEventProto proto) {
     return new Event.AppendEvent.Builder().path(proto.getPath()).build();
+  }
+
+  @Override
+  public boolean truncate(DFSClient client, String src, long newLength) throws IOException {
+    throw new UnsupportedOperationException("Hadoop 2.6 does not support truncate.");
+  }
+
+  @Override
+  public boolean truncate(DistributedFileSystem fs, String src, long newLength) throws IOException {
+    throw new UnsupportedOperationException("Hadoop 2.6 does not support truncate.");
+  }
+
+  @Override
+  public int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage) {
+    StorageType storageType = datanodeStorage.getStorageType();
+    return storageType.ordinal();
   }
 }

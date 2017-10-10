@@ -44,7 +44,8 @@ import java.util.Map;
     actionId = "copy",
     displayName = "copy",
     usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
-        " $dest "  + CopyFileAction.OFFSET_INDEX + " $offset" + CopyFileAction.LENGTH +
+        " $dest " + CopyFileAction.OFFSET_INDEX + " $offset" +
+        CopyFileAction.LENGTH +
         " $length" + CopyFileAction.BUF_SIZE + " $size"
 )
 public class CopyFileAction extends HdfsAction {
@@ -65,7 +66,8 @@ public class CopyFileAction extends HdfsAction {
   public void init(Map<String, String> args) {
     try {
       this.conf = getContext().getConf();
-      String nameNodeURL = this.conf.get(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
+      String nameNodeURL =
+          this.conf.get(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY);
       conf.set(DFSConfigKeys.FS_DEFAULT_NAME_KEY, nameNodeURL);
     } catch (NullPointerException e) {
       this.conf = new Configuration();
@@ -80,10 +82,10 @@ public class CopyFileAction extends HdfsAction {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
     if (args.containsKey(OFFSET_INDEX)) {
-      offset = Integer.valueOf(args.get(OFFSET_INDEX));
+      offset = Long.valueOf(args.get(OFFSET_INDEX));
     }
     if (args.containsKey(LENGTH)) {
-      length = Integer.valueOf(args.get(LENGTH));
+      length = Long.valueOf(args.get(LENGTH));
     }
   }
 
@@ -109,30 +111,36 @@ public class CopyFileAction extends HdfsAction {
     if (length != 0) {
       copyWithOffset(srcPath, destPath, bufferSize, offset, length);
     }
+    appendLog("Copy Successfully!!");
   }
 
   private boolean copySingleFile(String src, String dest) throws IOException {
     //get The file size of source file
     long fileSize = getFileSize(src);
-    return copyWithOffset(src,dest,2048,0,fileSize);
+    appendLog(
+        String.format("Copy the whole file with length %s", fileSize));
+    return copyWithOffset(src, dest, bufferSize, 0, fileSize);
   }
 
-  private boolean copyWithOffset(String src, String dest, int bufferSize, long offset, long length) throws IOException {
+  private boolean copyWithOffset(String src, String dest, int bufferSize,
+      long offset, long length) throws IOException {
+    appendLog(
+        String.format("Copy with offset %s and length %s", offset, length));
     InputStream in = null;
     OutputStream out = null;
 
     try {
       in = getSrcInputStream(src);
       out = getDestOutPutStream(dest);
-
       //skip offset
       in.skip(offset);
-
       byte[] buf = new byte[bufferSize];
       long bytesRemaining = length;
 
       while (bytesRemaining > 0L) {
-        int bytesToRead = (int) (bytesRemaining < (long) buf.length ? bytesRemaining : (long) buf.length);
+        int bytesToRead =
+            (int) (bytesRemaining < (long) buf.length ? bytesRemaining :
+                (long) buf.length);
         int bytesRead = in.read(buf, 0, bytesToRead);
         if (bytesRead == -1) {
           break;
@@ -140,7 +148,6 @@ public class CopyFileAction extends HdfsAction {
         out.write(buf, 0, bytesRead);
         bytesRemaining -= (long) bytesRead;
       }
-
       return true;
     } finally {
       if (out != null) {
@@ -182,12 +189,13 @@ public class CopyFileAction extends HdfsAction {
       try {
         replication = fs.getServerDefaults(new Path(dest)).getReplication();
         if (replication != DFSConfigKeys.DFS_REPLICATION_DEFAULT) {
-          LOG.debug("Remote Replications =" + replication);
+          appendLog("Remote Replications =" + replication);
         }
       } catch (IOException e) {
         LOG.debug("Get Server default replication error!", e);
       }
       if (fs.exists(new Path(dest))) {
+        appendLog("Append to existing file " + dest);
         return fs.append(new Path(dest));
       }
       return fs.create(new Path(dest), (short) replication);

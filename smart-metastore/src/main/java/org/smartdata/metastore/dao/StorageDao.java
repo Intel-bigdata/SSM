@@ -147,6 +147,13 @@ public class StorageDao {
         });
   }
 
+  public int getCountOfStorageType(String type) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT COUNT(*) FROM storage WHERE type = ?";
+
+    return jdbcTemplate.queryForObject(sql, Integer.class, type);
+  }
+
   public synchronized boolean updateStoragesTable(String type
       , Long capacity, Long free) throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
