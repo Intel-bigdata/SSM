@@ -46,7 +46,8 @@ import java.util.Map;
     usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
         " $dest " + CopyFileAction.OFFSET_INDEX + " $offset" +
         CopyFileAction.LENGTH +
-        " $length" + CopyFileAction.BUF_SIZE + " $size"
+        " $length" + CopyFileAction.BUF_SIZE + " $size" +
+        CopyFileAction.OVERWRITE + " $overWrite"
 )
 public class CopyFileAction extends HdfsAction {
   private static final Logger LOG =
@@ -55,10 +56,12 @@ public class CopyFileAction extends HdfsAction {
   public static final String DEST_PATH = "-dest";
   public static final String OFFSET_INDEX = "-offset";
   public static final String LENGTH = "-length";
+  public static final String OVERWRITE = "-overWrite";
   private String srcPath;
   private String destPath;
   private long offset = 0;
   private long length = 0;
+  private boolean overWrite = false;
   private int bufferSize = 64 * 1024;
   private Configuration conf;
 
@@ -86,6 +89,9 @@ public class CopyFileAction extends HdfsAction {
     }
     if (args.containsKey(LENGTH)) {
       length = Long.valueOf(args.get(LENGTH));
+    }
+    if (args.containsKey(OVERWRITE)) {
+      overWrite = Boolean.valueOf(args.get(OVERWRITE));
     }
   }
 
@@ -194,11 +200,13 @@ public class CopyFileAction extends HdfsAction {
       } catch (IOException e) {
         LOG.debug("Get Server default replication error!", e);
       }
-      if (fs.exists(new Path(dest))) {
+      if (fs.exists(new Path(dest)) && !overWrite) {
         appendLog("Append to existing file " + dest);
         return fs.append(new Path(dest));
+      } else {
+        return fs.create(new Path(dest), overWrite, (short) replication);
       }
-      return fs.create(new Path(dest), (short) replication);
+
     } else {
       // Copy between different dirs of the same cluster
       // TODO local append
