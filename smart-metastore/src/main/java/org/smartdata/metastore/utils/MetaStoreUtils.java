@@ -353,6 +353,23 @@ public class MetaStoreUtils {
           LOG.warn("Database URL not specified, using " + purl);
         }
 
+        if (purl.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+          String dbName;
+          String[] dbNameNotAllowed = new String[]{
+                  "mysql", "sys", "information_schema", "INFORMATION_SCHEMA", "performance_schema", "PERFORMANCE_SCHEMA"
+          };
+          if (purl.contains("?")) {
+            dbName = purl.substring(purl.indexOf("/", 13) + 1, purl.indexOf("?"));
+          } else {
+            dbName = purl.substring(purl.lastIndexOf("/") + 1, purl.length());
+          }
+          for (String name : dbNameNotAllowed) {
+            if (dbName.equals(name)) {
+              throw new MetaStoreException(String.format("The database %s should not be used for SSM, please configure druid.xml with other one.", name));
+            }
+          }
+        }
+
         for (String key : p.stringPropertyNames()) {
           LOG.info("\t" + key + " = " + p.getProperty(key));
         }
