@@ -22,7 +22,6 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveEntry;
 import org.apache.hadoop.hdfs.protocol.CacheDirectiveInfo;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
-import org.apache.hadoop.hdfs.server.namenode.CachePool;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,10 +156,8 @@ public class CachedListFetcher {
         }
         long cacheUsage = 0;
         if (!cacheDirectives.hasNext()) {
-          StorageCapacity storageCapacity = new StorageCapacity("cache",cacheMaxSize,cacheMaxSize-cacheUsage);
-          StorageCapacity storageCapacityList[] = new StorageCapacity[1];
-          storageCapacityList[0] = storageCapacity;
-          metaStore.insertStoragesTable(storageCapacityList);
+          metaStore.insertUpdateStoragesTable(
+              new StorageCapacity("cache", cacheMaxSize, cacheMaxSize - cacheUsage));
           clearAll();
           return;
         }
@@ -176,15 +173,8 @@ public class CachedListFetcher {
 
 
         //add cache information into metastore
-        if (!metaStore.judgeTheRecordIfExist("cache")) {
-          StorageCapacity storageCapacity = new StorageCapacity("cache", cacheMaxSize, cacheMaxSize - cacheUsage);
-          //insert
-          StorageCapacity storageCapacityList[] = new StorageCapacity[1];
-          storageCapacityList[0] = storageCapacity;
-          metaStore.insertStoragesTable(storageCapacityList);
-        } else {
-          metaStore.updateStoragesTable("cache", cacheMaxSize, cacheMaxSize - cacheUsage);
-        }
+        metaStore.insertUpdateStoragesTable(
+            new StorageCapacity("cache", cacheMaxSize, cacheMaxSize - cacheUsage));
 
         // Delete all records to avoid conflict
         // metaStore.deleteAllCachedFile();
