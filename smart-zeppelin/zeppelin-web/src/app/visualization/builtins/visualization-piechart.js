@@ -80,4 +80,8 @@ export default class PiechartVisualization extends Nvd3ChartVisualization {
 	 .showLabels(false)
 	 .showTooltipPercent(true);
   };
+
+  donut() {
+    this.chart.donut(true).donutRatio(0.7);
+  }
 }
