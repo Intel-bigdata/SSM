@@ -354,7 +354,12 @@ public class MetaStoreUtils {
         }
 
         for (String key : p.stringPropertyNames()) {
-          LOG.info("\t" + key + " = " + p.getProperty(key));
+          if(key.equals("password")){
+            LOG.info("\t" + key + " = **********" );
+          }
+          else{
+            LOG.info("\t" + key + " = " + p.getProperty(key));
+          }
         }
         return new MetaStore(new DruidPool(p));
       } catch (Exception e) {
