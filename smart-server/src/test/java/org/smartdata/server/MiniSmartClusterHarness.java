@@ -41,8 +41,6 @@ public class MiniSmartClusterHarness extends MiniClusterWithStoragesHarness {
   private String dbFile;
   private String dbUrl;
 
-  public static final int DEFAULT_BLOCK_SIZE = 100;
-
   @Before
   @Override
   public void init() throws Exception {
