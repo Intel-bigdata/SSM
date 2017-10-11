@@ -354,9 +354,9 @@ public class MetaStoreUtils {
         }
 
         for (String key : p.stringPropertyNames()) {
-          if(key.equals("password")){
+          if(key.equals("password")) {
             LOG.info("\t" + key + " = **********" );
-          } else{
+          } else {
             LOG.info("\t" + key + " = " + p.getProperty(key));
           }
         }
