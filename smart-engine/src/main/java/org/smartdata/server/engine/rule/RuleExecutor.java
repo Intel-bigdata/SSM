@@ -72,7 +72,7 @@ public class RuleExecutor implements Runnable {
   }
 
   public RuleExecutor(RuleManager ruleManager, ExecutionContext ctx,
-      TranslateResult tr, MetaStore adapter,long lastCheckTime) {
+      TranslateResult tr, MetaStore adapter, long lastCheckTime) {
     this.ruleManager = ruleManager;
     this.ctx = ctx;
     this.tr = tr;
