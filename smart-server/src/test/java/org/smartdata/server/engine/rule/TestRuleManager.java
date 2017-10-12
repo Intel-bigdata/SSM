@@ -223,7 +223,8 @@ public class TestRuleManager extends TestDaoUtil {
 
     System.out.println("\nFinal state:");
     List<RuleInfo> allRules = ruleManager.listRulesInfo();
-    Assert.assertTrue(allRules.size() == 2 * nRules);
+    // Deleted rules are not included in the list
+    Assert.assertTrue(allRules.size() == nRules);
     for (RuleInfo info : allRules) {
       System.out.println(info);
     }
