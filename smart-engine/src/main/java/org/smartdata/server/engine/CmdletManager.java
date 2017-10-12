@@ -130,9 +130,99 @@ public class CmdletManager extends AbstractService {
           schedulers.put(a, s);
         }
       }
+      // reload pending cmdlets from metastore
+      reloadPendingCmdlets();
     } catch (Exception e) {
       LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
       throw new IOException(e);
+    }
+  }
+
+  private void reloadPendingCmdlets() throws IOException {
+    LOG.info("Reloading Pending Cmdlets from Database.");
+    List<CmdletInfo> cmdletInfos = null;
+    try {
+      cmdletInfos = metaStore.getCmdlets(CmdletState.PENDING);
+    } catch (MetaStoreException e) {
+      LOG.error("Get pending cmdlets from database error!");
+      return;
+    }
+    if (cmdletInfos == null || cmdletInfos.size() == 0){
+      return;
+    }
+    for (CmdletInfo cmdletInfo : cmdletInfos) {
+      LOG.debug(
+          String.format("Reload Cmdlet -> [ %s ]", cmdletInfo.getParameters()));
+      CmdletDescriptor cmdletDescriptor;
+      try {
+        cmdletDescriptor =
+            CmdletDescriptor.fromCmdletString(cmdletInfo.getParameters());
+      } catch (ParseException e) {
+        LOG.error("Cmdlet ->[ {} ] parse error!", cmdletInfo.getParameters());
+        continue;
+      }
+      List<ActionInfo> actionInfos = null;
+      boolean actionsInDB = false;
+      if (cmdletInfo.getAids().size() == 0) {
+        // TODO reload unfinished actions
+        actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
+      } else {
+        try {
+          actionInfos = metaStore.getActions(cmdletInfo.getAids());
+        } catch (MetaStoreException e) {
+          LOG.error("Get aids -> [ {} ] from database error!", cmdletInfo.getAids());
+          cmdletInfo.setState(CmdletState.FAILED);
+          continue;
+        }
+        actionsInDB = true;
+      }
+
+      LOG.debug(String.format("Received Cmdlet -> [ %s ]",
+          cmdletDescriptor.getCmdletString()));
+      for (ActionInfo actionInfo : actionInfos) {
+        for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+          if (!p.onSubmit(actionInfo)) {
+            throw new IOException(
+                String.format("Action rejected by scheduler", actionInfo));
+          }
+        }
+        cmdletInfo.addAction(actionInfo.getActionId());
+      }
+      for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
+        if (!ActionRegistry
+            .registeredAction(cmdletDescriptor.getActionName(index))) {
+          throw new IOException(
+              String.format(
+                  "Submit Cmdlet %s error! Action names are not correct!",
+                  cmdletInfo));
+        }
+      }
+      Set<String> filesLocked = lockMovefileActionFiles(actionInfos);
+      try {
+        if (!actionsInDB) {
+          metaStore.insertActions(
+              actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+        }
+      } catch (MetaStoreException e) {
+        LOG.error("Submit Command {} to DB error!", cmdletInfo);
+        try {
+          for (String file : filesLocked) {
+            fileLocks.remove(file);
+          }
+          metaStore.deleteCmdlet(cmdletInfo.getCid());
+        } catch (MetaStoreException e1) {
+          LOG.error("Delete Command {} from DB error!", cmdletInfo, e);
+        }
+        throw new IOException(e);
+      }
+
+      for (ActionInfo actionInfo : actionInfos) {
+        idToActions.put(actionInfo.getActionId(), actionInfo);
+      }
+      idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
+      synchronized (pendingCmdlet) {
+        pendingCmdlet.add(cmdletInfo.getCid());
+      }
     }
   }
 
@@ -201,7 +291,7 @@ public class CmdletManager extends AbstractService {
     Set<String> filesLocked = lockMovefileActionFiles(actionInfos);
 
     try {
-      metaStore.insertCmdletTable(cmdletInfo);
+      metaStore.insertCmdlet(cmdletInfo);
       metaStore.insertActions(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("Submit Command {} to DB error!", cmdletInfo);

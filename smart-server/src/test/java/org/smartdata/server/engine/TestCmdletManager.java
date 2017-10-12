@@ -128,7 +128,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
       CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
       123178333l, 232444994l);
     CmdletInfo[] cmdlets = {cmdletInfo};
-    metaStore.insertCmdletsTable(cmdlets);
+    metaStore.insertCmdlets(cmdlets);
 
     CmdletManager cmdletManager = ssm.getCmdletManager();
     Assert.assertTrue(cmdletManager.listCmdletsInfo(1, null).size() == 1);
@@ -164,7 +164,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
 
     cmdletManager.start();
     cmdletManager.submitCmdlet("hello");
-    verify(metaStore, times(1)).insertCmdletTable(any(CmdletInfo.class));
+    verify(metaStore, times(1)).insertCmdlet(any(CmdletInfo.class));
     verify(metaStore, times(1)).insertActions(any(ActionInfo[].class));
 
     Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
