@@ -1,4 +1,4 @@
-Deployment SSM with Hadoop(CDH5.10.1 or Hadoop 2.7)Guide
+Deployment SSM with Hadoop(CDH5.10.1 or Hadoop 2.7) Guide
 ----------------------------------------------------------------------------------
 Requirements:
 
@@ -97,7 +97,7 @@ Configure SSM
        <name>smart.agent.master.address</name>
        <value>SmartServer-ip:7051</value>
        <description>SmartAgent master address</description>
-     </property>
+   </property>
    ```
    
    [**This part is prone to change, will be updated soon**]
@@ -189,40 +189,39 @@ After install CDH5.10.1 or Hadoop 2.7, please do the following configurations,
 
 * **Hadoop `core-site.xml`**
 
-    Change property `fs.hdfs.impl` value, to point to the Smart Server provided "Smart
-File System".
-
-    ```xml
-        <property>
+    Change property `fs.hdfs.impl` value to point to Smart Server provided "Smart File System".
+    
+     ```xml
+    <property>
         <name>fs.hdfs.impl</name>
         <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
         <description>The FileSystem for hdfs URL</description>
-        </property>
+    </property>
     ```
 
 * **Hadoop `hdfs-site.xml`**
 
     Add property `smart.server.rpc.adddress` and `smart.server.rpc.port` to point to installed Smart Server.
 
-        ```xml
-        <property>
-         <name>smart.server.rpc.address</name>
-         <value>ssm-server-ip</value>
-        </property>
-        <property>
+    ```xml
+    <property>
+        <name>smart.server.rpc.address</name>
+        <value>ssm-server-ip</value>
+    </property>
+    <property>
         <name>smart.server.rpc.port</name>
         <value>7042</value>
-        </property> 
-        ```
+    </property> 
+    ```
 
      Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
 
-        ```xml
-        <property>
+     ```xml
+     <property>
          <name>dfs.datanode.data.dir</name>
-        <value>[SSD]file:///Users/drankye/workspace/tmp/disk_a,[DISK]file:///Users/drankye/workspace/tmp/disk_b,[ARCHIVE]file:///Users/drankye/workspace/tmp/disk_c</value>
-        </property>
-        ```
+         <value>[SSD]file:///Users/drankye/workspace/tmp/disk_a,[DISK]file:///Users/drankye/workspace/tmp/disk_b,[ARCHIVE]file:///Users/drankye/workspace/tmp/disk_c</value>
+     </property>
+     ```
 
 * **Make sure Hadoop HDFS Client can access SSM jars**
 
