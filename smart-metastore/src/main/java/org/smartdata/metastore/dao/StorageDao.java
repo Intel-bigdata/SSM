@@ -128,10 +128,10 @@ public class StorageDao {
     return jdbcTemplate.update(sql);
   }
 
-  public void insertStoragesTable(final StorageCapacity[] storages)
+  public void insertUpdateStoragesTable(final StorageCapacity[] storages)
       throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "INSERT INTO storage (type, capacity, free) VALUES (?,?,?);";
+    String sql = "REPLACE INTO storage (type, capacity, free) VALUES (?,?,?);";
     jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
           public void setValues(PreparedStatement ps,

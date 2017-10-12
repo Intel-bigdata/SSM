@@ -60,6 +60,7 @@ public class CopyScheduler extends ActionSchedulerService {
   private ScheduledExecutorService executorService;
   // Global variables
   private MetaStore metaStore;
+  private Configuration conf;
   // <File path, file diff id>
   private Map<String, Long> fileLock;
   // <actionId, file diff id>
@@ -91,6 +92,12 @@ public class CopyScheduler extends ActionSchedulerService {
     this.fileDiffMap = new ConcurrentHashMap<>();
     this.baseSyncQueue = new ConcurrentHashMap<>();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
+    try {
+      conf = getContext().getConf();
+    } catch (NullPointerException e) {
+      // If SmartContext is empty
+      conf = new Configuration();
+    }
   }
 
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
@@ -184,7 +191,6 @@ public class CopyScheduler extends ActionSchedulerService {
 
   public boolean onSubmit(ActionInfo actionInfo) {
     String path = actionInfo.getArgs().get("-file");
-    System.out.println("Submit file" + path + fileLock.keySet());
     LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
     // If locked then false
     return !isFileLocked(path);
@@ -284,7 +290,7 @@ public class CopyScheduler extends ActionSchedulerService {
       baseSyncQueue.put(src, dest);
       // directSync(src, dest);
     }
-    LOG.info("Base Sync: All files have been added to sync queue!");
+    LOG.debug("Base Sync: All files have been added to sync queue!");
     batchDirectSync();
   }
 
@@ -347,12 +353,6 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     // Primary
     long localLen = fileInfo.getLength();
-    Configuration conf = null;
-    try {
-      conf = getContext().getConf();
-    } catch (NullPointerException e) {
-      conf = new Configuration();
-    }
     // Get InputStream from URL
     FileSystem fs = null;
     // Get file statue from remote HDFS
@@ -378,7 +378,6 @@ public class CopyScheduler extends ActionSchedulerService {
 
   @Override
   public void start() throws IOException {
-    // TODO Enable this module later
     executorService.scheduleAtFixedRate(
         new CopyScheduler.ScheduleTask(), 0, checkInterval,
         TimeUnit.MILLISECONDS);
@@ -386,7 +385,6 @@ public class CopyScheduler extends ActionSchedulerService {
 
   @Override
   public void stop() throws IOException {
-    // TODO Enable this module later
     executorService.shutdown();
   }
 
@@ -408,7 +406,7 @@ public class CopyScheduler extends ActionSchedulerService {
         pendingDiffs = metaStore.getPendingDiff();
         diffPreProcessing(pendingDiffs);
       } catch (MetaStoreException e) {
-        LOG.debug("Sync fileDiffs error", e);
+        LOG.error("Sync fileDiffs error", e);
       }
     }
 
@@ -417,7 +415,7 @@ public class CopyScheduler extends ActionSchedulerService {
       // Merge all existing fileDiffs into fileChains
       LOG.debug("Size of Pending diffs", fileDiffs.size());
       if (fileDiffs.size() == 0 && baseSyncQueue.size() == 0) {
-        LOG.info("All Backup directories are synced");
+        LOG.debug("All Backup directories are synced");
         return;
       }
       for (FileDiff fileDiff : fileDiffs) {
@@ -533,6 +531,7 @@ public class CopyScheduler extends ActionSchedulerService {
         if (fileLock.containsKey(filePath)) {
           return;
         }
+        LOG.debug("Append Merge Triggered!");
         // Lock file to avoid File Chain being processed
         fileLock.put(filePath, -1L);
         long offset = Integer.MAX_VALUE;
@@ -574,6 +573,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
       @VisibleForTesting
       void mergeDelete(FileDiff fileDiff) throws MetaStoreException {
+        LOG.debug("Delete Merge Triggered!");
         boolean isCreate = false;
         for (long did : appendChain) {
           FileDiff diff = metaStore.getFileDiff(did);
@@ -614,6 +614,7 @@ public class CopyScheduler extends ActionSchedulerService {
         if (fileLock.containsKey(filePath)) {
           return;
         }
+        LOG.debug("Rename Merge Triggered!");
         // Lock file to avoid File Chain being processed
         fileLock.put(filePath, -1L);
         String newName = fileDiff.getParameters().get("-dest");

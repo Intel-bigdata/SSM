@@ -52,7 +52,7 @@ public class TestStorageDao extends TestDaoUtil {
     StorageCapacity[] storageCapacities = new StorageCapacity[2];
     storageCapacities[0] = new StorageCapacity("type1", 1l, 1l);
     storageCapacities[1] = new StorageCapacity("type2", 2l, 2l);
-    storageDao.insertStoragesTable(storageCapacities);
+    storageDao.insertUpdateStoragesTable(storageCapacities);
     Assert.assertTrue(storageDao.getStorageCapacity("type1").equals(storageCapacities[0]));
     Map<String, StorageCapacity> map = storageDao.getStorageTablesItem();
     Assert.assertTrue(map.get("type2").equals(storageCapacities[1]));

@@ -38,6 +38,7 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import com.mysql.jdbc.NonRegisteringDriver;
 
 /**
  * Utilities for table operations.
@@ -45,6 +46,9 @@ import java.util.Properties;
 public class MetaStoreUtils {
   public static final String SQLITE_URL_PREFIX = "jdbc:sqlite:";
   public static final String MYSQL_URL_PREFIX = "jdbc:mysql:";
+  public static final String[] dbNameNotAllowed = new String[]{
+          "mysql", "sys", "information_schema", "INFORMATION_SCHEMA", "performance_schema", "PERFORMANCE_SCHEMA"
+  };
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
 
   public static Connection createConnection(String url,
@@ -325,6 +329,12 @@ public class MetaStoreUtils {
     getDBAdapter(conf).formatDataBase();
   }
 
+  public static String getDBName(String url) throws SQLException {
+    NonRegisteringDriver nonRegisteringDriver = new NonRegisteringDriver();
+    Properties properties = nonRegisteringDriver.parseURL(url, null);
+    return properties.getProperty(nonRegisteringDriver.DBNAME_PROPERTY_KEY);
+  }
+
   public static MetaStore getDBAdapter(
       SmartConf conf) throws MetaStoreException {
     URL pathUrl = ClassLoader.getSystemResource("");
@@ -353,8 +363,21 @@ public class MetaStoreUtils {
           LOG.warn("Database URL not specified, using " + purl);
         }
 
+        if (purl.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+          String dbName = getDBName(purl);
+          for (String name : dbNameNotAllowed) {
+            if (dbName.equals(name)) {
+              throw new MetaStoreException(String.format("The database %s in mysql is for DB system use, please appoint other database in druid.xml.", name));
+            }
+          }
+        }
+
         for (String key : p.stringPropertyNames()) {
-          LOG.info("\t" + key + " = " + p.getProperty(key));
+          if(key.equals("password")) {
+            LOG.info("\t" + key + " = **********");
+          } else {
+            LOG.info("\t" + key + " = " + p.getProperty(key));
+          }
         }
         return new MetaStore(new DruidPool(p));
       } catch (Exception e) {
@@ -446,12 +469,7 @@ public class MetaStoreUtils {
       String url) throws MetaStoreException {
     try {
       Statement stat = conn.createStatement();
-      String dbName;
-      if (url.contains("?")) {
-        dbName = url.substring(url.indexOf("/", 13) + 1, url.indexOf("?"));
-      } else {
-        dbName = url.substring(url.lastIndexOf("/") + 1, url.length());
-      }
+      String dbName = getDBName(url);
       LOG.info("Drop All tables of Current DBname: " + dbName);
       ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
           + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");
