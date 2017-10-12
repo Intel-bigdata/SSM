@@ -49,6 +49,13 @@ Steps to enable authentication on WebUI
 
    Visit `http://ssm-server-ip:7045` to open the UI. 
 
+   
+   For more information about security configuration, please refer to official document   
+   
+   https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html
+   
+   or other shiro offical documents. 
+
 
 
 
