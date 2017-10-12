@@ -191,10 +191,10 @@ After install CDH5.10.1 or Hadoop 2.7, please do the following configurations,
 
     Change property `fs.hdfs.impl` value to point to Smart Server provided "Smart File System".
     
-     ```xml
+    ```xml
     <property>
         <name>fs.hdfs.impl</name>
-        <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
+        <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
         <description>The FileSystem for hdfs URL</description>
     </property>
     ```
@@ -236,16 +236,16 @@ implementation jars, so that HDFS, YARN and other upper layer applications can a
 	 * Add the above path to Hadoop/CDH classpath 
 
 
-After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if 
+     After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if 
 the configuration takes effect. You can try TestDFSIO for example, 
 
- 	a. write data
+ 	* write data
  
-	`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
+	  `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
    
- 	b. read data
+ 	* read data
 
-	`hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –read`
+	  `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –read`
 
    You may want to replace the jar with the version used in your cluster. After the read data opertion, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
 
