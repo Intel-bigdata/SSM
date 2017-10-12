@@ -216,7 +216,10 @@ public class RuleManager extends AbstractService {
     Collection<RuleInfoRepo> infoRepos = mapRules.values();
     List<RuleInfo> retInfos = new ArrayList<>();
     for (RuleInfoRepo infoRepo : infoRepos) {
-      retInfos.add(infoRepo.getRuleInfo());
+      RuleInfo info = infoRepo.getRuleInfo();
+      if (info.getState() != RuleState.DELETED) {
+        retInfos.add(info);
+      }
     }
     return retInfos;
   }

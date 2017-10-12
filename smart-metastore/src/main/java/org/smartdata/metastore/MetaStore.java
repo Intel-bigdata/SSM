@@ -30,6 +30,8 @@ import org.smartdata.metastore.dao.CacheFileDao;
 import org.smartdata.metastore.dao.ClusterConfigDao;
 import org.smartdata.metastore.dao.ClusterInfoDao;
 import org.smartdata.metastore.dao.CmdletDao;
+import org.smartdata.metastore.dao.DataNodeInfoDao;
+import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
 import org.smartdata.metastore.dao.GlobalConfigDao;
@@ -40,15 +42,17 @@ import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.SystemInfoDao;
 import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
-import org.smartdata.metastore.dao.DataNodeInfoDao;
-import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
+import org.smartdata.metastore.utils.MetaStoreUtils;
+import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.ActionInfo;
 import org.smartdata.model.BackUpInfo;
+import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.ClusterInfo;
-import org.smartdata.model.CmdletState;
-import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.DataNodeInfo;
+import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.FileAccessInfo;
@@ -57,15 +61,11 @@ import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
-import org.smartdata.model.RuleState;
-import org.smartdata.model.DataNodeInfo;
-import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.SystemInfo;
 import org.smartdata.model.XAttribute;
-import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metrics.FileAccessEvent;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
@@ -388,14 +388,19 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertStoragesTable(StorageCapacity[] storages)
+  public void insertUpdateStoragesTable(StorageCapacity[] storages)
       throws MetaStoreException {
     mapStorageCapacity = null;
     try {
-      storageDao.insertStoragesTable(storages);
+      storageDao.insertUpdateStoragesTable(storages);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  public void insertUpdateStoragesTable(StorageCapacity storage)
+      throws MetaStoreException {
+    insertUpdateStoragesTable(new StorageCapacity[] {storage});
   }
 
   public StorageCapacity getStorageCapacity(
@@ -1350,23 +1355,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throws MetaStoreException {
     try {
       dataNodeStorageInfoDao.insert(dataNodeStorageInfos);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
-  //need to be triggered when DataNodeStorageInfo table is changed
-  public void updateStorageTable(String storageType, long capacity, long free) throws MetaStoreException {
-    try {
-      if (!judgeTheRecordIfExist(storageType)) {
-        StorageCapacity storageCapacity = new StorageCapacity(storageType, capacity, free);
-        //insert
-        StorageCapacity storageCapacityList[] = new StorageCapacity[1];
-        storageCapacityList[0] = storageCapacity;
-        insertStoragesTable(storageCapacityList);
-      } else {
-        updateStoragesTable(storageType, capacity, free);
-      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
