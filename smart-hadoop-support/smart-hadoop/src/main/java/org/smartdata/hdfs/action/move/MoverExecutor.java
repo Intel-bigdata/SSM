@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.action.move;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.Block;
@@ -32,6 +33,7 @@ import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.model.action.FileMovePlan;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,7 +77,7 @@ public class MoverExecutor {
    * @return number of failed moves
    * @throws Exception
    */
-  public int executeMove(FileMovePlan plan) throws Exception {
+  public int executeMove(FileMovePlan plan, PrintStream resultOs, PrintStream logOs) throws Exception {
     parseSchedulePlan(plan);
 
     moveExecutor = Executors.newFixedThreadPool(maxConcurrentMoves);
@@ -106,11 +108,19 @@ public class MoverExecutor {
         LOG.info("{} succeeded", this);
         return 0;
       }
+      if (logOs != null) {
+        logOs.println("The " + (retryTimes + 1) + "/" + maxRetryTimes + " retry, remaining = " + remaining);
+      }
       LOG.debug("{} : {} moves failed, start a new iteration", this, remaining);
     }
     int failedMoves = ReplicaMove.failedMoves(allMoves);
     LOG.info("{} : failed with {} moves", this, failedMoves);
     return failedMoves;
+  }
+
+  @VisibleForTesting
+  public int executeMove(FileMovePlan plan) throws Exception {
+    return executeMove(plan, null, null);
   }
 
   @Override

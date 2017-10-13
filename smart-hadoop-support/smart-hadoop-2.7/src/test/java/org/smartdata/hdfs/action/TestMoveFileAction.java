@@ -26,7 +26,7 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.action.MockActionStatusReporter;
-import org.smartdata.hdfs.MiniClusterHarness;
+import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 import org.smartdata.hdfs.action.move.MoverExecutor;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.model.action.FileMovePlan;
@@ -41,7 +41,7 @@ import java.util.Map;
 /**
  * Test for MoveFileAction.
  */
-public class TestMoveFileAction extends MiniClusterHarness {
+public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
 
   @Test(timeout = 300000)
   public void testParallelMove() throws Exception {
@@ -62,26 +62,22 @@ public class TestMoveFileAction extends MiniClusterHarness {
     out2.close();
 
     //move to SSD
-    MoveFileAction moveFileAction1 = new MoveFileAction();
+    AllSsdFileAction moveFileAction1 = new AllSsdFileAction();
     moveFileAction1.setDfsClient(dfsClient);
     moveFileAction1.setContext(smartContext);
     moveFileAction1.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args1 = new HashMap();
     args1.put(MoveFileAction.FILE_PATH, dir);
-    String storageType1 = "ONE_SSD";
-    args1.put(MoveFileAction.STORAGE_POLICY, storageType1);
-    FileMovePlan plan1 = createPlan(file1, storageType1);
+    FileMovePlan plan1 = createPlan(file1, "SSD");
     args1.put(MoveFileAction.MOVE_PLAN, plan1.toString());
 
-    MoveFileAction moveFileAction2 = new MoveFileAction();
+    AllSsdFileAction moveFileAction2 = new AllSsdFileAction();
     moveFileAction2.setDfsClient(dfsClient);
     moveFileAction2.setContext(smartContext);
     moveFileAction2.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args2 = new HashMap();
     args2.put(MoveFileAction.FILE_PATH, dir);
-    String storageType2 = "ONE_SSD";
-    args2.put(MoveFileAction.STORAGE_POLICY, storageType2);
-    FileMovePlan plan2 = createPlan(file2, storageType2);
+    FileMovePlan plan2 = createPlan(file2, "SSD");
     args2.put(MoveFileAction.MOVE_PLAN, plan2.toString());
 
     //init and run
@@ -154,16 +150,8 @@ public class TestMoveFileAction extends MiniClusterHarness {
     // write to DISK
     dfs.setStoragePolicy(dir, "HOT");
     final FSDataOutputStream out1 = dfs.create(new Path(file1));
-    out1.writeChars("This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B.");
+    byte[] data = new byte[DEFAULT_BLOCK_SIZE * 10];
+    out1.write(data);
     out1.close();
 
     // schedule move to SSD
@@ -173,8 +161,7 @@ public class TestMoveFileAction extends MiniClusterHarness {
     action1.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args1 = new HashMap();
     args1.put(ArchiveFileAction.FILE_PATH, file1);
-    args1.put(MoveFileAction.MOVE_PLAN, null);
-    FileMovePlan plan = createPlan(file1, "SSD");
+    FileMovePlan plan = createPlan(file1, "ARCHIVE");
     args1.put(MoveFileAction.MOVE_PLAN, plan.toString());
     action1.init(args1);
     action1.run();

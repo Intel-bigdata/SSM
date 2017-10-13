@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.action.FileMovePlan;
 
+import java.io.PrintStream;
 import java.net.URI;
 
 /**
@@ -32,6 +33,8 @@ public class MoverBasedMoveRunner {
   private static final Logger LOG = LoggerFactory.getLogger(MoverBasedMoveRunner.class);
   private Configuration conf;
   private MoverStatus actionStatus;
+  private PrintStream resultOs;
+  private PrintStream logOs;
 
   static class Pair {
     URI ns;
@@ -43,15 +46,18 @@ public class MoverBasedMoveRunner {
     }
   }
 
-  public MoverBasedMoveRunner(Configuration conf, MoverStatus actionStatus) {
+  public MoverBasedMoveRunner(Configuration conf, MoverStatus actionStatus,
+      PrintStream resultOs, PrintStream logOs) {
     this.conf = conf;
     this.actionStatus = actionStatus;
+    this.resultOs = resultOs;
+    this.logOs = logOs;
   }
 
-  public void move(String file, FileMovePlan plan) throws Exception {
+  public int move(String file, FileMovePlan plan) throws Exception {
     int maxMoves = plan.getPropertyValueInt(FileMovePlan.MAX_CONCURRENT_MOVES, 10);
     int maxRetries = plan.getPropertyValueInt(FileMovePlan.MAX_NUM_RETRIES, 10);
     MoverExecutor executor = new MoverExecutor(actionStatus, conf, maxRetries, maxMoves);
-    executor.executeMove(plan);
+    return executor.executeMove(plan, resultOs, logOs);
   }
 }

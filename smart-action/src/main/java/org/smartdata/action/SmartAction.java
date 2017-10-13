@@ -165,6 +165,14 @@ public abstract class SmartAction {
     psLogOs.println(log);
   }
 
+  public PrintStream getResultOs() {
+    return psResultOs;
+  }
+
+  public PrintStream getLogOs() {
+    return psLogOs;
+  }
+
   public float getProgress() {
     if (successful) {
       return 1.0F;
