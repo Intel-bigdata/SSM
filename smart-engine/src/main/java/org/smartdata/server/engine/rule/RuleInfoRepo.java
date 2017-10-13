@@ -182,7 +182,8 @@ public class RuleInfoRepo {
         int delay = new Random().nextInt(10000);
         si.setStartTime(now+delay);
       } else {
-        si.setStartTime(now);
+        long delay = every - (now - lastCheckTime);
+        si.setStartTime(now + delay);
       }
       executor = new RuleExecutor(
           ruleManager, ctx, tr, ruleManager.getMetaStore());
