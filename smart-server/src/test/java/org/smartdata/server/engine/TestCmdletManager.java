@@ -200,4 +200,23 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
 
     cmdletManager.stop();
   }
+
+  @Test
+  public void testLoadingPendingCmdlets() throws Exception {
+    waitTillSSMExitSafeMode();
+
+
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    cmdletManager.stop();
+
+    MetaStore metaStore = ssm.getMetaStore();
+    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
+    CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
+        CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
+        123178333l, 232444994l);
+    CmdletInfo[] cmdlets = {cmdletInfo};
+    metaStore.insertCmdlets(cmdlets);
+    cmdletManager.init();
+    Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
+  }
 }

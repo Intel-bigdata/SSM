@@ -746,7 +746,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throws MetaStoreException {
     try {
       // Update if exists
-      if (cmdletDao.getById(command.getCid()) != null) {
+      if (getCmdletById(command.getCid()) != null) {
         cmdletDao.update(command);
       } else {
         cmdletDao.insert(command);
