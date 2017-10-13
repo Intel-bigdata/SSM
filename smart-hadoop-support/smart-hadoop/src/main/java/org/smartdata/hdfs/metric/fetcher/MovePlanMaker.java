@@ -33,13 +33,13 @@ import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
-import org.smartdata.hdfs.scheduler.MovePlanStatistics;
-import org.smartdata.model.action.FileMovePlan;
 import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.Source;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.hdfs.action.move.StorageMap;
+import org.smartdata.hdfs.scheduler.MovePlanStatistics;
+import org.smartdata.model.action.FileMovePlan;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -108,20 +108,33 @@ public class MovePlanMaker {
    */
   public synchronized FileMovePlan processNamespace(Path targetPath) throws IOException {
     schedulePlan = new FileMovePlan();
-    schedulePlan.setFileName(targetPath.toUri().getPath());
-    DirectoryListing files = dfs.listPaths(targetPath.toUri().getPath(),
-      HdfsFileStatus.EMPTY_NAME, true);
-    HdfsFileStatus status = null;
-    for (HdfsFileStatus file : files.getPartialListing()) {
-      if (!file.isDir()) {
-        status = file;
-        break;
-      }
+    String filePath = targetPath.toUri().getPath();
+    schedulePlan.setFileName(filePath);
+
+    HdfsFileStatus status = dfs.getFileInfo(filePath);
+    if (status == null) {
+      throw new IOException("File '" + filePath + "' not found!");
     }
-    if (!status.isSymlink()) {
-      schedulePlan.setFileLength(status.getLen());
-      processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status);
+    if (status.isDir()) {
+      schedulePlan.setDir(true);
+      return schedulePlan;
     }
+
+    DirectoryListing files = dfs.listPaths(filePath, HdfsFileStatus.EMPTY_NAME, true);
+    HdfsFileStatus[] statuses = files.getPartialListing();
+    if (statuses == null || statuses.length == 0) {
+      throw new IOException("File '" + filePath + "' not found!");
+    }
+    if (statuses.length != 1) {
+      throw new IOException("Get '" + filePath + "' file located status error.");
+    }
+    status = statuses[0];
+    if (status.isDir()) {
+      throw new IOException("Unexpected '" + filePath + "' directory located status error.");
+    }
+    schedulePlan.setDir(false);
+    schedulePlan.setFileLength(status.getLen());
+    processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status);
     return schedulePlan;
   }
 
