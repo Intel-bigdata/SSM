@@ -87,7 +87,7 @@ public class CopyScheduler extends ActionSchedulerService {
   // Cache of the file_diff
   private Map<Long, FileDiff> fileDiffCache;
   // sync every 50 update
-  private short syncTime;
+  private int syncTime;
   // record the file_diff whether being changed
   private Map<Long, Boolean> fileDiffChanged;
 
@@ -131,7 +131,17 @@ public class CopyScheduler extends ActionSchedulerService {
     // Lock this file/chain to avoid conflict
     fileLock.put(path, fid);
     FileDiff fileDiff = null;
-    fileDiff = fileDiffCache.get(fid);
+    if (fileDiffCache.containsKey(fid)) {
+      fileDiff = fileDiffCache.get(fid);
+    } else {
+      try {
+        fileDiff = metaStore.getFileDiff(fid);
+        addDiffIntoCache(fileDiff);
+      } catch (MetaStoreException e) {
+        LOG.error("Get file diff by did = {} from metastore error", fid, e);
+      }
+    }
+
     if (fileDiff == null) {
       return ScheduleResult.FAIL;
     }
@@ -220,7 +230,17 @@ public class CopyScheduler extends ActionSchedulerService {
         if (actionDiffMap.containsKey(actionInfo.getActionId())) {
           actionDiffMap.remove(actionInfo.getActionId());
         }
-        fileDiff = fileDiffCache.get(did);
+        if (fileDiffCache.containsKey(did)) {
+          fileDiff = fileDiffCache.get(did);
+        } else {
+          try {
+            fileDiff = metaStore.getFileDiff(did);
+            addDiffIntoCache(fileDiff);
+          } catch (MetaStoreException e) {
+            LOG.error("Get file diff by did = {} from metastore error", did, e);
+          }
+        }
+
         if (fileDiff == null) {
           return;
         }
