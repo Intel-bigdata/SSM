@@ -21,9 +21,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfoWithStorage;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.junit.Assert;
@@ -31,8 +33,10 @@ import org.junit.Test;
 import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 import org.smartdata.model.action.FileMovePlan;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Test for MoverExecutor.
@@ -67,7 +71,7 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     FileMovePlan plan = new FileMovePlan(namenode, fileName);
 
     // Schedule move in the same node
-    for (LocatedBlock lb : MoverExecutor.getLocatedBlocks(dfsClient, fileName)) {
+    for (LocatedBlock lb : getLocatedBlocks(dfsClient, fileName, plan)) {
       ExtendedBlock block = lb.getBlock();
       for (DatanodeInfo datanodeInfo : lb.getLocations()) {
         StorageGroup source = new StorageGroup(datanodeInfo, StorageType.DISK.toString());
@@ -83,7 +87,7 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     Assert.assertEquals(0, failedMoves);
 
     // Check storage after move
-    for (LocatedBlock lb : MoverExecutor.getLocatedBlocks(dfsClient, fileName)) {
+    for (LocatedBlock lb : getLocatedBlocks(dfsClient, fileName)) {
       for (DatanodeInfo datanodeInfo : lb.getLocations()) {
         Assert.assertTrue(datanodeInfo instanceof DatanodeInfoWithStorage);
         Assert.assertEquals(StorageType.SSD, ((DatanodeInfoWithStorage)datanodeInfo).getStorageType());
@@ -106,7 +110,7 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     NameNodeConnector nnc = new NameNodeConnector(namenode, conf);
     HashSet<DatanodeInfo> fileNodes = new HashSet<>();
     ExtendedBlock block = null;
-    for (LocatedBlock lb : MoverExecutor.getLocatedBlocks(dfsClient, fileName)) {
+    for (LocatedBlock lb : getLocatedBlocks(dfsClient, fileName, plan)) {
       block = lb.getBlock();
       for (DatanodeInfo datanodeInfo : lb.getLocations()) {
         fileNodes.add(datanodeInfo);
@@ -133,7 +137,7 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     //Thread.sleep(100000);
     int ssdNum = 0;
     int hddNum = 0;
-    for (LocatedBlock lb : MoverExecutor.getLocatedBlocks(dfsClient, fileName)) {
+    for (LocatedBlock lb : getLocatedBlocks(dfsClient, fileName)) {
       for (DatanodeInfo datanodeInfo : lb.getLocations()) {
         Assert.assertTrue(datanodeInfo instanceof DatanodeInfoWithStorage);
         StorageType storageType = ((DatanodeInfoWithStorage)datanodeInfo).getStorageType();
@@ -153,5 +157,23 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     DatanodeInfo targetDatanode = target.getDatanodeInfo();
     plan.addPlan(blockId, sourceDatanode.getDatanodeUuid(), source.getStorageType(),
         targetDatanode.getIpAddr(), targetDatanode.getXferPort(), target.getStorageType());
+  }
+
+  private List<LocatedBlock> getLocatedBlocks(DFSClient dfsClient, String fileName, FileMovePlan plan)
+      throws IOException {
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+    if (fileStatus == null) {
+      throw new IOException("File does not exist.");
+    }
+    long length = fileStatus.getLen();
+    if (plan != null) {
+      plan.setFileLength(length);
+    }
+    return dfsClient.getLocatedBlocks(fileName, 0, length).getLocatedBlocks();
+  }
+
+  private List<LocatedBlock> getLocatedBlocks(DFSClient dfsClient, String fileName)
+      throws IOException {
+    return getLocatedBlocks(dfsClient, fileName, null);
   }
 }

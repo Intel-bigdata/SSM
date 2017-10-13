@@ -153,6 +153,9 @@ public class MoverScheduler extends ActionSchedulerService {
     } catch (IOException e) {
       LOG.error("Exception while processing " + action, e);
       return ScheduleResult.FAIL;
+    } catch (Throwable t) {
+      LOG.error("Unexpected exception when scheduling move " + policy + " '" + file + "'.", t);
+      return ScheduleResult.FAIL;
     }
   }
 

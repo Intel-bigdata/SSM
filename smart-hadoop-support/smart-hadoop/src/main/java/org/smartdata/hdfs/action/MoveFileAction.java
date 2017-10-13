@@ -75,6 +75,12 @@ public class MoveFileAction extends AbstractMoveFileAction {
       throw new IllegalArgumentException("File move plan not specified.");
     }
 
+    if (movePlan.isDir()) {
+      dfsClient.setStoragePolicy(fileName, storagePolicy);
+      appendResult("Directory moved successfully.");
+      return;
+    }
+
     int totalReplicas = movePlan.getBlockIds().size();
     this.appendLog(
         String.format(
