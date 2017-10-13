@@ -21,6 +21,7 @@ package org.smartdata.server.engine.rule;
 import org.smartdata.rule.ScheduleInfo;
 import org.smartdata.model.rule.TimeBasedScheduleInfo;
 
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -38,8 +39,15 @@ public class ExecutorScheduler {
   public void addPeriodicityTask(RuleExecutor re) {
     TimeBasedScheduleInfo si = re.getTranslateResult().getTbScheduleInfo();
     long now = System.currentTimeMillis();
-    service.scheduleAtFixedRate(re, si.getStartTime() - now,
-        si.getEvery(), TimeUnit.MILLISECONDS);
+    long lastCheckTime = re.getLastCheckTime();
+    long every = si.getEvery();
+    if ((now-lastCheckTime) > every) {
+      int delay = new Random().nextInt(10000);
+      service.scheduleAtFixedRate(re, delay, every, TimeUnit.MILLISECONDS);
+    } else {
+      long delay=every - (now - lastCheckTime);
+      service.scheduleAtFixedRate(re, delay, every, TimeUnit.MILLISECONDS);
+    }
   }
 
   public void addPeriodicityTask(ScheduleInfo schInfo, Runnable work) {

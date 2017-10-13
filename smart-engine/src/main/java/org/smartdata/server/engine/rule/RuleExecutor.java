@@ -52,6 +52,7 @@ public class RuleExecutor implements Runnable {
   private MetaStore adapter;
   private volatile boolean exited = false;
   private long exitTime;
+  private long lastCheckTime;
   private Stack<String> dynamicCleanups = new Stack<>();
   private static final Logger LOG =
       LoggerFactory.getLogger(RuleExecutor.class.getName());
@@ -68,6 +69,19 @@ public class RuleExecutor implements Runnable {
     this.ctx = ctx;
     this.tr = tr;
     this.adapter = adapter;
+  }
+
+  public RuleExecutor(RuleManager ruleManager, ExecutionContext ctx,
+      TranslateResult tr, MetaStore adapter, long lastCheckTime) {
+    this.ruleManager = ruleManager;
+    this.ctx = ctx;
+    this.tr = tr;
+    this.adapter = adapter;
+    this.lastCheckTime=lastCheckTime;
+  }
+
+  public long getLastCheckTime() {
+    return lastCheckTime;
   }
 
   public TranslateResult getTranslateResult() {
