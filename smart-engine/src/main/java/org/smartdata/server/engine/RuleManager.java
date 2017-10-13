@@ -293,7 +293,7 @@ public class RuleManager extends AbstractService {
       RuleInfo rule = infoRepo.getRuleInfoRef();
       if (rule.getState() == RuleState.ACTIVE
           || rule.getState() == RuleState.DRYRUN) {
-        boolean sub = submitRuleToScheduler(infoRepo.launchExecutor(this));
+        boolean sub = submitRuleToScheduler(infoRepo.launchExecutor(this, "start"));
         numLaunched += sub ? 1 : 0;
       }
     }

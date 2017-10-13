@@ -23,6 +23,7 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
+import org.smartdata.model.rule.TimeBasedScheduleInfo;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
@@ -31,6 +32,7 @@ import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -98,6 +100,16 @@ public class RuleInfoRepo {
     }
   }
 
+  public RuleExecutor launchExecutor(RuleManager ruleManager, String start)
+      throws IOException {
+    lockWrite();
+    try {
+      return doLaunchExecutor(ruleManager, start);
+    } finally {
+      unlockWrite();
+    }
+  }
+
   public boolean updateRuleInfo(RuleState rs, long lastCheckTime,
       long checkedCount, int cmdletsGen) throws IOException {
     lockWrite();
@@ -144,6 +156,40 @@ public class RuleInfoRepo {
     return null;
   }
 
+  private RuleExecutor doLaunchExecutor(RuleManager ruleManager, String start)
+      throws IOException {
+    RuleState state = ruleInfo.getState();
+    if (state == RuleState.ACTIVE || state == RuleState.DRYRUN) {
+      if (executor != null && !executor.isExited()) {
+        return null;
+      }
+
+      ExecutionContext ctx = new ExecutionContext();
+      ctx.setRuleId(ruleInfo.getId());
+      TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
+          ruleInfo.getSubmitTime());
+      TranslateResult tr = executor != null ? executor.getTranslateResult() :
+          new SmartRuleStringParser(ruleInfo.getRuleText(), transCtx).translate();
+      List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
+      for (RuleExecutorPlugin plugin : plugins) {
+        plugin.onNewRuleExecutor(ruleInfo, tr);
+      }
+      TimeBasedScheduleInfo si = tr.getTbScheduleInfo();
+      long lastCheckTime = ruleInfo.getLastCheckTime();
+      long every = si.getEvery();
+      long now = System.currentTimeMillis();
+      if ((now-lastCheckTime) > every) {
+        int delay = new Random().nextInt(10000);
+        si.setStartTime(now+delay);
+      } else {
+        si.setStartTime(now);
+      }
+      executor = new RuleExecutor(
+          ruleManager, ctx, tr, ruleManager.getMetaStore());
+      return executor;
+    }
+    return null;
+  }
   private void markWorkExit() {
     if (executor != null) {
       executor.setExited();
