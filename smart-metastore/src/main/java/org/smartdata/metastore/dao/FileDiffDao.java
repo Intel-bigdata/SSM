@@ -25,6 +25,7 @@ import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.utils.MetaStoreUtils;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -32,8 +33,11 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -146,6 +150,26 @@ public class FileDiffDao {
       maps[i] = toMap(fileDiffs[i]);
     }
     simpleJdbcInsert.executeBatch(maps);
+  }
+
+  public int[] batchUpdate(final List<Long> dids, final List<FileDiffState> states, final List<String> parameters) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+    final String sql = "UPDATE " + TABLE_NAME + " SET state = ?, "
+        + "parameters = ? WHERE did = ?";
+    return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+      @Override
+      public void setValues(PreparedStatement ps, int i) throws SQLException {
+        ps.setShort(1, (short) states.get(i).getValue());
+        ps.setString(2, parameters.get(i));
+        ps.setLong(3, dids.get(i));
+      }
+
+      @Override
+      public int getBatchSize() {
+        return dids.size();
+      }
+    });
   }
 
   public int update(long did, FileDiffState state) {

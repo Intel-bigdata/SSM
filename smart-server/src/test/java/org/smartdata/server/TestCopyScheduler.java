@@ -281,6 +281,35 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   // }
   //
   // @Test(timeout = 40000)
+  // public void testCache() throws Exception {
+  //   waitTillSSMExitSafeMode();
+  //   MetaStore metaStore = ssm.getMetaStore();
+  //   SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+  //   CmdletManager cmdletManager = ssm.getCmdletManager();
+  //   DistributedFileSystem dfs = cluster.getFileSystem();
+  //   final String srcPath = "/src/";
+  //   final String destPath = "/dest/";
+  //   // Submit sync rule
+  //   long ruleId =
+  //       admin.submitRule(
+  //           "file: every 2s | path matches \"/src/*\"| sync -dest " + destPath, RuleState.ACTIVE);
+  //   Thread.sleep(2000);
+  //   dfs.mkdirs(new Path(srcPath));
+  //   dfs.mkdirs(new Path(destPath));
+  //   // Write to src
+  //   for (int i = 0; i < 3; i++) {
+  //     // Create test files
+  //     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+  //   }
+  //   do {
+  //     Thread.sleep(1000);
+  //   } while (admin.getRuleInfo(ruleId).getNumCmdsGen() <= 2);
+  //   List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions("sync", 0);
+  //   Assert.assertTrue(actionInfos.size() >= 3);
+  //   Thread.sleep(20000);
+  // }
+  //
+  // @Test(timeout = 40000)
   // public void testWithSyncRule() throws Exception {
   //   waitTillSSMExitSafeMode();
   //   MetaStore metaStore = ssm.getMetaStore();
