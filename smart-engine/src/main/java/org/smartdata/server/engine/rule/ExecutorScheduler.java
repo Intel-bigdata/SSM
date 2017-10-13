@@ -39,15 +39,8 @@ public class ExecutorScheduler {
   public void addPeriodicityTask(RuleExecutor re) {
     TimeBasedScheduleInfo si = re.getTranslateResult().getTbScheduleInfo();
     long now = System.currentTimeMillis();
-    long lastCheckTime = re.getLastCheckTime();
-    long every = si.getEvery();
-    if ((now-lastCheckTime) > every) {
-      int delay = new Random().nextInt(10000);
-      service.scheduleAtFixedRate(re, delay, every, TimeUnit.MILLISECONDS);
-    } else {
-      long delay=every - (now - lastCheckTime);
-      service.scheduleAtFixedRate(re, delay, every, TimeUnit.MILLISECONDS);
-    }
+    service.scheduleAtFixedRate(re, si.getStartTime() - now,
+        si.getEvery(), TimeUnit.MILLISECONDS);
   }
 
   public void addPeriodicityTask(ScheduleInfo schInfo, Runnable work) {

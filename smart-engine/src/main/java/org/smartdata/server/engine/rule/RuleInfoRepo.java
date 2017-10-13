@@ -150,7 +150,7 @@ public class RuleInfoRepo {
         plugin.onNewRuleExecutor(ruleInfo, tr);
       }
       executor = new RuleExecutor(
-          ruleManager, ctx, tr, ruleManager.getMetaStore(), ruleInfo.getLastCheckTime());
+          ruleManager, ctx, tr, ruleManager.getMetaStore());
       return executor;
     }
     return null;
