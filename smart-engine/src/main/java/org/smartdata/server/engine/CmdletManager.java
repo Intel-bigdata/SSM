@@ -169,19 +169,22 @@ public class CmdletManager extends AbstractService {
       } else {
         try {
           actionInfos = metaStore.getActions(cmdletInfo.getAids());
+          actionsInDB = true;
         } catch (MetaStoreException e) {
           LOG.error("Get aids -> [ {} ] from database error!",
-              cmdletInfo.getAids());
+              cmdletInfo.getAids(), e);
+        }
+        if (!actionsInDB || actionInfos.size() == 0) {
           cmdletInfo.setState(CmdletState.FAILED);
           try {
             metaStore.updateCmdlet(cmdletInfo);
           } catch (MetaStoreException e1) {
             LOG.error("Mark cmdletinfo ->[ {} ] as failed error!",
-                cmdletInfo.getParameters(), e);
+                cmdletInfo.getParameters(), e1);
           }
-          continue;
         }
-        actionsInDB = true;
+        continue;
+
       }
       LOG.debug(String.format("Received Cmdlet -> [ %s ]",
           cmdletDescriptor.getCmdletString()));
