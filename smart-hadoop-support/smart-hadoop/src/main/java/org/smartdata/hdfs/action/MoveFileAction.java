@@ -26,6 +26,7 @@ import org.smartdata.hdfs.action.move.MoverBasedMoveRunner;
 import org.smartdata.hdfs.action.move.MoverStatus;
 import org.smartdata.model.action.FileMovePlan;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -74,15 +75,29 @@ public class MoveFileAction extends AbstractMoveFileAction {
       throw new IllegalArgumentException("File move plan not specified.");
     }
 
+    if (movePlan.isDir()) {
+      dfsClient.setStoragePolicy(fileName, storagePolicy);
+      appendResult("Directory moved successfully.");
+      return;
+    }
+
+    int totalReplicas = movePlan.getBlockIds().size();
     this.appendLog(
         String.format(
-            "Action starts at %s : %s -> %s",
-            Utils.getFormatedCurrentTime(), fileName, storagePolicy));
-    dfsClient.setStoragePolicy(fileName, storagePolicy);
+            "Action starts at %s : %s -> %s with %d replicas to move in total.",
+            Utils.getFormatedCurrentTime(), fileName, storagePolicy, totalReplicas));
 
     MoverBasedMoveRunner moveRunner =
-        new MoverBasedMoveRunner(getContext().getConf(), this.status);
-    moveRunner.move(fileName, movePlan);
+        new MoverBasedMoveRunner(getContext().getConf(), this.status, getResultOs(), getLogOs());
+    int numFailed = moveRunner.move(fileName, movePlan);
+    if (numFailed == 0) {
+      dfsClient.setStoragePolicy(fileName, storagePolicy);
+      appendResult("All the " + totalReplicas + " replicas moved successfully.");
+    } else {
+      String res = numFailed + " of " + totalReplicas + " replicas movement failed.";
+      appendResult(res);
+      throw new IOException(res);
+    }
   }
 
   @Override

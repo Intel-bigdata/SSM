@@ -26,6 +26,7 @@ import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.metastore.utils.TestDaoUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -57,6 +58,50 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiff.setCreate_time(1);
     fileDiffDao.insert(fileDiff);
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
+  }
+
+  @Test
+  public void testBatchUpdateAndQuery() {
+    FileDiff[] fileDiffs = new FileDiff[2];
+    fileDiffs[0] = new FileDiff();
+    fileDiffs[0].setDiffId(1);
+    fileDiffs[0].setParameters(new HashMap<String, String>());
+    fileDiffs[0].setSrc("test");
+    fileDiffs[0].setState(FileDiffState.RUNNING);
+    fileDiffs[0].setDiffType(FileDiffType.APPEND);
+    fileDiffs[0].setCreate_time(1);
+
+    fileDiffs[1] = new FileDiff();
+    fileDiffs[1].setDiffId(2);
+    fileDiffs[1].setParameters(new HashMap<String, String>());
+    fileDiffs[1].setSrc("src");
+    fileDiffs[1].setState(FileDiffState.PENDING);
+    fileDiffs[1].setDiffType(FileDiffType.APPEND);
+    fileDiffs[1].setCreate_time(1);
+
+    fileDiffDao.insert(fileDiffs);
+    List<FileDiff> fileInfoList = fileDiffDao.getAll();
+    for (int i = 0; i < 2; i++) {
+      Assert.assertTrue(fileInfoList.get(i).equals(fileDiffs[i]));
+    }
+
+    //update
+    List<Long> dids = new ArrayList<>();
+    dids.add(1l);
+    dids.add(2l);
+    List<String> parameters = new ArrayList<>();
+    parameters.add(fileDiffs[0].getParametersJsonString());
+    parameters.add(fileDiffs[1].getParametersJsonString());
+    List<FileDiffState> fileDiffStates = new ArrayList<>();
+    fileDiffStates.add(FileDiffState.APPLIED);
+    fileDiffStates.add(fileDiffs[1].getState());
+
+    fileDiffDao.batchUpdate(dids, fileDiffStates, parameters);
+
+    fileInfoList = fileDiffDao.getAll();
+
+    Assert.assertTrue(fileInfoList.get(0).getState().equals(FileDiffState.APPLIED));
+
   }
 
   @Test
