@@ -56,6 +56,11 @@ public class CheckStorageAction extends HdfsAction {
     long length = fileStatus.getLen();
     List<LocatedBlock> locatedBlocks =
         dfsClient.getLocatedBlocks(fileName, 0, length).getLocatedBlocks();
+
+    if (locatedBlocks.size() == 0) {
+      appendResult("File '" + fileName + "' has no blocks.");
+    }
+
     for (LocatedBlock locatedBlock : locatedBlocks) {
       StringBuilder blockInfo = new StringBuilder();
       blockInfo.append("File offset = ").append(locatedBlock.getStartOffset()).append(", ");

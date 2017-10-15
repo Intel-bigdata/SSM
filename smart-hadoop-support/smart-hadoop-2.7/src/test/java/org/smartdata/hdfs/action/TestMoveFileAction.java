@@ -20,28 +20,32 @@ package org.smartdata.hdfs.action;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.action.MockActionStatusReporter;
-import org.smartdata.hdfs.MiniClusterHarness;
-import org.smartdata.hdfs.action.move.MoverExecutor;
+import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.model.action.FileMovePlan;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Test for MoveFileAction.
  */
-public class TestMoveFileAction extends MiniClusterHarness {
+public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
 
   @Test(timeout = 300000)
   public void testParallelMove() throws Exception {
@@ -62,26 +66,22 @@ public class TestMoveFileAction extends MiniClusterHarness {
     out2.close();
 
     //move to SSD
-    MoveFileAction moveFileAction1 = new MoveFileAction();
+    AllSsdFileAction moveFileAction1 = new AllSsdFileAction();
     moveFileAction1.setDfsClient(dfsClient);
     moveFileAction1.setContext(smartContext);
     moveFileAction1.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args1 = new HashMap();
     args1.put(MoveFileAction.FILE_PATH, dir);
-    String storageType1 = "ONE_SSD";
-    args1.put(MoveFileAction.STORAGE_POLICY, storageType1);
-    FileMovePlan plan1 = createPlan(file1, storageType1);
+    FileMovePlan plan1 = createPlan(file1, "SSD");
     args1.put(MoveFileAction.MOVE_PLAN, plan1.toString());
 
-    MoveFileAction moveFileAction2 = new MoveFileAction();
+    AllSsdFileAction moveFileAction2 = new AllSsdFileAction();
     moveFileAction2.setDfsClient(dfsClient);
     moveFileAction2.setContext(smartContext);
     moveFileAction2.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args2 = new HashMap();
     args2.put(MoveFileAction.FILE_PATH, dir);
-    String storageType2 = "ONE_SSD";
-    args2.put(MoveFileAction.STORAGE_POLICY, storageType2);
-    FileMovePlan plan2 = createPlan(file2, storageType2);
+    FileMovePlan plan2 = createPlan(file2, "SSD");
     args2.put(MoveFileAction.MOVE_PLAN, plan2.toString());
 
     //init and run
@@ -146,45 +146,49 @@ public class TestMoveFileAction extends MiniClusterHarness {
   }
 
   @Test
+  public void testMoveZeroByteFile() throws Exception {
+    String file = "/zerofile";
+    DFSTestUtil.createFile(dfs, new Path(file), 0, (short)3, 0);
+    dfs.setStoragePolicy(new Path(file), "HOT");
+
+    moveFile(file);
+  }
+
+  @Test
   public void testMoveMultiblockFile() throws Exception {
-    final String file1 = "/testParallelMovers/file1";
+    final String file = "/testParallelMovers/file1";
     Path dir = new Path("/testParallelMovers");
     dfs.mkdirs(dir);
 
     // write to DISK
     dfs.setStoragePolicy(dir, "HOT");
-    final FSDataOutputStream out1 = dfs.create(new Path(file1));
-    out1.writeChars("This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B." +
-        "This is a block with 50B.");
+    final FSDataOutputStream out1 = dfs.create(new Path(file));
+    byte[] data = new byte[DEFAULT_BLOCK_SIZE * 10];
+    out1.write(data);
     out1.close();
 
+    moveFile(file);
+  }
+
+  private void moveFile(String file) throws Exception {
     // schedule move to SSD
-    ArchiveFileAction action1 = new ArchiveFileAction();
-    action1.setDfsClient(dfsClient);
-    action1.setContext(smartContext);
-    action1.setStatusReporter(new MockActionStatusReporter());
-    Map<String, String> args1 = new HashMap();
-    args1.put(ArchiveFileAction.FILE_PATH, file1);
-    args1.put(MoveFileAction.MOVE_PLAN, null);
-    FileMovePlan plan = createPlan(file1, "SSD");
-    args1.put(MoveFileAction.MOVE_PLAN, plan.toString());
-    action1.init(args1);
-    action1.run();
+    ArchiveFileAction action = new ArchiveFileAction();
+    action.setDfsClient(dfsClient);
+    action.setContext(smartContext);
+    action.setStatusReporter(new MockActionStatusReporter());
+    Map<String, String> args = new HashMap();
+    args.put(ArchiveFileAction.FILE_PATH, file);
+    FileMovePlan plan = createPlan(file, "ARCHIVE");
+    args.put(MoveFileAction.MOVE_PLAN, plan.toString());
+    action.init(args);
+    action.run();
   }
 
   private FileMovePlan createPlan(String dir, String storageType) throws Exception {
     URI namenode = cluster.getURI();
     FileMovePlan plan = new FileMovePlan(namenode, dir);
     // Schedule move in the same node
-    for (LocatedBlock lb : MoverExecutor.getLocatedBlocks(dfsClient, dir)) {
+    for (LocatedBlock lb : getLocatedBlocks(dfsClient, dir, plan)) {
       ExtendedBlock block = lb.getBlock();
       for (DatanodeInfo datanodeInfo : lb.getLocations()) {
         StorageGroup source = new StorageGroup(datanodeInfo, StorageType.DISK.toString());
@@ -200,5 +204,16 @@ public class TestMoveFileAction extends MiniClusterHarness {
     DatanodeInfo targetDatanode = target.getDatanodeInfo();
     plan.addPlan(blockId, sourceDatanode.getDatanodeUuid(), source.getStorageType(),
         targetDatanode.getIpAddr(), targetDatanode.getXferPort(), target.getStorageType());
+  }
+
+  private List<LocatedBlock> getLocatedBlocks(DFSClient dfsClient, String fileName, FileMovePlan plan)
+      throws IOException {
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+    if (fileStatus == null) {
+      throw new IOException("File does not exist.");
+    }
+    long length = fileStatus.getLen();
+    plan.setFileLength(length);
+    return dfsClient.getLocatedBlocks(fileName, 0, length).getLocatedBlocks();
   }
 }

@@ -40,6 +40,8 @@ import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
@@ -126,9 +128,9 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
     CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
       CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
-      123178333l, 232444994l);
+        123178333L, 232444994L);
     CmdletInfo[] cmdlets = {cmdletInfo};
-    metaStore.insertCmdletsTable(cmdlets);
+    metaStore.insertCmdlets(cmdlets);
 
     CmdletManager cmdletManager = ssm.getCmdletManager();
     Assert.assertTrue(cmdletManager.listCmdletsInfo(1, null).size() == 1);
@@ -164,7 +166,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
 
     cmdletManager.start();
     cmdletManager.submitCmdlet("hello");
-    verify(metaStore, times(1)).insertCmdletTable(any(CmdletInfo.class));
+    verify(metaStore, times(1)).insertCmdlet(any(CmdletInfo.class));
     verify(metaStore, times(1)).insertActions(any(ActionInfo[].class));
 
     Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
@@ -199,5 +201,44 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     Assert.assertNull(cmdletManager.getActionInfo(actionId));
 
     cmdletManager.stop();
+  }
+
+  @Test
+  public void testLoadingPendingCmdlets() throws Exception {
+    waitTillSSMExitSafeMode();
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    // Stop cmdletmanager
+    cmdletManager.stop();
+    MetaStore metaStore = ssm.getMetaStore();
+    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
+    CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
+        CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
+        123178333L, 232444994L);
+    CmdletInfo[] cmdlets = {cmdletInfo};
+    metaStore.insertCmdlets(cmdlets);
+    // init cmdletmanager
+    cmdletManager.init();
+    Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
+  }
+
+  @Test
+  public void testLoadingPendingCmdletFailed() throws Exception {
+    waitTillSSMExitSafeMode();
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    // Stop cmdletmanager
+    cmdletManager.stop();
+    MetaStore metaStore = ssm.getMetaStore();
+    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
+    CmdletInfo cmdletInfo = new CmdletInfo(0, cmdletDescriptor.getRuleId(),
+        CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
+        123178333L, 232444994L);
+    cmdletInfo.setAids(Arrays.asList(1L, 2L));
+    CmdletInfo[] cmdlets = {cmdletInfo};
+    metaStore.insertCmdlets(cmdlets);
+    // init cmdletmanager
+    cmdletManager.init();
+    Assert.assertEquals(0, cmdletManager.getCmdletsSizeInCache());
+    cmdletInfo = metaStore.getCmdletById(0L);
+    Assert.assertTrue(cmdletInfo.getState() == CmdletState.FAILED);
   }
 }

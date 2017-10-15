@@ -36,6 +36,7 @@ public class FileMovePlan {
 
   // info of the file
   private String fileName;
+  private boolean isDir;
   private long fileLength;
   private long fileLengthToMove; // length to move in file level
   private long sizeToMove;  // total bytes to move
@@ -187,5 +188,13 @@ public class FileMovePlan {
 
   public void addFileLengthToMove(long fileLengthToMove) {
     this.fileLengthToMove += fileLengthToMove;
+  }
+
+  public boolean isDir() {
+    return isDir;
+  }
+
+  public void setDir(boolean dir) {
+    isDir = dir;
   }
 }
