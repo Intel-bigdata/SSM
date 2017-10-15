@@ -70,7 +70,7 @@ angular.module('zeppelinWebApp')
               + " Status:" +  rule.state
             },
             submitTime: rule.submitTime,
-            lastCheckTime: rule.lastCheckTime,
+            lastCheckTime: rule.lastCheckTime === 0 ? '-' : rule.lastCheckTime,
             numChecked: rule.numChecked,
             numCmdsGen: rule.numCmdsGen,
             // startTime: rule.startTime,

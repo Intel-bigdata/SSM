@@ -121,9 +121,10 @@ public class LoginRestApi {
   }
 
   @POST
-  @Path("logout")
+  @Path("/logout")
   @ZeppelinApi
   public Response logout() {
+    LOG.info("-----------LOGOUT-----------");
     JsonResponse response;
     Subject currentUser = org.apache.shiro.SecurityUtils.getSubject();
     currentUser.logout();
