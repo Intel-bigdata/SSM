@@ -30,26 +30,24 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
-import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AgentMaster {
 
@@ -60,13 +58,17 @@ public class AgentMaster {
   private ActorRef master;
   private AgentManager agentManager;
 
-  public AgentMaster(CmdletManager statusUpdater) {
+  public AgentMaster(CmdletManager statusUpdater) throws IOException {
     this(new SmartConf(), statusUpdater);
   }
 
-  public AgentMaster(SmartConf conf, CmdletManager statusUpdater) {
-    String address = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
-    checkNotNull(address);
+  public AgentMaster(SmartConf conf, CmdletManager statusUpdater) throws IOException {
+    String[] addresses = AgentUtils.getMasterAddress(conf);
+    if (addresses == null) {
+      throw new IOException("AgentMaster address not configured!");
+    }
+    String address = addresses[0];
+    LOG.info("Agent master: " + address);
     Config config = AgentUtils.overrideRemoteAddress(
         ConfigFactory.load(AgentConstants.AKKA_CONF_FILE), address);
     this.agentManager = new AgentManager();

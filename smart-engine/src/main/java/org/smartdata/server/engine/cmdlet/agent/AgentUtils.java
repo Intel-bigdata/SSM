@@ -25,10 +25,14 @@ import akka.actor.Cancellable;
 import akka.actor.ExtendedActorSystem;
 import akka.actor.Scheduler;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
+
+import java.io.IOException;
+import java.net.InetAddress;
 
 public class AgentUtils {
 
@@ -96,6 +100,48 @@ public class AgentUtils {
         ConfigValueFactory.fromAnyRef(hostPort.getHost()))
         .withValue(AgentConstants.AKKA_REMOTE_PORT_KEY,
             ConfigValueFactory.fromAnyRef(hostPort.getPort()));
+  }
+
+  /**
+   * Return master address list.
+   *
+   * @param conf
+   * @return address array if valid address found, else null
+   */
+  public static String[] getMasterAddress(SmartConf conf) {
+    String[] masters = conf.getStrings(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
+    int masterDefPort = conf.getInt(SmartConfKeys.SMART_AGENT_MASTER_PORT_KEY,
+        SmartConfKeys.SMART_AGENT_MASTER_PORT_DEFAULT);
+
+    if (masters == null || masters.length == 0) {
+      return null;
+    }
+
+    for (int i = 0; i < masters.length; i++) {
+      if (!masters[i].contains(":")) {
+        masters[i] += ":" + masterDefPort;
+      }
+    }
+    return masters;
+  }
+
+  /**
+   * Return agent address.
+   *
+   * @param conf
+   * @return
+   * @throws IOException
+   */
+  public static String getAgentAddress(SmartConf conf) throws IOException {
+    String agentAddress = conf.get(SmartConfKeys.SMART_AGENT_ADDRESS_KEY);
+    if (agentAddress == null) {
+      agentAddress = InetAddress.getLocalHost().getHostName();
+    }
+    int agentDefPort = conf.getInt(SmartConfKeys.SMART_AGENT_PORT_KEY, SmartConfKeys.SMART_AGENT_PORT_DEFAULT);
+    if (!agentAddress.contains(":")) {
+      agentAddress += ":" + agentDefPort;
+    }
+    return agentAddress;
   }
 
   public static class HostPort {
