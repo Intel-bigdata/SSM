@@ -76,32 +76,6 @@ Configure SSM
    This step can be skipped if standalone SSM service is preferred. 
   
    Open `agents` file under /conf , put each Smart Agent server's hostname or IP address line by line. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
-
-   [**This part is prone to change, will be updated soon**]
-   
-   For each Agent, set `smart.agent.address` in `smart-default.xml` respectively.
-
-   ```xml
-     <property>
-       <name>smart.agent.address</name>
-       <value>Agent-ip:7048</value>
-       <description>SmartAgent address</description>
-     </property>
-   ```
-
-   Agent Master is coupled with Smart Server on the same host. `smart.agent.master.address` should be set as the Smart Server's hostname or IP address which is available for Agent connecting.
-   Please note that localhost or 127.0.0.1 is not valid if Smart Agent is deployed on a different host.
-
-   ```xml
-   <property>
-       <name>smart.agent.master.address</name>
-       <value>SmartServer-ip:7051</value>
-       <description>SmartAgent master address</description>
-   </property>
-   ```
-   
-   [**This part is prone to change, will be updated soon**]
- 
    After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
  
 * **Configure how to access MySQL DB**
