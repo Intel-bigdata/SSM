@@ -107,7 +107,6 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     this.fileDiffCache = new ConcurrentHashMap<>();
     this.fileDiffChanged = new ConcurrentHashMap<>();
-    this.cacheSyncTh = 0;
   }
 
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
