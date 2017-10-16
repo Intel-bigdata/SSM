@@ -76,13 +76,16 @@ public class TestRuleDao extends TestDaoUtil {
     long submitTime = System.currentTimeMillis();
     RuleInfo info1 = new RuleInfo(20l, submitTime,
         rule, RuleState.ACTIVE,
-        0, 0, 0);
+        12, 12, 12);
     ruleDao.insert(info1);
     long rid = ruleDao.update(info1.getId(),
-        RuleState.DISABLED.getValue(),
-        12l, 12l, 12);
+        RuleState.DISABLED.getValue());
     Assert.assertTrue(rid == info1.getId());
     info1 = ruleDao.getById(info1.getId());
     Assert.assertTrue(info1.getNumChecked() == 12l);
+
+    ruleDao.update(rid, System.currentTimeMillis(), 100, 200);
+    RuleInfo info2 = ruleDao.getById(rid);
+    Assert.assertTrue(info2.getNumChecked() == 100l);
   }
 }

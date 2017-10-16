@@ -84,6 +84,12 @@ public class RuleDao {
     return jdbcTemplate.update(sql, rs, lastCheckTime, checkedCount, cmdletsGen, ruleId);
   }
 
+  public int update(long ruleId, int rs) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "UPDATE rule SET state = ? WHERE id = ?";
+    return jdbcTemplate.update(sql, rs, ruleId);
+  }
+
   public void delete(long id) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM rule WHERE id = ?";
