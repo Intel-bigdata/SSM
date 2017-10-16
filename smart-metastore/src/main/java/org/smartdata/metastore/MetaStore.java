@@ -704,6 +704,18 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public synchronized boolean updateRuleState(long ruleId, RuleState rs)
+      throws MetaStoreException {
+    if (rs == null) {
+      throw new MetaStoreException("Rule state can not be null, ruleId = " + ruleId);
+    }
+    try {
+      return ruleDao.update(ruleId, rs.getValue()) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public RuleInfo getRuleInfo(long ruleId) throws MetaStoreException {
     try {
       return ruleDao.getById(ruleId);
