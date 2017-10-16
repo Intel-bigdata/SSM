@@ -126,7 +126,6 @@ public class RuleInfoRepo {
       if (executor != null && !executor.isExited()) {
         return null;
       }
-
       ExecutionContext ctx = new ExecutionContext();
       ctx.setRuleId(ruleInfo.getId());
       TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
