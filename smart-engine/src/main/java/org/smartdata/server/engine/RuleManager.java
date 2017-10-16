@@ -30,6 +30,7 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
 import org.smartdata.model.rule.RulePluginManager;
+import org.smartdata.model.rule.TimeBasedScheduleInfo;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
@@ -42,6 +43,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -293,7 +295,20 @@ public class RuleManager extends AbstractService {
       RuleInfo rule = infoRepo.getRuleInfoRef();
       if (rule.getState() == RuleState.ACTIVE
           || rule.getState() == RuleState.DRYRUN) {
-        boolean sub = submitRuleToScheduler(infoRepo.launchExecutor(this));
+        RuleExecutor ruleExecutor = infoRepo.launchExecutor(this);
+        TranslateResult tr = ruleExecutor.getTranslateResult();
+        TimeBasedScheduleInfo si = tr.getTbScheduleInfo();
+        long lastCheckTime = rule.getLastCheckTime();
+        long every = si.getEvery();
+        long now = System.currentTimeMillis();
+        if ((now-lastCheckTime) > every) {
+          int delay = new Random().nextInt(5000);
+          si.setStartTime(now+delay);
+        } else {
+          long delay = every - (now - lastCheckTime);
+          si.setStartTime(now + delay);
+        }
+        boolean sub = submitRuleToScheduler(ruleExecutor);
         numLaunched += sub ? 1 : 0;
       }
     }
