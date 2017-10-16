@@ -20,8 +20,6 @@ package org.smartdata.server.engine.rule;
 
 import org.smartdata.rule.ScheduleInfo;
 import org.smartdata.model.rule.TimeBasedScheduleInfo;
-
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

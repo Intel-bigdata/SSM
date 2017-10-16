@@ -23,7 +23,6 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
-import org.smartdata.model.rule.TimeBasedScheduleInfo;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
@@ -32,7 +31,6 @@ import org.smartdata.server.engine.data.ExecutionContext;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
