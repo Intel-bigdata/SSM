@@ -31,7 +31,6 @@ import org.smartdata.model.RuleState;
 import org.smartdata.model.rule.*;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
-import org.smartdata.server.engine.data.ExecutionContext;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
 import org.smartdata.server.engine.rule.RuleExecutor;
@@ -293,28 +292,20 @@ public class RuleManager extends AbstractService {
       RuleInfo rule = infoRepo.getRuleInfoRef();
       if (rule.getState() == RuleState.ACTIVE
           || rule.getState() == RuleState.DRYRUN) {
-        ExecutionContext ctx = new ExecutionContext();
-        ctx.setRuleId(rule.getId());
-        TranslationContext transCtx = new TranslationContext(rule.getId(),
-          rule.getSubmitTime());
-        TranslateResult tr = new SmartRuleStringParser(rule.getRuleText(), transCtx).translate();
-        List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
-        for (RuleExecutorPlugin plugin : plugins) {
-          plugin.onNewRuleExecutor(rule, tr);
-        }
+        RuleExecutor ruleExecutor = infoRepo.launchExecutor(this);
+        TranslateResult tr = ruleExecutor.getTranslateResult();
         TimeBasedScheduleInfo si = tr.getTbScheduleInfo();
         long lastCheckTime = rule.getLastCheckTime();
         long every = si.getEvery();
         long now = System.currentTimeMillis();
         if ((now-lastCheckTime) > every) {
-          int delay = new Random().nextInt(10000);
+          int delay = new Random().nextInt(5000);
           si.setStartTime(now+delay);
         } else {
           long delay = every - (now - lastCheckTime);
           si.setStartTime(now + delay);
         }
-        boolean sub = submitRuleToScheduler(new RuleExecutor(
-           this, ctx, tr, this.getMetaStore()));
+        boolean sub = submitRuleToScheduler(ruleExecutor);
         numLaunched += sub ? 1 : 0;
       }
     }
