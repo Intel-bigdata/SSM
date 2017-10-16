@@ -195,7 +195,7 @@
 //        CmdletState.PENDING, cmdletDescriptor.getCmdletString(),
 //        123178333l, 232444994l);
 //    CmdletInfo[] cmdlets = {cmdletInfo};
-//    metaStore.insertCmdletsTable(cmdlets);
+//    metaStore.insertCmdlets(cmdlets);
 //  }
 //
 //  private void testCmdletExecutorHelper() throws Exception {

@@ -733,7 +733,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
 
-  public synchronized void insertCmdletsTable(CmdletInfo[] commands)
+  public synchronized void insertCmdlets(CmdletInfo[] commands)
       throws MetaStoreException {
     try {
       cmdletDao.insert(commands);
@@ -742,10 +742,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertCmdletTable(CmdletInfo command)
+  public synchronized void insertCmdlet(CmdletInfo command)
       throws MetaStoreException {
     try {
-      cmdletDao.insert(command);
+      // Update if exists
+      if (getCmdletById(command.getCid()) != null) {
+        cmdletDao.update(command);
+      } else {
+        cmdletDao.insert(command);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -776,6 +781,25 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       return cmdletDao.getByCondition(cidCondition, ridCondition, state);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<CmdletInfo> getCmdlets(CmdletState state) throws MetaStoreException {
+    try {
+      return cmdletDao.getByState(state);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public boolean updateCmdlet(CmdletInfo cmdletInfo)
+      throws MetaStoreException {
+    try {
+      return cmdletDao.update(cmdletInfo) >= 0;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

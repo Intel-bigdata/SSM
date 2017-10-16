@@ -326,7 +326,7 @@ public class TestMetaStore extends TestDaoUtil {
     CmdletInfo cmdletInfo = new CmdletInfo(1, ruleInfo.getId(),
         CmdletState.EXECUTING, "test", 123123333l, 232444444l);
     cmdletInfo.setAids(Collections.singletonList(1l));
-    metaStore.insertCmdletTable(cmdletInfo);
+    metaStore.insertCmdlet(cmdletInfo);
     metaStore.insertAction(new ActionInfo(1, 1,
         "allssd", args, "Test",
         "Test", true, 123213213l, true, 123123l,
@@ -443,10 +443,10 @@ public class TestMetaStore extends TestDaoUtil {
   public void testInsertCmdletsTable() throws Exception {
     CmdletInfo command1 = new CmdletInfo(0, 1,
         CmdletState.EXECUTING, "test", 123123333l, 232444444l);
-    metaStore.insertCmdletTable(command1);
+    metaStore.insertCmdlet(command1);
     CmdletInfo command2 = new CmdletInfo(1, 78,
         CmdletState.PAUSED, "tt", 123178333l, 232444994l);
-    metaStore.insertCmdletTable(command2);
+    metaStore.insertCmdlet(command2);
     Assert.assertTrue(metaStore.getCmdletById(command1.getCid()).equals(command1));
     Assert.assertTrue(metaStore.getCmdletById(command2.getCid()).equals(command2));
     metaStore.updateCmdlet(command1.getCid(), "TestParameter", CmdletState.DRYRUN);
@@ -464,7 +464,7 @@ public class TestMetaStore extends TestDaoUtil {
     CmdletInfo command2 = new CmdletInfo(1, 78,
         CmdletState.PENDING, "tt", 123178333l, 232444994l);
     CmdletInfo[] commands = {command1, command2};
-    metaStore.insertCmdletsTable(commands);
+    metaStore.insertCmdlets(commands);
     commandId = metaStore.getMaxCmdletId();
     String cidCondition = ">= 1 ";
     String ridCondition = "= 78 ";
