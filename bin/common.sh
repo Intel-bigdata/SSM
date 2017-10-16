@@ -256,12 +256,14 @@ function init_command() {
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
       JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
+      SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
     ;;
     smartagent)
       SMART_CLASSNAME=org.smartdata.agent.SmartAgent
       SMART_PID_FILE=/tmp/SmartAgent.pid
       ALLOW_DAEMON_OPT=true
       JAVA_OPTS+=" -Dsmart.log.file=SmartAgent.log"
+      SMART_VARGS+=" -D smart.agent.address="${SSM_EXEC_HOST}
     ;;
     getconf)
       SMART_CLASSNAME=org.smartdata.server.utils.tools.GetConf
@@ -277,7 +279,7 @@ function remote_execute() {
   local host=$1
   shift
 
-  ssh ${SSH_OPTIONS} ${host} "cd ${SMART_HOME} ; $@"
+  ssh ${SSH_OPTIONS} ${host} "export SSM_EXEC_HOST=${host}; cd ${SMART_HOME} ; $@"
 }
 
 function local_execute() {

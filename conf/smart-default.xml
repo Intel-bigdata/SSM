@@ -50,15 +50,15 @@
   </property>
 
   <property>
-    <name>smart.agent.address</name>
-    <value>127.0.0.1:7048</value>
-    <description>SmartAgent address</description>
+    <name>smart.agent.port</name>
+    <value>7048</value>
+    <description>SmartAgent port</description>
   </property>
 
   <property>
-    <name>smart.agent.master.address</name>
-    <value>127.0.0.1:7051</value>
-    <description>SmartAgent master address</description>
+    <name>smart.agent.master.port</name>
+    <value>7051</value>
+    <description>SmartAgent master port</description>
   </property>
 
   <property>
