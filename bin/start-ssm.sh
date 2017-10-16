@@ -60,18 +60,37 @@ if [ "$?" != "0" ]; then
   exit 1
 fi
 
+CONTAIN_LOCALHOST=
 HH=
-for i in $ORGSMARTSERVERS; do if [ "$i" = "localhost" ]; then HH+=" ${HOSTNAME}" ; else HH+=" $i"; fi; done
+for i in $ORGSMARTSERVERS; do if [ "$i" = "localhost" ]; then HH+=" ${HOSTNAME}" ; CONTAIN_LOCALHOST=true ; else HH+=" $i"; fi; done
 SMARTSERVERS=${HH/ /}
+
+if [ x"${CONTAIN_LOCALHOST}" = x"true" -a x"${ORGSMARTSERVERS}" != x"localhost" ]; then
+    echo "ERROR: 'localhost' cannot be used when starting multiple SmartServers."
+    echo "       Please replace it with the real hostname in hazelcast.xml."
+    exit 1
+fi
 
 if [ x"${SMARTSERVERS}" != x"" ]; then
   echo "Starting SmartServers on [${SMARTSERVERS}]"
+  FIRST_MASTER=$(echo ${SMARTSERVERS} | awk '{print $1}')
   . "${SMART_HOME}/bin/ssm" \
     --remote \
     --config "${SMART_CONF_DIR}" \
-    --hosts "${SMARTSERVERS}" --hostsend \
+    --hosts "${FIRST_MASTER}" --hostsend \
     --daemon start ${DEBUG_OPT} \
     smartserver
+
+  if [ x"${SMARTSERVERS}" != x"${FIRST_MASTER}" ]; then
+    OTHER_MASTERS=${SMARTSERVERS/${FIRST_MASTER} /}
+    sleep 4
+    . "${SMART_HOME}/bin/ssm" \
+      --remote \
+      --config "${SMART_CONF_DIR}" \
+      --hosts "${OTHER_MASTERS}" --hostsend \
+      --daemon start ${DEBUG_OPT} \
+      smartserver
+  fi
 else
   echo "WARN: No SmartServers configured in 'hazelcast.xml'."
   exit 1
