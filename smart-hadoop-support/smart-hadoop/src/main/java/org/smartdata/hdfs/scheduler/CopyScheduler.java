@@ -38,7 +38,6 @@ import org.smartdata.model.FileInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -83,11 +82,10 @@ public class CopyScheduler extends ActionSchedulerService {
   private int batchSize = 300;
   // Overwrite remove during base Sync
   private boolean overwrite = true;
-
   // Cache of the file_diff
   private Map<Long, FileDiff> fileDiffCache;
-  // sync every 50 update
-  private int syncTime;
+  // cache sync threshold, default 50
+  private int cacheSyncTh = 50;
   // record the file_diff whether being changed
   private Map<Long, Boolean> fileDiffChanged;
 
@@ -109,7 +107,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     this.fileDiffCache = new ConcurrentHashMap<>();
     this.fileDiffChanged = new ConcurrentHashMap<>();
-    this.syncTime = 0;
+    this.cacheSyncTh = 0;
   }
 
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
@@ -134,12 +132,7 @@ public class CopyScheduler extends ActionSchedulerService {
     if (fileDiffCache.containsKey(fid)) {
       fileDiff = fileDiffCache.get(fid);
     } else {
-      try {
-        fileDiff = metaStore.getFileDiff(fid);
-        addDiffIntoCache(fileDiff);
-      } catch (MetaStoreException e) {
-        LOG.error("Get file diff by did = {} from metastore error", fid, e);
-      }
+      return ScheduleResult.FAIL;
     }
 
     if (fileDiff == null) {
@@ -184,8 +177,7 @@ public class CopyScheduler extends ActionSchedulerService {
   public List<String> getSupportedActions() {
     return actions;
   }
-
-
+  
   private boolean isFileLocked(String path) {
     if (fileLock.containsKey(path)) {
       // File is locked
@@ -205,7 +197,6 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     return false;
   }
-
 
   public boolean onSubmit(ActionInfo actionInfo) {
     String path = actionInfo.getArgs().get("-file");
@@ -233,12 +224,8 @@ public class CopyScheduler extends ActionSchedulerService {
         if (fileDiffCache.containsKey(did)) {
           fileDiff = fileDiffCache.get(did);
         } else {
-          try {
-            fileDiff = metaStore.getFileDiff(did);
-            addDiffIntoCache(fileDiff);
-          } catch (MetaStoreException e) {
-            LOG.error("Get file diff by did = {} from metastore error", did, e);
-          }
+          LOG.error("Duplicate sync action->[ {} ] is triggered", did);
+          return;
         }
 
         if (fileDiff == null) {
@@ -289,6 +276,7 @@ public class CopyScheduler extends ActionSchedulerService {
       return;
     }
     List<FileDiff> batchFileDiffs = new ArrayList<>();
+    List<String> removed = new ArrayList<>();
     FileDiff fileDiff;
     for (Iterator<Map.Entry<String, String>> it =
         baseSyncQueue.entrySet().iterator(); it.hasNext(); ) {
@@ -300,12 +288,16 @@ public class CopyScheduler extends ActionSchedulerService {
       if (fileDiff != null) {
         batchFileDiffs.add(fileDiff);
       }
-      it.remove();
+      removed.add(entry.getKey());
       index++;
     }
     // Batch Insert
     metaStore.insertFileDiffs(
         batchFileDiffs.toArray(new FileDiff[batchFileDiffs.size()]));
+    // Remove from baseSyncQueue
+    for (String src : removed) {
+      baseSyncQueue.remove(src);
+    }
   }
 
   private void baseSync(String srcDir,
@@ -406,15 +398,14 @@ public class CopyScheduler extends ActionSchedulerService {
 
   // add file_diff into Cache, if the file diff is already in cache, we update
   // if the file diff is not in cache, we insert.
-  public void addDiffIntoCache(List<FileDiff> fileDiffs) throws MetaStoreException {
+  public void addDiffIntoCache(
+      List<FileDiff> fileDiffs) throws MetaStoreException {
     LOG.debug("Add FileDiff Cache into file_diff cache");
     for (FileDiff fileDiff : fileDiffs) {
       recordChangedFileDiff(fileDiff);
       fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
-      syncTime++;
     }
-    if (syncTime >= 50) {
-      syncTime = 0;
+    if (fileDiffChanged.size() >= cacheSyncTh) {
       // update
       pushCacheIntoDB();
     }
@@ -426,9 +417,7 @@ public class CopyScheduler extends ActionSchedulerService {
     LOG.debug("Add FileDiff Cache into file_diff cache");
     recordChangedFileDiff(fileDiff);
     fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
-    syncTime++;
-    if (syncTime >= 50) {
-      syncTime = 0;
+    if (fileDiffChanged.size() >= cacheSyncTh) {
       // update
       pushCacheIntoDB();
     }
@@ -448,7 +437,6 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-
   public void deleteDiffInCache(Long did) {
     LOG.debug("Delete FileDiff in cache");
     if (fileDiffCache.containsKey(did)) {
@@ -465,7 +453,6 @@ public class CopyScheduler extends ActionSchedulerService {
     FileDiff fileDiff = fileDiffCache.get(did);
     fileDiff.setState(fileDiffState);
     //update
-    syncTime++;
     fileDiffChanged.put(did, true);
     fileDiffCache.put(did, fileDiff);
   }
@@ -537,8 +524,6 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
 
-
-
     private void diffPreProcessing(
         List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
@@ -574,8 +559,6 @@ public class CopyScheduler extends ActionSchedulerService {
         fileDiffMap.put(fileDiff.getDiffId(), 0);
       }
     }
-
-
 
     @Override
     public void run() {
@@ -670,7 +653,7 @@ public class CopyScheduler extends ActionSchedulerService {
         long totalLength = 0;
         long lastAppend = -1;
         for (long did : appendChain) {
-          FileDiff fileDiff = metaStore.getFileDiff(did);
+          FileDiff fileDiff = fileDiffCache.get(did);
           if (fileDiff != null && fileDiff.getState().getValue() != 2) {
             long currOffset =
                 Long.valueOf(fileDiff.getParameters().get("-offset"));
@@ -691,7 +674,7 @@ public class CopyScheduler extends ActionSchedulerService {
         if (lastAppend == -1) {
           return;
         }
-        FileDiff fileDiff = metaStore.getFileDiff(lastAppend);
+        FileDiff fileDiff = fileDiffCache.get(lastAppend);
         fileDiff.getParameters().put("-offset", "" + offset);
         fileDiff.getParameters().put("-length", "" + totalLength);
         // Update fileDiff in metastore
@@ -708,7 +691,7 @@ public class CopyScheduler extends ActionSchedulerService {
         LOG.debug("Delete Merge Triggered!");
         boolean isCreate = false;
         for (long did : appendChain) {
-          FileDiff diff = metaStore.getFileDiff(did);
+          FileDiff diff = fileDiffCache.get(did);
           if (diff.getParameters().containsKey("-offset")) {
             if (diff.getParameters().get("-offset").equals("0")) {
               isCreate = true;
@@ -753,7 +736,7 @@ public class CopyScheduler extends ActionSchedulerService {
         nameChain.add(newName);
         boolean isCreate = false;
         for (long did : appendChain) {
-          FileDiff appendFileDiff = metaStore.getFileDiff(did);
+          FileDiff appendFileDiff = fileDiffCache.get(did);
           if (fileDiff.getParameters().containsKey("-offset")) {
             if (fileDiff.getParameters().get("-offset").equals("0")) {
               isCreate = true;
