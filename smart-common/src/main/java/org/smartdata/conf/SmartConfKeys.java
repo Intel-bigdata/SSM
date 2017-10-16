@@ -72,12 +72,14 @@ public class SmartConfKeys {
   public final static boolean SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT = false;
 
   // SmartAgent
-  public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
-  public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
   public static final String SMART_AGENT_MASTER_PORT_KEY = "smart.agent.master.port";
   public static final int SMART_AGENT_MASTER_PORT_DEFAULT = 7051;
   public static final String SMART_AGENT_PORT_KEY = "smart.agent.port";
   public static final int SMART_AGENT_PORT_DEFAULT = 7048;
+
+  /** Do NOT configure the following two options manually. They are set by the boot scripts. **/
+  public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
+  public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
 
   // SmartClient
   // Comma delimited directories, access event of files under these directories will not be reported to SSM.
