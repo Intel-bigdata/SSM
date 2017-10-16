@@ -28,11 +28,10 @@ import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
-import org.smartdata.model.rule.RuleExecutorPluginManager;
-import org.smartdata.model.rule.RulePluginManager;
-import org.smartdata.model.rule.TranslateResult;
+import org.smartdata.model.rule.*;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
+import org.smartdata.server.engine.data.ExecutionContext;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
 import org.smartdata.server.engine.rule.RuleExecutor;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -293,7 +293,28 @@ public class RuleManager extends AbstractService {
       RuleInfo rule = infoRepo.getRuleInfoRef();
       if (rule.getState() == RuleState.ACTIVE
           || rule.getState() == RuleState.DRYRUN) {
-        boolean sub = submitRuleToScheduler(infoRepo.launchExecutor(this, "start"));
+        ExecutionContext ctx = new ExecutionContext();
+        ctx.setRuleId(rule.getId());
+        TranslationContext transCtx = new TranslationContext(rule.getId(),
+          rule.getSubmitTime());
+        TranslateResult tr = new SmartRuleStringParser(rule.getRuleText(), transCtx).translate();
+        List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
+        for (RuleExecutorPlugin plugin : plugins) {
+          plugin.onNewRuleExecutor(rule, tr);
+        }
+        TimeBasedScheduleInfo si = tr.getTbScheduleInfo();
+        long lastCheckTime = rule.getLastCheckTime();
+        long every = si.getEvery();
+        long now = System.currentTimeMillis();
+        if ((now-lastCheckTime) > every) {
+          int delay = new Random().nextInt(10000);
+          si.setStartTime(now+delay);
+        } else {
+          long delay = every - (now - lastCheckTime);
+          si.setStartTime(now + delay);
+        }
+        boolean sub = submitRuleToScheduler(new RuleExecutor(
+           this, ctx, tr, this.getMetaStore()));
         numLaunched += sub ? 1 : 0;
       }
     }

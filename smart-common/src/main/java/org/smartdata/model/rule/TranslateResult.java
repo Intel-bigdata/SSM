@@ -80,9 +80,13 @@ public class TranslateResult {
     return retSqlIndex;
   }
 
-  public TimeBasedScheduleInfo getTbScheduleInfo() { return tbScheduleInfo; }
+  public TimeBasedScheduleInfo getTbScheduleInfo() {
+    return tbScheduleInfo;
+  }
 
-  public boolean isTimeBased() { return tbScheduleInfo != null; }
+  public boolean isTimeBased() {
+    return tbScheduleInfo != null;
+  }
 
   public int[] getCondPosition() {
     return condPosition;

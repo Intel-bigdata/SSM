@@ -100,16 +100,6 @@ public class RuleInfoRepo {
     }
   }
 
-  public RuleExecutor launchExecutor(RuleManager ruleManager, String start)
-      throws IOException {
-    lockWrite();
-    try {
-      return doLaunchExecutor(ruleManager, start);
-    } finally {
-      unlockWrite();
-    }
-  }
-
   public boolean updateRuleInfo(RuleState rs, long lastCheckTime,
       long checkedCount, int cmdletsGen) throws IOException {
     lockWrite();
@@ -138,7 +128,6 @@ public class RuleInfoRepo {
       if (executor != null && !executor.isExited()) {
         return null;
       }
-
       ExecutionContext ctx = new ExecutionContext();
       ctx.setRuleId(ruleInfo.getId());
       TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
@@ -156,41 +145,6 @@ public class RuleInfoRepo {
     return null;
   }
 
-  private RuleExecutor doLaunchExecutor(RuleManager ruleManager, String start)
-      throws IOException {
-    RuleState state = ruleInfo.getState();
-    if (state == RuleState.ACTIVE || state == RuleState.DRYRUN) {
-      if (executor != null && !executor.isExited()) {
-        return null;
-      }
-
-      ExecutionContext ctx = new ExecutionContext();
-      ctx.setRuleId(ruleInfo.getId());
-      TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
-          ruleInfo.getSubmitTime());
-      TranslateResult tr = executor != null ? executor.getTranslateResult() :
-          new SmartRuleStringParser(ruleInfo.getRuleText(), transCtx).translate();
-      List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
-      for (RuleExecutorPlugin plugin : plugins) {
-        plugin.onNewRuleExecutor(ruleInfo, tr);
-      }
-      TimeBasedScheduleInfo si = tr.getTbScheduleInfo();
-      long lastCheckTime = ruleInfo.getLastCheckTime();
-      long every = si.getEvery();
-      long now = System.currentTimeMillis();
-      if ((now-lastCheckTime) > every) {
-        int delay = new Random().nextInt(10000);
-        si.setStartTime(now+delay);
-      } else {
-        long delay = every - (now - lastCheckTime);
-        si.setStartTime(now + delay);
-      }
-      executor = new RuleExecutor(
-          ruleManager, ctx, tr, ruleManager.getMetaStore());
-      return executor;
-    }
-    return null;
-  }
   private void markWorkExit() {
     if (executor != null) {
       executor.setExited();
