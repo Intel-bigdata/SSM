@@ -206,11 +206,6 @@ public class SmartZeppelinServer {
     notebook.addNotebookEventListener(notebookWsServer.getNotebookInformationListener());
   }
 
-  private boolean isZeppelinWebEnabled() {
-    return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB,
-        SmartConfKeys.SMART_ENABLE_ZEPPELIN_WEB_DEFAULT);
-  }
-
   public static void main(String[] args) throws Exception {
     SmartZeppelinServer server = new SmartZeppelinServer(new SmartConf(), null);
 
@@ -471,12 +466,6 @@ public class SmartZeppelinServer {
 
     WebAppContext webApp = new WebAppContext();
     webApp.setContextPath(zconf.getServerContextPath());
-
-    if (!isZeppelinWebEnabled()) {
-      webApp.setResourceBase("");
-      contexts.addHandler(webApp);
-      return webApp;
-    }
 
     File warPath = new File(zconf.getString(ConfVars.ZEPPELIN_WAR));
     //File warPath = new File("../dist/zeppelin-web-0.7.2.war");

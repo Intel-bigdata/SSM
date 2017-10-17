@@ -53,7 +53,6 @@ public class IntegrationTestBase {
     String httpAddr = conf.get(SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_KEY,
         SmartConfKeys.SMART_SERVER_HTTP_ADDRESS_DEFAULT);
     zeppelinPort = Integer.parseInt(httpAddr.split(":")[1]);
-    conf.setBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN, true);
     smartServer = new IntegrationSmartServer();
     smartServer.setUp(conf);
 
