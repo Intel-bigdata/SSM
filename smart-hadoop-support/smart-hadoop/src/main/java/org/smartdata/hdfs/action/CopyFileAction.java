@@ -46,8 +46,7 @@ import java.util.Map;
     usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
         " $dest " + CopyFileAction.OFFSET_INDEX + " $offset" +
         CopyFileAction.LENGTH +
-        " $length" + CopyFileAction.BUF_SIZE + " $size" +
-        CopyFileAction.OVERWRITE + " $overWrite"
+        " $length" + CopyFileAction.BUF_SIZE + " $size"
 )
 public class CopyFileAction extends HdfsAction {
   private static final Logger LOG =
@@ -56,12 +55,10 @@ public class CopyFileAction extends HdfsAction {
   public static final String DEST_PATH = "-dest";
   public static final String OFFSET_INDEX = "-offset";
   public static final String LENGTH = "-length";
-  public static final String OVERWRITE = "-overWrite";
   private String srcPath;
   private String destPath;
   private long offset = 0;
   private long length = 0;
-  private boolean overWrite = false;
   private int bufferSize = 64 * 1024;
   private Configuration conf;
 
@@ -89,9 +86,6 @@ public class CopyFileAction extends HdfsAction {
     }
     if (args.containsKey(LENGTH)) {
       length = Long.valueOf(args.get(LENGTH));
-    }
-    if (args.containsKey(OVERWRITE)) {
-      overWrite = Boolean.valueOf(args.get(OVERWRITE));
     }
   }
 
@@ -137,7 +131,7 @@ public class CopyFileAction extends HdfsAction {
 
     try {
       in = getSrcInputStream(src);
-      out = getDestOutPutStream(dest);
+      out = getDestOutPutStream(dest, offset);
       //skip offset
       in.skip(offset);
       byte[] buf = new byte[bufferSize];
@@ -186,7 +180,7 @@ public class CopyFileAction extends HdfsAction {
     }
   }
 
-  private OutputStream getDestOutPutStream(String dest) throws IOException {
+  private OutputStream getDestOutPutStream(String dest, long offset) throws IOException {
     if (dest.startsWith("hdfs")) {
       // Copy between different clusters
       // Get OutPutStream from URL
@@ -200,11 +194,11 @@ public class CopyFileAction extends HdfsAction {
       } catch (IOException e) {
         LOG.debug("Get Server default replication error!", e);
       }
-      if (fs.exists(new Path(dest)) && !overWrite) {
+      if (fs.exists(new Path(dest)) && offset != 0) {
         appendLog("Append to existing file " + dest);
         return fs.append(new Path(dest));
       } else {
-        return fs.create(new Path(dest), overWrite, (short) replication);
+        return fs.create(new Path(dest), true, (short) replication);
       }
 
     } else {
