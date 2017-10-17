@@ -325,16 +325,10 @@ public class CopyScheduler extends ActionSchedulerService {
     }
 
     if (returnStatus == null) {
-      return null;
+      return new FileStatus[0];
     }
-
-    FileStatus[] returnArr = new FileStatus[returnStatus.size()];
-    int i = 0;
-    for (FileStatus fileStatus : returnStatus) {
-      returnArr[i] = fileStatus;
-      i++;
-    }
-    return returnArr;
+    
+    return returnStatus.toArray(new FileStatus[returnStatus.size()]);
   }
 
   private void baseSync(String srcDir,
