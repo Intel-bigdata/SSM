@@ -249,20 +249,20 @@ function init_command() {
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
       SMART_VARGS+=" -format"
-      JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
+      JAVA_OPTS+=" -Dsmart.log.file=smartserver.log"
     ;;
     smartserver)
       SMART_CLASSNAME=org.smartdata.server.SmartDaemon
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
-      JAVA_OPTS+=" -Dsmart.log.file=SmartServer.log"
+      JAVA_OPTS+=" -Dsmart.log.file=smartserver.log"
       SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
     ;;
     smartagent)
       SMART_CLASSNAME=org.smartdata.agent.SmartAgent
       SMART_PID_FILE=/tmp/SmartAgent.pid
       ALLOW_DAEMON_OPT=true
-      JAVA_OPTS+=" -Dsmart.log.file=SmartAgent.log"
+      JAVA_OPTS+=" -Dsmart.log.file=smartagent.log"
       SMART_VARGS+=" -D smart.agent.address="${SSM_EXEC_HOST}
     ;;
     getconf)

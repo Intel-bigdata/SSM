@@ -230,12 +230,6 @@ public class MovePlanMaker {
       if (target == null) {
         continue;
       }
-//      final Dispatcher.PendingMove pm = new Dispatcher.PendingMove(source, target);
-//      if (pm != null) {
-//        dispatcher.executePendingMove(pm);
-//        return true;
-//      }
-//      dispatcher.executePendingMove();
       addPlan(source, target, db.getBlock().getBlockId());
       return true;
     }
@@ -251,12 +245,6 @@ public class MovePlanMaker {
       for (StorageGroup target : targets) {
         if (matcher.match(cluster, source.getDatanodeInfo(),
                 target.getDatanodeInfo())) {
-//          final Dispatcher.PendingMove pm = source.addPendingMove(db, target);
-//          if (pm != null) {
-//            dispatcher.executePendingMove(pm);
-//            return true;
-//          }
-//          dispatcher.executePendingMove();
           addPlan(source, target, db.getBlock().getBlockId());
           return true;
         }
