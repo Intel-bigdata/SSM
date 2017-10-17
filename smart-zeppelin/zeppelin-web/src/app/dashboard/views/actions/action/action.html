@@ -24,7 +24,13 @@ under the License.
   <h5 ng-bind="action.argument"></h5>
 </div>
 
-<div ng-include src="'app/dashboard/views/actions/action/overview.html'">
+<div ng-include src="'app/dashboard/views/actions/action/overview.html'"></div>
+<div class="container" ng-if="action.log">
+  <h4><span>Log</span></h4>
+  <div class="error text">
+    {{action.log}}
+  </div>
 </div>
+
 
 
