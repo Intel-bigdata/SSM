@@ -203,7 +203,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
             argument: util.joinArguments(obj.args)
           });
         },
-        action1: function (obj) {
+        actionInfo: function (obj) {
           obj = obj.body;
           return angular.merge(obj, {
             uptime: obj.finishTime - obj.createTime,
@@ -242,8 +242,8 @@ angular.module('org.apache.hadoop.ssm.models', [])
         actions: function () {
           return get('actions/list/0', decoder.actions);
         },
-        action: function (actionId) {
-          return get('actions/' + actionId + '/info', decoder.action1);
+        actionInfo: function (actionId) {
+          return get('actions/' + actionId + '/info', decoder.actionInfo);
         },
         actionTypes: function () {
           return get('actions/registry/list', decoder.default)
