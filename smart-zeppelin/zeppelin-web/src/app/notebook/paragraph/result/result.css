@@ -11,11 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+.text {
+  display: block !important;
+  font-family: "Monaco","Menlo","Ubuntu Mono","Consolas","source-code-pro",monospace;
+  font-size: 12px !important;
+  line-height: 1.42857143 !important;
+  margin: 0 0 5px !important;
+  padding-top: 2px;
+  unicode-bidi: embed;
+  white-space: pre-wrap;
+  word-break: break-all !important;
+  word-wrap: break-word !important;
+}
 
 .result-chart-selector {
-    margin-bottom: 10px; 
-    position: relative; 
-    display: inline-block; 
+    margin-bottom: 10px;
+    position: relative;
+    display: inline-block;
     vertical-align: middle;
 }
 

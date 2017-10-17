@@ -73,7 +73,7 @@ angular.module('zeppelinWebApp')
             createTime: action.createTime,
             finishTime: action.finished ? action.finishTime : "-",
             runningTime: action.uptime,
-            succeed: action.finished ? action.successful ? "Successful" : "Fiald" : "-",
+            succeed: action.finished ? action.successful ? "Successful" : "Faild" : "-",
             view: {
               href: action.pageUrl,
               icon: function() {
