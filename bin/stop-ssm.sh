@@ -49,12 +49,16 @@ done
 #---------------------------------------------------------
 # Stop Smart Servers
 
-SMARTSERVERS=$("${SMART_HOME}/bin/ssm" getconf SmartServers 2>/dev/null)
+ORGSMARTSERVERS=$("${SMART_HOME}/bin/ssm" getconf SmartServers 2>/dev/null)
 
 if [ "$?" != "0" ]; then
-  echo "ERROR: Get SmartServers error: ${SMARTSERVERS}"
+  echo "ERROR: Get SmartServers error."
   exit 1
 fi
+
+HH=
+for i in $ORGSMARTSERVERS; do if [ "$i" = "localhost" ]; then HH+=" ${HOSTNAME}" ; else HH+=" $i"; fi; done
+SMARTSERVERS=${HH/ /}
 
 if [ x"${SMARTSERVERS}" != x"" ]; then
   echo "Stopping SmartServers on [${SMARTSERVERS}]"
@@ -76,6 +80,9 @@ echo
 AGENTS_FILE="${SMART_CONF_DIR}/agents"
 if [ -f "${AGENTS_FILE}" ]; then
   AGENT_HOSTS=$(sed 's/#.*$//;/^$/d' "${AGENTS_FILE}" | xargs echo)
+  AH=
+  for i in $AGENT_HOSTS; do if [ "$i" = "localhost" ]; then AH+=" ${HOSTNAME}" ; else AH+=" $i"; fi; done
+  AGENT_HOSTS=${AH/ /}
   if [ x"${AGENT_HOSTS}" != x"" ]; then
     echo "Stopping SmartAgents on [${AGENT_HOSTS}]"
     . "${SMART_HOME}/bin/ssm" \

@@ -23,13 +23,14 @@ import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
+import java.io.IOException;
 import java.util.List;
 
 public class AgentExecutorService extends CmdletExecutorService {
 
   private AgentMaster master;
 
-  public AgentExecutorService(SmartConf conf, CmdletManager cmdletManager) {
+  public AgentExecutorService(SmartConf conf, CmdletManager cmdletManager) throws IOException {
     super(cmdletManager, ExecutorType.AGENT);
     this.master = new AgentMaster(conf, cmdletManager);
   }

@@ -28,7 +28,6 @@ import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.balancer.Matcher;
-import org.apache.hadoop.hdfs.server.blockmanagement.BlockStoragePolicySuite;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +43,11 @@ import org.smartdata.model.action.FileMovePlan;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -60,8 +61,7 @@ public class MovePlanMaker {
   private StorageMap storages;
   private final AtomicInteger retryCount;
 
-  private final BlockStoragePolicy[] blockStoragePolicies;
-  private long movedBlocks = 0;
+  private final Map<String, BlockStoragePolicy> mapStoragePolicies;
   private final MovePlanStatistics statistics;
   private FileMovePlan schedulePlan;
 
@@ -71,8 +71,7 @@ public class MovePlanMaker {
     this.storages = storages;
     this.networkTopology = cluster;
     this.retryCount = new AtomicInteger(1);
-    this.blockStoragePolicies = new BlockStoragePolicy[1 <<
-        BlockStoragePolicySuite.ID_BIT_LENGTH];
+    this.mapStoragePolicies = new HashMap<>();
     initStoragePolicies();
     this.statistics = statistics;
   }
@@ -81,7 +80,7 @@ public class MovePlanMaker {
     BlockStoragePolicy[] policies = dfs.getStoragePolicies();
 
     for (BlockStoragePolicy policy : policies) {
-      this.blockStoragePolicies[policy.getId()] = policy;
+      mapStoragePolicies.put(policy.getName(), policy);
     }
   }
 
@@ -106,7 +105,7 @@ public class MovePlanMaker {
    * @return whether there is still remaining migration work for the next
    * round
    */
-  public synchronized FileMovePlan processNamespace(Path targetPath) throws IOException {
+  public synchronized FileMovePlan processNamespace(Path targetPath, String destPolicy) throws IOException {
     schedulePlan = new FileMovePlan();
     String filePath = targetPath.toUri().getPath();
     schedulePlan.setFileName(filePath);
@@ -134,19 +133,15 @@ public class MovePlanMaker {
     }
     schedulePlan.setDir(false);
     schedulePlan.setFileLength(status.getLen());
-    processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status);
+    processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status, destPolicy);
     return schedulePlan;
   }
 
   /**
    * @return true if it is necessary to run another round of migration
    */
-  private void processFile(String fullPath, HdfsLocatedFileStatus status) {
-    byte policyId = status.getStoragePolicy();
-    if (policyId == BlockStoragePolicySuite.ID_UNSPECIFIED) {
-      return;
-    }
-    final BlockStoragePolicy policy = blockStoragePolicies[policyId];
+  private void processFile(String fullPath, HdfsLocatedFileStatus status, String destPolicy) {
+    final BlockStoragePolicy policy = mapStoragePolicies.get(destPolicy);
     if (policy == null) {
       LOG.warn("Failed to get the storage policy of file " + fullPath);
       return;
@@ -230,12 +225,6 @@ public class MovePlanMaker {
       if (target == null) {
         continue;
       }
-//      final Dispatcher.PendingMove pm = new Dispatcher.PendingMove(source, target);
-//      if (pm != null) {
-//        dispatcher.executePendingMove(pm);
-//        return true;
-//      }
-//      dispatcher.executePendingMove();
       addPlan(source, target, db.getBlock().getBlockId());
       return true;
     }
@@ -251,12 +240,6 @@ public class MovePlanMaker {
       for (StorageGroup target : targets) {
         if (matcher.match(cluster, source.getDatanodeInfo(),
                 target.getDatanodeInfo())) {
-//          final Dispatcher.PendingMove pm = source.addPendingMove(db, target);
-//          if (pm != null) {
-//            dispatcher.executePendingMove(pm);
-//            return true;
-//          }
-//          dispatcher.executePendingMove();
           addPlan(source, target, db.getBlock().getBlockId());
           return true;
         }

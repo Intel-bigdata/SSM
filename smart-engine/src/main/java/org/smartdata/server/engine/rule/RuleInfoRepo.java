@@ -126,7 +126,6 @@ public class RuleInfoRepo {
       if (executor != null && !executor.isExited()) {
         return null;
       }
-
       ExecutionContext ctx = new ExecutionContext();
       ctx.setRuleId(ruleInfo.getId());
       TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
@@ -177,7 +176,7 @@ public class RuleInfoRepo {
           if (oldState == RuleState.DISABLED || oldState == RuleState.DRYRUN) {
             ruleInfo.setState(newState);
             if (updateDb && metaStore != null) {
-              metaStore.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+              metaStore.updateRuleState(ruleInfo.getId(), newState);
             }
             return true;
           }
@@ -188,7 +187,7 @@ public class RuleInfoRepo {
             ruleInfo.setState(newState);
             markWorkExit();
             if (updateDb && metaStore != null) {
-              metaStore.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+              metaStore.updateRuleState(ruleInfo.getId(), newState);
             }
             return true;
           }
@@ -198,7 +197,7 @@ public class RuleInfoRepo {
           ruleInfo.setState(newState);
           markWorkExit();
           if (updateDb && metaStore != null) {
-            metaStore.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+            metaStore.updateRuleState(ruleInfo.getId(), newState);
           }
           return true;
 
@@ -206,7 +205,7 @@ public class RuleInfoRepo {
           if (oldState == RuleState.ACTIVE || oldState == RuleState.DRYRUN) {
             ruleInfo.setState(newState);
             if (updateDb && metaStore != null) {
-              metaStore.updateRuleInfo(ruleInfo.getId(), newState, 0, 0, 0);
+              metaStore.updateRuleState(ruleInfo.getId(), newState);
             }
             return true;
           }

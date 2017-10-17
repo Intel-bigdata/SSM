@@ -19,14 +19,10 @@ package org.smartdata.hdfs.metric.fetcher;
 
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
-import org.apache.hadoop.util.Time;
-import org.smartdata.hdfs.action.move.PendingMove;
 import org.smartdata.hdfs.action.move.Source;
 import org.smartdata.hdfs.action.move.StorageGroup;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /** A class that keeps track of a datanode. */
@@ -34,11 +30,6 @@ public class DDatanode {
   final DatanodeInfo datanode;
   private final Map<String, Source> sourceMap;
   private final Map<String, StorageGroup> targetMap;
-  private long delayUntil = 0L;
-  /** blocks being moved but not confirmed yet */
-  private final List<PendingMove> pendings;
-  private volatile boolean hasFailure = false;
-  private final int maxConcurrentMoves;
 
   @Override
   public String toString() {
@@ -49,8 +40,6 @@ public class DDatanode {
     this.datanode = datanode;
     this.sourceMap = new HashMap<>();
     this.targetMap = new HashMap<>();
-    this.maxConcurrentMoves = maxConcurrentMoves;
-    this.pendings = new ArrayList<>(maxConcurrentMoves);
   }
 
   public DatanodeInfo getDatanodeInfo() {
@@ -73,44 +62,5 @@ public class DDatanode {
     final Source s = new Source(storageType, this.getDatanodeInfo());
     put(storageType, s, sourceMap);
     return s;
-  }
-
-  synchronized public void activateDelay(long delta) {
-    delayUntil = Time.monotonicNow() + delta;
-  }
-
-  synchronized private boolean isDelayActive() {
-    if (delayUntil == 0 || Time.monotonicNow() > delayUntil) {
-      delayUntil = 0;
-      return false;
-    }
-    return true;
-  }
-
-  /** Check if the node can schedule more blocks to move */
-  synchronized boolean isPendingQNotFull() {
-    return pendings.size() < maxConcurrentMoves;
-  }
-
-  /** Check if all the dispatched moves are done */
-  synchronized boolean isPendingQEmpty() {
-    return pendings.isEmpty();
-  }
-
-  /** Add a scheduled block move to the node */
-  synchronized public boolean addPendingBlock(PendingMove pendingBlock) {
-    if (!isDelayActive() && isPendingQNotFull()) {
-      return pendings.add(pendingBlock);
-    }
-    return false;
-  }
-
-  /** Remove a scheduled block move from the node */
-  synchronized public boolean removePendingBlock(PendingMove pendingBlock) {
-    return pendings.remove(pendingBlock);
-  }
-
-  void setHasFailure() {
-    this.hasFailure = true;
   }
 }

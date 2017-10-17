@@ -22,7 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionType;
 import org.smartdata.action.Utils;
-import org.smartdata.hdfs.action.move.MoverBasedMoveRunner;
+import org.smartdata.hdfs.action.move.AbstractMoveFileAction;
+import org.smartdata.hdfs.action.move.MoverExecutor;
 import org.smartdata.hdfs.action.move.MoverStatus;
 import org.smartdata.model.action.FileMovePlan;
 
@@ -87,9 +88,7 @@ public class MoveFileAction extends AbstractMoveFileAction {
             "Action starts at %s : %s -> %s with %d replicas to move in total.",
             Utils.getFormatedCurrentTime(), fileName, storagePolicy, totalReplicas));
 
-    MoverBasedMoveRunner moveRunner =
-        new MoverBasedMoveRunner(getContext().getConf(), this.status, getResultOs(), getLogOs());
-    int numFailed = moveRunner.move(fileName, movePlan);
+    int numFailed = move();
     if (numFailed == 0) {
       dfsClient.setStoragePolicy(fileName, storagePolicy);
       appendResult("All the " + totalReplicas + " replicas moved successfully.");
@@ -98,6 +97,13 @@ public class MoveFileAction extends AbstractMoveFileAction {
       appendResult(res);
       throw new IOException(res);
     }
+  }
+
+  private int move() throws Exception {
+    int maxMoves = movePlan.getPropertyValueInt(FileMovePlan.MAX_CONCURRENT_MOVES, 10);
+    int maxRetries = movePlan.getPropertyValueInt(FileMovePlan.MAX_NUM_RETRIES, 10);
+    MoverExecutor executor = new MoverExecutor(status, getContext().getConf(), maxRetries, maxMoves);
+    return executor.executeMove(movePlan, getResultOs(), getLogOs());
   }
 
   @Override

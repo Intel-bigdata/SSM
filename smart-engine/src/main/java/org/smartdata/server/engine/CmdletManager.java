@@ -27,7 +27,7 @@ import org.smartdata.AbstractService;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.action.SmartAction;
-import org.smartdata.hdfs.action.AbstractMoveFileAction;
+import org.smartdata.hdfs.action.move.AbstractMoveFileAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
