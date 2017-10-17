@@ -71,6 +71,7 @@ public class CopyScheduler extends ActionSchedulerService {
   private Map<Long, Integer> fileDiffMap;
   // BaseSync queue
   private Map<String, String> baseSyncQueue;
+  private Map<String, Boolean> overwriteQueue;
   // Merge append length threshold
   private long mergeLenTh = DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT * 3;
   // Merge count length threshold
@@ -80,8 +81,6 @@ public class CopyScheduler extends ActionSchedulerService {
   private long checkInterval = 150;
   // Base sync batch insert size
   private int batchSize = 300;
-  // Overwrite remove during base Sync
-  private boolean overwrite = true;
   // Cache of the file_diff
   private Map<Long, FileDiff> fileDiffCache;
   // cache sync threshold, default 50
@@ -98,6 +97,7 @@ public class CopyScheduler extends ActionSchedulerService {
     this.fileDiffChainMap = new HashMap<>();
     this.fileDiffMap = new ConcurrentHashMap<>();
     this.baseSyncQueue = new ConcurrentHashMap<>();
+    this.overwriteQueue = new ConcurrentHashMap<>();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     try {
       conf = getContext().getConf();
@@ -302,8 +302,40 @@ public class CopyScheduler extends ActionSchedulerService {
   private void baseSync(String srcDir,
       String destDir) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(srcDir);
-    LOG.debug("Base Sync {} files", srcFiles.size());
+    LOG.debug("Directory Base Sync {} files", srcFiles.size());
+    // <file name, fileinfo>
+    Map<String, FileInfo> srcFileSet = new HashMap<>();
     for (FileInfo fileInfo : srcFiles) {
+      // Remove prefix/parent
+      srcFileSet.put(fileInfo.getPath().replace(srcDir,""), fileInfo);
+    }
+    FileStatus[] fileStatuses = null;
+    FileSystem fs = null;
+    try {
+      fs = FileSystem.get(URI.create(destDir), conf);
+      // TODO recursively file lists
+      fileStatuses = fs.listStatus(new Path(destDir));
+    } catch (IOException e) {
+      LOG.error("Fetch remote file list error!", e);
+    }
+    if (fileStatuses == null || fileStatuses.length == 0) {
+      LOG.debug("Remote directory is empty!");
+    } else {
+      LOG.debug("Remote directory contains {} files!", fileStatuses.length);
+      for (FileStatus fileStatus : fileStatuses) {
+        // only get file name
+        String destName = fileStatus.getPath().getName();
+        if (srcFileSet.containsKey(destName)) {
+          FileInfo fileInfo = srcFileSet.get(destName);
+          String src = fileInfo.getPath();
+          String dest = src.replace(srcDir, destDir);
+          baseSyncQueue.put(src, dest);
+          srcFileSet.remove(destName);
+        }
+      }
+    }
+    LOG.debug("Directory Base Sync {} files", srcFileSet.size());
+    for (FileInfo fileInfo : srcFileSet.values()) {
       if (fileInfo.isdir()) {
         // Ignore directory
         continue;
@@ -311,9 +343,9 @@ public class CopyScheduler extends ActionSchedulerService {
       String src = fileInfo.getPath();
       String dest = src.replace(srcDir, destDir);
       baseSyncQueue.put(src, dest);
+      overwriteQueue.put(src, true);
       // directSync(src, dest);
     }
-    LOG.debug("Base Sync: All files have been added to sync queue!");
     batchDirectSync();
   }
 
@@ -346,7 +378,13 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
     FileDiff fileDiff;
-    long offSet = fileCompare(fileInfo, dest);
+    long offSet;
+    if (overwriteQueue.containsKey(src)) {
+      offSet = 0;
+      overwriteQueue.remove(src);
+    } else {
+      offSet = fileCompare(fileInfo, dest);
+    }
     if (offSet == fileInfo.getLength()) {
       LOG.debug("Primary len={}, remote len={}", fileInfo.getLength(), offSet);
       return null;
@@ -370,10 +408,6 @@ public class CopyScheduler extends ActionSchedulerService {
 
   private long fileCompare(FileInfo fileInfo,
       String dest) throws MetaStoreException {
-    if (this.overwrite) {
-      // Overwrite remote
-      return 0;
-    }
     // Primary
     long localLen = fileInfo.getLength();
     // Get InputStream from URL
