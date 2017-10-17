@@ -133,8 +133,7 @@ public class MoverScheduler extends ActionSchedulerService {
     }
 
     try {
-      client.setStoragePolicy(file, policy);
-      FileMovePlan plan = planMaker.processNamespace(new Path(file));
+      FileMovePlan plan = planMaker.processNamespace(new Path(file), policy);
       if (rateLimiter != null) {
         // Two possible understandings here: file level and replica level
         int len = (int)(plan.getFileLengthToMove() >> 20);
