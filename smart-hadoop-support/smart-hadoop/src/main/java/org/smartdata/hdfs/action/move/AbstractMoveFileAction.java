@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action.copy;
+package org.smartdata.hdfs.action.move;
 
-import java.io.IOException;
+import org.smartdata.hdfs.action.HdfsAction;
 
-/**
- * Base class for all kinds of copy strategies.
- */
-public abstract class CopyRunner {
+public abstract class AbstractMoveFileAction extends HdfsAction {
+  public static final String STORAGE_POLICY = "-storagePolicy";
+  public static final String MOVE_PLAN = "-movePlan";
 
-  public abstract void copy(String srcFile, String destFile) throws IOException;
-
-  public abstract void copy(String[] srcFiles, String destDirectory) throws IOException;
+  public abstract String getStoragePolicy();
 }
