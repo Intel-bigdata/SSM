@@ -18,9 +18,10 @@
 package org.smartdata.server.util;
 
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.server.utils.JsonUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,12 +33,24 @@ public class TestJsonUtil {
     Map<String, String> mapParams = new HashMap<>();
     mapParams.put("id", "avcde@#$%^^&~!@#$%^&*()3,./;'[]\\<>?:\"{}|\"");
     mapParams.put("k:[{'", "1024");
-    String jsonString = JsonUtil.toJsonString(mapParams);
+    String jsonString = toJsonString(mapParams);
 
-    Map<String, String> mapRevert = JsonUtil.toStringStringMap(jsonString);
+    Map<String, String> mapRevert = toStringStringMap(jsonString);
     Assert.assertTrue(mapParams.size() == mapRevert.size());
     for (String key : mapRevert.keySet()) {
       Assert.assertTrue(mapParams.get(key).equals(mapRevert.get(key)));
     }
+  }
+
+  public String toJsonString(Map<String, String> map) {
+    Gson gson = new Gson();
+    return gson.toJson(map);
+  }
+
+  public Map<String, String> toStringStringMap(String jsonString) {
+    Gson gson = new Gson();
+    Map<String, String> res = gson.fromJson(jsonString,
+        new TypeToken<Map<String, String>>(){}.getType());
+    return res;
   }
 }
