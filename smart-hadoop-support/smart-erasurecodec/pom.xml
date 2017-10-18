@@ -65,6 +65,7 @@
         like core-default.xml.
         -->
         <plugins>
+
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
@@ -77,8 +78,21 @@
                     </excludes>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
+
+
+    <repositories>
+        <repository>
+            <id>local</id>
+            <name>Local Repository</name>
+            <url>/home/intel/.m2/repository</url>
+            <layout>default</layout>
+
+        </repository>
+    </repositories>
+
 
     <profiles>
         <profile>
