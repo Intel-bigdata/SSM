@@ -35,16 +35,15 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AgentService;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
+import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
-import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
-import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.utils.GenericOptionsParser;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
@@ -52,8 +51,6 @@ import scala.concurrent.duration.FiniteDuration;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SmartAgent implements StatusReporter {
   private static final String NAME = "SmartAgent";
@@ -65,13 +62,17 @@ public class SmartAgent implements StatusReporter {
     SmartAgent agent = new SmartAgent();
 
     SmartConf conf = (SmartConf) new GenericOptionsParser(new SmartConf(), args).getConfiguration();
-    String[] masters = conf.getStrings(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
-
-    checkNotNull(masters);
-
+    String[] masters = AgentUtils.getMasterAddress(conf);
+    if (masters == null) {
+      throw new IOException("No master address found!");
+    }
+    for (int i = 0; i < masters.length; i++) {
+      LOG.info("Agent master " + i + ":  " + masters[i]);
+    }
+    String agentAddress = AgentUtils.getAgentAddress(conf);
+    LOG.info("Agent address: " + agentAddress);
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
-        conf.get(SmartConfKeys.SMART_AGENT_ADDRESS_KEY)),
-        AgentUtils.getMasterActorPaths(masters), conf);
+        agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
   }
 
   public void start(Config config, String[] masterPath, SmartConf conf) {

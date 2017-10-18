@@ -192,7 +192,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         controller: 'ActionCtrl',
         resolve: {
           action0: ['$route', 'models', function ($route, models) {
-            return models.$get.action($route.current.params.actionId);
+            return models.$get.actionInfo($route.current.params.actionId);
           }]
         }
       })
@@ -302,9 +302,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
     restapiRoot: rootPath,
     restapiQueryInterval: 3 * 1000, // in milliseconds
     restapiQueryTimeout: 30 * 1000, // in milliseconds
-    restapiTaskLevelMetricsQueryLimit: 100,
-    // loginUrl: 'http://localhost:7045/' + 'login'
-    loginUrl: rootPath + 'login'
+    restapiTaskLevelMetricsQueryLimit: 100
   })
   .constant('TRASH_FOLDER_ID', '~Trash');
 

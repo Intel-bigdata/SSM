@@ -36,8 +36,7 @@ angular.module('zeppelinWebApp')
         $ptb.datetime('Create Time').done(),
         $ptb.datetime('Finish Time').done(),
         $ptb.duration("Running Time").done(),
-        $ptb.text('Result').done(),
-        $ptb.text('Log').done()
+        $ptb.text('Result').done()
       /*
        $ptb.text('User').done(),
        $ptb.button('Quick Links').done()
@@ -50,8 +49,7 @@ angular.module('zeppelinWebApp')
           action.createTime,
           action.finished ? action.finishTime : "",
           action.uptime,
-          action.result,
-          action.log
+          action.result
           /*
            rule.user,
            [
