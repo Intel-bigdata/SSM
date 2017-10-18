@@ -138,10 +138,6 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public Map<Long, CmdletInfo> getIdToCmdlets() {
-    return idToCmdlets;
-  }
-
   private void reloadPendingCmdlets() throws IOException {
     LOG.info("Reloading Pending Cmdlets from Database.");
     List<CmdletInfo> cmdletInfos = null;

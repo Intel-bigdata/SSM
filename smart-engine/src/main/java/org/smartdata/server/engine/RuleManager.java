@@ -204,38 +204,35 @@ public class RuleManager extends AbstractService {
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
     for (RuleInfoRepo infoRepo : mapRules.values()) {
       RuleInfo ruleInfo = infoRepo.getRuleInfoRef();
-      if ((ruleInfo.getRuleText().contains("allssd") ||
-          ruleInfo.getRuleText().contains("onessd") ||
-          ruleInfo.getRuleText().contains("archive")) &&
-          ruleInfo.getState() !=RuleState.DELETED) {
-        DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
-        List<CmdletInfo> cmdletInfos = new ArrayList<CmdletInfo>();
-        for (CmdletInfo cmdletInfo : cmdletManager.getIdToCmdlets().values()) {
-          if (ruleInfo.getId() == cmdletInfo.getRid()) {
-            cmdletInfos.add(cmdletInfo);
+      if (ruleInfo.getState() !=RuleState.DELETED){
+        if (ruleInfo.getRuleText().contains("allssd") ||
+            ruleInfo.getRuleText().contains("onessd") ||
+            ruleInfo.getRuleText().contains("archive")) {
+          DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
+          List<CmdletInfo> cmdletInfos = new ArrayList<CmdletInfo>();
+          cmdletInfos=cmdletManager.listCmdletsInfo(ruleInfo.getId());
+          int currPos = 0;
+          for (CmdletInfo cmdletInfo: cmdletInfos) {
+            if (cmdletInfo.getState() ==  CmdletState.EXECUTING ||
+                cmdletInfo.getState() ==  CmdletState.NOTINITED ||
+                cmdletInfo.getState() ==  CmdletState.PENDING) {
+              break;
+            }
+            currPos += 1;
           }
-        }
-        int currPos = 0;
-        for (CmdletInfo cmdletInfo: cmdletInfos) {
-          if (cmdletInfo.getState() ==  CmdletState.EXECUTING ||
-              cmdletInfo.getState() ==  CmdletState.NOTINITED ||
-              cmdletInfo.getState() ==  CmdletState.PENDING) {
-            break;
+          int countRunning = 0;
+          for (int i = 0; i < cmdletInfos.size(); i++ ) {
+            if (cmdletInfos.get(i).getState() == CmdletState.EXECUTING ||
+                cmdletInfos.get(i).getState() == CmdletState.PENDING ||
+                cmdletInfos.get(i).getState() == CmdletState.NOTINITED) {
+              countRunning += 1;
+            }
           }
-          currPos += 1;
+          detailedRuleInfo
+              .setBaseProgress(cmdletInfos.size() - currPos);
+          detailedRuleInfo.setRunningProgress(countRunning);
+          detailedRuleInfos.add(detailedRuleInfo);
         }
-        int countRunning = 0;
-        for (int i = 0; i < cmdletInfos.size(); i++ ) {
-          if (cmdletInfos.get(i).getState() == CmdletState.EXECUTING ||
-              cmdletInfos.get(i).getState() == CmdletState.PENDING ||
-              cmdletInfos.get(i).getState() == CmdletState.NOTINITED) {
-            countRunning += 1;
-          }
-        }
-        detailedRuleInfo
-            .setBaseProgress(cmdletInfos.size() - currPos);
-        detailedRuleInfo.setRunningProgress(countRunning);
-        detailedRuleInfos.add(detailedRuleInfo);
       }
     }
     return detailedRuleInfos;
