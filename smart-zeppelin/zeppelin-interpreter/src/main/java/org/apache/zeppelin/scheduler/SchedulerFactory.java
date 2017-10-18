@@ -54,7 +54,7 @@ public class SchedulerFactory implements SchedulerListener {
     return singleton;
   }
 
-  public SchedulerFactory() throws Exception {
+  public SchedulerFactory() {
     executor = ExecutorFactory.singleton().createOrGet("schedulerFactory", 100);
   }
 

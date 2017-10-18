@@ -212,7 +212,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       LOG.info("Failed to create states updater service for: " + e.getMessage());
     }
 
-    if (working) {
+    if (working && statesUpdaterService != null) {
       try {
         statesUpdaterService.start();
       } catch (IOException e) {

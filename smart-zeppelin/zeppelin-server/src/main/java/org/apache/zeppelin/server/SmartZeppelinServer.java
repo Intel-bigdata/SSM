@@ -81,6 +81,7 @@ import org.smartdata.server.rest.SystemRestApi;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.Application;
 import java.io.File;
+import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
@@ -111,7 +112,7 @@ public class SmartZeppelinServer {
   private Credentials credentials;
   private DependencyResolver depResolver;
 
-  public SmartZeppelinServer(SmartConf conf, SmartEngine engine) throws Exception {
+  public SmartZeppelinServer(SmartConf conf, SmartEngine engine) throws IOException {
     this.conf = conf;
     this.engine = engine;
 
