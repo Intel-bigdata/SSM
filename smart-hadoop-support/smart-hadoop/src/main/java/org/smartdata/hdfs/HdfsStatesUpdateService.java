@@ -72,16 +72,15 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     LOG.info("Initializing ...");
     SmartContext context = getContext();
     String hadoopConfPath = getContext().getConf()
-        .get(SmartConfKeys.SMART_CONF_DIR_KEY);
-    try {
-      HadoopUtil.loadHadoopConf(context.getConf(), hadoopConfPath);
-    } catch (IOException e) {
-      // Ignore this one now
-    }
+        .get(SmartConfKeys.SMART_HADOOP_CONF_DIR);
+    HadoopUtil.loadHadoopConf(context.getConf(), hadoopConfPath);
     URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
-    LOG.debug("Final Namenode URL:" + nnUri.toString());
+    LOG.debug("Final Namenode URL: " + nnUri.toString());
+    LOG.info("Before Client");
     this.client = new DFSClient(nnUri, context.getConf());
+    LOG.info("Before Check");
     moverIdOutputStream = checkAndMarkRunning(nnUri, context.getConf());
+    LOG.info("Checked");
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
@@ -157,7 +156,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
       fsout.writeBytes(InetAddress.getLocalHost().getHostName());
       fsout.hflush();
       return fsout;
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.error("Unable to lock 'mover', please stop 'mover' first.");
       throw e;
     }

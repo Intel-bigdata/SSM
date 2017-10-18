@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.smartdata.SmartServiceState;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.utils.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
@@ -75,10 +76,16 @@ public class SmartServer {
     this.enabled = false;
   }
 
-  public void initWith(StartupOption startupOption) throws Exception {
+  public void initWith(StartupOption startupOption) throws IOException {
     checkSecurityAndLogin();
 
-    MetaStore metaStore = MetaStoreUtils.getDBAdapter(conf);
+    MetaStore metaStore = null;
+    try {
+      metaStore = MetaStoreUtils.getDBAdapter(conf);
+    } catch (MetaStoreException e) {
+      LOG.error("Failed to create meta store ", e);
+      throw new IOException(e);
+    }
     context = new ServerContext(conf, metaStore);
     initServiceMode(conf);
     if (startupOption == StartupOption.REGULAR) {
@@ -108,7 +115,7 @@ public class SmartServer {
     return this.context;
   }
 
-  public static StartupOption processArgs(String[] args, SmartConf conf) throws Exception {
+  public static StartupOption processArgs(String[] args, SmartConf conf) throws IOException {
     if (args == null) {
       args = new String[0];
     }
@@ -125,7 +132,18 @@ public class SmartServer {
     return startOpt;
   }
 
-  static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
+  static SmartServer processWith(StartupOption startOption, SmartConf conf) throws IOException {
+    if (startOption == StartupOption.FORMAT) {
+      LOG.info("Formatting DataBase ...");
+      try {
+        MetaStoreUtils.formatDatabase(conf);
+        LOG.info("Formatting DataBase finished successfully!");
+      } catch (MetaStoreException e) {
+        LOG.error("Failed to format DataBase ", e);
+      }
+      return null;
+    }
+
     if (isTidbEnabled(conf)) {
       LaunchDB launchDB = new LaunchDB();
       Thread db = new Thread(launchDB);
@@ -140,19 +158,12 @@ public class SmartServer {
       }
     }
 
-    if (startOption == StartupOption.FORMAT) {
-      LOG.info("Formatting DataBase ...");
-      MetaStoreUtils.formatDatabase(conf);
-      LOG.info("Formatting DataBase finished successfully!");
-      return null;
-    }
-
     SmartServer ssm = new SmartServer(conf);
     try {
       ssm.initWith(startOption);
       ssm.run();
       return ssm;
-    } catch (Exception e){
+    } catch (IOException e){
       ssm.shutdown();
       throw e;
     }
@@ -216,6 +227,7 @@ public class SmartServer {
       subject = JaasLoginUtil.loginUsingKeytab(principal, keytabPath);
     } catch (IOException e) {
       LOG.error("Fail to login using keytab. " + e);
+      throw e;
     }
     LOG.info("Login successful for user: "
         + subject.getPrincipals().iterator().next());
@@ -226,7 +238,7 @@ public class SmartServer {
    *
    * @throws Exception
    */
-  private void run() throws Exception {
+  private void run() throws IOException {
     boolean enabled = conf.getBoolean(SmartConfKeys.SMART_DFS_ENABLED,
         SmartConfKeys.SMART_DFS_ENABLED_DEFAULT);
 
@@ -237,11 +249,16 @@ public class SmartServer {
     rpcServer.start();
 
     if (zeppelinServer != null) {
-      zeppelinServer.start();
+      try {
+        zeppelinServer.start();
+      } catch (Exception e) {
+        LOG.error("Failed to start zeppelin server ", e);
+        throw new IOException(e);
+      }
     }
   }
 
-  private void startEngines() throws Exception {
+  private void startEngines() throws IOException {
     enabled = true;
     engine.init();
     engine.start();
@@ -271,7 +288,7 @@ public class SmartServer {
     return getSSMServiceState() == SmartServiceState.ACTIVE;
   }
 
-  private void stop() throws Exception {
+  private void stop() throws IOException {
     if (engine != null) {
       engine.stop();
     }
@@ -280,18 +297,14 @@ public class SmartServer {
       zeppelinServer.stop();
     }
 
-    try {
-      if (rpcServer != null) {
-        rpcServer.stop();
-      }
-    } catch (Exception e) {
+    if (rpcServer != null) {
+      rpcServer.stop();
     }
   }
 
   public void shutdown() {
     try {
       stop();
-      //join();
     } catch (Exception e) {
       LOG.error("SmartServer shutdown error", e);
     }
@@ -344,7 +357,7 @@ public class SmartServer {
     return launchWith(null, conf);
   }
 
-  public static SmartServer launchWith(String[] args, SmartConf conf) throws Exception {
+  public static SmartServer launchWith(String[] args, SmartConf conf) throws IOException {
     if (conf == null) {
       conf = new SmartConf();
     }
@@ -357,7 +370,6 @@ public class SmartServer {
   }
 
   public static void main(String[] args) {
-    int errorCode = 0;  // if SSM exit normally then the errorCode is 0
     try {
       final SmartServer inst = launchWith(args, null);
       if (inst != null) {
@@ -381,8 +393,6 @@ public class SmartServer {
     } catch (Exception e) {
       LOG.error("Failed to create SmartServer", e);
       System.exit(1);
-    } finally {
-      System.exit(errorCode);
     }
   }
 }
