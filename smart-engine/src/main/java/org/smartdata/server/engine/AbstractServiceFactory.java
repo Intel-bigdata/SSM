@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.SmartConstants;
 import org.smartdata.SmartContext;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdateService;

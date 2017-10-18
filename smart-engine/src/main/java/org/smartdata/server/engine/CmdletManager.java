@@ -116,6 +116,7 @@ public class CmdletManager extends AbstractService {
 
   @Override
   public void init() throws IOException {
+    LOG.info("Initializing ...");
     try {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
@@ -132,9 +133,14 @@ public class CmdletManager extends AbstractService {
       }
       // reload pending cmdlets from metastore
       reloadPendingCmdlets();
-    } catch (Exception e) {
+      LOG.info("Initialized.");
+    } catch (MetaStoreException e) {
       LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
       throw new IOException(e);
+    } catch (IOException e) {
+      throw e;
+    } catch (Throwable t) {
+      throw new IOException(t);
     }
   }
 
@@ -275,21 +281,25 @@ public class CmdletManager extends AbstractService {
 
   @Override
   public void start() throws IOException {
+    LOG.info("Starting ...");
     executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50,  TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(
         new DispatchTask(this.dispatcher), 200, 100, TimeUnit.MILLISECONDS);
     for (ActionSchedulerService s : schedulerServices) {
       s.start();
     }
+    LOG.info("Started.");
   }
 
   @Override
   public void stop() throws IOException {
+    LOG.info("Stopping ...");
     for (int i = schedulerServices.size() - 1; i >=0 ; i--) {
       schedulerServices.get(i).stop();
     }
     executorService.shutdown();
     dispatcher.shutDownExcutorServices();
+    LOG.info("Stopped.");
   }
 
   public void registerExecutorService(CmdletExecutorService executorService) {
