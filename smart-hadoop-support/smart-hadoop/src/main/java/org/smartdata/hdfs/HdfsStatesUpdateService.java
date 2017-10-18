@@ -76,11 +76,8 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     HadoopUtil.loadHadoopConf(context.getConf(), hadoopConfPath);
     URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
     LOG.debug("Final Namenode URL: " + nnUri.toString());
-    LOG.info("Before Client");
     this.client = new DFSClient(nnUri, context.getConf());
-    LOG.info("Before Check");
     moverIdOutputStream = checkAndMarkRunning(nnUri, context.getConf());
-    LOG.info("Checked");
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
