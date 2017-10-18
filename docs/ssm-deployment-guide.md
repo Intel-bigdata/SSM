@@ -249,7 +249,7 @@ then move the file to archive storage.
     This rule will move all XML files under /test directory to SSD. In this rule, neither a
 single date nor time value is specified, the rule will be evaluated every short time interval (5s by default).
 
-* **Specify rule evaluation internal**
+* **Specify rule evaluation interval**
 
 	`file: every 3s | path matches "/test/*.xml" | allssd`
   
