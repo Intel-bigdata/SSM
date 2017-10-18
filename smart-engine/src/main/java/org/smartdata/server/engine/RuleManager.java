@@ -204,15 +204,15 @@ public class RuleManager extends AbstractService {
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
     for (RuleInfoRepo infoRepo : mapRules.values()) {
       RuleInfo ruleInfo = infoRepo.getRuleInfoRef();
-      if (ruleInfo.getState() !=RuleState.DELETED){
+      if (ruleInfo.getState() != RuleState.DELETED){
         if (ruleInfo.getRuleText().contains("allssd") ||
             ruleInfo.getRuleText().contains("onessd") ||
             ruleInfo.getRuleText().contains("archive")) {
           DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
           List<CmdletInfo> cmdletInfos = new ArrayList<CmdletInfo>();
-          cmdletInfos=cmdletManager.listCmdletsInfo(ruleInfo.getId());
+          cmdletInfos = cmdletManager.listCmdletsInfo(ruleInfo.getId());
           int currPos = 0;
-          for (CmdletInfo cmdletInfo: cmdletInfos) {
+          for (CmdletInfo cmdletInfo : cmdletInfos) {
             if (cmdletInfo.getState() ==  CmdletState.EXECUTING ||
                 cmdletInfo.getState() ==  CmdletState.NOTINITED ||
                 cmdletInfo.getState() ==  CmdletState.PENDING) {
