@@ -60,6 +60,10 @@ public class SmartConfKeys {
   public final static String SMART_CMDLET_EXECUTORS_KEY = "smart.cmdlet.executors";
   public final static int SMART_CMDLET_EXECUTORS_DEFAULT = 10;
 
+  // Keep it only for test
+  public final static String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
+  public final static boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = true;
+
   // Action
   public final static String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
   public final static long SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
