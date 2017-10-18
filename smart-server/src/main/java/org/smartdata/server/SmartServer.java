@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.smartdata.SmartServiceState;
-import org.smartdata.utils.JaasLoginUtil;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
@@ -40,14 +39,13 @@ import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.utils.GenericOptionsParser;
+import org.smartdata.tidb.LaunchDB;
+import org.smartdata.utils.JaasLoginUtil;
 
 import javax.security.auth.Subject;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-
-import org.smartdata.tidb.LaunchDB;
 
 /**
  * From this Smart Storage Management begins.

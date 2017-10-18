@@ -203,22 +203,26 @@ public class StatesManager extends AbstractService implements Reconfigurable {
 
   private synchronized void initStatesUpdaterService() {
     try {
-      statesUpdaterService = AbstractServiceFactory
-          .createStatesUpdaterService(getContext().getConf(),
-              serverContext, serverContext.getMetaStore());
-      statesUpdaterService.init();
-    } catch (IOException e) {
-      statesUpdaterService = null;
-      LOG.info("Failed to create states updater service for: " + e.getMessage());
-    }
-
-    if (working) {
       try {
-        statesUpdaterService.start();
+        statesUpdaterService = AbstractServiceFactory
+            .createStatesUpdaterService(getContext().getConf(),
+                serverContext, serverContext.getMetaStore());
+        statesUpdaterService.init();
       } catch (IOException e) {
-        LOG.info("Failed to start states updater service.");
         statesUpdaterService = null;
+        LOG.info("Failed to create states updater service for: " + e.getMessage());
       }
+
+      if (working) {
+        try {
+          statesUpdaterService.start();
+        } catch (IOException e) {
+          LOG.info("Failed to start states updater service.");
+          statesUpdaterService = null;
+        }
+      }
+    } catch (Throwable t) {
+      LOG.info("", t);
     }
   }
 }
