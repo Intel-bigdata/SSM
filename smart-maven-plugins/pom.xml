@@ -24,6 +24,7 @@
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
             <version>${maven.dependency.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
@@ -35,13 +36,16 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>${maven.plugin-tools.version}</version>
                 <executions>
                     <execution>
                         <id>default-descriptor</id>
-                        <phase>process-classes</phase>
+                        <phase>compile</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -52,14 +56,11 @@
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>maven-clover2-plugin</artifactId>
+                <version>3.3.0</version>
                 <configuration>
                     <skip>true</skip>
                 </configuration>
             </plugin>
-
         </plugins>
-
     </build>
-
-
 </project>
