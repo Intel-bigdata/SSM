@@ -84,10 +84,7 @@ public class SmartServer {
     if (startupOption == StartupOption.REGULAR) {
       engine = new SmartEngine(context);
       rpcServer = new SmartRpcServer(this, conf);
-
-      if (isZeppelinEnabled()) {
-        zeppelinServer = new SmartZeppelinServer(conf, engine);
-      }
+      zeppelinServer = new SmartZeppelinServer(conf, engine);
     }
   }
 
@@ -198,11 +195,6 @@ public class SmartServer {
 
   private boolean isSecurityEnabled() {
     return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
-  }
-
-  private boolean isZeppelinEnabled() {
-    return conf.getBoolean(SmartConfKeys.SMART_ENABLE_ZEPPELIN,
-        SmartConfKeys.SMART_ENABLE_ZEPPELIN_DEFAULT);
   }
 
   private static boolean isTidbEnabled(SmartConf conf) {
