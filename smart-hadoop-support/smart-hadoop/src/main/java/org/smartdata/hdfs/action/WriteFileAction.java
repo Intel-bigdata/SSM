@@ -19,6 +19,7 @@
 package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -90,8 +91,8 @@ public class WriteFileAction extends HdfsAction {
 
     Path path = new Path(filePath);
     FileSystem fileSystem = path.getFileSystem(conf);
-
-    final OutputStream out = fileSystem.create(path, true);
+    int replication = fileSystem.getServerDefaults(new Path(filePath)).getReplication();
+    final FSDataOutputStream out = fileSystem.create(path, true, replication);
     // generate random data with given length
     byte[] buffer = new byte[bufferSize];
     new Random().nextBytes(buffer);
