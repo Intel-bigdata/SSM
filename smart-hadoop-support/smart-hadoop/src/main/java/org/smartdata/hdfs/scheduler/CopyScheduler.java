@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -299,6 +300,37 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
+  FileStatus[] listFileStatuesOfDirs(String dirName) {
+    FileSystem fs = null;
+    FileStatus[] tmpFileStatus = null;
+    List<FileStatus> returnStatus = new LinkedList<>();
+    try {
+      fs = FileSystem.get(URI.create(dirName), conf);
+      tmpFileStatus = fs.listStatus(new Path(dirName));
+      for (FileStatus fileStatus : tmpFileStatus) {
+        if (!fileStatus.isDirectory()) {
+          returnStatus.add(fileStatus);
+        } else {
+          //all the file in this fileStatuses
+          FileStatus[] childFileStatuses = listFileStatuesOfDirs(fileStatus.getPath().getName());
+          if (childFileStatuses != null && childFileStatuses.length != 0) {
+            for (int i = 0; i < childFileStatuses.length; i++) {
+              returnStatus.add(childFileStatuses[i]);
+            }
+          }
+        }
+      }
+    } catch (IOException e) {
+      LOG.error("Fetch remote file list error!", e);
+    }
+
+    if (returnStatus == null) {
+      return new FileStatus[0];
+    }
+    
+    return returnStatus.toArray(new FileStatus[returnStatus.size()]);
+  }
+
   private void baseSync(String srcDir,
       String destDir) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(srcDir);
@@ -307,17 +339,14 @@ public class CopyScheduler extends ActionSchedulerService {
     Map<String, FileInfo> srcFileSet = new HashMap<>();
     for (FileInfo fileInfo : srcFiles) {
       // Remove prefix/parent
-      srcFileSet.put(fileInfo.getPath().replace(srcDir,""), fileInfo);
+      srcFileSet.put(fileInfo.getPath().replace(srcDir, ""), fileInfo);
     }
     FileStatus[] fileStatuses = null;
     FileSystem fs = null;
-    try {
-      fs = FileSystem.get(URI.create(destDir), conf);
-      // TODO recursively file lists
-      fileStatuses = fs.listStatus(new Path(destDir));
-    } catch (IOException e) {
-      LOG.error("Fetch remote file list error!", e);
-    }
+
+    // recursively file lists
+    fileStatuses = listFileStatuesOfDirs(destDir);
+
     if (fileStatuses == null || fileStatuses.length == 0) {
       LOG.debug("Remote directory is empty!");
     } else {
