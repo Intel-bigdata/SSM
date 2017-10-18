@@ -24,10 +24,7 @@ import org.smartdata.action.ActionRegistry;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.model.CmdletDescriptor;
-import org.smartdata.model.DetailedRuleInfo;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.RuleState;
+import org.smartdata.model.*;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
 import org.smartdata.model.rule.RulePluginManager;
 import org.smartdata.model.rule.TimeBasedScheduleInfo;
@@ -40,10 +37,7 @@ import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -199,11 +193,44 @@ public class RuleManager extends AbstractService {
   }
 
   public List<DetailedRuleInfo> listRulesMoveInfo() throws IOException {
-    try {
-      return metaStore.listMoveRules();
-    } catch (MetaStoreException e) {
-      throw new IOException(e);
+    List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
+    for (RuleInfoRepo infoRepo : mapRules.values()) {
+      RuleInfo ruleInfo = infoRepo.getRuleInfoRef();
+      if ((ruleInfo.getRuleText().contains("allssd") ||
+          ruleInfo.getRuleText().contains("onessd") ||
+          ruleInfo.getRuleText().contains("archive")) &&
+          ruleInfo.getState() !=RuleState.DELETED) {
+        DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
+        List<CmdletInfo> cmdletInfos = new ArrayList<CmdletInfo>();
+        for (CmdletInfo cmdletInfo : cmdletManager.getIdToCmdlets().values()) {
+          if (ruleInfo.getId() == cmdletInfo.getRid()) {
+            cmdletInfos.add(cmdletInfo);
+          }
+        }
+        int currPos = 0;
+        for (CmdletInfo cmdletInfo: cmdletInfos) {
+          if (cmdletInfo.getState() ==  CmdletState.EXECUTING ||
+              cmdletInfo.getState() ==  CmdletState.NOTINITED ||
+              cmdletInfo.getState() ==  CmdletState.PENDING) {
+            break;
+          }
+          currPos += 1;
+        }
+        int countRunning = 0;
+        for (int i = 0; i < cmdletInfos.size(); i++ ) {
+          if (cmdletInfos.get(i).getState() == CmdletState.EXECUTING ||
+              cmdletInfos.get(i).getState() == CmdletState.PENDING ||
+              cmdletInfos.get(i).getState() == CmdletState.NOTINITED) {
+            countRunning += 1;
+          }
+        }
+        detailedRuleInfo
+            .setBaseProgress(cmdletInfos.size() - currPos);
+        detailedRuleInfo.setRunningProgress(countRunning);
+        detailedRuleInfos.add(detailedRuleInfo);
+      }
     }
+    return detailedRuleInfos;
   }
 
   public List<DetailedRuleInfo> listRulesSyncInfo() throws IOException {
