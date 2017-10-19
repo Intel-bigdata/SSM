@@ -22,11 +22,6 @@
         <value></value>
         <description>Namenode rpcserver</description>
     </property>
-
-    <property>
-        <name>smart.zeppelin.web.enable</name>
-        <value>false</value>
-    </property>
     <property>
         <name>smart.hadoop.conf.path</name>     
         <!-- an example
@@ -34,10 +29,6 @@
         -->
         <value></value>
         <description>Hadoop main cluster configuration file path</description>
-    </property>
-    <property>
-        <name>smart.zeppelin.enable</name>
-        <value>false</value>
     </property>
     <property>
         <name>smart.tidb.enable</name>

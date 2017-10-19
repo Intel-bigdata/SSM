@@ -17,7 +17,9 @@
 */
 package org.smartdata.server;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.fs.Path;
@@ -34,9 +36,14 @@ import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.server.engine.CmdletManager;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 public class TestCopyScheduler extends MiniSmartClusterHarness {
+
   // @Test
   // public void appendMerge() throws Exception {
   //   waitTillSSMExitSafeMode();
@@ -170,6 +177,12 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   //     // Create test files
   //     DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
   //   }
+  //
+  //   for (int i = 0; i < 3; i++) {
+  //     // Create test files
+  //     DFSTestUtil.createFile(dfs, new Path(destPath + i + 5), 1024, (short) 1, 1);
+  //   }
+  //
   //   // Clear file diffs
   //   metaStore.deleteAllFileDiff();
   //   // Submit rules and trigger forceSync
