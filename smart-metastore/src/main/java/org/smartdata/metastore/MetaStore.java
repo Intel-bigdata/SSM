@@ -658,6 +658,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<RuleInfo> ruleInfos = getRuleInfo();
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
     for (RuleInfo ruleInfo : ruleInfos) {
+      if (ruleInfo.getState() == RuleState.DELETED) {
+        continue;
+      }
       if (ruleInfo.getRuleText().contains("sync")) {
         DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add sync progress
