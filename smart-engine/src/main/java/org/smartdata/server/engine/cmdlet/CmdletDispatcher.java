@@ -68,7 +68,7 @@ public class CmdletDispatcher {
       selected.execute(cmdlet);
       LOG.info(
           String.format(
-              "Dispatching cmdlet %s to executor service %s",
+              "Dispatching cmdlet->[%s] to executor service %s",
               cmdlet.getCmdletId(), selected.getClass()));
       index += 1;
     }

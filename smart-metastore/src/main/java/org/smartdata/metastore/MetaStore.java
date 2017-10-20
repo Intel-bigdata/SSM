@@ -889,6 +889,28 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void markActionFailed(long aid) throws MetaStoreException {
+    ActionInfo actionInfo = getActionById(aid);
+    if (actionInfo != null) {
+      actionInfo.setSuccessful(false);
+      actionInfo.setProgress(1);
+      actionInfo.setFinishTime(actionInfo.getCreateTime());
+      updateAction(actionInfo);
+    }
+  }
+
+  public void updateAction(ActionInfo actionInfo) throws MetaStoreException {
+    if (actionInfo == null) {
+      return;
+    }
+    LOG.debug("Update Action ID {}", actionInfo.getActionId());
+    try {
+      actionDao.update(actionInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public synchronized void updateActions(ActionInfo[] actionInfos)
       throws MetaStoreException {
     if (actionInfos == null || actionInfos.length == 0) {
