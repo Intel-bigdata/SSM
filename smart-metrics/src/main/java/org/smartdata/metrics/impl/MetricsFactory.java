@@ -22,9 +22,13 @@ import org.smartdata.metrics.FileAccessEventSource;
 
 import java.io.IOException;
 
+/**
+ * A factory used to create FileAccessEventSource according to the configuration.
+ */
 public class MetricsFactory {
   private static final String ACCESS_EVENT_SOURCE = "smart.data.file.event.source";
-  private static final String DEFAULT_ACCESS_EVENT_SOURCE = SmartServerAccessEventSource.class.getName();
+  private static final String DEFAULT_ACCESS_EVENT_SOURCE =
+    SmartServerAccessEventSource.class.getName();
 
   public static FileAccessEventSource createAccessEventSource(Configuration conf)
       throws IOException {

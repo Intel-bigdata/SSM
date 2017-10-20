@@ -17,6 +17,9 @@
  */
 package org.smartdata.metrics;
 
+/**
+ * This interface aims to collect file access event through different ways.
+ */
 public interface FileAccessEventSource {
   /**
    * Get a collector what will produce events from this file access event source.
