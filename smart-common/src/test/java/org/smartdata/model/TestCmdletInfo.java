@@ -32,7 +32,14 @@ public class TestCmdletInfo {
 
     //Case 2
     Random random = new Random();
-    CmdletInfo cmdletInfo = new CmdletInfo(random.nextLong(), random.nextLong(), CmdletState.NOTINITED, " ", random.nextLong(), random.nextLong());
+    CmdletInfo cmdletInfo =
+        new CmdletInfo(
+            random.nextLong(),
+            random.nextLong(),
+            CmdletState.NOTINITED,
+            " ",
+            random.nextLong(),
+            random.nextLong());
     Assert.assertEquals(true, cmdletInfo.equals(cmdletInfo));
 
     //Case 3

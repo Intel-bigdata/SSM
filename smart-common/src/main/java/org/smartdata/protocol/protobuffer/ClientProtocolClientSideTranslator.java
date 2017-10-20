@@ -19,9 +19,9 @@ package org.smartdata.protocol.protobuffer;
 
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
+import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.SmartClientProtocol;
-import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
 

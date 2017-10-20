@@ -18,6 +18,8 @@
 package org.smartdata.model;
 
 
+import java.util.Objects;
+
 public class DataNodeStorageInfo {
 
   private String uuid;
@@ -76,34 +78,28 @@ public class DataNodeStorageInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     DataNodeStorageInfo that = (DataNodeStorageInfo) o;
-
-    if (sid != that.sid) return false;
-    if (state != that.state) return false;
-    if (failed != that.failed) return false;
-    if (capacity != that.capacity) return false;
-    if (dfsUsed != that.dfsUsed) return false;
-    if (remaining != that.remaining) return false;
-    if (blockPoolUsed != that.blockPoolUsed) return false;
-    if (uuid != null ? !uuid.equals(that.uuid) : that.uuid != null) return false;
-    return storageId != null ? storageId.equals(that.storageId) : that.storageId == null;
+    return sid == that.sid
+        && state == that.state
+        && failed == that.failed
+        && capacity == that.capacity
+        && dfsUsed == that.dfsUsed
+        && remaining == that.remaining
+        && blockPoolUsed == that.blockPoolUsed
+        && Objects.equals(uuid, that.uuid)
+        && Objects.equals(storageId, that.storageId);
   }
 
   @Override
   public int hashCode() {
-    int result = uuid != null ? uuid.hashCode() : 0;
-    result = 31 * result + (int) (sid ^ (sid >>> 32));
-    result = 31 * result + (int) (state ^ (state >>> 32));
-    result = 31 * result + (storageId != null ? storageId.hashCode() : 0);
-    result = 31 * result + (int) (failed ^ (failed >>> 32));
-    result = 31 * result + (int) (capacity ^ (capacity >>> 32));
-    result = 31 * result + (int) (dfsUsed ^ (dfsUsed >>> 32));
-    result = 31 * result + (int) (remaining ^ (remaining >>> 32));
-    result = 31 * result + (int) (blockPoolUsed ^ (blockPoolUsed >>> 32));
-    return result;
+    return Objects.hash(
+        uuid, sid, state, storageId, failed, capacity, dfsUsed, remaining, blockPoolUsed);
   }
 
   public String getUuid() {
@@ -198,11 +194,11 @@ public class DataNodeStorageInfo {
 
   @Override
   public String toString() {
-    return String.format("DataNodeStorageInfo{uuid=\'%s\', sid=\'%s\', " +
-            "state=%d, storage_id=\'%s\', failed=%d, capacity=%d, " +
-            "dfs_used=%d, remaining=%d, block_pool_used=%d}",
-        uuid, sid, state, storageId, failed,
-        capacity, dfsUsed, remaining, blockPoolUsed);
+    return String.format(
+        "DataNodeStorageInfo{uuid=\'%s\', sid=\'%s\', "
+            + "state=%d, storage_id=\'%s\', failed=%d, capacity=%d, "
+            + "dfs_used=%d, remaining=%d, block_pool_used=%d}",
+        uuid, sid, state, storageId, failed, capacity, dfsUsed, remaining, blockPoolUsed);
   }
 
   public static Builder newBuilder() {

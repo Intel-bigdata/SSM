@@ -18,6 +18,7 @@
 package org.smartdata.model;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class XAttribute {
   private final String nameSpace;
@@ -44,21 +45,20 @@ public class XAttribute {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     XAttribute that = (XAttribute) o;
-
-    if (!nameSpace.equals(that.nameSpace)) return false;
-    if (!name.equals(that.name)) return false;
-    return Arrays.equals(value, that.value);
+    return Objects.equals(nameSpace, that.nameSpace)
+        && Objects.equals(name, that.name)
+        && Arrays.equals(value, that.value);
   }
 
   @Override
   public int hashCode() {
-    int result = nameSpace.hashCode();
-    result = 31 * result + name.hashCode();
-    result = 31 * result + Arrays.hashCode(value);
-    return result;
+    return Objects.hash(nameSpace, name, value);
   }
 }

@@ -23,6 +23,7 @@ import com.google.gson.reflect.TypeToken;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 public class FileDiff {
   private long diffId;
@@ -31,10 +32,10 @@ public class FileDiff {
   private String src;
   private Map<String, String> parameters;
   private FileDiffState state;
-  private long create_time;
+  private long createTime;
 
   public FileDiff() {
-    this.create_time = System.currentTimeMillis();
+    this.createTime = System.currentTimeMillis();
     this.parameters = new HashMap<>();
   }
 
@@ -124,45 +125,41 @@ public class FileDiff {
     this.state = state;
   }
 
-  public long getCreate_time() {
-    return create_time;
+  public long getCreateTime() {
+    return createTime;
   }
 
-  public void setCreate_time(long create_time) {
-    this.create_time = create_time;
+  public void setCreateTime(long createTime) {
+    this.createTime = createTime;
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     FileDiff fileDiff = (FileDiff) o;
-
-    if (diffId != fileDiff.diffId) return false;
-    if (state != fileDiff.state) return false;
-    if (create_time != fileDiff.create_time) return false;
-    if (parameters != null ? !parameters.equals(fileDiff.parameters) : fileDiff.parameters != null) return false;
-    if (src != null ? !src.equals(fileDiff.src) : fileDiff.src != null) return false;
-    return diffType == fileDiff.diffType;
+    return diffId == fileDiff.diffId
+        && ruleId == fileDiff.ruleId
+        && createTime == fileDiff.createTime
+        && diffType == fileDiff.diffType
+        && Objects.equals(src, fileDiff.src)
+        && Objects.equals(parameters, fileDiff.parameters)
+        && state == fileDiff.state;
   }
 
   @Override
   public int hashCode() {
-    int result = (int) (getDiffId() ^ (getDiffId() >>> 32));
-    result = 31 * result + (int) (getRuleId() ^ (getRuleId() >>> 32));
-    result = 31 * result + getDiffType().hashCode();
-    result = 31 * result + getSrc().hashCode();
-    result = 31 * result + getParameters().hashCode();
-    result = 31 * result + getState().hashCode();
-    result = 31 * result + (int) (getCreate_time() ^ (getCreate_time() >>> 32));
-    return result;
+    return Objects.hash(diffId, ruleId, diffType, src, parameters, state, createTime);
   }
 
   @Override
   public String toString() {
-    return String.format("FileDiff{diffId=%s, parameters=%s, " +
-            "src=%s, diffType=%s, state=%s, create_time=%s}", diffId, parameters, src,
-        diffType, state.getValue(), create_time);
+    return String.format(
+        "FileDiff{diffId=%s, parameters=%s, src=%s, diffType=%s, state=%s, createTime=%s}",
+        diffId, parameters, src, diffType, state.getValue(), createTime);
   }
 }

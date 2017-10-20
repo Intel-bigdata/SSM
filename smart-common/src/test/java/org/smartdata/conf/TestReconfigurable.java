@@ -24,8 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TestReconfigurable {
-  public static String PROPERTY1 = "property1";
-  public static String PROPERTY2 = "property2";
+  public static final String PROPERTY1 = "property1";
+  public static final String PROPERTY2 = "property2";
 
   private class TestReconf extends ReconfigurableBase {
     private String value1 = "oldValue1";

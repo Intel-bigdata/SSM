@@ -17,6 +17,8 @@
  */
 package org.smartdata.model;
 
+import java.util.Objects;
+
 public class DataNodeInfo {
   private String uuid;
   private String hostname;
@@ -37,28 +39,24 @@ public class DataNodeInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     DataNodeInfo that = (DataNodeInfo) o;
-
-    if (cacheCapacity != that.cacheCapacity) return false;
-    if (cacheUsed != that.cacheUsed) return false;
-    if (uuid != null ? !uuid.equals(that.uuid) : that.uuid != null) return false;
-    if (hostname != null ? !hostname.equals(that.hostname) : that.hostname != null) return false;
-    if (rpcAddress != null ? !rpcAddress.equals(that.rpcAddress) : that.rpcAddress != null) return false;
-    return location != null ? location.equals(that.location) : that.location == null;
+    return cacheCapacity == that.cacheCapacity
+        && cacheUsed == that.cacheUsed
+        && Objects.equals(uuid, that.uuid)
+        && Objects.equals(hostname, that.hostname)
+        && Objects.equals(rpcAddress, that.rpcAddress)
+        && Objects.equals(location, that.location);
   }
 
   @Override
   public int hashCode() {
-    int result = uuid != null ? uuid.hashCode() : 0;
-    result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
-    result = 31 * result + (rpcAddress != null ? rpcAddress.hashCode() : 0);
-    result = 31 * result + (int) (cacheCapacity ^ (cacheCapacity >>> 32));
-    result = 31 * result + (int) (cacheUsed ^ (cacheUsed >>> 32));
-    result = 31 * result + (location != null ? location.hashCode() : 0);
-    return result;
+    return Objects.hash(uuid, hostname, rpcAddress, cacheCapacity, cacheUsed, location);
   }
 
   public String getUuid() {
@@ -111,13 +109,14 @@ public class DataNodeInfo {
 
   @Override
   public String toString() {
-    return String.format("DataNodeInfo{uuid=\'%s\', hostname=\'%s\', " +
-            "rpcAddress=\'%s\', cache_capacity=%d, cache_used=%d, location=\'%s\'}",
+    return String.format(
+        "DataNodeInfo{uuid=\'%s\', hostname=\'%s\', "
+            + "rpcAddress=\'%s\', cache_capacity=%d, cache_used=%d, location=\'%s\'}",
         uuid, hostname, rpcAddress, cacheCapacity, cacheUsed, location);
   }
 
   public static Builder newBuilder() {
-    return new Builder() ;
+    return new Builder();
   }
 
   public static class Builder {
@@ -158,3 +157,4 @@ public class DataNodeInfo {
     }
   }
 }
+

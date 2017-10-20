@@ -42,5 +42,4 @@ public class SmartContext {
   public void setConf(SmartConf conf) {
     this.conf = conf;
   }
-  
 }

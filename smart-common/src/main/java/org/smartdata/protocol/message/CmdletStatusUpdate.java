@@ -18,7 +18,6 @@
 package org.smartdata.protocol.message;
 
 import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.message.StatusMessage;
 
 public class CmdletStatusUpdate implements StatusMessage {
   private long cmdletId;

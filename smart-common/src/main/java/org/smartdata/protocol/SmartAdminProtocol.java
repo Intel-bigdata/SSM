@@ -17,13 +17,13 @@
  */
 package org.smartdata.protocol;
 
-import org.smartdata.model.ActionDescriptor;
-import org.smartdata.model.CmdletState;
 import org.smartdata.SmartServiceState;
+import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
-import org.smartdata.model.CmdletInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -85,7 +85,7 @@ public interface SmartAdminProtocol {
    * List cmdlets in SSM.
    * @param ruleID
    * @param cmdletState
-   * @return All List<CmdletInfo> cmdletInfos that satisfy requirement
+   * @return All cmdletInfos that satisfy requirement
    * @throws IOException
    */
   List<CmdletInfo> listCmdletInfo(long ruleID, CmdletState cmdletState) throws IOException;
