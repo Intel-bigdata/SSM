@@ -37,15 +37,14 @@ conditions, at what time which actions should be taken when the
 conditions are true. By writing rules, a user can easily manage their
 cluster and adjust its behavior for certain purposes.
 
-User need to define the rule first based on his/her requirements. A rule
+User need to define the rule first based on the requirements. A rule
 has the following format,
 
 <img src="./image/rule-syntax.png" width="481" height="208" />
 
 A rule contains four parts, Object to manipulate, trigger, conditions
 and commands. “:” and “|” are used as the separator to separate
-different rule part. These two characters are reserved for SSM, cannot
-be used in rule content, otherwise rule parse will fail.
+different rule part.
 
 Detail information of each rule part are listed in following tables.
 
@@ -53,7 +52,7 @@ Table - 1 Objects to manipulate
 
 | Object  | Description       | Example                            |
 |---------|-------------------|------------------------------------|
-| file    | Files             | *file.path matches "/fooA/\*.dat"* |
+| file    | Files             | *file with path matches "/fooA/\*.dat"* |
 
 Table - 2 Triggers
 
@@ -69,8 +68,8 @@ Table – 3 Conditions
 | Ingredient       | Description                                                                              | Example                                  |
 |------------------|------------------------------------------------------------------------------------------|------------------------------------------|
 | Object property  | Object property as condition subject, refer to table-4 to supported object property list | - length &gt; 5MB                          |
-| Time             | -   “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + TimeInterval | -   “2017-07-29 23:00:00” <br>  -   now  <br>  -   now + 7day  |
-| Time Interval    | -   Digital + unit <br> -   Time – Time  | -   5sec, 5min, 5hour, 5day <br>  -   now - “2016-03-19 23:00:00”           |
+| Time             | -   “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + Time Interval | -   “2017-07-29 23:00:00” <br>  -   now  <br>  -   now + 7day  |
+| Time Interval    | -   Digital + unit <br> -   Time – Time <br> -   Time Interval + Time Interval | -   5ms, 5sec, 5min, 5hour, 5day <br>  -   now - “2016-03-19 23:00:00” <br>  -   5hour + 5min           |
 | File Size        | -   Digital + unit                                                                           | - 5B, 5kb, 5MB, 5GB, 5TB, 5PB              |
 | String           | Start and ends with “, support escapes                                                   | - “abc”, “123”, “Hello world\\n”           |
 | Logical operator | and, or, not                                                                             |                                          |
@@ -84,7 +83,7 @@ Table – 4 Object properties
 | file     | path                     | Path in HDFS                                   |
 |          | age                      | Time from last been modified                   |
 |          | atime                    | Time accessed last time                        |
-|          | accessCount(interval)    | Access counts during in the last time interval |
+|          | accessCount(Time Interval)    | Access counts during the last time interval |
 |          | blocksize                | Block size of the file                         |
 |          | storagePolicy            | Storage policy of file                         |
 |          | length                   | Length of the file                             |
