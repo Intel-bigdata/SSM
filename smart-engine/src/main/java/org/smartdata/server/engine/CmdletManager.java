@@ -42,6 +42,7 @@ import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.server.engine.cmdlet.Cmdlet;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.metastore.ActionSchedulerService;
@@ -162,11 +163,11 @@ public class CmdletManager extends AbstractService {
       List<ActionInfo> actionInfos = null;
       if (cmdletInfo.getAids().size() != 0) {
         for (long aid : cmdletInfo.getAids()) {
-          LOG.debug("Mark action -> [ {} ] as Failed", aid);
+          LOG.debug("ActionId -> [ {} ] marked as Failed", aid);
           try {
             metaStore.markActionFailed(aid);
           } catch (MetaStoreException e) {
-            LOG.error("Cannot mark action -> [ {} ] as Failed!", aid, e);
+            LOG.debug("ActionId -> [ {} ] cannot marked as Failed", aid, e);
           }
         }
       }
@@ -174,6 +175,8 @@ public class CmdletManager extends AbstractService {
       try {
         metaStore.updateCmdlet(cmdletInfo);
       } catch (MetaStoreException e1) {
+        LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ], marked as failed error",
+            cmdletInfo.getCid(), cmdletInfo, e1);
         LOG.error("Mark cmdletinfo ->[ {} ] as failed error!",
             cmdletInfo.getParameters(), e1);
       }
@@ -242,7 +245,7 @@ public class CmdletManager extends AbstractService {
             actionInfos.toArray(new ActionInfo[actionInfos.size()]));
       }
     } catch (MetaStoreException e) {
-      LOG.error("Sync Command {} with DB error!", cmdletInfo);
+      LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ] Sync with DB error", cmdletInfo.getCid(), cmdletInfo, e);
       try {
         for (String file : filesLocked) {
           fileLocks.remove(file);
@@ -250,7 +253,7 @@ public class CmdletManager extends AbstractService {
         cmdletInfo.setState(CmdletState.FAILED);
         metaStore.updateCmdlet(cmdletInfo);
       } catch (MetaStoreException e1) {
-        LOG.error("Mark cmdletinfo ->[ {} ] as failed error!", cmdletInfo.getParameters(), e);
+        LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ] marked as failed error!", cmdletInfo.getCid(), cmdletInfo, e);
       }
       throw new IOException(e);
     }
@@ -300,7 +303,7 @@ public class CmdletManager extends AbstractService {
       CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdlet);
       return submitCmdlet(cmdletDescriptor);
     } catch (ParseException e) {
-      LOG.error("Cmdlet format is not correct", e);
+      LOG.error("Cmdlet -> [ {} ], format is not correct", e);
       throw new IOException(e);
     }
   }
@@ -341,14 +344,15 @@ public class CmdletManager extends AbstractService {
       metaStore.insertActions(
           actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (MetaStoreException e) {
-      LOG.error("Submit Command {} to DB error!", cmdletInfo);
+      LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ] submit to DB error", cmdletInfo.getCid(), cmdletInfo, e);
+
       try {
         for (String file : filesLocked) {
           fileLocks.remove(file);
         }
         metaStore.deleteCmdlet(cmdletInfo.getCid());
       } catch (MetaStoreException e1) {
-        LOG.error("Delete Command {} from DB error!", cmdletInfo, e);
+        LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ] delete from DB error", cmdletInfo.getCid(), cmdletInfo, e);
       }
       throw new IOException(e);
     }
@@ -537,7 +541,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getCmdletById(cid);
     } catch (MetaStoreException e) {
-      LOG.error("Get CmdletInfo with ID {} from DB error! {}", cid, e);
+      LOG.error("CmdletId -> [ {} ], delete from DB error", cid, e);
       throw new IOException(e);
     }
   }
@@ -551,7 +555,7 @@ public class CmdletManager extends AbstractService {
         result.addAll(metaStore.getCmdlets(null, String.format("= %d", rid), cmdletState));
       }
     } catch (MetaStoreException e) {
-      LOG.error("List CmdletInfo from DB error! Conditions rid {}", rid, e);
+      LOG.error("RuleId -> [ {} ], List CmdletInfo from DB error", rid, e);
       throw new IOException(e);
     }
     for (CmdletInfo info : idToCmdlets.values()) {
@@ -570,7 +574,7 @@ public class CmdletManager extends AbstractService {
         result.put(info.getCid(), info);
       }
     } catch (MetaStoreException e) {
-      LOG.error("List CmdletInfo from DB error! Conditions rid {}", rid, e);
+      LOG.error("RuleId -> [ {} ], List CmdletInfo from DB error", rid, e);
       throw new IOException(e);
     }
     for (CmdletInfo info : idToCmdlets.values()) {
@@ -685,7 +689,7 @@ public class CmdletManager extends AbstractService {
       metaStore.deleteCmdlet(cid);
       metaStore.deleteCmdletActions(cid);
     } catch (MetaStoreException e) {
-      LOG.error("Delete Cmdlet {} from DB error!", cid, e);
+      LOG.error("CmdletId -> [ {} ], delete from DB error", cid, e);
       throw new IOException(e);
     }
   }
@@ -705,7 +709,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getActionById(actionID);
     } catch (MetaStoreException e) {
-      LOG.error("Get ActionInfo of {} from DB error!", actionID, e);
+      LOG.error("ActionId -> [ {} ], delete from DB error", actionID, e);
       throw new IOException(e);
     }
   }
@@ -715,7 +719,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getNewCreatedActions(actionName, actionNum);
     } catch (MetaStoreException e) {
-      LOG.error("Get Finished Actions from DB error", e);
+      LOG.error("ActionName -> [ {} ], get from DB error", actionName, e);
       throw new IOException(e);
     }
   }
@@ -725,7 +729,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getNewCreatedActions(actionName, actionNum, finished);
     } catch (MetaStoreException e) {
-      LOG.error("Get Finished Actions from DB error", e);
+      LOG.error("ActionName -> [ {} ], get from DB error", actionName, e);
       throw new IOException(e);
     }
   }
@@ -735,7 +739,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getNewCreatedActions(actionName, successful, actionNum);
     } catch (MetaStoreException e) {
-      LOG.error("Get Finished Actions from DB error", e);
+      LOG.error("ActionName -> [ {} ], get from DB error", actionName, e);
       throw new IOException(e);
     }
   }
@@ -760,7 +764,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getActions(rid, size);
     } catch (MetaStoreException e) {
-      LOG.error("Get Finished Actions by rid and size from DB error", e);
+      LOG.error("RuleId -> [ {} ], Get Finished Actions by rid and size from DB error", rid, e);
       throw new IOException(e);
     }
   }
@@ -769,7 +773,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.listFileActions(rid, size);
     } catch (MetaStoreException e) {
-      LOG.error("Get File Actions by rid and size from DB error", e);
+      LOG.error("RuleId -> [ {} ], Get Finished Actions by rid and size from DB error", rid, e);
       throw new IOException(e);
     }
   }
@@ -880,7 +884,7 @@ public class CmdletManager extends AbstractService {
     try {
       metaStore.updateCmdlet(info.getCid(), info.getRid(), info.getState());
     } catch (MetaStoreException e) {
-      LOG.error("Batch Cmdlet Status Update error!", e);
+      LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ]. Batch Cmdlet Status Update error!", info.getCid(), info, e);
       throw new IOException(e);
     }
   }

@@ -53,7 +53,7 @@ public class CmdletInfo {
 
   @Override
   public String toString() {
-    return String.format("{cid = %d, rid = %d, aids = %s, genTime = %d, "
+    return String.format("CmdletID -> [ %s ] {rid = %d, aids = %s, genTime = %d, "
             + "stateChangedTime = %d, state = %s, params = %s}",
         cid, rid, StringUtils.join(getAidsString(), ","),
         generateTime, stateChangedTime, state,
