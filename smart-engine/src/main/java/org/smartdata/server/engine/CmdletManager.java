@@ -158,48 +158,33 @@ public class CmdletManager extends AbstractService {
     }
     for (CmdletInfo cmdletInfo : cmdletInfos) {
       LOG.debug(
-          String.format("Reload Cmdlet -> [ %s ]", cmdletInfo.getParameters()));
-      CmdletDescriptor cmdletDescriptor;
-      try {
-        cmdletDescriptor =
-            CmdletDescriptor.fromCmdletString(cmdletInfo.getParameters());
-      } catch (ParseException e) {
-        LOG.error("Cmdlet ->[ {} ] parse error!", cmdletInfo.getParameters());
-        continue;
-      }
+          String.format("Reload Pending Cmdlet -> [ %s ]", cmdletInfo.getParameters()));
       List<ActionInfo> actionInfos = null;
-      boolean actionsInDB = false;
-      if (cmdletInfo.getAids().size() == 0) {
-        // TODO reload unfinished actions
-        actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
-      } else {
-        try {
-          actionInfos = metaStore.getActions(cmdletInfo.getAids());
-          actionsInDB = true;
-        } catch (MetaStoreException e) {
-          LOG.error("Get aids -> [ {} ] from database error!",
-              cmdletInfo.getAids(), e);
-        }
-        if (!actionsInDB || actionInfos.size() == 0) {
-          cmdletInfo.setState(CmdletState.FAILED);
+      if (cmdletInfo.getAids().size() != 0) {
+        for (long aid : cmdletInfo.getAids()) {
+          LOG.debug("Mark action -> [ {} ] as Failed", aid);
           try {
-            metaStore.updateCmdlet(cmdletInfo);
-          } catch (MetaStoreException e1) {
-            LOG.error("Mark cmdletinfo ->[ {} ] as failed error!",
-                cmdletInfo.getParameters(), e1);
+            metaStore.markActionFailed(aid);
+          } catch (MetaStoreException e) {
+            LOG.error("Cannot mark action -> [ {} ] as Failed!", aid, e);
           }
         }
-        continue;
-
       }
-      LOG.debug(String.format("Received Cmdlet -> [ %s ]",
-          cmdletDescriptor.getCmdletString()));
+      cmdletInfo.setState(CmdletState.FAILED);
+      try {
+        metaStore.updateCmdlet(cmdletInfo);
+      } catch (MetaStoreException e1) {
+        LOG.error("Mark cmdletinfo ->[ {} ] as failed error!",
+            cmdletInfo.getParameters(), e1);
+      }
+      // LOG.debug(String.format("Received Cmdlet -> [ %s ]",
+      //     cmdletDescriptor.getCmdletString()));
       // Check action names
-      checkActionNames(cmdletDescriptor);
+      // checkActionNames(cmdletDescriptor);
       // Let Scheduler check actioninfo onsubmit and add them to cmdletinfo
-      checkActionsOnSubmit(cmdletInfo, actionInfos);
+      // checkActionsOnSubmit(cmdletInfo, actionInfos);
       // Sync cmdletinfo and actionInfos with metastore and cache, add locks if necessary
-      syncCmdAction(cmdletInfo, actionInfos, actionsInDB);
+      // syncCmdAction(cmdletInfo, actionInfos, actionsInDB);
     }
   }
 
@@ -271,6 +256,9 @@ public class CmdletManager extends AbstractService {
     }
 
     for (ActionInfo actionInfo : actionInfos) {
+      if (actionInfo.isFinished()) {
+        continue;
+      }
       idToActions.put(actionInfo.getActionId(), actionInfo);
     }
     idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
