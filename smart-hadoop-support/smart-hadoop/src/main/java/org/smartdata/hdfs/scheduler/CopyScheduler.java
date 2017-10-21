@@ -589,7 +589,7 @@ public class CopyScheduler extends ActionSchedulerService {
     private void diffPreProcessing(
         List<FileDiff> fileDiffs) throws MetaStoreException {
       // Merge all existing fileDiffs into fileChains
-      LOG.debug("Size of Pending diffs", fileDiffs.size());
+      LOG.debug("Size of Pending diffs {}", fileDiffs.size());
       if (fileDiffs.size() == 0 && baseSyncQueue.size() == 0) {
         LOG.debug("All Backup directories are synced");
         return;
