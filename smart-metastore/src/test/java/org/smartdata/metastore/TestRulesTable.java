@@ -21,7 +21,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
-import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.util.List;
 

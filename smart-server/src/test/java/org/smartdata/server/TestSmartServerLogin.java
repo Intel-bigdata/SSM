@@ -11,7 +11,7 @@ import org.smartdata.conf.SmartConfKeys;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
 import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.utils.TestDBUtil;
+import org.smartdata.metastore.TestDBUtil;
 
 import java.io.File;
 import java.net.URI;
