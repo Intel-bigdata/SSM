@@ -27,6 +27,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * The default AccessEventSource for SmartServer.
+ */
 public class SmartServerAccessEventSource implements FileAccessEventSource {
   static final Logger LOG = LoggerFactory.getLogger(SmartServerAccessEventSource.class);
 
