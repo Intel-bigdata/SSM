@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore.fetcher;
+package org.smartdata.metastore.ingestion;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.FileInfoBatch;
 
-public abstract class FetchTask implements Runnable {
+public abstract class IngestionTask implements Runnable {
   public static long numFilesFetched = 0L;
   public static long numDirectoriesFetched = 0L;
   public static long numPersisted = 0L;
@@ -38,7 +39,7 @@ public abstract class FetchTask implements Runnable {
   protected long lastUpdateTime = System.currentTimeMillis();
   protected long startTime = lastUpdateTime;
 
-  public FetchTask() {
+  public IngestionTask() {
     this.deque = new ArrayDeque<>();
     this.batches = new LinkedBlockingDeque<>();
     this.currentBatch = new FileInfoBatch(DEFAULT_BATCH_SIZE);

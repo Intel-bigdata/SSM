@@ -19,11 +19,11 @@ package org.smartdata.alluxio.metric.fetcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.metastore.ingestion.IngestionTask;
 import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.fetcher.FetchTask;
-import org.smartdata.metastore.fetcher.FileInfoBatch;
-import org.smartdata.metastore.fetcher.FileStatusConsumer;
+import org.smartdata.model.FileInfoBatch;
+import org.smartdata.metastore.ingestion.FileStatusIngester;
 
 import alluxio.AlluxioURI;
 import alluxio.client.file.FileSystem;
@@ -43,7 +43,7 @@ public class AlluxioNamespaceFetcher {
   private final long fetchInterval;
   private ScheduledFuture fetchTaskFuture;
   private ScheduledFuture consumerFuture;
-  private FileStatusConsumer consumer;
+  private FileStatusIngester consumer;
   private AlluxioFetchTask fetchTask;
 
   public static final Logger LOG =
@@ -52,7 +52,7 @@ public class AlluxioNamespaceFetcher {
   public AlluxioNamespaceFetcher(FileSystem fs, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service) {
     this.fetchTask = new AlluxioFetchTask(fs);
-    this.consumer = new FileStatusConsumer(metaStore, fetchTask);
+    this.consumer = new FileStatusIngester(metaStore, fetchTask);
     this.fetchInterval = fetchInterval;
     this.scheduledExecutorService = service;
   }
@@ -78,7 +78,7 @@ public class AlluxioNamespaceFetcher {
     }
   }
 
-  private static class AlluxioFetchTask extends FetchTask {
+  private static class AlluxioFetchTask extends IngestionTask {
 
     private final FileSystem fs;
 

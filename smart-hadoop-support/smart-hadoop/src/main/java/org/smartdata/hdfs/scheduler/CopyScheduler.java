@@ -388,8 +388,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-  private FileDiff directSync(String src,
-      String dest) throws MetaStoreException {
+  private FileDiff directSync(String src, String dest) throws MetaStoreException {
     FileInfo fileInfo = metaStore.getFile(src);
     if (fileInfo == null) {
       // Primary file doesn't exist
