@@ -102,21 +102,19 @@ Configure SSM
     
     `[users]` section
 
-	      define supported user name and password. It follows the username = password, role format.
+	 define supported user name and password. It follows the username = password, role format. Here is an example,
 
-	      Here is an example,
-
-	      `admin = intel@intel, admin`
+	     admin = intel@intel, admin
 	
-	      `ssmoperator = operator@operation, operator`   
+	     ssmoperator = operator@operation, operator 
 	
     `[roles]` section
 
-	    define support roles. Here is the example,
+	 define support roles. Here is the example,
 
-	    `operator = *`
+	     operator = *
 	
-	    `admin = *`  
+	     admin = *
 
      For more information about security configuration, please refer to official document
 
