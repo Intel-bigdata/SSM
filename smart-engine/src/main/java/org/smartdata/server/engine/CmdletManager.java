@@ -175,10 +175,8 @@ public class CmdletManager extends AbstractService {
       try {
         metaStore.updateCmdlet(cmdletInfo);
       } catch (MetaStoreException e1) {
-        LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ], marked as failed error",
-            cmdletInfo.getCid(), cmdletInfo, e1);
-        LOG.error("Mark cmdletinfo ->[ {} ] as failed error!",
-            cmdletInfo.getParameters(), e1);
+        LOG.error("{} marked as failed error",
+            cmdletInfo, e1);
       }
       // LOG.debug(String.format("Received Cmdlet -> [ %s ]",
       //     cmdletDescriptor.getCmdletString()));
@@ -245,7 +243,7 @@ public class CmdletManager extends AbstractService {
             actionInfos.toArray(new ActionInfo[actionInfos.size()]));
       }
     } catch (MetaStoreException e) {
-      LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ] Sync with DB error", cmdletInfo.getCid(), cmdletInfo, e);
+      LOG.error("{} Sync with DB error", cmdletInfo, e);
       try {
         for (String file : filesLocked) {
           fileLocks.remove(file);
@@ -253,7 +251,7 @@ public class CmdletManager extends AbstractService {
         cmdletInfo.setState(CmdletState.FAILED);
         metaStore.updateCmdlet(cmdletInfo);
       } catch (MetaStoreException e1) {
-        LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ] marked as failed error!", cmdletInfo.getCid(), cmdletInfo, e);
+        LOG.error("{} marked as failed error!", cmdletInfo, e);
       }
       throw new IOException(e);
     }
@@ -303,7 +301,7 @@ public class CmdletManager extends AbstractService {
       CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdlet);
       return submitCmdlet(cmdletDescriptor);
     } catch (ParseException e) {
-      LOG.error("Cmdlet -> [ {} ], format is not correct", e);
+      LOG.error("Cmdlet -> [ {} ], format is not correct", cmdlet, e);
       throw new IOException(e);
     }
   }
@@ -344,7 +342,7 @@ public class CmdletManager extends AbstractService {
       metaStore.insertActions(
           actionInfos.toArray(new ActionInfo[actionInfos.size()]));
     } catch (MetaStoreException e) {
-      LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ] submit to DB error", cmdletInfo.getCid(), cmdletInfo, e);
+      LOG.error("{} submit to DB error", cmdletInfo, e);
 
       try {
         for (String file : filesLocked) {
@@ -352,7 +350,7 @@ public class CmdletManager extends AbstractService {
         }
         metaStore.deleteCmdlet(cmdletInfo.getCid());
       } catch (MetaStoreException e1) {
-        LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ] delete from DB error", cmdletInfo.getCid(), cmdletInfo, e);
+        LOG.error("{} delete from DB error", cmdletInfo, e);
       }
       throw new IOException(e);
     }
