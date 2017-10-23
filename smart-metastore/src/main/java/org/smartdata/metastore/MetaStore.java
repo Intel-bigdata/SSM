@@ -889,11 +889,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  /**
+   * Mark action {aid} as failed.
+   * @param aid
+   * @throws MetaStoreException
+   */
   public void markActionFailed(long aid) throws MetaStoreException {
     ActionInfo actionInfo = getActionById(aid);
     if (actionInfo != null) {
+      // Finished
+      actionInfo.setFinished(true);
+      // Failed
       actionInfo.setSuccessful(false);
+      // 100 % progress
       actionInfo.setProgress(1);
+      // Finish time equals to create time
       actionInfo.setFinishTime(actionInfo.getCreateTime());
       updateAction(actionInfo);
     }
