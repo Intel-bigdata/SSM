@@ -658,6 +658,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<RuleInfo> ruleInfos = getRuleInfo();
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
     for (RuleInfo ruleInfo : ruleInfos) {
+      if (ruleInfo.getState() == RuleState.DELETED) {
+        continue;
+      }
       if (ruleInfo.getRuleText().contains("sync")) {
         DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add sync progress
@@ -881,6 +884,38 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteAllActions() throws MetaStoreException {
     try {
       actionDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  /**
+   * Mark action {aid} as failed.
+   * @param aid
+   * @throws MetaStoreException
+   */
+  public void markActionFailed(long aid) throws MetaStoreException {
+    ActionInfo actionInfo = getActionById(aid);
+    if (actionInfo != null) {
+      // Finished
+      actionInfo.setFinished(true);
+      // Failed
+      actionInfo.setSuccessful(false);
+      // 100 % progress
+      actionInfo.setProgress(1);
+      // Finish time equals to create time
+      actionInfo.setFinishTime(actionInfo.getCreateTime());
+      updateAction(actionInfo);
+    }
+  }
+
+  public void updateAction(ActionInfo actionInfo) throws MetaStoreException {
+    if (actionInfo == null) {
+      return;
+    }
+    LOG.debug("Update Action ID {}", actionInfo.getActionId());
+    try {
+      actionDao.update(actionInfo);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

@@ -218,7 +218,8 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     metaStore.insertCmdlets(cmdlets);
     // init cmdletmanager
     cmdletManager.init();
-    Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
+    Thread.sleep(1000);
+    Assert.assertTrue(metaStore.getCmdletById(0).getState() == CmdletState.FAILED);
   }
 
   @Test

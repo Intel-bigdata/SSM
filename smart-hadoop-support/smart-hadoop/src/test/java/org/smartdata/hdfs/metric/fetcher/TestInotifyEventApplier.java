@@ -32,7 +32,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.utils.TestDaoUtil;
+
+import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;

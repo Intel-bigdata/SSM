@@ -25,6 +25,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * Collect access events from users RPC call to Smart RPC Server.
+ */
 public class SmartServerAccessEventCollector implements FileAccessEventCollector {
   private final LinkedBlockingQueue<FileAccessEvent> outerQueue;
 

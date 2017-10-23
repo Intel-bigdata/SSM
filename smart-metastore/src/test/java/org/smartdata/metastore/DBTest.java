@@ -21,7 +21,6 @@ import org.dbunit.IDatabaseTester;
 import org.dbunit.JdbcDatabaseTester;
 import org.junit.After;
 import org.junit.Before;
-import org.smartdata.metastore.utils.TestDaoUtil;
 
 public abstract class DBTest extends TestDaoUtil {
   protected IDatabaseTester databaseTester;
