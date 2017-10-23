@@ -26,7 +26,7 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.RuleManager;
 

@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore.utils;
+package org.smartdata.metastore;
 
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

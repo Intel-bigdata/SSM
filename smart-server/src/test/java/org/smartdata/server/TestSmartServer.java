@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.utils.TestDBUtil;
+import org.smartdata.metastore.TestDBUtil;
 
 public class TestSmartServer {
   protected SmartConf conf;

@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.dao.MetaStoreHelper;
-import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.TestDaoUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;

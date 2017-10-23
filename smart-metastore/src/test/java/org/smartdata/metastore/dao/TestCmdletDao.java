@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.CmdletInfo;
-import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.TestDaoUtil;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.List;

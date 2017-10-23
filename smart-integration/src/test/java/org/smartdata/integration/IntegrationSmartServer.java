@@ -22,7 +22,7 @@ import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.utils.TestDBUtil;
+import org.smartdata.metastore.TestDBUtil;
 import org.smartdata.server.SmartServer;
 
 /**
