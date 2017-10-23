@@ -96,6 +96,30 @@ Configure SSM
    
    After all finish the SSM configuration, we can start to deploy the SSM package with the configuration files to all involved servers.
   
+* **Configure user account to authenticate to Web UI**
+
+    By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.int file, 
+    
+    `[users]` section
+
+	 define supported user name and password. It follows the username = password, role format. Here is an example,
+
+	     admin = intel@intel, admin
+	
+	     ssmoperator = operator@operation, operator 
+	
+    `[roles]` section
+
+	 define support roles. Here is the example,
+
+	     operator = *
+	
+	     admin = *
+
+     For more information about security configuration, please refer to official document
+
+     https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html
+
 
 Deploy SSM
 ---------------------------------------------------------------------------------
