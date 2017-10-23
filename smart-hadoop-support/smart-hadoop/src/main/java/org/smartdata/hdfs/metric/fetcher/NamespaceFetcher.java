@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.fetcher.FetchTask;
-import org.smartdata.metastore.fetcher.FileInfoBatch;
-import org.smartdata.metastore.fetcher.FileStatusConsumer;
+import org.smartdata.metastore.ingestion.IngestionTask;
+import org.smartdata.model.FileInfoBatch;
+import org.smartdata.metastore.ingestion.FileStatusIngester;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,8 +44,8 @@ public class NamespaceFetcher {
   private final long fetchInterval;
   private ScheduledFuture fetchTaskFuture;
   private ScheduledFuture consumerFuture;
-  private FileStatusConsumer consumer;
-  private FetchTask fetchTask;
+  private FileStatusIngester consumer;
+  private IngestionTask ingestionTask;
   private MetaStore metaStore;
 
   public static final Logger LOG =
@@ -65,8 +65,8 @@ public class NamespaceFetcher {
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service) {
-    this.fetchTask = new HdfsFetchTask(client);
-    this.consumer = new FileStatusConsumer(metaStore, fetchTask);
+    this.ingestionTask = new HdfsFetchTask(client);
+    this.consumer = new FileStatusIngester(metaStore, ingestionTask);
     this.fetchInterval = fetchInterval;
     this.scheduledExecutorService = service;
     this.metaStore = metaStore;
@@ -79,14 +79,14 @@ public class NamespaceFetcher {
       throw new IOException("Error while reset files", e);
     }
     this.fetchTaskFuture = this.scheduledExecutorService.scheduleAtFixedRate(
-        fetchTask, 0, fetchInterval, TimeUnit.MILLISECONDS);
+        ingestionTask, 0, fetchInterval, TimeUnit.MILLISECONDS);
     this.consumerFuture = this.scheduledExecutorService.scheduleAtFixedRate(
         consumer, 0, 100, TimeUnit.MILLISECONDS);
     LOG.info("Started.");
   }
 
   public boolean fetchFinished() {
-    return this.fetchTask.finished();
+    return this.ingestionTask.finished();
   }
 
   public void stop() {
@@ -98,7 +98,7 @@ public class NamespaceFetcher {
     }
   }
 
-  private static class HdfsFetchTask extends FetchTask {
+  private static class HdfsFetchTask extends IngestionTask {
     private final HdfsFileStatus[] EMPTY_STATUS = new HdfsFileStatus[0];
     private final DFSClient client;
     public HdfsFetchTask(DFSClient client) {

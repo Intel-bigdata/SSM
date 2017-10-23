@@ -15,41 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metastore.fetcher;
+package org.smartdata.metastore.ingestion;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.FileInfoBatch;
 
-public class FileStatusConsumer implements Runnable {
-  public static final Logger LOG = LoggerFactory.getLogger(FileStatusConsumer.class);
+public class FileStatusIngester implements Runnable {
+  public static final Logger LOG = LoggerFactory.getLogger(FileStatusIngester.class);
 
   private final MetaStore dbAdapter;
-  private final FetchTask fetchTask;
+  private final IngestionTask ingestionTask;
   private long startTime = System.currentTimeMillis();
   private long lastUpdateTime = startTime;
 
-  public FileStatusConsumer(MetaStore dbAdapter, FetchTask fetchTask) {
+  public FileStatusIngester(MetaStore dbAdapter, IngestionTask ingestionTask) {
     this.dbAdapter = dbAdapter;
-    this.fetchTask = fetchTask;
+    this.ingestionTask = ingestionTask;
   }
 
   @Override
   public void run() {
-    FileInfoBatch batch = fetchTask.pollBatch();
+    FileInfoBatch batch = ingestionTask.pollBatch();
     try {
       if (batch != null) {
         FileInfo[] statuses = batch.getFileInfos();
         if (statuses.length == batch.actualSize()) {
           this.dbAdapter.insertFiles(batch.getFileInfos());
-          FetchTask.numPersisted += statuses.length;
+          IngestionTask.numPersisted += statuses.length;
         } else {
           FileInfo[] actual = new FileInfo[batch.actualSize()];
           System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
           this.dbAdapter.insertFiles(actual);
-          FetchTask.numPersisted += actual.length;
+          IngestionTask.numPersisted += actual.length;
         }
 
         if (LOG.isDebugEnabled()) {
@@ -64,11 +65,11 @@ public class FileStatusConsumer implements Runnable {
     if (LOG.isDebugEnabled()) {
       long curr = System.currentTimeMillis();
       if (curr - lastUpdateTime >= 2000) {
-        long total = FetchTask.numDirectoriesFetched + FetchTask.numFilesFetched;
+        long total = IngestionTask.numDirectoriesFetched + IngestionTask.numFilesFetched;
         if (total > 0) {
           LOG.debug(String.format(
               "%d sec, %%%d persisted into database",
-              (curr - startTime) / 1000, FetchTask.numPersisted * 100 / total));
+              (curr - startTime) / 1000, IngestionTask.numPersisted * 100 / total));
         } else {
           LOG.debug(String.format(
               "%d sec, %%0 persisted into database",
