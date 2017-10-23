@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.utils.TestDBUtil;
 
 import java.io.InputStream;
 import java.util.Properties;

@@ -36,7 +36,7 @@ import org.mockito.Mockito;
 import org.smartdata.SmartConstants;
 import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.TestDaoUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;

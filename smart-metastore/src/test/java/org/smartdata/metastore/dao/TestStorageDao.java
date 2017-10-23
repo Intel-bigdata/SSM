@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
-import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.TestDaoUtil;
 
 import java.util.Map;
 

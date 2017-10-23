@@ -23,7 +23,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.utils.TestDaoUtil;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

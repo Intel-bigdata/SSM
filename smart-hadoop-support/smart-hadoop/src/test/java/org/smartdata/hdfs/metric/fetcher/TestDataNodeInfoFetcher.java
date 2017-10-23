@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.TestDaoUtil;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;

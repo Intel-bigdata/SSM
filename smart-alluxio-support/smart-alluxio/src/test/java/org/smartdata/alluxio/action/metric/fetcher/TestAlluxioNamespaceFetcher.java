@@ -34,7 +34,7 @@ import org.junit.Test;
 
 import org.smartdata.alluxio.metric.fetcher.AlluxioNamespaceFetcher;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.FileInfo;
 
 import java.io.IOException;

@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
-import org.smartdata.metastore.utils.TestDaoUtil;
+import org.smartdata.metastore.TestDaoUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -26,7 +26,7 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.SmartServiceState;
 import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 import org.smartdata.metastore.utils.MetaStoreUtils;
-import org.smartdata.metastore.utils.TestDBUtil;
+import org.smartdata.metastore.TestDBUtil;
 
 import java.io.IOException;
 import java.net.URI;
