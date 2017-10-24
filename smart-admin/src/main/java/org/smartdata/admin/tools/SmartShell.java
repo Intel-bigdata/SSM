@@ -107,35 +107,37 @@ public class SmartShell extends Configured implements Tool {
     public static final String NAME = "usage";
     public static final String USAGE = "[cmd ...]";
     public static final String DESCRIPTION =
-        "Displays the usage for given cmdlet or all cmdlets if none " +
-            "is specified.";
+        "Displays the usage for given cmdlet or all cmdlets if none is specified.";
 
     @Override
     protected void processRawArguments(LinkedList<String> args) {
       if (args.isEmpty()) {
         printUsage(System.out);
       } else {
-        for (String arg : args) printUsage(System.out, arg);
+        for (String arg : args) {
+          printUsage(System.out, arg);
+        }
       }
     }
   }
 
   /**
-   * Displays short usage of cmdlets sans the long description
+   * Displays short usage of cmdlets sans the long description.
    */
   protected class Help extends SmartCmdlet {
     public static final String NAME = "help";
     public static final String USAGE = "[cmd ...]";
     public static final String DESCRIPTION =
-        "Displays help for given cmdlet or all cmdlets if none " +
-            "is specified.";
+        "Displays help for given cmdlet or all cmdlets if none is specified.";
 
     @Override
     protected void processRawArguments(LinkedList<String> args) {
       if (args.isEmpty()) {
         printHelp(System.out);
       } else {
-        for (String arg : args) printHelp(System.out, arg);
+        for (String arg : args) {
+          printHelp(System.out, arg);
+        }
       }
     }
   }
@@ -252,7 +254,7 @@ public class SmartShell extends Configured implements Tool {
   }
 
   /**
-   * run
+   * run.
    */
   @Override
   public int run(String argv[]) throws Exception {
@@ -298,8 +300,7 @@ public class SmartShell extends Configured implements Tool {
         Command instance = null;
         instance = cmdletFactory.getInstance("-" + cmd);
         if (instance != null) {
-          System.err.println("Did you mean -" + cmd + "?  This cmdlet " +
-              "begins with a dash.");
+          System.err.println("Did you mean -" + cmd + "?  This cmdlet begins with a dash.");
         }
       }
     }
@@ -312,7 +313,7 @@ public class SmartShell extends Configured implements Tool {
   }
 
   /**
-   * main() has some simple utility methods
+   * main() has some simple utility methods.
    * @param argv the cmdlet and its arguments
    * @throws Exception upon error
    */
@@ -343,8 +344,14 @@ public class SmartShell extends Configured implements Tool {
   @SuppressWarnings("serial")
   static class UnknownCmdletException extends IllegalArgumentException {
     private final String cmd;
-    UnknownCmdletException() { this(null); }
-    UnknownCmdletException(String cmd) { this.cmd = cmd; }
+
+    UnknownCmdletException() {
+      this(null);
+    }
+
+    UnknownCmdletException(String cmd) {
+      this.cmd = cmd;
+    }
 
     @Override
     public String getMessage() {

@@ -50,7 +50,7 @@ public abstract class SmartObject {
   }
 
   /**
-   * The following properties of this Object are required.
+   * The following PROPERTIES of this Object are required.
    * @param properties
    */
   public void setRequiredProperties(List<Property> properties) {

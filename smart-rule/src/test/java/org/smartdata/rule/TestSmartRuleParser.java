@@ -26,10 +26,10 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleLexer;
 import org.smartdata.rule.parser.SmartRuleParser;
 import org.smartdata.rule.parser.SmartRuleVisitTranslator;
-import org.smartdata.model.rule.TranslateResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class TestSmartRuleParser {
     public void syntaxError(Recognizer<?, ?> recognizer,
         Object offendingSymbol, int line, int charPositionInLine,
         String msg, RecognitionException e) {
-      List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
+      List<String> stack = ((Parser) recognizer).getRuleInvocationStack();
       Collections.reverse(stack);
       System.err.println("rule stack: " + stack);
       System.err.println("line " + line + ":" + charPositionInLine + " at "

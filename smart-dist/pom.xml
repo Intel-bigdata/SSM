@@ -117,7 +117,7 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <!-- Default hadoop profile. Uses global properties. -->
+            <!-- Default hadoop profile. Uses global PROPERTIES. -->
             <dependencies>
                 <dependency>
                     <groupId>org.smartdata</groupId>

@@ -31,7 +31,7 @@ public class TestSmartRuleStringParser {
   public void testRuleTranslate() throws Exception {
     List<String> rules = new LinkedList<>();
     rules.add("file : path matches \"/test/*\" | sync -dest \"hdfs://remotecluster:port/somedir\"");
-    for(String rule : rules) {
+    for (String rule : rules) {
       parseRule(rule);
     }
   }
