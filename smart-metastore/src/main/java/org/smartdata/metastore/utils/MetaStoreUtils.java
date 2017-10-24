@@ -83,7 +83,7 @@ public class MetaStoreUtils {
 
   public static void initializeDataBase(
       Connection conn) throws MetaStoreException {
-    String createEmptyTables[] = new String[]{
+    String deleteExistingTables[] = new String[] {
         "DROP TABLE IF EXISTS access_count_table;",
         "DROP TABLE IF EXISTS cached_file;",
         "DROP TABLE IF EXISTS ec_policy;",
@@ -104,8 +104,9 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS cluster_config",
         "DROP TABLE IF EXISTS backup_file",
         "DROP TABLE IF EXISTS sys_info",
-        "DROP TABLE IF EXISTS cluster_info",
-
+        "DROP TABLE IF EXISTS cluster_info"
+    };
+    String createEmptyTables[] = new String[]{
         "CREATE TABLE access_count_table (\n" +
             "  table_name varchar(255) PRIMARY KEY,\n" +
             "  start_time bigint(20) NOT NULL,\n" +
@@ -304,12 +305,24 @@ public class MetaStoreUtils {
         mysqlOldRelease = true;
       }
       boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
+      for (String s : deleteExistingTables) {
+        // Drop table if exists
+        LOG.debug(s);
+        executeSql(conn, s);
+      }
       for (String s : createEmptyTables) {
+        // Solve mysql and sqlite sql difference
         if (mysql) {
-          if (s.startsWith("CREATE INDEX") && mysqlOldRelease) {
+          // path/src index should be set to less than 767
+          // to avoid "Specified key was too long" in
+          // Mysql 5.6 or previous version
+          if (mysqlOldRelease && s.startsWith("CREATE INDEX") &&
+              (s.contains("path") || s.contains("src"))) {
             // Fix index size 767 in mysql 5.6 or previous version
             s = s.replace(");", "(750));");
-          } else {
+          }
+          // Replace AUTOINCREMENT with AUTO_INCREMENT
+          if (s.contains("AUTOINCREMENT")) {
             s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
           }
         }
