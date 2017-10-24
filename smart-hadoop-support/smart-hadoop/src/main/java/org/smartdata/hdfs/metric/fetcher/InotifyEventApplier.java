@@ -122,15 +122,15 @@ public class InotifyEventApplier {
             .put("-length", String.valueOf(fileInfo.getLength()));
         // TODO add support in CopyFileAction or split into two file diffs
         //add modification_time and access_time to filediff
-        fileDiff.getParameters().put("-mtime", "" + fileInfo.getModification_time());
-        // fileDiff.getParameters().put("-atime", "" + fileInfo.getAccess_time());
+        fileDiff.getParameters().put("-mtime", "" + fileInfo.getModificationTime());
+        // fileDiff.getParameters().put("-atime", "" + fileInfo.getAccessTime());
         //add owner to filediff
         fileDiff.getParameters().put("-owner", "" + fileInfo.getOwner());
         fileDiff.getParameters().put("-group", "" + fileInfo.getGroup());
         //add Permission to filediff
         fileDiff.getParameters().put("-permission", "" + fileInfo.getPermission());
         //add replication count to file diff
-        fileDiff.getParameters().put("-replication", "" + fileInfo.getBlock_replication());
+        fileDiff.getParameters().put("-replication", "" + fileInfo.getBlockReplication());
         metaStore.insertFileDiff(fileDiff);
       }
     }

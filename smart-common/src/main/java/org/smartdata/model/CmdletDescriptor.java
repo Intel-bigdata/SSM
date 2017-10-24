@@ -28,7 +28,7 @@ import java.util.Map;
  * parameters like shell format. It does not including verifications like
  * whether the action is supported or the parameters are valid or not.
  *
- * Cmdlet string should have the following format:
+ * <p>Cmdlet string should have the following format:
  *    action1 [-option [value]] ... [; action2 [-option [value]] ...]
  */
 public class CmdletDescriptor {
@@ -180,7 +180,9 @@ public class CmdletDescriptor {
 
   @Override
   public String toString() {
-    return String.format("CmdletDescriptor{actionCommon=%s, actionNames=%s, actionArgs=%s, cmdletString=\'%s\'}",
+    return String.format(
+        "CmdletDescriptor{actionCommon=%s, actionNames=%s, "
+            + "actionArgs=%s, cmdletString=\'%s\'}",
         actionCommon, actionNames, actionArgs, cmdletString);
   }
 

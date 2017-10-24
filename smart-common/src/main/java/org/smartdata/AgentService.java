@@ -31,7 +31,7 @@ public abstract class AgentService extends AbstractService {
   public abstract void execute(Message message) throws Exception;
 
   /**
-   * This must be the same as that returned by {@link Message#getServiceName} below
+   * This must be the same as that returned by {@link Message#getServiceName} below.
    */
   public abstract String getServiceName();
 

@@ -18,6 +18,8 @@
 
 package org.smartdata.model;
 
+import java.util.Objects;
+
 public class FileAccessInfo {
   private Long fid;
   private String path;
@@ -55,26 +57,26 @@ public class FileAccessInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     FileAccessInfo that = (FileAccessInfo) o;
-
-    if (fid != null ? !fid.equals(that.fid) : that.fid != null) return false;
-    if (path != null ? !path.equals(that.path) : that.path != null) return false;
-    return accessCount != null ? accessCount.equals(that.accessCount) : that.accessCount == null;
+    return Objects.equals(fid, that.fid)
+        && Objects.equals(path, that.path)
+        && Objects.equals(accessCount, that.accessCount);
   }
 
   @Override
   public int hashCode() {
-    int result = fid != null ? fid.hashCode() : 0;
-    result = 31 * result + (path != null ? path.hashCode() : 0);
-    result = 31 * result + (accessCount != null ? accessCount.hashCode() : 0);
-    return result;
+    return Objects.hash(fid, path, accessCount);
   }
 
   @Override
   public String toString() {
-    return String.format("FileAccessInfo{fid=%s, path=\'%s\', accessCount=%s}", fid, path, accessCount);
+    return String.format(
+        "FileAccessInfo{fid=%s, path=\'%s\', accessCount=%s}", fid, path, accessCount);
   }
 }

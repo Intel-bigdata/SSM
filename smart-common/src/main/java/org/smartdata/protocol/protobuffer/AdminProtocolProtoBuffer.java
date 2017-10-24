@@ -20,40 +20,40 @@ package org.smartdata.protocol.protobuffer;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
+import org.smartdata.protocol.AdminServerProto.ActivateCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.ActivateCmdletResponseProto;
+import org.smartdata.protocol.AdminServerProto.ActivateRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.ActivateRuleResponseProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleResponseProto;
+import org.smartdata.protocol.AdminServerProto.DeleteCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.DeleteCmdletResponseProto;
+import org.smartdata.protocol.AdminServerProto.DeleteRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.DeleteRuleResponseProto;
+import org.smartdata.protocol.AdminServerProto.DisableCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.DisableCmdletResponseProto;
+import org.smartdata.protocol.AdminServerProto.DisableRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.DisableRuleResponseProto;
+import org.smartdata.protocol.AdminServerProto.GetActionInfoRequestProto;
+import org.smartdata.protocol.AdminServerProto.GetActionInfoResponseProto;
+import org.smartdata.protocol.AdminServerProto.GetCmdletInfoRequestProto;
+import org.smartdata.protocol.AdminServerProto.GetCmdletInfoResponseProto;
 import org.smartdata.protocol.AdminServerProto.GetRuleInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.GetRuleInfoResponseProto;
 import org.smartdata.protocol.AdminServerProto.GetServiceStateRequestProto;
 import org.smartdata.protocol.AdminServerProto.GetServiceStateResponseProto;
+import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
+import org.smartdata.protocol.AdminServerProto.ListActionsSupportedRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListActionsSupportedResponseProto;
+import org.smartdata.protocol.AdminServerProto.ListCmdletInfoRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListCmdletInfoResponseProto;
 import org.smartdata.protocol.AdminServerProto.ListRulesInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.ListRulesInfoResponseProto;
+import org.smartdata.protocol.AdminServerProto.SubmitCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleResponseProto;
-import org.smartdata.protocol.AdminServerProto.DeleteRuleResponseProto;
-import org.smartdata.protocol.AdminServerProto.ActivateRuleResponseProto;
-import org.smartdata.protocol.AdminServerProto.DisableRuleResponseProto;
-import org.smartdata.protocol.AdminServerProto.DeleteRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.ActivateRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.DisableRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.GetCmdletInfoResponseProto;
-import org.smartdata.protocol.AdminServerProto.GetCmdletInfoRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListCmdletInfoResponseProto;
-import org.smartdata.protocol.AdminServerProto.ListCmdletInfoRequestProto;
-import org.smartdata.protocol.AdminServerProto.ActivateCmdletResponseProto;
-import org.smartdata.protocol.AdminServerProto.ActivateCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.DisableCmdletResponseProto;
-import org.smartdata.protocol.AdminServerProto.DisableCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.DeleteCmdletResponseProto;
-import org.smartdata.protocol.AdminServerProto.DeleteCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.GetActionInfoResponseProto;
-import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
-import org.smartdata.protocol.AdminServerProto.GetActionInfoRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
-import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
-import org.smartdata.protocol.AdminServerProto.SubmitCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListActionsSupportedResponseProto;
-import org.smartdata.protocol.AdminServerProto.ListActionsSupportedRequestProto;
 
 @ProtocolInfo(protocolName = "org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer",
     protocolVersion = 1)
@@ -83,7 +83,7 @@ public interface AdminProtocolProtoBuffer {
 
   DisableRuleResponseProto disableRule(RpcController controller,
       DisableRuleRequestProto req) throws ServiceException;
-  
+
   GetCmdletInfoResponseProto getCmdletInfo(RpcController controller,
       GetCmdletInfoRequestProto req) throws ServiceException;
 
@@ -113,5 +113,4 @@ public interface AdminProtocolProtoBuffer {
   ListActionsSupportedResponseProto listActionsSupported(
       RpcController controller, ListActionsSupportedRequestProto req)
       throws ServiceException;
-
 }

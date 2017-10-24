@@ -17,6 +17,8 @@
  */
 package org.smartdata.model;
 
+import java.util.Objects;
+
 public class SystemInfo {
   private final String property;
   private final String value;
@@ -36,20 +38,19 @@ public class SystemInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     SystemInfo that = (SystemInfo) o;
-
-    if (property != null ? !property.equals(that.property) : that.property != null) return false;
-    return value != null ? value.equals(that.value) : that.value == null;
+    return Objects.equals(property, that.property) && Objects.equals(value, that.value);
   }
 
   @Override
   public int hashCode() {
-    int result = property != null ? property.hashCode() : 0;
-    result = 31 * result + (value != null ? value.hashCode() : 0);
-    return result;
+    return Objects.hash(property, value);
   }
 
   @Override

@@ -28,7 +28,6 @@ public final class StorageCapacity {
     this.free = free;
   }
 
-
   public String getType() {
     return type;
   }
@@ -55,8 +54,7 @@ public final class StorageCapacity {
     if (type != null ? !type.equals(that.type) : that.type != null) {
       return false;
     }
-    if (capacity != null ? !capacity.equals(that.capacity) :
-        that.capacity != null) {
+    if (capacity != null ? !capacity.equals(that.capacity) : that.capacity != null) {
       return false;
     }
     return free != null ? free.equals(that.free) : that.free == null;
@@ -72,6 +70,7 @@ public final class StorageCapacity {
 
   @Override
   public String toString() {
-    return String.format("StorageCapacity{type=\'%s\', capacity=%s, free=%s}", type, capacity, free);
+    return String.format(
+        "StorageCapacity{type=\'%s\', capacity=%s, free=%s}", type, capacity, free);
   }
 }

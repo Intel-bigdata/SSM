@@ -29,10 +29,11 @@ public class ActionFinished implements StatusMessage {
   }
 
   public ActionFinished(long actionId, long timestamp, String result, String log) {
-    this(actionId, timestamp, result, log,null);
+    this(actionId, timestamp, result, log, null);
   }
 
-  public ActionFinished(long actionId, long timestamp, String result, String log, Throwable throwable) {
+  public ActionFinished(
+      long actionId, long timestamp, String result, String log, Throwable throwable) {
     this.actionId = actionId;
     this.timestamp = timestamp;
     this.result = result;
@@ -85,7 +86,8 @@ public class ActionFinished implements StatusMessage {
     if (throwable == null) {
       return String.format("Action %s finished at %s", actionId, timestamp);
     } else {
-      return String.format("Action %s finished at %s with exception %s", actionId, timestamp, throwable);
+      return String.format(
+          "Action %s finished at %s with exception %s", actionId, timestamp, throwable);
     }
   }
 }
