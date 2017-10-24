@@ -294,10 +294,24 @@ public class MetaStoreUtils {
     };
     try {
       String url = conn.getMetaData().getURL();
+      conn.getMetaData().getDatabaseMajorVersion();
+      boolean mysqlOldRelease = false;
+      // Mysql version number
+      double mysqlVersion = conn.getMetaData().getDatabaseMajorVersion() +
+          conn.getMetaData().getDatabaseMinorVersion() * 0.1;
+      LOG.debug("Mysql Version Number {}", mysqlVersion);
+      if (mysqlVersion < 5.7) {
+        mysqlOldRelease = true;
+      }
       boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
       for (String s : createEmptyTables) {
         if (mysql) {
-          s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+          if (s.startsWith("CREATE INDEX") && mysqlOldRelease) {
+            // Fix index size 767 in mysql 5.6 or previous version
+            s = s.replace(");", "(750));");
+          } else {
+            s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+          }
         }
         LOG.debug(s);
         executeSql(conn, s);
