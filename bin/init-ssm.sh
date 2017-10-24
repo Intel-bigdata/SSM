@@ -51,10 +51,11 @@ done
 
 echo -n "Start formatting database ... "
 
-$("${SMART_HOME}/bin/ssm" --config "${SMART_CONF_DIR}" formatdatabase 2>/dev/null)
+Msg=$(. "${SMART_HOME}/bin/ssm" --config "${SMART_CONF_DIR}" formatdatabase 2>&1 )
 
 if [ x"$?" = x"0" ]; then
   echo "[Success]"
 else
   echo "[Failed]"
+  echo ${Msg}
 fi

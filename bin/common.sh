@@ -16,6 +16,10 @@
 # limitations under the License.
 #
 
+export SMART_SERVER_LOG_FILE_NAME=smartserver.log
+export SMART_AGENT_LOG_FILE_NAME=smartagent.log
+export SMART_LOG_FILE_NAME=${SMART_SERVER_LOG_FILE_NAME}
+
 if [ -L ${BASH_SOURCE-$0} ]; then
   FWDIR=$(dirname $(readlink "${BASH_SOURCE-$0}"))
 else
@@ -35,6 +39,7 @@ fi
 if [[ -z "${SMART_LOG_DIR}" ]]; then
   export SMART_LOG_DIR="${SMART_HOME}/logs"
 fi
+export SMART_LOG_FILE=${SMART_LOG_DIR}/${SMART_LOG_FILE_NAME}
 
 if [[ -z "$SMART_PID_DIR" ]]; then
   export SMART_PID_DIR="${SMART_HOME}/run"
@@ -133,14 +138,20 @@ if [[ -z "$SMART_INTERPRETER_REMOTE_RUNNER" ]]; then
   export SMART_INTERPRETER_REMOTE_RUNNER="bin/interpreter.sh"
 fi
 
-
-SMART_SERVER_PID_FILE=/tmp/SmartServer.pid
-
 SSH_OPTIONS="-o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10s"
 
-function start_smart_server() {
-  local servers=localhost
+function check_java_avaliable() {
+  "${SMART_RUNNER}" -version >/dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo "#===================================================================="
+    echo "#  Cannot find java. Please config JAVA_HOME in conf/smart-env.sh"
+    echo "#===================================================================="
+    return 1;
+  fi
+  return 0;
+}
 
+function start_smart_server() {
   if [[ "${SMART_VARGS}" =~ " -format" ]]; then
     echo "Start formatting database ..."
     exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_CLASSNAME $SMART_VARGS
@@ -167,7 +178,7 @@ function smart_start_daemon() {
     rm -f "${pidfile}" >/dev/null 2>&1
   fi
 
-  start_daemon "${pidfile}" >/dev/null 2>&1 < /dev/null &
+  start_daemon "${pidfile}" >>${SMART_LOG_FILE} 2>&1 < /dev/null &
 
   (( counter=0 ))
   while [[ ! -f ${pidfile} && ${counter} -le 5 ]]; do
@@ -249,20 +260,22 @@ function init_command() {
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
       SMART_VARGS+=" -format"
-      JAVA_OPTS+=" -Dsmart.log.file=smartserver.log"
+      JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
     ;;
     smartserver)
       SMART_CLASSNAME=org.smartdata.server.SmartDaemon
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
-      JAVA_OPTS+=" -Dsmart.log.file=smartserver.log"
+      JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
       SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
     ;;
     smartagent)
       SMART_CLASSNAME=org.smartdata.agent.SmartAgent
       SMART_PID_FILE=/tmp/SmartAgent.pid
       ALLOW_DAEMON_OPT=true
-      JAVA_OPTS+=" -Dsmart.log.file=smartagent.log"
+      export SMART_LOG_FILE_NAME=${SMART_AGENT_LOG_FILE_NAME}
+      export SMART_LOG_FILE=${SMART_LOG_DIR}/${SMART_LOG_FILE_NAME}
+      JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
       SMART_VARGS+=" -D smart.agent.address="${SSM_EXEC_HOST}
     ;;
     getconf)
