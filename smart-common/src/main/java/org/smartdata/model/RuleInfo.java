@@ -19,6 +19,7 @@ package org.smartdata.model;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Contains info about a rule inside SSM.
@@ -119,6 +120,29 @@ public class RuleInfo implements Cloneable {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    RuleInfo ruleInfo = (RuleInfo) o;
+    return id == ruleInfo.id
+        && submitTime == ruleInfo.submitTime
+        && numChecked == ruleInfo.numChecked
+        && numCmdsGen == ruleInfo.numCmdsGen
+        && lastCheckTime == ruleInfo.lastCheckTime
+        && Objects.equals(ruleText, ruleInfo.ruleText)
+        && state == ruleInfo.state;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, submitTime, ruleText, state, numChecked, numCmdsGen, lastCheckTime);
+  }
+
+  @Override
   public String toString() {
     StringBuffer sb = new StringBuffer();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -128,11 +152,18 @@ public class RuleInfo implements Cloneable {
       Date lastCheckDate = new Date(lastCheckTime);
       lastCheck = sdf.format(lastCheckDate);
     }
-    sb.append("{ id = ").append(id)
-        .append(", submitTime = '").append(sdf.format(submitDate)).append("'")
-        .append(", State = ").append(state.toString())
-        .append(", lastCheckTime = '").append(lastCheck).append("'")
-        .append(", numChecked = ").append(numChecked)
+    sb.append("{ id = ")
+        .append(id)
+        .append(", submitTime = '")
+        .append(sdf.format(submitDate))
+        .append("'")
+        .append(", State = ")
+        .append(state.toString())
+        .append(", lastCheckTime = '")
+        .append(lastCheck)
+        .append("'")
+        .append(", numChecked = ")
+        .append(numChecked)
         .append(", numCmdsGen = ")
         .append(numCmdsGen)
         .append(" }");
@@ -142,34 +173,6 @@ public class RuleInfo implements Cloneable {
   public RuleInfo newCopy() {
     return new RuleInfo(id, submitTime, ruleText, state, numChecked,
         numCmdsGen, lastCheckTime);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    RuleInfo ruleInfo = (RuleInfo) o;
-
-    if (id != ruleInfo.id) return false;
-    if (submitTime != ruleInfo.submitTime) return false;
-    if (numChecked != ruleInfo.numChecked) return false;
-    if (numCmdsGen != ruleInfo.numCmdsGen) return false;
-    if (lastCheckTime != ruleInfo.lastCheckTime) return false;
-    if (ruleText != null ? !ruleText.equals(ruleInfo.ruleText) : ruleInfo.ruleText != null) return false;
-    return state == ruleInfo.state;
-  }
-
-  @Override
-  public int hashCode() {
-    int result = (int) (id ^ (id >>> 32));
-    result = 31 * result + (int) (submitTime ^ (submitTime >>> 32));
-    result = 31 * result + (ruleText != null ? ruleText.hashCode() : 0);
-    result = 31 * result + (state != null ? state.hashCode() : 0);
-    result = 31 * result + (int) (numChecked ^ (numChecked >>> 32));
-    result = 31 * result + (int) (numCmdsGen ^ (numCmdsGen >>> 32));
-    result = 31 * result + (int) (lastCheckTime ^ (lastCheckTime >>> 32));
-    return result;
   }
 
   public static Builder newBuilder() {

@@ -19,55 +19,54 @@ package org.smartdata.protocol.protobuffer;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
+import org.smartdata.SmartServiceState;
 import org.smartdata.model.ActionDescriptor;
-import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.RuleInfo;
 import org.smartdata.protocol.AdminServerProto;
+import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
+import org.smartdata.protocol.AdminServerProto.ActionInfoProto;
+import org.smartdata.protocol.AdminServerProto.ActivateCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.ActivateCmdletResponseProto;
+import org.smartdata.protocol.AdminServerProto.ActivateRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.ActivateRuleResponseProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleResponseProto;
+import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
+import org.smartdata.protocol.AdminServerProto.DeleteCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.DeleteCmdletResponseProto;
+import org.smartdata.protocol.AdminServerProto.DeleteRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.DeleteRuleResponseProto;
+import org.smartdata.protocol.AdminServerProto.DisableCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.DisableCmdletResponseProto;
+import org.smartdata.protocol.AdminServerProto.DisableRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.DisableRuleResponseProto;
+import org.smartdata.protocol.AdminServerProto.GetActionInfoRequestProto;
+import org.smartdata.protocol.AdminServerProto.GetActionInfoResponseProto;
+import org.smartdata.protocol.AdminServerProto.GetCmdletInfoRequestProto;
+import org.smartdata.protocol.AdminServerProto.GetCmdletInfoResponseProto;
 import org.smartdata.protocol.AdminServerProto.GetRuleInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.GetRuleInfoResponseProto;
 import org.smartdata.protocol.AdminServerProto.GetServiceStateRequestProto;
 import org.smartdata.protocol.AdminServerProto.GetServiceStateResponseProto;
+import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
+import org.smartdata.protocol.AdminServerProto.ListActionsSupportedRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListActionsSupportedResponseProto;
+import org.smartdata.protocol.AdminServerProto.ListCmdletInfoRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListCmdletInfoResponseProto;
 import org.smartdata.protocol.AdminServerProto.ListRulesInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.ListRulesInfoResponseProto;
 import org.smartdata.protocol.AdminServerProto.RuleInfoProto;
+import org.smartdata.protocol.AdminServerProto.SubmitCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleResponseProto;
-import org.smartdata.protocol.AdminServerProto.DeleteRuleResponseProto;
-import org.smartdata.protocol.AdminServerProto.ActivateRuleResponseProto;
-import org.smartdata.protocol.AdminServerProto.DisableRuleResponseProto;
-import org.smartdata.protocol.AdminServerProto.DeleteRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.ActivateRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.DisableRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.GetCmdletInfoResponseProto;
-import org.smartdata.protocol.AdminServerProto.GetCmdletInfoRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListCmdletInfoResponseProto;
-import org.smartdata.protocol.AdminServerProto.ListCmdletInfoRequestProto;
-import org.smartdata.protocol.AdminServerProto.ActivateCmdletResponseProto;
-import org.smartdata.protocol.AdminServerProto.ActivateCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.DisableCmdletResponseProto;
-import org.smartdata.protocol.AdminServerProto.DisableCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.DeleteCmdletResponseProto;
-import org.smartdata.protocol.AdminServerProto.DeleteCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
-import org.smartdata.protocol.AdminServerProto.GetActionInfoResponseProto;
-import org.smartdata.protocol.AdminServerProto.GetActionInfoRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsResponseProto;
-import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
-import org.smartdata.protocol.AdminServerProto.ActionInfoProto;
-import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
-import org.smartdata.protocol.AdminServerProto.SubmitCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListActionsSupportedResponseProto;
-import org.smartdata.protocol.AdminServerProto.ListActionsSupportedRequestProto;
-import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
-
 import org.smartdata.protocol.ClientServerProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
-import org.smartdata.SmartServiceState;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.CmdletInfo;
 import org.smartdata.protocol.SmartServerProtocols;
 
 import java.io.IOException;
@@ -78,7 +77,7 @@ public class ServerProtocolsServerSideTranslator implements
     ServerProtocolsProtoBuffer,
     AdminServerProto.protoService.BlockingInterface,
     ClientServerProto.protoService.BlockingInterface {
-  final private SmartServerProtocols server;
+  private final SmartServerProtocols server;
 
   public ServerProtocolsServerSideTranslator(SmartServerProtocols server) {
     this.server = server;
@@ -203,8 +202,9 @@ public class ServerProtocolsServerSideTranslator implements
     try {
       List<CmdletInfo> list = server.listCmdletInfo(req.getRuleID(),
           CmdletState.fromValue(req.getCmdletState()));
-      if (list == null)
+      if (list == null) {
         return ListCmdletInfoResponseProto.newBuilder().build();
+      }
       List<CmdletInfoProto> protoList = new ArrayList<>();
       for (CmdletInfo info : list) {
         protoList.add(ProtoBufferHelper.convert(info));
@@ -272,7 +272,7 @@ public class ServerProtocolsServerSideTranslator implements
     try {
       List<ActionInfo> list =
           server.listActionInfoOfLastActions(request.getMaxNumActions());
-      if (list==null) {
+      if (list == null) {
         return ListActionInfoOfLastActionsResponseProto.newBuilder().build();
       }
       List<ActionInfoProto> protoList = new ArrayList<>();

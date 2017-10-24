@@ -35,13 +35,13 @@ public class RulePluginManager {
     return inst;
   }
 
-  public synchronized static void addPlugin(RulePlugin plugin) {
+  public static synchronized void addPlugin(RulePlugin plugin) {
     if (!plugins.contains(plugin)) {
       plugins.add(plugin);
     }
   }
 
-  public synchronized static void deletePlugin(RulePlugin plugin) {
+  public static synchronized void deletePlugin(RulePlugin plugin) {
     if (plugins.contains(plugin)) {
       plugins.remove(plugin);
     }

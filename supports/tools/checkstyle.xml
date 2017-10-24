@@ -157,7 +157,7 @@ page at http://checkstyle.sourceforge.net/config.html -->
     <!-- See http://checkstyle.sf.net/config_javadoc.html -->
     <module name="JavadocMethod">
       <property name="scope" value="protected"/>
-      <property name="severity" value="error"/>
+      <property name="severity" value="warning"/>
       <property name="allowMissingJavadoc" value="true"/>
       <property name="allowMissingParamTags" value="true"/>
       <property name="allowMissingReturnTag" value="true"/>
@@ -169,9 +169,10 @@ page at http://checkstyle.sourceforge.net/config.html -->
     <!-- Check that paragraph tags are used correctly in Javadoc. -->
     <module name="JavadocParagraph"/>
 
+    <!-- Todo: change security level to error -->
     <module name="JavadocType">
       <property name="scope" value="protected"/>
-      <property name="severity" value="error"/>
+      <property name="severity" value="warning"/>
       <property name="allowMissingParamTags" value="true"/>
     </module>
 

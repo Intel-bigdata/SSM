@@ -28,15 +28,10 @@ public class CachedFileStatus {
   private int numAccessed;
 
   public CachedFileStatus() {
-
   }
 
-
-  public CachedFileStatus(long fid,
-                          String path,
-                          long fromTime,
-                          long lastAccessTime,
-                          int numAccessed) {
+  public CachedFileStatus(
+      long fid, String path, long fromTime, long lastAccessTime, int numAccessed) {
     this.fid = fid;
     this.path = path;
     this.fromTime = fromTime;
@@ -122,7 +117,8 @@ public class CachedFileStatus {
 
   @Override
   public String toString() {
-    return String.format("CachedFileStatus{fid=%s, path=\'%s\', fromTime=%s, lastAccessTime=%s, numAccessed=%s}",
+    return String.format(
+        "CachedFileStatus{fid=%s, path=\'%s\', fromTime=%s, lastAccessTime=%s, numAccessed=%s}",
         fid, path, fromTime, lastAccessTime, numAccessed);
   }
 }

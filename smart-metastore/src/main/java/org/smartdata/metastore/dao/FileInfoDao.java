@@ -153,10 +153,10 @@ public class FileInfoDao {
     parameters.put("path", fileInfo.getPath());
     parameters.put("fid", fileInfo.getFileId());
     parameters.put("length", fileInfo.getLength());
-    parameters.put("block_replication", fileInfo.getBlock_replication());
+    parameters.put("block_replication", fileInfo.getBlockReplication());
     parameters.put("block_size", fileInfo.getBlocksize());
-    parameters.put("modification_time", fileInfo.getModification_time());
-    parameters.put("access_time", fileInfo.getAccess_time());
+    parameters.put("modification_time", fileInfo.getModificationTime());
+    parameters.put("access_time", fileInfo.getAccessTime());
     parameters.put("is_dir", fileInfo.isdir());
     parameters.put("sid", fileInfo.getStoragePolicy());
     parameters

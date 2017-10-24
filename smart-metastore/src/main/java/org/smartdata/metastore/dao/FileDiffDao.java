@@ -200,7 +200,7 @@ public class FileDiffDao {
     parameters.put("src", fileDiff.getSrc());
     parameters.put("parameters", fileDiff.getParametersJsonString());
     parameters.put("state", fileDiff.getState().getValue());
-    parameters.put("create_time", fileDiff.getCreate_time());
+    parameters.put("create_time", fileDiff.getCreateTime());
     return parameters;
   }
 
@@ -214,7 +214,7 @@ public class FileDiffDao {
       fileDiff.setSrc(resultSet.getString("src"));
       fileDiff.setParametersFromJsonString(resultSet.getString("parameters"));
       fileDiff.setState(FileDiffState.fromValue((int) resultSet.getByte("state")));
-      fileDiff.setCreate_time(resultSet.getLong("create_time"));
+      fileDiff.setCreateTime(resultSet.getLong("create_time"));
       return fileDiff;
     }
   }

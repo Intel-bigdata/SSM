@@ -17,6 +17,8 @@
  */
 package org.smartdata.model;
 
+import java.util.Objects;
+
 public class BackUpInfo {
   private long rid;
   private String src;
@@ -68,28 +70,27 @@ public class BackUpInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     BackUpInfo that = (BackUpInfo) o;
-
-    if (rid != that.rid) return false;
-    if (period != that.period) return false;
-    if (src != null ? !src.equals(that.src) : that.src != null) return false;
-    return dest != null ? dest.equals(that.dest) : that.dest == null;
+    return rid == that.rid
+        && period == that.period
+        && Objects.equals(src, that.src)
+        && Objects.equals(dest, that.dest);
   }
 
   @Override
   public int hashCode() {
-    int result = (int) (rid ^ (rid >>> 32));
-    result = 31 * result + (src != null ? src.hashCode() : 0);
-    result = 31 * result + (dest != null ? dest.hashCode() : 0);
-    result = 31 * result + (int) (period ^ (period >>> 32));
-    return result;
+    return Objects.hash(rid, src, dest, period);
   }
 
   @Override
   public String toString() {
-    return String.format("BackUpInfo{rid=%s, src\'%s\', dest=\'%s\', period=%s}", rid, src, dest, period);
+    return String.format(
+        "BackUpInfo{rid=%s, src\'%s\', dest=\'%s\', period=%s}", rid, src, dest, period);
   }
 }

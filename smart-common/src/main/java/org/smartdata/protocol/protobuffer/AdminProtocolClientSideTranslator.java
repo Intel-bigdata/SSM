@@ -19,37 +19,36 @@ package org.smartdata.protocol.protobuffer;
 
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
-
+import org.smartdata.SmartServiceState;
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
-import org.smartdata.protocol.AdminServerProto.GetCmdletInfoRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListCmdletInfoRequestProto;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
+import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
+import org.smartdata.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.protocol.AdminServerProto.ActivateCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.DisableCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.DeleteCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
+import org.smartdata.protocol.AdminServerProto.ActivateRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
+import org.smartdata.protocol.AdminServerProto.DeleteCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.DeleteRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.DisableCmdletRequestProto;
+import org.smartdata.protocol.AdminServerProto.DisableRuleRequestProto;
+import org.smartdata.protocol.AdminServerProto.GetActionInfoRequestProto;
+import org.smartdata.protocol.AdminServerProto.GetCmdletInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.GetRuleInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.GetRuleInfoResponseProto;
 import org.smartdata.protocol.AdminServerProto.GetServiceStateRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListActionsSupportedRequestProto;
+import org.smartdata.protocol.AdminServerProto.ListCmdletInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.ListRulesInfoRequestProto;
 import org.smartdata.protocol.AdminServerProto.RuleInfoProto;
-import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.DeleteRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.ActivateRuleRequestProto;
-import org.smartdata.protocol.AdminServerProto.DisableRuleRequestProto;
-import org.smartdata.protocol.SmartAdminProtocol;
-import org.smartdata.protocol.AdminServerProto.GetActionInfoRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListActionInfoOfLastActionsRequestProto;
-import org.smartdata.protocol.AdminServerProto.ActionInfoProto;
-import org.smartdata.SmartServiceState;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.RuleState;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.protocol.AdminServerProto.SubmitCmdletRequestProto;
-import org.smartdata.protocol.AdminServerProto.ListActionsSupportedRequestProto;
+import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
+import org.smartdata.protocol.SmartAdminProtocol;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -189,8 +188,9 @@ public class AdminProtocolClientSideTranslator implements
     try {
       List<CmdletInfoProto> protoslist =
           rpcProxy.listCmdletInfo(null, req).getCmdletInfosList();
-      if (protoslist == null)
+      if (protoslist == null) {
         return new ArrayList<>();
+      }
       List<CmdletInfo> list = new ArrayList<>();
       for (CmdletInfoProto infoProto : protoslist) {
         list.add(ProtoBufferHelper.convert(infoProto));
@@ -244,7 +244,7 @@ public class AdminProtocolClientSideTranslator implements
         .setActionID(actionID)
         .build();
     try {
-      return ProtoBufferHelper.convert(rpcProxy.getActionInfo(null,req).getActionInfo());
+      return ProtoBufferHelper.convert(rpcProxy.getActionInfo(null, req).getActionInfo());
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }
@@ -258,7 +258,7 @@ public class AdminProtocolClientSideTranslator implements
         .setMaxNumActions(maxNumActions).build();
     try {
       List<ActionInfoProto> protoslist =
-      rpcProxy.listActionInfoOfLastActions(null,req).getActionInfoListList();
+      rpcProxy.listActionInfoOfLastActions(null, req).getActionInfoListList();
       if (protoslist == null) {
         return new ArrayList<>();
       }
@@ -277,7 +277,7 @@ public class AdminProtocolClientSideTranslator implements
     SubmitCmdletRequestProto req = SubmitCmdletRequestProto.newBuilder()
         .setCmd(cmd).build();
     try {
-     return rpcProxy.submitCmdlet(null,req).getRes();
+     return rpcProxy.submitCmdlet(null, req).getRes();
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }
@@ -289,9 +289,9 @@ public class AdminProtocolClientSideTranslator implements
         .newBuilder().build();
     try {
       List<ActionDescriptorProto> prolist = rpcProxy
-          .listActionsSupported(null,req).getActDesListList();
+          .listActionsSupported(null, req).getActDesListList();
       List<ActionDescriptor> list = new ArrayList<>();
-      for(ActionDescriptorProto a:prolist){
+      for (ActionDescriptorProto a : prolist){
         list.add(ProtoBufferHelper.convert(a));
       }
       return list;
@@ -305,7 +305,7 @@ public class AdminProtocolClientSideTranslator implements
    * with it. If the stream is already closed then invoking this
    * method has no effect.
    *
-   * <p> As noted in {@link AutoCloseable#close()}, cases where the
+   * <p>As noted in {@link AutoCloseable#close()}, cases where the
    * close may fail require careful attention. It is strongly advised
    * to relinquish the underlying resources and to internally
    * <em>mark</em> the {@code Closeable} as closed, prior to throwing
