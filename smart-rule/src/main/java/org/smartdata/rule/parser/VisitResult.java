@@ -21,9 +21,7 @@ import org.smartdata.rule.objects.PropertyRealParas;
 
 import java.io.IOException;
 
-/**
- * Represent a value or a identifier in the parser tree.
- */
+/** Represent a value or a identifier in the parser tree. */
 public class VisitResult {
 
   private ValueType type;
@@ -39,8 +37,7 @@ public class VisitResult {
     this.value = value;
   }
 
-  public VisitResult(ValueType type, Object value,
-      PropertyRealParas realParas) {
+  public VisitResult(ValueType type, Object value, PropertyRealParas realParas) {
     this.type = type;
     this.value = value;
     this.realParas = realParas;
@@ -96,7 +93,7 @@ public class VisitResult {
       case MOD:
         r = generateCalc(type, dst);
         break;
-      // TODO:
+        // TODO:
       default:
         throw new IOException("Unknown type");
     }
@@ -106,8 +103,9 @@ public class VisitResult {
   private VisitResult generateCalc(OperatorType opType, VisitResult dst) {
     ValueType retType = null;
     Object retValue = null;
-    boolean haveTimePoint = getValueType() == ValueType.TIMEPOINT
-        || (dst != null && dst.getValueType() == ValueType.TIMEPOINT);
+    boolean haveTimePoint =
+        getValueType() == ValueType.TIMEPOINT
+            || (dst != null && dst.getValueType() == ValueType.TIMEPOINT);
 
     if (haveTimePoint) {
       if (opType == OperatorType.ADD) {
@@ -125,13 +123,13 @@ public class VisitResult {
       case STRING:
         switch (opType) {
           case ADD:
-            retValue = (String)getValue() + (String)dst.getValue();
+            retValue = (String) getValue() + (String) dst.getValue();
         }
         break;
 
       default:
-        Long r1 = (Long)getValue();
-        Long r2 = (Long)dst.getValue();
+        Long r1 = (Long) getValue();
+        Long r2 = (Long) dst.getValue();
         switch (opType) {
           case ADD:
             retValue = r1 + r2;
@@ -157,25 +155,23 @@ public class VisitResult {
     if (type != ValueType.BOOLEAN) {
       throw new IOException("Type must be boolean: " + this);
     }
-    return (Boolean)getValue();
+    return (Boolean) getValue();
   }
 
   private int compareTo(VisitResult dst) throws IOException {
     if (dst.getValueType() != this.type) {
-      throw new IOException("Type miss match for compare: [1] "
-          + this + " [2] " + dst);
+      throw new IOException("Type miss match for compare: [1] " + this + " [2] " + dst);
     }
 
     switch (type) {
       case LONG:
       case TIMEINTVAL:
       case TIMEPOINT:
-        return (int)((Long)getValue() - (Long)(dst.getValue()));
+        return (int) ((Long) getValue() - (Long) (dst.getValue()));
       case STRING:
-        return ((String)getValue()).equals((String)(dst.getValue())) ? 0 : 1;
+        return ((String) getValue()).equals((String) (dst.getValue())) ? 0 : 1;
       default:
-        throw new IOException("Invalid type for compare: [1] "
-            + this + " [2] " + dst);
+        throw new IOException("Invalid type for compare: [1] " + this + " [2] " + dst);
     }
   }
 

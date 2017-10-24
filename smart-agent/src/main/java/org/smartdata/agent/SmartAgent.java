@@ -45,16 +45,17 @@ import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterN
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.utils.GenericOptionsParser;
-import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
 
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
+
 public class SmartAgent implements StatusReporter {
   private static final String NAME = "SmartAgent";
-  private final static Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
   private ActorRef agentActor;
 
@@ -113,10 +114,10 @@ public class SmartAgent implements StatusReporter {
   }
 
   static class AgentActor extends UntypedActor {
-    private final static Logger LOG = LoggerFactory.getLogger(AgentActor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AgentActor.class);
 
-    private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
-    private final static FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
+    private static final FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
+    private static final FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
 
     private MasterToAgent.AgentId id;
     private ActorRef master;
