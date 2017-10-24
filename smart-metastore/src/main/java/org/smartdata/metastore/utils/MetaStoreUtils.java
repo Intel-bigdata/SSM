@@ -305,7 +305,7 @@ public class MetaStoreUtils {
         mysqlOldRelease = true;
       }
       boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
-      for (String s: deleteExistingTables) {
+      for (String s : deleteExistingTables) {
         // Drop table if exists
         LOG.debug(s);
         executeSql(conn, s);
@@ -313,11 +313,15 @@ public class MetaStoreUtils {
       for (String s : createEmptyTables) {
         // Solve mysql and sqlite sql difference
         if (mysql) {
+          // path/src index should be set to less than 767
+          // to avoid "Specified key was too long" in
+          // Mysql 5.6 or previous version
           if (mysqlOldRelease && s.startsWith("CREATE INDEX") &&
               (s.contains("path") || s.contains("src"))) {
             // Fix index size 767 in mysql 5.6 or previous version
             s = s.replace(");", "(750));");
           }
+          // Replace AUTOINCREMENT with AUTO_INCREMENT
           if (s.contains("AUTOINCREMENT")) {
             s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
           }
