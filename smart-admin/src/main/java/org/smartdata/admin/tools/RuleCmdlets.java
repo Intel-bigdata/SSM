@@ -68,7 +68,7 @@ public class RuleCmdlets {
       if (file.length() >= 2 * 1024L * 1024 * 1024) {
         throw new IOException("File size is too big (>= 2BG)");
       }
-      int len = (int)file.length();
+      int len = (int) file.length();
       int nreaded = 0;
       FileInputStream in = new FileInputStream(file);
       byte[] con = new byte[len];

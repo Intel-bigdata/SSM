@@ -20,7 +20,7 @@ package org.smartdata.action;
 import org.smartdata.action.annotation.ActionSignature;
 
 /**
- * Sync action is an abstract action for backup and copy
+ * Sync action is an abstract action for backup and copy.
  * Users can submit a sync action with detailed src path and
  * dest path, e.g., "sync -src /test/1 -dest hdfs:/remoteIP:port/test/1"
  */

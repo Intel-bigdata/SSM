@@ -20,6 +20,7 @@ package org.smartdata.rule.objects;
 import org.smartdata.rule.parser.ValueType;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Property of SSM object.
@@ -88,32 +89,26 @@ public class Property {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     Property property = (Property) o;
-
-    if (isGlobal != property.isGlobal) return false;
-    if (propertyName != null ? !propertyName.equals(property.propertyName) : property.propertyName != null)
-      return false;
-    if (retType != property.retType) return false;
-    if (paramsTypes != null ? !paramsTypes.equals(property.paramsTypes) : property.paramsTypes != null) return false;
-    if (tableName != null ? !tableName.equals(property.tableName) : property.tableName != null) return false;
-    if (tableItemName != null ? !tableItemName.equals(property.tableItemName) : property.tableItemName != null)
-      return false;
-    return formatTemplate != null ? formatTemplate.equals(property.formatTemplate) : property.formatTemplate == null;
+    return isGlobal == property.isGlobal
+        && Objects.equals(propertyName, property.propertyName)
+        && retType == property.retType
+        && Objects.equals(paramsTypes, property.paramsTypes)
+        && Objects.equals(tableName, property.tableName)
+        && Objects.equals(tableItemName, property.tableItemName)
+        && Objects.equals(formatTemplate, property.formatTemplate);
   }
 
   @Override
   public int hashCode() {
-    int result = propertyName != null ? propertyName.hashCode() : 0;
-    result = 31 * result + (retType != null ? retType.hashCode() : 0);
-    result = 31 * result + (paramsTypes != null ? paramsTypes.hashCode() : 0);
-    result = 31 * result + (tableName != null ? tableName.hashCode() : 0);
-    result = 31 * result + (tableItemName != null ? tableItemName.hashCode() : 0);
-    result = 31 * result + (formatTemplate != null ? formatTemplate.hashCode() : 0);
-    result = 31 * result + (isGlobal ? 1 : 0);
-    return result;
+    return Objects.hash(
+        propertyName, retType, paramsTypes, tableName, tableItemName, formatTemplate, isGlobal);
   }
 
   public String instId(List<Object> values) {

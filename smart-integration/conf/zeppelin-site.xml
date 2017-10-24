@@ -106,7 +106,7 @@
 -->
 
 <!-- Use a custom encryption materials provider to encrypt data -->
-<!-- No configuration is given to the provider, so you must use system properties or another means to configure -->
+<!-- No configuration is given to the provider, so you must use system PROPERTIES or another means to configure -->
 <!-- See https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/EncryptionMaterialsProvider.html -->
 <!--
 <property>

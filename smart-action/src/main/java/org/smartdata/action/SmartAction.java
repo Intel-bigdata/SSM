@@ -117,7 +117,7 @@ public abstract class SmartAction {
 
   protected abstract void execute() throws Exception;
 
-  final public void run() {
+  public final void run() {
     Throwable throwable = null;
     try {
       reportStart();

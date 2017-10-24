@@ -34,7 +34,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
-  private final static long VERSION = 1;
+  private static final long VERSION = 1;
   private Configuration conf;
   private SmartClientProtocol server;
   private volatile boolean running = true;
