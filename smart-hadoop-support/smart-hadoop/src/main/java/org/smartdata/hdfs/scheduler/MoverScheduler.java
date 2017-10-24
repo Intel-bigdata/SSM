@@ -29,7 +29,6 @@ import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.MoveFileAction;
 import org.smartdata.hdfs.metric.fetcher.DatanodeStorageReportProcTask;
 import org.smartdata.hdfs.metric.fetcher.MovePlanMaker;
-import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.LaunchAction;
@@ -109,6 +108,7 @@ public class MoverScheduler extends ActionSchedulerService {
     return actions;
   }
 
+  @Override
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     if (!actions.contains(action.getActionType())) {
       return ScheduleResult.SUCCESS;
@@ -156,20 +156,6 @@ public class MoverScheduler extends ActionSchedulerService {
       LOG.error("Unexpected exception when scheduling move " + policy + " '" + file + "'.", t);
       return ScheduleResult.FAIL;
     }
-  }
-
-  public void postSchedule(ActionInfo actionInfo, ScheduleResult result) {
-  }
-
-  public void onPreDispatch(LaunchAction action) {
-  }
-
-  public boolean onSubmit(ActionInfo actionInfo) {
-    return true;
-  }
-
-  public void onActionFinished(ActionInfo actionInfo) {
-
   }
 
   private class UpdateClusterInfoTask implements Runnable {
