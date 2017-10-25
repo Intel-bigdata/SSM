@@ -757,6 +757,19 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  private class ActionGroup {
+    private List<ActionInfo> actions;
+    private int totalNumOfActions;
+
+    public ActionGroup(List<ActionInfo> actions, int totalNumOfActions) {
+      this.actions = actions;
+      this.totalNumOfActions = totalNumOfActions;
+    }
+  }
+
+  public ActionGroup listActions(int pageIndex, int numPerPage, List<String> orderBy, List<Boolean> isDesc) throws IOException {
+    return new ActionGroup(new ArrayList<ActionInfo>(), 0);
+  }
 
   public List<ActionInfo> getActions(long rid, int size) throws IOException {
     try {
