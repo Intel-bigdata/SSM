@@ -35,6 +35,7 @@ python reset_env.py ResetEnv.test_create_1000_100MB
 ```
 
 These commands will create 10K * 1MB in `1MB`, 10K * 10MB in `10MB` and 1K * 100MB in `100MB`.
+
 2. Init/Rest SSM and remote HDFS
 Stop, init and start SSM
 ```
@@ -50,8 +51,9 @@ HDFS dfs -rm /10MB/*
 HDFS dfs -rm /100MB/*
 ```
 
-## Test Disaster Recovery through GUI
-Submit a sync rule in SSM notebook.
+## Test SSM Disaster Recovery module
+### Test Disaster Recovery through GUI
+1. Submit a sync rule in SSM notebook
 ```
 file : path matches "/{src}/*" | sync -dest hdfs://{remote HDFS}/{dest}
 ```
@@ -60,5 +62,11 @@ file : path matches "/{src}/*" | sync -dest hdfs://{remote HDFS}/{dest}
 - {remote HDFS} is the IP address and port of remote HDFS cluster, such as `192.168.0.1:9000`.
 - {dest} is the destination directory of remote cluster, such as `/10MB/`.
 
-## Test Disaster Recovery through Script
+2. Start/stop sync rule in Data Sync page
+After start sync rule, you can see the number of files are processed by SSM.
+
+3. Check file status in remote HDFS cluster
+Check file size and checksum between primary and remote HDFS cluster.
+ 
+### Test Disaster Recovery through Script
 [TODO] Python script is not finished yet. :)
