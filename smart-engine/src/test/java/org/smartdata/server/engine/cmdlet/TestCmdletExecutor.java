@@ -21,13 +21,13 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.action.HelloAction;
 import org.smartdata.action.SmartAction;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
-import org.smartdata.conf.SmartConf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,12 +40,13 @@ public class TestCmdletExecutor {
   @Test
   public void testCmdletExecutor() throws InterruptedException {
     final List<StatusMessage> statusMessages = new ArrayList<>();
-    StatusReporter reporter = new StatusReporter() {
-      @Override
-      public void report(StatusMessage status) {
-        statusMessages.add(status);
-      }
-    };
+    StatusReporter reporter =
+        new StatusReporter() {
+          @Override
+          public void report(StatusMessage status) {
+            statusMessages.add(status);
+          }
+        };
     CmdletExecutor executor = new CmdletExecutor(new SmartConf(), reporter);
     SmartAction action = new HelloAction();
     Map<String, String> args = new HashMap<>();
@@ -53,7 +54,7 @@ public class TestCmdletExecutor {
     action.setStatusReporter(reporter);
     action.setArguments(args);
     action.setActionId(101);
-    Cmdlet cmdlet = new Cmdlet(new SmartAction[]{action}, reporter);
+    Cmdlet cmdlet = new Cmdlet(new SmartAction[] {action}, reporter);
 
     executor.execute(cmdlet);
 
@@ -62,10 +63,11 @@ public class TestCmdletExecutor {
     Assert.assertTrue(statusMessages.get(0) instanceof CmdletStatusUpdate);
     Assert.assertTrue(statusMessages.get(1) instanceof ActionStarted);
     Assert.assertTrue(statusMessages.get(2) instanceof ActionFinished);
-    Assert.assertNull(((ActionFinished)statusMessages.get(2)).getThrowable());
-    Assert.assertTrue(((ActionFinished)statusMessages.get(2)).getResult().contains("message"));
+    Assert.assertNull(((ActionFinished) statusMessages.get(2)).getThrowable());
+    Assert.assertTrue(((ActionFinished) statusMessages.get(2)).getResult().contains("message"));
     Assert.assertTrue(statusMessages.get(3) instanceof CmdletStatusUpdate);
-    Assert.assertEquals(CmdletState.DONE, ((CmdletStatusUpdate)statusMessages.get(3)).getCurrentState());
+    Assert.assertEquals(
+        CmdletState.DONE, ((CmdletStatusUpdate) statusMessages.get(3)).getCurrentState());
     executor.shutdown();
   }
 
@@ -79,17 +81,18 @@ public class TestCmdletExecutor {
   @Test
   public void testStop() throws InterruptedException {
     final List<StatusMessage> statusMessages = new Vector<>();
-    StatusReporter reporter = new StatusReporter() {
-      @Override
-      public void report(StatusMessage status) {
-        statusMessages.add(status);
-      }
-    };
+    StatusReporter reporter =
+        new StatusReporter() {
+          @Override
+          public void report(StatusMessage status) {
+            statusMessages.add(status);
+          }
+        };
     CmdletExecutor executor = new CmdletExecutor(new SmartConf(), reporter);
     SmartAction action = new HangingAction();
     action.setStatusReporter(reporter);
     action.setActionId(101);
-    Cmdlet cmdlet = new Cmdlet(new SmartAction[]{action}, reporter);
+    Cmdlet cmdlet = new Cmdlet(new SmartAction[] {action}, reporter);
     cmdlet.setId(10);
 
     executor.execute(cmdlet);
@@ -101,9 +104,10 @@ public class TestCmdletExecutor {
     Assert.assertTrue(statusMessages.get(0) instanceof CmdletStatusUpdate);
     Assert.assertTrue(statusMessages.get(1) instanceof ActionStarted);
     Assert.assertTrue(statusMessages.get(2) instanceof ActionFinished);
-    Assert.assertNotNull(((ActionFinished)statusMessages.get(2)).getThrowable());
+    Assert.assertNotNull(((ActionFinished) statusMessages.get(2)).getThrowable());
     Assert.assertTrue(statusMessages.get(3) instanceof CmdletStatusUpdate);
-    Assert.assertEquals(CmdletState.FAILED, ((CmdletStatusUpdate)statusMessages.get(3)).getCurrentState());
+    Assert.assertEquals(
+        CmdletState.FAILED, ((CmdletStatusUpdate) statusMessages.get(3)).getCurrentState());
     executor.shutdown();
   }
 }

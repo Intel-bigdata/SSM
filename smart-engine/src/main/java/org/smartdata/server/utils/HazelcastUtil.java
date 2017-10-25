@@ -22,7 +22,6 @@ import com.hazelcast.core.Member;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class HazelcastUtil {
   //Todo: find a better way to determine whether instance is the master node

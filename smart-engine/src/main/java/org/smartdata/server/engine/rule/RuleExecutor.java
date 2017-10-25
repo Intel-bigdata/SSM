@@ -20,12 +20,12 @@ package org.smartdata.server.engine.rule;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.model.CmdletDescriptor;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.RuleState;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.dao.AccessCountTable;
+import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
 import org.smartdata.model.rule.TimeBasedScheduleInfo;
@@ -42,9 +42,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Execute rule queries and return result.
- */
+/** Execute rule queries and return result. */
 public class RuleExecutor implements Runnable {
   private RuleManager ruleManager;
   private TranslateResult tr;
@@ -53,17 +51,14 @@ public class RuleExecutor implements Runnable {
   private volatile boolean exited = false;
   private long exitTime;
   private Stack<String> dynamicCleanups = new Stack<>();
-  private static final Logger LOG =
-      LoggerFactory.getLogger(RuleExecutor.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(RuleExecutor.class.getName());
 
-  private static Pattern varPattern = Pattern.compile(
-      "\\$([a-zA-Z_]+[a-zA-Z0-9_]*)");
-  private static Pattern callPattern = Pattern.compile(
-      "\\$@([a-zA-Z_]+[a-zA-Z0-9_]*)\\(([a-zA-Z_][a-zA-Z0-9_]*)?\\)");
+  private static Pattern varPattern = Pattern.compile("\\$([a-zA-Z_]+[a-zA-Z0-9_]*)");
+  private static Pattern callPattern =
+      Pattern.compile("\\$@([a-zA-Z_]+[a-zA-Z0-9_]*)\\(([a-zA-Z_][a-zA-Z0-9_]*)?\\)");
 
-
-  public RuleExecutor(RuleManager ruleManager, ExecutionContext ctx,
-      TranslateResult tr, MetaStore adapter) {
+  public RuleExecutor(
+      RuleManager ruleManager, ExecutionContext ctx, TranslateResult tr, MetaStore adapter) {
     this.ruleManager = ruleManager;
     this.ctx = ctx;
     this.tr = tr;
@@ -140,31 +135,29 @@ public class RuleExecutor implements Runnable {
   public String callFunction(String funcName, List<Object> parameters) {
     try {
       Method m = getClass().getMethod(funcName, List.class);
-      String ret = (String)(m.invoke(this, parameters));
+      String ret = (String) (m.invoke(this, parameters));
       return ret;
-    } catch (Exception e ) {
-      LOG.error("Rule " + ctx.getRuleId()
-          + " exception when call " + funcName, e);
+    } catch (Exception e) {
+      LOG.error("Rule " + ctx.getRuleId() + " exception when call " + funcName, e);
       return null;
     }
   }
 
   public String genVirtualAccessCountTable(List<Object> parameters) {
-    List<Object> paraList = (List<Object>)parameters.get(0);
+    List<Object> paraList = (List<Object>) parameters.get(0);
     String newTable = (String) parameters.get(1);
-    Long interval = (Long)paraList.get(0);
+    Long interval = (Long) paraList.get(0);
     String countFilter = "";
-    List<String> tableNames =
-        getAccessCountTablesDuringLast(interval);
+    List<String> tableNames = getAccessCountTablesDuringLast(interval);
     return generateSQL(tableNames, newTable, countFilter, adapter);
   }
 
   @VisibleForTesting
-  static String  generateSQL(List<String> tableNames, String newTable, String countFilter, MetaStore adapter) {
+  static String generateSQL(
+      List<String> tableNames, String newTable, String countFilter, MetaStore adapter) {
     String sqlFinal, sqlCreate;
     if (tableNames.size() <= 1) {
-      String tableName = tableNames.size() == 0 ? "blank_access_count_info" :
-          tableNames.get(0);
+      String tableName = tableNames.size() == 0 ? "blank_access_count_info" : tableNames.get(0);
       sqlCreate = "CREATE TABLE " + newTable + "(fid INTEGER NOT NULL, count INTEGER NOT NULL);";
       try {
         adapter.execute(sqlCreate);
@@ -174,17 +167,15 @@ public class RuleExecutor implements Runnable {
       sqlFinal = "INSERT INTO " + newTable + " SELECT * FROM " + tableName + ";";
     } else {
       String sqlPrefix = "SELECT fid, SUM(count) AS count FROM (\n";
-      String sqlUnion = "SELECT fid, count FROM "
-          + tableNames.get(0) + " \n";
+      String sqlUnion = "SELECT fid, count FROM " + tableNames.get(0) + " \n";
       for (int i = 1; i < tableNames.size(); i++) {
-        sqlUnion += "UNION ALL\n" +
-            "SELECT fid, count FROM " + tableNames.get(i) + " \n";
+        sqlUnion += "UNION ALL\n" + "SELECT fid, count FROM " + tableNames.get(i) + " \n";
       }
       String sqlSufix = ") as tmp GROUP BY fid ";
       String sqlCountFilter =
-          (countFilter == null || countFilter.length() == 0) ?
-              "" :
-              "HAVING SUM(count) " + countFilter;
+          (countFilter == null || countFilter.length() == 0)
+              ? ""
+              : "HAVING SUM(count) " + countFilter;
       String sqlRe = sqlPrefix + sqlUnion + sqlSufix + sqlCountFilter;
       sqlCreate = "CREATE TABLE " + newTable + "(fid INTEGER NOT NULL, count INTEGER NOT NULL);";
       try {
@@ -198,7 +189,6 @@ public class RuleExecutor implements Runnable {
   }
 
   /**
-   *
    * @param lastInterval
    * @return
    */
@@ -212,17 +202,15 @@ public class RuleExecutor implements Runnable {
     try {
       accTables = ruleManager.getStatesManager().getTablesInLast(lastInterval);
     } catch (MetaStoreException e) {
-      LOG.error("Rule " + ctx.getRuleId()
-          + " get access info tables exception", e);
+      LOG.error("Rule " + ctx.getRuleId() + " get access info tables exception", e);
     }
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Rule " + ctx.getRuleId() + " got "
-          + accTables.size() + " tables:");
+      LOG.debug("Rule " + ctx.getRuleId() + " got " + accTables.size() + " tables:");
       int idx = 1;
       for (AccessCountTable t : accTables) {
-        LOG.debug(idx + ".  " + (t.isEphemeral() ? " [TABLE] " : "        ")
-            + t.getTableName() + " ");
+        LOG.debug(
+            idx + ".  " + (t.isEphemeral() ? " [TABLE] " : "        ") + t.getTableName() + " ");
       }
     }
 
@@ -269,7 +257,9 @@ public class RuleExecutor implements Runnable {
       }
 
       RuleState state = info.getState();
-      if (exited || state == RuleState.DELETED || state == RuleState.FINISHED
+      if (exited
+          || state == RuleState.DELETED
+          || state == RuleState.FINISHED
           || state == RuleState.DISABLED) {
         exitSchedule();
       }
@@ -279,13 +269,10 @@ public class RuleExecutor implements Runnable {
           // TODO: tricky here, time passed
           && startCheckTime - scheduleInfo.getEndTime() > 0) {
         // TODO: special for scheduleInfo.isOneShot()
-        LOG.info("Rule " + ctx.getRuleId()
-            + " exit rule executor due to time passed or finished");
-        ruleManager.updateRuleInfo(rid, RuleState.FINISHED,
-            System.currentTimeMillis(), 0, 0);
+        LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to time passed or finished");
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
         exitSchedule();
       }
-
 
       if (doExec) {
         files = executeFileRuleQuery();
@@ -300,19 +287,24 @@ public class RuleExecutor implements Runnable {
         }
         numCmdSubmitted = submitCmdlets(info, files);
       }
-      ruleManager.updateRuleInfo(rid, null,
-          System.currentTimeMillis(), 1, numCmdSubmitted);
+      ruleManager.updateRuleInfo(rid, null, System.currentTimeMillis(), 1, numCmdSubmitted);
       if (exited) {
         exitSchedule();
       }
-      //System.out.println(this + " -> " + System.currentTimeMillis());
+      // System.out.println(this + " -> " + System.currentTimeMillis());
       long endProcessTime = System.currentTimeMillis();
 
       if (endProcessTime - startCheckTime > 3000 || LOG.isDebugEnabled()) {
-        LOG.warn("Rule " + ctx.getRuleId() + " execution took "
-            + (endProcessTime - startCheckTime) + "ms. QueryTime = "
-            + (endCheckTime - startCheckTime) + "ms, SubmitTime = "
-            + (endProcessTime - endCheckTime) + "ms.");
+        LOG.warn(
+            "Rule "
+                + ctx.getRuleId()
+                + " execution took "
+                + (endProcessTime - startCheckTime)
+                + "ms. QueryTime = "
+                + (endCheckTime - startCheckTime)
+                + "ms, SubmitTime = "
+                + (endProcessTime - endCheckTime)
+                + "ms.");
       }
 
     } catch (IOException e) {
@@ -333,8 +325,7 @@ public class RuleExecutor implements Runnable {
 
   private int submitCmdlets(RuleInfo ruleInfo, List<String> files) {
     long ruleId = ruleInfo.getId();
-    if (files == null || files.size() == 0
-        || ruleManager.getCmdletManager() == null) {
+    if (files == null || files.size() == 0 || ruleManager.getCmdletManager() == null) {
       return 0;
     }
     int nSubmitted = 0;

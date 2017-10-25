@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.server.engine.*;
+import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import java.util.List;
 
 //Todo: extract the onSchedule implementation
 public class CmdletDispatcher {
-  private Logger LOG = LoggerFactory.getLogger(CmdletDispatcher.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CmdletDispatcher.class);
   private List<CmdletExecutorService> executorServices;
   private int index;
 
@@ -40,7 +40,8 @@ public class CmdletDispatcher {
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT);
     if (!disableLocal) {
-      this.executorServices.add(new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager));
+      this.executorServices.add(
+          new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager));
     }
     this.index = 0;
   }

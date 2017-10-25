@@ -20,20 +20,20 @@ package org.smartdata.server.engine.cmdlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.model.ExecutorType;
 import org.smartdata.protocol.message.ActionStatusReport;
+import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.protocol.message.StatusMessage;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class LocalCmdletExecutorService extends CmdletExecutorService implements StatusReporter {
-  private final static Logger LOG = LoggerFactory.getLogger(LocalCmdletExecutorService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LocalCmdletExecutorService.class);
   private CmdletFactory cmdletFactory;
   private CmdletExecutor cmdletExecutor;
   private ScheduledExecutorService executorService;
@@ -43,7 +43,8 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
     this.cmdletExecutor = new CmdletExecutor(smartConf, this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.executorService.scheduleAtFixedRate(new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+    this.executorService.scheduleAtFixedRate(
+        new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
   }
 
   @Override

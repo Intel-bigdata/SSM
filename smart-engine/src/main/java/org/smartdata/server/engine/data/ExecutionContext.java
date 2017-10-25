@@ -62,9 +62,9 @@ public class ExecutionContext {
       return null;
     }
     if (val instanceof Integer) {
-      return Long.valueOf((Integer)val);
+      return Long.valueOf((Integer) val);
     } else if (val instanceof Long) {
-      return (Long)val;
+      return (Long) val;
     } else if (val instanceof String) {
       try {
         return Long.parseLong((String) val);

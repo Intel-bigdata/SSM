@@ -136,8 +136,8 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
     return objects;
   }
 
-  public CmdletDescriptor preSubmitCmdletDescriptor(final RuleInfo ruleInfo, TranslateResult tResult,
-      CmdletDescriptor descriptor) {
+  public CmdletDescriptor preSubmitCmdletDescriptor(
+      final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
     return descriptor;
   }
 
