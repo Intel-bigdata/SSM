@@ -1,7 +1,7 @@
 ## Necessary Components
 
 ### HDFS
-Assueme HDFS is correctly deployed, and its namenode is available on `{namenode.rpcserver:port}`. Please make sure that SSM can connect to namenode.
+Assume HDFS is correctly deployed, and its namenode is available on `{namenode.rpcserver:port}`. Please make sure that SSM can connect to namenode.
 
 ### MetaStore
 SSM need a metstore to store the metadata of SSM. Currently, we uses mysql as its metastore. Please ensure that mysql is correctly installed, and SSM can access to mysql.
@@ -23,7 +23,7 @@ Configure `namenode.rpcserver` in `smart-site.xml`.
 
 **Parameters:**
 
-- `{namenode.rpcserver:port}` is the ip address:port of namenode.rpcserver.
+- `{namenode.rpcserver:port}` is the ip `address:port` of `namenode.rpcserver`.
 
 
 ### Metasotre
@@ -41,7 +41,7 @@ Configure `namenode.rpcserver` in `smart-site.xml`.
 - `{database_name}` is the database used by SSM. **Please create this database before launching SSM.**
 - `{username}`/`{password}` username and password for connection mysql.
 
-**Note that you should initilize the database before launching SSM.*** Use `./bin/start-smart.sh -format` to initilize the database.
+**Note that you should initialize the database before launching SSM.*** Use `./bin/start-smart.sh -format` to initialize the database.
 
 
 ## Troubleshooting
