@@ -22,11 +22,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.TestDaoUtil;
+import org.smartdata.metastore.dao.MetaStoreHelper;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class TestRuleExecutor extends TestDaoUtil {
