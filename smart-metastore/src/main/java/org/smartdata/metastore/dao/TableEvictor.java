@@ -23,7 +23,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 
 public abstract class TableEvictor {
-  public final Logger LOG = LoggerFactory.getLogger(this.getClass());
+  public static final Logger LOG = LoggerFactory.getLogger(TableEvictor.class);
   private MetaStore metaStore;
 
   public TableEvictor(MetaStore metaStore) {

@@ -19,9 +19,9 @@ package org.smartdata.metastore.ingestion;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileInfoBatch;
 
 public class FileStatusIngester implements Runnable {

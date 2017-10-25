@@ -18,22 +18,20 @@
 package org.smartdata.metastore.dao;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.smartdata.model.CachedFileStatus;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.CachedFileStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 
 public class CacheFileDao {
 
@@ -96,11 +94,9 @@ public class CacheFileDao {
     simpleJdbcInsert.executeBatch(maps);
   }
 
-  public int update(Long fid, Long lastAccessTime,
-                    Integer numAccessed) {
+  public int update(Long fid, Long lastAccessTime, Integer numAccessed) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE cached_file SET last_access_time = ?, "  +
-                     "accessed_num = ? WHERE fid = ?";
+    String sql = "UPDATE cached_file SET last_access_time = ?, accessed_num = ? WHERE fid = ?";
     return jdbcTemplate.update(sql, lastAccessTime, numAccessed, fid);
   }
 

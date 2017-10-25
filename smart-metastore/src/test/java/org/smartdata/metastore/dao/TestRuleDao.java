@@ -21,9 +21,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
-import org.smartdata.metastore.TestDaoUtil;
 
 import java.util.List;
 
@@ -51,13 +51,13 @@ public class TestRuleDao extends TestDaoUtil {
     RuleInfo info1 = new RuleInfo(0, submitTime,
         rule, RuleState.ACTIVE, 0, 0, 0);
     ruleDao.insert(info1);
-    RuleInfo info1_1 = ruleDao.getById(info1.getId());
-    Assert.assertTrue(info1.equals(info1_1));
+    RuleInfo info11 = ruleDao.getById(info1.getId());
+    Assert.assertTrue(info1.equals(info11));
     RuleInfo info2 = new RuleInfo(1, submitTime,
         rule, RuleState.ACTIVE, 0, 0, 0);
     ruleDao.insert(info2);
-    RuleInfo info2_1 = ruleDao.getById(info2.getId());
-    Assert.assertFalse(info1_1.equals(info2_1));
+    RuleInfo info21 = ruleDao.getById(info2.getId());
+    Assert.assertFalse(info11.equals(info21));
 
     List<RuleInfo> infos = ruleDao.getAll();
     Assert.assertTrue(infos.size() == 2);
@@ -74,7 +74,7 @@ public class TestRuleDao extends TestDaoUtil {
     String rule = "file : accessCount(10m) > 20 \n\n"
         + "and length() > 3 | cache";
     long submitTime = System.currentTimeMillis();
-    RuleInfo info1 = new RuleInfo(20l, submitTime,
+    RuleInfo info1 = new RuleInfo(20L, submitTime,
         rule, RuleState.ACTIVE,
         12, 12, 12);
     ruleDao.insert(info1);
@@ -82,10 +82,10 @@ public class TestRuleDao extends TestDaoUtil {
         RuleState.DISABLED.getValue());
     Assert.assertTrue(rid == info1.getId());
     info1 = ruleDao.getById(info1.getId());
-    Assert.assertTrue(info1.getNumChecked() == 12l);
+    Assert.assertTrue(info1.getNumChecked() == 12L);
 
     ruleDao.update(rid, System.currentTimeMillis(), 100, 200);
     RuleInfo info2 = ruleDao.getById(rid);
-    Assert.assertTrue(info2.getNumChecked() == 100l);
+    Assert.assertTrue(info2.getNumChecked() == 100L);
   }
 }
