@@ -44,14 +44,14 @@ public class TestRulesTable extends TestDaoUtil {
         rule, RuleState.ACTIVE, 0, 0, 0);
 
     Assert.assertTrue(adapter.insertNewRule(info1));
-    RuleInfo info1_1 = adapter.getRuleInfo(info1.getId());
-    Assert.assertTrue(info1.equals(info1_1));
+    RuleInfo info11 = adapter.getRuleInfo(info1.getId());
+    Assert.assertTrue(info1.equals(info11));
 
     RuleInfo info2 = new RuleInfo(0, submitTime,
         rule, RuleState.ACTIVE, 0, 0, 0);
     Assert.assertTrue(adapter.insertNewRule(info2));
-    RuleInfo info2_1 = adapter.getRuleInfo(info2.getId());
-    Assert.assertFalse(info1_1.equals(info2_1));
+    RuleInfo info21 = adapter.getRuleInfo(info2.getId());
+    Assert.assertFalse(info11.equals(info21));
 
     List<RuleInfo> infos = adapter.getRuleInfo();
     assert(infos.size() == 2);

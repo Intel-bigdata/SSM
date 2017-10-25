@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore;
 
-import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 
 import java.io.BufferedInputStream;
@@ -28,7 +27,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.UUID;
 
 /**

@@ -52,8 +52,8 @@ public abstract class TableAddOpListener {
       final List<AccessCountTable> tablesToAggregate =
           fineGrainedTableDeque.getTables(
               lastCoarseGrainedTable.getStartTime(), lastCoarseGrainedTable.getEndTime());
-      if (tablesToAggregate.size() > 0 &&
-          !tablesUnderAggregating.contains(lastCoarseGrainedTable)) {
+      if (tablesToAggregate.size() > 0
+          && !tablesUnderAggregating.contains(lastCoarseGrainedTable)) {
         tablesUnderAggregating.add(lastCoarseGrainedTable);
         executorService.submit(
             new Runnable() {
@@ -64,7 +64,8 @@ public abstract class TableAddOpListener {
                   coarseGrainedTableDeque.addAndNotifyListener(lastCoarseGrainedTable);
                   tablesUnderAggregating.remove(lastCoarseGrainedTable);
                 } catch (MetaStoreException e) {
-                  LOG.error("Add AccessCount Table {} error", lastCoarseGrainedTable.getTableName(), e);
+                  LOG.error(
+                      "Add AccessCount Table {} error", lastCoarseGrainedTable.getTableName(), e);
                 }
               }
             });

@@ -18,13 +18,13 @@
 package org.smartdata.metastore.dao;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.TimeGranularity;
 import org.smartdata.metastore.utils.TimeUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.metastore.MetaStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,7 +80,8 @@ public class AccessCountTableManager {
         new TableAddOpListener.MinuteTableListener(minuteTableDeque, aggregator, executorService);
 
     this.secondTableDeque =
-        new AccessCountTableDeque(new CountEvictor(metaStore, NUM_SECOND_TABLES_TO_KEEP), minuteTableListener);
+        new AccessCountTableDeque(
+            new CountEvictor(metaStore, NUM_SECOND_TABLES_TO_KEEP), minuteTableListener);
     this.tableDeques.put(TimeGranularity.SECOND, this.secondTableDeque);
     this.tableDeques.put(TimeGranularity.MINUTE, minuteTableDeque);
     this.tableDeques.put(TimeGranularity.HOUR, hourTableDeque);
@@ -92,7 +93,8 @@ public class AccessCountTableManager {
     try {
       List<AccessCountTable> tables = metaStore.getAllSortedTables();
       for (AccessCountTable table : tables) {
-        TimeGranularity timeGranularity = TimeUtils.getGranularity(table.getEndTime() - table.getStartTime());
+        TimeGranularity timeGranularity =
+            TimeUtils.getGranularity(table.getEndTime() - table.getStartTime());
         if (tableDeques.containsKey(timeGranularity)) {
           tableDeques.get(timeGranularity).add(table);
         }
@@ -130,7 +132,8 @@ public class AccessCountTableManager {
       return new ArrayList<>();
     }
     long now = secondTableDeque.getLast().getEndTime();
-    return getTablesDuring(tableDeques, metaStore, lengthInMillis, now, TimeUtils.getGranularity(lengthInMillis));
+    return getTablesDuring(
+        tableDeques, metaStore, lengthInMillis, now, TimeUtils.getGranularity(lengthInMillis));
   }
 
   // Todo: multi-thread issue
@@ -165,7 +168,8 @@ public class AccessCountTableManager {
     }
     if (startTime != endTime && !timeGranularity.equals(TimeGranularity.SECOND)) {
       TimeGranularity fineGrained = TimeUtils.getFineGarinedGranularity(timeGranularity);
-      results.addAll(getTablesDuring(tableDeques, metaStore, endTime - startTime, endTime, fineGrained));
+      results.addAll(
+          getTablesDuring(tableDeques, metaStore, endTime - startTime, endTime, fineGrained));
     }
     return results;
   }

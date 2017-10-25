@@ -21,9 +21,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.model.CachedFileStatus;
 import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.CachedFileStatus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,25 +88,25 @@ public class TestCacheFileDao extends TestDaoUtil {
   @Test
   public void testInsertDeleteCachedFiles() throws Exception {
     cacheFileDao
-        .insert(80l,
-            "testPath", 123456l, 234567l, 456);
+        .insert(80L,
+            "testPath", 123456L, 234567L, 456);
     Assert.assertTrue(cacheFileDao.getById(
-        80l).getFromTime() == 123456l);
+      80L).getFromTime() == 123456L);
     // Update record with 80l id
-    cacheFileDao.update(80l,
-        123455l, 460);
+    cacheFileDao.update(80L,
+      123455L, 460);
     Assert.assertTrue(cacheFileDao
                           .getAll().get(0)
-                          .getLastAccessTime() == 123455l);
+                          .getLastAccessTime() == 123455L);
     CachedFileStatus[] cachedFileStatuses = new CachedFileStatus[] {
-        new CachedFileStatus(321l, "testPath",
-                                113334l, 222222l, 222)};
+        new CachedFileStatus(321L, "testPath",
+          113334L, 222222L, 222)};
     cacheFileDao.insert(cachedFileStatuses);
-    Assert.assertTrue(cacheFileDao.getById(321l)
+    Assert.assertTrue(cacheFileDao.getById(321L)
                           .equals(cachedFileStatuses[0]));
     Assert.assertTrue(cacheFileDao.getAll().size() == 2);
     // Delete one record
-    cacheFileDao.deleteById(321l);
+    cacheFileDao.deleteById(321L);
     Assert.assertTrue(cacheFileDao.getAll().size() == 1);
     // Clear all records
     cacheFileDao.deleteAll();
@@ -115,14 +115,14 @@ public class TestCacheFileDao extends TestDaoUtil {
 
   @Test
   public void testGetCachedFileStatus() throws Exception {
-    cacheFileDao.insert(6l, "testPath", 1490918400000l,
-        234567l, 456);
-    CachedFileStatus cachedFileStatus = new CachedFileStatus(6l, "testPath", 1490918400000l,
-        234567l, 456);
-    cacheFileDao.insert(19l, "testPath", 1490918400000l,
-        234567l, 456);
-    cacheFileDao.insert(23l, "testPath", 1490918400000l,
-        234567l, 456);
+    cacheFileDao.insert(6L, "testPath", 1490918400000L,
+      234567L, 456);
+    CachedFileStatus cachedFileStatus = new CachedFileStatus(6L, "testPath", 1490918400000L,
+      234567L, 456);
+    cacheFileDao.insert(19L, "testPath", 1490918400000L,
+      234567L, 456);
+    cacheFileDao.insert(23L, "testPath", 1490918400000L,
+      234567L, 456);
     CachedFileStatus dbcachedFileStatus = cacheFileDao.getById(6);
     Assert.assertTrue(dbcachedFileStatus.equals(cachedFileStatus));
     List<CachedFileStatus> cachedFileList = cacheFileDao.getAll();

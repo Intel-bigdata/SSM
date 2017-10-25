@@ -21,10 +21,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
-import org.smartdata.metastore.TestDaoUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,8 +87,8 @@ public class TestFileDiffDao extends TestDaoUtil {
 
     //update
     List<Long> dids = new ArrayList<>();
-    dids.add(1l);
-    dids.add(2l);
+    dids.add(1L);
+    dids.add(2L);
     List<String> parameters = new ArrayList<>();
     parameters.add(fileDiffs[0].getParametersJsonString());
     parameters.add(fileDiffs[1].getParametersJsonString());
