@@ -28,11 +28,13 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import scala.concurrent.ExecutionContextExecutor;
-import scala.concurrent.duration.FiniteDuration;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Objects;
+
+import scala.concurrent.ExecutionContextExecutor;
+import scala.concurrent.duration.FiniteDuration;
 
 public class AgentUtils {
 
@@ -137,7 +139,8 @@ public class AgentUtils {
     if (agentAddress == null) {
       agentAddress = InetAddress.getLocalHost().getHostName();
     }
-    int agentDefPort = conf.getInt(SmartConfKeys.SMART_AGENT_PORT_KEY, SmartConfKeys.SMART_AGENT_PORT_DEFAULT);
+    int agentDefPort =
+        conf.getInt(SmartConfKeys.SMART_AGENT_PORT_KEY, SmartConfKeys.SMART_AGENT_PORT_DEFAULT);
     if (!agentAddress.contains(":")) {
       agentAddress += ":" + agentDefPort;
     }
@@ -165,28 +168,24 @@ public class AgentUtils {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
       HostPort hostPort = (HostPort) o;
-
-      if (host != null ? !host.equals(hostPort.host) : hostPort.host != null) return false;
-      return port != null ? port.equals(hostPort.port) : hostPort.port == null;
+      return Objects.equals(host, hostPort.host) && Objects.equals(port, hostPort.port);
     }
 
     @Override
     public int hashCode() {
-      int result = host != null ? host.hashCode() : 0;
-      result = 31 * result + (port != null ? port.hashCode() : 0);
-      return result;
+      return Objects.hash(host, port);
     }
 
     @Override
     public String toString() {
-      return "HostPort{" +
-          "host='" + host + '\'' +
-          ", port='" + port + '\'' +
-          '}';
+      return "HostPort{ host='" + host + '\'' + ", port='" + port + '\'' + '}';
     }
   }
 }

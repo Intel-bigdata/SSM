@@ -28,11 +28,11 @@ import com.hazelcast.core.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.ExecutorType;
+import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 import org.smartdata.server.utils.HazelcastUtil;
 
@@ -46,7 +46,7 @@ import java.util.Random;
 import java.util.Set;
 
 public class HazelcastExecutorService extends CmdletExecutorService {
-  private Logger LOG = LoggerFactory.getLogger(HazelcastExecutorService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HazelcastExecutorService.class);
   public static final String WORKER_TOPIC_PREFIX = "worker_";
   public static final String STATUS_TOPIC = "status_topic";
   private final HazelcastInstance instance;

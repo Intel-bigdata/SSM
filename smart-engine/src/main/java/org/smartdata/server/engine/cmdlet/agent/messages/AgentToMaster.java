@@ -22,7 +22,7 @@ import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import java.io.Serializable;
 
 /**
- * Messages sent from {@link SmartAgent} to {@link AgentMaster}
+ * Messages sent from {@link SmartAgent} to {@link AgentMaster}.
  */
 public class AgentToMaster {
 
@@ -53,8 +53,12 @@ public class AgentToMaster {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
 
       RegisterAgent that = (RegisterAgent) o;
 
@@ -68,9 +72,7 @@ public class AgentToMaster {
 
     @Override
     public String toString() {
-      return "RegisterAgent{" +
-          "id=" + id +
-          '}';
+      return "RegisterAgent{ id=" + id + "}";
     }
   }
 }

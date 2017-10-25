@@ -17,11 +17,10 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
-import org.smartdata.model.CmdletState;
-import org.smartdata.action.SmartAction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.action.SmartAction;
+import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusReporter;
 
@@ -30,7 +29,7 @@ import org.smartdata.protocol.message.StatusReporter;
  * actions. Different cmdlets can be executed at the same time, but actions
  * belonging to a cmdlet can only be executed in sequence.
  *
- * The cmdlet get executed when rule conditions fulfills.
+ * <p>The cmdlet get executed when rule conditions fulfills.
  */
 // Todo: Cmdlet's state should be maintained by itself
 public class Cmdlet implements Runnable {

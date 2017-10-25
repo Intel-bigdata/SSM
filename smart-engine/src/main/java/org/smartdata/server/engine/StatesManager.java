@@ -20,8 +20,6 @@ package org.smartdata.server.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
-import org.smartdata.model.CachedFileStatus;
-import org.smartdata.model.FileAccessInfo;
 import org.smartdata.conf.Reconfigurable;
 import org.smartdata.conf.ReconfigurableRegistry;
 import org.smartdata.conf.ReconfigureException;
@@ -32,6 +30,8 @@ import org.smartdata.metastore.dao.AccessCountTableManager;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventSource;
 import org.smartdata.metrics.impl.MetricsFactory;
+import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.Utilization;
@@ -44,7 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * Polls metrics and events from NameNode
+ * Polls metrics and events from NameNode.
  */
 public class StatesManager extends AbstractService implements Reconfigurable {
   private ServerContext serverContext;
@@ -160,12 +160,15 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   public Utilization getStorageUtilization(String resourceName) throws IOException {
     try {
       if (!resourceName.equals("cache")) {
-        long capacity = serverContext.getMetaStore().getStoreCapacityOfDifferentStorageType(resourceName);
+        long capacity =
+            serverContext.getMetaStore().getStoreCapacityOfDifferentStorageType(resourceName);
         long free = serverContext.getMetaStore().getStoreFreeOfDifferentStorageType(resourceName);
         return new Utilization(capacity, capacity - free);
       } else {
         StorageCapacity storageCapacity = serverContext.getMetaStore().getStorageCapacity("cache");
-        return new Utilization(storageCapacity.getCapacity(), storageCapacity.getCapacity() - storageCapacity.getFree());
+        return new Utilization(
+            storageCapacity.getCapacity(),
+            storageCapacity.getCapacity() - storageCapacity.getFree());
       }
     } catch (MetaStoreException e) {
       throw new IOException(e);
