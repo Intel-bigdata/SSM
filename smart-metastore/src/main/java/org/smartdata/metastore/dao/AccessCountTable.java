@@ -83,9 +83,9 @@ public class AccessCountTable {
       return false;
     }
     AccessCountTable other = (AccessCountTable) o;
-    return other.getStartTime().equals(this.startTime) &&
-        other.getEndTime().equals(this.endTime) &&
-        other.getGranularity().equals(this.granularity);
+    return other.getStartTime().equals(this.startTime)
+        && other.getEndTime().equals(this.endTime)
+        && other.getGranularity().equals(this.granularity);
   }
 
   @Override

@@ -17,18 +17,19 @@
  */
 package org.smartdata.metastore.ingestion;
 
-import java.util.ArrayDeque;
-import java.util.concurrent.LinkedBlockingDeque;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileInfoBatch;
+
+import java.util.ArrayDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public abstract class IngestionTask implements Runnable {
   public static long numFilesFetched = 0L;
   public static long numDirectoriesFetched = 0L;
   public static long numPersisted = 0L;
-  
-  protected final static int DEFAULT_BATCH_SIZE = 20;
-  protected final static String ROOT = "/";
+
+  protected static final int DEFAULT_BATCH_SIZE = 20;
+  protected static final String ROOT = "/";
   // Deque for Breadth-First-Search
   protected ArrayDeque<String> deque;
   // Queue for outer-consumer to fetch file status

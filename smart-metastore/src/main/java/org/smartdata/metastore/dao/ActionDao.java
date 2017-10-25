@@ -27,6 +27,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,7 +37,7 @@ import java.util.Map;
 
 public class ActionDao {
 
-  private String TABLE_NAME = "action";
+  private static final String TABLE_NAME = "action";
   private DataSource dataSource;
 
   public void setDataSource(DataSource dataSource) {
@@ -55,9 +56,10 @@ public class ActionDao {
 
   public ActionInfo getById(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT * FROM " +
-        TABLE_NAME + " WHERE aid = ?",
-        new Object[]{aid}, new ActionRowMapper());
+    return jdbcTemplate.queryForObject(
+        "SELECT * FROM " + TABLE_NAME + " WHERE aid = ?",
+        new Object[] {aid},
+        new ActionRowMapper());
   }
 
   public List<ActionInfo> getByIds(List<Long> aids) {
@@ -65,16 +67,18 @@ public class ActionDao {
         new NamedParameterJdbcTemplate(dataSource);
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
     parameterSource.addValue("aids", aids);
-    return namedParameterJdbcTemplate.query("SELECT * FROM " +
-        TABLE_NAME + " WHERE aid IN (:aids)",
-        parameterSource, new ActionRowMapper());
+    return namedParameterJdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE aid IN (:aids)",
+        parameterSource,
+        new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCid(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM " +
-        TABLE_NAME + " WHERE cid = ?",
-        new Object[]{cid}, new ActionRowMapper());
+    return jdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE cid = ?",
+        new Object[] {cid},
+        new ActionRowMapper());
   }
 
   public List<ActionInfo> getByCondition(String aidCondition,
@@ -107,8 +111,7 @@ public class ActionDao {
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);
     }
-    String sql = "SELECT * FROM " + TABLE_NAME +
-        " WHERE action_name = ? ORDER BY aid DESC";
+    String sql = "SELECT * FROM " + TABLE_NAME + " WHERE action_name = ? ORDER BY aid DESC";
     return jdbcTemplate.query(sql, new ActionRowMapper(), actionName);
   }
 
@@ -118,10 +121,11 @@ public class ActionDao {
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);
     }
-    String sql = "SELECT * FROM " + TABLE_NAME +
-        " WHERE action_name = ? AND successful = ? AND finished = ? ORDER BY aid DESC";
-    return jdbcTemplate
-        .query(sql, new ActionRowMapper(), actionName, successful, finished);
+    String sql =
+        "SELECT * FROM "
+            + TABLE_NAME
+            + " WHERE action_name = ? AND successful = ? AND finished = ? ORDER BY aid DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper(), actionName, successful, finished);
   }
 
   public List<ActionInfo> getLatestActions(String actionName, boolean successful,
@@ -130,10 +134,11 @@ public class ActionDao {
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);
     }
-    String sql = "SELECT * FROM " + TABLE_NAME +
-        " WHERE action_name = ? AND successful = ? ORDER BY aid DESC";
-    return jdbcTemplate
-        .query(sql, new ActionRowMapper(), actionName, successful);
+    String sql =
+        "SELECT * FROM "
+            + TABLE_NAME
+            + " WHERE action_name = ? AND successful = ? ORDER BY aid DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper(), actionName, successful);
   }
 
   public List<ActionInfo> getLatestActions(String actionType, int size,
@@ -142,10 +147,9 @@ public class ActionDao {
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);
     }
-    String sql = "SELECT * FROM " + TABLE_NAME +
-        " WHERE action_name = ? AND finished = ? ORDER BY aid DESC";
-    return jdbcTemplate
-        .query(sql, new ActionRowMapper(), actionType, finished);
+    String sql =
+        "SELECT * FROM " + TABLE_NAME + " WHERE action_name = ? AND finished = ? ORDER BY aid DESC";
+    return jdbcTemplate.query(sql, new ActionRowMapper(), actionType, finished);
   }
 
   public void delete(long aid) {
@@ -188,15 +192,18 @@ public class ActionDao {
 
   public int[] update(final ActionInfo[] actionInfos) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE " + TABLE_NAME + " SET " +
-        "result = ?, " +
-        "log = ?, " +
-        "successful = ?, " +
-        "create_time = ?, " +
-        "finished = ?, " +
-        "finish_time = ?, " +
-        "progress = ? " +
-        "WHERE aid = ?";
+    String sql =
+        "UPDATE "
+            + TABLE_NAME
+            + " SET "
+            + "result = ?, "
+            + "log = ?, "
+            + "successful = ?, "
+            + "create_time = ?, "
+            + "finished = ?, "
+            + "finish_time = ?, "
+            + "progress = ? "
+            + "WHERE aid = ?";
     return jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
           public void setValues(PreparedStatement ps,

@@ -22,9 +22,9 @@ import org.smartdata.model.BackUpInfo;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.sqlite.JDBC;
 
 import javax.sql.DataSource;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -56,7 +56,8 @@ public class BackUpInfoDao {
 
   public int getCountByRid(int rid){
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM backup_file WHERE rid = ?",new Object[rid],Integer.class);
+    return jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM backup_file WHERE rid = ?", new Object[rid], Integer.class);
   }
 
   public BackUpInfo getByRid(long rid) {
@@ -67,12 +68,14 @@ public class BackUpInfoDao {
 
   public List<BackUpInfo> getBySrc(String src) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM backup_file WHERE src = ?", new Object[]{src}, new BackUpInfoRowMapper());
+    return jdbcTemplate.query(
+        "SELECT * FROM backup_file WHERE src = ?", new Object[] {src}, new BackUpInfoRowMapper());
   }
 
   public List<BackUpInfo> getByDest(String dest) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM backup_file WHERE dest = ?", new Object[]{dest}, new BackUpInfoRowMapper());
+    return jdbcTemplate.query(
+        "SELECT * FROM backup_file WHERE dest = ?", new Object[] {dest}, new BackUpInfoRowMapper());
   }
 
 
@@ -82,17 +85,17 @@ public class BackUpInfoDao {
     jdbcTemplate.update(sql, rid);
   }
 
-  public void insert(BackUpInfo backUpInfo){
+  public void insert(BackUpInfo backUpInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("backup_file");
     simpleJdbcInsert.execute(toMap(backUpInfo));
   }
 
-  public void insert(BackUpInfo[] backUpInfos){
+  public void insert(BackUpInfo[] backUpInfos) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("backup_file");
-    Map<String,Object>[] maps = new Map[backUpInfos.length];
-    for (int i = 0; i < backUpInfos.length; i++){
+    Map<String, Object>[] maps = new Map[backUpInfos.length];
+    for (int i = 0; i < backUpInfos.length; i++) {
       maps[i] = toMap(backUpInfos[i]);
     }
     simpleJdbcInsert.executeBatch(maps);

@@ -21,11 +21,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.model.ClusterInfo;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
-import org.smartdata.model.FileDiffType;
 import org.smartdata.metastore.TestDaoUtil;
+import org.smartdata.model.ClusterInfo;
 
 import java.util.List;
 

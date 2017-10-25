@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,22 +18,15 @@
 package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
-import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.model.GlobalConfig;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,27 +49,32 @@ public class GlobalConfigDao {
 
   public List<GlobalConfig> getByIds(List<Long> cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM global_config WHERE cid IN (?)",
-        new Object[]{StringUtils.join(cid, ",")},
+    return jdbcTemplate.query(
+        "SELECT * FROM global_config WHERE cid IN (?)",
+        new Object[] {StringUtils.join(cid, ",")},
         new GlobalConfigRowMapper());
   }
 
   public GlobalConfig getById(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT * FROM global_config WHERE cid = ?",
-        new Object[]{cid}, new GlobalConfigRowMapper());
+    return jdbcTemplate.queryForObject(
+        "SELECT * FROM global_config WHERE cid = ?",
+        new Object[] {cid},
+        new GlobalConfigRowMapper());
   }
 
-  public GlobalConfig getByPropertyName(String property_name) {
+  public GlobalConfig getByPropertyName(String propertyName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT * FROM global_config WHERE property_name = ?",
-        new Object[]{property_name}, new GlobalConfigRowMapper());
+    return jdbcTemplate.queryForObject(
+        "SELECT * FROM global_config WHERE property_name = ?",
+        new Object[] {propertyName},
+        new GlobalConfigRowMapper());
   }
 
-  public void deleteByName(String property_name) {
+  public void deleteByName(String propertyName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM global_config WHERE property_name = ?";
-    jdbcTemplate.update(sql, property_name);
+    jdbcTemplate.update(sql, propertyName);
   }
 
   public void delete(long cid) {
@@ -112,15 +110,15 @@ public class GlobalConfigDao {
 
   public long getCountByName(String name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM global_config WHERE property_name = ?",Long.class,name);
+    return jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM global_config WHERE property_name = ?", Long.class, name);
   }
 
-  public int update(String property_name, String property_value) {
+  public int update(String propertyName, String propertyValue) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "UPDATE global_config SET property_value = ? WHERE property_name = ?";
-    return jdbcTemplate.update(sql, property_value, property_name);
+    return jdbcTemplate.update(sql, propertyValue, propertyName);
   }
-
 
   private Map<String, Object> toMaps(GlobalConfig globalConfig) {
     Map<String, Object> parameters = new HashMap<>();

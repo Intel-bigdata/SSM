@@ -21,8 +21,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.metastore.TestDaoUtil;
+import org.smartdata.model.DataNodeStorageInfo;
 
 import java.util.List;
 
@@ -67,5 +67,4 @@ public class TestDataNodeStorageInfoDao extends TestDaoUtil {
     infos = dataNodeStorageInfoDao.getAll();
     Assert.assertTrue(infos.size() == 0);
   }
-
 }

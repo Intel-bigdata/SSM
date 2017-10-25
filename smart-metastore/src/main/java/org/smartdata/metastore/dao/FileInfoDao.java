@@ -17,8 +17,8 @@
  */
 package org.smartdata.metastore.dao;
 
-import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.utils.MetaStoreUtils;
+import org.smartdata.model.FileInfo;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -26,6 +26,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -123,7 +124,7 @@ public class FileInfoDao {
     simpleJdbcInsert.setTableName("file");
     Map<String, Object>[] maps = new Map[fileInfos.length];
     for (int i = 0; i < fileInfos.length; i++) {
-      maps[i] = toMap(fileInfos[i],mapOwnerIdName,mapGroupIdName);
+      maps[i] = toMap(fileInfos[i], mapOwnerIdName, mapGroupIdName);
     }
     simpleJdbcInsert.executeBatch(maps);
   }
