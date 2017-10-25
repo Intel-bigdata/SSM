@@ -17,13 +17,11 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.smartdata.SmartContext;
 import org.smartdata.action.ActionException;
-import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.LaunchAction;

@@ -20,7 +20,6 @@ package org.smartdata.hdfs.action;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,22 +136,22 @@ public class MetaDataAction extends HdfsAction {
               fs.getFileStatus(new Path(srcFile)).getOwner(),
               fileInfo.getGroup());
         }
-        if (fileInfo.getBlock_replication() != -1) {
-          fs.setReplication(new Path(srcFile), fileInfo.getBlock_replication());
+        if (fileInfo.getBlockReplication() != -1) {
+          fs.setReplication(new Path(srcFile), fileInfo.getBlockReplication());
         }
         if (fileInfo.getPermission() != -1) {
           fs.setPermission(new Path(srcFile), new FsPermission(fileInfo.getPermission()));
         }
-        if (fileInfo.getAccess_time() != -1) {
+        if (fileInfo.getAccessTime() != -1) {
           fs.setTimes(
               new Path(srcFile),
               fs.getFileStatus(new Path(srcFile)).getModificationTime(),
-              fileInfo.getAccess_time());
+              fileInfo.getAccessTime());
         }
-        if (fileInfo.getModification_time() != -1) {
+        if (fileInfo.getModificationTime() != -1) {
           fs.setTimes(
               new Path(srcFile),
-              fileInfo.getModification_time(),
+              fileInfo.getModificationTime(),
               fs.getFileStatus(new Path(srcFile)).getAccessTime());
         }
         return true;
@@ -166,22 +165,22 @@ public class MetaDataAction extends HdfsAction {
           dfsClient.setOwner(
               srcFile, dfsClient.getFileInfo(srcFile).getOwner(), fileInfo.getGroup());
         }
-        if (fileInfo.getBlock_replication() != -1) {
-          dfsClient.setReplication(srcFile, fileInfo.getBlock_replication());
+        if (fileInfo.getBlockReplication() != -1) {
+          dfsClient.setReplication(srcFile, fileInfo.getBlockReplication());
         }
         if (fileInfo.getPermission() != -1) {
           dfsClient.setPermission(srcFile, new FsPermission(fileInfo.getPermission()));
         }
-        if (fileInfo.getAccess_time() != -1) {
+        if (fileInfo.getAccessTime() != -1) {
           dfsClient.setTimes(
               srcFile,
               dfsClient.getFileInfo(srcFile).getModificationTime(),
-              fileInfo.getAccess_time());
+              fileInfo.getAccessTime());
         }
-        if (fileInfo.getModification_time() != -1) {
+        if (fileInfo.getModificationTime() != -1) {
           dfsClient.setTimes(
               srcFile,
-              fileInfo.getModification_time(),
+              fileInfo.getModificationTime(),
               dfsClient.getFileInfo(srcFile).getAccessTime());
         }
         return true;

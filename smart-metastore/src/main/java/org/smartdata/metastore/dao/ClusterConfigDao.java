@@ -19,22 +19,14 @@ package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.model.ClusterConfig;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
-import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.sqlite.JDBC;
 
 import javax.sql.DataSource;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +62,8 @@ public class ClusterConfigDao {
 
   public long getCountByName(String name) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM cluster_config WHERE node_name = ?",Long.class,name);
+    return jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM cluster_config WHERE node_name = ?", Long.class, name);
   }
 
   public ClusterConfig getByName(String name) {
@@ -110,17 +103,17 @@ public class ClusterConfigDao {
     }
   }
 
-  public int updateById(int cid, String config_path){
+  public int updateById(int cid, String configPath){
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "UPDATE cluster_config SET config_path = ? WHERE cid = ?";
-    return jdbcTemplate.update(sql,config_path,cid);
+    return jdbcTemplate.update(sql, configPath, cid);
   }
 
 
-  public int updateByNodeName(String node_name, String config_path){
+  public int updateByNodeName(String nodeName, String configPath){
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "UPDATE cluster_config SET config_path = ? WHERE node_name = ?";
-    return jdbcTemplate.update(sql,config_path,node_name);
+    return jdbcTemplate.update(sql, configPath, nodeName);
   }
 
 

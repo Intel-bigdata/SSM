@@ -26,8 +26,8 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.engine.cmdlet.agent.ActorSystemHarness;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
-import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 
 public class TestSmartAgent extends ActorSystemHarness {
@@ -41,7 +41,7 @@ public class TestSmartAgent extends ActorSystemHarness {
     for (int i = 0; i < num; i++) {
       masters[i] = new JavaTestKit(system);
       masterPaths[i] = AgentUtils.getFullPath(system, masters[i].getRef().path());
-    };
+    }
     SmartConf conf = new SmartConf();
     AgentRunner runner = new AgentRunner(
         AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),

@@ -310,7 +310,8 @@ public class TestAccessCountTableManager extends DBTest {
 
     AccessCountTableDeque secondDeque = new AccessCountTableDeque(tableEvictor);
     AccessCountTable firstFiveSeconds =
-      new AccessCountTable(55 * Constants.ONE_SECOND_IN_MILLIS, 60 * Constants.ONE_SECOND_IN_MILLIS);
+        new AccessCountTable(
+            55 * Constants.ONE_SECOND_IN_MILLIS, 60 * Constants.ONE_SECOND_IN_MILLIS);
     AccessCountTable secondFiveSeconds =
       new AccessCountTable(60 * Constants.ONE_SECOND_IN_MILLIS,
         65 * Constants.ONE_SECOND_IN_MILLIS);

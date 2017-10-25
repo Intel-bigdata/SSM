@@ -87,7 +87,8 @@ public class TestTableAggregator extends DBTest {
 
     List<FileAccessInfo> accessInfos2 =
         metaStore.getHotFiles(Arrays.asList(table1, table2, table3), 2);
-    List<FileAccessInfo> expected2 = Arrays.asList(expected1, new FileAccessInfo(102L, "/file2", 6));
+    List<FileAccessInfo> expected2 =
+        Arrays.asList(expected1, new FileAccessInfo(102L, "/file2", 6));
     Assert.assertTrue(accessInfos2.size() == expected2.size());
     Assert.assertTrue(accessInfos2.containsAll(expected2));
   }

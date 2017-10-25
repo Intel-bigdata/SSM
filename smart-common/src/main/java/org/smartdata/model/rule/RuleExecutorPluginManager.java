@@ -32,13 +32,13 @@ public class RuleExecutorPluginManager {
     return inst;
   }
 
-  public synchronized static void addPlugin(RuleExecutorPlugin plugin) {
+  public static synchronized void addPlugin(RuleExecutorPlugin plugin) {
     if (!plugins.contains(plugin)) {
       plugins.add(plugin);
     }
   }
 
-  public synchronized static void deletePlugin(RuleExecutorPlugin plugin) {
+  public static synchronized void deletePlugin(RuleExecutorPlugin plugin) {
     if (plugins.contains(plugin)) {
       plugins.remove(plugin);
     }

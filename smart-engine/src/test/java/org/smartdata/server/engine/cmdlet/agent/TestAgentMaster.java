@@ -17,11 +17,10 @@
  */
 package org.smartdata.server.engine.cmdlet.agent;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
-import org.smartdata.server.engine.CmdletManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -30,13 +29,14 @@ import static org.mockito.Mockito.mock;
 public class TestAgentMaster {
 
   @Test
-  @Ignore
   public void testAgentMaster() throws Exception {
     CmdletManager statusUpdater = mock(CmdletManager.class);
     AgentMaster master = new AgentMaster(statusUpdater);
 
     // Wait for master to start
-    while(master.getMasterActor() == null);
+    while (master.getMasterActor() == null) {
+      // Do nothing
+    }
 
     Object answer = master.askMaster(AgentToMaster.RegisterNewAgent.getInstance());
     assertTrue(answer instanceof MasterToAgent.AgentRegistered);

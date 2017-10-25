@@ -19,9 +19,9 @@ package org.smartdata.metastore;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
-import org.smartdata.metastore.utils.MetaStoreUtils;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -48,13 +48,13 @@ public class TestDruid {
     RuleInfo info1 = new RuleInfo(0, submitTime,
         rule, RuleState.ACTIVE, 0, 0, 0);
     Assert.assertTrue(adapter.insertNewRule(info1));
-    RuleInfo info1_1 = adapter.getRuleInfo(info1.getId());
-    Assert.assertTrue(info1.equals(info1_1));
+    RuleInfo info11 = adapter.getRuleInfo(info1.getId());
+    Assert.assertTrue(info1.equals(info11));
 
     long now = System.currentTimeMillis();
     adapter.updateRuleInfo(info1.getId(), RuleState.DELETED, now, 1, 1);
-    RuleInfo info1_2 = adapter.getRuleInfo(info1.getId());
-    Assert.assertTrue(info1_2.getLastCheckTime() == now);
+    RuleInfo info12 = adapter.getRuleInfo(info1.getId());
+    Assert.assertTrue(info12.getLastCheckTime() == now);
 
     druidPool.close();
   }

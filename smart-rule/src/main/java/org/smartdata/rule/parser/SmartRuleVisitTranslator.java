@@ -41,9 +41,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Convert SSM parse tree into internal representation.
- */
+/** Convert SSM parse tree into internal representation. */
 public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   private Map<String, SmartObject> objects = new HashMap<>();
   private TreeNode objFilter = null;
@@ -57,8 +55,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   private long minTimeInverval = Long.MAX_VALUE;
   private List<String> pathCheckGlob = new ArrayList<>();
 
-  public SmartRuleVisitTranslator() {
-  }
+  public SmartRuleVisitTranslator() {}
 
   public SmartRuleVisitTranslator(TranslationContext transCtx) {
     this.transCtx = transCtx;
@@ -112,7 +109,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     }
   }
 
-  @Override public TreeNode visitTriCycle(SmartRuleParser.TriCycleContext ctx) {
+  @Override
+  public TreeNode visitTriCycle(SmartRuleParser.TriCycleContext ctx) {
     timeBasedScheduleInfo = new TimeBasedScheduleInfo();
     TreeNode tr = visit(ctx.timeintvalexpr());
     timeBasedScheduleInfo.setEvery(getLongConstFromTreeNode(tr));
@@ -125,12 +123,14 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     return null;
   }
 
-  @Override public TreeNode visitTriFileEvent(SmartRuleParser.TriFileEventContext ctx) {
+  @Override
+  public TreeNode visitTriFileEvent(SmartRuleParser.TriFileEventContext ctx) {
     return visitChildren(ctx);
   }
 
   // duringexpr : FROM timepointexpr (TO timepointexpr)? ;
-  @Override public TreeNode visitDuringexpr(SmartRuleParser.DuringexprContext ctx) {
+  @Override
+  public TreeNode visitDuringexpr(SmartRuleParser.DuringexprContext ctx) {
     TreeNode trFrom = visit(ctx.timepointexpr(0));
     timeBasedScheduleInfo.setStartTime(getLongConstFromTreeNode(trFrom));
     if (ctx.timepointexpr().size() > 1) {
@@ -184,21 +184,20 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   @Override
   public TreeNode visitTpeTimeExpr(SmartRuleParser.TpeTimeExprContext ctx) {
     return generalExprOpExpr(ctx);
-    //return evalLongExpr(ctx, ValueType.TIMEPOINT);
+    // return evalLongExpr(ctx, ValueType.TIMEPOINT);
   }
 
   @Override
   public TreeNode visitTpeTimeId(SmartRuleParser.TpeTimeIdContext ctx) {
     TreeNode node = visitChildren(ctx);
     if (!node.isOperNode()) {
-      if (((ValueNode)node).getValueType() == ValueType.TIMEPOINT) {
+      if (((ValueNode) node).getValueType() == ValueType.TIMEPOINT) {
         return node;
       }
     }
-    throw new RuleParserException("Invalid attribute type in expression for '"
-        + ctx.getText() + "'");
+    throw new RuleParserException(
+        "Invalid attribute type in expression for '" + ctx.getText() + "'");
   }
-
 
   // Time interval
 
@@ -211,7 +210,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   @Override
   public TreeNode visitTieTpExpr(SmartRuleParser.TieTpExprContext ctx) {
     return generalExprOpExpr(ctx);
-    //return evalLongExpr(ctx, ValueType.TIMEINTVAL);
+    // return evalLongExpr(ctx, ValueType.TIMEINTVAL);
   }
 
   @Override
@@ -223,21 +222,20 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   @Override
   public TreeNode visitTieTiExpr(SmartRuleParser.TieTiExprContext ctx) {
     return generalExprOpExpr(ctx);
-    //return evalLongExpr(ctx, ValueType.TIMEINTVAL);
+    // return evalLongExpr(ctx, ValueType.TIMEINTVAL);
   }
 
   @Override
   public TreeNode visitTieTiIdExpr(SmartRuleParser.TieTiIdExprContext ctx) {
     TreeNode node = visitChildren(ctx);
     if (!node.isOperNode()) {
-      if (((ValueNode)node).getValueType() == ValueType.TIMEINTVAL) {
+      if (((ValueNode) node).getValueType() == ValueType.TIMEINTVAL) {
         return node;
       }
     }
-    throw new RuleParserException("Invalid attribute type in expression for '"
-        + ctx.getText() + "'");
+    throw new RuleParserException(
+        "Invalid attribute type in expression for '" + ctx.getText() + "'");
   }
-
 
   private SmartObject createIfNotExist(String objName) {
     SmartObject obj = objects.get(objName);
@@ -255,13 +253,16 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     // System.out.println("Bare ID: " + ctx.getText());
     Property p = objects.get("Default").getProperty(ctx.getText());
     if (p == null) {
-      throw new RuleParserException("Object " + objects.get("Default").toString()
-          + " does not have a attribute named '" + "'" + ctx.getText());
+      throw new RuleParserException(
+          "Object "
+              + objects.get("Default").toString()
+              + " does not have a attribute named '"
+              + "'"
+              + ctx.getText());
     }
 
     if (p.getParamsTypes() != null) {
-      throw new RuleParserException("Should have no parameter(s) for "
-          + ctx.getText());
+      throw new RuleParserException("Should have no parameter(s) for " + ctx.getText());
     }
     PropertyRealParas realParas = new PropertyRealParas(p, null);
     realParases.add(realParas);
@@ -273,12 +274,15 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     SmartObject obj = createIfNotExist(ctx.OBJECTTYPE().toString());
     Property p = obj.getProperty(ctx.ID().getText());
     if (p == null) {
-      throw new RuleParserException("Object " + obj.toString()
-          + " does not have a attribute named '" + "'" + ctx.ID().getText());
+      throw new RuleParserException(
+          "Object "
+              + obj.toString()
+              + " does not have a attribute named '"
+              + "'"
+              + ctx.ID().getText());
     }
     if (p.getParamsTypes() != null) {
-      throw new RuleParserException("Should have no parameter(s) for "
-          + ctx.getText());
+      throw new RuleParserException("Should have no parameter(s) for " + ctx.getText());
     }
     PropertyRealParas realParas = new PropertyRealParas(p, null);
     realParases.add(realParas);
@@ -290,20 +294,29 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     SmartObject obj = createIfNotExist("Default");
     Property p = obj.getProperty(ctx.ID().getText());
     if (p == null) {
-      throw new RuleParserException("Object " + obj.toString()
-          + " does not have a attribute named '" + ctx.ID().getText() + "'");
+      throw new RuleParserException(
+          "Object "
+              + obj.toString()
+              + " does not have a attribute named '"
+              + ctx.ID().getText()
+              + "'");
     }
 
     if (p.getParamsTypes() == null) {
-      throw new RuleParserException(obj.toString() + "." + ctx.ID().getText()
-          + " does not need parameter(s)");
+      throw new RuleParserException(
+          obj.toString() + "." + ctx.ID().getText() + " does not need parameter(s)");
     }
 
     int numParameters = ctx.getChildCount() / 2 - 1;
     if (p.getParamsTypes().size() != numParameters) {
-      throw new RuleParserException(obj.toString() + "." + ctx.ID().getText()
-          + " needs " + p.getParamsTypes().size() + " instead of "
-          + numParameters);
+      throw new RuleParserException(
+          obj.toString()
+              + "."
+              + ctx.ID().getText()
+              + " needs "
+              + p.getParamsTypes().size()
+              + " instead of "
+              + numParameters);
     }
 
     return parseIdParams(ctx, p, 2);
@@ -316,20 +329,29 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     Property p = createIfNotExist(objName).getProperty(propertyName);
 
     if (p == null) {
-      throw new RuleParserException("Object " + ctx.OBJECTTYPE().toString()
-          + " does not have a attribute named '" + "'" + ctx.ID().getText());
+      throw new RuleParserException(
+          "Object "
+              + ctx.OBJECTTYPE().toString()
+              + " does not have a attribute named '"
+              + "'"
+              + ctx.ID().getText());
     }
 
     if (p.getParamsTypes() == null) {
-      throw new RuleParserException(ctx.OBJECTTYPE().toString() + "." + ctx.ID().getText()
-          + " does not need parameter(s)");
+      throw new RuleParserException(
+          ctx.OBJECTTYPE().toString() + "." + ctx.ID().getText() + " does not need parameter(s)");
     }
 
     int numParameters = ctx.getChildCount() / 2 - 2;
     if (p.getParamsTypes().size() != numParameters) {
-      throw new RuleParserException(ctx.OBJECTTYPE().toString() + "." + ctx.ID().getText()
-          + " needs " + p.getParamsTypes().size() + " instead of "
-          + numParameters);
+      throw new RuleParserException(
+          ctx.OBJECTTYPE().toString()
+              + "."
+              + ctx.ID().getText()
+              + " needs "
+              + p.getParamsTypes().size()
+              + " instead of "
+              + numParameters);
     }
 
     return parseIdParams(ctx, p, 4);
@@ -338,7 +360,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   private TreeNode parseIdParams(ParserRuleContext ctx, Property p, int start) {
     int paraIndex = 0;
     List<Object> paras = new ArrayList<>();
-    //String a = ctx.getText();
+    // String a = ctx.getText();
     for (int i = start; i < ctx.getChildCount() - 1; i += 2) {
       String c = ctx.getChild(i).getText();
       TreeNode res = visit(ctx.getChild(i));
@@ -346,14 +368,13 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         throw new RuleParserException("Should be direct.");
       }
       if (res.getValueType() != p.getParamsTypes().get(paraIndex)) {
-        throw new RuleParserException("Unexpected parameter type: "
-            + ctx.getChild(i).getText());
+        throw new RuleParserException("Unexpected parameter type: " + ctx.getChild(i).getText());
       }
       Object value = ((ValueNode) res).eval().getValue();
       paras.add(value);
 
       if (p.getParamsTypes().get(paraIndex) == ValueType.TIMEINTVAL) {
-        minTimeInverval = Math.min((long)value, minTimeInverval);
+        minTimeInverval = Math.min((long) value, minTimeInverval);
       }
 
       paraIndex++;
@@ -372,8 +393,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   /**
    * {@inheritDoc}
    *
-   * <p>The default implementation returns the result of calling
-   * {@link #visitChildren} on {@code ctx}.</p>
+   * <p>The default implementation returns the result of calling {@link #visitChildren} on {@code
+   * ctx}.
    */
   @Override
   public TreeNode visitNumricexprCurve(SmartRuleParser.NumricexprCurveContext ctx) {
@@ -405,7 +426,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   private TreeNode generalHandleExpr(String operator, TreeNode left, TreeNode right) {
     TreeNode ret;
     try {
-      if (left.isOperNode() ||  right.isOperNode()) {
+      if (left.isOperNode() || right.isOperNode()) {
         ret = new OperNode(OperatorType.fromString(operator), left, right);
       } else if (left.eval().isConst() && right.eval().isConst()) {
         ret = new ValueNode(left.eval().eval(OperatorType.fromString(operator), right.eval()));
@@ -421,7 +442,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           if (!right.isOperNode()) {
             VisitResult vs = ((ValueNode) right).eval();
             if (vs.isConst() && vs.getValueType() == ValueType.TIMEINTVAL) {
-              minTimeInverval = Math.min((long)vs.getValue(), minTimeInverval);
+              minTimeInverval = Math.min((long) vs.getValue(), minTimeInverval);
             }
           }
         }
@@ -494,7 +515,6 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     return generalExprOpExpr(ctx);
   }
 
-
   @Override
   public TreeNode visitStrOrdString(SmartRuleParser.StrOrdStringContext ctx) {
     return pharseConstString(ctx.STRING().getText());
@@ -512,8 +532,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitStrTimePointStr(SmartRuleParser.StrTimePointStrContext ctx) {
-    return new ValueNode(new VisitResult(ValueType.STRING,
-        ctx.TIMEPOINTCONST().getText()));
+    return new ValueNode(new VisitResult(ValueType.STRING, ctx.TIMEPOINTCONST().getText()));
   }
 
   @Override
@@ -566,6 +585,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         case "s":
         case "sec":
           intval += value * 1000;
+          break;
         case "ms":
           intval += value;
           break;
@@ -595,14 +615,19 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       switch (unit) {
         case "PB":
           times *= 1024;
+          break;
         case "TB":
           times *= 1024;
+          break;
         case "GB":
           times *= 1024;
+          break;
         case "MB":
           times *= 1024;
+          break;
         case "KB":
           times *= 1024;
+          break;
       }
       ret = Long.parseLong(str);
     } catch (NumberFormatException e) {
@@ -613,8 +638,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   @Override
   public TreeNode visitCmdlet(SmartRuleParser.CmdletContext ctx) {
-    Interval i = new Interval(ctx.getStart().getStartIndex(),
-        ctx.getStop().getStopIndex());
+    Interval i = new Interval(ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
     String cmd = ctx.getStart().getInputStream().getText(i);
     try {
       cmdDescriptor = CmdletDescriptor.fromCmdletString(cmd);
@@ -630,8 +654,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     Date date;
     try {
       date = ft.parse(str);
-      result = new ValueNode(
-          new VisitResult(ValueType.TIMEPOINT, date.getTime()));
+      result = new ValueNode(new VisitResult(ValueType.TIMEPOINT, date.getTime()));
     } catch (ParseException e) {
       throw new RuleParserException("Invalid time point string '" + str + "'");
     }
@@ -644,8 +667,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       if (minTimeInverval != Long.MAX_VALUE) {
         intval = Math.max(intval, minTimeInverval / 20);
       }
-      timeBasedScheduleInfo = new TimeBasedScheduleInfo(getTimeNow(),
-          TimeBasedScheduleInfo.FOR_EVER, intval);
+      timeBasedScheduleInfo =
+          new TimeBasedScheduleInfo(getTimeNow(), TimeBasedScheduleInfo.FOR_EVER, intval);
     }
   }
 
@@ -663,8 +686,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         ret = "SELECT path FROM file";
         break;
       default:
-        throw new IOException("No operation defined for Object "
-            + objects.get("Default").getType());
+        throw new IOException(
+            "No operation defined for Object " + objects.get("Default").getType());
     }
 
     if (l != null) {
@@ -681,9 +704,15 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     sqlStatements.add(ret);
     setDefaultTimeBasedScheduleInfo();
 
-    return new TranslateResult(sqlStatements,
-        tempTableNames, dynamicParameters, sqlStatements.size() - 1,
-        timeBasedScheduleInfo, cmdDescriptor, condPostion, pathCheckGlob);
+    return new TranslateResult(
+        sqlStatements,
+        tempTableNames,
+        dynamicParameters,
+        sqlStatements.size() - 1,
+        timeBasedScheduleInfo,
+        cmdDescriptor,
+        condPostion,
+        pathCheckGlob);
   }
 
   private class NodeTransResult {
@@ -716,21 +745,25 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   }
 
   private String connectTables(String baseTable, NodeTransResult curr) {
-    String[] key =
-        TableMetaData.getJoinableKey(baseTable, curr.getTableName());
+    String[] key = TableMetaData.getJoinableKey(baseTable, curr.getTableName());
     String subSql = null;
     if (key == null) {
-      return "(SELECT COUNT(*) FROM " + curr.getTableName()
+      return "(SELECT COUNT(*) FROM "
+          + curr.getTableName()
           + (curr.getRet() != null ? " WHERE (" + curr.getRet() + ")" : "")
           + ") <> 0";
     } else {
       String con = "";
-      if (curr.isInvert()
-          && curr.getTableName().startsWith("VIR_ACC_CNT_TAB_")) {
+      if (curr.isInvert() && curr.getTableName().startsWith("VIR_ACC_CNT_TAB_")) {
         con = " NOT";
       }
-      return key[0] + con + " IN "
-          + "(SELECT " + key[1] + " FROM " + curr.getTableName()
+      return key[0]
+          + con
+          + " IN "
+          + "(SELECT "
+          + key[1]
+          + " FROM "
+          + curr.getTableName()
           + (curr.getRet() != null ? " WHERE (" + curr.getRet() + ")" : "")
           + ")";
     }
@@ -738,8 +771,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
   private boolean procAcc = false;
 
-  public NodeTransResult doGenerateSql(TreeNode root, String tableName)
-      throws IOException {
+  public NodeTransResult doGenerateSql(TreeNode root, String tableName) throws IOException {
     if (root == null) {
       return new NodeTransResult(tableName, "");
     }
@@ -759,8 +791,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         rop = temp;
       }
 
-      if (optype == OperatorType.AND || optype == OperatorType.OR
-          || optype == OperatorType.NONE) {
+      if (optype == OperatorType.AND || optype == OperatorType.OR || optype == OperatorType.NONE) {
         String lopTable = lop.getTableName();
         if (lopTable != null && !lopTable.equals(tableName)) {
           lop = new NodeTransResult(tableName, connectTables(tableName, lop));
@@ -773,8 +804,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       }
 
       if (optype == OperatorType.NOT) {
-        return new NodeTransResult(tableName,
-            op + " " + connectTables(tableName, lop));
+        return new NodeTransResult(tableName, op + " " + connectTables(tableName, lop));
       }
 
       boolean procAccLt = false;
@@ -811,8 +841,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       }
 
       return new NodeTransResult(
-          lop.getTableName() != null ? lop.getTableName() : rop.getTableName(),
-          res, procAccLt);
+          lop.getTableName() != null ? lop.getTableName() : rop.getTableName(), res, procAccLt);
 
     } else {
       ValueNode vNode = (ValueNode) root;
@@ -824,10 +853,9 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           case LONG:
             return new NodeTransResult(null, "" + ((Long) vr.getValue()));
           case STRING:
-            return new NodeTransResult(null,
-                "'" + ((String) vr.getValue()) + "'");
+            return new NodeTransResult(null, "'" + ((String) vr.getValue()) + "'");
           case BOOLEAN:
-            if ((Boolean)vr.getValue()) {
+            if ((Boolean) vr.getValue()) {
               return new NodeTransResult(null, "1");
             } else {
               return new NodeTransResult(null, "0");
@@ -841,9 +869,9 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
 
         // TODO: Handle not
         if (p.getPropertyName().equals("path")) {
-          ValueNode pathStrNode = (ValueNode)(vNode.getPeer());
+          ValueNode pathStrNode = (ValueNode) (vNode.getPeer());
           VisitResult pathVr = pathStrNode.eval();
-          String pathStr = (String)pathVr.getValue();
+          String pathStr = (String) pathVr.getValue();
           pathCheckGlob.add(pathStr);
         }
 
@@ -858,18 +886,15 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
             tempTableNames.add(virTab);
             sqlStatements.add("DROP TABLE IF EXISTS " + virTab + ";");
             sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
-            dynamicParameters.put(virTab,
-                Arrays.asList(realParas.getValues(), virTab));
+            dynamicParameters.put(virTab, Arrays.asList(realParas.getValues(), virTab));
           }
           procAcc = true;
-          return new NodeTransResult(virTab,
-              realParas.formatParameters());
+          return new NodeTransResult(virTab, realParas.formatParameters());
         }
 
-        return new NodeTransResult(p.getTableName(),
-            realParas.formatParameters());
+        return new NodeTransResult(p.getTableName(), realParas.formatParameters());
       }
     }
-    //return new NodeTransResult(tableName, "");
+    // return new NodeTransResult(tableName, "");
   }
 }

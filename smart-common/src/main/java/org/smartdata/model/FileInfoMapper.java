@@ -46,15 +46,15 @@ public class FileInfoMapper {
   }
 
   public String getPath() {
-    return (String)attrMap.get(PATH);
+    return (String) attrMap.get(PATH);
   }
 
   public Long getFileId() {
-    return (Long)attrMap.get(FID);
+    return (Long) attrMap.get(FID);
   }
 
   public Long getLength() {
-    return (Long)attrMap.get(LENGTH);
+    return (Long) attrMap.get(LENGTH);
   }
 
   public Boolean getIsdir() {
@@ -66,15 +66,15 @@ public class FileInfoMapper {
   }
 
   public Long getBlocksize() {
-    return (Long)attrMap.get(BLOCK_SIZE);
+    return (Long) attrMap.get(BLOCK_SIZE);
   }
 
   public Long getModification_time() {
-    return (Long)attrMap.get(MODIFICATION_TIME);
+    return (Long) attrMap.get(MODIFICATION_TIME);
   }
 
   public Long getAccess_time() {
-    return (Long)attrMap.get(ACCESS_TIME);
+    return (Long) attrMap.get(ACCESS_TIME);
   }
 
   public Short getPermission() {
@@ -86,7 +86,7 @@ public class FileInfoMapper {
   }
 
   public String getGroup(String group) {
-    return (String)attrMap.get(GROUP);
+    return (String) attrMap.get(GROUP);
   }
 
   public Byte getStoragePolicy(byte storagePolicy) {
@@ -130,8 +130,8 @@ public class FileInfoMapper {
       return this;
     }
 
-    public Builder setBlock_replication(short block_replication) {
-      attrMap.put(FileInfoMapper.BLOCK_REPLICATION, block_replication);
+    public Builder setBlockReplication(short blockReplication) {
+      attrMap.put(FileInfoMapper.BLOCK_REPLICATION, blockReplication);
       return this;
     }
 
@@ -140,13 +140,13 @@ public class FileInfoMapper {
       return this;
     }
 
-    public Builder setModification_time(long modification_time) {
-      attrMap.put(FileInfoMapper.MODIFICATION_TIME, modification_time);
+    public Builder setModificationTime(long modificationTime) {
+      attrMap.put(FileInfoMapper.MODIFICATION_TIME, modificationTime);
       return this;
     }
 
-    public Builder setAccess_time(long access_time) {
-      attrMap.put(FileInfoMapper.ACCESS_TIME, access_time);
+    public Builder setAccessTime(long accessTime) {
+      attrMap.put(FileInfoMapper.ACCESS_TIME, accessTime);
       return this;
     }
 

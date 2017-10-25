@@ -27,17 +27,17 @@ import java.util.Map;
  * Definition of rule object 'Storage'.
  */
 public class StorageObject extends SmartObject {
-  public static final Map<String, Property> properties;
+  public static final Map<String, Property> PROPERTIES;
 
   static {
-    properties = new HashMap<>();
-    properties.put("capacity", new Property("capacity", ValueType.LONG,
+    PROPERTIES = new HashMap<>();
+    PROPERTIES.put("capacity", new Property("capacity", ValueType.LONG,
         Arrays.asList(ValueType.STRING), "storage", "capacity", true,
         "type = $0"));
-    properties.put("free", new Property("free", ValueType.LONG,
+    PROPERTIES.put("free", new Property("free", ValueType.LONG,
         Arrays.asList(ValueType.STRING), "storage", "free", true,
         "type = $0 AND free"));
-    properties.put("utilization", new Property("utilization", ValueType.LONG,
+    PROPERTIES.put("utilization", new Property("utilization", ValueType.LONG,
         Arrays.asList(ValueType.STRING), "storage", "free", true,
         "type = $0 AND (capacity - free) * 100.0 / capacity"));
   }
@@ -47,6 +47,6 @@ public class StorageObject extends SmartObject {
   }
 
   public Map<String, Property> getProperties() {
-    return properties;
+    return PROPERTIES;
   }
 }

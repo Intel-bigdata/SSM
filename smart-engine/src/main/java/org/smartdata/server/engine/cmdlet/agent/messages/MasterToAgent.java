@@ -36,8 +36,12 @@ public class MasterToAgent {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
 
       AgentId agentId = (AgentId) o;
 
@@ -51,9 +55,7 @@ public class MasterToAgent {
 
     @Override
     public String toString() {
-      return "AgentId{" +
-        "id=" + id +
-        '}';
+      return "AgentId{ id=" + id + "}";
     }
   }
 
@@ -62,7 +64,7 @@ public class MasterToAgent {
     private static final long serialVersionUID = -7212238600261028430L;
     private final AgentId id;
 
-    public AgentRegistered(AgentId id ) {
+    public AgentRegistered(AgentId id) {
       this.id = id;
     }
 
@@ -72,8 +74,12 @@ public class MasterToAgent {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
 
       AgentRegistered that = (AgentRegistered) o;
 
@@ -87,9 +93,7 @@ public class MasterToAgent {
 
     @Override
     public String toString() {
-      return "AgentRegistered{" +
-          "id=" + id +
-          '}';
+      return "AgentRegistered{ id=" + id + "}";
     }
   }
 }

@@ -92,7 +92,7 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
       smartserver
   fi
 else
-  echo "WARN: No SmartServers configured in 'hazelcast.xml'."
+  echo "ERROR: No SmartServers configured in 'hazelcast.xml'."
   exit 1
 fi
 

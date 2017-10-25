@@ -159,7 +159,14 @@ def create_random_file_parallel(length=1024):
     """
     create a random file in /test/
     """
-    file_path = TEST_DIR + random_string()
+    return create_random_file_parallel(TEST_DIR, length)
+
+
+def create_random_file_parallel(dest_path, length=1024):
+    """
+    create a random file in /dest_path/
+    """
+    file_path = dest_path + random_string()
     cmdlet_str = "write -file " + \
                  file_path + " -length " + str(length)
     return file_path, submit_cmdlet(cmdlet_str)

@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.action.SyncAction;
-import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -110,6 +109,7 @@ public class CopyScheduler extends ActionSchedulerService {
     this.fileDiffChanged = new ConcurrentHashMap<>();
   }
 
+  @Override
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     if (!actionInfo.getActionName().equals("sync")) {
       return ScheduleResult.FAIL;
@@ -198,6 +198,7 @@ public class CopyScheduler extends ActionSchedulerService {
     return false;
   }
 
+  @Override
   public boolean onSubmit(ActionInfo actionInfo) {
     String path = actionInfo.getArgs().get("-file");
     LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
@@ -205,12 +206,7 @@ public class CopyScheduler extends ActionSchedulerService {
     return !isFileLocked(path);
   }
 
-  public void postSchedule(ActionInfo actionInfo, ScheduleResult result) {
-  }
-
-  public void onPreDispatch(LaunchAction action) {
-  }
-
+  @Override
   public void onActionFinished(ActionInfo actionInfo) {
     // Remove lock
     FileDiff fileDiff = null;

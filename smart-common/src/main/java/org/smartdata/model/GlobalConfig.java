@@ -17,6 +17,8 @@
  */
 package org.smartdata.model;
 
+import java.util.Objects;
+
 public class GlobalConfig {
   private long cid;
   private String propertyName;
@@ -57,26 +59,27 @@ public class GlobalConfig {
 
   @Override
   public String toString() {
-    return String.format("GlobalConfig{cid=%s, propertyName=\'%s\', propertyValue=\'%s\'}",cid,propertyName,propertyValue);
+    return String.format(
+        "GlobalConfig{cid=%s, propertyName=\'%s\', propertyValue=\'%s\'}",
+        cid, propertyName, propertyValue);
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     GlobalConfig that = (GlobalConfig) o;
-
-    if (cid != that.cid) return false;
-    if (propertyName != null ? !propertyName.equals(that.propertyName) : that.propertyName != null) return false;
-    return propertyValue != null ? propertyValue.equals(that.propertyValue) : that.propertyValue == null;
+    return cid == that.cid
+        && Objects.equals(propertyName, that.propertyName)
+        && Objects.equals(propertyValue, that.propertyValue);
   }
 
   @Override
   public int hashCode() {
-    int result = (int) (cid ^ (cid >>> 32));
-    result = 31 * result + (propertyName != null ? propertyName.hashCode() : 0);
-    result = 31 * result + (propertyValue != null ? propertyValue.hashCode() : 0);
-    return result;
+    return Objects.hash(cid, propertyName, propertyValue);
   }
 }

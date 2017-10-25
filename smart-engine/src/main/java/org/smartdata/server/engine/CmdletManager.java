@@ -28,6 +28,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.action.SmartAction;
 import org.smartdata.hdfs.action.move.AbstractMoveFileAction;
+import org.smartdata.hdfs.scheduler.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -35,6 +36,8 @@ import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.DetailedFileAction;
+import org.smartdata.model.LaunchAction;
+import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
@@ -42,12 +45,8 @@ import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.server.engine.cmdlet.Cmdlet;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
-import org.smartdata.metastore.ActionSchedulerService;
-import org.smartdata.model.action.ActionScheduler;
-import org.smartdata.model.LaunchAction;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
@@ -72,11 +71,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * to avoid duplicated Cmdlet, then enqueue into pendingCmdlet. When the Cmdlet is scheduled it
  * will be remove out of the queue and marked in the runningCmdlets.
  *
- * The map idToCmdlets stores all the recent CmdletInfos, including pending and running Cmdlets.
+ * <p>The map idToCmdlets stores all the recent CmdletInfos, including pending and running Cmdlets.
  * After the Cmdlet is finished or cancelled or failed, it's status will be flush to DB.
  */
 public class CmdletManager extends AbstractService {
-  private final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
   private MetaStore metaStore;
@@ -190,7 +189,7 @@ public class CmdletManager extends AbstractService {
   }
 
   /**
-   * Check if action names in cmdletDescriptor are correct
+   * Check if action names in cmdletDescriptor are correct.
    * @param cmdletDescriptor
    * @throws IOException
    */
@@ -208,7 +207,7 @@ public class CmdletManager extends AbstractService {
   }
 
   /**
-   * Let Scheduler check actioninfo onsubmit and add them to cmdletinfo
+   * Let Scheduler check actioninfo onsubmit and add them to cmdletinfo.
    * @param cmdletInfo
    * @param actionInfos
    * @throws IOException
@@ -227,7 +226,7 @@ public class CmdletManager extends AbstractService {
   }
 
   /**
-   * Sync cmdletinfo and actionInfos with metastore and cache, add locks if necessary
+   * Sync cmdletinfo and actionInfos with metastore and cache, add locks if necessary.
    * @param cmdletInfo
    * @param actionInfos
    * @param actionsInDB
@@ -283,7 +282,7 @@ public class CmdletManager extends AbstractService {
   @Override
   public void stop() throws IOException {
     LOG.info("Stopping ...");
-    for (int i = schedulerServices.size() - 1; i >=0 ; i--) {
+    for (int i = schedulerServices.size() - 1; i >= 0; i--) {
       schedulerServices.get(i).stop();
     }
     executorService.shutdown();
@@ -328,7 +327,7 @@ public class CmdletManager extends AbstractService {
   }
 
   /**
-   * Insert cmdletinfo and actions to metastore and cache, add locks if necessary
+   * Insert cmdletinfo and actions to metastore and cache, add locks if necessary.
    *
    * @param cmdletInfo
    * @param actionInfos
@@ -482,7 +481,7 @@ public class CmdletManager extends AbstractService {
   private void postscheduleCmdletActions(List<Long> actions, ScheduleResult result,
       int lastAction, int lastScheduler) {
     List<ActionScheduler> actSchedulers;
-    for (int aidx = lastAction; aidx >= 0 ; aidx--) {
+    for (int aidx = lastAction; aidx >= 0; aidx--) {
       ActionInfo info = idToActions.get(actions.get(aidx));
       actSchedulers = schedulers.get(info.getActionName());
       if (actSchedulers == null || actSchedulers.size() == 0) {
@@ -634,7 +633,8 @@ public class CmdletManager extends AbstractService {
     runningCmdlets.remove(cmdletId);
 
     List<ActionInfo> removed = new ArrayList<>();
-    for (Iterator<Map.Entry<Long, ActionInfo>> it = idToActions.entrySet().iterator(); it.hasNext();) {
+    for (Iterator<Map.Entry<Long, ActionInfo>> it = idToActions.entrySet().iterator();
+        it.hasNext(); ) {
       Map.Entry<Long, ActionInfo> entry = it.next();
       if (entry.getValue().getCmdletId() == cmdletId) {
         it.remove();
@@ -790,7 +790,7 @@ public class CmdletManager extends AbstractService {
   }
 
   /**
-   * Delete all cmdlets related with rid
+   * Delete all cmdlets related with rid.
    * @param rid
    * @throws IOException
    */
@@ -895,7 +895,11 @@ public class CmdletManager extends AbstractService {
     try {
       metaStore.updateCmdlet(info.getCid(), info.getRid(), info.getState());
     } catch (MetaStoreException e) {
-      LOG.error("CmdletId -> [ {} ], CmdletInfo -> [ {} ]. Batch Cmdlet Status Update error!", info.getCid(), info, e);
+      LOG.error(
+          "CmdletId -> [ {} ], CmdletInfo -> [ {} ]. Batch Cmdlet Status Update error!",
+          info.getCid(),
+          info,
+          e);
       throw new IOException(e);
     }
   }
@@ -927,7 +931,8 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  protected List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid) throws IOException {
+  protected List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid)
+      throws IOException {
     List<ActionInfo> actionInfos = new ArrayList<>();
     for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
       Map<String, String> args = cmdletDescriptor.getActionArgs(index);

@@ -38,9 +38,6 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,6 +45,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 public class AgentMaster {
 
@@ -176,9 +177,10 @@ public class AgentMaster {
 
     @Override
     public void onReceive(Object message) throws Exception {
-      Boolean handled = handleAgentMessage(message) ||
-          handleClientMessage(message) ||
-          handleTerminatedMessage(message);
+      Boolean handled =
+          handleAgentMessage(message)
+              || handleClientMessage(message)
+              || handleTerminatedMessage(message);
       if (!handled) {
         unhandled(message);
       }

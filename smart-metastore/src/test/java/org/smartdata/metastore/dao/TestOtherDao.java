@@ -24,10 +24,7 @@ import org.junit.Test;
 import org.smartdata.metastore.TestDaoUtil;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 public class TestOtherDao extends TestDaoUtil {
   private GroupsDao groupsDao;

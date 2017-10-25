@@ -140,6 +140,10 @@ if [ x"${REMOTE_MODE}" = x"true" ]; then
     fi
   done
 else
+  check_java_avaliable
+  if [ $? -ne 0 ]; then
+    exit 1
+  fi
   if [ x"${DAEMON_MOD}" = x"true" ]; then
     case "${DAEMON_MOD_OP}" in
       "start")

@@ -21,10 +21,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileDiffType;
-import org.smartdata.metastore.TestDaoUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,7 +55,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiff.setSrc("test");
     fileDiff.setState(FileDiffState.PENDING);
     fileDiff.setDiffType(FileDiffType.APPEND);
-    fileDiff.setCreate_time(1);
+    fileDiff.setCreateTime(1);
     fileDiffDao.insert(fileDiff);
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
   }
@@ -69,7 +69,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiffs[0].setSrc("test");
     fileDiffs[0].setState(FileDiffState.RUNNING);
     fileDiffs[0].setDiffType(FileDiffType.APPEND);
-    fileDiffs[0].setCreate_time(1);
+    fileDiffs[0].setCreateTime(1);
 
     fileDiffs[1] = new FileDiff();
     fileDiffs[1].setDiffId(2);
@@ -77,7 +77,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiffs[1].setSrc("src");
     fileDiffs[1].setState(FileDiffState.PENDING);
     fileDiffs[1].setDiffType(FileDiffType.APPEND);
-    fileDiffs[1].setCreate_time(1);
+    fileDiffs[1].setCreateTime(1);
 
     fileDiffDao.insert(fileDiffs);
     List<FileDiff> fileInfoList = fileDiffDao.getAll();
@@ -87,8 +87,8 @@ public class TestFileDiffDao extends TestDaoUtil {
 
     //update
     List<Long> dids = new ArrayList<>();
-    dids.add(1l);
-    dids.add(2l);
+    dids.add(1L);
+    dids.add(2L);
     List<String> parameters = new ArrayList<>();
     parameters.add(fileDiffs[0].getParametersJsonString());
     parameters.add(fileDiffs[1].getParametersJsonString());
@@ -113,7 +113,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiffs[0].setSrc("test");
     fileDiffs[0].setState(FileDiffState.RUNNING);
     fileDiffs[0].setDiffType(FileDiffType.APPEND);
-    fileDiffs[0].setCreate_time(1);
+    fileDiffs[0].setCreateTime(1);
 
     fileDiffs[1] = new FileDiff();
     fileDiffs[1].setDiffId(2);
@@ -121,7 +121,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiffs[1].setSrc("src");
     fileDiffs[1].setState(FileDiffState.PENDING);
     fileDiffs[1].setDiffType(FileDiffType.APPEND);
-    fileDiffs[1].setCreate_time(1);
+    fileDiffs[1].setCreateTime(1);
 
     fileDiffDao.insert(fileDiffs);
     List<FileDiff> fileInfoList = fileDiffDao.getAll();
@@ -142,7 +142,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiff.setSrc("test");
     fileDiff.setState(FileDiffState.PENDING);
     fileDiff.setDiffType(FileDiffType.APPEND);
-    fileDiff.setCreate_time(1);
+    fileDiff.setCreateTime(1);
     fileDiffDao.insert(fileDiff);
 
     fileDiffDao.update(1, FileDiffState.RUNNING);
