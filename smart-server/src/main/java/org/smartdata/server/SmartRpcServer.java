@@ -62,8 +62,8 @@ public class SmartRpcServer implements SmartServerProtocols {
     InetSocketAddress rpcAddr = getRpcServerAddress();
     RPC.setProtocolEngine(conf, AdminProtocolProtoBuffer.class, ProtobufRpcEngine.class);
 
-    ServerProtocolsServerSideTranslator clientSSMProtocolServerSideTranslatorPB
-        = new ServerProtocolsServerSideTranslator(this);
+    ServerProtocolsServerSideTranslator clientSSMProtocolServerSideTranslatorPB =
+        new ServerProtocolsServerSideTranslator(this);
 
     BlockingService adminSmartPbService = AdminServerProto.protoService
         .newReflectiveBlockingService(clientSSMProtocolServerSideTranslatorPB);
@@ -103,7 +103,7 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   /**
-   * Start SSM RPC service
+   * Start SSM RPC service.
    */
   public void start() {
     if (clientRpcServer != null) {
@@ -112,7 +112,7 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   /**
-   * Stop SSM RPC service
+   * Stop SSM RPC service.
    */
   public void stop() {
     if (clientRpcServer != null) {

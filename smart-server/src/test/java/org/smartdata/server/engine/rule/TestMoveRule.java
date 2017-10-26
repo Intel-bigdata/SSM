@@ -36,7 +36,7 @@ public class TestMoveRule extends MiniSmartClusterHarness {
     dfs.mkdirs(new Path("/test"));
     dfs.setStoragePolicy(new Path("/test"), "HOT");
     dfs.mkdirs(new Path("/test/dir1"));
-    DFSTestUtil.createFile(dfs, new Path("/test/dir1/f1"), DEFAULT_BLOCK_SIZE * 3, (short)3, 0);
+    DFSTestUtil.createFile(dfs, new Path("/test/dir1/f1"), DEFAULT_BLOCK_SIZE * 3, (short) 3, 0);
 
     String rule = "file: path matches \"/test/*\" | allssd";
     SmartAdmin admin = new SmartAdmin(smartContext.getConf());
@@ -48,7 +48,7 @@ public class TestMoveRule extends MiniSmartClusterHarness {
       Thread.sleep(1000);
       List<ActionInfo> infos = admin.listActionInfoOfLastActions(100);
       System.out.println(idx + " round:");
-      for(ActionInfo info : infos) {
+      for (ActionInfo info : infos) {
         System.out.println("\t" + info);
       }
       System.out.println();

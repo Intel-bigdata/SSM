@@ -88,9 +88,9 @@ public class TestSmartAdmin extends MiniSmartClusterHarness {
 
       //test actioninfo
       List<Long> aidlist = cmdletInfo.getAids();
-      assertNotEquals(0,aidlist.size());
+      assertNotEquals(0, aidlist.size());
       ActionInfo actionInfo = admin.getActionInfo(aidlist.get(0));
-      assertEquals(id,actionInfo.getCmdletId());
+      assertEquals(id, actionInfo.getCmdletId());
 
       //test listActionInfoOfLastActions
       admin.listActionInfoOfLastActions(2);

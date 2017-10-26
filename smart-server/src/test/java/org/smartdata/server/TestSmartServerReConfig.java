@@ -26,8 +26,8 @@ import org.junit.Test;
 import org.smartdata.SmartServiceState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.TestDBUtil;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 
 import java.net.URI;
 import java.util.ArrayList;
