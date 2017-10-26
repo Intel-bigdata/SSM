@@ -767,7 +767,8 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public ActionGroup listActions(int pageIndex, int numPerPage, List<String> orderBy, List<Boolean> isDesc) throws IOException {
+  public ActionGroup listActions(int pageIndex, int numPerPage,
+    List<String> orderBy, List<Boolean> isDesc) throws IOException {
     return new ActionGroup(new ArrayList<ActionInfo>(), 0);
   }
 

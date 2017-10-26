@@ -67,13 +67,17 @@ public class ActionRestApi {
       @PathParam("isDesc") String isDesc) {
 //    Integer intNumber = Integer.parseInt(listNumber);
 //    intNumber = intNumber > 0 ? intNumber : 0;
+    logger.info("pageIndex", pageIndex);
+    logger.info("numPerPage", numPerPage);
+    logger.info("orderBy", orderBy);
+    logger.info("isDesc", isDesc);
     try {
 //      return new JsonResponse<>(Response.Status.OK,
 //          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
       List<String> orderByList = new ArrayList<>();
       List<Boolean> isDescList = new ArrayList<>();
       return new JsonResponse<>(Response.Status.OK,
-              smartEngine.getCmdletManager().listActions(0,0, orderByList, isDescList)).build();
+              smartEngine.getCmdletManager().listActions(0, 0, orderByList, isDescList)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
