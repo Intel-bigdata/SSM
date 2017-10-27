@@ -15,10 +15,6 @@
  * limitations under the License.
  */
 // rootPath of this site, it has a tailing slash /
-var rootPath = function () {
-  var root = location.origin + location.pathname;
-  return root.substring(0, root.lastIndexOf("/") + 1);
-}();
 var zeppelinWebApp = angular.module('zeppelinWebApp', [
   'ngCookies',
   'ngAnimate',
@@ -75,9 +71,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
     };
 
     $routeProvider
-      .when("/",{
-        redirectTo: '/notebook/2CM9DW8NW'
-      })
       .when('/notebook/:noteId', {
         templateUrl: 'app/notebook/notebook.html',
         controller: 'NotebookCtrl',
@@ -244,7 +237,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         }
       })
       .otherwise({
-        redirectTo: '/'
+        redirectTo: '/notebook/2CM9DW8NW'
       });
 
     ngToastProvider.configure({
@@ -298,8 +291,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
   // constants
   .constant('conf', {
     restapiProtocol: 'v1',
-    // restapiRoot: 'http://localhost:7045/',
-    restapiRoot: rootPath,
     restapiQueryInterval: 3 * 1000, // in milliseconds
     restapiQueryTimeout: 30 * 1000, // in milliseconds
     restapiTaskLevelMetricsQueryLimit: 100

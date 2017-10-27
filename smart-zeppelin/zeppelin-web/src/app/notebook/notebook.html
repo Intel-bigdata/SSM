@@ -17,7 +17,7 @@ limitations under the License.
   <div class="col-xs-4 box" style="height: 100%; overflow: hidden;">
     <ul class="list-group" style="height: 100%; overflow-y: auto;">
       <div style="font-size: 17px; font-family: Roboto; font-weight: bold;">Rule List</div>
-      <li ng-repeat="rule in rules" class="list-group-item" style="border: 0px solid transparent">
+      <li ng-repeat="rule in rules" class="list-group-item" ng-click="cloneRule(rule.ruleText)" style="border: 0px solid transparent">
         {{rule.ruleText}}
       </li>
     </ul>

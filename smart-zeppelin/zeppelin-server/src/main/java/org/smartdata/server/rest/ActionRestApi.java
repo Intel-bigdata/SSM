@@ -29,6 +29,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Action APIs.
@@ -58,13 +60,24 @@ public class ActionRestApi {
   }
 
   @GET
-  @Path("/list/{listNumber}")
-  public Response actionList(@PathParam("listNumber") String listNumber) {
-    Integer intNumber = Integer.parseInt(listNumber);
-    intNumber = intNumber > 0 ? intNumber : 0;
+  @Path("/list/{pageIndex}/{numPerPage}/{orderBy}/{isDesc}")
+  public Response actionList(@PathParam("pageIndex") String pageIndex,
+      @PathParam("numPerPage") String numPerPage,
+      @PathParam("orderBy") String orderBy,
+      @PathParam("isDesc") String isDesc) {
+//    Integer intNumber = Integer.parseInt(listNumber);
+//    intNumber = intNumber > 0 ? intNumber : 0;
+    logger.info("pageIndex", pageIndex);
+    logger.info("numPerPage", numPerPage);
+    logger.info("orderBy", orderBy);
+    logger.info("isDesc", isDesc);
     try {
+//      return new JsonResponse<>(Response.Status.OK,
+//          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
+      List<String> orderByList = new ArrayList<>();
+      List<Boolean> isDescList = new ArrayList<>();
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
+              smartEngine.getCmdletManager().listActions(0, 0, orderByList, isDescList)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,

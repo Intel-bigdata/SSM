@@ -19,8 +19,8 @@
 angular.module('zeppelinWebApp')
 
 /** TODO: refactoring work required */
-  .factory('restapi', ['$q', '$http', '$timeout', '$modal', 'Upload', 'conf', 'HealthCheckService',
-    function ($q, $http, $timeout, $modal, Upload, conf, HealthCheckService) {
+  .factory('restapi', ['$q', '$http', '$timeout', '$modal', 'Upload', 'conf', 'HealthCheckService', 'baseUrlSrv',
+    function ($q, $http, $timeout, $modal, Upload, conf, HealthCheckService, baseUrlSrv) {
       'use strict';
 
       function decodeSuccessResponse(data) {
@@ -40,7 +40,7 @@ angular.module('zeppelinWebApp')
         return {success: false, error: errorMessage, stackTrace: stackTrace};
       }
 
-      var restapiV1Root = conf.restapiRoot + 'smart/api/' + conf.restapiProtocol + '/';
+      var restapiV1Root = baseUrlSrv.getRestApiRoot() + 'smart/api/' + conf.restapiProtocol + '/';
       var self = {
         /**
          * Retrieve data from rest service endpoint (HTTP GET) periodically in an angular scope.
@@ -181,7 +181,7 @@ angular.module('zeppelinWebApp')
 
         /** Return the service version in onData callback */
         serviceVersion: function (onData) {
-          return $http.get(conf.restapiRoot + 'version').then(function (response) {
+          return $http.get(baseUrlSrv.getRestApiRoot() + 'version').then(function (response) {
             if (angular.isFunction(onData)) {
               onData(response.data);
             }
