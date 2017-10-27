@@ -136,7 +136,7 @@ public class TestActionRestApi extends IntegrationTestBase {
     }
 
     // check action list
-    Response actionList = RestAssured.get(ACTIONROOT + "/list/0");
+ /*   Response actionList = RestAssured.get(ACTIONROOT + "/list/0");
     actionList.then().body("status", Matchers.equalTo("OK"));
     actionList.jsonPath().getList("body.actionId", Long.class).contains(aid);
 
@@ -145,7 +145,7 @@ public class TestActionRestApi extends IntegrationTestBase {
     actionList.then().body("status", Matchers.equalTo("OK"));
     actionList.jsonPath().getList("body.actionId", Long.class).contains(aid);
 
-    System.out.println("Action " + actionType + " is finished.");
+    System.out.println("Action " + actionType + " is finished.");*/
     return actionInfoMap;
   }
 }
