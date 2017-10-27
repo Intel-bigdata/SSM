@@ -30,20 +30,19 @@ function baseUrlSrv() {
     return port;
   };
 
+  this.getRestApiRoot = function () {
+    return location.protocol + '//' + location.hostname + ':' +
+      this.getPort() + '/';
+  };
+
   this.getWebsocketUrl = function() {
     var wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return wsProtocol + '//' + location.hostname + ':' + this.getPort() +
-      skipTrailingSlash(location.pathname) + '/ws';
+    return wsProtocol + '//' + location.hostname + ':' + this.getPort() + '/ws';
   };
 
   this.getRestApiBase = function() {
-    return location.protocol + '//' + location.hostname + ':' +
-      this.getPort() + skipTrailingSlash(location.pathname) +
-      '/api';
-  };
 
-  var skipTrailingSlash = function(path) {
-    return path.replace(/\/$/, '');
+    return this.getRestApiRoot() + 'api';
   };
 }
 
