@@ -872,6 +872,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<ActionInfo> listPageAction(long start, long offset, List<String> orderBy, List<Boolean> desc) throws MetaStoreException {
+    LOG.debug("List Action, start {}, offset {}", start, offset);
+    try {
+      return actionDao.getAPageOfAction(start, offset, orderBy, desc);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteCmdletActions(long cmdletId) throws MetaStoreException {
     try {
       actionDao.deleteCmdletActions(cmdletId);
@@ -1077,6 +1086,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public long getMaxActionId() throws MetaStoreException {
     try {
       return actionDao.getMaxId();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public long getCountOfAllAction() throws MetaStoreException {
+    try {
+      return actionDao.getCountOfAction();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

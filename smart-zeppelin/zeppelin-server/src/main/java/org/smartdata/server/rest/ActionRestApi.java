@@ -17,6 +17,12 @@
  */
 package org.smartdata.server.rest;
 
+import com.amazonaws.util.json.JSONArray;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,12 +78,15 @@ public class ActionRestApi {
     logger.info("orderBy", orderBy);
     logger.info("isDesc", isDesc);
     try {
-//      return new JsonResponse<>(Response.Status.OK,
-//          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
-      List<String> orderByList = new ArrayList<>();
-      List<Boolean> isDescList = new ArrayList<>();
+      //      return new JsonResponse<>(Response.Status.OK,
+      //          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
+      Gson gson = new Gson();
+      List<String> orderByList = gson.fromJson(orderBy, new TypeToken<List<String>>() {}.getType());
+      List<Boolean> isDescList = gson.fromJson(isDesc, new TypeToken<List<String>>() {}.getType());
+
       return new JsonResponse<>(Response.Status.OK,
-              smartEngine.getCmdletManager().listActions(0, 0, orderByList, isDescList)).build();
+          smartEngine.getCmdletManager().listActions(Integer.parseInt(pageIndex), Integer.parseInt(numPerPage),
+              orderByList, isDescList)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
