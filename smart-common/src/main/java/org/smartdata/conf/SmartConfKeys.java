@@ -91,4 +91,10 @@ public class SmartConfKeys {
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";
   public static final boolean SMART_TIDB_ENABLED_DEFAULT = false;
+
+  // Compression
+  public static final String SMART_COMPRESSION_IMPL = "smart.compression.impl";
+  public static final String SMART_COMPRESSION_IMPL_DEFAULT = "snappy";
+  public static final String SMART_COMPRESSION_BUFFER_SIZE = "smart.compression.buffer.size";
+  public static final int SMART_COMPRESSION_BUFFER_SIZE_DEFAULT = 262144;
 }
