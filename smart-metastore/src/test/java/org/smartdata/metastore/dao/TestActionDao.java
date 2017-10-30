@@ -76,7 +76,7 @@ public class TestActionDao extends TestDaoUtil {
     order.add("aid");
     List<Boolean> desc = new ArrayList<>();
     desc.add(false);
-    Assert.assertTrue(actionDao.getAPageOfAction(2,1, order, desc).get(0).equals(actionInfo2));
+    Assert.assertTrue(actionDao.getAPageOfAction(2, 1, order, desc).get(0).equals(actionInfo2));
   }
 
   @Test
