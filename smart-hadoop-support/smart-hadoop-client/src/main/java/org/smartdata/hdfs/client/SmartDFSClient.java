@@ -18,24 +18,58 @@
 package org.smartdata.hdfs.client;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.UnresolvedLinkException;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.DFSOutputStream;
+import org.apache.hadoop.hdfs.SmartDFSOutputStream;
+import org.apache.hadoop.util.Progressable;
 import org.smartdata.client.SmartClient;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.EnumSet;
+
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_BLOCK_SIZE_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_REPLICATION_DEFAULT;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_REPLICATION_KEY;
 
 public class SmartDFSClient extends DFSClient {
   private SmartClient smartClient = null;
   private boolean healthy = false;
+  private String compressPath = "/ssm/compress/";
+  
+  String compressionImpl;
+  short defaultReplication;
+  long defaultBlockSize;
+  int ioBufferSize;
+
+  private void initConf(Configuration conf) {
+    compressionImpl = conf.get(SmartConfKeys.SMART_COMPRESSION_IMPL,
+        SmartConfKeys.SMART_COMPRESSION_IMPL_DEFAULT);
+    defaultReplication = (short) conf.getInt(
+        DFS_REPLICATION_KEY, DFS_REPLICATION_DEFAULT);
+    defaultBlockSize = conf.getLongBytes(DFS_BLOCK_SIZE_KEY,
+        DFS_BLOCK_SIZE_DEFAULT);
+    ioBufferSize = conf.getInt(
+        CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY,
+        CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
+  }
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeAddress, conf);
+    initConf(conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
@@ -48,6 +82,7 @@ public class SmartDFSClient extends DFSClient {
   public SmartDFSClient(URI nameNodeUri, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeUri, conf);
+    initConf(conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
@@ -61,6 +96,7 @@ public class SmartDFSClient extends DFSClient {
       FileSystem.Statistics stats, InetSocketAddress smartServerAddress)
       throws IOException {
     super(nameNodeUri, conf, stats);
+    initConf(conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
@@ -73,6 +109,7 @@ public class SmartDFSClient extends DFSClient {
   public SmartDFSClient(Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(conf);
+    initConf(conf);
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
@@ -84,6 +121,7 @@ public class SmartDFSClient extends DFSClient {
 
   public SmartDFSClient(Configuration conf) throws IOException {
     super(conf);
+    initConf(conf);
     try {
       smartClient = new SmartClient(conf);
       healthy = true;
@@ -92,7 +130,110 @@ public class SmartDFSClient extends DFSClient {
       throw e;
     }
   }
+  /*
+  public OutputStream smartCreate(String src, boolean overwrite)
+      throws IOException {
+    return create(src, overwrite, getDefaultReplication(),
+        getDefaultBlockSize(), null);
+  }
+  
+  public OutputStream smartCreate(String src,
+      boolean overwrite,
+      Progressable progress) throws IOException {
+    return smartCreate(src, overwrite, getDefaultReplication(),
+        getDefaultBlockSize(), progress);
+  }
 
+  public OutputStream smartCreate(String src,
+      boolean overwrite,
+      short replication,
+      long blockSize) throws IOException {
+    return create(src, overwrite, replication, blockSize, null);
+  }
+
+  public OutputStream smartCreate(String src, boolean overwrite, 
+      short replication, long blockSize, Progressable progress)
+      throws IOException {
+    return smartCreate(src, overwrite, replication, blockSize, progress,
+        dfsClientConf.ioBufferSize);
+  }
+
+  public OutputStream smartCreate(String src,
+      boolean overwrite,
+      short replication,
+      long blockSize,
+      Progressable progress,
+      int buffersize)
+      throws IOException {
+
+  }
+
+  public OutputStream smartCreate(String src,
+      FsPermission permission,
+      EnumSet<CreateFlag> flag,
+      short replication,
+      long blockSize,
+      Progressable progress,
+      int buffersize,
+      Options.ChecksumOpt checksumOpt)
+      throws IOException {
+    return create(src, permission, flag, true,
+        replication, blockSize, progress, buffersize, checksumOpt, null);
+  }
+
+  public OutputStream smartCreate(String src,
+      FsPermission permission,
+      EnumSet<CreateFlag> flag,
+      boolean createParent,
+      short replication,
+      long blockSize,
+      Progressable progress,
+      int buffersize,
+      Options.ChecksumOpt checksumOpt) throws IOException {
+    return create(src, permission, flag, createParent, replication, blockSize,
+        progress, buffersize, checksumOpt, null);
+  }
+
+
+  public OutputStream smartCreate(String src,
+      FsPermission permission,
+      EnumSet<CreateFlag> flag,
+      boolean createParent,
+      short replication,
+      long blockSize,
+      Progressable progress,
+      int buffersize,
+      Options.ChecksumOpt checksumOpt,
+      InetSocketAddress[] favoredNodes) throws IOException {
+    if (src.startsWith(compressPath)) {
+      if (permission == null) {
+        permission = FsPermission.getFileDefault();
+      }
+      FsPermission uMask = FsPermission.getUMask(conf);
+      FsPermission masked = permission.applyUMask(uMask);
+      return SmartDFSOutputStream.newStreamForCreate(this, src, masked,
+          flag, createParent, replication, blockSize, progress, buffersize,
+          null, 
+          getFavoredNodesStr(favoredNodes), conf);
+    } else {
+      return super.create(src, permission, flag, createParent, replication, 
+          blockSize, progress, buffersize, checksumOpt, favoredNodes);
+    }
+  }
+
+  private String[] getFavoredNodesStr(InetSocketAddress[] favoredNodes) {
+    String[] favoredNodeStrs = null;
+    if (favoredNodes != null) {
+      favoredNodeStrs = new String[favoredNodes.length];
+      for (int i = 0; i < favoredNodes.length; i++) {
+        favoredNodeStrs[i] =
+            favoredNodes[i].getHostName() + ":"
+                + favoredNodes[i].getPort();
+      }
+    }
+    return favoredNodeStrs;
+  }
+*/
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
