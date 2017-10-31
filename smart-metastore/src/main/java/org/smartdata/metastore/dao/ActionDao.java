@@ -147,7 +147,8 @@ public class ActionDao {
     return jdbcTemplate.query(sql, new ActionRowMapper(), actionName, successful);
   }
 
-  public List<ActionInfo> getAPageOfAction(long start, long offset, List<String> orderBy, List<Boolean> isDesc) {
+  public List<ActionInfo> getAPageOfAction(long start, long offset, List<String> orderBy,
+      List<Boolean> isDesc) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     boolean ifHasAid = false;
     String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ";
