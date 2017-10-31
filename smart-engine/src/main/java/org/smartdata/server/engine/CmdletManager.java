@@ -770,8 +770,8 @@ public class CmdletManager extends AbstractService {
   public ActionGroup listActions(int pageIndex, int numPerPage,
       List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
 
-    return new ActionGroup(metaStore.listPageAction((pageIndex - 1) * numPerPage, numPerPage, orderBy, isDesc),
-        metaStore.getCountOfAllAction());
+    return new ActionGroup(metaStore.listPageAction((pageIndex - 1) * numPerPage,
+        numPerPage, orderBy, isDesc), metaStore.getCountOfAllAction());
   }
 
   public List<ActionInfo> getActions(long rid, int size) throws IOException {
