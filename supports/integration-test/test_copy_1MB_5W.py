@@ -4,10 +4,20 @@ from util import *
 
 FILE_SIZE = 1 * 1024 * 1024
 
-# add rule like 'file : path matches "/test/1MB/*" | sync -dest hdfs://namenode_ip:hdfs_port/test'
+BACK_UP_SERVER_IP = "hdfs://namenode_ip"
+BACK_UP_SERVER_PORT = "9000"
+
+
 
 class TestCopy_1MB_5W(unittest.TestCase):
     def test_5W_copy(self):
+	#add rule
+	rule_str = "file : path matches \"/test/1MB/*\" | sync -dest "+ \
+			   BACK_UP_SERVER_IP + ":" + BACK_UP_SERVER_PORT + "/test "
+	rid = submit_rule(rule_str)
+	# Activate rule
+	start_rule(rid)
+
 	#create 20W files and move to archive
 	file_paths = []
 	cids = []
