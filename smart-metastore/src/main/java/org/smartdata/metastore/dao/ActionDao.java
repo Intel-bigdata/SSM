@@ -54,6 +54,12 @@ public class ActionDao {
         new ActionRowMapper());
   }
 
+  public Long getCountOfAction() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT COUNT(*) FROM " + TABLE_NAME;
+    return jdbcTemplate.queryForObject(sql, Long.class);
+  }
+
   public ActionInfo getById(long aid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject(
@@ -139,6 +145,34 @@ public class ActionDao {
             + TABLE_NAME
             + " WHERE action_name = ? AND successful = ? ORDER BY aid DESC";
     return jdbcTemplate.query(sql, new ActionRowMapper(), actionName, successful);
+  }
+
+  public List<ActionInfo> getAPageOfAction(long start, long offset, List<String> orderBy,
+      List<Boolean> isDesc) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    boolean ifHasAid = false;
+    String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ";
+
+    for (int i = 0; i < orderBy.size(); i++) {
+      if (orderBy.get(i).equals("aid")) {
+        ifHasAid = true;
+      }
+      sql = sql + orderBy.get(i);
+      if (isDesc.get(i)) {
+        sql = sql + " desc ";
+      }
+      sql = sql + ",";
+    }
+
+    if (!ifHasAid) {
+      sql = sql + "aid,";
+    }
+
+    //delete the last char
+    sql = sql.substring(0, sql.length() - 1);
+    //add limit
+    sql = sql + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
   public List<ActionInfo> getLatestActions(String actionType, int size,
