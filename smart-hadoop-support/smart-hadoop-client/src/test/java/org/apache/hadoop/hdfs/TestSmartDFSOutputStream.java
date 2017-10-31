@@ -1,5 +1,7 @@
 package org.apache.hadoop.hdfs;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.compress.BlockCompressorStream;
@@ -20,6 +22,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.fail;
@@ -32,30 +37,46 @@ public class TestSmartDFSOutputStream {
   private MiniDFSCluster cluster;
   private SmartConf conf;
 
+  private static final int DEFAULT_BLOCK_SIZE = 128;
+
+  private void initConf(Configuration conf) {
+    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
+    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
+  }
+
   @Before
   public void setup() throws Exception {
     System.out.println(System.getProperty("java.library.path"));
     assumeTrue(SnappyCodec.isNativeCodeLoaded());
+    conf = new SmartConf();
+    initConf(conf);
+
   }
 
   @Test
   public void test() {
-    int BYTE_SIZE = 1024 * 100;
-    byte[] bytes = BytesGenerator.get(BYTE_SIZE);
+    int BYTE_SIZE = 1024 * 500;
+    byte[] bytes1 = BytesGenerator.get(BYTE_SIZE);
+    byte[] bytes2 = BytesGenerator.get(BYTE_SIZE);
+    byte[] bytes = ArrayUtils.addAll(bytes1, bytes2);
     int bufferSize = 262144;
     int compressionOverhead = (bufferSize / 6) + 32;
     DataOutputStream deflateOut = null;
     DataInputStream inflateIn = null;
     try {
       DataOutputBuffer compressedDataBuffer = new DataOutputBuffer();
-      CompressionOutputStream deflateFilter = new BlockCompressorStream(
-          compressedDataBuffer, new SnappyCompressor(bufferSize), bufferSize,
-          compressionOverhead);
+      SmartDFSOutputStream deflateFilter = new SmartDFSOutputStream(
+          compressedDataBuffer, new SnappyCompressor(bufferSize), bufferSize);
       deflateOut = new DataOutputStream(new BufferedOutputStream(deflateFilter));
 
-      deflateOut.write(bytes, 0, bytes.length);
+      deflateOut.write(bytes1, 0, bytes1.length);
+      //deflateOut.flush();
+      //deflateFilter.finish();
+      //deflateOut.write(bytes2, 0, bytes2.length);
       deflateOut.flush();
       deflateFilter.finish();
+
+      List<Integer> compressedPositions = deflateFilter.compressedPositions;
 
       DataInputBuffer deCompressedDataBuffer = new DataInputBuffer();
       deCompressedDataBuffer.reset(compressedDataBuffer.getData(), 0,
@@ -68,11 +89,12 @@ public class TestSmartDFSOutputStream {
       inflateIn = new DataInputStream(new BufferedInputStream(inflateFilter));
 
       byte[] result = new byte[BYTE_SIZE];
+      //int skip = inflateIn.skipBytes(compressedPositions.get(0));
       inflateIn.read(result);
 
       Assert.assertArrayEquals(
           "original array not equals compress/decompressed array", result,
-          bytes);
+          bytes1);
     } catch (IOException e) {
       fail("testSnappyCompressorDecopressorLogicWithCompressionStreams ex error !!!");
     } finally {

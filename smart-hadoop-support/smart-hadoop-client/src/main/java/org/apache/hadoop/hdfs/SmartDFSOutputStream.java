@@ -5,9 +5,11 @@ import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileEncryptionInfo;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.io.compress.BlockCompressorStream;
 import org.apache.hadoop.io.compress.Compressor;
+import org.apache.hadoop.io.compress.CompressorStream;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.DataChecksum;
@@ -18,37 +20,42 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.ClosedChannelException;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 /**
  * SmartOutputStream.
  */
-public class SmartDFSOutputStream extends FilterOutputStream {
+public class SmartDFSOutputStream extends CompressorStream {
 
-  private Compressor compressor;
-  private BlockCompressorStream blockCompressorStream;
-
+  // buffer to save input and compress when it is full as a whole block
+  private byte[] bufferIn;
   private final int bufferSize;
-  private final int compressionOverhead;
+  private int count;
 
-  private volatile boolean closed;
+  private volatile boolean closed = false;
 
-  private SmartDFSOutputStream(DFSOutputStream dfsOutputStream,
-      Configuration conf) {
-    super(dfsOutputStream);
-    this.closed = false;
-    String compressionImpl = conf.get(SmartConfKeys.SMART_COMPRESSION_IMPL,
-        SmartConfKeys.SMART_COMPRESSION_IMPL_DEFAULT);
-    if (compressionImpl.equals("snappy")) {
-      compressor = new SnappyCompressor();
-    } else {
-      throw new RuntimeException("Unsupported compressor: " + compressionImpl);
-    }
-    bufferSize = conf.getInt(SmartConfKeys.SMART_COMPRESSION_BUFFER_SIZE,
-        SmartConfKeys.SMART_COMPRESSION_BUFFER_SIZE_DEFAULT);
-    compressionOverhead = (bufferSize / 6) + 32;
-    blockCompressorStream = new BlockCompressorStream(out, compressor,
-        bufferSize, compressionOverhead);
+  private int originPos = 0;
+  private int compressedPos = 0;
+  public List<Integer> originPositions;
+  public List<Integer> compressedPositions;
+
+  // The 'maximum' size of input data to be compressed, to account
+  // for the overhead of the compression algorithm.
+  private final int MAX_INPUT_SIZE;
+
+
+  public SmartDFSOutputStream(OutputStream outputStream, Compressor compressor,
+      int bufferSize) {
+    super(outputStream, compressor, bufferSize);
+    int compressionOverhead = (bufferSize / 6) + 32;
+    MAX_INPUT_SIZE = bufferSize - compressionOverhead;
+    this.bufferSize = bufferSize;
+    bufferIn = new byte[bufferSize];
+    this.count = 0;
+    originPositions = new ArrayList<>();
+    compressedPositions = new ArrayList<>();
   }
 
   static public SmartDFSOutputStream newStreamForCreate(DFSClient dfsClient,
@@ -59,25 +66,120 @@ public class SmartDFSOutputStream extends FilterOutputStream {
     DFSOutputStream dfsOutputStream = DFSOutputStream.newStreamForCreate(
         dfsClient, src, masked, flag, createParent, replication, blockSize,
         progress, buffersize, checksum, favoredNodes);
+
+    String compressionImpl = conf.get(SmartConfKeys.SMART_COMPRESSION_IMPL,
+        SmartConfKeys.SMART_COMPRESSION_IMPL_DEFAULT);
+    Compressor compressor;
+    if (compressionImpl.equals("snappy")) {
+      compressor = new SnappyCompressor();
+    } else {
+      throw new RuntimeException("Unsupported compressor: " + compressionImpl);
+    }
+    int bufferSize = conf.getInt(SmartConfKeys.SMART_COMPRESSION_BUFFER_SIZE,
+        SmartConfKeys.SMART_COMPRESSION_BUFFER_SIZE_DEFAULT);
+
     SmartDFSOutputStream smartDFSOutputStream = new SmartDFSOutputStream(
-        dfsOutputStream, conf);
+        dfsOutputStream, compressor, bufferSize);
     return smartDFSOutputStream;
   }
 
+  /**
+   * Write the data provided to the compression codec, compressing no more
+   * than the buffer size less the compression overhead as specified during
+   * construction for each block.
+   *
+   * Each block contains the uncompressed length for the block, followed by
+   * one or more length-prefixed blocks of compressed data.
+   */
   @Override
-  public void write(int b) throws IOException {
-    byte[] buf = new byte[]{(byte)b};
-    write(buf, 0, 1);
+  public void write(byte[] b, int off, int len) throws IOException {
+    // Sanity checks
+    if (compressor.finished()) {
+      throw new IOException("write beyond end of stream");
+    }
+    if (b == null) {
+      throw new NullPointerException();
+    } else if ((off < 0) || (off > b.length) || (len < 0) ||
+        ((off + len) > b.length)) {
+      throw new IndexOutOfBoundsException();
+    } else if (len == 0) {
+      return;
+    }
+
+    long limlen = compressor.getBytesRead();
+    if (len + limlen > MAX_INPUT_SIZE && limlen > 0) {
+      // Adding this segment would exceed the maximum size.
+      // Flush data if we have it.
+      finish();
+      compressor.reset();
+    }
+
+    if (len > MAX_INPUT_SIZE) {
+      // The data we're given exceeds the maximum size. Any data
+      // we had have been flushed, so we write out this chunk in segments
+      // not exceeding the maximum size until it is exhausted.
+      //rawWriteInt(len);
+      do {
+        int bufLen = Math.min(len, MAX_INPUT_SIZE);
+
+        compressor.setInput(b, off, bufLen);
+        compressor.finish();
+        while (!compressor.finished()) {
+          compress();
+        }
+        compressor.reset();
+        off += bufLen;
+        len -= bufLen;
+      } while (len > 0);
+      compressedPositions.add(compressedPos);
+      return;
+    }
+
+    // Give data to the compressor
+    compressor.setInput(b, off, len);
+    if (!compressor.needsInput()) {
+      // compressor buffer size might be smaller than the maximum
+      // size, so we permit it to flush if required.
+      //rawWriteInt((int)compressor.getBytesRead());
+      do {
+        compress();
+      } while (!compressor.needsInput());
+    }
   }
 
   @Override
-  public void write(byte b[], int off, int len) throws IOException {
-    blockCompressorStream.write(b, off, len);
+  public void finish() throws IOException {
+    if (!compressor.finished()) {
+      //rawWriteInt((int)compressor.getBytesRead());
+      compressor.finish();
+      while (!compressor.finished()) {
+        compress();
+      }
+    }
+  }
+
+  @Override
+  protected void compress() throws IOException {
+    int len = compressor.compress(buffer, 0, buffer.length);
+    if (len > 0) {
+      // Write out the compressed chunk
+      rawWriteInt(len);
+      out.write(buffer, 0, len);
+      compressedPos += len;
+    }
+  }
+
+  private void rawWriteInt(int v) throws IOException {
+    out.write((v >>> 24) & 0xFF);
+    out.write((v >>> 16) & 0xFF);
+    out.write((v >>>  8) & 0xFF);
+    out.write((v >>>  0) & 0xFF);
+    compressedPos += 4;
   }
 
   @Override
   public void close() throws IOException {
-    blockCompressorStream.close();
+
     closed = true;
   }
 
