@@ -36,6 +36,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -73,18 +74,20 @@ public class ActionRestApi {
       @PathParam("isDesc") String isDesc) {
     //    Integer intNumber = Integer.parseInt(listNumber);
     //    intNumber = intNumber > 0 ? intNumber : 0;
-    logger.info("pageIndex", pageIndex);
-    logger.info("numPerPage", numPerPage);
-    logger.info("orderBy", orderBy);
-    logger.info("isDesc", isDesc);
+    logger.info("pageIndex {}", pageIndex);
+    logger.info("numPerPage {}", numPerPage);
+    logger.info("orderBy {}", orderBy);
+    logger.info("isDesc {}", isDesc);
     try {
       //      return new JsonResponse<>(Response.Status.OK,
       //          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
-      Gson gson = new Gson();
-      List<String> orderByList = gson.fromJson(orderBy, new TypeToken<List<String>>() {
-      }.getType());
-      List<Boolean> isDescList = gson.fromJson(isDesc, new TypeToken<List<String>>() {
-      }.getType());
+      List<String> orderByList = Arrays.asList(orderBy.split(","));
+      List<String> isDescStringList = Arrays.asList(isDesc.split(","));
+      List<Boolean> isDescList = new ArrayList<>();
+
+      for (int i = 0; i < isDescStringList.size(); i++) {
+        isDescList.add(Boolean.parseBoolean(isDescStringList.get(i)));
+      }
 
       return new JsonResponse<>(Response.Status.OK,
           smartEngine.getCmdletManager().listActions(Integer.parseInt(pageIndex),
