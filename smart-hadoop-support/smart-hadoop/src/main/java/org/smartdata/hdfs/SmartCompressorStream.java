@@ -39,7 +39,7 @@ import java.util.List;
 /**
  * SmartOutputStream.
  */
-public class CompressionDFSOutputStream extends CompressorStream {
+public class SmartCompressorStream extends CompressorStream {
 
   // buffer to save input and compress when it is full as a whole block
   private byte[] bufferIn;
@@ -58,8 +58,8 @@ public class CompressionDFSOutputStream extends CompressorStream {
   private final int MAX_INPUT_SIZE;
 
 
-  public CompressionDFSOutputStream(OutputStream outputStream, Compressor compressor,
-      int bufferSize) {
+  public SmartCompressorStream(OutputStream outputStream, Compressor compressor,
+                               int bufferSize) {
     super(outputStream, compressor, bufferSize);
     int compressionOverhead = (bufferSize / 6) + 32;
     MAX_INPUT_SIZE = bufferSize - compressionOverhead;
