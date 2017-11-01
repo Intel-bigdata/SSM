@@ -59,9 +59,9 @@ public class AgentMaster {
   private ActorSystem system;
   private ActorRef master;
   private AgentManager agentManager;
-  private CmdletManager statusUpdater;
   private SmartConf conf;
 
+  private static CmdletManager statusUpdater;
   private static int tikvNumber = 0;
   private static AgentMaster agentMaster = null;
 
@@ -111,8 +111,8 @@ public class AgentMaster {
     }
   }
 
-  public void setCmdletManager(CmdletManager statusUpdater) {
-    this.statusUpdater = statusUpdater;
+  public static void setCmdletManager(CmdletManager statusUpdater) {
+    AgentMaster.statusUpdater = statusUpdater;
   }
 
   public boolean canAcceptMore() {
@@ -241,7 +241,7 @@ public class AgentMaster {
         LOG.info("Register SmartAgent {} from {}", id, agent);
         return true;
       } else if (message instanceof StatusMessage) {
-        statusUpdater.updateStatus((StatusMessage) message);
+        AgentMaster.statusUpdater.updateStatus((StatusMessage) message);
         return true;
       } else if (message instanceof AlreadyLaunchedTikv) {
         LOG.info(message.toString());

@@ -83,7 +83,7 @@ public class AgentToMaster {
     }
 
     public String toString() {
-      return id.toString() + " already launched Tikv.";
+      return "Agent" + "[" + id.toString() + "]" + " already launched Tikv.";
     }
   }
 }
