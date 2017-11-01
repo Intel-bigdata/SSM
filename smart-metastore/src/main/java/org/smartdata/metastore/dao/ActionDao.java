@@ -158,10 +158,12 @@ public class ActionDao {
         ifHasAid = true;
       }
       sql = sql + orderBy.get(i);
-      if (isDesc.get(i)) {
-        sql = sql + " desc ";
+      if (isDesc.size() > i) {
+        if (isDesc.get(i)) {
+          sql = sql + " desc ";
+        }
+        sql = sql + ",";
       }
-      sql = sql + ",";
     }
 
     if (!ifHasAid) {
@@ -172,6 +174,13 @@ public class ActionDao {
     sql = sql.substring(0, sql.length() - 1);
     //add limit
     sql = sql + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new ActionRowMapper());
+  }
+
+  public List<ActionInfo> getAPageOfAction(long start, long offset) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    boolean ifHasAid = false;
+    String sql = "SELECT * FROM " + TABLE_NAME + " LIMIT " + start + "," + offset + ";";
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
