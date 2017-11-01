@@ -1,4 +1,3 @@
-<div class="col-md-12">
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -17,33 +16,59 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-  <!-- control toolbar -->
-  <div class="row">
-    <div class="col-md-6 col-sm-6">
+<h3 class="text-center">Actions</h3>
+<div class="col-md-offset-1 col-md-10">
+  <br/>
+  <table class="table table-bordered">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Create Time</th>
+      <th>Finish Time</th>
+      <th>Running Time</th>
+      <th>Status</th>
+      <th>Progress</th>
+      <th>Actions</th>
+    </tr>
+  </table>
+  <tbody>
+    <tr ng-repeat="action in actions">
+      <td>{{action.actionId}}</td>
+      <td>{{action.actionName}}</td>
+      <td>{{action.createTime}}</td>
+      <td>{{action.finished ? action.finishTime : "-"}}</td>
+      <td>{{action.finished ? action.uptime : "-"}}</td>
+      <td>{{action.finished ? action.successful ? "Successful" : "Faild" : "-"}}</td>
+      <td>
+        <div ng-if="action.finished" style="width: 100%"><span class="small pull-left"></span> <span
+          class="small pull-right" ng-bind="action.progress + '%'"></span></div>
+        <div style="clear: both; height: 1px"></div>
+        <div style="width: 100%" class="progress progress-tiny">
+          <div ng-style="{'width': action.progress+'%'}" class="progress-bar {{usageClass}}"></div>
+        </div>
+      </td>
+      <td>
+        <button type="button" class="btn btn-default btn-xs btn-info"
+                ng-click="click(action.actionId)" ng-attr-bs-tooltip="tooltip">
+          <span class="glyphicon glyphicon-info-sign"></span>
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</div>
+<div class="page-list">
+  <ul class="pagination" ng-show="conf.totalItems > 0">
+    <li ng-class="{disabled: conf.currentPage == 1}" ng-click="prevPage()"><span>&laquo;</span></li>
+    <li ng-repeat="item in pageList track by $index" ng-class={active: item == conf.currentPage, separate: item == \'...\'}
+    ng-click="changeCurrentPage(item)">
+    <span>{{ item }}</span>
+    </li>
+    <li ng-class="{disabled: conf.currentPage == conf.numberOfPages}" ng-click="nextPage()"><span>&raquo;</span></li>
+    </ul>
+  <div class="page-total" ng-show="conf.totalItems > 0">
+    每页<select ng-model="conf.itemsPerPage" ng-options="option for option in conf.perPageOptions " ng-change="changeItemsPerPage()"></select>
+    /共<strong>10</strong>条
+    跳转至<input type="text" ng-model="jumpPageNum" ng-keyup="jumpPageKeyUp($event)"/>
     </div>
-    <div class="col-md-3 col-sm-6 text-right">
-      <!--FILTER-->
-    </div>
-    <div class="col-md-3 hidden-sm hidden-xs">
-      <searchbox
-        ng-show="actionsTable.rows && actionsTable.rows.length > 0"
-        ng-model="search" placeholder="Search Actions"></searchbox>
-    </div>
+  <div class="no-items" ng-show="conf.totalItems <= 0">暂无数据</div>
   </div>
-  <!-- end of control toolbar -->
-</div>
-
-<div class="col-md-12">
-  <sortable-table
-    columns-bind="actionsTable.cols"
-    records-bind="actionsTable.rows"
-    search-bind="search"
-    pagination="10">
-    <div class="table-no-data">
-      <h2 class="glyphicon glyphicon-bullhorn"></h2>
-      <h4>No action is running</h4>
-
-      <p>Please submit a action first.</p>
-    </div>
-  </sortable-table>
-</div>

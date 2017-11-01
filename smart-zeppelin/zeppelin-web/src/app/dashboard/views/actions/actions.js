@@ -96,4 +96,3 @@ angular.module('zeppelinWebApp')
       updateTable(actions);
     });
   }
-
