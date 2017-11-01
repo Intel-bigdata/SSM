@@ -877,7 +877,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throws MetaStoreException {
     LOG.debug("List Action, start {}, offset {}", start, offset);
     try {
-      return actionDao.getAPageOfAction(start, offset, orderBy, desc);
+      if (orderBy.size() == 0) {
+        return actionDao.getAPageOfAction(start, offset);
+      } else {
+        return actionDao.getAPageOfAction(start, offset, orderBy, desc);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
