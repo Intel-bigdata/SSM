@@ -32,7 +32,8 @@ public class AgentExecutorService extends CmdletExecutorService {
 
   public AgentExecutorService(SmartConf conf, CmdletManager cmdletManager) throws IOException {
     super(cmdletManager, ExecutorType.AGENT);
-    this.master = new AgentMaster(conf, cmdletManager);
+    this.master = AgentMaster.getAgentMaster(conf);
+    master.setCmdletManager(cmdletManager);
   }
 
   @Override

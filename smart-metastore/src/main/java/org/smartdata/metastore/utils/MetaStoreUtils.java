@@ -81,6 +81,45 @@ public class MetaStoreUtils {
     }
   }
 
+  public static boolean isTablesExist(Connection conn) throws MetaStoreException {
+    String tableName[] = new String[]{
+            "access_count_table",
+            "blank_access_count_info",
+            "cached_file",
+            "ec_policy",
+            "file",
+            "user_group",
+            "owner",
+            "storage",
+            "storage_policy",
+            "xattr",
+            "datanode_info",
+            "datanode_storage_info",
+            "rule",
+            "cmdlet",
+            "action",
+            "file_diff",
+            "global_config",
+            "cluster_config",
+            "sys_info",
+            "cluster_info",
+            "backup_file",
+    };
+    try {
+      String url = conn.getMetaData().getURL();
+      String dbName = getDBName(url);
+      for (String table : tableName) {
+        String query = String.format("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' and TABLE_NAME='%s'", dbName, table);
+        if (isEmptyResultSet(conn, query)) {
+          return false;
+        }
+      }
+      return true;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public static void initializeDataBase(
       Connection conn) throws MetaStoreException {
     String createEmptyTables[] = new String[]{
@@ -317,6 +356,17 @@ public class MetaStoreUtils {
     }
   }
 
+  public static boolean isEmptyResultSet(Connection conn, String sql)
+          throws MetaStoreException {
+    try {
+      Statement s = conn.createStatement();
+      ResultSet rs = s.executeQuery(sql);
+      return !rs.next();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public static boolean supportsBatchUpdates(Connection conn) {
     try {
       return conn.getMetaData().supportsBatchUpdates();
@@ -327,6 +377,10 @@ public class MetaStoreUtils {
 
   public static void formatDatabase(SmartConf conf) throws MetaStoreException {
     getDBAdapter(conf).formatDataBase();
+  }
+
+  public static void checkTables(SmartConf conf) throws MetaStoreException {
+    getDBAdapter(conf).checkTables();
   }
 
   public static String getDBName(String url) throws SQLException {

@@ -18,17 +18,43 @@
 package org.smartdata.conf;
 
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Console;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Scanner;
 
 /**
  * SSM related configurations as well as HDFS configurations.
  */
 public class SmartConf extends Configuration {
+  private final static String AGENTS_FILE_PATH = "conf/agents";
+  private final static Logger LOG = LoggerFactory.getLogger(SmartConf.class);
+
   public SmartConf() {
     Configuration.addDefaultResource("smart-default.xml");
     Configuration.addDefaultResource("smart-site.xml");
+  }
+
+  public int getAgentsNumber() {
+    Scanner sc;
+    try {
+      sc = new Scanner(new File(AGENTS_FILE_PATH));
+    } catch (FileNotFoundException ex) {
+      LOG.error("Cannot find the configure file named agents!");
+      return 0;
+    }
+    int num = 0;
+    while (sc.hasNextLine()) {
+      String host = sc.nextLine().trim();
+      if (!host.startsWith("#") && !host.isEmpty()) {
+        num++;
+      }
+    }
+    return num;
   }
 
   public static void main(String[] args) {

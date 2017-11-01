@@ -41,10 +41,13 @@ import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.utils.GenericOptionsParser;
+import org.smartdata.tidb.TikvServer;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -117,11 +120,14 @@ public class SmartAgent implements StatusReporter {
 
     private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
     private final static FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
+    private final static String TIKV_OPTIONS = "--data-dir=tikv --log-file=logs/tikv.log";
+    private final static String PD_PORT = "2379";
 
     private MasterToAgent.AgentId id;
     private ActorRef master;
     private final SmartAgent agent;
     private final String[] masters;
+    private String masterHost;
 
     public AgentActor(SmartAgent agent, String[] masters) {
       this.agent = agent;
@@ -131,6 +137,18 @@ public class SmartAgent implements StatusReporter {
     @Override
     public void onReceive(Object message) throws Exception {
       unhandled(message);
+    }
+
+    public boolean launchTikv() throws InterruptedException {
+      //TODO: configure in the file
+      String tikvArgs = "--pd=" + masterHost + ":" + PD_PORT + " " + TIKV_OPTIONS;
+      TikvServer tikvServer = new TikvServer(tikvArgs);
+      Thread tikvThread = new Thread(tikvServer);
+      tikvThread.start();
+      while (!tikvServer.isReady()) {
+        Thread.sleep(100);
+      }
+      return true;
     }
 
     @Override
@@ -170,6 +188,7 @@ public class SmartAgent implements StatusReporter {
           master = identity.getRef();
           if (master != null) {
             findMaster.cancel();
+            masterHost = master.path().address().host().get();
             Cancellable registerAgent =
                 AgentUtils.repeatActionUntil(getContext().system(), Duration.Zero(),
                     RETRY_INTERVAL, TIMEOUT,
@@ -217,6 +236,12 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof StatusMessage) {
           master.tell(message, getSelf());
           getSender().tell("status reported", getSelf());
+        } else if (message instanceof ReadyToLaunchTikv) {
+          boolean launched = launchTikv();
+          if (launched) {
+            LOG.info("Tikv server is ready.");
+            master.tell(new AlreadyLaunchedTikv(id), getSelf());
+          }
         } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {

@@ -38,14 +38,18 @@ import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StatesManager;
+import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.tidb.LaunchDB;
+import org.smartdata.tidb.PdServer;
+import org.smartdata.tidb.TidbServer;
 import org.smartdata.utils.JaasLoginUtil;
 
 import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Scanner;
 
 /**
  * From this Smart Storage Management begins.
@@ -123,19 +127,44 @@ public class SmartServer {
     return startOpt;
   }
 
-  static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
-    if (isTidbEnabled(conf)) {
+  public static void startDB(SmartConf conf) throws InterruptedException, IOException {
+    if (conf.getAgentsNumber() != 0) {
+      AgentMaster agentMaster = AgentMaster.getAgentMaster(conf);
+      String pdArgs = new String("--data-dir=pd --log-file=logs/pd.log");
+      PdServer pdServer = new PdServer(pdArgs);
+      Thread pdThread = new Thread(pdServer);
+      pdThread.start();
+      while (!pdServer.isReady() || !agentMaster.isAgentRegisterReady()) {
+        Thread.sleep(100);
+      }
+      LOG.info("Pd server is ready.");
+      agentMaster.sendLaunchTikvMessage();
+      while (!agentMaster.isAlreadyLaunchedTikv()) {
+        Thread.sleep(100);
+      }
+      LOG.info("Tikv server is ready.");
+      String tidbArgs = new String("--store=tikv --path=127.0.0.1:2379 --lease=1s --log-file=logs/tidb.log");
+      TidbServer tidbServer = new TidbServer(tidbArgs);
+      Thread tidbThread = new Thread(tidbServer);
+      tidbThread.start();
+      while (!tidbServer.isReady()) {
+        Thread.sleep(100);
+      }
+      LOG.info("Tidb server is ready.");
+    } else {
       LaunchDB launchDB = new LaunchDB();
       Thread db = new Thread(launchDB);
-      LOG.info("Starting PD, TiKV and TiDB..");
+      LOG.info("Starting Pd, Tikv and Tidb..");
       db.start();
-      try {
-        while (!launchDB.isCompleted()) {
-          Thread.sleep(100);
-        }
-      } catch (InterruptedException ex) {
-        LOG.error(ex.getMessage());
+      while (!launchDB.isCompleted()) {
+        Thread.sleep(100);
       }
+    }
+  }
+
+  static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
+    if (isTidbEnabled(conf)) {
+      startDB(conf);
     }
 
     if (startOption == StartupOption.FORMAT) {
@@ -144,6 +173,8 @@ public class SmartServer {
       LOG.info("Formatting DataBase finished successfully!");
       return null;
     }
+
+    MetaStoreUtils.checkTables(conf);
 
     SmartServer ssm = new SmartServer(conf);
     try {

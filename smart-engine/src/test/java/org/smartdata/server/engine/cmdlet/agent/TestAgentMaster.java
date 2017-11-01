@@ -32,8 +32,7 @@ public class TestAgentMaster {
   @Test
   @Ignore
   public void testAgentMaster() throws Exception {
-    CmdletManager statusUpdater = mock(CmdletManager.class);
-    AgentMaster master = new AgentMaster(statusUpdater);
+    AgentMaster master = AgentMaster.getAgentMaster();
 
     // Wait for master to start
     while(master.getMasterActor() == null);

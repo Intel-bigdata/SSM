@@ -1264,6 +1264,19 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public synchronized void checkTables() throws MetaStoreException {
+    Connection conn = getConnection();
+    try {
+      if (!MetaStoreUtils.isTablesExist(conn)) {
+        formatDataBase();
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
   public synchronized void formatDataBase() throws MetaStoreException {
     dropAllTables();
     initializeDataBase();

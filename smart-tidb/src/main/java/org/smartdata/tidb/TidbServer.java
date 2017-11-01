@@ -38,7 +38,7 @@ public class TidbServer implements Runnable {
     try {
       tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
     } catch (UnsatisfiedLinkError ex) {
-      LOG.error("libtidb.so is not found!");
+      LOG.error("libtidb.so can not be found or loaded!");
     }
   }
 
@@ -47,7 +47,7 @@ public class TidbServer implements Runnable {
   }
 
   public void run() {
-    LOG.info("Starting TiDB..");
+    LOG.info("Starting Tidb..");
     tidb.startServer(args);
   }
 }
