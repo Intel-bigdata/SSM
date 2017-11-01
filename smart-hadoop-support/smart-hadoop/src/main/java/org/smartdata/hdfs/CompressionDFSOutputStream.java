@@ -15,25 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.hdfs;
+package org.smartdata.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
-import org.apache.hadoop.fs.FileEncryptionInfo;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
-import org.apache.hadoop.io.compress.BlockCompressorStream;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DFSOutputStream;
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.CompressorStream;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
-import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.DataChecksum;
 import org.apache.hadoop.util.Progressable;
 import org.smartdata.conf.SmartConfKeys;
 
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.ClosedChannelException;
@@ -44,7 +39,7 @@ import java.util.List;
 /**
  * SmartOutputStream.
  */
-public class SmartDFSOutputStream extends CompressorStream {
+public class CompressionDFSOutputStream extends CompressorStream {
 
   // buffer to save input and compress when it is full as a whole block
   private byte[] bufferIn;
@@ -63,7 +58,7 @@ public class SmartDFSOutputStream extends CompressorStream {
   private final int MAX_INPUT_SIZE;
 
 
-  public SmartDFSOutputStream(OutputStream outputStream, Compressor compressor,
+  public CompressionDFSOutputStream(OutputStream outputStream, Compressor compressor,
       int bufferSize) {
     super(outputStream, compressor, bufferSize);
     int compressionOverhead = (bufferSize / 6) + 32;
@@ -73,31 +68,6 @@ public class SmartDFSOutputStream extends CompressorStream {
     this.count = 0;
     originPositions = new ArrayList<>();
     compressedPositions = new ArrayList<>();
-  }
-
-  static public SmartDFSOutputStream newStreamForCreate(DFSClient dfsClient,
-      String src, FsPermission masked, EnumSet<CreateFlag> flag,
-      boolean createParent, short replication, long blockSize,
-      Progressable progress, int buffersize, DataChecksum checksum,
-      String[] favoredNodes, Configuration conf) throws IOException {
-    DFSOutputStream dfsOutputStream = DFSOutputStream.newStreamForCreate(
-        dfsClient, src, masked, flag, createParent, replication, blockSize,
-        progress, buffersize, checksum, favoredNodes);
-
-    String compressionImpl = conf.get(SmartConfKeys.SMART_COMPRESSION_IMPL,
-        SmartConfKeys.SMART_COMPRESSION_IMPL_DEFAULT);
-    Compressor compressor;
-    if (compressionImpl.equals("snappy")) {
-      compressor = new SnappyCompressor();
-    } else {
-      throw new RuntimeException("Unsupported compressor: " + compressionImpl);
-    }
-    int bufferSize = conf.getInt(SmartConfKeys.SMART_COMPRESSION_BUFFER_SIZE,
-        SmartConfKeys.SMART_COMPRESSION_BUFFER_SIZE_DEFAULT);
-
-    SmartDFSOutputStream smartDFSOutputStream = new SmartDFSOutputStream(
-        dfsOutputStream, compressor, bufferSize);
-    return smartDFSOutputStream;
   }
 
   /**
