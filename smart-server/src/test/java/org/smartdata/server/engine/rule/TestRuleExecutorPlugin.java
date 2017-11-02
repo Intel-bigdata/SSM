@@ -44,8 +44,7 @@ public class TestRuleExecutorPlugin extends MiniSmartClusterHarness {
       String rule = "file: every 1s \n | length > 10 | cache";
       SmartAdmin client = new SmartAdmin(smartContext.getConf());
 
-      long ruleId = 0l;
-      ruleId = client.submitRule(rule, RuleState.ACTIVE);
+      long ruleId = client.submitRule(rule, RuleState.ACTIVE);
 
       Assert.assertEquals(plugin.getNumOnNewRuleExecutor(), 1);
       Thread.sleep(3000);
@@ -97,8 +96,8 @@ public class TestRuleExecutorPlugin extends MiniSmartClusterHarness {
       return objects;
     }
 
-    public CmdletDescriptor preSubmitCmdletDescriptor(final RuleInfo ruleInfo, TranslateResult tResult,
-        CmdletDescriptor descriptor) {
+    public CmdletDescriptor preSubmitCmdletDescriptor(
+        final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
       return descriptor;
     }
 

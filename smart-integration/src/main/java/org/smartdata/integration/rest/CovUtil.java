@@ -20,8 +20,8 @@ package org.smartdata.integration.rest;
 public class CovUtil {
   public static Long getLong(Object o) {
     if (o instanceof Integer) {
-      return new Long((Integer)o);
+      return new Long((Integer) o);
     }
-    return (Long)o;
+    return (Long) o;
   }
 }

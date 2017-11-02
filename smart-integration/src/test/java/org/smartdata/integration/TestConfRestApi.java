@@ -37,7 +37,7 @@ public class TestConfRestApi extends IntegrationTestBase {
     response.then().body("status", Matchers.equalTo("OK"));
     Map confMap = response.jsonPath().getMap("body");
     Assert.assertEquals("true", confMap.get(SmartConfKeys.SMART_DFS_ENABLED));
-    Assert.assertTrue(((String)confMap.get(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY))
+    Assert.assertTrue(((String) confMap.get(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY))
       .contains("localhost"));
   }
 }

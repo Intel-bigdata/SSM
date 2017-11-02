@@ -43,6 +43,7 @@ import org.smartdata.tidb.LaunchDB;
 import org.smartdata.utils.JaasLoginUtil;
 
 import javax.security.auth.Subject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -196,7 +197,8 @@ public class SmartServer {
   }
 
   private static boolean isTidbEnabled(SmartConf conf) {
-    return conf.getBoolean(SmartConfKeys.SMART_TIDB_ENABLED,SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
+    return conf.getBoolean(
+        SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
   }
 
   private void checkSecurityAndLogin() throws IOException {
@@ -316,18 +318,22 @@ public class SmartServer {
     try {
       context.setServiceMode(ServiceMode.valueOf(serviceModeStr.trim().toUpperCase()));
     } catch (IllegalStateException e) {
-      String errorMsg = "Illegal service mode '" + serviceModeStr + "' set in property: "+
-          SmartConfKeys.SMART_SERVICE_MODE_KEY + "!";
+      String errorMsg =
+          "Illegal service mode '"
+              + serviceModeStr
+              + "' set in property: "
+              + SmartConfKeys.SMART_SERVICE_MODE_KEY
+              + "!";
       LOG.error(errorMsg);
       throw e;
     }
-    LOG.info("Initialized service mode: "+ context.getServiceMode().getName() + ".");
+    LOG.info("Initialized service mode: " + context.getServiceMode().getName() + ".");
   }
 
   private static StartupOption parseArguments(String args[]) {
     int argsLen = (args == null) ? 0 : args.length;
     StartupOption startOpt = StartupOption.REGULAR;
-    for(int i=0; i < argsLen; i++) {
+    for (int i = 0; i < argsLen; i++) {
       String cmd = args[i];
       if (StartupOption.FORMAT.getName().equalsIgnoreCase(cmd)) {
         startOpt = StartupOption.FORMAT;

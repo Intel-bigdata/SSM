@@ -18,12 +18,6 @@
 package org.smartdata.integration;
 
 import org.junit.Test;
-import org.smartdata.integration.rest.RuleRestApi;
-
-import static org.smartdata.integration.rest.ClusterRestApi.getCachedFilePaths;
-import static org.smartdata.integration.rest.CmdletRestApi.submitCmdlet;
-import static org.smartdata.integration.rest.CmdletRestApi.waitCmdletComplete;
-import static org.smartdata.integration.rest.RuleRestApi.startRule;
 
 public class TestCaseCacheFile extends IntegrationTestBase {
 

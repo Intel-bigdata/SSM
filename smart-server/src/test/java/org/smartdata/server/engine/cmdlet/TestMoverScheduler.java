@@ -36,7 +36,7 @@ public class TestMoverScheduler extends MiniSmartClusterHarness {
     Path filePath = new Path(file);
     int numBlocks = 2;
     DistributedFileSystem fs = cluster.getFileSystem();
-    DFSTestUtil.createFile(fs, filePath, numBlocks * DEFAULT_BLOCK_SIZE, (short)3, 100);
+    DFSTestUtil.createFile(fs, filePath, numBlocks * DEFAULT_BLOCK_SIZE, (short) 3, 100);
     fs.setStoragePolicy(filePath, "ALL_SSD");
 
     CmdletManager cmdletManager = ssm.getCmdletManager();
