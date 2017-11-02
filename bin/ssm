@@ -21,6 +21,7 @@ Usage="ssm --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend]
 
 #The tikv server will fail to start if http_proxy is set
 unset http_proxy
+unset https_proxy
 
 SCRIPT_ARGS="$*"
 
