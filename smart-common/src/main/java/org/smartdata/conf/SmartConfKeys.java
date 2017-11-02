@@ -53,6 +53,9 @@ public class SmartConfKeys {
   public static final String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
 
   // StatesManager
+  // Directories are separated with ','
+  public static final String SMART_SERVER_IGNORE_FILE_DIRS_KEY =
+      "smart.server.ignore.file.dirs";
 
   // RuleManager
   public static final String SMART_RULE_EXECUTORS_KEY = "smart.rule.executors";
