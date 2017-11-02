@@ -19,24 +19,18 @@ package org.smartdata.server.engine.cmdlet;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.*;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.SmartContext;
 import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.hdfs.action.CacheFileAction;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.model.CmdletState;
-import org.smartdata.conf.SmartConf;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Cmdlet Unit Test
+ * Cmdlet Unit Test.
  */
 public class TestCmdlet extends MiniClusterHarness {
 

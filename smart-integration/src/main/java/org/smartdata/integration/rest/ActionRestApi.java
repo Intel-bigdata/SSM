@@ -47,7 +47,7 @@ public class ActionRestApi extends RestApiBase {
     cmdletInfo.then().body("status", Matchers.equalTo("OK"));
     JsonPath cmdletInfoPath = new JsonPath(cmdletInfo.asString());
     List<Long> ret = new ArrayList<>();
-    for (Object obj: (List)cmdletInfoPath.getMap("body").get("aids")) {
+    for (Object obj: (List) cmdletInfoPath.getMap("body").get("aids")) {
       ret.add(CovUtil.getLong(obj));
     }
     return ret;

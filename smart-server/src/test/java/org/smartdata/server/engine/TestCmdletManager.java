@@ -24,11 +24,6 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
@@ -48,12 +43,19 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 public class TestCmdletManager extends MiniSmartClusterHarness {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   private CmdletDescriptor generateCmdletDescriptor() throws Exception {
     String cmd =
-        "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024";
+        "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; "
+            + "write -file /test -length 1024";
     CmdletDescriptor cmdletDescriptor = new CmdletDescriptor(cmd);
     cmdletDescriptor.setRuleId(1);
     return cmdletDescriptor;
@@ -85,7 +87,8 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     Assert.assertTrue(ActionRegistry.supportedActions().size() > 0);
     CmdletManager cmdletManager = ssm.getCmdletManager();
     cmdletManager.submitCmdlet(
-        "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; write -file /test -length 1024");
+        "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; "
+            + "write -file /test -length 1024");
     Thread.sleep(1200);
     List<ActionInfo> actionInfos = cmdletManager.listNewCreatedActions(10);
     Assert.assertTrue(actionInfos.size() > 0);

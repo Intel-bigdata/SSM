@@ -60,7 +60,8 @@ public class Util {
     retryUntil(retryTask, maxRetries, 1000);
   }
 
-  public static void retryUntil(RetryTask retryTask, int maxRetries, long interval) throws InterruptedException {
+  public static void retryUntil(RetryTask retryTask, int maxRetries, long interval)
+      throws InterruptedException {
     boolean met = false;
     int retries = 0;
 
@@ -109,7 +110,8 @@ public class Util {
     return buildProcess(new String[0], mainClass, arguments);
   }
 
-  public static Process buildProcess(String[] classPath, String mainClass, String[] arguments) throws IOException {
+  public static Process buildProcess(String[] classPath, String mainClass, String[] arguments)
+      throws IOException {
     return buildProcess(new String[0], classPath, mainClass, arguments);
   }
 }
