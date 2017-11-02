@@ -30,6 +30,7 @@ import org.smartdata.metastore.dao.CacheFileDao;
 import org.smartdata.metastore.dao.ClusterConfigDao;
 import org.smartdata.metastore.dao.ClusterInfoDao;
 import org.smartdata.metastore.dao.CmdletDao;
+import org.smartdata.metastore.dao.CompressionFileDao;
 import org.smartdata.metastore.dao.DataNodeInfoDao;
 import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
 import org.smartdata.metastore.dao.FileDiffDao;
@@ -62,6 +63,7 @@ import org.smartdata.model.FileInfo;
 import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.SmartFileCompressionInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.SystemInfo;
@@ -114,6 +116,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private BackUpInfoDao backUpInfoDao;
   private ClusterInfoDao clusterInfoDao;
   private SystemInfoDao systemInfoDao;
+  private CompressionFileDao compressionFileDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -136,6 +139,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
+    compressionFileDao = new CompressionFileDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -188,6 +192,25 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  /**
+   * Insert a new compressed file into database.
+   *
+   * @param compressionInfo
+   */
+  public synchronized void insertCompressedFile(
+      SmartFileCompressionInfo compressionInfo) {
+    compressionFileDao.insert(compressionInfo);
+  }
+
+  /**
+   * Delete a compressed file from database.
+   *
+   * @param fileName
+   */
+  public synchronized void deleteCompressedFile(String fileName) {
+    compressionFileDao.deleteByName(fileName);
   }
 
   /**
