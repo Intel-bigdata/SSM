@@ -17,8 +17,8 @@
  */
 package org.smartdata.model;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A class to maintain info of compressed files.
@@ -27,12 +27,14 @@ public class SmartFileCompressionInfo {
 
   private String fileName;
   private int bufferSize;
-  private Map<Integer, Integer> offsetMapping;
+  private List<Integer> originalPos;
+  private List<Integer> compressedPos;
 
   public SmartFileCompressionInfo(String fileName, int bufferSize) {
     this.fileName = fileName;
     this.bufferSize = bufferSize;
-    offsetMapping = new HashMap<>();
+    originalPos = new ArrayList<>();
+    compressedPos = new ArrayList<>();
   }
 
   public int getBufferSize() {
@@ -41,5 +43,18 @@ public class SmartFileCompressionInfo {
 
   public String getFileName() {
     return fileName;
+  }
+
+  public List<Integer> getOriginalPos() {
+    return originalPos;
+  }
+
+  public List<Integer> getCompressedPos() {
+    return compressedPos;
+  }
+
+  public void setPositionMapping(int originalPosition, int compressedPosition) {
+    originalPos.add(originalPosition);
+    compressedPos.add(compressedPosition);
   }
 }

@@ -104,7 +104,8 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS cluster_config",
         "DROP TABLE IF EXISTS backup_file",
         "DROP TABLE IF EXISTS sys_info",
-        "DROP TABLE IF EXISTS cluster_info"
+        "DROP TABLE IF EXISTS cluster_info",
+        "DROP TABLE IF EXISTS compression_file"
     };
     String createEmptyTables[] = new String[]{
         "CREATE TABLE access_count_table (\n" +
@@ -291,7 +292,12 @@ public class MetaStoreUtils {
             " dest varchar(4096) NOT NULL,\n" +
             " period bigint(20) NOT NULL\n" +
             ") ;",
-        "CREATE INDEX backup_file_rid_idx ON backup_file (rid);"
+        "CREATE INDEX backup_file_rid_idx ON backup_file (rid);",
+
+        "CREATE TABLE compression_file (\n" +
+            " file_name varchar(1000) PRIMARY KEY,\n" +
+            " buffer_size int(11) NOT NULL\n" +
+            ");"
     };
     try {
       String url = conn.getMetaData().getURL();
