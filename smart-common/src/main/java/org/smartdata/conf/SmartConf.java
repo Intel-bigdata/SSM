@@ -40,12 +40,11 @@ public class SmartConf extends Configuration {
   }
 
   public int getAgentsNumber() {
-    Scanner sc;
+    Scanner sc = null;
     try {
       sc = new Scanner(new File(AGENTS_FILE_PATH));
     } catch (FileNotFoundException ex) {
       LOG.error("Cannot find the configure file named agents!");
-      return 0;
     }
     int num = 0;
     while (sc.hasNextLine()) {

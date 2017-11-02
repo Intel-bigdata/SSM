@@ -134,7 +134,7 @@ public class SmartServer {
       String host = agentMaster.getAgentMasterHost();
       InetAddress address = InetAddress.getByName(host);
       String ip = address.getHostAddress();
-      String pdArgs = new String("--client-urls=http://" + ip + ":2379 --data-dir=pd --log-file=logs/pd.log");
+      String pdArgs = String.format("--client-urls=http://%s:2379 --peer-urls=http://%s:2380 --data-dir=pd --log-file=logs/pd.log", ip, ip);
       PdServer pdServer = new PdServer(pdArgs);
       Thread pdThread = new Thread(pdServer);
       pdThread.start();
@@ -147,7 +147,7 @@ public class SmartServer {
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");
-      String tidbArgs = new String("--store=tikv --path=" + host + ":2379 --lease=1s --log-file=logs/tidb.log");
+      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=1s --log-file=logs/tidb.log", host);
       TidbServer tidbServer = new TidbServer(tidbArgs);
       Thread tidbThread = new Thread(tidbServer);
       tidbThread.start();

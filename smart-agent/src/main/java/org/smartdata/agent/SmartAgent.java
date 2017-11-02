@@ -52,6 +52,8 @@ import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -60,6 +62,7 @@ public class SmartAgent implements StatusReporter {
   private final static Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
   private ActorRef agentActor;
+  private String host;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
@@ -74,6 +77,8 @@ public class SmartAgent implements StatusReporter {
     }
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
+    AgentUtils.HostPort hostPort = new AgentUtils.HostPort(agentAddress);
+    agent.host = hostPort.getHost();
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
   }
@@ -120,8 +125,8 @@ public class SmartAgent implements StatusReporter {
 
     private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
     private final static FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
-    private final static String TIKV_OPTIONS = "--data-dir=tikv --log-file=logs/tikv.log";
     private final static String PD_PORT = "2379";
+    private final static String TIKV_PORT = "20160";
 
     private MasterToAgent.AgentId id;
     private ActorRef master;
@@ -139,9 +144,11 @@ public class SmartAgent implements StatusReporter {
       unhandled(message);
     }
 
-    public boolean launchTikv() throws InterruptedException {
+    public boolean launchTikv() throws InterruptedException, UnknownHostException {
       //TODO: configure in the file
-      String tikvArgs = new String("--pd=" + masterHost + ":" + PD_PORT + " " + TIKV_OPTIONS);
+      InetAddress address = InetAddress.getByName(agent.host);
+      String ip = address.getHostAddress();
+      String tikvArgs = String.format("--pd=%s:%s --addr=%s:%s --data-dir=tikv --log-file=logs/tikv.log", masterHost, PD_PORT, ip, TIKV_PORT);
       TikvServer tikvServer = new TikvServer(tikvArgs);
       Thread tikvThread = new Thread(tikvServer);
       tikvThread.start();
