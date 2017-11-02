@@ -49,6 +49,7 @@ import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.util.Scanner;
 
 /**
@@ -130,7 +131,10 @@ public class SmartServer {
   public static void startDB(SmartConf conf) throws InterruptedException, IOException {
     if (conf.getAgentsNumber() != 0) {
       AgentMaster agentMaster = AgentMaster.getAgentMaster(conf);
-      String pdArgs = new String("--data-dir=pd --log-file=logs/pd.log");
+      String host = agentMaster.getAgentMasterHost();
+      InetAddress address = InetAddress.getByName(host);
+      String ip = address.getHostAddress();
+      String pdArgs = new String("--client-urls=http://" + ip + ":2379 --data-dir=pd --log-file=logs/pd.log");
       PdServer pdServer = new PdServer(pdArgs);
       Thread pdThread = new Thread(pdServer);
       pdThread.start();
@@ -143,7 +147,7 @@ public class SmartServer {
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");
-      String tidbArgs = new String("--store=tikv --path=127.0.0.1:2379 --lease=1s --log-file=logs/tidb.log");
+      String tidbArgs = new String("--store=tikv --path=" + host + ":2379 --lease=1s --log-file=logs/tidb.log");
       TidbServer tidbServer = new TidbServer(tidbArgs);
       Thread tidbThread = new Thread(tidbServer);
       tidbThread.start();

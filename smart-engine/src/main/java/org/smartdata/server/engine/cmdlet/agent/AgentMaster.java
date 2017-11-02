@@ -60,6 +60,7 @@ public class AgentMaster {
   private ActorRef master;
   private AgentManager agentManager;
   private SmartConf conf;
+  private String host;
 
   private static CmdletManager statusUpdater;
   private static int tikvNumber = 0;
@@ -73,6 +74,8 @@ public class AgentMaster {
     }
     String address = addresses[0];
     LOG.info("Agent master: " + address);
+    AgentUtils.HostPort hostPort = new AgentUtils.HostPort(address);
+    host = hostPort.getHost();
     Config config = AgentUtils.overrideRemoteAddress(
         ConfigFactory.load(AgentConstants.AKKA_CONF_FILE), address);
     this.agentManager = new AgentManager();
@@ -92,6 +95,10 @@ public class AgentMaster {
     } else {
       return agentMaster;
     }
+  }
+
+  public String getAgentMasterHost() {
+    return host;
   }
 
   public boolean isAgentRegisterReady() {

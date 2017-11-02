@@ -141,7 +141,7 @@ public class SmartAgent implements StatusReporter {
 
     public boolean launchTikv() throws InterruptedException {
       //TODO: configure in the file
-      String tikvArgs = "--pd=" + masterHost + ":" + PD_PORT + " " + TIKV_OPTIONS;
+      String tikvArgs = new String("--pd=" + masterHost + ":" + PD_PORT + " " + TIKV_OPTIONS);
       TikvServer tikvServer = new TikvServer(tikvArgs);
       Thread tikvThread = new Thread(tikvServer);
       tikvThread.start();
