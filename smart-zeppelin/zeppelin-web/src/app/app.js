@@ -149,15 +149,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       })
       .when('/actions', {
         templateUrl: 'app/dashboard/views/actions/actions.html',
-        controller: 'ActionsCtrl',
-        resolve: {
-          actions0: ['models', function (models) {
-            return models.$get.actions();
-          }],
-          actionTypes: ['models', function (models) {
-            return models.$get.actionTypes();
-          }]
-        }
+        controller: 'ActionsCtrl'
       })
       .when('/action/usage', {
         templateUrl: 'app/dashboard/views/actions/submit/help.html'
