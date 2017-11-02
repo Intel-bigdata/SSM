@@ -17,7 +17,7 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.apache.hadoop.hdfs.DFSClient;
+import com.google.gson.Gson;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.hdfs.SmartCompressorStream;
-import org.smartdata.hdfs.SmartFileCompressionInfo;
+import org.smartdata.model.SmartFileCompressionInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,6 +78,7 @@ public class CompressionAction extends HdfsAction {
     // Generate compressed file
     String compressedFileName = filePath + ".snappy";
     OutputStream compressedOutputStream = dfsClient.create(compressedFileName, true);
+    compress(dfsInputStream, compressedOutputStream);
 
     // Replace the original file with the compressed file
     dfsClient.delete(filePath);
@@ -85,7 +86,8 @@ public class CompressionAction extends HdfsAction {
   }
 
   private void compress(InputStream inputStream, OutputStream outputStream) throws IOException {
-    SmartFileCompressionInfo.getInstance().addFile(filePath, bufferSize);
+    SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
+        filePath, bufferSize);
     SmartCompressorStream smartCompressorStream = new SmartCompressorStream(
         outputStream, new SnappyCompressor(bufferSize), bufferSize);
     byte[] buf = new byte[bufferSize * 5];
@@ -98,5 +100,8 @@ public class CompressionAction extends HdfsAction {
     }
     smartCompressorStream.finish();
     outputStream.close();
+
+    String compressionInfoJson = new Gson().toJson(compressionInfo);
+    appendResult(compressionInfoJson);
   }
 }
