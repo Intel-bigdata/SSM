@@ -240,7 +240,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('actions/filelist/0/' + ruleId , decoder.actions);
         },
         actions: function () {
-          return get('actions/list/1/2/[{}]/[{}]', decoder.actions);
+          return get('actions/list/0', decoder.actions);
         },
         actionInfo: function (actionId) {
           return get('actions/' + actionId + '/info', decoder.actionInfo);
