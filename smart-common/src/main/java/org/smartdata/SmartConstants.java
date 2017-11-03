@@ -25,9 +25,9 @@ public class SmartConstants {
     "org.smartdata.alluxio.AlluxioStatesUpdateService";
 
   public static final String SMART_ACTION_SCHEDULER_SERVICE_IMPL =
-    "org.smartdata.hdfs.scheduler.MoverScheduler, " +
-    "org.smartdata.hdfs.scheduler.CopyScheduler, " +
-    "org.smartdata.hdfs.scheduler.CompressionScheduler";
+    "org.smartdata.hdfs.scheduler.MoverScheduler, "
+    + "org.smartdata.hdfs.scheduler.CopyScheduler, "
+    + "org.smartdata.hdfs.scheduler.CompressionScheduler";
 
   public static final String SMART_HADOOP_LAST_INOTIFY_TXID =
     "smart_hadoop_last_inotify_txid";
