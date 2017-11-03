@@ -19,10 +19,12 @@ package org.smartdata.hdfs.scheduler;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
-import org.smartdata.model.LaunchAction;
 import org.smartdata.model.SmartFileCompressionInfo;
 
 import java.io.IOException;
@@ -33,6 +35,9 @@ import java.util.List;
  * CompressionScheduler.
  */
 public class CompressionScheduler extends ActionSchedulerService {
+  static final Logger LOG =
+      LoggerFactory.getLogger(CompressionScheduler.class);
+
   private static final List<String> actions = Arrays.asList("compress");
 
   private MetaStore metaStore;
@@ -61,10 +66,19 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
-    Gson gson = new Gson();
-    String compressionInfoJson = actionInfo.getResult();
-    SmartFileCompressionInfo compressionInfo = gson.fromJson(compressionInfoJson,
-        new TypeToken<SmartFileCompressionInfo>(){}.getType());
-    metaStore.insertCompressedFile(compressionInfo);
+    if (actionInfo.isFinished()) {
+      try {
+        Gson gson = new Gson();
+        String compressionInfoJson = actionInfo.getResult();
+        SmartFileCompressionInfo compressionInfo = gson.fromJson(compressionInfoJson,
+            new TypeToken<SmartFileCompressionInfo>() {
+            }.getType());
+        metaStore.insertCompressedFile(compressionInfo);
+      } catch (MetaStoreException e) {
+        LOG.error("Compression action in metastore failed!", e);
+      } catch (Exception e) {
+        LOG.error("Compression action error", e);
+      }
+    }
   }
 }

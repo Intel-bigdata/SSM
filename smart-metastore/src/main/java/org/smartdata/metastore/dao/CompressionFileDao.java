@@ -19,9 +19,12 @@ package org.smartdata.metastore.dao;
 
 import org.smartdata.model.SmartFileCompressionInfo;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,10 +56,27 @@ public class CompressionFileDao {
     jdbcTemplate.update(sql, fileName);
   }
 
+  public SmartFileCompressionInfo getInfoByName(String fileName) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE file_name = ?",
+        new Object[]{fileName}, new CompressFileRowMapper());
+  }
+
   private Map<String, Object> toMap(SmartFileCompressionInfo compressionInfo) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("file_name", compressionInfo.getFileName());
     parameters.put("buffer_size", compressionInfo.getBufferSize());
     return parameters;
+  }
+
+  class CompressFileRowMapper implements RowMapper<SmartFileCompressionInfo> {
+    @Override
+    public SmartFileCompressionInfo mapRow(ResultSet resultSet, int i) throws SQLException {
+      SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
+          resultSet.getString("file_name"),
+          resultSet.getInt("buffer_size")
+      );
+      return compressionInfo;
+    }
   }
 }
