@@ -200,7 +200,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    * @param compressionInfo
    */
   public synchronized void insertCompressedFile(
-      SmartFileCompressionInfo compressionInfo) {
+      SmartFileCompressionInfo compressionInfo) throws MetaStoreException {
     compressionFileDao.insert(compressionInfo);
   }
 
@@ -209,8 +209,20 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    *
    * @param fileName
    */
-  public synchronized void deleteCompressedFile(String fileName) {
+  public synchronized void deleteCompressedFile(String fileName)
+      throws MetaStoreException{
     compressionFileDao.deleteByName(fileName);
+  }
+
+  public synchronized SmartFileCompressionInfo getCompressionInfo(
+      String fileName) throws MetaStoreException {
+    try {
+      return compressionFileDao.getInfoByName(fileName);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   /**

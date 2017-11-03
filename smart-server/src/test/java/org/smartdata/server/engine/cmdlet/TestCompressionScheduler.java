@@ -15,20 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata;
+package org.smartdata.server.engine.cmdlet;
 
-public class SmartConstants {
-  public static final String SMART_HDFS_STATES_UPDATE_SERVICE_IMPL =
-    "org.smartdata.hdfs.HdfsStatesUpdateService";
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.model.SmartFileCompressionInfo;
+import org.smartdata.server.MiniSmartClusterHarness;
 
-  public static final String SMART_ALLUXIO_STATES_UPDATE_SERVICE_IMPL =
-    "org.smartdata.alluxio.AlluxioStatesUpdateService";
+public class TestCompressionScheduler extends MiniSmartClusterHarness {
+  public static final int DEFAULT_BLOCK_SIZE = 1024 * 64;
 
-  public static final String SMART_ACTION_SCHEDULER_SERVICE_IMPL =
-    "org.smartdata.hdfs.scheduler.MoverScheduler, "
-    + "org.smartdata.hdfs.scheduler.CopyScheduler, "
-    + "org.smartdata.hdfs.scheduler.CompressionScheduler";
+  @Override
+  @Before
+  public void setup() throws Exception {
+    init(DEFAULT_BLOCK_SIZE);
+  }
 
-  public static final String SMART_HADOOP_LAST_INOTIFY_TXID =
-    "smart_hadoop_last_inotify_txid";
+  @Test
+  public void testScheduler() throws Exception {
+    MetaStore metaStore = ssm.getMetaStore();
+    String fileName = "/file1";
+    SmartFileCompressionInfo compressionInfo = metaStore.getCompressionInfo(fileName);
+    Assert.assertNull(compressionInfo);
+  }
 }

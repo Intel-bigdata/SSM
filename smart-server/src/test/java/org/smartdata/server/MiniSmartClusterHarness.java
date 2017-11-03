@@ -41,10 +41,9 @@ public class MiniSmartClusterHarness extends MiniClusterWithStoragesHarness {
   private String dbFile;
   private String dbUrl;
 
-  @Before
   @Override
-  public void init() throws Exception {
-    super.init();
+  protected void init(int blockSize) throws Exception {
+    super.init(blockSize);
     // Set db used
     SmartConf conf = smartContext.getConf();
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
