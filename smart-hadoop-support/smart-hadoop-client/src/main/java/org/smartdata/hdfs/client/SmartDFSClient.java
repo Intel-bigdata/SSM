@@ -27,18 +27,20 @@ import org.smartdata.client.SmartClient;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileContainerInfo;
-import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SmartDFSClient extends DFSClient {
   private SmartClient smartClient = null;
   private boolean healthy = false;
   private List<String> smallFileDirs = new ArrayList<>();
+  private Map<String, List<Long>> metaData = new HashMap<>();
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
@@ -105,6 +107,19 @@ public class SmartDFSClient extends DFSClient {
     }
   }
 
+  public SmartDFSClient(Configuration conf, Map<String, List<Long>> meta) throws IOException {
+    super(conf);
+    this.metaData = meta;
+    try {
+      smartClient = new SmartClient(conf);
+      initSmallFileDirs(conf);
+      healthy = true;
+    } catch (IOException e) {
+      super.close();
+      throw e;
+    }
+  }
+
   private void initSmallFileDirs(Configuration conf) {
     String[] dirs = conf.getTrimmedStrings(SmartConfKeys.SMART_SMALL_FILE_DIRS_KEY);
     if (dirs == null || dirs.length == 0) {
@@ -126,22 +141,22 @@ public class SmartDFSClient extends DFSClient {
   }
 
   private FileContainerInfo getFileContainerInfo(String src) {
-    String baseDir = StringUtil.getBaseDir(src);
-    String fileName = src.replace(baseDir, "");
-    return new FileContainerInfo("", 0, 0);
+    long offset = metaData.get(src).get(0);
+    long length = metaData.get(src).get(1);
+    return new FileContainerInfo(src, offset, length);
   }
 
   // TODO: handle small file access event
   @Override
-  public DFSInputStream open(String src)
+  public SmartDFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-    DFSInputStream is;
-    if (!isInSmallFileDir(src)) {
+    SmartDFSInputStream is;
+    /*if (!isInSmallFileDir(src)) {
       is = super.open(src);
       reportFileAccessEvent(src);
-    } else {
-      is = new SmartDFSInputStream(this, src, true, getFileContainerInfo(src));
-    }
+    } else {*/
+    is = new SmartDFSInputStream(this, "/test/smallfile/testFile", true, getFileContainerInfo(src));
+    ///}
     return is;
   }
 

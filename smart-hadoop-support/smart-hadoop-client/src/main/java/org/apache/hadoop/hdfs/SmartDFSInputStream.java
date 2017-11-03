@@ -17,67 +17,37 @@
  */
 package org.apache.hadoop.hdfs;
 
+import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.io.ByteBufferPool;
 import org.smartdata.model.FileContainerInfo;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SmartDFSInputStream extends DFSInputStream {
   private FileContainerInfo containerFileInfo;
-  private final DFSClient dfsClient;
-  private AtomicBoolean closed = new AtomicBoolean(false);
-  private final String src;
-  private final boolean verifyChecksum;
 
   public SmartDFSInputStream(DFSClient dfsClient, String src,
       boolean verifyChecksum, FileContainerInfo containerFileInfo) throws IOException {
-    super(dfsClient, containerFileInfo.getContainerFilePath(), verifyChecksum);
-    super.seek(containerFileInfo.getOffset());
-    this.dfsClient = dfsClient;
-    this.src = src;
-    this.verifyChecksum = verifyChecksum;
+    super(dfsClient, src, verifyChecksum);
     this.containerFileInfo = containerFileInfo;
-  }
-
-
-//  @Override
-//  public synchronized int read() throws IOException {
-//  }
-//
-//  @Override
-//  public synchronized int read(final byte buf[], int off, int len) throws IOException {
-//  }
-//
-//  @Override
-//  public synchronized int read(final ByteBuffer buf) throws IOException {
-//  }
-//
-//  @Override
-//  public int read(long position, byte[] buffer, int offset, int length) throws IOException {
-//  }
-//
-//  @Override
-//  public synchronized ByteBuffer read(ByteBufferPool bufferPool,
-//      int maxLength, EnumSet<ReadOption> opts)
-//      throws IOException, UnsupportedOperationException {
-//  }
-
-
-
-
-  @Override
-  public int read(long position, byte[] buffer, int offset, int length) throws IOException {
-    return super.read(position + containerFileInfo.getOffset(), buffer, offset, length);
+    super.seek(containerFileInfo.getOffset());
   }
 
   @Override
   public long getFileLength() {
+    String callerClass = Thread.currentThread().getStackTrace()[2].getClassName();
+    if (callerClass.equals("org.apache.hadoop.hdfs.DFSInputStream")) {
+      return containerFileInfo.getLength() + containerFileInfo.getOffset();
+    }
     return containerFileInfo.getLength();
   }
 
+  @Override
   public List<LocatedBlock> getAllBlocks() throws IOException {
     List<LocatedBlock> blocks = super.getAllBlocks();
     List<LocatedBlock> ret = new ArrayList<>();
@@ -92,42 +62,42 @@ public class SmartDFSInputStream extends DFSInputStream {
     return ret;
   }
 
-  // TODO: check if right or not
-//  /**
-//   * Seek to given position on a node other than the current node.  If
-//   * a node other than the current node is found, then returns true.
-//   * If another node could not be found, then returns false.
-//   */
-//  @Override
-//  public synchronized boolean seekToNewSource(long targetPos) throws IOException {
-//  }
+  @Override
+  public synchronized int read(final byte buf[], int off, int len) throws IOException {
+    int realLen = (int) Math.min(len, containerFileInfo.getLength());
+    return super.read(buf, off, realLen);
+  }
 
-  /**
-   */
+  @Override
+  public synchronized int read(final ByteBuffer buf) throws IOException {
+    int realLen = (int) Math.min(buf.remaining(), containerFileInfo.getLength());
+    buf.limit(realLen + buf.position());
+    return super.read(buf);
+  }
+
+  @Override
+  public int read(long position, byte[] buffer, int offset, int length) throws IOException {
+    int realLen = (int) Math.min(length, containerFileInfo.getLength());
+    long realPos = position + containerFileInfo.getOffset();
+    return super.read(realPos, buffer, offset, realLen);
+  }
+
   @Override
   public synchronized long getPos() throws IOException {
     return super.getPos() - containerFileInfo.getOffset();
   }
 
-  /** Return the size of the remaining available bytes
-   * if the size is less than or equal to {@link Integer#MAX_VALUE},
-   * otherwise, return {@link Integer#MAX_VALUE}.
-   */
   @Override
-  public synchronized int available() throws IOException {
-    if (closed.get()) {
-      throw new IOException("Stream closed");
-    }
-
-    final long remaining = getFileLength() - getPos();
-    return remaining <= Integer.MAX_VALUE? (int)remaining: Integer.MAX_VALUE;
+  public synchronized void setReadahead(Long readahead) throws IOException {
+    long realReadAhead = Math.min(readahead, containerFileInfo.getLength());
+    super.setReadahead(realReadAhead);
   }
 
-//  @Override
-//  public synchronized void setReadahead(Long readahead)
-//  }
-//
-//  @Override
-//  public synchronized void setDropBehind(Boolean dropBehind)
-//  }
+  @Override
+  public synchronized ByteBuffer read(ByteBufferPool bufferPool,
+                                      int maxLength, EnumSet<ReadOption> opts)
+          throws IOException, UnsupportedOperationException {
+    int realMaxLen = (int) Math.min(maxLength, containerFileInfo.getLength());
+    return super.read(bufferPool, realMaxLen, opts);
+  }
 }

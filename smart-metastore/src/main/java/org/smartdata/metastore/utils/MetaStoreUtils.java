@@ -105,6 +105,7 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS backup_file",
         "DROP TABLE IF EXISTS sys_info",
         "DROP TABLE IF EXISTS cluster_info",
+            "DROP TABLE IF EXISTS small_file",
 
         "CREATE TABLE access_count_table (\n" +
             "  table_name varchar(255) PRIMARY KEY,\n" +
@@ -283,6 +284,13 @@ public class MetaStoreUtils {
             "  state varchar(64) NOT NULL,\n" +   // ClusterState
             "  type varchar(64) NOT NULL\n" +    // ClusterType
             ");",
+
+            "CREATE TABLE small_file (\n" +
+                    "path varchar(4096) NOT NULL PRIMARY KEY,\n" +
+                    "container_file_path varchar(4096) NOT NULL,\n" +
+                    "offset bigint(20) NOT NULL,\n" +
+                    "length bigint(20) NOT NULL\n" +
+                    ");",
 
         "CREATE TABLE backup_file (\n" +
             " rid bigint(20) NOT NULL,\n" +

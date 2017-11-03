@@ -22,52 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.metaservice.BackupMetaService;
 import org.smartdata.metaservice.CmdletMetaService;
 import org.smartdata.metaservice.CopyMetaService;
-import org.smartdata.metastore.dao.AccessCountDao;
-import org.smartdata.metastore.dao.AccessCountTable;
-import org.smartdata.metastore.dao.ActionDao;
-import org.smartdata.metastore.dao.BackUpInfoDao;
-import org.smartdata.metastore.dao.CacheFileDao;
-import org.smartdata.metastore.dao.ClusterConfigDao;
-import org.smartdata.metastore.dao.ClusterInfoDao;
-import org.smartdata.metastore.dao.CmdletDao;
-import org.smartdata.metastore.dao.DataNodeInfoDao;
-import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
-import org.smartdata.metastore.dao.FileDiffDao;
-import org.smartdata.metastore.dao.FileInfoDao;
-import org.smartdata.metastore.dao.GlobalConfigDao;
-import org.smartdata.metastore.dao.GroupsDao;
-import org.smartdata.metastore.dao.MetaStoreHelper;
-import org.smartdata.metastore.dao.RuleDao;
-import org.smartdata.metastore.dao.StorageDao;
-import org.smartdata.metastore.dao.SystemInfoDao;
-import org.smartdata.metastore.dao.UserDao;
-import org.smartdata.metastore.dao.XattrDao;
+import org.smartdata.metastore.dao.*;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.model.ActionInfo;
-import org.smartdata.model.BackUpInfo;
-import org.smartdata.model.CachedFileStatus;
-import org.smartdata.model.ClusterConfig;
-import org.smartdata.model.ClusterInfo;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CmdletState;
-import org.smartdata.model.DataNodeInfo;
-import org.smartdata.model.DataNodeStorageInfo;
-import org.smartdata.model.DetailedFileAction;
-import org.smartdata.model.DetailedRuleInfo;
-import org.smartdata.model.FileAccessInfo;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
-import org.smartdata.model.FileInfo;
-import org.smartdata.model.GlobalConfig;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.RuleState;
-import org.smartdata.model.StorageCapacity;
-import org.smartdata.model.StoragePolicy;
-import org.smartdata.model.SystemInfo;
-import org.smartdata.model.XAttribute;
+import org.smartdata.model.*;
 import org.springframework.dao.EmptyResultDataAccessException;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -114,6 +75,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private BackUpInfoDao backUpInfoDao;
   private ClusterInfoDao clusterInfoDao;
   private SystemInfoDao systemInfoDao;
+  private SmallFileDao smallFileDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -136,6 +98,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
+    smallFileDao = new SmallFileDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -1736,5 +1699,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  /**
+   * Store a single file info into database.
+   *
+   * @param path
+   */
+  public synchronized void insertSmallFile(String path, FileContainerInfo fileContainerInfo)
+          throws MetaStoreException {
+    smallFileDao.addSmallFile(path, fileContainerInfo);
   }
 }
