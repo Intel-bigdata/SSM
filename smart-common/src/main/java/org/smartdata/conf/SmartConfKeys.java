@@ -97,4 +97,6 @@ public class SmartConfKeys {
   public static final String SMART_COMPRESSION_IMPL_DEFAULT = "snappy";
   public static final String SMART_COMPRESSION_BUFFER_SIZE = "smart.compression.buffer.size";
   public static final int SMART_COMPRESSION_BUFFER_SIZE_DEFAULT = 262144;
+  public static final String SMART_COMPRESSION_DIR_KEY = "smart.compression.dir";
+  public static final String SMART_COMPRESSION_DIR_DEFAULT = "/ssm/compress/";
 }
