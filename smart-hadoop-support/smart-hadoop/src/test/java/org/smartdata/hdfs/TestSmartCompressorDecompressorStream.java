@@ -17,40 +17,28 @@
  */
 package org.smartdata.hdfs;
 
-import io.netty.buffer.UnpooledHeapByteBuf;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSInputStream;
-import org.apache.hadoop.hdfs.DFSOutputStream;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
-import org.apache.hadoop.io.compress.BlockDecompressorStream;
 import org.apache.hadoop.io.compress.CompressionInputStream;
-import org.apache.hadoop.io.compress.SnappyCodec;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.SmartContext;
-import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * Test for SmartCompressorStream and SmartDecompressorStream.
@@ -60,25 +48,8 @@ public class TestSmartCompressorDecompressorStream extends MiniClusterHarness{
 
   @Override
   @Before
-  public void init() throws Exception {
-    SmartConf conf = new SmartConf();
-    initConf(conf);
-    cluster = createCluster(conf);
-    // Add namenode URL to smartContext
-    conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
-        "hdfs://" + cluster.getNameNode().getNameNodeAddressHostPortString());
-    cluster.waitActive();
-    dfs = cluster.getFileSystem();
-    dfsClient = dfs.getClient();
-    smartContext = new SmartContext(conf);
-  }
-
-  static void initConf(Configuration conf) {
-    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
+  public void setup() throws Exception {
+    init(DEFAULT_BLOCK_SIZE);
   }
 
   @Test

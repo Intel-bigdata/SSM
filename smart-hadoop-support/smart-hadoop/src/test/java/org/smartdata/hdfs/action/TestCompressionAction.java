@@ -17,18 +17,13 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.SmartContext;
 import org.smartdata.action.MockActionStatusReporter;
-import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.hdfs.SmartDecompressorStream;
 
@@ -42,27 +37,10 @@ import java.util.Random;
 public class TestCompressionAction extends MiniClusterHarness {
   public static final int DEFAULT_BLOCK_SIZE = 1024 * 64;
 
-  static void initConf(Configuration conf) {
-    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
-    conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
-  }
-
   @Override
   @Before
-  public void init() throws Exception {
-    SmartConf conf = new SmartConf();
-    initConf(conf);
-    cluster = createCluster(conf);
-    // Add namenode URL to smartContext
-    conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
-      "hdfs://" + cluster.getNameNode().getNameNodeAddressHostPortString());
-    cluster.waitActive();
-    dfs = cluster.getFileSystem();
-    dfsClient = dfs.getClient();
-    smartContext = new SmartContext(conf);
+  public void setup() throws Exception {
+    init(DEFAULT_BLOCK_SIZE);
   }
 
   protected void compressoin(String filePath, long bufferSize) throws IOException {
