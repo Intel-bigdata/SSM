@@ -50,7 +50,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetAddress;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * From this Smart Storage Management begins.
@@ -78,17 +79,16 @@ public class SmartServer {
     this.enabled = false;
   }
 
-  public void initWith(StartupOption startupOption) throws Exception {
+  public void initWith() throws Exception {
     checkSecurityAndLogin();
 
     MetaStore metaStore = MetaStoreUtils.getDBAdapter(conf);
     context = new ServerContext(conf, metaStore);
     initServiceMode(conf);
-    if (startupOption == StartupOption.REGULAR) {
-      engine = new SmartEngine(context);
-      rpcServer = new SmartRpcServer(this, conf);
-      zeppelinServer = new SmartZeppelinServer(conf, engine);
-    }
+    engine = new SmartEngine(context);
+    rpcServer = new SmartRpcServer(this, conf);
+    zeppelinServer = new SmartZeppelinServer(conf, engine);
+
   }
 
   public StatesManager getStatesManager() {
@@ -120,17 +120,25 @@ public class SmartServer {
       return null;
     }
 
-    GenericOptionsParser hParser = new GenericOptionsParser(conf, args);
-    args = hParser.getRemainingArgs();
-
-    StartupOption startOpt = parseArguments(args);
+    StartupOption startOpt = StartupOption.REGULAR;
+    List<String> list = new ArrayList<>();
+    for (String arg : args) {
+      if (StartupOption.FORMAT.getName().equalsIgnoreCase(arg)) {
+        startOpt = StartupOption.FORMAT;
+      } else if (StartupOption.REGULAR.getName().equalsIgnoreCase(arg)) {
+        startOpt = StartupOption.REGULAR;
+      } else {
+        list.add(arg);
+      }
+    }
+    String remainArgs[] = list.toArray(new String[list.size()]);
+    new GenericOptionsParser(conf, remainArgs);
 
     return startOpt;
   }
 
-  public static void startDB(SmartConf conf) throws InterruptedException, IOException {
+  public static void startDB(SmartConf conf, AgentMaster agentMaster) throws InterruptedException, IOException {
     if (conf.getAgentsNumber() != 0) {
-      AgentMaster agentMaster = AgentMaster.getAgentMaster(conf);
       String host = agentMaster.getAgentMasterHost();
       InetAddress address = InetAddress.getByName(host);
       String ip = address.getHostAddress();
@@ -167,22 +175,24 @@ public class SmartServer {
   }
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
+    AgentMaster agentMaster = AgentMaster.getAgentMaster(conf);
+
     if (isTidbEnabled(conf)) {
-      startDB(conf);
+      startDB(conf, agentMaster);
     }
 
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
       LOG.info("Formatting DataBase finished successfully!");
-      return null;
     }
-
-    MetaStoreUtils.checkTables(conf);
+    else {
+      MetaStoreUtils.checkTables(conf);
+    }
 
     SmartServer ssm = new SmartServer(conf);
     try {
-      ssm.initWith(startOption);
+      ssm.initWith();
       ssm.run();
       return ssm;
     } catch (Exception e){
@@ -357,20 +367,6 @@ public class SmartServer {
       throw e;
     }
     LOG.info("Initialized service mode: "+ context.getServiceMode().getName() + ".");
-  }
-
-  private static StartupOption parseArguments(String args[]) {
-    int argsLen = (args == null) ? 0 : args.length;
-    StartupOption startOpt = StartupOption.REGULAR;
-    for(int i=0; i < argsLen; i++) {
-      String cmd = args[i];
-      if (StartupOption.FORMAT.getName().equalsIgnoreCase(cmd)) {
-        startOpt = StartupOption.FORMAT;
-      } else if (StartupOption.REGULAR.getName().equalsIgnoreCase(cmd)) {
-        startOpt = StartupOption.REGULAR;
-      }
-    }
-    return startOpt;
   }
 
   public static SmartServer launchWith(SmartConf conf) throws Exception {

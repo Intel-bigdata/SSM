@@ -79,7 +79,7 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
     --config "${SMART_CONF_DIR}" \
     --hosts "${FIRST_MASTER}" --hostsend \
     --daemon start ${DEBUG_OPT} \
-    smartserver
+    smartserver $SMART_VARGS
 
   if [ x"${SMARTSERVERS}" != x"${FIRST_MASTER}" ]; then
     OTHER_MASTERS=${SMARTSERVERS/${FIRST_MASTER} /}
@@ -89,7 +89,7 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
       --config "${SMART_CONF_DIR}" \
       --hosts "${OTHER_MASTERS}" --hostsend \
       --daemon start ${DEBUG_OPT} \
-      smartserver
+      smartserver $SMART_VARGS
   fi
 else
   echo "ERROR: No SmartServers configured in 'hazelcast.xml'."
