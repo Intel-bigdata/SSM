@@ -19,6 +19,7 @@ package org.smartdata.server.engine.cmdlet.message;
 
 import org.smartdata.AgentService;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.server.engine.cmdlet.CmdletDispatchPolicy;
 import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.List;
 public class LaunchCmdlet implements AgentService.Message {
   private long cmdletId;
   private List<LaunchAction> launchActions;
+  private CmdletDispatchPolicy dispPolicy = CmdletDispatchPolicy.ANY;
 
   public LaunchCmdlet(long cmdletId, List<LaunchAction> launchActions) {
     this.cmdletId = cmdletId;
@@ -51,5 +53,18 @@ public class LaunchCmdlet implements AgentService.Message {
   @Override
   public String getServiceName() {
     return AgentCmdletService.NAME;
+  }
+
+  public CmdletDispatchPolicy getDispPolicy() {
+    return dispPolicy;
+  }
+
+  public void setDispPolicy(CmdletDispatchPolicy dispPolicy) {
+    this.dispPolicy = dispPolicy;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("{cmdletId = %d, dispPolicy = '%s'}", cmdletId, dispPolicy);
   }
 }
