@@ -19,7 +19,10 @@ package org.smartdata.server.engine.cmdlet.agent;
 
 import akka.actor.ActorRef;
 import org.smartdata.server.cluster.NodeInfo;
+import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
+import org.smartdata.server.engine.message.AddNodeMessage;
+import org.smartdata.server.engine.message.RemoveNodeMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +45,7 @@ public class AgentManager {
     NodeInfo info = new AgentInfo(String.valueOf(id.getId()), location);
     nodeInfos.add(info);
     agentNodeInfos.put(agent, info);
+    EngineEventBus.post(new AddNodeMessage(info));
   }
 
   AgentId removeAgent(ActorRef agent) {
@@ -49,6 +53,7 @@ public class AgentManager {
     resources.remove(agent);
     NodeInfo info = agentNodeInfos.remove(agent);
     nodeInfos.remove(info);
+    EngineEventBus.post(new RemoveNodeMessage(info));
     return id;
   }
 

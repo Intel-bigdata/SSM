@@ -619,6 +619,7 @@ public class CmdletManager extends AbstractService {
     if (cmdletInfo != null) {
       flushCmdletInfo(cmdletInfo);
     }
+    dispatcher.onCmdletFinished(cmdletInfo.getCid());
     runningCmdlets.remove(cmdletId);
 
     List<ActionInfo> removed = new ArrayList<>();

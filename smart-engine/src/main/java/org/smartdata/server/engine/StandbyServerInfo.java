@@ -17,10 +17,11 @@
  */
 package org.smartdata.server.engine;
 
+import org.smartdata.model.ExecutorType;
 import org.smartdata.server.cluster.NodeInfo;
 
 public class StandbyServerInfo extends NodeInfo {
   public StandbyServerInfo(String id, String location) {
-    super(id, location);
+    super(id, location, ExecutorType.REMOTE_SSM);
   }
 }
