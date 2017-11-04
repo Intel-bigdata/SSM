@@ -15,8 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.metric.fetcher;
+package org.smartdata.server.cluster;
 
-public class DispatcherConf {
-  int maxConcurrentMovesPerNode;
+
+/**
+ * Represent each nodes that SSM services (SmartServers and SmartAgents) running on.
+ *
+ */
+public class NodeInfo {
+  private String id;
+  private String location;
+
+  public NodeInfo(String id, String location) {
+    this.id = id;
+    this.location = location;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
+  }
 }
+

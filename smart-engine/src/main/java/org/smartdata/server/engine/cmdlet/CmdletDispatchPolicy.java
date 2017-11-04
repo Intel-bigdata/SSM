@@ -15,12 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.agent;
+package org.smartdata.server.engine.cmdlet;
 
-import org.smartdata.server.cluster.NodeInfo;
 
-public class AgentInfo extends NodeInfo {
-  public AgentInfo(String id, String location) {
-    super(id, location);
-  }
+public enum CmdletDispatchPolicy {
+    ANY,
+    PREFER_AGENT,
+    PREFER_REMOTE_SSM,
+    PREFER_LOCAL;
+//    MUST_AGENT,
+//    MUST_REMOTE_SSM,
+//    MUST_LOCAL;
 }

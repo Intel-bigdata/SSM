@@ -15,12 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.agent;
+package org.smartdata.server.engine;
 
 import org.smartdata.server.cluster.NodeInfo;
 
-public class AgentInfo extends NodeInfo {
-  public AgentInfo(String id, String location) {
-    super(id, location);
+public class ActiveServerInfo extends NodeInfo {
+  private static ActiveServerInfo inst;
+
+  private ActiveServerInfo() {
+    super("ActiveSSMServer", "127.0.0.1");
+  }
+
+  public static ActiveServerInfo getInstance() {
+    if (inst == null) {
+      inst = new ActiveServerInfo();
+    }
+    return inst;
   }
 }
