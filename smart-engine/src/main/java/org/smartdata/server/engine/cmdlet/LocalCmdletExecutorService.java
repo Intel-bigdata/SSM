@@ -25,9 +25,9 @@ import org.smartdata.model.ExecutorType;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
+import org.smartdata.server.cluster.NodeInfo;
 import org.smartdata.server.engine.ActiveServerInfo;
 import org.smartdata.server.engine.CmdletManager;
-import org.smartdata.server.cluster.NodeInfo;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.util.ArrayList;

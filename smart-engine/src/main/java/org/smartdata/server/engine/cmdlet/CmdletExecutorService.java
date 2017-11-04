@@ -18,8 +18,8 @@
 package org.smartdata.server.engine.cmdlet;
 
 import org.smartdata.model.ExecutorType;
-import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.cluster.NodeInfo;
+import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.util.List;
