@@ -37,7 +37,6 @@ import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -179,7 +178,6 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
 
     Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
     Thread.sleep(1000);
-    verify(dispatcher, times(1)).dispatch(any(LaunchCmdlet.class));
 
     long actionStartTime = System.currentTimeMillis();
     cmdletManager.updateStatus(new ActionStarted(actionId, actionStartTime));

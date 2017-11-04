@@ -19,11 +19,17 @@ package org.smartdata.server.engine;
 
 import org.smartdata.server.cluster.NodeInfo;
 
-public class StandbyServerInfo extends NodeInfo {
-  private String id;
-  private String location;
+public class ActiveServerInfo extends NodeInfo {
+  private static ActiveServerInfo inst;
 
-  public StandbyServerInfo(String id, String location) {
-    super(id, location);
+  private ActiveServerInfo() {
+    super("ActiveSSMServer", "127.0.0.1");
+  }
+
+  public static ActiveServerInfo getInstance() {
+    if (inst == null) {
+      inst = new ActiveServerInfo();
+    }
+    return inst;
   }
 }
