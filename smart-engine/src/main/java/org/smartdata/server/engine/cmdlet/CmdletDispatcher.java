@@ -94,7 +94,6 @@ public class CmdletDispatcher {
   }
 
   public void dispatch(LaunchCmdlet cmdlet) {
-    ExecutorType execType;
     CmdletDispatchPolicy policy = cmdlet.getDispPolicy();
     if (policy == CmdletDispatchPolicy.ANY) {
       policy = getRoundrobinDispatchPolicy();
@@ -103,19 +102,16 @@ public class CmdletDispatcher {
     ExecutorType[] tryOrder;
     switch (policy) {
       case PREFER_LOCAL:
-        execType = ExecutorType.LOCAL;
         tryOrder = new ExecutorType[]
             {ExecutorType.LOCAL, ExecutorType.REMOTE_SSM, ExecutorType.AGENT};
         break;
 
       case PREFER_REMOTE_SSM:
-        execType = ExecutorType.REMOTE_SSM;
         tryOrder = new ExecutorType[]
             {ExecutorType.REMOTE_SSM, ExecutorType.AGENT, ExecutorType.LOCAL};
         break;
 
       case PREFER_AGENT:
-        execType = ExecutorType.AGENT;
         tryOrder = new ExecutorType[]
             {ExecutorType.AGENT, ExecutorType.LOCAL, ExecutorType.REMOTE_SSM};
         break;
@@ -143,7 +139,7 @@ public class CmdletDispatcher {
     LOG.info(
         String.format(
             "Dispatching cmdlet->[%s] to executor service %s : %s",
-            cmdlet.getCmdletId(), selected.getClass(), id));
+            cmdlet.getCmdletId(), selected.getExecutorType(), id));
   }
 
   private CmdletDispatchPolicy getRoundrobinDispatchPolicy() {
@@ -253,6 +249,9 @@ public class CmdletDispatcher {
   public void start() {
     schExecService.scheduleAtFixedRate(
         new DispatchTask(this), 200, 100, TimeUnit.MILLISECONDS);
+  }
+
+  public void onCmdletFinished(long cmdletId) {
   }
 
   public void stop() {

@@ -520,20 +520,6 @@ public class CmdletManager extends AbstractService {
     return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
   }
 
-  public LaunchCmdlet getNextCmdletToRun() throws IOException {
-    Long cmdletId = scheduledCmdlet.poll();
-    if (cmdletId == null) {
-      return null;
-    }
-    CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
-    if (cmdletInfo == null) {
-      return null;
-    }
-    LaunchCmdlet launchCmdlet = idToLaunchCmdlet.get(cmdletId);
-    runningCmdlets.add(cmdletInfo.getCid());
-    return launchCmdlet;
-  }
-
   public CmdletInfo getCmdletInfo(long cid) throws IOException {
     if (idToCmdlets.containsKey(cid)) {
       return idToCmdlets.get(cid);
