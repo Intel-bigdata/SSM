@@ -20,9 +20,6 @@ package org.smartdata.server.engine;
 import org.smartdata.server.cluster.NodeInfo;
 
 public class StandbyServerInfo extends NodeInfo {
-  private String id;
-  private String location;
-
   public StandbyServerInfo(String id, String location) {
     super(id, location);
   }
