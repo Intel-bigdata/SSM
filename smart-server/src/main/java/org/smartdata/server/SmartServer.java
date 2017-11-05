@@ -116,10 +116,6 @@ public class SmartServer {
       args = new String[0];
     }
 
-    if (parseHelpArgument(args, USAGE, System.out, true)) {
-      return null;
-    }
-
     StartupOption startOpt = StartupOption.REGULAR;
     List<String> list = new ArrayList<>();
     for (String arg : args) {
@@ -127,6 +123,10 @@ public class SmartServer {
         startOpt = StartupOption.FORMAT;
       } else if (StartupOption.REGULAR.getName().equalsIgnoreCase(arg)) {
         startOpt = StartupOption.REGULAR;
+      } else if (arg.equals("-h") || arg.equals("-help")) {
+        if (parseHelpArgument(new String[]{arg}, USAGE, System.out, true)) {
+          return null;
+        }
       } else {
         list.add(arg);
       }
@@ -204,6 +204,7 @@ public class SmartServer {
   private static final String USAGE =
       "Usage: ssm [options]\n"
           + "  -h\n\tShow this usage information.\n\n"
+          + "  -format\n\tFormat the configured database.\n\n"
           + "  -D property=value\n"
           + "\tSpecify or overwrite an configure option.\n"
           + "\tE.g. -D smart.dfs.namenode.rpcserver=hdfs://localhost:43543\n";
@@ -218,7 +219,6 @@ public class SmartServer {
 
   private static boolean parseHelpArgument(String[] args,
       String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
-    if (args.length == 1) {
       try {
         CommandLineParser parser = new PosixParser();
         CommandLine cmdLine = parser.parse(helpOptions, args);
@@ -232,7 +232,6 @@ public class SmartServer {
         //LOG.warn("Parse help exception", pe);
         return false;
       }
-    }
     return false;
   }
 
