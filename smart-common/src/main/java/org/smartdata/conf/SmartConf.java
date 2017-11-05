@@ -31,7 +31,6 @@ import java.util.Scanner;
  * SSM related configurations as well as HDFS configurations.
  */
 public class SmartConf extends Configuration {
-  private final static String AGENTS_FILE_PATH = "conf/agents";
   private final static Logger LOG = LoggerFactory.getLogger(SmartConf.class);
 
   public SmartConf() {
@@ -40,11 +39,12 @@ public class SmartConf extends Configuration {
   }
 
   public int getAgentsNumber() {
+    String agentConfFile = get(SmartConfKeys.SMART_CONF_DIR_KEY, SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/agents";
     Scanner sc = null;
     try {
-      sc = new Scanner(new File(AGENTS_FILE_PATH));
+      sc = new Scanner(new File(agentConfFile));
     } catch (FileNotFoundException ex) {
-      LOG.error("Cannot find the configure file named agents!");
+      LOG.error("Cannot find the configure file: {}!", agentConfFile);
     }
     int num = 0;
     while (sc.hasNextLine()) {
