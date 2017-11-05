@@ -44,7 +44,7 @@ public class SmartConf extends Configuration {
     try {
       sc = new Scanner(new File(agentConfFile));
     } catch (FileNotFoundException ex) {
-      LOG.error("Cannot find the configure file: {}!", agentConfFile);
+      LOG.error("Cannot find the config file: {}!", agentConfFile);
     }
     int num = 0;
     while (sc.hasNextLine()) {

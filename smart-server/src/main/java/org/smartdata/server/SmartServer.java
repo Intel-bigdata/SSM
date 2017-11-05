@@ -142,8 +142,8 @@ public class SmartServer {
       String host = agentMaster.getAgentMasterHost();
       InetAddress address = InetAddress.getByName(host);
       String ip = address.getHostAddress();
-      String pdArgs = String.format("--client-urls=http://%s:2379 --peer-urls=http://%s:2380 --data-dir=pd --log-file=logs/pd.log", ip, ip);
-      PdServer pdServer = new PdServer(pdArgs);
+      String pdArgs = String.format("--client-urls=http://%s:2379 --peer-urls=http://%s:2380 --data-dir=pd", ip, ip);
+      PdServer pdServer = new PdServer(pdArgs, conf);
       Thread pdThread = new Thread(pdServer);
       pdThread.start();
       while (!pdServer.isReady() || !agentMaster.isAgentRegisterReady()) {
@@ -155,8 +155,8 @@ public class SmartServer {
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");
-      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=1s --log-file=logs/tidb.log", host);
-      TidbServer tidbServer = new TidbServer(tidbArgs);
+      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=1s", host);
+      TidbServer tidbServer = new TidbServer(tidbArgs, conf);
       Thread tidbThread = new Thread(tidbServer);
       tidbThread.start();
       while (!tidbServer.isReady()) {
@@ -164,7 +164,7 @@ public class SmartServer {
       }
       LOG.info("Tidb server is ready.");
     } else {
-      LaunchDB launchDB = new LaunchDB();
+      LaunchDB launchDB = new LaunchDB(conf);
       Thread db = new Thread(launchDB);
       LOG.info("Starting Pd, Tikv and Tidb..");
       db.start();

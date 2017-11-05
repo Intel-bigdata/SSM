@@ -17,24 +17,27 @@
  */
 package org.smartdata.tidb;
 
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PdServer implements Runnable {
+  private final static Logger LOG = LoggerFactory.getLogger(PdServer.class);
+  private String args;
+  private Pd pd;
+
   public interface Pd extends Library {
     void startServer(String args);
 
     boolean isPdServerReady();
   }
 
-  private String args;
-  private Pd pd;
-  private final static Logger LOG = LoggerFactory.getLogger(PdServer.class);
-
-  public PdServer(String args) {
-    this.args = args;
+  public PdServer(String args, SmartConf conf) {
+    String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR_KEY, SmartConfKeys.SMART_LOG_DIR_DEFAULT);
+    this.args = args + " --log-file=" + logDir + "/pd.log";
     try {
       pd = (Pd) Native.loadLibrary("libpd.so", Pd.class);
     } catch (UnsatisfiedLinkError ex) {

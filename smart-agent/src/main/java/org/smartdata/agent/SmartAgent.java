@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AgentService;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
@@ -85,7 +86,7 @@ public class SmartAgent implements StatusReporter {
 
   public void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
-    agentActor = system.actorOf(Props.create(AgentActor.class, this, masterPath), getAgentName());
+    agentActor = system.actorOf(Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -125,18 +126,18 @@ public class SmartAgent implements StatusReporter {
 
     private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
     private final static FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
-    private final static String PD_PORT = "2379";
-    private final static String TIKV_PORT = "20160";
 
     private MasterToAgent.AgentId id;
     private ActorRef master;
     private final SmartAgent agent;
     private final String[] masters;
+    private SmartConf conf;
     private String masterHost;
 
-    public AgentActor(SmartAgent agent, String[] masters) {
+    public AgentActor(SmartAgent agent, String[] masters, SmartConf conf) {
       this.agent = agent;
       this.masters = masters;
+      this.conf =  conf;
     }
 
     @Override
@@ -148,8 +149,8 @@ public class SmartAgent implements StatusReporter {
       //TODO: configure in the file
       InetAddress address = InetAddress.getByName(agent.host);
       String ip = address.getHostAddress();
-      String tikvArgs = String.format("--pd=%s:%s --addr=%s:%s --data-dir=tikv --log-file=logs/tikv.log", masterHost, PD_PORT, ip, TIKV_PORT);
-      TikvServer tikvServer = new TikvServer(tikvArgs);
+      String tikvArgs = String.format("--pd=%s:2379 --addr=%s:20160 --data-dir=tikv", masterHost, ip);
+      TikvServer tikvServer = new TikvServer(tikvArgs, conf);
       Thread tikvThread = new Thread(tikvServer);
       tikvThread.start();
       while (!tikvServer.isReady()) {
