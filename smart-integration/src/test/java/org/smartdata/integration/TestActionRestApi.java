@@ -95,17 +95,22 @@ public class TestActionRestApi extends IntegrationTestBase {
   @Test
   public void testDistributedAction() throws Exception {
     Process worker = Util.startNewServer();
-    Process agent = Util.startNewAgent();
-    Util.waitSlaveServerAvailable();
-    Util.waitAgentAvailable();
+    try {
+      Process agent = Util.startNewAgent();
+      try {
+        Util.waitSlaveServerAvailable();
+        Util.waitAgentAvailable();
 
-    // Three actions would be executed on Master, StandbyServer and Agent
-    testAction("hello", "-print_message message");
-    testAction("hello", "-print_message message");
-    testAction("hello", "-print_message message");
-
-    worker.destroy();
-    agent.destroy();
+        // Three actions would be executed on Master, StandbyServer and Agent
+        testAction("hello", "-print_message message");
+        testAction("hello", "-print_message message");
+        testAction("hello", "-print_message message");
+      } finally {
+        agent.destroy();
+      }
+    } finally {
+      worker.destroy();
+    }
   }
 
   private int countSubstring(String parent, String child) {
