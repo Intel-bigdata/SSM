@@ -54,5 +54,10 @@ public class NodeInfo {
   public ExecutorType getExecutorType() {
     return executorType;
   }
+
+  @Override
+  public String toString() {
+    return String.format("{id=%s, location=%s, executorType=%s}", id, location, executorType);
+  }
 }
 

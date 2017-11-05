@@ -31,6 +31,7 @@ import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.message.AddNodeMessage;
 import org.smartdata.server.engine.message.NodeMessage;
+import org.smartdata.server.engine.message.RemoveNodeMessage;
 
 import java.io.IOException;
 import java.util.List;
@@ -284,7 +285,7 @@ public class CmdletDispatcher {
   }
 
   @Subscribe
-  public void onRemoveNodeMessage(AddNodeMessage msg) {
+  public void onRemoveNodeMessage(RemoveNodeMessage msg) {
     onNodeMessage(msg, false);
   }
 
@@ -296,6 +297,7 @@ public class CmdletDispatcher {
       cmdExecSrvTotalInsts += v;
       updateSlotsLeft(idx, v * defaultSlots);
     }
+    LOG.info(String.format("Node " + msg.getNodeInfo() + (isAdd ? " added." : " removed.")));
   }
 
   private int updateSlotsLeft(int index, int delta) {
