@@ -23,7 +23,6 @@ import io.restassured.response.ValidatableResponse;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.integration.util.Util;
 
 import java.util.Map;
 import java.util.regex.Matcher;
