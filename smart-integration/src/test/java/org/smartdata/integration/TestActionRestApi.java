@@ -92,6 +92,7 @@ public class TestActionRestApi extends IntegrationTestBase {
     testAction("cache", "-file /hello");
   }
 
+/*
   @Test
   public void testDistributedAction() throws Exception {
     Process worker = Util.startNewServer();
@@ -112,6 +113,7 @@ public class TestActionRestApi extends IntegrationTestBase {
       worker.destroy();
     }
   }
+*/
 
   private int countSubstring(String parent, String child) {
     Pattern storagePattern = Pattern.compile(child);
