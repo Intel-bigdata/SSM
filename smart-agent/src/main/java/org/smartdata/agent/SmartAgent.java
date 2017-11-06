@@ -52,7 +52,6 @@ import org.smartdata.tidb.TikvServer;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -144,9 +143,10 @@ public class SmartAgent implements StatusReporter {
       unhandled(message);
     }
 
-    public boolean launchTikv() throws InterruptedException, UnknownHostException {
+    public boolean launchTikv() throws InterruptedException, IOException {
       //TODO: configure in file
-      InetAddress address = InetAddress.getByName(getSelf().path().address().host().get());
+      String agentAddress = AgentUtils.getAgentAddress(conf);
+      InetAddress address = InetAddress.getByName(new AgentUtils.HostPort(agentAddress).getHost());
       String ip = address.getHostAddress();
       String tikvArgs = String.format(
               "--pd=%s:2379 --addr=%s:20160 --data-dir=tikv", masterHost, ip);
