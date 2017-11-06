@@ -307,6 +307,18 @@ public class CmdletDispatcher {
     }
   }
 
+  public int getTotalSlotsLeft() {
+    int total = 0;
+    for (int i : cmdExecSrvInstsSlotsLeft) {
+      total += i;
+    }
+    return total;
+  }
+
+  public int getTotalSlots() {
+    return cmdExecSrvTotalInsts * defaultSlots;
+  }
+
   public void start() {
     schExecService.scheduleAtFixedRate(
         new DispatchTask(this), 200, 100, TimeUnit.MILLISECONDS);
