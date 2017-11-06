@@ -130,7 +130,6 @@ public class SmartAgent implements StatusReporter {
     private final SmartAgent agent;
     private final String[] masters;
     private SmartConf conf;
-    private String masterHost;
 
     public AgentActor(SmartAgent agent, String[] masters, SmartConf conf) {
       this.agent = agent;
@@ -143,7 +142,7 @@ public class SmartAgent implements StatusReporter {
       unhandled(message);
     }
 
-    public boolean launchTikv() throws InterruptedException, IOException {
+    public boolean launchTikv(String masterHost) throws InterruptedException, IOException {
       //TODO: configure in file
       String agentAddress = AgentUtils.getAgentAddress(conf);
       InetAddress address = InetAddress.getByName(new AgentUtils.HostPort(agentAddress).getHost());
@@ -194,7 +193,6 @@ public class SmartAgent implements StatusReporter {
           master = identity.getRef();
           if (master != null) {
             findMaster.cancel();
-            masterHost = master.path().address().host().get();
             Cancellable registerAgent =
                 AgentUtils.repeatActionUntil(getContext().system(), Duration.Zero(),
                     RETRY_INTERVAL, TIMEOUT,
@@ -244,7 +242,8 @@ public class SmartAgent implements StatusReporter {
           master.tell(message, getSelf());
           getSender().tell("status reported", getSelf());
         } else if (message instanceof ReadyToLaunchTikv) {
-          boolean launched = launchTikv();
+          String masterHost = master.path().address().host().get();
+          boolean launched = launchTikv(masterHost);
           if (launched) {
             LOG.info("Tikv server is ready.");
             master.tell(new AlreadyLaunchedTikv(id), getSelf());

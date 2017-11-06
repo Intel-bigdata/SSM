@@ -149,12 +149,12 @@ public class SmartServer {
       PdServer pdServer = new PdServer(pdArgs, conf);
       Thread pdThread = new Thread(pdServer);
       pdThread.start();
-      while (!pdServer.isReady() || !agentMaster.isAgentRegisterReady()) {
+      while (!pdServer.isReady() || !agentMaster.isAgentRegisterReady(conf)) {
         Thread.sleep(100);
       }
       LOG.info("Pd server is ready.");
       agentMaster.sendLaunchTikvMessage();
-      while (!agentMaster.isTikvAlreadyLaunched()) {
+      while (!agentMaster.isTikvAlreadyLaunched(conf)) {
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");

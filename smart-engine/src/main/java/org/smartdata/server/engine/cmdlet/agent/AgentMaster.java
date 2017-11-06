@@ -61,7 +61,6 @@ public class AgentMaster {
   private ActorSystem system;
   private ActorRef master;
   private AgentManager agentManager;
-  private SmartConf conf;
 
   private static CmdletManager statusUpdater;
   private static int tikvNumber = 0;
@@ -69,7 +68,6 @@ public class AgentMaster {
   private static AgentMaster agentMaster = null;
 
   private AgentMaster(SmartConf conf) throws IOException {
-    this.conf = conf;
     String[] addresses = AgentUtils.getMasterAddress(conf);
     if (addresses == null) {
       throw new IOException("AgentMaster address not configured!");
@@ -97,12 +95,12 @@ public class AgentMaster {
     }
   }
 
-  public boolean isAgentRegisterReady() {
+  public boolean isAgentRegisterReady(SmartConf conf) {
     //TODO: how many agents are required to launch tikv
     return serveReadyAgent == conf.getAgentsNumber();
   }
 
-  public boolean isTikvAlreadyLaunched() {
+  public boolean isTikvAlreadyLaunched(SmartConf conf) {
     //TODO: how many tikvs are required
     return tikvNumber == conf.getAgentsNumber();
   }
