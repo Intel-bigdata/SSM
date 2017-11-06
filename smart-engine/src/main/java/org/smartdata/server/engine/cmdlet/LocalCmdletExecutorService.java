@@ -28,7 +28,9 @@ import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.cluster.NodeInfo;
 import org.smartdata.server.engine.ActiveServerInfo;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.engine.message.AddNodeMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +51,7 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.executorService.scheduleAtFixedRate(
         new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+    EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
   }
 
   @Override

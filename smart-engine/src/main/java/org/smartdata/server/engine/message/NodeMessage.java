@@ -15,13 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.agent;
+package org.smartdata.server.engine.message;
 
-import org.smartdata.model.ExecutorType;
 import org.smartdata.server.cluster.NodeInfo;
 
-public class AgentInfo extends NodeInfo {
-  public AgentInfo(String id, String location) {
-    super(id, location, ExecutorType.AGENT);
+public class NodeMessage {
+  private NodeInfo nodeInfo;
+
+  public NodeMessage(NodeInfo nodeInfo) {
+    this.nodeInfo = nodeInfo;
+  }
+
+  public NodeInfo getNodeInfo() {
+    return nodeInfo;
   }
 }

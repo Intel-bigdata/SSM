@@ -18,6 +18,8 @@
 package org.smartdata.server.cluster;
 
 
+import org.smartdata.model.ExecutorType;
+
 /**
  * Represent each nodes that SSM services (SmartServers and SmartAgents) running on.
  *
@@ -25,10 +27,12 @@ package org.smartdata.server.cluster;
 public class NodeInfo {
   private String id;
   private String location;
+  private ExecutorType executorType;
 
-  public NodeInfo(String id, String location) {
+  public NodeInfo(String id, String location, ExecutorType executorType) {
     this.id = id;
     this.location = location;
+    this.executorType = executorType;
   }
 
   public String getId() {
@@ -45,6 +49,15 @@ public class NodeInfo {
 
   public void setLocation(String location) {
     this.location = location;
+  }
+
+  public ExecutorType getExecutorType() {
+    return executorType;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("{id=%s, location=%s, executorType=%s}", id, location, executorType);
   }
 }
 
