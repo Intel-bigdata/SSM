@@ -728,6 +728,22 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<RuleInfo> listPageRule(long start, long offset, List<String> orderBy,
+      List<Boolean> desc)
+      throws MetaStoreException {
+    LOG.debug("List Rule, start {}, offset {}", start, offset);
+    try {
+      if (orderBy.size() == 0) {
+        return ruleDao.getAPageOfRule(start, offset);
+      } else {
+        return ruleDao.getAPageOfRule(start, offset, orderBy, desc);
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+
   public List<RuleInfo> getRuleInfo() throws MetaStoreException {
     try {
       return ruleDao.getAll();
