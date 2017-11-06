@@ -21,8 +21,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.model.DataNodeInfo;
 import org.smartdata.metastore.TestDaoUtil;
+import org.smartdata.model.DataNodeInfo;
 
 import java.util.List;
 
@@ -48,14 +48,14 @@ public class TestDataNodeInfoDao extends TestDaoUtil {
         "UUID1", "hostname", "www.ssm.com",  10000, 50, "lab");
     dataNodeInfoDao.insert(insertInfo1);
     List<DataNodeInfo> getInfo1 = dataNodeInfoDao.getByUuid("UUID1");
-    Assert.assertEquals(1,getInfo1.size());
+    Assert.assertEquals(1, getInfo1.size());
     Assert.assertTrue(insertInfo1.equals(getInfo1.get(0)));
 
     DataNodeInfo insertInfo2 = new DataNodeInfo(
         "UUID2", "HOSTNAME", "www.ssm.com",  0, 0, null);
     dataNodeInfoDao.insert(insertInfo2);
     List<DataNodeInfo> getInfo2 = dataNodeInfoDao.getByUuid("UUID2");
-    Assert.assertEquals(1,getInfo2.size());
+    Assert.assertEquals(1, getInfo2.size());
     Assert.assertTrue(insertInfo2.equals(getInfo2.get(0)));
 
     List<DataNodeInfo> infos = dataNodeInfoDao.getAll();

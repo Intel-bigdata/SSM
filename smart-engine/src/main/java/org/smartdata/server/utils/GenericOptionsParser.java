@@ -35,20 +35,18 @@ public class GenericOptionsParser {
   private Configuration conf;
   private CommandLine cmdLine;
 
-  public GenericOptionsParser(Configuration conf, String[] args)
-      throws IOException {
+  public GenericOptionsParser(Configuration conf, String[] args) throws IOException {
     this(conf, new Options(), args);
   }
 
-  public GenericOptionsParser(Configuration conf,
-      Options options, String[] args) throws IOException {
+  public GenericOptionsParser(Configuration conf, Options options, String[] args)
+      throws IOException {
     this.conf = conf;
     parseGeneralOptions(options, args);
   }
 
-
   public String[] getRemainingArgs() {
-    return (cmdLine == null) ? new String[]{} : cmdLine.getArgs();
+    return (cmdLine == null) ? new String[] {} : cmdLine.getArgs();
   }
 
   public Configuration getConfiguration() {
@@ -60,10 +58,11 @@ public class GenericOptionsParser {
   }
 
   private Options buildGeneralOptions(Options opts) {
-    Option property = OptionBuilder.withArgName("property=value")
-        .hasArg()
-        .withDescription("use value for given property")
-        .create('D');
+    Option property =
+        OptionBuilder.withArgName("property=value")
+            .hasArg()
+            .withDescription("use value for given property")
+            .create('D');
     opts.addOption(property);
 
     return opts;
@@ -72,7 +71,7 @@ public class GenericOptionsParser {
   private void processGeneralOptions(CommandLine line) throws IOException {
     if (line.hasOption('D')) {
       String[] property = line.getOptionValues('D');
-      for(String prop : property) {
+      for (String prop : property) {
         String[] keyval = prop.split("=", 2);
         if (keyval.length == 2) {
           conf.set(keyval[0], keyval[1], "from command line");
@@ -94,7 +93,7 @@ public class GenericOptionsParser {
       return null;
     }
     List<String> newArgs = new ArrayList<String>(args.length);
-    for (int i=0; i < args.length; i++) {
+    for (int i = 0; i < args.length; i++) {
       String prop = null;
       if (args[i].equals("-D")) {
         newArgs.add(args[i]);
@@ -121,14 +120,13 @@ public class GenericOptionsParser {
     return newArgs.toArray(new String[newArgs.size()]);
   }
 
-  private void parseGeneralOptions(Options opts, String[] args)
-      throws IOException {
+  private void parseGeneralOptions(Options opts, String[] args) throws IOException {
     opts = buildGeneralOptions(opts);
     CommandLineParser parser = new GnuParser();
     try {
       cmdLine = parser.parse(opts, preProcessForWindows(args), true);
       processGeneralOptions(cmdLine);
-    } catch(ParseException e) {
+    } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("general options are: ", opts);
     }

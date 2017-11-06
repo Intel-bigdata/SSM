@@ -23,17 +23,17 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class DataNodeInfoDao {
   private DataSource dataSource;
 
-  private final String TABLE_NAME = "datanode_info";
+  private static final String TABLE_NAME = "datanode_info";
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;

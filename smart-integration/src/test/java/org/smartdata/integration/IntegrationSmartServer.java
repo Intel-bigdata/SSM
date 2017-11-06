@@ -21,8 +21,8 @@ import org.smartdata.SmartServiceState;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metastore.TestDBUtil;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.server.SmartServer;
 
 /**
@@ -58,7 +58,7 @@ public class IntegrationSmartServer {
         if (state != SmartServiceState.SAFEMODE) {
           break;
         }
-        int secs = (int)(System.currentTimeMillis() - start) / 1000;
+        int secs = (int) (System.currentTimeMillis() - start) / 1000;
         System.out.println("Waited for " + secs + " seconds ...");
         Thread.sleep(1000);
       } catch (Exception e) {

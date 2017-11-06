@@ -34,7 +34,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
-  private final static long VERSION = 1;
+  private static final long VERSION = 1;
   private Configuration conf;
   private SmartClientProtocol server;
   private volatile boolean running = true;
@@ -67,7 +67,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         ClientProtocolProtoBuffer.class, VERSION, address, conf);
     this.server = new ClientProtocolClientSideTranslator(proxy);
     Collection<String> dirs = conf.getTrimmedStringCollection(
-        SmartConfKeys.SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY);
+        SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     ignoreAccessEventDirs = new ArrayList<>();
     for (String s : dirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));

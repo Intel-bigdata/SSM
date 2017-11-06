@@ -104,7 +104,7 @@ public class AccessEventAggregator {
       }
 
       List<String> values = new ArrayList<>();
-      for(String key : pathToIDs.keySet()) {
+      for (String key : pathToIDs.keySet()) {
         values.add(String.format("(%d, %d)", pathToIDs.get(key),
             accessCount.get(key)));
       }

@@ -17,6 +17,7 @@
  */
 package org.smartdata.metastore.utils;
 
+import com.mysql.jdbc.NonRegisteringDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
@@ -38,7 +39,6 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import com.mysql.jdbc.NonRegisteringDriver;
 
 /**
  * Utilities for table operations.
@@ -46,9 +46,15 @@ import com.mysql.jdbc.NonRegisteringDriver;
 public class MetaStoreUtils {
   public static final String SQLITE_URL_PREFIX = "jdbc:sqlite:";
   public static final String MYSQL_URL_PREFIX = "jdbc:mysql:";
-  public static final String[] dbNameNotAllowed = new String[]{
-          "mysql", "sys", "information_schema", "INFORMATION_SCHEMA", "performance_schema", "PERFORMANCE_SCHEMA"
-  };
+  public static final String[] DB_NAME_NOT_ALLOWED =
+      new String[] {
+        "mysql",
+        "sys",
+        "information_schema",
+        "INFORMATION_SCHEMA",
+        "performance_schema",
+        "PERFORMANCE_SCHEMA"
+      };
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
 
   public static Connection createConnection(String url,
@@ -122,7 +128,7 @@ public class MetaStoreUtils {
 
   public static void initializeDataBase(
       Connection conn) throws MetaStoreException {
-    String createEmptyTables[] = new String[]{
+    String deleteExistingTables[] = new String[] {
         "DROP TABLE IF EXISTS access_count_table;",
         "DROP TABLE IF EXISTS cached_file;",
         "DROP TABLE IF EXISTS ec_policy;",
@@ -143,200 +149,215 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS cluster_config",
         "DROP TABLE IF EXISTS backup_file",
         "DROP TABLE IF EXISTS sys_info",
-        "DROP TABLE IF EXISTS cluster_info",
-
-        "CREATE TABLE access_count_table (\n" +
-            "  table_name varchar(255) PRIMARY KEY,\n" +
-            "  start_time bigint(20) NOT NULL,\n" +
-            "  end_time bigint(20) NOT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE blank_access_count_info (\n" +
-            "  fid bigint(20) NOT NULL,\n" +
-            "  count bigint(20) NOT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE cached_file (\n" +
-            "  fid bigint(20) NOT NULL,\n" +
-            "  path varchar(1000) NOT NULL,\n" +
-            "  from_time bigint(20) NOT NULL,\n" +
-            "  last_access_time bigint(20) NOT NULL,\n" +
-            "  accessed_num int(11) NOT NULL\n" +
-            ") ;",
-        "CREATE INDEX cached_file_fid_idx ON cached_file (fid);",
-        "CREATE INDEX cached_file_path_idx ON cached_file (path);",
-
-        "CREATE TABLE ec_policy (\n" +
-            "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            "  name varchar(255) DEFAULT NULL,\n" +
-            "  cell_size int(11) DEFAULT NULL,\n" +
-            "  data_unit_num int(11) DEFAULT NULL,\n" +
-            "  parity_unit_num int(11) DEFAULT NULL,\n" +
-            "  codec_name varchar(64) DEFAULT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE file (\n" +
-            "  path varchar(1000) NOT NULL,\n" +
-            "  fid bigint(20) NOT NULL,\n" +
-            "  length bigint(20) DEFAULT NULL,\n" +
-            "  block_replication smallint(6) DEFAULT NULL,\n" +
-            "  block_size bigint(20) DEFAULT NULL,\n" +
-            "  modification_time bigint(20) DEFAULT NULL,\n" +
-            "  access_time bigint(20) DEFAULT NULL,\n" +
-            "  is_dir tinyint(1) DEFAULT NULL,\n" +
-            "  sid tinyint(4) DEFAULT NULL,\n" +
-            "  oid smallint(6) DEFAULT NULL,\n" +
-            "  gid smallint(6) DEFAULT NULL,\n" +
-            "  permission smallint(6) DEFAULT NULL,\n" +
-            "  ec_policy_id smallint(6) DEFAULT NULL\n" +
-            ") ;",
-        "CREATE INDEX file_fid_idx ON file (fid);",
-        "CREATE INDEX file_path_idx ON file (path);",
-
-        "CREATE TABLE user_group (\n" +
-            "  gid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            "  group_name varchar(255) DEFAULT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE owner (\n" +
-            "  oid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            "  owner_name varchar(255) DEFAULT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE storage (\n" +
-            "  type varchar(255) PRIMARY KEY,\n" +
-            "  capacity bigint(20) NOT NULL,\n" +
-            "  free bigint(20) NOT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE storage_policy (\n" +
-            "  sid tinyint(4) PRIMARY KEY,\n" +
-            "  policy_name varchar(64) DEFAULT NULL\n" +
-            ") ;",
-
-        "INSERT INTO storage_policy VALUES ('0', 'HOT');",
-        "INSERT INTO storage_policy VALUES ('2', 'COLD');",
-        "INSERT INTO storage_policy VALUES ('5', 'WARM');",
-        "INSERT INTO storage_policy VALUES ('7', 'HOT');",
-        "INSERT INTO storage_policy VALUES ('10', 'ONE_SSD');",
-        "INSERT INTO storage_policy VALUES ('12', 'ALL_SSD');",
-        "INSERT INTO storage_policy VALUES ('15', 'LAZY_PERSIST');",
-
-        "CREATE TABLE xattr (\n" +
-            "  fid bigint(20) NOT NULL,\n" +
-            "  namespace varchar(255) NOT NULL,\n" +
-            "  name varchar(255) NOT NULL,\n" +
-            "  value blob NOT NULL\n" +
-            ") ;",
-        "CREATE INDEX xattr_fid_idx ON xattr (fid);",
-
-        "CREATE TABLE datanode_info (\n" +
-            "  uuid varchar(64) PRIMARY KEY,\n" +
-            "  hostname varchar(255) NOT NULL,\n" +   // DatanodeInfo
-            "  rpcAddress varchar(21) DEFAULT NULL,\n" +
-            "  cache_capacity bigint(20) DEFAULT NULL,\n" +
-            "  cache_used bigint(20) DEFAULT NULL,\n" +
-            "  location varchar(255) DEFAULT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE datanode_storage_info (\n" +
-            "  uuid varchar(64) NOT NULL,\n" +
-            "  sid tinyint(4) NOT NULL,\n" +          // storage type
-            "  state tinyint(4) NOT NULL,\n" +        // DatanodeStorage.state
-            "  storage_id varchar(64) NOT NULL,\n" +   // StorageReport ...
-            "  failed tinyint(1) DEFAULT NULL,\n" +
-            "  capacity bigint(20) DEFAULT NULL,\n" +
-            "  dfs_used bigint(20) DEFAULT NULL,\n" +
-            "  remaining bigint(20) DEFAULT NULL,\n" +
-            "  block_pool_used bigint(20) DEFAULT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE rule (\n" +
-            "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            "  name varchar(255) DEFAULT NULL,\n" +
-            "  state tinyint(4) NOT NULL,\n" +
-            "  rule_text varchar(4096) NOT NULL,\n" +
-            "  submit_time bigint(20) NOT NULL,\n" +
-            "  last_check_time bigint(20) DEFAULT NULL,\n" +
-            "  checked_count int(11) NOT NULL,\n" +
-            "  generated_cmdlets int(11) NOT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE cmdlet (\n" +
-            "  cid INTEGER PRIMARY KEY,\n" +
-            "  rid INTEGER NOT NULL,\n" +
-            "  aids varchar(4096) NOT NULL,\n" +
-            "  state tinyint(4) NOT NULL,\n" +
-            "  parameters varchar(4096) NOT NULL,\n" +
-            "  generate_time bigint(20) NOT NULL,\n" +
-            "  state_changed_time bigint(20) NOT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE action (\n" +
-            "  aid INTEGER PRIMARY KEY,\n" +
-            "  cid INTEGER NOT NULL,\n" +
-            "  action_name varchar(4096) NOT NULL,\n" +
-            "  args varchar(4096) NOT NULL,\n" +
-            "  result text NOT NULL,\n" +
-            "  log text NOT NULL,\n" +
-            "  successful tinyint(4) NOT NULL,\n" +
-            "  create_time bigint(20) NOT NULL,\n" +
-            "  finished tinyint(4) NOT NULL,\n" +
-            "  finish_time bigint(20) NOT NULL,\n" +
-            "  progress float NOT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE file_diff (\n" +
-            "  did INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            "  rid INTEGER NOT NULL,\n" +
-            "  diff_type varchar(4096) NOT NULL,\n" +
-            "  src varchar(1000) NOT NULL,\n" +
-            "  parameters varchar(4096) NOT NULL,\n" +
-            "  state tinyint(4) NOT NULL,\n" +
-            "  create_time bigint(20) NOT NULL\n" +
-            ") ;",
-        "CREATE INDEX file_diff_idx ON file_diff (src);",
-
-        "CREATE TABLE global_config (\n" +
-            " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            " property_name varchar(512) NOT NULL UNIQUE,\n" +
-            " property_value varchar(3072) NOT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE cluster_config (\n" +
-            " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            " node_name varchar(512) NOT NULL UNIQUE,\n" +
-            " config_path varchar(3072) NOT NULL\n" +
-            ") ;",
-
-        "CREATE TABLE sys_info (\n" +
-            "  property varchar(512) PRIMARY KEY,\n" +
-            "  value varchar(4096) NOT NULL\n" +
-            ");",
-
-        "CREATE TABLE cluster_info (\n" +
-            "  cid INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            "  name varchar(512) NOT NULL UNIQUE,\n" +
-            "  url varchar(4096) NOT NULL,\n" +
-            "  conf_path varchar(4096) NOT NULL,\n" +
-            "  state varchar(64) NOT NULL,\n" +   // ClusterState
-            "  type varchar(64) NOT NULL\n" +    // ClusterType
-            ");",
-
-        "CREATE TABLE backup_file (\n" +
-            " rid bigint(20) NOT NULL,\n" +
-            " src varchar(4096) NOT NULL,\n" +
-            " dest varchar(4096) NOT NULL,\n" +
-            " period bigint(20) NOT NULL\n" +
-            ") ;",
-        "CREATE INDEX backup_file_rid_idx ON backup_file (rid);"
+        "DROP TABLE IF EXISTS cluster_info"
     };
+    String createEmptyTables[] =
+        new String[] {
+          "CREATE TABLE access_count_table (\n"
+              + "  table_name varchar(255) PRIMARY KEY,\n"
+              + "  start_time bigint(20) NOT NULL,\n"
+              + "  end_time bigint(20) NOT NULL\n"
+              + ") ;",
+          "CREATE TABLE blank_access_count_info (\n"
+              + "  fid bigint(20) NOT NULL,\n"
+              + "  count bigint(20) NOT NULL\n"
+              + ") ;",
+          "CREATE TABLE cached_file (\n"
+              + "  fid bigint(20) NOT NULL,\n"
+              + "  path varchar(1000) NOT NULL,\n"
+              + "  from_time bigint(20) NOT NULL,\n"
+              + "  last_access_time bigint(20) NOT NULL,\n"
+              + "  accessed_num int(11) NOT NULL\n"
+              + ") ;",
+          "CREATE INDEX cached_file_fid_idx ON cached_file (fid);",
+          "CREATE INDEX cached_file_path_idx ON cached_file (path);",
+          "CREATE TABLE ec_policy (\n"
+              + "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+              + "  name varchar(255) DEFAULT NULL,\n"
+              + "  cell_size int(11) DEFAULT NULL,\n"
+              + "  data_unit_num int(11) DEFAULT NULL,\n"
+              + "  parity_unit_num int(11) DEFAULT NULL,\n"
+              + "  codec_name varchar(64) DEFAULT NULL\n"
+              + ") ;",
+          "CREATE TABLE file (\n"
+              + "  path varchar(1000) NOT NULL,\n"
+              + "  fid bigint(20) NOT NULL,\n"
+              + "  length bigint(20) DEFAULT NULL,\n"
+              + "  block_replication smallint(6) DEFAULT NULL,\n"
+              + "  block_size bigint(20) DEFAULT NULL,\n"
+              + "  modification_time bigint(20) DEFAULT NULL,\n"
+              + "  access_time bigint(20) DEFAULT NULL,\n"
+              + "  is_dir tinyint(1) DEFAULT NULL,\n"
+              + "  sid tinyint(4) DEFAULT NULL,\n"
+              + "  oid smallint(6) DEFAULT NULL,\n"
+              + "  gid smallint(6) DEFAULT NULL,\n"
+              + "  permission smallint(6) DEFAULT NULL,\n"
+              + "  ec_policy_id smallint(6) DEFAULT NULL\n"
+              + ") ;",
+          "CREATE INDEX file_fid_idx ON file (fid);",
+          "CREATE INDEX file_path_idx ON file (path);",
+          "CREATE TABLE user_group (\n"
+              + "  gid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+              + "  group_name varchar(255) DEFAULT NULL\n"
+              + ") ;",
+          "CREATE TABLE owner (\n"
+              + "  oid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+              + "  owner_name varchar(255) DEFAULT NULL\n"
+              + ") ;",
+          "CREATE TABLE storage (\n"
+              + "  type varchar(255) PRIMARY KEY,\n"
+              + "  capacity bigint(20) NOT NULL,\n"
+              + "  free bigint(20) NOT NULL\n"
+              + ") ;",
+          "CREATE TABLE storage_policy (\n"
+              + "  sid tinyint(4) PRIMARY KEY,\n"
+              + "  policy_name varchar(64) DEFAULT NULL\n"
+              + ") ;",
+          "INSERT INTO storage_policy VALUES ('0', 'HOT');",
+          "INSERT INTO storage_policy VALUES ('2', 'COLD');",
+          "INSERT INTO storage_policy VALUES ('5', 'WARM');",
+          "INSERT INTO storage_policy VALUES ('7', 'HOT');",
+          "INSERT INTO storage_policy VALUES ('10', 'ONE_SSD');",
+          "INSERT INTO storage_policy VALUES ('12', 'ALL_SSD');",
+          "INSERT INTO storage_policy VALUES ('15', 'LAZY_PERSIST');",
+          "CREATE TABLE xattr (\n"
+              + "  fid bigint(20) NOT NULL,\n"
+              + "  namespace varchar(255) NOT NULL,\n"
+              + "  name varchar(255) NOT NULL,\n"
+              + "  value blob NOT NULL\n"
+              + ") ;",
+          "CREATE INDEX xattr_fid_idx ON xattr (fid);",
+          "CREATE TABLE datanode_info (\n"
+              + "  uuid varchar(64) PRIMARY KEY,\n"
+              + "  hostname varchar(255) NOT NULL,\n"
+              + // DatanodeInfo
+              "  rpcAddress varchar(21) DEFAULT NULL,\n"
+              + "  cache_capacity bigint(20) DEFAULT NULL,\n"
+              + "  cache_used bigint(20) DEFAULT NULL,\n"
+              + "  location varchar(255) DEFAULT NULL\n"
+              + ") ;",
+          "CREATE TABLE datanode_storage_info (\n"
+              + "  uuid varchar(64) NOT NULL,\n"
+              + "  sid tinyint(4) NOT NULL,\n"
+              + // storage type
+              "  state tinyint(4) NOT NULL,\n"
+              + // DatanodeStorage.state
+              "  storage_id varchar(64) NOT NULL,\n"
+              + // StorageReport ...
+              "  failed tinyint(1) DEFAULT NULL,\n"
+              + "  capacity bigint(20) DEFAULT NULL,\n"
+              + "  dfs_used bigint(20) DEFAULT NULL,\n"
+              + "  remaining bigint(20) DEFAULT NULL,\n"
+              + "  block_pool_used bigint(20) DEFAULT NULL\n"
+              + ") ;",
+          "CREATE TABLE rule (\n"
+              + "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+              + "  name varchar(255) DEFAULT NULL,\n"
+              + "  state tinyint(4) NOT NULL,\n"
+              + "  rule_text varchar(4096) NOT NULL,\n"
+              + "  submit_time bigint(20) NOT NULL,\n"
+              + "  last_check_time bigint(20) DEFAULT NULL,\n"
+              + "  checked_count int(11) NOT NULL,\n"
+              + "  generated_cmdlets int(11) NOT NULL\n"
+              + ") ;",
+          "CREATE TABLE cmdlet (\n"
+              + "  cid INTEGER PRIMARY KEY,\n"
+              + "  rid INTEGER NOT NULL,\n"
+              + "  aids varchar(4096) NOT NULL,\n"
+              + "  state tinyint(4) NOT NULL,\n"
+              + "  parameters varchar(4096) NOT NULL,\n"
+              + "  generate_time bigint(20) NOT NULL,\n"
+              + "  state_changed_time bigint(20) NOT NULL\n"
+              + ") ;",
+          "CREATE TABLE action (\n"
+              + "  aid INTEGER PRIMARY KEY,\n"
+              + "  cid INTEGER NOT NULL,\n"
+              + "  action_name varchar(4096) NOT NULL,\n"
+              + "  args varchar(4096) NOT NULL,\n"
+              + "  result text NOT NULL,\n"
+              + "  log text NOT NULL,\n"
+              + "  successful tinyint(4) NOT NULL,\n"
+              + "  create_time bigint(20) NOT NULL,\n"
+              + "  finished tinyint(4) NOT NULL,\n"
+              + "  finish_time bigint(20) NOT NULL,\n"
+              + "  progress float NOT NULL\n"
+              + ") ;",
+          "CREATE TABLE file_diff (\n"
+              + "  did INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+              + "  rid INTEGER NOT NULL,\n"
+              + "  diff_type varchar(4096) NOT NULL,\n"
+              + "  src varchar(1000) NOT NULL,\n"
+              + "  parameters varchar(4096) NOT NULL,\n"
+              + "  state tinyint(4) NOT NULL,\n"
+              + "  create_time bigint(20) NOT NULL\n"
+              + ") ;",
+          "CREATE INDEX file_diff_idx ON file_diff (src);",
+          "CREATE TABLE global_config (\n"
+              + " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+              + " property_name varchar(512) NOT NULL UNIQUE,\n"
+              + " property_value varchar(3072) NOT NULL\n"
+              + ") ;",
+          "CREATE TABLE cluster_config (\n"
+              + " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+              + " node_name varchar(512) NOT NULL UNIQUE,\n"
+              + " config_path varchar(3072) NOT NULL\n"
+              + ") ;",
+          "CREATE TABLE sys_info (\n"
+              + "  property varchar(512) PRIMARY KEY,\n"
+              + "  value varchar(4096) NOT NULL\n"
+              + ");",
+          "CREATE TABLE cluster_info (\n"
+              + "  cid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+              + "  name varchar(512) NOT NULL UNIQUE,\n"
+              + "  url varchar(4096) NOT NULL,\n"
+              + "  conf_path varchar(4096) NOT NULL,\n"
+              + "  state varchar(64) NOT NULL,\n"
+              + // ClusterState
+              "  type varchar(64) NOT NULL\n"
+              + // ClusterType
+              ");",
+          "CREATE TABLE backup_file (\n"
+              + " rid bigint(20) NOT NULL,\n"
+              + " src varchar(4096) NOT NULL,\n"
+              + " dest varchar(4096) NOT NULL,\n"
+              + " period bigint(20) NOT NULL\n"
+              + ") ;",
+          "CREATE INDEX backup_file_rid_idx ON backup_file (rid);"
+        };
     try {
       String url = conn.getMetaData().getURL();
+      conn.getMetaData().getDatabaseMajorVersion();
+      boolean mysqlOldRelease = false;
+      // Mysql version number
+      double mysqlVersion =
+          conn.getMetaData().getDatabaseMajorVersion()
+              + conn.getMetaData().getDatabaseMinorVersion() * 0.1;
+      LOG.debug("Mysql Version Number {}", mysqlVersion);
+      if (mysqlVersion < 5.7) {
+        mysqlOldRelease = true;
+      }
       boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
+      for (String s : deleteExistingTables) {
+        // Drop table if exists
+        LOG.debug(s);
+        executeSql(conn, s);
+      }
       for (String s : createEmptyTables) {
+        // Solve mysql and sqlite sql difference
         if (mysql) {
-          s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+          // path/src index should be set to less than 767
+          // to avoid "Specified key was too long" in
+          // Mysql 5.6 or previous version
+          if (mysqlOldRelease
+              && s.startsWith("CREATE INDEX")
+              && (s.contains("path") || s.contains("src"))) {
+            // Fix index size 767 in mysql 5.6 or previous version
+            s = s.replace(");", "(750));");
+          }
+          // Replace AUTOINCREMENT with AUTO_INCREMENT
+          if (s.contains("AUTOINCREMENT")) {
+            s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+          }
         }
         LOG.debug(s);
         executeSql(conn, s);
@@ -419,15 +440,19 @@ public class MetaStoreUtils {
 
         if (purl.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
           String dbName = getDBName(purl);
-          for (String name : dbNameNotAllowed) {
+          for (String name : DB_NAME_NOT_ALLOWED) {
             if (dbName.equals(name)) {
-              throw new MetaStoreException(String.format("The database %s in mysql is for DB system use, please appoint other database in druid.xml.", name));
+              throw new MetaStoreException(
+                  String.format(
+                      "The database %s in mysql is for DB system use, "
+                          + "please appoint other database in druid.xml.",
+                      name));
             }
           }
         }
 
         for (String key : p.stringPropertyNames()) {
-          if(key.equals("password")) {
+          if (key.equals("password")) {
             LOG.info("\t" + key + " = **********");
           } else {
             LOG.info("\t" + key + " = " + p.getProperty(key));

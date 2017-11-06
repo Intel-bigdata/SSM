@@ -29,40 +29,40 @@ import java.util.Map;
  */
 public class FileObject extends SmartObject {
 
-  public static final Map<String, Property> properties;
+  public static final Map<String, Property> PROPERTIES;
 
   static {
-    properties = new HashMap<>();
-    properties.put("path",
+    PROPERTIES = new HashMap<>();
+    PROPERTIES.put("path",
         new Property("path", ValueType.STRING, null, "file", "path", false));
-    properties.put("accessCount",
+    PROPERTIES.put("accessCount",
         new Property("accessCount", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
-    properties.put("length",
+    PROPERTIES.put("length",
         new Property("length", ValueType.LONG,
             null, "file", "length", false));
-    properties.put("blocksize",
+    PROPERTIES.put("blocksize",
         new Property("blocksize", ValueType.LONG,
             null, "file", "block_size", false));
-    properties.put("inCache",
+    PROPERTIES.put("inCache",
         new Property("inCache", ValueType.BOOLEAN,
             null, "cached_file", null, false));
-    properties.put("age",
+    PROPERTIES.put("age",
         new Property("age", ValueType.TIMEINTVAL,
             null, "file", null, false,
             "($NOW - modification_time)"));
-    properties.put("mtime",
+    PROPERTIES.put("mtime",
         new Property("mtime", ValueType.TIMEPOINT,
             null, "file", "modification_time", false));
-    properties.put("atime",
+    PROPERTIES.put("atime",
         new Property("atime", ValueType.TIMEPOINT,
             null, "file", "access_time", false));
-    properties.put("storagePolicy",
+    PROPERTIES.put("storagePolicy",
         new Property("storagePolicy", ValueType.STRING,
             null, "file", null, false,
             "(SELECT policy_name FROM storage_policy WHERE sid = file.sid)"));
-    properties.put("unsynced",
+    PROPERTIES.put("unsynced",
         new Property("unsynced", ValueType.BOOLEAN,
             null, "file_diff", null, false,
             "state = 0"));
@@ -73,6 +73,6 @@ public class FileObject extends SmartObject {
   }
 
   public Map<String, Property> getProperties() {
-    return properties;
+    return PROPERTIES;
   }
 }

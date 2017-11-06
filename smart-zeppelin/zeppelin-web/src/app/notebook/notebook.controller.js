@@ -441,6 +441,16 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
     }
   };
 
+  $scope.cloneRule = function (rule) {
+    if ($scope.note.paragraphs[0].text) {
+      if (confirm("Are you sure to overwrite existing rule?")) {
+        $scope.note.paragraphs[0].text = rule;
+      };
+    } else {
+      $scope.note.paragraphs[0].text = rule;
+    }
+  };
+
   var initializeLookAndFeel = function() {
     if (!$scope.note.config.looknfeel) {
       $scope.note.config.looknfeel = 'default';

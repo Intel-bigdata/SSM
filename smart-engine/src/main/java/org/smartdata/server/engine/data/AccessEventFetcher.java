@@ -85,7 +85,8 @@ public class AccessEventFetcher {
     private final AccessCountTableManager manager;
     private final FileAccessEventCollector collector;
 
-    public FetchTask(Configuration conf, AccessCountTableManager manager, FileAccessEventCollector collector) {
+    public FetchTask(
+        Configuration conf, AccessCountTableManager manager, FileAccessEventCollector collector) {
       this.conf = conf;
       this.manager = manager;
       this.collector = collector;

@@ -20,7 +20,8 @@ package org.smartdata.action;
 import java.util.Map;
 
 /**
- * Action factory interface. Either built-in or user defined actions will be provided via an action factory.
+ * Action factory interface. Either built-in or user defined actions will be
+ * provided via an action factory.
  */
 public interface ActionFactory {
 

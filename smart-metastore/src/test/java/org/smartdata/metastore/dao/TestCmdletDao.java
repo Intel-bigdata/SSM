@@ -21,9 +21,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.model.CmdletState;
-import org.smartdata.model.CmdletInfo;
 import org.smartdata.metastore.TestDaoUtil;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.List;
@@ -47,9 +47,9 @@ public class TestCmdletDao extends TestDaoUtil {
   @Test
   public void testInsertGetCmdlet() throws Exception {
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
-        CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+        CmdletState.EXECUTING, "test", 123123333L, 232444444L);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
-        CmdletState.PAUSED, "tt", 123178333l, 232444994l);
+        CmdletState.PAUSED, "tt", 123178333L, 232444994L);
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2});
     List<CmdletInfo> cmdlets = cmdletDao.getAll();
     Assert.assertTrue(cmdlets.size() == 2);
@@ -58,16 +58,16 @@ public class TestCmdletDao extends TestDaoUtil {
   @Test
   public void testUpdateCmdlet() throws Exception {
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
-        CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+        CmdletState.EXECUTING, "test", 123123333L, 232444444L);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
-        CmdletState.PAUSED, "tt", 123178333l, 232444994l);
+        CmdletState.PAUSED, "tt", 123178333L, 232444994L);
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2});
     cmdlet1.setState(CmdletState.DONE);
     cmdletDao.update(cmdlet1);
     CmdletInfo dbcmdlet1 = cmdletDao.getById(cmdlet1.getCid());
     Assert.assertTrue(dbcmdlet1.equals(cmdlet1));
     try {
-      cmdletDao.getById(2000l);
+      cmdletDao.getById(2000L);
     } catch (EmptyResultDataAccessException e) {
       Assert.assertTrue(true);
     }
@@ -76,9 +76,9 @@ public class TestCmdletDao extends TestDaoUtil {
   @Test
   public void testGetByCondition() throws Exception {
     CmdletInfo command1 = new CmdletInfo(0, 1,
-        CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+        CmdletState.EXECUTING, "test", 123123333L, 232444444L);
     CmdletInfo command2 = new CmdletInfo(1, 78,
-        CmdletState.PAUSED, "tt", 123178333l, 232444994l);
+        CmdletState.PAUSED, "tt", 123178333L, 232444994L);
     cmdletDao.insert(new CmdletInfo[]{command1, command2});
     List<CmdletInfo> commandInfos = cmdletDao
         .getByCondition(null, null, null);
@@ -91,9 +91,9 @@ public class TestCmdletDao extends TestDaoUtil {
   @Test
   public void testDeleteACmdlet() throws Exception {
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
-        CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+        CmdletState.EXECUTING, "test", 123123333L, 232444444L);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
-        CmdletState.PAUSED, "tt", 123178333l, 232444994l);
+        CmdletState.PAUSED, "tt", 123178333L, 232444994L);
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2});
     cmdletDao.delete(1);
     List<CmdletInfo> cmdlets = cmdletDao.getAll();
@@ -103,9 +103,9 @@ public class TestCmdletDao extends TestDaoUtil {
   @Test
   public void testMaxId() throws Exception {
     CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
-        CmdletState.EXECUTING, "test", 123123333l, 232444444l);
+        CmdletState.EXECUTING, "test", 123123333L, 232444444L);
     CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
-        CmdletState.PAUSED, "tt", 123178333l, 232444994l);
+        CmdletState.PAUSED, "tt", 123178333L, 232444994L);
     Assert.assertTrue(cmdletDao.getMaxId() == 0);
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2});
     Assert.assertTrue(cmdletDao.getMaxId() == 2);

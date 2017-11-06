@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore.dao;
 
-
 import org.apache.commons.lang.StringUtils;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
@@ -28,6 +27,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 public class FileDiffDao {
-  private final String TABLE_NAME = "file_diff";
+  private static final String TABLE_NAME = "file_diff";
   private DataSource dataSource;
 
   public void setDataSource(DataSource dataSource) {
@@ -54,7 +54,8 @@ public class FileDiffDao {
 
   public List<FileDiff> getPendingDiff() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE state = 0", new FileDiffRowMapper());
+    return jdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE state = 0", new FileDiffRowMapper());
   }
 
   public List<FileDiff> getByState(FileDiffState fileDiffState) {
@@ -99,14 +100,12 @@ public class FileDiffDao {
         new Object[]{fileName}, new FileDiffRowMapper());
   }
 
-
   public List<String> getSyncPath(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);
     }
-    String sql = "SELECT DISTINCT src FROM " + TABLE_NAME +
-        " WHERE state = ?";
+    String sql = "SELECT DISTINCT src FROM " + TABLE_NAME + " WHERE state = ?";
     return jdbcTemplate
         .queryForList(sql, String.class, FileDiffState.RUNNING.getValue());
   }
@@ -144,7 +143,8 @@ public class FileDiffDao {
     simpleJdbcInsert.executeBatch(maps);
   }
 
-  public int[] batchUpdate(final List<Long> dids, final List<FileDiffState> states, final List<String> parameters) {
+  public int[] batchUpdate(
+      final List<Long> dids, final List<FileDiffState> states, final List<String> parameters) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
     final String sql = "UPDATE " + TABLE_NAME + " SET state = ?, "
@@ -200,7 +200,7 @@ public class FileDiffDao {
     parameters.put("src", fileDiff.getSrc());
     parameters.put("parameters", fileDiff.getParametersJsonString());
     parameters.put("state", fileDiff.getState().getValue());
-    parameters.put("create_time", fileDiff.getCreate_time());
+    parameters.put("create_time", fileDiff.getCreateTime());
     return parameters;
   }
 
@@ -214,7 +214,7 @@ public class FileDiffDao {
       fileDiff.setSrc(resultSet.getString("src"));
       fileDiff.setParametersFromJsonString(resultSet.getString("parameters"));
       fileDiff.setState(FileDiffState.fromValue((int) resultSet.getByte("state")));
-      fileDiff.setCreate_time(resultSet.getLong("create_time"));
+      fileDiff.setCreateTime(resultSet.getLong("create_time"));
       return fileDiff;
     }
   }

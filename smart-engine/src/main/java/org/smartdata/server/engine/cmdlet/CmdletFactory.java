@@ -26,12 +26,12 @@ import org.smartdata.action.ActionRegistry;
 import org.smartdata.action.SmartAction;
 import org.smartdata.alluxio.AlluxioUtil;
 import org.smartdata.alluxio.action.AlluxioAction;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.client.SmartDFSClient;
-import org.smartdata.protocol.message.StatusReporter;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
@@ -81,8 +81,7 @@ public class CmdletFactory {
         LOG.error("smartAction aid={} setDfsClient error", launchAction.getActionId(), e);
         throw new ActionException(e);
       }
-    }
-    else if(smartAction instanceof AlluxioAction) {
+    } else if (smartAction instanceof AlluxioAction) {
       FileSystem fs;
       try {
         fs =  AlluxioUtil.getAlluxioFs(smartContext);
@@ -90,8 +89,7 @@ public class CmdletFactory {
         LOG.error("smartAction aid={} alluxio filesystem error", launchAction.getActionId(), e);
         throw new ActionException(e);
       }
-      ((AlluxioAction)smartAction).setFileSystem(fs);
-
+      ((AlluxioAction) smartAction).setFileSystem(fs);
     }
     return smartAction;
   }
@@ -100,7 +98,9 @@ public class CmdletFactory {
     String[] strings =
         smartContext
             .getConf()
-            .get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY, SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
+            .get(
+                SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+                SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
             .split(":");
     return new InetSocketAddress(
         strings[strings.length - 2], Integer.parseInt(strings[strings.length - 1]));

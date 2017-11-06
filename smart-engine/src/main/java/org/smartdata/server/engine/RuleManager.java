@@ -25,11 +25,11 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CmdletState;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
 import org.smartdata.model.rule.RulePluginManager;
 import org.smartdata.model.rule.TimeBasedScheduleInfo;
@@ -49,8 +49,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Manage and execute rules.
- * We can have 'cache' here to decrease the needs to execute a SQL query.
+ * Manage and execute rules. We can have 'cache' here to decrease the needs to execute a SQL query.
  */
 public class RuleManager extends AbstractService {
   private ServerContext serverContext;
@@ -59,21 +58,21 @@ public class RuleManager extends AbstractService {
   private MetaStore metaStore;
 
   private boolean isClosed = false;
-  public static final Logger LOG =
-      LoggerFactory.getLogger(RuleManager.class.getName());
+  public static final Logger LOG = LoggerFactory.getLogger(RuleManager.class.getName());
 
-  private ConcurrentHashMap<Long, RuleInfoRepo> mapRules =
-      new ConcurrentHashMap<>();
+  private ConcurrentHashMap<Long, RuleInfoRepo> mapRules = new ConcurrentHashMap<>();
 
   public ExecutorScheduler execScheduler;
 
-  public RuleManager(ServerContext context,
-      StatesManager statesManager, CmdletManager cmdletManager) {
+  public RuleManager(
+      ServerContext context, StatesManager statesManager, CmdletManager cmdletManager) {
     super(context);
 
-    int numExecutors = context.getConf().getInt(
-        SmartConfKeys.SMART_RULE_EXECUTORS_KEY,
-        SmartConfKeys.SMART_RULE_EXECUTORS_DEFAULT);
+    int numExecutors =
+        context
+            .getConf()
+            .getInt(
+                SmartConfKeys.SMART_RULE_EXECUTORS_KEY, SmartConfKeys.SMART_RULE_EXECUTORS_DEFAULT);
     execScheduler = new ExecutorScheduler(numExecutors);
 
     this.statesManager = statesManager;
@@ -86,19 +85,27 @@ public class RuleManager extends AbstractService {
 
   /**
    * Submit a rule to RuleManger.
+   *
    * @param rule
    * @param initState
    * @return
    * @throws IOException
    */
-  public long submitRule(String rule, RuleState initState)
-      throws IOException {
+  public long submitRule(String rule, RuleState initState) throws IOException {
     LOG.debug("Received Rule -> [" + rule + "]");
-    if (initState != RuleState.ACTIVE && initState != RuleState.DISABLED
+    if (initState != RuleState.ACTIVE
+        && initState != RuleState.DISABLED
         && initState != RuleState.DRYRUN) {
-      throw new IOException("Invalid initState = " + initState
-          + ", it MUST be one of [" + RuleState.ACTIVE
-          + ", " + RuleState.DRYRUN + ", " + RuleState.DISABLED + "]");
+      throw new IOException(
+          "Invalid initState = "
+              + initState
+              + ", it MUST be one of ["
+              + RuleState.ACTIVE
+              + ", "
+              + RuleState.DRYRUN
+              + ", "
+              + RuleState.DISABLED
+              + "]");
     }
 
     TranslateResult tr = doCheckRule(rule, null);
@@ -137,8 +144,7 @@ public class RuleManager extends AbstractService {
     }
   }
 
-  private TranslateResult doCheckRule(String rule, TranslationContext ctx)
-      throws IOException {
+  private TranslateResult doCheckRule(String rule, TranslationContext ctx) throws IOException {
     SmartRuleStringParser parser = new SmartRuleStringParser(rule, ctx);
     return parser.translate();
   }
@@ -152,17 +158,14 @@ public class RuleManager extends AbstractService {
   }
 
   /**
-   * Delete a rule in SSM. if dropPendingCmdlets equals false then the rule
-   * record will still be kept in Table 'rules', the record will be deleted
-   * sometime later.
+   * Delete a rule in SSM. if dropPendingCmdlets equals false then the rule record will still be
+   * kept in Table 'rules', the record will be deleted sometime later.
    *
    * @param ruleID
-   * @param dropPendingCmdlets pending cmdlets triggered by the rule will be
-   *                            discarded if true.
+   * @param dropPendingCmdlets pending cmdlets triggered by the rule will be discarded if true.
    * @throws IOException
    */
-  public void deleteRule(long ruleID, boolean dropPendingCmdlets)
-      throws IOException {
+  public void deleteRule(long ruleID, boolean dropPendingCmdlets) throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     try {
       if (dropPendingCmdlets && getCmdletManager() != null) {
@@ -178,8 +181,7 @@ public class RuleManager extends AbstractService {
     submitRuleToScheduler(infoRepo.activate(this));
   }
 
-  public void disableRule(long ruleID, boolean dropPendingCmdlets)
-      throws IOException {
+  public void disableRule(long ruleID, boolean dropPendingCmdlets) throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleID);
     infoRepo.disable();
     if (dropPendingCmdlets && getCmdletManager() != null) {
@@ -204,32 +206,31 @@ public class RuleManager extends AbstractService {
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
     for (RuleInfoRepo infoRepo : mapRules.values()) {
       RuleInfo ruleInfo = infoRepo.getRuleInfoRef();
-      if (ruleInfo.getState() != RuleState.DELETED){
-        if (ruleInfo.getRuleText().contains("allssd") ||
-            ruleInfo.getRuleText().contains("onessd") ||
-            ruleInfo.getRuleText().contains("archive")) {
+      if (ruleInfo.getState() != RuleState.DELETED) {
+        if (ruleInfo.getRuleText().contains("allssd")
+            || ruleInfo.getRuleText().contains("onessd")
+            || ruleInfo.getRuleText().contains("archive")) {
           DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
           List<CmdletInfo> cmdletInfos = new ArrayList<CmdletInfo>();
           cmdletInfos = cmdletManager.listCmdletsInfo(ruleInfo.getId());
           int currPos = 0;
           for (CmdletInfo cmdletInfo : cmdletInfos) {
-            if (cmdletInfo.getState() ==  CmdletState.EXECUTING ||
-                cmdletInfo.getState() ==  CmdletState.NOTINITED ||
-                cmdletInfo.getState() ==  CmdletState.PENDING) {
+            if (cmdletInfo.getState() == CmdletState.EXECUTING
+                || cmdletInfo.getState() == CmdletState.NOTINITED
+                || cmdletInfo.getState() == CmdletState.PENDING) {
               break;
             }
             currPos += 1;
           }
           int countRunning = 0;
-          for (int i = 0; i < cmdletInfos.size(); i++ ) {
-            if (cmdletInfos.get(i).getState() == CmdletState.EXECUTING ||
-                cmdletInfos.get(i).getState() == CmdletState.PENDING ||
-                cmdletInfos.get(i).getState() == CmdletState.NOTINITED) {
+          for (int i = 0; i < cmdletInfos.size(); i++) {
+            if (cmdletInfos.get(i).getState() == CmdletState.EXECUTING
+                || cmdletInfos.get(i).getState() == CmdletState.PENDING
+                || cmdletInfos.get(i).getState() == CmdletState.NOTINITED) {
               countRunning += 1;
             }
           }
-          detailedRuleInfo
-              .setBaseProgress(cmdletInfos.size() - currPos);
+          detailedRuleInfo.setBaseProgress(cmdletInfos.size() - currPos);
           detailedRuleInfo.setRunningProgress(countRunning);
           detailedRuleInfos.add(detailedRuleInfo);
         }
@@ -258,8 +259,9 @@ public class RuleManager extends AbstractService {
     return retInfos;
   }
 
-  public void updateRuleInfo(long ruleId, RuleState rs, long lastCheckTime,
-                             long checkedCount, int cmdletsGen) throws IOException {
+  public void updateRuleInfo(
+      long ruleId, RuleState rs, long lastCheckTime, long checkedCount, int cmdletsGen)
+      throws IOException {
     RuleInfoRepo infoRepo = checkIfExists(ruleId);
     infoRepo.updateRuleInfo(rs, lastCheckTime, checkedCount, cmdletsGen);
   }
@@ -277,9 +279,8 @@ public class RuleManager extends AbstractService {
   }
 
   /**
-   * Init RuleManager, this includes:
-   *    1. Load related data from local storage or HDFS
-   *    2. Initial
+   * Init RuleManager, this includes: 1. Load related data from local storage or HDFS 2. Initial
+   *
    * @throws IOException
    */
   @Override
@@ -295,8 +296,7 @@ public class RuleManager extends AbstractService {
     for (RuleInfo rule : rules) {
       mapRules.put(rule.getId(), new RuleInfoRepo(rule, metaStore));
     }
-    LOG.info("Initialized. Totally " + rules.size()
-        + " rules loaded from DataBase.");
+    LOG.info("Initialized. Totally " + rules.size() + " rules loaded from DataBase.");
     if (LOG.isDebugEnabled()) {
       for (RuleInfo info : rules) {
         LOG.debug("\t" + info);
@@ -304,8 +304,7 @@ public class RuleManager extends AbstractService {
     }
   }
 
-  private boolean submitRuleToScheduler(RuleExecutor executor)
-      throws IOException {
+  private boolean submitRuleToScheduler(RuleExecutor executor) throws IOException {
     if (executor == null || executor.isExited()) {
       return false;
     }
@@ -313,9 +312,7 @@ public class RuleManager extends AbstractService {
     return true;
   }
 
-  /**
-   * Start services
-   */
+  /** Start services. */
   @Override
   public void start() throws IOException {
     LOG.info("Starting ...");
@@ -325,17 +322,16 @@ public class RuleManager extends AbstractService {
     // Submit runnable rules to scheduler
     for (RuleInfoRepo infoRepo : mapRules.values()) {
       RuleInfo rule = infoRepo.getRuleInfoRef();
-      if (rule.getState() == RuleState.ACTIVE
-          || rule.getState() == RuleState.DRYRUN) {
+      if (rule.getState() == RuleState.ACTIVE || rule.getState() == RuleState.DRYRUN) {
         RuleExecutor ruleExecutor = infoRepo.launchExecutor(this);
         TranslateResult tr = ruleExecutor.getTranslateResult();
         TimeBasedScheduleInfo si = tr.getTbScheduleInfo();
         long lastCheckTime = rule.getLastCheckTime();
         long every = si.getEvery();
         long now = System.currentTimeMillis();
-        if ((now-lastCheckTime) > every) {
+        if ((now - lastCheckTime) > every) {
           int delay = new Random().nextInt(5000);
-          si.setStartTime(now+delay);
+          si.setStartTime(now + delay);
         } else {
           long delay = every - (now - lastCheckTime);
           si.setStartTime(now + delay);
@@ -347,9 +343,7 @@ public class RuleManager extends AbstractService {
     LOG.info("Started. " + numLaunched + " rules launched for execution.");
   }
 
-  /**
-   * Stop services
-   */
+  /** Stop services. */
   @Override
   public void stop() throws IOException {
     LOG.info("Stopping ...");

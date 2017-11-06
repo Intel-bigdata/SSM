@@ -28,12 +28,16 @@ import com.hazelcast.core.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.ExecutorType;
+import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
+import org.smartdata.server.cluster.NodeInfo;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
+import org.smartdata.server.engine.message.AddNodeMessage;
+import org.smartdata.server.engine.message.RemoveNodeMessage;
 import org.smartdata.server.utils.HazelcastUtil;
 
 import java.io.Serializable;
@@ -46,13 +50,14 @@ import java.util.Random;
 import java.util.Set;
 
 public class HazelcastExecutorService extends CmdletExecutorService {
-  private Logger LOG = LoggerFactory.getLogger(HazelcastExecutorService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HazelcastExecutorService.class);
   public static final String WORKER_TOPIC_PREFIX = "worker_";
   public static final String STATUS_TOPIC = "status_topic";
   private final HazelcastInstance instance;
   private Random random;
   private Map<String, ITopic<Serializable>> masterToWorkers;
   private Map<String, Set<Long>> scheduledCmdlets;
+  private Map<String, Member> members;
   private ITopic<StatusMessage> statusTopic;
 
   public HazelcastExecutorService(CmdletManager cmdletManager) {
@@ -60,6 +65,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
     this.random = new Random();
     this.scheduledCmdlets = new HashMap<>();
     this.masterToWorkers = new HashMap<>();
+    this.members = new HashMap<>();
     this.instance = HazelcastInstanceProvider.getInstance();
     this.statusTopic = instance.getTopic(STATUS_TOPIC);
     this.statusTopic.addMessageListener(new StatusMessageListener());
@@ -83,9 +89,21 @@ public class HazelcastExecutorService extends CmdletExecutorService {
     return infos;
   }
 
-  @Override
-  public boolean isLocalService() {
-    return false;
+  public int getNumNodes() {
+    return masterToWorkers.size();
+  }
+
+  public List<NodeInfo> getNodesInfo() {
+    List<StandbyServerInfo> infos = getStandbyServers();
+    List<NodeInfo> ret = new ArrayList<>(infos.size());
+    for (StandbyServerInfo info : infos) {
+      ret.add(info);
+    }
+    return ret;
+  }
+
+  private NodeInfo memberToNodeInfo(Member member) {
+    return new StandbyServerInfo(member.getUuid(), member.getAddress().toString());
   }
 
   @Override
@@ -94,12 +112,13 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   }
 
   @Override
-  public void execute(LaunchCmdlet cmdlet) {
+  public String execute(LaunchCmdlet cmdlet) {
     String[] members = masterToWorkers.keySet().toArray(new String[0]);
     String member = members[random.nextInt() % members.length];
     masterToWorkers.get(member).publish(cmdlet);
     scheduledCmdlets.get(member).add(cmdlet.getCmdletId());
     LOG.info("Executing cmdlet {} on worker {}", cmdlet.getCmdletId(), members);
+    return member;
   }
 
   @Override
@@ -133,6 +152,8 @@ public class HazelcastExecutorService extends CmdletExecutorService {
         ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
         masterToWorkers.put(worker.getUuid(), topic);
         scheduledCmdlets.put(worker.getUuid(), new HashSet<Long>());
+        members.put(worker.getUuid(), worker);
+        EngineEventBus.post(new AddNodeMessage(memberToNodeInfo(worker)));
       }
     }
 
@@ -141,6 +162,8 @@ public class HazelcastExecutorService extends CmdletExecutorService {
       Member member = membershipEvent.getMember();
       if (masterToWorkers.containsKey(member.getUuid())) {
         masterToWorkers.get(member.getUuid()).destroy();
+        members.remove(member.getUuid());
+        EngineEventBus.post(new RemoveNodeMessage(memberToNodeInfo(member)));
       }
       //Todo: recover
     }

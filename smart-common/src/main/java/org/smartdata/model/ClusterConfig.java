@@ -17,6 +17,8 @@
  */
 package org.smartdata.model;
 
+import java.util.Objects;
+
 public class ClusterConfig {
   private long cid;
   private String nodeName;
@@ -57,26 +59,26 @@ public class ClusterConfig {
 
   @Override
   public String toString() {
-    return String.format("ClusterConfig{cid=%s, nodeName=\'%s\', configPath=\'%s\'}",cid,nodeName,configPath);
+    return String.format(
+        "ClusterConfig{cid=%s, nodeName=\'%s\', configPath=\'%s\'}", cid, nodeName, configPath);
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     ClusterConfig that = (ClusterConfig) o;
-
-    if (cid != that.cid) return false;
-    if (nodeName != null ? !nodeName.equals(that.nodeName) : that.nodeName != null) return false;
-    return configPath != null ? configPath.equals(that.configPath) : that.configPath == null;
+    return cid == that.cid
+        && Objects.equals(nodeName, that.nodeName)
+        && Objects.equals(configPath, that.configPath);
   }
 
   @Override
   public int hashCode() {
-    int result = (int) (cid ^ (cid >>> 32));
-    result = 31 * result + (nodeName != null ? nodeName.hashCode() : 0);
-    result = 31 * result + (configPath != null ? configPath.hashCode() : 0);
-    return result;
+    return Objects.hash(cid, nodeName, configPath);
   }
 }

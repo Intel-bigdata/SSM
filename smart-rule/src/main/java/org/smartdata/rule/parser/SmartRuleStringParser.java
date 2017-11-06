@@ -36,14 +36,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Parser a rule string and translate it.
- */
+/** Parser a rule string and translate it. */
 public class SmartRuleStringParser {
   private String rule;
   private TranslationContext ctx = null;
 
   private static Map<String, String> optCond = new HashMap<>();
+
   static {
     optCond.put("allssd", "storagePolicy != \"ALL_SSD\"");
     optCond.put("onessd", "storagePolicy != \"ONE_SSD\"");
@@ -58,15 +57,16 @@ public class SmartRuleStringParser {
 
   public class SSMRuleErrorListener extends BaseErrorListener {
     @Override
-    public void syntaxError(Recognizer<?, ?> recognizer,
-                            Object offendingSymbol,
-                            int line, int charPositionInLine,
-                            String msg,
-                            RecognitionException e) {
-      List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
+    public void syntaxError(
+        Recognizer<?, ?> recognizer,
+        Object offendingSymbol,
+        int line,
+        int charPositionInLine,
+        String msg,
+        RecognitionException e) {
+      List<String> stack = ((Parser) recognizer).getRuleInvocationStack();
       Collections.reverse(stack);
-      parserErrorMessage += "Line " + line + ", Char " + charPositionInLine
-          + " : " + msg + "\n";
+      parserErrorMessage += "Line " + line + ", Char " + charPositionInLine + " : " + msg + "\n";
       parseErrors.add(e);
     }
   }
@@ -88,8 +88,7 @@ public class SmartRuleStringParser {
     }
     int[] condPosition = tr.getCondPosition();
     String cond = rule.substring(condPosition[0], condPosition[1] + 1);
-    String optRule = rule.replace(cond,
-        optCond.get(actName) + " and (" + cond + ")");
+    String optRule = rule.replace(cond, optCond.get(actName) + " and (" + cond + ")");
     return doTranslate(optRule);
   }
 

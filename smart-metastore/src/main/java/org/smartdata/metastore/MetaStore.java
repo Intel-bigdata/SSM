@@ -605,12 +605,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
-      if (actionInfo.getActionName().contains("allssd") ||
-          actionInfo.getActionName().contains("onessd") ||
-          actionInfo.getActionName().contains("archive")) {
+      if (actionInfo.getActionName().contains("allssd")
+          || actionInfo.getActionName().contains("onessd")
+          || actionInfo.getActionName().contains("archive")) {
         detailedFileAction.setTarget(actionInfo.getActionName());
-        detailedFileAction.setSrc(mapStoragePolicyIdName.get(
-            (int) fileInfo.getStoragePolicy()));
+        detailedFileAction.setSrc(mapStoragePolicyIdName.get((int) fileInfo.getStoragePolicy()));
       } else {
         detailedFileAction.setSrc(actionInfo.getArgs().get("-src"));
         detailedFileAction.setTarget(actionInfo.getArgs().get("-dest"));
@@ -625,9 +624,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<RuleInfo> ruleInfos = getRuleInfo();
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
     for (RuleInfo ruleInfo: ruleInfos) {
-      if (ruleInfo.getRuleText().contains("allssd") ||
-          ruleInfo.getRuleText().contains("onessd") ||
-          ruleInfo.getRuleText().contains("archive")) {
+      if (ruleInfo.getRuleText().contains("allssd")
+          || ruleInfo.getRuleText().contains("onessd")
+          || ruleInfo.getRuleText().contains("archive")) {
         DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add mover progress
         List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
@@ -639,8 +638,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           currPos += 1;
         }
         int countRunning = 0;
-        for (int i = 0; i < cmdletInfos.size(); i++ ) {
-          if (cmdletInfos.get(i).getState().getValue() <= 2) {
+        for (CmdletInfo cmdletInfo : cmdletInfos) {
+          if (cmdletInfo.getState().getValue() <= 2) {
             countRunning += 1;
           }
         }
@@ -873,6 +872,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<ActionInfo> listPageAction(long start, long offset, List<String> orderBy,
+      List<Boolean> desc)
+      throws MetaStoreException {
+    LOG.debug("List Action, start {}, offset {}", start, offset);
+    try {
+      if (orderBy.size() == 0) {
+        return actionDao.getAPageOfAction(start, offset);
+      } else {
+        return actionDao.getAPageOfAction(start, offset, orderBy, desc);
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteCmdletActions(long cmdletId) throws MetaStoreException {
     try {
       actionDao.deleteCmdletActions(cmdletId);
@@ -1051,12 +1065,12 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           break;
         }
         ActionInfo actionInfo = getActionById(aid);
-        if(actionInfo.isFinished()) {
+        if (actionInfo.isFinished()) {
           finishedActions.add(actionInfo);
         } else {
           runningActions.add(actionInfo);
         }
-        total ++;
+        total++;
       }
     }
     runningActions.addAll(finishedActions);
@@ -1078,6 +1092,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public long getMaxActionId() throws MetaStoreException {
     try {
       return actionDao.getMaxId();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public long getCountOfAllAction() throws MetaStoreException {
+    try {
+      return actionDao.getCountOfAction();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1189,7 +1211,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public boolean batchUpdateFileDiff(List<Long> did, List<FileDiffState> states, List<String> parameters) throws MetaStoreException {
+  public boolean batchUpdateFileDiff(
+      List<Long> did, List<FileDiffState> states, List<String> parameters)
+      throws MetaStoreException {
     try {
       return fileDiffDao.batchUpdate(did, states, parameters).length > 0;
     } catch (Exception e) {
@@ -1330,11 +1354,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public GlobalConfig getDefaultGlobalConfigByName(
-      String config_name) throws MetaStoreException {
+      String configName) throws MetaStoreException {
     try {
-      if (globalConfigDao.getCountByName(config_name) > 0) {
+      if (globalConfigDao.getCountByName(configName) > 0) {
         //the property is existed
-        return globalConfigDao.getByPropertyName(config_name);
+        return globalConfigDao.getByPropertyName(configName);
       } else {
         return null;
       }

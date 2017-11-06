@@ -48,11 +48,9 @@ function ConfigurationCtrl($scope, $rootScope, $http, baseUrlSrv, ngToast, conf)
   init();
 
   $scope.conf = [];
-  $scope._ = _;
-  ngToast.dismiss();
 
   var getConf = function() {
-    $http.get(conf.restapiRoot + 'smart/api/' + conf.restapiProtocol + '/' + 'conf').
+    $http.get(baseUrlSrv.getRestApiRoot() + 'smart/api/' + conf.restapiProtocol + '/' + 'conf').
     success(function(data, status, headers, config) {
       $scope.conf = data.body;
     }).

@@ -49,7 +49,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
   initController();
 
   function getZeppelinVersion() {
-    $http.get(conf.restapiRoot + 'smart/api/' + conf.restapiProtocol + '/system/version').success(
+    $http.get(baseUrlSrv.getRestApiRoot() + 'smart/api/' + conf.restapiProtocol + '/system/version').success(
       function(data, status, headers, config) {
         $rootScope.zeppelinVersion = data.body;
       }).error(
@@ -59,6 +59,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
   }
 
   function initController() {
+    location.pathname = '/';
     $scope.isDrawNavbarNoteList = false;
     angular.element('#notebook-list').perfectScrollbar({suppressScrollX: true});
 
@@ -114,6 +115,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
           message: 'Logout Success'
         });
         setTimeout(function() {
+          window.location.pathname = '/';
           window.location.replace('/');
         }, 1000);
       });

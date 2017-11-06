@@ -17,6 +17,8 @@
  */
 package org.smartdata.model;
 
+import java.util.Objects;
+
 public class ClusterInfo {
   private long cid;
   private String name;
@@ -25,7 +27,8 @@ public class ClusterInfo {
   private String state;
   private String type;
 
-  public ClusterInfo(long cid, String name, String url, String confPath, String state, String type) {
+  public ClusterInfo(
+      long cid, String name, String url, String confPath, String state, String type) {
     this.cid = cid;
     this.name = name;
     this.url = url;
@@ -87,33 +90,30 @@ public class ClusterInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     ClusterInfo that = (ClusterInfo) o;
-
-    if (cid != that.cid) return false;
-    if (name != null ? !name.equals(that.name) : that.name != null) return false;
-    if (url != null ? !url.equals(that.url) : that.url != null) return false;
-    if (confPath != null ? !confPath.equals(that.confPath) : that.confPath != null) return false;
-    if (state != null ? !state.equals(that.state) : that.state != null) return false;
-    return type != null ? type.equals(that.type) : that.type == null;
+    return cid == that.cid
+        && Objects.equals(name, that.name)
+        && Objects.equals(url, that.url)
+        && Objects.equals(confPath, that.confPath)
+        && Objects.equals(state, that.state)
+        && Objects.equals(type, that.type);
   }
 
   @Override
   public int hashCode() {
-    int result = (int) (cid ^ (cid >>> 32));
-    result = 31 * result + (name != null ? name.hashCode() : 0);
-    result = 31 * result + (url != null ? url.hashCode() : 0);
-    result = 31 * result + (confPath != null ? confPath.hashCode() : 0);
-    result = 31 * result + (state != null ? state.hashCode() : 0);
-    result = 31 * result + (type != null ? type.hashCode() : 0);
-    return result;
+    return Objects.hash(cid, name, url, confPath, state, type);
   }
 
   @Override
   public String toString() {
-    return String.format("ClusterInfo{cid=%s, name=\'%s\', url=\'%s\', confPath=\'%s\'," +
-        " state=\'%s\', type=\'%s\'}", cid, name, url, confPath, state, type);
+    return String.format(
+        "ClusterInfo{cid=%s, name=\'%s\', url=\'%s\', confPath=\'%s\', state=\'%s\', type=\'%s\'}",
+        cid, name, url, confPath, state, type);
   }
 }

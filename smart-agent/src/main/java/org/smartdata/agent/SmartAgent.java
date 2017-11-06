@@ -49,8 +49,6 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegi
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.tidb.TikvServer;
-import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -58,9 +56,12 @@ import java.net.UnknownHostException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
+
 public class SmartAgent implements StatusReporter {
   private static final String NAME = "SmartAgent";
-  private final static Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
   private ActorRef agentActor;
   private String host;
@@ -80,6 +81,7 @@ public class SmartAgent implements StatusReporter {
     LOG.info("Agent address: " + agentAddress);
     AgentUtils.HostPort hostPort = new AgentUtils.HostPort(agentAddress);
     agent.host = hostPort.getHost();
+    
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
   }
@@ -122,10 +124,10 @@ public class SmartAgent implements StatusReporter {
   }
 
   static class AgentActor extends UntypedActor {
-    private final static Logger LOG = LoggerFactory.getLogger(AgentActor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AgentActor.class);
 
-    private final static FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
-    private final static FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
+    private static final FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
+    private static final FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
 
     private MasterToAgent.AgentId id;
     private ActorRef master;

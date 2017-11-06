@@ -23,10 +23,11 @@ import java.io.PrintStream;
 import java.util.List;
 
 public class GetConf {
-  public static final String USAGE="USAGE: GetConf <Option>\n"
-      + "\t'Option' can be:\n"
-      + "\t\tHelp           Show this help message\n"
-      + "\t\tSmartServers   List SmartServers for the cluster(defined in hazelcast.xml)\n";
+  public static final String USAGE =
+      "USAGE: GetConf <Option>\n"
+          + "\t'Option' can be:\n"
+          + "\t\tHelp           Show this help message\n"
+          + "\t\tSmartServers   List SmartServers for the cluster(defined in hazelcast.xml)\n";
 
   public static int getSmartServers(PrintStream p) {
     ClasspathXmlConfig conf = new ClasspathXmlConfig("hazelcast.xml");

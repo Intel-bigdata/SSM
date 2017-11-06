@@ -31,7 +31,7 @@ public class DurationEvictor extends TableEvictor {
 
   @Override
   public void evictTables(AccessCountTableDeque tables, int size) {
-    if (tables.peek() != null ){
+    if (tables.peek() != null){
       AccessCountTable latestTable = tables.peekLast();
       Long threshHold = latestTable.getEndTime() - duration;
       for (Iterator<AccessCountTable> iterator = tables.iterator(); iterator.hasNext();) {

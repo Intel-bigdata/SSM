@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class CmdletInfo {
   private long cid;
@@ -137,30 +138,25 @@ public class CmdletInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     CmdletInfo that = (CmdletInfo) o;
-
-    if (cid != that.cid) return false;
-    if (rid != that.rid) return false;
-    if (generateTime != that.generateTime) return false;
-    if (stateChangedTime != that.stateChangedTime) return false;
-    if (aids != null ? !aids.equals(that.aids) : that.aids != null) return false;
-    if (state != that.state) return false;
-    return parameters != null ? parameters.equals(that.parameters) : that.parameters == null;
+    return cid == that.cid
+        && rid == that.rid
+        && generateTime == that.generateTime
+        && stateChangedTime == that.stateChangedTime
+        && Objects.equals(aids, that.aids)
+        && state == that.state
+        && Objects.equals(parameters, that.parameters);
   }
 
   @Override
   public int hashCode() {
-    int result = (int) (cid ^ (cid >>> 32));
-    result = 31 * result + (int) (rid ^ (rid >>> 32));
-    result = 31 * result + (aids != null ? aids.hashCode() : 0);
-    result = 31 * result + (state != null ? state.hashCode() : 0);
-    result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
-    result = 31 * result + (int) (generateTime ^ (generateTime >>> 32));
-    result = 31 * result + (int) (stateChangedTime ^ (stateChangedTime >>> 32));
-    return result;
+    return Objects.hash(cid, rid, aids, state, parameters, generateTime, stateChangedTime);
   }
 
   public static Builder newBuilder() {

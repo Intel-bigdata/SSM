@@ -22,7 +22,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
 public class HazelcastInstanceProvider {
-  private static String CONFIG_FILE = "hazelcast.xml";
+  private static final String CONFIG_FILE = "hazelcast.xml";
   private static HazelcastInstance instance;
 
   static {

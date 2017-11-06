@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,9 +40,6 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegi
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,6 +47,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 public class AgentMaster {
 
@@ -126,11 +127,13 @@ public class AgentMaster {
     return agentManager.hasFreeAgent();
   }
 
-  public void launchCmdlet(LaunchCmdlet launch) {
+  public String launchCmdlet(LaunchCmdlet launch) {
     try {
-      askMaster(launch);
+      AgentId agentId = (AgentId) askMaster(launch);
+      return String.valueOf(agentId.getId());
     } catch (Exception e) {
       LOG.error("Failed to launch Cmdlet {} due to {}", launch, e.getMessage());
+      return null;
     }
   }
 
@@ -158,9 +161,13 @@ public class AgentMaster {
     List<AgentInfo> infos = new ArrayList<>();
     for (Map.Entry<ActorRef, AgentId> entry : agentManager.getAgents().entrySet()) {
       String location = AgentUtils.getHostPort(entry.getKey());
-      infos.add(new AgentInfo(entry.getValue().getId(), location));
+      infos.add(new AgentInfo(String.valueOf(entry.getValue().getId()), location));
     }
     return infos;
+  }
+
+  public int getNumAgents() {
+    return agentManager.getAgents().size();
   }
 
   @VisibleForTesting
@@ -205,8 +212,8 @@ public class AgentMaster {
     }
   }
 
-  class MasterActor extends UntypedActor {
 
+  class MasterActor extends UntypedActor {
     private final Map<Long, ActorRef> dispatches = new HashMap<>();
     private int nextAgentId = 0;
     private AgentManager agentManager;
@@ -223,9 +230,10 @@ public class AgentMaster {
 
     @Override
     public void onReceive(Object message) throws Exception {
-      Boolean handled = handleAgentMessage(message) ||
-          handleClientMessage(message) ||
-          handleTerminatedMessage(message);
+      Boolean handled =
+          handleAgentMessage(message)
+              || handleClientMessage(message)
+              || handleTerminatedMessage(message);
       if (!handled) {
         unhandled(message);
       }
@@ -264,9 +272,10 @@ public class AgentMaster {
         if (agentManager.hasFreeAgent()) {
           LaunchCmdlet launch = (LaunchCmdlet) message;
           ActorRef agent = this.agentManager.dispatch();
+          AgentId agentId = this.agentManager.getAgentId(agent);
           agent.tell(launch, getSelf());
           dispatches.put(launch.getCmdletId(), agent);
-          getSender().tell("Succeed", getSelf());
+          getSender().tell(agentId, getSelf());
         }
         return true;
       } else if (message instanceof StopCmdlet) {
@@ -290,39 +299,5 @@ public class AgentMaster {
         return false;
       }
     }
-
   }
-
-  static class AgentManager {
-
-    private final Map<ActorRef, AgentId> agents = new HashMap<>();
-    private List<ActorRef> resources = new ArrayList<>();
-    private int dispatchIndex = 0;
-
-    void addAgent(ActorRef agent, AgentId id) {
-      agents.put(agent, id);
-      resources.add(agent);
-    }
-
-    AgentId removeAgent(ActorRef agent) {
-      AgentId id = agents.remove(agent);
-      resources.remove(agent);
-      return id;
-    }
-
-    boolean hasFreeAgent() {
-      return !resources.isEmpty();
-    }
-
-    ActorRef dispatch() {
-      int id = dispatchIndex % resources.size();
-      dispatchIndex = (id + 1) % resources.size();
-      return resources.get(id);
-    }
-
-    Map<ActorRef, AgentId> getAgents() {
-      return agents;
-    }
-  }
-
 }

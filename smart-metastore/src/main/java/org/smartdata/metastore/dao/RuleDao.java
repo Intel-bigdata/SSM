@@ -24,6 +24,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -63,24 +64,19 @@ public class RuleDao {
     return id;
   }
 
-  public int update(long ruleId, long lastCheckTime,
-      long checkedCount, int cmdletsGen) {
+  public int update(long ruleId, long lastCheckTime, long checkedCount, int cmdletsGen) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE rule SET " +
-        "last_check_time = ?, " +
-        "checked_count = ?, " +
-        "generated_cmdlets = ? WHERE id = ?";
+    String sql =
+        "UPDATE rule SET last_check_time = ?, checked_count = ?, "
+            + "generated_cmdlets = ? WHERE id = ?";
     return jdbcTemplate.update(sql, lastCheckTime, checkedCount, cmdletsGen, ruleId);
   }
 
-  public int update(long ruleId, int rs,
-      long lastCheckTime, long checkedCount, int cmdletsGen) {
+  public int update(long ruleId, int rs, long lastCheckTime, long checkedCount, int cmdletsGen) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE rule SET " +
-        "state = ?, " +
-        "last_check_time = ?, " +
-        "checked_count = ?, " +
-        "generated_cmdlets = ? WHERE id = ?";
+    String sql =
+        "UPDATE rule SET state = ?, last_check_time = ?, checked_count = ?, "
+            + "generated_cmdlets = ? WHERE id = ?";
     return jdbcTemplate.update(sql, rs, lastCheckTime, checkedCount, cmdletsGen, ruleId);
   }
 

@@ -59,8 +59,7 @@ public abstract class TreeNode {
       return null;
     }
 
-    return getParent().getLeft() == this ?
-        getParent().getRight() : getParent().getRight();
+    return getParent().getLeft() == this ? getParent().getRight() : getParent().getRight();
   }
 
   public abstract boolean isOperNode();

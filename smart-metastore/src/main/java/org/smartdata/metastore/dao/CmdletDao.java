@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,14 +18,15 @@
 package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringUtils;
-import org.smartdata.model.CmdletState;
 import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,9 +36,8 @@ import java.util.List;
 import java.util.Map;
 
 public class CmdletDao {
-
   private DataSource dataSource;
-  private String TABLE_NAME = "cmdlet";
+  private static final String TABLE_NAME = "cmdlet";
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -49,37 +49,43 @@ public class CmdletDao {
 
   public List<CmdletInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
-        new CmdletRowMapper());
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME, new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByIds(List<Long> aids) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE aid IN (?)",
-        new Object[]{StringUtils.join(aids, ",")},
+    return jdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE aid IN (?)",
+        new Object[] {StringUtils.join(aids, ",")},
         new CmdletRowMapper());
   }
 
   public CmdletInfo getById(long cid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE cid = ?",
-        new Object[]{cid}, new CmdletRowMapper());
+    return jdbcTemplate.queryForObject(
+        "SELECT * FROM " + TABLE_NAME + " WHERE cid = ?",
+        new Object[] {cid},
+        new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByRid(long rid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE rid = ?",
-        new Object[]{rid}, new CmdletRowMapper());
+    return jdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE rid = ?",
+        new Object[] {rid},
+        new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByState(CmdletState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME + " WHERE state = ?",
-        new Object[]{state.getValue()}, new CmdletRowMapper());
+    return jdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE state = ?",
+        new Object[] {state.getValue()},
+        new CmdletRowMapper());
   }
 
-  public List<CmdletInfo> getByCondition(String cidCondition,
-      String ridCondition, CmdletState state) {
+  public List<CmdletInfo> getByCondition(
+      String cidCondition, String ridCondition, CmdletState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sqlPrefix = "SELECT * FROM " + TABLE_NAME + " WHERE ";
     String sqlCid = (cidCondition == null) ? "" : "AND cid " + cidCondition;
@@ -107,70 +113,65 @@ public class CmdletDao {
     jdbcTemplate.execute(sql);
   }
 
-  public void insert(CmdletInfo CmdletInfo) {
+  public void insert(CmdletInfo cmdletInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
-    simpleJdbcInsert.execute(toMap(CmdletInfo));
+    simpleJdbcInsert.execute(toMap(cmdletInfo));
   }
 
-  public void insert(CmdletInfo[] CmdletInfos) {
+  public void insert(CmdletInfo[] cmdletInfos) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
-    Map<String, Object>[] maps = new Map[CmdletInfos.length];
-    for (int i = 0; i < CmdletInfos.length; i++) {
-      maps[i] = toMap(CmdletInfos[i]);
+    Map<String, Object>[] maps = new Map[cmdletInfos.length];
+    for (int i = 0; i < cmdletInfos.length; i++) {
+      maps[i] = toMap(cmdletInfos[i]);
     }
     simpleJdbcInsert.executeBatch(maps);
   }
 
   public int update(long cid, long rid, int state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE " + TABLE_NAME + " SET " +
-        "state = ?, " +
-        "state_changed_time = ? WHERE cid = ? AND rid = ?";
+    String sql =
+        "UPDATE " + TABLE_NAME + " SET state = ?, state_changed_time = ? WHERE cid = ? AND rid = ?";
     return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid, rid);
   }
 
   public int update(long cid, String parameters, int state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE " + TABLE_NAME + " SET " +
-        "parameters = ?, " +
-        "state = ?, " +
-        "state_changed_time = ? WHERE cid = ?";
+    String sql =
+        "UPDATE "
+            + TABLE_NAME
+            + " SET parameters = ?, state = ?, state_changed_time = ? WHERE cid = ?";
     return jdbcTemplate.update(sql, parameters, state, System.currentTimeMillis(), cid);
   }
 
-  public int update(final CmdletInfo CmdletInfo) {
-    List<CmdletInfo> CmdletInfos = new ArrayList<>();
-    CmdletInfos.add(CmdletInfo);
-    return update(CmdletInfos)[0];
+  public int update(final CmdletInfo cmdletInfo) {
+    List<CmdletInfo> cmdletInfos = new ArrayList<>();
+    cmdletInfos.add(cmdletInfo);
+    return update(cmdletInfos)[0];
   }
 
-  public int[] update(final List<CmdletInfo> CmdletInfos) {
+  public int[] update(final List<CmdletInfo> cmdletInfos) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE " + TABLE_NAME + " SET " +
-        "state = ?, " +
-        "state_changed_time = ? " +
-        "WHERE cid = ?";
-    return jdbcTemplate.batchUpdate(sql,
+    String sql = "UPDATE " + TABLE_NAME + " SET  state = ?, state_changed_time = ? WHERE cid = ?";
+    return jdbcTemplate.batchUpdate(
+        sql,
         new BatchPreparedStatementSetter() {
-          public void setValues(PreparedStatement ps,
-              int i) throws SQLException {
-            ps.setInt(1, CmdletInfos.get(i).getState().getValue());
-            ps.setLong(2, CmdletInfos.get(i).getStateChangedTime());
-            ps.setLong(3, CmdletInfos.get(i).getCid());
+          public void setValues(PreparedStatement ps, int i) throws SQLException {
+            ps.setInt(1, cmdletInfos.get(i).getState().getValue());
+            ps.setLong(2, cmdletInfos.get(i).getStateChangedTime());
+            ps.setLong(3, cmdletInfos.get(i).getCid());
           }
 
           public int getBatchSize() {
-            return CmdletInfos.size();
+            return cmdletInfos.size();
           }
         });
   }
 
   public long getMaxId() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    Long ret = jdbcTemplate
-        .queryForObject("SELECT MAX(cid) FROM " + TABLE_NAME, Long.class);
+    Long ret = jdbcTemplate.queryForObject("SELECT MAX(cid) FROM " + TABLE_NAME, Long.class);
     if (ret == null) {
       return 0;
     } else {
@@ -178,15 +179,15 @@ public class CmdletDao {
     }
   }
 
-  private Map<String, Object> toMap(CmdletInfo CmdletInfo) {
+  private Map<String, Object> toMap(CmdletInfo cmdletInfo) {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("cid", CmdletInfo.getCid());
-    parameters.put("rid", CmdletInfo.getRid());
-    parameters.put("aids", StringUtils.join(CmdletInfo.getAidsString(), ","));
-    parameters.put("state", CmdletInfo.getState().getValue());
-    parameters.put("parameters", CmdletInfo.getParameters());
-    parameters.put("generate_time", CmdletInfo.getGenerateTime());
-    parameters.put("state_changed_time", CmdletInfo.getStateChangedTime());
+    parameters.put("cid", cmdletInfo.getCid());
+    parameters.put("rid", cmdletInfo.getRid());
+    parameters.put("aids", StringUtils.join(cmdletInfo.getAidsString(), ","));
+    parameters.put("state", cmdletInfo.getState().getValue());
+    parameters.put("parameters", cmdletInfo.getParameters());
+    parameters.put("generate_time", cmdletInfo.getGenerateTime());
+    parameters.put("state_changed_time", cmdletInfo.getStateChangedTime());
     return parameters;
   }
 
@@ -194,15 +195,15 @@ public class CmdletDao {
 
     @Override
     public CmdletInfo mapRow(ResultSet resultSet, int i) throws SQLException {
-      CmdletInfo CmdletInfo = new CmdletInfo();
-      CmdletInfo.setCid(resultSet.getLong("cid"));
-      CmdletInfo.setRid(resultSet.getLong("rid"));
-      CmdletInfo.setAids(convertStringListToLong(resultSet.getString("aids").split(",")));
-      CmdletInfo.setState(CmdletState.fromValue((int) resultSet.getByte("state")));
-      CmdletInfo.setParameters(resultSet.getString("parameters"));
-      CmdletInfo.setGenerateTime(resultSet.getLong("generate_time"));
-      CmdletInfo.setStateChangedTime(resultSet.getLong("state_changed_time"));
-      return CmdletInfo;
+      CmdletInfo cmdletInfo = new CmdletInfo();
+      cmdletInfo.setCid(resultSet.getLong("cid"));
+      cmdletInfo.setRid(resultSet.getLong("rid"));
+      cmdletInfo.setAids(convertStringListToLong(resultSet.getString("aids").split(",")));
+      cmdletInfo.setState(CmdletState.fromValue((int) resultSet.getByte("state")));
+      cmdletInfo.setParameters(resultSet.getString("parameters"));
+      cmdletInfo.setGenerateTime(resultSet.getLong("generate_time"));
+      cmdletInfo.setStateChangedTime(resultSet.getLong("state_changed_time"));
+      return cmdletInfo;
     }
 
     private List<Long> convertStringListToLong(String[] strings) {
@@ -218,7 +219,4 @@ public class CmdletDao {
       return ret;
     }
   }
-
 }
-
-

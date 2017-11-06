@@ -30,9 +30,9 @@ import org.smartdata.integration.cluster.SmartMiniCluster;
  */
 public class IntegrationTestBase {
 
-  private static SmartCluster cluster;
-  private static SmartConf conf;
-  private static IntegrationSmartServer smartServer;
+  protected static SmartCluster cluster;
+  protected static SmartConf conf;
+  protected static IntegrationSmartServer smartServer;
   private static int zeppelinPort;
 
   @BeforeClass

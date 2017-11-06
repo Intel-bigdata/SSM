@@ -29,6 +29,7 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
@@ -56,7 +57,8 @@ public class JaasLoginUtil {
    *
    * @throws IOException
    */
-  public static synchronized Subject loginUserFromTgtTicket(String smartSecurity) throws IOException {
+  public static synchronized Subject loginUserFromTgtTicket(String smartSecurity)
+      throws IOException {
 
     TICKET_KERBEROS_OPTIONS.put("smartSecurity", smartSecurity);
     Subject subject = new Subject();
@@ -70,8 +72,7 @@ public class JaasLoginUtil {
     }
     try {
       loginContext.login();
-      LOG.info("Login successful for user "
-          + subject.getPrincipals().iterator().next().getName());
+      LOG.info("Login successful for user " + subject.getPrincipals().iterator().next().getName());
     } catch (LoginException e) {
       throw new IOException("Login failure for " + e);
     }

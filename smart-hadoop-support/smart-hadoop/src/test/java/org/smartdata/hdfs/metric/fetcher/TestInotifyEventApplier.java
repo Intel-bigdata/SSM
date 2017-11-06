@@ -22,13 +22,11 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
@@ -106,7 +104,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     applier.apply(new Event[] {close});
     FileInfo result2 = metaStore.getFile().get(0);
     Assert.assertEquals(result2.getLength(), 1024);
-    Assert.assertEquals(result2.getModification_time(), 0L);
+    Assert.assertEquals(result2.getModificationTime(), 0L);
 
 //    Event truncate = new Event.TruncateEvent("/file", 512, 16);
 //    applier.apply(new Event[] {truncate});
@@ -126,8 +124,8 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             .build();
     applier.apply(new Event[] {meta});
     FileInfo result4 = metaStore.getFile().get(0);
-    Assert.assertEquals(result4.getAccess_time(), 3);
-    Assert.assertEquals(result4.getModification_time(), 2);
+    Assert.assertEquals(result4.getAccessTime(), 3);
+    Assert.assertEquals(result4.getModificationTime(), 2);
 
     Event.CreateEvent createEvent2 =
         new Event.CreateEvent.Builder()

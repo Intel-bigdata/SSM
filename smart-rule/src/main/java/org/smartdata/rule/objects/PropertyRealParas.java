@@ -18,6 +18,7 @@
 package org.smartdata.rule.objects;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Log parameters for a property.
@@ -41,20 +42,19 @@ public class PropertyRealParas {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     PropertyRealParas that = (PropertyRealParas) o;
-
-    if (property != null ? !property.equals(that.property) : that.property != null) return false;
-    return values != null ? values.equals(that.values) : that.values == null;
+    return Objects.equals(property, that.property) && Objects.equals(values, that.values);
   }
 
   @Override
   public int hashCode() {
-    int result = property != null ? property.hashCode() : 0;
-    result = 31 * result + (values != null ? values.hashCode() : 0);
-    return result;
+    return Objects.hash(property, values);
   }
 
   public String formatParameters() {

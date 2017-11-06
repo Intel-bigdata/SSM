@@ -17,6 +17,12 @@
  */
 package org.smartdata.server.rest;
 
+import com.amazonaws.util.json.JSONArray;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +35,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Action APIs.
@@ -58,13 +67,31 @@ public class ActionRestApi {
   }
 
   @GET
-  @Path("/list/{listNumber}")
-  public Response actionList(@PathParam("listNumber") String listNumber) {
-    Integer intNumber = Integer.parseInt(listNumber);
-    intNumber = intNumber > 0 ? intNumber : 0;
+  @Path("/list/{pageIndex}/{numPerPage}/{orderBy}/{isDesc}")
+  public Response actionList(@PathParam("pageIndex") String pageIndex,
+      @PathParam("numPerPage") String numPerPage,
+      @PathParam("orderBy") String orderBy,
+      @PathParam("isDesc") String isDesc) {
+    //    Integer intNumber = Integer.parseInt(listNumber);
+    //    intNumber = intNumber > 0 ? intNumber : 0;
+    logger.info("pageIndex {}", pageIndex);
+    logger.info("numPerPage {}", numPerPage);
+    logger.info("orderBy {}", orderBy);
+    logger.info("isDesc {}", isDesc);
     try {
+      //      return new JsonResponse<>(Response.Status.OK,
+      //          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
+      List<String> orderByList = Arrays.asList(orderBy.split(","));
+      List<String> isDescStringList = Arrays.asList(isDesc.split(","));
+      List<Boolean> isDescList = new ArrayList<>();
+
+      for (int i = 0; i < isDescStringList.size(); i++) {
+        isDescList.add(Boolean.parseBoolean(isDescStringList.get(i)));
+      }
+
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
+          smartEngine.getCmdletManager().listActions(Integer.parseInt(pageIndex),
+              Integer.parseInt(numPerPage), orderByList, isDescList)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
@@ -103,7 +130,6 @@ public class ActionRestApi {
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
-
 
 
   @GET

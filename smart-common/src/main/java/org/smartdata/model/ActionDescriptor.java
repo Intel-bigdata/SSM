@@ -72,8 +72,10 @@ public class ActionDescriptor {
 
   @Override
   public String toString() {
-    return String.format("ActionDescriptor{actionName=\'%s\', displayName=\'%s\', displayName=\'%s\', usage=\'%s\', " +
-        "comment=\'%s\', comment=\'%s\'}", actionName, displayName, usage, comment);
+    return String.format(
+        "ActionDescriptor{actionName=\'%s\', displayName=\'%s\', "
+            + "displayName=\'%s\', usage=\'%s\', comment=\'%s\', comment=\'%s\'}",
+        actionName, displayName, usage, comment);
   }
 
   public static class Builder {
@@ -112,9 +114,9 @@ public class ActionDescriptor {
 
     @Override
     public String toString() {
-      return String.format("Builder{actionName=\'%s\', displayName=\'%s\', usage=\'%s\', comment=\'%s\'}",
+      return String.format(
+          "Builder{actionName=\'%s\', displayName=\'%s\', usage=\'%s\', comment=\'%s\'}",
           actionName, displayName, usage, comment);
     }
   }
-
 }
