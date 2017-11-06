@@ -94,7 +94,7 @@ public class NamespaceFetcher {
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service, SmartConf conf) {
-    this.ingestionTask = new HdfsFetchTask(client);
+    this.ingestionTask = new HdfsFetchTask(client, conf);
     this.consumer = new FileStatusIngester(metaStore, ingestionTask);
     this.fetchInterval = fetchInterval;
     this.scheduledExecutorService = service;
@@ -132,16 +132,31 @@ public class NamespaceFetcher {
     private final HdfsFileStatus[] EMPTY_STATUS = new HdfsFileStatus[0];
     private final DFSClient client;
     private final SmartConf conf;
+    private List<String> ignoreList;
     public HdfsFetchTask(DFSClient client, SmartConf conf) {
       super();
       this.client = client;
       this.conf = conf;
+      String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      if (configString == null){
+        configString = "";
+      }
+
+      //only when parent dir is not ignored we run the follow code
+      ignoreList = Arrays.asList(configString.split(","));
     }
 
     public HdfsFetchTask(DFSClient client) {
       super();
       this.client = client;
       this.conf = new SmartConf();
+      String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      if (configString == null){
+        configString = "";
+      }
+
+      //only when parent dir is not ignored we run the follow code
+      ignoreList = Arrays.asList(configString.split(","));
     }
 
     @Override
@@ -181,18 +196,23 @@ public class NamespaceFetcher {
         }
         return;
       }
-      String configString = conf.get(SmartConfKeys.SMART_SERVER_IGNORE_FILE_DIRS_KEY);
-      if (configString == null){
-        configString = "";
-      }
-
-      //only when parent dir is not ignored we run the follow code
-      List<String> ignoreList = Arrays.asList(configString.split(","));
 
       boolean isIgnored = false;
-      System.out.println(ignoreList);
       for (int i = 0; i < ignoreList.size(); i++) {
-        if (ignoreList.get(i).equals(parent)) {
+        String ignoreDir = ignoreList.get(i);
+
+        String tmpParent = parent;
+        if (ignoreDir.length() != 0 && ignoreDir.charAt(ignoreDir.length() - 1) == '/'
+            && ignoreDir.length() != 1) {
+          ignoreDir.substring(0, ignoreDir.length() - 1);
+        }
+        //
+        if (tmpParent.length() != 0 && tmpParent.charAt(tmpParent.length() - 1) == '/'
+            && tmpParent.length() != 1) {
+          tmpParent.substring(0, tmpParent.length() - 1);
+        }
+
+        if (ignoreDir.equals(tmpParent)) {
           isIgnored = true;
           break;
         }
@@ -215,7 +235,6 @@ public class NamespaceFetcher {
                 numFilesFetched++;
               }
             }
-
           }
         } catch (IOException | InterruptedException e) {
           LOG.error("Totally, numDirectoriesFetched = " + numDirectoriesFetched

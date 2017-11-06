@@ -64,14 +64,12 @@ public class InotifyEventFetcher {
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service, Callable callBack) {
-    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack);
-    this.conf = new SmartConf();
+    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack, new SmartConf());
   }
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service, Callable callBack, SmartConf conf) {
-    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack);
-    this.conf = conf;
+    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack, conf);
   }
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
