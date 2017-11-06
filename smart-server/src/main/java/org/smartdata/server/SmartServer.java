@@ -141,7 +141,7 @@ public class SmartServer {
   public static void startDB(SmartConf conf, AgentMaster agentMaster)
           throws InterruptedException, IOException {
     if (conf.getAgentsNumber() != 0) {
-      String host = agentMaster.getAgentMasterHost();
+      String host = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
       InetAddress address = InetAddress.getByName(host);
       String ip = address.getHostAddress();
       String pdArgs = String.format(

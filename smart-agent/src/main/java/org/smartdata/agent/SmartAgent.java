@@ -64,7 +64,6 @@ public class SmartAgent implements StatusReporter {
   private static final Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
   private ActorRef agentActor;
-  private String host;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
@@ -79,8 +78,6 @@ public class SmartAgent implements StatusReporter {
     }
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
-    AgentUtils.HostPort hostPort = new AgentUtils.HostPort(agentAddress);
-    agent.host = hostPort.getHost();
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
   }
@@ -148,8 +145,8 @@ public class SmartAgent implements StatusReporter {
     }
 
     public boolean launchTikv() throws InterruptedException, UnknownHostException {
-      //TODO: configure in the file
-      InetAddress address = InetAddress.getByName(agent.host);
+      //TODO: configure in file
+      InetAddress address = InetAddress.getByName(getSelf().path().address().host().get());
       String ip = address.getHostAddress();
       String tikvArgs = String.format(
               "--pd=%s:2379 --addr=%s:20160 --data-dir=tikv", masterHost, ip);
