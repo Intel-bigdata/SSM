@@ -26,7 +26,6 @@ limitations under the License.
 
     <div class="collapse navbar-collapse" ng-controller="NavCtrl as navbar">
       <ul class="nav navbar-nav" ng-if="ticket">
-        <!--TODO(zzq):  add smartnotebook. -->
         <li><a href="#/notebook/2CM9DW8NW">Smart Notebook</a></li>
         <li class="dropdown" uib-dropdown>
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>Cluster <span class="caret"></span></a>
@@ -42,8 +41,8 @@ limitations under the License.
         </li>
         <li><a href="#/rules">User Rules</a></li>
         <li><a href="#/actions">Actions</a></li>
-        <li><a href="#/movers">Storage Mover</a></li>
-        <li><a href="#/copys">Data Sync</a></li>
+        <li><a href="#/movers">Data Mover</a></li>
+        <li><a href="#/syncs">Data Sync</a></li>
         <li class="dropdown" uib-dropdown>
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" uib-dropdown-toggle>Help <span class="caret"></span></a>
           <ul class="dropdown-menu">
@@ -72,11 +71,6 @@ limitations under the License.
               <li ng-if="ticket.principal && ticket.principal !== 'anonymous'"><a ng-click="navbar.logout()">Logout</a></li>
             </ul>
           </div>
-        </li>
-        <li class="nav-component" ng-if="!ticket">
-          <button class="btn nav-login-btn" data-toggle="modal" data-target="#loginModal"
-                  ng-click="navbar.showLoginWindow()">Login
-          </button>
         </li>
       </ul>
     </div>
