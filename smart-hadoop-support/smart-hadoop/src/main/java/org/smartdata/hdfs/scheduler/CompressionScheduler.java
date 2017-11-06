@@ -63,7 +63,7 @@ public class CompressionScheduler extends ActionSchedulerService {
   public List<String> getSupportedActions() {
     return actions;
   }
-
+  
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
     if (actionInfo.isFinished()) {
