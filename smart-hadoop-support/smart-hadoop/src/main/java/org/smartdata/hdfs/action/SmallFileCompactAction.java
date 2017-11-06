@@ -73,6 +73,7 @@ public class SmallFileCompactAction extends HdfsAction {
         compact(smallFile, out, fileLen);
       }
     }
+    out.close();
   }
 
   /**
@@ -85,7 +86,7 @@ public class SmallFileCompactAction extends HdfsAction {
       byte[] buf = new byte[4096];
       int bytesRemaining = (int) fileLen;
       while (bytesRemaining > 0L) {
-        int bytesToRead = bytesRemaining < buf.length ? bytesRemaining : buf.length;
+        int bytesToRead = (bytesRemaining < buf.length) ? bytesRemaining : buf.length;
         int bytesRead = in.read(buf, 0, bytesToRead);
         if (bytesRead == -1) {
           break;

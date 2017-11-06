@@ -17,55 +17,52 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.apache.hadoop.fs.FSDataInputStream;
+import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.SmartContext;
-import org.smartdata.action.MockActionStatusReporter;
-import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.MiniClusterHarness;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class TestSmallFileCompactAction extends MiniClusterHarness {
-  private long sumFileLen = 0L;
+  private long sumFileLen;
+  private List<String> smallFileList;
 
   @Before
   @Override
   public void init() throws Exception {
     super.init();
+    sumFileLen = 0L;
+    smallFileList = new ArrayList<>();
     createTestFiles();
   }
 
-  public void createTestFiles() throws Exception {
-    Path path = new Path("/test/smallfile/");
+  private void createTestFiles() throws Exception {
+    Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
-
     for (int i = 0; i < 10; i++) {
-      String fileName = "/test/smallfile/file" + i;
+      String fileName = "/test/small_files/file" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
       long fileLen = (10 + (int) (Math.random() * 11)) * 1024;
-      byte[] toWrite = new byte[1024];
+      byte[] buf = new byte[4096];
       Random rb = new Random(2017);
-      long bytesToWrite = fileLen;
-      while (bytesToWrite > 0) {
-        rb.nextBytes(toWrite);
-        int bytesToWriteNext = (1024 < bytesToWrite) ? 1024 : (int) bytesToWrite;
-        out.write(toWrite, 0, bytesToWriteNext);
-        bytesToWrite -= bytesToWriteNext;
+      int bytesRemaining = (int) fileLen;
+      while (bytesRemaining > 0) {
+        rb.nextBytes(buf);
+        int bytesToWrite = (bytesRemaining < buf.length) ? bytesRemaining : buf.length;
+        out.write(buf, 0, bytesToWrite);
+        bytesRemaining -= bytesToWrite;
       }
-      sumFileLen += fileLen;
       out.close();
-      Assert.assertTrue(dfsClient.exists(fileName));
+      sumFileLen += fileLen;
+      smallFileList.add(fileName);
     }
   }
 
@@ -75,11 +72,12 @@ public class TestSmallFileCompactAction extends MiniClusterHarness {
     smallFileCompactAction.setDfsClient(dfsClient);
     smallFileCompactAction.setContext(smartContext);
     Map<String, String> args = new HashMap<>();
-    args.put(SmallFileCompactAction.FILE_PATH, "/test/smallfile/");
+    args.put(SmallFileCompactAction.SMALL_FILES, new Gson().toJson(smallFileList));
+    args.put(SmallFileCompactAction.CONTAINER_FILE, "/test/small_files/container_file");
     smallFileCompactAction.init(args);
     smallFileCompactAction.execute();
-    //Check if file is not exist
-    Assert.assertTrue(dfsClient.exists("/test/testFile"));
-    Assert.assertEquals(dfsClient.open("/test/testFile").getFileLength(), sumFileLen);
+    // Check if file exists and length match
+    Assert.assertTrue(dfsClient.exists("/test/small_files/container_file"));
+    Assert.assertEquals(dfsClient.open("/test/small_files/container_file").getFileLength(), sumFileLen);
   }
 }

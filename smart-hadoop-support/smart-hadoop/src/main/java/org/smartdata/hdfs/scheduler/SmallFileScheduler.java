@@ -40,12 +40,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SmallFileScheduler extends ActionSchedulerService {
   private URI nnUri;
   private DFSClient client;
   private MetaStore metaStore;
+  private List<String> fileLock;
+  private String containerFile = null;
   private Map<String, FileContainerInfo> fileContainerInfoMap;
   public static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
 
@@ -57,8 +59,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void init() throws IOException {
+    this.fileLock = new ArrayList<>();
+    this.fileContainerInfoMap = new ConcurrentHashMap<>();
     this.client = new DFSClient(nnUri, getContext().getConf());
-    this.fileContainerInfoMap = new HashMap<>();
   }
 
   private static final List<String> actions = Arrays.asList("write", "read", "compact");
@@ -83,11 +86,25 @@ public class SmallFileScheduler extends ActionSchedulerService {
         return ScheduleResult.FAIL;
       }
 
+      // Get the container file
+      String containerFilePath = action.getArgs().get("-containerFile");
+      if (containerFilePath != null) {
+        this.containerFile = containerFilePath;
+      } else {
+        this.containerFile = getContainerFile();
+      }
+      if (fileLock.contains(containerFile)) {
+        LOG.error("This container file: " + containerFile + " is locked.");
+        return ScheduleResult.RETRY;
+      } else {
+        fileLock.add(containerFile); // Lock this container file
+      }
+
+      // Get the small file list
       long offset = 0L;
       long size = Long.valueOf(action.getArgs().get("-size"));
       ArrayList<String> smallFileList = new ArrayList<>();
       List<FileInfo> fileInfoList = metaStore.getFilesByPrefix(srcDir);
-      String containerFile = getContainerFile();
       for (FileInfo fileInfo : fileInfoList) {
         long fileLen = fileInfo.getLength();
         String filePath = fileInfo.getPath();
@@ -99,7 +116,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
       }
 
       action.getArgs().put(SmallFileCompactAction.SMALL_FILES, new Gson().toJson(smallFileList));
-      action.getArgs().put(SmallFileCompactAction.CONTAINER_FILE, getContainerFile());
+      action.getArgs().put(SmallFileCompactAction.CONTAINER_FILE, containerFile);
       return ScheduleResult.SUCCESS;
     } catch (Exception e) {
       LOG.error("Exception occurred while processing " + action, e);
@@ -124,6 +141,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
           for (Map.Entry<String, FileContainerInfo> entry : fileContainerInfoMap.entrySet()) {
             metaStore.insertSmallFile(entry.getKey(), entry.getValue());
           }
+          if (fileLock.contains(containerFile)) {
+            fileLock.remove(containerFile); // Remove container file lock
+          }
         } catch (MetaStoreException e) {
           LOG.error("Process small file compact action in metaStore failed!", e);
         }
@@ -141,8 +161,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
    * An the container file path to compacted in.
    */
   private String getContainerFile() {
-    // TODO: get container file path to be compact
-    String containerFile = "/test/testFile";
-    return containerFile;
+    // TODO: get container file path if not specified
+    return "/small_files/containerFile";
   }
 }
