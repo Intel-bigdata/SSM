@@ -400,7 +400,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void insertUpdateStoragesTable(StorageCapacity storage)
       throws MetaStoreException {
-    insertUpdateStoragesTable(new StorageCapacity[] {storage});
+    insertUpdateStoragesTable(new StorageCapacity[]{storage});
   }
 
   public StorageCapacity getStorageCapacity(
@@ -592,7 +592,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<ActionInfo> actionInfos = getActions(rid, size);
     List<DetailedFileAction> detailedFileActions = new ArrayList<>();
 
-    for (ActionInfo actionInfo: actionInfos) {
+    for (ActionInfo actionInfo : actionInfos) {
       DetailedFileAction detailedFileAction = new DetailedFileAction(actionInfo);
       String filePath = actionInfo.getArgs().get("-file");
       FileInfo fileInfo = getFile(filePath);
@@ -623,7 +623,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public List<DetailedRuleInfo> listMoveRules() throws MetaStoreException {
     List<RuleInfo> ruleInfos = getRuleInfo();
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
-    for (RuleInfo ruleInfo: ruleInfos) {
+    for (RuleInfo ruleInfo : ruleInfos) {
       if (ruleInfo.getRuleText().contains("allssd")
           || ruleInfo.getRuleText().contains("onessd")
           || ruleInfo.getRuleText().contains("archive")) {
@@ -631,7 +631,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Add mover progress
         List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
         int currPos = 0;
-        for (CmdletInfo cmdletInfo: cmdletInfos) {
+        for (CmdletInfo cmdletInfo : cmdletInfos) {
           if (cmdletInfo.getState().getValue() <= 2) {
             break;
           }
@@ -667,13 +667,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Get total matched files
         if (backUpInfo != null) {
           detailedRuleInfo
-                  .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+              .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
           int count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
           count += fileDiffDao.getByState(backUpInfo.getSrc(), FileDiffState.RUNNING).size();
           detailedRuleInfo.setRunningProgress(count);
         } else {
           detailedRuleInfo
-                  .setBaseProgress(0);
+              .setBaseProgress(0);
           detailedRuleInfo.setRunningProgress(0);
         }
         detailedRuleInfos.add(detailedRuleInfo);
@@ -921,6 +921,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   /**
    * Mark action {aid} as failed.
+   *
    * @param aid
    * @throws MetaStoreException
    */
@@ -1071,7 +1072,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<ActionInfo> runningActions = new ArrayList<>();
     List<ActionInfo> finishedActions = new ArrayList<>();
     int total = 0;
-    for (CmdletInfo cmdletInfo:cmdletInfos) {
+    for (CmdletInfo cmdletInfo : cmdletInfos) {
       if (total >= size) {
         break;
       }

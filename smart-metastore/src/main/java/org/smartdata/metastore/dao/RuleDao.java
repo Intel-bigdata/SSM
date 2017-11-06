@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore.dao;
 
-import com.sun.org.apache.bcel.internal.generic.TABLESWITCH;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -63,7 +62,7 @@ public class RuleDao {
     String sql = "SELECT * FROM rule ORDER BY ";
 
     for (int i = 0; i < orderBy.size(); i++) {
-      if (orderBy.get(i).equals("rid")){
+      if (orderBy.get(i).equals("rid")) {
         ifHasAid = true;
       }
       sql = sql + orderBy.get(i);
@@ -75,11 +74,11 @@ public class RuleDao {
       }
     }
 
-    if (!ifHasAid){
+    if (!ifHasAid) {
       sql = sql + "rid,";
     }
 
-    sql = sql.substring(0,sql.length() - 1);
+    sql = sql.substring(0, sql.length() - 1);
     sql = sql + " LIMIT " + start + "," + offset + ";";
     return jdbcTemplate.query(sql, new RuleRowMapper());
   }
