@@ -148,15 +148,15 @@ public class SmartDFSClient extends DFSClient {
 
   // TODO: handle small file access event
   @Override
-  public SmartDFSInputStream open(String src)
+  public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-    SmartDFSInputStream is;
-    /*if (!isInSmallFileDir(src)) {
+    DFSInputStream is;
+    if (!isInSmallFileDir(src)) {
       is = super.open(src);
       reportFileAccessEvent(src);
-    } else {*/
+    } else {
     is = new SmartDFSInputStream(this, "/test/smallfile/testFile", true, getFileContainerInfo(src));
-    ///}
+    }
     return is;
   }
 

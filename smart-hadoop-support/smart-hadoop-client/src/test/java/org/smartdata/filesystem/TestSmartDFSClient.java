@@ -40,7 +40,7 @@ import java.util.*;
 public class TestSmartDFSClient extends MiniClusterHarness {
   Map<String, List<Long>> metaData = new HashMap<>();
 
-  @Before
+ /* @Before
   @Override
   public void init() throws Exception {
     SmartConf conf = new SmartConf();
@@ -219,20 +219,20 @@ public class TestSmartDFSClient extends MiniClusterHarness {
           System.out.println("a:" + a);
           System.out.println("pos: " + is.getPos());
         }
-        /*byte[] bytes = new byte[1000];
+        *//*byte[] bytes = new byte[1000];
         int b = is.read(bytes);
         System.out.println(is.getPos());
         System.out.println("b:" + b);
         System.out.println("position: " + is.getPos());
-        *//*int c = is.read(1, bytes, 2, 10);
-        System.out.println("c: " + c);*//*
+        *//**//*int c = is.read(1, bytes, 2, 10);
+        System.out.println("c: " + c);*//**//*
         System.out.println(is.getReadStatistics().getTotalBytesRead());
         System.out.println(is.getReadStatistics().getRemoteBytesRead());
         System.out.println(is.getReadStatistics().getTotalLocalBytesRead());
         System.out.println(is.getReadStatistics().getTotalShortCircuitBytesRead());
-        System.out.println(is.getReadStatistics().getTotalZeroCopyBytesRead());*/
+        System.out.println(is.getReadStatistics().getTotalZeroCopyBytesRead());*//*
         is.close();
       }
     }
-  }
+  }*/
 }
