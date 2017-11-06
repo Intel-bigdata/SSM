@@ -15,44 +15,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet;
+package org.smartdata.server.cluster;
+
 
 import org.smartdata.model.ExecutorType;
-import org.smartdata.server.cluster.NodeInfo;
-import org.smartdata.server.engine.CmdletManager;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
-import java.util.List;
-
-public abstract class CmdletExecutorService {
-  protected CmdletManager cmdletManager;
+/**
+ * Represent each nodes that SSM services (SmartServers and SmartAgents) running on.
+ *
+ */
+public class NodeInfo {
+  private String id;
+  private String location;
   private ExecutorType executorType;
 
-  public CmdletExecutorService(CmdletManager cmdletManager, ExecutorType executorType) {
-    this.cmdletManager = cmdletManager;
+  public NodeInfo(String id, String location, ExecutorType executorType) {
+    this.id = id;
+    this.location = location;
     this.executorType = executorType;
   }
 
-  public abstract boolean canAcceptMore();
+  public String getId() {
+    return id;
+  }
 
-  // TODO: to be refined
-  /**
-   * Send cmdlet to end executor for execution.
-   *
-   * @param cmdlet
-   * @return Node ID that the cmdlet been dispatched to, null if failed
-   */
-  public abstract String execute(LaunchCmdlet cmdlet);
+  public void setId(String id) {
+    this.id = id;
+  }
 
-  public abstract void stop(long cmdletId);
+  public String getLocation() {
+    return location;
+  }
 
-  public abstract void shutdown();
+  public void setLocation(String location) {
+    this.location = location;
+  }
 
   public ExecutorType getExecutorType() {
     return executorType;
   }
 
-  public abstract int getNumNodes();  // return number of nodes contained
-
-  public abstract List<NodeInfo> getNodesInfo();
+  @Override
+  public String toString() {
+    return String.format("{id=%s, location=%s, executorType=%s}", id, location, executorType);
+  }
 }
+

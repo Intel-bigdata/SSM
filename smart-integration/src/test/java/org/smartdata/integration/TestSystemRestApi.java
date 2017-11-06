@@ -40,7 +40,7 @@ public class TestSystemRestApi extends IntegrationTestBase {
 
   @Test
   public void testServers() throws IOException, InterruptedException {
-    Response response = RestAssured.get(RestApiBase.SYSTEMROOT+ "/servers");
+    Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/servers");
     response.then().body("body", Matchers.empty());
     Process worker = Util.startNewServer();
     Process agent = Util.startNewAgent();

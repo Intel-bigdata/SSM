@@ -17,32 +17,32 @@
 */
 package org.smartdata.server;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hdfs.DFSTestUtil;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.fs.Path;
-import org.junit.Assert;
-import org.junit.Test;
-import org.smartdata.admin.SmartAdmin;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.model.ActionInfo;
-import org.smartdata.model.BackUpInfo;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
-import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
-import org.smartdata.model.RuleState;
-import org.smartdata.server.engine.CmdletManager;
+//import org.apache.hadoop.conf.Configuration;
+//import org.apache.hadoop.fs.FileStatus;
+//import org.apache.hadoop.fs.FileSystem;
+//import org.apache.hadoop.hdfs.DFSTestUtil;
+//import org.apache.hadoop.hdfs.DistributedFileSystem;
+//import org.apache.hadoop.fs.Path;
+//import org.junit.Assert;
+//import org.junit.Test;
+//import org.smartdata.admin.SmartAdmin;
+//import org.smartdata.metastore.MetaStore;
+//import org.smartdata.model.ActionInfo;
+//import org.smartdata.model.BackUpInfo;
+//import org.smartdata.model.FileDiff;
+//import org.smartdata.model.FileDiffState;
+//import org.smartdata.model.FileDiffType;
+//import org.smartdata.model.FileInfo;
+//import org.smartdata.model.RuleState;
+//import org.smartdata.server.engine.CmdletManager;
+//
+//import java.io.IOException;
+//import java.net.URI;
+//import java.util.Arrays;
+//import java.util.LinkedList;
+//import java.util.List;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
-public class TestCopyScheduler extends MiniSmartClusterHarness {
+//public class TestCopyScheduler extends MiniSmartClusterHarness {
 
   // @Test
   // public void appendMerge() throws Exception {
@@ -305,7 +305,8 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   //   // Submit sync rule
   //   long ruleId =
   //       admin.submitRule(
-  //           "file: every 2s | path matches \"/src/*\"| sync -dest " + destPath, RuleState.ACTIVE);
+  //           "file: every 2s | path matches \"/src/*\"| sync -dest " + destPath,
+  //            RuleState.ACTIVE);
   //   Thread.sleep(2000);
   //   dfs.mkdirs(new Path(srcPath));
   //   dfs.mkdirs(new Path(destPath));
@@ -339,7 +340,8 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   //   // Submit sync rule
   //   long ruleId =
   //       admin.submitRule(
-  //           "file: every 2s | path matches \"/src/*\"| sync -dest " + destPath, RuleState.ACTIVE);
+  //           "file: every 2s | path matches \"/src/*\"| sync -dest " + destPath,
+  //            RuleState.ACTIVE);
   //   Thread.sleep(2000);
   //   dfs.mkdirs(new Path(srcPath));
   //   dfs.mkdirs(new Path(destPath));
@@ -443,4 +445,4 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
   //     System.out.printf("File %d is copied.\n", i);
   //   }
   // }
-}
+//}

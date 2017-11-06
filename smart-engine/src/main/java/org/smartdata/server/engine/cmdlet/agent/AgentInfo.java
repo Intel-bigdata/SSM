@@ -17,28 +17,11 @@
  */
 package org.smartdata.server.engine.cmdlet.agent;
 
-public class AgentInfo {
-  private long id;
-  private String location;
+import org.smartdata.model.ExecutorType;
+import org.smartdata.server.cluster.NodeInfo;
 
-  public AgentInfo(long id, String location) {
-    this.id = id;
-    this.location = location;
-  }
-
-  public long getId() {
-    return id;
-  }
-
-  public void setId(long id) {
-    this.id = id;
-  }
-
-  public String getLocation() {
-    return location;
-  }
-
-  public void setLocation(String location) {
-    this.location = location;
+public class AgentInfo extends NodeInfo {
+  public AgentInfo(String id, String location) {
+    super(id, location, ExecutorType.AGENT);
   }
 }

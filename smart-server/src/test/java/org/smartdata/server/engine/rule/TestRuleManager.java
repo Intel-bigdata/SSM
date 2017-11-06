@@ -21,14 +21,14 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.model.FileInfo;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.RuleState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.TestDaoUtil;
-import org.smartdata.server.engine.ServerContext;
+import org.smartdata.model.FileInfo;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 import org.smartdata.server.engine.RuleManager;
+import org.smartdata.server.engine.ServerContext;
 
 import java.io.IOException;
 import java.util.List;
@@ -245,7 +245,7 @@ public class TestRuleManager extends TestDaoUtil {
         new Thread(new RuleInfoUpdater(rid, 3)),
 //        new Thread(new RuleInfoUpdater(rid, 7)),
 //        new Thread(new RuleInfoUpdater(rid, 11)),
-        new Thread(new RuleInfoUpdater(rid, 17))} ;
+        new Thread(new RuleInfoUpdater(rid, 17))};
 
     for (Thread t : threads) {
       t.start();
@@ -281,7 +281,7 @@ public class TestRuleManager extends TestDaoUtil {
           RuleInfo info = ruleManager.getRuleInfo(ruleid);
           lastCheckTime = System.currentTimeMillis();
           checkedCount = info.getNumChecked();
-          cmdletsGen = (int)info.getNumCmdsGen();
+          cmdletsGen = (int) info.getNumCmdsGen();
           //System.out.println("" + index + ": " + lastCheckTime + " "
           // + checkedCount + " " + cmdletsGen);
           Assert.assertTrue(checkedCount == cmdletsGen);
@@ -302,8 +302,8 @@ public class TestRuleManager extends TestDaoUtil {
 
     long length = 100;
     long fid = 10000;
-    FileInfo[] files = { new FileInfo("/tmp/testfile", fid,  length, false, (short)3,
-        1024, now, now, (short) 1, null, null, (byte)3) };
+    FileInfo[] files = { new FileInfo("/tmp/testfile", fid,  length, false, (short) 3,
+        1024, now, now, (short) 1, null, null, (byte) 3) };
 
     metaStore.insertFiles(files);
     long rid = ruleManager.submitRule(rule, RuleState.ACTIVE);
@@ -312,7 +312,7 @@ public class TestRuleManager extends TestDaoUtil {
 
     int nThreads = 2;
     Thread[] threads = new Thread[nThreads];
-    for (int i = 0; i< nThreads; i++) {
+    for (int i = 0; i < nThreads; i++) {
       threads[i] = new Thread(new StateChangeWorker(rid));
     }
 

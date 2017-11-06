@@ -15,26 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.admin.tools;
+package org.smartdata.server.engine.message;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.shell.Command;
-import org.apache.hadoop.fs.shell.CommandFactory;
+import org.smartdata.server.cluster.NodeInfo;
 
-import java.io.IOException;
-
-public class SmartCmdlet extends Command {
-  public static void registerCommands(CommandFactory factory) {
-    factory.registerCommands(RuleCmdlets.class);
-  }
-
-  @Override
-  public String getCommandName() {
-    return getName();
-  }
-
-  @Override
-  protected void run(Path path) throws IOException {
-    throw new RuntimeException("not supposed to get here");
+public class AddNodeMessage extends NodeMessage {
+  public AddNodeMessage(NodeInfo nodeInfo) {
+    super(nodeInfo);
   }
 }

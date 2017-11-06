@@ -34,8 +34,7 @@ public class TestSubmitRule extends MiniSmartClusterHarness {
     String rule = "file: every 1s \n | length > 10 | cache";
     SmartAdmin client = new SmartAdmin(smartContext.getConf());
 
-    long ruleId = 0l;
-    ruleId = client.submitRule(rule, RuleState.ACTIVE);
+    long ruleId = client.submitRule(rule, RuleState.ACTIVE);
 
     for (int i = 0; i < 10; i++) {
       long id = client.submitRule(rule, RuleState.ACTIVE);

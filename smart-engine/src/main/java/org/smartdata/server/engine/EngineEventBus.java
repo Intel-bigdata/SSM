@@ -15,13 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.integration.rest;
+package org.smartdata.server.engine;
 
-public class CovUtil {
-  public static Long getLong(Object o) {
-    if (o instanceof Integer) {
-      return new Long((Integer) o);
-    }
-    return (Long) o;
+import com.google.common.eventbus.EventBus;
+
+public class EngineEventBus {
+  private static EventBus eventBus = new EventBus("EngineEventBus");
+
+  public static void post(Object event) {
+    eventBus.post(event);
+  }
+
+  public static void register(Object listener) {
+    eventBus.register(listener);
+  }
+
+  public static void unregister(Object listener) {
+    eventBus.unregister(listener);
   }
 }

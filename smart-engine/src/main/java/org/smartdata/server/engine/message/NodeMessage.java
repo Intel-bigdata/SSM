@@ -15,13 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.integration.rest;
+package org.smartdata.server.engine.message;
 
-public class CovUtil {
-  public static Long getLong(Object o) {
-    if (o instanceof Integer) {
-      return new Long((Integer) o);
-    }
-    return (Long) o;
+import org.smartdata.server.cluster.NodeInfo;
+
+public class NodeMessage {
+  private NodeInfo nodeInfo;
+
+  public NodeMessage(NodeInfo nodeInfo) {
+    this.nodeInfo = nodeInfo;
+  }
+
+  public NodeInfo getNodeInfo() {
+    return nodeInfo;
   }
 }

@@ -15,13 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.integration.rest;
+package org.smartdata.server.engine;
 
-public class CovUtil {
-  public static Long getLong(Object o) {
-    if (o instanceof Integer) {
-      return new Long((Integer) o);
+import org.smartdata.model.ExecutorType;
+import org.smartdata.server.cluster.NodeInfo;
+
+public class ActiveServerInfo extends NodeInfo {
+  private static ActiveServerInfo inst;
+
+  private ActiveServerInfo() {
+    super("ActiveSSMServer", "127.0.0.1", ExecutorType.LOCAL);
+  }
+
+  public static ActiveServerInfo getInstance() {
+    if (inst == null) {
+      inst = new ActiveServerInfo();
     }
-    return (Long) o;
+    return inst;
   }
 }

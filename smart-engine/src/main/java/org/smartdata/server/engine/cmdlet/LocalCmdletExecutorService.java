@@ -25,9 +25,15 @@ import org.smartdata.model.ExecutorType;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
+import org.smartdata.server.cluster.NodeInfo;
+import org.smartdata.server.engine.ActiveServerInfo;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.engine.message.AddNodeMessage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -45,11 +51,7 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.executorService.scheduleAtFixedRate(
         new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
-  }
-
-  @Override
-  public boolean isLocalService() {
-    return true;
+    EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
   }
 
   @Override
@@ -57,12 +59,25 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     return true;
   }
 
+  public int getNumNodes() {
+    return 1;
+  }
+
+  public List<NodeInfo> getNodesInfo() {
+    // TODO: to be refined
+    List<NodeInfo> ret = new ArrayList<>(1);
+    ret.add(ActiveServerInfo.getInstance());
+    return ret;
+  }
+
   @Override
-  public void execute(LaunchCmdlet cmdlet) {
+  public String execute(LaunchCmdlet cmdlet) {
     try {
       this.cmdletExecutor.execute(cmdletFactory.createCmdlet(cmdlet));
+      return ActiveServerInfo.getInstance().getId();
     } catch (ActionException e) {
       LOG.error("Failed to execute cmdlet {}" , cmdlet.getCmdletId(), e);
+      return null;
     }
   }
 

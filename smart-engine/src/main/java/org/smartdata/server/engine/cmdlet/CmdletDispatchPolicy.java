@@ -15,30 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.tools;
+package org.smartdata.server.engine.cmdlet;
 
-import junit.framework.AssertionFailedError;
-import org.junit.Test;
-import org.smartdata.admin.tools.SmartShell;
 
-public class TestSmartShell {
-
-  @Test
-  public void testWithInvalidOption() throws Throwable {
-    String[] args = new String[] {
-        "--conf=invalidFile"
-    };
-
-    Throwable th = null;
-    try {
-      SmartShell.main(args);
-    } catch (Exception e) {
-      th = e;
-    }
-
-    if (!(th instanceof RuntimeException)) {
-      throw new AssertionFailedError("Expected Runtime exception, got: " + th)
-          .initCause(th);
-    }
-  }
+public enum CmdletDispatchPolicy {
+    ANY,
+    PREFER_AGENT,
+    PREFER_REMOTE_SSM,
+    PREFER_LOCAL;
+//    MUST_AGENT,
+//    MUST_REMOTE_SSM,
+//    MUST_LOCAL;
 }

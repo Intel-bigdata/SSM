@@ -83,10 +83,14 @@ public class SmartConfKeys {
   public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
 
   // SmartClient
-  // Comma delimited directories, access event of files under these directories
-  // will not be reported to SSM.
-  public static final String SMART_CLIENT_IGNORE_ACCESS_EVENT_DIRS_KEY =
-    "smart.client.ignore.access.event.dirs";
+
+  // Common
+  /**
+   * Namespace, access info and other info related to files under these dirs will be ignored.
+   * Clients will not report access event of these files to SSM.
+   * Directories are separated with ','.
+   */
+  public static final String SMART_IGNORE_DIRS_KEY = "smart.ignore.dirs";
 
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";

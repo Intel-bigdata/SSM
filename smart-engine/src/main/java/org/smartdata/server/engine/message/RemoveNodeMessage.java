@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.metric.fetcher;
+package org.smartdata.server.engine.message;
 
-public class DispatcherConf {
-  int maxConcurrentMovesPerNode;
+import org.smartdata.server.cluster.NodeInfo;
+
+public class RemoveNodeMessage extends NodeMessage {
+  public RemoveNodeMessage(NodeInfo nodeInfo) {
+    super(nodeInfo);
+  }
 }

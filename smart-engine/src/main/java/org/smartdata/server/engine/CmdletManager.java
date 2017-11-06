@@ -92,13 +92,13 @@ public class CmdletManager extends AbstractService {
   private Map<String, Long> fileLocks;
   private ListMultimap<String, ActionScheduler> schedulers = ArrayListMultimap.create();
   private List<ActionSchedulerService> schedulerServices = new ArrayList<>();
+  private long totalScheduled = 0;
 
   public CmdletManager(ServerContext context) {
     super(context);
 
     this.metaStore = context.getMetaStore();
     this.executorService = Executors.newScheduledThreadPool(2);
-    this.dispatcher = new CmdletDispatcher(context, this);
     this.runningCmdlets = new ArrayList<>();
     this.pendingCmdlet = new LinkedList<>();
     this.schedulingCmdlet = new LinkedList<>();
@@ -107,6 +107,8 @@ public class CmdletManager extends AbstractService {
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
     this.fileLocks = new ConcurrentHashMap<>();
+    this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
+        idToLaunchCmdlet, runningCmdlets, schedulers);
   }
 
   @VisibleForTesting
@@ -270,18 +272,19 @@ public class CmdletManager extends AbstractService {
   @Override
   public void start() throws IOException {
     LOG.info("Starting ...");
-    executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50,  TimeUnit.MILLISECONDS);
-    executorService.scheduleAtFixedRate(
-        new DispatchTask(this.dispatcher), 200, 100, TimeUnit.MILLISECONDS);
+    executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50, TimeUnit.MILLISECONDS);
+
     for (ActionSchedulerService s : schedulerServices) {
       s.start();
     }
+    dispatcher.start();
     LOG.info("Started.");
   }
 
   @Override
   public void stop() throws IOException {
     LOG.info("Stopping ...");
+    dispatcher.stop();
     for (int i = schedulerServices.size() - 1; i >= 0; i--) {
       schedulerServices.get(i).stop();
     }
@@ -517,20 +520,6 @@ public class CmdletManager extends AbstractService {
     return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
   }
 
-  public LaunchCmdlet getNextCmdletToRun() throws IOException {
-    Long cmdletId = scheduledCmdlet.poll();
-    if (cmdletId == null) {
-      return null;
-    }
-    CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
-    if (cmdletInfo == null) {
-      return null;
-    }
-    LaunchCmdlet launchCmdlet = idToLaunchCmdlet.get(cmdletId);
-    runningCmdlets.add(cmdletInfo.getCid());
-    return launchCmdlet;
-  }
-
   public CmdletInfo getCmdletInfo(long cid) throws IOException {
     if (idToCmdlets.containsKey(cid)) {
       return idToCmdlets.get(cid);
@@ -630,6 +619,7 @@ public class CmdletManager extends AbstractService {
     if (cmdletInfo != null) {
       flushCmdletInfo(cmdletInfo);
     }
+    dispatcher.onCmdletFinished(cmdletInfo.getCid());
     runningCmdlets.remove(cmdletId);
 
     List<ActionInfo> removed = new ArrayList<>();
@@ -967,43 +957,11 @@ public class CmdletManager extends AbstractService {
         int nScheduled;
         do {
           nScheduled = scheduleCmdlet();
+          totalScheduled += nScheduled;
         } while (nScheduled != 0);
       } catch (IOException e) {
         LOG.error("Exception when Scheduling Cmdlet. "
             + scheduledCmdlet.size() + " cmdlets are pending for dispatch.", e);
-      }
-    }
-  }
-
-  private class DispatchTask implements Runnable {
-    private final CmdletDispatcher dispatcher;
-
-    public DispatchTask(CmdletDispatcher dispatcher) {
-      this.dispatcher = dispatcher;
-    }
-
-    @Override
-    public void run() {
-      while (dispatcher.canDispatchMore()) {
-        try {
-          LaunchCmdlet launchCmdlet = getNextCmdletToRun();
-          if (launchCmdlet == null) {
-            break;
-          } else {
-            cmdletPreExecutionProcess(launchCmdlet);
-            dispatcher.dispatch(launchCmdlet);
-          }
-        } catch (IOException e) {
-          LOG.error("Cmdlet dispatcher error", e);
-        }
-      }
-    }
-  }
-
-  public void cmdletPreExecutionProcess(LaunchCmdlet cmdlet) {
-    for (LaunchAction action : cmdlet.getLaunchActions()) {
-      for (ActionScheduler p : schedulers.get(action.getActionType())) {
-        p.onPreDispatch(action);
       }
     }
   }
