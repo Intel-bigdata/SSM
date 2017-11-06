@@ -208,7 +208,7 @@ public class AgentMaster {
   }
 
 
-  class MasterActor extends UntypedActor {
+  static class MasterActor extends UntypedActor {
     private final Map<Long, ActorRef> dispatches = new HashMap<>();
     private int nextAgentId = 0;
     private AgentManager agentManager;
