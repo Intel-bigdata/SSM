@@ -76,6 +76,10 @@ public class AgentToMaster {
     }
   }
 
+  public static class ServeReady implements Serializable{
+    private static final long serialVersionUID = 6888516209100011658L;
+  }
+
   public static class AlreadyLaunchedTikv implements Serializable {
     private static final long serialVersionUID = 7129253373711332715L;
     private final MasterToAgent.AgentId id;

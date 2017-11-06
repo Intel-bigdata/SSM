@@ -154,8 +154,7 @@ public class SmartServer {
       }
       LOG.info("Pd server is ready.");
       agentMaster.sendLaunchTikvMessage();
-      while (!agentMaster.isAlreadyLaunchedTikv()) {
-        LOG.info("waiting for agent launching tikv.");
+      while (!agentMaster.isTikvAlreadyLaunched()) {
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");

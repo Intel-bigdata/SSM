@@ -43,6 +43,7 @@ import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.ServeReady;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
@@ -227,6 +228,7 @@ public class SmartAgent implements StatusReporter {
               AgentActor.this.id,
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           getContext().become(new Serve());
+          master.tell(new ServeReady(), getSelf());
         }
       }
     }
@@ -245,7 +247,6 @@ public class SmartAgent implements StatusReporter {
           master.tell(message, getSelf());
           getSender().tell("status reported", getSelf());
         } else if (message instanceof ReadyToLaunchTikv) {
-          LOG.info("Receive a ReadyToLaunchTikv message.");
           boolean launched = launchTikv();
           if (launched) {
             LOG.info("Tikv server is ready.");
