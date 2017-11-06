@@ -20,8 +20,11 @@
 package org.smartdata.utils;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosPrincipal;
@@ -41,8 +44,8 @@ import java.util.Set;
 /**
  * Jaas utilities for Smart login.
  */
-public class JaasLoginUtil {
-  public static final Logger LOG = LoggerFactory.getLogger(JaasLoginUtil.class);
+public class SecurityUtil {
+  public static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
   public static final boolean ENABLE_DEBUG = true;
 
@@ -147,6 +150,27 @@ public class JaasLoginUtil {
     return loginContext.getSubject();
   }
 
+  public static void loginUsingKeytab(SmartConf conf) throws IOException{
+    String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
+    if (keytabFilename == null || keytabFilename.length() == 0) {
+      throw new IOException("Running in secure mode, but config doesn't have a keytab");
+    }
+    File keytabPath = new File(keytabFilename);
+    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
+    try {
+      SecurityUtil.loginUsingKeytab(principal, keytabPath.getAbsolutePath());
+    } catch (IOException e) {
+      LOG.error("Fail to login using keytab. " + e);
+      throw new IOException("Fail to login using keytab. " + e);
+    }
+    LOG.info("Login successful for user: " + principal);
+  }
+
+  public static void loginUsingKeytab(
+      String principal, String keytabFile) throws IOException {
+    UserGroupInformation.loginUserFromKeytab(principal, keytabFile);
+  }
+
   public static Subject loginUsingKeytab(
       String principal, File keytabFile) throws IOException {
     Set<Principal> principals = new HashSet<Principal>();
@@ -245,5 +269,9 @@ public class JaasLoginUtil {
               AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
               options)};
     }
+  }
+
+  public static boolean isSecurityEnabled(SmartConf conf) {
+    return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
   }
 }

@@ -71,16 +71,17 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
   public void init() throws IOException {
     LOG.info("Initializing ...");
     SmartContext context = getContext();
+    final Configuration conf = context.getConf();
     String hadoopConfPath = getContext().getConf()
-        .get(SmartConfKeys.SMART_CONF_DIR_KEY);
+        .get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
       HadoopUtil.loadHadoopConf(context.getConf(), hadoopConfPath);
     } catch (IOException e) {
-      // Ignore this one now
+      throw new IOException("Fail to load Hadoop configuration for : " + e.getMessage());
     }
-    URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
+    final URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
     LOG.debug("Final Namenode URL:" + nnUri.toString());
-    this.client = new DFSClient(nnUri, context.getConf());
+    client = HadoopUtil.getDFSClient(nnUri, conf);
     moverIdOutputStream = checkAndMarkRunning(nnUri, context.getConf());
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);

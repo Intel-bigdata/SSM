@@ -20,6 +20,8 @@ package org.smartdata.hdfs.scheduler;
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -37,6 +39,7 @@ import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -48,7 +51,7 @@ public class MoverScheduler extends ActionSchedulerService {
   private DFSClient client;
   private MovePlanStatistics statistics;
   private MovePlanMaker planMaker;
-  private URI nnUri;
+  private final URI nnUri;
   private long dnInfoUpdateInterval = 2 * 60 * 1000;
   private ScheduledExecutorService updateService;
   private ScheduledFuture updateServiceFuture;
@@ -71,7 +74,7 @@ public class MoverScheduler extends ActionSchedulerService {
   }
 
   public void init() throws IOException {
-    this.client = new DFSClient(nnUri, getContext().getConf());
+    client = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
     statistics = new MovePlanStatistics();
     updateService = Executors.newScheduledThreadPool(1);
   }
