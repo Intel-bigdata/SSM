@@ -138,12 +138,14 @@ public class SmartServer {
     return startOpt;
   }
 
-  public static void startDB(SmartConf conf, AgentMaster agentMaster) throws InterruptedException, IOException {
+  public static void startDB(SmartConf conf, AgentMaster agentMaster)
+          throws InterruptedException, IOException {
     if (conf.getAgentsNumber() != 0) {
       String host = agentMaster.getAgentMasterHost();
       InetAddress address = InetAddress.getByName(host);
       String ip = address.getHostAddress();
-      String pdArgs = String.format("--client-urls=http://%s:2379 --peer-urls=http://%s:2380 --data-dir=pd", ip, ip);
+      String pdArgs = String.format(
+              "--client-urls=http://%s:2379 --peer-urls=http://%s:2380 --data-dir=pd", ip, ip);
       PdServer pdServer = new PdServer(pdArgs, conf);
       Thread pdThread = new Thread(pdServer);
       pdThread.start();
@@ -153,6 +155,7 @@ public class SmartServer {
       LOG.info("Pd server is ready.");
       agentMaster.sendLaunchTikvMessage();
       while (!agentMaster.isAlreadyLaunchedTikv()) {
+        LOG.info("waiting for agent launching tikv.");
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");
@@ -186,8 +189,7 @@ public class SmartServer {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
       LOG.info("Formatting DataBase finished successfully!");
-    }
-    else {
+    } else {
       MetaStoreUtils.checkTables(conf);
     }
 

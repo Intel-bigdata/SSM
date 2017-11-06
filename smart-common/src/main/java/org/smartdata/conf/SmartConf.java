@@ -31,7 +31,7 @@ import java.util.Scanner;
  * SSM related configurations as well as HDFS configurations.
  */
 public class SmartConf extends Configuration {
-  private final static Logger LOG = LoggerFactory.getLogger(SmartConf.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SmartConf.class);
 
   public SmartConf() {
     Configuration.addDefaultResource("smart-default.xml");
@@ -39,7 +39,8 @@ public class SmartConf extends Configuration {
   }
 
   public int getAgentsNumber() {
-    String agentConfFile = get(SmartConfKeys.SMART_CONF_DIR_KEY, SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/agents";
+    String agentConfFile = get(SmartConfKeys.SMART_CONF_DIR_KEY,
+            SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/agents";
     Scanner sc = null;
     try {
       sc = new Scanner(new File(agentConfFile));

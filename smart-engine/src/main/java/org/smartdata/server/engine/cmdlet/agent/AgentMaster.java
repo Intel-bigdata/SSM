@@ -32,9 +32,9 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
@@ -103,17 +103,18 @@ public class AgentMaster {
   }
 
   public boolean isAgentRegisterReady() {
-    //TODO: how many agents are required to launch TiKV
+    //TODO: how many agents are required to launch tikv
     return agentManager.getAgents().size() == conf.getAgentsNumber();
   }
 
   public boolean isAlreadyLaunchedTikv() {
-    //TODO: how many TiKVs are required
+    //TODO: how many tikvs are required
     return tikvNumber == conf.getAgentsNumber();
   }
 
   public void sendLaunchTikvMessage() {
-    for (ActorRef agent : agentManager.agents.keySet()) {
+    LOG.info("agent number: {}", agentManager.getAgents().size());
+    for (ActorRef agent : agentManager.getAgents().keySet()) {
       agent.tell(new ReadyToLaunchTikv(), master);
       LOG.info("Try to launch Tikv on " + agent.path().address().host().get());
     }
@@ -220,8 +221,9 @@ public class AgentMaster {
 
     public MasterActor(CmdletManager statusUpdater, AgentManager agentManager) {
       this(agentManager);
-      if (agentManager != null)
+      if (statusUpdater != null) {
         setCmdletManager(statusUpdater);
+      }
     }
 
     public MasterActor(AgentManager agentManager) {

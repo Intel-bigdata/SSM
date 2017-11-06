@@ -115,7 +115,8 @@ public class MetaStoreUtils {
       String url = conn.getMetaData().getURL();
       String dbName = getDBName(url);
       for (String table : tableName) {
-        String query = String.format("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' and TABLE_NAME='%s'", dbName, table);
+        String query = String.format("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES "
+                + "WHERE TABLE_SCHEMA='%s' and TABLE_NAME='%s'", dbName, table);
         if (isEmptyResultSet(conn, query)) {
           return false;
         }

@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AgentService;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
@@ -81,14 +80,14 @@ public class SmartAgent implements StatusReporter {
     LOG.info("Agent address: " + agentAddress);
     AgentUtils.HostPort hostPort = new AgentUtils.HostPort(agentAddress);
     agent.host = hostPort.getHost();
-    
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
   }
 
   public void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
-    agentActor = system.actorOf(Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
+    agentActor = system.actorOf(
+            Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -151,7 +150,8 @@ public class SmartAgent implements StatusReporter {
       //TODO: configure in the file
       InetAddress address = InetAddress.getByName(agent.host);
       String ip = address.getHostAddress();
-      String tikvArgs = String.format("--pd=%s:2379 --addr=%s:20160 --data-dir=tikv", masterHost, ip);
+      String tikvArgs = String.format(
+              "--pd=%s:2379 --addr=%s:20160 --data-dir=tikv", masterHost, ip);
       TikvServer tikvServer = new TikvServer(tikvArgs, conf);
       Thread tikvThread = new Thread(tikvServer);
       tikvThread.start();
@@ -180,8 +180,6 @@ public class SmartAgent implements StatusReporter {
             }
           }, new Shutdown(agent));
     }
-
-
 
     private class WaitForFindMaster implements Procedure<Object> {
 
@@ -247,6 +245,7 @@ public class SmartAgent implements StatusReporter {
           master.tell(message, getSelf());
           getSender().tell("status reported", getSelf());
         } else if (message instanceof ReadyToLaunchTikv) {
+          LOG.info("Receive a ReadyToLaunchTikv message.");
           boolean launched = launchTikv();
           if (launched) {
             LOG.info("Tikv server is ready.");

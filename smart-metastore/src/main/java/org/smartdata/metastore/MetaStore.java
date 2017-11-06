@@ -1292,7 +1292,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     Connection conn = getConnection();
     try {
       if (!MetaStoreUtils.isTablesExist(conn)) {
-        LOG.info("At least one table required by SSM is missing. The configured database will be formatted.");
+        LOG.info("At least one table required by SSM is missing. "
+                + "The configured database will be formatted.");
         formatDataBase();
       }
     } catch (Exception e) {
