@@ -152,11 +152,6 @@ function check_java_avaliable() {
 }
 
 function start_smart_server() {
-  if [[ "${SMART_VARGS}" =~ " -format" ]]; then
-    echo "Start formatting database ..."
-    exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" $SMART_CLASSNAME $SMART_VARGS
-  fi
-
   echo "Starting SmartServer ..."
   smart_start_daemon ${SMART_PID_FILE}
 }
