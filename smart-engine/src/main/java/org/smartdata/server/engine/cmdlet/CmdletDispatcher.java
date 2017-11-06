@@ -18,6 +18,7 @@
 package org.smartdata.server.engine.cmdlet;
 
 import com.google.common.collect.ListMultimap;
+import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -26,7 +27,11 @@ import org.smartdata.model.ExecutorType;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
+import org.smartdata.server.engine.message.AddNodeMessage;
+import org.smartdata.server.engine.message.NodeMessage;
+import org.smartdata.server.engine.message.RemoveNodeMessage;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,6 +54,10 @@ public class CmdletDispatcher {
 
   private CmdletExecutorService[] cmdExecServices;
   private int[] cmdExecSrvInsts;
+  private int cmdExecSrvTotalInsts;
+  private int[] cmdExecSrvInstsSlotsLeft;
+  private Map<Long, ExecutorType> dispatchedToSrvs;
+
   // TODO: to be refined
   private final Map<String, Integer> execCmdletSlots = new ConcurrentHashMap<>();
   private final int defaultSlots;
@@ -67,6 +76,11 @@ public class CmdletDispatcher {
 
     this.cmdExecServices = new CmdletExecutorService[ExecutorType.values().length];
     cmdExecSrvInsts = new int[ExecutorType.values().length];
+    cmdExecSrvTotalInsts = 0;
+    cmdExecSrvInstsSlotsLeft = new int[ExecutorType.values().length];
+    dispatchedToSrvs = new ConcurrentHashMap<>();
+    EngineEventBus.register(this);
+
     boolean disableLocal = smartContext.getConf().getBoolean(
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT);
@@ -93,8 +107,7 @@ public class CmdletDispatcher {
     return false;
   }
 
-  public void dispatch(LaunchCmdlet cmdlet) {
-    ExecutorType execType;
+  public boolean dispatch(LaunchCmdlet cmdlet) {
     CmdletDispatchPolicy policy = cmdlet.getDispPolicy();
     if (policy == CmdletDispatchPolicy.ANY) {
       policy = getRoundrobinDispatchPolicy();
@@ -103,31 +116,28 @@ public class CmdletDispatcher {
     ExecutorType[] tryOrder;
     switch (policy) {
       case PREFER_LOCAL:
-        execType = ExecutorType.LOCAL;
         tryOrder = new ExecutorType[]
             {ExecutorType.LOCAL, ExecutorType.REMOTE_SSM, ExecutorType.AGENT};
         break;
 
       case PREFER_REMOTE_SSM:
-        execType = ExecutorType.REMOTE_SSM;
         tryOrder = new ExecutorType[]
             {ExecutorType.REMOTE_SSM, ExecutorType.AGENT, ExecutorType.LOCAL};
         break;
 
       case PREFER_AGENT:
-        execType = ExecutorType.AGENT;
         tryOrder = new ExecutorType[]
             {ExecutorType.AGENT, ExecutorType.LOCAL, ExecutorType.REMOTE_SSM};
         break;
 
       default:
         LOG.error("Unknown cmdlet dispatch policy. " + cmdlet);
-        return;
+        return false;
     }
 
     CmdletExecutorService selected = null;
     for (ExecutorType etTry : tryOrder) {
-      if (cmdExecServices[etTry.ordinal()] != null) {
+      if (cmdExecServices[etTry.ordinal()] != null && executorSlotAvaliable(etTry)) {
         selected = cmdExecServices[etTry.ordinal()];
         break;
       }
@@ -135,15 +145,22 @@ public class CmdletDispatcher {
 
     if (selected == null) {
       LOG.error("No cmdlet executor service available. " + cmdlet);
-      return;
+      return false;
     }
 
     String id = selected.execute(cmdlet);
+    updateSlotsLeft(selected.getExecutorType().ordinal(), -1);
+    dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
     LOG.info(
         String.format(
             "Dispatching cmdlet->[%s] to executor service %s : %s",
-            cmdlet.getCmdletId(), selected.getClass(), id));
+            cmdlet.getCmdletId(), selected.getExecutorType(), id));
+    return true;
+  }
+
+  private boolean executorSlotAvaliable(ExecutorType executorType) {
+    return cmdExecSrvInstsSlotsLeft[executorType.ordinal()] > 0;
   }
 
   private CmdletDispatchPolicy getRoundrobinDispatchPolicy() {
@@ -207,7 +224,6 @@ public class CmdletDispatcher {
   }
 
   private class DispatchTask implements Runnable {
-    private int roundIdx = 0;
     private final CmdletDispatcher dispatcher;
 
     public DispatchTask(CmdletDispatcher dispatcher) {
@@ -220,9 +236,8 @@ public class CmdletDispatcher {
         return;
       }
 
-      if (roundIdx % 30 == 0) {
-        roundIdx++;
-        upDateCmdExecSrvInsts();
+      if (cmdExecSrvTotalInsts == 0) {
+        return;
       }
 
       LaunchCmdlet launchCmdlet;
@@ -233,7 +248,12 @@ public class CmdletDispatcher {
             break;
           } else {
             cmdletPreExecutionProcess(launchCmdlet);
-            dispatcher.dispatch(launchCmdlet);
+            if (dispatcher.dispatch(launchCmdlet)) {
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("Stop this round dispatch due : " + launchCmdlet);
+              }
+              break;
+            }
           }
         } catch (IOException e) {
           LOG.error("Cmdlet dispatcher error", e);
@@ -247,6 +267,43 @@ public class CmdletDispatcher {
       for (ActionScheduler p : schedulers.get(action.getActionType())) {
         p.onPreDispatch(action);
       }
+    }
+  }
+
+  public void onCmdletFinished(long cmdletId) {
+    synchronized (dispatchedToSrvs) {
+      if (dispatchedToSrvs.containsKey(cmdletId)) {
+        ExecutorType t = dispatchedToSrvs.remove(cmdletId);
+        updateSlotsLeft(t.ordinal(), 1);
+      }
+    }
+  }
+
+  @Subscribe
+  public void onAddNodeMessage(AddNodeMessage msg) {
+    onNodeMessage(msg, true);
+  }
+
+  @Subscribe
+  public void onRemoveNodeMessage(RemoveNodeMessage msg) {
+    onNodeMessage(msg, false);
+  }
+
+  private void onNodeMessage(NodeMessage msg, boolean isAdd) {
+    synchronized (cmdExecSrvInsts) {
+      int v = isAdd ? 1 : -1;
+      int idx = msg.getNodeInfo().getExecutorType().ordinal();
+      cmdExecSrvInsts[idx] += v;
+      cmdExecSrvTotalInsts += v;
+      updateSlotsLeft(idx, v * defaultSlots);
+    }
+    LOG.info(String.format("Node " + msg.getNodeInfo() + (isAdd ? " added." : " removed.")));
+  }
+
+  private int updateSlotsLeft(int index, int delta) {
+    synchronized (cmdExecSrvInstsSlotsLeft) {
+      cmdExecSrvInstsSlotsLeft[index] += delta;
+      return cmdExecSrvInstsSlotsLeft[index];
     }
   }
 

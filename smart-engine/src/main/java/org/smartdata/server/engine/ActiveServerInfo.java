@@ -17,13 +17,14 @@
  */
 package org.smartdata.server.engine;
 
+import org.smartdata.model.ExecutorType;
 import org.smartdata.server.cluster.NodeInfo;
 
 public class ActiveServerInfo extends NodeInfo {
   private static ActiveServerInfo inst;
 
   private ActiveServerInfo() {
-    super("ActiveSSMServer", "127.0.0.1");
+    super("ActiveSSMServer", "127.0.0.1", ExecutorType.LOCAL);
   }
 
   public static ActiveServerInfo getInstance() {

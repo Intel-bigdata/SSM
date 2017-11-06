@@ -15,13 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.agent;
+package org.smartdata.server.engine;
 
-import org.smartdata.model.ExecutorType;
-import org.smartdata.server.cluster.NodeInfo;
+import com.google.common.eventbus.EventBus;
 
-public class AgentInfo extends NodeInfo {
-  public AgentInfo(String id, String location) {
-    super(id, location, ExecutorType.AGENT);
+public class EngineEventBus {
+  private static EventBus eventBus = new EventBus("EngineEventBus");
+
+  public static void post(Object event) {
+    eventBus.post(event);
+  }
+
+  public static void register(Object listener) {
+    eventBus.register(listener);
+  }
+
+  public static void unregister(Object listener) {
+    eventBus.unregister(listener);
   }
 }

@@ -32,9 +32,12 @@ import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cluster.NodeInfo;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
+import org.smartdata.server.engine.message.AddNodeMessage;
+import org.smartdata.server.engine.message.RemoveNodeMessage;
 import org.smartdata.server.utils.HazelcastUtil;
 
 import java.io.Serializable;
@@ -99,6 +102,10 @@ public class HazelcastExecutorService extends CmdletExecutorService {
     return ret;
   }
 
+  private NodeInfo memberToNodeInfo(Member member) {
+    return new StandbyServerInfo(member.getUuid(), member.getAddress().toString());
+  }
+
   @Override
   public boolean canAcceptMore() {
     return !HazelcastUtil.getWorkerMembers(instance).isEmpty();
@@ -146,6 +153,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
         masterToWorkers.put(worker.getUuid(), topic);
         scheduledCmdlets.put(worker.getUuid(), new HashSet<Long>());
         members.put(worker.getUuid(), worker);
+        EngineEventBus.post(new AddNodeMessage(memberToNodeInfo(worker)));
       }
     }
 
@@ -155,6 +163,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
       if (masterToWorkers.containsKey(member.getUuid())) {
         masterToWorkers.get(member.getUuid()).destroy();
         members.remove(member.getUuid());
+        EngineEventBus.post(new RemoveNodeMessage(memberToNodeInfo(member)));
       }
       //Todo: recover
     }

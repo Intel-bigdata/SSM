@@ -23,7 +23,6 @@ import io.restassured.response.ValidatableResponse;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.integration.util.Util;
 
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -92,21 +91,28 @@ public class TestActionRestApi extends IntegrationTestBase {
     testAction("cache", "-file /hello");
   }
 
+/*
   @Test
   public void testDistributedAction() throws Exception {
     Process worker = Util.startNewServer();
-    Process agent = Util.startNewAgent();
-    Util.waitSlaveServerAvailable();
-    Util.waitAgentAvailable();
+    try {
+      Process agent = Util.startNewAgent();
+      try {
+        Util.waitSlaveServerAvailable();
+        Util.waitAgentAvailable();
 
-    // Three actions would be executed on Master, StandbyServer and Agent
-    testAction("hello", "-print_message message");
-    testAction("hello", "-print_message message");
-    testAction("hello", "-print_message message");
-
-    worker.destroy();
-    agent.destroy();
+        // Three actions would be executed on Master, StandbyServer and Agent
+        testAction("hello", "-print_message message");
+        testAction("hello", "-print_message message");
+        testAction("hello", "-print_message message");
+      } finally {
+        agent.destroy();
+      }
+    } finally {
+      worker.destroy();
+    }
   }
+*/
 
   private int countSubstring(String parent, String child) {
     Pattern storagePattern = Pattern.compile(child);
