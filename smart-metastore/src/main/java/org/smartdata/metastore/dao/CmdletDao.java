@@ -93,7 +93,7 @@ public class CmdletDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE aid IN (?)",
-        new Object[] {StringUtils.join(aids, ",")},
+        new Object[]{StringUtils.join(aids, ",")},
         new CmdletRowMapper());
   }
 
@@ -101,7 +101,7 @@ public class CmdletDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject(
         "SELECT * FROM " + TABLE_NAME + " WHERE cid = ?",
-        new Object[] {cid},
+        new Object[]{cid},
         new CmdletRowMapper());
   }
 
@@ -109,7 +109,7 @@ public class CmdletDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE rid = ?",
-        new Object[] {rid},
+        new Object[]{rid},
         new CmdletRowMapper());
   }
 
@@ -124,7 +124,7 @@ public class CmdletDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE state = ?",
-        new Object[] {state.getValue()},
+        new Object[]{state.getValue()},
         new CmdletRowMapper());
   }
 
