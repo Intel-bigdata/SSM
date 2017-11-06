@@ -126,7 +126,7 @@ public class TestCmdletDao extends TestDaoUtil {
     CmdletInfo cmdlet6 = new CmdletInfo(1, 1,
             CmdletState.PAUSED, "tt", 123178333L, 232444994L);
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2, cmdlet3, cmdlet4, cmdlet5, cmdlet6});
-    List<CmdletInfo> cmdlets = cmdletDao.getByRid(1,1,2);
+    List<CmdletInfo> cmdlets = cmdletDao.getByRid(1, 1, 2);
     Assert.assertTrue(cmdlets.size() == 2);
   }
 
