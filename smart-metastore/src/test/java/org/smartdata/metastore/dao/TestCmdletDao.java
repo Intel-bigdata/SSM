@@ -110,4 +110,24 @@ public class TestCmdletDao extends TestDaoUtil {
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2});
     Assert.assertTrue(cmdletDao.getMaxId() == 2);
   }
+
+  @Test
+  public void testgetByRid() throws Exception{
+    CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
+            CmdletState.EXECUTING, "test", 123123333L, 232444444L);
+    CmdletInfo cmdlet2 = new CmdletInfo(1, 1,
+            CmdletState.PAUSED, "tt", 123178333L, 232444994L);
+    CmdletInfo cmdlet3 = new CmdletInfo(2, 1,
+            CmdletState.EXECUTING, "test", 123123333L, 232444444L);
+    CmdletInfo cmdlet4 = new CmdletInfo(3, 1,
+            CmdletState.PAUSED, "tt", 123178333L, 232444994L);
+    CmdletInfo cmdlet5 = new CmdletInfo(4, 1,
+            CmdletState.EXECUTING, "test", 123123333L, 232444444L);
+    CmdletInfo cmdlet6 = new CmdletInfo(5, 1,
+            CmdletState.PAUSED, "tt", 123178333L, 232444994L);
+    cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2, cmdlet3, cmdlet4, cmdlet5, cmdlet6});
+    List<CmdletInfo> cmdlets = cmdletDao.getByRid(1, 1, 2);
+    Assert.assertTrue(cmdlets.size() == 2);
+  }
+
 }

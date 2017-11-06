@@ -76,6 +76,13 @@ public class CmdletDao {
         new CmdletRowMapper());
   }
 
+  public List<CmdletInfo> getByRid(long rid, long start, long offset) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM " + TABLE_NAME + " WHERE rid = " + rid
+        + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new CmdletRowMapper());
+  }
+
   public List<CmdletInfo> getByState(CmdletState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query(
