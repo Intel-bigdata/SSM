@@ -754,6 +754,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<CmdletInfo> listPageCmdlets(long start, long offset,
+      List<String> orderBy, List<Boolean> desc)
+      throws MetaStoreException {
+    LOG.debug("List cmdlet, start {}, offset {}", start, offset);
+    try {
+      if (orderBy.size() == 0) {
+        return cmdletDao.getAPageOfCmdlet(start, offset);
+      } else {
+        return cmdletDao.getAPageOfCmdlet(start, offset, orderBy, desc);
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteAllRules() throws MetaStoreException {
     try {
       ruleDao.deleteAll();

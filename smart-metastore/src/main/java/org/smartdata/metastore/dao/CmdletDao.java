@@ -24,6 +24,7 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.sqlite.JDBC;
 
 import javax.sql.DataSource;
 
@@ -50,6 +51,42 @@ public class CmdletDao {
   public List<CmdletInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME, new CmdletRowMapper());
+  }
+
+  public List<CmdletInfo> getAPageOfCmdlet(long start, long offset,
+      List<String> orderBy, List<Boolean> isDesc) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    boolean ifHasAid = false;
+    String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ";
+
+    for (int i = 0; i < orderBy.size(); i++) {
+      if (orderBy.get(i).equals("cid")) {
+        ifHasAid = true;
+      }
+      sql = sql + orderBy.get(i);
+      if (isDesc.size() > i) {
+        if (isDesc.get(i)) {
+          sql = sql + " desc ";
+        }
+        sql = sql + ",";
+      }
+    }
+
+    if (!ifHasAid) {
+      sql = sql + "cid,";
+    }
+
+    //delete the last char
+    sql = sql.substring(0, sql.length() - 1);
+    //add limit
+    sql = sql + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new CmdletRowMapper());
+  }
+
+  public List<CmdletInfo> getAPageOfCmdlet(long start, long offset) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM " + TABLE_NAME + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByIds(List<Long> aids) {
