@@ -3,8 +3,8 @@ from util import *
 
 FILE_SIZE = 1024 * 1024
 
-class ResetEnv(unittest.TestCase):
 
+class ResetEnv(unittest.TestCase):
     def test_delete_all_rules(self):
         """
         delete all rules
