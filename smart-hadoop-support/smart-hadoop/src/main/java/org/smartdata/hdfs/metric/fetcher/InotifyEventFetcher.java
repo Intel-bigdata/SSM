@@ -26,11 +26,14 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.squareup.tape.QueueFile;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
+import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartConstants;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.SystemInfo;
@@ -38,6 +41,9 @@ import org.smartdata.model.SystemInfo;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
@@ -56,12 +62,18 @@ public class InotifyEventFetcher {
   private EventApplyTask eventApplyTask;
   private java.io.File inotifyFile;
   private QueueFile queueFile;
+  private SmartConf conf;
   public static final Logger LOG =
       LoggerFactory.getLogger(InotifyEventFetcher.class);
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service, Callable callBack) {
     this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack);
+  }
+
+  public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
+      ScheduledExecutorService service, Callable callBack, SmartConf conf) {
+    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack, conf);
   }
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
@@ -72,6 +84,19 @@ public class InotifyEventFetcher {
     this.scheduledExecutorService = service;
     this.finishedCallback = callBack;
     this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service);
+    this.conf = new SmartConf();
+  }
+
+  public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
+      ScheduledExecutorService service, InotifyEventApplier applier,
+      Callable callBack, SmartConf conf) {
+    this.client = client;
+    this.applier = applier;
+    this.metaStore = metaStore;
+    this.scheduledExecutorService = service;
+    this.finishedCallback = callBack;
+    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service);
+    this.conf = conf;
   }
 
   public void start() throws IOException {
@@ -116,7 +141,7 @@ public class InotifyEventFetcher {
     nameSpaceFetcher.startFetch();
     inotifyFetchFuture = scheduledExecutorService.scheduleAtFixedRate(
       new InotifyFetchTask(queueFile, client, startId), 0, 100, TimeUnit.MILLISECONDS);
-    eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile, startId);
+    eventApplyTask = new EventApplyTask(nameSpaceFetcher, applier, queueFile, startId, conf);
     ListenableFuture<?> future = listeningExecutorService.submit(eventApplyTask);
     Futures.addCallback(future, new NameSpaceFetcherCallBack(), scheduledExecutorService);
     LOG.info("Start apply iNotify events.");
@@ -203,6 +228,8 @@ public class InotifyEventFetcher {
     private final InotifyEventApplier applier;
     private final QueueFile queueFile;
     private long lastId;
+    private SmartConf conf;
+    private List<String> ignoreList;
 
     public EventApplyTask(NamespaceFetcher namespaceFetcher, InotifyEventApplier applier,
         QueueFile queueFile, long lastId) {
@@ -210,6 +237,54 @@ public class InotifyEventFetcher {
       this.queueFile = queueFile;
       this.applier = applier;
       this.lastId = lastId;
+      this.conf = new SmartConf();
+      this.ignoreList = getIgnoreDirFromConfig();
+    }
+
+    public EventApplyTask(NamespaceFetcher namespaceFetcher, InotifyEventApplier applier,
+        QueueFile queueFile, long lastId, SmartConf conf) {
+      this.namespaceFetcher = namespaceFetcher;
+      this.queueFile = queueFile;
+      this.applier = applier;
+      this.lastId = lastId;
+      this.conf = conf;
+      this.ignoreList = getIgnoreDirFromConfig();
+    }
+
+    public List<String> getIgnoreDirFromConfig() {
+      String ignoreDirs = this.conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      List<String> ignoreList;
+      if (ignoreDirs == null || ignoreDirs.equals("")) {
+        ignoreList = new ArrayList<>();
+      } else {
+        ignoreList = Arrays.asList(ignoreDirs.split(","));
+      }
+      return ignoreList;
+    }
+
+    public boolean ifEventIgnore(Event event) {
+      switch (event.getEventType()) {
+        case CREATE:
+          Event.CreateEvent createEvent = (Event.CreateEvent) event;
+
+          return Arrays.asList(this.getCreateSql((Event.CreateEvent) event));
+        case CLOSE:
+
+          return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
+        case RENAME:
+
+          return this.getRenameSql((Event.RenameEvent)event);
+        case METADATA:
+
+          return Arrays.asList(this.getMetaDataUpdateSql((Event.MetadataUpdateEvent)event));
+        case APPEND:
+
+          return this.getAppendSql((Event.AppendEvent)event);
+        case UNLINK:
+
+          return this.getUnlinkSql((Event.UnlinkEvent)event);
+      }
+      return true;
     }
 
     @Override
@@ -222,7 +297,8 @@ public class InotifyEventFetcher {
             while (!queueFile.isEmpty()) {
               EventBatch batch = EventBatchSerializer.deserialize(queueFile.peek());
               queueFile.remove();
-              this.applier.apply(batch.getEvents());
+              Event[] event = batch.getEvents();
+              this.applier.apply(event);
               this.lastId = batch.getTxid();
             }
             break;
