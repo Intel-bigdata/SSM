@@ -397,6 +397,15 @@ public class CmdletManager extends AbstractService {
     return filesToLock.keySet();
   }
 
+  private boolean shouldStopSchedule() {
+    int left = dispatcher.getTotalSlotsLeft();
+    int total = dispatcher.getTotalSlots();
+    if (scheduledCmdlet.size() >= left + total * 0.2) {
+      return true;
+    }
+    return false;
+  }
+
   public int scheduleCmdlet() throws IOException {
     int nScheduled = 0;
 
@@ -408,7 +417,7 @@ public class CmdletManager extends AbstractService {
     }
 
     Iterator<Long> it = schedulingCmdlet.iterator();
-    while (it.hasNext()) {
+    while (it.hasNext() && !shouldStopSchedule()) {
       long id = it.next();
       CmdletInfo cmdlet = idToCmdlets.get(id);
       synchronized (cmdlet) {
