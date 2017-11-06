@@ -76,16 +76,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
     }
 
     try {
-      String srcDir = action.getArgs().get(HdfsAction.FILE_PATH);
-      if (srcDir == null) {
-        LOG.error("File parameter is missing.");
-        return ScheduleResult.FAIL;
-      }
-      if (!client.exists(srcDir)) {
-        LOG.error("Source directory doesn't exist!");
-        return ScheduleResult.FAIL;
-      }
-
       // Get the container file
       String containerFilePath = action.getArgs().get("-containerFile");
       if (containerFilePath != null) {
@@ -100,22 +90,16 @@ public class SmallFileScheduler extends ActionSchedulerService {
         fileLock.add(containerFile); // Lock this container file
       }
 
-      // Get the small file list
+      // Get file container info of small files list
       long offset = 0L;
-      long size = Long.valueOf(action.getArgs().get("-size"));
-      ArrayList<String> smallFileList = new ArrayList<>();
-      List<FileInfo> fileInfoList = metaStore.getFilesByPrefix(srcDir);
-      for (FileInfo fileInfo : fileInfoList) {
+      String smallFiles = action.getArgs().get("-smallFiles");
+      ArrayList<String> smallFileList = new Gson().fromJson(smallFiles, new ArrayList<String>().getClass());
+      for (String filePath : smallFileList) {
+        FileInfo fileInfo = metaStore.getFile(filePath);
         long fileLen = fileInfo.getLength();
-        String filePath = fileInfo.getPath();
-        if (fileLen <= size) {
-          smallFileList.add(filePath);
-          fileContainerInfoMap.put(filePath, new FileContainerInfo(containerFile, offset, fileLen));
-          offset += fileLen;
-        }
+        fileContainerInfoMap.put(filePath, new FileContainerInfo(containerFile, offset, fileLen));
+        offset += fileLen;
       }
-
-      action.getArgs().put(SmallFileCompactAction.SMALL_FILES, new Gson().toJson(smallFileList));
       action.getArgs().put(SmallFileCompactAction.CONTAINER_FILE, containerFile);
       return ScheduleResult.SUCCESS;
     } catch (Exception e) {

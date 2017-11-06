@@ -40,6 +40,7 @@ import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
+import org.smartdata.server.engine.rule.SmallFilePlugin;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -82,6 +83,7 @@ public class RuleManager extends AbstractService {
     this.metaStore = context.getMetaStore();
 
     RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
+    RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context.getMetaStore()));
   }
 
   /**
