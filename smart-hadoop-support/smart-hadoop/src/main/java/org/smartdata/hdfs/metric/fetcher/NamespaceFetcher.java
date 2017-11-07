@@ -196,8 +196,9 @@ public class NamespaceFetcher {
         }
         return;
       }
-      if (!parent.endsWith("/")) {
-        parent = parent.concat("/");
+      String tmpParent = parent;
+      if (!tmpParent.endsWith("/")) {
+        tmpParent = tmpParent.concat("/");
       }
       for (int i = 0; i < ignoreList.size(); i++) {
         String ignoreDir = ignoreList.get(i);
@@ -206,7 +207,7 @@ public class NamespaceFetcher {
           ignoreDir = ignoreDir.concat("/");
         }
 
-        if (ignoreDir.equals(parent)) {
+        if (ignoreDir.equals(tmpParent)) {
           return;
         }
       }
