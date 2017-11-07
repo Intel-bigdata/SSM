@@ -32,10 +32,13 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.ServeReady;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 
@@ -59,11 +62,12 @@ public class AgentMaster {
   private ActorRef master;
   private AgentManager agentManager;
 
-  public AgentMaster(CmdletManager statusUpdater) throws IOException {
-    this(new SmartConf(), statusUpdater);
-  }
+  private static CmdletManager statusUpdater;
+  private static int tikvNumber = 0;
+  private static int serveReadyAgent = 0;
+  private static AgentMaster agentMaster = null;
 
-  public AgentMaster(SmartConf conf, CmdletManager statusUpdater) throws IOException {
+  private AgentMaster(SmartConf conf) throws IOException {
     String[] addresses = AgentUtils.getMasterAddress(conf);
     if (addresses == null) {
       throw new IOException("AgentMaster address not configured!");
@@ -73,9 +77,43 @@ public class AgentMaster {
     Config config = AgentUtils.overrideRemoteAddress(
         ConfigFactory.load(AgentConstants.AKKA_CONF_FILE), address);
     this.agentManager = new AgentManager();
-    Props props = Props.create(MasterActor.class, statusUpdater, agentManager);
+    Props props = Props.create(MasterActor.class, null, agentManager);
     ActorSystemLauncher launcher = new ActorSystemLauncher(config, props);
     launcher.start();
+  }
+
+  public static AgentMaster getAgentMaster() throws IOException {
+    return getAgentMaster(new SmartConf());
+  }
+
+  public static AgentMaster getAgentMaster(SmartConf conf) throws IOException {
+    if (agentMaster == null) {
+      agentMaster = new AgentMaster(conf);
+      return agentMaster;
+    } else {
+      return agentMaster;
+    }
+  }
+
+  public boolean isAgentRegisterReady(SmartConf conf) {
+    //TODO: how many agents are required to launch tikv
+    return serveReadyAgent == conf.getAgentsNumber();
+  }
+
+  public boolean isTikvAlreadyLaunched(SmartConf conf) {
+    //TODO: how many tikvs are required
+    return tikvNumber == conf.getAgentsNumber();
+  }
+
+  public void sendLaunchTikvMessage() {
+    for (ActorRef agent : agentManager.getAgents().keySet()) {
+      agent.tell(new ReadyToLaunchTikv(), master);
+      LOG.info("Try to launch Tikv on " + agent.path().address().host().get());
+    }
+  }
+
+  public static void setCmdletManager(CmdletManager statusUpdater) {
+    AgentMaster.statusUpdater = statusUpdater;
   }
 
   public boolean canAcceptMore() {
@@ -167,15 +205,20 @@ public class AgentMaster {
     }
   }
 
+
   static class MasterActor extends UntypedActor {
     private final Map<Long, ActorRef> dispatches = new HashMap<>();
     private int nextAgentId = 0;
-
-    private CmdletManager statusUpdater;
     private AgentManager agentManager;
 
     public MasterActor(CmdletManager statusUpdater, AgentManager agentManager) {
-      this.statusUpdater = statusUpdater;
+      this(agentManager);
+      if (statusUpdater != null) {
+        setCmdletManager(statusUpdater);
+      }
+    }
+
+    public MasterActor(AgentManager agentManager) {
       this.agentManager = agentManager;
     }
 
@@ -207,7 +250,14 @@ public class AgentMaster {
         LOG.info("Register SmartAgent {} from {}", id, agent);
         return true;
       } else if (message instanceof StatusMessage) {
-        this.statusUpdater.updateStatus((StatusMessage) message);
+        AgentMaster.statusUpdater.updateStatus((StatusMessage) message);
+        return true;
+      } else if (message instanceof ServeReady) {
+        AgentMaster.serveReadyAgent++;
+        return true;
+      } else if (message instanceof AlreadyLaunchedTikv) {
+        LOG.info(message.toString());
+        AgentMaster.tikvNumber++;
         return true;
       } else {
         return false;

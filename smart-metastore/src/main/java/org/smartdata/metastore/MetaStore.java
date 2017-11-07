@@ -1320,6 +1320,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public synchronized void checkTables() throws MetaStoreException {
+    Connection conn = getConnection();
+    try {
+      if (!MetaStoreUtils.isTableSetExist(conn)) {
+        LOG.info("At least one table required by SSM is missing. "
+                + "The configured database will be formatted.");
+        formatDataBase();
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
   public synchronized void formatDataBase() throws MetaStoreException {
     dropAllTables();
     initializeDataBase();

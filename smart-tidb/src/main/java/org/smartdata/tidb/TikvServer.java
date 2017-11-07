@@ -17,28 +17,31 @@
  */
 package org.smartdata.tidb;
 
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TikvServer implements Runnable {
+  private final static Logger LOG = LoggerFactory.getLogger(TikvServer.class);
+  private String args;
+  private Tikv tikv;
+
   public interface Tikv extends Library {
     void startServer(String args);
 
     boolean isTikvServerReady();
   }
 
-  private String args;
-  private Tikv tikv;
-  private final static Logger LOG = LoggerFactory.getLogger(TikvServer.class);
-
-  public TikvServer(String args) {
-    this.args = args;
+  public TikvServer(String args, SmartConf conf) {
+    String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR_KEY, SmartConfKeys.SMART_LOG_DIR_DEFAULT);
+    this.args = args + " --log-file=" + logDir + "/tikv.log";
     try {
       tikv = (Tikv) Native.loadLibrary("libtikv.so", Tikv.class);
     } catch (UnsatisfiedLinkError ex) {
-      LOG.error("libtikv.so is not found!");
+      LOG.error("libtikv.so can not be found or loaded!");
     }
   }
 
@@ -47,13 +50,13 @@ public class TikvServer implements Runnable {
   }
 
   public void run() {
-    StringBuffer strbuffer = new StringBuffer();
+    StringBuffer options = new StringBuffer();
     //According to start.rs in our tikv source code, "TiKV" is the flag name used for parsing
-    strbuffer.append("TiKV");
-    strbuffer.append(" ");
-    strbuffer.append(args);
+    options.append("TiKV");
+    options.append(" ");
+    options.append(args);
 
-    LOG.info("Starting TiKV..");
-    tikv.startServer(strbuffer.toString());
+    LOG.info("Starting Tikv..");
+    tikv.startServer(options.toString());
   }
 }
