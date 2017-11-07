@@ -17,12 +17,15 @@
  */
 package org.smartdata.metrics.impl;
 
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.metrics.FileAccessEventCollector;
 import org.smartdata.metrics.FileAccessEventSource;
 
+import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -37,12 +40,16 @@ public class SmartServerAccessEventSource implements FileAccessEventSource {
   private final SmartServerAccessEventCollector collector;
   private LinkedBlockingQueue<FileAccessEvent> eventQueue;
   private Timer timer;
+  private Configuration conf;
 
   public SmartServerAccessEventSource() {
     this.timer = new Timer();
     this.eventQueue = new LinkedBlockingQueue<>();
     this.collector = new SmartServerAccessEventCollector(eventQueue);
     this.timer.schedule(new ProgressInsertTask(eventQueue), DEFAULT_INTERVAL, DEFAULT_INTERVAL);
+    this.conf = new Configuration();
+    Configuration.addDefaultResource("smart-default.xml");
+    Configuration.addDefaultResource("smart-site.xml");
   }
 
   @Override
@@ -53,8 +60,21 @@ public class SmartServerAccessEventSource implements FileAccessEventSource {
   @Override
   public void insertEventFromSmartClient(FileAccessEvent event) {
     try {
-      this.eventQueue.put(event);
-      LOG.trace("Access:" + event.getPath());
+      String path = event.getPath();
+      boolean ignore = false;
+      Collection<String> dirs = conf.getTrimmedStringCollection(
+          SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      for (String s : dirs) {
+        s = s + (s.endsWith("/") ? "" : "/");
+        if (path.startsWith(s)) {
+          ignore = true;
+          break;
+        }
+      }
+      if (!ignore) {
+        this.eventQueue.put(event);
+        LOG.trace("Access:" + event.getPath());
+      }
     } catch (InterruptedException e) {
       LOG.error("Event queue enqueue path={} error", event.getPath(), e);
     }
