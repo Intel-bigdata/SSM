@@ -259,6 +259,11 @@ public class InotifyEventFetcher {
       } else {
         ignoreList = Arrays.asList(ignoreDirs.split(","));
       }
+      for (int i = 0; i < ignoreList.size(); i++) {
+        if (!ignoreList.get(i).endsWith("/")) {
+          ignoreList.set(i, ignoreList.get(i).concat("/"));
+        }
+      }
       return ignoreList;
     }
 
@@ -267,11 +272,7 @@ public class InotifyEventFetcher {
         path = path.concat("/");
       }
       for (int i = 0; i < ignoreList.size(); i++) {
-        String ignoreDir = ignoreList.get(i);
-        if (!ignoreDir.endsWith("/")) {
-          ignoreDir = ignoreDir.concat("/");
-        }
-        if (path.equals(ignoreDir)) {
+        if (path.equals(ignoreList.get(i))) {
           return true;
         }
       }
@@ -290,9 +291,7 @@ public class InotifyEventFetcher {
           path = closeEvent.getPath();
           return fetchPathInIgnoreList(path);
         case RENAME:
-          Event.RenameEvent renameEvent = (Event.RenameEvent) event;
-          path = renameEvent.getSrcPath();
-          return fetchPathInIgnoreList(path);
+          return false;
         case METADATA:
           Event.MetadataUpdateEvent metadataUpdateEvent = (Event.MetadataUpdateEvent) event;
           path = metadataUpdateEvent.getPath();
