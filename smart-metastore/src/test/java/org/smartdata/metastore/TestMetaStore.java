@@ -776,4 +776,24 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(metaStore.containSystemInfo("test"));
     Assert.assertTrue(metaStore.getSystemInfoByProperty("test").equals(systemInfo));
   }
+
+  @Test
+  public void testGetActions() throws MetaStoreException {
+    Map<String, String> args = new HashMap();
+    CmdletInfo command1 = new CmdletInfo(0, 1, CmdletState.PENDING, "test", 123123333L, 232444444L);
+    CmdletInfo command2 = new CmdletInfo(1, 1, CmdletState.PENDING, "tt", 123178333L, 232444994L);
+    CmdletInfo[] commands = {command1, command2};
+    metaStore.insertCmdlets(commands);
+    ActionInfo actionInfo1 =
+        new ActionInfo(1, 1, "cache", args, "Test", "Test", true, 123213213L, true, 123123L, 100);
+    ActionInfo actionInfo2 =
+        new ActionInfo(2, 0, "cache", args, "Test", "Test", true, 123213213L, true, 123123L, 100);
+    ActionInfo actionInfo3 =
+        new ActionInfo(3, 1, "cache", args, "Test", "Test", true, 123213213L, true, 123123L, 100);
+    ActionInfo actionInfo4 =
+        new ActionInfo(4, 1, "cache", args, "Test", "Test", true, 123213213L, true, 123123L, 100);
+    metaStore.insertActions(new ActionInfo[] {actionInfo1,actionInfo2,actionInfo3,actionInfo4});
+    Assert.assertTrue(metaStore.getActions(1, 0,2).size()==0);
+
+  }
 }
