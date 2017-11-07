@@ -56,7 +56,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   private FileAccessEventSource fileAccessEventSource;
   private AbstractService statesUpdaterService;
   private volatile boolean working = false;
-  private Collection<String> dirs;
+  private Collection<String> ignoreDirs;
 
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
@@ -87,7 +87,14 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       ReconfigurableRegistry.registReconfigurableProperty(
           getReconfigurableProperties(), this);
     }
-    dirs = serverContext.getConf().getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+    ignoreDirs = serverContext.getConf().getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+    for (String s : ignoreDirs) {
+      if(!s.endsWith("/")) {
+        ignoreDirs.remove(s);
+        s = s + "/";
+        ignoreDirs.add(s);
+      }
+    }
     LOG.info("Initialized.");
   }
 
@@ -140,18 +147,14 @@ public class StatesManager extends AbstractService implements Reconfigurable {
 
   public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
     String path = event.getPath();
-    boolean ignore = false;
-    for (String s : dirs) {
-      s = s + (s.endsWith("/") ? "" : "/");
+    path = path + (path.endsWith("/") ? "" : "/");
+    for (String s : ignoreDirs) {
       if (path.startsWith(s)) {
-        ignore = true;
-        break;
+        return;
       }
     }
-    if (!ignore) {
-      event.setTimeStamp(System.currentTimeMillis());
-      this.fileAccessEventSource.insertEventFromSmartClient(event);
-    }
+    event.setTimeStamp(System.currentTimeMillis());
+    this.fileAccessEventSource.insertEventFromSmartClient(event);
   }
 
   public List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
