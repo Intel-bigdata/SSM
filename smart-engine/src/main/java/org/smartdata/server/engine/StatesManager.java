@@ -87,9 +87,10 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       ReconfigurableRegistry.registReconfigurableProperty(
           getReconfigurableProperties(), this);
     }
-    ignoreDirs = serverContext.getConf().getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+    ignoreDirs = serverContext.getConf()
+        .getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     for (String s : ignoreDirs) {
-      if(!s.endsWith("/")) {
+      if (!s.endsWith("/")) {
         ignoreDirs.remove(s);
         s = s + "/";
         ignoreDirs.add(s);
