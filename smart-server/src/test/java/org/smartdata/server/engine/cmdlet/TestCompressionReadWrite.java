@@ -18,11 +18,13 @@
 package org.smartdata.server.engine.cmdlet;
 
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.SmartDFSInputStream;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.hdfs.SmartDecompressorStream;
+import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.SmartFileCompressionInfo;
@@ -33,7 +35,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.Random;
 
-public class TestCompressionScheduler extends MiniSmartClusterHarness {
+public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   public static final int DEFAULT_BLOCK_SIZE = 1024 * 64;
   
   @Override
@@ -43,40 +45,36 @@ public class TestCompressionScheduler extends MiniSmartClusterHarness {
   }
 
   @Test
-  public void testScheduler() throws Exception {
+  public void testCompressionScheduler() throws Exception {
     waitTillSSMExitSafeMode();
 
     MetaStore metaStore = ssm.getMetaStore();
-    int bufferSize = 1024 * 128;
+    int arraySize = 1024 * 128;
     String fileName = "/file1";
-    byte[] bytes = TestCompressionScheduler.BytesGenerator.get(bufferSize);
+    byte[] bytes = prepareFile(fileName, arraySize);
 
-    // Create HDFS file
-    OutputStream outputStream = dfsClient.create(fileName, true);
-    outputStream.write(bytes);
-    outputStream.close();
-
+    int bufSize = 16384;
     CmdletManager cmdletManager = ssm.getCmdletManager();
-    long cmdId = cmdletManager.submitCmdlet(("compress -file /file1 -bufSize 131072"));
+    long cmdId = cmdletManager.submitCmdlet("compress -file /file1 -bufSize 16384");
 
     while (true) {
       Thread.sleep(1000);
       CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
       if (state == CmdletState.DONE) {
-        
+
         //metastore  test
         SmartFileCompressionInfo compressionInfo = metaStore.getCompressionInfo(fileName);
-        Assert.assertNull(compressionInfo);
+        Assert.assertEquals(fileName, compressionInfo.getFileName());
+        Assert.assertEquals(bufSize, compressionInfo.getBufferSize());
 
         //data accuracy test
-        byte[] input = new byte[bufferSize];
+        byte[] input = new byte[arraySize];
         DFSInputStream compressedInputStream = dfsClient.open(fileName);
         SmartDecompressorStream uncompressedStream = new SmartDecompressorStream(
-          compressedInputStream, new SnappyDecompressor(bufferSize),
-          bufferSize);
+          compressedInputStream, new SnappyDecompressor(bufSize), bufSize);
         int offset = 0;
         while (true) {
-          int len = uncompressedStream.read(input, offset, bufferSize - offset);
+          int len = uncompressedStream.read(input, offset, arraySize - offset);
           if (len <= 0) {
             break;
           }
@@ -90,6 +88,56 @@ public class TestCompressionScheduler extends MiniSmartClusterHarness {
         Assert.fail("Mover failed.");
       }
     }
+  }
+
+  @Test
+  public void testSmartDFSInputStream() throws Exception {
+    waitTillSSMExitSafeMode();
+
+    int arraySize = 1024 * 128;
+    String fileName = "/ssm/compression/file1";
+    byte[] bytes = prepareFile(fileName, arraySize);
+
+    int bufSize = 16384;
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
+        + " -bufSize " + bufSize);
+
+    while (true) {
+      Thread.sleep(1000);
+      CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
+      if (state == CmdletState.DONE) {
+        //data accuracy test using SmartDFSInputStream
+        byte[] input = new byte[arraySize];
+        SmartDFSClient dfsClient = new SmartDFSClient(ssm.getContext().getConf());
+        DFSInputStream dfsInputStream = dfsClient.open(fileName);
+        int offset = 0;
+        while (true) {
+          int len = dfsInputStream.read(input, offset, arraySize - offset);
+          if (len <= 0) {
+            break;
+          }
+          offset += len;
+        }
+        Assert.assertArrayEquals(
+            "original array not equals compress/decompressed array", input, bytes
+        );
+        return;
+      } else if (state == CmdletState.FAILED) {
+        Assert.fail("Mover failed.");
+      }
+    }
+  }
+
+  private byte[] prepareFile(String fileName, int fileSize) throws Exception {
+    byte[] bytes = TestCompressionReadWrite.BytesGenerator.get(fileSize);
+
+    // Create HDFS file
+    OutputStream outputStream = dfsClient.create(fileName, true);
+    outputStream.write(bytes);
+    outputStream.close();
+
+    return bytes;
   }
 
   static final class BytesGenerator {
