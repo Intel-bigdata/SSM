@@ -96,4 +96,8 @@ public class MasterToAgent {
       return "AgentRegistered{ id=" + id + "}";
     }
   }
+
+  public static class ReadyToLaunchTikv implements Serializable {
+    private static final long serialVersionUID = 1927201465466654616L;
+  }
 }
