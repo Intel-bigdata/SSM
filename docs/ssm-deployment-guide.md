@@ -167,7 +167,7 @@ Run SSM
 
 * **Format Database**
 	
-	`bin/start-ssm.sh -format`
+	`./bin/start-ssm.sh -format`
 
    This command will start SSM service and format database meanwhile.
    The script will drop all tables in the database configured in druid.xml and create all tables required by SSM.
