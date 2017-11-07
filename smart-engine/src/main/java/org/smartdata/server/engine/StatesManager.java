@@ -39,6 +39,7 @@ import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,6 +56,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   private FileAccessEventSource fileAccessEventSource;
   private AbstractService statesUpdaterService;
   private volatile boolean working = false;
+  private Collection<String> dirs;
 
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
@@ -85,6 +87,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       ReconfigurableRegistry.registReconfigurableProperty(
           getReconfigurableProperties(), this);
     }
+    dirs = serverContext.getConf().getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     LOG.info("Initialized.");
   }
 
@@ -136,8 +139,19 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   }
 
   public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
-    event.setTimeStamp(System.currentTimeMillis());
-    this.fileAccessEventSource.insertEventFromSmartClient(event);
+    String path = event.getPath();
+    boolean ignore = false;
+    for (String s : dirs) {
+      s = s + (s.endsWith("/") ? "" : "/");
+      if (path.startsWith(s)) {
+        ignore = true;
+        break;
+      }
+    }
+    if (!ignore) {
+      event.setTimeStamp(System.currentTimeMillis());
+      this.fileAccessEventSource.insertEventFromSmartClient(event);
+    }
   }
 
   public List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
