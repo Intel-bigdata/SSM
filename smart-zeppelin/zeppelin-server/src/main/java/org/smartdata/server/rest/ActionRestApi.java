@@ -72,26 +72,20 @@ public class ActionRestApi {
       @PathParam("numPerPage") String numPerPage,
       @PathParam("orderBy") String orderBy,
       @PathParam("isDesc") String isDesc) {
-    //    Integer intNumber = Integer.parseInt(listNumber);
-    //    intNumber = intNumber > 0 ? intNumber : 0;
     if (logger.isDebugEnabled()) {
       logger.debug("pageIndex={}, numPerPage={}, orderBy={}, isDesc={}",
           pageIndex, numPerPage, orderBy, isDesc);
     }
     try {
-      //      return new JsonResponse<>(Response.Status.OK,
-      //          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
       List<String> orderByList = Arrays.asList(orderBy.split(","));
       List<String> isDescStringList = Arrays.asList(isDesc.split(","));
       List<Boolean> isDescList = new ArrayList<>();
-
       for (int i = 0; i < isDescStringList.size(); i++) {
         isDescList.add(Boolean.parseBoolean(isDescStringList.get(i)));
       }
-
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().listActions(Integer.parseInt(pageIndex),
-              Integer.parseInt(numPerPage), orderByList, isDescList)).build();
+          smartEngine.getCmdletManager().listActions(Long.parseLong(pageIndex),
+              Long.parseLong(numPerPage), orderByList, isDescList)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
@@ -110,6 +104,26 @@ public class ActionRestApi {
           smartEngine.getCmdletManager().getActions(Long.valueOf(ruleId), intNumber)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+  @GET
+  @Path("/filelist/{ruleId}/{pageIndex}/{numPerPage}")
+  public Response dataSyncFileList(@PathParam("ruleId") String ruleId,
+      @PathParam("pageIndex") String pageIndex,
+      @PathParam("numPerPage") String numPerPage) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("ruleId={}, pageIndex={}, numPerPage={}", ruleId,
+          pageIndex, numPerPage);
+    }
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager().getFileActions(Long.valueOf(ruleId),
+              Long.valueOf(pageIndex), Long.valueOf(numPerPage))).build();
+    } catch (Exception e) {
+      logger.error("Exception in ActionRestApi while listing file actions", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
