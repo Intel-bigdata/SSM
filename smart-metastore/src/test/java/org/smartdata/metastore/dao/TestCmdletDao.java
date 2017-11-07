@@ -26,6 +26,7 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.springframework.dao.EmptyResultDataAccessException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TestCmdletDao extends TestDaoUtil {
@@ -53,6 +54,23 @@ public class TestCmdletDao extends TestDaoUtil {
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2});
     List<CmdletInfo> cmdlets = cmdletDao.getAll();
     Assert.assertTrue(cmdlets.size() == 2);
+  }
+
+  @Test
+  public void testGetAPageOfAction() {
+    CmdletInfo cmdlet1 = new CmdletInfo(0, 1,
+        CmdletState.EXECUTING, "test", 123123333L, 232444444L);
+    CmdletInfo cmdlet2 = new CmdletInfo(1, 78,
+        CmdletState.PAUSED, "tt", 123178333L, 232444994L);
+    cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2});
+
+    List<String> order = new ArrayList<>();
+    order.add("cid");
+    List<Boolean> desc = new ArrayList<>();
+    desc.add(false);
+
+    Assert.assertTrue(cmdletDao.getAPageOfCmdlet(1, 1,
+        order, desc).get(0).equals(cmdlet2));
   }
 
   @Test
