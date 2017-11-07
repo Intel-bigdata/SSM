@@ -87,8 +87,8 @@ public class MetaStoreUtils {
     }
   }
 
-  public static boolean isTablesExist(Connection conn) throws MetaStoreException {
-    String tableName[] = new String[]{
+  public static boolean isTableSetExist(Connection conn) throws MetaStoreException {
+    String tableSet[] = new String[]{
             "access_count_table",
             "blank_access_count_info",
             "cached_file",
@@ -113,15 +113,28 @@ public class MetaStoreUtils {
     };
     try {
       String url = conn.getMetaData().getURL();
-      String dbName = getDBName(url);
-      for (String table : tableName) {
-        String query = String.format("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES "
-                + "WHERE TABLE_SCHEMA='%s' and TABLE_NAME='%s'", dbName, table);
-        if (isEmptyResultSet(conn, query)) {
-          return false;
+      if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+        String dbName = getMysqlDBName(url);
+        for (String table : tableSet) {
+          String query = String.format("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES "
+                  + "WHERE TABLE_SCHEMA='%s' and TABLE_NAME='%s'", dbName, table);
+          if (isEmptyResultSet(conn, query)) {
+            return false;
+          }
         }
+        return true;
+      } else if (url.startsWith(MetaStoreUtils.SQLITE_URL_PREFIX)) {
+        for (String table : tableSet) {
+          String query = String.format(
+                  "SELECT * FROM sqlite_master WHERE TYPE='table' AND NAME='%s'", table);
+          if (isEmptyResultSet(conn, query)) {
+            return false;
+          }
+        }
+        return true;
+      } else {
+        throw new MetaStoreException("The jdbc url is not valid for SSM use.");
       }
-      return true;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -405,7 +418,7 @@ public class MetaStoreUtils {
     getDBAdapter(conf).checkTables();
   }
 
-  public static String getDBName(String url) throws SQLException {
+  public static String getMysqlDBName(String url) throws SQLException {
     NonRegisteringDriver nonRegisteringDriver = new NonRegisteringDriver();
     Properties properties = nonRegisteringDriver.parseURL(url, null);
     return properties.getProperty(nonRegisteringDriver.DBNAME_PROPERTY_KEY);
@@ -440,7 +453,7 @@ public class MetaStoreUtils {
         }
 
         if (purl.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
-          String dbName = getDBName(purl);
+          String dbName = getMysqlDBName(purl);
           for (String name : DB_NAME_NOT_ALLOWED) {
             if (dbName.equals(name)) {
               throw new MetaStoreException(
@@ -549,7 +562,7 @@ public class MetaStoreUtils {
       String url) throws MetaStoreException {
     try {
       Statement stat = conn.createStatement();
-      String dbName = getDBName(url);
+      String dbName = getMysqlDBName(url);
       LOG.info("Drop All tables of Current DBname: " + dbName);
       ResultSet rs = stat.executeQuery("SELECT TABLE_NAME FROM "
           + "INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbName + "';");

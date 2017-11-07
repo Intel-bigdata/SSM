@@ -1291,7 +1291,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public synchronized void checkTables() throws MetaStoreException {
     Connection conn = getConnection();
     try {
-      if (!MetaStoreUtils.isTablesExist(conn)) {
+      if (!MetaStoreUtils.isTableSetExist(conn)) {
         LOG.info("At least one table required by SSM is missing. "
                 + "The configured database will be formatted.");
         formatDataBase();

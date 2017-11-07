@@ -132,8 +132,10 @@ public class SmartServer {
         list.add(arg);
       }
     }
-    String remainArgs[] = list.toArray(new String[list.size()]);
-    new GenericOptionsParser(conf, remainArgs);
+    if (list != null) {
+      String remainArgs[] = list.toArray(new String[list.size()]);
+      new GenericOptionsParser(conf, remainArgs);
+    }
 
     return startOpt;
   }
