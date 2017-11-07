@@ -106,7 +106,7 @@ class ReplicaMove {
 
       sendRequest(out, eb, accessToken);
       receiveResponse(in);
-      LOG.info("Successfully moved " + this);
+      LOG.debug("Successfully moved " + this);
       status.setSuccessful(true);
     } catch (IOException e) {
       LOG.warn("Failed to move " + this + ": " + e.getMessage());
@@ -184,6 +184,11 @@ class ReplicaMove {
     return true;
   }
 
+  /**
+   *
+   * @param allMoves
+   * @param ret ret[0] = number finished, ret[1] = number succeeded
+   */
   public static void countStatus(List<ReplicaMove> allMoves, int[] ret) {
     ret[0] = 0;
     ret[1] = 0;
