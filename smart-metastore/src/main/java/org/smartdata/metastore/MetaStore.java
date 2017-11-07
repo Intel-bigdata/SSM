@@ -619,7 +619,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return detailedFileActions;
   }
 
-  public List<DetailedFileAction> listFileActions(long rid, long start, int offset) throws MetaStoreException {
+  public List<DetailedFileAction> listFileActions(long rid, long start, int offset)
+      throws MetaStoreException {
     if (mapStoragePolicyIdName == null) {
       updateCache();
     }
