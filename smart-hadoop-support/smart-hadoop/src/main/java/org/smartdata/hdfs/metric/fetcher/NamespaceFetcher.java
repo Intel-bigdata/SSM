@@ -197,51 +197,48 @@ public class NamespaceFetcher {
         return;
       }
 
-      boolean isIgnored = false;
       for (int i = 0; i < ignoreList.size(); i++) {
         String ignoreDir = ignoreList.get(i);
 
-        String tmpParent = parent;
+
         if (ignoreDir.length() != 0 && ignoreDir.charAt(ignoreDir.length() - 1) == '/'
             && ignoreDir.length() != 1) {
           ignoreDir.substring(0, ignoreDir.length() - 1);
         }
         //
-        if (tmpParent.length() != 0 && tmpParent.charAt(tmpParent.length() - 1) == '/'
-            && tmpParent.length() != 1) {
-          tmpParent.substring(0, tmpParent.length() - 1);
+        if (parent.length() != 0 && parent.charAt(parent.length() - 1) == '/'
+            && parent.length() != 1) {
+          parent.substring(0, parent.length() - 1);
         }
 
-        if (ignoreDir.equals(tmpParent)) {
-          isIgnored = true;
-          break;
+        if (ignoreDir.equals(parent)) {
+          return;
         }
       }
 
-      if (!isIgnored) {
-        try {
-          HdfsFileStatus status = client.getFileInfo(parent);
-          if (status != null && status.isDir()) {
-            FileInfo internal = convertToFileInfo(status, "");
-            internal.setPath(parent);
-            this.addFileStatus(internal);
-            numDirectoriesFetched++;
-            HdfsFileStatus[] children = this.listStatus(parent);
-            for (HdfsFileStatus child : children) {
-              if (child.isDir()) {
-                this.deque.add(child.getFullName(parent));
-              } else {
-                this.addFileStatus(convertToFileInfo(child, parent));
-                numFilesFetched++;
-              }
+      try {
+        HdfsFileStatus status = client.getFileInfo(parent);
+        if (status != null && status.isDir()) {
+          FileInfo internal = convertToFileInfo(status, "");
+          internal.setPath(parent);
+          this.addFileStatus(internal);
+          numDirectoriesFetched++;
+          HdfsFileStatus[] children = this.listStatus(parent);
+          for (HdfsFileStatus child : children) {
+            if (child.isDir()) {
+              this.deque.add(child.getFullName(parent));
+            } else {
+              this.addFileStatus(convertToFileInfo(child, parent));
+              numFilesFetched++;
             }
           }
-        } catch (IOException | InterruptedException e) {
-          LOG.error("Totally, numDirectoriesFetched = " + numDirectoriesFetched
-              + ", numFilesFetched = " + numFilesFetched
-              + ". Parent = " + parent, e);
         }
+      } catch (IOException | InterruptedException e) {
+        LOG.error("Totally, numDirectoriesFetched = " + numDirectoriesFetched
+            + ", numFilesFetched = " + numFilesFetched
+            + ". Parent = " + parent, e);
       }
+
     }
 
     /**
