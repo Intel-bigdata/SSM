@@ -1127,16 +1127,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getActions(long rid, long start, long offset) throws MetaStoreException {
-    long mark=0;
-    long count=0;
+    long mark = 0;
+    long count = 0;
     List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(rid);
     List<ActionInfo> totalActions = new ArrayList<>();
     for (CmdletInfo cmdletInfo : cmdletInfos) {
       List<Long> aids = cmdletInfo.getAids();
       if (mark + aids.size()>= start + 1) {
         long i;
+        i = start - mark;
         for (Long aid : aids) {
-          i = start - mark;
           if (i > 0) {
             i --;
             continue;
@@ -1144,7 +1144,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           if (count < offset) {
             ActionInfo actionInfo = getActionById(aid);
             totalActions.add(actionInfo);
-            count++;
+            count ++;
           }
           else {
             break;
