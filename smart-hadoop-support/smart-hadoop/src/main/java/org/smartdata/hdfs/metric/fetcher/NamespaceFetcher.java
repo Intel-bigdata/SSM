@@ -17,11 +17,14 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
@@ -29,9 +32,12 @@ import org.smartdata.metastore.ingestion.IngestionTask;
 import org.smartdata.model.FileInfoBatch;
 import org.smartdata.metastore.ingestion.FileStatusIngester;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -47,6 +53,7 @@ public class NamespaceFetcher {
   private FileStatusIngester consumer;
   private IngestionTask ingestionTask;
   private MetaStore metaStore;
+  private SmartConf conf;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(NamespaceFetcher.class);
@@ -57,10 +64,22 @@ public class NamespaceFetcher {
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, ScheduledExecutorService service) {
     this(client, metaStore, DEFAULT_INTERVAL, service);
+    this.conf = new SmartConf();
+  }
+
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore, ScheduledExecutorService service, SmartConf conf) {
+    this(client, metaStore, DEFAULT_INTERVAL, service);
+    this.conf = conf;
   }
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval) {
     this(client, metaStore, fetchInterval, Executors.newSingleThreadScheduledExecutor());
+    this.conf = new SmartConf();
+  }
+
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval, SmartConf conf) {
+    this(client, metaStore, fetchInterval, Executors.newSingleThreadScheduledExecutor());
+    this.conf = conf;
   }
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
@@ -70,6 +89,17 @@ public class NamespaceFetcher {
     this.fetchInterval = fetchInterval;
     this.scheduledExecutorService = service;
     this.metaStore = metaStore;
+    this.conf = new SmartConf();
+  }
+
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
+      ScheduledExecutorService service, SmartConf conf) {
+    this.ingestionTask = new HdfsFetchTask(client, conf);
+    this.consumer = new FileStatusIngester(metaStore, ingestionTask);
+    this.fetchInterval = fetchInterval;
+    this.scheduledExecutorService = service;
+    this.metaStore = metaStore;
+    this.conf = conf;
   }
 
   public void startFetch() throws IOException {
@@ -101,9 +131,37 @@ public class NamespaceFetcher {
   private static class HdfsFetchTask extends IngestionTask {
     private final HdfsFileStatus[] EMPTY_STATUS = new HdfsFileStatus[0];
     private final DFSClient client;
+    private final SmartConf conf;
+    private List<String> ignoreList;
+    public HdfsFetchTask(DFSClient client, SmartConf conf) {
+      super();
+      this.client = client;
+      this.conf = conf;
+      String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      if (configString == null){
+        configString = "";
+      }
+
+      //only when parent dir is not ignored we run the follow code
+      ignoreList = Arrays.asList(configString.split(","));
+      for (int i = 0; i < ignoreList.size(); i++) {
+        if (!ignoreList.get(i).endsWith("/")) {
+          ignoreList.set(i, ignoreList.get(i).concat("/"));
+        }
+      }
+    }
+
     public HdfsFetchTask(DFSClient client) {
       super();
       this.client = client;
+      this.conf = new SmartConf();
+      String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      if (configString == null){
+        configString = "";
+      }
+
+      //only when parent dir is not ignored we run the follow code
+      ignoreList = Arrays.asList(configString.split(","));
     }
 
     @Override
@@ -143,11 +201,21 @@ public class NamespaceFetcher {
         }
         return;
       }
+      String tmpParent = parent;
+      if (!tmpParent.endsWith("/")) {
+        tmpParent = tmpParent.concat("/");
+      }
+      for (int i = 0; i < ignoreList.size(); i++) {
+
+        if (ignoreList.get(i).equals(tmpParent)) {
+          return;
+        }
+      }
 
       try {
         HdfsFileStatus status = client.getFileInfo(parent);
         if (status != null && status.isDir()) {
-          FileInfo internal = convertToFileInfo(status,"");
+          FileInfo internal = convertToFileInfo(status, "");
           internal.setPath(parent);
           this.addFileStatus(internal);
           numDirectoriesFetched++;
@@ -166,6 +234,7 @@ public class NamespaceFetcher {
             + ", numFilesFetched = " + numFilesFetched
             + ". Parent = " + parent, e);
       }
+
     }
 
     /**
