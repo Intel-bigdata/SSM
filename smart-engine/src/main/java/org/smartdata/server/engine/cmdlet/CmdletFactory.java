@@ -29,7 +29,6 @@ import org.smartdata.alluxio.action.AlluxioAction;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
-import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -73,10 +72,12 @@ public class CmdletFactory {
       try {
         ((HdfsAction) smartAction)
             .setDfsClient(
-                new SmartDFSClient(
-                    HadoopUtil.getNameNodeUri(smartContext.getConf()),
-                    smartContext.getConf(),
-                    getRpcServerAddress()));
+                HadoopUtil.getDFSClient(HadoopUtil.getNameNodeUri(smartContext.getConf()),
+                    smartContext.getConf()));
+//                new SmartDFSClient(
+//                    HadoopUtil.getNameNodeUri(smartContext.getConf()),
+//                    smartContext.getConf(),
+//                    getRpcServerAddress()));
       } catch (IOException e) {
         LOG.error("smartAction aid={} setDfsClient error", launchAction.getActionId(), e);
         throw new ActionException(e);

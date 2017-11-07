@@ -25,6 +25,7 @@ public class SmartConfKeys {
   public static final boolean SMART_DFS_ENABLED_DEFAULT = true;
 
   public static final String SMART_CONF_DIR_KEY = "smart.conf.dir";
+  public static final String SMART_HADOOP_CONF_DIR_KEY = "smart.hadoop.conf.path";
   public static final String SMART_CONF_DIR_DEFAULT = "conf";
   public static final String SMART_LOG_DIR_KEY = "smart.log.dir";
   public static final String SMART_LOG_DIR_DEFAULT = "logs";

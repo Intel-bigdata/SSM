@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.SmartServiceState;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
@@ -31,7 +32,7 @@ import org.smartdata.model.RuleState;
 import org.smartdata.protocol.SmartAdminProtocol;
 import org.smartdata.protocol.protobuffer.AdminProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer;
-import org.smartdata.utils.JaasLoginUtil;
+import org.smartdata.utils.SecurityUtil;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -46,7 +47,7 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
   public SmartAdmin(Configuration conf)
       throws IOException {
     this.conf = conf;
-    checkSecurityAndLogin();
+    //authenticate(conf);
     String[] strings = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
         SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT).split(":");
     InetSocketAddress address = new InetSocketAddress(
@@ -59,16 +60,12 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
     this.ssm = new AdminProtocolClientSideTranslator(proxy);
   }
 
-  private boolean isSecurityEnabled() {
-    return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
-  }
-
-  private void checkSecurityAndLogin() throws IOException {
-    if (!isSecurityEnabled()) {
+  private void authenticate(Configuration conf) throws IOException {
+    if (!SecurityUtil.isSecurityEnabled((SmartConf) conf)) {
       return;
     }
-    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
-    JaasLoginUtil.loginUsingTicketCache(principal);
+
+    SecurityUtil.loginUsingKeytab((SmartConf) conf);
   }
 
   @Override
