@@ -38,6 +38,7 @@ import org.smartdata.model.Utilization;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -56,7 +57,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   private FileAccessEventSource fileAccessEventSource;
   private AbstractService statesUpdaterService;
   private volatile boolean working = false;
-  private Collection<String> ignoreDirs;
+  private List<String> ignoreDirs = new ArrayList<String>();
 
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
@@ -87,11 +88,11 @@ public class StatesManager extends AbstractService implements Reconfigurable {
       ReconfigurableRegistry.registReconfigurableProperty(
           getReconfigurableProperties(), this);
     }
-    ignoreDirs = serverContext.getConf()
+
+    Collection<String> dirs = serverContext.getConf()
         .getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-    for (String s : ignoreDirs) {
+    for (String s : dirs) {
       if (!s.endsWith("/")) {
-        ignoreDirs.remove(s);
         s = s + "/";
         ignoreDirs.add(s);
       }
