@@ -262,29 +262,61 @@ public class InotifyEventFetcher {
       return ignoreList;
     }
 
+    public boolean fetchPathInIgnoreList(String path) {
+      if (!path.endsWith("/")) {
+        path = path.concat("/");
+      }
+      for (int i = 0; i < ignoreList.size(); i++) {
+        String ignoreDir = ignoreList.get(i);
+        if (!ignoreDir.endsWith("/")) {
+          ignoreDir = ignoreDir.concat("/");
+        }
+        if (path.equals(ignoreDir)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     public boolean ifEventIgnore(Event event) {
+      String path;
       switch (event.getEventType()) {
         case CREATE:
           Event.CreateEvent createEvent = (Event.CreateEvent) event;
-
-          return Arrays.asList(this.getCreateSql((Event.CreateEvent) event));
+          path = createEvent.getPath();
+          return fetchPathInIgnoreList(path);
         case CLOSE:
-
-          return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
+          Event.CloseEvent closeEvent = (Event.CloseEvent) event;
+          path = closeEvent.getPath();
+          return fetchPathInIgnoreList(path);
         case RENAME:
-
-          return this.getRenameSql((Event.RenameEvent)event);
+          Event.RenameEvent renameEvent = (Event.RenameEvent) event;
+          path = renameEvent.getSrcPath();
+          return fetchPathInIgnoreList(path);
         case METADATA:
-
-          return Arrays.asList(this.getMetaDataUpdateSql((Event.MetadataUpdateEvent)event));
+          Event.MetadataUpdateEvent metadataUpdateEvent = (Event.MetadataUpdateEvent) event;
+          path = metadataUpdateEvent.getPath();
+          return fetchPathInIgnoreList(path);
         case APPEND:
-
-          return this.getAppendSql((Event.AppendEvent)event);
+          Event.AppendEvent appendEvent = (Event.AppendEvent) event;
+          path = appendEvent.getPath();
+          return fetchPathInIgnoreList(path);
         case UNLINK:
-
-          return this.getUnlinkSql((Event.UnlinkEvent)event);
+          Event.UnlinkEvent unlinkEvent = (Event.UnlinkEvent) event;
+          path = unlinkEvent.getPath();
+          return fetchPathInIgnoreList(path);
       }
       return true;
+    }
+
+    public Event[] deleteIgnoreEvent(Event[] events) {
+      ArrayList<Event> eventArrayList = new ArrayList<>();
+      for (int i = 0; i < events.length; i++) {
+        if (!ifEventIgnore(events[i])) {
+          eventArrayList.add(events[i]);
+        }
+      }
+      return eventArrayList.toArray(new Event[eventArrayList.size()]);
     }
 
     @Override
@@ -298,8 +330,11 @@ public class InotifyEventFetcher {
               EventBatch batch = EventBatchSerializer.deserialize(queueFile.peek());
               queueFile.remove();
               Event[] event = batch.getEvents();
-              this.applier.apply(event);
-              this.lastId = batch.getTxid();
+              event = deleteIgnoreEvent(event);
+              if (event.length > 0) {
+                this.applier.apply(event);
+                this.lastId = batch.getTxid();
+              }
             }
             break;
           }
