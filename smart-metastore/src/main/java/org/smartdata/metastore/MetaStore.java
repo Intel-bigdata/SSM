@@ -1134,26 +1134,24 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     for (CmdletInfo cmdletInfo : cmdletInfos) {
       List<Long> aids = cmdletInfo.getAids();
       if (mark + aids.size() >= start + 1) {
-        long i;
-        i = start - mark;
+        long gap;
+        gap = start - mark;
         for (Long aid : aids) {
-          if (i > 0) {
-            i --;
-            mark ++;
+          if (gap > 0) {
+            gap--;
+            mark++;
             continue;
           }
           if (count < offset) {
             ActionInfo actionInfo = getActionById(aid);
             totalActions.add(actionInfo);
-            count ++;
-            mark ++;
-          }
-          else {
+            count++;
+            mark++;
+          } else {
             return totalActions;
           }
         }
-      }
-      else {
+      } else {
         mark += aids.size();
       }
 
