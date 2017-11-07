@@ -19,24 +19,18 @@ package org.smartdata.hdfs.client;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
-import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.UnresolvedLinkException;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.*;
-import org.apache.hadoop.util.Progressable;
 import org.smartdata.client.SmartClient;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.SmartFileCompressionInfo;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.EnumSet;
 
-import static org.apache.hadoop.fs.CommonConfigurationKeys.SECURITY_CLIENT_DATANODE_PROTOCOL_ACL;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_BLOCK_SIZE_KEY;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_REPLICATION_DEFAULT;
@@ -45,7 +39,6 @@ import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_REPLICATION_KEY;
 public class SmartDFSClient extends DFSClient {
   private SmartClient smartClient = null;
   private boolean healthy = false;
-  private String compressPath = "/ssm/compress/";
   
   String compressionImpl;
   short defaultReplication;
@@ -245,15 +238,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-    DFSInputStream is; 
-    if(!iscompressFileDir(src)){
-      is = super.open(src);
-      reportFileAccessEvent(src);
-    }else{
-//      is = new SmartDFSInputStream(src);
-      is = null;
-    }
-    return  is;
+    return super.open(src);
   }
 
   @Override
@@ -262,11 +247,15 @@ public class SmartDFSClient extends DFSClient {
       throws IOException, UnresolvedLinkException {
     DFSInputStream is;
     if(!iscompressFileDir(src)){
-      is = super.open(src,buffersize,verifyChecksum);
-      reportFileAccessEvent(src);
+      LOG.info("Uncompressed file " + src + " opened.");
+      is = super.open(src, buffersize, verifyChecksum);
     }else{
-      is = new SmartDFSInputStream(this, src, verifyChecksum);
+      LOG.info("Compressed file " + src + " opened.");
+      SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
+          src, 256 * 1024);
+      is = new SmartDFSInputStream(this, src, verifyChecksum, compressionInfo);
     }
+    reportFileAccessEvent(src);
     return  is;
   }
 
@@ -275,15 +264,7 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException, UnresolvedLinkException {
-    DFSInputStream is;
-    if(!iscompressFileDir(src)){
-      is = super.open(src,buffersize,verifyChecksum,stats);
-      reportFileAccessEvent(src);
-    }else{
-//      is = new SmartDFSInputStream(this, src, verifyChecksum,stats);
-      is = null;
-    }
-    return  is;
+    return super.open(src,buffersize,verifyChecksum,stats);
   }
 
   private void reportFileAccessEvent(String src) {

@@ -22,7 +22,7 @@
     {
       "id": "local",
       "type": "default",
-      "url": "file:///home/hadoop/.m2/repository",
+      "url": "file:///root/.m2/repository",
       "releasePolicy": {
         "enabled": true,
         "updatePolicy": "daily",
@@ -39,7 +39,7 @@
     {
       "id": "local",
       "type": "default",
-      "url": "file:///root/.m2/repository",
+      "url": "file:///home/hadoop/.m2/repository",
       "releasePolicy": {
         "enabled": true,
         "updatePolicy": "daily",
