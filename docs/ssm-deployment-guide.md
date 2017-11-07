@@ -92,13 +92,13 @@ Configure SSM
    </properties>	   
    ```
    
-   `ssm` is the Database name. User need to create it manully through mySQL client. 
+   `ssm` is the Database name. User need to create it manully through MySQL client.
    
    After all finish the SSM configuration, we can start to deploy the SSM package with the configuration files to all involved servers.
 
 * **Configure TiDB (optional)**
 
-    TiDB is integrated with SSM. It can replace Mysql to store metadata. TiDB can be enabled in smart-site.xml.
+    TiDB is integrated with SSM. It can replace MySQL to store metadata. TiDB can be enabled in smart-site.xml.
 
    ```xml
     <property>
@@ -108,10 +108,10 @@ Configure SSM
     </property>
    ```
 
-    For SSM standalone case, three instances PD, TiKV and TiDB will be running on Smart Server.
-    For SSM with multiple agents case, each Smart Server will run PD and TiDB instance and each agent will run a TiKV instance to scale up the capacity of TiDB.
+    For SSM standalone mode, three instances PD, TiKV and TiDB will be running on Smart Server.
+    For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance to scale up the capacity of TiDB.
 
-    If TiDB is enabled, the jdbc url must be the default one of TiDB. The default configuration is shown as follows. You can also use mysql shell to connect to TiDB server manually.
+    If TiDB is enabled, the jdbc url must be the default one of TiDB. The configuration in druid.xml is shown as follows. You can also use mysql shell to connect to TiDB server manually.
 
    ```xml
     <properties>
@@ -168,13 +168,14 @@ Run SSM
 * **Format Database**
 	
 	`bin/start-ssm.sh -format`
-   
-   The script will drop all tables in the configured database and create all tables required by SSM.
+
+   This command will start SSM service and format database meanwhile.
+   The script will drop all tables in the database configured in druid.xml and create all tables required by SSM.
 	
    
 * **Start SSM server**
    
-   SSM server requires HDFS superuser privielge to access some Namenode APIs. So please make sure the account you used to start SSM has the provilege. 
+   SSM server requires HDFS superuser privilege to access some Namenode APIs. So please make sure the account you used to start SSM has the privilege.
    
    The start process also requires the user account to start the SSM server is able to ssh to localhost without providing password.  
 
