@@ -196,19 +196,14 @@ public class NamespaceFetcher {
         }
         return;
       }
-
+      if (!parent.endsWith("/")) {
+        parent = parent.concat("/");
+      }
       for (int i = 0; i < ignoreList.size(); i++) {
         String ignoreDir = ignoreList.get(i);
 
-
-        if (ignoreDir.length() != 0 && ignoreDir.charAt(ignoreDir.length() - 1) == '/'
-            && ignoreDir.length() != 1) {
-          ignoreDir.substring(0, ignoreDir.length() - 1);
-        }
-        //
-        if (parent.length() != 0 && parent.charAt(parent.length() - 1) == '/'
-            && parent.length() != 1) {
-          parent.substring(0, parent.length() - 1);
+        if (!ignoreDir.endsWith("/")) {
+          ignoreDir = ignoreDir.concat("/");
         }
 
         if (ignoreDir.equals(parent)) {
