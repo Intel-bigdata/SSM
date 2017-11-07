@@ -74,10 +74,10 @@ public class ActionRestApi {
       @PathParam("isDesc") String isDesc) {
     //    Integer intNumber = Integer.parseInt(listNumber);
     //    intNumber = intNumber > 0 ? intNumber : 0;
-    logger.info("pageIndex {}", pageIndex);
-    logger.info("numPerPage {}", numPerPage);
-    logger.info("orderBy {}", orderBy);
-    logger.info("isDesc {}", isDesc);
+    if (logger.isDebugEnabled()) {
+      logger.debug("pageIndex={}, numPerPage={}, orderBy={}, isDesc={}",
+          pageIndex, numPerPage, orderBy, isDesc);
+    }
     try {
       //      return new JsonResponse<>(Response.Status.OK,
       //          smartEngine.getCmdletManager().listNewCreatedActions(intNumber)).build();
