@@ -144,6 +144,11 @@ public class NamespaceFetcher {
 
       //only when parent dir is not ignored we run the follow code
       ignoreList = Arrays.asList(configString.split(","));
+      for (int i = 0; i < ignoreList.size(); i++) {
+        if (!ignoreList.get(i).endsWith("/")) {
+          ignoreList.set(i, ignoreList.get(i).concat("/"));
+        }
+      }
     }
 
     public HdfsFetchTask(DFSClient client) {
@@ -201,13 +206,8 @@ public class NamespaceFetcher {
         tmpParent = tmpParent.concat("/");
       }
       for (int i = 0; i < ignoreList.size(); i++) {
-        String ignoreDir = ignoreList.get(i);
 
-        if (!ignoreDir.endsWith("/")) {
-          ignoreDir = ignoreDir.concat("/");
-        }
-
-        if (ignoreDir.equals(tmpParent)) {
+        if (ignoreList.get(i).equals(tmpParent)) {
           return;
         }
       }
