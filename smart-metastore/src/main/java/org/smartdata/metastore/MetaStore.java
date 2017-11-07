@@ -1149,13 +1149,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
             mark ++;
           }
           else {
-            break;
+            return totalActions;
           }
         }
-        if (count >= offset) {
-          break;
-        }
-
       }
       else {
         mark += aids.size();
