@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -54,12 +55,12 @@ import java.util.concurrent.TimeUnit;
 public class CopyScheduler extends ActionSchedulerService {
   static final Logger LOG =
       LoggerFactory.getLogger(CopyScheduler.class);
+  private static final List<String> actions = Collections.singletonList("sync");
+  private MetaStore metaStore;
 
-  private static final List<String> actions = Arrays.asList("sync");
   // Fixed rate scheduler
   private ScheduledExecutorService executorService;
   // Global variables
-  private MetaStore metaStore;
   private Configuration conf;
   // <File path, file diff id>
   private Map<String, Long> fileLock;
