@@ -55,14 +55,6 @@ angular.module('zeppelinWebApp')
       $ptb.$update($scope.ruleSummary, [
           rule.id,
           rule.submitTime
-          /*
-           rule.user,
-           [
-           {href: rule.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
-           helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, rule.homeDirectory),
-           helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, rule.logFile)
-           ]
-           */
       ]);
     });
 
@@ -83,8 +75,8 @@ angular.module('zeppelinWebApp')
           $scope.totalNumber = cmdletsData.body.totalNumOfCmdlets;
           $scope.cmdlets = cmdletsData.body.cmdlets;
           angular.forEach($scope.cmdlets, function (data,index) {
-            data.createTime = data.createTime === 0 ? "-" :
-              $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
+            data.generateTime = data.generateTime === 0 ? "-" :
+              $filter('date')(data.generateTime,'yyyy-MM-dd HH:mm:ss');
             data.stateColor = data.state === "DONE" ? "green" : data.state === "FAILED" ? "red" : "gray";
           });
           $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);

@@ -37,10 +37,10 @@ under the License.
       <caption>Cmdlets</caption>
       <thead ng-show="totalNumber > 0">
       <tr>
-        <th style="width: 10px"></th>
-        <th ng-click="defindOrderBy('aid')">ID</th>
-        <th ng-click="defindOrderBy('action_name')">Arguments</th>
-        <th ng-click="defindOrderBy('create_time')">Generate Time</th>
+        <th ng-click="defindOrderBy('state')" style="width: 5px"></th>
+        <th ng-click="defindOrderBy('cid')">ID</th>
+        <th ng-click="defindOrderBy('parameters')">Arguments</th>
+        <th ng-click="defindOrderBy('generate_time')">Generate Time</th>
       </tr>
       </thead>
       <thead ng-if="totalNumber < 1">
