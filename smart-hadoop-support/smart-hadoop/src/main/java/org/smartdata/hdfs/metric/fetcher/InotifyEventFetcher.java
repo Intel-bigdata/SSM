@@ -291,7 +291,10 @@ public class InotifyEventFetcher {
           path = closeEvent.getPath();
           return fetchPathInIgnoreList(path);
         case RENAME:
-          return false;
+          Event.RenameEvent renameEvent = (Event.RenameEvent) event;
+          path = renameEvent.getSrcPath();
+          String dest = renameEvent.getDstPath();
+          return fetchPathInIgnoreList(path) && fetchPathInIgnoreList(dest);
         case METADATA:
           Event.MetadataUpdateEvent metadataUpdateEvent = (Event.MetadataUpdateEvent) event;
           path = metadataUpdateEvent.getPath();
