@@ -287,7 +287,7 @@ public class MetaStoreUtils {
             ");",
 
         "CREATE TABLE small_file (\n" +
-            "path varchar(4096) NOT NULL PRIMARY KEY,\n" +
+            "path varchar(1000) NOT NULL PRIMARY KEY,\n" +
             "container_file_path varchar(4096) NOT NULL,\n" +
             "offset bigint(20) NOT NULL,\n" +
             "length bigint(20) NOT NULL\n" +
