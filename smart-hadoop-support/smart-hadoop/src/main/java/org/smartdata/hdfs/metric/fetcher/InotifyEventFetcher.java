@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.squareup.tape.QueueFile;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.Event;
@@ -34,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.SystemInfo;
@@ -68,7 +70,12 @@ public class InotifyEventFetcher {
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service, Callable callBack) {
-    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack);
+    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack, new SmartConf());
+  }
+
+  public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
+      ScheduledExecutorService service, Callable callBack, SmartConf conf) {
+    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack, conf);
   }
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
@@ -95,8 +102,8 @@ public class InotifyEventFetcher {
     this.metaStore = metaStore;
     this.scheduledExecutorService = service;
     this.finishedCallback = callBack;
-    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service);
     this.conf = conf;
+    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service,conf);
   }
 
   public void start() throws IOException {

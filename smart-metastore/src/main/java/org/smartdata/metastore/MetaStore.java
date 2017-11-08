@@ -400,7 +400,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void insertUpdateStoragesTable(StorageCapacity storage)
       throws MetaStoreException {
-    insertUpdateStoragesTable(new StorageCapacity[] {storage});
+    insertUpdateStoragesTable(new StorageCapacity[]{storage});
   }
 
   public StorageCapacity getStorageCapacity(
@@ -592,7 +592,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<ActionInfo> actionInfos = getActions(rid, size);
     List<DetailedFileAction> detailedFileActions = new ArrayList<>();
 
-    for (ActionInfo actionInfo: actionInfos) {
+    for (ActionInfo actionInfo : actionInfos) {
       DetailedFileAction detailedFileAction = new DetailedFileAction(actionInfo);
       String filePath = actionInfo.getArgs().get("-file");
       FileInfo fileInfo = getFile(filePath);
@@ -619,11 +619,44 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return detailedFileActions;
   }
 
+  public List<DetailedFileAction> listFileActions(long rid, long start, int offset)
+      throws MetaStoreException {
+    if (mapStoragePolicyIdName == null) {
+      updateCache();
+    }
+    List<ActionInfo> actionInfos = getActions(rid, start, offset);
+    List<DetailedFileAction> detailedFileActions = new ArrayList<>();
+    for (ActionInfo actionInfo : actionInfos) {
+      DetailedFileAction detailedFileAction = new DetailedFileAction(actionInfo);
+      String filePath = actionInfo.getArgs().get("-file");
+      FileInfo fileInfo = getFile(filePath);
+      if (fileInfo == null) {
+        // LOG.debug("Namespace is not sync! File {} not in file table!", filePath);
+        // Add a mock fileInfo
+        fileInfo = new FileInfo(filePath, 0L, 0L, false,
+            (short) 0, 0L, 0L, 0L, (short) 0,
+            "root", "root", (byte) 0);
+      }
+      detailedFileAction.setFileLength(fileInfo.getLength());
+      detailedFileAction.setFilePath(filePath);
+      if (actionInfo.getActionName().contains("allssd")
+          || actionInfo.getActionName().contains("onessd")
+          || actionInfo.getActionName().contains("archive")) {
+        detailedFileAction.setTarget(actionInfo.getActionName());
+        detailedFileAction.setSrc(mapStoragePolicyIdName.get((int) fileInfo.getStoragePolicy()));
+      } else {
+        detailedFileAction.setSrc(actionInfo.getArgs().get("-src"));
+        detailedFileAction.setTarget(actionInfo.getArgs().get("-dest"));
+      }
+      detailedFileActions.add(detailedFileAction);
+    }
+    return detailedFileActions;
+  }
 
   public List<DetailedRuleInfo> listMoveRules() throws MetaStoreException {
     List<RuleInfo> ruleInfos = getRuleInfo();
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
-    for (RuleInfo ruleInfo: ruleInfos) {
+    for (RuleInfo ruleInfo : ruleInfos) {
       if (ruleInfo.getRuleText().contains("allssd")
           || ruleInfo.getRuleText().contains("onessd")
           || ruleInfo.getRuleText().contains("archive")) {
@@ -631,7 +664,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Add mover progress
         List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
         int currPos = 0;
-        for (CmdletInfo cmdletInfo: cmdletInfos) {
+        for (CmdletInfo cmdletInfo : cmdletInfos) {
           if (cmdletInfo.getState().getValue() <= 2) {
             break;
           }
@@ -667,13 +700,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Get total matched files
         if (backUpInfo != null) {
           detailedRuleInfo
-                  .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+              .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
           int count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
           count += fileDiffDao.getByState(backUpInfo.getSrc(), FileDiffState.RUNNING).size();
           detailedRuleInfo.setRunningProgress(count);
         } else {
           detailedRuleInfo
-                  .setBaseProgress(0);
+              .setBaseProgress(0);
           detailedRuleInfo.setRunningProgress(0);
         }
         detailedRuleInfos.add(detailedRuleInfo);
@@ -728,11 +761,42 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<RuleInfo> listPageRule(long start, long offset, List<String> orderBy,
+      List<Boolean> desc)
+      throws MetaStoreException {
+    LOG.debug("List Rule, start {}, offset {}", start, offset);
+    try {
+      if (orderBy.size() == 0) {
+        return ruleDao.getAPageOfRule(start, offset);
+      } else {
+        return ruleDao.getAPageOfRule(start, offset, orderBy, desc);
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+
   public List<RuleInfo> getRuleInfo() throws MetaStoreException {
     try {
       return ruleDao.getAll();
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<CmdletInfo> listPageCmdlets(long start, long offset,
+      List<String> orderBy, List<Boolean> desc)
+      throws MetaStoreException {
+    LOG.debug("List cmdlet, start {}, offset {}", start, offset);
+    try {
+      if (orderBy.size() == 0) {
+        return cmdletDao.getAPageOfCmdlet(start, offset);
+      } else {
+        return cmdletDao.getAPageOfCmdlet(start, offset, orderBy, desc);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -905,6 +969,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   /**
    * Mark action {aid} as failed.
+   *
    * @param aid
    * @throws MetaStoreException
    */
@@ -1055,7 +1120,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<ActionInfo> runningActions = new ArrayList<>();
     List<ActionInfo> finishedActions = new ArrayList<>();
     int total = 0;
-    for (CmdletInfo cmdletInfo:cmdletInfos) {
+    for (CmdletInfo cmdletInfo : cmdletInfos) {
       if (total >= size) {
         break;
       }
@@ -1075,6 +1140,39 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
     runningActions.addAll(finishedActions);
     return runningActions;
+  }
+
+  public List<ActionInfo> getActions(long rid, long start, long offset) throws MetaStoreException {
+    long mark = 0;
+    long count = 0;
+    List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(rid);
+    List<ActionInfo> totalActions = new ArrayList<>();
+    for (CmdletInfo cmdletInfo : cmdletInfos) {
+      List<Long> aids = cmdletInfo.getAids();
+      if (mark + aids.size() >= start + 1) {
+        long gap;
+        gap = start - mark;
+        for (Long aid : aids) {
+          if (gap > 0) {
+            gap--;
+            mark++;
+            continue;
+          }
+          if (count < offset) {
+            ActionInfo actionInfo = getActionById(aid);
+            totalActions.add(actionInfo);
+            count++;
+            mark++;
+          } else {
+            return totalActions;
+          }
+        }
+      } else {
+        mark += aids.size();
+      }
+
+    }
+    return totalActions;
   }
 
   public ActionInfo getActionById(long aid) throws MetaStoreException {
@@ -1281,6 +1379,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     Connection conn = getConnection();
     try {
       MetaStoreUtils.initializeDataBase(conn);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    } finally {
+      closeConnection(conn);
+    }
+  }
+
+  public synchronized void checkTables() throws MetaStoreException {
+    Connection conn = getConnection();
+    try {
+      if (!MetaStoreUtils.isTableSetExist(conn)) {
+        LOG.info("At least one table required by SSM is missing. "
+                + "The configured database will be formatted.");
+        formatDataBase();
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     } finally {

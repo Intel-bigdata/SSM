@@ -397,6 +397,15 @@ public class CmdletManager extends AbstractService {
     return filesToLock.keySet();
   }
 
+  private boolean shouldStopSchedule() {
+    int left = dispatcher.getTotalSlotsLeft();
+    int total = dispatcher.getTotalSlots();
+    if (scheduledCmdlet.size() >= left + total * 0.2) {
+      return true;
+    }
+    return false;
+  }
+
   public int scheduleCmdlet() throws IOException {
     int nScheduled = 0;
 
@@ -408,7 +417,7 @@ public class CmdletManager extends AbstractService {
     }
 
     Iterator<Long> it = schedulingCmdlet.iterator();
-    while (it.hasNext()) {
+    while (it.hasNext() && !shouldStopSchedule()) {
       long id = it.next();
       CmdletInfo cmdlet = idToCmdlets.get(id);
       synchronized (cmdlet) {
@@ -530,6 +539,13 @@ public class CmdletManager extends AbstractService {
       LOG.error("CmdletId -> [ {} ], delete from DB error", cid, e);
       throw new IOException(e);
     }
+  }
+
+  public CmdletGroup listCmdletsInfo(long rid, long pageIndex, long numPerPage,
+      List<String> orderBy, List<Boolean> isDesc) throws IOException {
+    // TODO connect with metastore
+    List<CmdletInfo> result = new ArrayList<>();
+    return new CmdletGroup(result, 0);
   }
 
   public List<CmdletInfo> listCmdletsInfo(long rid, CmdletState cmdletState) throws IOException {
@@ -747,6 +763,27 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  private class DetailedFileActionGroup {
+    private List<DetailedFileAction> detailedFileActions;
+    private long totalNumOfActions;
+
+    public DetailedFileActionGroup(List<DetailedFileAction> detailedFileActions,
+        long totalNumOfActions) {
+      this.detailedFileActions = detailedFileActions;
+      this.totalNumOfActions = totalNumOfActions;
+    }
+  }
+
+  private class CmdletGroup {
+    private List<CmdletInfo> cmdlets;
+    private long totalNumOfCmdlets;
+
+    public CmdletGroup(List<CmdletInfo> cmdlets, long totalNumOfCmdlets) {
+      this.cmdlets = cmdlets;
+      this.totalNumOfCmdlets = totalNumOfCmdlets;
+    }
+  }
+
   private class ActionGroup {
     private List<ActionInfo> actions;
     private long totalNumOfActions;
@@ -757,7 +794,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public ActionGroup listActions(int pageIndex, int numPerPage,
+  public ActionGroup listActions(long pageIndex, long numPerPage,
       List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
 
     return new ActionGroup(metaStore.listPageAction((pageIndex - 1) * numPerPage,
@@ -771,6 +808,12 @@ public class CmdletManager extends AbstractService {
       LOG.error("RuleId -> [ {} ], Get Finished Actions by rid and size from DB error", rid, e);
       throw new IOException(e);
     }
+  }
+
+  public DetailedFileActionGroup getFileActions(long rid, long pageIndex,
+      long numPerPage) throws IOException {
+    // TODO connect with metastore
+    return null;
   }
 
   public List<DetailedFileAction> getFileActions(long rid, int size) throws IOException {

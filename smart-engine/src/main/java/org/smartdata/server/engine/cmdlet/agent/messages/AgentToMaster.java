@@ -75,4 +75,21 @@ public class AgentToMaster {
       return "RegisterAgent{ id=" + id + "}";
     }
   }
+
+  public static class ServeReady implements Serializable{
+    private static final long serialVersionUID = 6888516209100011658L;
+  }
+
+  public static class AlreadyLaunchedTikv implements Serializable {
+    private static final long serialVersionUID = 7129253373711332715L;
+    private final MasterToAgent.AgentId id;
+
+    public AlreadyLaunchedTikv(MasterToAgent.AgentId id) {
+      this.id = id;
+    }
+
+    public String toString() {
+      return "Agent" + "[" + id.toString() + "]" + " already launched Tikv.";
+    }
+  }
 }

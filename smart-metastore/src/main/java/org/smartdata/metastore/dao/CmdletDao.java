@@ -52,11 +52,47 @@ public class CmdletDao {
     return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME, new CmdletRowMapper());
   }
 
+  public List<CmdletInfo> getAPageOfCmdlet(long start, long offset,
+      List<String> orderBy, List<Boolean> isDesc) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    boolean ifHasAid = false;
+    String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ";
+
+    for (int i = 0; i < orderBy.size(); i++) {
+      if (orderBy.get(i).equals("cid")) {
+        ifHasAid = true;
+      }
+      sql = sql + orderBy.get(i);
+      if (isDesc.size() > i) {
+        if (isDesc.get(i)) {
+          sql = sql + " desc ";
+        }
+        sql = sql + ",";
+      }
+    }
+
+    if (!ifHasAid) {
+      sql = sql + "cid,";
+    }
+
+    //delete the last char
+    sql = sql.substring(0, sql.length() - 1);
+    //add limit
+    sql = sql + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new CmdletRowMapper());
+  }
+
+  public List<CmdletInfo> getAPageOfCmdlet(long start, long offset) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM " + TABLE_NAME + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new CmdletRowMapper());
+  }
+
   public List<CmdletInfo> getByIds(List<Long> aids) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE aid IN (?)",
-        new Object[] {StringUtils.join(aids, ",")},
+        new Object[]{StringUtils.join(aids, ",")},
         new CmdletRowMapper());
   }
 
@@ -64,7 +100,7 @@ public class CmdletDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject(
         "SELECT * FROM " + TABLE_NAME + " WHERE cid = ?",
-        new Object[] {cid},
+        new Object[]{cid},
         new CmdletRowMapper());
   }
 
@@ -72,15 +108,22 @@ public class CmdletDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE rid = ?",
-        new Object[] {rid},
+        new Object[]{rid},
         new CmdletRowMapper());
+  }
+
+  public List<CmdletInfo> getByRid(long rid, long start, long offset) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM " + TABLE_NAME + " WHERE rid = " + rid
+        + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByState(CmdletState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query(
         "SELECT * FROM " + TABLE_NAME + " WHERE state = ?",
-        new Object[] {state.getValue()},
+        new Object[]{state.getValue()},
         new CmdletRowMapper());
   }
 

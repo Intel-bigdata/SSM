@@ -71,6 +71,10 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
     };
 
     $routeProvider
+      .when('/', {
+        templateUrl: 'components/login/login.html',
+        controller: 'LoginCtrl'
+      })
       .when('/notebook/:noteId', {
         templateUrl: 'app/notebook/notebook.html',
         controller: 'NotebookCtrl',
@@ -154,7 +158,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       .when('/action/usage', {
         templateUrl: 'app/dashboard/views/actions/submit/help.html'
       })
-      .when('/copys', {
+      .when('/syncs', {
         templateUrl: 'app/dashboard/views/copy/copy.html',
         controller: 'CopyCtrl',
         resolve: {

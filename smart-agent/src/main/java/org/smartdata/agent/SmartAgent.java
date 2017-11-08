@@ -41,12 +41,17 @@ import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
+import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.ServeReady;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.utils.GenericOptionsParser;
+import org.smartdata.tidb.TikvServer;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -78,7 +83,8 @@ public class SmartAgent implements StatusReporter {
 
   public void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
-    agentActor = system.actorOf(Props.create(AgentActor.class, this, masterPath), getAgentName());
+    agentActor = system.actorOf(
+            Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -123,15 +129,33 @@ public class SmartAgent implements StatusReporter {
     private ActorRef master;
     private final SmartAgent agent;
     private final String[] masters;
+    private SmartConf conf;
 
-    public AgentActor(SmartAgent agent, String[] masters) {
+    public AgentActor(SmartAgent agent, String[] masters, SmartConf conf) {
       this.agent = agent;
       this.masters = masters;
+      this.conf =  conf;
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
       unhandled(message);
+    }
+
+    public boolean launchTikv(String masterHost) throws InterruptedException, IOException {
+      //TODO: configure in file
+      String agentAddress = AgentUtils.getAgentAddress(conf);
+      InetAddress address = InetAddress.getByName(new AgentUtils.HostPort(agentAddress).getHost());
+      String ip = address.getHostAddress();
+      String tikvArgs = String.format(
+              "--pd=%s:2379 --addr=%s:20160 --data-dir=tikv", masterHost, ip);
+      TikvServer tikvServer = new TikvServer(tikvArgs, conf);
+      Thread tikvThread = new Thread(tikvServer);
+      tikvThread.start();
+      while (!tikvServer.isReady()) {
+        Thread.sleep(100);
+      }
+      return true;
     }
 
     @Override
@@ -153,8 +177,6 @@ public class SmartAgent implements StatusReporter {
             }
           }, new Shutdown(agent));
     }
-
-
 
     private class WaitForFindMaster implements Procedure<Object> {
 
@@ -201,6 +223,7 @@ public class SmartAgent implements StatusReporter {
               AgentActor.this.id,
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           getContext().become(new Serve());
+          master.tell(new ServeReady(), getSelf());
         }
       }
     }
@@ -218,6 +241,13 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof StatusMessage) {
           master.tell(message, getSelf());
           getSender().tell("status reported", getSelf());
+        } else if (message instanceof ReadyToLaunchTikv) {
+          String masterHost = master.path().address().host().get();
+          boolean launched = launchTikv(masterHost);
+          if (launched) {
+            LOG.info("Tikv server is ready.");
+            master.tell(new AlreadyLaunchedTikv(id), getSelf());
+          }
         } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {
