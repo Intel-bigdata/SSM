@@ -24,7 +24,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.squareup.tape.QueueFile;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.inotify.Event;
@@ -77,11 +76,7 @@ public class InotifyEventFetcher {
       ScheduledExecutorService service, Callable callBack, SmartConf conf) {
     this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack, conf);
   }
-
-  public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
-      ScheduledExecutorService service, Callable callBack, SmartConf conf) {
-    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack, conf);
-  }
+  
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service, InotifyEventApplier applier, Callable callBack) {
