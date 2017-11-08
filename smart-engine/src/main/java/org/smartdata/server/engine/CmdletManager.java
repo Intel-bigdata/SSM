@@ -814,7 +814,7 @@ public class CmdletManager extends AbstractService {
       long numPerPage) throws IOException, MetaStoreException {
     List<DetailedFileAction> detailedFileActions = metaStore.listFileActions(rid,
         (pageIndex - 1) * numPerPage, numPerPage);
-    return new DetailedFileActionGroup(detailedFileActions, 0);
+    return new DetailedFileActionGroup(detailedFileActions, metaStore.getNumFileAction(rid));
   }
 
   public List<DetailedFileAction> getFileActions(long rid, int size) throws IOException {
