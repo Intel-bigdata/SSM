@@ -657,7 +657,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return listFileActions(rid, 0).size();
   }
 
-
   public List<DetailedRuleInfo> listMoveRules() throws MetaStoreException {
     List<RuleInfo> ruleInfos = getRuleInfo();
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
