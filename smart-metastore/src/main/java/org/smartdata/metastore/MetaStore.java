@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,10 +25,31 @@ import org.smartdata.metaservice.CopyMetaService;
 import org.smartdata.metastore.dao.*;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.model.*;
+import org.smartdata.model.ActionInfo;
+import org.smartdata.model.BackUpInfo;
+import org.smartdata.model.CachedFileStatus;
+import org.smartdata.model.ClusterConfig;
+import org.smartdata.model.ClusterInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.DataNodeInfo;
+import org.smartdata.model.DataNodeStorageInfo;
+import org.smartdata.model.DetailedFileAction;
+import org.smartdata.model.DetailedRuleInfo;
+import org.smartdata.model.FileAccessInfo;
+import org.smartdata.model.FileContainerInfo;
+import org.smartdata.model.FileDiff;
+import org.smartdata.model.FileDiffState;
+import org.smartdata.model.FileInfo;
+import org.smartdata.model.GlobalConfig;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
+import org.smartdata.model.StorageCapacity;
+import org.smartdata.model.StoragePolicy;
+import org.smartdata.model.SystemInfo;
+import org.smartdata.model.XAttribute;
 import org.springframework.dao.EmptyResultDataAccessException;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -378,8 +399,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized boolean updateStoragesTable(String type,
-                                                  Long capacity, Long free) throws MetaStoreException {
+  public synchronized boolean updateStoragesTable(
+      String type, Long capacity, Long free) throws MetaStoreException {
     try {
       return storageDao.updateStoragesTable(type, capacity, free);
     } catch (Exception e) {
@@ -416,9 +437,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertCachedFiles(long fid, String path,
-                                             long fromTime,
-                                             long lastAccessTime, int numAccessed) throws MetaStoreException {
+  public synchronized void insertCachedFiles(
+      long fid, String path, long fromTime, long lastAccessTime, int numAccessed) throws MetaStoreException {
     try {
       cacheFileDao.insert(fid, path, fromTime, lastAccessTime, numAccessed);
     } catch (Exception e) {
@@ -1705,7 +1725,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   /**
    * Store a single file info into database.
    *
-   * @param path
+   * @param path the small file path
+   * @param fileContainerInfo file container info of the small file specified
    */
   public void insertSmallFile(String path, FileContainerInfo fileContainerInfo)
       throws MetaStoreException {

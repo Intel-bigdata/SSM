@@ -27,5 +27,5 @@ import java.io.IOException;
  */
 public interface SmartClientProtocol {
   void reportFileAccessEvent(FileAccessEvent event) throws IOException;
-  FileContainerInfo fileContainerInfo(String filePath) throws IOException;
+  FileContainerInfo getFileContainerInfo(String filePath) throws IOException;
 }

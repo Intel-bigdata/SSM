@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,39 +71,46 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
-    if (!actionInfo.getActionName().equals("compact")) {
-      return ScheduleResult.FAIL;
-    }
+    if (actionInfo.getActionName().equals("compact")) {
+      try {
+        // Get the container file
+        String containerFilePath = action.getArgs().get("-containerFile");
+        if (containerFilePath != null) {
+          this.containerFile = containerFilePath;
+        } else {
+          this.containerFile = getContainerFile();
+        }
+        if (fileLock.contains(containerFile)) {
+          LOG.error("This container file: " + containerFile + " is locked.");
+          return ScheduleResult.RETRY;
+        } else {
+          fileLock.add(containerFile); // Lock this container file
+        }
 
-    try {
-      // Get the container file
-      String containerFilePath = action.getArgs().get("-containerFile");
-      if (containerFilePath != null) {
-        this.containerFile = containerFilePath;
-      } else {
-        this.containerFile = getContainerFile();
+        // Get file container info of small files list
+        long offset = 0L;
+        String smallFiles = action.getArgs().get("-smallFiles");
+        ArrayList<String> smallFileList = new Gson().fromJson(smallFiles, new ArrayList<String>().getClass());
+        for (String filePath : smallFileList) {
+          FileInfo fileInfo = metaStore.getFile(filePath);
+          long fileLen = fileInfo.getLength();
+          fileContainerInfoMap.put(filePath, new FileContainerInfo(containerFile, offset, fileLen));
+          offset += fileLen;
+        }
+        action.getArgs().put(SmallFileCompactAction.CONTAINER_FILE, containerFile);
+        return ScheduleResult.SUCCESS;
+      } catch (Exception e) {
+        LOG.error("Exception occurred while processing " + action, e);
+        return ScheduleResult.FAIL;
       }
-      if (fileLock.contains(containerFile)) {
-        LOG.error("This container file: " + containerFile + " is locked.");
-        return ScheduleResult.RETRY;
-      } else {
-        fileLock.add(containerFile); // Lock this container file
-      }
-
-      // Get file container info of small files list
-      long offset = 0L;
-      String smallFiles = action.getArgs().get("-smallFiles");
-      ArrayList<String> smallFileList = new Gson().fromJson(smallFiles, new ArrayList<String>().getClass());
-      for (String filePath : smallFileList) {
-        FileInfo fileInfo = metaStore.getFile(filePath);
-        long fileLen = fileInfo.getLength();
-        fileContainerInfoMap.put(filePath, new FileContainerInfo(containerFile, offset, fileLen));
-        offset += fileLen;
-      }
-      action.getArgs().put(SmallFileCompactAction.CONTAINER_FILE, containerFile);
+    } else if (actionInfo.getActionName().equals("write")) {
+      // TODO: scheduler for write
       return ScheduleResult.SUCCESS;
-    } catch (Exception e) {
-      LOG.error("Exception occurred while processing " + action, e);
+    } else if (actionInfo.getActionName().equals("read")) {
+      // TODO: scheduler for read
+      return ScheduleResult.SUCCESS;
+    } else {
+      LOG.error("Not support this action: " + actionInfo.getActionName());
       return ScheduleResult.FAIL;
     }
   }
@@ -121,15 +128,17 @@ public class SmallFileScheduler extends ActionSchedulerService {
   public void onActionFinished(ActionInfo actionInfo) {
     if (actionInfo.isFinished()) {
       if (actionInfo.isSuccessful()) {
-        try {
-          for (Map.Entry<String, FileContainerInfo> entry : fileContainerInfoMap.entrySet()) {
-            metaStore.insertSmallFile(entry.getKey(), entry.getValue());
+        if (actionInfo.getActionName().equals("compact")) {
+          try {
+            for (Map.Entry<String, FileContainerInfo> entry : fileContainerInfoMap.entrySet()) {
+              metaStore.insertSmallFile(entry.getKey(), entry.getValue());
+            }
+            if (fileLock.contains(containerFile)) {
+              fileLock.remove(containerFile); // Remove container file lock
+            }
+          } catch (MetaStoreException e) {
+            LOG.error("Process small file compact action in metaStore failed!", e);
           }
-          if (fileLock.contains(containerFile)) {
-            fileLock.remove(containerFile); // Remove container file lock
-          }
-        } catch (MetaStoreException e) {
-          LOG.error("Process small file compact action in metaStore failed!", e);
         }
       }
     }

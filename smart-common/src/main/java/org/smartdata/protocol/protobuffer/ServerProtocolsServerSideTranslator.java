@@ -68,8 +68,8 @@ import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.protocol.ClientServerProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
-import org.smartdata.protocol.ClientServerProto.FileContainerInfoRequestProto;
-import org.smartdata.protocol.ClientServerProto.FileContainerInfoResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetFileContainerInfoRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileContainerInfoResponseProto;
 import org.smartdata.SmartServiceState;
 import org.smartdata.protocol.SmartServerProtocols;
 
@@ -332,12 +332,12 @@ public class ServerProtocolsServerSideTranslator implements
   }
 
   @Override
-  public FileContainerInfoResponseProto fileContainerInfo(
-      RpcController controller, FileContainerInfoRequestProto req)
+  public GetFileContainerInfoResponseProto getFileContainerInfo(
+      RpcController controller, GetFileContainerInfoRequestProto req)
       throws ServiceException {
     try {
-      FileContainerInfo fileContainerInfo = server.fileContainerInfo(ProtoBufferHelper.convert(req));
-      return FileContainerInfoResponseProto.newBuilder()
+      FileContainerInfo fileContainerInfo = server.getFileContainerInfo(req.getFilePath());
+      return GetFileContainerInfoResponseProto.newBuilder()
           .setContainerFilePath(fileContainerInfo.getContainerFilePath())
           .setOffset(fileContainerInfo.getOffset())
           .setLength(fileContainerInfo.getLength())

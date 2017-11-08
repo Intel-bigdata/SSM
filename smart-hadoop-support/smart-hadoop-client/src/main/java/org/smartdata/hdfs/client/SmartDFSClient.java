@@ -128,7 +128,7 @@ public class SmartDFSClient extends DFSClient {
     if (!healthy) {
       throw new IOException("smart client is not healthy.");
     }
-    return smartClient.fileContainerInfo(src);
+    return smartClient.getFileContainerInfo(src);
   }
 
   // TODO: handle small file access event

@@ -31,11 +31,11 @@ message ReportFileAccessEventRequestProto {
 message ReportFileAccessEventResponseProto {
 }
 
-message FileContainerInfoRequestProto {
+message GetFileContainerInfoRequestProto {
   required string filePath = 1;
 }
 
-message FileContainerInfoResponseProto {
+message GetFileContainerInfoResponseProto {
   required string containerFilePath = 1;
   required int64 offset = 2;
   required int64 length = 3;
@@ -44,6 +44,6 @@ message FileContainerInfoResponseProto {
 service protoService {
   rpc reportFileAccessEvent (ReportFileAccessEventRequestProto)
   returns (ReportFileAccessEventResponseProto);
-  rpc fileContainerInfo (FileContainerInfoRequestProto)
-  returns (FileContainerInfoResponseProto);
+  rpc getFileContainerInfo (GetFileContainerInfoRequestProto)
+  returns (GetFileContainerInfoResponseProto);
 }

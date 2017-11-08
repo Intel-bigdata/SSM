@@ -21,8 +21,8 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.model.FileContainerInfo;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
-import org.smartdata.protocol.ClientServerProto.FileContainerInfoRequestProto;
-import org.smartdata.protocol.ClientServerProto.FileContainerInfoResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetFileContainerInfoRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileContainerInfoResponseProto;
 import org.smartdata.protocol.SmartClientProtocol;
 import org.smartdata.metrics.FileAccessEvent;
 
@@ -59,13 +59,13 @@ public class ClientProtocolClientSideTranslator implements
   }
 
   @Override
-  public FileContainerInfo fileContainerInfo(String filePath) throws IOException {
-    FileContainerInfoRequestProto req =
-        FileContainerInfoRequestProto.newBuilder()
+  public FileContainerInfo getFileContainerInfo(String filePath) throws IOException {
+    GetFileContainerInfoRequestProto req =
+        GetFileContainerInfoRequestProto.newBuilder()
             .setFilePath(filePath)
             .build();
     try {
-      FileContainerInfoResponseProto proto = rpcProxy.fileContainerInfo(null, req);
+      GetFileContainerInfoResponseProto proto = rpcProxy.getFileContainerInfo(null, req);
       return new FileContainerInfo(
           proto.getContainerFilePath(), proto.getOffset(), proto.getLength());
     } catch (ServiceException e) {

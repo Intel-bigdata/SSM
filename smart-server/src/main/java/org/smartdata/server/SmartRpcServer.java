@@ -249,7 +249,7 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   @Override
-  public FileContainerInfo fileContainerInfo(String filePath) throws IOException {
+  public FileContainerInfo getFileContainerInfo(String filePath) throws IOException {
     checkIfActive();
     MetaStore metaStore = ssm.getMetaStore();
     FileContainerInfo fileContainerInfo;

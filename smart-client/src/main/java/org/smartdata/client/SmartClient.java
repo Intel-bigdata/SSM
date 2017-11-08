@@ -85,10 +85,10 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   }
 
   @Override
-  public FileContainerInfo fileContainerInfo(String filePath)
+  public FileContainerInfo getFileContainerInfo(String filePath)
       throws IOException {
       checkOpen();
-      return server.fileContainerInfo(filePath);
+      return server.getFileContainerInfo(filePath);
   }
 
   private boolean shouldIgnore(String path) {
