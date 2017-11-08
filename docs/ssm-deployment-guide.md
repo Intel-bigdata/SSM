@@ -53,7 +53,7 @@ Configure SSM
    
    ```xml   
    <property>
-       <name>smart.hadoop.configuration.path</name>
+       <name>smart.hadoop.conf.path</name>
        <value>/conf</value>
        <description>local file path which holds all hadoop configuration files, such as hdfs-site.xml, core-site.xml</description>
     </property>

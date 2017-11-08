@@ -38,7 +38,9 @@ import org.smartdata.model.Utilization;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,6 +57,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   private FileAccessEventSource fileAccessEventSource;
   private AbstractService statesUpdaterService;
   private volatile boolean working = false;
+  private List<String> ignoreDirs = new ArrayList<String>();
 
   public static final Logger LOG = LoggerFactory.getLogger(StatesManager.class);
 
@@ -84,6 +87,15 @@ public class StatesManager extends AbstractService implements Reconfigurable {
     if (statesUpdaterService == null) {
       ReconfigurableRegistry.registReconfigurableProperty(
           getReconfigurableProperties(), this);
+    }
+
+    Collection<String> dirs = serverContext.getConf()
+        .getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+    for (String s : dirs) {
+      if (!s.endsWith("/")) {
+        s = s + "/";
+        ignoreDirs.add(s);
+      }
     }
     LOG.info("Initialized.");
   }
@@ -136,6 +148,13 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   }
 
   public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
+    String path = event.getPath();
+    path = path + (path.endsWith("/") ? "" : "/");
+    for (String s : ignoreDirs) {
+      if (path.startsWith(s)) {
+        return;
+      }
+    }
     event.setTimeStamp(System.currentTimeMillis());
     this.fileAccessEventSource.insertEventFromSmartClient(event);
   }

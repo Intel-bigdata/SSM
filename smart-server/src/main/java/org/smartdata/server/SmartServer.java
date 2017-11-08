@@ -38,8 +38,11 @@ import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StatesManager;
+import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.tidb.LaunchDB;
+import org.smartdata.tidb.PdServer;
+import org.smartdata.tidb.TidbServer;
 import org.smartdata.utils.JaasLoginUtil;
 
 import javax.security.auth.Subject;
@@ -47,6 +50,9 @@ import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * From this Smart Storage Management begins.
@@ -74,17 +80,16 @@ public class SmartServer {
     this.enabled = false;
   }
 
-  public void initWith(StartupOption startupOption) throws Exception {
+  public void initWith() throws Exception {
     checkSecurityAndLogin();
 
     MetaStore metaStore = MetaStoreUtils.getDBAdapter(conf);
     context = new ServerContext(conf, metaStore);
     initServiceMode(conf);
-    if (startupOption == StartupOption.REGULAR) {
-      engine = new SmartEngine(context);
-      rpcServer = new SmartRpcServer(this, conf);
-      zeppelinServer = new SmartZeppelinServer(conf, engine);
-    }
+    engine = new SmartEngine(context);
+    rpcServer = new SmartRpcServer(this, conf);
+    zeppelinServer = new SmartZeppelinServer(conf, engine);
+
   }
 
   public StatesManager getStatesManager() {
@@ -112,43 +117,86 @@ public class SmartServer {
       args = new String[0];
     }
 
-    if (parseHelpArgument(args, USAGE, System.out, true)) {
-      return null;
+    StartupOption startOpt = StartupOption.REGULAR;
+    List<String> list = new ArrayList<>();
+    for (String arg : args) {
+      if (StartupOption.FORMAT.getName().equalsIgnoreCase(arg)) {
+        startOpt = StartupOption.FORMAT;
+      } else if (StartupOption.REGULAR.getName().equalsIgnoreCase(arg)) {
+        startOpt = StartupOption.REGULAR;
+      } else if (arg.equals("-h") || arg.equals("-help")) {
+        if (parseHelpArgument(new String[]{arg}, USAGE, System.out, true)) {
+          return null;
+        }
+      } else {
+        list.add(arg);
+      }
     }
-
-    GenericOptionsParser hParser = new GenericOptionsParser(conf, args);
-    args = hParser.getRemainingArgs();
-
-    StartupOption startOpt = parseArguments(args);
+    if (list != null) {
+      String remainArgs[] = list.toArray(new String[list.size()]);
+      new GenericOptionsParser(conf, remainArgs);
+    }
 
     return startOpt;
   }
 
-  static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
-    if (isTidbEnabled(conf)) {
-      LaunchDB launchDB = new LaunchDB();
-      Thread db = new Thread(launchDB);
-      LOG.info("Starting PD, TiKV and TiDB..");
-      db.start();
-      try {
-        while (!launchDB.isCompleted()) {
-          Thread.sleep(100);
-        }
-      } catch (InterruptedException ex) {
-        LOG.error(ex.getMessage());
+  public static void startDB(SmartConf conf, AgentMaster agentMaster)
+          throws InterruptedException, IOException {
+    if (conf.getAgentsNumber() != 0) {
+      String host = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
+      InetAddress address = InetAddress.getByName(host);
+      String ip = address.getHostAddress();
+      String pdArgs = String.format(
+              "--client-urls=http://%s:2379 --peer-urls=http://%s:2380 --data-dir=pd", ip, ip);
+      PdServer pdServer = new PdServer(pdArgs, conf);
+      Thread pdThread = new Thread(pdServer);
+      pdThread.start();
+      while (!pdServer.isReady() || !agentMaster.isAgentRegisterReady(conf)) {
+        Thread.sleep(100);
       }
+      LOG.info("Pd server is ready.");
+      agentMaster.sendLaunchTikvMessage();
+      while (!agentMaster.isTikvAlreadyLaunched(conf)) {
+        Thread.sleep(100);
+      }
+      LOG.info("Tikv server is ready.");
+      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=1s", host);
+      TidbServer tidbServer = new TidbServer(tidbArgs, conf);
+      Thread tidbThread = new Thread(tidbServer);
+      tidbThread.start();
+      while (!tidbServer.isReady()) {
+        Thread.sleep(100);
+      }
+      LOG.info("Tidb server is ready.");
+    } else {
+      LaunchDB launchDB = new LaunchDB(conf);
+      Thread db = new Thread(launchDB);
+      LOG.info("Starting Pd, Tikv and Tidb..");
+      db.start();
+      while (!launchDB.isCompleted()) {
+        Thread.sleep(100);
+      }
+    }
+  }
+
+  static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
+    AgentMaster agentMaster = AgentMaster.getAgentMaster(conf);
+
+    if (isTidbEnabled(conf)) {
+      startDB(conf, agentMaster);
     }
 
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
       LOG.info("Formatting DataBase finished successfully!");
-      return null;
+    } else {
+      MetaStoreUtils.checkTables(conf);
     }
 
     SmartServer ssm = new SmartServer(conf);
     try {
-      ssm.initWith(startOption);
+      ssm.initWith();
       ssm.run();
       return ssm;
     } catch (Exception e){
@@ -160,6 +208,7 @@ public class SmartServer {
   private static final String USAGE =
       "Usage: ssm [options]\n"
           + "  -h\n\tShow this usage information.\n\n"
+          + "  -format\n\tFormat the configured database.\n\n"
           + "  -D property=value\n"
           + "\tSpecify or overwrite an configure option.\n"
           + "\tE.g. -D smart.dfs.namenode.rpcserver=hdfs://localhost:43543\n";
@@ -174,7 +223,6 @@ public class SmartServer {
 
   private static boolean parseHelpArgument(String[] args,
       String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
-    if (args.length == 1) {
       try {
         CommandLineParser parser = new PosixParser();
         CommandLine cmdLine = parser.parse(helpOptions, args);
@@ -188,7 +236,6 @@ public class SmartServer {
         //LOG.warn("Parse help exception", pe);
         return false;
       }
-    }
     return false;
   }
 
@@ -328,20 +375,6 @@ public class SmartServer {
       throw e;
     }
     LOG.info("Initialized service mode: " + context.getServiceMode().getName() + ".");
-  }
-
-  private static StartupOption parseArguments(String args[]) {
-    int argsLen = (args == null) ? 0 : args.length;
-    StartupOption startOpt = StartupOption.REGULAR;
-    for (int i = 0; i < argsLen; i++) {
-      String cmd = args[i];
-      if (StartupOption.FORMAT.getName().equalsIgnoreCase(cmd)) {
-        startOpt = StartupOption.FORMAT;
-      } else if (StartupOption.REGULAR.getName().equalsIgnoreCase(cmd)) {
-        startOpt = StartupOption.REGULAR;
-      }
-    }
-    return startOpt;
   }
 
   public static SmartServer launchWith(SmartConf conf) throws Exception {

@@ -91,8 +91,11 @@ public class MoverExecutor {
       throw new RuntimeException("File does not exist.");
     }
 
-    // TODO: better checks
-    if (fileStatus.isDir() || fileStatus.getLen() < plan.getFileLength()) {
+    if (fileStatus.isDir()) {
+      throw new RuntimeException("File path is a directory.");
+    }
+
+    if (fileStatus.getLen() < plan.getFileLength()) {
       throw new RuntimeException("File has been changed after this action generated.");
     }
 
@@ -113,7 +116,6 @@ public class MoverExecutor {
    * @throws Exception
    */
   public int doMove(PrintStream resultOs, PrintStream logOs) throws Exception {
-    // TODO: currently just retry failed moves, may need advanced schedule
     for (int retryTimes = 0; retryTimes < maxRetryTimes; retryTimes ++) {
       for (final ReplicaMove replicaMove : allMoves) {
         moveExecutor.execute(new Runnable() {
@@ -124,6 +126,7 @@ public class MoverExecutor {
         });
       }
 
+      int sleeped = 0;
       int[] stat = new int[2];
       while (true) {
         ReplicaMove.countStatus(allMoves, stat);
@@ -132,6 +135,7 @@ public class MoverExecutor {
           break;
         }
         Thread.sleep(1000);
+        sleeped += 1000;
       }
 
       int remaining = ReplicaMove.refreshMoverList(allMoves);
@@ -143,6 +147,9 @@ public class MoverExecutor {
         logOs.println("The " + (retryTimes + 1) + "/" + maxRetryTimes + " retry, remaining = " + remaining);
       }
       LOG.debug("{} : {} moves failed, start a new iteration", this, remaining);
+      if (sleeped == 0) {
+        Thread.sleep(1000);
+      }
     }
     int failedMoves = ReplicaMove.failedMoves(allMoves);
     LOG.info("{} : failed with {} moves", this, failedMoves);

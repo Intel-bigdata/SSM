@@ -19,6 +19,7 @@ package org.smartdata.tidb;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
 
 public class LaunchDB implements Runnable {
   private PdServer pdServer;
@@ -27,16 +28,16 @@ public class LaunchDB implements Runnable {
   private boolean dbReady = false;
   private final static Logger LOG = LoggerFactory.getLogger(LaunchDB.class);
 
-  public LaunchDB() {
-    String pdArgs = new String("--data-dir=pd --log-file=logs/pd.log");
-    String tikvArgs = new String("--pd=127.0.0.1:2379 --data-dir=tikv --log-file=logs/tikv.log");
+  public LaunchDB(SmartConf conf) {
+    String pdArgs = "--data-dir=pd";
+    String tikvArgs = "--pd=127.0.0.1:2379 --data-dir=tikv";
     //The default lease time is 10s. Setting a smaller value may decrease the time of executing ddl statement, but it's dangerous to do so.
-    String tidbArgs = new String("--store=tikv --path=127.0.0.1:2379 --lease=1s --log-file=logs/tidb.log");
+    String tidbArgs = "--store=tikv --path=127.0.0.1:2379 --lease=1s";
     //String tidbArgs = new String("--log-file=logs/tidb.log");
 
-    pdServer = new PdServer(pdArgs);
-    tikvServer = new TikvServer(tikvArgs);
-    tidbServer = new TidbServer(tidbArgs);
+    pdServer = new PdServer(pdArgs, conf);
+    tikvServer = new TikvServer(tikvArgs, conf);
+    tidbServer = new TidbServer(tidbArgs, conf);
   }
 
   public boolean isCompleted() {

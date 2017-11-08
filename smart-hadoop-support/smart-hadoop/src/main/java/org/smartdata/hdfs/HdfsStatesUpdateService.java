@@ -85,7 +85,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
-        metaStore, executorService, new FetchFinishedCallBack());
+        metaStore, executorService, new FetchFinishedCallBack(), context.getConf());
     this.dataNodeInfoFetcher = new DataNodeInfoFetcher(
         client, metaStore, executorService, context.getConf());
     LOG.info("Initialized.");

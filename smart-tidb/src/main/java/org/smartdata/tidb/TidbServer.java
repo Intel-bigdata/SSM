@@ -17,28 +17,31 @@
  */
 package org.smartdata.tidb;
 
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TidbServer implements Runnable {
+  private final static Logger LOG = LoggerFactory.getLogger(TidbServer.class);
+  private String args;
+  private Tidb tidb;
+
   public interface Tidb extends Library {
     void startServer(String args);
 
     boolean isTidbServerReady();
   }
 
-  private String args;
-  private Tidb tidb;
-  private final static Logger LOG = LoggerFactory.getLogger(TidbServer.class);
-
-  public TidbServer(String args) {
-    this.args = args;
+  public TidbServer(String args, SmartConf conf) {
+    String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR_KEY, SmartConfKeys.SMART_LOG_DIR_DEFAULT);
+    this.args = args + " --log-file=" + logDir + "/tidb.log";
     try {
       tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
     } catch (UnsatisfiedLinkError ex) {
-      LOG.error("libtidb.so is not found!");
+      LOG.error("libtidb.so can not be found or loaded!");
     }
   }
 
@@ -47,7 +50,7 @@ public class TidbServer implements Runnable {
   }
 
   public void run() {
-    LOG.info("Starting TiDB..");
+    LOG.info("Starting Tidb..");
     tidb.startServer(args);
   }
 }

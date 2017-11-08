@@ -18,14 +18,14 @@
     <property>
         <name>smart.dfs.namenode.rpcserver</name>
         <value></value>
-        <description>Namenode rpcserver</description>
+        <description>hdfs://127.0.0.1:9002/</description>
     </property>
     <property>
         <name>smart.hadoop.conf.path</name>
         <!-- an example
         <value>file:///home/ha/hadoop/etc/hadoop/</value>
         -->
-        <value></value>
+        <value>file:///Work/dev/hadoop-2.7.3/etc/hadoop/</value>
         <description>Hadoop main cluster configuration file path</description>
     </property>
     <property>

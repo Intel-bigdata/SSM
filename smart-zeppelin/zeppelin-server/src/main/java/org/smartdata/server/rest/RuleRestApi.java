@@ -31,6 +31,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Rules APIs.
@@ -100,7 +103,7 @@ public class RuleRestApi {
       smartEngine.getRuleManager().disableRule(intNumber, true);
       return new JsonResponse<>(Response.Status.OK).build();
     } catch (Exception e) {
-      logger.error("Exception in RuleRestApi while stoping rule ", e);
+      logger.error("Exception in RuleRestApi while stopping rule ", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
@@ -121,6 +124,36 @@ public class RuleRestApi {
   }
 
   @GET
+  @Path("/{ruleId}/cmdlets/{pageIndex}/{numPerPage}/{orderBy}/{isDesc}")
+  public Response cmdlets(@PathParam("ruleId") String ruleId,
+      @PathParam("pageIndex") String pageIndex,
+      @PathParam("numPerPage") String numPerPage,
+      @PathParam("orderBy") String orderBy,
+      @PathParam("isDesc") String isDesc) {
+    Long longNumber = Long.parseLong(ruleId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("ruleId={}, pageIndex={}, numPerPage={}, orderBy={}, " +
+              "isDesc={}", longNumber, pageIndex, numPerPage, orderBy, isDesc);
+    }
+    try {
+      List<String> orderByList = Arrays.asList(orderBy.split(","));
+      List<String> isDescStringList = Arrays.asList(isDesc.split(","));
+      List<Boolean> isDescList = new ArrayList<>();
+      for (int i = 0; i < isDescStringList.size(); i++) {
+        isDescList.add(Boolean.parseBoolean(isDescStringList.get(i)));
+      }
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager().listCmdletsInfo(longNumber,
+              Integer.parseInt(pageIndex),
+              Integer.parseInt(numPerPage), orderByList, isDescList)).build();
+    } catch (Exception e) {
+      logger.error("Exception in RuleRestApi while getting cmdlets", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+  @GET
   @Path("/{ruleId}/cmdlets")
   public Response cmdlets(@PathParam("ruleId") String ruleId) {
     Long intNumber = Long.parseLong(ruleId);
@@ -128,7 +161,7 @@ public class RuleRestApi {
       return new JsonResponse<>(Response.Status.OK,
           smartEngine.getCmdletManager().listCmdletsInfo(intNumber, null)).build();
     } catch (Exception e) {
-      logger.error("Exception in RuleRestApi while getting cmdlets ", e);
+      logger.error("Exception in RuleRestApi while getting cmdlets", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }

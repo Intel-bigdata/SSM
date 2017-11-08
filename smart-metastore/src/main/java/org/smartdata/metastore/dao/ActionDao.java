@@ -179,7 +179,6 @@ public class ActionDao {
 
   public List<ActionInfo> getAPageOfAction(long start, long offset) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    boolean ifHasAid = false;
     String sql = "SELECT * FROM " + TABLE_NAME + " LIMIT " + start + "," + offset + ";";
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }

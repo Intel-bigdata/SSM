@@ -55,6 +55,40 @@ public class RuleDao {
         new Object[]{id}, new RuleRowMapper());
   }
 
+  public List<RuleInfo> getAPageOfRule(long start, long offset, List<String> orderBy,
+      List<Boolean> isDesc) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    boolean ifHasAid = false;
+    String sql = "SELECT * FROM rule ORDER BY ";
+
+    for (int i = 0; i < orderBy.size(); i++) {
+      if (orderBy.get(i).equals("rid")) {
+        ifHasAid = true;
+      }
+      sql = sql + orderBy.get(i);
+      if (isDesc.size() > i) {
+        if (isDesc.get(i)) {
+          sql = sql + " desc ";
+        }
+        sql = sql + ",";
+      }
+    }
+
+    if (!ifHasAid) {
+      sql = sql + "rid,";
+    }
+
+    sql = sql.substring(0, sql.length() - 1);
+    sql = sql + " LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new RuleRowMapper());
+  }
+
+  public List<RuleInfo> getAPageOfRule(long start, long offset) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM rule LIMIT " + start + "," + offset + ";";
+    return jdbcTemplate.query(sql, new RuleRowMapper());
+  }
+
   public long insert(RuleInfo ruleInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("rule");

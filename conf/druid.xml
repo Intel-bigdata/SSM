@@ -19,10 +19,10 @@
 <!-- This file contains configurations needed by Druid. -->
 
 <properties>
-    <!-- <entry key="url">jdbc:sqlite:sqlit-db-path</entry> -->
+    <entry key="url">jdbc:mysql://127.0.0.1:3306/ssm</entry>
     <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> default url for Tidb-->
-    <entry key="username">""</entry>
-    <entry key="password">""</entry>
+    <entry key="username">root</entry>
+    <entry key="password">123456</entry>
 
     <entry key="initialSize">10</entry>
     <entry key="minIdle">4</entry>
