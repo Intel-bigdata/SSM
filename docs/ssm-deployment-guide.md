@@ -14,7 +14,7 @@ Requirements:
 Why JDK 1.7 is preferred
 ----------------------------------------------------------------------------------
 
-  It is because CDH5.10.1 by default support compile and run with JDK 1.7. If you
+  It is because by default CDH5.10.1 supports compile and run with JDK 1.7. If you
   want to use JDK1.8, please turn to Cloudera web site for how to support JDK1.8
   in CDH5.10.1.
   For SSM, JDK 1.7 and 1.8 are both supported.
@@ -43,13 +43,13 @@ Build SSM Package
 Configure SSM
 ---------------------------------------------------------------------------------
 
-* **Configure How to acces Hadoop Namenode**
+* **Configure How to access Hadoop Namenode**
 
    We need to let SSM know where Hadoop Namenode is. There are 2 cases,
    
    a.  HA Namenode
    
-   open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, fill the value field with Hadoop configuration files path, for exmaple "file:///etc/hadoop/conf".
+   open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, fill the value field with Hadoop configuration files path, for example "file:///etc/hadoop/conf".
    
    ```xml   
    <property>
@@ -73,14 +73,14 @@ Configure SSM
  
 * **Configure Smart Agent (optional)**
 
-   This step can be skipped if standalone SSM service is preferred. 
+   This step can be skipped if SSM standalone mode is preferred.
   
    Open `agents` file under /conf , put each Smart Agent server's hostname or IP address line by line. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
    After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
  
 * **Configure how to access MySQL DB**
 
-   You need to install an Mysql instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically fill out the
+   You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the
    DB url, username and password are enough. Please be noted that, security support will be enabled later. Here is an example, 
    
    ```xml
@@ -92,10 +92,34 @@ Configure SSM
    </properties>	   
    ```
    
-   `ssm` is the Database name. User need to create it manully through mySQL client. 
-   
-   After all finish the SSM configuration, we can start to deploy the SSM package with the configuration files to all involved servers.
-  
+   `ssm` is the database name. User needs to create it manually through MySQL client.
+
+* **Configure TiDB (optional)**
+
+    TiDB is integrated with SSM. It can replace MySQL to store metadata. TiDB can be enabled in smart-site.xml.
+
+   ```xml
+    <property>
+        <name>smart.tidb.enable</name>
+        <value>true</value>
+        ......
+    </property>
+   ```
+
+    For SSM standalone mode, the three instances PD, TiKV and TiDB are all deployed on Smart Server host.
+    For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance to scale up the storage capacity of TiDB.
+
+    If TiDB is enabled, the jdbc url should be the default one of TiDB. The configuration in druid.xml is shown as follows. You can also use MySQL shell to connect to TiDB server manually.
+
+   ```xml
+    <properties>
+        <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry>
+        <entry key="username">root</entry>
+        <entry key="password"></entry>
+        ......
+    <properties>
+   ```
+
 * **Configure user account to authenticate to Web UI**
 
     By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.int file, 
@@ -120,6 +144,8 @@ Configure SSM
 
      https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html
 
+     After finishing the SSM configuration, we can start to deploy the SSM package with the configuration files to all involved servers.
+
 
 Deploy SSM
 ---------------------------------------------------------------------------------
@@ -139,44 +165,44 @@ SSM supports two running modes, standalone service and SSM service with multiple
 Run SSM
 ---------------------------------------------------------------------------------
 
-* **Initalize Database**
+* **Format Database**
 	
-	`bin/init-ssm.sh`
-   
-   The script will create all tables required by SSM.
+	`./bin/start-ssm.sh -format`
+
+   This command will start SSM service and format database meanwhile.
+   The script will drop all tables in the database configured in druid.xml and create all tables required by SSM.
 	
    
 * **Start SSM server**
    
-   SSM server requires HDFS superuser privielge to access some Namenode APIs. So please make sure the account you used to start SSM has the provilege. 
+   SSM server requires HDFS superuser privilege to access some Namenode APIs. So please make sure the account you used to start SSM has the privilege.
    
    The start process also requires the user account to start the SSM server is able to ssh to localhost without providing password.  
 
-   `./bin/start-ssm.sh" --config ./conf`
+   `./bin/start-ssm.sh`
 
-   `--config <config-dir>` configures where the configuration file directory is.
-   
-   `${SMART_HOME}/conf` is used if not specified.
-   
+   `--config <config-dir>` can be used to specify where the config directory is.
+   `${SMART_HOME}/conf` is the default config directory if the config option is not used.
+
    If Smart Agents are configured, the start script will start the Agents one by one remotely.
    
    Once you start the SSM server, you can open its web UI by 
 
    `http://localhost:7045`
 
-   If you meet any problem, please open the SmartServer.log under /logs directory. All the trouble shooting clues are there. 
+   If you meet any problem, please open the smartserver.log under /logs directory. All the trouble shooting clues are there.
    
 * **Stop SSM server**
    
-   If stop SSM server is required, use the script `bin/stop-ssm.sh`. Remeber to
-   use the exact same parameters to `stop-ssm.sh` script as to `start-ssm.sh` script.
-   For exmaple, when you start smart server, you use 
+   The script `bin/stop-ssm.sh` is used to stop SSM server. Remember to
+   use the exact same options to `stop-ssm.sh` script as to `start-ssm.sh` script.
+   For example, for starting Smart Server, you use
 
-   `bin/start-ssm.sh --config ./conf`
+   `bin/start-ssm.sh --config ./YOUR_CONF_DIR`
 
-   Then, when you stop smart server, you should use 
+   Then, to stop Smart Server, you should use
 
-   `bin/stop-ssm.sh --config ./conf`
+   `bin/stop-ssm.sh --config ./YOUR_CONF_DIR`
    
    If Smart Agents are configured, the stop script will stop the Agents one by one remotely.
 
