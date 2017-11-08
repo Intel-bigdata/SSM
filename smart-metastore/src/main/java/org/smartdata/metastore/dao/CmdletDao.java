@@ -56,30 +56,30 @@ public class CmdletDao {
       List<String> orderBy, List<Boolean> isDesc) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     boolean ifHasAid = false;
-    String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ";
+    StringBuilder sql =
+        new StringBuilder("SELECT * FROM " + TABLE_NAME + " ORDER BY ");
 
     for (int i = 0; i < orderBy.size(); i++) {
       if (orderBy.get(i).equals("cid")) {
         ifHasAid = true;
       }
-      sql = sql + orderBy.get(i);
+      sql.append(orderBy.get(i));
       if (isDesc.size() > i) {
         if (isDesc.get(i)) {
-          sql = sql + " desc ";
+          sql.append(" desc ");
         }
-        sql = sql + ",";
+        sql.append(",");
       }
     }
 
     if (!ifHasAid) {
-      sql = sql + "cid,";
+      sql.append("cid,");
     }
-
     //delete the last char
-    sql = sql.substring(0, sql.length() - 1);
+    sql = new StringBuilder(sql.substring(0, sql.length() - 1));
     //add limit
-    sql = sql + " LIMIT " + start + "," + offset + ";";
-    return jdbcTemplate.query(sql, new CmdletRowMapper());
+    sql.append(" LIMIT ").append(start).append(",").append(offset).append(";");
+    return jdbcTemplate.query(sql.toString(), new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getAPageOfCmdlet(long start, long offset) {
@@ -117,6 +117,37 @@ public class CmdletDao {
     String sql = "SELECT * FROM " + TABLE_NAME + " WHERE rid = " + rid
         + " LIMIT " + start + "," + offset + ";";
     return jdbcTemplate.query(sql, new CmdletRowMapper());
+  }
+
+  public List<CmdletInfo> getByRid(long rid, long start, long offset,
+      List<String> orderBy, List<Boolean> isDesc) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    boolean ifHasAid = false;
+    StringBuilder sql =
+        new StringBuilder("SELECT * FROM " + TABLE_NAME + " WHERE rid = " + rid
+            + "ORDER BY ");
+    for (int i = 0; i < orderBy.size(); i++) {
+      if (orderBy.get(i).equals("cid")) {
+        ifHasAid = true;
+      }
+      sql.append(orderBy.get(i));
+      if (isDesc.size() > i) {
+        if (isDesc.get(i)) {
+          sql.append(" desc ");
+        }
+        sql.append(",");
+      }
+    }
+
+    if (!ifHasAid) {
+      sql.append("cid,");
+    }
+
+    //delete the last char
+    sql = new StringBuilder(sql.substring(0, sql.length() - 1));
+    //add limit
+    sql.append(" LIMIT ").append(start).append(",").append(offset).append(";");
+    return jdbcTemplate.query(sql.toString(), new CmdletRowMapper());
   }
 
   public List<CmdletInfo> getByState(CmdletState state) {

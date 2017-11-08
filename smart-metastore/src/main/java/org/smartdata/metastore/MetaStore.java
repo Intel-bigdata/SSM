@@ -619,7 +619,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return detailedFileActions;
   }
 
-  public List<DetailedFileAction> listFileActions(long rid, long start, int offset)
+  public List<DetailedFileAction> listFileActions(long rid, long start, long offset)
       throws MetaStoreException {
     if (mapStoragePolicyIdName == null) {
       updateCache();
@@ -652,6 +652,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
     return detailedFileActions;
   }
+
+  public long getNumFileAction(long rid) throws MetaStoreException {
+    return listFileActions(rid, 0).size();
+  }
+
 
   public List<DetailedRuleInfo> listMoveRules() throws MetaStoreException {
     List<RuleInfo> ruleInfos = getRuleInfo();
@@ -784,6 +789,29 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
+    }
+  }
+
+  public List<CmdletInfo> listPageCmdlets(long rid, long start, long offset,
+      List<String> orderBy, List<Boolean> desc)
+      throws MetaStoreException {
+    LOG.debug("List cmdlet, start {}, offset {}", start, offset);
+    try {
+      if (orderBy.size() == 0) {
+        return cmdletDao.getByRid(rid, start, offset);
+      } else {
+        return cmdletDao.getByRid(rid, start, offset, orderBy, desc);
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public long getNumCmdletsByRid(long rid) {
+    try {
+        return cmdletDao.getByRid(rid).size();
+    } catch (Exception e) {
+      return 0;
     }
   }
 

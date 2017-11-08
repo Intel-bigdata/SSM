@@ -542,10 +542,10 @@ public class CmdletManager extends AbstractService {
   }
 
   public CmdletGroup listCmdletsInfo(long rid, long pageIndex, long numPerPage,
-      List<String> orderBy, List<Boolean> isDesc) throws IOException {
-    // TODO connect with metastore
-    List<CmdletInfo> result = new ArrayList<>();
-    return new CmdletGroup(result, 0);
+      List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
+    List<CmdletInfo> cmdlets = metaStore.listPageCmdlets(rid,
+        (pageIndex - 1) * numPerPage, numPerPage, orderBy, isDesc);
+    return new CmdletGroup(cmdlets, metaStore.getNumCmdletsByRid(rid));
   }
 
   public List<CmdletInfo> listCmdletsInfo(long rid, CmdletState cmdletState) throws IOException {
@@ -811,9 +811,10 @@ public class CmdletManager extends AbstractService {
   }
 
   public DetailedFileActionGroup getFileActions(long rid, long pageIndex,
-      long numPerPage) throws IOException {
-    // TODO connect with metastore
-    return null;
+      long numPerPage) throws IOException, MetaStoreException {
+    List<DetailedFileAction> detailedFileActions = metaStore.listFileActions(rid,
+        (pageIndex - 1) * numPerPage, numPerPage);
+    return new DetailedFileActionGroup(detailedFileActions, 0);
   }
 
   public List<DetailedFileAction> getFileActions(long rid, int size) throws IOException {
