@@ -78,10 +78,15 @@ Configure SSM
    Open `agents` file under /conf , put each Smart Agent server's hostname or IP address line by line. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
    After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
  
-* **Configure how to access MySQL DB**
+* **Configure database**
 
-   You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the
-   DB url, username and password are enough. Please be noted that, security support will be enabled later. Here is an example, 
+   MySQL or SQLite can be used to store metadata for SSM. Alternatively, user can choose TiDB which has been integrated with SSM.
+   TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
+   You just need to follow one of the two following options to configure database for SSM.
+
+   Option 1. Use MySQL/SQLite
+   You need to install a MySQL or SQLite instance first. Open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the
+   DB url, username and password are enough. Please be noted that, security support will be enabled later. Here is an example for MySQL,
    
    ```xml
    <properties>
@@ -94,9 +99,10 @@ Configure SSM
    
    `ssm` is the database name. User needs to create it manually through MySQL client.
 
-* **Configure TiDB (optional)**
+   Option 2. Use SSM-TiDB
 
-    TiDB is integrated with SSM. It can replace MySQL to store metadata. TiDB can be enabled in smart-site.xml.
+    Since TiDB has been integrated with SSM, you do not need to install TiDB beforehand.
+    TiDB can be enabled in smart-site.xml.
 
    ```xml
     <property>
@@ -107,9 +113,10 @@ Configure SSM
    ```
 
     For SSM standalone mode, the three instances PD, TiKV and TiDB are all deployed on Smart Server host.
-    For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance to scale up the storage capacity of TiDB.
+    For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
+    So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over MySQL.
 
-    If TiDB is enabled, the jdbc url should be the default one of TiDB. The configuration in druid.xml is shown as follows. You can also use MySQL shell to connect to TiDB server manually.
+    If TiDB is enabled, the jdbc url should be the following default one. The configuration in druid.xml is shown as follows.
 
    ```xml
     <properties>
@@ -119,6 +126,9 @@ Configure SSM
         ......
     <properties>
    ```
+
+    TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
+    The default command to enter into MySQL shell for SSM-TiDB is `mysql -h 127.0.0.1 -u root -P 4000`.
 
 * **Configure user account to authenticate to Web UI**
 
