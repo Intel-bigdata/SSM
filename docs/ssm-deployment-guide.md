@@ -80,7 +80,7 @@ Configure SSM
  
 * **Configure how to access MySQL DB**
 
-   You need to install an MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the
+   You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the
    DB url, username and password are enough. Please be noted that, security support will be enabled later. Here is an example, 
    
    ```xml
