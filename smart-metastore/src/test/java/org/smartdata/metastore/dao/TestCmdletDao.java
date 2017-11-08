@@ -145,7 +145,14 @@ public class TestCmdletDao extends TestDaoUtil {
             CmdletState.PAUSED, "tt", 123178333L, 232444994L);
     cmdletDao.insert(new CmdletInfo[]{cmdlet1, cmdlet2, cmdlet3, cmdlet4, cmdlet5, cmdlet6});
     List<CmdletInfo> cmdlets = cmdletDao.getByRid(1, 1, 2);
+    List<String> order = new ArrayList<>();
+    order.add("cid");
+    List<Boolean> desc = new ArrayList<>();
+    desc.add(false);
     Assert.assertTrue(cmdlets.size() == 2);
+    cmdlets = cmdletDao.getByRid(1, 1, 2, order, desc);
+    Assert.assertTrue(cmdlets.size() == 2);
+    Assert.assertTrue(cmdlets.get(0).equals(cmdlet2));
   }
 
 }
