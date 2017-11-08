@@ -22,11 +22,15 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
+import org.smartdata.protocol.ClientServerProto.FileContainerInfoRequestProto;
+import org.smartdata.protocol.ClientServerProto.FileContainerInfoResponseProto;
 
 @ProtocolInfo(protocolName = "org.smartdata.protocol.protocolbuffer.ClientProtocolProtoBuffer",
     protocolVersion = 1)
 public interface ClientProtocolProtoBuffer {
-  ReportFileAccessEventResponseProto
-  reportFileAccessEvent(RpcController controller,
-      ReportFileAccessEventRequestProto req) throws ServiceException;
+  ReportFileAccessEventResponseProto reportFileAccessEvent(
+      RpcController controller, ReportFileAccessEventRequestProto req) throws ServiceException;
+
+  FileContainerInfoResponseProto fileContainerInfo(
+      RpcController controller, FileContainerInfoRequestProto req) throws ServiceException;
 }

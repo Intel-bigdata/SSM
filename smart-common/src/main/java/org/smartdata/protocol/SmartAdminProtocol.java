@@ -19,11 +19,11 @@ package org.smartdata.protocol;
 
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.CmdletState;
-import org.smartdata.SmartServiceState;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.CmdletInfo;
+import org.smartdata.SmartServiceState;
 
 import java.io.IOException;
 import java.util.List;

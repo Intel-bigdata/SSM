@@ -26,11 +26,14 @@ import org.apache.hadoop.ipc.RetriableException;
 import org.smartdata.SmartServiceState;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.protocol.AdminServerProto;
@@ -243,5 +246,18 @@ public class SmartRpcServer implements SmartServerProtocols {
   @Override
   public List<ActionDescriptor> listActionsSupported() throws IOException {
     return ActionRegistry.supportedActions();
+  }
+
+  @Override
+  public FileContainerInfo fileContainerInfo(String filePath) throws IOException {
+    checkIfActive();
+    MetaStore metaStore = ssm.getMetaStore();
+    FileContainerInfo fileContainerInfo;
+    try {
+      fileContainerInfo = metaStore.getFileContainerInfo(filePath);
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
+    return fileContainerInfo;
   }
 }

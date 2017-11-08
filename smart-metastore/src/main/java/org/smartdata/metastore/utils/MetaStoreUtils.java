@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +38,7 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
 import com.mysql.jdbc.NonRegisteringDriver;
 
 /**
@@ -47,12 +48,12 @@ public class MetaStoreUtils {
   public static final String SQLITE_URL_PREFIX = "jdbc:sqlite:";
   public static final String MYSQL_URL_PREFIX = "jdbc:mysql:";
   public static final String[] dbNameNotAllowed = new String[]{
-          "mysql", "sys", "information_schema", "INFORMATION_SCHEMA", "performance_schema", "PERFORMANCE_SCHEMA"
+      "mysql", "sys", "information_schema", "INFORMATION_SCHEMA", "performance_schema", "PERFORMANCE_SCHEMA"
   };
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
 
   public static Connection createConnection(String url,
-      String userName, String password)
+                                            String userName, String password)
       throws ClassNotFoundException, SQLException {
     if (url.startsWith(SQLITE_URL_PREFIX)) {
       Class.forName("org.sqlite.JDBC");
@@ -64,8 +65,8 @@ public class MetaStoreUtils {
   }
 
   public static Connection createConnection(String driver, String url,
-      String userName,
-      String password) throws ClassNotFoundException, SQLException {
+                                            String userName,
+                                            String password) throws ClassNotFoundException, SQLException {
     Class.forName(driver);
     Connection conn = DriverManager.getConnection(url, userName, password);
     return conn;
@@ -105,7 +106,7 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS backup_file",
         "DROP TABLE IF EXISTS sys_info",
         "DROP TABLE IF EXISTS cluster_info",
-            "DROP TABLE IF EXISTS small_file",
+        "DROP TABLE IF EXISTS small_file",
 
         "CREATE TABLE access_count_table (\n" +
             "  table_name varchar(255) PRIMARY KEY,\n" +
@@ -285,12 +286,12 @@ public class MetaStoreUtils {
             "  type varchar(64) NOT NULL\n" +    // ClusterType
             ");",
 
-            "CREATE TABLE small_file (\n" +
-                    "path varchar(4096) NOT NULL PRIMARY KEY,\n" +
-                    "container_file_path varchar(4096) NOT NULL,\n" +
-                    "offset bigint(20) NOT NULL,\n" +
-                    "length bigint(20) NOT NULL\n" +
-                    ");",
+        "CREATE TABLE small_file (\n" +
+            "path varchar(4096) NOT NULL PRIMARY KEY,\n" +
+            "container_file_path varchar(4096) NOT NULL,\n" +
+            "offset bigint(20) NOT NULL,\n" +
+            "length bigint(20) NOT NULL\n" +
+            ");",
 
         "CREATE TABLE backup_file (\n" +
             " rid bigint(20) NOT NULL,\n" +
@@ -381,7 +382,7 @@ public class MetaStoreUtils {
         }
 
         for (String key : p.stringPropertyNames()) {
-          if(key.equals("password")) {
+          if (key.equals("password")) {
             LOG.info("\t" + key + " = **********");
           } else {
             LOG.info("\t" + key + " = " + p.getProperty(key));
@@ -474,7 +475,7 @@ public class MetaStoreUtils {
   }
 
   public static void dropAllTablesMysql(Connection conn,
-      String url) throws MetaStoreException {
+                                        String url) throws MetaStoreException {
     try {
       Statement stat = conn.createStatement();
       String dbName = getDBName(url);

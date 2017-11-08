@@ -20,8 +20,11 @@ package org.smartdata.protocol.protobuffer;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.smartdata.model.ActionDescriptor;
-import org.smartdata.model.CmdletState;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.CmdletState;
+import org.smartdata.model.FileContainerInfo;
+import org.smartdata.model.RuleInfo;
 import org.smartdata.protocol.AdminServerProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.CheckRuleResponseProto;
@@ -65,9 +68,9 @@ import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.protocol.ClientServerProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
+import org.smartdata.protocol.ClientServerProto.FileContainerInfoRequestProto;
+import org.smartdata.protocol.ClientServerProto.FileContainerInfoResponseProto;
 import org.smartdata.SmartServiceState;
-import org.smartdata.model.RuleInfo;
-import org.smartdata.model.CmdletInfo;
 import org.smartdata.protocol.SmartServerProtocols;
 
 import java.io.IOException;
@@ -323,6 +326,22 @@ public class ServerProtocolsServerSideTranslator implements
     try {
       server.reportFileAccessEvent(ProtoBufferHelper.convert(req));
       return ReportFileAccessEventResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public FileContainerInfoResponseProto fileContainerInfo(
+      RpcController controller, FileContainerInfoRequestProto req)
+      throws ServiceException {
+    try {
+      FileContainerInfo fileContainerInfo = server.fileContainerInfo(ProtoBufferHelper.convert(req));
+      return FileContainerInfoResponseProto.newBuilder()
+          .setContainerFilePath(fileContainerInfo.getContainerFilePath())
+          .setOffset(fileContainerInfo.getOffset())
+          .setLength(fileContainerInfo.getLength())
+          .build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }

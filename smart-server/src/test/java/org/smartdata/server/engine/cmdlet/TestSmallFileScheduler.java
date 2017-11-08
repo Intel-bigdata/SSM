@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
+import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.server.MiniSmartClusterHarness;
@@ -34,12 +35,14 @@ import java.util.List;
 import java.util.Random;
 
 public class TestSmallFileScheduler extends MiniSmartClusterHarness {
+  private long sumFileLen;
   private List<String> smallFileList;
 
   @Before
   @Override
   public void init() throws Exception {
     super.init();
+    sumFileLen = 0L;
     smallFileList = new ArrayList<>();
     createTestFiles();
   }
@@ -61,6 +64,7 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
         bytesRemaining -= bytesToWrite;
       }
       out.close();
+      sumFileLen += fileLen;
       smallFileList.add(fileName);
     }
   }
@@ -79,6 +83,9 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
       Thread.sleep(1000);
       CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
       if (state == CmdletState.DONE) {
+        MetaStore metaStore = ssm.getMetaStore();
+        long containerFileLen = metaStore.getFile("/test/small_files/container_file").getLength();
+        Assert.assertEquals(sumFileLen, containerFileLen);
         return;
       } else if (state == CmdletState.FAILED) {
         Assert.fail("Compact failed.");

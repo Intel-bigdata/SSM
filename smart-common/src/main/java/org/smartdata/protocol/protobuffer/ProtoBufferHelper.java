@@ -27,6 +27,7 @@ import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.protocol.ClientServerProto.FileContainerInfoRequestProto;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.CmdletInfo;
@@ -170,5 +171,9 @@ public class ProtoBufferHelper {
         .setDisplayName(ac.getDisplayName())
         .setUsage(ac.getUsage())
         .build();
+  }
+
+  public static String convert(final FileContainerInfoRequestProto proto) {
+    return proto.getFilePath();
   }
 }

@@ -32,15 +32,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SmartDFSClient extends DFSClient {
   private SmartClient smartClient = null;
   private boolean healthy = false;
   private List<String> smallFileDirs = new ArrayList<>();
-  private Map<String, List<Long>> metaData = new HashMap<>();
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
@@ -107,19 +104,6 @@ public class SmartDFSClient extends DFSClient {
     }
   }
 
-  public SmartDFSClient(Configuration conf, Map<String, List<Long>> meta) throws IOException {
-    super(conf);
-    this.metaData = meta;
-    try {
-      smartClient = new SmartClient(conf);
-      initSmallFileDirs(conf);
-      healthy = true;
-    } catch (IOException e) {
-      super.close();
-      throw e;
-    }
-  }
-
   private void initSmallFileDirs(Configuration conf) {
     String[] dirs = conf.getTrimmedStrings(SmartConfKeys.SMART_SMALL_FILE_DIRS_KEY);
     if (dirs == null || dirs.length == 0) {
@@ -140,10 +124,11 @@ public class SmartDFSClient extends DFSClient {
     return false;
   }
 
-  private FileContainerInfo getFileContainerInfo(String src) {
-    long offset = metaData.get(src).get(0);
-    long length = metaData.get(src).get(1);
-    return new FileContainerInfo(src, offset, length);
+  public FileContainerInfo getFileContainerInfo(String src) throws IOException {
+    if (!healthy) {
+      throw new IOException("smart client is not healthy.");
+    }
+    return smartClient.fileContainerInfo(src);
   }
 
   // TODO: handle small file access event
@@ -151,23 +136,22 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
     DFSInputStream is;
-    if (!isInSmallFileDir(src)) {
+    //if (!isInSmallFileDir(src)) {
       is = super.open(src);
-      reportFileAccessEvent(src);
-    } else {
-    is = new SmartDFSInputStream(this, "/test/smallfile/testFile", true, getFileContainerInfo(src));
-    }
+      //reportFileAccessEvent(src);
+    /*} else {
+      is = new SmartDFSInputStream(this, src, true, getFileContainerInfo(src));
+    }*/
     return is;
   }
 
   @Override
-  public DFSInputStream open(String src, int buffersize,
-      boolean verifyChecksum)
+  public DFSInputStream open(String src, int buffersize, boolean verifyChecksum)
       throws IOException, UnresolvedLinkException {
     DFSInputStream is;
     if (!isInSmallFileDir(src)) {
       is = super.open(src, buffersize, verifyChecksum);
-      reportFileAccessEvent(src);
+      //reportFileAccessEvent(src);
     } else {
       is = new SmartDFSInputStream(this, src, true, getFileContainerInfo(src));
     }

@@ -50,10 +50,9 @@ public class SmallFileDao {
     jdbcTemplate.update(sql, path);
   }
 
-  public synchronized void getSmallFile(String path) {
+  public FileContainerInfo getSmallFile(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT * FROM small_file where path = ?";
-    jdbcTemplate.queryForObject("SELECT * FROM smallFile WHERE path = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM small_file WHERE path = ?",
         new Object[]{path}, new SmallFileDao.FileContainerInfoRowMapper());
   }
 
@@ -63,16 +62,21 @@ public class SmallFileDao {
     jdbcTemplate.update(sql, containerFilePath, offset, length);
   }
 
+  public int getCountByPath(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "SELECT COUNT(*) FROM small_file WHERE path = ?";
+    return jdbcTemplate.queryForObject(sql, Integer.class, path);
+  }
+
   class FileContainerInfoRowMapper implements RowMapper<FileContainerInfo> {
     @Override
     public FileContainerInfo mapRow(ResultSet resultSet, int i)
         throws SQLException {
-      FileContainerInfo fileContainerInfo = new FileContainerInfo(
+      return new FileContainerInfo(
           resultSet.getString("container_file_path"),
           resultSet.getLong("offset"),
           resultSet.getLong("length")
       );
-      return fileContainerInfo;
     }
   }
 }
