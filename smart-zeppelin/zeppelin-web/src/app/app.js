@@ -169,12 +169,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       })
       .when('/copys/copy/:ruleId', {
         templateUrl: 'app/dashboard/views/copy/detail/copyActions.html',
-        controller: 'CopyActionsCtrl',
-        resolve: {
-          copyActions0: ['$route', 'models', function ($route, models) {
-            return models.$get.copyActions($route.current.params.ruleId);
-          }]
-        }
+        controller: 'CopyActionsCtrl'
       })
       .when('/actions/action/:actionId', {
         templateUrl: 'app/dashboard/views/actions/action/action.html',
