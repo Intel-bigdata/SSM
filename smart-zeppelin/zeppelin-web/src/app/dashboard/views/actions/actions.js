@@ -37,8 +37,10 @@ angular.module('zeppelinWebApp')
         $scope.actions = actionData.body.actions;
         angular.forEach($scope.actions, function (data,index) {
           data.runTime = data.finishTime - data.createTime;
-          data.createTime = $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
-          data.finishTime = data.finished ? $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
+          data.createTime = data.createTime === 0 ? "-" :
+            $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
+          data.finishTime = data.finished ? data.finishTime === 0 ? "-" :
+            $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
           data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
         });
         $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);

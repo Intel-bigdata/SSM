@@ -19,58 +19,49 @@
 angular.module('zeppelinWebApp')
 
   .controller('CopyActionsCtrl', CopyActionsCtrl);
-  CopyActionsCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'copyActions0'];
-  function CopyActionsCtrl($scope, $modal, $stb, $dialogs, copyActions0) {
-
-    $scope.actionsTable = {
-      cols: [
-        // group 1/3 (4-col)
-        $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
-        $stb.text('File Path').key('filePath').canSort().styleClass('col-md-1').done(),
-        $stb.text('Source Path').key('sourcePath').canSort().styleClass('col-md-1').done(),
-        $stb.text('Target Path').key('targetPath').canSort().styleClass('col-md-1').done(),
-        $stb.text('Status').key('succeed').canSort().styleClass('col-md-1 hidden-sm hidden-xs').done(),
-        $stb.duration("Running Time").key('runningTime').canSort().done(),
-        $stb.datetime('Create Time').key('createTime').canSort().done(),
-        $stb.datetime('Finish Time').key('finishTime').canSort().done(),
-        $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
-      ],
-      rows: null
+  CopyActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$route'];
+  function CopyActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route) {
+    $scope.pageNumber = 10;
+    $scope.totalNumber = 0;
+    $scope.copyActions;
+    $scope.currentPage = 1;
+    $scope.totalPage = 1;
+    $scope.orderby = 'aid';
+    $scope.isDesc = true;
+    var ruleId = $route.current.params.ruleId;
+    function getCopyActions() {
+      $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/filelist/'
+        + ruleId + '/' + $scope.currentPage + '/' + $scope.pageNumber)
+        .then(function(response) {
+          var actionData = angular.fromJson(response.data);
+          $scope.totalNumber = actionData.body.totalNumOfActions;
+          $scope.copyActions = actionData.body.detailedFileActions;
+          angular.forEach($scope.copyActions, function (data,index) {
+            data.runTime = data.finishTime - data.createTime;
+            data.createTime = data.createTime === 0 ? "-" :
+              $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
+            data.finishTime = data.finished ? data.finishTime === 0 ? "-" :
+              $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
+            data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
+          });
+          $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);
+        }, function(errorResponse) {
+          $scope.totalNumber = 0;
+        });
     };
-
-    function updateTable(actions) {
-      $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
-        _.map(actions, function (action) {
-          return {
-            state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
-            createTime: action.createTime,
-            finishTime: action.finished ? action.finishTime : "-",
-            runningTime: action.uptime,
-            succeed: action.finished ? action.successful : "-",
-            view: {
-              href: action.pageUrl,
-              icon: function() {
-                return 'glyphicon glyphicon-info-sign';
-              },
-              class: 'btn-xs btn-info'
-            },
-            progress: {
-                current: action.progress,
-                max: 1,
-                flag: action.finished ? action.successful : "-"
-                // usage: action.progress * 100
-            },
-            filePath: action.filePath,
-            sourcePath: action.src,
-            targetPath: action.target
-          };
-        }));
-    }
-
-    updateTable(copyActions0.$data());
-    copyActions0.$subscribe($scope, function (actions) {
-      updateTable(actions);
-    });
+    $scope.gotoPage = function (index) {
+      $scope.currentPage = index;
+      getCopyActions();
+    };
+    $scope.defindOrderBy = function (filed) {
+      if ($scope.orderby === filed) {
+        $scope.isDesc = ! $scope.isDesc;
+      } else {
+        $scope.orderby = filed;
+        $scope.isDesc = true;
+      }
+      getCopyActions();
+    };
+    getCopyActions();
   }
 
