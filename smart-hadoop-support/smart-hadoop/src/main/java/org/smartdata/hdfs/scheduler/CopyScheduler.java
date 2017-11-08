@@ -310,20 +310,16 @@ public class CopyScheduler extends ActionSchedulerService {
           //all the file in this fileStatuses
           FileStatus[] childFileStatuses = listFileStatuesOfDirs(fileStatus.getPath().getName());
           if (childFileStatuses != null && childFileStatuses.length != 0) {
-            for (int i = 0; i < childFileStatuses.length; i++) {
-              returnStatus.add(childFileStatuses[i]);
-            }
+            returnStatus.addAll(Arrays.asList(childFileStatuses));
           }
         }
       }
     } catch (IOException e) {
       LOG.error("Fetch remote file list error!", e);
     }
-
-    if (returnStatus == null) {
+    if (returnStatus.size() == 0) {
       return new FileStatus[0];
     }
-    
     return returnStatus.toArray(new FileStatus[returnStatus.size()]);
   }
 
@@ -331,18 +327,15 @@ public class CopyScheduler extends ActionSchedulerService {
       String destDir) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(srcDir);
     LOG.debug("Directory Base Sync {} files", srcFiles.size());
-    // <file name, fileinfo>
+    // <file name, fileInfo>
     Map<String, FileInfo> srcFileSet = new HashMap<>();
     for (FileInfo fileInfo : srcFiles) {
       // Remove prefix/parent
       srcFileSet.put(fileInfo.getPath().replace(srcDir, ""), fileInfo);
     }
     FileStatus[] fileStatuses = null;
-    FileSystem fs = null;
-
     // recursively file lists
     fileStatuses = listFileStatuesOfDirs(destDir);
-
     if (fileStatuses == null || fileStatuses.length == 0) {
       LOG.debug("Remote directory is empty!");
     } else {
