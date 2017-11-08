@@ -128,7 +128,7 @@ Configure SSM
 
 	 define supported user name and password. It follows the username = password, role format. Here is an example,
 
-	     admin = intel@intel, admin
+	     admin = ssm@123, admin
 	
 	     ssmoperator = operator@operation, operator 
 	
