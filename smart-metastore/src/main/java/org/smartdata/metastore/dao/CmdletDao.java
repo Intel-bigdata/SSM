@@ -58,7 +58,6 @@ public class CmdletDao {
     boolean ifHasAid = false;
     StringBuilder sql =
         new StringBuilder("SELECT * FROM " + TABLE_NAME + " ORDER BY ");
-
     for (int i = 0; i < orderBy.size(); i++) {
       if (orderBy.get(i).equals("cid")) {
         ifHasAid = true;
@@ -71,7 +70,6 @@ public class CmdletDao {
         sql.append(",");
       }
     }
-
     if (!ifHasAid) {
       sql.append("cid,");
     }
@@ -125,7 +123,7 @@ public class CmdletDao {
     boolean ifHasAid = false;
     StringBuilder sql =
         new StringBuilder("SELECT * FROM " + TABLE_NAME + " WHERE rid = " + rid
-            + "ORDER BY ");
+            + " ORDER BY ");
     for (int i = 0; i < orderBy.size(); i++) {
       if (orderBy.get(i).equals("cid")) {
         ifHasAid = true;
@@ -138,7 +136,6 @@ public class CmdletDao {
         sql.append(",");
       }
     }
-
     if (!ifHasAid) {
       sql.append("cid,");
     }
