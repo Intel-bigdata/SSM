@@ -134,8 +134,8 @@ public class MoverExecutor {
           status.increaseMovedBlocks(stat[1]);
           break;
         }
-        Thread.sleep(1000);
-        sleeped += 1000;
+        Thread.sleep(10);
+        sleeped += 10;
       }
 
       int remaining = ReplicaMove.refreshMoverList(allMoves);
@@ -144,11 +144,12 @@ public class MoverExecutor {
         return 0;
       }
       if (logOs != null) {
-        logOs.println("The " + (retryTimes + 1) + "/" + maxRetryTimes + " retry, remaining = " + remaining);
+        logOs.println(String.format("The %d/%d retry, remaining = %d",
+            retryTimes + 1, maxRetryTimes, remaining));
       }
       LOG.debug("{} : {} moves failed, start a new iteration", this, remaining);
-      if (sleeped == 0) {
-        Thread.sleep(1000);
+      if (sleeped < 1000) {
+        Thread.sleep(1000 - sleeped);
       }
     }
     int failedMoves = ReplicaMove.failedMoves(allMoves);
