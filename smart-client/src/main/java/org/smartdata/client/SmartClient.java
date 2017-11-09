@@ -23,6 +23,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.SmartFileCompressionInfo;
 import org.smartdata.protocol.SmartClientProtocol;
 import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
@@ -81,6 +82,17 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       checkOpen();
       server.reportFileAccessEvent(event);
     }
+  }
+
+  @Override
+  public SmartFileCompressionInfo getFileCompressionInfo(String fileName)
+    throws IOException {
+    return server.getFileCompressionInfo(fileName);
+  }
+
+  @Override
+  public boolean fileCompressed(String fileName) throws IOException {
+    return server.fileCompressed(fileName);
   }
 
   private boolean shouldIgnore(String path) {

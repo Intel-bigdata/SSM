@@ -26,12 +26,14 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.SmartFileCompressionInfo;
 import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.protocol.AdminServerProto.ActionInfoProto.Builder;
 import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.protocol.ClientServerProto.SmartFileCompressionInfoProto;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -101,6 +103,24 @@ public class ProtoBufferHelper {
         .setGenerateTime(info.getGenerateTime())
         .setStateChangedTime(info.getStateChangedTime());
     builder.addAllAids(info.getAids());
+    return builder.build();
+  }
+
+  public static SmartFileCompressionInfo convert(SmartFileCompressionInfoProto proto) {
+    SmartFileCompressionInfo.Builder builder = SmartFileCompressionInfo.newBuilder();
+    builder.setFileName(proto.getFileName())
+        .setBufferSize(proto.getBufferSize())
+        .setOriginalPos(proto.getOriginalPosList())
+        .setCompressedPos(proto.getCompressedPosList());
+    return builder.build();
+  }
+
+  public static SmartFileCompressionInfoProto convert(SmartFileCompressionInfo info) {
+    SmartFileCompressionInfoProto.Builder builder = SmartFileCompressionInfoProto.newBuilder();
+    builder.setFileName(info.getFileName())
+        .setBufferSize(info.getBufferSize());
+    builder.addAllOriginalPos(info.getOriginalPos());
+    builder.addAllCompressedPos(info.getCompressedPos());
     return builder.build();
   }
 

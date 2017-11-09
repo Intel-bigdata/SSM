@@ -27,14 +27,19 @@ public class SmartFileCompressionInfo {
 
   private String fileName;
   private int bufferSize;
-  private List<Integer> originalPos;
-  private List<Integer> compressedPos;
+  private List<Long> originalPos;
+  private List<Long> compressedPos;
 
   public SmartFileCompressionInfo(String fileName, int bufferSize) {
+    this(fileName, bufferSize, new ArrayList<Long>(), new ArrayList<Long>());
+  }
+
+  public SmartFileCompressionInfo(String fileName, int bufferSize,
+      List<Long> originalPos, List<Long> compressedPos) {
     this.fileName = fileName;
     this.bufferSize = bufferSize;
-    originalPos = new ArrayList<>();
-    compressedPos = new ArrayList<>();
+    this.originalPos = originalPos;
+    this.compressedPos = compressedPos;
   }
 
   public int getBufferSize() {
@@ -45,16 +50,56 @@ public class SmartFileCompressionInfo {
     return fileName;
   }
 
-  public List<Integer> getOriginalPos() {
+  public List<Long> getOriginalPos() {
     return originalPos;
   }
 
-  public List<Integer> getCompressedPos() {
+  public List<Long> getCompressedPos() {
     return compressedPos;
   }
 
-  public void setPositionMapping(int originalPosition, int compressedPosition) {
+  public void setPositionMapping(long originalPosition, long compressedPosition) {
     originalPos.add(originalPosition);
     compressedPos.add(compressedPosition);
+  }
+
+  public static Builder newBuilder() {
+    return Builder.create();
+  }
+
+  public static class Builder {
+    private String fileName = null;
+    private int bufferSize = 0;
+    private List<Long> originalPos = new ArrayList<>();
+    private List<Long> compressedPos = new ArrayList<>();
+
+    public static Builder create() {
+      return new Builder();
+    }
+
+    public Builder setFileName(String fileName) {
+      this.fileName = fileName;
+      return this;
+    }
+
+    public Builder setBufferSize(int bufferSize) {
+      this.bufferSize = bufferSize;
+      return this;
+    }
+
+    public Builder setOriginalPos(List<Long> originalPos) {
+      this.originalPos = originalPos;
+      return this;
+    }
+
+    public Builder setCompressedPos(List<Long> compressedPos) {
+      this.compressedPos = compressedPos;
+      return this;
+    }
+
+    public SmartFileCompressionInfo build() {
+      return new SmartFileCompressionInfo(fileName, bufferSize, originalPos,
+          compressedPos);
+    }
   }
 }

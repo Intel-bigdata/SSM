@@ -20,6 +20,10 @@ package org.smartdata.protocol.protobuffer;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.SmartFileCompressionInfo;
+import org.smartdata.protocol.ClientServerProto;
+import org.smartdata.protocol.ClientServerProto.FileCompressedRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileCompressionInfoRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.SmartClientProtocol;
 
@@ -50,6 +54,35 @@ public class ClientProtocolClientSideTranslator implements
             .build();
     try {
       rpcProxy.reportFileAccessEvent(null, req);
+    } catch (ServiceException e) {
+      throw ProtoBufferHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public SmartFileCompressionInfo getFileCompressionInfo(String fileName)
+      throws IOException {
+    try {
+      GetFileCompressionInfoRequestProto req =
+          GetFileCompressionInfoRequestProto.newBuilder()
+              .setFileName(fileName)
+              .build();
+      ClientServerProto.SmartFileCompressionInfoProto r =
+          rpcProxy.getFileCompressionInfo(null, req)
+          .getSmartFileCompressionInfo();
+      return ProtoBufferHelper.convert(r);
+    } catch (ServiceException e) {
+      throw ProtoBufferHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public boolean fileCompressed(String fileName) throws IOException {
+    try {
+      FileCompressedRequestProto req = FileCompressedRequestProto.newBuilder()
+          .setFileName(fileName)
+          .build();
+      return rpcProxy.fileCompressed(null, req).getCompressed();
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }

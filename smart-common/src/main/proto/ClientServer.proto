@@ -31,7 +31,34 @@ message ReportFileAccessEventRequestProto {
 message ReportFileAccessEventResponseProto {
 }
 
+message SmartFileCompressionInfoProto {
+  required string fileName = 1;
+  required int32 bufferSize = 2;
+  repeated int64 originalPos = 3;
+  repeated int64 compressedPos = 4;
+}
+
+message GetFileCompressionInfoRequestProto {
+  required string fileName = 1;
+}
+
+message GetFileCompressionInfoResponseProto {
+  required SmartFileCompressionInfoProto smartFileCompressionInfo = 1;
+}
+
+message FileCompressedRequestProto {
+  required string fileName = 1;
+}
+
+message FileCompressedResponseProto {
+  required bool compressed = 1;
+}
+
 service protoService {
   rpc reportFileAccessEvent (ReportFileAccessEventRequestProto)
   returns (ReportFileAccessEventResponseProto);
+  rpc getFileCompressionInfo (GetFileCompressionInfoRequestProto)
+  returns (GetFileCompressionInfoResponseProto);
+  rpc fileCompressed (FileCompressedRequestProto)
+  returns (FileCompressedResponseProto);
 }

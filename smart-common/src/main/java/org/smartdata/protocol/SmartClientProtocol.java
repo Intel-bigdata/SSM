@@ -18,6 +18,7 @@
 package org.smartdata.protocol;
 
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.SmartFileCompressionInfo;
 
 import java.io.IOException;
 
@@ -27,4 +28,7 @@ import java.io.IOException;
 public interface  SmartClientProtocol {
   void reportFileAccessEvent(FileAccessEvent event) throws IOException;
 
+  SmartFileCompressionInfo getFileCompressionInfo(String fileName) throws IOException;
+
+  boolean fileCompressed(String fileName) throws IOException;
 }

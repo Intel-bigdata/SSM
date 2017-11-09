@@ -143,12 +143,14 @@ public class SmartDFSInputStream extends DFSInputStream {
   }
 
   private int rawReadInt() throws IOException {
-    int b1 = super.read();
-    int b2 = super.read();
-    int b3 = super.read();
-    int b4 = super.read();
+    byte[] bytes = new byte[4];
+    int b1 = super.read(bytes, 0, 1);
+    int b2 = super.read(bytes, 1, 1);
+    int b3 = super.read(bytes, 2, 1);
+    int b4 = super.read(bytes, 3, 1);
     if ((b1 | b2 | b3 | b4) < 0)
       throw new EOFException();
-    return ((b1 << 24) + (b2 << 16) + (b3 << 8) + (b4 << 0));
+    return (((bytes[0] & 0xff) << 24) + ((bytes[1] & 0xff) << 16)
+        + ((bytes[2] & 0xff) << 8) + ((bytes[3] & 0xff) << 0));
   }
 }

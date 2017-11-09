@@ -25,6 +25,7 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.RuleInfo;
+import org.smartdata.model.SmartFileCompressionInfo;
 import org.smartdata.protocol.AdminServerProto;
 import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
 import org.smartdata.protocol.AdminServerProto.ActionInfoProto;
@@ -65,6 +66,10 @@ import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleResponseProto;
 import org.smartdata.protocol.ClientServerProto;
+import org.smartdata.protocol.ClientServerProto.FileCompressedRequestProto;
+import org.smartdata.protocol.ClientServerProto.FileCompressedResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetFileCompressionInfoRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileCompressionInfoResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.protocol.SmartServerProtocols;
@@ -323,6 +328,38 @@ public class ServerProtocolsServerSideTranslator implements
     try {
       server.reportFileAccessEvent(ProtoBufferHelper.convert(req));
       return ReportFileAccessEventResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public GetFileCompressionInfoResponseProto getFileCompressionInfo(
+      RpcController controller, GetFileCompressionInfoRequestProto req)
+      throws ServiceException {
+    try {
+      SmartFileCompressionInfo compressionInfo =
+          server.getFileCompressionInfo(req.getFileName());
+      return GetFileCompressionInfoResponseProto.newBuilder()
+          .setSmartFileCompressionInfo(ProtoBufferHelper.convert(compressionInfo))
+          .build();
+    } catch (Exception e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public FileCompressedResponseProto fileCompressed(RpcController controller,
+      FileCompressedRequestProto req) throws ServiceException {
+    try {
+      boolean compressed = true;
+      SmartFileCompressionInfo compressionInfo =
+          server.getFileCompressionInfo(req.getFileName());
+      if (compressionInfo == null) {
+        compressed = false;
+      }
+      return FileCompressedResponseProto.newBuilder()
+          .setCompressed(compressed).build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
