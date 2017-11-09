@@ -38,7 +38,7 @@ function LoginCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv, 
       $rootScope.$broadcast('loginSuccess', true);
       $rootScope.userName = $scope.loginParams.userName;
       $scope.SigningIn = false;
-      $location.path('/notebook/2CM9DW8NW');
+
       //redirect to the page from where the user originally was
       if ($location.search() && $location.search()['ref']) {
         $timeout(function() {

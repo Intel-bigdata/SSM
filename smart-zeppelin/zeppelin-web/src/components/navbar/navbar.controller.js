@@ -59,7 +59,6 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
   }
 
   function initController() {
-    location.pathname = '/';
     $scope.isDrawNavbarNoteList = false;
     angular.element('#notebook-list').perfectScrollbar({suppressScrollX: true});
 
@@ -115,7 +114,6 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
           message: 'Logout Success'
         });
         setTimeout(function() {
-          window.location.pathname = '/';
           window.location.replace('/');
         }, 1000);
       });
