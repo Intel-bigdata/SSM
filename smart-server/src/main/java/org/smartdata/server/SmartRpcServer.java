@@ -26,6 +26,8 @@ import org.apache.hadoop.ipc.RetriableException;
 import org.smartdata.SmartServiceState;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metaservice.MetaServiceException;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
@@ -33,6 +35,7 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.SmartFileCompressionInfo;
 import org.smartdata.protocol.AdminServerProto;
 import org.smartdata.protocol.ClientServerProto;
 import org.smartdata.protocol.SmartServerProtocols;
@@ -243,5 +246,28 @@ public class SmartRpcServer implements SmartServerProtocols {
   @Override
   public List<ActionDescriptor> listActionsSupported() throws IOException {
     return ActionRegistry.supportedActions();
+  }
+
+  @Override
+  public SmartFileCompressionInfo getFileCompressionInfo(String fileName)
+      throws IOException {
+    try {
+      return ssm.getMetaStore().getCompressionInfo(fileName);
+    } catch (Exception e) {
+      throw new IOException(e);
+    }
+  }
+
+  @Override
+  public boolean fileCompressed(String fileName) throws IOException {
+    try {
+      if (ssm.getMetaStore().getCompressionInfo(fileName) != null) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (Exception e) {
+      throw new IOException(e);
+    }
   }
 }

@@ -44,7 +44,6 @@ public class SmartDFSClient extends DFSClient {
   short defaultReplication;
   long defaultBlockSize;
   int ioBufferSize;
-  String compressDir;
   
   private void initConf(Configuration conf) {
     compressionImpl = conf.get(SmartConfKeys.SMART_COMPRESSION_IMPL,
@@ -56,17 +55,8 @@ public class SmartDFSClient extends DFSClient {
     ioBufferSize = conf.getInt(
         CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY,
         CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
-    compressDir = conf.get(SmartConfKeys.SMART_COMPRESSION_DIR_KEY,
-        SmartConfKeys.SMART_COMPRESSION_DIR_DEFAULT);
   }
-  
-  private boolean iscompressFileDir(String file) {
-    if (file.startsWith(compressDir)) {
-      return true;
-    }
-    return false;
-  }
-  
+
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeAddress, conf);
@@ -235,6 +225,11 @@ public class SmartDFSClient extends DFSClient {
     return favoredNodeStrs;
   }
 */
+
+  private boolean isFileCompressed(String path) throws IOException {
+    return smartClient.fileCompressed(path);
+  }
+
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
@@ -246,13 +241,12 @@ public class SmartDFSClient extends DFSClient {
       boolean verifyChecksum)
       throws IOException, UnresolvedLinkException {
     DFSInputStream is;
-    if(!iscompressFileDir(src)){
+    if (!isFileCompressed(src)) {
       LOG.info("Uncompressed file " + src + " opened.");
       is = super.open(src, buffersize, verifyChecksum);
-    }else{
+    } else {
       LOG.info("Compressed file " + src + " opened.");
-      SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
-          src, 256 * 1024);
+      SmartFileCompressionInfo compressionInfo = smartClient.getFileCompressionInfo(src);
       is = new SmartDFSInputStream(this, src, verifyChecksum, compressionInfo);
     }
     reportFileAccessEvent(src);

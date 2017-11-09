@@ -20,6 +20,10 @@ package org.smartdata.protocol.protobuffer;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
+import org.smartdata.protocol.ClientServerProto.FileCompressedRequestProto;
+import org.smartdata.protocol.ClientServerProto.FileCompressedResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetFileCompressionInfoRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileCompressionInfoResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 
@@ -29,4 +33,12 @@ public interface ClientProtocolProtoBuffer {
   ReportFileAccessEventResponseProto
   reportFileAccessEvent(RpcController controller,
       ReportFileAccessEventRequestProto req) throws ServiceException;
+
+  GetFileCompressionInfoResponseProto
+      getFileCompressionInfo(RpcController controller,
+      GetFileCompressionInfoRequestProto req) throws ServiceException;
+
+  FileCompressedResponseProto
+      fileCompressed(RpcController controller,
+      FileCompressedRequestProto req) throws ServiceException;
 }

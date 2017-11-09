@@ -295,7 +295,7 @@ public class MetaStoreUtils {
         "CREATE INDEX backup_file_rid_idx ON backup_file (rid);",
 
         "CREATE TABLE compression_file (\n" +
-            " file_name varchar(1000) PRIMARY KEY,\n" +
+            " file_name varchar(512) PRIMARY KEY,\n" +
             " buffer_size int(11) NOT NULL\n" +
             ");"
     };

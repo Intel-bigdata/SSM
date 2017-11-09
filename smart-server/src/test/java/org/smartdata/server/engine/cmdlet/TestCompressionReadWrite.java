@@ -18,7 +18,6 @@
 package org.smartdata.server.engine.cmdlet;
 
 import org.apache.hadoop.hdfs.DFSInputStream;
-import org.apache.hadoop.hdfs.SmartDFSInputStream;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.junit.Assert;
 import org.junit.Before;
@@ -85,7 +84,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
         );
         return;
       } else if (state == CmdletState.FAILED) {
-        Assert.fail("Mover failed.");
+        Assert.fail("Compression failed.");
       }
     }
   }
@@ -124,7 +123,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
         );
         return;
       } else if (state == CmdletState.FAILED) {
-        Assert.fail("Mover failed.");
+        Assert.fail("Compression failed.");
       }
     }
   }
