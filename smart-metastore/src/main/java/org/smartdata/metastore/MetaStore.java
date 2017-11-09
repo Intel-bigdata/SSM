@@ -808,7 +808,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public long getNumCmdletsByRid(long rid) {
     try {
-        return cmdletDao.getByRid(rid).size();
+        return cmdletDao.getNumByRid(rid);
     } catch (Exception e) {
       return 0;
     }

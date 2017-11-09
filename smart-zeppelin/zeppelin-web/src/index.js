@@ -80,7 +80,6 @@ import './app/dashing/dashing.js';
 import './app/dashboard/services/locator.js';
 import './app/dashboard/services/restapi.js';
 import './app/dashboard/services/health_check_service.js';
-import './app/dashboard/services/login_check.js';
 import './app/dashboard/services/models/models.js';
 import './app/dashboard/views/cluster/cluster_hottestFiles.js';
 import './app/dashboard/views/cluster/cluster_fileInCache.js';

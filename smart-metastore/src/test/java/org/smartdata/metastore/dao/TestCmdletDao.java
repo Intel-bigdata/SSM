@@ -153,6 +153,7 @@ public class TestCmdletDao extends TestDaoUtil {
     cmdlets = cmdletDao.getByRid(1, 1, 2, order, desc);
     Assert.assertTrue(cmdlets.size() == 2);
     Assert.assertTrue(cmdlets.get(0).equals(cmdlet2));
+    Assert.assertTrue(cmdletDao.getNumByRid(1) == 6);
   }
 
 }

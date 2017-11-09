@@ -22,10 +22,21 @@ angular.module('zeppelinWebApp')
  * This controller is used to obtain rule. All nested views will read status from here.
  */
   .controller('RuleCtrl', RuleCtrl);
-  RuleCtrl.$inject = ['$scope', 'rule0', 'helper', '$propertyTableBuilder', 'models'];
-  function RuleCtrl($scope, rule0, helper, $ptb, models) {
+  RuleCtrl.$inject = ['$scope', 'rule0', '$propertyTableBuilder', 'models',
+    'baseUrlSrv', '$filter', '$http', 'conf', '$route'];
+  function RuleCtrl($scope, rule0, $ptb, models,
+                    baseUrlSrv, $filter, $http, conf, $route) {
     'use strict';
 
+    $scope.pageNumber = 5;
+    $scope.totalNumber = 0;
+    $scope.cmdlets;
+    $scope.currentPage = 1;
+    $scope.totalPage = 1;
+    $scope.orderby = 'cid';
+    $scope.isDesc = true;
+
+    var ruleId = $route.current.params.ruleId;
     $scope.rule = rule0.$data();
     rule0.$subscribe($scope, function (rule) {
       $scope.rule = rule;
@@ -44,14 +55,6 @@ angular.module('zeppelinWebApp')
       $ptb.$update($scope.ruleSummary, [
           rule.id,
           rule.submitTime
-          /*
-           rule.user,
-           [
-           {href: rule.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
-           helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, rule.homeDirectory),
-           helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, rule.logFile)
-           ]
-           */
       ]);
     });
 
@@ -64,12 +67,36 @@ angular.module('zeppelinWebApp')
           });
         });
 
-    $scope.cmdlets = [];
-    models.$get.ruleCmdlets($scope.rule.id)
-        .then(function (cmdlets0) {
-          $scope.cmdlets = cmdlets0.$data();
-          cmdlets0.$subscribe($scope, function (cmdlets) {
-            $scope.cmdlets = cmdlets;
+    function getCmdlets() {
+      $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/rules/' + ruleId + '/cmdlets/'
+        + $scope.currentPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc)
+        .then(function(response) {
+          var cmdletsData = angular.fromJson(response.data);
+          $scope.totalNumber = cmdletsData.body.totalNumOfCmdlets;
+          $scope.cmdlets = cmdletsData.body.cmdlets;
+          angular.forEach($scope.cmdlets, function (data,index) {
+            data.generateTime = data.generateTime === 0 ? "-" :
+              $filter('date')(data.generateTime,'yyyy-MM-dd HH:mm:ss');
+            data.stateColor = data.state === "DONE" ? "green" : data.state === "FAILED" ? "red" : "gray";
           });
+          $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);
+        }, function(errorResponse) {
+          $scope.totalNumber = 0;
         });
+    };
+
+    $scope.gotoPage = function (index) {
+      $scope.currentPage = index;
+      getCmdlets();
+    };
+    $scope.defindOrderBy = function (filed) {
+      if ($scope.orderby === filed) {
+        $scope.isDesc = ! $scope.isDesc;
+      } else {
+        $scope.orderby = filed;
+        $scope.isDesc = true;
+      }
+      getCmdlets();
+    };
+    getCmdlets();
   }

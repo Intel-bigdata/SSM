@@ -84,8 +84,9 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   }
 
   private boolean shouldIgnore(String path) {
+    String toCheck = path.endsWith("/") ? path : path + "/";
     for (String s : ignoreAccessEventDirs) {
-      if (path.startsWith(s)) {
+      if (toCheck.startsWith(s)) {
         return true;
       }
     }
