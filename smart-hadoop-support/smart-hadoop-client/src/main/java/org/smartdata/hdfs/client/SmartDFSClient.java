@@ -19,7 +19,6 @@ package org.smartdata.hdfs.client;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.SmartDFSInputStream;
@@ -27,6 +26,7 @@ import org.smartdata.client.SmartClient;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileContainerInfo;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -125,25 +125,27 @@ public class SmartDFSClient extends DFSClient {
     }
   }
 
-  // TODO: handle small file access event
   @Override
   public DFSInputStream open(String src) throws IOException {
+    reportFileAccessEvent(src);
     if (!isSmallFile(src)) {
       return super.open(src);
-      //reportFileAccessEvent(src);
     } else {
-      return new SmartDFSInputStream(this, src, true, getFileContainerInfo(src));
+      FileContainerInfo fileContainerInfo = getFileContainerInfo(src);
+      String containerFile = fileContainerInfo.getContainerFilePath();
+      return new SmartDFSInputStream(this, containerFile, true, fileContainerInfo);
     }
   }
 
   @Override
-  public DFSInputStream open(String src, int bufferSize, boolean verifyChecksum)
-      throws IOException {
+  public DFSInputStream open(String src, int bufferSize, boolean verifyChecksum) throws IOException {
+    reportFileAccessEvent(src);
     if (!isSmallFile(src)) {
       return super.open(src, bufferSize, verifyChecksum);
-      //reportFileAccessEvent(src);
     } else {
-      return new SmartDFSInputStream(this, src, true, getFileContainerInfo(src));
+      FileContainerInfo fileContainerInfo = getFileContainerInfo(src);
+      String containerFile = fileContainerInfo.getContainerFilePath();
+      return new SmartDFSInputStream(this, containerFile, verifyChecksum, fileContainerInfo);
     }
   }
 

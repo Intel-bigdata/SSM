@@ -31,9 +31,9 @@ import java.util.List;
 public class SmartDFSInputStream extends DFSInputStream {
   private FileContainerInfo containerFileInfo;
 
-  public SmartDFSInputStream(DFSClient dfsClient, String src,
+  public SmartDFSInputStream(DFSClient dfsClient, String containerFile,
       boolean verifyChecksum, FileContainerInfo containerFileInfo) throws IOException {
-    super(dfsClient, src, verifyChecksum);
+    super(dfsClient, containerFile, verifyChecksum);
     this.containerFileInfo = containerFileInfo;
     super.seek(containerFileInfo.getOffset());
   }
