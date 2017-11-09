@@ -23,6 +23,7 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -50,6 +51,7 @@ public class InotifyEventApplier {
     this.client = client;
   }
 
+
   public void apply(List<Event> events) throws IOException, MetaStoreException {
     List<String> statements = new ArrayList<>();
     for (Event event : events) {
@@ -64,6 +66,8 @@ public class InotifyEventApplier {
     }
     this.metaStore.execute(statements);
   }
+
+  //check if the dir is in ignoreList
 
   public void apply(Event[] events) throws IOException, MetaStoreException {
     this.apply(Arrays.asList(events));
