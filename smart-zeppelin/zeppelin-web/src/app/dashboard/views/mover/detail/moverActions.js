@@ -24,7 +24,6 @@ angular.module('zeppelinWebApp')
 
     $scope.actionsTable = {
       cols: [
-        $stb.indicator().key('state').canSort('state.condition+"_"+createTime').styleClass('td-no-padding').done(),
         $stb.text('File').key('file').canSort().styleClass('col-md-1').done(),
         $stb.text('File Size').key('fileSize').canSort().styleClass('col-md-1').done(),
         $stb.text('Storage Type').key('sourceType').canSort().styleClass('col-md-1').done(),
@@ -42,7 +41,6 @@ angular.module('zeppelinWebApp')
       $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
         _.map(actions, function (action) {
           return {
-            state: {tooltip: action.status, condition: action.finished ? '' : 'good', shape: 'stripe'},
             createTime: action.createTime,
             finishTime: action.finished ? action.finishTime : "-",
             runningTime: action.uptime,
