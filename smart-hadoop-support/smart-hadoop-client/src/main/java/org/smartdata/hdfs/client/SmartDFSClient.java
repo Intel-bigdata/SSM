@@ -22,6 +22,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.client.SmartClient;
 import org.smartdata.metrics.FileAccessEvent;
 
@@ -30,6 +32,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 
 public class SmartDFSClient extends DFSClient {
+  private static final Logger LOG = LoggerFactory.getLogger(SmartDFSClient.class);
   private SmartClient smartClient = null;
   private boolean healthy = false;
 
@@ -45,9 +48,10 @@ public class SmartDFSClient extends DFSClient {
     }
   }
 
-  public SmartDFSClient(URI nameNodeUri, Configuration conf,
-      InetSocketAddress smartServerAddress) throws IOException {
+  public SmartDFSClient(final URI nameNodeUri, final Configuration conf,
+      final InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeUri, conf);
+
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;

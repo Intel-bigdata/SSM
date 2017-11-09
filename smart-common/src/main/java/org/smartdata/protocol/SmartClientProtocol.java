@@ -17,6 +17,8 @@
  */
 package org.smartdata.protocol;
 
+import org.apache.hadoop.security.KerberosInfo;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 
 import java.io.IOException;
@@ -24,6 +26,8 @@ import java.io.IOException;
 /**
  * Interface between SmartClient and SmartServer.
  */
+@KerberosInfo(
+  serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
 public interface  SmartClientProtocol {
   void reportFileAccessEvent(FileAccessEvent event) throws IOException;
 

@@ -25,6 +25,7 @@ public class SmartConfKeys {
   public static final boolean SMART_DFS_ENABLED_DEFAULT = true;
 
   public static final String SMART_CONF_DIR_KEY = "smart.conf.dir";
+  public static final String SMART_HADOOP_CONF_DIR_KEY = "smart.hadoop.conf.path";
   public static final String SMART_CONF_DIR_DEFAULT = "conf";
   public static final String SMART_LOG_DIR_KEY = "smart.log.dir";
   public static final String SMART_LOG_DIR_DEFAULT = "logs";
@@ -50,6 +51,14 @@ public class SmartConfKeys {
   public static final String SMART_SERVER_KEYTAB_FILE_KEY = "smart.server.keytab.file";
   public static final String SMART_SERVER_KERBEROS_PRINCIPAL_KEY =
     "smart.server.kerberos.principal";
+  public static final String SMART_AGENT_KEYTAB_FILE_KEY = "smart.server.keytab.file";
+  public static final String SMART_AGENT_KERBEROS_PRINCIPAL_KEY =
+    "smart.agent.kerberos.principal";
+  public static final String SMART_SECURITY_CLIENT_PROTOCOL_ACL =
+    "smart.security.client.protocol.acl";
+  public static final String SMART_SECURITY_ADMIN_PROTOCOL_ACL =
+    "smart.security.admin.protocol.acl";
+
   public static final String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
 
   // StatesManager

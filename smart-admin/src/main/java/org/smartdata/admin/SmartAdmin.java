@@ -31,7 +31,6 @@ import org.smartdata.model.RuleState;
 import org.smartdata.protocol.SmartAdminProtocol;
 import org.smartdata.protocol.protobuffer.AdminProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer;
-import org.smartdata.utils.JaasLoginUtil;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -46,7 +45,6 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
   public SmartAdmin(Configuration conf)
       throws IOException {
     this.conf = conf;
-    checkSecurityAndLogin();
     String[] strings = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
         SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT).split(":");
     InetSocketAddress address = new InetSocketAddress(
@@ -57,18 +55,6 @@ public class SmartAdmin implements java.io.Closeable, SmartAdminProtocol {
     AdminProtocolProtoBuffer proxy = RPC.getProxy(
         AdminProtocolProtoBuffer.class, VERSION, address, conf);
     this.ssm = new AdminProtocolClientSideTranslator(proxy);
-  }
-
-  private boolean isSecurityEnabled() {
-    return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
-  }
-
-  private void checkSecurityAndLogin() throws IOException {
-    if (!isSecurityEnabled()) {
-      return;
-    }
-    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
-    JaasLoginUtil.loginUsingTicketCache(principal);
   }
 
   @Override
