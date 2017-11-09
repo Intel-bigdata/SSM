@@ -110,6 +110,14 @@ public class CmdletDao {
         new CmdletRowMapper());
   }
 
+  public long getNumByRid(long rid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM " + TABLE_NAME + " WHERE rid = ?",
+        new Object[]{rid},
+        Long.class);
+  }
+
   public List<CmdletInfo> getByRid(long rid, long start, long offset) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT * FROM " + TABLE_NAME + " WHERE rid = " + rid
