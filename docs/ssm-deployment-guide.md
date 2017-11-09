@@ -80,7 +80,7 @@ Configure SSM
  
 * **Configure database**
 
-   MySQL or SQLite can be used to store metadata for SSM. Alternatively, you can just enable TiDB integrated with SSM.
+   MySQL or SQLite can be used to store metadata for SSM. Alternatively, you can just enable TiDB (rc4 version) which has been integrated with SSM.
    TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
 
    You just need to follow the guide in one of the two following options to configure database for SSM.
