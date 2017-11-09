@@ -15,7 +15,7 @@ import java.io.File;
 /**
  * Test for JaasLoginUtil.
  */
-public class TestJaasLoginUtil {
+public class TestSecurityUtil {
   private SimpleKdcServer kdcServer;
   private String serverHost = "localhost";
   private int serverPort = -1;
@@ -45,7 +45,7 @@ public class TestJaasLoginUtil {
   @Test
   public void loginUsingKeytab() throws Exception {
     File keytabFile = generateKeytab(keytabFileName, principal);
-    Subject subject = JaasLoginUtil.loginUsingKeytab(principal, keytabFile);
+    Subject subject = SecurityUtil.loginUsingKeytab(principal, keytabFile);
     Assert.assertEquals(principal, subject.getPrincipals().iterator().next().getName());
     System.out.println("Login successful for user: "
         + subject.getPrincipals().iterator().next());
@@ -57,7 +57,7 @@ public class TestJaasLoginUtil {
     TgtTicket tgtTicket = kdcServer.getKrbClient().requestTgt(principal, keytabFile);
     File ticketCacheFile = new File(ticketCacheFileName);
     kdcServer.getKrbClient().storeTicket(tgtTicket, ticketCacheFile);
-    Subject subject = JaasLoginUtil.loginUsingTicketCache(principal, ticketCacheFileName);
+    Subject subject = SecurityUtil.loginUsingTicketCache(principal, ticketCacheFileName);
     Assert.assertEquals(principal, subject.getPrincipals().iterator().next().getName());
     System.out.println("Login successful for user: "
         + subject.getPrincipals().iterator().next());

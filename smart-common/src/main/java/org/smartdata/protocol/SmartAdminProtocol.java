@@ -17,7 +17,9 @@
  */
 package org.smartdata.protocol;
 
+import org.apache.hadoop.security.KerberosInfo;
 import org.smartdata.SmartServiceState;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
@@ -28,6 +30,8 @@ import org.smartdata.model.RuleState;
 import java.io.IOException;
 import java.util.List;
 
+@KerberosInfo(
+  serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
 public interface SmartAdminProtocol {
 
   SmartServiceState getServiceState() throws IOException;

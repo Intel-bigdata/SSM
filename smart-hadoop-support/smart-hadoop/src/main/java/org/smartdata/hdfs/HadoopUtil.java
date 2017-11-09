@@ -18,8 +18,10 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
@@ -34,6 +36,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * Contain utils related to hadoop cluster.
@@ -88,7 +91,7 @@ public class HadoopUtil {
   public static void loadHadoopConf(Configuration conf, String hadoopConfPath)
       throws IOException {
     if (hadoopConfPath == null || hadoopConfPath.isEmpty()) {
-      LOG.debug("Hadoop configuration path is not set");
+      LOG.info("Hadoop configuration path is not set");
     } else {
       URL hadoopConfDir;
       try {
@@ -162,7 +165,7 @@ public class HadoopUtil {
     int lastNotNullIdx = 0;
     for (int index = 0; index < rpcAddrKeys.length; index++) {
       nnRpcAddrs[index] = conf.get(rpcAddrKeys[index]);
-      LOG.debug("Get namenode URL, key: " + rpcAddrKeys[index] + ", value:" + nnRpcAddrs[index]);
+      LOG.info("Get namenode URL, key: " + rpcAddrKeys[index] + ", value:" + nnRpcAddrs[index]);
       lastNotNullIdx = nnRpcAddrs[index] == null ? lastNotNullIdx : index;
       nnRpcAddr = nnRpcAddr == null ? nnRpcAddrs[index] : nnRpcAddr;
     }
@@ -200,4 +203,21 @@ public class HadoopUtil {
       .setStoragePolicy(status.getStoragePolicy())
       .build();
   }
+
+  public static DFSClient getDFSClient(final URI nnUri, final Configuration conf)
+    throws IOException{
+    try {
+      return UserGroupInformation.getCurrentUser()
+          .doAs(new PrivilegedExceptionAction<DFSClient>() {
+        @Override
+        public DFSClient run() throws Exception {
+          return new DFSClient(nnUri, conf);
+        }
+      });
+    } catch (InterruptedException e) {
+      LOG.error("Fail to new DFSClient for : " + e.getMessage());
+      throw new IOException("Fail to new DFSClient for : " + e.getMessage());
+    }
+  }
+
 }

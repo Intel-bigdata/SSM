@@ -15,12 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol;
+package org.smartdata;
 
-import org.apache.hadoop.security.KerberosInfo;
+import org.apache.hadoop.security.authorize.PolicyProvider;
+import org.apache.hadoop.security.authorize.Service;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.protocol.SmartAdminProtocol;
+import org.smartdata.protocol.SmartClientProtocol;
 
-@KerberosInfo(
-  serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
-public interface SmartServerProtocols extends SmartClientProtocol, SmartAdminProtocol {
+/**
+ * {@link PolicyProvider} for SSM protocols.
+ */
+public class SmartPolicyProvider extends PolicyProvider {
+      private static final Service[] ssmServices =
+    new Service[] {
+    new Service(SmartConfKeys.SMART_SECURITY_CLIENT_PROTOCOL_ACL,
+        SmartClientProtocol.class),
+    new Service(SmartConfKeys.SMART_SECURITY_ADMIN_PROTOCOL_ACL,
+        SmartAdminProtocol.class)
+  };
+
+  @Override
+  public Service[] getServices() {
+    return ssmServices;
+  }
 }

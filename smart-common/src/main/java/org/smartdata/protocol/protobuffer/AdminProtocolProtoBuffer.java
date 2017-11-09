@@ -20,6 +20,9 @@ package org.smartdata.protocol.protobuffer;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
+import org.apache.hadoop.security.KerberosInfo;
+import org.smartdata.SmartConstants;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.protocol.AdminServerProto.ActivateCmdletRequestProto;
 import org.smartdata.protocol.AdminServerProto.ActivateCmdletResponseProto;
 import org.smartdata.protocol.AdminServerProto.ActivateRuleRequestProto;
@@ -55,7 +58,9 @@ import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleResponseProto;
 
-@ProtocolInfo(protocolName = "org.smartdata.protocol.protobuffer.AdminProtocolProtoBuffer",
+@KerberosInfo(
+  serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
+@ProtocolInfo(protocolName = SmartConstants.SMART_ADMIN_PROTOCOL_NAME,
     protocolVersion = 1)
 public interface AdminProtocolProtoBuffer {
 
