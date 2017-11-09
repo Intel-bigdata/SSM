@@ -160,7 +160,7 @@ public class SmartServer {
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");
-      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=1s", host);
+      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=10s", host);
       TidbServer tidbServer = new TidbServer(tidbArgs, conf);
       Thread tidbThread = new Thread(tidbServer);
       tidbThread.start();
