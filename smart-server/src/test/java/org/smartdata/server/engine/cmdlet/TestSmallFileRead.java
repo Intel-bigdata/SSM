@@ -119,7 +119,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
   public void testGetAllBlocks() throws Exception {
     waitTillSSMExitSafeMode();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open("/test/small_files/file_1");
+    DFSInputStream is = smartDFSClient.open("/test/small_files/file_0");
     is.getAllBlocks();
     Assert.assertEquals(1, is.getAllBlocks().size());
     is.close();
@@ -138,7 +138,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
   public void testGetPos() throws Exception {
     waitTillSSMExitSafeMode();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open("/test/small_files/file_1");
+    DFSInputStream is = smartDFSClient.open("/test/small_files/file_2");
     Assert.assertEquals(0, is.getPos());
     is.close();
   }
@@ -177,7 +177,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
   @Test
   public void testBytesRead() throws Exception {
     waitTillSSMExitSafeMode();
-    String smallFile = "/test/small_files/file_1";
+    String smallFile = "/test/small_files/file_2";
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     DFSInputStream is = smartDFSClient.open(smallFile);
     byte[] bytes = new byte[50];
