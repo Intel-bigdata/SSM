@@ -45,7 +45,6 @@
     <module>smart-integration</module>
     <module>smart-hadoop-support</module>
     <module>smart-tidb</module>
-    <module>smart-alluxio-support</module>
   </modules>
 
   <properties>
@@ -79,6 +78,9 @@
       <activation>
         <jdk>[1.8,)</jdk>
       </activation>
+      <modules>
+        <module>smart-alluxio-support</module>
+      </modules>
     </profile>
 
     <profile>
