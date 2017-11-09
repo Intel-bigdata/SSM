@@ -31,11 +31,11 @@ HDFS dfs -mkdir /test/
 python reset_env.py -v
 ```
 
-3. Init/Rest SSM
+3. Stop and start SSM with formatting database
+
 ```
 bin/stop-ssm.sh
-bin/init-ssm.sh
-bin/start-ssm.sh
+bin/start-ssm.sh -format
 ```
 
 ## Run Test Scripts
