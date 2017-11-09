@@ -41,9 +41,19 @@ message GetFileContainerInfoResponseProto {
   required int64 length = 3;
 }
 
+message GetSmallFileListRequestProto {
+}
+
+message GetSmallFileListResponseProto {
+  repeated string smallFileList = 1;
+}
+
 service protoService {
   rpc reportFileAccessEvent (ReportFileAccessEventRequestProto)
   returns (ReportFileAccessEventResponseProto);
   rpc getFileContainerInfo (GetFileContainerInfoRequestProto)
   returns (GetFileContainerInfoResponseProto);
+  rpc getSmallFileList (GetSmallFileListRequestProto)
+  returns (GetSmallFileListResponseProto);
+
 }

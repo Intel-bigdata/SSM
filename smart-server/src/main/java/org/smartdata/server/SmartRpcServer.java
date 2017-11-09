@@ -260,4 +260,17 @@ public class SmartRpcServer implements SmartServerProtocols {
     }
     return fileContainerInfo;
   }
+
+  @Override
+  public List<String> getSmallFileList() throws IOException {
+    checkIfActive();
+    MetaStore metaStore = ssm.getMetaStore();
+    List<String> smallFileList;
+    try {
+      smallFileList = metaStore.getSmallFileList();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
+    return smallFileList;
+  }
 }

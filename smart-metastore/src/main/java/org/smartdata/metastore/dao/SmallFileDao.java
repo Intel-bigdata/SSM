@@ -25,6 +25,7 @@ import org.springframework.jdbc.core.RowMapper;
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public class SmallFileDao {
   private DataSource dataSource;
@@ -66,6 +67,12 @@ public class SmallFileDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "SELECT COUNT(*) FROM small_file WHERE path = ?";
     return jdbcTemplate.queryForObject(sql, Integer.class, path);
+  }
+
+  public List<String> getSmallFileList() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "SELECT path FROM small_file";
+    return jdbcTemplate.queryForList(sql, String.class);
   }
 
   class FileContainerInfoRowMapper implements RowMapper<FileContainerInfo> {

@@ -66,10 +66,12 @@ import org.smartdata.protocol.AdminServerProto.ListActionsSupportedRequestProto;
 import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
 
 import org.smartdata.protocol.ClientServerProto;
-import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
-import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.protocol.ClientServerProto.GetFileContainerInfoRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileContainerInfoResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetSmallFileListRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetSmallFileListResponseProto;
+import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.SmartServiceState;
 import org.smartdata.protocol.SmartServerProtocols;
 
@@ -341,6 +343,19 @@ public class ServerProtocolsServerSideTranslator implements
           .setContainerFilePath(fileContainerInfo.getContainerFilePath())
           .setOffset(fileContainerInfo.getOffset())
           .setLength(fileContainerInfo.getLength())
+          .build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public GetSmallFileListResponseProto getSmallFileList(
+      RpcController controller, GetSmallFileListRequestProto req) throws ServiceException {
+    try {
+      List<String> smallFileList = server.getSmallFileList();
+      return GetSmallFileListResponseProto.newBuilder()
+          .addAllSmallFileList(smallFileList)
           .build();
     } catch (IOException e) {
       throw new ServiceException(e);

@@ -20,16 +20,19 @@ package org.smartdata.server.engine.cmdlet;
 import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSInputStream;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
+import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.CmdletManager;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -50,7 +53,7 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
   private void createTestFiles() throws Exception {
     Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 1; i++) {
       String fileName = "/test/small_files/file" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
       long fileLen = (10 + (int) (Math.random() * 11)) * 1024;
@@ -69,7 +72,7 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
     }
   }
 
-  @Test(timeout = 60000)
+  @Test
   public void testScheduler() throws Exception {
     waitTillSSMExitSafeMode();
 
@@ -86,6 +89,11 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
         MetaStore metaStore = ssm.getMetaStore();
         long containerFileLen = metaStore.getFile("/test/small_files/container_file").getLength();
         Assert.assertEquals(sumFileLen, containerFileLen);
+        SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
+        DFSInputStream is = smartDFSClient.open("/test/small_files/file0");
+        ByteBuffer buffer = ByteBuffer.allocate(102400);
+        int a = is.read(buffer);
+        Assert.assertEquals(sumFileLen, is.getFileLength());
         return;
       } else if (state == CmdletState.FAILED) {
         Assert.fail("Compact failed.");

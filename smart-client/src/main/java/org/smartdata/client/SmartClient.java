@@ -85,6 +85,12 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   }
 
   @Override
+  public List<String> getSmallFileList() throws IOException {
+    checkOpen();
+    return server.getSmallFileList();
+  }
+
+  @Override
   public FileContainerInfo getFileContainerInfo(String filePath)
       throws IOException {
       checkOpen();
