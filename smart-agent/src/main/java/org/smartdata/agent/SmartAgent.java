@@ -32,10 +32,13 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AgentService;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
@@ -49,6 +52,7 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegi
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.tidb.TikvServer;
+import org.smartdata.utils.SecurityUtil;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -77,9 +81,36 @@ public class SmartAgent implements StatusReporter {
     }
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
+
+    agent.authentication(conf);
+
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
   }
+
+  private void authentication(SmartConf conf) throws IOException {
+    if (!SecurityUtil.isSecurityEnabled(conf)) {
+      return;
+    }
+
+    // Load Hadoop configuration files
+    String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
+    try {
+      HadoopUtil.loadHadoopConf(conf, hadoopConfPath);
+    } catch (IOException e) {
+      LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
+          + "Please config smart.hadoop.conf.path property in smart-site.xml.");
+      conf.set("hadoop.security.authentication", "kerberos");
+      conf.set("hadoop.security.authorization", "true");
+    }
+    UserGroupInformation.setConfiguration(conf);
+
+    String keytabFilename = conf.get(SmartConfKeys.SMART_AGENT_KEYTAB_FILE_KEY);
+    String principal = conf.get(SmartConfKeys.SMART_AGENT_KERBEROS_PRINCIPAL_KEY);
+
+    SecurityUtil.loginUsingKeytab(keytabFilename, principal);
+  }
+
 
   public void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
