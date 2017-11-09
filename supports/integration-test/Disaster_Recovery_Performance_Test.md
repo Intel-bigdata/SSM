@@ -37,11 +37,10 @@ python reset_env.py ResetEnv.test_create_1000_100MB
 These commands will create 10K * 1MB in `1MB`, 10K * 10MB in `10MB` and 1K * 100MB in `100MB`.
 
 2. Init/Rest SSM and remote HDFS
-Stop, init and start SSM
+Stop and start SSM with formatting database
 ```
 bin/stop-ssm.sh
-bin/init-ssm.sh
-bin/start-ssm.sh
+bin/start-ssm.sh -format
 ```
 
 [Optional] Remove existing files in test directories of remote cluster:

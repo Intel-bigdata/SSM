@@ -93,7 +93,7 @@ public class MasterToAgent {
 
     @Override
     public String toString() {
-      return "AgentRegistered{ id=" + id + "}";
+      return "AgentRegistered{id=" + id + "}";
     }
   }
 

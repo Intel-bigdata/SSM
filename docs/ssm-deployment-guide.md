@@ -80,12 +80,12 @@ Configure SSM
  
 * **Configure database**
 
-   MySQL or SQLite can be used to store metadata for SSM. Alternatively, you can just enable TiDB integrated with SSM.
+   MySQL or SQLite can be used to store metadata for SSM. Alternatively, you can just enable TiDB (rc4 version) which has been integrated with SSM.
    TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
 
    You just need to follow the guide in one of the two following options to configure database for SSM.
 
-   Option 1. Use MySQL/SQLite
+   * Option 1. Use MySQL/SQLite
 
     You need to install a MySQL or SQLite instance first. Open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password are enough.
     Please be noted that, security support will be enabled later. Here is an example for MySQL,
@@ -101,7 +101,7 @@ Configure SSM
    
    `ssm` is the database name. User needs to create it manually through MySQL client.
 
-   Option 2. Use SSM-TiDB
+   * Option 2. Use SSM-TiDB
 
     Since TiDB has been integrated with SSM, you do not need to install TiDB beforehand.
     TiDB can be enabled in smart-site.xml.
