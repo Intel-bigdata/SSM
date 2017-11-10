@@ -56,6 +56,7 @@ public class MetaStoreUtils {
         "PERFORMANCE_SCHEMA"
       };
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
+  private static Boolean tidbInited = false;
 
   public static Connection createConnection(String url,
       String userName, String password)
@@ -440,9 +441,26 @@ public class MetaStoreUtils {
       try {
         p.loadFromXML(new FileInputStream(cpConfigFile));
 
-        String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
-        if (url != null) {
+        boolean tidbEnabled = conf.getBoolean(
+                SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
+        if (tidbEnabled) {
+          String tidbPort = conf.get(
+                  SmartConfKeys.TIDB_SERVICE_PORT_KEY, SmartConfKeys.TIDB_SERVICE_PORT_KEY_DEFAULT);
+          String url = String.format("jdbc:mysql://127.0.0.1:%s", tidbPort);
+          String dbName = "ssm";
+          if (!tidbInited) {
+            String user = p.getProperty("username");
+            String password = p.getProperty("password");
+            initTidb(url, user, password, dbName);
+          }
+          url = url + "/" + dbName;
           p.setProperty("url", url);
+          LOG.info("The jdbc url for Tidb is {}", url);
+        } else {
+          String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
+          if (url != null) {
+            p.setProperty("url", url);
+          }
         }
 
         String purl = p.getProperty("url");
@@ -578,4 +596,26 @@ public class MetaStoreUtils {
       throw new MetaStoreException(e);
     }
   }
+
+  public static void initTidb(String url, String user, String password, String dbName)
+          throws MetaStoreException {
+    Connection conn;
+    try {
+      conn = DriverManager.getConnection(url + "/?user=" + user);
+      Statement stat = conn.createStatement();
+      stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", dbName));
+      stat.executeQuery(String.format("SET PASSWORD FOR root = PASSWORD('%s')", password));
+    } catch (SQLException ex) {
+      try {
+        conn = DriverManager.getConnection(url, user, password);
+        Statement stat = conn.createStatement();
+        stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", dbName));
+      } catch (Exception e) {
+        throw new MetaStoreException(ex);
+      }
+    }
+    tidbInited = true;
+    LOG.info("Tidb is initialized.");
+  }
 }
+
