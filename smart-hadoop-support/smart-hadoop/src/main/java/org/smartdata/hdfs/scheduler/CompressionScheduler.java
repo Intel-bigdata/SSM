@@ -25,11 +25,15 @@ import org.smartdata.SmartContext;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.LaunchAction;
 import org.smartdata.model.SmartFileCompressionInfo;
+import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * CompressionScheduler.
@@ -41,6 +45,7 @@ public class CompressionScheduler extends ActionSchedulerService {
   private static final List<String> actions = Arrays.asList("compress");
 
   private MetaStore metaStore;
+  private Map<String, Long> fileLock;
 
   public CompressionScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -49,6 +54,7 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public void init() throws IOException {
+    this.fileLock = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -63,7 +69,43 @@ public class CompressionScheduler extends ActionSchedulerService {
   public List<String> getSupportedActions() {
     return actions;
   }
-  
+
+  private boolean isFileLocked(String path) {
+    if (fileLock.containsKey(path)) {
+      LOG.warn("File " + path + " is locked.");
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  public boolean onSubmit(ActionInfo actionInfo) {
+    String path = actionInfo.getArgs().get("-file");
+    if (isFileLocked(path)) {
+      return false;
+    }
+    try {
+      if (metaStore.getCompressionInfo(path) != null) {
+        LOG.warn("File " + path + " is already compressed, action abandoned");
+        return false;
+      }
+    } catch (MetaStoreException e) {
+      LOG.error("Compress action of file " + path + " failed in metastore!");
+    }
+    return true;
+  }
+
+  @Override
+  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
+    String path = actionInfo.getArgs().get("-file");
+    long aid = action.getActionId();
+    if (isFileLocked(path)) {
+      return ScheduleResult.FAIL;
+    }
+    fileLock.put(path, aid);
+    return ScheduleResult.SUCCESS;
+  }
+
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
     if (actionInfo.isFinished()) {
@@ -74,8 +116,9 @@ public class CompressionScheduler extends ActionSchedulerService {
             new TypeToken<SmartFileCompressionInfo>() {
             }.getType());
         metaStore.insertCompressedFile(compressionInfo);
+        fileLock.remove(compressionInfo.getFileName());
       } catch (MetaStoreException e) {
-        LOG.error("Compression action in metastore failed!", e);
+        LOG.error("Compression action failed in metastore!", e);
       } catch (Exception e) {
         LOG.error("Compression action error", e);
       }
