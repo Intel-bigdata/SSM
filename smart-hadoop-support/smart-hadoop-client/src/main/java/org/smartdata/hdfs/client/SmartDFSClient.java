@@ -26,7 +26,6 @@ import org.smartdata.client.SmartClient;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileContainerInfo;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -118,11 +117,7 @@ public class SmartDFSClient extends DFSClient {
   }
 
   private boolean isSmallFile(String file) {
-    if (smallFileList == null) {
-      return false;
-    } else {
-      return smallFileList.contains(file);
-    }
+    return smallFileList != null && smallFileList.contains(file);
   }
 
   @Override

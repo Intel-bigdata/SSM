@@ -17,15 +17,20 @@
  */
 package org.smartdata.server.engine.rule;
 
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.action.HdfsAction;
+import org.smartdata.hdfs.action.SmallFileCompactAction;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
 
 import java.util.List;
+import java.util.Map;
 
 public class SmallFilePlugin implements RuleExecutorPlugin {
   private MetaStore metaStore;
@@ -44,43 +49,47 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   }
 
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
-    // TODO: Get the small file list to compact action
+    String fileList = new Gson().toJson(objects);
+    objects.clear();
+    objects.add(fileList);
     return objects;
   }
 
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
-    /*for (int i = 0; i < descriptor.actionSize(); i++) {
+    for (int i = 0; i < descriptor.actionSize(); i++) {
       if (descriptor.getActionName(i).equals("compact")) {
-        Map<String, String> args =  descriptor.getActionArgs(i);
-        String srcDir = args.get(HdfsAction.FILE_PATH);
-        long size = Long.valueOf(args.get("-size"));
-
-        // Get the small file list
-        try {
-          ArrayList<String> smallFileList = new ArrayList<>();
-          List<FileInfo> fileInfoList = metaStore.getFilesByPrefix(srcDir);
-          for (FileInfo fileInfo : fileInfoList) {
-            long fileLen = fileInfo.getLength();
-            String filePath = fileInfo.getPath();
-            if (fileLen <= size) {
-              smallFileList.add(filePath);
+        Map<String, String> args = descriptor.getActionArgs(i);
+        String smallFileList = args.get(HdfsAction.FILE_PATH);
+        if (!smallFileList.equals("[]")) {
+          descriptor.addActionArg(i, SmallFileCompactAction.SMALL_FILES, new Gson().toJson(smallFileList));
+          descriptor.deleteActionArg(i, HdfsAction.FILE_PATH);
+          String containerFile = args.get(SmallFileCompactAction.CONTAINER_FILE);
+          if (containerFile == null) {
+            try {
+              containerFile = getContainerFile();
+            } catch (MetaStoreException e) {
+              LOG.error("Failed to generate a new container file.", e);
             }
           }
-          if (smallFileList.size() > 0) {
-            descriptor.addActionArg(i, SmallFileCompactAction.SMALL_FILES, new Gson().toJson(smallFileList));
-            descriptor.deleteActionArg(i, HdfsAction.FILE_PATH);
-            descriptor.deleteActionArg(i, "-size");
-          } else {
-            LOG.debug("No small files in " + srcDir);
-          }
-        } catch (MetaStoreException e) {
-          LOG.error("Failed to get small files list from: " + srcDir, e);
+          descriptor.addActionArg(i, SmallFileCompactAction.CONTAINER_FILE, containerFile);
         }
       }
-    }*/
+    }
     return descriptor;
   }
 
-  public void onRuleExecutorExit(final RuleInfo ruleInfo) {}
+  public void onRuleExecutorExit(final RuleInfo ruleInfo) {
+  }
+
+  private String getContainerFile() throws MetaStoreException {
+    String prefix = "/container_files/container_file_";
+    while (true) {
+      int random = (int) (Math.random() * 10000);
+      String genContainerFile = prefix + random;
+      if (metaStore.getFile(genContainerFile) == null) {
+        return genContainerFile;
+      }
+    }
+  }
 }

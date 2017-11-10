@@ -15,35 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet;
+package org.smartdata.server.engine.rule;
 
-import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.hdfs.action.SmallFileCompactAction;
-import org.smartdata.metastore.MetaStore;
-import org.smartdata.model.CmdletDescriptor;
-import org.smartdata.model.CmdletState;
+import org.smartdata.admin.SmartAdmin;
+import org.smartdata.model.RuleInfo;
+import org.smartdata.model.RuleState;
 import org.smartdata.server.MiniSmartClusterHarness;
-import org.smartdata.server.engine.CmdletManager;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class TestSmallFileScheduler extends MiniSmartClusterHarness {
-  private long sumFileLen;
-  private List<String> smallFileList;
+public class TestSmallFileRule extends MiniSmartClusterHarness {
 
   @Before
   @Override
   public void init() throws Exception {
     super.init();
-    sumFileLen = 0L;
-    smallFileList = new ArrayList<>();
     createTestFiles();
   }
 
@@ -53,7 +45,8 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
     for (int i = 0; i < 3; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
-      long fileLen = 10 + (int) (Math.random() * 11);
+      long fileLen;
+      fileLen = 10 + (int) (Math.random() * 11);
       byte[] buf = new byte[20];
       Random rb = new Random(2018);
       int bytesRemaining = (int) fileLen;
@@ -64,8 +57,6 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
         bytesRemaining -= bytesToWrite;
       }
       out.close();
-      sumFileLen += fileLen;
-      smallFileList.add(fileName);
     }
   }
 
@@ -73,23 +64,15 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
   public void testScheduler() throws Exception {
     waitTillSSMExitSafeMode();
 
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString("compact -containerFile " +
-        "/test/small_files/container_file");
-    cmdletDescriptor.addActionArg(0, SmallFileCompactAction.SMALL_FILES, new Gson().toJson(smallFileList));
-    long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
+    String rule = "file: path matches \"/test/small_files/file*\" and length < 2t0KB" +
+        " | compact -container_file \"/test/small_files/container_file\"";
+    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+    admin.submitRule(rule, RuleState.ACTIVE);
 
-    while (true) {
-      Thread.sleep(1000);
-      CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
-      if (state == CmdletState.DONE) {
-        MetaStore metaStore = ssm.getMetaStore();
-        long containerFileLen = metaStore.getFile("/test/small_files/container_file").getLength();
-        Assert.assertEquals(sumFileLen, containerFileLen);
-        return;
-      } else if (state == CmdletState.FAILED) {
-        Assert.fail("Compact failed.");
-      }
+    List<RuleInfo> ruleInfoList = admin.listRulesInfo();
+    for (RuleInfo info : ruleInfoList) {
+      System.out.println(info);
     }
+    Assert.assertEquals(1, ruleInfoList.size());
   }
 }

@@ -18,13 +18,9 @@
 package org.smartdata.hdfs.scheduler;
 
 import com.google.gson.Gson;
-import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.hdfs.HadoopUtil;
-import org.smartdata.hdfs.action.HdfsAction;
-import org.smartdata.hdfs.action.SmallFileCompactAction;
 import org.smartdata.metastore.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -35,7 +31,6 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,8 +38,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SmallFileScheduler extends ActionSchedulerService {
-  private URI nnUri;
-  private DFSClient client;
   private MetaStore metaStore;
   private List<String> fileLock;
   private String containerFile = null;
@@ -53,7 +46,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   public SmallFileScheduler(SmartContext context, MetaStore metaStore) throws IOException {
     super(context, metaStore);
-    this.nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
     this.metaStore = metaStore;
   }
 
@@ -61,7 +53,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
   public void init() throws IOException {
     this.fileLock = new ArrayList<>();
     this.fileContainerInfoMap = new ConcurrentHashMap<>();
-    this.client = new DFSClient(nnUri, getContext().getConf());
   }
 
   private static final List<String> actions = Arrays.asList("write", "read", "compact");
@@ -73,13 +64,14 @@ public class SmallFileScheduler extends ActionSchedulerService {
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     if (actionInfo.getActionName().equals("compact")) {
       try {
-        // Get the container file
+        // Check container file is null
         String containerFilePath = action.getArgs().get("-containerFile");
-        if (containerFilePath != null) {
-          this.containerFile = containerFilePath;
+        if (containerFilePath == null) {
+          return ScheduleResult.FAIL;
         } else {
-          this.containerFile = getContainerFile();
+          this.containerFile = containerFilePath;
         }
+
         if (fileLock.contains(containerFile)) {
           LOG.error("This container file: " + containerFile + " is locked.");
           return ScheduleResult.RETRY;
@@ -87,7 +79,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
           fileLock.add(containerFile); // Lock this container file
         }
 
-        // Get file container info of small files list
+        // Get file container info of small files
         long offset = 0L;
         String smallFiles = action.getArgs().get("-smallFiles");
         ArrayList<String> smallFileList = new Gson().fromJson(smallFiles, new ArrayList<String>().getClass());
@@ -97,7 +89,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
           fileContainerInfoMap.put(filePath, new FileContainerInfo(containerFile, offset, fileLen));
           offset += fileLen;
         }
-        action.getArgs().put(SmallFileCompactAction.CONTAINER_FILE, containerFile);
         return ScheduleResult.SUCCESS;
       } catch (Exception e) {
         LOG.error("Exception occurred while processing " + action, e);
@@ -145,16 +136,10 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void stop() throws IOException {}
+  public void stop() throws IOException {
+  }
 
   @Override
-  public void start() throws IOException {}
-
-  /**
-   * An the container file path to compacted in.
-   */
-  private String getContainerFile() {
-    // TODO: get container file path if not specified
-    return "/small_files/containerFile";
+  public void start() throws IOException {
   }
 }

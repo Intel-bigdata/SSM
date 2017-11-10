@@ -31,7 +31,7 @@ import java.util.Random;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestSmallFileCompactAction extends MiniClusterHarness {
+public class TestSmallFileAction extends MiniClusterHarness {
   private long sumFileLen;
   private List<String> smallFileList;
 
@@ -50,9 +50,9 @@ public class TestSmallFileCompactAction extends MiniClusterHarness {
     for (int i = 0; i < 10; i++) {
       String fileName = "/test/small_files/file" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
-      long fileLen = (10 + (int) (Math.random() * 11)) * 1024;
-      byte[] buf = new byte[4096];
-      Random rb = new Random(2017);
+      long fileLen = 10 + (int) (Math.random() * 11);
+      byte[] buf = new byte[20];
+      Random rb = new Random(2018);
       int bytesRemaining = (int) fileLen;
       while (bytesRemaining > 0) {
         rb.nextBytes(buf);
