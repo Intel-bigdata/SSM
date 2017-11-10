@@ -117,11 +117,11 @@ Configure SSM
     For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
     So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over MySQL.
 
-    If TiDB is enabled, the jdbc url should be the following default one. The configuration in druid.xml is shown as follows.
+    If TiDB is enabled, there is no need to configure jdbc url in druid.xml. You can set a password for root user in druid.xml.
 
    ```xml
     <properties>
-        <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry>
+        <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> no need to configure url for TiDB -->
         <entry key="username">root</entry>
         <entry key="password"></entry>
         ......
@@ -129,7 +129,12 @@ Configure SSM
    ```
 
     TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
-    The default command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 4000`.
+    If user password is not set in druid, by default the command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 7070`.
+    The 7070 port is the default one configured for tidb.service.port in smart-default.xml.
+    If you modified it, the port in the above command should also be modified accordingly.
+    In TiDB, the database named ssm is used to store metadata.
+
+    By default, the logs of Pd, TiKV and TiDB are under logs/ directory. You can refer to these logs if encountering database fault.
 
 * **Configure user account to authenticate to Web UI**
 
