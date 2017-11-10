@@ -455,7 +455,7 @@ public class MetaStoreUtils {
           }
           url = url + "/" + dbName;
           p.setProperty("url", url);
-          LOG.info("The jdbc url for Tidb is {}", url);
+          LOG.info("\t" + "The jdbc url for Tidb is " + url);
         } else {
           String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
           if (url != null) {
@@ -601,7 +601,7 @@ public class MetaStoreUtils {
           throws MetaStoreException {
     Connection conn;
     try {
-      conn = DriverManager.getConnection(url + "/?user=" + user);
+      conn = DriverManager.getConnection(url, user, "");
       Statement stat = conn.createStatement();
       stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", dbName));
       stat.executeQuery(String.format("SET PASSWORD FOR root = PASSWORD('%s')", password));
