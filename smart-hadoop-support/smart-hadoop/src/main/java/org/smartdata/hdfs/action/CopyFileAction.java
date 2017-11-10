@@ -27,6 +27,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -183,6 +184,7 @@ public class CopyFileAction extends HdfsAction {
   private OutputStream getDestOutPutStream(String dest, long offset) throws IOException {
     if (dest.startsWith("hdfs")) {
       // Copy between different clusters
+      // Copy to remote HDFS
       // Get OutPutStream from URL
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
       int replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
@@ -200,13 +202,14 @@ public class CopyFileAction extends HdfsAction {
       } else {
         return fs.create(new Path(dest), true, (short) replication);
       }
-
-    } else {
-      // Copy between different dirs of the same cluster
-      // TODO local append
-      // if (dfsClient.exists(dest)) {
-      // }
-      return dfsClient.create(dest, true);
+    } else if (dest.startsWith("s3")) {
+      // Copy to s3
+      FileSystem fs = FileSystem.get(URI.create(dest), conf);
+      return fs.create(new Path(dest), true);
+    }
+    else {
+      return CompatibilityHelperLoader.getHelper()
+          .getDFSClientAppend(dfsClient, dest, bufferSize, offset);
     }
   }
 }

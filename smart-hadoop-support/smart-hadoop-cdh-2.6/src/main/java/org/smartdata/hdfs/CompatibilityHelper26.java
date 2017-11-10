@@ -130,4 +130,14 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     StorageType storageType = datanodeStorage.getStorageType();
     return storageType.ordinal();
   }
+
+  @Override
+  public OutputStream getDFSClientAppend(DFSClient client, String dest,
+      int buffersize, long offset) throws IOException {
+    if (client.exists(dest) && offset != 0) {
+      return client
+          .append(dest, buffersize, null);
+    }
+    return client.create(dest, true);
+  }
 }
