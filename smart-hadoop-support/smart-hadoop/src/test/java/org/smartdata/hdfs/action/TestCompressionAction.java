@@ -72,14 +72,21 @@ public class TestCompressionAction extends MiniClusterHarness {
     int bufferSize = 1024*128;
     byte[] bytes = TestCompressionAction.BytesGenerator.get(bufferSize);
 
+    short replication = 4;
+    long blockSize = DEFAULT_BLOCK_SIZE;
     // Create HDFS file
-    OutputStream outputStream = dfsClient.create(filePath, true);
+    OutputStream outputStream = dfsClient.create(filePath, true,
+        replication, blockSize);
     outputStream.write(bytes);
     outputStream.close();
 
     // Generate compressed file
     compressoin(filePath, bufferSize);
-    HdfsFileStatus fileStatus = dfs.getClient().getFileInfo(filePath);
+
+    // Check HdfsFileStatus
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
+    Assert.assertEquals(replication, fileStatus.getReplication());
+    Assert.assertEquals(blockSize, fileStatus.getBlockSize());
 
     // Read compressed file
     byte[] input = new byte[bufferSize];

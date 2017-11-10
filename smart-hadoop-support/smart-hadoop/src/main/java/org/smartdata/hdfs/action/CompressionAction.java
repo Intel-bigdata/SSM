@@ -19,6 +19,7 @@ package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,8 +77,12 @@ public class CompressionAction extends HdfsAction {
     DFSInputStream dfsInputStream = dfsClient.open(filePath);
 
     // Generate compressed file
-    String compressedFileName = filePath + ".snappy";
-    OutputStream compressedOutputStream = dfsClient.create(compressedFileName, true);
+    String compressedFileName = filePath + ".ssm_snappy";
+    HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
+    short replication = srcFile.getReplication();
+    long blockSize = srcFile.getBlockSize();
+    OutputStream compressedOutputStream = dfsClient.create(compressedFileName,
+      true, replication, blockSize);
     compress(dfsInputStream, compressedOutputStream);
 
     // Replace the original file with the compressed file
