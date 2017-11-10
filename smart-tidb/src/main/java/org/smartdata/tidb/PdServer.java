@@ -35,9 +35,17 @@ public class PdServer implements Runnable {
     boolean isPdServerReady();
   }
 
-  public PdServer(String args, SmartConf conf) {
+  public PdServer(SmartConf conf) {
+    this("127.0.0.1", conf);
+  }
+
+  public PdServer(String ip, SmartConf conf) {
+    String clientPort = conf.get(SmartConfKeys.PD_CLIENT_PORT_KEY, SmartConfKeys.PD_CLIENT_PORT_DEFAULT);
+    String peerPort = conf.get(SmartConfKeys.PD_PEER_PORT_KEY, SmartConfKeys.PD_PEER_PORT_DEFAULT);
     String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR_KEY, SmartConfKeys.SMART_LOG_DIR_DEFAULT);
-    this.args = args + " --log-file=" + logDir + "/pd.log";
+    args = String.format("--client-urls=http://%s:%s --peer-urls=http://%s:%s --data-dir=pd --log-file=%s/pd.log",
+            ip, clientPort, ip, peerPort, logDir);
+
     try {
       pd = (Pd) Native.loadLibrary("libpd.so", Pd.class);
     } catch (UnsatisfiedLinkError ex) {

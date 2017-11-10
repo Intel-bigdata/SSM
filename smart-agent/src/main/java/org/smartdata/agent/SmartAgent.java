@@ -174,13 +174,10 @@ public class SmartAgent implements StatusReporter {
     }
 
     public boolean launchTikv(String masterHost) throws InterruptedException, IOException {
-      //TODO: configure in file
       String agentAddress = AgentUtils.getAgentAddress(conf);
       InetAddress address = InetAddress.getByName(new AgentUtils.HostPort(agentAddress).getHost());
       String ip = address.getHostAddress();
-      String tikvArgs = String.format(
-              "--pd=%s:2379 --addr=%s:20160 --data-dir=tikv", masterHost, ip);
-      TikvServer tikvServer = new TikvServer(tikvArgs, conf);
+      TikvServer tikvServer = new TikvServer(masterHost, ip, conf);
       Thread tikvThread = new Thread(tikvServer);
       tikvThread.start();
       while (!tikvServer.isReady()) {
