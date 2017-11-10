@@ -75,13 +75,13 @@
 
   <property>
     <name>pd.client.port</name>
-    <value>2379</value>
+    <value>7060</value>
     <description>Pd port in client-url option</description>
   </property>
 
   <property>
     <name>pd.peer.port</name>
-    <value>2380</value>
+    <value>7061</value>
     <description>Pd port in peer-url option</description>
   </property>
 
@@ -93,8 +93,7 @@
 
   <property>
     <name>tidb.service.port</name>
-    <value>4000</value>
+    <value>7070</value>
     <description>SmartAgent master port</description>
   </property>
-
 </configuration>

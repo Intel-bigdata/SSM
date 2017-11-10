@@ -106,11 +106,11 @@ public class SmartConfKeys {
   public static final boolean SMART_TIDB_ENABLED_DEFAULT = false;
 
   public static final String PD_CLIENT_PORT_KEY = "pd.client.port";
-  public static final String PD_CLIENT_PORT_DEFAULT = "2379";
+  public static final String PD_CLIENT_PORT_DEFAULT = "7060";
   public static final String PD_PEER_PORT_KEY = "pd.peer.port";
-  public static final String PD_PEER_PORT_DEFAULT = "2380";
+  public static final String PD_PEER_PORT_DEFAULT = "7061";
   public static final String TIKV_SERVICE_PORT_KEY = "tikv.service.port";
   public static final String TIKV_SERVICE_PORT_DEFAULT = "20160";
   public static final String TIDB_SERVICE_PORT_KEY = "tidb.service.port";
-  public static final String TIDB_SERVICE_PORT_KEY_DEFAULT = "4000";
+  public static final String TIDB_SERVICE_PORT_KEY_DEFAULT = "7070";
 }
