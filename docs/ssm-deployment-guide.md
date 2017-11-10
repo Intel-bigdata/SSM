@@ -131,7 +131,7 @@ Configure SSM
     TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
     If user password is not set in druid, by default the command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 7070`.
     The 7070 port is the default one configured for tidb.service.port in smart-default.xml.
-    If you modified it, the port in the above command should also be modified accordingly.
+    If you modify it, the port in the above command should also be modified accordingly.
     In TiDB, the database named ssm is used to store metadata.
 
     By default, the logs of Pd, TiKV and TiDB are under logs/ directory. You can refer to these logs if encountering database fault.
