@@ -56,7 +56,8 @@ public class MetaStoreUtils {
         "PERFORMANCE_SCHEMA"
       };
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
-  private static Boolean tidbInited = false;
+  private static MetaStore metaStore = null;
+  private static final String dbName = "ssm";
 
   public static Connection createConnection(String url,
       String userName, String password)
@@ -427,103 +428,105 @@ public class MetaStoreUtils {
 
   public static MetaStore getDBAdapter(
       SmartConf conf) throws MetaStoreException {
-    URL pathUrl = ClassLoader.getSystemResource("");
-    String path = pathUrl.getPath();
+    if (metaStore != null) {
+      return metaStore;
+    } else {
+      URL pathUrl = ClassLoader.getSystemResource("");
+      String path = pathUrl.getPath();
 
-    String fileName = "druid.xml";
-    String expectedCpPath = path + fileName;
-    LOG.info("Expected DB connection pool configuration path = "
-        + expectedCpPath);
-    File cpConfigFile = new File(expectedCpPath);
-    if (cpConfigFile.exists()) {
+      String fileName = "druid.xml";
+      String expectedCpPath = path + fileName;
+      LOG.info("Expected DB connection pool configuration path = "
+              + expectedCpPath);
+      File cpConfigFile = new File(expectedCpPath);
+      if (cpConfigFile.exists()) {
+        LOG.info("Using pool configure file: " + expectedCpPath);
+        Properties p = new Properties();
+        try {
+          p.loadFromXML(new FileInputStream(cpConfigFile));
+
+          boolean tidbEnabled = conf.getBoolean(
+                  SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
+          if (tidbEnabled) {
+            String tidbPort = conf.get(SmartConfKeys.TIDB_SERVICE_PORT_KEY,
+                    SmartConfKeys.TIDB_SERVICE_PORT_KEY_DEFAULT);
+            String url = String.format("jdbc:mysql://127.0.0.1:%s", tidbPort);
+            String user = p.getProperty("username");
+            String password = p.getProperty("password");
+            initTidb(url, user, password);
+            url = url + "/" + dbName;
+            p.setProperty("url", url);
+            LOG.info("\t" + "The jdbc url for Tidb is " + url);
+          } else {
+            String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
+            if (url != null) {
+              p.setProperty("url", url);
+            }
+          }
+
+          String purl = p.getProperty("url");
+          if (purl == null || purl.length() == 0) {
+            purl = getDefaultSqliteDB(); // For testing
+            p.setProperty("url", purl);
+            LOG.warn("Database URL not specified, using " + purl);
+          }
+
+          if (purl.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
+            String dbName = getMysqlDBName(purl);
+            for (String name : DB_NAME_NOT_ALLOWED) {
+              if (dbName.equals(name)) {
+                throw new MetaStoreException(
+                        String.format(
+                                "The database %s in mysql is for DB system use, "
+                                        + "please appoint other database in druid.xml.",
+                                name));
+              }
+            }
+          }
+
+          for (String key : p.stringPropertyNames()) {
+            if (key.equals("password")) {
+              LOG.info("\t" + key + " = **********");
+            } else {
+              LOG.info("\t" + key + " = " + p.getProperty(key));
+            }
+          }
+          return new MetaStore(new DruidPool(p));
+        } catch (Exception e) {
+          if (e instanceof InvalidPropertiesFormatException) {
+            throw new MetaStoreException(
+                    "Malformat druid.xml, please check the file.", e);
+          } else {
+            throw new MetaStoreException(e);
+          }
+        }
+      } else {
+        LOG.info("DB connection pool config file " + expectedCpPath
+                + " NOT found.");
+      }
+      // Get Default configure from druid-template.xml
+      fileName = "druid-template.xml";
+      expectedCpPath = path + fileName;
+      LOG.info("Expected DB connection pool configuration path = "
+              + expectedCpPath);
+      cpConfigFile = new File(expectedCpPath);
       LOG.info("Using pool configure file: " + expectedCpPath);
       Properties p = new Properties();
       try {
         p.loadFromXML(new FileInputStream(cpConfigFile));
-
-        boolean tidbEnabled = conf.getBoolean(
-                SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
-        if (tidbEnabled) {
-          String tidbPort = conf.get(
-                  SmartConfKeys.TIDB_SERVICE_PORT_KEY, SmartConfKeys.TIDB_SERVICE_PORT_KEY_DEFAULT);
-          String url = String.format("jdbc:mysql://127.0.0.1:%s", tidbPort);
-          String dbName = "ssm";
-          if (!tidbInited) {
-            String user = p.getProperty("username");
-            String password = p.getProperty("password");
-            initTidb(url, user, password, dbName);
-          }
-          url = url + "/" + dbName;
-          p.setProperty("url", url);
-          LOG.info("\t" + "The jdbc url for Tidb is " + url);
-        } else {
-          String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
-          if (url != null) {
-            p.setProperty("url", url);
-          }
-        }
-
-        String purl = p.getProperty("url");
-        if (purl == null || purl.length() == 0) {
-          purl = getDefaultSqliteDB(); // For testing
-          p.setProperty("url", purl);
-          LOG.warn("Database URL not specified, using " + purl);
-        }
-
-        if (purl.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
-          String dbName = getMysqlDBName(purl);
-          for (String name : DB_NAME_NOT_ALLOWED) {
-            if (dbName.equals(name)) {
-              throw new MetaStoreException(
-                  String.format(
-                      "The database %s in mysql is for DB system use, "
-                          + "please appoint other database in druid.xml.",
-                      name));
-            }
-          }
-        }
-
-        for (String key : p.stringPropertyNames()) {
-          if (key.equals("password")) {
-            LOG.info("\t" + key + " = **********");
-          } else {
-            LOG.info("\t" + key + " = " + p.getProperty(key));
-          }
-        }
-        return new MetaStore(new DruidPool(p));
       } catch (Exception e) {
-        if (e instanceof InvalidPropertiesFormatException) {
-          throw new MetaStoreException(
-              "Malformat druid.xml, please check the file.", e);
-        } else {
-          throw new MetaStoreException(e);
-        }
+        throw new MetaStoreException(e);
       }
-    } else {
-      LOG.info("DB connection pool config file " + expectedCpPath
-          + " NOT found.");
+      String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
+      if (url != null) {
+        p.setProperty("url", url);
+      }
+      for (String key : p.stringPropertyNames()) {
+        LOG.info("\t" + key + " = " + p.getProperty(key));
+      }
+      metaStore = new MetaStore(new DruidPool(p));
+      return metaStore;
     }
-    // Get Default configure from druid-template.xml
-    fileName = "druid-template.xml";
-    expectedCpPath = path + fileName;
-    LOG.info("Expected DB connection pool configuration path = "
-        + expectedCpPath);
-    cpConfigFile = new File(expectedCpPath);
-    LOG.info("Using pool configure file: " + expectedCpPath);
-    Properties p = new Properties();
-    try {
-      p.loadFromXML(new FileInputStream(cpConfigFile));
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-    String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
-    if (url != null) {
-      p.setProperty("url", url);
-    }
-    for (String key : p.stringPropertyNames()) {
-      LOG.info("\t" + key + " = " + p.getProperty(key));
-    }
-    return new MetaStore(new DruidPool(p));
   }
 
   public static Integer getKey(Map<Integer, String> map, String value) {
@@ -597,24 +600,25 @@ public class MetaStoreUtils {
     }
   }
 
-  public static void initTidb(String url, String user, String password, String dbName)
+  public static void initTidb(String url, String user, String password)
           throws MetaStoreException {
     Connection conn;
     try {
-      conn = DriverManager.getConnection(url, user, "");
+      conn = createConnection(url, user, "");
       Statement stat = conn.createStatement();
       stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", dbName));
       stat.executeQuery(String.format("SET PASSWORD FOR root = PASSWORD('%s')", password));
     } catch (SQLException ex) {
       try {
-        conn = DriverManager.getConnection(url, user, password);
+        conn = createConnection(url, user, password);
         Statement stat = conn.createStatement();
         stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", dbName));
       } catch (Exception e) {
         throw new MetaStoreException(ex);
       }
+    } catch (Exception ex) {
+      throw new MetaStoreException(ex);
     }
-    tidbInited = true;
     LOG.info("Tidb is initialized.");
   }
 }
