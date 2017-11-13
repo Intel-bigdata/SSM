@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
@@ -51,13 +52,12 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   }
 
   private long checkTheLengthOfFile(String fileName) {
-    FileSystem fs = null;
     try {
-      fs = FileSystem.get(URI.create(fileName), conf);
-      return fs.getFileStatus(new Path(fileName)).getLen();
-    } catch (IOException e) {
-      LOG.error("Fetch file length error!", e);
+      return metaStore.getFile(fileName).getLength();
+    } catch (MetaStoreException e) {
+      e.printStackTrace();
     }
+    return 0;
   }
 
   public List<String> getSupportedActions() {
