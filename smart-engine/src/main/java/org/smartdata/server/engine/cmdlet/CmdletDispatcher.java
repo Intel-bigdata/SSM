@@ -99,12 +99,7 @@ public class CmdletDispatcher {
   }
 
   public boolean canDispatchMore() {
-    for (CmdletExecutorService service : cmdExecServices) {
-      if (service.canAcceptMore()) {
-        return true;
-      }
-    }
-    return false;
+    return getTotalSlotsLeft() > 0;
   }
 
   public boolean dispatch(LaunchCmdlet cmdlet) {
@@ -308,11 +303,13 @@ public class CmdletDispatcher {
   }
 
   public int getTotalSlotsLeft() {
-    int total = 0;
-    for (int i : cmdExecSrvInstsSlotsLeft) {
-      total += i;
+    synchronized (cmdExecSrvInstsSlotsLeft) {
+      int total = 0;
+      for (int i : cmdExecSrvInstsSlotsLeft) {
+        total += i;
+      }
+      return total;
     }
-    return total;
   }
 
   public int getTotalSlots() {
