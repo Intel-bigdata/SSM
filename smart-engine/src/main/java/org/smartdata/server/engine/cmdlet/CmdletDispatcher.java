@@ -98,7 +98,7 @@ public class CmdletDispatcher {
     this.cmdExecServices[executorService.getExecutorType().ordinal()] = executorService;
   }
 
-  private boolean canDispatchMore() {
+  public boolean canDispatchMore() {
     return getTotalSlotsLeft() > 0;
   }
 
