@@ -98,13 +98,8 @@ public class CmdletDispatcher {
     this.cmdExecServices[executorService.getExecutorType().ordinal()] = executorService;
   }
 
-  public boolean canDispatchMore() {
-    for (CmdletExecutorService service : cmdExecServices) {
-      if (service.canAcceptMore()) {
-        return true;
-      }
-    }
-    return false;
+  private boolean canDispatchMore() {
+    return getTotalSlotsLeft() > 0;
   }
 
   public boolean dispatch(LaunchCmdlet cmdlet) {
@@ -308,11 +303,13 @@ public class CmdletDispatcher {
   }
 
   public int getTotalSlotsLeft() {
-    int total = 0;
-    for (int i : cmdExecSrvInstsSlotsLeft) {
-      total += i;
+    synchronized (cmdExecSrvInstsSlotsLeft) {
+      int total = 0;
+      for (int i : cmdExecSrvInstsSlotsLeft) {
+        total += i;
+      }
+      return total;
     }
-    return total;
   }
 
   public int getTotalSlots() {
