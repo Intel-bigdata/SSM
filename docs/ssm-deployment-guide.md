@@ -102,7 +102,8 @@ Configure SSM
 
    * Option 2. Use SSM-TiDB
 
-    Since TiDB has been integrated with SSM, you do not need to install TiDB beforehand.
+    To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb.git.
+
     TiDB can be enabled in smart-site.xml.
 
    ```xml
