@@ -26,7 +26,10 @@ import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import com.google.gson.Gson;
+import com.google.gson.reflect.*;
 
 /**
  * CompressionFileDao.
@@ -63,19 +66,31 @@ public class CompressionFileDao {
   }
 
   private Map<String, Object> toMap(SmartFileCompressionInfo compressionInfo) {
+    Gson gson = new Gson();
     Map<String, Object> parameters = new HashMap<>();
+    List<Long> originalPos = compressionInfo.getOriginalPos();
+    List<Long> compressedPos = compressionInfo.getCompressedPos();
+    String originalPosGson = gson.toJson(originalPos);
+    String compressedPosGson = gson.toJson(compressedPos);
     parameters.put("file_name", compressionInfo.getFileName());
     parameters.put("buffer_size", compressionInfo.getBufferSize());
+    parameters.put("originalPos",originalPosGson);
+    parameters.put("compressedPos",compressedPosGson);
     return parameters;
   }
 
   class CompressFileRowMapper implements RowMapper<SmartFileCompressionInfo> {
     @Override
     public SmartFileCompressionInfo mapRow(ResultSet resultSet, int i) throws SQLException {
+      Gson gson = new Gson();
+      String originalPosGson = resultSet.getString("originalPos");
+      String compressedPosGson = resultSet.getString("compressedPos");
+      List<Long> originalPos = gson.fromJson(originalPosGson,new TypeToken<List<Long>>(){}.getType());
+      List<Long> compressedPos = gson.fromJson(compressedPosGson,new TypeToken<List<Long>>(){}.getType());
       SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
-          resultSet.getString("file_name"),
-          resultSet.getInt("buffer_size")
-      );
+        resultSet.getString("file_name"), 
+        resultSet.getInt("buffer_size"), 
+        originalPos, compressedPos);
       return compressionInfo;
     }
   }
