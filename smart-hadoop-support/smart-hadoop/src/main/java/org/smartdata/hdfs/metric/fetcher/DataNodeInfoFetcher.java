@@ -102,6 +102,7 @@ public class DataNodeInfoFetcher {
         metaStore.deleteAllDataNodeInfo();
         for (DatanodeStorageReport r : reports) {
           metaStore.insertDataNodeInfo(transform(r.getDatanodeInfo()));
+          List<DataNodeStorageInfo> infos = new ArrayList<>();
           //insert record in DataNodeStorageInfoTable
           for (int i = 0; i < r.getStorageReports().length; i++) {
             StorageReport storageReport = r.getStorageReports()[i];
@@ -118,16 +119,17 @@ public class DataNodeInfoFetcher {
             long dfsUsed = storageReport.getDfsUsed();
             long remaining = storageReport.getRemaining();
             long blockPoolUsed = storageReport.getBlockPoolUsed();
-            DataNodeStorageInfo dataNodeStorageInfo = new DataNodeStorageInfo(uuid, sid, state,
-                storageId, fail, capacity, dfsUsed, remaining, blockPoolUsed);
-            metaStore.insertDataNodeStorageInfo(dataNodeStorageInfo);
+            infos.add(new DataNodeStorageInfo(uuid, sid, state,
+                storageId, fail, capacity, dfsUsed, remaining, blockPoolUsed));
           }
+          metaStore.deleteDataNodeStorageInfo(r.getDatanodeInfo().getDatanodeUuid());
+          metaStore.insertDataNodeStorageInfos(infos);
         }
         isFinished = true;
       } catch (IOException e) {
         LOG.error("Process datanode report error", e);
       } catch (MetaStoreException e) {
-        e.printStackTrace();
+        LOG.error("Process datanode report error", e);
       }
     }
 
