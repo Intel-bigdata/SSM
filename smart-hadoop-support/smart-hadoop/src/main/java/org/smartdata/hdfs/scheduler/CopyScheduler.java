@@ -296,7 +296,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-  FileStatus[] listFileStatuesOfDirs(String dirName) {
+  private FileStatus[] listFileStatuesOfDirs(String dirName) {
     FileSystem fs = null;
     FileStatus[] tmpFileStatus = null;
     List<FileStatus> returnStatus = new LinkedList<>();
@@ -309,7 +309,7 @@ public class CopyScheduler extends ActionSchedulerService {
         } else {
           //all the file in this fileStatuses
           FileStatus[] childFileStatuses = listFileStatuesOfDirs(fileStatus.getPath().getName());
-          if (childFileStatuses != null && childFileStatuses.length != 0) {
+          if (childFileStatuses.length != 0) {
             returnStatus.addAll(Arrays.asList(childFileStatuses));
           }
         }
@@ -336,7 +336,7 @@ public class CopyScheduler extends ActionSchedulerService {
     FileStatus[] fileStatuses = null;
     // recursively file lists
     fileStatuses = listFileStatuesOfDirs(destDir);
-    if (fileStatuses == null || fileStatuses.length == 0) {
+    if (fileStatuses.length == 0) {
       LOG.debug("Remote directory is empty!");
     } else {
       LOG.debug("Remote directory contains {} files!", fileStatuses.length);
@@ -463,7 +463,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
   // add file_diff into Cache, if the file diff is already in cache, we update
   // if the file diff is not in cache, we insert.
-  public void addDiffIntoCache(FileDiff fileDiff) throws MetaStoreException {
+  private void addDiffIntoCache(FileDiff fileDiff) throws MetaStoreException {
     LOG.debug("Add FileDiff Cache into file_diff cache");
     recordChangedFileDiff(fileDiff);
     fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
@@ -473,7 +473,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-  public void recordChangedFileDiff(FileDiff fileDiff) {
+  private void recordChangedFileDiff(FileDiff fileDiff) {
     //judge whether change the file diff
     if (fileDiffCache.containsKey(fileDiff.getDiffId())) {
       FileDiff oldDiff = fileDiffCache.get(fileDiff.getDiffId());
@@ -487,7 +487,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-  public void deleteDiffInCache(Long did) {
+  private void deleteDiffInCache(Long did) {
     LOG.debug("Delete FileDiff in cache");
     if (fileDiffCache.containsKey(did)) {
       fileDiffCache.remove(did);
@@ -495,7 +495,8 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-  public void updateFileDiffStatesInCache(Long did, FileDiffState fileDiffState) {
+  private void updateFileDiffStatesInCache(Long did,
+      FileDiffState fileDiffState) {
     LOG.debug("Update FileDiff");
     if (!fileDiffCache.containsKey(did)) {
       return;
@@ -507,7 +508,7 @@ public class CopyScheduler extends ActionSchedulerService {
     fileDiffCache.put(did, fileDiff);
   }
 
-  public void pushCacheIntoDB() throws MetaStoreException {
+  private void pushCacheIntoDB() throws MetaStoreException {
     LOG.debug("Push FileFiff From cache Into FileDiff");
     List<Long> dids = new ArrayList<>();
     List<FileDiffState> states = new ArrayList<>();
@@ -666,7 +667,7 @@ public class CopyScheduler extends ActionSchedulerService {
         return diffChain.size();
       }
 
-      public void addToChain(FileDiff fileDiff) throws MetaStoreException {
+      void addToChain(FileDiff fileDiff) throws MetaStoreException {
         addDiffIntoCache(fileDiff);
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
@@ -808,14 +809,14 @@ public class CopyScheduler extends ActionSchedulerService {
         fileLock.remove(filePath);
       }
 
-      public long getHead() {
+      long getHead() {
         if (diffChain.size() == 0) {
           return -1;
         }
         return diffChain.get(0);
       }
 
-      public long removeHead() {
+      long removeHead() {
         if (diffChain.size() == 0) {
           return -1;
         }
@@ -830,7 +831,7 @@ public class CopyScheduler extends ActionSchedulerService {
         return fid;
       }
 
-      public void markAllDiffs() throws MetaStoreException {
+      void markAllDiffs() throws MetaStoreException {
         for (long did : diffChain) {
           metaStore.updateFileDiff(did, FileDiffState.MERGED);
         }
