@@ -20,10 +20,15 @@ package org.smartdata.protocol.protobuffer;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.ProtocolInfo;
+import org.apache.hadoop.security.KerberosInfo;
+import org.smartdata.SmartConstants;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 
-@ProtocolInfo(protocolName = "org.smartdata.protocol.protocolbuffer.ClientProtocolProtoBuffer",
+@KerberosInfo(
+  serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
+@ProtocolInfo(protocolName = SmartConstants.SMART_CLIENT_PROTOCOL_NAME,
     protocolVersion = 1)
 public interface ClientProtocolProtoBuffer {
   ReportFileAccessEventResponseProto

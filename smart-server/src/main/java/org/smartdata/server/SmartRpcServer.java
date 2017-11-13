@@ -19,10 +19,12 @@ package org.smartdata.server;
 
 import com.google.protobuf.BlockingService;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RetriableException;
+import org.smartdata.SmartPolicyProvider;
 import org.smartdata.SmartServiceState;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.conf.SmartConfKeys;
@@ -54,6 +56,7 @@ public class SmartRpcServer implements SmartServerProtocols {
   protected final InetSocketAddress clientRpcAddress;
   protected int serviceHandlerCount;
   protected final RPC.Server clientRpcServer;
+  private final boolean serviceAuthEnabled;
 
   public SmartRpcServer(SmartServer ssm, Configuration conf) throws IOException {
     this.ssm = ssm;
@@ -93,6 +96,14 @@ public class SmartRpcServer implements SmartServerProtocols {
         adminSmartPbService, clientRpcServer);
     DFSUtil.addPBProtocol(conf, ClientProtocolProtoBuffer.class,
         clientSmartPbService, clientRpcServer);
+
+    // set service-level authorization security policy
+    if (serviceAuthEnabled = conf.getBoolean(
+        CommonConfigurationKeys.HADOOP_SECURITY_AUTHORIZATION, false)) {
+      if (clientRpcServer != null) {
+        clientRpcServer.refreshServiceAcl(conf, new SmartPolicyProvider());
+      }
+    }
   }
 
   private InetSocketAddress getRpcServerAddress() {

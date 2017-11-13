@@ -32,7 +32,7 @@ public class LaunchDB implements Runnable {
     String pdArgs = "--data-dir=pd";
     String tikvArgs = "--pd=127.0.0.1:2379 --data-dir=tikv";
     //The default lease time is 10s. Setting a smaller value may decrease the time of executing ddl statement, but it's dangerous to do so.
-    String tidbArgs = "--store=tikv --path=127.0.0.1:2379 --lease=1s";
+    String tidbArgs = "--store=tikv --path=127.0.0.1:2379 --lease=10s";
     //String tidbArgs = new String("--log-file=logs/tidb.log");
 
     pdServer = new PdServer(pdArgs, conf);

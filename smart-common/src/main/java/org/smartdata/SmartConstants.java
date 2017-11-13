@@ -29,4 +29,10 @@ public class SmartConstants {
 
   public static final String SMART_HADOOP_LAST_INOTIFY_TXID =
     "smart_hadoop_last_inotify_txid";
+
+  public static final String SMART_CLIENT_PROTOCOL_NAME =
+    "org.smartdata.protocol.SmartClientProtocol";
+
+  public static final String SMART_ADMIN_PROTOCOL_NAME =
+    "org.smartdata.protocol.SmartAdminProtocol";
 }

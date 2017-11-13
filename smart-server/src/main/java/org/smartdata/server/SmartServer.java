@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.zeppelin.server.SmartZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.smartdata.SmartServiceState;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.server.engine.CmdletManager;
@@ -43,11 +45,8 @@ import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.tidb.LaunchDB;
 import org.smartdata.tidb.PdServer;
 import org.smartdata.tidb.TidbServer;
-import org.smartdata.utils.JaasLoginUtil;
+import org.smartdata.utils.SecurityUtil;
 
-import javax.security.auth.Subject;
-
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetAddress;
@@ -61,7 +60,7 @@ public class SmartServer {
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
   private ConfManager confMgr;
-  private SmartConf conf;
+  private final SmartConf conf;
   private SmartEngine engine;
   private ServerContext context;
   private boolean enabled;
@@ -81,8 +80,9 @@ public class SmartServer {
   }
 
   public void initWith() throws Exception {
-    checkSecurityAndLogin();
+    LOG.info("Start Init Smart Server");
 
+    authentication();
     MetaStore metaStore = MetaStoreUtils.getDBAdapter(conf);
     context = new ServerContext(conf, metaStore);
     initServiceMode(conf);
@@ -90,6 +90,7 @@ public class SmartServer {
     rpcServer = new SmartRpcServer(this, conf);
     zeppelinServer = new SmartZeppelinServer(conf, engine);
 
+    LOG.info("Finish Init Smart Server");
   }
 
   public StatesManager getStatesManager() {
@@ -160,7 +161,7 @@ public class SmartServer {
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");
-      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=1s", host);
+      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=10s", host);
       TidbServer tidbServer = new TidbServer(tidbArgs, conf);
       Thread tidbThread = new Thread(tidbServer);
       tidbThread.start();
@@ -239,33 +240,32 @@ public class SmartServer {
     return false;
   }
 
-  private boolean isSecurityEnabled() {
-    return conf.getBoolean(SmartConfKeys.SMART_SECURITY_ENABLE, false);
-  }
-
   private static boolean isTidbEnabled(SmartConf conf) {
     return conf.getBoolean(
         SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
   }
 
-  private void checkSecurityAndLogin() throws IOException {
-    if (!isSecurityEnabled()) {
+  private void authentication() throws IOException {
+    if (!SecurityUtil.isSecurityEnabled(conf)) {
       return;
     }
-    String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
-    if (keytabFilename == null || keytabFilename.length() == 0) {
-      throw new IOException("Running in secure mode, but config doesn't have a keytab");
-    }
-    File keytabPath = new File(keytabFilename);
-    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
-    Subject subject = null;
+    // Load Hadoop configuration files
+    String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      subject = JaasLoginUtil.loginUsingKeytab(principal, keytabPath);
+      HadoopUtil.loadHadoopConf(conf, hadoopConfPath);
     } catch (IOException e) {
-      LOG.error("Fail to login using keytab. " + e);
+        LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
+            + "Please config smart.hadoop.conf.path property in smart-site.xml.");
+        conf.set("hadoop.security.authentication", "kerberos");
+        conf.set("hadoop.security.authorization", "true");
     }
-    LOG.info("Login successful for user: "
-        + subject.getPrincipals().iterator().next());
+
+    UserGroupInformation.setConfiguration(conf);
+
+    String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
+    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
+
+    SecurityUtil.loginUsingKeytab(keytabFilename, principal);
   }
 
   /**
