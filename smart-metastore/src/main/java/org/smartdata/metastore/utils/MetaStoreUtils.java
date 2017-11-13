@@ -297,6 +297,8 @@ public class MetaStoreUtils {
         "CREATE TABLE compression_file (\n" +
             " file_name varchar(512) PRIMARY KEY,\n" +
             " buffer_size int(11) NOT NULL\n" +
+            " originalPos text NOT NULL\n" +
+            " compressedPos text NOT NULL\n" +
             ");"
     };
     try {
