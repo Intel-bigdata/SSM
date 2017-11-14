@@ -453,7 +453,10 @@ public class CopyScheduler extends ActionSchedulerService {
   // if the file diff is not in cache, we insert.
   private void addDiffToCache(FileDiff fileDiff) throws MetaStoreException {
     LOG.debug("Add FileDiff Cache into file_diff cache");
-    recordChangedFileDiff(fileDiff);
+    // recordChangedFileDiff(fileDiff);
+    if (fileDiffCache.containsKey(fileDiff.getDiffId())) {
+      LOG.error("FileDiff {} already in cache!", fileDiff);
+    }
     fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
     if (fileDiffCacheChanged.size() >= cacheSyncTh) {
       // update
@@ -622,6 +625,10 @@ public class CopyScheduler extends ActionSchedulerService {
         }
         FileChain fileChain;
         String src = fileDiff.getSrc();
+        // Skip diff in cache
+        if (fileDiffCache.containsKey(fileDiff.getDiffId())) {
+          continue;
+        }
         // Skip applying file diffs
         if (fileDiffMap.containsKey(fileDiff.getDiffId())) {
           continue;
