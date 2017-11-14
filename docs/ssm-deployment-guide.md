@@ -118,7 +118,9 @@ Configure SSM
     For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
     So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over MySQL.
 
-    If TiDB is enabled, there is no need to configure jdbc url in druid.xml. You can set a password for root user in druid.xml.
+    If TiDB is enabled, there is no need to configure jdbc url in druid.xml. In TiDB only root user is created initially, so you should set username as root. Optionally, you can set a password for root user in druid.xml.
+
+    An example of configuration in druid.xml for using TiDB is shown as follows.
 
    ```xml
     <properties>

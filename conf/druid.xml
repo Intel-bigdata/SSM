@@ -23,7 +23,7 @@
 <properties>
     <!-- <entry key="url">jdbc:sqlite:sqlit-db-path</entry> -->
     <!-- <entry key="url">jdbc:mysql://127.0.0.1:3306/test</entry> -->
-    <entry key="username">root</entry>
+    <entry key="username"></entry>
     <entry key="password"></entry>
 
     <entry key="initialSize">10</entry>
