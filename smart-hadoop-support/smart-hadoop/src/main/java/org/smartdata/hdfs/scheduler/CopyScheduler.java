@@ -102,7 +102,7 @@ public class CopyScheduler extends ActionSchedulerService {
     try {
       conf = getContext().getConf();
     } catch (NullPointerException e) {
-      // If SmartContext is empty
+      // SmartContext is empty
       conf = new Configuration();
     }
     this.fileDiffCache = new ConcurrentHashMap<>();
@@ -128,13 +128,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     // Lock this file/chain to avoid conflict
     fileLock.put(path, fid);
-    FileDiff fileDiff = null;
-    if (fileDiffCache.containsKey(fid)) {
-      fileDiff = fileDiffCache.get(fid);
-    } else {
-      return ScheduleResult.FAIL;
-    }
-
+    FileDiff fileDiff = fileDiffCache.get(fid);
     if (fileDiff == null) {
       return ScheduleResult.FAIL;
     }
@@ -442,7 +436,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
   // add file_diff into Cache, if the file diff is already in cache, we update
   // if the file diff is not in cache, we insert.
-  public void addDiffIntoCache(
+  public void addDiffToCache(
       List<FileDiff> fileDiffs) throws MetaStoreException {
     LOG.debug("Add FileDiff Cache into file_diff cache");
     for (FileDiff fileDiff : fileDiffs) {
@@ -451,19 +445,19 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     if (fileDiffCacheChanged.size() >= cacheSyncTh) {
       // update
-      pushCacheIntoDB();
+      pushCacheToDB();
     }
   }
 
   // add file_diff into Cache, if the file diff is already in cache, we update
   // if the file diff is not in cache, we insert.
-  private void addDiffIntoCache(FileDiff fileDiff) throws MetaStoreException {
+  private void addDiffToCache(FileDiff fileDiff) throws MetaStoreException {
     LOG.debug("Add FileDiff Cache into file_diff cache");
     recordChangedFileDiff(fileDiff);
     fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
     if (fileDiffCacheChanged.size() >= cacheSyncTh) {
       // update
-      pushCacheIntoDB();
+      pushCacheToDB();
     }
   }
 
@@ -471,7 +465,7 @@ public class CopyScheduler extends ActionSchedulerService {
     // judge whether change the file diff
     if (fileDiffCache.containsKey(fileDiff.getDiffId())) {
       FileDiff oldDiff = fileDiffCache.get(fileDiff.getDiffId());
-      if (oldDiff != fileDiff) {
+      if (!oldDiff.equals(fileDiff)) {
         fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
       }
     } else {
@@ -511,7 +505,21 @@ public class CopyScheduler extends ActionSchedulerService {
     fileDiffCache.put(did, fileDiff);
   }
 
-  private void pushCacheIntoDB() throws MetaStoreException {
+  private void updateFileDiffStatesInCache(Long did, String parameters,
+      FileDiffState fileDiffState) {
+    LOG.debug("Update FileDiff");
+    if (!fileDiffCache.containsKey(did)) {
+      return;
+    }
+    FileDiff fileDiff = fileDiffCache.get(did);
+    fileDiff.setState(fileDiffState);
+    fileDiff.setParametersFromJsonString(parameters);
+    // Update
+    fileDiffCacheChanged.put(did, true);
+    fileDiffCache.put(did, fileDiff);
+  }
+
+  private void pushCacheToDB() throws MetaStoreException {
     LOG.debug("Push FileFiff From cache Into FileDiff");
     List<Long> dids = new ArrayList<>();
     List<FileDiffState> states = new ArrayList<>();
@@ -590,7 +598,7 @@ public class CopyScheduler extends ActionSchedulerService {
     private void syncFileDiff() {
       List<FileDiff> pendingDiffs = null;
       try {
-        pushCacheIntoDB();
+        pushCacheToDB();
         pendingDiffs = metaStore.getPendingDiff();
         diffPreProcessing(pendingDiffs);
       } catch (MetaStoreException e) {
@@ -664,7 +672,7 @@ public class CopyScheduler extends ActionSchedulerService {
         this.currAppendLength = 0;
       }
 
-      public FileChain(String filePath) {
+      FileChain(String filePath) {
         this();
         this.filePath = filePath;
         this.nameChain.add(filePath);
@@ -691,7 +699,7 @@ public class CopyScheduler extends ActionSchedulerService {
       }
 
       void addToChain(FileDiff fileDiff) throws MetaStoreException {
-        addDiffIntoCache(fileDiff);
+        addDiffToCache(fileDiff);
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
           if (currAppendLength >= mergeLenTh ||
@@ -738,7 +746,7 @@ public class CopyScheduler extends ActionSchedulerService {
               // Check offset and length to avoid dirty append
               break;
             }
-            metaStore.updateFileDiff(did, FileDiffState.APPLIED);
+            updateFileDiffStatesInCache(did, FileDiffState.APPLIED);
             // Add current file length to length
             totalLength +=
                 Long.valueOf(fileDiff.getParameters().get("-length"));
@@ -771,7 +779,7 @@ public class CopyScheduler extends ActionSchedulerService {
               isCreate = true;
             }
           }
-          metaStore.updateFileDiff(did, FileDiffState.APPLIED);
+          updateFileDiffStatesInCache(did, FileDiffState.APPLIED);
         }
         appendChain.clear();
         if (!isCreate) {
@@ -782,7 +790,7 @@ public class CopyScheduler extends ActionSchedulerService {
           }
           diffChain.add(fileDiff.getDiffId());
         } else {
-          metaStore.updateFileDiff(fileDiff.getDiffId(), FileDiffState.APPLIED);
+          updateFileDiffStatesInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }
       }
 
@@ -826,7 +834,7 @@ public class CopyScheduler extends ActionSchedulerService {
         if (!isCreate) {
           diffChain.add(0, fileDiff.getDiffId());
         } else {
-          metaStore.updateFileDiff(fileDiff.getDiffId(), FileDiffState.APPLIED);
+          updateFileDiffStatesInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }
         // Unlock file
         fileLock.remove(filePath);
@@ -856,7 +864,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
       void markAllDiffs() throws MetaStoreException {
         for (long did : diffChain) {
-          metaStore.updateFileDiff(did, FileDiffState.MERGED);
+          updateFileDiffStatesInCache(did, FileDiffState.MERGED);
         }
         diffChain.clear();
       }
