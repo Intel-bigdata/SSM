@@ -506,7 +506,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     FileDiff fileDiff = fileDiffCache.get(did);
     fileDiff.setState(fileDiffState);
-    //update
+    // Update
     fileDiffCacheChanged.put(did, true);
     fileDiffCache.put(did, fileDiff);
   }
@@ -528,12 +528,11 @@ public class CopyScheduler extends ActionSchedulerService {
       dids.add(fileDiff.getDiffId());
       states.add(fileDiff.getState());
       param.add(fileDiff.getParametersJsonString());
-      // TODO need to be confirmed what should be delete
       if (FileDiffState.isTerminalState(fileDiff.getState())) {
         needDel.add(key);
       }
     }
-    //update to DB
+    // Push cache to metastore
     if (dids.size() > 0) {
       // Sync file diff with metastore
       metaStore.batchUpdateFileDiff(dids, states, param);
@@ -560,15 +559,31 @@ public class CopyScheduler extends ActionSchedulerService {
     executorService.shutdown();
   }
 
-  // private void lockFile(String fileName, long did) {
-  //   fileLock.put(fileName, did);
-  // }
-  //
-  // private void unlockFile(String fileName) {
-  //   if (fileLock.containsKey(fileName)) {
-  //     fileLock.remove(fileName);
-  //   }
-  // }
+  private void lockFile(String fileName) {
+    fileLock.put(fileName, 0L);
+  }
+
+  private void lockFile(long did) {
+    FileDiff diff = fileDiffCache.get(did);
+    if(diff == null) {
+      return;
+    }
+    fileLock.put(diff.getSrc(), did);
+  }
+
+  private void unlockFile(String fileName) {
+    if (fileLock.containsKey(fileName)) {
+      fileLock.remove(fileName);
+    }
+  }
+
+  private void unlockFile(long did){
+    FileDiff diff = fileDiffCache.get(did);
+    if(diff == null) {
+      return;
+    }
+    fileLock.remove(diff.getSrc());
+  }
 
   private class ScheduleTask implements Runnable {
 
@@ -720,7 +735,7 @@ public class CopyScheduler extends ActionSchedulerService {
               offset = currOffset;
             }
             if (currOffset != offset && currOffset != totalLength + offset) {
-              // offset and length check to avoid dirty append
+              // Check offset and length to avoid dirty append
               break;
             }
             metaStore.updateFileDiff(did, FileDiffState.APPLIED);
