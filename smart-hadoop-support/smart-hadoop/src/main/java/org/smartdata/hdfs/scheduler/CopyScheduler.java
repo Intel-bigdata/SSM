@@ -483,12 +483,12 @@ public class CopyScheduler extends ActionSchedulerService {
     LOG.debug("Delete FileDiff in cache");
     if (fileDiffCache.containsKey(did)) {
       FileDiff fileDiff = fileDiffCache.get(did);
+      fileDiffCache.remove(did);
+      fileDiffCacheChanged.remove(did);
       // Remove file lock
       if (fileLock.containsKey(fileDiff.getSrc())) {
         fileLock.remove(fileDiff.getSrc());
       }
-      fileDiffCache.remove(did);
-      fileDiffCacheChanged.remove(did);
     }
   }
 
