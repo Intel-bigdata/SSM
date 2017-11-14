@@ -253,9 +253,6 @@ public class CopyScheduler extends ActionSchedulerService {
             }
           }
         }
-        if (fileLock.containsKey(fileDiff.getSrc())) {
-          fileLock.remove(fileDiff.getSrc());
-        }
       } catch (MetaStoreException e) {
         LOG.error("Mark sync action in metastore failed!", e);
       } catch (Exception e) {
@@ -474,7 +471,7 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private void recordChangedFileDiff(FileDiff fileDiff) {
-    //judge whether change the file diff
+    // judge whether change the file diff
     if (fileDiffCache.containsKey(fileDiff.getDiffId())) {
       FileDiff oldDiff = fileDiffCache.get(fileDiff.getDiffId());
       if (oldDiff != fileDiff) {
@@ -487,9 +484,18 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
+  /***
+   * delete cache and remove file lock if necessary
+   * @param did
+   */
   private void deleteDiffInCache(Long did) {
     LOG.debug("Delete FileDiff in cache");
     if (fileDiffCache.containsKey(did)) {
+      FileDiff fileDiff = fileDiffCache.get(did);
+      // Remove file lock
+      if (fileLock.containsKey(fileDiff.getSrc())) {
+        fileLock.remove(fileDiff.getSrc());
+      }
       fileDiffCache.remove(did);
       fileDiffChanged.remove(did);
     }
@@ -529,7 +535,9 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     //update to DB
     if (dids.size() > 0) {
+      // Sync file diff with metastore
       metaStore.batchUpdateFileDiff(dids, states, param);
+      // Remove file diffs in cache and file lock
       for (long did : needDel) {
         deleteDiffInCache(did);
       }
