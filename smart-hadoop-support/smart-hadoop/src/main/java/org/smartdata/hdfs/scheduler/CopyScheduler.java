@@ -118,28 +118,19 @@ public class CopyScheduler extends ActionSchedulerService {
     String path = action.getArgs().get("-file");
     String destDir = action.getArgs().get(SyncAction.DEST);
     // Check again to avoid corner cases
-    if (isFileLocked(path)) {
-      LOG.error("File lock is not correct!");
-      return ScheduleResult.FAIL;
-    }
     long fid = fileDiffChainMap.get(path).getHead();
     if (fid == -1) {
       // FileChain is already empty
-      LOG.error("fileDiffChainMap has been proceeded!");
       return ScheduleResult.FAIL;
     }
-    // Lock this file/chain to avoid conflict
-    fileLock.put(path, fid);
     FileDiff fileDiff = fileDiffCache.get(fid);
     if (fileDiff == null) {
-      LOG.error("fileDiffCache has been proceeded!");
       return ScheduleResult.FAIL;
     }
     if (fileDiff.getState() != FileDiffState.PENDING) {
       // If file diff is applied or failed
       fileDiffChainMap.get(path).removeHead();
       fileLock.remove(path);
-      LOG.error("FileDiffState is not pending!");
       return ScheduleResult.FAIL;
     }
     switch (fileDiff.getDiffType()) {
@@ -201,7 +192,12 @@ public class CopyScheduler extends ActionSchedulerService {
     String path = actionInfo.getArgs().get("-file");
     LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
     // If locked then false
-    return !isFileLocked(path);
+    if (!isFileLocked(path)) {
+      // Lock this file/chain to avoid conflict
+      fileLock.put(path, 0L);
+      return true;
+    }
+    return false;
   }
 
   @Override
