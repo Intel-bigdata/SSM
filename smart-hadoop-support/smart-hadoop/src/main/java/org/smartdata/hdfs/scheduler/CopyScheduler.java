@@ -86,7 +86,7 @@ public class CopyScheduler extends ActionSchedulerService {
   // cache sync threshold, default 50
   private int cacheSyncTh = 50;
   // record the file_diff whether being changed
-  private Map<Long, Boolean> fileDiffChanged;
+  private Map<Long, Boolean> fileDiffCacheChanged;
 
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
@@ -94,7 +94,7 @@ public class CopyScheduler extends ActionSchedulerService {
     this.metaStore = metaStore;
     this.fileLock = new ConcurrentHashMap<>();
     this.actionDiffMap = new ConcurrentHashMap<>();
-    this.fileDiffChainMap = new HashMap<>();
+    this.fileDiffChainMap = new ConcurrentHashMap<>();
     this.fileDiffMap = new ConcurrentHashMap<>();
     this.baseSyncQueue = new ConcurrentHashMap<>();
     this.overwriteQueue = new ConcurrentHashMap<>();
@@ -106,7 +106,7 @@ public class CopyScheduler extends ActionSchedulerService {
       conf = new Configuration();
     }
     this.fileDiffCache = new ConcurrentHashMap<>();
-    this.fileDiffChanged = new ConcurrentHashMap<>();
+    this.fileDiffCacheChanged = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -223,7 +223,6 @@ public class CopyScheduler extends ActionSchedulerService {
           LOG.error("Duplicate sync action->[ {} ] is triggered", did);
           return;
         }
-
         if (fileDiff == null) {
           return;
         }
@@ -234,11 +233,9 @@ public class CopyScheduler extends ActionSchedulerService {
           }
           //update state in cache
           updateFileDiffStatesInCache(did, FileDiffState.APPLIED);
-
           if (fileDiffMap.containsKey(did)) {
             fileDiffMap.remove(did);
           }
-
         } else {
           if (fileDiffMap.containsKey(did)) {
             int curr = fileDiffMap.get(did);
@@ -452,7 +449,7 @@ public class CopyScheduler extends ActionSchedulerService {
       recordChangedFileDiff(fileDiff);
       fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
     }
-    if (fileDiffChanged.size() >= cacheSyncTh) {
+    if (fileDiffCacheChanged.size() >= cacheSyncTh) {
       // update
       pushCacheIntoDB();
     }
@@ -464,7 +461,7 @@ public class CopyScheduler extends ActionSchedulerService {
     LOG.debug("Add FileDiff Cache into file_diff cache");
     recordChangedFileDiff(fileDiff);
     fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
-    if (fileDiffChanged.size() >= cacheSyncTh) {
+    if (fileDiffCacheChanged.size() >= cacheSyncTh) {
       // update
       pushCacheIntoDB();
     }
@@ -475,12 +472,12 @@ public class CopyScheduler extends ActionSchedulerService {
     if (fileDiffCache.containsKey(fileDiff.getDiffId())) {
       FileDiff oldDiff = fileDiffCache.get(fileDiff.getDiffId());
       if (oldDiff != fileDiff) {
-        fileDiffChanged.put(fileDiff.getDiffId(), true);
+        fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
       }
     } else {
       //this is the new file_diff inserted into file_diff cache
       //init the fileDiffchanged map
-      fileDiffChanged.put(fileDiff.getDiffId(), false);
+      fileDiffCacheChanged.put(fileDiff.getDiffId(), false);
     }
   }
 
@@ -497,7 +494,7 @@ public class CopyScheduler extends ActionSchedulerService {
         fileLock.remove(fileDiff.getSrc());
       }
       fileDiffCache.remove(did);
-      fileDiffChanged.remove(did);
+      fileDiffCacheChanged.remove(did);
     }
   }
 
@@ -510,7 +507,7 @@ public class CopyScheduler extends ActionSchedulerService {
     FileDiff fileDiff = fileDiffCache.get(did);
     fileDiff.setState(fileDiffState);
     //update
-    fileDiffChanged.put(did, true);
+    fileDiffCacheChanged.put(did, true);
     fileDiffCache.put(did, fileDiff);
   }
 
@@ -520,17 +517,20 @@ public class CopyScheduler extends ActionSchedulerService {
     List<FileDiffState> states = new ArrayList<>();
     List<String> param = new ArrayList<>();
     List<Long> needDel = new ArrayList<>();
-    for (Long key : fileDiffCache.keySet()) {
-      FileDiff fileDiff;
-      if (fileDiffChanged.get(key)) {
-        fileDiff = fileDiffCache.get(key);
-        dids.add(fileDiff.getDiffId());
-        states.add(fileDiff.getState());
-        param.add(fileDiff.getParametersJsonString());
-        // TODO need to be confirmed what should be delete
-        if (!(fileDiff.getState() == FileDiffState.PENDING || fileDiff.getState() == FileDiffState.RUNNING)) {
-          needDel.add(key);
-        }
+    FileDiff fileDiff;
+    // Only check changed cache rather than full cache
+    for (Long key: fileDiffCacheChanged.keySet()) {
+      fileDiff = fileDiffCache.get(key);
+      if (fileDiff == null) {
+        needDel.add(key);
+        continue;
+      }
+      dids.add(fileDiff.getDiffId());
+      states.add(fileDiff.getState());
+      param.add(fileDiff.getParametersJsonString());
+      // TODO need to be confirmed what should be delete
+      if (FileDiffState.isTerminalState(fileDiff.getState())) {
+        needDel.add(key);
       }
     }
     //update to DB
