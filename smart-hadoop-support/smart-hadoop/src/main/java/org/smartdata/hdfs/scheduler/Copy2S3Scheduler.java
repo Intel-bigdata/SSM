@@ -1,9 +1,7 @@
 package org.smartdata.hdfs.scheduler;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -14,12 +12,12 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 
 public class Copy2S3Scheduler extends ActionSchedulerService {
   private static final List<String> actions = Arrays.asList("copy2s3");
@@ -36,10 +34,10 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
     this.metaStore = metaStore;
     this.fileLock = Collections.synchronizedSet(new HashSet<String>());
     try {
-      conf = getContext().getConf();
+      this.conf = getContext().getConf();
     } catch (NullPointerException e) {
       // If SmartContext is empty
-      conf = new Configuration();
+      this.conf = new Configuration();
     }
   }
 
@@ -49,6 +47,10 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
 
   private void unLockTheFile(String filePath) {
     fileLock.remove(filePath);
+  }
+
+  private boolean ifLocked(String filePath) {
+    return fileLock.contains(filePath);
   }
 
   private long checkTheLengthOfFile(String fileName) {
@@ -71,11 +73,32 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
+    String path = actionInfo.getArgs().get("-file");
+    if (checkTheLengthOfFile(path) == 0) {
+      LOG.info("The submit file {}'s length is 0", path);
+      return false;
+    }
+
+    if (ifLocked(path)) {
+      LOG.info("The submit file {} is locked", path);
+      return false;
+    }
+
+    lockTheFile(path);
+
+    LOG.info("The file {} can be submited", path);
     return true;
   }
 
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
+    String path = actionInfo.getArgs().get("-file");
+    // unlock filelock
+    if (ifLocked(path)) {
+      unLockTheFile(path);
+    } else {
+      LOG.info("The file {} has already unlocked", path);
+    }
   }
 
   @Override
@@ -90,4 +113,5 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   @Override
   public void stop() throws IOException {
   }
+
 }
