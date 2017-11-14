@@ -514,12 +514,9 @@ public class MetaStoreUtils {
       throw new MetaStoreException(e);
     }
     String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
-//    String url = "jdbc:mysql://127.0.0.1:4000/test";
     if (url != null) {
       p.setProperty("url", url);
     }
-    p.setProperty("username", "root");
-    p.setProperty("password", "");
     for (String key : p.stringPropertyNames()) {
       LOG.info("\t" + key + " = " + p.getProperty(key));
     }
