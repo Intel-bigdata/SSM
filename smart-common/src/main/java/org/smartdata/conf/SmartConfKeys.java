@@ -74,6 +74,12 @@ public class SmartConfKeys {
   public static final String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
   public static final boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = true;
 
+  // Cmdlets
+  public static final String SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY =
+      "smart.cmdlet.hist.max.num.records";
+  public static final String SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY =
+      "smart.cmdlet.hist.max.record.lifetime";
+
   // Action
   public static final String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
   public static final long SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
