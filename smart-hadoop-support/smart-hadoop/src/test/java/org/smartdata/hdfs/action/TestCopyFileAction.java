@@ -50,7 +50,7 @@ public class TestCopyFileAction extends MiniClusterHarness {
     copyFileAction.run();
   }
 
-  @Test
+  /*@Test
   public void testLocalFileCopy() throws Exception {
     final String srcPath = "/testCopy";
     final String file1 = "file1";
@@ -71,7 +71,7 @@ public class TestCopyFileAction extends MiniClusterHarness {
       readString.append(in1.readChar());
     }
     Assert.assertTrue(readString.toString().equals("testCopy1"));
-  }
+  }*/
 
   @Test
   public void testRemoteFileCopy() throws Exception {
@@ -123,7 +123,7 @@ public class TestCopyFileAction extends MiniClusterHarness {
     }
   }
 
-  @Test
+  /*@Test
   public void testLocalCopyWithOffset() throws Exception {
     final String srcPath = "/testCopy";
     final String file1 = "file1";
@@ -147,7 +147,7 @@ public class TestCopyFileAction extends MiniClusterHarness {
     for (int i = 0; i < 50; i++) {
       Assert.assertTrue(in1.readByte() == 2);
     }
-  }
+  }*/
 
   @Test
   public void testAppendRemote() throws Exception {
