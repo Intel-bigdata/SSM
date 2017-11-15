@@ -35,9 +35,18 @@ public class TidbServer implements Runnable {
     boolean isTidbServerReady();
   }
 
-  public TidbServer(String args, SmartConf conf) {
+  public TidbServer(SmartConf conf) {
+    this("127.0.0.1", conf);
+  }
+
+  public TidbServer(String pdHost, SmartConf conf) {
+    String pdPort = conf.get(SmartConfKeys.PD_CLIENT_PORT_KEY, SmartConfKeys.PD_CLIENT_PORT_DEFAULT);
+    String servePort = conf.get(SmartConfKeys.TIDB_SERVICE_PORT_KEY, SmartConfKeys.TIDB_SERVICE_PORT_KEY_DEFAULT);
     String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR_KEY, SmartConfKeys.SMART_LOG_DIR_DEFAULT);
-    this.args = args + " --log-file=" + logDir + "/tidb.log";
+    //The default lease time is 10s. Setting a smaller value may decrease the time of executing ddl statement, but it's dangerous to do so.
+    args = String.format("--store=tikv --path=%s:%s --P=%s --lease=10s --log-file=%s/tidb.log",
+            pdHost, pdPort, servePort, logDir);
+
     try {
       tidb = (Tidb) Native.loadLibrary("libtidb.so", Tidb.class);
     } catch (UnsatisfiedLinkError ex) {

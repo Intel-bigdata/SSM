@@ -55,6 +55,7 @@ public class MetaStoreUtils {
         "performance_schema",
         "PERFORMANCE_SCHEMA"
       };
+  public static final String TIDB_DB_NAME = "ssm";
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
 
   public static Connection createConnection(String url,
@@ -425,14 +426,14 @@ public class MetaStoreUtils {
   }
 
   public static MetaStore getDBAdapter(
-      SmartConf conf) throws MetaStoreException {
+          SmartConf conf) throws MetaStoreException {
     URL pathUrl = ClassLoader.getSystemResource("");
     String path = pathUrl.getPath();
 
     String fileName = "druid.xml";
     String expectedCpPath = path + fileName;
     LOG.info("Expected DB connection pool configuration path = "
-        + expectedCpPath);
+            + expectedCpPath);
     File cpConfigFile = new File(expectedCpPath);
     if (cpConfigFile.exists()) {
       LOG.info("Using pool configure file: " + expectedCpPath);
@@ -440,9 +441,23 @@ public class MetaStoreUtils {
       try {
         p.loadFromXML(new FileInputStream(cpConfigFile));
 
-        String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
-        if (url != null) {
+        boolean tidbEnabled = conf.getBoolean(
+                SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
+        if (tidbEnabled) {
+          String tidbPort = conf.get(SmartConfKeys.TIDB_SERVICE_PORT_KEY,
+                  SmartConfKeys.TIDB_SERVICE_PORT_KEY_DEFAULT);
+          String url = String.format("jdbc:mysql://127.0.0.1:%s", tidbPort);
+          String user = p.getProperty("username");
+          String password = p.getProperty("password");
+          initTidb(url, user, password);
+          url = url + "/" + TIDB_DB_NAME;
           p.setProperty("url", url);
+          LOG.info("\t" + "The jdbc url for Tidb is " + url);
+        } else {
+          String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
+          if (url != null) {
+            p.setProperty("url", url);
+          }
         }
 
         String purl = p.getProperty("url");
@@ -457,10 +472,10 @@ public class MetaStoreUtils {
           for (String name : DB_NAME_NOT_ALLOWED) {
             if (dbName.equals(name)) {
               throw new MetaStoreException(
-                  String.format(
-                      "The database %s in mysql is for DB system use, "
-                          + "please appoint other database in druid.xml.",
-                      name));
+                      String.format(
+                              "The database %s in mysql is for DB system use, "
+                                      + "please appoint other database in druid.xml.",
+                              name));
             }
           }
         }
@@ -476,20 +491,20 @@ public class MetaStoreUtils {
       } catch (Exception e) {
         if (e instanceof InvalidPropertiesFormatException) {
           throw new MetaStoreException(
-              "Malformat druid.xml, please check the file.", e);
+                  "Malformat druid.xml, please check the file.", e);
         } else {
           throw new MetaStoreException(e);
         }
       }
     } else {
       LOG.info("DB connection pool config file " + expectedCpPath
-          + " NOT found.");
+              + " NOT found.");
     }
     // Get Default configure from druid-template.xml
     fileName = "druid-template.xml";
     expectedCpPath = path + fileName;
     LOG.info("Expected DB connection pool configuration path = "
-        + expectedCpPath);
+            + expectedCpPath);
     cpConfigFile = new File(expectedCpPath);
     LOG.info("Using pool configure file: " + expectedCpPath);
     Properties p = new Properties();
@@ -578,4 +593,27 @@ public class MetaStoreUtils {
       throw new MetaStoreException(e);
     }
   }
+
+  public static void initTidb(String url, String user, String password)
+          throws MetaStoreException {
+    Connection conn;
+    try {
+      conn = createConnection(url, user, "");
+      Statement stat = conn.createStatement();
+      stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", TIDB_DB_NAME));
+      stat.executeQuery(String.format("SET PASSWORD FOR root = PASSWORD('%s')", password));
+    } catch (SQLException ex) {
+      try {
+        conn = createConnection(url, user, password);
+        Statement stat = conn.createStatement();
+        stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", TIDB_DB_NAME));
+      } catch (Exception e) {
+        throw new MetaStoreException(ex);
+      }
+    } catch (Exception ex) {
+      throw new MetaStoreException(ex);
+    }
+    LOG.info("Tidb is initialized.");
+  }
 }
+

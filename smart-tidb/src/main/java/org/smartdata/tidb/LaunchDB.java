@@ -29,15 +29,9 @@ public class LaunchDB implements Runnable {
   private final static Logger LOG = LoggerFactory.getLogger(LaunchDB.class);
 
   public LaunchDB(SmartConf conf) {
-    String pdArgs = "--data-dir=pd";
-    String tikvArgs = "--pd=127.0.0.1:2379 --data-dir=tikv";
-    //The default lease time is 10s. Setting a smaller value may decrease the time of executing ddl statement, but it's dangerous to do so.
-    String tidbArgs = "--store=tikv --path=127.0.0.1:2379 --lease=10s";
-    //String tidbArgs = new String("--log-file=logs/tidb.log");
-
-    pdServer = new PdServer(pdArgs, conf);
-    tikvServer = new TikvServer(tikvArgs, conf);
-    tidbServer = new TidbServer(tidbArgs, conf);
+    pdServer = new PdServer(conf);
+    tikvServer = new TikvServer(conf);
+    tidbServer = new TidbServer(conf);
   }
 
   public boolean isCompleted() {
