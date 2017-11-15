@@ -35,9 +35,17 @@ public class TikvServer implements Runnable {
     boolean isTikvServerReady();
   }
 
-  public TikvServer(String args, SmartConf conf) {
+  public TikvServer(SmartConf conf) {
+    this("127.0.0.1", "127.0.0.1", conf);
+  }
+
+  public TikvServer(String pdHost, String ip, SmartConf conf) {
+    String pdPort = conf.get(SmartConfKeys.PD_CLIENT_PORT_KEY, SmartConfKeys.PD_CLIENT_PORT_DEFAULT);
+    String servePort = conf.get(SmartConfKeys.TIKV_SERVICE_PORT_KEY, SmartConfKeys.TIKV_SERVICE_PORT_DEFAULT);
     String logDir = conf.get(SmartConfKeys.SMART_LOG_DIR_KEY, SmartConfKeys.SMART_LOG_DIR_DEFAULT);
-    this.args = args + " --log-file=" + logDir + "/tikv.log";
+    args = String.format("--pd=%s:%s --addr=%s:%s --data-dir=tikv --log-file=%s/tikv.log",
+            pdHost, pdPort, ip, servePort, logDir);
+
     try {
       tikv = (Tikv) Native.loadLibrary("libtikv.so", Tikv.class);
     } catch (UnsatisfiedLinkError ex) {
