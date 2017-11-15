@@ -52,13 +52,19 @@ public class CompressionFileDao {
     simpleJdbcInsert.setTableName(TABLE_NAME);
     simpleJdbcInsert.execute(toMap(compressionInfo));
   }
-
+  
   public void deleteByName(String fileName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME + " WHERE file_name = ?";
     jdbcTemplate.update(sql, fileName);
   }
 
+  public List<SmartFileCompressionInfo> getAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
+        new CompressFileRowMapper());
+  }
+  
   public SmartFileCompressionInfo getInfoByName(String fileName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE file_name = ?",
