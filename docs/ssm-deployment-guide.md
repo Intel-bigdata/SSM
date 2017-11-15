@@ -65,9 +65,9 @@ Configure SSM
    
    ```xml
    <property>
-   <name>smart.dfs.namenode.rpcserver</name>
-      <value>hdfs://namenode-ip:9000</value>
-      <description>Hadoop cluster Namenode RPC server address and port</description>
+       <name>smart.dfs.namenode.rpcserver</name>
+       <value>hdfs://namenode-ip:9000</value>
+       <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
    ```
 
@@ -75,8 +75,8 @@ Configure SSM
 
    ```xml
    <property>
-   <name>smart.ignore.dirs</name>
-   <value>/foodirA,/foodirB</value>
+       <name>smart.ignore.dirs</name>
+       <value>/foodirA,/foodirB</value>
    </property>
    ```
 
