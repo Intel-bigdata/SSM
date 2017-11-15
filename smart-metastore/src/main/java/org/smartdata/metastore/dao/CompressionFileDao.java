@@ -64,7 +64,6 @@ public class CompressionFileDao {
     return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
         new CompressFileRowMapper());
   }
-  
   public SmartFileCompressionInfo getInfoByName(String fileName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE file_name = ?",
