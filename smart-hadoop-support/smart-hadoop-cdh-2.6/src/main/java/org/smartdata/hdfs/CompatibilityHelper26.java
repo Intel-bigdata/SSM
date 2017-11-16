@@ -35,6 +35,7 @@ import org.apache.hadoop.security.token.Token;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileSystem;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,7 +137,7 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
       int buffersize, long offset) throws IOException {
     if (client.exists(dest) && offset != 0) {
       return client
-          .append(dest, buffersize, null);
+          .append(dest, buffersize, null, null);
     }
     return client.create(dest, true);
   }
