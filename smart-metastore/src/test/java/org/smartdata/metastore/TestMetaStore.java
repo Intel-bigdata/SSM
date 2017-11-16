@@ -471,8 +471,8 @@ public class TestMetaStore extends TestDaoUtil {
         new ActionInfo(3, 0, "cache", args, "Test", "Test", true, 123213213L, true, 123123L, 100);
     metaStore.insertAction(actionInfo3);
     metaStore.deleteFinishedCmdletsWithGenTimeBefore(125);
-    Assert.assertTrue(metaStore.getActionById(1)==null);
-    Assert.assertTrue(metaStore.getActionById(2)!=null);
+    Assert.assertTrue(metaStore.getActionById(1) == null);
+    Assert.assertTrue(metaStore.getActionById(2) != null);
   }
 
   @Test

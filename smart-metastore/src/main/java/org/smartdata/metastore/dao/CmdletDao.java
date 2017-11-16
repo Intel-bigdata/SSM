@@ -188,7 +188,8 @@ public class CmdletDao {
 
   public void deleteBeforeTime(long timestamp) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String querysql = "SELECT cid FROM " + TABLE_NAME + " WHERE  generate_time < ? and state = 4";
+    final String querysql = "SELECT cid FROM " + TABLE_NAME
+        + " WHERE  generate_time < ? and state = 4";
     List<Long> cids = jdbcTemplate.queryForList(querysql, new Object[]{timestamp}, Long.class);
     final String deleteCmds = "DELETE FROM " + TABLE_NAME + " WHERE  generate_time < ?";
     jdbcTemplate.update(deleteCmds, timestamp);
