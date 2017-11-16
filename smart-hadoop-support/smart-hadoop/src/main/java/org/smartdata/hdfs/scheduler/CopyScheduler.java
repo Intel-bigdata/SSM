@@ -356,7 +356,6 @@ public class CopyScheduler extends ActionSchedulerService {
     batchDirectSync();
   }
 
-
   private void directSync(String src, String srcDir,
       String destDir) throws MetaStoreException {
     String dest = src.replace(srcDir, destDir);
@@ -372,10 +371,15 @@ public class CopyScheduler extends ActionSchedulerService {
       // Primary file doesn't exist
       return null;
     }
+    if (fileLock.containsKey(src)) {
+      // File is syncing
+      return null;
+    }
     // Mark all related diff as Merged
     if (fileDiffChainMap.containsKey(src)) {
       fileDiffChainMap.get(src).markAllDiffs();
       fileDiffChainMap.remove(src);
+      pushCacheToDB();
     }
     List<FileDiff> fileDiffs = metaStore.getFileDiffsByFileName(src);
     for (FileDiff fileDiff : fileDiffs) {
@@ -857,7 +861,12 @@ public class CopyScheduler extends ActionSchedulerService {
 
       void markAllDiffs() throws MetaStoreException {
         for (long did : diffChain) {
-          updateFileDiffInCache(did, FileDiffState.MERGED);
+          if (fileDiffCache.containsKey(did)) {
+            updateFileDiffInCache(did, FileDiffState.MERGED);
+          } else {
+            LOG.error("FileDiff {} is in chain but not in cache", did);
+            metaStore.updateFileDiff(did, FileDiffState.MERGED);
+          }
         }
         diffChain.clear();
       }
