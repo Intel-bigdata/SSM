@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -35,8 +36,9 @@ import org.apache.hadoop.security.token.Token;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.file.FileSystem;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 public class CompatibilityHelper27 implements CompatibilityHelper {
@@ -135,5 +137,16 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
   public int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage) {
     StorageType storageType = datanodeStorage.getStorageType();
     return storageType.ordinal();
+  }
+
+  @Override
+  public OutputStream getDFSClientAppend(DFSClient client, String dest,
+      int buffersize, long offset) throws IOException {
+    if (client.exists(dest) && offset != 0) {
+      return client
+          .append(dest, buffersize,
+              EnumSet.of(CreateFlag.APPEND), null, null);
+    }
+    return client.create(dest, true);
   }
 }

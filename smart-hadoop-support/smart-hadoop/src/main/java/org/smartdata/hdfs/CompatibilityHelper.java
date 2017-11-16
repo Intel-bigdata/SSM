@@ -33,6 +33,7 @@ import org.apache.hadoop.security.token.Token;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 public interface CompatibilityHelper {
@@ -67,4 +68,6 @@ public interface CompatibilityHelper {
   boolean truncate(DistributedFileSystem fileSystem, String src, long newLength) throws IOException;
 
   int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage);
+
+  OutputStream getDFSClientAppend(DFSClient client, String dest, int buffersize, long offset) throws IOException;
 }
