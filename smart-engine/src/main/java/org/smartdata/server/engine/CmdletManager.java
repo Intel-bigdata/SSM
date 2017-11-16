@@ -27,6 +27,8 @@ import org.smartdata.AbstractService;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.action.SmartAction;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.move.AbstractMoveFileAction;
 import org.smartdata.hdfs.scheduler.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
@@ -48,6 +50,7 @@ import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
+import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -92,6 +95,10 @@ public class CmdletManager extends AbstractService {
   private Map<String, Long> fileLocks;
   private ListMultimap<String, ActionScheduler> schedulers = ArrayListMultimap.create();
   private List<ActionSchedulerService> schedulerServices = new ArrayList<>();
+
+  private AtomicLong numCmdletsGen;
+  private int numCmdletsFinished;
+
   private long totalScheduled = 0;
 
   public CmdletManager(ServerContext context) {
@@ -122,6 +129,7 @@ public class CmdletManager extends AbstractService {
     try {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
+      numCmdletsGen = new AtomicLong(0);
 
       schedulerServices = AbstractServiceFactory.createActionSchedulerServices(
           getContext().getConf(), getContext(), metaStore, false);
@@ -272,6 +280,8 @@ public class CmdletManager extends AbstractService {
   @Override
   public void start() throws IOException {
     LOG.info("Starting ...");
+    executorService.scheduleAtFixedRate(new CmdletPurgeTask(getContext().getConf()),
+        10, 5000, TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50, TimeUnit.MILLISECONDS);
 
     for (ActionSchedulerService s : schedulerServices) {
@@ -343,6 +353,7 @@ public class CmdletManager extends AbstractService {
       metaStore.insertCmdlet(cmdletInfo);
       metaStore.insertActions(
           actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+      numCmdletsGen.incrementAndGet();
     } catch (MetaStoreException e) {
       LOG.error("{} submit to DB error", cmdletInfo, e);
 
@@ -1007,6 +1018,30 @@ public class CmdletManager extends AbstractService {
         LOG.error("Exception when Scheduling Cmdlet. "
             + scheduledCmdlet.size() + " cmdlets are pending for dispatch.", e);
       }
+    }
+  }
+
+  private class CmdletPurgeTask implements Runnable {
+    private int lastNumRecords;
+    private int maxNumRecords;
+    private long maxLifeTime;
+
+    private long lastTimeGenCmdlet;
+
+    public CmdletPurgeTask(SmartConf conf) {
+      maxNumRecords = conf.getInt(SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY,
+          SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_DEFAULT);
+      String lifeString = conf.get(SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY,
+          SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_DEFAULT);
+      maxLifeTime = StringUtil.pharseTimeString(lifeString);
+      if (maxLifeTime == -1) {
+        throw new IOException("Invalid value format for configure option " + )
+      }
+      lastNumRecords = numCmdletsGen;
+    }
+
+    @Override
+    public void run() {
     }
   }
 }
