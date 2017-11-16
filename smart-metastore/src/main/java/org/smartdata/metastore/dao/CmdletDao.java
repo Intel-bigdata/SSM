@@ -186,6 +186,25 @@ public class CmdletDao {
     jdbcTemplate.update(sql, cid);
   }
 
+  public void deleteBeforeTime(long timestamp) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String finishedState = "";
+    for (CmdletState cmdletState : CmdletState.values()) {
+      if (CmdletState.isTerminalState(cmdletState)) {
+        finishedState = finishedState + cmdletState.getValue() + ",";
+      }
+    }
+    finishedState = finishedState.substring(0, finishedState.length() - 1);
+    final String querysql = "SELECT cid FROM " + TABLE_NAME
+        + " WHERE  generate_time < ? AND state IN (" + finishedState + ")";
+    List<Long> cids = jdbcTemplate.queryForList(querysql, new Object[]{timestamp}, Long.class);
+    final String deleteCmds = "DELETE FROM " + TABLE_NAME
+        + " WHERE  generate_time < ? AND state IN (" + finishedState + ")";
+    jdbcTemplate.update(deleteCmds, timestamp);
+    final String deleteActions = "DELETE FROM action WHERE cid IN (?)";
+    jdbcTemplate.update(deleteActions, StringUtils.join(cids, ","));
+  }
+
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME;
