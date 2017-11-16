@@ -120,6 +120,30 @@ SSM uses SQL database as its backend metastore. The following two databases were
 **TiDB** : TiDB instance can be embedded into SSM for convenience of deployment. Independent TiDB deployment is also supported.
 Please ref. [SSM Deployment Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-deployment-guide.md) for more details.
 
+Developers
+------------
+- Wei, Zhou
+- Huafeng, Wang
+- Qiyuan, Gong
+- Yi, Chen
+- Kai, Zheng
+- Jie, Tao
+- Shunyang, Yao
+- Zhiqiang, Zhang
+- Feilong, He
+- Frank, Zeng
+- Tianlun, Zhang
+- Yuxuan, Pan
+- Jiajia, Li
+- Zhen, Du
+- Yao, Chen
+- Chen, Feng
+- Yanping, You
+- Tianlong, Xu
+- Anyang, Wang
+- Conghui, Li
+- Weijun, Pang
+
 How to Contribute
 ------------
 We welcome your feedback and contributions. Please feel free to fire issues or push PRs, we'll respond soon. Note the project is evolving very fast. 
