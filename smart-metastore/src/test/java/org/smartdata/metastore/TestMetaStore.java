@@ -454,6 +454,29 @@ public class TestMetaStore extends TestDaoUtil {
   }
 
   @Test
+  public void testdeleteFinishedCmdletsWithGenTimeBefore() throws Exception {
+    Map<String, String> args = new HashMap();
+    CmdletInfo command1 =
+        new CmdletInfo(0, 78, CmdletState.CANCELLED, "test", 123L, 232444444L);
+    metaStore.insertCmdlet(command1);
+    CmdletInfo command2 = new CmdletInfo(1, 78, CmdletState.DONE, "tt", 128L, 232444994L);
+    metaStore.insertCmdlet(command2);
+    ActionInfo actionInfo =
+        new ActionInfo(1, 0, "cache", args, "Test", "Test", true, 123213213L, true, 123123L, 100);
+    metaStore.insertAction(actionInfo);
+    ActionInfo actionInfo2 =
+        new ActionInfo(2, 1, "cache", args, "Test", "Test", true, 123213213L, true, 123123L, 100);
+    metaStore.insertAction(actionInfo2);
+    ActionInfo actionInfo3 =
+        new ActionInfo(3, 0, "cache", args, "Test", "Test", true, 123213213L, true, 123123L, 100);
+    metaStore.insertAction(actionInfo3);
+    metaStore.deleteFinishedCmdletsWithGenTimeBefore(125);
+    Assert.assertTrue(metaStore.getCmdletById(0) == null);
+    Assert.assertTrue(metaStore.getActionById(1) == null);
+    Assert.assertTrue(metaStore.getActionById(2) != null);
+  }
+
+  @Test
   public void testUpdateDeleteCommand() throws Exception {
     long commandId = 0;
     commandId = metaStore.getMaxCmdletId();

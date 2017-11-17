@@ -48,4 +48,11 @@ public enum FileDiffState {
   public String toString() {
     return String.format("FileDiffState{value=%s} %s", value, super.toString());
   }
+
+  public static boolean isTerminalState(FileDiffState state) {
+    return state.equals(APPLIED)
+        || state.equals(MERGED)
+        || state.equals(DELETED)
+        || state.equals(FAILED);
+  }
 }

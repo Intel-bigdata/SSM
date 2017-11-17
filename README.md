@@ -19,7 +19,7 @@ Optimizing NameNode to support even larger namespace, eliminating the inodes of 
 ### 4. Cluster Data Copy and Disaster Recovery
 Supporting transparent fail-over for applications. Here is the [HDFS disaster recovery design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/disaster-recovery.md) document. The 1st stage already released. 
 ### 5. Transparent HDFS Data Compression
-Supporting transparent HDFS data compression, note it's not Hadoop compression, which needs to be explictly called by applications and frameworks like MR. Under prototyping and design coming soon. 
+Supporting transparent HDFS data compression, note it's not Hadoop compression, which needs to be explicitly called by applications and frameworks like MR. Under prototyping and design coming soon. 
 
 High Level Considerations
 ------------
@@ -51,7 +51,7 @@ Development Phases
 ------------
 HDFS-SSM development is separated into 3 major phases. Currently the Phase 1 work is approaching completion.
 
-**Phase 1.** Implement SSM framewwork and the fundamental infrustrature:
+**Phase 1.** Implement SSM framework and the fundamental infrastructure:
 * Event and metrics collection from HDFS cluster;
 * Rule DSL to support high level customization and usage;
 * Support richful smart actions to adjust storage policies and options, enhancing HDFS-HSM and HDFS-Cache;
@@ -81,7 +81,7 @@ When the files got very hot, they can be moved from fast storage into cache memo
 ### 2. Move hot data to fast storage
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/ssd-case.png)
 
-Without SSM, data may always be readed from HDD. With SSM, optimizaitons can be made through rules. As showned in the figure above, data can be moved to faster SSD to achive better performance.
+Without SSM, data may always be readed from HDD. With SSM, optimizations can be made through rules. As showned in the figure above, data can be moved to faster SSD to achieve better performance.
 
 ### 3. Archive cold data
 Files are less likely to be read during the ending of lifecycle, so it’s better to move these cold files into lower performance storage to decrease the cost of data storage. The following shows the example of archiving data that has not been read over 1 times during the last 90 days.
@@ -90,7 +90,7 @@ Files are less likely to be read during the ending of lifecycle, so it’s bette
 
 Admin Doc
 ------------
-Cluster admininstrator takes the role of SSM rule management. A set of APIs is exposed to help administrator manage rule. This set of APIs includes create, delete, list, enable and disable SSM rule. Hadoop admin privilege is required for access the APIs. For detailed information, please refer to [Admin Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md).
+Cluster administrator takes the role of SSM rule management. A set of APIs is exposed to help administrator manage rule. This set of APIs includes create, delete, list, enable and disable SSM rule. Hadoop admin privilege is required for access the APIs. For detailed information, please refer to [Admin Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md).
 
 User Doc
 ------------
@@ -113,10 +113,41 @@ mvn package -P dist,hadoop-cdh-2.6
 
 Then there will be a `smart-data-${version}.tar.gz` built out under `smart-dist/target`.
 
+Third-party dependencies
+------------------------
+SSM uses SQL database as its backend metastore. The following two databases were tested and recommended for using in production environment:
+**MySQL** : User have to deploy MySQL service manually.
+**TiDB** : TiDB instance can be embedded into SSM for convenience of deployment. Independent TiDB deployment is also supported.
+Please ref. [SSM Deployment Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-deployment-guide.md) for more details.
+
+Developers
+------------
+- Wei, Zhou
+- Huafeng, Wang
+- Qiyuan, Gong
+- Yi, Chen
+- Kai, Zheng
+- Jie, Tao
+- Shunyang, Yao
+- Zhiqiang, Zhang
+- Feilong, He
+- Frank, Zeng
+- Tianlun, Zhang
+- Yuxuan, Pan
+- Jiajia, Li
+- Zhen, Du
+- Yao, Chen
+- Chen, Feng
+- Yanping, You
+- Tianlong, Xu
+- Anyang, Wang
+- Conghui, Li
+- Weijun, Pang
+
 How to Contribute
 ------------
 We welcome your feedback and contributions. Please feel free to fire issues or push PRs, we'll respond soon. Note the project is evolving very fast. 
 
-Acknowlegement
+Acknowledgement
 ------------
-This originates from and bases on the discussions occured in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). It not only thanks to all the team members of this project, but also thanks a lot to all the idea and feedback contributors.
+This originates from and bases on the discussions occurred in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). It not only thanks to all the team members of this project, but also thanks a lot to all the idea and feedback contributors.

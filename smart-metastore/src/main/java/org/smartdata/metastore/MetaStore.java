@@ -943,6 +943,20 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
+  /**
+   * Delete finished cmdlets before given timestamp, actions belonging to these cmdlets
+   * will also be deleted. Cmdlet's generate_time is used for comparison.
+   *
+   * @param timestamp
+   * @throws MetaStoreException
+   */
+  public void deleteFinishedCmdletsWithGenTimeBefore(long timestamp) throws MetaStoreException {
+    try {
+      cmdletDao.deleteBeforeTime(timestamp);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
 
   public synchronized void insertActions(ActionInfo[] actionInfos)
       throws MetaStoreException {

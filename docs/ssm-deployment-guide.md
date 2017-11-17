@@ -65,12 +65,21 @@ Configure SSM
    
    ```xml
    <property>
-   <name>smart.dfs.namenode.rpcserver</name>
-      <value>hdfs://namenode-ip:9000</value>
-      <description>Hadoop cluster Namenode RPC server address and port</description>
+       <name>smart.dfs.namenode.rpcserver</name>
+       <value>hdfs://namenode-ip:9000</value>
+       <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
    ```
- 
+
+   SSM will fetch the whole HDFS namespace when it starts by default. If you do not care about files under some directories (directories for temporary files for example) then you can configure them in the following way, SSM will completely ignore these files. Please note, actions will also not be triggered for these files by rules.
+
+   ```xml
+   <property>
+       <name>smart.ignore.dirs</name>
+       <value>/foodirA,/foodirB</value>
+   </property>
+   ```
+
 * **Configure Smart Agent (optional)**
 
    This step can be skipped if SSM standalone mode is preferred.
@@ -80,7 +89,7 @@ Configure SSM
  
 * **Configure database**
 
-   SSM currenlty supports MySQL and TiDB(rc vesion) as the backend to store metadata for SSM. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
+   SSM currently supports MySQL and TiDB(rc version) as the backend to store metadata for SSM. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
 
    You just need to follow the guide in one of the two following options to configure database for SSM.
 
@@ -102,7 +111,8 @@ Configure SSM
 
    * Option 2. Use SSM-TiDB
 
-    Since TiDB has been integrated with SSM, you do not need to install TiDB beforehand.
+    To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb.git.
+
     TiDB can be enabled in smart-site.xml.
 
    ```xml
@@ -117,11 +127,13 @@ Configure SSM
     For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
     So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over MySQL.
 
-    If TiDB is enabled, the jdbc url should be the following default one. The configuration in druid.xml is shown as follows.
+    If TiDB is enabled, there is no need to configure jdbc url in druid.xml. In TiDB only root user is created initially, so you should set username as root. Optionally, you can set a password for root user in druid.xml.
+
+    An example of configuration in druid.xml for using TiDB is shown as follows.
 
    ```xml
     <properties>
-        <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry>
+        <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> no need to configure url for TiDB -->
         <entry key="username">root</entry>
         <entry key="password"></entry>
         ......
@@ -129,7 +141,12 @@ Configure SSM
    ```
 
     TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
-    The default command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 4000`.
+    If user password is not set in druid, by default the command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 7070`.
+    The 7070 port is the default one configured for tidb.service.port in smart-default.xml.
+    If you modify it, the port in the above command should also be modified accordingly.
+    In TiDB, the database named ssm is used to store metadata.
+
+    By default, the logs of Pd, TiKV and TiDB are under ${SMART_HOME}/logs directory. You can refer to these logs if encountering database fault.
 
 * **Configure user account to authenticate to Web UI**
 
@@ -201,7 +218,7 @@ Run SSM
 
    `http://localhost:7045`
 
-   If you meet any problem, please open the smartserver.log under /logs directory. All the trouble shooting clues are there.
+   If you meet any problem, please open the smartserver.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
    
 * **Stop SSM server**
    
@@ -282,7 +299,7 @@ the configuration takes effect. You can try TestDFSIO for example,
 
 	  `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –read`
 
-   You may want to replace the jar with the version used in your cluster. After the read data opertion, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
+   You may want to replace the jar with the version used in your cluster. After the read data operation, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
 
 
 SSM Rule Examples
@@ -317,28 +334,28 @@ single date nor time value is specified, the rule will be evaluated every short 
     This rule will move all XML files under /test directory to SSD. The rule engine will
 evaluate whether the condition meets every 3s. 
 
-Rule priority and rule order will be considered to implement yet. Currenlty all rules
-will run parallelly. For a full detail rule format definition, please refer to 
+Rule priority and rule order will be considered to implement yet. Currently all rules
+will run in parallel. For a full detail rule format definition, please refer to
 https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 
 
-Performance Tunning
+Performance Tuning
 ---------------------------------------------------------------------------------
-There are two configurable parameters which impact the SSM rule evalute and action 
-execution parallism.
+There are two configurable parameters which impact the SSM rule evaluation and action
+execution parallelism.
 
 **smart.rule.executors**
 
-Current default value is 5, which means system will concurrently evalue 5 rule state 
+Current default value is 5, which means system will concurrently evaluate 5 rule state
 at the same time.
 
 **smart.cmdlet.executors**
 
-Current default value is 10, means there will be 10 actions concurrenlty executed at
+Current default value is 10, means there will be 10 actions concurrently executed at
 the same time. 
 If the current configuration cannot meet your performance requirements, you can change
 it by define the property in the smart-site.xml under /conf directory. Here is an example
-to change the ation execution paralliem to 50.
+to change the action execution paralliem to 50.
 
 ```xml
 <property>
@@ -380,8 +397,8 @@ All logs will go to SmartSerer.log under /logs directory.
 Know Issues(2017-08-19)
 ---------------------------------------------------------------------------------
 1. On UI, actions in waiting list will show "CreateTime" 1969-12-31 16:00:00 and "Running Time" 36 weeks and 2 days. This will be improved later. 
-2. If there is no SSD and Archive type disk volumn configured in DataNodes, action generated by "allssd" and "archive" rule wil fail.
-3. When SSM starts, it will pull the whole namespace form Namenode. If the namespace is very big, it will takes minutes for SSM to finish the namespace synchronization. SSM may half fuction during this period. 
+2. If there is no SSD and Archive type disk volume configured in DataNodes, action generated by "allssd" and "archive" rule wil fail.
+3. When SSM starts, it will pull the whole namespace form Namenode. If the namespace is very big, it will takes minutes for SSM to finish the namespace synchronization. SSM may half function during this period. 
 
 
    

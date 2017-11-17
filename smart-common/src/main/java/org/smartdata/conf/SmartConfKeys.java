@@ -74,6 +74,12 @@ public class SmartConfKeys {
   public static final String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
   public static final boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = true;
 
+  // Cmdlets
+  public static final String SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY =
+      "smart.cmdlet.hist.max.num.records";
+  public static final String SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY =
+      "smart.cmdlet.hist.max.record.lifetime";
+
   // Action
   public static final String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
   public static final long SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
@@ -104,4 +110,13 @@ public class SmartConfKeys {
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";
   public static final boolean SMART_TIDB_ENABLED_DEFAULT = false;
+
+  public static final String PD_CLIENT_PORT_KEY = "pd.client.port";
+  public static final String PD_CLIENT_PORT_DEFAULT = "7060";
+  public static final String PD_PEER_PORT_KEY = "pd.peer.port";
+  public static final String PD_PEER_PORT_DEFAULT = "7061";
+  public static final String TIKV_SERVICE_PORT_KEY = "tikv.service.port";
+  public static final String TIKV_SERVICE_PORT_DEFAULT = "20160";
+  public static final String TIDB_SERVICE_PORT_KEY = "tidb.service.port";
+  public static final String TIDB_SERVICE_PORT_KEY_DEFAULT = "7070";
 }

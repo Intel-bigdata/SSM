@@ -59,7 +59,7 @@ public class TestDBUtil {
   }
 
   public static String getUniqueFilePath() {
-    return getTestDir() + "/" + UUID.randomUUID().toString();
+    return getTestDir() + "/" + UUID.randomUUID().toString() + System.currentTimeMillis();
   }
 
   public static String getUniqueDBFilePath() {

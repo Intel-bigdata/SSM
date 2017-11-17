@@ -147,9 +147,7 @@ public class SmartServer {
       String host = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
       InetAddress address = InetAddress.getByName(host);
       String ip = address.getHostAddress();
-      String pdArgs = String.format(
-              "--client-urls=http://%s:2379 --peer-urls=http://%s:2380 --data-dir=pd", ip, ip);
-      PdServer pdServer = new PdServer(pdArgs, conf);
+      PdServer pdServer = new PdServer(ip, conf);
       Thread pdThread = new Thread(pdServer);
       pdThread.start();
       while (!pdServer.isReady() || !agentMaster.isAgentRegisterReady(conf)) {
@@ -161,8 +159,7 @@ public class SmartServer {
         Thread.sleep(100);
       }
       LOG.info("Tikv server is ready.");
-      String tidbArgs = String.format("--store=tikv --path=%s:2379 --lease=10s", host);
-      TidbServer tidbServer = new TidbServer(tidbArgs, conf);
+      TidbServer tidbServer = new TidbServer(host, conf);
       Thread tidbThread = new Thread(tidbServer);
       tidbThread.start();
       while (!tidbServer.isReady()) {

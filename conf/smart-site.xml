@@ -34,9 +34,7 @@
         <name>smart.tidb.enable</name>
         <value>false</value>
         <description>
-            This decides whether Tidb is enabled and used as metastore.
-            If it is enabled, the jdbc url configured in druid.xml must be a valid service address of Tidb.
+            This decides whether Tidb is enabled.
         </description>
     </property>
-
 </configuration>

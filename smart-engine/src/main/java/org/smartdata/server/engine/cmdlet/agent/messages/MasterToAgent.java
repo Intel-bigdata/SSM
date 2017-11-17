@@ -55,7 +55,7 @@ public class MasterToAgent {
 
     @Override
     public String toString() {
-      return "AgentId{ id=" + id + "}";
+      return "AgentId{id=" + id + "}";
     }
   }
 
