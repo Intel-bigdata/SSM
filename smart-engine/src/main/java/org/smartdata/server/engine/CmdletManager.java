@@ -96,12 +96,13 @@ public class CmdletManager extends AbstractService {
   private ListMultimap<String, ActionScheduler> schedulers = ArrayListMultimap.create();
   private List<ActionSchedulerService> schedulerServices = new ArrayList<>();
 
-  private AtomicLong numCmdletsGen;
-  private int numCmdletsFinished;
+  private AtomicLong numCmdletsGen = new AtomicLong(0);
+  private AtomicLong numCmdletsFinished = new AtomicLong(0);
 
   private long totalScheduled = 0;
+  private CmdletPurgeTask purgeTask;
 
-  public CmdletManager(ServerContext context) {
+  public CmdletManager(ServerContext context) throws IOException {
     super(context);
 
     this.metaStore = context.getMetaStore();
@@ -114,6 +115,7 @@ public class CmdletManager extends AbstractService {
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
     this.fileLocks = new ConcurrentHashMap<>();
+    this.purgeTask = new CmdletPurgeTask(context.getConf());
     this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
         idToLaunchCmdlet, runningCmdlets, schedulers);
   }
@@ -129,7 +131,6 @@ public class CmdletManager extends AbstractService {
     try {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
-      numCmdletsGen = new AtomicLong(0);
 
       schedulerServices = AbstractServiceFactory.createActionSchedulerServices(
           getContext().getConf(), getContext(), metaStore, false);
@@ -454,7 +455,7 @@ public class CmdletManager extends AbstractService {
               CmdletStatusUpdate msg = new CmdletStatusUpdate(cmdlet.getCid(),
                   cmdlet.getStateChangedTime(), cmdlet.getState());
               // Mark all actions as finished and successful
-              cmdletFinished(cmdlet);
+              cmdletFinishedInternal(cmdlet);
               onCmdletStatusUpdate(msg);
             }
             break;
@@ -642,6 +643,7 @@ public class CmdletManager extends AbstractService {
 
   //Todo: optimize this function.
   private void cmdletFinished(long cmdletId) throws IOException {
+    numCmdletsFinished.incrementAndGet();
     CmdletInfo cmdletInfo = idToCmdlets.remove(cmdletId);
     if (cmdletInfo != null) {
       flushCmdletInfo(cmdletInfo);
@@ -665,7 +667,8 @@ public class CmdletManager extends AbstractService {
     idToLaunchCmdlet.remove(cmdletId);
   }
 
-  private void cmdletFinished(CmdletInfo cmdletInfo) throws IOException {
+  private void cmdletFinishedInternal(CmdletInfo cmdletInfo) throws IOException {
+    numCmdletsFinished.incrementAndGet();
     List<ActionInfo> removed = new ArrayList<>();
     ActionInfo actionInfo;
     for (Long aid : cmdletInfo.getAids()) {
@@ -1022,26 +1025,45 @@ public class CmdletManager extends AbstractService {
   }
 
   private class CmdletPurgeTask implements Runnable {
-    private int lastNumRecords;
+    private long lastGen;
+    private long lastFinished;
+
     private int maxNumRecords;
     private long maxLifeTime;
 
     private long lastTimeGenCmdlet;
+    private long lastDelTimeStamp = System.currentTimeMillis();
 
-    public CmdletPurgeTask(SmartConf conf) {
+    private long lifeCheckInterval;
+
+    private long lastUpdateTime = 0;
+
+    public CmdletPurgeTask(SmartConf conf) throws IOException {
       maxNumRecords = conf.getInt(SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY,
           SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_DEFAULT);
       String lifeString = conf.get(SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY,
           SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_DEFAULT);
       maxLifeTime = StringUtil.pharseTimeString(lifeString);
       if (maxLifeTime == -1) {
-        throw new IOException("Invalid value format for configure option " + )
+        throw new IOException("Invalid value format for configure option. "
+            + SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY + "=" + lifeString);
       }
-      lastNumRecords = numCmdletsGen;
+      lifeCheckInterval = maxLifeTime / 20 > 1000 ? (maxLifeTime / 20) : 1000;
+      lastGen = numCmdletsGen.get();
+      lastFinished = numCmdletsFinished.get();
     }
 
     @Override
     public void run() {
+      long ts = System.currentTimeMillis();
+      if (ts - lastDelTimeStamp >= lifeCheckInterval) {
+        metaStore.deleteFinishedCmdletsWithGenTimeBefore(lastDelTimeStamp);
+      }
+
+
+    }
+
+    public long updateNumFinished() {
     }
   }
 }

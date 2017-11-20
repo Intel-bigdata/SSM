@@ -17,6 +17,9 @@
  */
 package org.smartdata.model;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * The possible state that a cmdlet can be in.
  */
@@ -52,10 +55,11 @@ public enum CmdletState {
   }
 
   public static boolean isTerminalState(CmdletState state) {
-    return state.equals(DONE)
-        || state.equals(CANCELLED)
-        || state.equals(DISABLED)
-        || state.equals(FAILED);
+    return getTerminalStates().contains(state);
+  }
+
+  public static List<CmdletState> getTerminalStates() {
+    return Arrays.asList(DONE, CANCELLED, DISABLED, FAILED);
   }
 
   @Override

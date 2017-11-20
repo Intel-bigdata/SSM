@@ -163,6 +163,14 @@ public class CmdletDao {
         new CmdletRowMapper());
   }
 
+  public List<CmdletInfo> getCmdletsInTerminiatedState(CmdletState state) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE state = ?",
+        new Object[]{state.getValue()},
+        new CmdletRowMapper());
+  }
+
   public List<CmdletInfo> getByCondition(
       String cidCondition, String ridCondition, CmdletState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
