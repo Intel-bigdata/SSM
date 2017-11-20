@@ -66,6 +66,10 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
       $scope.query.q = '';
     });
 
+    if ($rootScope.ticket) {
+      $location.path('/notebook/2CM9DW8NW');
+    }
+
     getZeppelinVersion();
     loadNotes();
   }
@@ -102,7 +106,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     var logoutURL = baseUrlSrv.getRestApiBase() + '/login/logout';
 
     //for firefox and safari
-    logoutURL = logoutURL.replace('//', '//false:false@');
+    // logoutURL = logoutURL.replace('//', '//false:false@');
     $http.post(logoutURL).error(function() {
       //force authcBasic (if configured) to logout
       $http.post(logoutURL).error(function() {
