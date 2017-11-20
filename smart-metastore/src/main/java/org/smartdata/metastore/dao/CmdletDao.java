@@ -205,6 +205,34 @@ public class CmdletDao {
     jdbcTemplate.update(deleteActions, StringUtils.join(cids, ","));
   }
 
+  public void deleteKeepNewCmd (long num) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String finishedState = "";
+    for (CmdletState cmdletState : CmdletState.values()) {
+      if (CmdletState.isTerminalState(cmdletState)) {
+        finishedState = finishedState + cmdletState.getValue() + ",";
+      }
+    }
+    finishedState = finishedState.substring(0, finishedState.length() - 1);
+    final String querysql = "SELECT COUNT(1) FROM " + TABLE_NAME
+        + " WHERE state IN (" + finishedState + ")";
+    long count = jdbcTemplate.queryForObject(querysql, Long.class);
+    if (num >= count) {
+      return;
+    } else {
+      long deleteNum = count - num;
+      final String queryCids = "SELECT cid FROM " + TABLE_NAME
+          + " WHERE state IN (" + finishedState + ") LIMIT " + deleteNum;
+      List<Long> cids = jdbcTemplate.queryForList(queryCids, Long.class);
+      String deleteCids = StringUtils.join(cids, ",");
+      final String deleteCmd = "DELETE FROM " + TABLE_NAME
+          + " WHERE cid IN (?)";
+      jdbcTemplate.update(deleteCmd, deleteCids);
+      final String deleteActions = "DELETE FROM action WHERE cid IN (?)";
+      jdbcTemplate.update(deleteActions, deleteCids);
+    }
+  }
+
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME;
