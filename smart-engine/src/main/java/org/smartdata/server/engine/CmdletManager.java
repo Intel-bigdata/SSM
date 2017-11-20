@@ -27,6 +27,8 @@ import org.smartdata.AbstractService;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.action.SmartAction;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.move.AbstractMoveFileAction;
 import org.smartdata.hdfs.scheduler.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
@@ -48,6 +50,7 @@ import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
+import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -92,9 +95,14 @@ public class CmdletManager extends AbstractService {
   private Map<String, Long> fileLocks;
   private ListMultimap<String, ActionScheduler> schedulers = ArrayListMultimap.create();
   private List<ActionSchedulerService> schedulerServices = new ArrayList<>();
-  private long totalScheduled = 0;
 
-  public CmdletManager(ServerContext context) {
+  private AtomicLong numCmdletsGen = new AtomicLong(0);
+  private AtomicLong numCmdletsFinished = new AtomicLong(0);
+
+  private long totalScheduled = 0;
+  private CmdletPurgeTask purgeTask;
+
+  public CmdletManager(ServerContext context) throws IOException {
     super(context);
 
     this.metaStore = context.getMetaStore();
@@ -107,6 +115,7 @@ public class CmdletManager extends AbstractService {
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
     this.fileLocks = new ConcurrentHashMap<>();
+    this.purgeTask = new CmdletPurgeTask(context.getConf());
     this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
         idToLaunchCmdlet, runningCmdlets, schedulers);
   }
@@ -122,6 +131,7 @@ public class CmdletManager extends AbstractService {
     try {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
+      numCmdletsFinished.addAndGet(metaStore.getNumCmdletsInTerminiatedStates());
 
       schedulerServices = AbstractServiceFactory.createActionSchedulerServices(
           getContext().getConf(), getContext(), metaStore, false);
@@ -272,6 +282,8 @@ public class CmdletManager extends AbstractService {
   @Override
   public void start() throws IOException {
     LOG.info("Starting ...");
+    executorService.scheduleAtFixedRate(new CmdletPurgeTask(getContext().getConf()),
+        10, 5000, TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50, TimeUnit.MILLISECONDS);
 
     for (ActionSchedulerService s : schedulerServices) {
@@ -343,6 +355,7 @@ public class CmdletManager extends AbstractService {
       metaStore.insertCmdlet(cmdletInfo);
       metaStore.insertActions(
           actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+      numCmdletsGen.incrementAndGet();
     } catch (MetaStoreException e) {
       LOG.error("{} submit to DB error", cmdletInfo, e);
 
@@ -443,7 +456,7 @@ public class CmdletManager extends AbstractService {
               CmdletStatusUpdate msg = new CmdletStatusUpdate(cmdlet.getCid(),
                   cmdlet.getStateChangedTime(), cmdlet.getState());
               // Mark all actions as finished and successful
-              cmdletFinished(cmdlet);
+              cmdletFinishedInternal(cmdlet);
               onCmdletStatusUpdate(msg);
             }
             break;
@@ -631,6 +644,7 @@ public class CmdletManager extends AbstractService {
 
   //Todo: optimize this function.
   private void cmdletFinished(long cmdletId) throws IOException {
+    numCmdletsFinished.incrementAndGet();
     CmdletInfo cmdletInfo = idToCmdlets.remove(cmdletId);
     if (cmdletInfo != null) {
       flushCmdletInfo(cmdletInfo);
@@ -654,7 +668,8 @@ public class CmdletManager extends AbstractService {
     idToLaunchCmdlet.remove(cmdletId);
   }
 
-  private void cmdletFinished(CmdletInfo cmdletInfo) throws IOException {
+  private void cmdletFinishedInternal(CmdletInfo cmdletInfo) throws IOException {
+    numCmdletsFinished.incrementAndGet();
     List<ActionInfo> removed = new ArrayList<>();
     ActionInfo actionInfo;
     for (Long aid : cmdletInfo.getAids()) {
@@ -1006,6 +1021,52 @@ public class CmdletManager extends AbstractService {
       } catch (IOException e) {
         LOG.error("Exception when Scheduling Cmdlet. "
             + scheduledCmdlet.size() + " cmdlets are pending for dispatch.", e);
+      }
+    }
+  }
+
+  private class CmdletPurgeTask implements Runnable {
+    private int maxNumRecords;
+    private long maxLifeTime;
+    private long lastDelTimeStamp = System.currentTimeMillis();
+    private long lifeCheckInterval;
+    private int succ = 0;
+
+    public CmdletPurgeTask(SmartConf conf) throws IOException {
+      maxNumRecords = conf.getInt(SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY,
+          SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_DEFAULT);
+      String lifeString = conf.get(SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY,
+          SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_DEFAULT);
+      maxLifeTime = StringUtil.pharseTimeString(lifeString);
+      if (maxLifeTime == -1) {
+        throw new IOException("Invalid value format for configure option. "
+            + SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY + "=" + lifeString);
+      }
+      lifeCheckInterval = maxLifeTime / 20 > 5000 ? (maxLifeTime / 20) : 5000;
+    }
+
+    @Override
+    public void run() {
+      try {
+        long ts = System.currentTimeMillis();
+        if (ts - lastDelTimeStamp >= lifeCheckInterval) {
+          numCmdletsFinished.getAndAdd(
+              metaStore.deleteFinishedCmdletsWithGenTimeBefore(ts - maxLifeTime));
+          lastDelTimeStamp = ts;
+        }
+
+        long finished = numCmdletsFinished.get();
+        if (finished > maxNumRecords * 1.05) {
+          numCmdletsFinished.getAndAdd(-metaStore.deleteKeepNewCmdlets(maxNumRecords));
+          succ = 0;
+        } else if (finished > maxNumRecords) {
+          if (succ++ > 5) {
+            numCmdletsFinished.getAndAdd(-metaStore.deleteKeepNewCmdlets(maxNumRecords));
+            succ = 0;
+          }
+        }
+      } catch (MetaStoreException e) {
+        LOG.error("Exception when purging cmdlets.", e);
       }
     }
   }
