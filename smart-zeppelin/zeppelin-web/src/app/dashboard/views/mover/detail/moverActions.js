@@ -19,56 +19,49 @@
 angular.module('zeppelinWebApp')
 
   .controller('MoverActionsCtrl', MoverActionsCtrl);
-  MoverActionsCtrl.$inject = ['$scope', '$modal', '$sortableTableBuilder', '$dialogs', 'moverActions0'];
-  function MoverActionsCtrl($scope, $modal, $stb, $dialogs, moverActions0) {
-
-    $scope.actionsTable = {
-      cols: [
-        $stb.text('File').key('file').canSort().styleClass('col-md-1').done(),
-        $stb.text('File Size').key('fileSize').canSort().styleClass('col-md-1').done(),
-        $stb.text('Storage Type').key('sourceType').canSort().styleClass('col-md-1').done(),
-        $stb.text('Target Storage Type').key('targetType').canSort().styleClass('col-md-1').done(),
-        $stb.datetime('Create Time').key('createTime').canSort().styleClass('col-md-2').done(),
-        $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
-        $stb.datetime('Finish Time').key('finishTime').canSort().styleClass('col-md-2').done(),
-        $stb.duration("Running Time").key('runningTime').canSort().styleClass('col-md-1').done(),
-        $stb.button('Actions').key(['view']).styleClass('col-md-1').done()
-      ],
-      rows: null
-    };
-
-    function updateTable(actions) {
-      $scope.actionsTable.rows = $stb.$update($scope.actionsTable.rows,
-        _.map(actions, function (action) {
-          return {
-            createTime: action.createTime,
-            finishTime: action.finished ? action.finishTime : "-",
-            runningTime: action.uptime,
-            succeed: action.finished ? action.successful : "-",
-            view: {
-              href: action.pageUrl,
-              icon: function() {
-                return 'glyphicon glyphicon-info-sign';
-              },
-              class: 'btn-xs btn-info'
-            },
-            progress: {
-                current: action.progress,
-                max: 1,
-                flag: action.finished ? action.successful : "-"
-                // usage: action.progress * 100
-            },
-            file: action.filePath,
-            fileSize: action.fileLength,
-            sourceType: action.src,
-            targetType: action.target
-          };
-        }));
+MoverActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$route'];
+function MoverActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route) {
+  $scope.pageNumber = 10;
+  $scope.totalNumber = 0;
+  $scope.copyActions;
+  $scope.currentPage = 1;
+  $scope.totalPage = 1;
+  $scope.orderby = 'aid';
+  $scope.isDesc = true;
+  var ruleId = $route.current.params.ruleId;
+  function getCopyActions() {
+    $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/filelist/'
+      + ruleId + '/' + $scope.currentPage + '/' + $scope.pageNumber)
+      .then(function(response) {
+        var actionData = angular.fromJson(response.data);
+        $scope.totalNumber = actionData.body.totalNumOfActions;
+        $scope.copyActions = actionData.body.detailedFileActions;
+        angular.forEach($scope.copyActions, function (data,index) {
+          data.runTime = data.finishTime - data.createTime;
+          data.createTime = data.createTime === 0 ? "-" :
+            $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
+          data.finishTime = data.finished ? data.finishTime === 0 ? "-" :
+            $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
+          data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
+        });
+        $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);
+      }, function(errorResponse) {
+        $scope.totalNumber = 0;
+      });
+  };
+  $scope.gotoPage = function (index) {
+    $scope.currentPage = index;
+    getCopyActions();
+  };
+  $scope.defindOrderBy = function (filed) {
+    if ($scope.orderby === filed) {
+      $scope.isDesc = ! $scope.isDesc;
+    } else {
+      $scope.orderby = filed;
+      $scope.isDesc = true;
     }
-
-    updateTable(moverActions0.$data());
-    moverActions0.$subscribe($scope, function (actions) {
-      updateTable(actions);
-    });
-  }
+    getCopyActions();
+  };
+  getCopyActions();
+}
 

@@ -16,15 +16,81 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-<div class="col-md-12">
-  <sortable-table
-    columns-bind="actionsTable.cols"
-    records-bind="actionsTable.rows"
-    search-bind="search"
-    pagination="10">
-    <div class="table-no-data">
-      <h2 class="glyphicon glyphicon-bullhorn"></h2>
-      <h4>No mover action is running</h4>
-    </div>
-  </sortable-table>
+<div class="col-md-12" >
+  <br/>
+  <table class="table table-bordered">
+    <thead ng-show="totalNumber > 0">
+    <tr>
+      <th>File</th>
+      <th>File Size</th>
+      <th>Storage Type</th>
+      <th>Target Storage Type</th>
+      <th>Create Time</th>
+      <th>Finish Time</th>
+      <th>Running Time</th>
+      <th class="col-md-1">Progress</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <thead ng-if="totalNumber < 1">
+    <tr>
+      <th colspan="3" class="text-center active">
+        <div class="table-no-data" style="width: 100%;">
+          <h2 class="glyphicon glyphicon-bullhorn"></h2>
+          <h4>No action is running</h4>
+        </div>
+      </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="action in copyActions">
+      <td>{{action.filePath}}</td>
+      <td>{{action.fileLength}}</td>
+      <td>{{action.src}}</td>
+      <td>{{action.target}}</td>
+      <td>{{action.createTime}}</td>
+      <td>{{action.finishTime}}</td>
+      <td>{{action.finished ? action.runTime + "ms" : "-"}}</td>
+      <td>
+        <div style="width: 100%"><span class="small pull-left"></span>
+          <span class="small pull-right" ng-bind="action.progress * 100 + '%'"></span>
+        </div>
+        <div style="clear: both; height: 1px"></div>
+        <div style="width: 100%" class="progress progress-tiny">
+          <div ng-style="{'width': action.progress * 100 +'%'}"
+               class="progress-bar progress-bar-{{action.progressColor}}"></div>
+        </div>
+      </td>
+      <td>
+        <a type="button" class="btn btn-default btn-xs btn-info"
+           href="#/actions/action/{{action.actionId}}" ng-attr-bs-tooltip="tooltip">
+          <span class="glyphicon glyphicon-info-sign"></span>
+        </a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="col-md-12" ng-show="totalNumber > 0">
+  <div class="page-list" style="float: left;">
+    <strong>Total Number:</strong>
+    {{totalNumber}}
+  </div>
+  <div class="btn-group" role="group" style="float: right;">
+    <button type="button" class="btn btn-default" ng-click="gotoPage(1)">First</button>
+    <button type="button" class="btn btn-default" ng-show="currentPage > 1"
+            ng-click="gotoPage(currentPage - 1)">&laquo;</button>
+    <button type="button" class="btn btn-default" disabled>{{currentPage}}</button>
+    <button type="button" class="btn btn-default"
+            ng-repeat="i in [1, 2, 3, 4, 5]"
+            ng-show="currentPage + i <= totalPage" ng-click="gotoPage(currentPage + i)">
+      {{currentPage + i}}
+    </button>
+    <button type="button" class="btn btn-default"
+            ng-show="currentPage < totalPage"
+            ng-click="gotoPage(currentPage + 1)">
+      <span>&raquo;</span>
+    </button>
+    <button type="button" class="btn btn-default" ng-click="gotoPage(totalPage)">Last</button>
+  </div>
 </div>

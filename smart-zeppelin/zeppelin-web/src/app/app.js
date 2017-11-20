@@ -144,12 +144,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
       })
       .when('/movers/mover/:ruleId', {
         templateUrl: 'app/dashboard/views/mover/detail/moverActions.html',
-        controller: 'MoverActionsCtrl',
-        resolve: {
-          moverActions0: ['$route', 'models', function ($route, models) {
-            return models.$get.moverActions($route.current.params.ruleId);
-          }]
-        }
+        controller: 'MoverActionsCtrl'
       })
       .when('/actions', {
         templateUrl: 'app/dashboard/views/actions/actions.html',
