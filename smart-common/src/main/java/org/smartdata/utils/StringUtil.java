@@ -20,6 +20,8 @@
 package org.smartdata.utils;
 
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StringUtil {
   private static final String DIR_SEP = "/";
@@ -77,5 +79,52 @@ public class StringUtil {
     str = str.replace("*", "%");
     str = str.replace("?", "_");
     return str;
+  }
+
+  /**
+   * Convert time string into milliseconds representation.
+   *
+   * @param str
+   * @return -1 if error
+   */
+  public static long pharseTimeString(String str) {
+    long intval = 0L;
+    str = str.trim();
+    Pattern p = Pattern.compile("([0-9]+)([a-z]+)");
+    Matcher m = p.matcher(str);
+    int start = 0;
+    while (m.find(start)) {
+      String digStr = m.group(1);
+      String unitStr = m.group(2);
+      long value = 0;
+      try {
+        value = Long.parseLong(digStr);
+      } catch (NumberFormatException e) {
+      }
+
+      switch (unitStr) {
+        case "d":
+        case "day":
+          intval += value * 24 * 3600 * 1000;
+          break;
+        case "h":
+        case "hour":
+          intval += value * 3600 * 1000;
+          break;
+        case "m":
+        case "min":
+          intval += value * 60 * 1000;
+          break;
+        case "s":
+        case "sec":
+          intval += value * 1000;
+          break;
+        case "ms":
+          intval += value;
+          break;
+      }
+      start += m.group().length();
+    }
+    return intval;
   }
 }

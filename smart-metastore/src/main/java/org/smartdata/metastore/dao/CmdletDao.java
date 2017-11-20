@@ -38,6 +38,7 @@ import java.util.Map;
 public class CmdletDao {
   private DataSource dataSource;
   private static final String TABLE_NAME = "cmdlet";
+  private final String terminiatedStates;
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -45,6 +46,7 @@ public class CmdletDao {
 
   public CmdletDao(DataSource dataSource) {
     this.dataSource = dataSource;
+    terminiatedStates = getTerminiatedStatesString();
   }
 
   public List<CmdletInfo> getAll() {
@@ -163,6 +165,13 @@ public class CmdletDao {
         new CmdletRowMapper());
   }
 
+  public int getNumCmdletsInTerminiatedStates() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String query = "SELECT count(*) FROM " + TABLE_NAME
+        + " WHERE state IN (" + terminiatedStates + ")";
+    return jdbcTemplate.queryForObject(query, Integer.class);
+  }
+
   public List<CmdletInfo> getByCondition(
       String cidCondition, String ridCondition, CmdletState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
@@ -186,51 +195,39 @@ public class CmdletDao {
     jdbcTemplate.update(sql, cid);
   }
 
-  public void deleteBeforeTime(long timestamp) {
+  public int deleteBeforeTime(long timestamp) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String finishedState = "";
-    for (CmdletState cmdletState : CmdletState.values()) {
-      if (CmdletState.isTerminalState(cmdletState)) {
-        finishedState = finishedState + cmdletState.getValue() + ",";
-      }
-    }
-    finishedState = finishedState.substring(0, finishedState.length() - 1);
+
     final String querysql = "SELECT cid FROM " + TABLE_NAME
-        + " WHERE  generate_time < ? AND state IN (" + finishedState + ")";
+        + " WHERE  generate_time < ? AND state IN (" + terminiatedStates + ")";
     List<Long> cids = jdbcTemplate.queryForList(querysql, new Object[]{timestamp}, Long.class);
+    if (cids.size() == 0) {
+      return 0;
+    }
     final String deleteCmds = "DELETE FROM " + TABLE_NAME
-        + " WHERE  generate_time < ? AND state IN (" + finishedState + ")";
+        + " WHERE generate_time < ? AND state IN (" + terminiatedStates + ")";
     jdbcTemplate.update(deleteCmds, timestamp);
-    final String deleteActions = "DELETE FROM action WHERE cid IN (?)";
-    jdbcTemplate.update(deleteActions, StringUtils.join(cids, ","));
+    final String deleteActions = "DELETE FROM action WHERE cid IN ("
+        + StringUtils.join(cids, ",") + ")";
+    jdbcTemplate.update(deleteActions);
+    return cids.size();
   }
 
-  public void deleteKeepNewCmd (long num) {
+  public int deleteKeepNewCmd (long num) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String finishedState = "";
-    for (CmdletState cmdletState : CmdletState.values()) {
-      if (CmdletState.isTerminalState(cmdletState)) {
-        finishedState = finishedState + cmdletState.getValue() + ",";
-      }
+    final String queryCids = "SELECT cid FROM " + TABLE_NAME
+        + " WHERE state IN (" + terminiatedStates + ")"
+        + " ORDER BY generate_time DESC LIMIT 100000 OFFSET " + num;
+    List<Long> cids = jdbcTemplate.queryForList(queryCids, Long.class);
+    if (cids.size() == 0) {
+      return 0;
     }
-    finishedState = finishedState.substring(0, finishedState.length() - 1);
-    final String querysql = "SELECT COUNT(1) FROM " + TABLE_NAME
-        + " WHERE state IN (" + finishedState + ")";
-    long count = jdbcTemplate.queryForObject(querysql, Long.class);
-    if (num >= count) {
-      return;
-    } else {
-      long deleteNum = count - num;
-      final String queryCids = "SELECT cid FROM " + TABLE_NAME
-          + " WHERE state IN (" + finishedState + ") LIMIT " + deleteNum;
-      List<Long> cids = jdbcTemplate.queryForList(queryCids, Long.class);
-      String deleteCids = StringUtils.join(cids, ",");
-      final String deleteCmd = "DELETE FROM " + TABLE_NAME
-          + " WHERE cid IN (?)";
-      jdbcTemplate.update(deleteCmd, deleteCids);
-      final String deleteActions = "DELETE FROM action WHERE cid IN (?)";
-      jdbcTemplate.update(deleteActions, deleteCids);
-    }
+    String deleteCids = StringUtils.join(cids, ",");
+    final String deleteCmd = "DELETE FROM " + TABLE_NAME + " WHERE cid IN (" + deleteCids + ")";
+    jdbcTemplate.update(deleteCmd);
+    final String deleteActions = "DELETE FROM action WHERE cid IN (" + deleteCids + ")";
+    jdbcTemplate.update(deleteActions);
+    return cids.size();
   }
 
   public void deleteAll() {
@@ -315,6 +312,14 @@ public class CmdletDao {
     parameters.put("generate_time", cmdletInfo.getGenerateTime());
     parameters.put("state_changed_time", cmdletInfo.getStateChangedTime());
     return parameters;
+  }
+
+  private String getTerminiatedStatesString() {
+    String finishedState = "";
+    for (CmdletState cmdletState : CmdletState.getTerminalStates()) {
+      finishedState = finishedState + cmdletState.getValue() + ",";
+    }
+    return finishedState.substring(0, finishedState.length() - 1);
   }
 
   class CmdletRowMapper implements RowMapper<CmdletInfo> {
