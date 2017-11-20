@@ -98,10 +98,6 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     websocketMsgSrv.getNoteList();
   }
 
-  function getHomeNote(){
-    websocketMsgSrv.getHomeNote();
-  }
-
   function logout() {
     var logoutURL = baseUrlSrv.getRestApiBase() + '/login/logout';
 
@@ -150,7 +146,6 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
   $scope.$on('loginSuccess', function(event, param) {
     listConfigurations();
     loadNotes();
-    getHomeNote();
   });
 
   /*
