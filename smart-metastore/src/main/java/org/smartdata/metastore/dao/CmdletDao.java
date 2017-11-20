@@ -227,7 +227,7 @@ public class CmdletDao {
       String deleteCids = StringUtils.join(cids, ",");
       final String deleteCmd = "DELETE FROM " + TABLE_NAME
           + " WHERE cid IN (?)";
-      jdbcTemplate.update(deleteCmd,deleteCids);
+      jdbcTemplate.update(deleteCmd, deleteCids);
       final String deleteActions = "DELETE FROM action WHERE cid IN (?)";
       jdbcTemplate.update(deleteActions, deleteCids);
     }
