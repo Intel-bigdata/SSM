@@ -131,6 +131,7 @@ public class CmdletManager extends AbstractService {
     try {
       maxActionId = new AtomicLong(metaStore.getMaxActionId());
       maxCmdletId = new AtomicLong(metaStore.getMaxCmdletId());
+      numCmdletsFinished.addAndGet(metaStore.getNumCmdletsInTerminiatedStates());
 
       schedulerServices = AbstractServiceFactory.createActionSchedulerServices(
           getContext().getConf(), getContext(), metaStore, false);
@@ -1025,18 +1026,11 @@ public class CmdletManager extends AbstractService {
   }
 
   private class CmdletPurgeTask implements Runnable {
-    private long lastGen;
-    private long lastFinished;
-
     private int maxNumRecords;
     private long maxLifeTime;
-
-    private long lastTimeGenCmdlet;
     private long lastDelTimeStamp = System.currentTimeMillis();
-
     private long lifeCheckInterval;
-
-    private long lastUpdateTime = 0;
+    private int succ = 0;
 
     public CmdletPurgeTask(SmartConf conf) throws IOException {
       maxNumRecords = conf.getInt(SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY,
@@ -1048,22 +1042,32 @@ public class CmdletManager extends AbstractService {
         throw new IOException("Invalid value format for configure option. "
             + SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY + "=" + lifeString);
       }
-      lifeCheckInterval = maxLifeTime / 20 > 1000 ? (maxLifeTime / 20) : 1000;
-      lastGen = numCmdletsGen.get();
-      lastFinished = numCmdletsFinished.get();
+      lifeCheckInterval = maxLifeTime / 20 > 5000 ? (maxLifeTime / 20) : 5000;
     }
 
     @Override
     public void run() {
-      long ts = System.currentTimeMillis();
-      if (ts - lastDelTimeStamp >= lifeCheckInterval) {
-        metaStore.deleteFinishedCmdletsWithGenTimeBefore(lastDelTimeStamp);
+      try {
+        long ts = System.currentTimeMillis();
+        if (ts - lastDelTimeStamp >= lifeCheckInterval) {
+          numCmdletsFinished.getAndAdd(
+              metaStore.deleteFinishedCmdletsWithGenTimeBefore(ts - maxLifeTime));
+          lastDelTimeStamp = ts;
+        }
+
+        long finished = numCmdletsFinished.get();
+        if (finished > maxNumRecords * 1.05) {
+          numCmdletsFinished.getAndAdd(-metaStore.deleteKeepNewCmdlets(maxNumRecords));
+          succ = 0;
+        } else if (finished > maxNumRecords) {
+          if (succ++ > 5) {
+            numCmdletsFinished.getAndAdd(-metaStore.deleteKeepNewCmdlets(maxNumRecords));
+            succ = 0;
+          }
+        }
+      } catch (MetaStoreException e) {
+        LOG.error("Exception when purging cmdlets.", e);
       }
-
-
-    }
-
-    public long updateNumFinished() {
     }
   }
 }

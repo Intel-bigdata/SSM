@@ -928,14 +928,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void deleteAllCmdlets() throws MetaStoreException {
-    try {
-      cmdletDao.deleteAll();
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
   public void deleteCmdlet(long cid) throws MetaStoreException {
     try {
       cmdletDao.delete(cid);
@@ -943,24 +935,34 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
+
   /**
    * Delete finished cmdlets before given timestamp, actions belonging to these cmdlets
    * will also be deleted. Cmdlet's generate_time is used for comparison.
    *
    * @param timestamp
+   * @return number of cmdlets deleted
    * @throws MetaStoreException
    */
-  public void deleteFinishedCmdletsWithGenTimeBefore(long timestamp) throws MetaStoreException {
+  public int deleteFinishedCmdletsWithGenTimeBefore(long timestamp) throws MetaStoreException {
     try {
-      cmdletDao.deleteBeforeTime(timestamp);
+      return cmdletDao.deleteBeforeTime(timestamp);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public void deleteKeepNewCmdlets(long num) throws MetaStoreException {
+  public int deleteKeepNewCmdlets(long num) throws MetaStoreException {
     try {
-      cmdletDao.deleteKeepNewCmd(num);
+      return cmdletDao.deleteKeepNewCmd(num);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public int getNumCmdletsInTerminiatedStates() throws MetaStoreException {
+    try {
+      return cmdletDao.getNumCmdletsInTerminiatedStates();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
