@@ -958,6 +958,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteKeepNewCmdlets(long num) throws MetaStoreException {
+    try {
+      cmdletDao.deleteKeepNewCmd(num);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public synchronized void insertActions(ActionInfo[] actionInfos)
       throws MetaStoreException {
     try {
