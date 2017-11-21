@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartConstants;
@@ -141,7 +142,13 @@ public class SmartDFSClient extends DFSClient {
       if (!healthy) {
         return;
       }
-      smartClient.reportFileAccessEvent(new FileAccessEvent(src));
+      String userName;
+      try {
+        userName = UserGroupInformation.getCurrentUser().getUserName();
+      } catch (IOException e) {
+        userName = "Unknown";
+      }
+      smartClient.reportFileAccessEvent(new FileAccessEvent(src, userName));
     } catch (IOException e) {
       // Here just ignores that failed to report
       LOG.error("Cannot report file access event to SmartServer: " + src
