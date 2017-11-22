@@ -27,7 +27,6 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,8 +43,8 @@ import java.util.Map;
 @ActionSignature(
     actionId = "copy2s3",
     displayName = "copy2s3",
-    usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
-        " $dest " + CopyFileAction.OFFSET_INDEX
+    usage = HdfsAction.FILE_PATH + " $src " + Copy2S3Action.DEST_PATH +
+        " $dest "
 )
 public class Copy2S3Action extends HdfsAction {
   private static final Logger LOG =
