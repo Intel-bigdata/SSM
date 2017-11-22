@@ -1388,6 +1388,20 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public boolean updateFileDiff(FileDiff fileDiff)
+      throws MetaStoreException {
+    long did = fileDiff.getDiffId();
+    FileDiff preFileDiff = getFileDiff(did);
+    if (preFileDiff == null) {
+      insertFileDiff(fileDiff);
+    }
+    try {
+      return fileDiffDao.update(fileDiff) >= 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
 
   public List<String> getSyncPath(int size) throws MetaStoreException {
     return fileDiffDao.getSyncPath(size);

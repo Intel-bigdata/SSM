@@ -156,5 +156,8 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiff.setSrc("test1");
     fileDiffDao.update(1, "test1");
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
+    fileDiff.setRuleId(1L);
+    fileDiffDao.update(fileDiff);
+    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
   }
 }
