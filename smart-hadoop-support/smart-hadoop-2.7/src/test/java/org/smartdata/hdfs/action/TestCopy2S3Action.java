@@ -17,10 +17,8 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.s3a.S3AFileSystem;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,17 +28,15 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.OutputStream;
-import java.net.StandardSocketOptions;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.hadoop.fs.s3a.S3AFileSystem;
 
 /**
  * Test for Copy2S3FileAction.
  */
 public class TestCopy2S3Action extends MiniClusterHarness {
-  // //change this to connect with aws s3
+  //change this to connect with aws s3
   // final String S3_ACCESS_KEY = "";
   // final String S3_SECRET_KEY = "";
   //
@@ -90,13 +86,6 @@ public class TestCopy2S3Action extends MiniClusterHarness {
   //
   //   Assert.assertTrue(fs.exists(new Path(destFile)));
   // }
-  //
-  // @Test
-  // public void test26S3() throws Exception {
-  //   //check the file in S3
-  //   S3AFileSystem s3AFileSystem = new S3AFileSystem();
-  //   SmartConf configuration = testContext.getConf();
-  //   s3AFileSystem.initialize(URI.create("s3a://xxxctest/file"), configuration);
-  // }
+
 
 }

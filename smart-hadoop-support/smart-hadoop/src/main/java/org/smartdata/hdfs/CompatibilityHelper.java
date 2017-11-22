@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.inotify.Event;
@@ -30,6 +31,7 @@ import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.conf.SmartConf;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -70,4 +72,6 @@ public interface CompatibilityHelper {
   int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage);
 
   OutputStream getDFSClientAppend(DFSClient client, String dest, int buffersize, long offset) throws IOException;
+
+  OutputStream getS3outputStream(String dest, Configuration conf) throws IOException;
 }

@@ -27,6 +27,8 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelper;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -114,7 +116,7 @@ public class Copy2S3Action extends HdfsAction {
 
     try {
       in = getSrcInputStream(src);
-      out = getDestOutPutStream(dest);
+      out = CompatibilityHelperLoader.getHelper().getS3outputStream(dest,conf);
       byte[] buf = new byte[bufferSize];
       long bytesRemaining = getFileSize(src);
 
