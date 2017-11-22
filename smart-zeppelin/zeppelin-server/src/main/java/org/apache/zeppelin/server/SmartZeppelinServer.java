@@ -42,7 +42,6 @@ import org.apache.zeppelin.rest.HeliumRestApi;
 import org.apache.zeppelin.rest.InterpreterRestApi;
 import org.apache.zeppelin.rest.LoginRestApi;
 import org.apache.zeppelin.rest.NotebookRepoRestApi;
-import org.apache.zeppelin.rest.NotebookRestApi;
 import org.apache.zeppelin.rest.SecurityRestApi;
 import org.apache.zeppelin.rest.ZeppelinRestApi;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
@@ -71,12 +70,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.SmartEngine;
-import org.smartdata.server.rest.ActionRestApi;
-import org.smartdata.server.rest.ClusterRestApi;
-import org.smartdata.server.rest.CmdletRestApi;
-import org.smartdata.server.rest.ConfRestApi;
-import org.smartdata.server.rest.RuleRestApi;
-import org.smartdata.server.rest.SystemRestApi;
+import org.smartdata.server.rest.*;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.Application;
@@ -396,6 +390,9 @@ public class SmartZeppelinServer {
       RuleRestApi ruleApi = new RuleRestApi(engine);
       singletons.add(ruleApi);
 
+      NoteBookRestApi notebookApi = new NoteBookRestApi(engine);
+      singletons.add(notebookApi);
+
       return singletons;
     }
   }
@@ -414,10 +411,10 @@ public class SmartZeppelinServer {
       /** Rest-api root endpoint */
       ZeppelinRestApi root = new ZeppelinRestApi();
       singletons.add(root);
-
+/*
       NotebookRestApi notebookApi =
         new NotebookRestApi(notebook, notebookWsServer, noteSearchService);
-      singletons.add(notebookApi);
+      singletons.add(notebookApi);*/
 
       NotebookRepoRestApi notebookRepoApi =
         new NotebookRepoRestApi(notebookRepo, notebookWsServer);

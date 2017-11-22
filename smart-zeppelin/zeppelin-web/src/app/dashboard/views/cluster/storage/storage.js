@@ -32,7 +32,6 @@ function StorageCtrl($scope, cache, ssd, disk, archive) {
   }
 
   var initPieChart = function(targetEl, data) {
-    console.log(targetEls.length);
     if (data.total === 0) {
       targetEl.remove();
       return;

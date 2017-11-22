@@ -36,6 +36,7 @@ import './app/visualization/builtins/visualization-scatterchart.js';
 
 import './app/credential/credential.controller.js';
 import './app/configuration/configuration.controller.js';
+import './app/configuration/configuration.filter.js';
 import './app/notebook/paragraph/paragraph.controller.js';
 import './app/notebook/paragraph/result/result.controller.js';
 import './app/search/result-list.controller.js';

@@ -34,7 +34,6 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
                  arrayOrderingSrv, searchService, TRASH_FOLDER_ID, conf) {
   var vm = this;
   vm.arrayOrderingSrv = arrayOrderingSrv;
-  vm.connected = websocketMsgSrv.isConnected();
   vm.isActive = isActive;
   vm.logout = logout;
   vm.notes = noteListDataFactory;
@@ -67,11 +66,10 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     });
 
     if ($rootScope.ticket) {
-      $location.path('/notebook/2CM9DW8NW');
+      $location.path('/notebook');
     }
 
     getZeppelinVersion();
-    loadNotes();
   }
 
   function isFilterNote(note) {
@@ -92,10 +90,6 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
 
   function listConfigurations() {
     websocketMsgSrv.listConfigurations();
-  }
-
-  function loadNotes() {
-    websocketMsgSrv.getNoteList();
   }
 
   function logout() {
@@ -139,13 +133,8 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     initNotebookListEventListener();
   });
 
-  $scope.$on('setConnectedStatus', function(event, param) {
-    vm.connected = param;
-  });
-
   $scope.$on('loginSuccess', function(event, param) {
     listConfigurations();
-    loadNotes();
   });
 
   /*

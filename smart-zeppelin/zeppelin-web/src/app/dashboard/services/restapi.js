@@ -30,17 +30,10 @@ angular.module('zeppelinWebApp')
       }
 
       function decodeErrorResponse(data) {
-        var errorMessage = '';
-        var stackTrace = [];
-        var lines = (data || '').split('\n');
-        if (lines.length) {
-          errorMessage = lines[0].replace(', error summary:', '');
-          stackTrace = lines.slice(1);
-        }
-        return {success: false, error: errorMessage, stackTrace: stackTrace};
+        return {success: false, error: data.body};
       }
 
-      var restapiV1Root = baseUrlSrv.getRestApiRoot() + 'smart/api/' + conf.restapiProtocol + '/';
+      var restapiV1Root = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/';
       var self = {
         /**
          * Retrieve data from rest service endpoint (HTTP GET) periodically in an angular scope.
@@ -138,15 +131,15 @@ angular.module('zeppelinWebApp')
         },
 
         /** Submit an user defined application with user configuration */
-        submitAction: function (action, args, onComplete) {
-          return self._submitAction(restapiV1Root + 'cmdlets/submit', action, args, onComplete);
+        submitAction: function (args, onComplete) {
+          return self._submitAction(restapiV1Root + 'cmdlets/submit', args, onComplete);
         },
 
-        _submitAction: function (url, action, args, onComplete) {
+        _submitAction: function (url, args, onComplete) {
           return $http({
             method: 'POST',
             url: url,
-            data: action + ' ' + args,
+            data: args,
             headers: {'Content-Type': 'application/raw'}
           }).then(function (response) {
             if (onComplete) {
