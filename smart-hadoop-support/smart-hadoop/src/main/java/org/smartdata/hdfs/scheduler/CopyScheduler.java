@@ -481,20 +481,6 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-  private void updateFileDiffInCache(Long did, String parameters,
-      FileDiffState fileDiffState) {
-    LOG.debug("Update FileDiff");
-    if (!fileDiffCache.containsKey(did)) {
-      return;
-    }
-    FileDiff fileDiff = fileDiffCache.get(did);
-    fileDiff.setState(fileDiffState);
-    fileDiff.setParametersFromJsonString(parameters);
-    // Update
-    fileDiffCacheChanged.put(did, true);
-    fileDiffCache.put(did, fileDiff);
-  }
-
   /***
    * delete cache and remove file lock if necessary
    * @param did
@@ -757,8 +743,7 @@ public class CopyScheduler extends ActionSchedulerService {
         fileDiff.getParameters().put("-offset", "" + offset);
         fileDiff.getParameters().put("-length", "" + totalLength);
         // Update fileDiff in metastore
-        metaStore.updateFileDiff(fileDiff.getDiffId(),
-            FileDiffState.PENDING, fileDiff.getParametersJsonString());
+        updateFileDiffInCache(fileDiff);
         // Unlock file
         fileLock.remove(filePath);
         currAppendLength = 0;
@@ -783,7 +768,7 @@ public class CopyScheduler extends ActionSchedulerService {
           if (nameChain.size() > 1) {
             fileDiff.setSrc(nameChain.get(0));
             // Delete raw is enough
-            metaStore.updateFileDiff(fileDiff.getDiffId(), nameChain.get(0));
+            updateFileDiffInCache(fileDiff);
           }
           diffChain.add(fileDiff.getDiffId());
         } else {
@@ -824,7 +809,7 @@ public class CopyScheduler extends ActionSchedulerService {
           if (appendFileDiff != null &&
               appendFileDiff.getState().getValue() != 2) {
             appendFileDiff.setSrc(newName);
-            metaStore.updateFileDiff(did, newName);
+            updateFileDiffInCache(appendFileDiff);
           }
         }
         // Insert rename fileDiff to head
