@@ -28,7 +28,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 
-import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -187,14 +186,14 @@ public class FileDiffDao {
 
   public int update(final FileDiff fileDiff) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE " + TABLE_NAME + " SET " +
-        "rid = ?, " +
-        "diff_type = ?, " +
-        "src = ?, " +
-        "parameters = ?, " +
-        "state = ?, " +
-        "create_time = ? " +
-        "WHERE did = ?";
+    String sql = "UPDATE " + TABLE_NAME + " SET "
+        + "rid = ?, "
+        + "diff_type = ?, "
+        + "src = ?, "
+        + "parameters = ?, "
+        + "state = ?, "
+        + "create_time = ? "
+        + "WHERE did = ?";
     return jdbcTemplate.update(sql, fileDiff.getRuleId(),
         fileDiff.getDiffType().getValue(), fileDiff.getSrc(),
         fileDiff.getParametersJsonString(), fileDiff.getState().getValue(),
