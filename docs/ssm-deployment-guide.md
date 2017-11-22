@@ -89,7 +89,7 @@ Configure SSM
  
 * **Configure database**
 
-   SSM currently supports MySQL and TiDB(rc version) as the backend to store metadata for SSM. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
+   SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata for SSM. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
 
    You just need to follow the guide in one of the two following options to configure database for SSM.
 
@@ -111,7 +111,7 @@ Configure SSM
 
    * Option 2. Use SSM-TiDB
 
-    To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb.git.
+    To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb/tree/release-1.0.0.
 
     TiDB can be enabled in smart-site.xml.
 
