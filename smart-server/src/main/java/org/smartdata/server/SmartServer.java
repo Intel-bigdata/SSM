@@ -47,11 +47,14 @@ import org.smartdata.tidb.PdServer;
 import org.smartdata.tidb.TidbServer;
 import org.smartdata.utils.SecurityUtil;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * From this Smart Storage Management begins.
@@ -143,7 +146,7 @@ public class SmartServer {
 
   public static void startDB(SmartConf conf, AgentMaster agentMaster)
           throws InterruptedException, IOException {
-    if (conf.getAgentsNumber() != 0) {
+    if (conf.getInt("agentNum", 0) != 0) {
       String host = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
       InetAddress address = InetAddress.getByName(host);
       String ip = address.getHostAddress();
@@ -374,6 +377,25 @@ public class SmartServer {
     LOG.info("Initialized service mode: " + context.getServiceMode().getName() + ".");
   }
 
+  public static void setAgentNum(SmartConf conf) {
+    String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
+            SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/agents";
+    Scanner sc = null;
+    try {
+      sc = new Scanner(new File(agentConfFile));
+    } catch (FileNotFoundException ex) {
+      LOG.error("Cannot find the config file: {}!", agentConfFile);
+    }
+    int num = 0;
+    while (sc.hasNextLine()) {
+      String host = sc.nextLine().trim();
+      if (!host.startsWith("#") && !host.isEmpty()) {
+        num++;
+      }
+    }
+    conf.setInt("agentNum", num);
+  }
+
   public static SmartServer launchWith(SmartConf conf) throws Exception {
     return launchWith(null, conf);
   }
@@ -382,6 +404,7 @@ public class SmartServer {
     if (conf == null) {
       conf = new SmartConf();
     }
+    setAgentNum(conf);
 
     StartupOption startOption = processArgs(args, conf);
     if (startOption == null) {

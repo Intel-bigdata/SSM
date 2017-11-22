@@ -97,12 +97,12 @@ public class AgentMaster {
 
   public boolean isAgentRegisterReady(SmartConf conf) {
     //TODO: how many agents are required to launch tikv
-    return serveReadyAgent == conf.getAgentsNumber();
+    return serveReadyAgent == conf.getInt("agentNum", 0);
   }
 
   public boolean isTikvAlreadyLaunched(SmartConf conf) {
     //TODO: how many tikvs are required
-    return tikvNumber == conf.getAgentsNumber();
+    return tikvNumber == conf.getInt("agentNum", 0);
   }
 
   public void sendLaunchTikvMessage() {
