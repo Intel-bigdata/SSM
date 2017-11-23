@@ -39,6 +39,10 @@ public class FileAccessEvent implements DataAccessEvent {
     this.user = user;
   }
 
+  public FileAccessEvent(String path, String user) {
+    this(path, -1, user);
+  }
+
   /**
    * Get the accessed file path.
    * @return file path
