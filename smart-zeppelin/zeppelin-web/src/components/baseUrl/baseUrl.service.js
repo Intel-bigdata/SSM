@@ -35,6 +35,10 @@ function baseUrlSrv() {
       this.getPort() + '/';
   };
 
+  this.getSmartApiRoot = function() {
+    return this.getRestApiRoot() + 'smart/api/';
+  };
+
   this.getWebsocketUrl = function() {
     var wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     return wsProtocol + '//' + location.hostname + ':' + this.getPort() + '/ws';
