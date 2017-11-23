@@ -27,6 +27,7 @@ import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;
 import org.smartdata.rule.objects.PropertyRealParas;
 import org.smartdata.rule.objects.SmartObject;
+import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -556,42 +557,7 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   }
 
   private TreeNode pharseConstTimeInterval(String str) {
-    long intval = 0L;
-    Pattern p = Pattern.compile("([0-9]+)([a-z]+)");
-    Matcher m = p.matcher(str);
-    int start = 0;
-    while (m.find(start)) {
-      String digStr = m.group(1);
-      String unitStr = m.group(2);
-      long value = 0;
-      try {
-        value = Long.parseLong(digStr);
-      } catch (NumberFormatException e) {
-      }
-
-      switch (unitStr) {
-        case "d":
-        case "day":
-          intval += value * 24 * 3600 * 1000;
-          break;
-        case "h":
-        case "hour":
-          intval += value * 3600 * 1000;
-          break;
-        case "m":
-        case "min":
-          intval += value * 60 * 1000;
-          break;
-        case "s":
-        case "sec":
-          intval += value * 1000;
-          break;
-        case "ms":
-          intval += value;
-          break;
-      }
-      start += m.group().length();
-    }
+    long intval = StringUtil.pharseTimeString(str);
     return new ValueNode(new VisitResult(ValueType.TIMEINTVAL, intval));
   }
 

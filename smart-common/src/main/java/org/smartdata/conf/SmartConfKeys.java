@@ -77,8 +77,12 @@ public class SmartConfKeys {
   // Cmdlets
   public static final String SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY =
       "smart.cmdlet.hist.max.num.records";
+  public static final int SMART_CMDLET_HIST_MAX_NUM_RECORDS_DEFAULT =
+      100000;
   public static final String SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY =
       "smart.cmdlet.hist.max.record.lifetime";
+  public static final String SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_DEFAULT =
+      "30day";
 
   // Action
   public static final String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
