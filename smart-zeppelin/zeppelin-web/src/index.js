@@ -72,6 +72,7 @@ import './components/rename/rename.controller.js';
 import './components/rename/rename.service.js';
 import './components/helium/helium.service.js';
 import './app/dashboard/i18n.js';
+import './app/dashing/tables/smart-table.js';
 import './app/dashing/dashing.js';
 import './app/dashboard/services/locator.js';
 import './app/dashboard/services/restapi.js';
