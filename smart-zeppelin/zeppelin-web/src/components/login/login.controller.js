@@ -39,7 +39,7 @@ function LoginCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv, 
       $rootScope.userName = $scope.loginParams.userName;
       $scope.SigningIn = false;
 
-      $location.path('/notebook/2CM9DW8NW');
+      $location.path('/notebook');
     }, function errorCallback(errorResponse) {
       $scope.loginParams.errorText = 'The username and password that you entered don\'t match.';
       $scope.SigningIn = false;
