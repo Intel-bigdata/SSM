@@ -53,8 +53,7 @@ done
 #---------------------------------------------------------
 # Start Smart Servers
 
-ORGSMARTSERVERS=localhost sr518
-echo
+ORGSMARTSERVERS=$("${SMART_HOME}/bin/ssm" getconf SmartServers 2>/dev/null)
 if [ "$?" != "0" ]; then
   echo "ERROR: Get SmartServers error."
   exit 1
