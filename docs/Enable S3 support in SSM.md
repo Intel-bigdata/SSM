@@ -1,4 +1,4 @@
-# Enable S3 support in SSM
+# SSM S3 Support
 
 SSM has already supported S3 in `Copy2S3Action` action. Now we can set a remote S3 path as a destination in 'copy2s3' action.
 
@@ -33,16 +33,16 @@ ll | grep aws
 
 ### Add configuration of AWS S3
 
-Then we add some configurations in `${HADOOP_HOME}/etc/core-site.xml`:
+Then we add some configurations in `${HADOOP_HOME}/etc/hadoop/core-site.xml`:
 
 ```xml
 <property>
         <name>fs.s3a.access.key</name>
-        <value>{s3 key}</value>
+        <value>{s3.key}</value>
 </property>
 <property>
         <name>fs.s3a.secret.key</name>
-        <value>{s3 secret}</value>
+        <value>{s3.secret}</value>
 </property>
 ```
 
@@ -70,11 +70,11 @@ SSM has already solved the dependency of S3. We only need to add some configurat
 ```xml
 <property>
         <name>fs.s3a.access.key</name>
-        <value>{s3 key}</value>
+        <value>{s3.key}</value>
 </property>
 <property>
         <name>fs.s3a.secret.key</name>
-        <value>{s3 secret}</value>
+        <value>{s3.secret}</value>
 </property>
 ```
 
@@ -91,13 +91,13 @@ The {src} and {dest} must be full path.
 This is a example in SSM WebUI command:
 
 ```shell
-copy2s3 /test/copytest s3a://xxxctest/
+copy2s3 -file /test/copytest -dest s3a://{test_dir}/
 ```
 
 ### Use rule to trigger the action
 
 ```shell
-file: path matches "/test/*" and age > 30d | copy2s3 -dest s3a://xxxctest/
+file: path matches "/{hdfs_test_dir}/*" | copy2s3 -dest {s3_test_dir}
 ```
 
 
