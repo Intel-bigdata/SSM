@@ -46,14 +46,11 @@ public class HazelcastInstanceProvider {
 
   private HazelcastInstanceProvider() {}
 
-  public static HazelcastInstance getInstance() {
-    if (instance == null) {
-      ClasspathXmlConfig config = new ClasspathXmlConfig(CONFIG_FILE);
-      NetworkConfig network = config.getNetworkConfig();
+  public static void addMemberConfig(ClasspathXmlConfig config) {
+    NetworkConfig network = config.getNetworkConfig();
       JoinConfig join = network.getJoin();
-      /*String serverConfFile = new Configuration().get(SmartConfKeys.SMART_CONF_DIR_KEY,
-            SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/servers";*/
-      String serverConfFile = "/home/manuzhang/IdeaProjects/tianlong/SSM/smart-engine/src/test/resources/servers";
+      String serverConfFile = new Configuration().get(SmartConfKeys.SMART_CONF_DIR_KEY,
+            SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/servers";
       Scanner sc = null;
       try {
         sc = new Scanner(new File(serverConfFile));
@@ -66,6 +63,12 @@ public class HazelcastInstanceProvider {
           join.getTcpIpConfig().addMember(host);
         }
       }
+  }
+
+  public static HazelcastInstance getInstance() {
+    if (instance == null) {
+      ClasspathXmlConfig config = new ClasspathXmlConfig(CONFIG_FILE);
+      addMemberConfig(config);
       instance = Hazelcast.newHazelcastInstance(config);
       Runtime.getRuntime().addShutdownHook(new Thread(){
         @Override public void run() {
