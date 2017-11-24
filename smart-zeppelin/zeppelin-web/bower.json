@@ -39,7 +39,6 @@
     "moment": "momentjs#^2.18.1",
     "jquery.cookie": "jquery-cookie#^1.4.1",
     "angular-loading-bar": "^0.9.0",
-    "angular-smart-table": "^2.1.8",
     "angular-motion": "^0.4.4",
     "bootstrap-additions": "^0.3.1",
     "angular-strap": "^2.3.12",

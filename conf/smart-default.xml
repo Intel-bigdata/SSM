@@ -74,6 +74,26 @@
   </property>
 
   <property>
+    <name>smart.cmdlet.hist.max.num.records</name>
+    <value>100000</value>
+    <description>
+      Maximum number of historic cmdlet records kept in SSM server.
+      Oldest cmdlets will be deleted if exceeds the threshold.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.cmdlet.hist.max.record.lifetime</name>
+    <value>30day</value>
+    <description>
+      Maximum life time of historic cmdlet records kept in SSM server.
+      Cmdlet record will be deleted from SSM server if exceeds the threshold.
+      Valid time unit can be 'day', 'hour', 'min', 'sec'. The minimum update
+      granularity is 5sec.
+    </description>
+  </property>
+
+  <property>
     <name>pd.client.port</name>
     <value>7060</value>
     <description>Pd port in client-url option</description>

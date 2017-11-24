@@ -34,7 +34,6 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
                  arrayOrderingSrv, searchService, TRASH_FOLDER_ID, conf) {
   var vm = this;
   vm.arrayOrderingSrv = arrayOrderingSrv;
-  vm.connected = websocketMsgSrv.isConnected();
   vm.isActive = isActive;
   vm.logout = logout;
   vm.notes = noteListDataFactory;
@@ -66,8 +65,11 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
       $scope.query.q = '';
     });
 
+    if ($rootScope.ticket) {
+      $location.path('/notebook');
+    }
+
     getZeppelinVersion();
-    loadNotes();
   }
 
   function isFilterNote(note) {
@@ -90,19 +92,11 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     websocketMsgSrv.listConfigurations();
   }
 
-  function loadNotes() {
-    websocketMsgSrv.getNoteList();
-  }
-
-  function getHomeNote(){
-    websocketMsgSrv.getHomeNote();
-  }
-
   function logout() {
     var logoutURL = baseUrlSrv.getRestApiBase() + '/login/logout';
 
     //for firefox and safari
-    logoutURL = logoutURL.replace('//', '//false:false@');
+    // logoutURL = logoutURL.replace('//', '//false:false@');
     $http.post(logoutURL).error(function() {
       //force authcBasic (if configured) to logout
       $http.post(logoutURL).error(function() {
@@ -139,14 +133,8 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     initNotebookListEventListener();
   });
 
-  $scope.$on('setConnectedStatus', function(event, param) {
-    vm.connected = param;
-  });
-
   $scope.$on('loginSuccess', function(event, param) {
     listConfigurations();
-    loadNotes();
-    getHomeNote();
   });
 
   /*

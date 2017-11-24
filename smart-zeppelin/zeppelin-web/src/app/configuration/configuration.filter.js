@@ -12,36 +12,11 @@
  * limitations under the License.
  */
 
-.job-col {
-  margin: 0;
-  padding: 0;
-}
+angular.module('zeppelinWebApp').filter('sortByKey', sortByKey);
 
-.job {
-  padding: 2px 8px 4px 8px;
-  min-height: 32px;
-}
-
-.jobManagerHead {
-  margin: -10px -10px 20px;
-  padding: 10px 15px 15px 15px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  border-bottom: 1px solid #E5E5E5;
-}
-
-.jobManagerHead .header {
-  font-family: 'Roboto', sans-serif;
-}
-
-.job-note-name-query {
-  padding: 6px;
-  height: 25px;
-  width: 200px;
-}
-
-.job-note-name-font-family {
-  font: inherit;
-  font-size: 14px;
-  font-weight: normal;
+function sortByKey() {
+  return function (properties) {
+    var sortedKeys = properties ? Object.keys(properties) : [];
+    return sortedKeys.sort();
+  };
 }
