@@ -62,7 +62,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
       $scope.query.q = '';
     });
 
-    if ($rootScope.ticket) {
+    if ($rootScope.ticket && $location.path() === '/') {
       $location.path('/notebook');
     }
 
