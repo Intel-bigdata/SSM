@@ -165,7 +165,7 @@ public class HadoopUtil {
     int lastNotNullIdx = 0;
     for (int index = 0; index < rpcAddrKeys.length; index++) {
       nnRpcAddrs[index] = conf.get(rpcAddrKeys[index]);
-      LOG.info("Get namenode URL, key: " + rpcAddrKeys[index] + ", value:" + nnRpcAddrs[index]);
+      LOG.debug("Get namenode URL, key: " + rpcAddrKeys[index] + ", value:" + nnRpcAddrs[index]);
       lastNotNullIdx = nnRpcAddrs[index] == null ? lastNotNullIdx : index;
       nnRpcAddr = nnRpcAddr == null ? nnRpcAddrs[index] : nnRpcAddr;
     }
