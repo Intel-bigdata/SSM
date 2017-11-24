@@ -20,9 +20,7 @@ NavCtrl.$inject = [
   '$http',
   '$routeParams',
   '$location',
-  'noteListDataFactory',
   'baseUrlSrv',
-  'websocketMsgSrv',
   'arrayOrderingSrv',
   'searchService',
   'TRASH_FOLDER_ID',
@@ -30,13 +28,12 @@ NavCtrl.$inject = [
 ];
 
 function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
-                 noteListDataFactory, baseUrlSrv, websocketMsgSrv,
-                 arrayOrderingSrv, searchService, TRASH_FOLDER_ID, conf) {
+                 baseUrlSrv, arrayOrderingSrv,
+                 searchService, TRASH_FOLDER_ID, conf) {
   var vm = this;
   vm.arrayOrderingSrv = arrayOrderingSrv;
   vm.isActive = isActive;
   vm.logout = logout;
-  vm.notes = noteListDataFactory;
   vm.search = search;
   vm.searchForm = searchService;
   vm.showLoginWindow = showLoginWindow;
@@ -88,10 +85,6 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     return ($routeParams.noteId === noteId);
   }
 
-  function listConfigurations() {
-    websocketMsgSrv.listConfigurations();
-  }
-
   function logout() {
     var logoutURL = baseUrlSrv.getRestApiBase() + '/login/logout';
 
@@ -129,12 +122,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
    */
 
   $scope.$on('setNoteMenu', function(event, notes) {
-    noteListDataFactory.setNotes(notes);
     initNotebookListEventListener();
-  });
-
-  $scope.$on('loginSuccess', function(event, param) {
-    listConfigurations();
   });
 
   /*
