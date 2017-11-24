@@ -47,6 +47,9 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
 
   private void generateFile(String content) throws Exception {
     Path dir = new Path(fileDir);
+    if (dfs.exists(dir)) {
+      dfs.delete(dir, true);
+    }
     dfs.mkdirs(dir);
     // write to DISK
     dfs.setStoragePolicy(dir, "HOT");
@@ -82,7 +85,7 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
 
     // Do move executor
     MoverStatus status = new MoverStatus();
-    MoverExecutor moverExecutor = new MoverExecutor(status, conf, 10, 500);
+    MoverExecutor moverExecutor = new MoverExecutor(status, conf, 10, 3);
     int failedMoves = moverExecutor.executeMove(plan);
     Assert.assertEquals(0, failedMoves);
     cluster.triggerBlockReports();
