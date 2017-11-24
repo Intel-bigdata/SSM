@@ -14,7 +14,6 @@
 
 import './app/app.js';
 import './app/app.controller.js';
-import './app/home/home.controller.js';
 import './app/handsontable/handsonHelper.js';
 import './app/notebook/notebook.controller.js';
 
@@ -48,28 +47,19 @@ import './components/navbar/navbar.controller.js';
 import './components/ngescape/ngescape.directive.js';
 import './components/interpreter/interpreter.directive.js';
 import './components/expandCollapse/expandCollapse.directive.js';
-import './components/noteName-create/notename.controller.js';
-import './components/noteName-import/notenameImport.controller.js';
 import './components/popover-html-unsafe/popover-html-unsafe.directive.js';
 import './components/popover-html-unsafe/popover-html-unsafe-popup.directive.js';
 import './components/editor/codeEditor.directive.js';
 import './components/ngenter/ngenter.directive.js';
 import './components/dropdowninput/dropdowninput.directive.js';
 import './components/resizable/resizable.directive.js';
-import './components/noteName-create/visible.directive.js';
-import './components/websocketEvents/websocketMsg.service.js';
-import './components/websocketEvents/websocketEvents.factory.js';
-import './components/noteListDataFactory/noteList.datafactory.js';
 import './components/baseUrl/baseUrl.service.js';
 import './components/browser-detect/browserDetect.service.js';
 import './components/saveAs/saveAs.service.js';
 import './components/searchService/search.service.js';
 import './components/login/login.controller.js';
 import './components/elasticInputCtrl/elasticInput.controller.js';
-import './components/noteAction/noteAction.service.js';
 import './components/notevarshareService/notevarshare.service.js';
-import './components/rename/rename.controller.js';
-import './components/rename/rename.service.js';
 import './components/helium/helium.service.js';
 import './app/dashboard/i18n.js';
 import './app/dashing/tables/smart-table.js';
