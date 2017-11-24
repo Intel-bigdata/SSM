@@ -26,26 +26,20 @@ ResultCtrl.$inject = [
   '$scope',
   '$rootScope',
   '$route',
-  '$window',
-  '$routeParams',
-  '$location',
   '$timeout',
   '$compile',
   '$http',
-  '$q',
   '$templateRequest',
   '$sce',
-  'websocketMsgSrv',
   'baseUrlSrv',
-  'ngToast',
   'saveAsService',
   'noteVarShareService',
   'heliumService'
 ];
 
-function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location,
-                    $timeout, $compile, $http, $q, $templateRequest, $sce, websocketMsgSrv,
-                    baseUrlSrv, ngToast, saveAsService, noteVarShareService, heliumService) {
+function ResultCtrl($scope, $rootScope, $route, $timeout, $compile, $http,
+                    $templateRequest, $sce, baseUrlSrv, saveAsService,
+                    noteVarShareService, heliumService) {
 
   /**
    * Built-in visualizations
@@ -514,8 +508,6 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
         data: data
       }, newParagraphConfig.results[resultIndex], paragraph, resultIndex);
       renderResult($scope.type, true);
-    } else {
-      websocketMsgSrv.commitParagraph(paragraph.id, title, text, newParagraphConfig, params);
     }
   };
 
@@ -875,12 +867,6 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
             registry[varName].skipEmit = false;
             return;
           }
-          websocketMsgSrv.updateAngularObject(
-            registry[varName].noteId,
-            registry[varName].paragraphId,
-            varName,
-            newValue,
-            registry[varName].interpreterGroupId);
         });
       }
       console.log('angular object (paragraph) created %o', varName);
