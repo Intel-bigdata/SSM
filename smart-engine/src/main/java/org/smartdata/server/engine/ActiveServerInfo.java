@@ -23,14 +23,17 @@ import org.smartdata.server.cluster.NodeInfo;
 public class ActiveServerInfo extends NodeInfo {
   private static ActiveServerInfo inst;
 
-  private ActiveServerInfo() {
-    super("ActiveSSMServer", "127.0.0.1", ExecutorType.LOCAL);
+  private ActiveServerInfo(String id, String location, ExecutorType executorType) {
+    super(id, location, executorType);
   }
 
   public static ActiveServerInfo getInstance() {
-    if (inst == null) {
-      inst = new ActiveServerInfo();
-    }
+    assert inst != null;
     return inst;
+  }
+
+  public static void setInstance(String id, String location,
+      ExecutorType executorType) {
+    inst = new ActiveServerInfo(id, location, executorType);
   }
 }

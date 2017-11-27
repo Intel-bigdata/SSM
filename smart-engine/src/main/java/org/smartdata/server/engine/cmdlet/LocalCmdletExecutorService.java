@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.ExecutorType;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusMessage;
@@ -32,6 +33,8 @@ import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.message.AddNodeMessage;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -40,17 +43,21 @@ import java.util.concurrent.TimeUnit;
 
 public class LocalCmdletExecutorService extends CmdletExecutorService implements StatusReporter {
   private static final Logger LOG = LoggerFactory.getLogger(LocalCmdletExecutorService.class);
+  private static final String ACTIVE_SERVER_ID = "ActiveSSMServer";
+  private SmartConf conf;
   private CmdletFactory cmdletFactory;
   private CmdletExecutor cmdletExecutor;
   private ScheduledExecutorService executorService;
 
   public LocalCmdletExecutorService(SmartConf smartConf, CmdletManager cmdletManager) {
     super(cmdletManager, ExecutorType.LOCAL);
+    this.conf = smartConf;
     this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
     this.cmdletExecutor = new CmdletExecutor(smartConf, this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.executorService.scheduleAtFixedRate(
         new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+    ActiveServerInfo.setInstance(ACTIVE_SERVER_ID, getActiveServerAddress(), ExecutorType.LOCAL);
     EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
   }
 
@@ -96,6 +103,18 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
   public void report(StatusMessage status) {
     LOG.debug("Reporting status message " + status);
     cmdletManager.updateStatus(status);
+  }
+
+  private String getActiveServerAddress() {
+    String srv = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
+    if (srv == null || srv.length() == 0) {
+      try {
+        srv = InetAddress.getLocalHost().getHostName();
+      } catch (UnknownHostException e) {
+        srv = "127.0.0.1";
+      }
+    }
+    return srv;
   }
 
   private class StatusFetchTask implements Runnable {
