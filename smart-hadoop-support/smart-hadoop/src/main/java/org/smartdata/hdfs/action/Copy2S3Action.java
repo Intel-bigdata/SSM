@@ -27,6 +27,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelper;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.io.IOException;
@@ -42,24 +43,18 @@ import java.util.Map;
  * Note that destination should contains filename.
  */
 @ActionSignature(
-    actionId = "copy",
-    displayName = "copy",
-    usage = HdfsAction.FILE_PATH + " $src " + CopyFileAction.DEST_PATH +
-        " $dest " + CopyFileAction.OFFSET_INDEX + " $offset" +
-        CopyFileAction.LENGTH +
-        " $length" + CopyFileAction.BUF_SIZE + " $size"
+    actionId = "copy2s3",
+    displayName = "copy2s3",
+    usage = HdfsAction.FILE_PATH + " $src " + Copy2S3Action.DEST_PATH +
+        " $dest "
 )
-public class CopyFileAction extends HdfsAction {
+public class Copy2S3Action extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CopyFileAction.class);
   public static final String BUF_SIZE = "-bufSize";
   public static final String DEST_PATH = "-dest";
-  public static final String OFFSET_INDEX = "-offset";
-  public static final String LENGTH = "-length";
   private String srcPath;
   private String destPath;
-  private long offset = 0;
-  private long length = 0;
   private int bufferSize = 64 * 1024;
   private Configuration conf;
 
@@ -82,12 +77,6 @@ public class CopyFileAction extends HdfsAction {
     if (args.containsKey(BUF_SIZE)) {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
-    if (args.containsKey(OFFSET_INDEX)) {
-      offset = Long.valueOf(args.get(OFFSET_INDEX));
-    }
-    if (args.containsKey(LENGTH)) {
-      length = Long.valueOf(args.get(LENGTH));
-    }
   }
 
   @Override
@@ -106,37 +95,30 @@ public class CopyFileAction extends HdfsAction {
     }
     appendLog(
         String.format("Copy from %s to %s", srcPath, destPath));
-    if (offset == 0 && length == 0) {
-      copySingleFile(srcPath, destPath);
-    }
-    if (length != 0) {
-      copyWithOffset(srcPath, destPath, bufferSize, offset, length);
-    }
+    copySingleFile(srcPath, destPath);
     appendLog("Copy Successfully!!");
+  }
+
+  private long getFileSize(String fileName) throws IOException {
+    if (fileName.startsWith("hdfs")) {
+      // Get InputStream from URL
+      FileSystem fs = FileSystem.get(URI.create(fileName), conf);
+      return fs.getFileStatus(new Path(fileName)).getLen();
+    } else {
+      return dfsClient.getFileInfo(fileName).getLen();
+    }
   }
 
   private boolean copySingleFile(String src, String dest) throws IOException {
     //get The file size of source file
-    long fileSize = getFileSize(src);
-    appendLog(
-        String.format("Copy the whole file with length %s", fileSize));
-    return copyWithOffset(src, dest, bufferSize, 0, fileSize);
-  }
-
-  private boolean copyWithOffset(String src, String dest, int bufferSize,
-      long offset, long length) throws IOException {
-    appendLog(
-        String.format("Copy with offset %s and length %s", offset, length));
     InputStream in = null;
     OutputStream out = null;
 
     try {
       in = getSrcInputStream(src);
-      out = getDestOutPutStream(dest, offset);
-      //skip offset
-      in.skip(offset);
+      out = CompatibilityHelperLoader.getHelper().getS3outputStream(dest,conf);
       byte[] buf = new byte[bufferSize];
-      long bytesRemaining = length;
+      long bytesRemaining = getFileSize(src);
 
       while (bytesRemaining > 0L) {
         int bytesToRead =
@@ -160,56 +142,25 @@ public class CopyFileAction extends HdfsAction {
     }
   }
 
-  private long getFileSize(String fileName) throws IOException {
-    if (fileName.startsWith("hdfs")) {
-      // Get InputStream from URL
-      FileSystem fs = FileSystem.get(URI.create(fileName), conf);
-      return fs.getFileStatus(new Path(fileName)).getLen();
-    } else {
-      return dfsClient.getFileInfo(fileName).getLen();
-    }
-  }
-
   private InputStream getSrcInputStream(String src) throws IOException {
-    if (src.startsWith("hdfs")) {
+    if (!src.startsWith("hdfs")) {
       // Copy between different remote clusters
       // Get InputStream from URL
       FileSystem fs = FileSystem.get(URI.create(src), conf);
       return fs.open(new Path(src));
     } else {
+      // Copy from primary HDFS
       return dfsClient.open(src);
     }
   }
 
-  private OutputStream getDestOutPutStream(String dest, long offset) throws IOException {
-    if (dest.startsWith("hdfs")) {
-      // Copy between different clusters
-      // Copy to remote HDFS
-      // Get OutPutStream from URL
-      FileSystem fs = FileSystem.get(URI.create(dest), conf);
-      int replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
-      try {
-        replication = fs.getServerDefaults(new Path(dest)).getReplication();
-        if (replication != DFSConfigKeys.DFS_REPLICATION_DEFAULT) {
-          appendLog("Remote Replications =" + replication);
-        }
-      } catch (IOException e) {
-        LOG.debug("Get Server default replication error!", e);
-      }
-      if (fs.exists(new Path(dest)) && offset != 0) {
-        appendLog("Append to existing file " + dest);
-        return fs.append(new Path(dest));
-      } else {
-        return fs.create(new Path(dest), true, (short) replication);
-      }
-    } else if (dest.startsWith("s3")) {
-      // Copy to s3
-      FileSystem fs = FileSystem.get(URI.create(dest), conf);
-      return fs.create(new Path(dest), true);
+  private OutputStream getDestOutPutStream(String dest) throws IOException {
+    // Copy to remote S3
+    if (!dest.startsWith("s3")) {
+      throw new IOException();
     }
-    else {
-      return CompatibilityHelperLoader.getHelper()
-          .getDFSClientAppend(dfsClient, dest, bufferSize, offset);
-    }
+    // Copy to s3
+    FileSystem fs = FileSystem.get(URI.create(dest), conf);
+    return fs.create(new Path(dest), true);
   }
 }

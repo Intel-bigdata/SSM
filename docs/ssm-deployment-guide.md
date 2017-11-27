@@ -334,6 +334,23 @@ single date nor time value is specified, the rule will be evaluated every short 
     This rule will move all XML files under /test directory to SSD. The rule engine will
 evaluate whether the condition meets every 3s. 
 
+
+* **Backup files between clusters**
+     
+     `file: every 500ms | path matches "/test-10000-10MB/*"| sync -dest hdfs://sr518:9000/test-10000-10MB/`
+	
+     This rule will copy file and update any namespace changes(add,delete,rename,append) under source directory "/test-10000-10MB/" to destination directory "hdfs://sr518:9000/test-10000-10MB/". 
+
+* **Support action chain**
+
+	`file: path matches "/test/*" and age > 90d | archive ; setReplica 1 `
+	
+     SSM use ";" to seperate different actions in a rule. The execution trigger of later action depends on the successful execution of the prior action. If prior action fails, then the following actions will not be executed.
+     
+     Above rule means all the files under /test directory, if it's age is more than 90 days, then move the file to archive storage, and set the replica to 1. "setReplica 1" is a not a built-in action.  Users need to implement it by themselfs. 
+     
+     Refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM. 
+     
 Rule priority and rule order will be considered to implement yet. Currently all rules
 will run in parallel. For a full detail rule format definition, please refer to
 https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
@@ -341,30 +358,59 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 
 Performance Tuning
 ---------------------------------------------------------------------------------
-There are two configurable parameters which impact the SSM rule evaluation and action
-execution parallelism.
+1. Rule and Cmdlet concurrency
 
-**smart.rule.executors**
+   There are two configurable parameters which impact the SSM rule evaluation and action execution parallelism.
 
-Current default value is 5, which means system will concurrently evaluate 5 rule state
-at the same time.
+    **smart.rule.executors**
 
-**smart.cmdlet.executors**
+    Current default value is 5, which means system will concurrently evaluate 5 rule state at the same time.
+    
+    ```xml
+    <property>
+        <name>smart.rule.executors</name>
+        <value>5</value>
+        <description>Max number of rules that can be executed in parallel</description>
+     </property>
+     ```
 
-Current default value is 10, means there will be 10 actions concurrently executed at
-the same time. 
-If the current configuration cannot meet your performance requirements, you can change
-it by define the property in the smart-site.xml under /conf directory. Here is an example
-to change the action execution paralliem to 50.
+    **smart.cmdlet.executors**
 
-```xml
-<property>
-  <name>smart.cmdlet.executors</name>
-  <value>50</value>
-</property>
-```
+    Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
+    If the current configuration cannot meet your performance requirements, you can change it by define the property in the smart-site.xml under /conf directory. Here is an example to change the action execution paralliem to 50.
 
-SSM service restart is required after the configuration change. 
+     ```xml
+     <property>
+         <name>smart.cmdlet.executors</name>
+         <value>50</value>
+     </property>
+     ```
+
+2. Cmdlet history purge in metastore  
+
+    SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodly purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records. 
+
+    ```xml
+    <property>
+        <name>smart.cmdlet.hist.max.num.records</name>
+        <value>100000</value>
+        <description>Maximum number of historic cmdlet records kept in SSM server. Oldest cmdlets will be deleted if exceeds the threshold. 
+        </description>
+     </property>
+
+     <property>
+        <name>smart.cmdlet.hist.max.record.lifetime</name>
+        <value>30day</value>
+        <description>Maximum life time of historic cmdlet records kept in SSM server. Cmdlet record will be deleted from SSM server if exceeds the threshold. Valid time unit can be 'day', 'hour', 'min', 'sec'. The minimum update granularity is 5sec.
+        </description>
+     </property>
+     ```
+
+      SSM service restart is required after the configuration change. 
+
+3. Disable SSM Client
+
+    For some reason, if you do not want to SmartDFSClients on specific host to contact SSM server then it can be realized by creating file "/tmp/SMART_CLIENT_DISABLED_ID_FILE" on that node's local file system. After that, new created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
 
 Trouble Shooting
@@ -394,11 +440,10 @@ All logs will go to SmartSerer.log under /logs directory.
   Make sure there is no system mover running. Try to restart the SSM service will solve the problem. 
 	 
 	 
-Know Issues(2017-08-19)
+Notes
 ---------------------------------------------------------------------------------
-1. On UI, actions in waiting list will show "CreateTime" 1969-12-31 16:00:00 and "Running Time" 36 weeks and 2 days. This will be improved later. 
-2. If there is no SSD and Archive type disk volume configured in DataNodes, action generated by "allssd" and "archive" rule wil fail.
-3. When SSM starts, it will pull the whole namespace form Namenode. If the namespace is very big, it will takes minutes for SSM to finish the namespace synchronization. SSM may half function during this period. 
+1. If there is no SSD and Archive type disk volume configured in DataNodes, actions generated by "allssd" and "archive" rule will fail.
+2. When SSM starts, it will pull the whole namespace form Namenode. If the namespace is very big, it will takes time for SSM to finish the namespace synchronization. SSM may half function during this period.
 
 
    
