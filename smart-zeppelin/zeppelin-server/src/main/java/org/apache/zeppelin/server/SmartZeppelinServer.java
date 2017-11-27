@@ -36,10 +36,8 @@ import org.apache.zeppelin.interpreter.InterpreterSettingManager;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
-import org.apache.zeppelin.rest.ConfigurationsRestApi;
 import org.apache.zeppelin.rest.CredentialRestApi;
 import org.apache.zeppelin.rest.HeliumRestApi;
-import org.apache.zeppelin.rest.InterpreterRestApi;
 import org.apache.zeppelin.rest.LoginRestApi;
 import org.apache.zeppelin.rest.NotebookRepoRestApi;
 import org.apache.zeppelin.rest.SecurityRestApi;
@@ -390,9 +388,6 @@ public class SmartZeppelinServer {
       HeliumRestApi heliumApi = new HeliumRestApi(helium, notebook);
       singletons.add(heliumApi);
 
-      InterpreterRestApi interpreterApi = new InterpreterRestApi(interpreterSettingManager);
-      singletons.add(interpreterApi);
-
       CredentialRestApi credentialApi = new CredentialRestApi(credentials);
       singletons.add(credentialApi);
 
@@ -401,9 +396,6 @@ public class SmartZeppelinServer {
 
       LoginRestApi loginRestApi = new LoginRestApi();
       singletons.add(loginRestApi);
-
-      ConfigurationsRestApi settingsApi = new ConfigurationsRestApi(notebook);
-      singletons.add(settingsApi);
 
       return singletons;
     }
