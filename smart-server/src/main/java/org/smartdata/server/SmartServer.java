@@ -46,6 +46,7 @@ import org.smartdata.tidb.LaunchDB;
 import org.smartdata.tidb.PdServer;
 import org.smartdata.tidb.TidbServer;
 import org.smartdata.utils.SecurityUtil;
+import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -146,7 +147,7 @@ public class SmartServer {
 
   public static void startDB(SmartConf conf, AgentMaster agentMaster)
           throws InterruptedException, IOException {
-    if (conf.getInt("agentNum", 0) != 0) {
+    if (conf.getInt(NUMBER_OF_SMART_AGENT, 0) != 0) {
       String host = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
       InetAddress address = InetAddress.getByName(host);
       String ip = address.getHostAddress();
@@ -196,7 +197,7 @@ public class SmartServer {
         num++;
       }
     }
-    conf.setInt("agentNum", num);
+    conf.setInt(NUMBER_OF_SMART_AGENT, num);
   }
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
