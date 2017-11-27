@@ -17,6 +17,8 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.StorageType;
@@ -35,6 +37,8 @@ import org.apache.hadoop.security.token.Token;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
 import java.nio.file.FileSystem;
 import java.util.ArrayList;
 import java.util.List;
@@ -129,5 +133,26 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
   public int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage) {
     StorageType storageType = datanodeStorage.getStorageType();
     return storageType.ordinal();
+  }
+
+  @Override
+  public OutputStream getDFSClientAppend(DFSClient client, String dest,
+      int buffersize, long offset) throws IOException {
+    if (client.exists(dest) && offset != 0) {
+      return client
+          .append(dest, buffersize, null, null);
+    }
+    return client.create(dest, true);
+  }
+
+  @Override
+  public OutputStream getS3outputStream(String dest, Configuration conf) throws IOException {
+    // Copy to remote S3
+    if (!dest.startsWith("s3")) {
+      throw new IOException();
+    }
+    // Copy to s3
+    org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
+    return fs.create(new Path(dest), true);
   }
 }
