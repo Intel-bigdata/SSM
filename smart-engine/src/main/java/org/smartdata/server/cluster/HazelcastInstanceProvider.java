@@ -48,21 +48,23 @@ public class HazelcastInstanceProvider {
 
   public static void addMemberConfig(ClasspathXmlConfig config) {
     NetworkConfig network = config.getNetworkConfig();
-      JoinConfig join = network.getJoin();
-      String serverConfFile = new Configuration().get(SmartConfKeys.SMART_CONF_DIR_KEY,
-            SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/servers";
-      Scanner sc = null;
-      try {
-        sc = new Scanner(new File(serverConfFile));
-      } catch (FileNotFoundException ex) {
-        LOG.error("Cannot find the config file: {}!", serverConfFile);
-      }
+    JoinConfig join = network.getJoin();
+    String serverConfFile = new Configuration().get(SmartConfKeys.SMART_CONF_DIR_KEY,
+        SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/servers";
+    Scanner sc = null;
+    try {
+      sc = new Scanner(new File(serverConfFile));
+    } catch (FileNotFoundException ex) {
+      LOG.error("Cannot find the config file: {}!", serverConfFile);
+    }
+    if (sc != null) {
       while (sc.hasNextLine()) {
         String host = sc.nextLine().trim();
         if (!host.startsWith("#") && !host.isEmpty()) {
           join.getTcpIpConfig().addMember(host);
         }
       }
+    }
   }
 
   public static HazelcastInstance getInstance() {
