@@ -341,30 +341,55 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 
 Performance Tuning
 ---------------------------------------------------------------------------------
-There are two configurable parameters which impact the SSM rule evaluation and action
-execution parallelism.
+1. Rule and Cmdlet concurrency
 
-**smart.rule.executors**
+   There are two configurable parameters which impact the SSM rule evaluation and action execution parallelism.
 
-Current default value is 5, which means system will concurrently evaluate 5 rule state
-at the same time.
+    **smart.rule.executors**
 
-**smart.cmdlet.executors**
+    Current default value is 5, which means system will concurrently evaluate 5 rule state at the same time.
+    
+    ```xml
+    <property>
+        <name>smart.rule.executors</name>
+        <value>5</value>
+        <description>Max number of rules that can be executed in parallel</description>
+     </property>
+     ```
 
-Current default value is 10, means there will be 10 actions concurrently executed at
-the same time. 
-If the current configuration cannot meet your performance requirements, you can change
-it by define the property in the smart-site.xml under /conf directory. Here is an example
-to change the action execution paralliem to 50.
+    **smart.cmdlet.executors**
 
-```xml
-<property>
-  <name>smart.cmdlet.executors</name>
-  <value>50</value>
-</property>
-```
+    Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
+    If the current configuration cannot meet your performance requirements, you can change it by define the property in the smart-site.xml under /conf directory. Here is an example to change the action execution paralliem to 50.
 
-SSM service restart is required after the configuration change. 
+     ```xml
+     <property>
+         <name>smart.cmdlet.executors</name>
+         <value>50</value>
+     </property>
+     ```
+
+2. Cmdlet history purge in metastore  
+
+    SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodly purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records. 
+
+    ```xml
+    <property>
+        <name>smart.cmdlet.hist.max.num.records</name>
+        <value>100000</value>
+        <description>Maximum number of historic cmdlet records kept in SSM server. Oldest cmdlets will be deleted if exceeds the threshold. 
+        </description>
+     </property>
+
+     <property>
+        <name>smart.cmdlet.hist.max.record.lifetime</name>
+        <value>30day</value>
+        <description>Maximum life time of historic cmdlet records kept in SSM server. Cmdlet record will be deleted from SSM server if exceeds the threshold. Valid time unit can be 'day', 'hour', 'min', 'sec'. The minimum update granularity is 5sec.
+        </description>
+     </property>
+     ```
+
+      SSM service restart is required after the configuration change. 
 
 
 Trouble Shooting
