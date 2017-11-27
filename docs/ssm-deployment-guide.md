@@ -334,6 +334,23 @@ single date nor time value is specified, the rule will be evaluated every short 
     This rule will move all XML files under /test directory to SSD. The rule engine will
 evaluate whether the condition meets every 3s. 
 
+
+* **Backup files between clusters**
+     
+     `file: every 500ms | path matches "/test-10000-10MB/*"| sync -dest hdfs://sr518:9000/test-10000-10MB/`
+	
+     This rule will copy file and update any namespace changes(add,delete,rename,append) under source directory "/test-10000-10MB/" to destination directory "hdfs://sr518:9000/test-10000-10MB/". 
+
+* **Support action chain**
+
+	`file: path matches "/test/*" and age > 90d | archive ; setReplica 1 `
+	
+     SSM use ";" to seperate different actions in a rule. The execution trigger of later action depends on the successful execution of the prior action. If prior action fails, then the following actions will not be executed.
+     
+     Above rule means all the files under /test directory, if it's age is more than 90 days, then move the file to archive storage, and set the replica to 1. "setReplica 1" is a not a built-in action.  Users need to implement it by themselfs. 
+     
+     Refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM. 
+     
 Rule priority and rule order will be considered to implement yet. Currently all rules
 will run in parallel. For a full detail rule format definition, please refer to
 https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
