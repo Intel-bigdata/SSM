@@ -391,6 +391,10 @@ Performance Tuning
 
       SSM service restart is required after the configuration change. 
 
+3. Disable SSM Client
+
+    For some reason, if you do not want to SmartDFSClients on specific host to contact SSM server then it can be realized by creating file "/tmp/SMART_CLIENT_DISABLED_ID_FILE" on that node's local file system. After that, new created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
+
 
 Trouble Shooting
 ---------------------------------------------------------------------------------
