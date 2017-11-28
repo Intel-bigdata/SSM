@@ -69,7 +69,7 @@ if [ -f "${SERVERS_FILE}" ]; then
 
   if [ x"${CONTAIN_LOCALHOST}" = x"true" -a x"${ORGSMARTSERVERS}" != x"localhost" ]; then
       echo "ERROR: 'localhost' cannot be used when starting multiple SmartServers."
-      echo "       Please replace it with the real hostname in hazelcast.xml."
+      echo "       Please replace it with the real hostname in servers."
       exit 1
   fi
 
