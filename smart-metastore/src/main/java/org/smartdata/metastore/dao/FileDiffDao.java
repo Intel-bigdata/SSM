@@ -31,6 +31,7 @@ import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,11 +137,19 @@ public class FileDiffDao {
   public void insert(FileDiff[] fileDiffs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
-    Map<String, Object>[] maps = new Map[fileDiffs.length];
+    Map[] maps = new Map[fileDiffs.length];
     for (int i = 0; i < fileDiffs.length; i++) {
       maps[i] = toMap(fileDiffs[i]);
     }
     simpleJdbcInsert.executeBatch(maps);
+  }
+
+  public Long[] insert(List<FileDiff> fileDiffs) {
+    List<Long> dids = new ArrayList<>();
+    for (FileDiff fileDiff : fileDiffs) {
+      dids.add(insert(fileDiff));
+    }
+    return dids.toArray(new Long[dids.size()]);
   }
 
   public int[] batchUpdate(

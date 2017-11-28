@@ -1324,6 +1324,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public synchronized void insertFileDiffs(List<FileDiff> fileDiffs)
+      throws MetaStoreException {
+    try {
+      fileDiffDao.insert(fileDiffs);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public FileDiff getFileDiff(long did) throws MetaStoreException {
     try {
       return fileDiffDao.getById(did);
@@ -1400,6 +1409,19 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  public boolean updateFileDiff(List<FileDiff> fileDiffs)
+    throws MetaStoreException {
+    if (fileDiffs == null || fileDiffs.size() == 0) {
+      return true;
+    }
+    for (FileDiff fileDiff: fileDiffs) {
+      if (!updateFileDiff(fileDiff)) {
+        return false;
+      }
+    }
+    return true;
   }
 
 

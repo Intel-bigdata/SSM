@@ -170,6 +170,9 @@ public class CopyScheduler extends ActionSchedulerService {
   }
   
   private boolean isFileLocked(String path) {
+    if(fileLock.size() == 0) {
+      LOG.info("Lock is empty");
+    }
     if (fileLock.containsKey(path)) {
       // File is locked
       return true;
@@ -243,6 +246,8 @@ public class CopyScheduler extends ActionSchedulerService {
               //     actionInfo.getArgs().get(SyncAction.DEST));
             } else {
               fileDiffMap.put(did, curr + 1);
+              // Unlock this file for retry
+              fileLock.remove(fileDiff.getSrc());
             }
           }
         }
@@ -278,8 +283,7 @@ public class CopyScheduler extends ActionSchedulerService {
       index++;
     }
     // Batch Insert
-    metaStore.insertFileDiffs(
-        batchFileDiffs.toArray(new FileDiff[batchFileDiffs.size()]));
+    metaStore.insertFileDiffs(batchFileDiffs);
     // Remove from baseSyncQueue
     for (String src : removed) {
       baseSyncQueue.remove(src);
@@ -460,7 +464,7 @@ public class CopyScheduler extends ActionSchedulerService {
     fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
   }
 
-  private void updateFileDiffInCache(FileDiff fileDiff) {
+/*  private void updateFileDiffInCache(FileDiff fileDiff) {
     // judge whether change the file diff
     if (fileDiffCache.containsKey(fileDiff.getDiffId())) {
       FileDiff oldDiff = fileDiffCache.get(fileDiff.getDiffId());
@@ -469,7 +473,7 @@ public class CopyScheduler extends ActionSchedulerService {
         fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
       }
     }
-  }
+  }*/
 
   private void updateFileDiffInCache(Long did,
       FileDiffState fileDiffState) throws MetaStoreException {
@@ -507,9 +511,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
   private void pushCacheToDB() throws MetaStoreException {
     LOG.debug("Push FileFiff From cache Into FileDiff");
-    List<Long> dids = new ArrayList<>();
-    List<FileDiffState> states = new ArrayList<>();
-    List<String> param = new ArrayList<>();
+    List<FileDiff> updatedFileDiffs = new ArrayList<>();
     List<Long> needDel = new ArrayList<>();
     FileDiff fileDiff;
     // Only check changed cache rather than full cache
@@ -519,21 +521,16 @@ public class CopyScheduler extends ActionSchedulerService {
         needDel.add(did);
         continue;
       }
-      dids.add(fileDiff.getDiffId());
-      states.add(fileDiff.getState());
-      param.add(fileDiff.getParametersJsonString());
+      updatedFileDiffs.add(fileDiff);
       if (FileDiffState.isTerminalState(fileDiff.getState())) {
         needDel.add(did);
       }
     }
     // Push cache to metastore
-    if (dids.size() > 0) {
-      // Sync file diff with metastore
-      metaStore.batchUpdateFileDiff(dids, states, param);
-      // Remove file diffs in cache and file lock
-      for (long did : needDel) {
-        deleteDiffInCache(did);
-      }
+    metaStore.updateFileDiff(updatedFileDiffs);
+    // Remove file diffs in cache and file lock
+    for (long did : needDel) {
+      deleteDiffInCache(did);
     }
   }
 
@@ -745,7 +742,7 @@ public class CopyScheduler extends ActionSchedulerService {
         fileDiff.getParameters().put("-offset", "" + offset);
         fileDiff.getParameters().put("-length", "" + totalLength);
         // Update fileDiff in metastore
-        updateFileDiffInCache(fileDiff);
+        fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
         // Unlock file
         fileLock.remove(filePath);
         currAppendLength = 0;
@@ -770,7 +767,7 @@ public class CopyScheduler extends ActionSchedulerService {
           if (nameChain.size() > 1) {
             fileDiff.setSrc(nameChain.get(0));
             // Delete raw is enough
-            updateFileDiffInCache(fileDiff);
+            fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
           }
           diffChain.add(fileDiff.getDiffId());
         } else {
@@ -811,7 +808,7 @@ public class CopyScheduler extends ActionSchedulerService {
           if (appendFileDiff != null &&
               appendFileDiff.getState().getValue() != 2) {
             appendFileDiff.setSrc(newName);
-            updateFileDiffInCache(appendFileDiff);
+            fileDiffCacheChanged.put(appendFileDiff.getDiffId(), true);
           }
         }
         // Insert rename fileDiff to head
