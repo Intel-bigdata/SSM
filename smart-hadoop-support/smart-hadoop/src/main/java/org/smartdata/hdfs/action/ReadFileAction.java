@@ -56,9 +56,11 @@ public class ReadFileAction extends HdfsAction {
       throw new IllegalArgumentException("File parameter is missing.");
     }
     appendLog(
-        String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
+        String.format("Action starts at %s : Read %s",
+            Utils.getFormatedCurrentTime(), filePath));
     if (!dfsClient.exists(filePath)) {
-      throw new ActionException("ReadFile Action fails, file doesn't exist!");
+      throw new ActionException("ReadFile Action fails, file " +
+          filePath + " doesn't exist!");
     }
     DFSInputStream dfsInputStream = dfsClient.open(filePath);
     byte[] buffer = new byte[bufferSize];

@@ -49,7 +49,6 @@ public class TestFileDiffDao extends TestDaoUtil {
   @Test
   public void testInsertAndGetSingleRecord() {
     FileDiff fileDiff = new FileDiff();
-    fileDiff.setDiffId(1);
     fileDiff.setParameters(new HashMap<String, String>());
     fileDiff.getParameters().put("-test", "test");
     fileDiff.setSrc("test");
@@ -57,7 +56,7 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileDiff.setDiffType(FileDiffType.APPEND);
     fileDiff.setCreateTime(1);
     fileDiffDao.insert(fileDiff);
-    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
+    Assert.assertTrue(fileDiffDao.getAll().get(0).equals(fileDiff));
   }
 
   @Test
@@ -106,27 +105,27 @@ public class TestFileDiffDao extends TestDaoUtil {
 
   @Test
   public void testBatchInsertAndQuery() {
-    FileDiff[] fileDiffs = new FileDiff[2];
-    fileDiffs[0] = new FileDiff();
-    fileDiffs[0].setDiffId(1);
-    fileDiffs[0].setParameters(new HashMap<String, String>());
-    fileDiffs[0].setSrc("test");
-    fileDiffs[0].setState(FileDiffState.RUNNING);
-    fileDiffs[0].setDiffType(FileDiffType.APPEND);
-    fileDiffs[0].setCreateTime(1);
+    List<FileDiff> fileDiffs = new ArrayList<>();
+    FileDiff fileDiff = new FileDiff();
+    fileDiff.setParameters(new HashMap<String, String>());
+    fileDiff.setSrc("test");
+    fileDiff.setState(FileDiffState.RUNNING);
+    fileDiff.setDiffType(FileDiffType.APPEND);
+    fileDiff.setCreateTime(1);
+    fileDiffs.add(fileDiff);
 
-    fileDiffs[1] = new FileDiff();
-    fileDiffs[1].setDiffId(2);
-    fileDiffs[1].setParameters(new HashMap<String, String>());
-    fileDiffs[1].setSrc("src");
-    fileDiffs[1].setState(FileDiffState.PENDING);
-    fileDiffs[1].setDiffType(FileDiffType.APPEND);
-    fileDiffs[1].setCreateTime(1);
+    fileDiff = new FileDiff();
+    fileDiff.setParameters(new HashMap<String, String>());
+    fileDiff.setSrc("src");
+    fileDiff.setState(FileDiffState.PENDING);
+    fileDiff.setDiffType(FileDiffType.APPEND);
+    fileDiff.setCreateTime(1);
+    fileDiffs.add(fileDiff);
 
     fileDiffDao.insert(fileDiffs);
     List<FileDiff> fileInfoList = fileDiffDao.getAll();
     for (int i = 0; i < 2; i++) {
-      Assert.assertTrue(fileInfoList.get(i).equals(fileDiffs[i]));
+      Assert.assertTrue(fileInfoList.get(i).equals(fileDiffs.get(i)));
     }
     List<String> paths = fileDiffDao.getSyncPath(0);
     Assert.assertTrue(paths.size() == 1);
@@ -155,6 +154,9 @@ public class TestFileDiffDao extends TestDaoUtil {
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
     fileDiff.setSrc("test1");
     fileDiffDao.update(1, "test1");
+    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
+    fileDiff.setRuleId(1L);
+    fileDiffDao.update(fileDiff);
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
   }
 }
