@@ -41,6 +41,7 @@ import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegi
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
+import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -97,12 +98,12 @@ public class AgentMaster {
 
   public boolean isAgentRegisterReady(SmartConf conf) {
     //TODO: how many agents are required to launch tikv
-    return serveReadyAgent == conf.getAgentsNumber();
+    return serveReadyAgent == conf.getInt(NUMBER_OF_SMART_AGENT, 0);
   }
 
   public boolean isTikvAlreadyLaunched(SmartConf conf) {
     //TODO: how many tikvs are required
-    return tikvNumber == conf.getAgentsNumber();
+    return tikvNumber == conf.getInt(NUMBER_OF_SMART_AGENT, 0);
   }
 
   public void sendLaunchTikvMessage() {
