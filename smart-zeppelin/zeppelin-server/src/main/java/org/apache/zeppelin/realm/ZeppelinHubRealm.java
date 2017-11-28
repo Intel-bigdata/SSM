@@ -214,8 +214,6 @@ public class ZeppelinHubRealm extends AuthorizingRealm {
     /* TODO(xxx): add proper roles */
     HashSet<String> userAndRoles = new HashSet<String>();
     userAndRoles.add(username);
-    SmartZeppelinServer.notebookWsServer.broadcastReloadedNoteList(
-        new org.apache.zeppelin.user.AuthenticationInfo(username), userAndRoles);
 
     ZeppelinhubUtils.userLoginRoutine(username);
   }

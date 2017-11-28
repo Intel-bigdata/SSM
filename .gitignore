@@ -37,7 +37,6 @@ smart-zeppelin/spark/.flattened-pom.xml
 smart-zeppelin/yarn.lock
 smart-zeppelin/zeppelin-display/.flattened-pom.xml
 smart-zeppelin/zeppelin-interpreter/.flattened-pom.xml
-smart-zeppelin/smart-interpreter/.flattened-pom.xml
 smart-zeppelin/zeppelin-server/.flattened-pom.xml
 smart-zeppelin/zeppelin-web/.flattened-pom.xml
 smart-zeppelin/zeppelin-web/.tmp
