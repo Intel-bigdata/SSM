@@ -55,7 +55,7 @@ done
 SERVERS_IN_HAZELCAST=$("${SMART_HOME}/bin/ssm" getconf SmartServers 2>/dev/null)
 
 if [ "$SERVERS_IN_HAZELCAST" != "" ]; then
-  echo "ERROR: Get SmartServers error."
+  echo "ERROR: Get SmartServers error.Please don't add member in hazelcast.xml"
   exit 1
 fi
 ORGSMARTSERVERS=
