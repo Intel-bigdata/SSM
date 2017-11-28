@@ -57,6 +57,7 @@ public class MetaStoreUtils {
       };
   public static final String TIDB_DB_NAME = "ssm";
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
+  private static boolean tidbInited = false;
 
   public static Connection createConnection(String url,
       String userName, String password)
@@ -449,7 +450,9 @@ public class MetaStoreUtils {
           String url = String.format("jdbc:mysql://127.0.0.1:%s", tidbPort);
           String user = p.getProperty("username");
           String password = p.getProperty("password");
-          initTidb(url, user, password);
+          if (!tidbInited) {
+            initTidb(url, user, password);
+          }
           url = url + "/" + TIDB_DB_NAME;
           p.setProperty("url", url);
           LOG.info("\t" + "The jdbc url for Tidb is " + url);
@@ -613,6 +616,7 @@ public class MetaStoreUtils {
     } catch (Exception ex) {
       throw new MetaStoreException(ex);
     }
+    tidbInited = true;
     LOG.info("Tidb is initialized.");
   }
 }
