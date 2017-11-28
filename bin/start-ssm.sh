@@ -52,7 +52,12 @@ done
 
 #---------------------------------------------------------
 # Start Smart Servers
+SERVERS_IN_HAZELCAST=$("${SMART_HOME}/bin/ssm" getconf SmartServers 2>/dev/null)
 
+if [ "$SERVERS_IN_HAZELCAST" != "" ]; then
+  echo "ERROR: Get SmartServers error."
+  exit 1
+fi
 ORGSMARTSERVERS=
 SERVERS_FILE="${SMART_CONF_DIR}/servers"
 if [ -f "${SERVERS_FILE}" ]; then
