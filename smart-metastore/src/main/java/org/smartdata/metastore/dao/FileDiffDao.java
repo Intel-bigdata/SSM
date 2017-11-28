@@ -31,6 +31,7 @@ import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,11 +137,19 @@ public class FileDiffDao {
   public void insert(FileDiff[] fileDiffs) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
-    Map<String, Object>[] maps = new Map[fileDiffs.length];
+    Map[] maps = new Map[fileDiffs.length];
     for (int i = 0; i < fileDiffs.length; i++) {
       maps[i] = toMap(fileDiffs[i]);
     }
     simpleJdbcInsert.executeBatch(maps);
+  }
+
+  public Long[] insert(List<FileDiff> fileDiffs) {
+    List<Long> dids = new ArrayList<>();
+    for (FileDiff fileDiff : fileDiffs) {
+      dids.add(insert(fileDiff));
+    }
+    return dids.toArray(new Long[dids.size()]);
   }
 
   public int[] batchUpdate(
@@ -182,6 +191,22 @@ public class FileDiffDao {
     String sql = "UPDATE " + TABLE_NAME + " SET state = ?, "
         + "parameters = ? WHERE did = ?";
     return jdbcTemplate.update(sql, state.getValue(), parameters, did);
+  }
+
+  public int update(final FileDiff fileDiff) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "UPDATE " + TABLE_NAME + " SET "
+        + "rid = ?, "
+        + "diff_type = ?, "
+        + "src = ?, "
+        + "parameters = ?, "
+        + "state = ?, "
+        + "create_time = ? "
+        + "WHERE did = ?";
+    return jdbcTemplate.update(sql, fileDiff.getRuleId(),
+        fileDiff.getDiffType().getValue(), fileDiff.getSrc(),
+        fileDiff.getParametersJsonString(), fileDiff.getState().getValue(),
+        fileDiff.getCreateTime(), fileDiff.getDiffId());
   }
 
 
