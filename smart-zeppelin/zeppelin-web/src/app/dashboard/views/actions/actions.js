@@ -28,6 +28,7 @@ angular.module('zeppelinWebApp')
     $scope.totalPage = 1;
     $scope.orderby = 'aid';
     $scope.isDesc = true;
+
     function getActions() {
       $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/list/'
         + $scope.currentPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc)
@@ -48,10 +49,12 @@ angular.module('zeppelinWebApp')
           $scope.totalNumber = 0;
       });
     };
+
     $scope.gotoPage = function (index) {
       $scope.currentPage = index;
       getActions();
     };
+
     $scope.defindOrderBy = function (filed) {
       if ($scope.orderby === filed) {
         $scope.isDesc = ! $scope.isDesc;
@@ -61,5 +64,10 @@ angular.module('zeppelinWebApp')
       }
       getActions();
     };
+
     getActions();
+
+    setInterval(function(){
+      $scope.$apply(getActions());
+    },10000);
   }
