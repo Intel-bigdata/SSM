@@ -44,7 +44,7 @@ public class TestCompressionFileDao extends TestDaoUtil {
   }
 
   @After
-  public void closeCacheFileDao() throws Exception {
+  public void closeCompressionFileDao() throws Exception {
     closeDao();
     compressionFileDao = null;
   }
@@ -66,8 +66,10 @@ public class TestCompressionFileDao extends TestDaoUtil {
 
   @Test
   public void testGetCompressionInfo() throws Exception {
+    long originalLen = 100;
+    long compressedLen = 50;
     SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
-      "/test1", 131072, originalPos, compressedPos);
+      "/test1", 131072, originalLen, compressedLen, originalPos, compressedPos);
     SmartFileCompressionInfo compressionInfo2 = new SmartFileCompressionInfo(
       "/test2", 131072, originalPos, compressedPos);
 
@@ -80,5 +82,7 @@ public class TestCompressionFileDao extends TestDaoUtil {
     Assert.assertTrue(dbcompressionInfo.getOriginalPos().get(0).equals(9000L));
     Assert.assertTrue(dbcompressionInfo.getCompressedPos().get(1).equals(2000L));
     Assert.assertTrue(compressionFileDao.getAll().size() == 2);
+    Assert.assertEquals(originalLen, dbcompressionInfo.getOriginalLength());
+    Assert.assertEquals(compressedLen, dbcompressionInfo.getCompressedLength());
   }
 }

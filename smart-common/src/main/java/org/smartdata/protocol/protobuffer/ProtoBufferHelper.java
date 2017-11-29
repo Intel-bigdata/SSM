@@ -110,6 +110,8 @@ public class ProtoBufferHelper {
     SmartFileCompressionInfo.Builder builder = SmartFileCompressionInfo.newBuilder();
     builder.setFileName(proto.getFileName())
         .setBufferSize(proto.getBufferSize())
+        .setOriginalLength(proto.getOriginalLength())
+        .setCompressedLength(proto.getCompressedLength())
         .setOriginalPos(proto.getOriginalPosList())
         .setCompressedPos(proto.getCompressedPosList());
     return builder.build();
@@ -118,7 +120,9 @@ public class ProtoBufferHelper {
   public static SmartFileCompressionInfoProto convert(SmartFileCompressionInfo info) {
     SmartFileCompressionInfoProto.Builder builder = SmartFileCompressionInfoProto.newBuilder();
     builder.setFileName(info.getFileName())
-        .setBufferSize(info.getBufferSize());
+        .setBufferSize(info.getBufferSize())
+        .setOriginalLength(info.getOriginalLength())
+        .setCompressedLength(info.getCompressedLength());
     builder.addAllOriginalPos(info.getOriginalPos());
     builder.addAllCompressedPos(info.getCompressedPos());
     return builder.build();
