@@ -5,7 +5,7 @@
 Python 2 (2.6 or higher) with `requests` installed.
 ```
 python --version
-pip install requests
+sudo pip install requests
 ```
 
 ### HDFS and SSM Environment
@@ -20,7 +20,7 @@ BASE_URL = "http://{SSM_Server}:7045"
 Assume you have two HDFS clusters, SSM is connected with one of them. We named the cluster connected with SSM as primary HDFS cluster, the other HDFS cluster as remote HDFS.
 
 1. Create test directories and files in HDFS clusters
-[Optional] Create test directories in both clusters:
+  [Optional] Create test directories in both clusters:
 ```
 HDFS dfs -mkdir /1MB
 HDFS dfs -mkdir /10MB
@@ -37,7 +37,7 @@ python reset_env.py ResetEnv.test_create_1000_100MB
 These commands will create 10K * 1MB in `1MB`, 10K * 10MB in `10MB` and 1K * 100MB in `100MB`.
 
 2. Init/Rest SSM and remote HDFS
-Stop and start SSM with formatting database
+  Stop and start SSM with formatting database
 ```
 bin/stop-ssm.sh
 bin/start-ssm.sh -format
@@ -62,10 +62,10 @@ file : path matches "/{src}/*" | sync -dest hdfs://{remote HDFS}/{dest}
 - {dest} is the destination directory of remote cluster, such as `/10MB/`.
 
 2. Start/stop sync rule in Data Sync page
-After start sync rule, you can see the number of files are processed by SSM.
+  After start sync rule, you can see the number of files are processed by SSM.
 
 3. Check file status in remote HDFS cluster
-Check file size and checksum between primary and remote HDFS cluster.
- 
+  Check file size and checksum between primary and remote HDFS cluster.
+
 ### Test Disaster Recovery through Script
 [TODO] Python script is not finished yet. :)
