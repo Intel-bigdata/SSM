@@ -31,11 +31,38 @@ limitations under the License.
     rule part. These two characters are reserved for SSM, cannot be used in rule
     content, otherwise rule parse will fail.
     <br/>
-    <br/>
-    Detail information of each rule part are listed in following tables.
-    <br/>
   </p>
   <br/>
+  <table class="table table-bordered">
+    <thead>
+    <tr>
+      <th>Example</th>
+      <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td>file: path matches "/foo/*.dat" and accessCount(7day) < 3 | archive</td>
+      <td>For each file with path matches the wildcard expression “/foo/*.dat”, if the file has been read for lesser than 3 times during the last 7 days, then move the file to archive storage.</td>
+    </tr>
+    <tr>
+      <td>file: path matches "/foo/*" | sync -dest hdfs://ip:port/destdir</td>
+      <td>For each file with path matches the wildcard expression “/foo/*.dat”, incrementally sync it into "/destdir" of HDFS cluster denoted by 'ip:port'.</td>
+    </tr>
+    <tr>
+      <td>file: every 500ms | path matches "/foo/*" | sync -dest hdfs://ip:port/destdir</td>
+      <td>The same as the above one except the rule will be executed every 500ms (by default the time interval is 5s). By doing this, the sync can acts more likely to real time.</td>
+    </tr>
+    <tr>
+      <td>file: accessCount(10min) < 2 | uncache; archive</td>
+      <td>If the file has been read for lesser than 2 times during the last 10 minutes, then uncache it from memory and archive it.</td>
+    </tr>
+    </tbody>
+  </table>
+  <br/>
+  <p>
+    Detail information of each rule part are listed in following tables.
+  </p>
   <table class="table table-bordered">
     <caption class="text-left">Table-1 Objects to manipulate</caption>
     <thead>
@@ -228,15 +255,4 @@ limitations under the License.
     </tr>
     </tbody>
   </table>
-  <br/>
-  <p>
-    Here is a rule example,
-    <br/>
-    <br/>
-    file:  path matches "/fooA/*.dat": age > 30day | archive
-    <br/>
-    <br/>
-    This example defines a rule that for each file with path matches regular expression
-    “/fooA/*.dat”, if the file has been created for more than 30 days,  then move the file to archive storage.
-  </p>
 </div>
