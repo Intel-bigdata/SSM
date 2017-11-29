@@ -13,7 +13,7 @@ class Test_S3_1MB(unittest.TestCase):
 
     # move to S3
     def test_S3(self):
-        max_number = 1000
+        max_number = 100
         file_paths = []
         cids = []
 
