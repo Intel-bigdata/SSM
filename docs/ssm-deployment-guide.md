@@ -309,8 +309,8 @@ SSM Rule Examples
 	`file: path matches "/test/*" and accessCount(5m) > 3 | allssd`
 
     This rule means all the files under /test directory, if it is accessed 3 times during
-last 5 minutes, SSM should trigger an anction to move the file to SSD. Rule engine
-will evalue the condition every MAX{5s,5m/20} internal.
+last 5 minutes, SSM should trigger an action to move the file to SSD. Rule engine
+will evaluate the condition every MAX{5s,5m/20} internal.
 
 
 * **Move to Archive(Cold) rule**
