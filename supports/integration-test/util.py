@@ -180,7 +180,7 @@ def create_random_file_parallel_return_file_name(dest_path, length=1024):
     file_path = dest_path + file_name
     cmdlet_str = "write -file " + \
                  file_path + " -length " + str(length)
-    return file_name, submit_cmdlet(cmdlet_str)
+    return file_name
 
 
 def copy_file_to_S3(file_path, dest_path):
