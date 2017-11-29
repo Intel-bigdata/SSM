@@ -410,7 +410,7 @@ Performance Tuning
 
 3. Disable SSM Client
 
-    For some reasons, if you do want to disable SmartDFSClients on a specific host to contact SSM server, it can be realized by creating file "/tmp/SMART_CLIENT_DISABLED_ID_FILE" on that node's local file system. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
+    For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by creating file "/tmp/SMART_CLIENT_DISABLED_ID_FILE" on that node's local file system. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
 
 Trouble Shooting
