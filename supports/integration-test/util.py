@@ -172,6 +172,28 @@ def create_random_file_parallel(dest_path, length=1024):
     return file_path, submit_cmdlet(cmdlet_str)
 
 
+def create_random_file_parallel_return_file_name(dest_path, length=1024):
+    """
+    create a random file in /dest_path/
+    """
+    file_name = random_string()
+    file_path = dest_path + file_name
+    cmdlet_str = "write -file " + \
+                 file_path + " -length " + str(length)
+    submit_cmdlet(cmdlet_str)
+    return file_name
+
+
+def copy_file_to_S3(file_path, dest_path):
+    """
+    move file to S3
+    """
+    cmdlet_str = "copy2s3 -file " + \
+                 file_path + " -dest " + dest_path
+    return submit_cmdlet(cmdlet_str)
+
+
+
 def delete_file(file_path, recursivly=True):
     cmdlet_str = "delete -file " + file_path
     return submit_cmdlet(cmdlet_str)
