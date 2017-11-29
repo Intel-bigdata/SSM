@@ -45,10 +45,6 @@ angular.module('zeppelinWebApp')
     $scope.ruleSummary = [
         $ptb.text('ID').done(),
         $ptb.datetime('Start Time').done()
-        /*
-        $ptb.text('User').done(),
-        $ptb.button('Quick Links').done()
-        */
     ];
 
     $scope.$watch('rule', function (rule) {
@@ -99,4 +95,8 @@ angular.module('zeppelinWebApp')
       getCmdlets();
     };
     getCmdlets();
+
+    setInterval(function(){
+      $scope.$apply(getCmdlets());
+    },10000);
   }

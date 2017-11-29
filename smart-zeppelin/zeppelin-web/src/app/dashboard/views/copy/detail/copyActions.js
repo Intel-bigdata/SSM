@@ -62,6 +62,11 @@ angular.module('zeppelinWebApp')
       }
       getCopyActions();
     };
+
     getCopyActions();
+
+    setInterval(function(){
+      $scope.$apply(getCopyActions());
+    },10000);
   }
 

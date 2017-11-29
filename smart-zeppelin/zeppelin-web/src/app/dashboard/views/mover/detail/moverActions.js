@@ -62,6 +62,11 @@ function MoverActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route) {
     }
     getCopyActions();
   };
+
   getCopyActions();
+
+  setInterval(function(){
+    $scope.$apply(getCopyActions());
+  },10000);
 }
 
