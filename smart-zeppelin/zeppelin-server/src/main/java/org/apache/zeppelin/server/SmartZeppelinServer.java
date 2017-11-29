@@ -36,10 +36,8 @@ import org.apache.zeppelin.interpreter.InterpreterSettingManager;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
-import org.apache.zeppelin.rest.ConfigurationsRestApi;
 import org.apache.zeppelin.rest.CredentialRestApi;
 import org.apache.zeppelin.rest.HeliumRestApi;
-import org.apache.zeppelin.rest.InterpreterRestApi;
 import org.apache.zeppelin.rest.LoginRestApi;
 import org.apache.zeppelin.rest.NotebookRepoRestApi;
 import org.apache.zeppelin.rest.SecurityRestApi;
@@ -47,7 +45,6 @@ import org.apache.zeppelin.rest.ZeppelinRestApi;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
-import org.apache.zeppelin.socket.NotebookServer;
 import org.apache.zeppelin.user.Credentials;
 import org.apache.zeppelin.utils.SecurityUtils;
 import org.eclipse.jetty.http.HttpVersion;
@@ -61,7 +58,6 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -91,7 +87,6 @@ public class SmartZeppelinServer {
   private SmartConf conf;
 
   public static Notebook notebook;
-  public static NotebookServer notebookWsServer;
   private ZeppelinConfiguration zconf;
   private Server jettyWebServer;
   private Helium helium;
@@ -180,24 +175,10 @@ public class SmartZeppelinServer {
     this.schedulerFactory = new SchedulerFactory();
     this.interpreterSettingManager = new InterpreterSettingManager(zconf, depResolver,
         new InterpreterOption(true));
-    this.replFactory = new InterpreterFactory(zconf, notebookWsServer,
-        notebookWsServer, heliumApplicationFactory, depResolver, SecurityUtils.isAuthenticated(),
-        interpreterSettingManager);
     this.notebookRepo = new NotebookRepoSync(zconf);
     this.noteSearchService = new LuceneSearch();
     this.notebookAuthorization = NotebookAuthorization.init(zconf);
     this.credentials = new Credentials(zconf.credentialsPersist(), zconf.getCredentialsPath());
-    notebook = new Notebook(zconf,
-        notebookRepo, schedulerFactory, replFactory, interpreterSettingManager, notebookWsServer,
-            noteSearchService, notebookAuthorization, credentials);
-
-    // to update notebook from application event from remote process.
-    heliumApplicationFactory.setNotebook(notebook);
-    // to update fire websocket event on application event.
-    heliumApplicationFactory.setApplicationEventListener(notebookWsServer);
-
-    notebook.addNotebookEventListener(heliumApplicationFactory);
-    notebook.addNotebookEventListener(notebookWsServer.getNotebookInformationListener());
   }
 
   private boolean isZeppelinWebEnabled() {
@@ -220,9 +201,6 @@ public class SmartZeppelinServer {
 
     // Web UI
     final WebAppContext webApp = setupWebAppContext(contexts);
-
-    // Notebook server
-    setupNotebookServer(webApp);
 
     init();
 
@@ -327,19 +305,6 @@ public class SmartZeppelinServer {
     return server;
   }
 
-  private void setupNotebookServer(WebAppContext webapp) {
-    notebookWsServer = new NotebookServer(engine);
-
-    String maxTextMessageSize = zconf.getWebsocketMaxTextMessageSize();
-    final ServletHolder servletHolder = new ServletHolder(notebookWsServer);
-    servletHolder.setInitParameter("maxTextMessageSize", maxTextMessageSize);
-
-    final ServletContextHandler cxfContext = new ServletContextHandler(
-        ServletContextHandler.SESSIONS);
-
-    webapp.addServlet(servletHolder, "/ws/*");
-  }
-
   private static SslContextFactory getSslContextFactory(ZeppelinConfiguration zconf) {
     SslContextFactory sslContextFactory = new SslContextFactory();
 
@@ -417,14 +382,11 @@ public class SmartZeppelinServer {
       singletons.add(notebookApi);*/
 
       NotebookRepoRestApi notebookRepoApi =
-        new NotebookRepoRestApi(notebookRepo, notebookWsServer);
+        new NotebookRepoRestApi(notebookRepo);
       singletons.add(notebookRepoApi);
 
       HeliumRestApi heliumApi = new HeliumRestApi(helium, notebook);
       singletons.add(heliumApi);
-
-      InterpreterRestApi interpreterApi = new InterpreterRestApi(interpreterSettingManager);
-      singletons.add(interpreterApi);
 
       CredentialRestApi credentialApi = new CredentialRestApi(credentials);
       singletons.add(credentialApi);
@@ -434,9 +396,6 @@ public class SmartZeppelinServer {
 
       LoginRestApi loginRestApi = new LoginRestApi();
       singletons.add(loginRestApi);
-
-      ConfigurationsRestApi settingsApi = new ConfigurationsRestApi(notebook);
-      singletons.add(settingsApi);
 
       return singletons;
     }

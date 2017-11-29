@@ -32,7 +32,6 @@ import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
 import org.apache.zeppelin.notebook.repo.NotebookRepoWithSettings;
 import org.apache.zeppelin.rest.message.NotebookRepoSettingsRequest;
 import org.apache.zeppelin.server.JsonResponse;
-import org.apache.zeppelin.socket.NotebookServer;
 import org.apache.zeppelin.user.AuthenticationInfo;
 import org.apache.zeppelin.utils.SecurityUtils;
 import org.slf4j.Logger;
@@ -54,13 +53,11 @@ public class NotebookRepoRestApi {
 
   private Gson gson = new Gson();
   private NotebookRepoSync noteRepos;
-  private NotebookServer notebookWsServer;
 
   public NotebookRepoRestApi() {}
 
-  public NotebookRepoRestApi(NotebookRepoSync noteRepos, NotebookServer notebookWsServer) {
+  public NotebookRepoRestApi(NotebookRepoSync noteRepos) {
     this.noteRepos = noteRepos;
-    this.notebookWsServer = notebookWsServer;
   }
 
   /**
@@ -84,15 +81,12 @@ public class NotebookRepoRestApi {
   public Response refreshRepo(){
     AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     LOG.info("Reloading notebook repository for user {}", subject.getUser());
-    notebookWsServer.broadcastReloadedNoteList(subject, null);
     return new JsonResponse<>(Status.OK, "", null).build();
   }
 
   /**
    * Update a specific note repo.
    *
-   * @param message
-   * @param settingId
    * @return
    */
   @PUT
@@ -119,10 +113,6 @@ public class NotebookRepoRestApi {
     LOG.info("User {} is going to change repo setting", subject.getUser());
     NotebookRepoWithSettings updatedSettings =
         noteRepos.updateNotebookRepo(newSettings.name, newSettings.settings, subject);
-    if (!updatedSettings.isEmpty()) {
-      LOG.info("Broadcasting note list to user {}", subject.getUser());
-      notebookWsServer.broadcastReloadedNoteList(subject, null);
-    }
     return new JsonResponse<>(Status.OK, "", updatedSettings).build();
   }
 }
