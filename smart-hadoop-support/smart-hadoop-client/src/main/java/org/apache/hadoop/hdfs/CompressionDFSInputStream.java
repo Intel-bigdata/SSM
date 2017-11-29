@@ -17,8 +17,10 @@
  */
 package org.apache.hadoop.hdfs;
 
+import org.apache.hadoop.fs.FileEncryptionInfo;
+import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.fs.UnresolvedLinkException;
-import org.apache.hadoop.io.compress.BlockDecompressorStream;
+import org.apache.hadoop.io.ByteBufferPool;
 import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.smartdata.model.SmartFileCompressionInfo;
@@ -26,24 +28,32 @@ import org.smartdata.model.SmartFileCompressionInfo;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.EnumSet;
 
 /**
- * SmartDFSInputStream.
+ * CompressionDFSInputStream.
  */
-public class SmartDFSInputStream extends DFSInputStream {
-  private int originalBlockSize = 0;
-  private int noUncompressedBytes = 0;
+public class CompressionDFSInputStream extends DFSInputStream {
+
   private Decompressor decompressor = null;
   private byte[] buffer;
-  private boolean eof = false;
+  private boolean closed = false;
+  private long pos = 0;
 
   private SmartFileCompressionInfo compressionInfo;
+  private final Long[] originalPos;
+  private final Long[] compressedPos;
+  private final long originalLength;
 
-  public SmartDFSInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
-      SmartFileCompressionInfo compressionInfo) throws IOException,
+  public CompressionDFSInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+                                   SmartFileCompressionInfo compressionInfo) throws IOException,
       UnresolvedLinkException {
     super(dfsClient, src, verifyChecksum);
     this.compressionInfo = compressionInfo;
+    originalPos = compressionInfo.getOriginalPos().toArray(new Long[0]);
+    compressedPos = compressionInfo.getCompressedPos().toArray(new Long[0]);
+    originalLength = compressionInfo.getOriginalLength();
     int bufferSize = compressionInfo.getBufferSize();
     this.decompressor = new SnappyDecompressor(bufferSize);
     this.buffer = new byte[bufferSize];
@@ -64,7 +74,9 @@ public class SmartDFSInputStream extends DFSInputStream {
       return 0;
     }
 
-    return decompress(b, off, len);
+    int n = decompress(b, off, len);
+    pos += n;
+    return n;
   }
 
   @Override
@@ -73,42 +85,26 @@ public class SmartDFSInputStream extends DFSInputStream {
   }
 
   @Override
+  public int read(long position, byte[] buffer, int offset, int length)
+      throws IOException {
+    seek(position);
+    return read(buffer, offset, length);
+  }
+
+  @Override
   public synchronized void close() throws IOException {
     super.close();
+    this.closed = true;
   }
 
   private int decompress(byte[] b, int off, int len) throws IOException {
-    // Check if we are the beginning of a block
-    if (noUncompressedBytes == originalBlockSize) {
-      // Get original data size
-      try {
-        originalBlockSize =  rawReadInt();
-      } catch (IOException ioe) {
-        return -1;
-      }
-      noUncompressedBytes = 0;
-      // EOF if originalBlockSize is 0
-      // This will occur only when decompressing previous compressed empty file
-      if (originalBlockSize == 0) {
-        eof = true;
-        return -1;
-      }
-    }
-
     int n = 0;
     while ((n = decompressor.decompress(b, off, len)) == 0) {
-      if (decompressor.finished() || decompressor.needsDictionary()) {
-        if (noUncompressedBytes >= originalBlockSize) {
-          eof = true;
-          return -1;
-        }
-      }
       if (decompressor.needsInput()) {
         int m;
         try {
           m = getCompressedData();
         } catch (EOFException e) {
-          eof = true;
           return -1;
         }
         // Send the read data to the decompressor
@@ -117,7 +113,7 @@ public class SmartDFSInputStream extends DFSInputStream {
     }
 
     // Note the no. of decompressed bytes read from 'current' block
-    noUncompressedBytes += n;
+    //noUncompressedBytes += n;
 
     return n;
   }
@@ -152,5 +148,89 @@ public class SmartDFSInputStream extends DFSInputStream {
       throw new EOFException();
     return (((bytes[0] & 0xff) << 24) + ((bytes[1] & 0xff) << 16)
         + ((bytes[2] & 0xff) << 8) + ((bytes[3] & 0xff) << 0));
+  }
+
+/*
+  @Override
+  public long getFileLength() {
+    return compressionInfo.getOriginalLength();
+  }
+  */
+
+  @Override
+  public long skip(long n) throws IOException {
+    return super.skip(n);
+  }
+
+  @Override
+  public synchronized void seek(long targetPos) throws IOException {
+    if (targetPos > originalLength) {
+      throw new EOFException("Cannot seek after EOF");
+    }
+    if (targetPos < 0) {
+      throw new EOFException("Cannot seek to negative offset");
+    }
+    if(targetPos == pos) {
+      return;
+    }
+
+    // Seek to the start of the compression trunk
+    int trunkIndex = Arrays.binarySearch(originalPos, targetPos);
+    trunkIndex = trunkIndex < 0 ? (- trunkIndex - 2) : trunkIndex;
+    long hdfsFilePos = compressedPos[trunkIndex];
+    super.seek(hdfsFilePos);
+
+    // Decompress the trunk until reaching the targetPos of the original file
+    int startPos = (int)(targetPos - originalPos[trunkIndex]);
+    decompressor.reset();
+    int m = getCompressedData();
+    decompressor.setInput(buffer, 0, m);
+    if (startPos > 0) {
+      byte[] temp = new byte[startPos];
+      decompress(temp, 0, startPos);
+    }
+    pos = targetPos;
+  }
+
+  @Override
+  public synchronized boolean seekToNewSource(long targetPos) throws IOException {
+    throw new RuntimeException("SeekToNewSource not supported for compressed file");
+  }
+
+  @Override
+  public synchronized long getPos() throws IOException {
+    return pos;
+  }
+
+  @Override
+  public synchronized int available() throws IOException {
+    if (closed) {
+      throw new IOException("Stream closed");
+    }
+    final long remaining = originalLength - pos;
+    return remaining <= Integer.MAX_VALUE? (int)remaining: Integer.MAX_VALUE;
+  }
+
+  @Override
+  public ReadStatistics getReadStatistics() {
+    throw new RuntimeException("GetReadStatistics not supported for compressed file");
+  }
+
+  @Override
+  public void clearReadStatistics() {
+    throw new RuntimeException("ClearReadStatistics not supported for compressed file");
+  }
+
+  @Override
+  public FileEncryptionInfo getFileEncryptionInfo() {
+    throw new RuntimeException("GetFileEncryptionInfo not supported for compressed file");
+  }
+
+  @Override
+  public synchronized ByteBuffer read(ByteBufferPool bufferPool,
+      int maxLength, EnumSet<ReadOption> opts)
+      throws IOException, UnsupportedOperationException {
+    throw new RuntimeException("Read(ByteBufferPool, int, EnumSet) not supported " +
+        "for compressed file");
   }
 }

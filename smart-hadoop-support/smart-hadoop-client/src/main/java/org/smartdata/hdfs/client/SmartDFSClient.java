@@ -247,7 +247,7 @@ public class SmartDFSClient extends DFSClient {
     } else {
       LOG.info("Compressed file " + src + " opened.");
       SmartFileCompressionInfo compressionInfo = smartClient.getFileCompressionInfo(src);
-      is = new SmartDFSInputStream(this, src, verifyChecksum, compressionInfo);
+      is = new CompressionDFSInputStream(this, src, verifyChecksum, compressionInfo);
     }
     reportFileAccessEvent(src);
     return  is;

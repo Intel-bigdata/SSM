@@ -17,7 +17,9 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,67 +34,70 @@ import org.smartdata.server.engine.CmdletManager;
 
 import java.io.OutputStream;
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Random;
 
 public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   public static final int DEFAULT_BLOCK_SIZE = 1024 * 64;
+  private DFSClient smartDFSClient;
   
   @Override
   @Before
   public void setup() throws Exception {
     init(DEFAULT_BLOCK_SIZE);
+    smartDFSClient = new SmartDFSClient(ssm.getContext().getConf());
+  }
+
+  private void initDB() throws Exception {
+    MetaStore metaStore = ssm.getMetaStore();
+    metaStore.deleteAllCompressedFile();
   }
 
   @Test
-  public void testCompressionScheduler() throws Exception {
+  public void testSubmitCompressionAction() throws Exception {
     waitTillSSMExitSafeMode();
 
-    MetaStore metaStore = ssm.getMetaStore();
+    initDB();
     int arraySize = 1024 * 128;
-    String fileName = "/file1";
+    String fileName = "/ssm/compression/file1";
     byte[] bytes = prepareFile(fileName, arraySize);
+    MetaStore metaStore = ssm.getMetaStore();
 
     int bufSize = 16384;
     CmdletManager cmdletManager = ssm.getCmdletManager();
-    long cmdId = cmdletManager.submitCmdlet("compress -file /file1 -bufSize 16384");
+    long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
+        + " -bufSize " + bufSize);
 
+    waitTillActionDone(cmdId);
+
+    // metastore  test
+    SmartFileCompressionInfo compressionInfo = metaStore.getCompressionInfo(fileName);
+    Assert.assertEquals(fileName, compressionInfo.getFileName());
+    Assert.assertEquals(bufSize, compressionInfo.getBufferSize());
+    Assert.assertEquals(arraySize, compressionInfo.getOriginalLength());
+    Assert.assertTrue(compressionInfo.getCompressedLength() > 0);
+    Assert.assertTrue(compressionInfo.getCompressedLength() < compressionInfo.getOriginalLength());
+
+    // data accuracy test
+    byte[] input = new byte[arraySize];
+    DFSInputStream dfsInputStream = smartDFSClient.open(fileName);
+    int offset = 0;
     while (true) {
-      Thread.sleep(1000);
-      CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
-      if (state == CmdletState.DONE) {
-
-        //metastore  test
-        SmartFileCompressionInfo compressionInfo = metaStore.getCompressionInfo(fileName);
-        Assert.assertEquals(fileName, compressionInfo.getFileName());
-        Assert.assertEquals(bufSize, compressionInfo.getBufferSize());
-
-        //data accuracy test
-        byte[] input = new byte[arraySize];
-        DFSInputStream compressedInputStream = dfsClient.open(fileName);
-        SmartDecompressorStream uncompressedStream = new SmartDecompressorStream(
-          compressedInputStream, new SnappyDecompressor(bufSize), bufSize);
-        int offset = 0;
-        while (true) {
-          int len = uncompressedStream.read(input, offset, arraySize - offset);
-          if (len <= 0) {
-            break;
-          }
-          offset += len;
-        }
-        Assert.assertArrayEquals(
-          "original array not equals compress/decompressed array", input, bytes
-        );
-        return;
-      } else if (state == CmdletState.FAILED) {
-        Assert.fail("Compression failed.");
+      int len = dfsInputStream.read(input, offset, arraySize - offset);
+      if (len <= 0) {
+        break;
       }
+      offset += len;
     }
+    Assert.assertArrayEquals("original array not equals " +
+        "compress/decompressed array", input, bytes);
   }
 
   @Test
-  public void testSmartDFSInputStream() throws Exception {
+  public void testCompressedFileRandomRead() throws Exception {
     waitTillSSMExitSafeMode();
 
+    initDB();
     int arraySize = 1024 * 128;
     String fileName = "/ssm/compression/file1";
     byte[] bytes = prepareFile(fileName, arraySize);
@@ -102,28 +107,37 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
         + " -bufSize " + bufSize);
 
+    waitTillActionDone(cmdId);
+
+    // Test random read
+    Random rnd = new Random(System.currentTimeMillis());
+    DFSInputStream dfsInputStream = smartDFSClient.open(fileName);
+    int randomReadSize = 500;
+    byte[] randomReadBuffer = new byte[randomReadSize];
+    for (int i = 0; i < 5; i ++) {
+      int pos = rnd.nextInt(arraySize - 500);
+      byte[] subBytes = Arrays.copyOfRange(bytes, pos, pos + 500);
+      dfsInputStream.seek(pos);
+      Assert.assertEquals(pos, dfsInputStream.getPos());
+      int off = 0;
+      while (off < randomReadSize) {
+        int len = dfsInputStream.read(randomReadBuffer, off, randomReadSize - off);
+        off += len;
+      }
+      Assert.assertArrayEquals(subBytes, randomReadBuffer);
+      Assert.assertEquals(pos + 500, dfsInputStream.getPos());
+    }
+  }
+
+  private void waitTillActionDone(long cmdId) throws Exception {
     while (true) {
       Thread.sleep(1000);
+      CmdletManager cmdletManager = ssm.getCmdletManager();
       CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
       if (state == CmdletState.DONE) {
-        //data accuracy test using SmartDFSInputStream
-        byte[] input = new byte[arraySize];
-        SmartDFSClient dfsClient = new SmartDFSClient(ssm.getContext().getConf());
-        DFSInputStream dfsInputStream = dfsClient.open(fileName);
-        int offset = 0;
-        while (true) {
-          int len = dfsInputStream.read(input, offset, arraySize - offset);
-          if (len <= 0) {
-            break;
-          }
-          offset += len;
-        }
-        Assert.assertArrayEquals(
-            "original array not equals compress/decompressed array", input, bytes
-        );
         return;
       } else if (state == CmdletState.FAILED) {
-        Assert.fail("Compression failed.");
+        Assert.fail("Compression action failed.");
       }
     }
   }

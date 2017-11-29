@@ -34,8 +34,10 @@ message ReportFileAccessEventResponseProto {
 message SmartFileCompressionInfoProto {
   required string fileName = 1;
   required int32 bufferSize = 2;
-  repeated int64 originalPos = 3;
-  repeated int64 compressedPos = 4;
+  required int64 originalLength = 3;
+  required int64 compressedLength = 4;
+  repeated int64 originalPos = 5;
+  repeated int64 compressedPos = 6;
 }
 
 message GetFileCompressionInfoRequestProto {

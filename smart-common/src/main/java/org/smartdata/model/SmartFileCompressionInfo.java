@@ -27,17 +27,27 @@ public class SmartFileCompressionInfo {
 
   private String fileName;
   private int bufferSize;
+  private long originalLength;
+  private long compressedLength;
   private List<Long> originalPos;
   private List<Long> compressedPos;
 
   public SmartFileCompressionInfo(String fileName, int bufferSize) {
-    this(fileName, bufferSize, new ArrayList<Long>(), new ArrayList<Long>());
+    this(fileName, bufferSize, 0, 0, new ArrayList<Long>(), new ArrayList<Long>());
   }
 
   public SmartFileCompressionInfo(String fileName, int bufferSize,
       List<Long> originalPos, List<Long> compressedPos) {
+    this(fileName, bufferSize, 0, 0, originalPos, compressedPos);
+  }
+
+  public SmartFileCompressionInfo(String fileName, int bufferSize,
+      long originalLength, long compressedLength, List<Long> originalPos,
+      List<Long> compressedPos) {
     this.fileName = fileName;
     this.bufferSize = bufferSize;
+    this.originalLength = originalLength;
+    this.compressedLength = compressedLength;
     this.originalPos = originalPos;
     this.compressedPos = compressedPos;
   }
@@ -48,6 +58,22 @@ public class SmartFileCompressionInfo {
 
   public String getFileName() {
     return fileName;
+  }
+
+  public long getOriginalLength() {
+    return originalLength;
+  }
+
+  public long getCompressedLength() {
+    return compressedLength;
+  }
+
+  public void setOriginalLength(long length) {
+    originalLength = length;
+  }
+
+  public void setCompressedLength(long length) {
+    compressedLength = length;
   }
 
   public List<Long> getOriginalPos() {
@@ -70,6 +96,8 @@ public class SmartFileCompressionInfo {
   public static class Builder {
     private String fileName = null;
     private int bufferSize = 0;
+    private long originalLength;
+    private long compressedLength;
     private List<Long> originalPos = new ArrayList<>();
     private List<Long> compressedPos = new ArrayList<>();
 
@@ -87,6 +115,16 @@ public class SmartFileCompressionInfo {
       return this;
     }
 
+    public Builder setOriginalLength(long originalLength) {
+      this.originalLength = originalLength;
+      return this;
+    }
+
+    public Builder setCompressedLength(long compressedLength) {
+      this.compressedLength = compressedLength;
+      return this;
+    }
+
     public Builder setOriginalPos(List<Long> originalPos) {
       this.originalPos = originalPos;
       return this;
@@ -98,8 +136,8 @@ public class SmartFileCompressionInfo {
     }
 
     public SmartFileCompressionInfo build() {
-      return new SmartFileCompressionInfo(fileName, bufferSize, originalPos,
-          compressedPos);
+      return new SmartFileCompressionInfo(fileName, bufferSize, originalLength,
+          compressedLength, originalPos, compressedPos);
     }
   }
 }

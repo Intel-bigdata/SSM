@@ -214,6 +214,22 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     compressionFileDao.deleteByName(fileName);
   }
 
+  /**
+   * Delete all compressed files from database.
+   *
+   * @throws MetaStoreException
+   */
+  public synchronized void deleteAllCompressedFile() throws MetaStoreException {
+    compressionFileDao.deleteAll();
+  }
+
+  /**
+   * Get the compression info of a compressed info.
+   *
+   * @param fileName
+   * @return the compression info if the file is compressed, otherwise return null
+   * @throws MetaStoreException
+   */
   public synchronized SmartFileCompressionInfo getCompressionInfo(
       String fileName) throws MetaStoreException {
     try {

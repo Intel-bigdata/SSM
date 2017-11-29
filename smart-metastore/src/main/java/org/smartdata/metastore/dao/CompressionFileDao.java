@@ -59,11 +59,18 @@ public class CompressionFileDao {
     jdbcTemplate.update(sql, fileName);
   }
 
+  public void deleteAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM " + TABLE_NAME;
+    jdbcTemplate.execute(sql);
+  }
+
   public List<SmartFileCompressionInfo> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
         new CompressFileRowMapper());
   }
+
   public SmartFileCompressionInfo getInfoByName(String fileName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE file_name = ?",
@@ -79,6 +86,8 @@ public class CompressionFileDao {
     String compressedPosGson = gson.toJson(compressedPos);
     parameters.put("file_name", compressionInfo.getFileName());
     parameters.put("buffer_size", compressionInfo.getBufferSize());
+    parameters.put("original_length", compressionInfo.getOriginalLength());
+    parameters.put("compressed_length", compressionInfo.getCompressedLength());
     parameters.put("originalPos",originalPosGson);
     parameters.put("compressedPos",compressedPosGson);
     return parameters;
@@ -92,10 +101,15 @@ public class CompressionFileDao {
       String compressedPosGson = resultSet.getString("compressedPos");
       List<Long> originalPos = gson.fromJson(originalPosGson,new TypeToken<List<Long>>(){}.getType());
       List<Long> compressedPos = gson.fromJson(compressedPosGson,new TypeToken<List<Long>>(){}.getType());
-      SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
-        resultSet.getString("file_name"), 
-        resultSet.getInt("buffer_size"), 
-        originalPos, compressedPos);
+      SmartFileCompressionInfo compressionInfo =
+          SmartFileCompressionInfo.newBuilder()
+          .setFileName(resultSet.getString("file_name"))
+          .setBufferSize(resultSet.getInt("buffer_size"))
+          .setOriginalLength(resultSet.getLong("original_length"))
+          .setCompressedLength(resultSet.getLong("compressed_length"))
+          .setOriginalPos(originalPos)
+          .setCompressedPos(compressedPos)
+          .build();
       return compressionInfo;
     }
   }
