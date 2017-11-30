@@ -42,20 +42,26 @@ limitations under the License.
     </thead>
     <tbody>
     <tr>
-      <td>file: path matches "/foo/*.dat" and accessCount(7day) < 3 | archive</td>
-      <td>For each file with path matches the wildcard expression “/foo/*.dat”, if the file has been read for lesser than 3 times during the last 7 days, then move the file to archive storage.</td>
+      <td>file: path matches "/foo/*.dat" and accessCount(7day) &lt; 3 | archive</td>
+      <td>For each file with path matches the wildcard expression “/foo/*.dat”,
+        if the file has been read for lesser than 3 times during the last 7 days,
+        then move the file to archive storage.</td>
     </tr>
     <tr>
       <td>file: path matches "/foo/*" | sync -dest hdfs://ip:port/destdir</td>
-      <td>For each file with path matches the wildcard expression “/foo/*.dat”, incrementally sync it into "/destdir" of HDFS cluster denoted by 'ip:port'.</td>
+      <td>For each file with path matches the wildcard expression “/foo/*.dat”,
+        incrementally sync it into "/destdir" of HDFS cluster denoted by 'ip:port'.</td>
     </tr>
     <tr>
       <td>file: every 500ms | path matches "/foo/*" | sync -dest hdfs://ip:port/destdir</td>
-      <td>The same as the above one except the rule will be executed every 500ms (by default the time interval is 5s). By doing this, the sync can acts more likely to real time.</td>
+      <td>The same as the above one except the rule will be executed every 500ms (by
+        default the time interval is 5s). By doing this, the sync can acts more likely
+        to real time.</td>
     </tr>
     <tr>
-      <td>file: accessCount(10min) < 2 | uncache; archive</td>
-      <td>If the file has been read for lesser than 2 times during the last 10 minutes, then uncache it from memory and archive it.</td>
+      <td>file: accessCount(10min) &lt; 2 | uncache; archive</td>
+      <td>If the file has been read for lesser than 2 times during the last 10 minutes,
+        then uncache it from memory and archive it.</td>
     </tr>
     </tbody>
   </table>
