@@ -22,19 +22,19 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smartdata-project</artifactId>
-        <version>1.3.1-SNAPSHOT</version>
+        <version>1.3.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>smart-common</artifactId>
-    <version>1.3.1-SNAPSHOT</version>
+    <version>1.3.1</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metrics</artifactId>
-            <version>1.3.1-SNAPSHOT</version>
+            <version>1.3.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
