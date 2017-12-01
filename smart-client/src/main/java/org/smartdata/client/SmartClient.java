@@ -49,9 +49,15 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     }
 
     String[] strings = rpcConfValue.split(":");
-    InetSocketAddress address = new InetSocketAddress(
-        strings[strings.length - 2],
-        Integer.parseInt(strings[strings.length - 1]));
+    InetSocketAddress address;
+    try {
+      address = new InetSocketAddress(
+          strings[strings.length - 2],
+          Integer.parseInt(strings[strings.length - 1]));
+    } catch (Exception e) {
+      throw new IOException("Incorrect SmartServer address. Please follow the "
+          + "IP/Hostname:Port format");
+    }
     initialize(address);
   }
 

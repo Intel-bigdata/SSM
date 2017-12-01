@@ -68,9 +68,15 @@ public class SmartFileSystem extends DistributedFileSystem {
     }
 
     String[] strings = rpcConfValue.split(":");
-    InetSocketAddress smartServerAddress = new InetSocketAddress(
+    InetSocketAddress smartServerAddress;
+    try {
+      smartServerAddress = new InetSocketAddress(
           strings[strings.length - 2],
           Integer.parseInt(strings[strings.length - 1]));
+    } catch (Exception e) {
+      throw new IOException("Incorrect SmartServer address. Please follow the "
+          + "IP/Hostname:Port format");
+    }
 
     this.smartClient = new SmartDFSClient(conf, smartServerAddress);
   }
