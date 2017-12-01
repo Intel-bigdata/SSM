@@ -16,16 +16,50 @@ SSM has already solved the dependency of S3. We only need to add some configurat
 
 ```xml
 <property>
-        <name>fs.s3a.access.key</name>
-        <value>{s3.key}</value>
+    <name>fs.s3a.access.key</name>
+    <value>{s3.key}</value>
 </property>
 <property>
-        <name>fs.s3a.secret.key</name>
-        <value>{s3.secret}</value>
+    <name>fs.s3a.secret.key</name>
+    <value>{s3.secret}</value>
 </property>
 ```
 
 where `{s3.key}` and `{s3.secret}` are the key and secret of your S3 account.
+
+### Add S3 Endpoint (Optional)
+
+The default `endpoint`/`region` of aws S3 may be not fast enough for your business, or you may have a self-built object storage with S3 interface. In these cases, you need to configuration `endpoint` in `{SSM_HOME}/conf/smart-site.xml`. Here is an example,
+
+```xml
+<property>
+    <name>fs.s3a.endpoint</name>
+    <value>{s3.endpoint}</value>
+    <description>AWS S3 endpoint to connect to. An up-to-date list is
+    provided in the AWS Documentation: regions and endpoints. Without this
+    property, the standard region (s3.amazonaws.com) is assumed.
+    </description>
+</property>
+```
+
+where {s3.endpoint} is domain or IP of your S3 endpoint, e.g., `s3.ap-southeast-1.amazonaws.com` (an region of aws S3), or `{IP}:{port}` (your self-built S3 service). Note that `{port}` is not essential if your S3 service is using standard http or https port.
+
+### Add S3 Proxy (Optional)
+
+Sometimes, you may need a proxy to visit S3 service. In that case, you need to add the following configuration to `{SSM_HOME}/conf/smart-site.xml`.
+
+```xml
+<property>
+    <name>fs.s3a.proxy.host</name>
+    <value>{proxy.IP}</value>
+</property>
+<property>
+    <name>fs.s3a.proxy.port</name>
+    <value>{proxy.port}</value>
+</property>
+```
+
+where {proxy.IP} and {proxy.port} are the IP address and port of your proxy.
 
 ### Copy to S3 with action
 
@@ -49,11 +83,11 @@ copy2s3 -file /test/copytest -dest s3a://{test_dir}/copytest
 file: path matches "/{hdfs_dir}/*" | copy2s3 -dest {s3_dir}
 ```
 
-where `{hdfs_dir}` and `{s3_dir}` are the HDFS source direstory and S3 targe direstory.
+where `{hdfs_dir}` and `{s3_dir}` are the HDFS source directory and S3 target directory.
 
 ## Enable S3 support in HDFS（Optional）
 
-This is an optional step. We highly recommand enable this feature on HDFS for test and trouble shooting. The hadoop version we use is 2.7.
+This is an optional step. We highly recommend enable this feature on HDFS for test and trouble shooting. The hadoop version we use is 2.7.3.
 
 ### Solve HDFS S3 dependency
 
@@ -84,12 +118,12 @@ Then, we need to add some configurations in `${HADOOP_HOME}/etc/hadoop/core-site
 
 ```xml
 <property>
-        <name>fs.s3a.access.key</name>
-        <value>{s3.key}</value>
+    <name>fs.s3a.access.key</name>
+    <value>{s3.key}</value>
 </property>
 <property>
-        <name>fs.s3a.secret.key</name>
-        <value>{s3.secret}</value>
+    <name>fs.s3a.secret.key</name>
+    <value>{s3.secret}</value>
 </property>
 ```
 
