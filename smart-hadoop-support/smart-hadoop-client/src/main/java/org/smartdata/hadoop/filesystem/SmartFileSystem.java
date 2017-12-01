@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.client.SmartDFSClient;
 
 import java.io.IOException;
@@ -43,45 +44,35 @@ import java.net.URI;
  *      <description>The FileSystem for hdfs URL</description>
  *    </property>
  *    2. hdfs-site.xml
- *    Add property "smart.server.rpc.adddress" and "smart.server.rpc.port" to
- *    point to installed Smart Server.
+ *    Add property "smart.server.rpc.adddress" to point to Smart Server.
  *    <property>
  *      <name>smart.server.rpc.address</name>
- *      <value>127.0.0.1</value>
+ *      <value>127.0.0.1:7042</value>
  *    </property>
- *    <property>
- *      <name>smart.server.rpc.port</name>
- *      <value>7042</value>
- *    </property>
+ *
  * 4. Restart HDFS
  */
 
 public class SmartFileSystem extends DistributedFileSystem {
   private SmartDFSClient smartClient;
-  private InetSocketAddress smartServerAddress;
   private boolean verifyChecksum = true;
-  private boolean healthy;
 
   @Override
   public void initialize(URI uri, Configuration conf) throws IOException {
     super.initialize(uri, conf);
 
-    String smartServerIp = conf.get("smart.server.rpc.address", "127.0.0.1");
-    int smartServerPort = conf.getInt("smart.server.rpc.port", 7042);
-
-    try {
-      smartServerAddress = new InetSocketAddress(smartServerIp, smartServerPort);
-    } catch (Exception e){
-      try {
-        super.close();
-      } catch (Throwable e1) {
-        // DO nothing now
-      }
-      throw new IOException("Cannot parse smart server rpc address or port" +
-          ", address: " + smartServerIp + ", port:" +  smartServerPort);
+    String rpcConfValue = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
+    if (rpcConfValue == null) {
+      throw new IOException("SmartServer address not found. Please configure "
+          + "it through " + SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     }
+
+    String[] strings = rpcConfValue.split(":");
+    InetSocketAddress smartServerAddress = new InetSocketAddress(
+          strings[strings.length - 2],
+          Integer.parseInt(strings[strings.length - 1]));
+
     this.smartClient = new SmartDFSClient(conf, smartServerAddress);
-    healthy = true;
   }
 
   @Override
@@ -104,12 +95,8 @@ public class SmartFileSystem extends DistributedFileSystem {
     } catch (IOException e) {
       throw e;
     } finally {
-      try {
-        if (smartClient != null) {
-          this.smartClient.close();
-        }
-      } finally {
-        healthy = false;
+      if (smartClient != null) {
+        this.smartClient.close();
       }
     }
   }
