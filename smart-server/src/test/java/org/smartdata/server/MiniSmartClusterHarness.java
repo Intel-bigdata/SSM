@@ -52,8 +52,9 @@ public class MiniSmartClusterHarness extends MiniClusterWithStoragesHarness {
     conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
       uriList.get(0).toString());
 
-    dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
-    dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
+    //dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
+    //dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
+    dbUrl = "jdbc:mysql://localhost/ssm";
     smartContext.getConf().set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer

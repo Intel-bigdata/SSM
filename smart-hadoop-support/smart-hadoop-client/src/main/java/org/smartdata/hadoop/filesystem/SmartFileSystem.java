@@ -19,11 +19,23 @@ package org.smartdata.hadoop.filesystem;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileSystemLinkResolver;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.DirectoryListing;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.smartdata.hdfs.client.SmartDFSClient;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -112,5 +124,132 @@ public class SmartFileSystem extends DistributedFileSystem {
         healthy = false;
       }
     }
+  }
+
+  @Override
+  protected RemoteIterator<LocatedFileStatus> listLocatedStatus(final Path p,
+      final PathFilter filter) throws IOException {
+    if (!smartClient.isFileCompressed(p.toUri().getPath())) {
+      return super.listLocatedStatus(p, filter);
+    }
+    Path absF = fixRelativePart(p);
+    return new FileSystemLinkResolver<RemoteIterator<LocatedFileStatus>>() {
+      @Override
+      public RemoteIterator<LocatedFileStatus> doCall(final Path p)
+          throws IOException, UnresolvedLinkException {
+        return new SmartDirListingIterator<LocatedFileStatus>(p, filter, true);
+      }
+
+      @Override
+      public RemoteIterator<LocatedFileStatus> next(final FileSystem fs, final Path p)
+          throws IOException {
+        if (fs instanceof SmartFileSystem) {
+          return ((SmartFileSystem)fs).listLocatedStatus(p, filter);
+        }
+        // symlink resolution for this methos does not work cross file systems
+        // because it is a protected method.
+        throw new IOException("Link resolution does not work with multiple " +
+            "file systems for listLocatedStatus(): " + p);
+      }
+    }.resolve(this, absF);
+  }
+
+  private class SmartDirListingIterator<T extends FileStatus>
+      implements RemoteIterator<T> {
+    private DirectoryListing thisListing;
+    private int i;
+    private Path p;
+    private String src;
+    private T curStat = null;
+    private PathFilter filter;
+    private boolean needLocation;
+
+    private SmartDirListingIterator(Path p, PathFilter filter,
+        boolean needLocation) throws IOException {
+      this.p = p;
+      this.src = getPathName(p);
+      this.filter = filter;
+      this.needLocation = needLocation;
+      // fetch the first batch of entries in the directory
+      thisListing = smartClient.listPaths(src, HdfsFileStatus.EMPTY_NAME,
+          needLocation);
+      statistics.incrementReadOps(1);
+      if (thisListing == null) { // the directory does not exist
+        throw new FileNotFoundException("File " + p + " does not exist.");
+      }
+      i = 0;
+    }
+
+    private SmartDirListingIterator(Path p, boolean needLocation)
+        throws IOException {
+      this(p, null, needLocation);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean hasNext() throws IOException {
+      while (curStat == null && hasNextNoFilter()) {
+        T next;
+        HdfsFileStatus fileStat = thisListing.getPartialListing()[i++];
+        if (needLocation) {
+          next = (T)((HdfsLocatedFileStatus)fileStat)
+              .makeQualifiedLocated(getUri(), p);
+        } else {
+          next = (T)fileStat.makeQualified(getUri(), p);
+        }
+        // apply filter if not null
+        if (filter == null || filter.accept(next.getPath())) {
+          curStat = next;
+        }
+      }
+      return curStat != null;
+    }
+
+    /** Check if there is a next item before applying the given filter */
+    private boolean hasNextNoFilter() throws IOException {
+      if (thisListing == null) {
+        return false;
+      }
+      if (i >= thisListing.getPartialListing().length
+          && thisListing.hasMore()) {
+        // current listing is exhausted & fetch a new listing
+        thisListing = smartClient.listPaths(src, thisListing.getLastName(),
+            needLocation);
+        statistics.incrementReadOps(1);
+        if (thisListing == null) {
+          return false;
+        }
+        i = 0;
+      }
+      return (i < thisListing.getPartialListing().length);
+    }
+
+    @Override
+    public T next() throws IOException {
+      if (hasNext()) {
+        T tmp = curStat;
+        curStat = null;
+        return tmp;
+      }
+      throw new java.util.NoSuchElementException("No more entry in " + p);
+    }
+  }
+
+  /**
+   * Checks that the passed URI belongs to this filesystem and returns
+   * just the path component. Expects a URI with an absolute path.
+   *
+   * @param file URI with absolute path
+   * @return path component of {file}
+   * @throws IllegalArgumentException if URI does not belong to this DFS
+   */
+  private String getPathName(Path file) {
+    checkPath(file);
+    String result = file.toUri().getPath();
+    if (!DFSUtil.isValidName(result)) {
+      throw new IllegalArgumentException("Pathname " + result + " from " +
+          file+" is not a valid DFS filename.");
+    }
+    return result;
   }
 }

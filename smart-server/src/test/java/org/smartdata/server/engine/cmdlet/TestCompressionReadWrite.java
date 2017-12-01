@@ -17,6 +17,10 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
@@ -24,6 +28,7 @@ import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartdata.hadoop.filesystem.SmartFileSystem;
 import org.smartdata.hdfs.SmartDecompressorStream;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.metastore.MetaStore;
@@ -127,6 +132,18 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
       Assert.assertArrayEquals(subBytes, randomReadBuffer);
       Assert.assertEquals(pos + 500, dfsInputStream.getPos());
     }
+  }
+
+  @Test
+  public void test() throws Exception {
+
+    int arraySize = 1024 * 128;
+    String fileName = "/ssm/compression/file1";
+    byte[] bytes = prepareFile(fileName, arraySize);
+
+    RemoteIterator<LocatedFileStatus> iter = dfs.listLocatedStatus(new Path(fileName));
+    LocatedFileStatus stat = iter.next();
+    return;
   }
 
   private void waitTillActionDone(long cmdId) throws Exception {

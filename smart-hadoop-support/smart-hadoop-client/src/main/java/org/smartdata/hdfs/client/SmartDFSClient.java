@@ -18,10 +18,15 @@
 package org.smartdata.hdfs.client;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.*;
+import org.apache.hadoop.hdfs.protocol.DirectoryListing;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.smartdata.client.SmartClient;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
@@ -30,6 +35,8 @@ import org.smartdata.model.SmartFileCompressionInfo;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_BLOCK_SIZE_KEY;
@@ -121,113 +128,13 @@ public class SmartDFSClient extends DFSClient {
       throw e;
     }
   }
-  /*
-  public OutputStream smartCreate(String src, boolean overwrite)
-      throws IOException {
-    return create(src, overwrite, getDefaultReplication(),
-        getDefaultBlockSize(), null);
-  }
-  
-  public OutputStream smartCreate(String src,
-      boolean overwrite,
-      Progressable progress) throws IOException {
-    return smartCreate(src, overwrite, getDefaultReplication(),
-        getDefaultBlockSize(), progress);
-  }
 
-  public OutputStream smartCreate(String src,
-      boolean overwrite,
-      short replication,
-      long blockSize) throws IOException {
-    return create(src, overwrite, replication, blockSize, null);
-  }
-
-  public OutputStream smartCreate(String src, boolean overwrite, 
-      short replication, long blockSize, Progressable progress)
-      throws IOException {
-    return smartCreate(src, overwrite, replication, blockSize, progress,
-        dfsClientConf.ioBufferSize);
-  }
-
-  public OutputStream smartCreate(String src,
-      boolean overwrite,
-      short replication,
-      long blockSize,
-      Progressable progress,
-      int buffersize)
-      throws IOException {
-
-  }
-
-  public OutputStream smartCreate(String src,
-      FsPermission permission,
-      EnumSet<CreateFlag> flag,
-      short replication,
-      long blockSize,
-      Progressable progress,
-      int buffersize,
-      Options.ChecksumOpt checksumOpt)
-      throws IOException {
-    return create(src, permission, flag, true,
-        replication, blockSize, progress, buffersize, checksumOpt, null);
-  }
-
-  public OutputStream smartCreate(String src,
-      FsPermission permission,
-      EnumSet<CreateFlag> flag,
-      boolean createParent,
-      short replication,
-      long blockSize,
-      Progressable progress,
-      int buffersize,
-      Options.ChecksumOpt checksumOpt) throws IOException {
-    return create(src, permission, flag, createParent, replication, blockSize,
-        progress, buffersize, checksumOpt, null);
-  }
-
-
-  public OutputStream smartCreate(String src,
-      FsPermission permission,
-      EnumSet<CreateFlag> flag,
-      boolean createParent,
-      short replication,
-      long blockSize,
-      Progressable progress,
-      int buffersize,
-      Options.ChecksumOpt checksumOpt,
-      InetSocketAddress[] favoredNodes) throws IOException {
-    if (src.startsWith(compressPath)) {
-      if (permission == null) {
-        permission = FsPermission.getFileDefault();
-      }
-      FsPermission uMask = FsPermission.getUMask(conf);
-      FsPermission masked = permission.applyUMask(uMask);
-      return SmartDFSOutputStream.newStreamForCreate(this, src, masked,
-          flag, createParent, replication, blockSize, progress, buffersize,
-          null, 
-          getFavoredNodesStr(favoredNodes), conf);
-    } else {
-      return super.create(src, permission, flag, createParent, replication, 
-          blockSize, progress, buffersize, checksumOpt, favoredNodes);
-    }
-  }
-
-  private String[] getFavoredNodesStr(InetSocketAddress[] favoredNodes) {
-    String[] favoredNodeStrs = null;
-    if (favoredNodes != null) {
-      favoredNodeStrs = new String[favoredNodes.length];
-      for (int i = 0; i < favoredNodes.length; i++) {
-        favoredNodeStrs[i] =
-            favoredNodes[i].getHostName() + ":"
-                + favoredNodes[i].getPort();
-      }
-    }
-    return favoredNodeStrs;
-  }
-*/
-
-  private boolean isFileCompressed(String path) throws IOException {
+  public boolean isFileCompressed(String path) throws IOException {
     return smartClient.fileCompressed(path);
+  }
+
+  public SmartFileCompressionInfo getFileCompressionInfo(String path) throws IOException {
+    return smartClient.getFileCompressionInfo(path);
   }
 
   @Override
@@ -252,6 +159,82 @@ public class SmartDFSClient extends DFSClient {
     reportFileAccessEvent(src);
     return  is;
   }
+
+  /*@Override
+  public LocatedBlocks getLocatedBlocks(String src, long start, long length)
+      throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.getLocatedBlocks(src, start, length);
+    }
+
+    SmartFileCompressionInfo compressionInfo = smartClient.getFileCompressionInfo(src);
+    Long[] originalPos = compressionInfo.getOriginalPos().toArray(new Long[0]);
+    Long[] compressedPos = compressionInfo.getCompressedPos().toArray(new Long[0]);
+    int startIndex = compressionInfo.getPosIndexByOriginalOffset(start);
+    int endIndex = compressionInfo.getPosIndexByOriginalOffset(start + length - 1);
+    long compressedStart = compressedPos[startIndex];
+    long compressedLength = 0;
+    if (endIndex < compressedPos.length - 1) {
+      compressedLength = compressedPos[endIndex + 1] - compressedStart;
+    } else {
+      compressedLength = compressionInfo.getCompressedLength() - compressedStart;
+    }
+
+    LocatedBlocks originalLocatedBlocks = super.getLocatedBlocks(src, compressedStart, compressedLength);
+
+    List<LocatedBlock> blocks = new ArrayList<>();
+    for (LocatedBlock block : originalLocatedBlocks.getLocatedBlocks()) {
+
+      blocks.add(new LocatedBlock(
+          block.getBlock(),
+          block.getLocations(),
+          block.getStorageIDs(),
+          block.getStorageTypes(),
+          compressionInfo.getPosIndexByCompressedOffset(block.getStartOffset()),
+          block.isCorrupt(),
+          block.getCachedLocations()
+      ));
+    }
+    LocatedBlock lastLocatedBlock = originalLocatedBlocks.getLastLocatedBlock();
+    long fileLength = compressionInfo.getOriginalLength();
+
+    return new LocatedBlocks(fileLength,
+        originalLocatedBlocks.isUnderConstruction(),
+        blocks,
+        lastLocatedBlock,
+        originalLocatedBlocks.isLastBlockComplete(),
+        originalLocatedBlocks.getFileEncryptionInfo());
+  }*/
+
+  /*
+  // Not complete
+  @Override
+  public BlockLocation[] getBlockLocations(String src, long start,
+      long length) throws IOException, UnresolvedLinkException {
+    if (!isFileCompressed(src)) {
+      return super.getBlockLocations(src, start, length);
+    }
+    BlockLocation[] blockLocations = super.getBlockLocations(src, start, length);
+    return null;
+  }
+
+  @Override
+  public DirectoryListing listPaths(String src, byte[] startAfter,
+      boolean needLocation) throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.listPaths(src, startAfter, needLocation);
+    }
+    return null;
+  }
+
+  @Override
+  public HdfsFileStatus getFileInfo(String src) throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.getFileInfo(src);
+    }
+    return null;
+  }
+  */
 
   @Deprecated
   @Override
