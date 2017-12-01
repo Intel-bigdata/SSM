@@ -28,7 +28,6 @@ import org.smartdata.model.SmartFileCompressionInfo;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.EnumSet;
 
 /**
@@ -47,7 +46,7 @@ public class CompressionDFSInputStream extends DFSInputStream {
   private final long originalLength;
 
   public CompressionDFSInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
-                                   SmartFileCompressionInfo compressionInfo) throws IOException,
+      SmartFileCompressionInfo compressionInfo) throws IOException,
       UnresolvedLinkException {
     super(dfsClient, src, verifyChecksum);
     this.compressionInfo = compressionInfo;
@@ -175,8 +174,7 @@ public class CompressionDFSInputStream extends DFSInputStream {
     }
 
     // Seek to the start of the compression trunk
-    int trunkIndex = Arrays.binarySearch(originalPos, targetPos);
-    trunkIndex = trunkIndex < 0 ? (- trunkIndex - 2) : trunkIndex;
+    int trunkIndex = compressionInfo.getPosIndexByOriginalOffset(targetPos);
     long hdfsFilePos = compressedPos[trunkIndex];
     super.seek(hdfsFilePos);
 

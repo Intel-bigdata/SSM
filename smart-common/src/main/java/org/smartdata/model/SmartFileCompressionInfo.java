@@ -18,6 +18,7 @@
 package org.smartdata.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -82,6 +83,38 @@ public class SmartFileCompressionInfo {
 
   public List<Long> getCompressedPos() {
     return compressedPos;
+  }
+
+  /**
+   * Get the index of originalPos and compressedPos of the given original offset.
+   *
+   * @param offset the offset of original file
+   * @return the index of the compression trunk where the offset locates
+   */
+  public int getPosIndexByOriginalOffset(long offset) {
+    int trunkIndex = Arrays.binarySearch(originalPos.toArray(new Long[0]), offset);
+    if (trunkIndex < -1) {
+      trunkIndex = - trunkIndex - 2;
+    } else if (trunkIndex == -1) {
+      trunkIndex = 0;
+    }
+    return trunkIndex;
+  }
+
+  /**
+   * Get the index of originalPos and compressedPos of the given compressed offset.
+   *
+   * @param offset the offset of compressed file
+   * @return the index of the compression trunk where the offset locates
+   */
+  public int getPosIndexByCompressedOffset(long offset) {
+    int trunkIndex = Arrays.binarySearch(compressedPos.toArray(new Long[0]), offset);
+    if (trunkIndex < -1) {
+      trunkIndex = - trunkIndex - 2;
+    } else if (trunkIndex == -1) {
+      trunkIndex = 0;
+    }
+    return trunkIndex;
   }
 
   public void setPositionMapping(long originalPosition, long compressedPosition) {
