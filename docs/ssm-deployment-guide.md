@@ -260,17 +260,13 @@ After install CDH5.10.1 or Hadoop 2.7, please do the following configurations,
 
 * **Hadoop `hdfs-site.xml`**
 
-    Add property `smart.server.rpc.address` and `smart.server.rpc.port` to point to installed Smart Server.
+    Add property `smart.server.rpc.address` to point to the installed Smart Server.
 
     ```xml
     <property>
         <name>smart.server.rpc.address</name>
-        <value>ssm-server-ip</value>
-    </property>
-    <property>
-        <name>smart.server.rpc.port</name>
-        <value>7042</value>
-    </property> 
+        <value>ssm-server-ip:port</value>
+    </property>   
     ```
 
      Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
