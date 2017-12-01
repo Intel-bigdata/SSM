@@ -20,64 +20,80 @@ limitations under the License.
     <tr>
       <th>Action</th>
       <th>Arguments</th>
+      <th>Description</th>
     </tr>
     </thead>
     <tbody>
     <tr>
-      <td>cache</td>
-      <td>-file $file</td>
-    </tr>
-    <tr>
-      <td>uncache</td>
-      <td>-file $file</td>
-    </tr>
-    <tr>
-      <td>delete</td>
-      <td>-file $file</td>
-    </tr>
-    <tr>
-      <td>copy</td>
-      <td>-file $src -dest $dest -offset $offset-length $length-bufSize $size</td>
-    </tr>
-    <tr>
-      <td>write</td>
-      <td>-file $file -bufSize $size -length $length</td>
-    </tr>
-    <tr>
-      <td>read</td>
-      <td>-file $file -bufSize $size</td>
-    </tr>
-    <tr>
       <td>allssd</td>
       <td>-file $file</td>
-    </tr>
-    <tr>
-      <td>checkstorage</td>
-      <td>-file $file</td>
+      <td>Move $file to SSD storage</td>
     </tr>
     <tr>
       <td>archive</td>
       <td>-file $file</td>
+      <td>Archive $file</td>
+    </tr>
+    <tr>
+      <td>cache</td>
+      <td>-file $file</td>
+      <td>Cache $file to HDFS cache</td>
+    </tr>
+    <tr>
+      <td>checkstorage</td>
+      <td>-file $file</td>
+      <td>Show the storage type of $file</td>
     </tr>
     <tr>
       <td>concat</td>
       <td>-file $src -dest $dest</td>
+      <td>Concatenate the files in $src which lists at least two files
+        separated by comma and $dest is the target file</td>
     </tr>
     <tr>
-      <td>list</td>
-      <td>-file $src</td>
+      <td>copy</td>
+      <td>-file $src -dest $dest [-offset $offset] [-length $length] [-bufSize $size]</td>
+      <td>Copy the file in $src with $offset offset, $length length and $size buffer size</td>
     </tr>
     <tr>
-      <td>rename</td>
-      <td>-file $src -dest $dest</td>
-    </tr>
-    <tr>
-      <td>onessd</td>
+      <td>delete</td>
       <td>-file $file</td>
+      <td>Delete $file</td>
     </tr>
     <tr>
       <td>hello</td>
       <td>-print_message $message</td>
+      <td>Print $message</td>
+    </tr>
+    <tr>
+      <td>list</td>
+      <td>-file $src</td>
+      <td>List all the files in $src</td>
+    </tr>
+    <tr>
+      <td>onessd</td>
+      <td>-file $file</td>
+      <td>Move one replica of $file to SSD</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>-file $file [-bufSize $size]</td>
+      <td>Read $file with $size buffer size</td>
+    </tr>
+    <tr>
+      <td>rename</td>
+      <td>-file $src -dest $dest</td>
+      <td>Rename $src to $dest</td>
+    </tr>
+    <tr>
+      <td>uncache</td>
+      <td>-file $file</td>
+      <td>Uncache $file from HDFS cache</td>
+    </tr>
+    <tr>
+      <td>write</td>
+      <td>-file $file -length $length [-bufSize $size]</td>
+      <td>Write random data to $file with $size buffer size and $length length</td>
     </tr>
     </tbody>
   </table>
