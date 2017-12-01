@@ -232,14 +232,18 @@ public class StatesManager extends AbstractService implements Reconfigurable {
         statesUpdaterService.init();
       } catch (IOException e) {
         statesUpdaterService = null;
-        LOG.info("Failed to create states updater service for: " + e.getMessage());
+        LOG.warn("================================================================");
+        LOG.warn("  Failed to create states updater service for: " + e.getMessage());
+        LOG.warn("  This may leads to rule/action execution error. The reason why SSM "
+            + "does not exit under this condition is some other feature depends on this.");
+        LOG.warn("================================================================");
       }
 
       if (working) {
         try {
           statesUpdaterService.start();
         } catch (IOException e) {
-          LOG.info("Failed to start states updater service.");
+          LOG.error("Failed to start states updater service.", e);
           statesUpdaterService = null;
         }
       }
