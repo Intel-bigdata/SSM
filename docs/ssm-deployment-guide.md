@@ -79,6 +79,11 @@ Configure SSM
        <value>/foodirA,/foodirB</value>
    </property>
    ```
+* **Configure Smart Server**
+
+   Open `servers` file under /conf, put each server's hostname or IP address line by line.
+
+   After the configuration, the Smart Servers should be installed in the same path on their respective hosts.
 
 * **Configure Smart Agent (optional)**
 

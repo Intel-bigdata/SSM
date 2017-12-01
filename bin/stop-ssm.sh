@@ -49,31 +49,33 @@ done
 #---------------------------------------------------------
 # Stop Smart Servers
 
-ORGSMARTSERVERS=$("${SMART_HOME}/bin/ssm" getconf SmartServers 2>/dev/null)
+ORGSMARTSERVERS=
+SERVERS_FILE="${SMART_CONF_DIR}/servers"
+if [ -f "${SERVERS_FILE}" ]; then
+  ORGSMARTSERVERS=$(sed 's/#.*$//;/^$/d' "${SERVERS_FILE}" | xargs echo)
+  if [ "$?" != "0" ]; then
+    echo "ERROR: Get SmartServers error."
+    exit 1
+  fi
 
-if [ "$?" != "0" ]; then
-  echo "ERROR: Get SmartServers error."
-  exit 1
+  HH=
+  for i in $ORGSMARTSERVERS; do if [ "$i" = "localhost" ]; then HH+=" ${HOSTNAME}" ; else HH+=" $i"; fi; done
+  SMARTSERVERS=${HH/ /}
+
+  if [ x"${SMARTSERVERS}" != x"" ]; then
+    echo "Stopping SmartServers on [${SMARTSERVERS}]"
+    . "${SMART_HOME}/bin/ssm" \
+      --remote \
+      --config "${SMART_CONF_DIR}" \
+      --hosts "${SMARTSERVERS}" --hostsend \
+      --daemon stop ${DEBUG_OPT} \
+      smartserver
+  else
+    echo "No SmartServers configured in 'servers'."
+  fi
+
+  echo
 fi
-
-HH=
-for i in $ORGSMARTSERVERS; do if [ "$i" = "localhost" ]; then HH+=" ${HOSTNAME}" ; else HH+=" $i"; fi; done
-SMARTSERVERS=${HH/ /}
-
-if [ x"${SMARTSERVERS}" != x"" ]; then
-  echo "Stopping SmartServers on [${SMARTSERVERS}]"
-  . "${SMART_HOME}/bin/ssm" \
-    --remote \
-    --config "${SMART_CONF_DIR}" \
-    --hosts "${SMARTSERVERS}" --hostsend \
-    --daemon stop ${DEBUG_OPT} \
-    smartserver
-else
-  echo "No SmartServers configured in 'hazelcast.xml'."
-fi
-
-echo
-
 #---------------------------------------------------------
 # Stop Smart Agents
 
