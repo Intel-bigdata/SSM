@@ -81,15 +81,17 @@ Configure SSM
    ```
 * **Configure Smart Server**
 
-   Open `servers` file under /conf, put each server's hostname or IP address line by line.
+   SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
 
-   After the configuration, the Smart Servers should be installed in the same path on their respective hosts.
+   Open `servers` file under /conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
+
+   Please note, the configuration should be the same on all server hosts.
 
 * **Configure Smart Agent (optional)**
 
    This step can be skipped if SSM standalone mode is preferred.
   
-   Open `agents` file under /conf , put each Smart Agent server's hostname or IP address line by line. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
+   Open `agents` file under /conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
    After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
  
 * **Configure database**
