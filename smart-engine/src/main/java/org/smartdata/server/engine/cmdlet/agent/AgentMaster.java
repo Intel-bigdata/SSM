@@ -278,8 +278,12 @@ public class AgentMaster {
         return true;
       } else if (message instanceof StopCmdlet) {
         long cmdletId = ((StopCmdlet) message).getCmdletId();
-        dispatches.get(cmdletId).tell(message, getSelf());
-        getSender().tell("Succeed", getSelf());
+        if (dispatches.containsKey(cmdletId)) {
+          dispatches.get(cmdletId).tell(message, getSelf());
+          getSender().tell("Succeed", getSelf());
+        } else {
+          getSender().tell("NotFound", getSelf());
+        }
         return true;
       } else {
         return false;
