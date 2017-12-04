@@ -18,12 +18,23 @@
 package org.smartdata.server.cluster;
 
 import com.hazelcast.config.ClasspathXmlConfig;
+import com.hazelcast.config.JoinConfig;
+import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConfKeys;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 public class HazelcastInstanceProvider {
   private static final String CONFIG_FILE = "hazelcast.xml";
   private static HazelcastInstance instance;
+  private static final Logger LOG = LoggerFactory.getLogger(HazelcastInstanceProvider.class);
 
   static {
     String typeKey = "hazelcast.logging.type";
@@ -35,9 +46,32 @@ public class HazelcastInstanceProvider {
 
   private HazelcastInstanceProvider() {}
 
+  public static void addMemberConfig(ClasspathXmlConfig config) {
+    NetworkConfig network = config.getNetworkConfig();
+    JoinConfig join = network.getJoin();
+    String serverConfFile = new Configuration().get(SmartConfKeys.SMART_CONF_DIR_KEY,
+        SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/servers";
+    Scanner sc = null;
+    try {
+      sc = new Scanner(new File(serverConfFile));
+    } catch (FileNotFoundException ex) {
+      LOG.error("Cannot find the config file: {}!", serverConfFile);
+    }
+    if (sc != null) {
+      while (sc.hasNextLine()) {
+        String host = sc.nextLine().trim();
+        if (!host.startsWith("#") && !host.isEmpty()) {
+          join.getTcpIpConfig().addMember(host);
+        }
+      }
+    }
+  }
+
   public static HazelcastInstance getInstance() {
     if (instance == null) {
-      instance = Hazelcast.newHazelcastInstance(new ClasspathXmlConfig(CONFIG_FILE));
+      ClasspathXmlConfig config = new ClasspathXmlConfig(CONFIG_FILE);
+      addMemberConfig(config);
+      instance = Hazelcast.newHazelcastInstance(config);
       Runtime.getRuntime().addShutdownHook(new Thread(){
         @Override public void run() {
           instance.getLifecycleService().shutdown();

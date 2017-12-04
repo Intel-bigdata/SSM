@@ -79,17 +79,24 @@ Configure SSM
        <value>/foodirA,/foodirB</value>
    </property>
    ```
+* **Configure Smart Server**
+
+   SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+
+   Open `servers` file under /conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
+
+   Please note, the configuration should be the same on all server hosts.
 
 * **Configure Smart Agent (optional)**
 
    This step can be skipped if SSM standalone mode is preferred.
   
-   Open `agents` file under /conf , put each Smart Agent server's hostname or IP address line by line. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
+   Open `agents` file under /conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
    After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
  
 * **Configure database**
 
-   SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata for SSM. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
+   SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
 
    You just need to follow the guide in one of the two following options to configure database for SSM.
 
@@ -125,7 +132,7 @@ Configure SSM
 
     For SSM standalone mode, the three instances PD, TiKV and TiDB are all deployed on Smart Server host.
     For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
-    So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over MySQL.
+    So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over using MySQL.
 
     If TiDB is enabled, there is no need to configure jdbc url in druid.xml. In TiDB only root user is created initially, so you should set username as root. Optionally, you can set a password for root user in druid.xml.
 
@@ -253,17 +260,13 @@ After install CDH5.10.1 or Hadoop 2.7, please do the following configurations,
 
 * **Hadoop `hdfs-site.xml`**
 
-    Add property `smart.server.rpc.adddress` and `smart.server.rpc.port` to point to installed Smart Server.
+    Add property `smart.server.rpc.address` to point to the installed Smart Server.
 
     ```xml
     <property>
         <name>smart.server.rpc.address</name>
-        <value>ssm-server-ip</value>
-    </property>
-    <property>
-        <name>smart.server.rpc.port</name>
-        <value>7042</value>
-    </property> 
+        <value>ssm-server-ip:port</value>
+    </property>   
     ```
 
      Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
@@ -277,11 +280,11 @@ After install CDH5.10.1 or Hadoop 2.7, please do the following configurations,
 
 * **Make sure Hadoop HDFS Client can access SSM jars**
 
-    After we switch to the SmartFileSystem from the default HDFS implmentation, we need to make sure Hadoop can access SmartFileSystem
+    After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem
 implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem, 
 	* When SSM compilation is finished, copy all the jar files starts with smart under 
 
-		`/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{vesion}-SNAPSHOT/lib`
+		`/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`
 
 	  to directory in Hadoop/CDH class path.
 	  
@@ -309,8 +312,8 @@ SSM Rule Examples
 	`file: path matches "/test/*" and accessCount(5m) > 3 | allssd`
 
     This rule means all the files under /test directory, if it is accessed 3 times during
-last 5 minutes, SSM should trigger an anction to move the file to SSD. Rule engine
-will evalue the condition every MAX{5s,5m/20} internal.
+last 5 minutes, SSM should trigger an action to move the file to SSD. Rule engine
+will evaluate the condition every MAX{5s,5m/20} internal.
 
 
 * **Move to Archive(Cold) rule**
@@ -345,11 +348,11 @@ evaluate whether the condition meets every 3s.
 
 	`file: path matches "/test/*" and age > 90d | archive ; setReplica 1 `
 	
-     SSM use ";" to seperate different actions in a rule. The execution trigger of later action depends on the successful execution of the prior action. If prior action fails, then the following actions will not be executed.
+     SSM use ";" to separate different actions in a rule. The execution trigger of later action depends on the successful execution of the prior action. If prior action fails, the following actions will not be executed.
      
-     Above rule means all the files under /test directory, if it's age is more than 90 days, then move the file to archive storage, and set the replica to 1. "setReplica 1" is a not a built-in action.  Users need to implement it by themselfs. 
+     Above rule means all the files under /test directory, if it's age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is a not a built-in action. Users need to implement it by themselves.
      
-     Refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM. 
+     Please refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM.
      
 Rule priority and rule order will be considered to implement yet. Currently all rules
 will run in parallel. For a full detail rule format definition, please refer to
@@ -377,7 +380,7 @@ Performance Tuning
     **smart.cmdlet.executors**
 
     Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
-    If the current configuration cannot meet your performance requirements, you can change it by define the property in the smart-site.xml under /conf directory. Here is an example to change the action execution paralliem to 50.
+    If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under /conf directory. Here is an example to change the action execution paralliem to 50.
 
      ```xml
      <property>
@@ -388,7 +391,7 @@ Performance Tuning
 
 2. Cmdlet history purge in metastore  
 
-    SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodly purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records. 
+    SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodically purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
 
     ```xml
     <property>
@@ -406,11 +409,11 @@ Performance Tuning
      </property>
      ```
 
-      SSM service restart is required after the configuration change. 
+      SSM service restart is required after the configuration changes.
 
 3. Disable SSM Client
 
-    For some reason, if you do not want to SmartDFSClients on specific host to contact SSM server then it can be realized by creating file "/tmp/SMART_CLIENT_DISABLED_ID_FILE" on that node's local file system. After that, new created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
+    For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by creating file "/tmp/SMART_CLIENT_DISABLED_ID_FILE" on that node's local file system. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
 
 Trouble Shooting
@@ -443,7 +446,7 @@ All logs will go to SmartSerer.log under /logs directory.
 Notes
 ---------------------------------------------------------------------------------
 1. If there is no SSD and Archive type disk volume configured in DataNodes, actions generated by "allssd" and "archive" rule will fail.
-2. When SSM starts, it will pull the whole namespace form Namenode. If the namespace is very big, it will takes time for SSM to finish the namespace synchronization. SSM may half function during this period.
+2. When SSM starts, it will pull the whole namespace from Namenode. If the namespace is very huge, it will takes time for SSM to finish the namespace synchronization. SSM may half function during this period.
 
 
    

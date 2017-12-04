@@ -7,7 +7,7 @@
             <multicast enabled="false">
             </multicast>
             <tcp-ip enabled="true">
-                <member>localhost</member>
+                <!-- please don't config member in this file, you should config member in file named servers-->
             </tcp-ip>
         </join>
     </network>
