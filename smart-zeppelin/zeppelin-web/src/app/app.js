@@ -81,9 +81,6 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         resolve: {
           rules0: ['models', function (models) {
             return models.$get.rules();
-          }],
-          notebookInfo: ['models', function (models) {
-            return models.$get.notebookInfo();
           }]
         }
       })

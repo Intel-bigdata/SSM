@@ -45,9 +45,19 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
   initController();
 
   function getZeppelinVersion() {
-    $http.get(baseUrlSrv.getRestApiRoot() + 'smart/api/' + conf.restapiProtocol + '/system/version').success(
+    $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/system/version').success(
       function(data, status, headers, config) {
         $rootScope.zeppelinVersion = data.body;
+      }).error(
+      function(data, status, headers, config) {
+        console.log('Error %o %o', status, data.message);
+      });
+  }
+
+  function getNoteInfo() {
+    $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/note/info').success(
+      function(data, status, headers, config) {
+        $rootScope.note = data;
       }).error(
       function(data, status, headers, config) {
         console.log('Error %o %o', status, data.message);
@@ -65,7 +75,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     if ($rootScope.ticket && $location.path() === '/') {
       $location.path('/notebook');
     }
-
+    getNoteInfo();
     getZeppelinVersion();
   }
 
