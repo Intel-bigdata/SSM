@@ -18,10 +18,10 @@ NotebookCtrl.$inject = [
   '$scope',
   'ngToast',
   'rules0',
-  'notebookInfo'
+  '$rootScope'
 ];
 
-function NotebookCtrl($scope, ngToast, rules0, notenookInfo) {
+function NotebookCtrl($scope, ngToast, rules0, $rootScope) {
 
   ngToast.dismiss();
 
@@ -46,7 +46,7 @@ function NotebookCtrl($scope, ngToast, rules0, notenookInfo) {
 
   /** Init the new controller */
   var initNotebook = function() {
-    $scope.note = notenookInfo;
+    $scope.note = $rootScope.note;
   };
 
   initNotebook();
