@@ -231,7 +231,7 @@ Run SSM
 
    If you want to add more agents while keeping the SSM service online, you can run the following command on Agent Master.
 
-   `./bin/start-agent.sh [--host ..]`
+   `./bin/start-agent.sh [--host .. --conf ..]`
 
    If host option in the above is not used, localhost is the default one. You should also put the host name you specified or localhost in $SMART_CONF/agents.
    So all SSM services can be killed later.
