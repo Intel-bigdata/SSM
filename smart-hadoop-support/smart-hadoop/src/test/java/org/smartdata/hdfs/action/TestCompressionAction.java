@@ -87,24 +87,6 @@ public class TestCompressionAction extends MiniClusterHarness {
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
     Assert.assertEquals(replication, fileStatus.getReplication());
     Assert.assertEquals(blockSize, fileStatus.getBlockSize());
-
-    // Read compressed file
-    byte[] input = new byte[bufferSize];
-    DFSInputStream compressedInputStream = dfsClient.open(filePath);
-    SmartDecompressorStream uncompressedStream = new SmartDecompressorStream(
-      compressedInputStream, new SnappyDecompressor(bufferSize),
-      bufferSize);
-    int offset = 0;
-    while (true) {
-      int len = uncompressedStream.read(input, offset , bufferSize - offset);
-      if (len <= 0) {
-        break;
-      }
-      offset += len;
-    }
-    Assert.assertArrayEquals(
-      "original array not equals compress/decompressed array", input,bytes
-    );
   }
 
   static final class BytesGenerator {
