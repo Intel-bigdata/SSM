@@ -143,6 +143,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
 
   $scope.runParagraph = function(data) {
     var submitFn;
+    $scope.paragraph.config.enabled = false;
     if ($scope.paragraph.id === 'add_rule') {
       submitFn = restapi.submitRule;
     } else if ($scope.paragraph.id === 'run_action') {
