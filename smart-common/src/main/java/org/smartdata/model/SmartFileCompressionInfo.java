@@ -17,7 +17,7 @@
  */
 package org.smartdata.model;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,21 +30,21 @@ public class SmartFileCompressionInfo {
   private int bufferSize;
   private long originalLength;
   private long compressedLength;
-  private List<Long> originalPos;
-  private List<Long> compressedPos;
+  private Long[] originalPos;
+  private Long[] compressedPos;
 
   public SmartFileCompressionInfo(String fileName, int bufferSize) {
-    this(fileName, bufferSize, 0, 0, new ArrayList<Long>(), new ArrayList<Long>());
+    this(fileName, bufferSize, 0, 0, new Long[0], new Long[0]);
   }
 
   public SmartFileCompressionInfo(String fileName, int bufferSize,
-      List<Long> originalPos, List<Long> compressedPos) {
+      Long[] originalPos, Long[] compressedPos) {
     this(fileName, bufferSize, 0, 0, originalPos, compressedPos);
   }
 
   public SmartFileCompressionInfo(String fileName, int bufferSize,
-      long originalLength, long compressedLength, List<Long> originalPos,
-      List<Long> compressedPos) {
+      long originalLength, long compressedLength, Long[] originalPos,
+      Long[] compressedPos) {
     this.fileName = fileName;
     this.bufferSize = bufferSize;
     this.originalLength = originalLength;
@@ -77,11 +77,11 @@ public class SmartFileCompressionInfo {
     compressedLength = length;
   }
 
-  public List<Long> getOriginalPos() {
+  public Long[] getOriginalPos() {
     return originalPos;
   }
 
-  public List<Long> getCompressedPos() {
+  public Long[] getCompressedPos() {
     return compressedPos;
   }
 
@@ -92,9 +92,9 @@ public class SmartFileCompressionInfo {
    * @return the index of the compression trunk where the offset locates
    */
   public int getPosIndexByOriginalOffset(long offset) {
-    int trunkIndex = Arrays.binarySearch(originalPos.toArray(new Long[0]), offset);
+    int trunkIndex = Arrays.binarySearch(originalPos, offset);
     if (trunkIndex < -1) {
-      trunkIndex = - trunkIndex - 2;
+      trunkIndex = -trunkIndex - 2;
     } else if (trunkIndex == -1) {
       trunkIndex = 0;
     }
@@ -108,18 +108,23 @@ public class SmartFileCompressionInfo {
    * @return the index of the compression trunk where the offset locates
    */
   public int getPosIndexByCompressedOffset(long offset) {
-    int trunkIndex = Arrays.binarySearch(compressedPos.toArray(new Long[0]), offset);
+    int trunkIndex = Arrays.binarySearch(compressedPos, offset);
     if (trunkIndex < -1) {
-      trunkIndex = - trunkIndex - 2;
+      trunkIndex = -trunkIndex - 2;
     } else if (trunkIndex == -1) {
       trunkIndex = 0;
     }
     return trunkIndex;
   }
 
-  public void setPositionMapping(long originalPosition, long compressedPosition) {
-    originalPos.add(originalPosition);
-    compressedPos.add(compressedPosition);
+  public void setPositionMapping(Long[] originalPos, Long[] compressedPos)
+      throws IOException{
+    if (originalPos.length != compressedPos.length) {
+      throw new IOException("Input of position mapping is incorrect : "
+          + "originalPos.length != compressedPos.length");
+    }
+    this.originalPos = originalPos;
+    this.compressedPos = compressedPos;
   }
 
   public static Builder newBuilder() {
@@ -131,8 +136,8 @@ public class SmartFileCompressionInfo {
     private int bufferSize = 0;
     private long originalLength;
     private long compressedLength;
-    private List<Long> originalPos = new ArrayList<>();
-    private List<Long> compressedPos = new ArrayList<>();
+    private Long[] originalPos;
+    private Long[] compressedPos;
 
     public static Builder create() {
       return new Builder();
@@ -158,13 +163,23 @@ public class SmartFileCompressionInfo {
       return this;
     }
 
-    public Builder setOriginalPos(List<Long> originalPos) {
+    public Builder setOriginalPos(Long[] originalPos) {
       this.originalPos = originalPos;
       return this;
     }
 
-    public Builder setCompressedPos(List<Long> compressedPos) {
+    public Builder setOriginalPos(List<Long> originalPos) {
+      this.originalPos = originalPos.toArray(new Long[0]);
+      return this;
+    }
+
+    public Builder setCompressedPos(Long[] compressedPos) {
       this.compressedPos = compressedPos;
+      return this;
+    }
+
+    public Builder setCompressedPos(List<Long> compressedPos) {
+      this.compressedPos = compressedPos.toArray(new Long[0]);
       return this;
     }
 

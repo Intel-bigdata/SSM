@@ -50,8 +50,8 @@ public class CompressionDFSInputStream extends DFSInputStream {
       UnresolvedLinkException {
     super(dfsClient, src, verifyChecksum);
     this.compressionInfo = compressionInfo;
-    originalPos = compressionInfo.getOriginalPos().toArray(new Long[0]);
-    compressedPos = compressionInfo.getCompressedPos().toArray(new Long[0]);
+    originalPos = compressionInfo.getOriginalPos();
+    compressedPos = compressionInfo.getCompressedPos();
     originalLength = compressionInfo.getOriginalLength();
     int bufferSize = compressionInfo.getBufferSize();
     this.decompressor = new SnappyDecompressor(bufferSize);

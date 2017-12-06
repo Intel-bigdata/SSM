@@ -80,8 +80,8 @@ public class CompressionFileDao {
   private Map<String, Object> toMap(SmartFileCompressionInfo compressionInfo) {
     Gson gson = new Gson();
     Map<String, Object> parameters = new HashMap<>();
-    List<Long> originalPos = compressionInfo.getOriginalPos();
-    List<Long> compressedPos = compressionInfo.getCompressedPos();
+    Long[] originalPos = compressionInfo.getOriginalPos();
+    Long[] compressedPos = compressionInfo.getCompressedPos();
     String originalPosGson = gson.toJson(originalPos);
     String compressedPosGson = gson.toJson(compressedPos);
     parameters.put("file_name", compressionInfo.getFileName());
@@ -99,8 +99,8 @@ public class CompressionFileDao {
       Gson gson = new Gson();
       String originalPosGson = resultSet.getString("originalPos");
       String compressedPosGson = resultSet.getString("compressedPos");
-      List<Long> originalPos = gson.fromJson(originalPosGson,new TypeToken<List<Long>>(){}.getType());
-      List<Long> compressedPos = gson.fromJson(compressedPosGson,new TypeToken<List<Long>>(){}.getType());
+      Long[] originalPos = gson.fromJson(originalPosGson,new TypeToken<Long[]>(){}.getType());
+      Long[] compressedPos = gson.fromJson(compressedPosGson,new TypeToken<Long[]>(){}.getType());
       SmartFileCompressionInfo compressionInfo =
           SmartFileCompressionInfo.newBuilder()
           .setFileName(resultSet.getString("file_name"))
