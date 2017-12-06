@@ -18,14 +18,14 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.io.compress.Compressor;
-import org.apache.hadoop.io.compress.CompressorStream;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
 import org.smartdata.model.SmartFileCompressionInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.ClosedChannelException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * SmartOutputStream.
@@ -42,6 +42,8 @@ public class SmartCompressorStream {
 
   private long originPos = 0;
   private long compressedPos = 0;
+  private List<Long> originPositions = new ArrayList<>();
+  private List<Long> compressedPositions = new ArrayList<>();
 
   public SmartCompressorStream(InputStream inputStream, OutputStream outputStream,
       int bufferSize, SmartFileCompressionInfo compressionInfo) {
@@ -70,6 +72,8 @@ public class SmartCompressorStream {
           write(buf, 0, off);
           finish();
           out.close();
+          compressionInfo.setPositionMapping(originPositions.toArray(new Long[0]),
+              compressedPositions.toArray(new Long[0]));
           return;
         }
         off += len;
@@ -89,7 +93,8 @@ public class SmartCompressorStream {
       return;
     }
 
-    compressionInfo.setPositionMapping(originPos, compressedPos);
+    originPositions.add(originPos);
+    compressedPositions.add(compressedPos);
 
     compressor.setInput(b, off, len);
     compressor.finish();

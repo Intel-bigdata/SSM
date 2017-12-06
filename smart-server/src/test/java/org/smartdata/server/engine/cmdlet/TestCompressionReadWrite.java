@@ -143,6 +143,8 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
     RemoteIterator<LocatedFileStatus> iter = dfs.listLocatedStatus(new Path(fileName));
     LocatedFileStatus stat = iter.next();
+    Path path = stat.getPath();
+    String name = path.toUri().getPath();
     return;
   }
 

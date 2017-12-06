@@ -18,6 +18,7 @@
 package org.smartdata.hadoop.filesystem;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -34,6 +35,7 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.smartdata.hdfs.client.SmartDFSClient;
+import org.smartdata.model.SmartFileCompressionInfo;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -129,9 +131,6 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   protected RemoteIterator<LocatedFileStatus> listLocatedStatus(final Path p,
       final PathFilter filter) throws IOException {
-    if (!smartClient.isFileCompressed(p.toUri().getPath())) {
-      return super.listLocatedStatus(p, filter);
-    }
     Path absF = fixRelativePart(p);
     return new FileSystemLinkResolver<RemoteIterator<LocatedFileStatus>>() {
       @Override
@@ -194,6 +193,32 @@ public class SmartFileSystem extends DistributedFileSystem {
         if (needLocation) {
           next = (T)((HdfsLocatedFileStatus)fileStat)
               .makeQualifiedLocated(getUri(), p);
+          String fileName = next.getPath().toUri().getPath();
+          // Reconstruct FileStatus if this file is compressed
+          // Two segments to be replaced : length, blockLocations
+          if (smartClient.isFileCompressed(fileName)) {
+            SmartFileCompressionInfo compressionInfo =
+                smartClient.getFileCompressionInfo(fileName);
+            long fileLen = compressionInfo.getOriginalLength();
+            BlockLocation[] blockLocations =
+                ((LocatedFileStatus)next).getBlockLocations();
+            for (BlockLocation blockLocation : blockLocations) {
+              blockLocation.setOffset(0);
+              blockLocation.setLength(0);
+            }
+            next = (T) new LocatedFileStatus(fileLen,
+                next.isDirectory(),
+                next.getReplication(),
+                next.getBlockSize(),
+                next.getModificationTime(),
+                next.getAccessTime(),
+                next.getPermission(),
+                next.getOwner(),
+                next.getGroup(),
+                next.getSymlink(),
+                next.getPath(),
+                blockLocations);
+          }
         } else {
           next = (T)fileStat.makeQualified(getUri(), p);
         }

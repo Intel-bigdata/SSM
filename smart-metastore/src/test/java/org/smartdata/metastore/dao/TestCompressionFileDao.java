@@ -52,12 +52,13 @@ public class TestCompressionFileDao extends TestDaoUtil {
   @Test
   public void testInsertDeleteCompressionFiles() throws Exception {
     SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
-      "/test", 131072, originalPos, compressedPos);
+      "/test", 131072, originalPos.toArray(new Long[0]),
+        compressedPos.toArray(new Long[0]));
 
     //insert test
     compressionFileDao.insert(compressionInfo);
     Assert.assertTrue(compressionFileDao.getInfoByName("/test").
-      getOriginalPos().get(0).equals(9000L));
+      getOriginalPos()[0].equals(9000L));
 
     //delete test
     compressionFileDao.deleteByName("/test");
@@ -69,9 +70,11 @@ public class TestCompressionFileDao extends TestDaoUtil {
     long originalLen = 100;
     long compressedLen = 50;
     SmartFileCompressionInfo compressionInfo = new SmartFileCompressionInfo(
-      "/test1", 131072, originalLen, compressedLen, originalPos, compressedPos);
+      "/test1", 131072, originalLen, compressedLen,
+        originalPos.toArray(new Long[0]), compressedPos.toArray(new Long[0]));
     SmartFileCompressionInfo compressionInfo2 = new SmartFileCompressionInfo(
-      "/test2", 131072, originalPos, compressedPos);
+      "/test2", 131072, originalPos.toArray(new Long[0]),
+        compressedPos.toArray(new Long[0]));
 
     compressionFileDao.insert(compressionInfo);
     compressionFileDao.insert(compressionInfo2);
@@ -79,8 +82,8 @@ public class TestCompressionFileDao extends TestDaoUtil {
 
     Assert.assertTrue(dbcompressionInfo.getFileName().equals("/test1"));
     Assert.assertTrue(dbcompressionInfo.getBufferSize() == 131072);
-    Assert.assertTrue(dbcompressionInfo.getOriginalPos().get(0).equals(9000L));
-    Assert.assertTrue(dbcompressionInfo.getCompressedPos().get(1).equals(2000L));
+    Assert.assertTrue(dbcompressionInfo.getOriginalPos()[0].equals(9000L));
+    Assert.assertTrue(dbcompressionInfo.getCompressedPos()[1].equals(2000L));
     Assert.assertTrue(compressionFileDao.getAll().size() == 2);
     Assert.assertEquals(originalLen, dbcompressionInfo.getOriginalLength());
     Assert.assertEquals(compressedLen, dbcompressionInfo.getCompressedLength());
