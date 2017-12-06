@@ -5,8 +5,9 @@ bin=$(cd "${bin}">/dev/null; pwd)
 
 . "${bin}/common.sh"
 
-SMART_CONF_DIR=$SMART_HOME/conf
+#Running start-agent.sh with no host option will start an agent on localhost
 AGENT_HOSTS=localhost
+
 while [ $# != 0 ]; do
   case "$1" in
     "--config")
@@ -14,16 +15,16 @@ while [ $# != 0 ]; do
       SMART_CONF_DIR="$1"
       shift
       ;;
-      "--host")
-        shift
-        AGENT_HOSTS="$1"
-        shift
-        ;;
-      "--debug")
-        shift
-        DEBUG_OPT="$1"
-        shift
-        ;;
+    "--host")
+      shift
+      AGENT_HOSTS="$1"
+      shift
+      ;;
+    "--debug")
+      shift
+      DEBUG_OPT="$1"
+      shift
+      ;;
     *)
       break;
       ;;
