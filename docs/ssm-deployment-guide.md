@@ -229,14 +229,14 @@ Run SSM
 
 * **Start Smart Agent independently**(optional)
 
-   If you want to add more agents while keeping the SSM service online, you can run the following command on Agent Master.
+   If you want to add more agents while keeping the SSM service online, you can run the following command on Smart Server.
 
-   `./bin/start-agent.sh [--host .. --conf ..]`
+   `./bin/start-agent.sh [--host .. --config ..]`
 
-   If host option in the above is not used, localhost is the default one. You should also put the host name you specified or localhost in $SMART_CONF/agents.
+   If the host option in the above is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
    So all SSM services can be killed later.
 
-   Please note that the SSM distribution directory should be in the same directory of the new agent host as that of Smart Server.
+   Please note that the SSM distribution directory should be under the same directory on the new agent host as that on Smart Server.
 
 * **Stop SSM server**
    
