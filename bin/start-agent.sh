@@ -6,7 +6,7 @@ bin=$(cd "${bin}">/dev/null; pwd)
 . "${bin}/common.sh"
 
 SMART_CONF_DIR=$SMART_HOME/conf
-AGENT_HOST=localhost
+AGENT_HOSTS=localhost
 while [ $# != 0 ]; do
   case "$1" in
     "--config")
@@ -16,7 +16,12 @@ while [ $# != 0 ]; do
       ;;
       "--host")
         shift
-        AGENT_HOST="$1"
+        AGENT_HOSTS="$1"
+        shift
+        ;;
+      "--debug")
+        shift
+        DEBUG_OPT="$1"
         shift
         ;;
     *)
@@ -27,14 +32,15 @@ done
 
 AGENT_MASTER=${SMARTSERVERS// /,}
 
-if [ "$AGENT_HOST" = "localhost" ]; then
-  AGENT_HOST=" ${HOSTNAME}" ;
-fi
-echo "Starting SmartAgents on [${AGENT_HOST}]"
+AH=
+for i in $AGENT_HOSTS; do if [ "$i" = "localhost" ]; then AH+=" ${HOSTNAME}" ; else AH+=" $i"; fi; done
+  AGENT_HOSTS=${AH/ /}
+
+echo "Starting SmartAgents on [${AGENT_HOSTS}]"
 sleep 3
 . "${SMART_HOME}/bin/ssm" \
   --remote \
   --config "${SMART_CONF_DIR}" \
-  --hosts "${AGENT_HOST}" --hostsend \
+  --hosts "${AGENT_HOSTS}" --hostsend \
   --daemon start ${DEBUG_OPT} \
   smartagent -D smart.agent.master.address=${AGENT_MASTER}

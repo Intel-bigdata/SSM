@@ -92,17 +92,11 @@ AGENT_MASTER=${SMARTSERVERS// /,}
 AGENTS_FILE="${SMART_CONF_DIR}/agents"
 if [ -f "${AGENTS_FILE}" ]; then
   AGENT_HOSTS=$(sed 's/#.*$//;/^$/d' "${AGENTS_FILE}" | xargs echo)
-  AH=
-  for i in $AGENT_HOSTS; do if [ "$i" = "localhost" ]; then AH+=" ${HOSTNAME}" ; else AH+=" $i"; fi; done
-  AGENT_HOSTS=${AH/ /}
+
   if [ x"${AGENT_HOSTS}" != x"" ]; then
-    echo "Starting SmartAgents on [${AGENT_HOSTS}]"
-    sleep 3
-    . "${SMART_HOME}/bin/ssm" \
-      --remote \
+    . "${SMART_HOME}"/bin/start-agent.sh \
       --config "${SMART_CONF_DIR}" \
-      --hosts "${AGENT_HOSTS}" --hostsend \
-      --daemon start ${DEBUG_OPT} \
-      smartagent -D smart.agent.master.address=${AGENT_MASTER}
+      --host "${AGENT_HOSTS}" \
+      --debug "${DEBUG_OPT}"
   fi
 fi
