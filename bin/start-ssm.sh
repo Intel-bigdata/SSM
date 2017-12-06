@@ -95,7 +95,6 @@ if [ -f "${AGENTS_FILE}" ]; then
 
   if [ x"${AGENT_HOSTS}" != x"" ]; then
     . "${SMART_HOME}"/bin/start-agent.sh \
-      --config "${SMART_CONF_DIR}" \
       --host "${AGENT_HOSTS}" \
       --debug "${DEBUG_OPT}"
   fi

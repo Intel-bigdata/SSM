@@ -3,8 +3,6 @@
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
 
-. "${bin}/common.sh"
-
 #Running start-agent.sh with no host option will start an agent on localhost
 AGENT_HOSTS=localhost
 
@@ -12,7 +10,15 @@ while [ $# != 0 ]; do
   case "$1" in
     "--config")
       shift
-      SMART_CONF_DIR="$1"
+      conf_dir="$1"
+      if [[ ! -d "${conf_dir}" ]]; then
+        echo "ERROR : ${conf_dir} is not a directory"
+        echo ${USAGE}
+        exit 1
+      else
+        export SMART_CONF_DIR="${conf_dir}"
+        echo "SMART_CONF_DIR="$SMART_CONF_DIR
+      fi
       shift
       ;;
     "--host")
@@ -30,6 +36,8 @@ while [ $# != 0 ]; do
       ;;
   esac
 done
+
+. "${bin}/common.sh"
 
 AGENT_MASTER=${SMARTSERVERS// /,}
 
