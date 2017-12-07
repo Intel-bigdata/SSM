@@ -24,12 +24,13 @@ NavCtrl.$inject = [
   'arrayOrderingSrv',
   'searchService',
   'TRASH_FOLDER_ID',
-  'conf'
+  'conf',
+  '$route'
 ];
 
 function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
-                 baseUrlSrv, arrayOrderingSrv,
-                 searchService, TRASH_FOLDER_ID, conf) {
+                 baseUrlSrv, arrayOrderingSrv, searchService,
+                 TRASH_FOLDER_ID, conf, $route) {
   var vm = this;
   vm.arrayOrderingSrv = arrayOrderingSrv;
   vm.isActive = isActive;
@@ -58,6 +59,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/note/info').success(
       function(data, status, headers, config) {
         $rootScope.note = data;
+        $route.reload();
       }).error(
       function(data, status, headers, config) {
         console.log('Error %o %o', status, data.message);
