@@ -35,6 +35,7 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.smartdata.hdfs.client.SmartDFSClient;
+import org.smartdata.model.CompressionTrunk;
 import org.smartdata.model.SmartFileCompressionInfo;
 
 import java.io.FileNotFoundException;
@@ -237,32 +238,32 @@ public class SmartFileSystem extends DistributedFileSystem {
     // - Offset = original middle of the first incomplete trunk
     // - End = original middle of the last incomplete trunk
     private void convertBlockLocation(BlockLocation blockLocation,
-        SmartFileCompressionInfo compressionInfo) {
-      long compressedOffset = blockLocation.getOffset();
-      long compressedEnd = compressedOffset + blockLocation.getLength() - 1;
-      Long[] originPositions = compressionInfo.getOriginalPos();
-      Long[] compressedPositions = compressionInfo.getCompressedPos();
+        SmartFileCompressionInfo compressionInfo) throws IOException {
+      long compressedStart = blockLocation.getOffset();
+      long compressedEnd = compressedStart + blockLocation.getLength() - 1;
 
-      int startIndex = compressionInfo.getPosIndexByCompressedOffset(compressedOffset);
-      int endIndex = compressionInfo.getPosIndexByCompressedOffset(compressedEnd);
-      long originOffset = originPositions[startIndex];
-      long originEnd = originPositions[endIndex];
+      CompressionTrunk startTrunk = compressionInfo.locateCompressionTrunk(
+          true, compressedStart);
+      CompressionTrunk endTrunk = compressionInfo.locateCompressionTrunk(
+          true, compressedEnd);
 
+      long originStart;
       // If the first trunk crosses over two blocks, set start as middle of the trunk
-      if (compressedPositions[startIndex] < compressedOffset) {
-        long originNextOffset;
-        if (startIndex == originPositions.length - 1) {
-          originNextOffset = compressionInfo.getOriginalLength();
-        } else {
-          originNextOffset = originPositions[startIndex + 1];
-        }
-        originOffset = (originOffset + originNextOffset) / 2 + 1;
+      if (startTrunk.getCompressedOffset() < compressedStart) {
+        originStart = startTrunk.getOriginOffset() + startTrunk.getOriginLength() / 2 + 1;
+      } else {
+        originStart = startTrunk.getOriginOffset();
       }
 
+      long originEnd;
       // If the last trunk corsses over two blocks, set end as middle of the trunk
-      //if ()
-      //blockLocation.setOffset(originOffset);
-      //blockLocation.setLength();
+      if (endTrunk.getCompressedOffset() + endTrunk.getCompressedLength() - 1 > compressedEnd) {
+        originEnd = endTrunk.getOriginOffset() + endTrunk.getOriginLength() / 2;
+      } else {
+        originEnd = endTrunk.getOriginOffset() + endTrunk.getOriginLength() - 1;
+      }
+      blockLocation.setOffset(originStart);
+      blockLocation.setLength(originEnd - originStart + 1);
     }
 
     /** Check if there is a next item before applying the given filter */

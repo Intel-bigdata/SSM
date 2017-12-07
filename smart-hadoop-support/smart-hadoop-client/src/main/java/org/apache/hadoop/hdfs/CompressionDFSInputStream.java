@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.io.ByteBufferPool;
 import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
+import org.smartdata.model.CompressionTrunk;
 import org.smartdata.model.SmartFileCompressionInfo;
 
 import java.io.EOFException;
@@ -41,8 +42,6 @@ public class CompressionDFSInputStream extends DFSInputStream {
   private long pos = 0;
 
   private SmartFileCompressionInfo compressionInfo;
-  private final Long[] originalPos;
-  private final Long[] compressedPos;
   private final long originalLength;
 
   public CompressionDFSInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
@@ -50,8 +49,6 @@ public class CompressionDFSInputStream extends DFSInputStream {
       UnresolvedLinkException {
     super(dfsClient, src, verifyChecksum);
     this.compressionInfo = compressionInfo;
-    originalPos = compressionInfo.getOriginalPos();
-    compressedPos = compressionInfo.getCompressedPos();
     originalLength = compressionInfo.getOriginalLength();
     int bufferSize = compressionInfo.getBufferSize();
     this.decompressor = new SnappyDecompressor(bufferSize);
@@ -174,12 +171,13 @@ public class CompressionDFSInputStream extends DFSInputStream {
     }
 
     // Seek to the start of the compression trunk
-    int trunkIndex = compressionInfo.getPosIndexByOriginalOffset(targetPos);
-    long hdfsFilePos = compressedPos[trunkIndex];
+    CompressionTrunk compressionTrunk = compressionInfo.locateCompressionTrunk(
+        false, targetPos);
+    long hdfsFilePos = compressionTrunk.getCompressedOffset();
     super.seek(hdfsFilePos);
 
     // Decompress the trunk until reaching the targetPos of the original file
-    int startPos = (int)(targetPos - originalPos[trunkIndex]);
+    int startPos = (int)(targetPos - compressionTrunk.getOriginOffset());
     decompressor.reset();
     int m = getCompressedData();
     decompressor.setInput(buffer, 0, m);
