@@ -117,6 +117,64 @@ public class SmartFileCompressionInfo {
     return trunkIndex;
   }
 
+  /**
+   * Locate the compression trunk with the given offset (either origin or compressed).
+   *
+   * @param compressed true for compressed offset, false for origin offset
+   * @param offset
+   * @return the compression trunk where the offset locates
+   * @throws IOException
+   */
+  public CompressionTrunk locateCompressionTrunk(boolean compressed,
+      long offset) throws IOException {
+    int index = compressed ? getPosIndexByCompressedOffset(offset) :
+        getPosIndexByOriginalOffset(offset);
+    CompressionTrunk compressionTrunk = new CompressionTrunk(index);
+    compressionTrunk.setOriginOffset(originalPos[index]);
+    compressionTrunk.setOriginLength(getOriginTrunkSize(index));
+    compressionTrunk.setCompressedOffset(compressedPos[index]);
+    compressionTrunk.setCompressedLength(getCompressedTrunkSize(index));
+    return compressionTrunk;
+  }
+
+  /**
+   * Get original trunk size with the given index.
+   *
+   * @param index
+   * @return
+   */
+  public long getOriginTrunkSize(int index) throws IOException {
+    if (index >= originalPos.length || index < 0) {
+      throw new IOException("Trunk index out of bound");
+    }
+    long trunkSize = 0;
+    if (index == originalPos.length - 1) {
+      trunkSize = originalLength - originalPos[index];
+    } else {
+      trunkSize = originalPos[index + 1] - originalPos[index];
+    }
+    return trunkSize;
+  }
+
+  /**
+   * Get the compressed trunk size with the given index.
+   *
+   * @param index
+   * @return
+   */
+  public long getCompressedTrunkSize(int index) throws IOException {
+    if (index >= compressedPos.length || index < 0) {
+      throw new IOException("Trunk index out of bound");
+    }
+    long trunkSize =0;
+    if (index == compressedPos.length - 1) {
+      trunkSize = compressedLength - compressedPos[index];
+    } else {
+      trunkSize = compressedPos[index + 1] - compressedPos[index];
+    }
+    return trunkSize;
+  }
+
   public void setPositionMapping(Long[] originalPos, Long[] compressedPos)
       throws IOException{
     if (originalPos.length != compressedPos.length) {

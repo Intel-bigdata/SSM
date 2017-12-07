@@ -203,8 +203,7 @@ public class SmartFileSystem extends DistributedFileSystem {
             BlockLocation[] blockLocations =
                 ((LocatedFileStatus)next).getBlockLocations();
             for (BlockLocation blockLocation : blockLocations) {
-              blockLocation.setOffset(0);
-              blockLocation.setLength(0);
+              convertBlockLocation(blockLocation, compressionInfo);
             }
             next = (T) new LocatedFileStatus(fileLen,
                 next.isDirectory(),
@@ -228,6 +227,42 @@ public class SmartFileSystem extends DistributedFileSystem {
         }
       }
       return curStat != null;
+    }
+
+    // Definitions:
+    // * Compression trunk doesn't cross over two blocks:
+    // - Offset = original start of the first trunk
+    // - End = original end of the last trunk
+    // * Compression trunk crosses over two blocks:
+    // - Offset = original middle of the first incomplete trunk
+    // - End = original middle of the last incomplete trunk
+    private void convertBlockLocation(BlockLocation blockLocation,
+        SmartFileCompressionInfo compressionInfo) {
+      long compressedOffset = blockLocation.getOffset();
+      long compressedEnd = compressedOffset + blockLocation.getLength() - 1;
+      Long[] originPositions = compressionInfo.getOriginalPos();
+      Long[] compressedPositions = compressionInfo.getCompressedPos();
+
+      int startIndex = compressionInfo.getPosIndexByCompressedOffset(compressedOffset);
+      int endIndex = compressionInfo.getPosIndexByCompressedOffset(compressedEnd);
+      long originOffset = originPositions[startIndex];
+      long originEnd = originPositions[endIndex];
+
+      // If the first trunk crosses over two blocks, set start as middle of the trunk
+      if (compressedPositions[startIndex] < compressedOffset) {
+        long originNextOffset;
+        if (startIndex == originPositions.length - 1) {
+          originNextOffset = compressionInfo.getOriginalLength();
+        } else {
+          originNextOffset = originPositions[startIndex + 1];
+        }
+        originOffset = (originOffset + originNextOffset) / 2 + 1;
+      }
+
+      // If the last trunk corsses over two blocks, set end as middle of the trunk
+      //if ()
+      //blockLocation.setOffset(originOffset);
+      //blockLocation.setLength();
     }
 
     /** Check if there is a next item before applying the given filter */
