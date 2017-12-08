@@ -172,6 +172,9 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     client.setOwner(src, fileStatus.getOwner(), fileStatus.getGroup());
     client.setPermission(src, fileStatus.getPermission());
     client.setReplication(src, fileStatus.getReplication());
+    // TODO set Storagepolicy
+    client.setStoragePolicy(src, "Hot");
+    // client.setTimes(src, fileStatus.getAccessTime(), client.getFileInfo(src).getModificationTime());
 
     return true;
   }
@@ -190,6 +193,10 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     fileSystem.setOwner(new Path(src), fileStatus.getOwner(), fileStatus.getGroup());
     fileSystem.setPermission(new Path(src), fileStatus.getPermission());
     fileSystem.setReplication(new Path(src), fileStatus.getReplication());
+    // TODO set Storagepolicy
+    fileSystem.setStoragePolicy(new Path(src), "Hot");
+    // fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
+    //     fileSystem.getFileStatus(new Path(src)).getModificationTime());
 
     return true;
   }
