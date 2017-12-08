@@ -66,6 +66,8 @@ public class TruncateAction extends HdfsAction {
     if (length == -1) {
       throw new IllegalArgumentException("Length is missing");
     }
+
+    truncateClusterFile(srcPath, length);
   }
 
   private boolean truncateClusterFile(String srcFile, long length) throws IOException {
