@@ -233,7 +233,7 @@ Run SSM
 
    `./bin/start-agent.sh [--host .. --config ..]`
 
-   If the host option in the above is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
+   If the host option is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
    So all SSM services can be killed later.
 
    Please note that the SSM distribution directory should be under the same directory on the new agent host as that on Smart Server.
