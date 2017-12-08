@@ -74,4 +74,8 @@ public interface CompatibilityHelper {
   OutputStream getDFSClientAppend(DFSClient client, String dest, int buffersize, long offset) throws IOException;
 
   OutputStream getS3outputStream(String dest, Configuration conf) throws IOException;
+
+  boolean setLen2Zero(DFSClient client, String src) throws IOException;
+
+  boolean setLen2Zero(DistributedFileSystem fileSystem, String src) throws IOException;
 }
