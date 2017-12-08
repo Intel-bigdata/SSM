@@ -17,6 +17,8 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -135,16 +137,49 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   }
 
   @Test
-  public void test() throws Exception {
+  public void testListLocatedStatus() throws Exception {
+    waitTillSSMExitSafeMode();
 
-    int arraySize = 1024 * 128;
+    initDB();
+    SmartFileSystem smartDfs = new SmartFileSystem();
+    smartDfs.initialize(dfs.getUri(), ssm.getContext().getConf());
+
+    int arraySize = 1024 * 135;
     String fileName = "/ssm/compression/file1";
     byte[] bytes = prepareFile(fileName, arraySize);
 
-    RemoteIterator<LocatedFileStatus> iter = dfs.listLocatedStatus(new Path(fileName));
-    LocatedFileStatus stat = iter.next();
-    Path path = stat.getPath();
-    String name = path.toUri().getPath();
+    // For uncompressed file, SmartFileSystem and DistributedFileSystem behave exactly the same
+    RemoteIterator<LocatedFileStatus> iter1 = dfs.listLocatedStatus(new Path("/ssm/compression"));
+    LocatedFileStatus stat1 = iter1.next();
+    RemoteIterator<LocatedFileStatus> iter2 = smartDfs.listLocatedStatus(new Path(fileName));
+    LocatedFileStatus stat2 = iter2.next();
+    Assert.assertEquals(stat1.getPath(), stat2.getPath());
+    Assert.assertEquals(stat1.getBlockSize(), stat2.getBlockSize());
+    Assert.assertEquals(stat1.getLen(), stat2.getLen());
+    BlockLocation[] blockLocations1 = stat1.getBlockLocations();
+    BlockLocation[] blockLocations2 = stat2.getBlockLocations();
+    Assert.assertEquals(blockLocations1.length, blockLocations2.length);
+    for (int i = 0; i < blockLocations1.length; i ++) {
+      Assert.assertEquals(blockLocations1[i].getLength(), blockLocations2[i].getLength());
+      Assert.assertEquals(blockLocations1[i].getOffset(), blockLocations2[i].getOffset());
+    }
+
+    // Test compressed file
+    int bufSize = 20000;
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
+        + " -bufSize " + bufSize);
+    waitTillActionDone(cmdId);
+    RemoteIterator<LocatedFileStatus> iter3 = dfs.listLocatedStatus(new Path(fileName));
+    LocatedFileStatus stat3 = iter3.next();
+    BlockLocation[] blockLocations3 = stat3.getBlockLocations();
+    RemoteIterator<LocatedFileStatus> iter4 = smartDfs.listLocatedStatus(new Path(fileName));
+    LocatedFileStatus stat4 = iter4.next();
+    BlockLocation[] blockLocations4 = stat4.getBlockLocations();
+    Assert.assertEquals(stat1.getPath(), stat4.getPath());
+    Assert.assertEquals(stat1.getBlockSize(), stat4.getBlockSize());
+    Assert.assertEquals(stat1.getLen(), stat4.getLen());
+
     return;
   }
 
