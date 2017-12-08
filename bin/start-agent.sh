@@ -3,9 +3,7 @@
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
 
-#Running start-agent.sh with no host option will start an agent on localhost
-AGENT_HOSTS=localhost
-
+AGENT_HOSTS=
 while [ $# != 0 ]; do
   case "$1" in
     "--config")
@@ -37,7 +35,13 @@ while [ $# != 0 ]; do
   esac
 done
 
+#Running start-agent.sh with no host option will start an agent on localhost
+if [[ -z "${AGENT_HOSTS}" ]]; then
+  AGENT_HOSTS=localhost
+fi
+
 . "${bin}/common.sh"
+get_smart_servers
 
 AGENT_MASTER=${SMARTSERVERS// /,}
 

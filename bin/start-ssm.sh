@@ -49,6 +49,7 @@ while [ $# != 0 ]; do
 done
 
 . "${bin}/common.sh"
+get_smart_servers
 
 #---------------------------------------------------------
 # Start Smart Servers
