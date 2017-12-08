@@ -34,6 +34,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.CompressionTrunk;
 import org.smartdata.model.SmartFileCompressionInfo;
@@ -81,22 +82,24 @@ public class SmartFileSystem extends DistributedFileSystem {
   public void initialize(URI uri, Configuration conf) throws IOException {
     super.initialize(uri, conf);
 
-    String smartServerIp = conf.get("smart.server.rpc.address", "127.0.0.1");
-    int smartServerPort = conf.getInt("smart.server.rpc.port", 7042);
-
-    try {
-      smartServerAddress = new InetSocketAddress(smartServerIp, smartServerPort);
-    } catch (Exception e){
-      try {
-        super.close();
-      } catch (Throwable e1) {
-        // DO nothing now
-      }
-      throw new IOException("Cannot parse smart server rpc address or port" +
-          ", address: " + smartServerIp + ", port:" +  smartServerPort);
+    String rpcConfValue = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
+    if (rpcConfValue == null) {
+      throw new IOException("SmartServer address not found. Please configure "
+          + "it through " + SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     }
+
+    String[] strings = rpcConfValue.split(":");
+    InetSocketAddress smartServerAddress;
+    try {
+      smartServerAddress = new InetSocketAddress(
+          strings[strings.length - 2],
+          Integer.parseInt(strings[strings.length - 1]));
+    } catch (Exception e) {
+      throw new IOException("Incorrect SmartServer address. Please follow the "
+          + "IP/Hostname:Port format");
+    }
+
     this.smartClient = new SmartDFSClient(conf, smartServerAddress);
-    healthy = true;
   }
 
   @Override
@@ -215,7 +218,7 @@ public class SmartFileSystem extends DistributedFileSystem {
                 next.getPermission(),
                 next.getOwner(),
                 next.getGroup(),
-                next.getSymlink(),
+                next.isSymlink() ? next.getSymlink() : null,
                 next.getPath(),
                 blockLocations);
           }
