@@ -81,7 +81,7 @@ public class CompressionAction extends HdfsAction {
     compressionInfo = new SmartFileCompressionInfo(filePath, bufferSize);
 
     // Generate compressed file
-    String compressedFileName = filePath + ".ssm_snappy";
+    String compressedFileName = "/tmp/" + System.currentTimeMillis() + ".ssm_snappy";
     HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
     short replication = srcFile.getReplication();
     long blockSize = srcFile.getBlockSize();
