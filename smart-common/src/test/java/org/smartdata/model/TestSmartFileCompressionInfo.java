@@ -29,8 +29,8 @@ public class TestSmartFileCompressionInfo {
   private final int bufferSize = 10;
   private final long originalLength = 86;
   private final long compressedLength = 34;
-  private final Long[] originalPos = {0l, 10l, 20l, 30l, 40l, 50l, 60l, 70l, 80l};
-  private final Long[] compressedPos = {0l, 4l, 10l, 13l, 19l, 22l, 25l, 28l, 32l};
+  private final Long[] originalPos = {0L, 10L, 20L, 30L, 40L, 50L, 60L, 70L, 80L};
+  private final Long[] compressedPos = {0L, 4L, 10L, 13L, 19L, 22L, 25L, 28L, 32L};
 
 
   @Before
@@ -123,41 +123,41 @@ public class TestSmartFileCompressionInfo {
     // Original offset
     compressionTrunk = compressionInfo.locateCompressionTrunk(false, 12);
     Assert.assertEquals(1, compressionTrunk.getIndex());
-    Assert.assertEquals(10l, compressionTrunk.getOriginOffset());
-    Assert.assertEquals(10l, compressionTrunk.getOriginLength());
-    Assert.assertEquals(4l, compressionTrunk.getCompressedOffset());
-    Assert.assertEquals(6l, compressionTrunk.getCompressedLength());
+    Assert.assertEquals(1L, compressionTrunk.getOriginOffset());
+    Assert.assertEquals(10L, compressionTrunk.getOriginLength());
+    Assert.assertEquals(4L, compressionTrunk.getCompressedOffset());
+    Assert.assertEquals(6L, compressionTrunk.getCompressedLength());
     compressionTrunk = compressionInfo.locateCompressionTrunk(false, 40);
     Assert.assertEquals(4, compressionTrunk.getIndex());
-    Assert.assertEquals(40l, compressionTrunk.getOriginOffset());
-    Assert.assertEquals(10l, compressionTrunk.getOriginLength());
-    Assert.assertEquals(19l, compressionTrunk.getCompressedOffset());
-    Assert.assertEquals(3l, compressionTrunk.getCompressedLength());
+    Assert.assertEquals(40L, compressionTrunk.getOriginOffset());
+    Assert.assertEquals(10L, compressionTrunk.getOriginLength());
+    Assert.assertEquals(19L, compressionTrunk.getCompressedOffset());
+    Assert.assertEquals(3L, compressionTrunk.getCompressedLength());
     compressionTrunk = compressionInfo.locateCompressionTrunk(false, 85);
     Assert.assertEquals(8, compressionTrunk.getIndex());
-    Assert.assertEquals(80l, compressionTrunk.getOriginOffset());
-    Assert.assertEquals(6l, compressionTrunk.getOriginLength());
-    Assert.assertEquals(32l, compressionTrunk.getCompressedOffset());
-    Assert.assertEquals(2l, compressionTrunk.getCompressedLength());
+    Assert.assertEquals(80L, compressionTrunk.getOriginOffset());
+    Assert.assertEquals(6L, compressionTrunk.getOriginLength());
+    Assert.assertEquals(32L, compressionTrunk.getCompressedOffset());
+    Assert.assertEquals(2L, compressionTrunk.getCompressedLength());
 
     // Compressed offset
     compressionTrunk = compressionInfo.locateCompressionTrunk(true, 6);
     Assert.assertEquals(1, compressionTrunk.getIndex());
-    Assert.assertEquals(10l, compressionTrunk.getOriginOffset());
-    Assert.assertEquals(10l, compressionTrunk.getOriginLength());
-    Assert.assertEquals(4l, compressionTrunk.getCompressedOffset());
-    Assert.assertEquals(6l, compressionTrunk.getCompressedLength());
+    Assert.assertEquals(10L, compressionTrunk.getOriginOffset());
+    Assert.assertEquals(10L, compressionTrunk.getOriginLength());
+    Assert.assertEquals(4L, compressionTrunk.getCompressedOffset());
+    Assert.assertEquals(6L, compressionTrunk.getCompressedLength());
     compressionTrunk = compressionInfo.locateCompressionTrunk(true, 19);
     Assert.assertEquals(4, compressionTrunk.getIndex());
-    Assert.assertEquals(40l, compressionTrunk.getOriginOffset());
-    Assert.assertEquals(10l, compressionTrunk.getOriginLength());
-    Assert.assertEquals(19l, compressionTrunk.getCompressedOffset());
-    Assert.assertEquals(3l, compressionTrunk.getCompressedLength());
+    Assert.assertEquals(40L, compressionTrunk.getOriginOffset());
+    Assert.assertEquals(10L, compressionTrunk.getOriginLength());
+    Assert.assertEquals(19L, compressionTrunk.getCompressedOffset());
+    Assert.assertEquals(3L, compressionTrunk.getCompressedLength());
     compressionTrunk = compressionInfo.locateCompressionTrunk(true, 33);
     Assert.assertEquals(8, compressionTrunk.getIndex());
-    Assert.assertEquals(80l, compressionTrunk.getOriginOffset());
-    Assert.assertEquals(6l, compressionTrunk.getOriginLength());
-    Assert.assertEquals(32l, compressionTrunk.getCompressedOffset());
-    Assert.assertEquals(2l, compressionTrunk.getCompressedLength());
+    Assert.assertEquals(80L, compressionTrunk.getOriginOffset());
+    Assert.assertEquals(6L, compressionTrunk.getOriginLength());
+    Assert.assertEquals(32L, compressionTrunk.getCompressedOffset());
+    Assert.assertEquals(2L, compressionTrunk.getCompressedLength());
   }
 }
