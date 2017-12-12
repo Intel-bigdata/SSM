@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestSetLen2Zero extends MiniClusterHarness {
+public class TestTruncate0 extends MiniClusterHarness {
   @Test
   public void testSetFileLen() throws IOException, InterruptedException {
     final String srcPath = "/test";
@@ -44,12 +44,12 @@ public class TestSetLen2Zero extends MiniClusterHarness {
 
     out.close();
 
-    SetLen2ZeroAction setLen2ZeroAction = new SetLen2ZeroAction();
+    Truncate0Action setLen2ZeroAction = new Truncate0Action();
     setLen2ZeroAction.setDfsClient(dfsClient);
     setLen2ZeroAction.setContext(smartContext);
     setLen2ZeroAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
-    args.put(SetLen2ZeroAction.FILE_PATH, srcPath + "/" + file);
+    args.put(Truncate0Action.FILE_PATH, srcPath + "/" + file);
 
     setLen2ZeroAction.init(args);
     setLen2ZeroAction.run();

@@ -34,11 +34,11 @@ import java.util.Map;
  * action to set file length to zero
  */
 @ActionSignature(
-    actionId = "setlen2zero",
-    displayName = "setlen2zero",
+    actionId = "truncate0",
+    displayName = "truncate0",
     usage = HdfsAction.FILE_PATH + " $src "
 )
-public class SetLen2ZeroAction extends HdfsAction {
+public class Truncate0Action extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(TruncateAction.class);
   private String srcPath;
 
