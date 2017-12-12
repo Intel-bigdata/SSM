@@ -166,7 +166,7 @@ public class SmartFileCompressionInfo {
     if (index >= compressedPos.length || index < 0) {
       throw new IOException("Trunk index out of bound");
     }
-    long trunkSize =0;
+    long trunkSize = 0;
     if (index == compressedPos.length - 1) {
       trunkSize = compressedLength - compressedPos[index];
     } else {
