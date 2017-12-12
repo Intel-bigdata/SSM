@@ -18,6 +18,7 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -26,6 +27,7 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
@@ -154,5 +156,48 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     // Copy to s3
     org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
     return fs.create(new Path(dest), true);
+  }
+
+  @Override
+  public boolean setLen2Zero(DFSClient client, String src) throws IOException {
+    //Delete file and create file
+    //save the metadata
+    HdfsFileStatus fileStatus = client.getFileInfo(src);
+
+    //delete file
+    client.delete(src, true);
+    //create file
+    client.create(src, true);
+    //set metadata
+    client.setOwner(src, fileStatus.getOwner(), fileStatus.getGroup());
+    client.setPermission(src, fileStatus.getPermission());
+    client.setReplication(src, fileStatus.getReplication());
+    // TODO set Storagepolicy
+    client.setStoragePolicy(src, "Hot");
+    // client.setTimes(src, fileStatus.getAccessTime(), client.getFileInfo(src).getModificationTime());
+
+    return true;
+  }
+
+  @Override
+  public boolean setLen2Zero(DistributedFileSystem fileSystem, String src) throws IOException {
+    //Delete file and create file
+    //save the metadata
+    FileStatus fileStatus = fileSystem.getFileStatus(new Path(src));
+
+    //delete file
+    fileSystem.delete(new Path(src), true);
+    //create file
+    fileSystem.create(new Path(src), true);
+    //set metadata
+    fileSystem.setOwner(new Path(src), fileStatus.getOwner(), fileStatus.getGroup());
+    fileSystem.setPermission(new Path(src), fileStatus.getPermission());
+    fileSystem.setReplication(new Path(src), fileStatus.getReplication());
+    // TODO set Storagepolicy
+    fileSystem.setStoragePolicy(new Path(src), "Hot");
+    // fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
+    //     fileSystem.getFileStatus(new Path(src)).getModificationTime());
+
+    return true;
   }
 }

@@ -31,30 +31,21 @@ import java.net.URI;
 import java.util.Map;
 
 /**
- * action to truncate file
+ * action to set file length to zero
  */
 @ActionSignature(
-    actionId = "truncate",
-    displayName = "truncate",
-    usage = HdfsAction.FILE_PATH + " $src " + TruncateAction.LENGTH + " $length"
+    actionId = "truncate0",
+    displayName = "truncate0",
+    usage = HdfsAction.FILE_PATH + " $src "
 )
-public class TruncateAction extends HdfsAction {
+public class Truncate0Action extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(TruncateAction.class);
-  public static final String LENGTH = "-length";
-
   private String srcPath;
-  private long length;
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
     srcPath = args.get(FILE_PATH);
-
-    this.length = -1;
-
-    if (args.containsKey(LENGTH)) {
-      this.length = Long.parseLong(args.get(LENGTH));
-    }
   }
 
   @Override
@@ -62,37 +53,19 @@ public class TruncateAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File src is missing.");
     }
-
-    if (length == -1) {
-      throw new IllegalArgumentException("Length is missing");
-    }
-
-    truncateClusterFile(srcPath, length);
+    setLen2Zero(srcPath);
   }
 
-  private boolean truncateClusterFile(String srcFile, long length) throws IOException {
-    if (srcFile.startsWith("hdfs")) {
+  private boolean setLen2Zero(String srcPath) throws IOException {
+    if (srcPath.startsWith("hdfs")) {
       // TODO read conf from files
       Configuration conf = new Configuration();
       DistributedFileSystem fs = new DistributedFileSystem();
-      fs.initialize(URI.create(srcFile), conf);
+      fs.initialize(URI.create(srcPath), conf);
 
-      //check the length
-      long oldLength = fs.getFileStatus(new Path(srcFile)).getLen();
-
-      if (length > oldLength) {
-        throw new IllegalArgumentException("Length is illegal");
-      } else {
-        return CompatibilityHelperLoader.getHelper().truncate(fs, srcPath, length);
-      }
+      return CompatibilityHelperLoader.getHelper().setLen2Zero(fs, srcPath);
     } else {
-      long oldLength = dfsClient.getFileInfo(srcFile).getLen();
-
-      if (length > oldLength) {
-        throw new IllegalArgumentException("Length is illegal");
-      } else {
-        return CompatibilityHelperLoader.getHelper().truncate(dfsClient, srcPath, length);
-      }
+      return CompatibilityHelperLoader.getHelper().setLen2Zero(dfsClient, srcPath);
     }
   }
 }
