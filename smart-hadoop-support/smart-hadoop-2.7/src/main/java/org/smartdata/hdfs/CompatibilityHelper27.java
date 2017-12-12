@@ -162,4 +162,16 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
     return fs.create(new Path(dest), true);
   }
+
+  @Override
+  public boolean setLen2Zero(DFSClient client, String src) throws IOException {
+    return client.truncate(src, 0);
+  }
+
+  @Override
+  public boolean setLen2Zero(DistributedFileSystem fileSystem, String src) throws IOException {
+    return fileSystem.truncate(new Path(src), 0);
+  }
+
+
 }
