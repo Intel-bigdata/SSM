@@ -18,14 +18,14 @@ BASE_URL = "http://{SSM_Server}:7045"
 `{SSM_Server}` is the IP address of SSM.
 
 ## Init/Rest Test Environment
-1. Remove all files in hdfs:/test/
+1. Remove all files in hdfs:/ssmtest/
 Run this command in HDFS enviroment.
 ```
-HDFS dfs -ls -rm -r /test/
-HDFS dfs -mkdir /test/
+HDFS dfs -ls -rm -r /ssmtest/
+HDFS dfs -mkdir /ssmtest/
 ```
 
-2. Create 10000 files (1MB) in hdfs:/test/
+2. Create 10000 files (1MB) in hdfs:/ssmtest/
 
 ```
 python reset_env.py -v
@@ -72,7 +72,7 @@ Run all stress/performance test cases with the following command:
 python test_stress.py -v
 ```
 
-If you want to increase the number of files in `hdfs:/test/`, please remove all delete file actions in `test_stress.py`.
+If you want to increase the number of files in `hdfs:/ssmtest/`, please remove all delete file actions in `test_stress.py`.
 ```
 for i in range(max_number):
     cids.append(delete_file(file_paths[i]))

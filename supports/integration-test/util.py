@@ -20,7 +20,7 @@ MOVE_TYPE = ["onessd",
              "allssd",
              "archive"]
 
-TEST_DIR = "/test/"
+TEST_DIR = "/ssmtest/"
 
 
 def random_file_path():
@@ -146,7 +146,7 @@ def create_file(file_path, length=1024):
 
 def create_random_file(length=1024):
     """
-    create a random file in /test/
+    create a random file in /ssmtest/
     """
     file_path = TEST_DIR + random_string()
     cmdlet_str = "write -file " + \
@@ -157,7 +157,7 @@ def create_random_file(length=1024):
 
 def create_random_file_parallel(length=1024):
     """
-    create a random file in /test/
+    create a random file in /ssmtest/
     """
     return create_random_file_parallel(TEST_DIR, length)
 

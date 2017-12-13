@@ -29,6 +29,40 @@ class ResetEnv(unittest.TestCase):
         except OSError:
             print "HDFS Envs is not configured!"
 
+    def test_create_10000M_0KB(self):
+        """
+        Create 50MB * 20 files in /ssmtest/.
+        Files will be kept in dir named from 1 to 20.
+        Files are named from 0-499999.
+        """
+        max_number = 500000
+        dir_number = 20
+        for i in range(dir_number):
+            cids = []
+            dir_name = TEST_DIR + str(dir_number)
+            # 20 dirs
+            for j in range(max_number):
+                # each has 50M files
+                cid = create_file_parallel(dir_name + "/" + str(j), 0)
+            cids.append(cid)
+            wait_for_cmdlets(cids)
+
+    def test_create_50M_0KB(self):
+        """
+        Create 50MB files in /ssmtest/.
+        All files will be kept in one dir with random name.
+        Files are named from 0-499999.
+        """
+        max_number = 500000
+        cids = []
+        dir_name = TEST_DIR + random_string()
+        # 20 dirs
+        for i in range(max_number):
+            # each has 50M files
+            cid = create_file_parallel(dir_name + "/" + str(i), 0)
+        cids.append(cid)
+        wait_for_cmdlets(cids)
+
     def test_create_10000_1MB(self):
         """
         Create 10000 * 1 MB files in /1MB/
@@ -73,7 +107,7 @@ class ResetEnv(unittest.TestCase):
 
     def test_create_files_10000(self):
         """
-        Create 10000 * 1 MB files in /test/
+        Create 10000 * 1 MB files in /ssmtest/
         """
         max_number = 10000
         file_paths = []
@@ -87,7 +121,7 @@ class ResetEnv(unittest.TestCase):
 
     def test_create_files_1000(self):
         """
-        Create 1000 * 1 MB files  in /test/
+        Create 1000 * 1 MB files  in /ssmtest/
         """
         max_number = 10000
         file_paths = []
@@ -101,7 +135,7 @@ class ResetEnv(unittest.TestCase):
 
     def test_create_files_100(self):
         """
-        Create 100 * 1 MB files  in /test/
+        Create 100 * 1 MB files  in /ssmtest/
         """
         max_number = 10000
         file_paths = []
