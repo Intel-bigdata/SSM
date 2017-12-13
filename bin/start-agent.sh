@@ -50,7 +50,6 @@ for i in $AGENT_HOSTS; do if [ "$i" = "localhost" ]; then AH+=" ${HOSTNAME}" ; e
   AGENT_HOSTS=${AH/ /}
 
 echo "Starting SmartAgents on [${AGENT_HOSTS}]"
-sleep 3
 . "${SMART_HOME}/bin/ssm" \
   --remote \
   --config "${SMART_CONF_DIR}" \
