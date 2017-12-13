@@ -43,7 +43,7 @@ class ResetEnv(unittest.TestCase):
             # 20 dirs
             for j in range(max_number):
                 # each has 50M files
-                cid = create_file_parallel(dir_name + "/" + str(j), 0)
+                cid = create_file(dir_name + "/" + str(j), 0)
             cids.append(cid)
             wait_for_cmdlets(cids)
 
@@ -59,7 +59,7 @@ class ResetEnv(unittest.TestCase):
         # 20 dirs
         for i in range(max_number):
             # each has 50M files
-            cid = create_file_parallel(dir_name + "/" + str(i), 0)
+            cid = create_file(dir_name + "/" + str(i), 0)
         cids.append(cid)
         wait_for_cmdlets(cids)
 

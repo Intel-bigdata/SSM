@@ -193,7 +193,6 @@ def copy_file_to_S3(file_path, dest_path):
     return submit_cmdlet(cmdlet_str)
 
 
-
 def delete_file(file_path, recursivly=True):
     cmdlet_str = "delete -file " + file_path
     return submit_cmdlet(cmdlet_str)
