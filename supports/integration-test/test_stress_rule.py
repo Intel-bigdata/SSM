@@ -12,7 +12,7 @@ class TestStressRule(unittest.TestCase):
             rule_str = "file: " + \
                 "every 4s from now to now + 1d |" + \
                 " path matches " + \
-                "\"/test/" + random_string()[:5] + " *\"" + \
+                "\"/ssmtest/" + random_string()[:5] + " *\"" + \
                 " | onessd "
             rids.append(submit_rule(rule_str))
         # activate all rules
@@ -30,7 +30,7 @@ class TestStressRule(unittest.TestCase):
             rule_str = "file: " + \
                 "every 4s from now to now + 1d |" + \
                 " path matches " + \
-                "\"/test/" + random_string()[:5] + " *\"" + \
+                "\"/ssmtest/" + random_string()[:5] + " *\"" + \
                 " | onessd "
             rids.append(submit_rule(rule_str))
         # activate all rules
@@ -48,7 +48,7 @@ class TestStressRule(unittest.TestCase):
             rule_str = "file: " + \
                 "every 4s from now to now + 1d |" + \
                 " path matches " + \
-                "\"/test/" + random_string()[:5] + " *\"" + \
+                "\"/ssmtest/" + random_string()[:5] + " *\"" + \
                 " | onessd "
             rids.append(submit_rule(rule_str))
         # activate all rules
@@ -66,7 +66,7 @@ class TestStressRule(unittest.TestCase):
             rule_str = "file: " + \
                 "every 4s from now to now + 1d |" + \
                 " path matches " + \
-                "\"/test/" + random_string()[:5] + " *\"" + \
+                "\"/ssmtest/" + random_string()[:5] + " *\"" + \
                 " | onessd "
             rids.append(submit_rule(rule_str))
         # activate all rules
