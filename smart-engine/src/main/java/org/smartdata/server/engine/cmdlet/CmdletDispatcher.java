@@ -220,6 +220,12 @@ public class CmdletDispatcher {
 
   private class DispatchTask implements Runnable {
     private final CmdletDispatcher dispatcher;
+    private long lastInfo = System.currentTimeMillis();
+    private int statRound = 0;
+    private int statFail = 0;
+    private int statDispatched = 0;
+    private int statNoMoreCmdlet = 0;
+    private int statNoExecutorOrFull = 0;
 
     public DispatchTask(CmdletDispatcher dispatcher) {
       this.dispatcher = dispatcher;
@@ -227,11 +233,31 @@ public class CmdletDispatcher {
 
     @Override
     public void run() {
+      statRound++;
+      long curr = System.currentTimeMillis();
+      if (curr - lastInfo >= 5000) {
+        if (!(statDispatched == 0 && statRound == statNoMoreCmdlet)) {
+          LOG.info(
+              "timeInterval={} statRound={} statFail={} statDispatched={} "
+                  + "statNoMoreCmdlet={} statNoExecutorOrFull={} pendingCmdlets={}",
+              curr - lastInfo, statRound, statFail, statDispatched, statNoMoreCmdlet,
+              statNoExecutorOrFull, pendingCmdlets.size());
+        }
+        statRound = 0;
+        statFail = 0;
+        statDispatched = 0;
+        statNoExecutorOrFull = 0;
+        statNoMoreCmdlet = 0;
+        lastInfo = curr;
+      }
+
       if (!dispatcher.canDispatchMore()) {
+        statNoExecutorOrFull++;
         return;
       }
 
       if (cmdExecSrvTotalInsts == 0) {
+        statNoExecutorOrFull++;
         return;
       }
 
@@ -240,6 +266,7 @@ public class CmdletDispatcher {
         try {
           launchCmdlet = getNextCmdletToRun();
           if (launchCmdlet == null) {
+            statNoMoreCmdlet++;
             break;
           } else {
             cmdletPreExecutionProcess(launchCmdlet);
@@ -247,8 +274,10 @@ public class CmdletDispatcher {
               if (LOG.isDebugEnabled()) {
                 LOG.debug("Stop this round dispatch due : " + launchCmdlet);
               }
+              statFail++;
               break;
             }
+            statDispatched++;
           }
         } catch (IOException e) {
           LOG.error("Cmdlet dispatcher error", e);
