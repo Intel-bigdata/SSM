@@ -243,7 +243,7 @@ public class CmdletDispatcher {
             break;
           } else {
             cmdletPreExecutionProcess(launchCmdlet);
-            if (dispatcher.dispatch(launchCmdlet)) {
+            if (!dispatcher.dispatch(launchCmdlet)) {
               if (LOG.isDebugEnabled()) {
                 LOG.debug("Stop this round dispatch due : " + launchCmdlet);
               }
