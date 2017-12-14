@@ -28,4 +28,4 @@ install:
 
 script:
   - mvn test $PROFILE
-
+group: deprecated-2017Q4
