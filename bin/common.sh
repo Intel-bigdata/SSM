@@ -55,6 +55,32 @@ else
   SMART_CLASSPATH+=":${SMART_CONF_DIR}"
 fi
 
+function get_smart_servers(){
+  ORGSMARTSERVERS=
+  export SERVERS_FILE="${SMART_CONF_DIR}/servers"
+  if [ -f "${SERVERS_FILE}" ]; then
+    ORGSMARTSERVERS=$(sed 's/#.*$//;/^$/d' "${SERVERS_FILE}" | xargs echo)
+    if [ "$?" != "0" ]; then
+      echo "ERROR: Get SmartServers error."
+      exit 1
+    fi
+
+    CONTAIN_LOCALHOST=
+    HH=
+    for i in $ORGSMARTSERVERS; do if [ "$i" = "localhost" ]; then HH+=" ${HOSTNAME}" ; CONTAIN_LOCALHOST=true ; else HH+=" $i"; fi; done
+    export SMARTSERVERS=${HH/ /}
+
+    if [ x"${CONTAIN_LOCALHOST}" = x"true" -a x"${ORGSMARTSERVERS}" != x"localhost" ]; then
+        echo "ERROR: 'localhost' cannot be used when starting multiple SmartServers."
+        echo "       Please replace it with the real hostname in servers."
+        exit 1
+    fi
+  else
+    echo "${SERVERS_FILE} doesn't exist!"
+    exit 1
+  fi
+}
+
 function addNonTestJarInDir(){
   if [[ -d "${1}" ]]; then
     for jar in $(find -L "${1}" -maxdepth 1 -name '*jar' | grep -v '\-tests.jar'); do
