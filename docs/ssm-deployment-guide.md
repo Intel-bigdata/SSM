@@ -226,7 +226,18 @@ Run SSM
    `http://localhost:7045`
 
    If you meet any problem, please open the smartserver.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
-   
+
+* **Start Smart Agent independently**(optional)
+
+   If you want to add more agents while keeping the SSM service online, you can run the following command on Smart Server.
+
+   `./bin/start-agent.sh [--host .. --config ..]`
+
+   If the host option is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
+   So all SSM services can be killed later.
+
+   Please note that the SSM distribution directory should be under the same directory on the new agent host as that on Smart Server.
+
 * **Stop SSM server**
    
    The script `bin/stop-ssm.sh` is used to stop SSM server. Remember to
