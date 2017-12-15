@@ -59,6 +59,13 @@ if [ "$SERVERS_IN_HAZELCAST" != "" ]; then
   exit 1
 fi
 
+SMART_VARGS_STANDBY=
+for i in $SMART_VARGS; do
+  if [ "$i" != "-format" ]; then
+    SMART_VARGS_STANDBY+=" $i"
+  fi
+done
+
 if [ x"${SMARTSERVERS}" != x"" ]; then
   echo "Starting SmartServers on [${SMARTSERVERS}]"
   FIRST_MASTER=$(echo ${SMARTSERVERS} | awk '{print $1}')
@@ -77,7 +84,7 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
       --config "${SMART_CONF_DIR}" \
       --hosts "${OTHER_MASTERS}" --hostsend \
       --daemon start ${DEBUG_OPT} \
-      smartserver $SMART_VARGS
+      smartserver $SMART_VARGS_STANDBY
   fi
 else
   echo "ERROR: No SmartServers configured in 'servers'."
