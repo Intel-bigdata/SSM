@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivilegedExceptionAction;
+import java.util.Map;
 
 /**
  * Contain utils related to hadoop cluster.
@@ -218,6 +219,34 @@ public class HadoopUtil {
       LOG.error("Fail to new DFSClient for : " + e.getMessage());
       throw new IOException("Fail to new DFSClient for : " + e.getMessage());
     }
+  }
+
+  public static String translateStoragePoliceId2Name(int id) {
+    if (id == 15) {
+      return "Lazy_Persist";
+    }
+
+    if (id == 12) {
+      return "All_SSD";
+    }
+
+    if (id == 10) {
+      return "One_SSD";
+    }
+
+    if (id == 7) {
+      return "Hot";
+    }
+
+    if (id == 5) {
+      return "Warm";
+    }
+
+    if (id == 2) {
+      return "Cold";
+    }
+
+    return "";
   }
 
 }
