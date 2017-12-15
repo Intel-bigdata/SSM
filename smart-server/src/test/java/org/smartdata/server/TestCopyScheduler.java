@@ -17,7 +17,7 @@
 */
 package org.smartdata.server;
 
-/*import org.apache.hadoop.fs.FileStatus;
+/*import org.apache.hadoop.fs.FileStage;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.fs.Path;
@@ -282,7 +282,7 @@ public class TestCopyScheduler extends MiniSmartClusterHarness {
       Thread.sleep(500);
     }
     Thread.sleep(1000);
-    FileStatus fileStatus = dfs.getFileStatus(new Path(destPath + 1));
+    FileStage fileStatus = dfs.getFileStatus(new Path(destPath + 1));
     Assert.assertTrue(fileStatus.getPermission().toString().equals("rwxrwxrwx"));
   }
 
