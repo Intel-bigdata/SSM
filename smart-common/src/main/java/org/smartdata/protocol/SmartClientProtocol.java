@@ -20,6 +20,7 @@ package org.smartdata.protocol;
 import org.apache.hadoop.security.KerberosInfo;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.FileState;
 
 import java.io.IOException;
 
@@ -31,4 +32,5 @@ import java.io.IOException;
 public interface  SmartClientProtocol {
   void reportFileAccessEvent(FileAccessEvent event) throws IOException;
 
+  FileState getFileState(String filePath) throws IOException;
 }
