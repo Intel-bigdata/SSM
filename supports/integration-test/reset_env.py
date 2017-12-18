@@ -72,7 +72,7 @@ class ResetEnv(unittest.TestCase):
         dir_number = 200
         for i in range(dir_number):
             cids = []
-            dir_name = TEST_DIR + str(dir_number)
+            dir_name = TEST_DIR + str(i)
             # 200 dirs
             for j in range(max_number):
                 # each has 500K files
