@@ -222,31 +222,39 @@ public class HadoopUtil {
   }
 
   public static String translateStoragePoliceId2Name(int id) {
-    if (id == 15) {
-      return "Lazy_Persist";
+    switch (id){
+      case 15:
+        return "Lazy_Persist";
+      case 12:
+        return "All_SSD";
+      case 10:
+        return "One_SSD";
+      case 7:
+        return "Hot";
+      case 5:
+        return "Warm";
+      case 2:
+        return "Cold";
     }
-
-    if (id == 12) {
-      return "All_SSD";
-    }
-
-    if (id == 10) {
-      return "One_SSD";
-    }
-
-    if (id == 7) {
-      return "Hot";
-    }
-
-    if (id == 5) {
-      return "Warm";
-    }
-
-    if (id == 2) {
-      return "Cold";
-    }
-
     return "";
+  }
+
+  public static byte translateStoragePoliceName2Id(String name) {
+    switch (name){
+      case "Lazy_Persist":
+        return 15;
+      case "All_SSD":
+        return 12;
+      case "One_SSD":
+        return 10;
+      case "Hot":
+        return 7;
+      case "Warm":
+        return 5;
+      case "Cold":
+        return 2;
+    }
+    return 0;
   }
 
 }
