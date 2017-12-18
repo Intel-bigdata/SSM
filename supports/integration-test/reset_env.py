@@ -1,5 +1,6 @@
 import unittest
 from util import *
+import os
 
 FILE_SIZE = 1024 * 1024
 
@@ -29,6 +30,38 @@ class ResetEnv(unittest.TestCase):
         except OSError:
             print "HDFS Envs is not configured!"
 
+    def test_create_1M_DFSIO(self):
+        """
+        Using DFSIO to generte 10M files.
+        Each time generate 100K * 2 files (100K io_data and 100K io_control)
+        """
+        dir_number = 50
+        dfsio_cmd = "hadoop jar /usr/lib/hadoop-mapreduce/hadoop-" + \
+            "mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
+            "-write -nrFiles 10000 -fileSize 0KB"
+        for i in range(dir_number):
+            os.system(dfsio_cmd)
+            os.system("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
+                      TEST_DIR + str(i) + "_control")
+            os.system("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
+                      TEST_DIR + str(i) + "_data")
+
+    def test_create_10M_DFSIO(self):
+        """
+        Using DFSIO to generte 10M files.
+        Each time generate 100K * 2 files (100K io_data and 100K io_control)
+        """
+        dir_number = 500
+        dfsio_cmd = "hadoop jar /usr/lib/hadoop-mapreduce/hadoop-" + \
+            "mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
+            "-write -nrFiles 10000 -fileSize 0KB"
+        for i in range(dir_number):
+            os.system(dfsio_cmd)
+            os.system("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
+                      TEST_DIR + str(i) + "_control")
+            os.system("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
+                      TEST_DIR + str(i) + "_data")
+
     def test_create_100M_0KB(self):
         """
         Create 100M=500K * 200 files in /ssmtest/.
@@ -39,7 +72,7 @@ class ResetEnv(unittest.TestCase):
         dir_number = 200
         for i in range(dir_number):
             cids = []
-            dir_name = TEST_DIR + str(dir_number)
+            dir_name = TEST_DIR + str(i)
             # 200 dirs
             for j in range(max_number):
                 # each has 500K files
@@ -148,4 +181,7 @@ class ResetEnv(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    requests.adapters.DEFAULT_RETRIES = 5
+    s = requests.session()
+    s.keep_alive = False
     unittest.main()

@@ -79,7 +79,7 @@ class TestStressDR(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    equests.adapters.DEFAULT_RETRIES = 5
+    requests.adapters.DEFAULT_RETRIES = 5
     s = requests.session()
     s.keep_alive = False
     unittest.main()
