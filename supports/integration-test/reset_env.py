@@ -40,10 +40,10 @@ class ResetEnv(unittest.TestCase):
             "mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
             "-write -nrFiles 10000 -fileSize 0KB"
         for i in range(dir_number):
-            os.system(dfsio_cmd)
-            os.system("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
+            subprocess.call(dfsio_cmd)
+            subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
                       TEST_DIR + str(i) + "_control")
-            os.system("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
+            subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
                       TEST_DIR + str(i) + "_data")
 
     def test_create_10M_DFSIO(self):
@@ -56,10 +56,10 @@ class ResetEnv(unittest.TestCase):
             "mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
             "-write -nrFiles 10000 -fileSize 0KB"
         for i in range(dir_number):
-            os.system(dfsio_cmd)
-            os.system("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
+            subprocess.call(dfsio_cmd)
+            subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
                       TEST_DIR + str(i) + "_control")
-            os.system("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
+            subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
                       TEST_DIR + str(i) + "_data")
 
     def test_create_100M_0KB(self):

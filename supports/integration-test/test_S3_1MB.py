@@ -35,7 +35,7 @@ class Test_S3_1MB(unittest.TestCase):
         #delete file from S3
         print "delete test file from S3"
         for i in range(max_number):
-            os.system("hadoop fs -rm " + DEST_DIR + file_paths[i])
+            subprocess.call("hadoop fs -rm " + DEST_DIR + file_paths[i], shell=True)
 
 
 
