@@ -32,6 +32,7 @@ public class SmartConfKeys {
 
   public static final String SMART_SERVICE_MODE_KEY = "smart.service.mode";
   public static final String SMART_SERVICE_MODE_DEFAULT = "HDFS";
+  public static final String SMART_NAMESPACE_BATCH = "smart.namespace.batch";
 
   public static final String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
 

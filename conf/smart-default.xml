@@ -68,6 +68,12 @@
   </property>
 
   <property>
+    <name>smart.cmdlet.executors</name>
+    <value>40</value>
+    <description>Max number of cmdlets that can be executed in parallel on agent</description>
+  </property>
+
+  <property>
     <name>smart.action.local.execution.disabled</name>
     <value>false</value>
     <description>Actions will not be executed on SSM server if true.</description>

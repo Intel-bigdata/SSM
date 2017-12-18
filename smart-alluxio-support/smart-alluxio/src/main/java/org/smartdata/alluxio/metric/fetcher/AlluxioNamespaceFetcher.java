@@ -111,7 +111,7 @@ public class AlluxioNamespaceFetcher {
             LOG.error("Current batch actual size = "
                 + currentBatch.actualSize(), e);
           }
-          this.currentBatch = new FileInfoBatch(DEFAULT_BATCH_SIZE);
+          this.currentBatch = new FileInfoBatch(defaultBatchSize);
         }
 
         if (this.batches.isEmpty()) {

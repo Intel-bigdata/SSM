@@ -28,7 +28,8 @@ public abstract class IngestionTask implements Runnable {
   public static long numDirectoriesFetched = 0L;
   public static long numPersisted = 0L;
 
-  protected static final int DEFAULT_BATCH_SIZE = 20;
+  protected int defaultBatchSize = 20;
+
   protected static final String ROOT = "/";
   // Deque for Breadth-First-Search
   protected ArrayDeque<String> deque;
@@ -43,7 +44,7 @@ public abstract class IngestionTask implements Runnable {
   public IngestionTask() {
     this.deque = new ArrayDeque<>();
     this.batches = new LinkedBlockingDeque<>();
-    this.currentBatch = new FileInfoBatch(DEFAULT_BATCH_SIZE);
+    this.currentBatch = new FileInfoBatch(defaultBatchSize);
     this.deque.add(ROOT);
   }
   public boolean finished() {
@@ -58,7 +59,7 @@ public abstract class IngestionTask implements Runnable {
     this.currentBatch.add(status);
     if (this.currentBatch.isFull()) {
       this.batches.put(currentBatch);
-      this.currentBatch = new FileInfoBatch(DEFAULT_BATCH_SIZE);
+      this.currentBatch = new FileInfoBatch(defaultBatchSize);
     }
   }
 }
