@@ -18,6 +18,7 @@
 package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.fs.UnresolvedLinkException;
+import org.apache.htrace.TraceScope;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
@@ -41,23 +42,29 @@ public abstract class SmartInputStream extends DFSInputStream {
   public static DFSInputStream create(DFSClient dfsClient, String src,
       boolean verifyChecksum, FileState fileState)
       throws IOException, UnresolvedLinkException {
-    DFSInputStream inputStream = null;
-    switch (fileState.getFileType()) {
-      case NORMAL:
-        inputStream = new DFSInputStream(dfsClient, src, verifyChecksum);
-        break;
-      case COMPACT:
-        inputStream = new CompactInputStream(dfsClient, src, verifyChecksum, fileState);
-        break;
-      case COMPRESSION:
-        inputStream = new CompressionInputStream(dfsClient, src, verifyChecksum, fileState);
-        break;
-      case S3:
-        inputStream = new S3InputStream(dfsClient, src, verifyChecksum, fileState);
-        break;
-      default:
-        throw new IOException("Unsupported file type");
+    dfsClient.checkOpen();
+    TraceScope scope = dfsClient.getPathTraceScope("newDFSInputStream", src);
+    try {
+      DFSInputStream inputStream = null;
+      switch (fileState.getFileType()) {
+        case NORMAL:
+          inputStream = new DFSInputStream(dfsClient, src, verifyChecksum);
+          break;
+        case COMPACT:
+          inputStream = new CompactInputStream(dfsClient, src, verifyChecksum, fileState);
+          break;
+        case COMPRESSION:
+          inputStream = new CompressionInputStream(dfsClient, src, verifyChecksum, fileState);
+          break;
+        case S3:
+          inputStream = new S3InputStream(dfsClient, src, verifyChecksum, fileState);
+          break;
+        default:
+          throw new IOException("Unsupported file type");
+      }
+      return inputStream;
+    } finally {
+      scope.close();
     }
-    return inputStream;
   }
 }
