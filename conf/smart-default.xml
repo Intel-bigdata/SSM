@@ -62,6 +62,12 @@
   </property>
 
   <property>
+    <name>smart.namespace.batch</name>
+    <value>200</value>
+    <description>Batch number of Namespace (Inotify) consumer batch</description>
+  </property>
+
+  <property>
     <name>smart.rule.executors</name>
     <value>5</value>
     <description>Max number of rules that can be executed in parallel</description>
