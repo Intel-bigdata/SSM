@@ -142,13 +142,7 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException, UnresolvedLinkException {
-    FileState fileState = smartClient.getFileState(src);
-    if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
-      throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
-          + fileState.getFileType());
-    }
-    return SmartInputStream.create(this, src,
-        verifyChecksum, fileState);
+    return super.open(src, buffersize, verifyChecksum, stats);
   }
 
   private void reportFileAccessEvent(String src) {
