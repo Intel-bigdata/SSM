@@ -24,6 +24,7 @@ import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.FileState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.protocol.AdminServerProto;
 import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
@@ -65,6 +66,8 @@ import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleResponseProto;
 import org.smartdata.protocol.ClientServerProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.protocol.SmartServerProtocols;
@@ -323,6 +326,18 @@ public class ServerProtocolsServerSideTranslator implements
     try {
       server.reportFileAccessEvent(ProtoBufferHelper.convert(req));
       return ReportFileAccessEventResponseProto.newBuilder().build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public GetFileStateResponseProto getFileState(RpcController controller,
+      GetFileStateRequestProto req) throws ServiceException {
+    try {
+      String path = req.getFilePath();
+      FileState fileState = server.getFileState(path);
+      return ProtoBufferHelper.convert(fileState);
     } catch (IOException e) {
       throw new ServiceException(e);
     }

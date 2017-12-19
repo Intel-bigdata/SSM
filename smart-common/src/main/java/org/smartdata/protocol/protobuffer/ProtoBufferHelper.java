@@ -36,8 +36,8 @@ import org.smartdata.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.protocol.ClientServerProto.CompactFileStateProto;
 import org.smartdata.protocol.ClientServerProto.CompressionFileStateProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
-import org.smartdata.protocol.ClientServerProto.S3FileStateProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.protocol.ClientServerProto.S3FileStateProto;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -204,5 +204,21 @@ public class ProtoBufferHelper {
       default:
     }
     return fileState;
+  }
+
+  public static GetFileStateResponseProto convert(FileState fileState) {
+    GetFileStateResponseProto.Builder builder = GetFileStateResponseProto.newBuilder();
+    builder.setPath(fileState.getPath())
+        .setType(fileState.getFileType().getValue())
+        .setStage(fileState.getFileStage().getValue());
+    // Set corresponding segment
+    /*if (fileState instanceof CompressionFileState) {
+      builder.setCompressionFileState();
+    } else if (fileState instanceof CompactFileState) {
+      builder.setCompactFileState();
+    } else if (fileState instanceof S3FileState) {
+      builder.setS3FileState();
+    }*/
+    return builder.build();
   }
 }

@@ -140,6 +140,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
+    fileStateDao = new FileStateDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
