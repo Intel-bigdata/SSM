@@ -15,31 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server;
+package org.apache.hadoop.hdfs;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.smartdata.client.SmartClient;
-import org.smartdata.metastore.MetaStore;
+import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.smartdata.model.FileState;
-import org.smartdata.model.NormalFileState;
 
-public class TestSmartClient extends MiniSmartClusterHarness {
+import java.io.IOException;
 
-  @Test
-  public void testGetFileState() throws Exception {
-    MetaStore metaStore = ssm.getMetaStore();
-    String path = "/file1";
-    FileState fileState = new NormalFileState(path);
-
-    SmartClient client = new SmartClient(smartContext.getConf());
-    FileState fileState1;
-    // No entry in file_state table (Normal type as default)
-    fileState1 = client.getFileState(path);
-    Assert.assertEquals(fileState, fileState1);
-
-    metaStore.insertUpdateFileState(fileState);
-    fileState1 = client.getFileState(path);
-    Assert.assertEquals(fileState, fileState1);
+public class S3InputStream extends SmartInputStream {
+  S3InputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+      FileState fileState) throws IOException, UnresolvedLinkException {
+    super(dfsClient, src, verifyChecksum, fileState);
   }
 }
