@@ -63,7 +63,7 @@
 
   <property>
     <name>smart.namespace.batch</name>
-    <value>200</value>
+    <value>500</value>
     <description>Batch number of Namespace (Inotify) consumer batch</description>
   </property>
 
