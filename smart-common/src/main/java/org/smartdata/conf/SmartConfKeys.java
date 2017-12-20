@@ -70,7 +70,7 @@ public class SmartConfKeys {
   public static final int SMART_RULE_EXECUTORS_DEFAULT = 5;
 
   public static final String SMART_CMDLET_EXECUTORS_KEY = "smart.cmdlet.executors";
-  public static final int SMART_CMDLET_EXECUTORS_DEFAULT = 10;
+  public static final int SMART_CMDLET_EXECUTORS_DEFAULT = 40;
 
   // Keep it only for test
   public static final String SMART_ENABLE_ZEPPELIN_WEB = "smart.zeppelin.web.enable";
