@@ -62,9 +62,9 @@
   </property>
 
   <property>
-    <name>smart.namespace.batch</name>
+    <name>smart.namespace.fetcher.batch</name>
     <value>500</value>
-    <description>Batch number of Namespace (Inotify) consumer batch</description>
+    <description>Batch size of Namespace fetcher</description>
   </property>
 
   <property>

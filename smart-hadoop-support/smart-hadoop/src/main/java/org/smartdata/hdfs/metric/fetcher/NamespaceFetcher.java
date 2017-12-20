@@ -137,7 +137,9 @@ public class NamespaceFetcher {
       this.client = client;
       this.conf = conf;
       String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-      defaultBatchSize = conf.getInt(SmartConfKeys.SMART_NAMESPACE_BATCH, 200);
+      defaultBatchSize = conf.getInt(SmartConfKeys
+              .SMART_NAMESPACE_FETCHER_BATCH_KEY,
+          SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
       if (configString == null){
         configString = "";
       }
@@ -156,7 +158,9 @@ public class NamespaceFetcher {
       this.client = client;
       this.conf = new SmartConf();
       String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-      defaultBatchSize = conf.getInt(SmartConfKeys.SMART_NAMESPACE_BATCH, 200);
+      defaultBatchSize = conf.getInt(SmartConfKeys
+          .SMART_NAMESPACE_FETCHER_BATCH_KEY,
+          SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
       if (configString == null){
         configString = "";
       }
