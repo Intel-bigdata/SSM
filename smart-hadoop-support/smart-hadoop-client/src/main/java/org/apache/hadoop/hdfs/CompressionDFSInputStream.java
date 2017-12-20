@@ -219,7 +219,8 @@ public class CompressionDFSInputStream extends DFSInputStream {
 
   @Override
   public FileEncryptionInfo getFileEncryptionInfo() {
-    throw new RuntimeException("GetFileEncryptionInfo not supported for compressed file");
+//    throw new RuntimeException("GetFileEncryptionInfo not supported for compressed file");
+    return  super.getFileEncryptionInfo();
   }
 
   @Override
