@@ -18,10 +18,8 @@
 package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
-import org.apache.hadoop.fs.Hdfs;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
@@ -55,6 +53,8 @@ public class CompressionAction extends HdfsAction {
 
   private String filePath;
   private int bufferSize = 10 * 1024 * 1024;
+  private int UserDefinedbuffersize;
+  private int Calculatedbuffersize;
 
   private SmartFileCompressionInfo compressionInfo;
 
@@ -63,7 +63,7 @@ public class CompressionAction extends HdfsAction {
     super.init(args);
     this.filePath = args.get(FILE_PATH);
     if (args.containsKey(BUF_SIZE)) {
-      this.bufferSize = Integer.valueOf(args.get(BUF_SIZE));
+      this.UserDefinedbuffersize = Integer.valueOf(args.get(BUF_SIZE));
     }
   }
 
@@ -77,14 +77,28 @@ public class CompressionAction extends HdfsAction {
     if (!dfsClient.exists(filePath)) {
       throw new ActionException("ReadFile Action fails, file doesn't exist!");
     }
-    DFSInputStream dfsInputStream = dfsClient.open(filePath);
-    compressionInfo = new SmartFileCompressionInfo(filePath, bufferSize);
 
     // Generate compressed file
-    String compressedFileName = "/tmp/" + System.currentTimeMillis() + ".ssm_snappy";
+    String compressedFileName = "/tmp/ssm" + filePath + "." + System.currentTimeMillis() + ".ssm_snappy";
     HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
     short replication = srcFile.getReplication();
     long blockSize = srcFile.getBlockSize();
+    long fileSize = srcFile.getLen();
+    //The capacity of originalPos and compressedPos is 5000 in database 
+    this.Calculatedbuffersize = (int)fileSize/5000;
+    
+    //Determine the actual buffersize
+    if(UserDefinedbuffersize < bufferSize || UserDefinedbuffersize < Calculatedbuffersize){
+      if(bufferSize <= Calculatedbuffersize){
+        LOG.warn("User defined buffersize is too small,use the calculated buffersize:" + Calculatedbuffersize );
+      }else{
+        LOG.warn("User defined buffersize is too small,use the default buffersize:" + bufferSize );
+      }
+    }
+    bufferSize = Math.max(Math.max(UserDefinedbuffersize,Calculatedbuffersize),bufferSize);
+    
+    DFSInputStream dfsInputStream = dfsClient.open(filePath);
+    compressionInfo = new SmartFileCompressionInfo(filePath, bufferSize);
     compressionInfo.setOriginalLength(srcFile.getLen());
     OutputStream compressedOutputStream = dfsClient.create(compressedFileName,
       true, replication, blockSize);
