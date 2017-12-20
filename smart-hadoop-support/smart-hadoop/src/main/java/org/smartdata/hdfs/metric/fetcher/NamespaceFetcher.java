@@ -17,7 +17,6 @@
  */
 package org.smartdata.hdfs.metric.fetcher;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
@@ -138,6 +137,9 @@ public class NamespaceFetcher {
       this.client = client;
       this.conf = conf;
       String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      defaultBatchSize = conf.getInt(SmartConfKeys
+              .SMART_NAMESPACE_FETCHER_BATCH_KEY,
+          SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
       if (configString == null){
         configString = "";
       }
@@ -156,6 +158,9 @@ public class NamespaceFetcher {
       this.client = client;
       this.conf = new SmartConf();
       String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      defaultBatchSize = conf.getInt(SmartConfKeys
+          .SMART_NAMESPACE_FETCHER_BATCH_KEY,
+          SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
       if (configString == null){
         configString = "";
       }
@@ -186,7 +191,7 @@ public class NamespaceFetcher {
             LOG.error("Current batch actual size = "
                 + currentBatch.actualSize(), e);
           }
-          this.currentBatch = new FileInfoBatch(DEFAULT_BATCH_SIZE);
+          this.currentBatch = new FileInfoBatch(defaultBatchSize);
         }
 
         if (this.batches.isEmpty()) {

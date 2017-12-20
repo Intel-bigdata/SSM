@@ -62,9 +62,21 @@
   </property>
 
   <property>
+    <name>smart.namespace.fetcher.batch</name>
+    <value>500</value>
+    <description>Batch size of Namespace fetcher</description>
+  </property>
+
+  <property>
     <name>smart.rule.executors</name>
     <value>5</value>
     <description>Max number of rules that can be executed in parallel</description>
+  </property>
+
+  <property>
+    <name>smart.cmdlet.executors</name>
+    <value>40</value>
+    <description>Max number of cmdlets that can be executed in parallel on agent</description>
   </property>
 
   <property>
