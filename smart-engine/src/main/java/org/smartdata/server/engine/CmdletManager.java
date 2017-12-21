@@ -160,7 +160,7 @@ public class CmdletManager extends AbstractService {
   }
 
   private void reloadPendingCmdlets() throws IOException {
-    LOG.info("Reloading Pending Cmdlets from Database.");
+    LOG.info("Reloading pending cmdlets from database.");
     List<CmdletInfo> cmdletInfos = null;
     try {
       cmdletInfos = metaStore.getCmdlets(CmdletState.PENDING);
@@ -172,26 +172,59 @@ public class CmdletManager extends AbstractService {
       return;
     }
     for (CmdletInfo cmdletInfo : cmdletInfos) {
-      LOG.debug(
-          String.format("Reload Pending Cmdlet -> [ %s ]", cmdletInfo.getParameters()));
-      List<ActionInfo> actionInfos = null;
-      if (cmdletInfo.getAids().size() != 0) {
-        for (long aid : cmdletInfo.getAids()) {
-          LOG.debug("ActionId -> [ {} ] marked as Failed", aid);
-          try {
-            metaStore.markActionFailed(aid);
-          } catch (MetaStoreException e) {
-            LOG.debug("ActionId -> [ {} ] cannot marked as Failed", aid, e);
-          }
-        }
-      }
-      cmdletInfo.setState(CmdletState.FAILED);
+      LOG.debug(String.format("Reload pending cmdlet: {}", cmdletInfo));
       try {
-        metaStore.updateCmdlet(cmdletInfo);
-      } catch (MetaStoreException e1) {
-        LOG.error("{} marked as failed error",
-            cmdletInfo, e1);
+        List<ActionInfo> actionInfosInDB = metaStore.getActions(cmdletInfo.getAids());
+        int actionSize = new CmdletDescriptor(cmdletInfo.getParameters()).actionSize();
+        if (actionInfosInDB == null || actionInfosInDB.size() != actionSize) {
+          LOG.debug("Mark the action as failed for pending cmdlet: CmdletId -> [ {} ]",
+                  cmdletInfo.getCid());
+          for (long aid : cmdletInfo.getAids()) {
+            try {
+              metaStore.markActionFailed(aid);
+            } catch (MetaStoreException e) {
+              LOG.debug("ActionId -> [ {} ] cannot be marked as Failed", aid, e);
+            }
+          }
+          LOG.info("Get actions by parsing pending cmdlet: {}", cmdletInfo);
+          List<ActionInfo> actionInfosByParse = createActionInfos(
+                  new CmdletDescriptor(cmdletInfo.getParameters()), cmdletInfo.getCid());
+          List<Long> aids = new ArrayList<>();
+          for (ActionInfo actionInfo : actionInfosByParse) {
+            aids.add(actionInfo.getActionId());
+          }
+          cmdletInfo.setAids(aids);
+          syncCmdAction(cmdletInfo, actionInfosByParse, false);
+        } else {
+          syncCmdAction(cmdletInfo, actionInfosInDB, true);
+        }
+      } catch (MetaStoreException e) {
+        LOG.error("Get actions from database error!");
+        return;
+      } catch (ParseException ex) {
+        LOG.error("Parse error for pending cmdlet: {}", cmdletInfo);
+        return;
       }
+//      List<ActionInfo> actionInfos = null;
+//      if (cmdletInfo.getAids().size() != 0) {
+//        for (long aid : cmdletInfo.getAids()) {
+//          LOG.debug("ActionId -> [ {} ] marked as Failed", aid);
+//          try {
+//            metaStore.markActionFailed(aid);
+//          } catch (MetaStoreException e) {
+//            LOG.debug("ActionId -> [ {} ] cannot marked as Failed", aid, e);
+//          }
+//        }
+//      }
+//      cmdletInfo.setState(CmdletState.FAILED);
+
+//      try {
+//        metaStore.updateCmdlet(cmdletInfo);
+//      } catch (MetaStoreException e1) {
+//        LOG.error("{} marked as failed error",
+//            cmdletInfo, e1);
+//      }
+
       // LOG.debug(String.format("Received Cmdlet -> [ %s ]",
       //     cmdletDescriptor.getCmdletString()));
       // Check action names
@@ -254,7 +287,11 @@ public class CmdletManager extends AbstractService {
       metaStore.insertCmdlet(cmdletInfo);
       if (!actionsInDB) {
         metaStore.insertActions(
-            actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+                actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+      } else {
+        for (ActionInfo actionInfo : actionInfos) {
+          metaStore.insertAction(actionInfo);
+        }
       }
     } catch (MetaStoreException e) {
       LOG.error("{} Sync with DB error", cmdletInfo, e);
@@ -344,7 +381,7 @@ public class CmdletManager extends AbstractService {
     // Let Scheduler check actioninfo onsubmit and add them to cmdletinfo
     checkActionsOnSubmit(cmdletInfo, actionInfos);
     // Insert cmdletinfo and actionInfos to metastore and cache, add locks if necessary
-    syncCmdAction(cmdletInfo, actionInfos);
+    syncCmdAction(cmdletInfo, actionInfos, false);
     return cmdletInfo.getCid();
   }
 
