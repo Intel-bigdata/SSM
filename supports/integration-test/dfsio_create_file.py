@@ -1,4 +1,3 @@
-import os
 import sys
 from util import *
 
@@ -15,9 +14,9 @@ def create_file_DFSIO(num):
     for i in range(num):
         subprocess.call(dfsio_cmd)
         subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
-                  TEST_DIR + str(i) + "_control")
+                        TEST_DIR + str(i) + "_control")
         subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
-                  TEST_DIR + str(i) + "_data")
+                        TEST_DIR + str(i) + "_data")
 
 
 if __name__ == '__main__':
@@ -26,4 +25,6 @@ if __name__ == '__main__':
         num = int(sys.argv[1])
     except ValueError:
         print "Usage: python dfsio_create_file [num]"
+    except IndexError:
+        pass
     create_file_DFSIO(num)
