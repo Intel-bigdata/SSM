@@ -1,19 +1,20 @@
 import unittest
 from util import *
-import thread
-import os
+from threading import Thread
 
 FILE_SIZE = 1024 * 1024
 
+
 def test_create_100M_0KB_thread(max_number):
-     cids = []
-     dir_name = TEST_DIR + random_string()
-     # 500 dirs
-     for j in range(max_number):
+    cids = []
+    dir_name = TEST_DIR + random_string()
+    # 500 dirs
+    for j in range(max_number):
         # each has 200K files
         cid = create_file(dir_name + "/" + str(j), 0)
-     cids.append(cid)
-     wait_for_cmdlets(cids)
+        cids.append(cid)
+    wait_for_cmdlets(cids)
+
 
 class ResetEnv(unittest.TestCase):
     def test_delete_all_rules(self):
@@ -46,16 +47,15 @@ class ResetEnv(unittest.TestCase):
         Each time generate 100K * 2 files (100K io_data and 100K io_control)
         """
         dir_number = 50
-        dfsio_cmd = "hadoop jar /usr/lib/hadoop-mapreduce/hadoop-" + \
-            "mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
+        dfsio_cmd = "hadoop jar $HADOOP_HOME/share/hadoop/mapreduce" + \
+            "/hadoop-mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
             "-write -nrFiles 10000 -fileSize 0KB"
         for i in range(dir_number):
             subprocess.call(dfsio_cmd)
             subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
-                      TEST_DIR + str(i) + "_control")
+                            TEST_DIR + str(i) + "_control")
             subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
-                      TEST_DIR + str(i) + "_data")
-
+                            TEST_DIR + str(i) + "_data")
 
     def test_create_10M_DFSIO(self):
         """
@@ -63,23 +63,22 @@ class ResetEnv(unittest.TestCase):
         Each time generate 100K * 2 files (100K io_data and 100K io_control)
         """
         dir_number = 500
-        dfsio_cmd = "hadoop jar /usr/lib/hadoop-mapreduce/hadoop-" + \
-            "mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
+        dfsio_cmd = "hadoop jar $HADOOP_HOME/share/hadoop/mapreduce" + \
+            "/hadoop-mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
             "-write -nrFiles 10000 -fileSize 0KB"
         for i in range(dir_number):
             subprocess.call(dfsio_cmd)
             subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
-                      TEST_DIR + str(i) + "_control")
+                            TEST_DIR + str(i) + "_control")
             subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
-                      TEST_DIR + str(i) + "_data")
-
+                            TEST_DIR + str(i) + "_data")
 
     def test_create_100M_0KB_parallel(self):
         max_number = 200000
-        dir_number = 500
+        dir_number = 50
         for i in range(dir_number):
-            thread.start_new_thread(test_create_100M_0KB_thread,(max_number))
-
+            t = Thread(target=test_create_100M_0KB_thread, args=(max_number,))
+            t.start()
 
     def test_create_100M_0KB(self):
         """
