@@ -185,7 +185,7 @@ Configure SSM
 Deploy SSM
 ---------------------------------------------------------------------------------
 
-SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone servie mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode.
+SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode.
    
    * Standalone SSM Service
    
@@ -391,7 +391,7 @@ Performance Tuning
     **smart.cmdlet.executors**
 
     Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
-    If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under /conf directory. Here is an example to change the action execution paralliem to 50.
+    If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under /conf directory. Here is an example to change the action execution parallelism to 50.
 
      ```xml
      <property>
@@ -422,7 +422,19 @@ Performance Tuning
 
       SSM service restart is required after the configuration changes.
 
-3. Disable SSM Client
+3. Batch Size of Namespace fetcher
+
+    SSM will fetch/sync namespace from namenode when it is started. According to our tests, a large namespace may lead to long start up time. To avoid this, we add a parameter named `smart.namespace.fetcher.batch`, its default value is 500. You can change it if namespace is very large, e.g., 100M or more. A larger batch size will greatly speed up fetcher efficiency, and reduce start up time.
+
+    ```xml
+    <property>
+        <name>smart.namespace.fetcher.batch</name>
+        <value>500</value>
+        <description>Batch size of Namespace fetcher</description>
+    </property>
+    ```
+
+4. Disable SSM Client
 
     For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by creating file "/tmp/SMART_CLIENT_DISABLED_ID_FILE" on that node's local file system. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
