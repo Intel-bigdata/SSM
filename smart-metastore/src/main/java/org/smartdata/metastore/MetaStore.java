@@ -1045,7 +1045,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throws MetaStoreException {
     LOG.debug("Insert Action ID {}", actionInfo.getActionId());
     try {
-      actionDao.insert(actionInfo);
+      if (getActionById(actionInfo.getActionId()) != null) {
+        actionDao.update(actionInfo);
+      } else {
+        actionDao.insert(actionInfo);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
