@@ -5,12 +5,12 @@ import os
 
 FILE_SIZE = 1024 * 1024
 
-def test_create_100M_0KB_thread(i,max_number):
+def test_create_100M_0KB_thread(max_number):
      cids = []
-     dir_name = TEST_DIR + str(i)
-     # 200 dirs
+     dir_name = TEST_DIR + random_string()
+     # 500 dirs
      for j in range(max_number):
-        # each has 500K files
+        # each has 200K files
         cid = create_file(dir_name + "/" + str(j), 0)
      cids.append(cid)
      wait_for_cmdlets(cids)
@@ -75,10 +75,10 @@ class ResetEnv(unittest.TestCase):
 
 
     def test_create_100M_0KB_parallel(self):
-        max_number = 500000
-        dir_number = 200
+        max_number = 200000
+        dir_number = 500
         for i in range(dir_number):
-            thread.start_new_thread(test_create_100M_0KB_thread,(i, max_number,))
+            thread.start_new_thread(test_create_100M_0KB_thread,(max_number))
 
 
     def test_create_100M_0KB(self):
