@@ -5,6 +5,15 @@ import os
 
 FILE_SIZE = 1024 * 1024
 
+def test_create_100M_0KB_thread(i,max_number):
+     cids = []
+     dir_name = TEST_DIR + str(i)
+     # 200 dirs
+     for j in range(max_number):
+        # each has 500K files
+        cid = create_file(dir_name + "/" + str(j), 0)
+     cids.append(cid)
+     wait_for_cmdlets(cids)
 
 class ResetEnv(unittest.TestCase):
     def test_delete_all_rules(self):
@@ -48,31 +57,6 @@ class ResetEnv(unittest.TestCase):
                       TEST_DIR + str(i) + "_data")
 
 
-    def test_create_10M_DFSIO_thread(self,i,dfsio_cmd):
-            subprocess.call(dfsio_cmd)
-            subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
-                            TEST_DIR + str(i) + "_control")
-            subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
-                            TEST_DIR + str(i) + "_data")
-
-
-    def test_create_10M_DFSIO_parallel(self):
-        """
-        Using DFSIO to generte 10M files.
-        Each time generate 100K * 2 files (100K io_data and 100K io_control)
-        All of the operations run parallel
-        """
-        dir_number = 500
-        dfsio_cmd = "hadoop jar /usr/lib/hadoop-mapreduce/hadoop-" + \
-                    "mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
-                    "-write -nrFiles 10000 -fileSize 0KB"
-        for i in range(dir_number):
-            try:
-               thread.start_new_thread( test_create_10M_DFSIO_thread, (i, , ) )
-            except:
-               print "Error: unable to start thread"
-
-
     def test_create_10M_DFSIO(self):
         """
         Using DFSIO to generte 10M files.
@@ -90,22 +74,11 @@ class ResetEnv(unittest.TestCase):
                       TEST_DIR + str(i) + "_data")
 
 
-    def test_create_100M_0KB_thread(self,i,max_number):
-        cids = []
-        dir_name = TEST_DIR + str(i)
-        # 200 dirs
-        for j in range(max_number):
-            # each has 500K files
-            cid = create_file(dir_name + "/" + str(j), 0)
-        cids.append(cid)
-        wait_for_cmdlets(cids)
-
-
     def test_create_100M_0KB_parallel(self):
         max_number = 500000
         dir_number = 200
         for i in range(dir_number):
-            test_create_100M_0KB_thread(self,i,max_number)
+            thread.start_new_thread(test_create_100M_0KB_thread,(i, max_number,))
 
 
     def test_create_100M_0KB(self):
