@@ -1,9 +1,9 @@
 Transparent Cluster Disaster Recovery
 =============
 
-Apache Hadoop is architected to operate efficiently at scale for normal hardware failures within a datacenter. It is not designed today to handle datacenter failures. Although HDFS is not designed for deploy spanning multiple datacenters, replicating data from one location to another is common practice for disaster recovery and global service availability.
+Apache Hadoop is architected to operate efficiently at scale for normal hardware failures within a data center. It is not designed today to handle data center failures. Although HDFS is not designed for deploy spanning multiple data centers, replicating data from one location to another is common practice for disaster recovery and global service availability.
 
-There are lots of ideas contributed to the community in the past about how to solve the notable problem, like in the issue [HDFS-5442](https://issues.apache.org/jira/browse/HDFS-5442). Ideas in HDFS-5442 enlight us to propose a new solution, which aims to provide a practical, low latency and high throughput HDFS data sync up between clusters for disaster recovery.
+There are lots of ideas contributed to the community in the past about how to solve the notable problem, like in the issue [HDFS-5442](https://issues.apache.org/jira/browse/HDFS-5442). Ideas in HDFS-5442 enlighten us to propose a new solution, which aims to provide a practical, low latency and high throughput HDFS data sync up between clusters for disaster recovery.
 
 Limitations of DistCp
 =====================
@@ -23,7 +23,7 @@ Use Cases
 
 ### 1. Synchronous write
 
-For critical file & directory, apply the synchronous writing rule to the files, enforce synchronous data writing. In this case, SmartDFSClient will replace the existing HDFS Client, be responsible to save the data to both primary cluster and secondary cluster. With synchronous writing, data is avaiable in both primary cluster and secondary cluster. The drawbacks is longer write latency.
+For critical file & directory, apply the synchronous writing rule to the files, enforce synchronous data writing. In this case, SmartDFSClient will replace the existing HDFS Client, be responsible to save the data to both primary cluster and secondary cluster. With synchronous writing, data is available in both primary cluster and secondary cluster. The drawbacks is longer write latency.
 
 <img src="./image/dr-sync-backup.png" width="681" height="138" />
  
@@ -35,7 +35,7 @@ For those none-critical files, apply the asynchronous backup rule to the files. 
 
 ### 3. Transparent read
 
-When above application reads data content, by default, data will be read from primary cluster to gurantee that the up-to-data data is returned. But if data accuracy can be lowered down a bit or Administrator know the two copies of data in primary and secondary cluster are the same, read operation can be optimized by appling rule to files and directories. Here is an example of direct read from backup cluster, 
+When above application reads data content, by default, data will be read from primary cluster to guarantee that the up-to-data data is returned. But if data accuracy can be lowered down a bit or Administrator know the two copies of data in primary and secondary cluster are the same, read operation can be optimized by applying rule to files and directories. Here is an example of direct read from backup cluster, 
 
 <img src="./image/dr-read-direct.png" width="681" height="158" />
 
@@ -45,7 +45,7 @@ or read from either primary cluster or secondary cluster is acceptable,
 
 ### 4. Replication between federation namespaces
 
-There is also need to backup files between different namespaces under a HDFS federation cluster, or migrate files drom one namespace to another namespace. With the help of SSM, we can also achieve this process efficiently. The fast copy idea in [HDFS-2139](https://issues.apache.org/jira/browse/HDFS-2139) will be referenced during the implementation. 
+There is also need to backup files between different namespaces under a HDFS federation cluster, or migrate files from one namespace to another namespace. With the help of SSM, we can also achieve this process efficiently. The fast copy idea in [HDFS-2139](https://issues.apache.org/jira/browse/HDFS-2139) will be referenced during the implementation. 
 
 <img src="./image/dr-backup-between-namespace.png" width="681" height="158" />
 
@@ -63,7 +63,7 @@ The following list the targets of this design:
 Architecture
 ============
 
-The basis of this solution is to have one primary Hadoop cluster, one or more secondary Hadoop clusters. Secondary cluster will be continuously updated with the data from the primary cluster in either a synchronous method or an asynchronous method. In this solution, we support both synchronously writing and asynchronously replication across datacenters for both namespace and data block. The following architecture diagram shows the overall architecture of this solution.
+The basis of this solution is to have one primary Hadoop cluster, one or more secondary Hadoop clusters. Secondary cluster will be continuously updated with the data from the primary cluster in either a synchronous method or an asynchronous method. In this solution, we support both synchronously writing and asynchronously replication across data centers for both namespace and data block. The following architecture diagram shows the overall architecture of this solution.
 
 <img src="./image/high-level-disaster-recovery-arch.png" width="481" height="408" />
 
