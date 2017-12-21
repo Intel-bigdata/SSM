@@ -93,7 +93,7 @@ public class Cmdlet implements Runnable {
       act.init(act.getArguments());
       act.run();
       if (!act.isSuccessful()) {
-        state = CmdletState.FAILED;
+        //state = CmdletState.FAILED;
         reportCurrentStatus();
         return;
       }
