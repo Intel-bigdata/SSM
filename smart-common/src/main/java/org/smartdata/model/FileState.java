@@ -18,6 +18,8 @@
 package org.smartdata.model;
 
 
+import java.util.Objects;
+
 /**
  * FileState.
  */
@@ -64,7 +66,7 @@ public class FileState {
 
   @Override
   public int hashCode() {
-    return path.hashCode();
+    return Objects.hash(path, fileType, fileStage);
   }
 
   /**
