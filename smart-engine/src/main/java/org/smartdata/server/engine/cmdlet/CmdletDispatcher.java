@@ -59,9 +59,20 @@ public class CmdletDispatcher {
   private Map<Long, ExecutorType> dispatchedToSrvs;
 
   // TODO: to be refined
-  private final Map<String, Integer> execCmdletSlots = new ConcurrentHashMap<>();
   private final int defaultSlots;
   private int index;
+
+  private final ExecutorType[] preferLocalTryList = new ExecutorType[]
+      {ExecutorType.LOCAL, ExecutorType.REMOTE_SSM, ExecutorType.AGENT};
+  private final ExecutorType[] preferRemoteSsmTryList = new ExecutorType[]
+      {ExecutorType.REMOTE_SSM, ExecutorType.AGENT, ExecutorType.LOCAL};
+  private final ExecutorType[] preferAgentTryList = new ExecutorType[]
+      {ExecutorType.AGENT, ExecutorType.LOCAL, ExecutorType.REMOTE_SSM};
+  private final CmdletDispatchPolicy[] roundRobinPolicies = new CmdletDispatchPolicy[] {
+      CmdletDispatchPolicy.PREFER_LOCAL,
+      CmdletDispatchPolicy.PREFER_REMOTE_SSM,
+      CmdletDispatchPolicy.PREFER_AGENT
+  };
 
   public CmdletDispatcher(SmartContext smartContext, CmdletManager cmdletManager,
       Queue<Long> scheduledCmdlets, Map<Long, LaunchCmdlet> idToLaunchCmdlet,
@@ -111,18 +122,15 @@ public class CmdletDispatcher {
     ExecutorType[] tryOrder;
     switch (policy) {
       case PREFER_LOCAL:
-        tryOrder = new ExecutorType[]
-            {ExecutorType.LOCAL, ExecutorType.REMOTE_SSM, ExecutorType.AGENT};
+        tryOrder = preferLocalTryList;
         break;
 
       case PREFER_REMOTE_SSM:
-        tryOrder = new ExecutorType[]
-            {ExecutorType.REMOTE_SSM, ExecutorType.AGENT, ExecutorType.LOCAL};
+        tryOrder = preferRemoteSsmTryList;
         break;
 
       case PREFER_AGENT:
-        tryOrder = new ExecutorType[]
-            {ExecutorType.AGENT, ExecutorType.LOCAL, ExecutorType.REMOTE_SSM};
+        tryOrder = preferAgentTryList;
         break;
 
       default:
@@ -159,25 +167,15 @@ public class CmdletDispatcher {
   }
 
   private CmdletDispatchPolicy getRoundrobinDispatchPolicy() {
-    int sum = 0;
-    for (int v : cmdExecSrvInsts) {
-      sum += v;
-    }
-    CmdletDispatchPolicy[] policies = new CmdletDispatchPolicy[] {
-        CmdletDispatchPolicy.PREFER_LOCAL,
-        CmdletDispatchPolicy.PREFER_REMOTE_SSM,
-        CmdletDispatchPolicy.PREFER_AGENT
-    };
-
-    int rev = index % sum;
+    int rev = index % cmdExecSrvTotalInsts;
     for (int i = 0; i < cmdExecSrvInsts.length; i++) {
       if (cmdExecSrvInsts[i] > 0 && rev < cmdExecSrvInsts[i]) {
-        return policies[i];
+        return roundRobinPolicies[i];
       } else {
         rev -= cmdExecSrvInsts[i];
       }
     }
-    return policies[0]; // not reachable
+    return roundRobinPolicies[0]; // not reachable
   }
 
   //Todo: pick the right service to stop cmdlet
@@ -208,16 +206,6 @@ public class CmdletDispatcher {
     return launchCmdlet;
   }
 
-  private void upDateCmdExecSrvInsts() {
-    for (int i = 0; i < cmdExecServices.length; i++) {
-      if (cmdExecServices[i] != null) {
-        cmdExecSrvInsts[i] = cmdExecServices[i].getNumNodes();
-      } else {
-        cmdExecSrvInsts[i] = 0;
-      }
-    }
-  }
-
   private class DispatchTask implements Runnable {
     private final CmdletDispatcher dispatcher;
     private long lastInfo = System.currentTimeMillis();
@@ -233,7 +221,6 @@ public class CmdletDispatcher {
 
     @Override
     public void run() {
-      statRound++;
       long curr = System.currentTimeMillis();
       if (curr - lastInfo >= 5000) {
         if (!(statDispatched == 0 && statRound == statNoMoreCmdlet)) {
@@ -250,13 +237,9 @@ public class CmdletDispatcher {
         statNoMoreCmdlet = 0;
         lastInfo = curr;
       }
+      statRound++;
 
-      if (!dispatcher.canDispatchMore()) {
-        statNoExecutorOrFull++;
-        return;
-      }
-
-      if (cmdExecSrvTotalInsts == 0) {
+      if (cmdExecSrvTotalInsts == 0 || !dispatcher.canDispatchMore()) {
         statNoExecutorOrFull++;
         return;
       }
