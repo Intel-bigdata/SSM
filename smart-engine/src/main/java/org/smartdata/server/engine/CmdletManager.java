@@ -85,6 +85,7 @@ public class CmdletManager extends AbstractService {
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
 
+  private int maxNumPendingCmdlets;
   private List<Long> pendingCmdlet;
   private List<Long> schedulingCmdlet;
   private Queue<Long> scheduledCmdlet;
@@ -118,6 +119,8 @@ public class CmdletManager extends AbstractService {
     this.purgeTask = new CmdletPurgeTask(context.getConf());
     this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
         idToLaunchCmdlet, runningCmdlets, schedulers);
+    maxNumPendingCmdlets = context.getConf().getInt(SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY,
+        SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_DEFAULT);
   }
 
   @VisibleForTesting
@@ -322,6 +325,10 @@ public class CmdletManager extends AbstractService {
 
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
     LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
+    if (maxNumPendingCmdlets <= pendingCmdlet.size() + schedulingCmdlet.size()) {
+      throw new IOException("Pending cmdlets exceeds value specified by key '"
+          + SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY + "' = " + maxNumPendingCmdlets);
+    }
     long submitTime = System.currentTimeMillis();
     CmdletInfo cmdletInfo =
       new CmdletInfo(
