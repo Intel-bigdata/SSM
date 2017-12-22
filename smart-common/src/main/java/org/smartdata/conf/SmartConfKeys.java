@@ -77,6 +77,9 @@ public class SmartConfKeys {
   public static final boolean SMART_ENABLE_ZEPPELIN_WEB_DEFAULT = true;
 
   // Cmdlets
+  public static final String SMART_CMDLET_MAX_NUM_PENDING_KEY =
+      "smart.cmdlet.max.num.pending";
+  public static final int SMART_CMDLET_MAX_NUM_PENDING_DEFAULT = 20000;
   public static final String SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY =
       "smart.cmdlet.hist.max.num.records";
   public static final int SMART_CMDLET_HIST_MAX_NUM_RECORDS_DEFAULT =
