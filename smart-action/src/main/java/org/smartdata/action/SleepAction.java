@@ -19,8 +19,6 @@ package org.smartdata.action;
 
 import org.smartdata.action.annotation.ActionSignature;
 
-import java.util.Map;
-
 @ActionSignature(
     actionId = "sleep",
     displayName = "sleep",
