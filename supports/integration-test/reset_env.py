@@ -17,30 +17,6 @@ def test_create_100M_0KB_thread(max_number):
         cids.append(cid)
     wait_for_cmdlets(cids)
 
-
-def cpu_count():
-    ''' Returns the number of CPUs in the system
-    '''
-    num = 1
-    if sys.platform == 'win32':
-        try:
-            num = int(os.environ['NUMBER_OF_PROCESSORS'])
-        except (ValueError, KeyError):
-            pass
-    elif sys.platform == 'darwin':
-        try:
-            num = int(os.popen('sysctl -n hw.ncpu').read())
-        except ValueError:
-            pass
-    else:
-        try:
-            num = os.sysconf('SC_NPROCESSORS_ONLN')
-        except (ValueError, OSError, AttributeError):
-            pass
-
-    return num
-
-
 def exec_commands(cmds):
     ''' Exec commands in parallel in multiple process
     (as much as we have CPU)
