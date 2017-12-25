@@ -818,9 +818,17 @@ public class CmdletManager extends AbstractService {
 
   public ActionGroup listActions(long pageIndex, long numPerPage,
       List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
+    List<ActionInfo> infos = metaStore.listPageAction((pageIndex - 1) * numPerPage,
+        numPerPage, orderBy, isDesc);
+    for (ActionInfo info : infos) {
+      ActionInfo memInfo = idToActions.get(info.getActionId());
+      if (memInfo != null) {
+        info.setCreateTime(memInfo.getCreateTime());
+        info.setProgress(memInfo.getProgress());
+      }
+    }
 
-    return new ActionGroup(metaStore.listPageAction((pageIndex - 1) * numPerPage,
-        numPerPage, orderBy, isDesc), metaStore.getCountOfAllAction());
+    return new ActionGroup(infos, metaStore.getCountOfAllAction());
   }
 
   public List<ActionInfo> getActions(long rid, int size) throws IOException {
