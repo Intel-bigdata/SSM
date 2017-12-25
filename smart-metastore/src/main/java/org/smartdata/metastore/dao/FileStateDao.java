@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.Map;
 
 public class FileStateDao {
+  private static final String TABLE_NAME = "file_state";
   private DataSource dataSource;
-  private final static String TABLE_NAME = "file_state";
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
