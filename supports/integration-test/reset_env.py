@@ -1,6 +1,8 @@
 import unittest
 from util import *
 from threading import Thread
+import sys, os, time
+from subprocess import Popen, list2cmdline
 
 FILE_SIZE = 1024 * 1024
 
@@ -15,6 +17,62 @@ def test_create_100M_0KB_thread(max_number):
         cids.append(cid)
     wait_for_cmdlets(cids)
 
+
+def cpu_count():
+    ''' Returns the number of CPUs in the system
+    '''
+    num = 1
+    if sys.platform == 'win32':
+        try:
+            num = int(os.environ['NUMBER_OF_PROCESSORS'])
+        except (ValueError, KeyError):
+            pass
+    elif sys.platform == 'darwin':
+        try:
+            num = int(os.popen('sysctl -n hw.ncpu').read())
+        except ValueError:
+            pass
+    else:
+        try:
+            num = os.sysconf('SC_NPROCESSORS_ONLN')
+        except (ValueError, OSError, AttributeError):
+            pass
+
+    return num
+
+
+def exec_commands(cmds):
+    ''' Exec commands in parallel in multiple process
+    (as much as we have CPU)
+    '''
+    if not cmds: return # empty list
+
+    def done(p):
+        return p.poll() is not None
+    def success(p):
+        return p.returncode == 0
+    def fail():
+        sys.exit(1)
+
+    max_task = cpu_count()
+    processes = []
+    while True:
+        while cmds and len(processes) < max_task:
+            task = cmds.pop()
+            print list2cmdline(task)
+            processes.append(Popen(task))
+
+        for p in processes:
+            if done(p):
+                if success(p):
+                    processes.remove(p)
+                else:
+                    fail()
+
+        if not processes and not cmds:
+            break
+        else:
+            time.sleep(0.05)
 
 class ResetEnv(unittest.TestCase):
     def test_delete_all_rules(self):
@@ -75,24 +133,17 @@ class ResetEnv(unittest.TestCase):
 
 
     def test_create_10K_0KB_DFSIO_parallel(self):
-        dir_name = TEST_DIR + random_string()
-
-        """
-        When there are so many thread is started, and the client cannot handles them,
-        please set process_group_size less
-        """
-        process_group_size = 200
-
-        file_index = 0;
-        for i in range(10000 / process_group_size):
-            process_group = []
-            for j in range(process_group_size):
-                process_group.append(subprocess.Popen("hdfs dfs -touchz dir_name/" + str(file_index)))
+        dir_num = 5
+        for i in range(dir_num):
+            file_index = 0
+            dir_name = TEST_DIR + random_string()
+            command_arr = []
+            for i in range(10000 / dir_num):
+                command_arr.append("hdfs dfs -touchz " + dir_name + "/" + str(file_index))
                 file_index = file_index + 1
+            exec_commands(command_arr)
 
-            # wait
-            for k in range(process_group_size):
-                process_group[k].wait()
+
 
     def test_create_100M_0KB_parallel(self):
         max_number = 200000
