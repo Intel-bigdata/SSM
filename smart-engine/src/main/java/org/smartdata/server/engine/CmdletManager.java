@@ -556,7 +556,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getCmdletById(cid);
     } catch (MetaStoreException e) {
-      LOG.error("CmdletId -> [ {} ], delete from DB error", cid, e);
+      LOG.error("CmdletId -> [ {} ], get CmdletInfo from DB error", cid, e);
       throw new IOException(e);
     }
   }
@@ -735,7 +735,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getActionById(actionID);
     } catch (MetaStoreException e) {
-      LOG.error("ActionId -> [ {} ], delete from DB error", actionID, e);
+      LOG.error("ActionId -> [ {} ], get ActionInfo from DB error", actionID, e);
       throw new IOException(e);
     }
   }
@@ -745,7 +745,7 @@ public class CmdletManager extends AbstractService {
     try {
       return metaStore.getNewCreatedActions(actionName, actionNum);
     } catch (MetaStoreException e) {
-      LOG.error("ActionName -> [ {} ], get from DB error", actionName, e);
+      LOG.error("ActionName -> [ {} ], list ActionInfo from DB error", actionName, e);
       throw new IOException(e);
     }
   }
