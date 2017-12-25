@@ -31,6 +31,7 @@ import java.util.Map;
 
 public class FileStateDao {
   private DataSource dataSource;
+  private final static String TABLE_NAME = "file_state";
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -42,32 +43,32 @@ public class FileStateDao {
 
   public void insertUpate(FileState fileState) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "REPLACE INTO file_state (path, type, stage) VALUES (?,?,?);";
+    String sql = "REPLACE INTO " + TABLE_NAME + " (path, type, stage) VALUES (?,?,?);";
     jdbcTemplate.update(sql, fileState.getPath(), fileState.getFileType().getValue(),
         fileState.getFileStage().getValue());
   }
 
   public FileState getByPath(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT * FROM file_state WHERE path = ?",
+    return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE path = ?",
         new Object[]{path}, new FileStateRowMapper());
   }
 
   public List<FileState> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM file_state",
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
         new FileStateRowMapper());
   }
 
   public void deleteByPath(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE FROM file_state WHERE path = ?";
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
     jdbcTemplate.update(sql, path);
   }
 
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE FROM file_state";
+    final String sql = "DELETE FROM " + TABLE_NAME;
     jdbcTemplate.execute(sql);
   }
 
