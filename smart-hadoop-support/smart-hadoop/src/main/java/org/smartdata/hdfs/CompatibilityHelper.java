@@ -20,6 +20,7 @@ package org.smartdata.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.SmartInputStreamFactory;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -78,4 +79,6 @@ public interface CompatibilityHelper {
   boolean setLen2Zero(DFSClient client, String src) throws IOException;
 
   boolean setLen2Zero(DistributedFileSystem fileSystem, String src) throws IOException;
+
+  SmartInputStreamFactory getSmartInputStreamFactory();
 }

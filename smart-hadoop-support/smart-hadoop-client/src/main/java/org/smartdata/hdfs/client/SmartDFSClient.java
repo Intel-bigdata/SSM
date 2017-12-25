@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.SmartInputStream;
+import org.apache.hadoop.hdfs.SmartInputStreamFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,9 +132,8 @@ public class SmartDFSClient extends DFSClient {
       throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
           + fileState.getFileType());
     }
-    DFSInputStream is = SmartInputStream.create(this, src,
+    DFSInputStream is = SmartInputStreamFactory.get().create(this, src,
         verifyChecksum, fileState);
-    //DFSInputStream is = super.open(src, buffersize, verifyChecksum);
     reportFileAccessEvent(src);
     return is;
   }

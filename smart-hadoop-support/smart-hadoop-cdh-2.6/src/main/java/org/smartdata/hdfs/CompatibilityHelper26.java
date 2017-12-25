@@ -22,6 +22,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.SmartInputStreamFactory;
+import org.apache.hadoop.hdfs.SmartInputStreamFactory26;
 import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
@@ -199,5 +201,10 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     //     fileSystem.getFileStatus(new Path(src)).getModificationTime());
 
     return true;
+  }
+
+  @Override
+  public SmartInputStreamFactory getSmartInputStreamFactory() {
+    return new SmartInputStreamFactory26();
   }
 }
