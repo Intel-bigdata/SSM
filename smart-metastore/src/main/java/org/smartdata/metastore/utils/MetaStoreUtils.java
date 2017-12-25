@@ -112,6 +112,7 @@ public class MetaStoreUtils {
             "sys_info",
             "cluster_info",
             "backup_file",
+            "file_state"
     };
     try {
       String url = conn.getMetaData().getURL();
@@ -165,7 +166,8 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS cluster_config",
         "DROP TABLE IF EXISTS backup_file",
         "DROP TABLE IF EXISTS sys_info",
-        "DROP TABLE IF EXISTS cluster_info"
+        "DROP TABLE IF EXISTS cluster_info",
+        "DROP TABLE IF EXISTS file_state"
     };
     String createEmptyTables[] =
         new String[] {
@@ -338,7 +340,12 @@ public class MetaStoreUtils {
               + " dest varchar(4096) NOT NULL,\n"
               + " period bigint(20) NOT NULL\n"
               + ") ;",
-          "CREATE INDEX backup_file_rid_idx ON backup_file (rid);"
+          "CREATE INDEX backup_file_rid_idx ON backup_file (rid);",
+          "CREATE TABLE file_state (\n"
+              + " path varchar(1000) PRIMARY KEY,\n"
+              + " type tinyint(4) NOT NULL,\n"
+              + " stage tinyint(4) NOT NULL\n"
+              + ");"
         };
     try {
       String url = conn.getMetaData().getURL();

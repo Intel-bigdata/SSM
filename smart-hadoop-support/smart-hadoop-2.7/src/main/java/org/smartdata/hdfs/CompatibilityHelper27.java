@@ -22,6 +22,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.SmartInputStreamFactory;
+import org.apache.hadoop.hdfs.SmartInputStreamFactory27;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -173,5 +175,8 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return fileSystem.truncate(new Path(src), 0);
   }
 
-
+  @Override
+  public SmartInputStreamFactory getSmartInputStreamFactory() {
+    return new SmartInputStreamFactory27();
+  }
 }

@@ -23,6 +23,8 @@ import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.security.KerberosInfo;
 import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 
@@ -34,4 +36,8 @@ public interface ClientProtocolProtoBuffer {
   ReportFileAccessEventResponseProto
   reportFileAccessEvent(RpcController controller,
       ReportFileAccessEventRequestProto req) throws ServiceException;
+
+  GetFileStateResponseProto
+  getFileState(RpcController controller,
+      GetFileStateRequestProto req) throws ServiceException;
 }

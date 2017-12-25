@@ -24,6 +24,8 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.FileState;
+import org.smartdata.model.NormalFileState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.protocol.AdminServerProto.ActionDescriptorProto;
@@ -31,7 +33,11 @@ import org.smartdata.protocol.AdminServerProto.ActionInfoProto;
 import org.smartdata.protocol.AdminServerProto.ActionInfoProto.Builder;
 import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.protocol.AdminServerProto.RuleInfoProto;
+import org.smartdata.protocol.ClientServerProto.CompactFileStateProto;
+import org.smartdata.protocol.ClientServerProto.CompressionFileStateProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.protocol.ClientServerProto.S3FileStateProto;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -169,5 +175,50 @@ public class ProtoBufferHelper {
         .setDisplayName(ac.getDisplayName())
         .setUsage(ac.getUsage())
         .build();
+  }
+
+  public static FileState convert(GetFileStateResponseProto proto) {
+    FileState fileState = null;
+    String path = proto.getPath();
+    FileState.FileType type = FileState.FileType.fromValue(proto.getType());
+    FileState.FileStage stage = FileState.FileStage.fromValue(proto.getStage());
+    switch (type) {
+      case NORMAL:
+        fileState = new NormalFileState(path);
+        break;
+      case COMPACT:
+        CompactFileStateProto compactProto = proto.getCompactFileState();
+        // convert to CompactFileState
+        // fileState = convert(path, type, stage, compactProto);
+        break;
+      case COMPRESSION:
+        CompressionFileStateProto compressionProto = proto.getCompressionFileState();
+        // convert to CompressionFileState
+        // fileState = convert(path, type, stage, compressionProto);
+        break;
+      case S3:
+        S3FileStateProto s3Proto = proto.getS3FileState();
+        // convert to S3FileState
+        // fileState = convert(path, type, stage, s3Proto);
+        break;
+      default:
+    }
+    return fileState;
+  }
+
+  public static GetFileStateResponseProto convert(FileState fileState) {
+    GetFileStateResponseProto.Builder builder = GetFileStateResponseProto.newBuilder();
+    builder.setPath(fileState.getPath())
+        .setType(fileState.getFileType().getValue())
+        .setStage(fileState.getFileStage().getValue());
+    // Set corresponding segment
+    /*if (fileState instanceof CompressionFileState) {
+      builder.setCompressionFileState();
+    } else if (fileState instanceof CompactFileState) {
+      builder.setCompactFileState();
+    } else if (fileState instanceof S3FileState) {
+      builder.setS3FileState();
+    }*/
+    return builder.build();
   }
 }

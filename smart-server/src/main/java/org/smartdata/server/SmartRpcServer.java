@@ -33,6 +33,7 @@ import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.FileState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.protocol.AdminServerProto;
@@ -254,5 +255,10 @@ public class SmartRpcServer implements SmartServerProtocols {
   @Override
   public List<ActionDescriptor> listActionsSupported() throws IOException {
     return ActionRegistry.supportedActions();
+  }
+
+  @Override
+  public FileState getFileState(String filePath) throws IOException {
+    return ssm.getMetaStore().getFileState(filePath);
   }
 }
