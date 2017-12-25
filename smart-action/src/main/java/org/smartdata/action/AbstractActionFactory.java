@@ -34,6 +34,7 @@ public abstract class AbstractActionFactory implements ActionFactory {
 
   static {
     addAction(HelloAction.class);
+    addAction(SleepAction.class);
     addAction(SyncAction.class);
   }
 
