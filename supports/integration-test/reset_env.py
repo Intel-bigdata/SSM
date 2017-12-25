@@ -73,6 +73,27 @@ class ResetEnv(unittest.TestCase):
             subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
                             TEST_DIR + str(i) + "_data")
 
+
+    def test_create_10K_0KB_DFSIO_parallel(self):
+        dir_name = TEST_DIR + random_string()
+
+        """
+        When there are so many thread is started, and the client cannot handles them,
+        please set process_group_size less
+        """
+        process_group_size = 200
+
+        file_index = 0;
+        for i in range(10000 / process_group_size):
+            process_group = []
+            for j in range(process_group_size):
+                process_group.append(subprocess.Popen("hdfs dfs -touchz dir_name/" + str(file_index)))
+                file_index = file_index + 1
+
+            # wait
+            for k in range(process_group_size):
+                process_group[k].wait()
+
     def test_create_100M_0KB_parallel(self):
         max_number = 200000
         dir_number = 50
