@@ -15,22 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol;
-
-import org.apache.hadoop.security.KerberosInfo;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metrics.FileAccessEvent;
-import org.smartdata.model.FileState;
-
-import java.io.IOException;
+package org.smartdata.model;
 
 /**
- * Interface between SmartClient and SmartServer.
+ * FileState for normal HDFS files.
  */
-@KerberosInfo(
-  serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
-public interface  SmartClientProtocol {
-  void reportFileAccessEvent(FileAccessEvent event) throws IOException;
-
-  FileState getFileState(String filePath) throws IOException;
+public class NormalFileState extends FileState {
+  public NormalFileState(String path) {
+    super(path, FileType.NORMAL, FileStage.DONE);
+  }
 }

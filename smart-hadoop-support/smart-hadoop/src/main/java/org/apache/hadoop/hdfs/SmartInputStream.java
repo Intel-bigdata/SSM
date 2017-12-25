@@ -15,22 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol;
+package org.apache.hadoop.hdfs;
 
-import org.apache.hadoop.security.KerberosInfo;
-import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.metrics.FileAccessEvent;
+import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
 
 /**
- * Interface between SmartClient and SmartServer.
+ * DFSInputStream for SSM.
  */
-@KerberosInfo(
-  serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
-public interface  SmartClientProtocol {
-  void reportFileAccessEvent(FileAccessEvent event) throws IOException;
+public abstract class SmartInputStream extends DFSInputStream {
+  protected final FileState fileState;
 
-  FileState getFileState(String filePath) throws IOException;
+  SmartInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+      FileState fileState) throws IOException, UnresolvedLinkException {
+    super(dfsClient, src, verifyChecksum);
+    this.fileState = fileState;
+  }
+
+  public FileState.FileType getType() {
+    return fileState.getFileType();
+  }
 }

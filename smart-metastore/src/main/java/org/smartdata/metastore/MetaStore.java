@@ -34,6 +34,7 @@ import org.smartdata.metastore.dao.DataNodeInfoDao;
 import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
+import org.smartdata.metastore.dao.FileStateDao;
 import org.smartdata.metastore.dao.GlobalConfigDao;
 import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
@@ -59,7 +60,9 @@ import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.FileState;
 import org.smartdata.model.GlobalConfig;
+import org.smartdata.model.NormalFileState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.StorageCapacity;
@@ -114,6 +117,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private BackUpInfoDao backUpInfoDao;
   private ClusterInfoDao clusterInfoDao;
   private SystemInfoDao systemInfoDao;
+  private FileStateDao fileStateDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -136,6 +140,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
+    fileStateDao = new FileStateDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -1960,5 +1965,43 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
+
+  public void insertUpdateFileState(FileState fileState) {
+    fileStateDao.insertUpate(fileState);
+    // Update corresponding table if fileState is a specific FileState
+    /*
+    if (fileState instanceof CompressFileState) {
+
+    } else if (fileState instanceof CompactFileState) {
+
+    } else if (fileState instanceof S3FileState) {
+
+    }
+    */
+  }
+
+  public FileState getFileState(String path) {
+    FileState fileState;
+    try {
+      fileState = fileStateDao.getByPath(path);
+    } catch (EmptyResultDataAccessException e) {
+      fileState = new NormalFileState(path);
+    }
+
+    // Fetch info from corresponding table to regenerate a specific FileState
+    switch (fileState.getFileType()) {
+      case NORMAL:
+        fileState = new NormalFileState(path);
+        break;
+      case COMPACT:
+        break;
+      case COMPRESSION:
+        break;
+      case S3:
+        break;
+      default:
+    }
+    return fileState;
   }
 }

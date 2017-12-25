@@ -20,6 +20,9 @@ package org.smartdata.protocol.protobuffer;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.FileState;
+import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.SmartClientProtocol;
 
@@ -50,6 +53,19 @@ public class ClientProtocolClientSideTranslator implements
             .build();
     try {
       rpcProxy.reportFileAccessEvent(null, req);
+    } catch (ServiceException e) {
+      throw ProtoBufferHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public FileState getFileState(String filePath) throws IOException {
+    GetFileStateRequestProto  req = GetFileStateRequestProto.newBuilder()
+        .setFilePath(filePath)
+        .build();
+    try {
+      GetFileStateResponseProto response = rpcProxy.getFileState(null, req);
+      return ProtoBufferHelper.convert(response);
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }

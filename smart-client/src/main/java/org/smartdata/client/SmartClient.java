@@ -23,6 +23,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
+import org.smartdata.model.FileState;
 import org.smartdata.protocol.SmartClientProtocol;
 import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
@@ -87,6 +88,11 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       checkOpen();
       server.reportFileAccessEvent(event);
     }
+  }
+
+  @Override
+  public FileState getFileState(String filePath) throws IOException {
+    return server.getFileState(filePath);
   }
 
   private boolean shouldIgnore(String path) {

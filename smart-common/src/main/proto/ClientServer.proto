@@ -31,7 +31,34 @@ message ReportFileAccessEventRequestProto {
 message ReportFileAccessEventResponseProto {
 }
 
+message GetFileStateRequestProto {
+  required string filePath = 1;
+}
+
+message CompressionFileStateProto {
+
+}
+
+message CompactFileStateProto {
+
+}
+
+message S3FileStateProto {
+
+}
+
+message GetFileStateResponseProto {
+  required string path = 1;
+  required int32 type = 2;
+  required int32 stage = 3;
+  optional CompressionFileStateProto compressionFileState = 4;
+  optional CompactFileStateProto compactFileState = 5;
+  optional S3FileStateProto s3FileState = 6;
+}
+
 service protoService {
   rpc reportFileAccessEvent (ReportFileAccessEventRequestProto)
   returns (ReportFileAccessEventResponseProto);
+  rpc getFileState (GetFileStateRequestProto)
+  returns (GetFileStateResponseProto);
 }
