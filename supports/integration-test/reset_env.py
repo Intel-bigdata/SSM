@@ -2,7 +2,7 @@ import unittest
 from util import *
 from threading import Thread
 import sys, os, time
-from subprocess import Popen, list2cmdline
+import subprocess
 
 FILE_SIZE = 1024 * 1024
 
@@ -35,8 +35,8 @@ def exec_commands(cmds):
     while True:
         while cmds and len(processes) < max_task:
             task = cmds.pop()
-            print list2cmdline(task)
-            processes.append(Popen(task))
+            print task
+            processes.append(subprocess.Popen(task, shell=True))
 
         for p in processes:
             if done(p):
