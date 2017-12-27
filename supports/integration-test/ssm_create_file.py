@@ -14,7 +14,7 @@ def test_create_100M_0KB_thread(max_number):
 
 
 if __name__ == '__main__':
-    num = 10
+    num = 20
     try:
         num = int(sys.argv[1])
     except ValueError:
