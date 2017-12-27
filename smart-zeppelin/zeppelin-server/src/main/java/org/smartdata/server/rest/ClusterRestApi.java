@@ -31,6 +31,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import java.util.List;
 
 /**
@@ -97,6 +98,48 @@ public class ClusterRestApi {
     try {
       return new JsonResponse<>(Response.Status.OK,
           smartEngine.getUtilization(resourceName)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while getting [" + resourceName
+          + "] utilization", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+  /**
+   *
+   * @param resourceName
+   * @param timeGranularity  Time interval of successive data points in milliseconds
+   * @param beginTs  Begin timestamp in milliseconds. If <=0 denotes the value related to 'endTs'
+   * @param endTs  Like 'beginTs'. If <= 0 denotes the time related to current server time.
+   * @return
+   */
+  @GET
+  @Path("/primary/hist_utilization/{resourceName}/{timeGranularity}/{beginTs}/{endTs}")
+  public Response utilization(@PathParam("resourceName") String resourceName,
+      @PathParam("timeGranularity") String timeGranularity,
+      @PathParam("beginTs") String beginTs,
+      @PathParam("endTs") String endTs) {
+    try {
+      long now = System.currentTimeMillis();
+      long granularity = Long.valueOf(timeGranularity);
+      long tsEnd = Long.valueOf(endTs);
+      long tsBegin = Long.valueOf(beginTs);
+      if (granularity == 0) {
+        granularity = 1;
+      }
+      if (tsEnd <= 0) {
+        tsEnd += now;
+      }
+      if (tsBegin <= 0) {
+        tsBegin += tsEnd;
+      }
+      if (tsBegin > tsEnd) {
+        return new JsonResponse<>(Status.BAD_REQUEST, "Invalid time range").build();
+      }
+
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getHistUtilization(resourceName, granularity, tsBegin, tsEnd)).build();
     } catch (Exception e) {
       logger.error("Exception in ClusterRestApi while getting [" + resourceName
           + "] utilization", e);

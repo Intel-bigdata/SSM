@@ -178,14 +178,15 @@ public class StatesManager extends AbstractService implements Reconfigurable {
 
   public Utilization getStorageUtilization(String resourceName) throws IOException {
     try {
+      long now = System.currentTimeMillis();
       if (!resourceName.equals("cache")) {
         long capacity =
             serverContext.getMetaStore().getStoreCapacityOfDifferentStorageType(resourceName);
         long free = serverContext.getMetaStore().getStoreFreeOfDifferentStorageType(resourceName);
-        return new Utilization(capacity, capacity - free);
+        return new Utilization(now, capacity, capacity - free);
       } else {
         StorageCapacity storageCapacity = serverContext.getMetaStore().getStorageCapacity("cache");
-        return new Utilization(
+        return new Utilization(now,
             storageCapacity.getCapacity(),
             storageCapacity.getCapacity() - storageCapacity.getFree());
       }
