@@ -48,8 +48,8 @@ class ResetEnv(unittest.TestCase):
             "-write -nrFiles 10000 -fileSize 0KB"
         for i in range(dir_number):
             subprocess.call(dfsio_cmd, shell=True)
-            subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
-                            TEST_DIR + str(i) + "_control", shell=True)
+            # subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
+            #                 TEST_DIR + str(i) + "_control", shell=True)
             subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
                             TEST_DIR + str(i) + "_data", shell=True)
 
@@ -64,8 +64,8 @@ class ResetEnv(unittest.TestCase):
             "-write -nrFiles 10000 -fileSize 0KB"
         for i in range(dir_number):
             subprocess.call(dfsio_cmd)
-            subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
-                            TEST_DIR + str(i) + "_control")
+            # subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_control " +
+            #                 TEST_DIR + str(i) + "_control")
             subprocess.call("hdfs dfs -mv /benchmarks/TestDFSIO/io_data " +
                             TEST_DIR + str(i) + "_data")
 

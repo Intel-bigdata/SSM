@@ -4,9 +4,8 @@ from util import *
 
 def create_file_CLI(dir_num):
     """
-    Please use this script in namenode
-    Each time create 10K * 2 files (10K in io_data and 10K in io_control).
-    Then, move these data to TEST_DIR.
+    Please use this script in nodes with HDFS env.
+    Each time create 10K * 50 files (10K in random dir) in TEST_DIR.
     """
     for i in range(dir_num):
         file_index = 0
