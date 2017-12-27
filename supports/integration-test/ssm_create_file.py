@@ -4,6 +4,8 @@ from threading import Thread
 
 
 def test_create_100M_0KB_thread(max_number):
+    """ submit SSM action througth Restful API in parallel
+    """
     cids = []
     dir_name = TEST_DIR + random_string()
     for j in range(max_number):
@@ -14,7 +16,7 @@ def test_create_100M_0KB_thread(max_number):
 
 
 if __name__ == '__main__':
-    num = 10
+    num = 20
     try:
         num = int(sys.argv[1])
     except ValueError:

@@ -2,8 +2,9 @@ import requests
 import random
 import time
 import uuid
-import sys, os
-from subprocess import Popen, list2cmdline
+import sys
+import os
+import subprocess
 
 # Server info
 BASE_URL = "http://localhost:7045"
@@ -26,7 +27,7 @@ TEST_DIR = "/ssmtest/"
 
 
 def cpu_count():
-    ''' Returns the number of CPUs in the system
+    '''Returns the number of CPUs in the system
     '''
     num = 1
     if sys.platform == 'win32':
@@ -44,8 +45,45 @@ def cpu_count():
             num = os.sysconf('SC_NPROCESSORS_ONLN')
         except (ValueError, OSError, AttributeError):
             pass
-
     return num
+
+
+def exec_commands(cmds):
+    '''Exec commands in parallel in multiple process
+    (as much as we have CPU)
+    '''
+    if not cmds:
+        # empty list
+        return
+
+    def done(p):
+        return p.poll() is not None
+
+    def success(p):
+        return p.returncode == 0
+
+    def fail():
+        sys.exit(1)
+
+    # get core number
+    max_task = cpu_count()
+    processes = []
+    while True:
+        while cmds and len(processes) < max_task:
+            task = cmds.pop()
+            print task
+            processes.append(subprocess.Popen(task, shell=True))
+        for p in processes:
+            if done(p):
+                if success(p):
+                    processes.remove(p)
+                else:
+                    fail()
+        if not processes and not cmds:
+            break
+        else:
+            time.sleep(0.05)
+
 
 def random_file_path():
     return TEST_DIR + random_string()
