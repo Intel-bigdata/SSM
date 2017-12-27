@@ -2,6 +2,8 @@ import requests
 import random
 import time
 import uuid
+import sys, os
+from subprocess import Popen, list2cmdline
 
 # Server info
 BASE_URL = "http://localhost:7045"
@@ -22,6 +24,28 @@ MOVE_TYPE = ["onessd",
 
 TEST_DIR = "/ssmtest/"
 
+
+def cpu_count():
+    ''' Returns the number of CPUs in the system
+    '''
+    num = 1
+    if sys.platform == 'win32':
+        try:
+            num = int(os.environ['NUMBER_OF_PROCESSORS'])
+        except (ValueError, KeyError):
+            pass
+    elif sys.platform == 'darwin':
+        try:
+            num = int(os.popen('sysctl -n hw.ncpu').read())
+        except ValueError:
+            pass
+    else:
+        try:
+            num = os.sysconf('SC_NPROCESSORS_ONLN')
+        except (ValueError, OSError, AttributeError):
+            pass
+
+    return num
 
 def random_file_path():
     return TEST_DIR + random_string()

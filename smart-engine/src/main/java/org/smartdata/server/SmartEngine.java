@@ -34,7 +34,9 @@ import org.smartdata.server.engine.cmdlet.agent.AgentInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class SmartEngine extends AbstractService {
   private ConfManager confMgr;
@@ -140,5 +142,27 @@ public class SmartEngine extends AbstractService {
 
   public Utilization getUtilization(String resourceName) throws IOException {
     return getStatesManager().getStorageUtilization(resourceName);
+  }
+
+  public List<Utilization> getHistUtilization(String resourceName, long granularity,
+      long begin, long end) throws IOException {
+    long now = System.currentTimeMillis();
+    if (begin == end && Math.abs(begin - now) <= 5) {
+      return Arrays.asList(getUtilization(resourceName));
+    }
+
+    // fake data
+    List<Utilization> utils = new ArrayList<>();
+    long ts = end;
+    if (ts % granularity != 0) {
+      ts += granularity;
+      ts = (ts / granularity) * granularity;
+    }
+    Random rand = new Random(ts);
+
+    for (; ts <= end; ts += granularity) {
+      utils.add(new Utilization(ts, 100, rand.nextInt(100)));
+    }
+    return utils;
   }
 }

@@ -18,12 +18,22 @@
 package org.smartdata.model;
 
 public class Utilization {
+  private long timeStamp;
   private long total;
   private long used;
 
-  public Utilization(long total, long used) {
+  public Utilization(long timeStamp, long total, long used) {
+    this.timeStamp = timeStamp;
     this.total = total;
     this.used = used;
+  }
+
+  public long getTimeStamp() {
+    return timeStamp;
+  }
+
+  public void setTimeStamp(long timeStamp) {
+    this.timeStamp = timeStamp;
   }
 
   public long getTotal() {
