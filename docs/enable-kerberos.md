@@ -75,15 +75,17 @@ shell% kadmind
 
 ### Add smartserver Kerberos principal to database and export it to keytab. Replace hostname with the hostname of smart server.
 ```
-kadmin.local:addprinc -randkey smartserver /hostname
-kadmin.local:xst -k /xxx/xxx/smartserver-hostname.keytab smartserver /hostname
+kadmin.local:addprinc -randkey smartserver/hostname
+kadmin.local:xst -k /xxx/xxx/smartserver-hostname.keytab smartserver/hostname
 ```
+Note: replace the hostname with the hostname of the smart server
 
 ### Add smartagent Kerberos principals to database and export it to keytabs. Replace hostname with the hostname of smart agent, please create principals for each agents.
 ```
 kadmin.local:addprinc -randkey smartagent/hostname
 kadmin.local:xst -k /xxx/xxx/smartagent-hostname.keytab smartagent/hostname
 ```
+Note: replace the hostname with the hostname of the smart agent
 
 ### Add hdfs Kerberos principals to database and export it to keytabs.
 ```
