@@ -26,6 +26,9 @@ import org.smartdata.action.annotation.ActionSignature;
 )
 public class SleepAction extends SmartAction {
   public static final String TIME_IN_MS = "-ms";
+  private boolean started = false;
+  private long toSleep;
+  private long startTm;
 
   @Override
   protected void execute() throws Exception {
@@ -33,9 +36,23 @@ public class SleepAction extends SmartAction {
       throw new IllegalArgumentException("Time to sleep not specified (through option '"
           + TIME_IN_MS + "').");
     }
-    long tm = Long.valueOf(getArguments().get(TIME_IN_MS));
-    if (tm != 0) {
-      Thread.sleep(tm);
+    toSleep = Long.valueOf(getArguments().get(TIME_IN_MS));
+    if (toSleep == 0) {
+      return;
     }
+    startTm = System.currentTimeMillis();
+    started = true;
+    Thread.sleep(toSleep);
+  }
+
+  @Override
+  public float getProgress() {
+    if (!started) {
+      return 0;
+    }
+    if (isSuccessful()) {
+      return 1.0f;
+    }
+    return (System.currentTimeMillis() - startTm) * 1.0f / toSleep;
   }
 }
