@@ -22,12 +22,13 @@ Exmaple:
    supported_enctypes = aes128-cts:normal des3-hmac-sha1:normal arcfour-hmac:normal des-hmac-sha1:normal des-cbc-md5:normal des-cbc-crc:normal
   }
 ```
-Set KRB5_CONFIG environment variables to point to the krb5.conf. For example:
+Set KRB5_KDC_PROFILE environment variables to point to the kdc.conf. For example:
 ```
-export KRB5_CONFIG=/yourdir/krb5.conf
+export KRB5_KDC_PROFILE=/yourdir/kdc.conf
 ```
 
-### Config krb.conf
+
+### Config krb5.conf
 Example:
 ```
  [libdefaults]
@@ -52,9 +53,9 @@ Example:
   kdc = FILE:/var/log/krb5kdc.log
   admin_server = FILE:/var/log/kadmind.log
 ```
-Set KRB5_KDC_PROFILE environment variables to point to the kdc.conf. For example:
+Set KRB5_CONFIG environment variables to point to the krb5.conf. For example:
 ```
-export KRB5_KDC_PROFILE=/yourdir/kdc.conf
+export KRB5_CONFIG=/yourdir/krb5.conf
 ```
 
 ### Create the KDC database
