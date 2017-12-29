@@ -219,7 +219,7 @@ def create_random_file(length=1024):
 
 def create_random_file_parallel(length=1024, dest_path=TEST_DIR):
     """
-    create a random file in /ssmtest/
+    create a random file in dest_path, e.g., /ssmtest/
     """
     file_path = dest_path + random_string()
     cmdlet_str = "write -file " + \
