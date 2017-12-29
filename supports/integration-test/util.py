@@ -217,16 +217,9 @@ def create_random_file(length=1024):
     return file_path
 
 
-def create_random_file_parallel(length=1024):
+def create_random_file_parallel(length=1024, dest_path=TEST_DIR):
     """
-    create a random file in /ssmtest/
-    """
-    return create_random_file_parallel(TEST_DIR, length)
-
-
-def create_random_file_parallel(dest_path, length=1024):
-    """
-    create a random file in /dest_path/
+    create a random file in dest_path, e.g., /ssmtest/
     """
     file_path = dest_path + random_string()
     cmdlet_str = "write -file " + \

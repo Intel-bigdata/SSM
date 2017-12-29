@@ -131,7 +131,7 @@ class ResetEnv(unittest.TestCase):
         cids = []
         for i in range(max_number):
             # 1 MB files
-            file_path, cid = create_random_file_parallel("/1MB/", FILE_SIZE)
+            file_path, cid = create_random_file_parallel(FILE_SIZE, "/1MB/")
             file_paths.append(file_path)
             cids.append(cid)
         wait_for_cmdlets(cids)
@@ -145,7 +145,7 @@ class ResetEnv(unittest.TestCase):
         cids = []
         for i in range(max_number):
             # 1 MB files
-            file_path, cid = create_random_file_parallel("/10MB/", FILE_SIZE)
+            file_path, cid = create_random_file_parallel(FILE_SIZE, "/10MB/")
             file_paths.append(file_path)
             cids.append(cid)
         wait_for_cmdlets(cids)
@@ -159,7 +159,7 @@ class ResetEnv(unittest.TestCase):
         cids = []
         for i in range(max_number):
             # 1 MB files
-            file_path, cid = create_random_file_parallel("/100MB/", FILE_SIZE)
+            file_path, cid = create_random_file_parallel(FILE_SIZE, "/100MB/")
             file_paths.append(file_path)
             cids.append(cid)
         wait_for_cmdlets(cids)
