@@ -56,7 +56,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1074,28 +1073,41 @@ public class CmdletManager extends AbstractService {
   }
 
   private class DetectFailedActionTask implements Runnable {
+    private final String timeoutLog = "Long time no report for this action. Mark it as failed.";
+
     public void run() {
-      long currentTime = System.currentTimeMillis();
-      Set<Long> failedCmdletId = new HashSet();
       try {
-        for (ActionInfo actionInfo : idToActions.values()) {
-          if (currentTime - actionInfo.getFinishTime() > TIMEOUT) {
-            failedCmdletId.add(actionInfo.getCmdletId());
-            ActionFinished finished = new ActionFinished(actionInfo.getActionId(), currentTime,
-                    "Long time no report for this action. Mark it as failed.", new Throwable());
-            onActionFinished(finished);
+        for (CmdletInfo cmdletInfo : idToCmdlets.values()) {
+          if (cmdletInfo.getState() == CmdletState.DISPATCHED) {
+            boolean cmdFailed = false;
+            for (long id : cmdletInfo.getAids()) {
+              ActionInfo actionInfo = idToActions.get(id);
+              if (isTimeout(actionInfo)) {
+                cmdFailed = true;
+                ActionFinished finished = new ActionFinished(actionInfo.getActionId(),
+                        System.currentTimeMillis(), timeoutLog, new Throwable());
+                onActionFinished(finished);
+              }
+            }
+            if (cmdFailed) {
+              cmdletInfo.setState(CmdletState.FAILED);
+              cmdletFinished(cmdletInfo.getCid());
+            }
           }
-        }
-        for (long cmdletId : failedCmdletId) {
-          CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
-          cmdletInfo.setState(CmdletState.FAILED);
-          cmdletFinished(cmdletId);
         }
       } catch (ActionException e) {
         LOG.error(e.getMessage());
       } catch (IOException e) {
         LOG.error(e.getMessage());
       }
+    }
+
+    public boolean isTimeout(ActionInfo actionInfo) {
+      if (actionInfo.isFinished() || actionInfo.getFinishTime() == 0) {
+        return false;
+      }
+      long currentTime = System.currentTimeMillis();
+      return currentTime - actionInfo.getFinishTime() > TIMEOUT;
     }
   }
 }
