@@ -41,7 +41,7 @@ angular.module('zeppelinWebApp')
       cols: [
         $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
         $stb.text('ID').key('id').canSort().sortDefaultDescent().done(),
-        $stb.text('Name').key(['ruleName']).canSort().done(),
+        $stb.text('Rule Text').key(['ruleText']).styleClass('col-md-1 hidden-sm hidden-xs').done(),
         $stb.datetime('Submission Time').key('submitTime').canSort().done(),
         $stb.datetime('Last Check Time').key('lastCheckTime').canSort().done(),
         $stb.text('Checked Number').key('numChecked').canSort().styleClass('hidden-sm hidden-xs').done(),
@@ -60,14 +60,9 @@ angular.module('zeppelinWebApp')
             // name: {href: pageUrl, text: rule.appName},
             state: {tooltip: rule.state, condition: rule.isRunning ? 'good' : '', shape: 'stripe'},
             //user: rule.user,
-            ruleName: {
-              value: rule.ruleName,
-              title: "ID:" + rule.id + " Name:" + rule.ruleName
-              + " Submission Time:" + new Date(rule.submitTime).toUTCString()
-              + " Last Check Time:" + new Date(rule.lastCheckTime).toUTCString()
-              + " Checked Number:" + rule.numChecked
-              + " Cmdlets Generated:" + rule.numCmdsGen
-              + " Status:" +  rule.state
+            ruleText: {
+              value: rule.ruleText.length > 70 ? rule.ruleText.substring(0, 70) + ' ...' : rule.ruleText,
+              title: rule.ruleText
             },
             submitTime: rule.submitTime,
             lastCheckTime: rule.lastCheckTime === 0 ? '-' : rule.lastCheckTime,
@@ -89,8 +84,10 @@ angular.module('zeppelinWebApp')
               click: function () {
                 if(!rule.isRunning) {
                   rule.start();
+                  rule.isRunning = true;
                 }else{
                   rule.terminate();
+                  rule.isRunning = false;
                 }
               }
             },
