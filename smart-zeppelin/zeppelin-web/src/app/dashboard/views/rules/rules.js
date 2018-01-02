@@ -84,8 +84,10 @@ angular.module('zeppelinWebApp')
               click: function () {
                 if(!rule.isRunning) {
                   rule.start();
+                  rule.isRunning = true;
                 }else{
                   rule.terminate();
+                  rule.isRunning = false;
                 }
               }
             },

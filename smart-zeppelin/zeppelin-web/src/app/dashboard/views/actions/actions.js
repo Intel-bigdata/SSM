@@ -42,6 +42,7 @@ angular.module('zeppelinWebApp')
             $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
           data.finishTime = data.finished ? data.finishTime === 0 ? "-" :
             $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
+          data.progress = Math.round(data.progress * 100);
           data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
         });
         $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);

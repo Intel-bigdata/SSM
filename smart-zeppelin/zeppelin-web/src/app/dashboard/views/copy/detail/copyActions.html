@@ -53,11 +53,11 @@ under the License.
       <td>{{action.finished ? action.runTime + "ms" : "-"}}</td>
       <td>
         <div style="width: 100%"><span class="small pull-left"></span>
-          <span class="small pull-right" ng-bind="action.progress * 100 + '%'"></span>
+          <span class="small pull-right" ng-bind="action.progress + '%'"></span>
         </div>
         <div style="clear: both; height: 1px"></div>
         <div style="width: 100%" class="progress progress-tiny">
-          <div ng-style="{'width': action.progress * 100 +'%'}"
+          <div ng-style="{'width': action.progress + '%'}"
                class="progress-bar progress-bar-{{action.progressColor}}"></div>
         </div>
       </td>
