@@ -360,11 +360,11 @@ public class CmdletManager extends AbstractService {
     }
     idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
 
-    if (cmdletInfo.getState().equals(CmdletState.PENDING)) {
+    if (cmdletInfo.getState() == CmdletState.PENDING) {
       synchronized (pendingCmdlet) {
         pendingCmdlet.add(cmdletInfo.getCid());
       }
-    } else if (cmdletInfo.getState().equals(CmdletState.DISPATCHED)) {
+    } else if (cmdletInfo.getState() == CmdletState.DISPATCHED) {
       runningCmdlets.add(cmdletInfo.getCid());
       LaunchCmdlet launchCmdlet = createLaunchCmdlet(cmdletInfo);
       idToLaunchCmdlet.put(cmdletInfo.getCid(), launchCmdlet);
@@ -884,7 +884,7 @@ public class CmdletManager extends AbstractService {
       //The cmdlet is already finished or terminated, remove status from memory.
       if (CmdletState.isTerminalState(state)) {
         cmdletFinished(cmdletId);
-      } else if (state.equals(CmdletState.DISPATCHED)) {
+      } else if (state == CmdletState.DISPATCHED) {
         flushCmdletInfo(cmdletInfo);
       }
     } else {
