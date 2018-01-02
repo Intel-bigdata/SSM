@@ -974,10 +974,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public boolean updateCmdlet(long cid, long rid, CmdletState state)
+  public boolean updateCmdlet(long cid, CmdletState state)
       throws MetaStoreException {
     try {
-      return cmdletDao.update(cid, rid, state.getValue()) >= 0;
+      return cmdletDao.update(cid, state.getValue()) >= 0;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
