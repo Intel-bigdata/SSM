@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusReporter;
@@ -73,6 +74,7 @@ public class CmdletExecutor {
 
   public void stop(Long cmdletId) {
     if (this.listenableFutures.containsKey(cmdletId)) {
+      runningCmdlets.get(cmdletId).setState(CmdletState.FAILED);
       this.listenableFutures.get(cmdletId).cancel(true);
     }
     removeCmdlet(cmdletId);
