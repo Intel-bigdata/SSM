@@ -153,7 +153,7 @@ public class SmartEngine extends AbstractService {
 
     // fake data
     List<Utilization> utils = new ArrayList<>();
-    long ts = end;
+    long ts = begin;
     if (ts % granularity != 0) {
       ts += granularity;
       ts = (ts / granularity) * granularity;
