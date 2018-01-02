@@ -123,11 +123,12 @@ public class ClusterRestApi {
     try {
       long now = System.currentTimeMillis();
       long granularity = Long.valueOf(timeGranularity);
+      if (granularity <= 0) {
+        return new JsonResponse<>(Status.BAD_REQUEST,
+            "Invalid time granularity, must larger than 0").build();
+      }
       long tsEnd = Long.valueOf(endTs);
       long tsBegin = Long.valueOf(beginTs);
-      if (granularity == 0) {
-        granularity = 1;
-      }
       if (tsEnd <= 0) {
         tsEnd += now;
       }
