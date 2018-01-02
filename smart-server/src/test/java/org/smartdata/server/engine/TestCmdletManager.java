@@ -39,7 +39,6 @@ import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
@@ -231,33 +230,6 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     metaStore.insertCmdlets(cmdlets);
     // init cmdletmanager
     cmdletManager.init();
-    Thread.sleep(1000);
-    Assert.assertTrue(metaStore.getCmdletById(0).getState() == CmdletState.FAILED);
-  }
-
-  @Test
-  public void testLoadingPendingCmdletFailed() throws Exception {
-    waitTillSSMExitSafeMode();
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    // Stop cmdletmanager
-    cmdletManager.stop();
-    MetaStore metaStore = ssm.getMetaStore();
-    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
-    CmdletInfo cmdletInfo =
-        new CmdletInfo(
-            0,
-            cmdletDescriptor.getRuleId(),
-            CmdletState.PENDING,
-            cmdletDescriptor.getCmdletString(),
-            123178333L,
-            232444994L);
-    cmdletInfo.setAids(Arrays.asList(1L, 2L));
-    CmdletInfo[] cmdlets = {cmdletInfo};
-    metaStore.insertCmdlets(cmdlets);
-    // init cmdletmanager
-    cmdletManager.init();
-    Assert.assertEquals(0, cmdletManager.getCmdletsSizeInCache());
-    cmdletInfo = metaStore.getCmdletById(0L);
-    Assert.assertTrue(cmdletInfo.getState() == CmdletState.FAILED);
+    Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
   }
 }
