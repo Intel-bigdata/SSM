@@ -28,6 +28,10 @@ public class ActionFinished implements StatusMessage {
     this(actionId, timestamp, "", "", t);
   }
 
+  public ActionFinished(long actionId, long timestamp, String log, Throwable t) {
+    this(actionId, timestamp, "", log, t);
+  }
+
   public ActionFinished(long actionId, long timestamp, String result, String log) {
     this(actionId, timestamp, result, log, null);
   }

@@ -39,8 +39,10 @@ import org.smartdata.AgentService;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
+import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
@@ -57,6 +59,8 @@ import org.smartdata.utils.SecurityUtil;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import scala.concurrent.duration.Duration;
@@ -67,11 +71,13 @@ public class SmartAgent implements StatusReporter {
   private static final Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
   private ActorRef agentActor;
+  private CmdletExecutor cmdletExecutor;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
 
     SmartConf conf = (SmartConf) new GenericOptionsParser(new SmartConf(), args).getConfiguration();
+    agent.cmdletExecutor = new CmdletExecutor(conf, agent);
     String[] masters = AgentUtils.getMasterAddress(conf);
     if (masters == null) {
       throw new IOException("No master address found!");
@@ -130,6 +136,10 @@ public class SmartAgent implements StatusReporter {
     });
     Services.init(new SmartAgentContext(conf, this));
     Services.start();
+
+    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    executorService.scheduleAtFixedRate(new StatusReportTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+
     system.awaitTermination();
   }
 
@@ -315,6 +325,15 @@ public class SmartAgent implements StatusReporter {
         getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
         LOG.info("Failed to find master after {}; Shutting down...", TIMEOUT);
         agent.close();
+      }
+    }
+  }
+  private class StatusReportTask implements Runnable {
+    @Override
+    public void run() {
+      ActionStatusReport report = cmdletExecutor.getActionStatusReport();
+      if (!report.getActionStatuses().isEmpty()) {
+        report(report);
       }
     }
   }

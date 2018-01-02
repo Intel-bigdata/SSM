@@ -23,9 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.model.CmdletState;
 import org.smartdata.model.ExecutorType;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
+import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -152,6 +154,11 @@ public class CmdletDispatcher {
     }
 
     String id = selected.execute(cmdlet);
+
+    CmdletStatusUpdate msg = new CmdletStatusUpdate(cmdlet.getCmdletId(),
+            System.currentTimeMillis(), CmdletState.DISPATCHED);
+    cmdletManager.updateStatus(msg);
+
     updateSlotsLeft(selected.getExecutorType().ordinal(), -1);
     dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
