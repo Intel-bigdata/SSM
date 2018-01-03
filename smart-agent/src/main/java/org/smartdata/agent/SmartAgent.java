@@ -77,7 +77,6 @@ public class SmartAgent implements StatusReporter {
     SmartAgent agent = new SmartAgent();
 
     SmartConf conf = (SmartConf) new GenericOptionsParser(new SmartConf(), args).getConfiguration();
-    agent.cmdletExecutor = new CmdletExecutor(conf, agent);
     String[] masters = AgentUtils.getMasterAddress(conf);
     if (masters == null) {
       throw new IOException("No master address found!");
@@ -122,6 +121,8 @@ public class SmartAgent implements StatusReporter {
     system = ActorSystem.apply(NAME, config);
     agentActor = system.actorOf(
             Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
+    cmdletExecutor = new CmdletExecutor(conf, this);
+
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
