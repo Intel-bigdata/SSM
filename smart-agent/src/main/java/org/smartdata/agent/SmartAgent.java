@@ -43,6 +43,7 @@ import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
+import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
@@ -121,7 +122,6 @@ public class SmartAgent implements StatusReporter {
     system = ActorSystem.apply(NAME, config);
     agentActor = system.actorOf(
             Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
-    cmdletExecutor = new CmdletExecutor(conf, this);
 
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -137,6 +137,10 @@ public class SmartAgent implements StatusReporter {
     });
     Services.init(new SmartAgentContext(conf, this));
     Services.start();
+
+    AgentCmdletService agentCmdletService =
+            (AgentCmdletService) Services.getService(AgentCmdletService.NAME);
+    cmdletExecutor = agentCmdletService.getCmdletExecutor();
 
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     executorService.scheduleAtFixedRate(new StatusReportTask(), 1000, 1000, TimeUnit.MILLISECONDS);
