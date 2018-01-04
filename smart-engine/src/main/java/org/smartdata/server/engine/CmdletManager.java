@@ -170,6 +170,9 @@ public class CmdletManager extends AbstractService {
       if (cmdletInfos != null && cmdletInfos.size() != 0) {
         for (CmdletInfo cmdletInfo : cmdletInfos) {
           List<ActionInfo> actionInfos = getActionInfosInDB(cmdletInfo);
+          for (ActionInfo actionInfo: actionInfos) {
+            actionInfo.setFinishTime(System.currentTimeMillis());
+          }
           syncCmdAction(cmdletInfo, actionInfos);
         }
       }
@@ -1078,7 +1081,8 @@ public class CmdletManager extends AbstractService {
     public void run() {
       try {
         for (CmdletInfo cmdletInfo : idToCmdlets.values()) {
-          if (cmdletInfo.getState() == CmdletState.DISPATCHED) {
+          if (cmdletInfo.getState() == CmdletState.DISPATCHED
+                  || cmdletInfo.getState() == CmdletState.EXECUTING) {
             boolean cmdFailed = false;
             for (long id : cmdletInfo.getAids()) {
               ActionInfo actionInfo = idToActions.get(id);
