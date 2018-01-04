@@ -22,7 +22,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
-import org.apache.hadoop.hdfs.SmartInputStream;
 import org.apache.hadoop.hdfs.SmartInputStreamFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
@@ -138,6 +137,82 @@ public class SmartDFSClient extends DFSClient {
     return is;
   }
 
+  /*@Override
+  public LocatedBlocks getLocatedBlocks(String src, long start, long length)
+      throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.getLocatedBlocks(src, start, length);
+    }
+
+    CompressionFileState compressionInfo = smartClient.getFileCompressionInfo(src);
+    Long[] originalPos = compressionInfo.getOriginalPos().toArray(new Long[0]);
+    Long[] compressedPos = compressionInfo.getCompressedPos().toArray(new Long[0]);
+    int startIndex = compressionInfo.getPosIndexByOriginalOffset(start);
+    int endIndex = compressionInfo.getPosIndexByOriginalOffset(start + length - 1);
+    long compressedStart = compressedPos[startIndex];
+    long compressedLength = 0;
+    if (endIndex < compressedPos.length - 1) {
+      compressedLength = compressedPos[endIndex + 1] - compressedStart;
+    } else {
+      compressedLength = compressionInfo.getCompressedLength() - compressedStart;
+    }
+
+    LocatedBlocks originalLocatedBlocks = super.getLocatedBlocks(src, compressedStart, compressedLength);
+
+    List<LocatedBlock> blocks = new ArrayList<>();
+    for (LocatedBlock block : originalLocatedBlocks.getLocatedBlocks()) {
+
+      blocks.add(new LocatedBlock(
+          block.getBlock(),
+          block.getLocations(),
+          block.getStorageIDs(),
+          block.getStorageTypes(),
+          compressionInfo.getPosIndexByCompressedOffset(block.getStartOffset()),
+          block.isCorrupt(),
+          block.getCachedLocations()
+      ));
+    }
+    LocatedBlock lastLocatedBlock = originalLocatedBlocks.getLastLocatedBlock();
+    long fileLength = compressionInfo.getOriginalLength();
+
+    return new LocatedBlocks(fileLength,
+        originalLocatedBlocks.isUnderConstruction(),
+        blocks,
+        lastLocatedBlock,
+        originalLocatedBlocks.isLastBlockComplete(),
+        originalLocatedBlocks.getFileEncryptionInfo());
+  }*/
+
+  /*
+  // Not complete
+  @Override
+  public BlockLocation[] getBlockLocations(String src, long start,
+      long length) throws IOException, UnresolvedLinkException {
+    if (!isFileCompressed(src)) {
+      return super.getBlockLocations(src, start, length);
+    }
+    BlockLocation[] blockLocations = super.getBlockLocations(src, start, length);
+    return null;
+  }
+
+  @Override
+  public DirectoryListing listPaths(String src, byte[] startAfter,
+      boolean needLocation) throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.listPaths(src, startAfter, needLocation);
+    }
+    return null;
+  }
+
+  @Override
+  public HdfsFileStatus getFileInfo(String src) throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.getFileInfo(src);
+    }
+    return null;
+  }
+  */
+
   @Deprecated
   @Override
   public DFSInputStream open(String src, int buffersize,
@@ -182,6 +257,10 @@ public class SmartDFSClient extends DFSClient {
         healthy = false;
       }
     }
+  }
+
+  public SmartClient getSmartClient() {
+    return smartClient;
   }
 
   private boolean isSmartClientDisabled() {

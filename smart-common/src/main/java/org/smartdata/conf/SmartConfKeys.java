@@ -128,4 +128,10 @@ public class SmartConfKeys {
   public static final String TIKV_SERVICE_PORT_DEFAULT = "20160";
   public static final String TIDB_SERVICE_PORT_KEY = "tidb.service.port";
   public static final String TIDB_SERVICE_PORT_KEY_DEFAULT = "7070";
+
+  // Compression
+  public static final String SMART_COMPRESSION_IMPL = "smart.compression.impl";
+  public static final String SMART_COMPRESSION_IMPL_DEFAULT = "snappy";
+  public static final String SMART_COMPRESSION_BUFFER_SIZE = "smart.compression.buffer.size";
+  public static final int SMART_COMPRESSION_BUFFER_SIZE_DEFAULT = 262144;
 }
