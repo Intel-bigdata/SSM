@@ -28,6 +28,7 @@ import org.smartdata.SmartPolicyProvider;
 import org.smartdata.SmartServiceState;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
@@ -259,6 +260,10 @@ public class SmartRpcServer implements SmartServerProtocols {
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
-    return ssm.getMetaStore().getFileState(filePath);
+    try {
+      return ssm.getMetaStore().getFileState(filePath);
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
   }
 }

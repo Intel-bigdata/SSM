@@ -30,6 +30,7 @@ import org.smartdata.metastore.dao.CacheFileDao;
 import org.smartdata.metastore.dao.ClusterConfigDao;
 import org.smartdata.metastore.dao.ClusterInfoDao;
 import org.smartdata.metastore.dao.CmdletDao;
+import org.smartdata.metastore.dao.CompressionFileDao;
 import org.smartdata.metastore.dao.DataNodeInfoDao;
 import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
 import org.smartdata.metastore.dao.FileDiffDao;
@@ -52,6 +53,7 @@ import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.ClusterInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.DetailedFileAction;
@@ -118,6 +120,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private ClusterInfoDao clusterInfoDao;
   private SystemInfoDao systemInfoDao;
   private FileStateDao fileStateDao;
+  private CompressionFileDao compressionFileDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -141,6 +144,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
     fileStateDao = new FileStateDao(pool.getDataSource());
+    compressionFileDao = new CompressionFileDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -1967,26 +1971,45 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertUpdateFileState(FileState fileState) {
-    fileStateDao.insertUpate(fileState);
-    // Update corresponding table if fileState is a specific FileState
-    /*
-    if (fileState instanceof CompressFileState) {
+  /**
+   * Insert or update fileState.
+   *
+   * @param fileState
+   * @throws MetaStoreException
+   */
+  public synchronized void insertUpdateFileState(FileState fileState) throws MetaStoreException {
+    try {
+      fileStateDao.insertUpate(fileState);
+      // Update corresponding table if fileState is a specific FileState
+      if (fileState instanceof CompressionFileState) {
+       insertCompressedFile((CompressionFileState) fileState);
+      }
+      /*else if (fileState instanceof CompactFileState) {
 
-    } else if (fileState instanceof CompactFileState) {
+      } else if (fileState instanceof S3FileState) {
 
-    } else if (fileState instanceof S3FileState) {
-
+      }
+      */
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
-    */
   }
 
-  public FileState getFileState(String path) {
+  /**
+   * Get FileState of the given path.
+   *
+   * @param path
+   * @return
+   * @throws MetaStoreException
+   */
+  public synchronized FileState getFileState(String path) throws MetaStoreException {
     FileState fileState;
     try {
       fileState = fileStateDao.getByPath(path);
     } catch (EmptyResultDataAccessException e) {
       fileState = new NormalFileState(path);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
 
     // Fetch info from corresponding table to regenerate a specific FileState
@@ -1997,11 +2020,96 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       case COMPACT:
         break;
       case COMPRESSION:
+        CompressionFileState compressionFileState = getCompressionInfo(path);
+        if (compressionFileState != null) {
+          compressionFileState.setFileStage(fileState.getFileStage());
+          fileState = compressionFileState;
+        }
         break;
       case S3:
         break;
       default:
     }
     return fileState;
+  }
+
+  /**
+   * Delete FileState of the given fileName (including its corresponding compression/
+   * compact/s3 state).
+   *
+   * @param fileName
+   * @throws MetaStoreException
+   */
+  public synchronized void deleteFileState(String fileName) throws MetaStoreException {
+    try {
+      fileStateDao.deleteByPath(fileName);
+      // Delete other states
+      deleteCompressedFile(fileName);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  /**
+   * Clear up FileState info from database (including all corresponding compression/
+   * compact/s3 state).
+   *
+   * @throws MetaStoreException
+   */
+  public synchronized void deleteAllFileState() throws MetaStoreException {
+    try {
+      fileStateDao.deleteAll();
+      // Delete all other states
+      deleteAllCompressedFile();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  /**
+   * Insert a new compressed file into database.
+   *
+   * @param compressionInfo
+   */
+  private synchronized void insertCompressedFile(
+      CompressionFileState compressionInfo) throws MetaStoreException {
+    compressionFileDao.insert(compressionInfo);
+  }
+
+  /**
+   * Delete a compressed file from database.
+   *
+   * @param fileName
+   */
+  private synchronized void deleteCompressedFile(String fileName)
+      throws MetaStoreException {
+    compressionFileDao.deleteByName(fileName);
+  }
+
+  /**
+   * Delete all compressed files from database.
+   *
+   * @throws MetaStoreException
+   */
+  private synchronized void deleteAllCompressedFile() throws MetaStoreException {
+    compressionFileDao.deleteAll();
+  }
+
+  /**
+   * Get the compression info of a compressed info.
+   *
+   * @param fileName
+   * @return the compression info if the file is compressed, otherwise return null
+   * @throws MetaStoreException
+   */
+  public synchronized CompressionFileState getCompressionInfo(
+      String fileName) throws MetaStoreException {
+    try {
+      return compressionFileDao.getInfoByName(fileName);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 }

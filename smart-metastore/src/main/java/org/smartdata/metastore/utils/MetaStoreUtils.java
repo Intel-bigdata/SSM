@@ -167,7 +167,8 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS backup_file",
         "DROP TABLE IF EXISTS sys_info",
         "DROP TABLE IF EXISTS cluster_info",
-        "DROP TABLE IF EXISTS file_state"
+        "DROP TABLE IF EXISTS file_state",
+        "DROP TABLE IF EXISTS compression_file"
     };
     String createEmptyTables[] =
         new String[] {
@@ -342,9 +343,17 @@ public class MetaStoreUtils {
               + ") ;",
           "CREATE INDEX backup_file_rid_idx ON backup_file (rid);",
           "CREATE TABLE file_state (\n"
-              + " path varchar(1000) PRIMARY KEY,\n"
+              + " path varchar(512) PRIMARY KEY,\n"
               + " type tinyint(4) NOT NULL,\n"
               + " stage tinyint(4) NOT NULL\n"
+              + ");",
+          "CREATE TABLE compression_file (\n"
+              + " file_name varchar(512) PRIMARY KEY,\n"
+              + " buffer_size int(11) NOT NULL,\n"
+              + " original_length bigint(20) NOT NULL,\n"
+              + " compressed_length bigint(20) NOT NULL,\n"
+              + " originalPos text NOT NULL,\n"
+              + " compressedPos text NOT NULL\n"
               + ");"
         };
     try {

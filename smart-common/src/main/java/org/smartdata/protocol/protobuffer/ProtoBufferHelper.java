@@ -24,6 +24,7 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.FileState;
 import org.smartdata.model.NormalFileState;
 import org.smartdata.model.RuleInfo;
@@ -41,6 +42,7 @@ import org.smartdata.protocol.ClientServerProto.S3FileStateProto;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 
 public class ProtoBufferHelper {
@@ -189,12 +191,12 @@ public class ProtoBufferHelper {
       case COMPACT:
         CompactFileStateProto compactProto = proto.getCompactFileState();
         // convert to CompactFileState
-        // fileState = convert(path, type, stage, compactProto);
+        //fileState = convert(path, type, stage, compactProto);
         break;
       case COMPRESSION:
         CompressionFileStateProto compressionProto = proto.getCompressionFileState();
         // convert to CompressionFileState
-        // fileState = convert(path, type, stage, compressionProto);
+        fileState = convert(path, stage, compressionProto);
         break;
       case S3:
         S3FileStateProto s3Proto = proto.getS3FileState();
@@ -212,13 +214,36 @@ public class ProtoBufferHelper {
         .setType(fileState.getFileType().getValue())
         .setStage(fileState.getFileStage().getValue());
     // Set corresponding segment
-    /*if (fileState instanceof CompressionFileState) {
-      builder.setCompressionFileState();
-    } else if (fileState instanceof CompactFileState) {
+    if (fileState instanceof CompressionFileState) {
+      builder.setCompressionFileState(convert((CompressionFileState) fileState));
+    } /*else if (fileState instanceof CompactFileState) {
       builder.setCompactFileState();
     } else if (fileState instanceof S3FileState) {
       builder.setS3FileState();
     }*/
+    return builder.build();
+  }
+
+  public static CompressionFileState convert(String path,
+      FileState.FileStage stage, CompressionFileStateProto proto) {
+    CompressionFileState.Builder builder = CompressionFileState.newBuilder();
+    builder.setFileName(path)
+        .setFileStage(stage)
+        .setBufferSize(proto.getBufferSize())
+        .setOriginalLength(proto.getOriginalLength())
+        .setCompressedLength(proto.getCompressedLength())
+        .setOriginalPos(proto.getOriginalPosList())
+        .setCompressedPos(proto.getCompressedPosList());
+    return builder.build();
+  }
+
+  public static CompressionFileStateProto convert(CompressionFileState fileState) {
+    CompressionFileStateProto.Builder builder = CompressionFileStateProto.newBuilder();
+    builder.setBufferSize(fileState.getBufferSize())
+        .setOriginalLength(fileState.getOriginalLength())
+        .setCompressedLength(fileState.getCompressedLength());
+    builder.addAllOriginalPos(Arrays.asList(fileState.getOriginalPos()));
+    builder.addAllCompressedPos(Arrays.asList(fileState.getCompressedPos()));
     return builder.build();
   }
 }

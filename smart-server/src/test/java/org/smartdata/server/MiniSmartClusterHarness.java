@@ -19,7 +19,6 @@ package org.smartdata.server;
 
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.junit.After;
-import org.junit.Before;
 import org.smartdata.SmartServiceState;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.conf.SmartConf;
@@ -41,10 +40,9 @@ public class MiniSmartClusterHarness extends MiniClusterWithStoragesHarness {
   private String dbFile;
   private String dbUrl;
 
-  @Before
   @Override
-  public void init() throws Exception {
-    super.init();
+  protected void init(int blockSize) throws Exception {
+    super.init(blockSize);
     // Set db used
     SmartConf conf = smartContext.getConf();
     Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
@@ -55,6 +53,7 @@ public class MiniSmartClusterHarness extends MiniClusterWithStoragesHarness {
 
     dbFile = TestDBUtil.getUniqueEmptySqliteDBFile();
     dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
+    //dbUrl = "jdbc:mysql://localhost/ssm";
     smartContext.getConf().set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
 
     // rpcServer start in SmartServer
