@@ -37,6 +37,7 @@ import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
+import org.smartdata.server.engine.rule.FileCopy2S3Plugin;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
@@ -81,6 +82,7 @@ public class RuleManager extends AbstractService {
     this.metaStore = context.getMetaStore();
 
     RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
+    RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
   }
 
   /**
