@@ -45,6 +45,8 @@ import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
+import org.smartdata.protocol.message.CmdletStatus;
+import org.smartdata.protocol.message.CmdletStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
@@ -55,6 +57,7 @@ import org.smartdata.utils.StringUtil;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -864,6 +867,8 @@ public class CmdletManager extends AbstractService {
     try {
       if (status instanceof CmdletStatusUpdate) {
         onCmdletStatusUpdate((CmdletStatusUpdate) status);
+      } else if (status instanceof CmdletStatusReport) {
+        onCmdletStatusReport((CmdletStatusReport) status);
       } else if (status instanceof ActionStatusReport) {
         onActionStatusReport((ActionStatusReport) status);
       } else if (status instanceof ActionStarted) {
@@ -892,6 +897,21 @@ public class CmdletManager extends AbstractService {
       }
     } else {
       // Updating cmdlet status which is not pending or running
+    }
+  }
+
+  private void onCmdletStatusReport(CmdletStatusReport statusReport) throws IOException{
+    for (CmdletStatus status: statusReport.getCmdletStatusList()) {
+      long cmdletId = status.getCmdletId();
+      if (idToCmdlets.containsKey(cmdletId)) {
+        CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+        CmdletState state = status.getCurrentState();
+        cmdletInfo.setState(state);
+        cmdletInfo.setStateChangedTime(status.getStateUpdateTime());
+        if (CmdletState.isTerminalState(state)) {
+          cmdletFinished(cmdletId);
+        }
+      }
     }
   }
 
@@ -1094,7 +1114,7 @@ public class CmdletManager extends AbstractService {
   }
 
   private class DetectFailedActionTask implements Runnable {
-    private final String timeoutLog = "Long time no report for this action. Mark it as failed.";
+    public final String timeoutLog = "Long time no report for this action. Mark it as failed.";
 
     public void run() {
       try {
@@ -1106,9 +1126,12 @@ public class CmdletManager extends AbstractService {
               ActionInfo actionInfo = idToActions.get(id);
               if (isTimeout(actionInfo)) {
                 cmdFailed = true;
-                ActionFinished finished = new ActionFinished(actionInfo.getActionId(),
-                        System.currentTimeMillis(), timeoutLog, new Throwable());
-                onActionFinished(finished);
+                long finishTime = System.currentTimeMillis();
+                ActionStatus actionStatus = new ActionStatus(
+                        actionInfo.getActionId(), timeoutLog, finishTime, new Throwable(), true);
+                ActionStatusReport actionStatusReport =
+                        new ActionStatusReport(Arrays.asList(actionStatus));
+                onActionStatusReport(actionStatusReport);
               }
             }
             if (cmdFailed) {

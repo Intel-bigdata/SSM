@@ -23,7 +23,6 @@ import org.smartdata.action.ActionException;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.ExecutorType;
-import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.cluster.NodeInfo;
@@ -38,6 +37,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +48,7 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
   private CmdletFactory cmdletFactory;
   private CmdletExecutor cmdletExecutor;
   private ScheduledExecutorService executorService;
+  private Future scheduledReportTask;
 
   public LocalCmdletExecutorService(SmartConf smartConf, CmdletManager cmdletManager) {
     super(cmdletManager, ExecutorType.LOCAL);
@@ -55,8 +56,12 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
     this.cmdletExecutor = new CmdletExecutor(smartConf, this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
-    this.executorService.scheduleAtFixedRate(
-        new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
+    long reportPeriod = smartConf.getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD,
+            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    scheduledReportTask = this.executorService.scheduleAtFixedRate(
+        statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
     ActiveServerInfo.setInstance(ACTIVE_SERVER_ID, getActiveServerAddress(), ExecutorType.LOCAL);
     EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
   }
@@ -90,6 +95,9 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
 
   @Override
   public void stop(long cmdletId) {
+    if (scheduledReportTask != null) {
+      scheduledReportTask.cancel(true);
+    }
     this.cmdletExecutor.stop(cmdletId);
   }
 
@@ -115,15 +123,5 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
       }
     }
     return srv;
-  }
-
-  private class StatusFetchTask implements Runnable {
-    @Override
-    public void run() {
-      ActionStatusReport statusReport = cmdletExecutor.getActionStatusReport();
-      if (statusReport.getActionStatuses().size() > 0) {
-        report(statusReport);
-      }
-    }
   }
 }

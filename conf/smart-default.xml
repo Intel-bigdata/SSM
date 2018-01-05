@@ -115,6 +115,12 @@
   </property>
 
   <property>
+    <name>smart.status.report.period</name>
+    <value>1000</value>
+    <description>The status report period for cmdlet and action. The unit is millisecond.</description>
+  </property>
+
+  <property>
     <name>pd.client.port</name>
     <value>7060</value>
     <description>Pd port in client-url option</description>

@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.SmartAction;
 import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.protocol.message.StatusReporter;
 
 /**
@@ -37,6 +37,7 @@ public class Cmdlet implements Runnable {
   private long ruleId;   // id of the rule that this cmdlet comes from
   private long id;
   private CmdletState state = CmdletState.NOTINITED;
+  private long stateUpdateTime;
   private final SmartAction[] actions;
   private final StatusReporter statusReporter;
 
@@ -84,7 +85,7 @@ public class Cmdlet implements Runnable {
 
   private void runAllActions() {
     state = CmdletState.EXECUTING;
-    reportCurrentStatus();
+    stateUpdateTime = System.currentTimeMillis();
     for (SmartAction act : actions) {
       if (act == null) {
         continue;
@@ -93,14 +94,15 @@ public class Cmdlet implements Runnable {
       act.init(act.getArguments());
       act.run();
       if (!act.isSuccessful()) {
-        //state = CmdletState.FAILED;
-        reportCurrentStatus();
+        state = CmdletState.FAILED;
+        stateUpdateTime = System.currentTimeMillis();
+        LOG.error("Executing Cmdlet [id={}] meets failed.", getId());
         return;
       }
     }
     state = CmdletState.DONE;
+    stateUpdateTime = System.currentTimeMillis();
     // TODO catch MetaStoreException and handle
-    reportCurrentStatus();
   }
 
   @Override
@@ -108,9 +110,7 @@ public class Cmdlet implements Runnable {
     runAllActions();
   }
 
-  private void reportCurrentStatus() {
-    if (statusReporter != null) {
-      statusReporter.report(new CmdletStatusUpdate(id, System.currentTimeMillis(), state));
-    }
+  public CmdletStatus getCmdletStatus() {
+    return new CmdletStatus(id, stateUpdateTime, state);
   }
 }

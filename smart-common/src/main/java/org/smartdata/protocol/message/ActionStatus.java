@@ -41,6 +41,26 @@ public class ActionStatus implements Serializable {
     this.finished = finished;
   }
 
+  public ActionStatus(long actionId, String log, long finishTime, Throwable t, boolean finished) {
+    this.actionId = actionId;
+    this.log = log;
+    this.finishTime = finishTime;
+    this.throwable = t;
+    this.finished = finished;
+  }
+
+  public ActionStatus(long actionId, long startTime) {
+    this.actionId = actionId;
+    this.startTime = startTime;
+  }
+
+  public ActionStatus(long actionId, long finishTime, Throwable t) {
+    this.actionId = actionId;
+    this.finishTime = finishTime;
+    this.throwable = t;
+  }
+
+
   public long getActionId() {
     return actionId;
   }
