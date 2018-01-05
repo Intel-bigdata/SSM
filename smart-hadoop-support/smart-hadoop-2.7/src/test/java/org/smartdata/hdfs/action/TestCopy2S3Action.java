@@ -59,7 +59,7 @@ public class TestCopy2S3Action extends MiniClusterHarness {
   //   Map<String, String> args = new HashMap<>();
   //   args.put(Copy2S3Action.FILE_PATH, src);
   //
-  //   args.put(Copy2S3Action.DEST_PATH, dest);
+  //   args.put(Copy2S3Action.DEST, dest);
   //   copy2S3Action.init(args);
   //   copy2S3Action.run();
   // }
