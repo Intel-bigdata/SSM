@@ -22,12 +22,9 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.protocol.message.ActionFinished;
-import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReporter;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
@@ -137,32 +134,8 @@ public abstract class SmartAction {
     }
   }
 
-  private void reportStart() {
-    if (statusReporter != null) {
-      statusReporter.report(new ActionStarted(actionId, System.currentTimeMillis()));
-    }
-  }
-
   private void setStartTime() {
     this.startTime = System.currentTimeMillis();
-  }
-
-  private void reportFinished(Throwable throwable) {
-    if (statusReporter != null) {
-      try {
-        statusReporter.report(
-            new ActionFinished(
-                actionId,
-                System.currentTimeMillis(),
-                resultOs.toString("UTF-8"),
-                logOs.toString("UTF-8"),
-                throwable));
-      } catch (IOException e) {
-        LOG.error("Action statusReporter ActionFinished aid={} error", this.actionId, e);
-        statusReporter.report(
-            new ActionFinished(actionId, System.currentTimeMillis(), throwable));
-      }
-    }
   }
 
   private void setThrowable(Throwable t) {
@@ -201,7 +174,7 @@ public abstract class SmartAction {
         actionId,
         getProgress(),
         resultOs.toString("UTF-8"),
-        resultOs.toString("UTF-8"),
+        logOs.toString("UTF-8"),
         startTime,
         finishTime,
         throwable,

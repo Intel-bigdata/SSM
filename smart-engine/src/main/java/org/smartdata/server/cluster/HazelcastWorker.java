@@ -22,14 +22,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.action.ActionException;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
+import org.smartdata.server.engine.cmdlet.StatusReportTask;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 
@@ -48,7 +49,8 @@ public class HazelcastWorker implements StatusReporter {
   private ITopic<StatusMessage> statusTopic;
   private CmdletExecutor cmdletExecutor;
   private CmdletFactory factory;
-  private Future<?> fetcher;
+  private Future<?> scheduledReportTask;
+  private long reportPeriod;
 
   public HazelcastWorker(SmartContext smartContext) {
     this.factory = new CmdletFactory(smartContext, this);
@@ -60,17 +62,19 @@ public class HazelcastWorker implements StatusReporter {
     this.masterMessages =
         instance.getTopic(HazelcastExecutorService.WORKER_TOPIC_PREFIX + instanceId);
     this.masterMessages.addMessageListener(new MasterMessageListener());
+    this.reportPeriod = smartContext.getConf().getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD,
+            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
   }
 
   public void start() {
-    fetcher =
-        executorService.scheduleAtFixedRate(
-            new StatusReporter(), 1000, 1000, TimeUnit.MILLISECONDS);
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
+    scheduledReportTask = executorService.scheduleAtFixedRate(
+            statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
-    if (fetcher != null) {
-      fetcher.cancel(true);
+    if (scheduledReportTask != null) {
+      scheduledReportTask.cancel(true);
     }
     executorService.shutdown();
     cmdletExecutor.shutdown();
@@ -98,16 +102,6 @@ public class HazelcastWorker implements StatusReporter {
       } else if (msg instanceof StopCmdlet) {
         StopCmdlet stopCmdlet = (StopCmdlet) msg;
         cmdletExecutor.stop(stopCmdlet.getCmdletId());
-      }
-    }
-  }
-
-  private class StatusReporter implements Runnable {
-    @Override
-    public void run() {
-      ActionStatusReport report = cmdletExecutor.getActionStatusReport();
-      if (!report.getActionStatuses().isEmpty()) {
-        report(report);
       }
     }
   }

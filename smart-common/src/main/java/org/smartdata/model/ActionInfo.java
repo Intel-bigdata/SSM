@@ -108,7 +108,9 @@ public class ActionInfo {
   }
 
   public void setResult(String result) {
-    this.result = result;
+    if (result != null) {
+      this.result = result;
+    }
   }
 
   public String getLog() {
@@ -116,7 +118,9 @@ public class ActionInfo {
   }
 
   public void setLog(String log) {
-    this.log = log;
+    if (log != null) {
+      this.log = log;
+    }
   }
 
   public boolean isSuccessful() {
@@ -132,7 +136,9 @@ public class ActionInfo {
   }
 
   public void setCreateTime(long createTime) {
-    this.createTime = createTime;
+    if (createTime != 0) {
+      this.createTime = createTime;
+    }
   }
 
   public boolean isFinished() {
@@ -148,7 +154,9 @@ public class ActionInfo {
   }
 
   public void setFinishTime(long finishTime) {
-    this.finishTime = finishTime;
+    if (finishTime != 0) {
+      this.finishTime = finishTime;
+    }
   }
 
   public float getProgress() {

@@ -39,10 +39,10 @@ import org.smartdata.AgentService;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
-import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
+import org.smartdata.server.engine.cmdlet.StatusReportTask;
 import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
@@ -61,6 +61,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -73,6 +74,7 @@ public class SmartAgent implements StatusReporter {
   private ActorSystem system;
   private ActorRef agentActor;
   private CmdletExecutor cmdletExecutor;
+  private Future scheduledReportTask;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
@@ -143,12 +145,20 @@ public class SmartAgent implements StatusReporter {
     cmdletExecutor = agentCmdletService.getCmdletExecutor();
 
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    executorService.scheduleAtFixedRate(new StatusReportTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
+    long reportPeriod = conf.getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD,
+            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    scheduledReportTask = executorService.scheduleAtFixedRate(
+            statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
 
     system.awaitTermination();
   }
 
   public void close() {
+    if (scheduledReportTask != null) {
+      scheduledReportTask.cancel(true);
+    }
+
     Services.stop();
     if (system != null && !system.isTerminated()) {
       LOG.info("Shutting down system {}", AgentUtils.getSystemAddres(system));
@@ -330,15 +340,6 @@ public class SmartAgent implements StatusReporter {
         getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
         LOG.info("Failed to find master after {}; Shutting down...", TIMEOUT);
         agent.close();
-      }
-    }
-  }
-  private class StatusReportTask implements Runnable {
-    @Override
-    public void run() {
-      ActionStatusReport report = cmdletExecutor.getActionStatusReport();
-      if (!report.getActionStatuses().isEmpty()) {
-        report(report);
       }
     }
   }
