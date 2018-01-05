@@ -171,6 +171,7 @@ public class CmdletManager extends AbstractService {
         for (CmdletInfo cmdletInfo : cmdletInfos) {
           List<ActionInfo> actionInfos = getActionInfosInDB(cmdletInfo);
           for (ActionInfo actionInfo: actionInfos) {
+            actionInfo.setCreateTime(System.currentTimeMillis());
             actionInfo.setFinishTime(System.currentTimeMillis());
           }
           syncCmdAction(cmdletInfo, actionInfos);
@@ -894,17 +895,34 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void onActionStatusReport(ActionStatusReport report) throws IOException {
+  private void onActionStatusReport(ActionStatusReport report) throws IOException, ActionException {
     for (ActionStatus status : report.getActionStatuses()) {
       long actionId = status.getActionId();
       if (idToActions.containsKey(actionId)) {
         ActionInfo actionInfo = idToActions.get(actionId);
         synchronized (actionInfo) {
           if (!actionInfo.isFinished()) {
-            actionInfo.setProgress(status.getPercentage());
+            actionInfo.setCreateTime(status.getStartTime());
             actionInfo.setLog(status.getLog());
             actionInfo.setResult(status.getResult());
-            actionInfo.setFinishTime(System.currentTimeMillis());
+            if (!status.isFinished()) {
+              actionInfo.setProgress(status.getPercentage());
+              actionInfo.setFinishTime(System.currentTimeMillis());
+            } else {
+              actionInfo.setProgress(1.0F);
+              actionInfo.setFinished(true);
+              actionInfo.setFinishTime(status.getFinishTime());
+              unLockFileIfNeeded(actionInfo);
+              if (status.getThrowable() != null) {
+                actionInfo.setSuccessful(false);
+              } else {
+                actionInfo.setSuccessful(true);
+                updateStorageIfNeeded(actionInfo);
+              }
+              for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+                p.onActionFinished(actionInfo);
+              }
+            }
           }
         }
       } else {
