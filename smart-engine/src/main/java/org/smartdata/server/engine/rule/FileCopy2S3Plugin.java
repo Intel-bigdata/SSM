@@ -66,7 +66,7 @@ public class FileCopy2S3Plugin implements RuleExecutorPlugin {
       TranslateResult tResult, CmdletDescriptor descriptor) {
     for (int i = 0; i < descriptor.actionSize(); i++) {
       // O(n)
-      if (!descriptor.getActionName(i).equals("copy2s3")) {
+      if (descriptor.getActionName(i).equals("copy2s3")) {
         String srcPath = descriptor.getActionArgs(i).get(Copy2S3Action.SRC);
         String destBase = descriptor.getActionArgs(i).get(Copy2S3Action.DEST);
         String workPath = null;
@@ -82,7 +82,7 @@ public class FileCopy2S3Plugin implements RuleExecutorPlugin {
         }
         // Update dest path
         // dest base + work path = dest full path
-        descriptor.getActionArgs(i).put(Copy2S3Action.DEST, destBase + workPath);
+        descriptor.addActionArg(i, Copy2S3Action.DEST, destBase + workPath);
       }
     }
     return descriptor;
