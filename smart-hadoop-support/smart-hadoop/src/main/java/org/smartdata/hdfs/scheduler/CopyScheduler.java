@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.action.SyncAction;
+import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -116,7 +117,7 @@ public class CopyScheduler extends ActionSchedulerService {
       return ScheduleResult.FAIL;
     }
     String srcDir = action.getArgs().get(SyncAction.SRC);
-    String path = action.getArgs().get("-file");
+    String path = action.getArgs().get(HdfsAction.FILE_PATH);
     String destDir = action.getArgs().get(SyncAction.DEST);
     // Check again to avoid corner cases
     long did = fileDiffChainMap.get(path).getHead();
@@ -141,11 +142,11 @@ public class CopyScheduler extends ActionSchedulerService {
         break;
       case DELETE:
         action.setActionType("delete");
-        action.getArgs().put("-file", path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
         break;
       case RENAME:
         action.setActionType("rename");
-        action.getArgs().put("-file", path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
         // TODO scope check
         String remoteDest = fileDiff.getParameters().get("-dest");
         action.getArgs().put("-dest", remoteDest.replace(srcDir, destDir));
@@ -153,7 +154,7 @@ public class CopyScheduler extends ActionSchedulerService {
         break;
       case METADATA:
         action.setActionType("metadata");
-        action.getArgs().put("-file", path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
         break;
       default:
         break;
@@ -194,7 +195,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
-    String path = actionInfo.getArgs().get("-file");
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
     // If locked then false
     if (!isFileLocked(path)) {

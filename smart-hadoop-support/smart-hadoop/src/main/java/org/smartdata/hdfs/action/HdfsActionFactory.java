@@ -44,6 +44,7 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction(MergeFileAction.class);
     addAction(MetaDataAction.class);
     addAction(Copy2S3Action.class);
+    addAction(Truncate0Action.class);
 //    addAction("list", ListFileAction.class);
 //    addAction("fsck", FsckAction.class);
 //    addAction("diskbalance", DiskBalanceAction.class);
