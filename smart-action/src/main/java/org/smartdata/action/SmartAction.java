@@ -50,6 +50,10 @@ public abstract class SmartAction {
   private PrintStream psLogOs;
   private volatile boolean successful;
   protected String name;
+  private long startTime;
+  private long finishTime;
+  private Throwable throwable;
+  private boolean finished;
 
   public SmartAction() {
     this(null);
@@ -118,17 +122,17 @@ public abstract class SmartAction {
   protected abstract void execute() throws Exception;
 
   public final void run() {
-    Throwable throwable = null;
     try {
-      reportStart();
+      setStartTime();
       execute();
       successful = true;
     } catch (Throwable t) {
       LOG.error("SmartAction execute error ", t);
-      throwable = t;
+      setThrowable(t);
       appendLog(ExceptionUtils.getFullStackTrace(t));
     } finally {
-      reportFinished(throwable);
+      setFinishTime();
+      finished = true;
       stop();
     }
   }
@@ -137,6 +141,10 @@ public abstract class SmartAction {
     if (statusReporter != null) {
       statusReporter.report(new ActionStarted(actionId, System.currentTimeMillis()));
     }
+  }
+
+  private void setStartTime() {
+    this.startTime = System.currentTimeMillis();
   }
 
   private void reportFinished(Throwable throwable) {
@@ -155,6 +163,14 @@ public abstract class SmartAction {
             new ActionFinished(actionId, System.currentTimeMillis(), throwable));
       }
     }
+  }
+
+  private void setThrowable(Throwable t) {
+    this.throwable = t;
+  }
+
+  private void setFinishTime() {
+    this.finishTime = System.currentTimeMillis();
   }
 
   protected void appendResult(String result) {
@@ -185,7 +201,11 @@ public abstract class SmartAction {
         actionId,
         getProgress(),
         resultOs.toString("UTF-8"),
-        resultOs.toString("UTF-8"));
+        resultOs.toString("UTF-8"),
+        startTime,
+        finishTime,
+        throwable,
+        finished);
   }
 
   private void stop() {
@@ -195,5 +215,9 @@ public abstract class SmartAction {
 
   public boolean isSuccessful() {
     return successful;
+  }
+
+  public boolean isFinished() {
+    return finished;
   }
 }

@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +52,7 @@ public class CmdletExecutor {
   private final SmartConf smartConf;
   private Map<Long, Future> listenableFutures;
   private Map<Long, Cmdlet> runningCmdlets;
+  private List<SmartAction> reportActionList;
   private ListeningExecutorService executorService;
 
   public CmdletExecutor(SmartConf smartConf, StatusReporter reporter) {
@@ -58,6 +60,7 @@ public class CmdletExecutor {
     this.smartConf = smartConf;
     this.listenableFutures = new ConcurrentHashMap<>();
     this.runningCmdlets = new ConcurrentHashMap<>();
+    this.reportActionList = new LinkedList<>();
     int nThreads =
         smartConf.getInt(
             SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
@@ -70,6 +73,9 @@ public class CmdletExecutor {
     Futures.addCallback(future, new CmdletCallBack(cmdlet), executorService);
     this.listenableFutures.put(cmdlet.getId(), future);
     this.runningCmdlets.put(cmdlet.getId(), cmdlet);
+    for (SmartAction action: cmdlet.getActions()) {
+      this.reportActionList.add(action);
+    }
   }
 
   public void stop(Long cmdletId) {
@@ -86,13 +92,14 @@ public class CmdletExecutor {
 
   public ActionStatusReport getActionStatusReport() {
     List<ActionStatus> actionStatusList = new ArrayList<>();
-    for (Cmdlet cmdlet : this.runningCmdlets.values()) {
-      for (SmartAction action : cmdlet.getActions()) {
-        try {
-          actionStatusList.add(action.getActionStatus());
-        } catch (UnsupportedEncodingException e) {
-          LOG.error("Add actionStatus aid={} to actionStatusList error", action.getActionId(), e);
+    for (SmartAction action : reportActionList) {
+      try {
+        actionStatusList.add(action.getActionStatus());
+        if (action.isFinished()) {
+          reportActionList.remove(action);
         }
+      } catch (UnsupportedEncodingException e) {
+        LOG.error("Add actionStatus aid={} to actionStatusList error", action.getActionId(), e);
       }
     }
     return new ActionStatusReport(actionStatusList);
