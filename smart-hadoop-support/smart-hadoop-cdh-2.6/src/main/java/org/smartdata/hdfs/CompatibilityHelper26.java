@@ -165,7 +165,6 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     //Delete file and create file
     //save the metadata
     HdfsFileStatus fileStatus = client.getFileInfo(src);
-
     //delete file
     client.delete(src, true);
     //create file
@@ -174,10 +173,8 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     client.setOwner(src, fileStatus.getOwner(), fileStatus.getGroup());
     client.setPermission(src, fileStatus.getPermission());
     client.setReplication(src, fileStatus.getReplication());
-    // TODO set Storagepolicy
-    client.setStoragePolicy(src, "Hot");
+    client.setStoragePolicy(src, "Cold");
     // client.setTimes(src, fileStatus.getAccessTime(), client.getFileInfo(src).getModificationTime());
-
     return true;
   }
 
@@ -186,7 +183,6 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     //Delete file and create file
     //save the metadata
     FileStatus fileStatus = fileSystem.getFileStatus(new Path(src));
-
     //delete file
     fileSystem.delete(new Path(src), true);
     //create file
@@ -195,11 +191,9 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     fileSystem.setOwner(new Path(src), fileStatus.getOwner(), fileStatus.getGroup());
     fileSystem.setPermission(new Path(src), fileStatus.getPermission());
     fileSystem.setReplication(new Path(src), fileStatus.getReplication());
-    // TODO set Storagepolicy
-    fileSystem.setStoragePolicy(new Path(src), "Hot");
+    fileSystem.setStoragePolicy(new Path(src), "Cold");
     // fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
     //     fileSystem.getFileStatus(new Path(src)).getModificationTime());
-
     return true;
   }
 
