@@ -131,6 +131,9 @@ public class StorageDao {
 
   public void insertUpdateStoragesTable(final StorageCapacity[] storages)
       throws SQLException {
+    if (storages.length == 0) {
+      return;
+    }
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "REPLACE INTO storage (type, capacity, free) VALUES (?,?,?);";
     jdbcTemplate.batchUpdate(sql,
@@ -153,6 +156,12 @@ public class StorageDao {
     String sql = "SELECT COUNT(*) FROM storage WHERE type = ?";
 
     return jdbcTemplate.queryForObject(sql, Integer.class, type);
+  }
+
+  public void deleteStorage(String storageType) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM storage WHERE type = ?";
+    jdbcTemplate.update(sql, storageType);
   }
 
   public synchronized boolean updateStoragesTable(String type

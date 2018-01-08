@@ -403,9 +403,42 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void insertUpdateStoragesTable(List<StorageCapacity> storages)
+      throws MetaStoreException {
+    mapStorageCapacity = null;
+    try {
+      storageDao.insertUpdateStoragesTable(
+          storages.toArray(new StorageCapacity[storages.size()]));
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void insertUpdateStoragesTable(StorageCapacity storage)
       throws MetaStoreException {
     insertUpdateStoragesTable(new StorageCapacity[]{storage});
+  }
+
+  public Map<String, StorageCapacity> getStorageCapacity() throws MetaStoreException {
+    if (mapStorageCapacity == null) {
+      updateCache();
+    }
+
+    Map<String, StorageCapacity> ret = new HashMap<>();
+    if (mapStorageCapacity != null) {
+      for (String key : mapStorageCapacity.keySet()) {
+        ret.put(key, mapStorageCapacity.get(key));
+      }
+    }
+    return ret;
+  }
+
+  public void deleteStorage(String storageType) throws MetaStoreException {
+    try {
+      storageDao.deleteStorage(storageType);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   public StorageCapacity getStorageCapacity(

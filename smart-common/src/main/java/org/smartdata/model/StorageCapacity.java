@@ -18,9 +18,9 @@
 package org.smartdata.model;
 
 public final class StorageCapacity {
-  private final String type;
-  private final Long capacity;
-  private final Long free;
+  private String type;
+  private Long capacity;
+  private Long free;
 
   public StorageCapacity(String type, Long capacity, Long free) {
     this.type = type;
@@ -36,8 +36,16 @@ public final class StorageCapacity {
     return capacity;
   }
 
+  public void addCapacity(long v) {
+    capacity += v;
+  }
+
   public Long getFree() {
     return free;
+  }
+
+  public void addFree(long v) {
+    free += v;
   }
 
   @Override
