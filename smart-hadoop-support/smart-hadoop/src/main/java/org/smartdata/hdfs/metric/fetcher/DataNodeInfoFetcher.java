@@ -26,6 +26,7 @@ import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -47,7 +48,7 @@ import java.util.concurrent.TimeUnit;
  * Fetch and maintain data nodes related info.
  */
 public class DataNodeInfoFetcher {
-  private static final long DN_STORAGE_REPORT_UPDATE_INTERVAL = 30 * 1000;
+  private long updateInterval;
   private final DFSClient client;
   private final MetaStore metaStore;
   private final ScheduledExecutorService scheduledExecutorService;
@@ -63,6 +64,8 @@ public class DataNodeInfoFetcher {
     this.metaStore = metaStore;
     this.scheduledExecutorService = service;
     this.conf = conf;
+    updateInterval = conf.getInt(SmartConfKeys.SMART_STORAGE_INFO_UPDATE_INTERVAL_KEY,
+        SmartConfKeys.SMART_STORAGE_INFO_UPDATE_INTERVAL_DEFAULT) * 1000;
   }
 
   public void start() throws IOException {
@@ -70,7 +73,7 @@ public class DataNodeInfoFetcher {
 
     procTask = new DataNodeInfoFetchTask(client, conf, metaStore);
     dnStorageReportProcTaskFuture = scheduledExecutorService.scheduleAtFixedRate(
-        procTask, 0, DN_STORAGE_REPORT_UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
+        procTask, 0, updateInterval, TimeUnit.MILLISECONDS);
 
     LOG.info("DataNodeInfoFetcher service started.");
   }
