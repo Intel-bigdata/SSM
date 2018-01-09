@@ -18,6 +18,7 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.fs.CreateFlag;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -28,6 +29,7 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
@@ -167,12 +169,46 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
 
   @Override
   public boolean setLen2Zero(DFSClient client, String src) throws IOException {
-    return client.truncate(src, 0);
+    // return client.truncate(src, 0);
+    // Delete file and create file
+    // Save the metadata
+    HdfsFileStatus fileStatus = client.getFileInfo(src);
+    // AclStatus aclStatus = client.getAclStatus(src);
+    // Delete file
+    client.delete(src, true);
+    // Create file
+    client.create(src, true);
+    // Set metadata
+    client.setOwner(src, fileStatus.getOwner(), fileStatus.getGroup());
+    client.setPermission(src, fileStatus.getPermission());
+    client.setReplication(src, fileStatus.getReplication());
+    client.setStoragePolicy(src, "Cold");
+    client.setTimes(src, fileStatus.getAccessTime(),
+        client.getFileInfo(src).getModificationTime());
+    // client.setAcl(src, aclStatus.getEntries());
+    return true;
   }
 
   @Override
   public boolean setLen2Zero(DistributedFileSystem fileSystem, String src) throws IOException {
-    return fileSystem.truncate(new Path(src), 0);
+    // return fileSystem.truncate(new Path(src), 0);
+    // Delete file and create file
+    // Save the metadata
+    FileStatus fileStatus = fileSystem.getFileStatus(new Path(src));
+    // AclStatus aclStatus = fileSystem.getAclStatus(new Path(src));
+    // Delete file
+    fileSystem.delete(new Path(src), true);
+    // Create file
+    fileSystem.create(new Path(src), true);
+    // Set metadata
+    fileSystem.setOwner(new Path(src), fileStatus.getOwner(), fileStatus.getGroup());
+    fileSystem.setPermission(new Path(src), fileStatus.getPermission());
+    fileSystem.setReplication(new Path(src), fileStatus.getReplication());
+    fileSystem.setStoragePolicy(new Path(src), "Cold");
+    // fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
+    //     fileSystem.getFileStatus(new Path(src)).getModificationTime());
+    // fileSystem.setAcl(new Path(src), aclStatus.getEntries());
+    return true;
   }
 
   @Override
