@@ -291,7 +291,7 @@ public class MetaStoreUtils {
               + "  aid INTEGER PRIMARY KEY,\n"
               + "  cid INTEGER NOT NULL,\n"
               + "  action_name varchar(4096) NOT NULL,\n"
-              + "  args varchar(4096) NOT NULL,\n"
+              + "  args text NOT NULL,\n"
               + "  result text NOT NULL,\n"
               + "  log text NOT NULL,\n"
               + "  successful tinyint(4) NOT NULL,\n"
