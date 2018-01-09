@@ -27,7 +27,8 @@ public class SmartConstants {
   public static final String SMART_ACTION_SCHEDULER_SERVICE_IMPL =
     "org.smartdata.hdfs.scheduler.MoverScheduler, "
         + "org.smartdata.hdfs.scheduler.CopyScheduler, "
-        + "org.smartdata.hdfs.scheduler.Copy2S3Scheduler";
+        + "org.smartdata.hdfs.scheduler.Copy2S3Scheduler,"
+        + " org.smartdata.hdfs.scheduler.SmallFileScheduler";
 
   public static final String SMART_HADOOP_LAST_INOTIFY_TXID =
     "smart_hadoop_last_inotify_txid";

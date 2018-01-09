@@ -121,7 +121,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-    return super.open(src);
+    return open(src, 1024, true);
   }
 
   @Override

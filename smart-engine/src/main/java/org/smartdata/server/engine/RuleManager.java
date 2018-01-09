@@ -41,6 +41,7 @@ import org.smartdata.server.engine.rule.FileCopy2S3Plugin;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
+import org.smartdata.server.engine.rule.SmallFilePlugin;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,6 +84,7 @@ public class RuleManager extends AbstractService {
 
     RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
     RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
+    RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context.getMetaStore()));
   }
 
   /**

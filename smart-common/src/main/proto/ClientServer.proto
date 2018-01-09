@@ -40,7 +40,9 @@ message CompressionFileStateProto {
 }
 
 message CompactFileStateProto {
-
+  required string containerFilePath = 1;
+  required int64 offset = 2;
+  required int64 length = 3;
 }
 
 message S3FileStateProto {
