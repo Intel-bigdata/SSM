@@ -5,6 +5,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -73,7 +74,7 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
-    String path = actionInfo.getArgs().get("-file");
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (checkTheLengthOfFile(path) == 0) {
       LOG.info("The submit file {}'s length is 0", path);
       return false;
@@ -92,7 +93,7 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
-    String path = actionInfo.getArgs().get("-file");
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     // unlock filelock
     if (ifLocked(path)) {
       unLockTheFile(path);

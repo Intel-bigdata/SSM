@@ -27,7 +27,6 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.hdfs.CompatibilityHelper;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.io.IOException;
@@ -45,14 +44,15 @@ import java.util.Map;
 @ActionSignature(
     actionId = "copy2s3",
     displayName = "copy2s3",
-    usage = HdfsAction.FILE_PATH + " $src " + Copy2S3Action.DEST_PATH +
+    usage = HdfsAction.FILE_PATH + " $src " + Copy2S3Action.DEST +
         " $dest "
 )
 public class Copy2S3Action extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CopyFileAction.class);
   public static final String BUF_SIZE = "-bufSize";
-  public static final String DEST_PATH = "-dest";
+  public static final String SRC = HdfsAction.FILE_PATH;
+  public static final String DEST = "-dest";
   private String srcPath;
   private String destPath;
   private int bufferSize = 64 * 1024;
@@ -71,8 +71,8 @@ public class Copy2S3Action extends HdfsAction {
     }
     super.init(args);
     this.srcPath = args.get(FILE_PATH);
-    if (args.containsKey(DEST_PATH)) {
-      this.destPath = args.get(DEST_PATH);
+    if (args.containsKey(DEST)) {
+      this.destPath = args.get(DEST);
     }
     if (args.containsKey(BUF_SIZE)) {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
