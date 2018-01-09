@@ -35,7 +35,6 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
-import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
 
@@ -165,7 +164,7 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     // Delete file and create file
     // Save the metadata
     HdfsFileStatus fileStatus = client.getFileInfo(src);
-    AclStatus aclStatus = client.getAclStatus(src);
+    // AclStatus aclStatus = client.getAclStatus(src);
     // Delete file
     client.delete(src, true);
     // Create file
@@ -177,7 +176,7 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     client.setStoragePolicy(src, "Cold");
     // client.setTimes(src, fileStatus.getAccessTime(),
     //     client.getFileInfo(src).getModificationTime());
-    client.setAcl(src, aclStatus.getEntries());
+    // client.setAcl(src, aclStatus.getEntries());
     return true;
   }
 
@@ -186,7 +185,7 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     // Delete file and create file
     // Save the metadata
     FileStatus fileStatus = fileSystem.getFileStatus(new Path(src));
-    AclStatus aclStatus = fileSystem.getAclStatus(new Path(src));
+    // AclStatus aclStatus = fileSystem.getAclStatus(new Path(src));
     // Delete file
     fileSystem.delete(new Path(src), true);
     // Create file
@@ -198,7 +197,7 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     fileSystem.setStoragePolicy(new Path(src), "Cold");
     // fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
     //     fileSystem.getFileStatus(new Path(src)).getModificationTime());
-    fileSystem.setAcl(new Path(src), aclStatus.getEntries());
+    // fileSystem.setAcl(new Path(src), aclStatus.getEntries());
     return true;
   }
 
