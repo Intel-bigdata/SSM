@@ -29,9 +29,8 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatus;
-import org.smartdata.protocol.message.CmdletStatusReport;
+import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
 import javax.annotation.Nullable;
@@ -95,7 +94,7 @@ public class CmdletExecutor {
     this.executorService.shutdown();
   }
 
-  public ActionStatusReport getActionStatusReport() {
+  public StatusReport getStatusReport() {
     List<ActionStatus> actionStatusList = new ArrayList<>();
     for (SmartAction action : idToReportAction.values()) {
       try {
@@ -110,10 +109,6 @@ public class CmdletExecutor {
       }
     }
 
-    return new ActionStatusReport(actionStatusList);
-  }
-
-  public CmdletStatusReport getCmdletStatusReport() {
     List<CmdletStatus> cmdletStatusList = new ArrayList<>();
     for (Cmdlet cmdlet: idToReportCmdlet.values()) {
       cmdletStatusList.add(cmdlet.getCmdletStatus());
@@ -124,7 +119,7 @@ public class CmdletExecutor {
       }
     }
 
-    return new CmdletStatusReport(cmdletStatusList);
+    return new StatusReport(actionStatusList, cmdletStatusList);
   }
 
   private void removeCmdlet(long cmdletId) {

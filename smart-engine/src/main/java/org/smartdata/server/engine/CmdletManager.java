@@ -44,11 +44,10 @@ import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.CmdletStatus;
-import org.smartdata.protocol.message.CmdletStatusReport;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -867,10 +866,8 @@ public class CmdletManager extends AbstractService {
     try {
       if (status instanceof CmdletStatusUpdate) {
         onCmdletStatusUpdate((CmdletStatusUpdate) status);
-      } else if (status instanceof CmdletStatusReport) {
-        onCmdletStatusReport((CmdletStatusReport) status);
-      } else if (status instanceof ActionStatusReport) {
-        onActionStatusReport((ActionStatusReport) status);
+      } else if (status instanceof StatusReport) {
+        onStatusReport((StatusReport) status);
       } else if (status instanceof ActionStarted) {
         onActionStarted((ActionStarted) status);
       } else if (status instanceof ActionFinished) {
@@ -881,6 +878,11 @@ public class CmdletManager extends AbstractService {
     } catch (ActionException e) {
       LOG.error("Action Status error {}", e);
     }
+  }
+
+  private void onStatusReport(StatusReport report) throws IOException, ActionException {
+    onActionStatusReport(report.getActionStatuses());
+    onCmdletStatusReport(report.getCmdletStatuses());
   }
 
   private void onCmdletStatusUpdate(CmdletStatusUpdate statusUpdate) throws IOException {
@@ -900,8 +902,11 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void onCmdletStatusReport(CmdletStatusReport statusReport) throws IOException{
-    for (CmdletStatus status: statusReport.getCmdletStatusList()) {
+  private void onCmdletStatusReport(List<CmdletStatus> statuses) throws IOException{
+    if (statuses == null) {
+      return;
+    }
+    for (CmdletStatus status: statuses) {
       long cmdletId = status.getCmdletId();
       if (idToCmdlets.containsKey(cmdletId)) {
         CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
@@ -915,8 +920,12 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void onActionStatusReport(ActionStatusReport report) throws IOException, ActionException {
-    for (ActionStatus status : report.getActionStatuses()) {
+  private void onActionStatusReport(List<ActionStatus> statuses)
+          throws IOException, ActionException {
+    if (statuses == null) {
+      return;
+    }
+    for (ActionStatus status : statuses) {
       long actionId = status.getActionId();
       if (idToActions.containsKey(actionId)) {
         ActionInfo actionInfo = idToActions.get(actionId);
@@ -1129,9 +1138,7 @@ public class CmdletManager extends AbstractService {
                 long finishTime = System.currentTimeMillis();
                 ActionStatus actionStatus = new ActionStatus(
                         actionInfo.getActionId(), timeoutLog, finishTime, new Throwable(), true);
-                ActionStatusReport actionStatusReport =
-                        new ActionStatusReport(Arrays.asList(actionStatus));
-                onActionStatusReport(actionStatusReport);
+                onActionStatusReport(Arrays.asList(actionStatus));
               }
             }
             if (cmdFailed) {

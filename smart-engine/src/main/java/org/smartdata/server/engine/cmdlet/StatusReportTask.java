@@ -17,8 +17,7 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
-import org.smartdata.protocol.message.ActionStatusReport;
-import org.smartdata.protocol.message.CmdletStatusReport;
+import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
 public class StatusReportTask implements Runnable {
@@ -32,13 +31,10 @@ public class StatusReportTask implements Runnable {
 
   @Override
   public void run() {
-    ActionStatusReport actionReport = cmdletExecutor.getActionStatusReport();
-    if (!actionReport.getActionStatuses().isEmpty()) {
-      statusReporter.report(actionReport);
-    }
-    CmdletStatusReport cmdletReport = cmdletExecutor.getCmdletStatusReport();
-    if (!cmdletReport.getCmdletStatusList().isEmpty()) {
-      statusReporter.report(cmdletReport);
+    StatusReport statusReport = cmdletExecutor.getStatusReport();
+    if (!statusReport.getActionStatuses().isEmpty()
+            || !statusReport.getCmdletStatuses().isEmpty()) {
+      statusReporter.report(statusReport);
     }
   }
 }
