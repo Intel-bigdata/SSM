@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -29,7 +30,6 @@ import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
@@ -37,8 +37,10 @@ import javax.annotation.Nullable;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -53,7 +55,6 @@ public class CmdletExecutor {
   private Map<Long, Future> listenableFutures;
   private Map<Long, Cmdlet> runningCmdlets;
   private Map<Long, SmartAction> idToReportAction;
-  private Map<Long, Cmdlet> idToReportCmdlet;
 
   private ListeningExecutorService executorService;
 
@@ -62,8 +63,7 @@ public class CmdletExecutor {
     this.smartConf = smartConf;
     this.listenableFutures = new ConcurrentHashMap<>();
     this.runningCmdlets = new ConcurrentHashMap<>();
-    this.idToReportAction = new ConcurrentHashMap<>();
-    this.idToReportCmdlet = new ConcurrentHashMap<>();
+    this.idToReportAction = new TreeMap(Collections.reverseOrder());
     int nThreads =
         smartConf.getInt(
             SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
@@ -76,7 +76,6 @@ public class CmdletExecutor {
     Futures.addCallback(future, new CmdletCallBack(cmdlet), executorService);
     this.listenableFutures.put(cmdlet.getId(), future);
     this.runningCmdlets.put(cmdlet.getId(), cmdlet);
-    this.idToReportCmdlet.put(cmdlet.getId(), cmdlet);
     for (SmartAction action: cmdlet.getActions()) {
       this.idToReportAction.put(action.getActionId(), action);
     }
@@ -96,6 +95,8 @@ public class CmdletExecutor {
 
   public StatusReport getStatusReport() {
     List<ActionStatus> actionStatusList = new ArrayList<>();
+    // get status in the order of the descend action id.
+    // The cmdletmanager should update action status in the ascend order.
     for (SmartAction action : idToReportAction.values()) {
       try {
         actionStatusList.add(action.getActionStatus());
@@ -108,18 +109,7 @@ public class CmdletExecutor {
         idToReportAction.remove(actionStatus.getActionId());
       }
     }
-
-    List<CmdletStatus> cmdletStatusList = new ArrayList<>();
-    for (Cmdlet cmdlet: idToReportCmdlet.values()) {
-      cmdletStatusList.add(cmdlet.getCmdletStatus());
-    }
-    for (CmdletStatus cmdletStatus: cmdletStatusList) {
-      if (CmdletState.isTerminalState(cmdletStatus.getCurrentState())) {
-        idToReportCmdlet.remove(cmdletStatus.getCmdletId());
-      }
-    }
-
-    return new StatusReport(actionStatusList, cmdletStatusList);
+    return new StatusReport(new ArrayList(Lists.reverse(actionStatusList)));
   }
 
   private void removeCmdlet(long cmdletId) {

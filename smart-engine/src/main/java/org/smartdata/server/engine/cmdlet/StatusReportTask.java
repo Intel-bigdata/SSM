@@ -32,8 +32,7 @@ public class StatusReportTask implements Runnable {
   @Override
   public void run() {
     StatusReport statusReport = cmdletExecutor.getStatusReport();
-    if (!statusReport.getActionStatuses().isEmpty()
-            || !statusReport.getCmdletStatuses().isEmpty()) {
+    if (!statusReport.getActionStatuses().isEmpty()) {
       statusReporter.report(statusReport);
     }
   }

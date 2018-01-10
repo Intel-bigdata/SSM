@@ -27,7 +27,7 @@ import org.smartdata.model.ExecutorType;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.CmdletStatus;
+import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -35,7 +35,6 @@ import org.smartdata.server.engine.message.NodeMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -161,10 +160,11 @@ public class CmdletDispatcher {
               new ActionStatus(action.getActionId(), 0, System.currentTimeMillis());
       actionStatusList.add(actionStatus);
     }
-    CmdletStatus cmdletStatus = new CmdletStatus(cmdlet.getCmdletId(),
+    CmdletStatusUpdate cmdletStatus = new CmdletStatusUpdate(cmdlet.getCmdletId(),
             System.currentTimeMillis(), CmdletState.DISPATCHED);
-    StatusReport status = new StatusReport(actionStatusList, Arrays.asList(cmdletStatus));
-    cmdletManager.updateStatus(status);
+    StatusReport actionStatus = new StatusReport(actionStatusList);
+    cmdletManager.updateStatus(actionStatus);
+    cmdletManager.updateStatus(cmdletStatus);
 
     updateSlotsLeft(selected.getExecutorType().ordinal(), -1);
     dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());

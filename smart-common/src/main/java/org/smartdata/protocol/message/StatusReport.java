@@ -21,19 +21,12 @@ import java.util.List;
 
 public class StatusReport implements StatusMessage {
   private List<ActionStatus> actionStatuses;
-  private List<CmdletStatus> cmdletStatuses;
 
-
-  public StatusReport(List<ActionStatus> actionStatuses, List<CmdletStatus> cmdletStatuses) {
+  public StatusReport(List<ActionStatus> actionStatuses) {
     this.actionStatuses = actionStatuses;
-    this.cmdletStatuses = cmdletStatuses;
   }
 
   public List<ActionStatus> getActionStatuses() {
     return actionStatuses;
-  }
-
-  public List<CmdletStatus> getCmdletStatuses() {
-    return cmdletStatuses;
   }
 }
