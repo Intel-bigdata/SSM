@@ -17,7 +17,7 @@ class TestStressDR(unittest.TestCase):
         file_paths = []
         cids = []
         # create random directory
-        source_dir = "/" + random_string() + "/"
+        source_dir = TEST_DIR + random_string() + "/"
         # create 10K random files in random directory
         for i in range(max_number):
             file_paths.append(create_random_file_parallel(FILE_SIZE,
@@ -52,7 +52,7 @@ class TestStressDR(unittest.TestCase):
         file_paths = []
         cids = []
         # create random directory
-        source_dir = "/" + random_string() + "/"
+        source_dir = TEST_DIR + random_string() + "/"
         # create 10K random files in random directory
         for i in range(max_number):
             file_paths.append(create_random_file_parallel(FILE_SIZE,

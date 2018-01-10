@@ -11,7 +11,7 @@ class TestSmallFile(unittest.TestCase):
         max_number = 500
         file_paths = []
         # create random directory in ssmtest
-        source_dir = TEST_DIR + "/" + random_string() + "/"
+        source_dir = TEST_DIR + random_string() + "/"
         # create 500 random files in random directory
         for i in range(max_number):
             file_paths.append(create_random_file_parallel(FILE_SIZE,
