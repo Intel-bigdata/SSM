@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -115,7 +116,8 @@ public class SmallFileCompactAction extends HdfsAction {
       }
     } else {
       if (dfsClient.exists(path)) {
-        return dfsClient.append(path, 4096, EnumSet.of(CreateFlag.APPEND), null, null);
+        return CompatibilityHelperLoader.getHelper()
+            .getDFSClientAppend(dfsClient, path, 64 * 1024, 0);
       } else {
         return dfsClient.create(path, true);
       }
