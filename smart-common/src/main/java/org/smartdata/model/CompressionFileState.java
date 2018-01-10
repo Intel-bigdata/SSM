@@ -27,32 +27,56 @@ import java.util.List;
 public class CompressionFileState extends FileState {
 
   private int bufferSize;
+  private String compressionImpl;
   private long originalLength;
   private long compressedLength;
   private Long[] originalPos;
   private Long[] compressedPos;
 
   public CompressionFileState(String fileName, int bufferSize) {
-    this(fileName, bufferSize, 0, 0, new Long[0], new Long[0]);
+    this(fileName, bufferSize, "snappy", 0, 0, new Long[0], new Long[0]);
+  }
+
+  public CompressionFileState(String fileName, int bufferSize, String compressionImpl,
+                              Long[] originalPos, Long[] compressedPos) {
+    this(fileName, bufferSize, compressionImpl, 0, 0, originalPos, compressedPos);
+  }
+
+  public CompressionFileState(String fileName, int bufferSize, String compressionImpl,
+                              long originalLength, long compressedLength) {
+    this(fileName, bufferSize, compressionImpl,
+      originalLength, compressedLength, new Long[0], new Long[0]);
+  }
+
+  public CompressionFileState(String fileName, int bufferSize, String compressionImpl) {
+    this(fileName, bufferSize, compressionImpl, 0, 0, new Long[0], new Long[0]);
+  }
+
+  public CompressionFileState(String fileName, int bufferSize,
+                              long originalLength, long compressedLength, Long[] originalPos,
+                              Long[] compressedPos) {
+    this(fileName, bufferSize, "snappy", originalLength, compressedLength, originalPos,
+      compressedPos, FileStage.DONE);
   }
 
   public CompressionFileState(String fileName, int bufferSize,
                               Long[] originalPos, Long[] compressedPos) {
-    this(fileName, bufferSize, 0, 0, originalPos, compressedPos);
+    this(fileName, bufferSize, "snappy", 0, 0, originalPos, compressedPos);
   }
 
-  public CompressionFileState(String fileName, int bufferSize,
-      long originalLength, long compressedLength, Long[] originalPos,
-      Long[] compressedPos) {
-    this(fileName, bufferSize, originalLength, compressedLength, originalPos,
-        compressedPos, FileStage.DONE);
+  public CompressionFileState(String fileName, int bufferSize, String compressionImpl,
+                              long originalLength, long compressedLength, Long[] originalPos,
+                              Long[] compressedPos) {
+    this(fileName, bufferSize, compressionImpl, originalLength, compressedLength, originalPos,
+      compressedPos, FileStage.DONE);
   }
 
-  public CompressionFileState(String fileName, int bufferSize,
-      long originalLength, long compressedLength, Long[] originalPos,
-      Long[] compressedPos, FileStage stage) {
+  public CompressionFileState(String fileName, int bufferSize, String compressionImpl,
+                              long originalLength, long compressedLength, Long[] originalPos,
+                              Long[] compressedPos, FileStage stage) {
     super(fileName, FileType.COMPRESSION, stage);
     this.bufferSize = bufferSize;
+    this.compressionImpl = compressionImpl;
     this.originalLength = originalLength;
     this.compressedLength = compressedLength;
     this.originalPos = originalPos;
@@ -85,6 +109,14 @@ public class CompressionFileState extends FileState {
 
   public Long[] getCompressedPos() {
     return compressedPos;
+  }
+
+  public String getCompressionImpl() {
+    return compressionImpl;
+  }
+
+  public void setCompressionImpl(String compressionImpl) {
+    this.compressionImpl = compressionImpl;
   }
 
   /**
@@ -194,6 +226,7 @@ public class CompressionFileState extends FileState {
   public static class Builder {
     private String fileName = null;
     private int bufferSize = 0;
+    private String compressImpl = "snappy";
     private long originalLength;
     private long compressedLength;
     private Long[] originalPos;
@@ -211,6 +244,11 @@ public class CompressionFileState extends FileState {
 
     public Builder setBufferSize(int bufferSize) {
       this.bufferSize = bufferSize;
+      return this;
+    }
+
+    public Builder setCompressImpl(String compressImpl) {
+      this.compressImpl = compressImpl;
       return this;
     }
 
@@ -250,7 +288,7 @@ public class CompressionFileState extends FileState {
     }
 
     public CompressionFileState build() {
-      return new CompressionFileState(fileName, bufferSize, originalLength,
+      return new CompressionFileState(fileName, bufferSize, compressImpl, originalLength,
           compressedLength, originalPos, compressedPos, fileStage);
     }
   }
