@@ -41,7 +41,7 @@ class TestStressDR(unittest.TestCase):
         delete_rule(rid)
         # delete all random files
         for i in range(max_number):
-            cids.append(delete_file(file_path[i]))
+            cids.append(delete_file(file_paths[i]))
         wait_for_cmdlets(cids)
 
     def test_sync_rule_100000(self):
@@ -76,7 +76,7 @@ class TestStressDR(unittest.TestCase):
         delete_rule(rid)
         # delete all random files
         for i in range(max_number):
-            cids.append(delete_file(file_path[i]))
+            cids.append(delete_file(file_paths[i]))
         wait_for_cmdlets(cids)
 
 
