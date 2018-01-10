@@ -261,6 +261,15 @@ def append_file(file_path, length=1024):
     return submit_cmdlet(cmdlet_str)
 
 
+def compact_small_file(src_files, container_file):
+    """
+    compact small files into container_file
+    """
+    cmdlet_str = "compact -file " + src_files + \
+                 " -containerFile " + container_file
+    return submit_cmdlet(cmdlet_str)
+
+
 def random_move_test_file(file_path):
     index = random.randrange(len(MOVE_TYPE))
     resp = requests.post(CMDLET_ROOT + "/submit",
