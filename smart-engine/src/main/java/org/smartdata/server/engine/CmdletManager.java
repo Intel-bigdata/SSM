@@ -451,15 +451,17 @@ public class CmdletManager extends AbstractService {
             if (result == ScheduleResult.SUCCESS) {
               idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
               cmdlet.setState(CmdletState.SCHEDULED);
+              cmdlet.setStateChangedTime(System.currentTimeMillis());
               scheduledCmdlet.add(id);
               nScheduled++;
             } else if (result == ScheduleResult.FAIL) {
               cmdlet.updateState(CmdletState.CANCELLED);
-              CmdletStatusUpdate msg = new CmdletStatusUpdate(cmdlet.getCid(),
-                  cmdlet.getStateChangedTime(), cmdlet.getState());
+              cmdlet.setStateChangedTime(System.currentTimeMillis());
+              CmdletStatus cmdletStatus = new CmdletStatus(
+                      cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
               // Mark all actions as finished and successful
               cmdletFinishedInternal(cmdlet);
-              onCmdletStatusUpdate(msg);
+              onCmdletStatusReport(cmdletStatus);
             }
             break;
         }
@@ -870,7 +872,8 @@ public class CmdletManager extends AbstractService {
     LOG.debug("Got status update: " + status);
     try {
       if (status instanceof CmdletStatusUpdate) {
-        onCmdletStatusUpdate((CmdletStatusUpdate) status);
+        CmdletStatusUpdate statusUpdate = (CmdletStatusUpdate) status;
+        onCmdletStatusReport(statusUpdate.getCmdletStatus());
       } else if (status instanceof StatusReport) {
         onStatusReport((StatusReport) status);
       } else if (status instanceof ActionStarted) {
@@ -898,23 +901,6 @@ public class CmdletManager extends AbstractService {
       for (CmdletStatus cmdletStatus: cmdletStatusList) {
         onCmdletStatusReport(cmdletStatus);
       }
-    }
-  }
-
-  private void onCmdletStatusUpdate(CmdletStatusUpdate statusUpdate) throws IOException {
-    long cmdletId = statusUpdate.getCmdletId();
-    if (idToCmdlets.containsKey(cmdletId)) {
-      CmdletState state = statusUpdate.getCurrentState();
-      CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
-      cmdletInfo.setState(state);
-      //The cmdlet is already finished or terminated, remove status from memory.
-      if (CmdletState.isTerminalState(state)) {
-        cmdletFinished(cmdletId);
-      } else if (state == CmdletState.DISPATCHED) {
-        flushCmdletInfo(cmdletInfo);
-      }
-    } else {
-      // Updating cmdlet status which is not pending or running
     }
   }
 
