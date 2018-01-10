@@ -153,6 +153,7 @@ public class MetaStoreUtils {
         "DROP TABLE IF EXISTS user_group;",
         "DROP TABLE IF EXISTS owner;",
         "DROP TABLE IF EXISTS storage;",
+        "DROP TABLE IF EXISTS storage_hist;",
         "DROP TABLE IF EXISTS storage_policy;",
         "DROP TABLE IF EXISTS xattr;",
         "DROP TABLE IF EXISTS datanode_info;",
@@ -223,10 +224,19 @@ public class MetaStoreUtils {
               + "  owner_name varchar(255) DEFAULT NULL\n"
               + ") ;",
           "CREATE TABLE storage (\n"
-              + "  type varchar(255) PRIMARY KEY,\n"
+              + "  type varchar(32) PRIMARY KEY,\n"
+              + "  time_stamp bigint(20) DEFAULT NULL,\n"
               + "  capacity bigint(20) NOT NULL,\n"
               + "  free bigint(20) NOT NULL\n"
               + ") ;",
+          "CREATE TABLE storage_hist (\n" // Keep this compatible with Table 'storage'
+              + "  type varchar(64),\n"
+              + "  time_stamp bigint(20) DEFAULT NULL,\n"
+              + "  capacity bigint(20) NOT NULL,\n"
+              + "  free bigint(20) NOT NULL\n"
+              + ") ;",
+          "CREATE INDEX type_idx ON storage_hist (type);",
+          "CREATE INDEX time_stamp_idx ON storage_hist (time_stamp);",
           "CREATE TABLE storage_policy (\n"
               + "  sid tinyint(4) PRIMARY KEY,\n"
               + "  policy_name varchar(64) DEFAULT NULL\n"

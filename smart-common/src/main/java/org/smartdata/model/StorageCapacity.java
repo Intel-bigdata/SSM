@@ -19,13 +19,25 @@ package org.smartdata.model;
 
 public final class StorageCapacity {
   private String type;
+  private Long timeStamp;
   private Long capacity;
   private Long free;
+
+  public StorageCapacity(String type, Long timeStamp, Long capacity, Long free) {
+    this.type = type;
+    this.timeStamp = timeStamp;
+    this.capacity = capacity;
+    this.free = free;
+  }
 
   public StorageCapacity(String type, Long capacity, Long free) {
     this.type = type;
     this.capacity = capacity;
     this.free = free;
+  }
+
+  public void setType(String type) {
+    this.type = type;
   }
 
   public String getType() {
@@ -34,6 +46,14 @@ public final class StorageCapacity {
 
   public Long getCapacity() {
     return capacity;
+  }
+
+  public Long getTimeStamp() {
+    return timeStamp;
+  }
+
+  public void setTimeStamp(Long timeStamp) {
+    this.timeStamp = timeStamp;
   }
 
   public void addCapacity(long v) {
@@ -49,7 +69,7 @@ public final class StorageCapacity {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(Object o) { // timeStamp not considered
     if (this == o) {
       return true;
     }
