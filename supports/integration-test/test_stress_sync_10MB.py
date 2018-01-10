@@ -5,7 +5,7 @@ from util import *
 
 # 10MB
 FILE_SIZE = 10 * 1024 * 1024
-DEST_DIR = "hdfs://datanode3:9000/dest"
+DEST_DIR = "hdfs://localhost:9000/dest"
 
 
 class TestStressDR(unittest.TestCase):
