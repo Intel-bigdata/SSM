@@ -31,6 +31,8 @@ import org.smartdata.model.CompressionFileState;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,15 +46,21 @@ import java.util.Map;
             + " $file "
             + CompressionAction.BUF_SIZE
             + " $size "
+            + CompressionAction.COMPRESS_IMPL
+            + " $impl"
 )
 public class CompressionAction extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CompressionAction.class);
 
   public static final String BUF_SIZE = "-bufSize";
+  public static final String COMPRESS_IMPL = "compressImpl";
+  private static List<String> compressionImplList = Arrays.asList(new String[]{
+    "Lz4","Bzip2","Zlib","snappy"});
 
   private String filePath;
   private int bufferSize = 1024 * 1024;
+  private String compressionImpl = "snappy";
   private int UserDefinedbuffersize;
   private int Calculatedbuffersize;
 
@@ -65,6 +73,9 @@ public class CompressionAction extends HdfsAction {
     if (args.containsKey(BUF_SIZE)) {
       this.UserDefinedbuffersize = Integer.valueOf(args.get(BUF_SIZE));
     }
+    if (args.containsKey(COMPRESS_IMPL)) {
+      this.compressionImpl = args.get(COMPRESS_IMPL);
+    }
   }
 
   @Override
@@ -72,15 +83,17 @@ public class CompressionAction extends HdfsAction {
     if (filePath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
+    if(!compressionImplList.contains(compressionImpl)){
+      throw new ActionException("Action fails, this compressionImpl isn't supported!");
+    }
     appendLog(
         String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
 
     if (!defaultDfsClient.exists(filePath)) {
       throw new ActionException("ReadFile Action fails, file doesn't exist!");
     }
-
     // Generate compressed file
-    String compressedFileName = "/tmp/ssm" + filePath + "." + System.currentTimeMillis() + ".ssm_snappy";
+    String compressedFileName = "/tmp/ssm" + filePath + "." + System.currentTimeMillis() + ".ssm_compression";
     HdfsFileStatus srcFile = defaultDfsClient.getFileInfo(filePath);
     short replication = srcFile.getReplication();
     long blockSize = srcFile.getBlockSize();
@@ -91,15 +104,16 @@ public class CompressionAction extends HdfsAction {
     //Determine the actual buffersize
     if(UserDefinedbuffersize < bufferSize || UserDefinedbuffersize < Calculatedbuffersize){
       if(bufferSize <= Calculatedbuffersize){
-        LOG.warn("User defined buffersize is too small,use the calculated buffersize:" + Calculatedbuffersize );
+        appendLog("User defined buffersize is too small,use the calculated buffersize:" + Calculatedbuffersize );
       }else{
-        LOG.warn("User defined buffersize is too small,use the default buffersize:" + bufferSize );
+        appendLog("User defined buffersize is too small,use the default buffersize:" + bufferSize );
       }
     }
     bufferSize = Math.max(Math.max(UserDefinedbuffersize,Calculatedbuffersize),bufferSize);
     
     DFSInputStream dfsInputStream = defaultDfsClient.open(filePath);
-    compressionInfo = new CompressionFileState(filePath, bufferSize);
+    compressionInfo = new CompressionFileState(filePath, bufferSize, compressionImpl);
+    compressionInfo.setCompressionImpl(compressionImpl);
     compressionInfo.setOriginalLength(srcFile.getLen());
     OutputStream compressedOutputStream = defaultDfsClient.create(compressedFileName,
       true, replication, blockSize);
