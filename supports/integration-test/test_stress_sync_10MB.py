@@ -17,10 +17,11 @@ class TestStressDR(unittest.TestCase):
         file_paths = []
         cids = []
         # create random directory
-        source_dir = "/" + random_string() + "/"
+        source_dir = TEST_DIR + random_string() + "/"
         # create 10K random files in random directory
         for i in range(max_number):
-            file_paths.append(create_random_file_parallel(FILE_SIZE, source_dir))
+            file_paths.append(create_random_file_parallel(FILE_SIZE,
+                                                          source_dir))
         time.sleep(1)
         rule_str = "file : every 1s | path matches " + \
             "\"" + source_dir + "*\" | sync -dest " + DEST_DIR
@@ -51,10 +52,11 @@ class TestStressDR(unittest.TestCase):
         file_paths = []
         cids = []
         # create random directory
-        source_dir = "/" + random_string() + "/"
+        source_dir = TEST_DIR + random_string() + "/"
         # create 10K random files in random directory
         for i in range(max_number):
-            file_paths.append(create_random_file_parallel(FILE_SIZE, source_dir))
+            file_paths.append(create_random_file_parallel(FILE_SIZE,
+                                                          source_dir))
         time.sleep(1)
         rule_str = "file : every 1s | path matches " + \
             "\"" + source_dir + "*\" | sync -dest " + DEST_DIR
