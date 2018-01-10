@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.SmartAction;
 import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.protocol.message.StatusReporter;
 
 /**
@@ -108,9 +107,5 @@ public class Cmdlet implements Runnable {
   @Override
   public void run() {
     runAllActions();
-  }
-
-  public CmdletStatus getCmdletStatus() {
-    return new CmdletStatus(id, stateUpdateTime, state);
   }
 }
