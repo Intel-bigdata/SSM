@@ -56,7 +56,6 @@ import org.smartdata.utils.StringUtil;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -81,7 +80,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class CmdletManager extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
-  private static final long TIMEOUT = 30000;
+  public static final long TIMEOUT_MUTIPLIER = 60;
 
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
@@ -106,6 +105,8 @@ public class CmdletManager extends AbstractService {
 
   private long totalScheduled = 0;
 
+  private long timeout;
+
   public CmdletManager(ServerContext context) throws IOException {
     super(context);
 
@@ -123,6 +124,10 @@ public class CmdletManager extends AbstractService {
         idToLaunchCmdlet, runningCmdlets, schedulers);
     maxNumPendingCmdlets = context.getConf().getInt(SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY,
         SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_DEFAULT);
+
+    long reportPeriod = context.getConf().getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    this.timeout = TIMEOUT_MUTIPLIER * reportPeriod;
   }
 
   @VisibleForTesting
@@ -268,7 +273,7 @@ public class CmdletManager extends AbstractService {
     executorService.scheduleAtFixedRate(new CmdletPurgeTask(getContext().getConf()),
         10, 5000, TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50, TimeUnit.MILLISECONDS);
-    executorService.scheduleAtFixedRate(new DetectFailedActionTask(), 1000, 1000,
+    executorService.scheduleAtFixedRate(new DetectFailedActionTask(), 1000, 5000,
             TimeUnit.MILLISECONDS);
 
     for (ActionSchedulerService s : schedulerServices) {
@@ -881,8 +886,19 @@ public class CmdletManager extends AbstractService {
   }
 
   private void onStatusReport(StatusReport report) throws IOException, ActionException {
-    onActionStatusReport(report.getActionStatuses());
-    onCmdletStatusReport(report.getCmdletStatuses());
+    List<ActionStatus> actionStatusList = report.getActionStatuses();
+    if (actionStatusList != null) {
+      for (ActionStatus actionStatus: actionStatusList) {
+        onActionStatusReport(actionStatus);
+      }
+    }
+
+    List<CmdletStatus> cmdletStatusList = report.getCmdletStatuses();
+    if (cmdletStatusList != null) {
+      for (CmdletStatus cmdletStatus: cmdletStatusList) {
+        onCmdletStatusReport(cmdletStatus);
+      }
+    }
   }
 
   private void onCmdletStatusUpdate(CmdletStatusUpdate statusUpdate) throws IOException {
@@ -902,61 +918,55 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void onCmdletStatusReport(List<CmdletStatus> statuses) throws IOException{
-    if (statuses == null) {
-      return;
-    }
-    for (CmdletStatus status: statuses) {
-      long cmdletId = status.getCmdletId();
-      if (idToCmdlets.containsKey(cmdletId)) {
-        CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
-        CmdletState state = status.getCurrentState();
-        cmdletInfo.setState(state);
-        cmdletInfo.setStateChangedTime(status.getStateUpdateTime());
-        if (CmdletState.isTerminalState(state)) {
-          cmdletFinished(cmdletId);
-        }
+  private void onCmdletStatusReport(CmdletStatus status) throws IOException {
+    long cmdletId = status.getCmdletId();
+    if (idToCmdlets.containsKey(cmdletId)) {
+      CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+      CmdletState state = status.getCurrentState();
+      cmdletInfo.setState(state);
+      cmdletInfo.setStateChangedTime(status.getStateUpdateTime());
+      if (CmdletState.isTerminalState(state)) {
+        cmdletFinished(cmdletId);
+      } else if (state == CmdletState.DISPATCHED) {
+        flushCmdletInfo(cmdletInfo);
       }
+    } else {
+      // Updating cmdlet status which is not pending or running
     }
   }
 
-  private void onActionStatusReport(List<ActionStatus> statuses)
+  private void onActionStatusReport(ActionStatus status)
           throws IOException, ActionException {
-    if (statuses == null) {
-      return;
-    }
-    for (ActionStatus status : statuses) {
-      long actionId = status.getActionId();
-      if (idToActions.containsKey(actionId)) {
-        ActionInfo actionInfo = idToActions.get(actionId);
-        synchronized (actionInfo) {
-          if (!actionInfo.isFinished()) {
-            actionInfo.setCreateTime(status.getStartTime());
-            actionInfo.setLog(status.getLog());
-            actionInfo.setResult(status.getResult());
-            if (!status.isFinished()) {
-              actionInfo.setProgress(status.getPercentage());
-              actionInfo.setFinishTime(System.currentTimeMillis());
+    long actionId = status.getActionId();
+    if (idToActions.containsKey(actionId)) {
+      ActionInfo actionInfo = idToActions.get(actionId);
+      synchronized (actionInfo) {
+        if (!actionInfo.isFinished()) {
+          actionInfo.setCreateTime(status.getStartTime());
+          actionInfo.setLog(status.getLog());
+          actionInfo.setResult(status.getResult());
+          if (!status.isFinished()) {
+            actionInfo.setProgress(status.getPercentage());
+            actionInfo.setFinishTime(System.currentTimeMillis());
+          } else {
+            actionInfo.setProgress(1.0F);
+            actionInfo.setFinished(true);
+            actionInfo.setFinishTime(status.getFinishTime());
+            unLockFileIfNeeded(actionInfo);
+            if (status.getThrowable() != null) {
+              actionInfo.setSuccessful(false);
             } else {
-              actionInfo.setProgress(1.0F);
-              actionInfo.setFinished(true);
-              actionInfo.setFinishTime(status.getFinishTime());
-              unLockFileIfNeeded(actionInfo);
-              if (status.getThrowable() != null) {
-                actionInfo.setSuccessful(false);
-              } else {
-                actionInfo.setSuccessful(true);
-                updateStorageIfNeeded(actionInfo);
-              }
-              for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
-                p.onActionFinished(actionInfo);
-              }
+              actionInfo.setSuccessful(true);
+              updateStorageIfNeeded(actionInfo);
+            }
+            for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+              p.onActionFinished(actionInfo);
             }
           }
         }
-      } else {
-        // Updating action info which is not pending or running
       }
+    } else {
+      // Updating action info which is not pending or running
     }
   }
 
@@ -1138,7 +1148,7 @@ public class CmdletManager extends AbstractService {
                 long finishTime = System.currentTimeMillis();
                 ActionStatus actionStatus = new ActionStatus(
                         actionInfo.getActionId(), timeoutLog, finishTime, new Throwable(), true);
-                onActionStatusReport(Arrays.asList(actionStatus));
+                onActionStatusReport(actionStatus);
               }
             }
             if (cmdFailed) {
@@ -1159,7 +1169,7 @@ public class CmdletManager extends AbstractService {
         return false;
       }
       long currentTime = System.currentTimeMillis();
-      return currentTime - actionInfo.getFinishTime() > TIMEOUT;
+      return currentTime - actionInfo.getFinishTime() > timeout;
     }
   }
 }
