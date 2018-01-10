@@ -41,8 +41,6 @@ import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.model.action.ScheduleResult;
-import org.smartdata.protocol.message.ActionFinished;
-import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
@@ -876,10 +874,6 @@ public class CmdletManager extends AbstractService {
         onCmdletStatusReport(statusUpdate.getCmdletStatus());
       } else if (status instanceof StatusReport) {
         onStatusReport((StatusReport) status);
-      } else if (status instanceof ActionStarted) {
-        onActionStarted((ActionStarted) status);
-      } else if (status instanceof ActionFinished) {
-        onActionFinished((ActionFinished) status);
       }
     } catch (IOException e) {
       LOG.error(String.format("Update status %s failed with %s", status, e));
@@ -953,40 +947,6 @@ public class CmdletManager extends AbstractService {
       }
     } else {
       // Updating action info which is not pending or running
-    }
-  }
-
-  private void onActionStarted(ActionStarted started) {
-    if (idToActions.containsKey(started.getActionId())) {
-      idToActions.get(started.getActionId()).setCreateTime(started.getTimestamp());
-    } else {
-      // Updating action status which is not pending or running
-    }
-  }
-
-  private void onActionFinished(ActionFinished finished) throws IOException, ActionException {
-    if (idToActions.containsKey(finished.getActionId())) {
-      ActionInfo actionInfo = idToActions.get(finished.getActionId());
-      synchronized (actionInfo) {
-        actionInfo.setProgress(1.0F);
-        actionInfo.setFinished(true);
-        actionInfo.setFinishTime(finished.getTimestamp());
-        actionInfo.setResult(finished.getResult());
-        actionInfo.setLog(finished.getLog());
-      }
-      unLockFileIfNeeded(actionInfo);
-      if (finished.getThrowable() != null) {
-        actionInfo.setSuccessful(false);
-      } else {
-        actionInfo.setSuccessful(true);
-        updateStorageIfNeeded(actionInfo);
-      }
-      for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
-        p.onActionFinished(actionInfo);
-      }
-
-    } else {
-      // Updating action status which is not pending or running
     }
   }
 
