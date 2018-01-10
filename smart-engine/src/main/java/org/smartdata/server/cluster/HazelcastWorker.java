@@ -62,7 +62,7 @@ public class HazelcastWorker implements StatusReporter {
     this.masterMessages =
         instance.getTopic(HazelcastExecutorService.WORKER_TOPIC_PREFIX + instanceId);
     this.masterMessages.addMessageListener(new MasterMessageListener());
-    this.reportPeriod = smartContext.getConf().getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD,
+    this.reportPeriod = smartContext.getConf().getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
   }
 

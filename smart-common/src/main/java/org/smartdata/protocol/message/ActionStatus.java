@@ -49,9 +49,10 @@ public class ActionStatus implements Serializable {
     this.finished = finished;
   }
 
-  public ActionStatus(long actionId, long startTime) {
+  public ActionStatus(long actionId, long startTime, long finishTime) {
     this.actionId = actionId;
     this.startTime = startTime;
+    this.finishTime = finishTime;
   }
 
   public ActionStatus(long actionId, long finishTime, Throwable t) {
@@ -59,7 +60,6 @@ public class ActionStatus implements Serializable {
     this.finishTime = finishTime;
     this.throwable = t;
   }
-
 
   public long getActionId() {
     return actionId;

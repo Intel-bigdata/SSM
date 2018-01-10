@@ -116,6 +116,7 @@ public class SmartConfKeys {
    */
   public static final String SMART_IGNORE_DIRS_KEY = "smart.ignore.dirs";
 
+<<<<<<< 437fc93784ad3a119ab78e0e537c5909f449d780
   // Target cluster
   public static final String SMART_STORAGE_INFO_UPDATE_INTERVAL_KEY =
       "smart.storage.info.update.interval";
@@ -125,7 +126,7 @@ public class SmartConfKeys {
   public static final String SMART_STORAGE_INFO_SAMPLING_INTERVALS_DEFAULT =
       "60s,60;1hour,60;1day";
 
-  public static final String SMART_STATUS_REPORT_PERIOD = "smart.status.report.period";
+  public static final String SMART_STATUS_REPORT_PERIOD_KEY = "smart.status.report.period";
   public static final long SMART_STATUS_REPORT_PERIOD_DEFAULT = 1000;
 
   //Tidb
