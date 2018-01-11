@@ -43,11 +43,16 @@ import java.util.Random;
 public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   public static final int DEFAULT_BLOCK_SIZE = 1024 * 1024 * 2;
   private DFSClient smartDFSClient;
+  private String compressionImpl;
 
   @Override
   @Before
   public void setup() throws Exception {
     init(DEFAULT_BLOCK_SIZE);
+    this.compressionImpl = "snappy";
+//    this.compressionImpl = "Lz4";
+//    this.compressionImpl = "Bzip2";
+//    this.compressionImpl = "Zlib";
     smartDFSClient = new SmartDFSClient(ssm.getContext().getConf());
   }
 
@@ -69,7 +74,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize);
+        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
 
     waitTillActionDone(cmdId);
 

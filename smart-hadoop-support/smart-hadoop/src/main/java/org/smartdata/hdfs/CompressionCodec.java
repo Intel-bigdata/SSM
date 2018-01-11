@@ -18,11 +18,16 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.io.compress.Compressor;
+import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.io.compress.bzip2.Bzip2Compressor;
+import org.apache.hadoop.io.compress.bzip2.Bzip2Decompressor;
 import org.apache.hadoop.io.compress.bzip2.Bzip2Factory;
 import org.apache.hadoop.io.compress.lz4.Lz4Compressor;
+import org.apache.hadoop.io.compress.lz4.Lz4Decompressor;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
+import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibCompressor;
+import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 import org.apache.hadoop.util.NativeCodeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +39,17 @@ import org.smartdata.conf.SmartConf;
  */
 public class CompressionCodec {
   static final Logger LOG = LoggerFactory.getLogger(SmartAction.class);
+  private String hadoopnativePath;
   SmartConf conf = new SmartConf();
+
+  public CompressionCodec() {
+    if (!(System.getenv("HADOOP_HOME") == null)) {
+      this.hadoopnativePath = System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
+    }else {
+      this.hadoopnativePath = System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
+    }
+    System.load(hadoopnativePath);
+  }
 
   /**
    *  Create a compressor
@@ -45,13 +60,6 @@ public class CompressionCodec {
         return  new Lz4Compressor(bufferSize);
 
       case "Bzip2" :
-        String hadoopnativePath;
-        if (!(System.getenv("HADOOP_HOME") == null)) {
-          hadoopnativePath = System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
-        }else {
-          hadoopnativePath = System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
-        }
-        System.load(hadoopnativePath);
         if (NativeCodeLoader.isNativeCodeLoaded())
           if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
             return new Bzip2Compressor(Bzip2Factory.getBlockSize(conf),
@@ -70,5 +78,29 @@ public class CompressionCodec {
       default:
         return new SnappyCompressor(bufferSize);
     }
+  }
+
+  /**
+   *  Create a Decompressor
+   */
+  public Decompressor creatDecompressor(int bufferSize, String compressionImpl){
+      switch (compressionImpl){
+        case "Lz4" :
+          return  new Lz4Decompressor(bufferSize);
+
+        case "Bzip2" :
+          if (NativeCodeLoader.isNativeCodeLoaded())
+            if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
+             return new Bzip2Decompressor(false, bufferSize);
+            } else {
+              LOG.error("Failed to load/initialize native-bzip2 library");
+            }
+
+        case "Zlib" :
+          return new ZlibDecompressor(ZlibDecompressor.CompressionHeader.DEFAULT_HEADER, bufferSize);
+
+        default:
+          return new SnappyDecompressor(bufferSize);
+      }
   }
 }
