@@ -22,9 +22,9 @@ angular.module('zeppelinWebApp')
  * This controller is used to obtain rule. All nested views will read status from here.
  */
   .controller('RuleCtrl', RuleCtrl);
-  RuleCtrl.$inject = ['$scope', 'rule0', '$propertyTableBuilder', 'models',
-    'baseUrlSrv', '$filter', '$http', 'conf', '$route'];
-  function RuleCtrl($scope, rule0, $ptb, models,
+  RuleCtrl.$inject = ['$scope', 'rule0', '$propertyTableBuilder', 'models', '$interval',
+    'baseUrlSrv', '$filter', '$http', 'conf', '$route' ];
+  function RuleCtrl($scope, rule0, $ptb, models, $interval,
                     baseUrlSrv, $filter, $http, conf, $route) {
     'use strict';
 
@@ -96,7 +96,11 @@ angular.module('zeppelinWebApp')
     };
     getCmdlets();
 
-    setInterval(function(){
-      $scope.$apply(getCmdlets());
-    },10000);
+    var timer=$interval(function(){
+      getCmdlets();
+    },5000);
+
+    $scope.$on('$destroy',function(){
+      $interval.cancel(timer);
+    });
   }

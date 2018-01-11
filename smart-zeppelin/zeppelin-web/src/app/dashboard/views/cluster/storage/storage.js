@@ -12,53 +12,81 @@
  * limitations under the License.
  */
 
-import PiechartVisualization from '../../../../visualization/builtins/visualization-piechart';
+import AreachartVisualization from '../../../../visualization/builtins/visualization-areachart';
 angular.module('zeppelinWebApp').controller('StorageCtrl', StorageCtrl);
-StorageCtrl.$inject = ['$scope', 'cache', 'ssd', 'disk', 'archive'];
-function StorageCtrl($scope, cache, ssd, disk, archive) {
-  var targetEls = new Array();
+StorageCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval'];
+function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
   var tableData = {
     columns: [
-      {name: "usage", index: 0, aggr: "sum"},
-      {name: "value", index: 1, aggr: "sum"}
+      {name: "time", index: 0, aggr: "sum"},
+      {name: "value(%)", index: 1, aggr: "sum"}
     ],
+    rows:[],
     comment: ""
   };
-  var config = {};
+  var config = {}
 
-  var getGB = function (value) {
-    var result = (value / (1024 * 1024 * 1024)).toFixed(2);
-    return result;
-  }
+  var timeGranularity = 60;
+  var timeRegular = 'HH:mm';
 
-  var initPieChart = function(targetEl, data) {
-    if (data.total === 0) {
-      targetEl.remove();
-      return;
-    }
-    //get pie chart data.
-    var rows = [];
-    rows[0] = ['Used(G)', getGB(data.used)];
-    rows[1] = ['Free(G)', getGB(data.total - data.used)];
-    tableData.rows = rows;
+  var builtInViz;
 
-    //generate pie chart.
-    targetEl.height(536);
-    targetEls.push(targetEl);
-    var builtInViz = new PiechartVisualization(targetEl, config);
-    var transformation = builtInViz.getTransformation();
-    var transformed = transformation.transform(tableData);
-    builtInViz.render(transformed);
-    builtInViz.donut();
-    builtInViz.activate();
-    angular.element(window).resize(function () {
-      builtInViz.resize();
+  var getStorageData = function () {
+    $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/cluster/primary/hist_utilization/'
+      +  $scope.storageType + '/' + timeGranularity + '000/-' + timeGranularity * 60 + '000/0')
+      .then(function(response) {
+        var storageData = angular.fromJson(response.data).body;
+        var rows = new Array();
+        angular.forEach(storageData, function (data, index) {
+          rows.push([$filter('date')(new Date(data.timeStamp), timeRegular),
+            (data.used / data.total * 100).toFixed(2)]);
+        });
+        tableData.rows = rows;
+        initAreaChart();
     });
   };
 
-  initPieChart(angular.element('#cache'), cache.body);
-  initPieChart(angular.element('#ssd'), ssd.body);
-  initPieChart(angular.element('#disk'), disk.body);
-  initPieChart(angular.element('#archive'), archive.body);
+  $scope.initStorage = function (storage) {
+    $scope.storageType = storage;
+    getStorageData();
+  };
 
+  $scope.selectTimeGranularity = function (time) {
+    if (time === 0) {
+      timeGranularity = 60;
+      timeRegular = 'HH:mm'
+    } else if (time === 1) {
+      timeGranularity = 3600;
+      timeRegular = 'dd HH:mm'
+    } else if (time === 2) {
+      timeGranularity = 3600 * 24;
+      timeRegular = 'MM-dd'
+    }
+    getStorageData();
+  };
+
+  var initAreaChart = function() {
+    var targetEl = angular.element('#' + $scope.storageType);
+    //generate area chart.
+    targetEl.height(300);
+    if (!builtInViz) {
+      builtInViz = new AreachartVisualization(targetEl, config);
+      angular.element(window).resize(function () {
+        builtInViz.resize();
+      });
+    }
+
+    var transformation = builtInViz.getTransformation();
+    var transformed = transformation.transform(tableData);
+    builtInViz.render(transformed);
+    builtInViz.activate();
+  };
+
+  var timer=$interval(function(){
+    getStorageData();
+  },30000);
+
+  $scope.$on('$destroy',function(){
+    $interval.cancel(timer);
+  });
 }

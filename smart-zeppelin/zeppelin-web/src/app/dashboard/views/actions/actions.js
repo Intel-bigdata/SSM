@@ -19,8 +19,8 @@
 angular.module('zeppelinWebApp')
 
   .controller('ActionsCtrl', ActionsCtrl);
-  ActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf'];
-  function ActionsCtrl($scope, baseUrlSrv, $filter, $http, conf) {
+  ActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval'];
+  function ActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
     $scope.pageNumber = 10;
     $scope.totalNumber = 0;
     $scope.actions;
@@ -68,7 +68,11 @@ angular.module('zeppelinWebApp')
 
     getActions();
 
-    setInterval(function(){
-      $scope.$apply(getActions());
-    },10000);
+    var timer=$interval(function(){
+      getActions();
+    },5000);
+
+    $scope.$on('$destroy',function(){
+      $interval.cancel(timer);
+    });
   }
