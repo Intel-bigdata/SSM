@@ -26,10 +26,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.StorageCapacity;
-import org.smartdata.model.StoragePolicy;
 
 import java.util.List;
-import java.util.Map;
 
 
 public class TestStorageHistoryDao extends TestDaoUtil {

@@ -23,6 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import javax.sql.DataSource;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -84,7 +85,7 @@ public class StorageHistoryDao {
   public int getNumberOfStorageHistoryData(String type, long interval) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT COUNT(*) FROM storage_hist WHERE type = ?";
-    return jdbcTemplate.queryForObject(sql,new Object[]{type + "-" + interval}, Integer.class);
+    return jdbcTemplate.queryForObject(sql, new Object[]{type + "-" + interval}, Integer.class);
   }
 
   public void deleteOldRecords(String type, long interval, long beforTimeStamp) {
