@@ -40,6 +40,7 @@ import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.dao.RuleDao;
 import org.smartdata.metastore.dao.StorageDao;
+import org.smartdata.metastore.dao.StorageHistoryDao;
 import org.smartdata.metastore.dao.SystemInfoDao;
 import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
@@ -104,6 +105,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private FileInfoDao fileInfoDao;
   private CacheFileDao cacheFileDao;
   private StorageDao storageDao;
+  private StorageHistoryDao storageHistoryDao;
   private UserDao userDao;
   private GroupsDao groupsDao;
   private XattrDao xattrDao;
@@ -129,6 +131,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     cacheFileDao = new CacheFileDao(pool.getDataSource());
     userDao = new UserDao(pool.getDataSource());
     storageDao = new StorageDao(pool.getDataSource());
+    storageHistoryDao = new StorageHistoryDao(pool.getDataSource());
     groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
     fileDiffDao = new FileDiffDao(pool.getDataSource());
@@ -403,9 +406,42 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void insertUpdateStoragesTable(List<StorageCapacity> storages)
+      throws MetaStoreException {
+    mapStorageCapacity = null;
+    try {
+      storageDao.insertUpdateStoragesTable(
+          storages.toArray(new StorageCapacity[storages.size()]));
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void insertUpdateStoragesTable(StorageCapacity storage)
       throws MetaStoreException {
     insertUpdateStoragesTable(new StorageCapacity[]{storage});
+  }
+
+  public Map<String, StorageCapacity> getStorageCapacity() throws MetaStoreException {
+    if (mapStorageCapacity == null) {
+      updateCache();
+    }
+
+    Map<String, StorageCapacity> ret = new HashMap<>();
+    if (mapStorageCapacity != null) {
+      for (String key : mapStorageCapacity.keySet()) {
+        ret.put(key, mapStorageCapacity.get(key));
+      }
+    }
+    return ret;
+  }
+
+  public void deleteStorage(String storageType) throws MetaStoreException {
+    try {
+      storageDao.deleteStorage(storageType);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   public StorageCapacity getStorageCapacity(
@@ -424,6 +460,29 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       Long capacity, Long free) throws MetaStoreException {
     try {
       return storageDao.updateStoragesTable(type, capacity, free);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public synchronized void insertStorageHistTable(StorageCapacity[] storages, long interval)
+      throws MetaStoreException {
+    try {
+      storageHistoryDao.insertStorageHistTable(storages, interval);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<StorageCapacity> getStorageHistoryData(String type, long interval,
+      long startTime, long endTime) {
+    return storageHistoryDao.getStorageHistoryData(type, interval, startTime, endTime);
+  }
+
+  public void deleteStorageHistoryOldRecords(String type, long interval, long beforTimeStamp)
+      throws MetaStoreException {
+    try {
+      storageHistoryDao.deleteOldRecords(type, interval, beforTimeStamp);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

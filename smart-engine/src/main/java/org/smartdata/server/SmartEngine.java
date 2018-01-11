@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.Utilization;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
@@ -151,7 +152,17 @@ public class SmartEngine extends AbstractService {
       return Arrays.asList(getUtilization(resourceName));
     }
 
-    // fake data
+    List<StorageCapacity> cs = serverContext.getMetaStore().getStorageHistoryData(
+        resourceName, granularity, begin, end);
+    List<Utilization> us = new ArrayList<>(cs.size());
+    for (StorageCapacity c : cs) {
+      us.add(new Utilization(c.getTimeStamp(), c.getCapacity(), c.getUsed()));
+    }
+    return us;
+  }
+
+  private List<Utilization> getFackData(String resourceName, long granularity,
+      long begin, long end) {
     List<Utilization> utils = new ArrayList<>();
     long ts = begin;
     if (ts % granularity != 0) {
