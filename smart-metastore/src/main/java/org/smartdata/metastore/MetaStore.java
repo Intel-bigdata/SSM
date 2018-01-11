@@ -474,6 +474,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<StorageCapacity> getStorageHistoryData(String type, long interval,
+      long startTime, long endTime) {
+    return storageHistoryDao.getStorageHistoryData(type, interval, startTime, endTime);
+  }
+
   public void deleteStorageHistoryOldRecords(String type, long interval, long beforTimeStamp)
       throws MetaStoreException {
     try {

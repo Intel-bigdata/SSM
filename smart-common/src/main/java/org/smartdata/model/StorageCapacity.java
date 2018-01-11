@@ -64,6 +64,10 @@ public final class StorageCapacity {
     return free;
   }
 
+  public Long getUsed() {
+    return capacity - free;
+  }
+
   public void addFree(long v) {
     free += v;
   }
