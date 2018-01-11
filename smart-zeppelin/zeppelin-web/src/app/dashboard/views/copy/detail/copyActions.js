@@ -15,12 +15,12 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */
+ */$interval
 angular.module('zeppelinWebApp')
 
   .controller('CopyActionsCtrl', CopyActionsCtrl);
-  CopyActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$route'];
-  function CopyActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route) {
+  CopyActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$route', '$interval'];
+  function CopyActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route, $interval) {
     $scope.pageNumber = 10;
     $scope.totalNumber = 0;
     $scope.copyActions;
@@ -66,8 +66,12 @@ angular.module('zeppelinWebApp')
 
     getCopyActions();
 
-    setInterval(function(){
-      $scope.$apply(getCopyActions());
-    },10000);
+    var timer=$interval(function(){
+      getCopyActions();
+    },5000);
+
+    $scope.$on('$destroy',function(){
+      $interval.cancel(timer);
+    });
   }
 

@@ -19,8 +19,8 @@
 angular.module('zeppelinWebApp')
 
   .controller('MoverActionsCtrl', MoverActionsCtrl);
-MoverActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$route'];
-function MoverActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route) {
+MoverActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$route', '$interval'];
+function MoverActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route, $interval) {
   $scope.pageNumber = 10;
   $scope.totalNumber = 0;
   $scope.copyActions;
@@ -66,8 +66,12 @@ function MoverActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route) {
 
   getCopyActions();
 
-  setInterval(function(){
-    $scope.$apply(getCopyActions());
-  },10000);
+  var timer=$interval(function(){
+    getCopyActions();
+  },5000);
+
+  $scope.$on('$destroy',function(){
+    $interval.cancel(timer);
+  });
 }
 
