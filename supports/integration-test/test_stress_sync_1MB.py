@@ -5,7 +5,7 @@ from util import *
 
 # 1MB
 FILE_SIZE = 1024 * 1024
-DEST_DIR = "hdfs://datanode3:9000/dest"
+DEST_DIR = "hdfs://localhost:9000/dest"
 
 
 class TestStressDR(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestStressDR(unittest.TestCase):
         # create 10K random files in random directory
         for i in range(max_number):
             file_paths.append(create_random_file_parallel(FILE_SIZE,
-                                                          source_dir))
+                                                          source_dir)[0])
         time.sleep(1)
         rule_str = "file : every 1s | path matches " + \
             "\"" + source_dir + "*\" | sync -dest " + DEST_DIR
@@ -41,7 +41,7 @@ class TestStressDR(unittest.TestCase):
         delete_rule(rid)
         # delete all random files
         for i in range(max_number):
-            cids.append(delete_file(file_path[i]))
+            cids.append(delete_file(file_paths[i]))
         wait_for_cmdlets(cids)
 
     def test_sync_rule_100000(self):
@@ -56,7 +56,7 @@ class TestStressDR(unittest.TestCase):
         # create 10K random files in random directory
         for i in range(max_number):
             file_paths.append(create_random_file_parallel(FILE_SIZE,
-                                                          source_dir))
+                                                          source_dir)[0])
         time.sleep(1)
         rule_str = "file : every 1s | path matches " + \
             "\"" + source_dir + "*\" | sync -dest " + DEST_DIR
@@ -76,7 +76,7 @@ class TestStressDR(unittest.TestCase):
         delete_rule(rid)
         # delete all random files
         for i in range(max_number):
-            cids.append(delete_file(file_path[i]))
+            cids.append(delete_file(file_paths[i]))
         wait_for_cmdlets(cids)
 
 
