@@ -15,7 +15,7 @@ class TestSmallFile(unittest.TestCase):
         # create 500 random files in random directory
         for i in range(max_number):
             file_paths.append(create_random_file_parallel(FILE_SIZE,
-                                                          source_dir))
+                                                          source_dir)[0])
         time.sleep(2)
         # compact rule
         rule_str = "file : path matches " + \
@@ -36,7 +36,7 @@ class TestSmallFile(unittest.TestCase):
         delete_rule(rid)
         # delete all random files
         for i in range(max_number):
-            cids.append(delete_file(file_path[i]))
+            cids.append(delete_file(file_paths[i]))
         wait_for_cmdlets(cids)
 
 
