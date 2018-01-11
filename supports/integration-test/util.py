@@ -227,18 +227,6 @@ def create_random_file_parallel(length=1024, dest_path=TEST_DIR):
     return file_path, submit_cmdlet(cmdlet_str)
 
 
-def create_random_file_parallel_return_file_name(dest_path, length=1024):
-    """
-    create a random file in /dest_path/
-    """
-    file_name = random_string()
-    file_path = dest_path + file_name
-    cmdlet_str = "write -file " + \
-                 file_path + " -length " + str(length)
-    submit_cmdlet(cmdlet_str)
-    return file_name
-
-
 def copy_file_to_S3(file_path, dest_path):
     """
     move file to S3
@@ -258,6 +246,15 @@ def append_file(file_path, length=1024):
     append random content to file_path
     """
     cmdlet_str = "append -file " + file_path + " -length " + str(length)
+    return submit_cmdlet(cmdlet_str)
+
+
+def compact_small_file(src_files, container_file):
+    """
+    compact small files into container_file
+    """
+    cmdlet_str = "compact -file " + src_files + \
+                 " -containerFile " + container_file
     return submit_cmdlet(cmdlet_str)
 
 

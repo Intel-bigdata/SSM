@@ -116,6 +116,15 @@ public class SmartConfKeys {
    */
   public static final String SMART_IGNORE_DIRS_KEY = "smart.ignore.dirs";
 
+  // Target cluster
+  public static final String SMART_STORAGE_INFO_UPDATE_INTERVAL_KEY =
+      "smart.storage.info.update.interval";
+  public static final int SMART_STORAGE_INFO_UPDATE_INTERVAL_DEFAULT = 60;
+  public static final String SMART_STORAGE_INFO_SAMPLING_INTERVALS_KEY =
+      "smart.storage.info.sampling.intervals";
+  public static final String SMART_STORAGE_INFO_SAMPLING_INTERVALS_DEFAULT =
+      "60s,60;1hour,60;1day";
+
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";
   public static final boolean SMART_TIDB_ENABLED_DEFAULT = false;

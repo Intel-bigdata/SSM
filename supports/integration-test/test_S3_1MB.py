@@ -19,8 +19,7 @@ class Test_S3_1MB(unittest.TestCase):
         # create 1K random files in random directory
         for i in range(max_number):
             file_paths.append(
-                create_random_file_parallel_return_file_name(FILE_SIZE,
-                                                             source_dir))
+                create_random_file_parallel(FILE_SIZE, source_dir)[0])
         time.sleep(1)
 
         # submit action

@@ -244,27 +244,31 @@ public class CmdletDispatcher {
         return;
       }
 
-      LaunchCmdlet launchCmdlet;
-      while (dispatcher.canDispatchMore()) {
-        try {
-          launchCmdlet = getNextCmdletToRun();
-          if (launchCmdlet == null) {
-            statNoMoreCmdlet++;
-            break;
-          } else {
-            cmdletPreExecutionProcess(launchCmdlet);
-            if (!dispatcher.dispatch(launchCmdlet)) {
-              if (LOG.isDebugEnabled()) {
-                LOG.debug("Stop this round dispatch due : " + launchCmdlet);
-              }
-              statFail++;
+      LaunchCmdlet launchCmdlet = null;
+      try {
+        while (dispatcher.canDispatchMore()) {
+          try {
+            launchCmdlet = getNextCmdletToRun();
+            if (launchCmdlet == null) {
+              statNoMoreCmdlet++;
               break;
+            } else {
+              cmdletPreExecutionProcess(launchCmdlet);
+              if (!dispatcher.dispatch(launchCmdlet)) {
+                if (LOG.isDebugEnabled()) {
+                  LOG.debug("Stop this round dispatch due : " + launchCmdlet);
+                }
+                statFail++;
+                break;
+              }
+              statDispatched++;
             }
-            statDispatched++;
+          } catch (IOException e) {
+            LOG.error("Cmdlet dispatcher error", e);
           }
-        } catch (IOException e) {
-          LOG.error("Cmdlet dispatcher error", e);
         }
+      } catch (Throwable t) {
+        LOG.error("Dispatch {} error", launchCmdlet, t);
       }
     }
   }
