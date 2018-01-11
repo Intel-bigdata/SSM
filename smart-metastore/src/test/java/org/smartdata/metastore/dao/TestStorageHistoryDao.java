@@ -26,44 +26,41 @@ import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.StorageCapacity;
-import org.smartdata.model.StoragePolicy;
 
-import java.util.Map;
+import java.util.List;
 
 
-public class TestStorageDao extends TestDaoUtil {
+public class TestStorageHistoryDao extends TestDaoUtil {
 
-  private StorageDao storageDao;
+  private StorageHistoryDao storageHistDao;
 
   @Before
   public void initStorageDao() throws Exception {
     initDao();
-    storageDao = new StorageDao(druidPool.getDataSource());
+    storageHistDao = new StorageHistoryDao(druidPool.getDataSource());
   }
 
   @After
   public void closeStorageDao() throws Exception {
     closeDao();
-    storageDao = null;
+    storageHistDao = null;
   }
 
   @Test
   public void testInsertGetStorageTable() throws Exception {
-    StorageCapacity[] storageCapacities = new StorageCapacity[2];
-    storageCapacities[0] = new StorageCapacity("type1", 1L, 1L);
-    storageCapacities[1] = new StorageCapacity("type2", 2L, 2L);
-    storageDao.insertUpdateStoragesTable(storageCapacities);
-    Assert.assertTrue(storageDao.getStorageCapacity("type1").equals(storageCapacities[0]));
-    Map<String, StorageCapacity> map = storageDao.getStorageTablesItem();
-    Assert.assertTrue(map.get("type2").equals(storageCapacities[1]));
-  }
-
-  @Test
-  public void testInsertGetStorage_policyTable() throws Exception {
-    StoragePolicy storagePolicy = new StoragePolicy((byte) 1, "pName");
-    storageDao.insertStoragePolicyTable(storagePolicy);
-    Assert.assertTrue(storageDao.getStoragePolicyName(1).equals("pName"));
-    Assert.assertTrue(storageDao.getStoragePolicyID("pName") == 1);
+    StorageCapacity[] storageCapacities = new StorageCapacity[3];
+    storageCapacities[0] = new StorageCapacity("type1", 1000L, 10L, 1L);
+    storageCapacities[1] = new StorageCapacity("type1", 2000L, 10L, 2L);
+    storageCapacities[2] = new StorageCapacity("type1", 3000L, 10L, 3L);
+    storageHistDao.insertStorageHistTable(storageCapacities, 1000);
+    List<StorageCapacity> capacities = storageHistDao.getStorageHistoryData(
+        "type1", 1000, 1000, 3000);
+    Assert.assertTrue(capacities.size() == storageCapacities.length);
+    Assert.assertEquals(storageCapacities.length,
+        storageHistDao.getNumberOfStorageHistoryData("type1", 1000));
+    storageHistDao.deleteOldRecords("type1", 1000, 1000L);
+    Assert.assertEquals(storageCapacities.length - 1,
+        storageHistDao.getNumberOfStorageHistoryData("type1", 1000));
   }
 }
 

@@ -31,6 +31,7 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.DataNodeInfoFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
+import org.smartdata.hdfs.metric.fetcher.StorageInfoSampler;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdateService;
 
@@ -53,6 +54,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
   private CachedListFetcher cachedListFetcher;
   private DataNodeInfoFetcher dataNodeInfoFetcher;
   private FSDataOutputStream moverIdOutputStream;
+  private StorageInfoSampler storageInfoSampler;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(HdfsStatesUpdateService.class);
@@ -89,6 +91,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
         metaStore, executorService, new FetchFinishedCallBack(), context.getConf());
     this.dataNodeInfoFetcher = new DataNodeInfoFetcher(
         client, metaStore, executorService, context.getConf());
+    this.storageInfoSampler = new StorageInfoSampler(metaStore, conf);
     LOG.info("Initialized.");
   }
 
@@ -114,6 +117,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     this.inotifyEventFetcher.start();
     this.cachedListFetcher.start();
     this.dataNodeInfoFetcher.start();
+    this.storageInfoSampler.start();
     LOG.info("Started. ");
   }
 
@@ -139,6 +143,10 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
 
     if (dataNodeInfoFetcher != null) {
       dataNodeInfoFetcher.stop();
+    }
+
+    if (storageInfoSampler != null) {
+      storageInfoSampler.stop();
     }
     LOG.info("Stopped.");
   }

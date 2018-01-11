@@ -51,7 +51,7 @@ public class StorageDao {
         new RowMapper<StorageCapacity>() {
           public StorageCapacity mapRow(ResultSet rs,
               int rowNum) throws SQLException {
-            return new StorageCapacity(rs.getString("type"),
+            return new StorageCapacity(rs.getString("type"), rs.getLong("time_stamp"),
                 rs.getLong("capacity"), rs.getLong("free"));
           }
         });
@@ -87,7 +87,7 @@ public class StorageDao {
         new RowMapper<StorageCapacity>() {
           public StorageCapacity mapRow(ResultSet rs,
               int rowNum) throws SQLException {
-            return new StorageCapacity(rs.getString("type"),
+            return new StorageCapacity(rs.getString("type"), rs.getLong("time_stamp"),
                 rs.getLong("capacity"), rs.getLong("free"));
           }
         });
@@ -131,15 +131,24 @@ public class StorageDao {
 
   public void insertUpdateStoragesTable(final StorageCapacity[] storages)
       throws SQLException {
+    if (storages.length == 0) {
+      return;
+    }
+    final Long curr = System.currentTimeMillis();
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "REPLACE INTO storage (type, capacity, free) VALUES (?,?,?);";
+    String sql = "REPLACE INTO storage (type, time_stamp, capacity, free) VALUES (?,?,?,?);";
     jdbcTemplate.batchUpdate(sql,
         new BatchPreparedStatementSetter() {
           public void setValues(PreparedStatement ps,
               int i) throws SQLException {
             ps.setString(1, storages[i].getType());
-            ps.setLong(2, storages[i].getCapacity());
-            ps.setLong(3, storages[i].getFree());
+            if (storages[i].getTimeStamp() == null) {
+              ps.setLong(2, curr);
+            } else {
+              ps.setLong(2, storages[i].getTimeStamp());
+            }
+            ps.setLong(3, storages[i].getCapacity());
+            ps.setLong(4, storages[i].getFree());
           }
 
           public int getBatchSize() {
@@ -151,23 +160,34 @@ public class StorageDao {
   public int getCountOfStorageType(String type) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT COUNT(*) FROM storage WHERE type = ?";
-
     return jdbcTemplate.queryForObject(sql, Integer.class, type);
   }
 
-  public synchronized boolean updateStoragesTable(String type
-      , Long capacity, Long free) throws SQLException {
+  public void deleteStorage(String storageType) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM storage WHERE type = ?";
+    jdbcTemplate.update(sql, storageType);
+  }
+
+  public synchronized boolean updateStoragesTable(String type, Long timeStamp,
+      Long capacity, Long free) throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = null;
     String sqlPrefix = "UPDATE storage SET";
     String sqlCapacity = (capacity != null) ? ", capacity = '"
-        + capacity + "'" : null;
+        + capacity + "' " : null;
     String sqlFree = (free != null) ? ", free = '" + free + "' " : null;
+    String sqlTimeStamp = (timeStamp != null) ? ", time_stamp = " + timeStamp + " " : null;
     String sqlSuffix = "WHERE type = '" + type + "';";
     if (capacity != null || free != null) {
-      sql = sqlPrefix + sqlCapacity + sqlFree + sqlSuffix;
+      sql = sqlPrefix + sqlCapacity + sqlFree + sqlTimeStamp + sqlSuffix;
       sql = sql.replaceFirst(",", "");
     }
     return jdbcTemplate.update(sql) == 1;
+  }
+
+  public synchronized boolean updateStoragesTable(String type,
+      Long capacity, Long free) throws SQLException {
+    return updateStoragesTable(type, System.currentTimeMillis(), capacity, free);
   }
 }
