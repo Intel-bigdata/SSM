@@ -152,19 +152,19 @@ public class CmdletDispatcher {
       return false;
     }
 
-    String id = selected.execute(cmdlet);
-
     List<ActionStatus> actionStatusList = new ArrayList<>();
-    for (LaunchAction action: cmdlet.getLaunchActions()) {
+    for (LaunchAction action : cmdlet.getLaunchActions()) {
       ActionStatus actionStatus =
               new ActionStatus(action.getActionId(), 0, System.currentTimeMillis());
       actionStatusList.add(actionStatus);
     }
-    CmdletStatusUpdate cmdletStatus = new CmdletStatusUpdate(cmdlet.getCmdletId(),
-            System.currentTimeMillis(), CmdletState.DISPATCHED);
     StatusReport actionStatus = new StatusReport(actionStatusList);
     cmdletManager.updateStatus(actionStatus);
+    CmdletStatusUpdate cmdletStatus = new CmdletStatusUpdate(cmdlet.getCmdletId(),
+            System.currentTimeMillis(), CmdletState.DISPATCHED);
     cmdletManager.updateStatus(cmdletStatus);
+
+    String id = selected.execute(cmdlet);
 
     updateSlotsLeft(selected.getExecutorType().ordinal(), -1);
     dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());

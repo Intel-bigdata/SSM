@@ -37,7 +37,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +47,6 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
   private CmdletFactory cmdletFactory;
   private CmdletExecutor cmdletExecutor;
   private ScheduledExecutorService executorService;
-  private Future scheduledReportTask;
 
   public LocalCmdletExecutorService(SmartConf smartConf, CmdletManager cmdletManager) {
     super(cmdletManager, ExecutorType.LOCAL);
@@ -60,8 +58,9 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
     long reportPeriod = smartConf.getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
-    scheduledReportTask = this.executorService.scheduleAtFixedRate(
+    this.executorService.scheduleAtFixedRate(
         statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
+
     ActiveServerInfo.setInstance(ACTIVE_SERVER_ID, getActiveServerAddress(), ExecutorType.LOCAL);
     EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
   }
@@ -95,9 +94,6 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
 
   @Override
   public void stop(long cmdletId) {
-    if (scheduledReportTask != null) {
-      scheduledReportTask.cancel(true);
-    }
     this.cmdletExecutor.stop(cmdletId);
   }
 
