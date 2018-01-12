@@ -18,6 +18,7 @@
 package org.smartdata.metastore.utils;
 
 import com.mysql.jdbc.NonRegisteringDriver;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
@@ -99,6 +100,7 @@ public class MetaStoreUtils {
             "user_group",
             "owner",
             "storage",
+            "storage_hist",
             "storage_policy",
             "xattr",
             "datanode_info",
@@ -114,30 +116,36 @@ public class MetaStoreUtils {
             "backup_file",
             "file_state"
     };
+    String tables = "('" + StringUtils.join(tableSet, "','") + "')";
     try {
       String url = conn.getMetaData().getURL();
+      String query;
       if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
         String dbName = getMysqlDBName(url);
-        for (String table : tableSet) {
-          String query = String.format("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES "
-                  + "WHERE TABLE_SCHEMA='%s' and TABLE_NAME='%s'", dbName, table);
-          if (isEmptyResultSet(conn, query)) {
-            return false;
-          }
-        }
-        return true;
+        query = String.format("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
+                + "WHERE TABLE_SCHEMA='%s' AND TABLE_NAME IN %s", dbName, tables);
       } else if (url.startsWith(MetaStoreUtils.SQLITE_URL_PREFIX)) {
-        for (String table : tableSet) {
-          String query = String.format(
-                  "SELECT * FROM sqlite_master WHERE TYPE='table' AND NAME='%s'", table);
-          if (isEmptyResultSet(conn, query)) {
-            return false;
-          }
-        }
-        return true;
+        query = String.format("SELECT COUNT(*) FROM sqlite_master "
+                + "WHERE TYPE='table' AND NAME IN %s", tables);
       } else {
         throw new MetaStoreException("The jdbc url is not valid for SSM use.");
       }
+
+      int num = 0;
+      Statement s = conn.createStatement();
+      ResultSet rs = s.executeQuery(query);
+      if (rs.next()) {
+        num = rs.getInt(1);
+      }
+
+      if (num == 0) {
+        return false;
+      } else if (num < tableSet.length) {
+        LOG.error("One or more tables required by SSM are missing! "
+                + "You can restart SSM with -format option or configure another database.");
+        System.exit(1);
+      }
+      return true;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -405,17 +413,6 @@ public class MetaStoreUtils {
     try {
       Statement s = conn.createStatement();
       s.execute(sql);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
-  public static boolean isEmptyResultSet(Connection conn, String sql)
-          throws MetaStoreException {
-    try {
-      Statement s = conn.createStatement();
-      ResultSet rs = s.executeQuery(sql);
-      return !rs.next();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
