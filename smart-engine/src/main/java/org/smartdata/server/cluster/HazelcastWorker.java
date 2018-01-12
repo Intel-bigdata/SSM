@@ -36,7 +36,6 @@ import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 
 import java.io.Serializable;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -49,7 +48,6 @@ public class HazelcastWorker implements StatusReporter {
   private ITopic<StatusMessage> statusTopic;
   private CmdletExecutor cmdletExecutor;
   private CmdletFactory factory;
-  private Future<?> scheduledReportTask;
   private long reportPeriod;
 
   public HazelcastWorker(SmartContext smartContext) {
@@ -68,14 +66,11 @@ public class HazelcastWorker implements StatusReporter {
 
   public void start() {
     StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
-    scheduledReportTask = executorService.scheduleAtFixedRate(
+    executorService.scheduleAtFixedRate(
             statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
-    if (scheduledReportTask != null) {
-      scheduledReportTask.cancel(true);
-    }
     executorService.shutdown();
     cmdletExecutor.shutdown();
   }

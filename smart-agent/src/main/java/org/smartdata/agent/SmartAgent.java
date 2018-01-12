@@ -61,7 +61,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.UUID;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -74,7 +73,6 @@ public class SmartAgent implements StatusReporter {
   private ActorSystem system;
   private ActorRef agentActor;
   private CmdletExecutor cmdletExecutor;
-  private Future scheduledReportTask;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
@@ -148,17 +146,13 @@ public class SmartAgent implements StatusReporter {
     StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
     long reportPeriod = conf.getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
-    scheduledReportTask = executorService.scheduleAtFixedRate(
+    executorService.scheduleAtFixedRate(
             statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
 
     system.awaitTermination();
   }
 
   public void close() {
-    if (scheduledReportTask != null) {
-      scheduledReportTask.cancel(true);
-    }
-
     Services.stop();
     if (system != null && !system.isTerminated()) {
       LOG.info("Shutting down system {}", AgentUtils.getSystemAddres(system));
