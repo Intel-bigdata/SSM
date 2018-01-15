@@ -16,7 +16,7 @@ limitations under the License.
        ng-controller="StorageCtrl"
        ng-init="initStorage(storage);"
        class="col-md-6 box">
-    <h3>{{storage}} storage usage</h3>
+    <h3>{{storage|uppercase}} Utilization</h3>
     <div class="result-chart-selector" style="width: 100%;text-align: left;">
       <div class="btn-group">
         <button type="button" class="btn btn-default btn-sm" ng-click="selectTimeGranularity(2);">d</button>

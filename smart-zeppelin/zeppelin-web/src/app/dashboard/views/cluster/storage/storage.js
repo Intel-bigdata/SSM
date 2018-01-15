@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-import AreachartVisualization from '../../../../visualization/builtins/visualization-areachart';
+import AreachartVisualization from '../../../../visualization/builtins/storage-areachart';
 angular.module('zeppelinWebApp').controller('StorageCtrl', StorageCtrl);
 StorageCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval'];
 function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
