@@ -210,7 +210,7 @@ public class CmdletManager extends AbstractService {
    */
   private void checkActionNames(
       CmdletDescriptor cmdletDescriptor) throws IOException {
-    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
+    for (int index = 0; index < cmdletDescriptor.getActionSize(); index++) {
       if (!ActionRegistry
           .registeredAction(cmdletDescriptor.getActionName(index))) {
         throw new IOException(
@@ -1001,7 +1001,7 @@ public class CmdletManager extends AbstractService {
   protected List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid)
       throws IOException {
     List<ActionInfo> actionInfos = new ArrayList<>();
-    for (int index = 0; index < cmdletDescriptor.actionSize(); index++) {
+    for (int index = 0; index < cmdletDescriptor.getActionSize(); index++) {
       Map<String, String> args = cmdletDescriptor.getActionArgs(index);
       ActionInfo actionInfo =
         new ActionInfo(

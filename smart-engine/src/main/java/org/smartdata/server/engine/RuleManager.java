@@ -136,7 +136,7 @@ public class RuleManager extends AbstractService {
 
   private void doCheckActions(CmdletDescriptor cd) throws IOException {
     String error = "";
-    for (int i = 0; i < cd.actionSize(); i++) {
+    for (int i = 0; i < cd.getActionSize(); i++) {
       if (!ActionRegistry.registeredAction(cd.getActionName(i))) {
         error += "Action '" + cd.getActionName(i) + "' not supported.\n";
       }
