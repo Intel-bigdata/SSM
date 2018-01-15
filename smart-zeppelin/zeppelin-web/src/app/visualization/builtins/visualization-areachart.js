@@ -62,6 +62,8 @@ export default class AreachartVisualization extends Nvd3ChartVisualization {
     chart.yAxis.tickFormat(function(d) {return self.yAxisTickFormat(d);});
     chart.yAxis.axisLabelDistance(50);
     chart.useInteractiveGuideline(true); // for better UX and performance issue. (https://github.com/novus/nvd3/issues/691)
+    chart.showControls(false);
+    chart.yDomain([0, 100]);
 
     this.chart.style(this.config.style || 'stack');
 
