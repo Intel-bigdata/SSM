@@ -31,6 +31,7 @@ import './app/visualization/builtins/visualization-piechart.js';
 import './app/visualization/builtins/visualization-areachart.js';
 import './app/visualization/builtins/visualization-linechart.js';
 import './app/visualization/builtins/visualization-scatterchart.js';
+import './app/visualization/builtins/storage-areachart.js';
 /** end: global variable `zeppelin` related files */
 
 import './app/credential/credential.controller.js';
