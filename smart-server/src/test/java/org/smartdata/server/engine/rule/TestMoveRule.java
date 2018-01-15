@@ -37,12 +37,9 @@ public class TestMoveRule extends MiniSmartClusterHarness {
     dfs.setStoragePolicy(new Path("/test"), "HOT");
     dfs.mkdirs(new Path("/test/dir1"));
     DFSTestUtil.createFile(dfs, new Path("/test/dir1/f1"), DEFAULT_BLOCK_SIZE * 3, (short) 3, 0);
-    cluster.triggerBlockReports();
-    cluster.triggerHeartbeats();
 
     String rule = "file: path matches \"/test/*\" | allssd";
     SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    Thread.sleep(3000);  // Wait for reports
 
     long ruleId = admin.submitRule(rule, RuleState.ACTIVE);
 
