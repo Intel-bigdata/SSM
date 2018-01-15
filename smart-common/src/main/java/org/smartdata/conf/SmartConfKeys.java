@@ -122,7 +122,6 @@ public class SmartConfKeys {
    */
   public static final String SMART_IGNORE_DIRS_KEY = "smart.ignore.dirs";
 
-<<<<<<< 437fc93784ad3a119ab78e0e537c5909f449d780
   // Target cluster
   public static final String SMART_STORAGE_INFO_UPDATE_INTERVAL_KEY =
       "smart.storage.info.update.interval";

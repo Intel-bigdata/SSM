@@ -125,7 +125,8 @@ public class CmdletManager extends AbstractService {
 
     long reportPeriod = context.getConf().getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
-    this.timeout = TIMEOUT_MUTIPLIER * reportPeriod;
+    this.timeout =
+            TIMEOUT_MUTIPLIER * reportPeriod < 30000 ? 30000 : TIMEOUT_MUTIPLIER * reportPeriod;
   }
 
   @VisibleForTesting
@@ -174,9 +175,8 @@ public class CmdletManager extends AbstractService {
       cmdletInfos = metaStore.getCmdlets(CmdletState.DISPATCHED);
       if (cmdletInfos != null && cmdletInfos.size() != 0) {
         for (CmdletInfo cmdletInfo : cmdletInfos) {
-          List<ActionInfo> actionInfos = getActionInfosInDB(cmdletInfo);
+          List<ActionInfo> actionInfos = getActions(cmdletInfo.getAids());
           for (ActionInfo actionInfo: actionInfos) {
-            actionInfo.setCreateTime(System.currentTimeMillis());
             actionInfo.setFinishTime(System.currentTimeMillis());
           }
           syncCmdAction(cmdletInfo, actionInfos);
@@ -187,7 +187,7 @@ public class CmdletManager extends AbstractService {
       if (cmdletInfos != null && cmdletInfos.size() != 0) {
         for (CmdletInfo cmdletInfo : cmdletInfos) {
           LOG.debug(String.format("Reload pending cmdlet: {}", cmdletInfo));
-          List<ActionInfo> actionInfos = getActionInfosInDB(cmdletInfo);
+          List<ActionInfo> actionInfos = getActions(cmdletInfo.getAids());
           syncCmdAction(cmdletInfo, actionInfos);
         }
       }
@@ -196,37 +196,6 @@ public class CmdletManager extends AbstractService {
       return;
     }
   }
-
-  private List<ActionInfo> getActionInfosInDB(CmdletInfo cmdletInfo)
-          throws MetaStoreException, IOException {
-    if (cmdletInfo == null) {
-      return null;
-    }
-    List<ActionInfo> actionInfosInDB = metaStore.getActions(cmdletInfo.getAids());
-    try {
-      int actionSize = new CmdletDescriptor(cmdletInfo.getParameters()).actionSize();
-      if (actionInfosInDB == null || actionInfosInDB.size() != actionSize) {
-        LOG.debug("The actions Mark the action as failed for pending cmdlet: CmdletId -> [ {} ]",
-                cmdletInfo.getCid());
-        for (long aid : cmdletInfo.getAids()) {
-          metaStore.markActionFailed(aid);
-        }
-        LOG.info("Get actions by parsing pending cmdlet: {}", cmdletInfo);
-        List<ActionInfo> actionInfosByParse = createActionInfos(
-                new CmdletDescriptor(cmdletInfo.getParameters()), cmdletInfo.getCid());
-        List<Long> aids = new ArrayList<>();
-        for (ActionInfo actionInfo : actionInfosByParse) {
-          aids.add(actionInfo.getActionId());
-        }
-        cmdletInfo.setAids(aids);
-        return actionInfosByParse;
-      }
-    } catch (ParseException ex) {
-      LOG.error("Parse error for pending cmdlet: {}", cmdletInfo);
-    }
-    return actionInfosInDB;
-  }
-
 
   /**
    * Check if action names in cmdletDescriptor are correct.
@@ -344,10 +313,10 @@ public class CmdletManager extends AbstractService {
       List<ActionInfo> actionInfos) throws IOException {
     Set<String> filesLocked = lockMovefileActionFiles(actionInfos);
     try {
-      metaStore.insertCmdlet(cmdletInfo);
       for (ActionInfo actionInfo: actionInfos) {
         metaStore.insertAction(actionInfo);
       }
+      metaStore.insertCmdlet(cmdletInfo);
       numCmdletsGen.incrementAndGet();
     } catch (MetaStoreException e) {
       LOG.error("{} submit to DB error", cmdletInfo, e);
@@ -826,6 +795,15 @@ public class CmdletManager extends AbstractService {
     return new ActionGroup(infos, metaStore.getCountOfAllAction());
   }
 
+  public List<ActionInfo> getActions(List<Long> aids) throws IOException {
+    try {
+      return metaStore.getActions(aids);
+    } catch (MetaStoreException e) {
+      LOG.error("Get Actions by aid list [{}] from DB error", aids.toString());
+      throw new IOException(e);
+    }
+  }
+
   public List<ActionInfo> getActions(long rid, int size) throws IOException {
     try {
       return metaStore.getActions(rid, size);
@@ -924,15 +902,19 @@ public class CmdletManager extends AbstractService {
       ActionInfo actionInfo = idToActions.get(actionId);
       synchronized (actionInfo) {
         if (!actionInfo.isFinished()) {
-          actionInfo.setCreateTime(status.getStartTime());
           actionInfo.setLog(status.getLog());
           actionInfo.setResult(status.getResult());
           if (!status.isFinished()) {
             actionInfo.setProgress(status.getPercentage());
+            if (actionInfo.getCreateTime() == 0) {
+              actionInfo.setCreateTime(
+                      idToCmdlets.get(actionInfo.getCmdletId()).getGenerateTime());
+            }
             actionInfo.setFinishTime(System.currentTimeMillis());
           } else {
             actionInfo.setProgress(1.0F);
             actionInfo.setFinished(true);
+            actionInfo.setCreateTime(status.getStartTime());
             actionInfo.setFinishTime(status.getFinishTime());
             unLockFileIfNeeded(actionInfo);
             if (status.getThrowable() != null) {
@@ -1105,7 +1087,8 @@ public class CmdletManager extends AbstractService {
 
     public void run() {
       try {
-        for (CmdletInfo cmdletInfo : idToCmdlets.values()) {
+        for (Long cid : idToLaunchCmdlet.keySet()) {
+          CmdletInfo cmdletInfo = idToCmdlets.get(cid);
           if (cmdletInfo.getState() == CmdletState.DISPATCHED
                   || cmdletInfo.getState() == CmdletState.EXECUTING) {
             boolean cmdFailed = false;
@@ -1113,9 +1096,13 @@ public class CmdletManager extends AbstractService {
               ActionInfo actionInfo = idToActions.get(id);
               if (isTimeout(actionInfo)) {
                 cmdFailed = true;
+                long startTime = actionInfo.getCreateTime();
+                if (startTime == 0) {
+                  startTime = cmdletInfo.getGenerateTime();
+                }
                 long finishTime = System.currentTimeMillis();
-                ActionStatus actionStatus = new ActionStatus(
-                        actionInfo.getActionId(), timeoutLog, finishTime, new Throwable(), true);
+                ActionStatus actionStatus = new ActionStatus(actionInfo.getActionId(),
+                        timeoutLog, startTime, finishTime, new Throwable(), true);
                 onActionStatusUpdate(actionStatus);
               }
             }

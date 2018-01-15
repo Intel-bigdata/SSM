@@ -154,8 +154,8 @@ public class CmdletDispatcher {
 
     List<ActionStatus> actionStatusList = new ArrayList<>();
     for (LaunchAction action : cmdlet.getLaunchActions()) {
-      ActionStatus actionStatus =
-              new ActionStatus(action.getActionId(), 0, System.currentTimeMillis());
+      ActionStatus actionStatus = new ActionStatus(
+              action.getActionId(), System.currentTimeMillis());
       actionStatusList.add(actionStatus);
     }
     StatusReport actionStatus = new StatusReport(actionStatusList);
