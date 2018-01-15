@@ -24,7 +24,7 @@ function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
     rows:[],
     comment: ""
   };
-  var config = {}
+  var config = {};
 
   var timeGranularity = 60;
   var timeRegular = 'HH:mm';
