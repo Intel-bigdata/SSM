@@ -47,7 +47,6 @@ public class TestSystemInfoDao extends TestDaoUtil {
 
     systemInfoDao.insert(systemInfo);
     Assert.assertTrue(systemInfoDao.getByProperty("test").equals(systemInfo));
-    systemInfoDao.insert(systemInfo);
   }
 
   @Test
