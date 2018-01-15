@@ -40,6 +40,7 @@ public class TestMoveRule extends MiniSmartClusterHarness {
 
     String rule = "file: path matches \"/test/*\" | allssd";
     SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+    Thread.sleep(3000);  // Wait for reports
 
     long ruleId = admin.submitRule(rule, RuleState.ACTIVE);
 
