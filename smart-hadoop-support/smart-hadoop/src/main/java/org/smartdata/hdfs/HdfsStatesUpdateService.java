@@ -32,8 +32,10 @@ import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.DataNodeInfoFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.hdfs.metric.fetcher.StorageInfoSampler;
+import org.smartdata.hdfs.ruleplugin.CheckSsdRulePlugin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdateService;
+import org.smartdata.model.rule.RulePluginManager;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -118,6 +120,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     this.cachedListFetcher.start();
     this.dataNodeInfoFetcher.start();
     this.storageInfoSampler.start();
+    RulePluginManager.addPlugin(new CheckSsdRulePlugin(metaStore));
     LOG.info("Started. ");
   }
 

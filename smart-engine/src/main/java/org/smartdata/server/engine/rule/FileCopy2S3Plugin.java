@@ -64,7 +64,7 @@ public class FileCopy2S3Plugin implements RuleExecutorPlugin {
   @Override
   public CmdletDescriptor preSubmitCmdletDescriptor(RuleInfo ruleInfo,
       TranslateResult tResult, CmdletDescriptor descriptor) {
-    for (int i = 0; i < descriptor.actionSize(); i++) {
+    for (int i = 0; i < descriptor.getActionSize(); i++) {
       // O(n)
       if (descriptor.getActionName(i).equals("copy2s3")) {
         String srcPath = descriptor.getActionArgs(i).get(Copy2S3Action.SRC);

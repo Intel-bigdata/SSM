@@ -57,7 +57,7 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
     List<String> pathsCheck = getPathMatchesList(pathsCheckGlob);
     String dirs = StringUtil.join(",", pathsCheck);
     CmdletDescriptor des = tResult.getCmdDescriptor();
-    for (int i = 0; i < des.actionSize(); i++) {
+    for (int i = 0; i < des.getActionSize(); i++) {
       if (des.getActionName(i).equals("sync")) {
 
         List<String> statements = tResult.getSqlStatements();
