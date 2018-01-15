@@ -16,3 +16,20 @@ II. SSM Configuration
 
 III. Test Plan
 ------------------------
+
+### 1. Data Mover Performance Test
+* Measurements:	
+a. Total running time of moving a certain size of data set 
+b. Disk bandwidth data collected by PAT 
+* Comparison	
+HDFS default mover tool
+* Mover pattern	
+a. ALL-HDD -> ALL-SSD (high priority)
+b. ALL-HDD -> ONE-SSD (high priority)
+c. ALL-SSD -> ALL-HDD (high priority)
+d. ONE-SSD -> ALL-HDD (low priority)
+e. ONE-SSD -> ALL-SSD (low priority)
+f. ALL-SSD -> ONE-SSD (low priority)
+* Data set	
+a. Large files: 10GB * 50 files
+b. Small files: 100MB * 1000 files
