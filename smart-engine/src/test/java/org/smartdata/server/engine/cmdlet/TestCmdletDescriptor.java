@@ -33,7 +33,7 @@ public class TestCmdletDescriptor {
   public void testStringToDescriptor() throws Exception {
     String cmd = "someaction -arg1 -arg2 /dir/foo ; cache -file /testFile; action3";
     CmdletDescriptor des = CmdletDescriptor.fromCmdletString(cmd);
-    Assert.assertTrue(des.actionSize() == 3);
+    Assert.assertTrue(des.getActionSize() == 3);
     Assert.assertTrue(des.getActionName(2).equals("action3"));
     Assert.assertTrue(des.getActionArgs(2).size() == 0);
   }
@@ -58,7 +58,7 @@ public class TestCmdletDescriptor {
 
     String cmdString = des.getCmdletString();
     CmdletDescriptor transDes = new CmdletDescriptor(cmdString);
-    Assert.assertTrue(des.actionSize() == transDes.actionSize());
+    Assert.assertTrue(des.getActionSize() == transDes.getActionSize());
     Assert.assertTrue(transDes.equals(des));
   }
 }

@@ -65,7 +65,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
     List<ActionInfo> actionInfos = ssm.getCmdletManager().createActionInfos(cmdletDescriptor, 0);
-    Assert.assertTrue(cmdletDescriptor.actionSize() == actionInfos.size());
+    Assert.assertTrue(cmdletDescriptor.getActionSize() == actionInfos.size());
   }
 
   @Test
