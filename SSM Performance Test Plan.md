@@ -36,3 +36,11 @@ III. Test Plan
 #### Data set	
 * a. Large files: 10GB * 50 files
 * b. Small files: 100MB * 1000 files
+
+
+### 2. Data Sync Performance Test
+
+
+
+### 3. Small File Compact Performance Test
+* Pending for the code ready 
