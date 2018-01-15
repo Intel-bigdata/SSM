@@ -23,6 +23,8 @@ import org.smartdata.AbstractService;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.Utilization;
+import org.smartdata.server.cluster.NodeInfo;
+import org.smartdata.server.engine.ActiveServerInfo;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
@@ -36,6 +38,7 @@ import org.smartdata.server.engine.cmdlet.agent.AgentInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -175,5 +178,13 @@ public class SmartEngine extends AbstractService {
       utils.add(new Utilization(ts, 100, rand.nextInt(100)));
     }
     return utils;
+  }
+
+  public List<NodeInfo> getSsmNodesInfo() {
+    List<NodeInfo> ret = new LinkedList<>();
+    ret.addAll(Arrays.asList(ActiveServerInfo.getInstance()));
+    ret.addAll(getStandbyServers());
+    ret.addAll(getAgents());
+    return ret;
   }
 }

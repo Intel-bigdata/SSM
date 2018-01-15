@@ -95,9 +95,9 @@ public class CmdletDispatcher {
     boolean disableLocal = smartContext.getConf().getBoolean(
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT);
+    CmdletExecutorService exe =
+        new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager);
     if (!disableLocal) {
-      CmdletExecutorService exe =
-          new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager);
       registerExecutorService(exe);
     }
     this.index = 0;

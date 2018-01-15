@@ -162,6 +162,18 @@ public class ClusterRestApi {
     }
   }
 
+  @GET
+  @Path("/primary/ssmnodesinfo")
+  public Response ssmNodesInfo() {
+    try {
+      return new JsonResponse<>(Response.Status.OK, smartEngine.getSsmNodesInfo()).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while listing SSM nodes", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
 //  @GET
 //  @Path("/alluxio/{clusterName}")
 //  public void alluxio() {
