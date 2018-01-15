@@ -1,6 +1,5 @@
----
-title: SSM Performance Test Plan
----
+SSM Performance Test Plan
+========
 
 
 I. Hadoop Configuration
