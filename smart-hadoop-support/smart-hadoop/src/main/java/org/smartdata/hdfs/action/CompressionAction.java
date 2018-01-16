@@ -54,7 +54,7 @@ public class CompressionAction extends HdfsAction {
       LoggerFactory.getLogger(CompressionAction.class);
 
   public static final String BUF_SIZE = "-bufSize";
-  public static final String COMPRESS_IMPL = "compressImpl";
+  public static final String COMPRESS_IMPL = "-compressImpl";
   private static List<String> compressionImplList = Arrays.asList(new String[]{
     "Lz4","Bzip2","Zlib","snappy"});
 
