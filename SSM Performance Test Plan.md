@@ -18,8 +18,8 @@ III. Test Plan
 ------------------------
 
 ### 1. Data Mover Performance Test
-#### Measurements:	
-* a. Total running time of moving a certain size of data set 
+#### Measurements
+* a. Total execution time of moving a certain size of data set 
 * b. Disk bandwidth data collected by PAT 
 
 #### Comparison	
@@ -39,8 +39,13 @@ III. Test Plan
 
 
 ### 2. Data Sync Performance Test
+#### Target Cluster
+* 
 
+#### Measurements
+* Execution time
+* 
 
 
 ### 3. Small File Compact Performance Test
-* Pending for the code ready 
+* Pending for code ready 
