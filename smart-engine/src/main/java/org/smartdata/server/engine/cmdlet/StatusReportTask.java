@@ -15,26 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metaservice;
+package org.smartdata.server.engine.cmdlet;
 
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CmdletState;
+import org.smartdata.protocol.message.StatusReport;
+import org.smartdata.protocol.message.StatusReporter;
 
-import java.util.List;
+public class StatusReportTask implements Runnable {
+  StatusReporter statusReporter;
+  CmdletExecutor cmdletExecutor;
 
-public interface CmdletMetaService extends MetaService {
+  public StatusReportTask(StatusReporter statusReporter, CmdletExecutor cmdletExecutor) {
+    this.statusReporter = statusReporter;
+    this.cmdletExecutor = cmdletExecutor;
+  }
 
-  CmdletInfo getCmdletById(long cid) throws MetaServiceException;
-
-  List<CmdletInfo> getCmdlets(String cidCondition,
-      String ridCondition, CmdletState state) throws MetaServiceException;
-
-  boolean updateCmdlet(long cid, CmdletState state)
-      throws MetaServiceException;
-
-  boolean updateCmdlet(long cid, String parameters, CmdletState state)
-      throws MetaServiceException;
-
-  void deleteCmdlet(long cid) throws MetaServiceException;
-
+  @Override
+  public void run() {
+    StatusReport statusReport = cmdletExecutor.getStatusReport();
+    if (statusReport != null && !statusReport.getActionStatuses().isEmpty()) {
+      statusReporter.report(statusReport);
+    }
+  }
 }

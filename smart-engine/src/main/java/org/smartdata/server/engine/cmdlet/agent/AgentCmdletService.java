@@ -68,4 +68,7 @@ public class AgentCmdletService extends AgentService {
     return NAME;
   }
 
+  public CmdletExecutor getCmdletExecutor() {
+    return executor;
+  }
 }

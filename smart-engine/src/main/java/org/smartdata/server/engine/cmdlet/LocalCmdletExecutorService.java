@@ -23,7 +23,6 @@ import org.smartdata.action.ActionException;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.ExecutorType;
-import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 import org.smartdata.server.cluster.NodeInfo;
@@ -55,8 +54,13 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
     this.cmdletExecutor = new CmdletExecutor(smartConf, this);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
+
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
+    long reportPeriod = smartConf.getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
     this.executorService.scheduleAtFixedRate(
-        new StatusFetchTask(), 1000, 1000, TimeUnit.MILLISECONDS);
+        statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
+
     ActiveServerInfo.setInstance(ACTIVE_SERVER_ID, getActiveServerAddress(), ExecutorType.LOCAL);
     EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
   }
@@ -115,15 +119,5 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
       }
     }
     return srv;
-  }
-
-  private class StatusFetchTask implements Runnable {
-    @Override
-    public void run() {
-      ActionStatusReport statusReport = cmdletExecutor.getActionStatusReport();
-      if (statusReport.getActionStatuses().size() > 0) {
-        report(statusReport);
-      }
-    }
   }
 }

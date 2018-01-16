@@ -15,26 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.metaservice;
+package org.smartdata.protocol.message;
 
-import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 
-import java.util.List;
+import java.io.Serializable;
 
-public interface CmdletMetaService extends MetaService {
+public class CmdletStatus implements Serializable{
+  private long cmdletId;
+  private long stateUpdateTime;
+  private CmdletState currentState;
 
-  CmdletInfo getCmdletById(long cid) throws MetaServiceException;
+  public CmdletStatus(long cmdletId, long stateUpdateTime, CmdletState state) {
+    this.cmdletId = cmdletId;
+    this.stateUpdateTime = stateUpdateTime;
+    this.currentState = state;
+  }
 
-  List<CmdletInfo> getCmdlets(String cidCondition,
-      String ridCondition, CmdletState state) throws MetaServiceException;
+  public long getCmdletId() {
+    return cmdletId;
+  }
 
-  boolean updateCmdlet(long cid, CmdletState state)
-      throws MetaServiceException;
+  public long getStateUpdateTime() {
+    return stateUpdateTime;
+  }
 
-  boolean updateCmdlet(long cid, String parameters, CmdletState state)
-      throws MetaServiceException;
-
-  void deleteCmdlet(long cid) throws MetaServiceException;
-
+  public CmdletState getCurrentState() {
+    return currentState;
+  }
 }

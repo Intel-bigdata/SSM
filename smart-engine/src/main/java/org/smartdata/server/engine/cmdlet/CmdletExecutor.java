@@ -24,11 +24,11 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.ActionStatusReport;
+import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
 import javax.annotation.Nullable;
@@ -50,6 +50,8 @@ public class CmdletExecutor {
   private final SmartConf smartConf;
   private Map<Long, Future> listenableFutures;
   private Map<Long, Cmdlet> runningCmdlets;
+  private Map<Long, Cmdlet> idToReportCmdlet;
+
   private ListeningExecutorService executorService;
 
   public CmdletExecutor(SmartConf smartConf, StatusReporter reporter) {
@@ -57,6 +59,7 @@ public class CmdletExecutor {
     this.smartConf = smartConf;
     this.listenableFutures = new ConcurrentHashMap<>();
     this.runningCmdlets = new ConcurrentHashMap<>();
+    this.idToReportCmdlet = new ConcurrentHashMap<>();
     int nThreads =
         smartConf.getInt(
             SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
@@ -69,10 +72,12 @@ public class CmdletExecutor {
     Futures.addCallback(future, new CmdletCallBack(cmdlet), executorService);
     this.listenableFutures.put(cmdlet.getId(), future);
     this.runningCmdlets.put(cmdlet.getId(), cmdlet);
+    idToReportCmdlet.put(cmdlet.getId(), cmdlet);
   }
 
   public void stop(Long cmdletId) {
     if (this.listenableFutures.containsKey(cmdletId)) {
+      runningCmdlets.get(cmdletId).setState(CmdletState.FAILED);
       this.listenableFutures.get(cmdletId).cancel(true);
     }
     removeCmdlet(cmdletId);
@@ -82,18 +87,29 @@ public class CmdletExecutor {
     this.executorService.shutdown();
   }
 
-  public ActionStatusReport getActionStatusReport() {
+  public StatusReport getStatusReport() {
+    if (idToReportCmdlet.isEmpty()) {
+      return null;
+    }
+
     List<ActionStatus> actionStatusList = new ArrayList<>();
-    for (Cmdlet cmdlet : this.runningCmdlets.values()) {
-      for (SmartAction action : cmdlet.getActions()) {
-        try {
-          actionStatusList.add(action.getActionStatus());
-        } catch (UnsupportedEncodingException e) {
-          LOG.error("Add actionStatus aid={} to actionStatusList error", action.getActionId(), e);
+    List<Long> cids = new ArrayList<>();
+    for (Cmdlet cmdlet: idToReportCmdlet.values()) {
+      try {
+        List<ActionStatus> statuses = cmdlet.getActionStatuses();
+        if (statuses != null) {
+          actionStatusList.addAll(statuses);
+        } else {
+          cids.add(cmdlet.getId());
         }
+      } catch (UnsupportedEncodingException e) {
+        LOG.error("Get actionStatus for cmdlet [id={}] error", cmdlet.getId(), e);
       }
     }
-    return new ActionStatusReport(actionStatusList);
+    for (Long cid: cids) {
+      idToReportCmdlet.remove(cid);
+    }
+    return new StatusReport(actionStatusList);
   }
 
   private void removeCmdlet(long cmdletId) {
