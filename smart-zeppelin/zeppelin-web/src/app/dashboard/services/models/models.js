@@ -195,6 +195,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
         actions: function (objs) {
           return decoder._asAssociativeArray(objs, decoder.action, 'actionId');
         },
+        nodes: function (objs) {
+          return objs;
+        },
         action: function (obj) {
           return angular.merge(obj, {
             uptime: obj.finishTime - obj.createTime,
@@ -256,6 +259,9 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         storageUsage: function (resourceName) {
           return get('cluster/primary/utilization/' + resourceName, decoder.default)
+        },
+        nodes: function () {
+          return get('cluster/primary/ssmnodesinfo', decoder.nodes);
         },
         notebookInfo: function () {
           return get('note/info', decoder.default)
