@@ -137,4 +137,13 @@
     <value>7070</value>
     <description>SmartAgent master port</description>
   </property>
+
+  <property>
+    <name>smart.namespace.fetcher.ignore.unsuccessive.inotify.event</name>
+    <value>false</value>
+    <description>
+      Skip fetch the entire namespace and only use available iNotify events to update namespace if true.
+      NOTE: This may leads to some unpredictable consequences and should only be used for testing.
+    </description>
+  </property>
 </configuration>
