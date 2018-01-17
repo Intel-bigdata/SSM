@@ -37,11 +37,17 @@ public class SmartConfKeys {
 
   public static final String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
 
-  // confKeys for alluxio
+  // Configure keys for HDFS
+  public static final String SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_KEY =
+      "smart.namespace.fetcher.ignore.unsuccessive.inotify.event";
+  public static final boolean SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_DEFAULT =
+      false;
+
+  // Configure keys for Alluxio
   public static final String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
   public static final String SMART_ALLUXIO_CONF_DIR_KEY = "smart.alluxio.conf.dir";
 
-  //ssm
+  // SSM
   public static final String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
   public static final String SMART_SERVER_RPC_ADDRESS_DEFAULT = "0.0.0.0:7042";
   public static final String SMART_SERVER_RPC_HANDLER_COUNT_KEY = "smart.server.rpc.handler.count";
