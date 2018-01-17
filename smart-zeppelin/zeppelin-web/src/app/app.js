@@ -172,6 +172,15 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
           }]
         }
       })
+      .when('/node/info', {
+        templateUrl: 'app/dashboard/views/cluster/nodeinfo/nodes.html',
+        controller: 'NodesCtrl',
+        resolve: {
+          nodes0: ['models', function (models) {
+            return models.$get.nodes();
+          }]
+        }
+      })
       .when('/jobmanager', {
         templateUrl: 'app/jobmanager/jobmanager.html',
         controller: 'JobmanagerCtrl'
