@@ -34,7 +34,7 @@ public class FileCopy2S3Plugin implements RuleExecutorPlugin {
     }
     // Get src base list
     srcBases = getPathMatchesList(pathsCheckGlob);
-    LOG.info("Source base list = {}", srcBases);
+    LOG.debug("Source base list = {}", srcBases);
   }
 
   private List<String> getPathMatchesList(List<String> paths) {
