@@ -57,6 +57,7 @@ public class CmdletDispatcher {
   private int cmdExecSrvTotalInsts;
   private int[] cmdExecSrvInstsSlotsLeft;
   private Map<Long, ExecutorType> dispatchedToSrvs;
+  private boolean disableLocalExec;
 
   // TODO: to be refined
   private final int defaultSlots;
@@ -92,12 +93,12 @@ public class CmdletDispatcher {
     dispatchedToSrvs = new ConcurrentHashMap<>();
     EngineEventBus.register(this);
 
-    boolean disableLocal = smartContext.getConf().getBoolean(
+    disableLocalExec = smartContext.getConf().getBoolean(
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT);
     CmdletExecutorService exe =
         new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager);
-    if (!disableLocal) {
+    if (!disableLocalExec) {
       registerExecutorService(exe);
     }
     this.index = 0;
@@ -301,6 +302,9 @@ public class CmdletDispatcher {
   }
 
   private void onNodeMessage(NodeMessage msg, boolean isAdd) {
+    if (disableLocalExec && msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
+      return;
+    }
     synchronized (cmdExecSrvInsts) {
       int v = isAdd ? 1 : -1;
       int idx = msg.getNodeInfo().getExecutorType().ordinal();
