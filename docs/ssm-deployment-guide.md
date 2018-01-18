@@ -66,7 +66,7 @@ Configure SSM
    ```xml
    <property>
        <name>smart.dfs.namenode.rpcserver</name>
-       <value>hdfs://namenode-ip:9000</value>
+       <value>hdfs://namenode-ip:port</value>
        <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
    ```
