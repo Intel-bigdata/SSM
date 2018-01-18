@@ -389,11 +389,16 @@ public class MetaStoreUtils {
           // path/src index should be set to less than 767
           // to avoid "Specified key was too long" in
           // Mysql 5.6 or previous version
-          if (mysqlOldRelease
-              && s.startsWith("CREATE INDEX")
-              && (s.contains("path") || s.contains("src"))) {
+          if (mysqlOldRelease) {
             // Fix index size 767 in mysql 5.6 or previous version
-            s = s.replace(");", "(750));");
+            if (s.startsWith("CREATE INDEX")
+                && (s.contains("path") || s.contains("src"))) {
+              // Index longer than 767
+              s = s.replace(");", "(750));");
+            } else if (s.contains("(1000) PRIMARY KEY")) {
+              // Primary key longer than 767
+              s = s.replace("1000", "750");
+            }
           }
           // Replace AUTOINCREMENT with AUTO_INCREMENT
           if (s.contains("AUTOINCREMENT")) {
