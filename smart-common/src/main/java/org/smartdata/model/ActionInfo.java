@@ -108,9 +108,7 @@ public class ActionInfo {
   }
 
   public void setResult(String result) {
-    if (result != null) {
-      this.result = result;
-    }
+    this.result = result;
   }
 
   public String getLog() {
@@ -118,9 +116,7 @@ public class ActionInfo {
   }
 
   public void setLog(String log) {
-    if (log != null) {
-      this.log = log;
-    }
+    this.log = log;
   }
 
   public boolean isSuccessful() {
@@ -136,9 +132,7 @@ public class ActionInfo {
   }
 
   public void setCreateTime(long createTime) {
-    if (createTime != 0) {
-      this.createTime = createTime;
-    }
+    this.createTime = createTime;
   }
 
   public boolean isFinished() {
@@ -154,9 +148,7 @@ public class ActionInfo {
   }
 
   public void setFinishTime(long finishTime) {
-    if (finishTime != 0) {
-      this.finishTime = finishTime;
-    }
+    this.finishTime = finishTime;
   }
 
   public float getProgress() {
@@ -242,6 +234,11 @@ public class ActionInfo {
     private long finishTime;
 
     private float progress;
+
+    public Builder() {
+      this.result = "";
+      this.log = "";
+    }
 
     public Builder setActionId(long actionId) {
       this.actionId = actionId;

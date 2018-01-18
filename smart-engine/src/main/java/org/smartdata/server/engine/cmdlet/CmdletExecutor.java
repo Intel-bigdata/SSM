@@ -29,7 +29,6 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReport;
-import org.smartdata.protocol.message.StatusReporter;
 
 import javax.annotation.Nullable;
 
@@ -46,7 +45,6 @@ import java.util.concurrent.Future;
 public class CmdletExecutor {
   static final Logger LOG = LoggerFactory.getLogger(CmdletExecutor.class);
 
-  private final StatusReporter reporter;
   private final SmartConf smartConf;
   private Map<Long, Future> listenableFutures;
   private Map<Long, Cmdlet> runningCmdlets;
@@ -54,8 +52,7 @@ public class CmdletExecutor {
 
   private ListeningExecutorService executorService;
 
-  public CmdletExecutor(SmartConf smartConf, StatusReporter reporter) {
-    this.reporter = reporter;
+  public CmdletExecutor(SmartConf smartConf) {
     this.smartConf = smartConf;
     this.listenableFutures = new ConcurrentHashMap<>();
     this.runningCmdlets = new ConcurrentHashMap<>();

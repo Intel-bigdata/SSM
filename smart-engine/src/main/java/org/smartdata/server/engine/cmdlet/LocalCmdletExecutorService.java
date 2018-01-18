@@ -52,7 +52,7 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     super(cmdletManager, ExecutorType.LOCAL);
     this.conf = smartConf;
     this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
-    this.cmdletExecutor = new CmdletExecutor(smartConf, this);
+    this.cmdletExecutor = new CmdletExecutor(smartConf);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
 
     StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);

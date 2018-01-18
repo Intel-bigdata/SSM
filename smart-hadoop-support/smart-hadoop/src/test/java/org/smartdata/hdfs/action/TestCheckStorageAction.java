@@ -19,11 +19,7 @@ package org.smartdata.hdfs.action;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
-import org.smartdata.protocol.message.ActionFinished;
-import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.protocol.message.StatusReporter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -39,7 +35,6 @@ public class TestCheckStorageAction extends MiniClusterHarness {
     CheckStorageAction checkStorageAction = new CheckStorageAction();
     checkStorageAction.setDfsClient(dfsClient);
     checkStorageAction.setContext(smartContext);
-    checkStorageAction.setStatusReporter(new MockActionStatusReporter());
     final String file = "/testPath/file1";
     dfsClient.mkdirs("/testPath");
     dfsClient.setStoragePolicy("/testPath", "ONE_SSD");
@@ -56,6 +51,7 @@ public class TestCheckStorageAction extends MiniClusterHarness {
     // do CheckStorageAction
     checkStorageAction.init(args);
     checkStorageAction.run();
+    Assert.assertTrue(checkStorageAction.getExpectedAfterRun());
   }
 
   @Test
@@ -63,15 +59,6 @@ public class TestCheckStorageAction extends MiniClusterHarness {
     CheckStorageAction checkStorageAction = new CheckStorageAction();
     checkStorageAction.setDfsClient(dfsClient);
     checkStorageAction.setContext(smartContext);
-    checkStorageAction.setStatusReporter(new StatusReporter() {
-      @Override
-      public void report(StatusMessage status) {
-        if (status instanceof ActionFinished) {
-          ActionFinished finished = (ActionFinished) status;
-          Assert.assertNotNull(finished.getThrowable());
-        }
-      }
-    });
 
     final String file = "/testPath/wrongfile";
     dfsClient.mkdirs("/testPath");
@@ -81,5 +68,6 @@ public class TestCheckStorageAction extends MiniClusterHarness {
     // do CheckStorageAction
     checkStorageAction.init(args);
     checkStorageAction.run();
+    Assert.assertNotNull(checkStorageAction.getActionStatus().getThrowable());
   }
 }

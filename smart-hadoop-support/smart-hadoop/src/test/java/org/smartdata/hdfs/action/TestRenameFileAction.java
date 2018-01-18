@@ -21,7 +21,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -52,12 +51,12 @@ public class TestRenameFileAction extends MiniClusterHarness {
     RenameFileAction renameFileAction = new RenameFileAction();
     renameFileAction.setDfsClient(dfsClient);
     renameFileAction.setContext(smartContext);
-    renameFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(RenameFileAction.FILE_PATH, srcPath + "/" + file1);
     args.put(RenameFileAction.DEST_PATH, destPath + "/" + destFilename);
     renameFileAction.init(args);
     renameFileAction.run();
+    Assert.assertTrue(renameFileAction.getExpectedAfterRun());
     Assert.assertFalse(dfsClient.exists(srcPath + "/" + file1));
     Assert.assertTrue(dfsClient.exists(destPath + "/" + destFilename));
   }
@@ -80,12 +79,12 @@ public class TestRenameFileAction extends MiniClusterHarness {
     RenameFileAction renameFileAction = new RenameFileAction();
     renameFileAction.setDfsClient(dfsClient);
     renameFileAction.setContext(smartContext);
-    renameFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String , String> args = new HashMap<>();
     args.put(RenameFileAction.FILE_PATH , dfs.getUri() + srcPath + "/" +file1);
     args.put(RenameFileAction.DEST_PATH , dfs.getUri() + destPath + "/" +destFilename);
     renameFileAction.init(args);
     renameFileAction.run();
+    Assert.assertTrue(renameFileAction.getExpectedAfterRun());
     Assert.assertFalse(dfsClient.exists(srcPath + "/" + file1));
     Assert.assertTrue(dfsClient.exists(destPath + "/" + destFilename));
   }

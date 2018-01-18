@@ -55,12 +55,12 @@ public class TestTruncate0Action extends MiniClusterHarness {
     Truncate0Action setLen2ZeroAction = new Truncate0Action();
     setLen2ZeroAction.setDfsClient(dfsClient);
     setLen2ZeroAction.setContext(smartContext);
-    setLen2ZeroAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(Truncate0Action.FILE_PATH, srcPath + "/" + file);
 
     setLen2ZeroAction.init(args);
     setLen2ZeroAction.run();
+    Assert.assertTrue(setLen2ZeroAction.getExpectedAfterRun());
 
     FileStatus newFileStatus = dfs.getFileStatus(new Path(srcPath + "/" + file));
     Map<String, byte[]> newXAttrs = dfs.getXAttrs(new Path(srcPath + "/" + file));

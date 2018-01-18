@@ -939,7 +939,7 @@ public class CmdletManager extends AbstractService {
       return;
     }
     long actionId = actionInfo.getActionId();
-    long cmdletId = idToActions.get(actionId).getCmdletId();
+    long cmdletId = actionInfo.getCmdletId();
     if (!actionInfo.isSuccessful()) {
       CmdletStatus cmdletStatus =
               new CmdletStatus(cmdletId, actionInfo.getFinishTime(), CmdletState.FAILED);

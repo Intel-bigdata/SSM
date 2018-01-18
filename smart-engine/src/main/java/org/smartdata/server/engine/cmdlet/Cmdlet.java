@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.action.SmartAction;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.StatusReporter;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -44,11 +43,9 @@ public class Cmdlet implements Runnable {
   private CmdletState state = CmdletState.NOTINITED;
   private long stateUpdateTime;
   private final SmartAction[] actions;
-  private final StatusReporter statusReporter;
   private List<SmartAction> actionReportList;
 
-  public Cmdlet(SmartAction[] actions, StatusReporter reporter) {
-    this.statusReporter = reporter;
+  public Cmdlet(SmartAction[] actions) {
     this.actions = actions;
     this.actionReportList = new ArrayList<>();
     for (int i = actions.length - 1; i >= 0; i--) {

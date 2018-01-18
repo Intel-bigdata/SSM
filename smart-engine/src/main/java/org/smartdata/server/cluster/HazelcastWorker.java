@@ -52,7 +52,7 @@ public class HazelcastWorker implements StatusReporter {
 
   public HazelcastWorker(SmartContext smartContext) {
     this.factory = new CmdletFactory(smartContext, this);
-    this.cmdletExecutor = new CmdletExecutor(smartContext.getConf(), this);
+    this.cmdletExecutor = new CmdletExecutor(smartContext.getConf());
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     this.instance = HazelcastInstanceProvider.getInstance();
     this.statusTopic = instance.getTopic(HazelcastExecutorService.STATUS_TOPIC);

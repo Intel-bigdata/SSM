@@ -32,13 +32,13 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.message.ActionFinished;
-import org.smartdata.protocol.message.ActionStarted;
-import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.protocol.message.ActionStatus;
+import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
@@ -173,63 +173,61 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     cmdletManager.start();
     cmdletManager.submitCmdlet("hello");
     verify(metaStore, times(1)).insertCmdlet(any(CmdletInfo.class));
-    verify(metaStore, times(1)).insertActions(any(ActionInfo[].class));
+    verify(metaStore, times(1)).insertAction(any(ActionInfo.class));
 
     Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
-    Thread.sleep(1000);
 
-    long actionStartTime = System.currentTimeMillis();
-    cmdletManager.updateStatus(new ActionStarted(actionId, actionStartTime));
+    long startTime = System.currentTimeMillis();
+    ActionStatus actionStatus = new ActionStatus(actionId, startTime, null);
+    StatusReport statusReport = new StatusReport(Arrays.asList(actionStatus));
+    cmdletManager.updateStatus(statusReport);
     ActionInfo actionInfo = cmdletManager.getActionInfo(actionId);
+    CmdletInfo cmdletInfo = cmdletManager.getCmdletInfo(cmdletId);
     Assert.assertNotNull(actionInfo);
-    Assert.assertEquals(actionInfo.getCreateTime(), actionStartTime);
 
-    long actionFinished = System.currentTimeMillis();
-    cmdletManager.updateStatus(new ActionFinished(actionId, actionFinished, null));
+    long finishTime = System.currentTimeMillis();
+    actionStatus = new ActionStatus(actionId, null, startTime, finishTime, null, true);
+    statusReport = new StatusReport(Arrays.asList(actionStatus));
+    cmdletManager.updateStatus(statusReport);
     Assert.assertTrue(actionInfo.isFinished());
     Assert.assertTrue(actionInfo.isSuccessful());
-    Assert.assertEquals(actionInfo.getFinishTime(), actionFinished);
-
-    cmdletManager.updateStatus(
-        new CmdletStatusUpdate(cmdletId, System.currentTimeMillis(), CmdletState.EXECUTING));
-    CmdletInfo info = cmdletManager.getCmdletInfo(cmdletId);
-    Assert.assertNotNull(info);
-    Assert.assertEquals(info.getParameters(), "hello");
-    Assert.assertEquals(info.getAids().size(), 1);
-    Assert.assertTrue(info.getAids().get(0) == actionId);
-    Assert.assertEquals(info.getState(), CmdletState.EXECUTING);
-
-    cmdletManager.updateStatus(
-        new CmdletStatusUpdate(cmdletId, System.currentTimeMillis(), CmdletState.DONE));
-    Assert.assertEquals(info.getState(), CmdletState.DONE);
+    Assert.assertEquals(actionInfo.getCreateTime(), startTime);
+    Assert.assertEquals(actionInfo.getFinishTime(), finishTime);
+    Assert.assertEquals(cmdletInfo.getState(), CmdletState.DONE);
+    Assert.assertEquals(0, cmdletManager.getActionsSizeInCache());
     Assert.assertEquals(0, cmdletManager.getCmdletsSizeInCache());
-
-    Assert.assertNull(cmdletManager.getCmdletInfo(cmdletId));
-    Assert.assertNull(cmdletManager.getActionInfo(actionId));
 
     cmdletManager.stop();
   }
 
   @Test
-  public void testLoadingPendingCmdlets() throws Exception {
+  public void testReloadCmdletsInDB() throws Exception {
     waitTillSSMExitSafeMode();
     CmdletManager cmdletManager = ssm.getCmdletManager();
     // Stop cmdletmanager
     cmdletManager.stop();
     MetaStore metaStore = ssm.getMetaStore();
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
-    CmdletInfo cmdletInfo =
+    CmdletInfo cmdletInfo1 =
         new CmdletInfo(
             0,
+            cmdletDescriptor.getRuleId(),
+            CmdletState.DISPATCHED,
+            cmdletDescriptor.getCmdletString(),
+            123178333L,
+            232444994L);
+    CmdletInfo cmdletInfo2 =
+        new CmdletInfo(
+            1,
             cmdletDescriptor.getRuleId(),
             CmdletState.PENDING,
             cmdletDescriptor.getCmdletString(),
             123178333L,
             232444994L);
-    CmdletInfo[] cmdlets = {cmdletInfo};
+    CmdletInfo[] cmdlets = {cmdletInfo1, cmdletInfo2};
     metaStore.insertCmdlets(cmdlets);
     // init cmdletmanager
     cmdletManager.init();
-    Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
+    Assert.assertEquals(2, cmdletManager.getCmdletsSizeInCache());
   }
 }

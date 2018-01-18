@@ -17,13 +17,13 @@
  */
 package org.smartdata.action;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.StatusReporter;
 
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -37,7 +37,6 @@ import java.util.Map;
 public abstract class SmartAction {
   static final Logger LOG = LoggerFactory.getLogger(SmartAction.class);
 
-  private StatusReporter statusReporter;
   private long actionId;
   private Map<String, String> actionArgs;
   private SmartContext context;
@@ -53,12 +52,7 @@ public abstract class SmartAction {
   private boolean finished;
 
   public SmartAction() {
-    this(null);
-  }
-
-  public SmartAction(StatusReporter statusReporter) {
     this.successful = false;
-    this.statusReporter = statusReporter;
     //Todo: extract the print stream out of this class
     this.resultOs = new ByteArrayOutputStream(64 * 1024);
     this.psResultOs = new PrintStream(resultOs, false);
@@ -80,10 +74,6 @@ public abstract class SmartAction {
 
   public void setContext(SmartContext context) {
     this.context = context;
-  }
-
-  public void setStatusReporter(StatusReporter statusReporter) {
-    this.statusReporter = statusReporter;
   }
 
   /**
@@ -192,5 +182,11 @@ public abstract class SmartAction {
 
   public boolean isFinished() {
     return finished;
+  }
+
+  @VisibleForTesting
+  public boolean getExpectedAfterRun() throws UnsupportedEncodingException {
+    ActionStatus actionStatus = getActionStatus();
+    return actionStatus.isFinished() && actionStatus.getThrowable() == null;
   }
 }

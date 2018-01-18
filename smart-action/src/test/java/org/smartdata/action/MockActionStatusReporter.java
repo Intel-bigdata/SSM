@@ -18,16 +18,21 @@
 package org.smartdata.action;
 
 import org.junit.Assert;
-import org.smartdata.protocol.message.ActionFinished;
+import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
 public class MockActionStatusReporter implements StatusReporter {
   @Override
   public void report(StatusMessage status) {
-    if (status instanceof ActionFinished) {
-      ActionFinished finished = (ActionFinished) status;
-      Assert.assertNull(finished.getThrowable());
+    if (status instanceof StatusReport) {
+      StatusReport statusReport = (StatusReport) status;
+      for (ActionStatus actionStatus: statusReport.getActionStatuses()) {
+        if (actionStatus.isFinished()) {
+          Assert.assertNull(actionStatus.getThrowable());
+        }
+      }
     }
   }
 }
