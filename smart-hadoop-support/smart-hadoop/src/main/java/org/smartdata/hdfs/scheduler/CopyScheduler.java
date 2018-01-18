@@ -172,7 +172,7 @@ public class CopyScheduler extends ActionSchedulerService {
   
   private boolean isFileLocked(String path) {
     if(fileLock.size() == 0) {
-      LOG.info("Lock is empty");
+      LOG.debug("File Lock is empty. Current path = {}", path);
     }
     if (fileLock.containsKey(path)) {
       // File is locked

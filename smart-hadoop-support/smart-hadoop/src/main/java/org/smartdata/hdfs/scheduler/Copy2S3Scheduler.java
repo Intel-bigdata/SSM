@@ -76,18 +76,18 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   public boolean onSubmit(ActionInfo actionInfo) {
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (checkTheLengthOfFile(path) == 0) {
-      LOG.info("The submit file {}'s length is 0", path);
+      LOG.debug("The submit file {}'s length is 0", path);
       return false;
     }
 
     if (ifLocked(path)) {
-      LOG.info("The submit file {} is locked", path);
+      LOG.debug("The submit file {} is locked", path);
       return false;
     }
 
     lockTheFile(path);
 
-    LOG.info("The file {} can be submited", path);
+    LOG.debug("The file {} can be submited", path);
     return true;
   }
 
@@ -98,7 +98,7 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
     if (ifLocked(path)) {
       unLockTheFile(path);
     } else {
-      LOG.info("The file {} has already unlocked", path);
+      LOG.debug("The file {} has already unlocked", path);
     }
   }
 
