@@ -40,6 +40,8 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utilities for table operations.
@@ -394,10 +396,15 @@ public class MetaStoreUtils {
             if (s.startsWith("CREATE INDEX")
                 && (s.contains("path") || s.contains("src"))) {
               // Index longer than 767
-              s = s.replace(");", "(750));");
-            } else if (s.contains("(1000) PRIMARY KEY")) {
-              // Primary key longer than 767
-              s = s.replace("1000", "750");
+              s = s.replace(");", "(749));");
+            } else if (s.contains(") PRIMARY KEY")) {
+              // Primary key longer than 749
+              Pattern p = Pattern.compile("[1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}");
+              Matcher m = p.matcher(s);
+              if (m.find()) {
+                String targetStr = m.group(0);
+                s = s.replace(targetStr, "749");
+              }
             }
           }
           // Replace AUTOINCREMENT with AUTO_INCREMENT
