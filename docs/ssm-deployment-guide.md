@@ -271,7 +271,7 @@ After install CDH5.10.1 or Hadoop 2.7, please do the following configurations,
 
 * **Hadoop `hdfs-site.xml`**
 
-    Add property `smart.server.rpc.address` to point to the installed Smart Server.
+    Add property `smart.server.rpc.address` to point to the installed Smart Server. Default Smart Server RPC port is `7042`.
 
     ```xml
     <property>
