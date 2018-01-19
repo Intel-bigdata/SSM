@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,22 +91,21 @@ public class CmdletExecutor {
     }
 
     List<ActionStatus> actionStatusList = new ArrayList<>();
-    List<Long> cids = new ArrayList<>();
-    for (Cmdlet cmdlet: idToReportCmdlet.values()) {
+    Iterator<Cmdlet> iter = idToReportCmdlet.values().iterator();
+    while (iter.hasNext()) {
+      Cmdlet cmdlet = iter.next();
       try {
         List<ActionStatus> statuses = cmdlet.getActionStatuses();
         if (statuses != null) {
           actionStatusList.addAll(statuses);
         } else {
-          cids.add(cmdlet.getId());
+          iter.remove();
         }
       } catch (UnsupportedEncodingException e) {
         LOG.error("Get actionStatus for cmdlet [id={}] error", cmdlet.getId(), e);
       }
     }
-    for (Long cid: cids) {
-      idToReportCmdlet.remove(cid);
-    }
+
     return new StatusReport(actionStatusList);
   }
 

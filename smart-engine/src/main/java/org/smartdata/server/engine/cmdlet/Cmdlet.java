@@ -26,6 +26,7 @@ import org.smartdata.protocol.message.ActionStatus;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -125,18 +126,16 @@ public class Cmdlet implements Runnable {
     // get status in the order of the descend action id.
     // The cmdletmanager should update action status in the ascend order.
     List<ActionStatus> statuses = new ArrayList<>();
-    List<SmartAction> finishedAction = new ArrayList<>();
-    for (SmartAction action : actionReportList) {
+    Iterator<SmartAction> iter = actionReportList.iterator();
+    while (iter.hasNext()) {
+      SmartAction action = iter.next();
       ActionStatus status = action.getActionStatus();
       statuses.add(status);
       if (status.isFinished()) {
-        finishedAction.add(action);
+        iter.remove();
       }
     }
 
-    for (SmartAction action : finishedAction) {
-        actionReportList.remove(action);
-    }
     return Lists.reverse(statuses);
   }
 }

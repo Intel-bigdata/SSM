@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -624,14 +625,13 @@ public class CmdletManager extends AbstractService {
     runningCmdlets.remove(cmdletId);
 
     List<ActionInfo> removed = new ArrayList<>();
-    for (Iterator<Map.Entry<Long, ActionInfo>> it = idToActions.entrySet().iterator();
-        it.hasNext(); ) {
-      Map.Entry<Long, ActionInfo> entry = it.next();
-      if (entry.getValue().getCmdletId() == cmdletId) {
-        it.remove();
-        removed.add(entry.getValue());
+    for (Long aid : cmdletInfo.getAids()) {
+      ActionInfo actionInfo = idToActions.remove(aid);
+      if (actionInfo != null) {
+        removed.add(actionInfo);
       }
     }
+
     for (ActionInfo actionInfo : removed) {
       unLockFileIfNeeded(actionInfo);
     }
@@ -1087,15 +1087,15 @@ public class CmdletManager extends AbstractService {
 
     public void run() {
       try {
+        Set<CmdletInfo> failedCmdlet = new HashSet<>();
         for (Long cid : idToLaunchCmdlet.keySet()) {
           CmdletInfo cmdletInfo = idToCmdlets.get(cid);
           if (cmdletInfo.getState() == CmdletState.DISPATCHED
                   || cmdletInfo.getState() == CmdletState.EXECUTING) {
-            boolean cmdFailed = false;
             for (long id : cmdletInfo.getAids()) {
               ActionInfo actionInfo = idToActions.get(id);
               if (isTimeout(actionInfo)) {
-                cmdFailed = true;
+                failedCmdlet.add(cmdletInfo);
                 long startTime = actionInfo.getCreateTime();
                 if (startTime == 0) {
                   startTime = cmdletInfo.getGenerateTime();
@@ -1106,11 +1106,11 @@ public class CmdletManager extends AbstractService {
                 onActionStatusUpdate(actionStatus);
               }
             }
-            if (cmdFailed) {
-              cmdletInfo.setState(CmdletState.FAILED);
-              cmdletFinished(cmdletInfo.getCid());
-            }
           }
+        }
+        for (CmdletInfo cmdletInfo: failedCmdlet) {
+          cmdletInfo.setState(CmdletState.FAILED);
+          cmdletFinished(cmdletInfo.getCid());
         }
       } catch (ActionException e) {
         LOG.error(e.getMessage());
