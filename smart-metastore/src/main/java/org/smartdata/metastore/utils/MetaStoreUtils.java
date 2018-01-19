@@ -399,11 +399,11 @@ public class MetaStoreUtils {
               s = s.replace(");", "(749));");
             } else if (s.contains(") PRIMARY KEY")) {
               // Primary key longer than 749
-              Pattern p = Pattern.compile("[1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}");
+              Pattern p = Pattern.compile("([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}). PRIMARY KEY");
               Matcher m = p.matcher(s);
               if (m.find()) {
                 String targetStr = m.group(0);
-                s = s.replace(targetStr, "749");
+                s = s.replace(targetStr, "749) PRIMARY KEY");
               }
             }
           }
