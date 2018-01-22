@@ -157,7 +157,7 @@ Configure SSM
 
 * **Configure user account to authenticate to Web UI**
 
-    By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.int file, 
+    By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.ini file, 
     
     `[users]` section
 
