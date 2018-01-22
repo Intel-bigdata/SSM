@@ -116,6 +116,7 @@ public class Copy2S3Action extends HdfsAction {
 
     String name = "user.coldloc";
     dfsClient.setXAttr(srcPath, name, dest.getBytes(), EnumSet.of(XAttrSetFlag.CREATE,XAttrSetFlag.REPLACE) );
+    appendLog(" SetXattr feature is set - srcPath  " + srcPath + "destination" + dest.getBytes() );
     return true; 
   }
 
