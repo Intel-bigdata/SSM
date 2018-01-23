@@ -117,7 +117,9 @@
   <property>
     <name>smart.status.report.period</name>
     <value>1000</value>
-    <description>The status report period for cmdlet and action. The unit is millisecond.</description>
+    <description>
+      The status report period for actions. The time unit is millisecond.
+    </description>
   </property>
 
   <property>

@@ -79,6 +79,9 @@ public class ActionStatus implements Serializable {
   }
 
   public String getResult() {
+    if (result == null) {
+      return "";
+    }
     return result;
   }
 
@@ -87,6 +90,9 @@ public class ActionStatus implements Serializable {
   }
 
   public String getLog() {
+    if (log == null) {
+      return "";
+    }
     return log;
   }
 

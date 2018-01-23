@@ -79,7 +79,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class CmdletManager extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
-  public static final long TIMEOUT_MUTIPLIER = 60;
+  public static final long TIMEOUT_MULTIPLIER = 60;
 
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
@@ -127,7 +127,7 @@ public class CmdletManager extends AbstractService {
     long reportPeriod = context.getConf().getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
     this.timeout =
-            TIMEOUT_MUTIPLIER * reportPeriod < 30000 ? 30000 : TIMEOUT_MUTIPLIER * reportPeriod;
+            TIMEOUT_MULTIPLIER * reportPeriod < 30000 ? 30000 : TIMEOUT_MULTIPLIER * reportPeriod;
   }
 
   @VisibleForTesting
@@ -178,6 +178,7 @@ public class CmdletManager extends AbstractService {
         for (CmdletInfo cmdletInfo : cmdletInfos) {
           List<ActionInfo> actionInfos = getActions(cmdletInfo.getAids());
           for (ActionInfo actionInfo: actionInfos) {
+            actionInfo.setCreateTime(cmdletInfo.getGenerateTime());
             actionInfo.setFinishTime(System.currentTimeMillis());
           }
           syncCmdAction(cmdletInfo, actionInfos);
