@@ -39,8 +39,9 @@ This part tests the performance of SSM itself to evaluate the efficiency of SSM 
 * f. ALL-SSD -> ONE-SSD (low priority)
 
 #### Data set	
-* a. Large files: 10GB * 50 files
-* b. Small files: 100MB * 5000 files
+* a. Large files: 10GB * [10, 20, 40, 80, 160] files
+* b. Small files: 100MB *  [100, 200, 400, 800, 16000] files
+* c. Tiny files: 1MB * [100, 500, 2500, 12500, 62500] files
 
 
 ### 2. Data Sync
@@ -64,9 +65,9 @@ This part tests the performance of SSM itself to evaluate the efficiency of SSM 
 	* 1GB
 	* 10GB
 * b. Directory:
-	* 1MB * [100, 500, 2500, 12500, 62500] files
-	* 100MB * [100, 200, 400, 800, 16000] files
-	* 10GB * [10, 20, 40, 80, 160] files
+	* Large files: 10GB * [10, 20, 40, 80, 160] files
+	* Small files: 100MB *  [100, 200, 400, 800, 16000] files
+	* Tiny files: 1MB * [100, 500, 2500, 12500, 62500] files
 * c. Incremental:
 	* Test the trigger time?
 
@@ -79,16 +80,15 @@ This part tests the performance of SSM itself to evaluate the efficiency of SSM 
 * Execution time of compacting a data set.
 
 #### Data set (source data and destination data are both ALL-HDD)
-* a. 100KB * 10000 files
-* b. 
+* a. Small files: 10MB *  [100, 500, 2500, 12500, 62500] files
+* b. Tiny files: 1MB * [100, 500, 2500, 12500, 62500] files
 
 
 IV. Performance Test of Using SSM in Hadoop
 ---------------------
-This part tests the effect after using different SSM features in order to evaluate the advatage brought by SSM. the benchmarks may include micro benchmarks such as TeraSort and other typical benchmarks in the industry such as TPC-DS, TPC-BB. 
+This part tests the effect after using different SSM features in order to evaluate the advatage brought by SSM. the benchmarks may include micro benchmarks such as TeraSort and other typical benchmarks in the industry such as TPC-DS, TPC-BB. As Jack’s team may take part in the benchmark, this part needs further discussion.
 
 ### 1. Data Mover
-
 
 ### 2. Data Sync
 
