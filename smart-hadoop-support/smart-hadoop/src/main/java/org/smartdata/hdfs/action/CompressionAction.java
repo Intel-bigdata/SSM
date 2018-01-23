@@ -83,7 +83,7 @@ public class CompressionAction extends HdfsAction {
     if (filePath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-    if(!compressionImplList.contains(compressionImpl)){
+    if (!compressionImplList.contains(compressionImpl)) {
       throw new ActionException("Action fails, this compressionImpl isn't supported!");
     }
     appendLog(

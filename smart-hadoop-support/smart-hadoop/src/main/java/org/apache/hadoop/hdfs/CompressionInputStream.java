@@ -106,6 +106,7 @@ public class CompressionInputStream extends SmartInputStream {
           return -1;
         }
         // Send the read data to the decompressor
+        decompressor.reset();
         decompressor.setInput(buffer, 0, m);
       }
     }

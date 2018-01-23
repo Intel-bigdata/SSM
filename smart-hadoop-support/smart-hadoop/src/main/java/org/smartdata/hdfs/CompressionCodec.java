@@ -43,6 +43,7 @@ public class CompressionCodec {
   SmartConf conf = new SmartConf();
 
   public CompressionCodec() {
+    //hadoopnativePath used to suport Bzip2 compresionImpl 
     if (!(System.getenv("HADOOP_HOME") == null)) {
       this.hadoopnativePath = System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
     }else {
@@ -55,12 +56,12 @@ public class CompressionCodec {
    *  Create a compressor
    */
   public Compressor createCompressor(int bufferSize, String compressionImpl) {
-    switch (compressionImpl){
+    switch (compressionImpl) {
       case "Lz4" :
         return  new Lz4Compressor(bufferSize);
 
       case "Bzip2" :
-        if (NativeCodeLoader.isNativeCodeLoaded())
+        if (NativeCodeLoader.isNativeCodeLoaded()) {
           if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
             return new Bzip2Compressor(Bzip2Factory.getBlockSize(conf),
               Bzip2Factory.getWorkFactor(conf),
@@ -68,6 +69,7 @@ public class CompressionCodec {
           } else {
             LOG.error("Failed to load/initialize native-bzip2 library");
           }
+        }
 
       case "Zlib" :
         return new ZlibCompressor(ZlibCompressor.CompressionLevel.DEFAULT_COMPRESSION,
@@ -84,23 +86,24 @@ public class CompressionCodec {
    *  Create a Decompressor
    */
   public Decompressor creatDecompressor(int bufferSize, String compressionImpl){
-      switch (compressionImpl){
-        case "Lz4" :
-          return  new Lz4Decompressor(bufferSize);
+    switch (compressionImpl){
+      case "Lz4" :
+        return  new Lz4Decompressor(bufferSize);
 
-        case "Bzip2" :
-          if (NativeCodeLoader.isNativeCodeLoaded())
-            if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
-             return new Bzip2Decompressor(false, bufferSize);
-            } else {
-              LOG.error("Failed to load/initialize native-bzip2 library");
-            }
+      case "Bzip2" :
+        if (NativeCodeLoader.isNativeCodeLoaded()) {
+          if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
+            return new Bzip2Decompressor(false, bufferSize);
+          } else {
+            LOG.error("Failed to load/initialize native-bzip2 library");
+          }
+        }
 
-        case "Zlib" :
-          return new ZlibDecompressor(ZlibDecompressor.CompressionHeader.DEFAULT_HEADER, bufferSize);
+      case "Zlib" :
+        return new ZlibDecompressor(ZlibDecompressor.CompressionHeader.DEFAULT_HEADER,bufferSize);
 
-        default:
-          return new SnappyDecompressor(bufferSize);
-      }
+      default:
+        return new SnappyDecompressor(bufferSize);
+    }
   }
 }
