@@ -53,23 +53,34 @@ This part tests the performance of SSM itself to evaluate the efficiency of SSM 
 * Disks: 2 HDD on each DataNode
 
 #### Measurements
-* Execution time of sync a data set.
+* Execution time of copying a certain size of data set.
 
 #### Comparison
 * HDFS Distcp tool
 
-#### Data set
+#### Data set (source data is ALL-HDD)
 * a. Single file:
 	* 100MB
 	* 1GB
 	* 10GB
 * b. Directory:
-	* 
+	* 1MB * [100, 500, 2500, 12500, 62500] files
+	* 100MB * [100, 200, 400, 800, 16000] files
+	* 10GB * [10, 20, 40, 80, 160] files
+* c. Incremental:
+	* Test the trigger time?
 
 
 ### 3. Small File Compact 
 #### Purpose
 * Test the execution speed of compact.
+
+#### Mesurements
+* Execution time of compacting a data set.
+
+#### Data set (source data and destination data are both ALL-HDD)
+* a. 100KB * 10000 files
+* b. 
 
 
 IV. Performance Test of Using SSM in Hadoop
