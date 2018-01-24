@@ -92,11 +92,14 @@ public class CompressionScheduler extends ActionSchedulerService {
       if (!supportCompression(path)) {
         return false;
       }
+      FileState fileState = new FileState(path, FileState.FileType.COMPRESSION,
+          FileState.FileStage.PROCESSING);
+      metaStore.insertUpdateFileState(fileState);
+      return true;
     } catch (MetaStoreException e) {
       LOG.error("Compress action of file " + path + " failed in metastore!", e);
       return false;
     }
-    return true;
   }
 
   @Override
@@ -106,9 +109,6 @@ public class CompressionScheduler extends ActionSchedulerService {
       if (!supportCompression(path)) {
         return ScheduleResult.FAIL;
       }
-      FileState fileState = new FileState(path, FileState.FileType.COMPRESSION,
-          FileState.FileStage.PROCESSING);
-      metaStore.insertUpdateFileState(fileState);
       return ScheduleResult.SUCCESS;
     } catch (MetaStoreException e) {
       LOG.error("Compress action of file " + path + " failed in metastore!", e);
