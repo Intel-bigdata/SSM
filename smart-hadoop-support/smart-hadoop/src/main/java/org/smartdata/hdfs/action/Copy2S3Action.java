@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -34,7 +35,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Map;
-
+import java.util.EnumSet;
 /**
  * An action to copy a single file from src to destination.
  * If dest doesn't contains "hdfs" prefix, then destination will be set to
@@ -97,7 +98,9 @@ public class Copy2S3Action extends HdfsAction {
         String.format("Copy from %s to %s", srcPath, destPath));
     copySingleFile(srcPath, destPath);
     appendLog("Copy Successfully!!");
-  }
+    setXAttribute(srcPath, destPath);
+    appendLog("SetXattr Successfully!!");
+}
 
   private long getFileSize(String fileName) throws IOException {
     if (fileName.startsWith("hdfs")) {
@@ -107,6 +110,14 @@ public class Copy2S3Action extends HdfsAction {
     } else {
       return dfsClient.getFileInfo(fileName).getLen();
     }
+  }
+
+  private boolean setXAttribute(String src, String dest) throws IOException {
+
+    String name = "user.coldloc";
+    dfsClient.setXAttr(srcPath, name, dest.getBytes(), EnumSet.of(XAttrSetFlag.CREATE,XAttrSetFlag.REPLACE) );
+    appendLog(" SetXattr feature is set - srcPath  " + srcPath + "destination" + dest.getBytes() );
+    return true; 
   }
 
   private boolean copySingleFile(String src, String dest) throws IOException {
