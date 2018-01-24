@@ -78,7 +78,7 @@ public class SetXAttrAction extends HdfsAction {
     appendLog(String.format("SetXattr path=%s name=%s value=%s",
         srcPath, attName, attValue));
     dfsClient.setXAttr(srcPath, attName, attValue.getBytes(),
-        EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE) );
+        EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
     appendLog("SetXattr Successfully!!");
   }
 
