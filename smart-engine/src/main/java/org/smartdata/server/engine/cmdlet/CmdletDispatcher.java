@@ -322,13 +322,13 @@ public class CmdletDispatcher {
   }
 
   public void start() {
-    CmdletDispatcherHelper.register(this);
+    CmdletDispatcherHelper.getInst().register(this);
     schExecService.scheduleAtFixedRate(
         new DispatchTask(this), 200, 100, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
-    CmdletDispatcherHelper.stop();
+    CmdletDispatcherHelper.getInst().stop();
     schExecService.shutdown();
   }
 }

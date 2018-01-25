@@ -27,16 +27,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class CmdletDispatcherHelper {
-  private static CmdletDispatcherHelper inst = new CmdletDispatcherHelper();
-  private static List<NodeMessage> msgs = new LinkedList<>();
-  private static List<Boolean> opers = new LinkedList<>();
-  private static CmdletDispatcher dispatcher = null;
+  private static CmdletDispatcherHelper inst;
+  private List<NodeMessage> msgs = new LinkedList<>();
+  private List<Boolean> opers = new LinkedList<>();
+  private CmdletDispatcher dispatcher = null;
 
-  static {
-    EngineEventBus.register(inst);
-  }
-
-  public static void register(CmdletDispatcher dispatcher) {
+  public void register(CmdletDispatcher dispatcher) {
     synchronized (msgs) {
       for (int i = 0; i < msgs.size(); i++) {
         dispatcher.onNodeMessage(msgs.get(i), opers.get(i));
@@ -47,20 +43,25 @@ public class CmdletDispatcherHelper {
   }
 
   public static void init() {
+    inst = new CmdletDispatcherHelper();
+    EngineEventBus.register(inst);
   }
 
+  public static CmdletDispatcherHelper getInst() {
+    return inst;
+  }
 
   @Subscribe
-  public static void onAddNodeMessage(AddNodeMessage msg) {
+  public void onAddNodeMessage(AddNodeMessage msg) {
     onNodeMessage(msg, true);
   }
 
   @Subscribe
-  public static void onRemoveNodeMessage(RemoveNodeMessage msg) {
+  public void onRemoveNodeMessage(RemoveNodeMessage msg) {
     onNodeMessage(msg, false);
   }
 
-  private static void onNodeMessage(NodeMessage msg, boolean add) {
+  private void onNodeMessage(NodeMessage msg, boolean add) {
     synchronized (msgs) {
       if (dispatcher == null) {
         msgs.add(msg);
@@ -71,8 +72,9 @@ public class CmdletDispatcherHelper {
     }
   }
 
-  public static void stop() {
+  public void stop() {
     synchronized (msgs) {
+      dispatcher = null;
       EngineEventBus.unregister(inst);
     }
   }
