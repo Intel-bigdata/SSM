@@ -845,7 +845,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public synchronized void updateStatus(StatusMessage status) {
+  public void updateStatus(StatusMessage status) {
     LOG.debug("Got status update: " + status);
     try {
       if (status instanceof CmdletStatusUpdate) {
@@ -873,27 +873,29 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void onCmdletStatusUpdate(CmdletStatus status) throws IOException {
+  public void onCmdletStatusUpdate(CmdletStatus status) throws IOException {
     if (status == null) {
       return;
     }
     long cmdletId = status.getCmdletId();
     if (idToCmdlets.containsKey(cmdletId)) {
-      CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
-      CmdletState state = status.getCurrentState();
-      cmdletInfo.setState(state);
-      cmdletInfo.setStateChangedTime(status.getStateUpdateTime());
-      if (CmdletState.isTerminalState(state)) {
-        cmdletFinished(cmdletId);
-      } else if (state == CmdletState.DISPATCHED) {
-        flushCmdletInfo(cmdletInfo);
+        CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+      synchronized (cmdletInfo) {
+        CmdletState state = status.getCurrentState();
+        cmdletInfo.setState(state);
+        cmdletInfo.setStateChangedTime(status.getStateUpdateTime());
+        if (CmdletState.isTerminalState(state)) {
+          cmdletFinished(cmdletId);
+        } else if (state == CmdletState.DISPATCHED) {
+          flushCmdletInfo(cmdletInfo);
+        }
       }
     } else {
       // Updating cmdlet status which is not pending or running
     }
   }
 
-  private void onActionStatusUpdate(ActionStatus status)
+  public void onActionStatusUpdate(ActionStatus status)
           throws IOException, ActionException {
     if (status == null) {
       return;

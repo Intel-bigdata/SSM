@@ -21,20 +21,19 @@ import com.google.common.collect.ListMultimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.action.ActionException;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.ExecutorType;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.CmdletStatusUpdate;
-import org.smartdata.protocol.message.StatusReport;
+import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.message.NodeMessage;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -152,17 +151,7 @@ public class CmdletDispatcher {
       return false;
     }
 
-    List<ActionStatus> actionStatusList = new ArrayList<>();
-    for (LaunchAction action : cmdlet.getLaunchActions()) {
-      ActionStatus actionStatus = new ActionStatus(
-              action.getActionId(), System.currentTimeMillis());
-      actionStatusList.add(actionStatus);
-    }
-    StatusReport actionStatus = new StatusReport(actionStatusList);
-    cmdletManager.updateStatus(actionStatus);
-    CmdletStatusUpdate cmdletStatus = new CmdletStatusUpdate(cmdlet.getCmdletId(),
-            System.currentTimeMillis(), CmdletState.DISPATCHED);
-    cmdletManager.updateStatus(cmdletStatus);
+    updateCmdActionStatus(cmdlet);
 
     String id = selected.execute(cmdlet);
 
@@ -218,6 +207,23 @@ public class CmdletDispatcher {
     LaunchCmdlet launchCmdlet = idToLaunchCmdlet.get(cmdletId);
     runningCmdlets.add(cmdletId);
     return launchCmdlet;
+  }
+
+  private void updateCmdActionStatus(LaunchCmdlet cmdlet) {
+    try {
+      for (LaunchAction action : cmdlet.getLaunchActions()) {
+        ActionStatus actionStatus = new ActionStatus(
+                action.getActionId(), System.currentTimeMillis());
+        cmdletManager.onActionStatusUpdate(actionStatus);
+      }
+      CmdletStatus cmdletStatus = new CmdletStatus(cmdlet.getCmdletId(),
+              System.currentTimeMillis(), CmdletState.DISPATCHED);
+      cmdletManager.onCmdletStatusUpdate(cmdletStatus);
+    } catch (IOException e) {
+      LOG.info("update status failed.", e);
+    } catch (ActionException e) {
+      LOG.info("update action status failed.", e);
+    }
   }
 
   private class DispatchTask implements Runnable {
