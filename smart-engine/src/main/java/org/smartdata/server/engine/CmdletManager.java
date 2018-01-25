@@ -362,6 +362,7 @@ public class CmdletManager extends AbstractService {
   private void syncCmdAction(CmdletInfo cmdletInfo,
       List<ActionInfo> actionInfos) throws IOException {
     lockMovefileActionFiles(actionInfos);
+    LOG.info("Cache cmd {}", cmdletInfo);
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
     }
@@ -376,10 +377,12 @@ public class CmdletManager extends AbstractService {
   }
 
   private synchronized void batchSyncCmdAction() throws IOException {
-    List<CmdletInfo> cmdletInfos = (List<CmdletInfo>) cacheCmd.values();
+    LOG.info("Number of cached cmds {}", cacheCmd.size());
+    List<CmdletInfo> cmdletInfos = new ArrayList<>();
     List<ActionInfo> actionInfos = new ArrayList<>();
-    for (CmdletInfo cmdletInfo : cmdletInfos) {
-      for (Long aid : cmdletInfo.getAids()) {
+    for (Long cid : cacheCmd.keySet()) {
+      cmdletInfos.add(cacheCmd.get(cid));
+      for (Long aid : cacheCmd.get(cid).getAids()) {
         actionInfos.add(idToActions.get(aid));
       }
     }
