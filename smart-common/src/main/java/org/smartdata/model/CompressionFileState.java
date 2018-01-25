@@ -164,6 +164,7 @@ public class CompressionFileState extends FileState {
     int index = compressed ? getPosIndexByCompressedOffset(offset) :
         getPosIndexByOriginalOffset(offset);
     CompressionTrunk compressionTrunk = new CompressionTrunk(index);
+    compressionTrunk.setCompressionImpl(compressionImpl);
     compressionTrunk.setOriginOffset(originalPos[index]);
     compressionTrunk.setOriginLength(getOriginTrunkSize(index));
     compressionTrunk.setCompressedOffset(compressedPos[index]);

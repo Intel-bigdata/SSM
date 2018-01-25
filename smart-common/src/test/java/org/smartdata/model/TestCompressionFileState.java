@@ -27,6 +27,7 @@ public class TestCompressionFileState {
   private CompressionFileState compressionFileState;
   private final String fileName = "/testFile";
   private final int bufferSize = 10;
+  private final String compressionImpl = "snappy";
   private final long originalLength = 86;
   private final long compressedLength = 34;
   private final Long[] originalPos = {0L, 10L, 20L, 30L, 40L, 50L, 60L, 70L, 80L};
@@ -40,6 +41,7 @@ public class TestCompressionFileState {
         .setFileStage(FileState.FileStage.DONE)
         .setFileName(fileName)
         .setBufferSize(bufferSize)
+        .setCompressImpl(compressionImpl)
         .setOriginalLength(originalLength)
         .setCompressedLength(compressedLength)
         .setOriginalPos(originalPos)
@@ -52,6 +54,7 @@ public class TestCompressionFileState {
     Assert.assertEquals(FileState.FileStage.DONE, compressionFileState.getFileStage());
     Assert.assertEquals(fileName, compressionFileState.getPath());
     Assert.assertEquals(bufferSize, compressionFileState.getBufferSize());
+    Assert.assertEquals(compressionImpl, compressionFileState.getCompressionImpl());
     Assert.assertEquals(originalLength, compressionFileState.getOriginalLength());
     Assert.assertEquals(compressedLength, compressionFileState.getCompressedLength());
     Assert.assertArrayEquals(originalPos, compressionFileState.getOriginalPos());

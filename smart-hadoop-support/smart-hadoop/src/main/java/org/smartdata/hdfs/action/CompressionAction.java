@@ -54,7 +54,7 @@ public class CompressionAction extends HdfsAction {
       LoggerFactory.getLogger(CompressionAction.class);
 
   public static final String BUF_SIZE = "-bufSize";
-  public static final String COMPRESS_IMPL = "compressImpl";
+  public static final String COMPRESS_IMPL = "-compressImpl";
   private static List<String> compressionImplList = Arrays.asList(new String[]{
     "Lz4","Bzip2","Zlib","snappy"});
 
@@ -83,7 +83,7 @@ public class CompressionAction extends HdfsAction {
     if (filePath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-    if(!compressionImplList.contains(compressionImpl)){
+    if (!compressionImplList.contains(compressionImpl)) {
       throw new ActionException("Action fails, this compressionImpl isn't supported!");
     }
     appendLog(

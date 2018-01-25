@@ -36,7 +36,8 @@ message GetFileStateRequestProto {
 }
 
 message CompressionFileStateProto {
-  required int32 bufferSize = 2;
+  required int32 bufferSize = 1;
+  required string compressionImpl = 2;
   required int64 originalLength = 3;
   required int64 compressedLength = 4;
   repeated int64 originalPos = 5;
