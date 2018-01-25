@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.cmdlet.CmdletDispatcherHelper;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
@@ -77,6 +78,7 @@ public class AgentMaster {
     LOG.info("Agent master: " + address);
     Config config = AgentUtils.overrideRemoteAddress(
         ConfigFactory.load(AgentConstants.AKKA_CONF_FILE), address);
+    CmdletDispatcherHelper.init();
     this.agentManager = new AgentManager();
     Props props = Props.create(MasterActor.class, null, agentManager);
     ActorSystemLauncher launcher = new ActorSystemLauncher(config, props);
