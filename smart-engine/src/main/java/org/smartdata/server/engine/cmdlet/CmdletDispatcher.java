@@ -218,7 +218,7 @@ public class CmdletDispatcher {
     @Override
     public void run() {
       long curr = System.currentTimeMillis();
-      if (curr - lastInfo >= 5000) {
+      if (curr - lastInfo >= 2000) {
         if (!(statDispatched == 0 && statRound == statNoMoreCmdlet)) {
           LOG.info(
               "timeInterval={} statRound={} statFail={} statDispatched={} "
