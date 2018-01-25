@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
