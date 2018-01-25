@@ -38,7 +38,6 @@
     <quartz.scheduler.version>2.2.1</quartz.scheduler.version>
     <jersey.servlet.version>1.13</jersey.servlet.version>
     <libpam4j.version>1.8</libpam4j.version>
-    <javax.ws.rsapi.version>2.0-m10</javax.ws.rsapi.version>
     <jna.version>4.1.0</jna.version>
 
     <!--test library versions-->
@@ -177,12 +176,6 @@
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-servlet</artifactId>
       <version>${jersey.servlet.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>javax.ws.rs-api</artifactId>
-      <version>${javax.ws.rsapi.version}</version>
     </dependency>
 
     <dependency>
