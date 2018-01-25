@@ -20,6 +20,7 @@ package org.smartdata.hdfs.action;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
@@ -29,6 +30,7 @@ import org.smartdata.action.annotation.ActionSignature;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.EnumSet;
 import java.util.Map;
 
 /**
@@ -76,6 +78,7 @@ public class Truncate0Action extends HdfsAction {
     // Save the metadata
     HdfsFileStatus fileStatus = client.getFileInfo(src);
     // AclStatus aclStatus = client.getAclStatus(src);
+    Map<String, byte[]> XAttr = client.getXAttrs(src);
     // Delete file
     client.delete(src, true);
     // Create file
@@ -85,9 +88,13 @@ public class Truncate0Action extends HdfsAction {
     client.setPermission(src, fileStatus.getPermission());
     client.setReplication(src, fileStatus.getReplication());
     client.setStoragePolicy(src, "Cold");
-    //client.setTimes(src, fileStatus.getAccessTime(),
-    //        client.getFileInfo(src).getModificationTime());
+    client.setTimes(src, fileStatus.getAccessTime(),
+            client.getFileInfo(src).getModificationTime());
     // client.setAcl(src, aclStatus.getEntries());
+    for(Map.Entry<String, byte[]> entry : XAttr.entrySet()){
+      client.setXAttr(src, entry.getKey(), entry.getValue(),
+              EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
+    }
     return true;
   }
 
@@ -97,6 +104,7 @@ public class Truncate0Action extends HdfsAction {
     // Save the metadata
     FileStatus fileStatus = fileSystem.getFileStatus(new Path(src));
     // AclStatus aclStatus = fileSystem.getAclStatus(new Path(src));
+    Map<String, byte[]> XAttr = fileSystem.getXAttrs(new Path(src));
     // Delete file
     fileSystem.delete(new Path(src), true);
     // Create file
@@ -106,9 +114,13 @@ public class Truncate0Action extends HdfsAction {
     fileSystem.setPermission(new Path(src), fileStatus.getPermission());
     fileSystem.setReplication(new Path(src), fileStatus.getReplication());
     fileSystem.setStoragePolicy(new Path(src), "Cold");
-    // fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
-    //     fileSystem.getFileStatus(new Path(src)).getModificationTime());
+    fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
+            fileSystem.getFileStatus(new Path(src)).getModificationTime());
     // fileSystem.setAcl(new Path(src), aclStatus.getEntries());
+    for(Map.Entry<String, byte[]> entry : XAttr.entrySet()){
+      fileSystem.setXAttr(new Path(src), entry.getKey(), entry.getValue(),
+              EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
+    }
     return true;
   }
 }
