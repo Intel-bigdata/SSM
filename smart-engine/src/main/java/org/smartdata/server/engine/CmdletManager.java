@@ -84,6 +84,7 @@ public class CmdletManager extends AbstractService {
   private MetaStore metaStore;
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
+  // cache sync threshold, default 100
   private int cacheCmdTh = 100;
 
   private int maxNumPendingCmdlets;
@@ -362,7 +363,7 @@ public class CmdletManager extends AbstractService {
   private void syncCmdAction(CmdletInfo cmdletInfo,
       List<ActionInfo> actionInfos) throws IOException {
     lockMovefileActionFiles(actionInfos);
-    LOG.info("Cache cmd {}", cmdletInfo);
+    LOG.debug("Cache cmd {}", cmdletInfo);
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
     }
@@ -377,7 +378,7 @@ public class CmdletManager extends AbstractService {
   }
 
   private synchronized void batchSyncCmdAction() throws IOException {
-    LOG.info("Number of cached cmds {}", cacheCmd.size());
+    LOG.debug("Number of cached cmds {}", cacheCmd.size());
     List<CmdletInfo> cmdletInfos = new ArrayList<>();
     List<ActionInfo> actionInfos = new ArrayList<>();
     for (Long cid : cacheCmd.keySet()) {
@@ -982,6 +983,7 @@ public class CmdletManager extends AbstractService {
 
   private void flushCmdletInfo(CmdletInfo info) throws IOException {
     try {
+      cacheCmd.remove(info.getCid());
       metaStore.updateCmdlet(info.getCid(), info.getRid(), info.getState());
     } catch (MetaStoreException e) {
       LOG.error(

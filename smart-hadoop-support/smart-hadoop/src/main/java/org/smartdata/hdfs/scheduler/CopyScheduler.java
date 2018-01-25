@@ -85,8 +85,8 @@ public class CopyScheduler extends ActionSchedulerService {
   private int batchSize = 300;
   // Cache of the file_diff
   private Map<Long, FileDiff> fileDiffCache;
-  // cache sync threshold, default 50
-  private int cacheSyncTh = 50;
+  // cache sync threshold, default 100
+  private int cacheSyncTh = 100;
   // record the file_diff whether being changed
   private Map<Long, Boolean> fileDiffCacheChanged;
 
@@ -548,6 +548,11 @@ public class CopyScheduler extends ActionSchedulerService {
 
   @Override
   public void stop() throws IOException {
+    try {
+      batchDirectSync();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
     executorService.shutdown();
   }
 
