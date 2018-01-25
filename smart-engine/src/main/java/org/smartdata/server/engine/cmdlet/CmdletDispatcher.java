@@ -328,7 +328,6 @@ public class CmdletDispatcher {
   }
 
   public void stop() {
-    CmdletDispatcherHelper.getInst().stop();
     schExecService.shutdown();
   }
 }

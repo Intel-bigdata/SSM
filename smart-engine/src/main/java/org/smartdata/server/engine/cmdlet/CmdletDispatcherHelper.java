@@ -71,11 +71,4 @@ public class CmdletDispatcherHelper {
       }
     }
   }
-
-  public void stop() {
-    synchronized (msgs) {
-      dispatcher = null;
-      EngineEventBus.unregister(inst);
-    }
-  }
 }
