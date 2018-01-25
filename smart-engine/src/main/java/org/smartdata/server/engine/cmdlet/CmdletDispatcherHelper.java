@@ -42,6 +42,7 @@ public class CmdletDispatcherHelper {
         dispatcher.onNodeMessage(msgs.get(i), opers.get(i));
       }
       msgs.clear();
+      opers.clear();
     }
   }
 
