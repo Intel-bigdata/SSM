@@ -76,9 +76,5 @@ public interface CompatibilityHelper {
 
   OutputStream getS3outputStream(String dest, Configuration conf) throws IOException;
 
-  boolean setLen2Zero(DFSClient client, String src) throws IOException;
-
-  boolean setLen2Zero(DistributedFileSystem fileSystem, String src) throws IOException;
-
   SmartInputStreamFactory getSmartInputStreamFactory();
 }
