@@ -84,6 +84,7 @@ public class CmdletManager extends AbstractService {
   private MetaStore metaStore;
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
+  private int cacheCmdTh = 100;
 
   private int maxNumPendingCmdlets;
   private List<Long> pendingCmdlet;
@@ -93,6 +94,7 @@ public class CmdletManager extends AbstractService {
   private List<Long> runningCmdlets;
   private Map<Long, CmdletInfo> idToCmdlets;
   private Map<Long, ActionInfo> idToActions;
+  private Map<Long, CmdletInfo> cacheCmd;
   private Map<String, Long> fileLocks;
   private ListMultimap<String, ActionScheduler> schedulers = ArrayListMultimap.create();
   private List<ActionSchedulerService> schedulerServices = new ArrayList<>();
@@ -115,6 +117,7 @@ public class CmdletManager extends AbstractService {
     this.idToLaunchCmdlet = new HashMap<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
+    this.cacheCmd = new ConcurrentHashMap<>();
     this.fileLocks = new ConcurrentHashMap<>();
     this.purgeTask = new CmdletPurgeTask(context.getConf());
     this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
@@ -298,6 +301,7 @@ public class CmdletManager extends AbstractService {
 
   @Override
   public void stop() throws IOException {
+    batchSyncCmdAction();
     LOG.info("Stopping ...");
     dispatcher.stop();
     for (int i = schedulerServices.size() - 1; i >= 0; i--) {
@@ -357,32 +361,47 @@ public class CmdletManager extends AbstractService {
    */
   private void syncCmdAction(CmdletInfo cmdletInfo,
       List<ActionInfo> actionInfos) throws IOException {
-    Set<String> filesLocked = lockMovefileActionFiles(actionInfos);
-    try {
-      metaStore.insertCmdlet(cmdletInfo);
-      metaStore.insertActions(
-          actionInfos.toArray(new ActionInfo[actionInfos.size()]));
-      numCmdletsGen.incrementAndGet();
-    } catch (MetaStoreException e) {
-      LOG.error("{} submit to DB error", cmdletInfo, e);
-
-      try {
-        for (String file : filesLocked) {
-          fileLocks.remove(file);
-        }
-        metaStore.deleteCmdlet(cmdletInfo.getCid());
-      } catch (MetaStoreException e1) {
-        LOG.error("{} delete from DB error", cmdletInfo, e);
-      }
-      throw new IOException(e);
-    }
-
+    lockMovefileActionFiles(actionInfos);
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
     }
     idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
+    cacheCmd.put(cmdletInfo.getCid(), cmdletInfo);
     synchronized (pendingCmdlet) {
       pendingCmdlet.add(cmdletInfo.getCid());
+    }
+    if (cacheCmd.size() >= cacheCmdTh) {
+      batchSyncCmdAction();
+    }
+  }
+
+  private synchronized void batchSyncCmdAction() throws IOException {
+    List<CmdletInfo> cmdletInfos = (List<CmdletInfo>) cacheCmd.values();
+    List<ActionInfo> actionInfos = new ArrayList<>();
+    for (CmdletInfo cmdletInfo : cmdletInfos) {
+      for (Long aid : cmdletInfo.getAids()) {
+        actionInfos.add(idToActions.get(aid));
+      }
+    }
+    try {
+      metaStore.insertCmdlets(
+          cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
+      metaStore.insertActions(
+          actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+      numCmdletsGen.incrementAndGet();
+    } catch (MetaStoreException e) {
+      LOG.error("{} submit to DB error", cmdletInfos, e);
+      for (CmdletInfo cmdletInfo : cmdletInfos) {
+        try {
+          metaStore.deleteCmdlet(cmdletInfo.getCid());
+        } catch (MetaStoreException e1) {
+          LOG.error("{} delete from DB error", cmdletInfo, e);
+        }
+      }
+      throw new IOException(e);
+    }
+    for (CmdletInfo cmdletInfo : cmdletInfos) {
+      cacheCmd.remove(cmdletInfo.getCid());
     }
   }
 
@@ -1030,6 +1049,7 @@ public class CmdletManager extends AbstractService {
       try {
         int nScheduled;
         do {
+          batchSyncCmdAction();
           nScheduled = scheduleCmdlet();
           totalScheduled += nScheduled;
         } while (nScheduled != 0);
