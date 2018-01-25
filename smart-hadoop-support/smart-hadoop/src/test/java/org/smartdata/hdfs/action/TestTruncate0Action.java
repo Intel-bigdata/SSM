@@ -18,17 +18,21 @@
 package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestTruncate0 extends MiniClusterHarness {
+public class TestTruncate0Action extends MiniClusterHarness {
   @Test
   public void testSetFileLen() throws IOException, InterruptedException {
     final String srcPath = "/test";
@@ -43,6 +47,11 @@ public class TestTruncate0 extends MiniClusterHarness {
 
     out.close();
 
+    dfs.setXAttr(new Path(srcPath + "/" + file), "user.coldloc", "test".getBytes(),
+            EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
+    FileStatus oldFileStatus = dfs.getFileStatus(new Path(srcPath + "/" + file));
+    Map<String, byte[]> oldXAttrs = dfs.getXAttrs(new Path(srcPath + "/" + file));
+
     Truncate0Action setLen2ZeroAction = new Truncate0Action();
     setLen2ZeroAction.setDfsClient(dfsClient);
     setLen2ZeroAction.setContext(smartContext);
@@ -53,9 +62,19 @@ public class TestTruncate0 extends MiniClusterHarness {
     setLen2ZeroAction.init(args);
     setLen2ZeroAction.run();
 
-    long newLength = dfs.getFileStatus(new Path(srcPath + "/" + file)).getLen();
+    FileStatus newFileStatus = dfs.getFileStatus(new Path(srcPath + "/" + file));
+    Map<String, byte[]> newXAttrs = dfs.getXAttrs(new Path(srcPath + "/" + file));
 
-    System.out.println(newLength);
-    Assert.assertTrue(newLength == 0);
+    Assert.assertTrue(newFileStatus.getLen()==0);
+    Assert.assertTrue(oldFileStatus.getOwner().equals(newFileStatus.getOwner()));
+    Assert.assertTrue(oldFileStatus.getGroup().equals(newFileStatus.getGroup()));
+    Assert.assertTrue(oldFileStatus.getPermission().equals(newFileStatus.getPermission()));
+    Assert.assertTrue(oldFileStatus.getReplication()==newFileStatus.getReplication());
+    //Assert.assertTrue(oldFileStatus.getAccessTime()==newFileStatus.getAccessTime());
+    //Assert.assertTrue(oldFileStatus.getModificationTime()==newFileStatus.getModificationTime());
+    Assert.assertTrue(oldXAttrs.size()==newXAttrs.size());
+    for(Map.Entry<String, byte[]> oldXAttr : oldXAttrs.entrySet()){
+      Assert.assertTrue(Arrays.equals(oldXAttr.getValue(),newXAttrs.get(oldXAttr.getKey())));
+    }
   }
 }
