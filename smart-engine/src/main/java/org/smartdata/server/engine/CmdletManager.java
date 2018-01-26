@@ -84,8 +84,8 @@ public class CmdletManager extends AbstractService {
   private MetaStore metaStore;
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
-  // cache sync threshold, default 100
-  private int cacheCmdTh = 100;
+  // cache sync threshold, default 400
+  private int cacheCmdTh = 400;
 
   private int maxNumPendingCmdlets;
   private List<Long> pendingCmdlet;
@@ -371,9 +371,6 @@ public class CmdletManager extends AbstractService {
     cacheCmd.put(cmdletInfo.getCid(), cmdletInfo);
     synchronized (pendingCmdlet) {
       pendingCmdlet.add(cmdletInfo.getCid());
-    }
-    if (cacheCmd.size() >= cacheCmdTh) {
-      batchSyncCmdAction();
     }
   }
 

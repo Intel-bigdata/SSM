@@ -305,7 +305,7 @@ public class RuleExecutor implements Runnable {
                 + "ms, SubmitTime = "
                 + (endProcessTime - endCheckTime)
                 + "ms, fileNum = "
-                + files.size()
+                + numCmdSubmitted
                 + ".");
       }
 
