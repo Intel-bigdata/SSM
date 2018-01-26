@@ -379,7 +379,9 @@ public class CmdletManager extends AbstractService {
   }
 
   private synchronized void batchSyncCmdAction() throws IOException {
-    LOG.info("Number of cached cmds {}", cacheCmd.size());
+    if (cacheCmd.size() != 0) {
+      LOG.info("Number of cached cmds {}", cacheCmd.size());
+    }
     List<CmdletInfo> cmdletInfos = new ArrayList<>();
     List<ActionInfo> actionInfos = new ArrayList<>();
     for (Long cid : cacheCmd.keySet()) {
@@ -391,7 +393,9 @@ public class CmdletManager extends AbstractService {
         actionInfos.add(idToActions.get(aid));
       }
     }
-    LOG.info("Number of cmds {} to submit", cacheCmd.size());
+    if (cmdletInfos.size() != 0) {
+      LOG.info("Number of cmds {} to submit", cmdletInfos.size());
+    }
     try {
       metaStore.insertCmdlets(
           cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
@@ -1051,15 +1055,17 @@ public class CmdletManager extends AbstractService {
   }
 
   private class ScheduleTask implements Runnable {
+    private int round;
     public ScheduleTask() {
+      round = 0;
     }
 
     @Override
     public void run() {
       try {
         int nScheduled;
+        batchSyncCmdAction();
         do {
-          batchSyncCmdAction();
           nScheduled = scheduleCmdlet();
           totalScheduled += nScheduled;
         } while (nScheduled != 0);
