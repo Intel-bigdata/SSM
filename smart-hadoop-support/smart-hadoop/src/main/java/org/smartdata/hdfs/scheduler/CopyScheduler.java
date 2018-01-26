@@ -82,7 +82,7 @@ public class CopyScheduler extends ActionSchedulerService {
   // Check interval of executorService
   private long checkInterval = 150;
   // Base sync batch insert size
-  private int batchSize = 300;
+  private int batchSize = 500;
   // Cache of the file_diff
   private Map<Long, FileDiff> fileDiffCache;
   // cache sync threshold, default 100
@@ -321,7 +321,9 @@ public class CopyScheduler extends ActionSchedulerService {
   private void baseSync(String srcDir,
       String destDir) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(srcDir);
-    LOG.debug("Directory Base Sync {} files", srcFiles.size());
+    if (srcFiles.size() > 0) {
+      LOG.info("Directory Base Sync {} files", srcFiles.size());
+    }
     // <file name, fileInfo>
     Map<String, FileInfo> srcFileSet = new HashMap<>();
     for (FileInfo fileInfo : srcFiles) {

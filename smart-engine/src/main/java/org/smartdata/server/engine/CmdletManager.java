@@ -84,8 +84,8 @@ public class CmdletManager extends AbstractService {
   private MetaStore metaStore;
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
-  // cache sync threshold, default 400
-  private int cacheCmdTh = 400;
+  // cache sync threshold, default 500
+  private int cacheCmdTh = 600;
 
   private int maxNumPendingCmdlets;
   private List<Long> pendingCmdlet;
@@ -375,15 +375,17 @@ public class CmdletManager extends AbstractService {
   }
 
   private synchronized void batchSyncCmdAction() throws IOException {
-    LOG.debug("Number of cached cmds {}", cacheCmd.size());
+    LOG.info("Number of cached cmds {}", cacheCmd.size());
     List<CmdletInfo> cmdletInfos = new ArrayList<>();
     List<ActionInfo> actionInfos = new ArrayList<>();
     for (Long cid : cacheCmd.keySet()) {
       cmdletInfos.add(cacheCmd.get(cid));
+      if (cmdletInfos.size() >= cacheCmdTh) break;
       for (Long aid : cacheCmd.get(cid).getAids()) {
         actionInfos.add(idToActions.get(aid));
       }
     }
+    LOG.info("Number of cmds {} to submit", cacheCmd.size());
     try {
       metaStore.insertCmdlets(
           cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
