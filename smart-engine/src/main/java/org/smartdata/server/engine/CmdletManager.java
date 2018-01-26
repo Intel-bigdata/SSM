@@ -123,8 +123,12 @@ public class CmdletManager extends AbstractService {
     this.purgeTask = new CmdletPurgeTask(context.getConf());
     this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
         idToLaunchCmdlet, runningCmdlets, schedulers);
-    maxNumPendingCmdlets = context.getConf().getInt(SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY,
+    maxNumPendingCmdlets = context.getConf()
+        .getInt(SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY,
         SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_DEFAULT);
+    cacheCmdTh = context.getConf()
+        .getInt(SmartConfKeys.SMART_CMDLET_CACHE_BATCH,
+        SmartConfKeys.SMART_CMDLET_CACHE_BATCH_DEFAULT);
   }
 
   @VisibleForTesting
@@ -380,7 +384,9 @@ public class CmdletManager extends AbstractService {
     List<ActionInfo> actionInfos = new ArrayList<>();
     for (Long cid : cacheCmd.keySet()) {
       cmdletInfos.add(cacheCmd.get(cid));
-      if (cmdletInfos.size() >= cacheCmdTh) break;
+      if (cmdletInfos.size() >= cacheCmdTh){
+        break;
+      }
       for (Long aid : cacheCmd.get(cid).getAids()) {
         actionInfos.add(idToActions.get(aid));
       }

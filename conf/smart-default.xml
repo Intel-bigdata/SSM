@@ -115,6 +115,22 @@
   </property>
 
   <property>
+    <name>smart.cmdlet.cache.batch</name>
+    <value>600</value>
+    <description>
+      Maximum batch size of cmdlet batch insert.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.copy.scheduler.base.sync.batch</name>
+    <value>500</value>
+    <description>
+      Maximum batch size of copyscheduer base sync batch insert.
+    </description>
+  </property>
+
+  <property>
     <name>pd.client.port</name>
     <value>7060</value>
     <description>Pd port in client-url option</description>

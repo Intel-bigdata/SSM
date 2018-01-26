@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.action.SyncAction;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -103,6 +104,9 @@ public class CopyScheduler extends ActionSchedulerService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     try {
       conf = getContext().getConf();
+      cacheSyncTh = conf.getInt(SmartConfKeys
+          .SMART_COPY_SCHEDULER_BASE_SYNC_BATCH,
+          SmartConfKeys.SMART_COPY_SCHEDULER_BASE_SYNC_BATCH_DEFAULT);
     } catch (NullPointerException e) {
       // SmartContext is empty
       conf = new Configuration();
