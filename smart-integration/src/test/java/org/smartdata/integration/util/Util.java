@@ -45,6 +45,17 @@ public class Util {
     }, 15);
   }
 
+  public static void waitSlaveServersDown() throws InterruptedException {
+    Util.retryUntil(new RetryTask() {
+      @Override
+      public boolean retry() {
+        Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/servers");
+        List<String> ids = with(response.asString()).get("body.id");
+        return ids.size() == 0;
+      }
+    }, 15);
+  }
+
   public static void waitAgentAvailable() throws InterruptedException {
     Util.retryUntil(new RetryTask() {
       @Override
@@ -52,6 +63,17 @@ public class Util {
         Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/agents");
         List<String> ids = with(response.asString()).get("body.id");
         return ids.size() > 0;
+      }
+    }, 15);
+  }
+
+  public static void waitAgentsDown() throws InterruptedException {
+    Util.retryUntil(new RetryTask() {
+      @Override
+      public boolean retry() {
+        Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/agents");
+        List<String> ids = with(response.asString()).get("body.id");
+        return ids.size() == 0;
       }
     }, 15);
   }
