@@ -19,6 +19,8 @@ III. Performance Tests of SSM Core Features
 ------------------------
 This part tests the performance of SSM itself to evaluate the efficiency of SSM running different kinds of tasks.
 
+Namespace: Empty (mysql), 10 million (mysql/Tidb)...
+
 ### 1. Data Mover
 #### Purpose
 * Test the execution speed of Data Mover.
@@ -82,6 +84,7 @@ This part tests the performance of SSM itself to evaluate the efficiency of SSM 
 #### Data set (source data and destination data are both ALL-HDD)
 * a. Small files: 10MB *  [100, 500, 2500, 12500, 62500] files
 * b. Tiny files: 1MB * [100, 500, 2500, 12500, 62500] files
+* c. 10KB * [100... ] files
 
 
 IV. Performance Test of Using SSM in Hadoop
