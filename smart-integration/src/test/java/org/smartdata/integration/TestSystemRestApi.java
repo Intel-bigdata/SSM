@@ -50,5 +50,7 @@ public class TestSystemRestApi extends IntegrationTestBase {
 
     agent.destroy();
     worker.destroy();
+    Util.waitAgentsDown();
+    Util.waitSlaveServersDown();
   }
 }

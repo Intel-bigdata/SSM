@@ -18,7 +18,6 @@
 package org.smartdata.server.engine.cmdlet;
 
 import com.google.common.collect.ListMultimap;
-import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -27,11 +26,8 @@ import org.smartdata.model.ExecutorType;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.server.engine.CmdletManager;
-import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.message.AddNodeMessage;
 import org.smartdata.server.engine.message.NodeMessage;
-import org.smartdata.server.engine.message.RemoveNodeMessage;
 
 import java.io.IOException;
 import java.util.List;
@@ -91,7 +87,6 @@ public class CmdletDispatcher {
     cmdExecSrvTotalInsts = 0;
     cmdExecSrvInstsSlotsLeft = new int[ExecutorType.values().length];
     dispatchedToSrvs = new ConcurrentHashMap<>();
-    EngineEventBus.register(this);
 
     disableLocalExec = smartContext.getConf().getBoolean(
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
@@ -291,17 +286,7 @@ public class CmdletDispatcher {
     }
   }
 
-  @Subscribe
-  public void onAddNodeMessage(AddNodeMessage msg) {
-    onNodeMessage(msg, true);
-  }
-
-  @Subscribe
-  public void onRemoveNodeMessage(RemoveNodeMessage msg) {
-    onNodeMessage(msg, false);
-  }
-
-  private void onNodeMessage(NodeMessage msg, boolean isAdd) {
+  public void onNodeMessage(NodeMessage msg, boolean isAdd) {
     if (disableLocalExec && msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
       return;
     }
@@ -337,6 +322,7 @@ public class CmdletDispatcher {
   }
 
   public void start() {
+    CmdletDispatcherHelper.getInst().register(this);
     schExecService.scheduleAtFixedRate(
         new DispatchTask(this), 200, 100, TimeUnit.MILLISECONDS);
   }
