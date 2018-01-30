@@ -1,12 +1,12 @@
-Deployment SSM with Hadoop(CDH5.10.1 or Hadoop 2.7) Guide
+Deployment SSM with Hadoop(CDH5.10.1 or Apache Hadoop 2.7.3) Guide
 ----------------------------------------------------------------------------------
 Requirements:
 
-* Unix System
+* Unix System/Unix-like System
 * JDK 1.7 for CDH5.10.1
-* JDK 1.8 for Hadoop 2.7
+* JDK 1.8 for Apache Hadoop 2.7.3
 * CDH 5.10.1
-* Hadoop 2.7
+* Apache Hadoop 2.7.3
 * MySQL Community 5.7.18
 * Maven 3.1.1+
 
@@ -30,15 +30,15 @@ Build SSM Package
 
   * For CDH5.10.1
   
-  	`mvn package -Pdist,web,hadoop-cdh-2.6 -DskipTests`
+  	`mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests`
    
-  * For Hadoop 2.7
+  * For Hadoop 2.7.3
   	
-	`mvn package -Pdist,web,hadoop-2.7 -DskipTests`
+	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
 
 
-   A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to get the configuration files under './conf'. 
-   More detail information, please refer to BUILDING.txt file.
+   A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
+   More detailed information, please refer to BUILDING.txt file.
 
 Configure SSM
 ---------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ Configure SSM
    ```xml
    <property>
        <name>smart.dfs.namenode.rpcserver</name>
-       <value>hdfs://namenode-ip:port</value>
+       <value>hdfs://namenode-ip:rpc-port</value>
        <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
    ```
@@ -83,7 +83,10 @@ Configure SSM
 
    SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
 
-   Open `servers` file under /conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
+   Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
+
+   The active SSM server is the first node in the `servers` file under ${SMART_HOME}/conf. After failover, please using the following command to find new active SSM servers
+   `hadoop fs -cat /system/ssm.id `
 
    Please note, the configuration should be the same on all server hosts.
 
@@ -91,7 +94,7 @@ Configure SSM
 
    This step can be skipped if SSM standalone mode is preferred.
   
-   Open `agents` file under /conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
+   Open `agents` file under ${SMART_HOME}/conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
    After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
  
 * **Configure database**
@@ -108,8 +111,8 @@ Configure SSM
    ```xml
    <properties>
        <entry key="url">jdbc:mysql://localhost/ssm</entry>
-       <entry key="username">root</entry>
-       <entry key="password">123456</entry>
+       <entry key="username">username</entry>
+       <entry key="password">password</entry>
 	   ......
    </properties>	   
    ```
@@ -141,8 +144,8 @@ Configure SSM
    ```xml
     <properties>
         <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> no need to configure url for TiDB -->
-        <entry key="username">root</entry>
-        <entry key="password"></entry>
+        <entry key="username">username</entry>
+        <entry key="password">password</entry>
         ......
     <properties>
    ```
@@ -188,26 +191,18 @@ Deploy SSM
 SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode.
    
    * Standalone SSM Service
-   
-     For deploy standalone SSM, copy the unzipped tar distribution directory to installation directory (assuming `${SMART_HOME}`) and switch to the directory, the configuration files are under './conf'. 
-      
+
+     For deploy standalone SSM, SSM will only start SSM server without SSM agents. Distribute `${SMART_HOME}` directory to SSM Server nodes. The configuration files are under `${SMART_HOME}/conf`.
+
    * SSM Service with multiple Agents
-   
-     Deploy and unzip tar distribution package to SSM Service server and each Smart Agent server. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
-     On the SSM service server, switch to the SSM installation directory, ready to start and run the SSM service. 
+
+     Distribute `${SMART_HOME}` directory to SSM Server nodes and each Smart Agent nodes. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
+     On the SSM service server, switch to the SSM installation directory, ready to start and run the SSM service.
 
 
 Run SSM
 ---------------------------------------------------------------------------------
-
-* **Format Database**
-	
-	`./bin/start-ssm.sh -format`
-
-   This command will start SSM service and format database meanwhile.
-   The script will drop all tables in the database configured in druid.xml and create all tables required by SSM.
-	
-   
+Enter into ${SMART_HOME} directory for running SSM.
 * **Start SSM server**
    
    SSM server requires HDFS superuser privilege to access some Namenode APIs. So please make sure the account you used to start SSM has the privilege.
@@ -216,6 +211,8 @@ Run SSM
 
    `./bin/start-ssm.sh`
 
+   `-format` This option `should` be used in the first time starting SSM server for formatting the database. The option will drop all tables in the database configured in druid.xml and create all tables required by SSM.
+
    `--config <config-dir>` can be used to specify where the config directory is.
    `${SMART_HOME}/conf` is the default config directory if the config option is not used.
 
@@ -223,7 +220,7 @@ Run SSM
    
    Once you start the SSM server, you can open its web UI by 
 
-   `http://localhost:7045`
+   `http://Active_SSM_Server_IP:7045`
 
    If you meet any problem, please open the smartserver.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
 
@@ -240,27 +237,24 @@ Run SSM
 
 * **Stop SSM server**
    
-   The script `bin/stop-ssm.sh` is used to stop SSM server. Remember to
-   use the exact same options to `stop-ssm.sh` script as to `start-ssm.sh` script.
-   For example, for starting Smart Server, you use
+   The script `bin/stop-ssm.sh` is used to stop SSM server.
 
-   `bin/start-ssm.sh --config ./YOUR_CONF_DIR`
+   `./bin/stop-ssm.sh`
 
-   Then, to stop Smart Server, you should use
+   `--config <config-dir>` can be used to specify where the config directory is. Please use the same config directory to execute stop-ssm.sh script as start-ssm.sh script.
+   `${SMART_HOME}/conf` is the default config directory if the config option is not used.
 
-   `bin/stop-ssm.sh --config ./YOUR_CONF_DIR`
-   
    If Smart Agents are configured, the stop script will stop the Agents one by one remotely.
 
 
 Hadoop Configuration
 ----------------------------------------------------------------------------------
-After install CDH5.10.1 or Hadoop 2.7, please do the following configurations, 
+After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configurations for integrating SSM.
 
-* **Hadoop `core-site.xml`**
+#### Apache Hadoop 2.7.3
 
-    Change property `fs.hdfs.impl` value to point to Smart Server provided "Smart File System".
-    
+* Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System". Add the following content to the `core-site.xml`
+
     ```xml
     <property>
         <name>fs.hdfs.impl</name>
@@ -269,39 +263,115 @@ After install CDH5.10.1 or Hadoop 2.7, please do the following configurations,
     </property>
     ```
 
-* **Hadoop `hdfs-site.xml`**
-
-    Add property `smart.server.rpc.address` to point to the installed Smart Server. Default Smart Server RPC port is `7042`.
+*   Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
 
     ```xml
     <property>
         <name>smart.server.rpc.address</name>
-        <value>ssm-server-ip:port</value>
+        <value>ssm-server-ip:rpc-port</value>
     </property>   
     ```
 
-     Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
+*   Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
 
      ```xml
      <property>
          <name>dfs.datanode.data.dir</name>
-         <value>[SSD]file:///Users/drankye/workspace/tmp/disk_a,[DISK]file:///Users/drankye/workspace/tmp/disk_b,[ARCHIVE]file:///Users/drankye/workspace/tmp/disk_c</value>
+         <value>[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
      </property>
      ```
 
-* **Make sure Hadoop HDFS Client can access SSM jars**
+* Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
+   *  Add SSM jars to the Hadoop classpath.
+      1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
 
-    After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem
-implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem, 
-	* When SSM compilation is finished, copy all the jar files starts with smart under 
+      2. Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
 
-		`/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`
+      3. Add the SSM jars directory to hadoop calsspath in `hadoop-env.sh` as following.
 
-	  to directory in Hadoop/CDH class path.
-	  
-	 * Add the above path to Hadoop/CDH classpath 
+          `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
+
+   *  Copy the SSM jars to the default Hadoop class path
+
+      1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
+
+      2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/hdfs/`.
 
 
+#### CDH5.10.1
+
+* Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point to Smart Server provided "Smart File System".
+
+    1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
+    2.    Search `Cluster-wide Advanced Configuration Snippet (Safety Valve) for core-site.xml` configuration, add the following xml context.
+    ```xml
+    <property>
+        <name>fs.hdfs.impl</name>
+        <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
+        <description>The FileSystem for hdfs URL</description>
+    </property>
+    ```
+    3.    Click the Save Changes button
+    4.    Restart stale Services and re-deploy the client configurations
+
+
+* Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manager to point to the installed Smart Server.
+    1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
+
+    2.    Search `HDFS Service Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, add the following xml context. The  default Smart Server RPC port is `7042`.
+    ```xml
+    <property>
+        <name>smart.server.rpc.address</name>
+        <value>ssm-server-ip:rpc-port</value>
+    </property>
+    ```
+    3.    Search `HDFS Client Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, add the following xml context. The  default Smart Server RPC port is `7042`.
+         ```xml
+         <property>
+             <name>smart.server.rpc.address</name>
+             <value>ssm-server-ip:rpc-port</value>
+         </property>
+         ```
+    4.    Click the Save Changes button
+
+    5.    Restart stale Services and re-deploy the client configurations
+
+* Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
+    1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
+
+    2.    Search `DataNode Data Directory` configuration. Below is an example which sets the SSD, DISK and Archive volumes.
+     ```xml
+     <property>
+         <name>dfs.datanode.data.dir</name>
+         <value>[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
+     </property>
+     ```
+
+* Make sure Hadoop HDFS Client can access SSM jars
+
+    After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
+	 * Add SSM jars to the CDH Hadoop Classpath using Cloudera Manager.
+       1. In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
+       2. Search `HDFS Replication Environment Advanced Configuration Snippet (Safety Valve) for hadoop-env.sh`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+       3. Search `HDFS Service Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+       4. Search `HDFS Client Environment Advanced Configuration Snippet (Safety Valve) for hadoop-env.sh`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+       5. Click the Save Changes button.
+       6. In the Cloudera Manager Admin Console, click the YARN indicator in the top navigation bar. Click the Configuration button.
+       7. Search `Gateway Client Environment Advanced Configuration Snippet (Safety Valve) for hadoop-env.sh`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+       8. Search `NodeManager Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+       9. Search `YARN (MR2 Included) Service Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+       10. Search `YARN Application Classpath`. In the classpath list, click plus symbol to open an additional row, and enter the path to SSM jars. For example, `/PATH/TO/SSM_jars/*`
+       11. Search `MR Application Classpath`. In the classpath list, click plus symbol to open an additional row, and enter the path to SSM jars. For example, `/PATH/TO/SSM_jars/*`
+       12. Click the Save Changes button
+       13. Restart stale Services and re-deploy the client configurations.
+
+   * Copy the SSM jars to the CDH default Hadoop class path.
+     1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
+     2. Distribute the jars starts with smart to CDH default Hadoop Classpath in each NameNode/DataNode.
+
+
+
+#### Validate the Hadoop Configuration
      After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if 
 the configuration takes effect. You can try TestDFSIO for example, 
 
@@ -391,7 +461,7 @@ Performance Tuning
     **smart.cmdlet.executors**
 
     Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
-    If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under /conf directory. Here is an example to change the action execution parallelism to 50.
+    If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under ${SMART_HOME}/conf directory. Here is an example to change the action execution parallelism to 50.
 
      ```xml
      <property>
@@ -441,7 +511,7 @@ Performance Tuning
 
 Trouble Shooting
 ---------------------------------------------------------------------------------
-All logs will go to SmartSerer.log under /logs directory. 
+All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
@@ -451,13 +521,13 @@ All logs will go to SmartSerer.log under /logs directory.
    
    c. Check if there is already a SmartDaemon process running
    
-   d. Got to logs under /logs directory, find any useful clues in the log file.
+   d. Got to logs under ${SMART_HOME}/logs directory, find any useful clues in the log file.
    
 2. UI can not show hot files list 
 
   Possible causes:
   
-  a. Cannot lock system mover locker. You may see something like this in the SmartServer.log file,
+  a. Cannot lock system mover locker. You may see something like this in the smartserver.log file,
   
 	2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...
 	2017-07-15 00:38:29,350 ERROR org.smartdata.hdfs.HdfsStatesUpdateService.checkAndMarkRunning 138: Unable to lock 'mover', please stop 'mover' first.
