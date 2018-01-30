@@ -904,6 +904,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void insertCmdlets(CmdletInfo[] commands)
       throws MetaStoreException {
+    if (commands.length == 0) {
+      return;
+    }
     try {
       cmdletDao.insert(commands);
     } catch (Exception e) {
