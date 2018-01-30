@@ -903,7 +903,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public synchronized void updateStatus(StatusMessage status) {
+  public void updateStatus(StatusMessage status) {
     LOG.debug("Got status update: " + status);
     try {
       if (status instanceof CmdletStatusUpdate) {
@@ -927,13 +927,15 @@ public class CmdletManager extends AbstractService {
     if (idToCmdlets.containsKey(cmdletId)) {
       CmdletState state = statusUpdate.getCurrentState();
       CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
-      cmdletInfo.setState(state);
-      //The cmdlet is already finished or terminated, remove status from memory.
-      if (CmdletState.isTerminalState(state)) {
-        cmdletFinished(cmdletId);
+      synchronized (cmdletInfo) {
+        cmdletInfo.setState(state);
+        //The cmdlet is already finished or terminated, remove status from memory.
+        if (CmdletState.isTerminalState(state)) {
+          cmdletFinished(cmdletId);
+        } else {
+          // Updating cmdlet status which is not pending or running
+        }
       }
-    } else {
-      // Updating cmdlet status which is not pending or running
     }
   }
 
@@ -956,7 +958,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void onActionStarted(ActionStarted started) {
+  private synchronized void onActionStarted(ActionStarted started) {
     if (idToActions.containsKey(started.getActionId())) {
       idToActions.get(started.getActionId()).setCreateTime(started.getTimestamp());
     } else {
