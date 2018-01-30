@@ -37,8 +37,8 @@ Build SSM Package
 	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
 
 
-   A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to get the configuration files under '${SMART_HOME}/conf'. 
-   More detail information, please refer to BUILDING.txt file.
+   A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
+   More detailed information, please refer to BUILDING.txt file.
 
 Configure SSM
 ---------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ Configure SSM
    Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
 
    The active SSM server is the first node in the `servers` file under ${SMART_HOME}/conf. After failover, please using the following command to find new active SSM servers
-   `hadoop fs -cat /system/mover.id `
+   `hadoop fs -cat /system/ssm.id `
 
    Please note, the configuration should be the same on all server hosts.
 
@@ -191,12 +191,12 @@ Deploy SSM
 SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode.
    
    * Standalone SSM Service
-   
-     For deploy standalone SSM, SSM will only start SSM server without SSM agents. Distribute unzipped tar SSM directory to installation directory (assuming `${SMART_HOME}`) in SSM Server nodes. The configuration files are under `${SMART_HOME}/conf`. 
-      
+
+     For deploy standalone SSM, SSM will only start SSM server without SSM agents. Distribute `${SMART_HOME}` directory to SSM Server nodes. The configuration files are under `${SMART_HOME}/conf`.
+
    * SSM Service with multiple Agents
-   
-     Deploy and unzip tar distribution package to SSM Server nodes and each Smart Agent nodes. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
+
+     Distribute `${SMART_HOME}` directory to SSM Server nodes and each Smart Agent nodes. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
      On the SSM service server, switch to the SSM installation directory, ready to start and run the SSM service.
 
 
@@ -241,7 +241,7 @@ Enter into ${SMART_HOME} directory for running SSM.
 
    `./bin/stop-ssm.sh`
 
-   `--config <config-dir>` can be used to specify where the config directory is.
+   `--config <config-dir>` can be used to specify where the config directory is. Please use the same config directory to execute stop-ssm.sh script as start-ssm.sh script.
    `${SMART_HOME}/conf` is the default config directory if the config option is not used.
 
    If Smart Agents are configured, the stop script will stop the Agents one by one remotely.
@@ -325,9 +325,16 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
         <value>ssm-server-ip:rpc-port</value>
     </property>
     ```
-    3.    Click the Save Changes button
+    3.    Search `HDFS Client Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, add the following xml context. The  default Smart Server RPC port is `7042`.
+         ```xml
+         <property>
+             <name>smart.server.rpc.address</name>
+             <value>ssm-server-ip:rpc-port</value>
+         </property>
+         ```
+    4.    Click the Save Changes button
 
-    4.    Restart stale Services and re-deploy the client configurations
+    5.    Restart stale Services and re-deploy the client configurations
 
 * Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
     1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
@@ -504,7 +511,7 @@ Performance Tuning
 
 Trouble Shooting
 ---------------------------------------------------------------------------------
-All logs will go to SmartSerer.log under ${SMART_HOME}/logs directory. 
+All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
@@ -514,13 +521,13 @@ All logs will go to SmartSerer.log under ${SMART_HOME}/logs directory.
    
    c. Check if there is already a SmartDaemon process running
    
-   d. Got to logs under /logs directory, find any useful clues in the log file.
+   d. Got to logs under ${SMART_HOME}/logs directory, find any useful clues in the log file.
    
 2. UI can not show hot files list 
 
   Possible causes:
   
-  a. Cannot lock system mover locker. You may see something like this in the SmartServer.log file,
+  a. Cannot lock system mover locker. You may see something like this in the smartserver.log file,
   
 	2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...
 	2017-07-15 00:38:29,350 ERROR org.smartdata.hdfs.HdfsStatesUpdateService.checkAndMarkRunning 138: Unable to lock 'mover', please stop 'mover' first.
