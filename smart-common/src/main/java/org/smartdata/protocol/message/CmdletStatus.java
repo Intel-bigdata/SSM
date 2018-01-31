@@ -15,24 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.action;
+package org.smartdata.protocol.message;
 
-import org.junit.Assert;
-import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.protocol.message.StatusReport;
-import org.smartdata.protocol.message.StatusReporter;
+import org.smartdata.model.CmdletState;
 
-public class MockActionStatusReporter implements StatusReporter {
-  @Override
-  public void report(StatusMessage status) {
-    if (status instanceof StatusReport) {
-      StatusReport statusReport = (StatusReport) status;
-      for (ActionStatus actionStatus: statusReport.getActionStatuses()) {
-        if (actionStatus.isFinished()) {
-          Assert.assertNull(actionStatus.getThrowable());
-        }
-      }
-    }
+import java.io.Serializable;
+
+public class CmdletStatus implements Serializable{
+  private long cmdletId;
+  private long stateUpdateTime;
+  private CmdletState currentState;
+
+  public CmdletStatus(long cmdletId, long stateUpdateTime, CmdletState state) {
+    this.cmdletId = cmdletId;
+    this.stateUpdateTime = stateUpdateTime;
+    this.currentState = state;
+  }
+
+  public long getCmdletId() {
+    return cmdletId;
+  }
+
+  public long getStateUpdateTime() {
+    return stateUpdateTime;
+  }
+
+  public CmdletState getCurrentState() {
+    return currentState;
   }
 }

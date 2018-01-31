@@ -20,7 +20,6 @@ package org.smartdata.hdfs.action;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -32,12 +31,12 @@ public class TestWriteFileAction extends MiniClusterHarness {
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.setDfsClient(dfsClient);
     writeFileAction.setContext(smartContext);
-    writeFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(WriteFileAction.FILE_PATH, filePath);
     args.put(WriteFileAction.LENGTH, "" + length);
     writeFileAction.init(args);
     writeFileAction.run();
+    Assert.assertTrue(writeFileAction.getExpectedAfterRun());
   }
 
   @Test
@@ -47,7 +46,6 @@ public class TestWriteFileAction extends MiniClusterHarness {
     args.put(WriteFileAction.LENGTH, "100000000000000");
     WriteFileAction writeFileAction = new WriteFileAction();
     writeFileAction.init(args);
-    writeFileAction.setStatusReporter(new MockActionStatusReporter());
     args.put(WriteFileAction.BUF_SIZE, "1024");
     writeFileAction.init(args);
   }

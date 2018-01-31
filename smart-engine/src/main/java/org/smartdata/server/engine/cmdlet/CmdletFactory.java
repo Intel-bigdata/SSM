@@ -58,7 +58,7 @@ public class CmdletFactory {
     for (LaunchAction action : launchCmdlet.getLaunchActions()) {
       actions.add(createAction(action));
     }
-    Cmdlet cmdlet = new Cmdlet(actions.toArray(new SmartAction[0]), reporter);
+    Cmdlet cmdlet = new Cmdlet(actions.toArray(new SmartAction[0]));
     cmdlet.setId(launchCmdlet.getCmdletId());
     return cmdlet;
   }
@@ -68,7 +68,6 @@ public class CmdletFactory {
     smartAction.setContext(smartContext);
     smartAction.init(launchAction.getArgs());
     smartAction.setActionId(launchAction.getActionId());
-    smartAction.setStatusReporter(reporter);
     if (smartAction instanceof HdfsAction) {
       try {
         ((HdfsAction) smartAction)

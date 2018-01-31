@@ -25,7 +25,6 @@ while [ $# != 0 ]; do
       shift
       ;;
     "--debug")
-      shift
       DEBUG_OPT="$1"
       shift
       ;;

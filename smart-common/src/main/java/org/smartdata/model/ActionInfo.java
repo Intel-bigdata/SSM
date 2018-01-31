@@ -235,6 +235,9 @@ public class ActionInfo {
 
     private float progress;
 
+    public Builder() {
+    }
+
     public Builder setActionId(long actionId) {
       this.actionId = actionId;
       return this;

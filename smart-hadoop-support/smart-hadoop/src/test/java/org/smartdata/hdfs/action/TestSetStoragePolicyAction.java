@@ -20,7 +20,6 @@ package org.smartdata.hdfs.action;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -70,12 +69,12 @@ public class TestSetStoragePolicyAction extends MiniClusterHarness {
     SetStoragePolicyAction action = new SetStoragePolicyAction();
     action.setDfsClient(dfsClient);
     action.setContext(smartContext);
-    action.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(SetStoragePolicyAction.FILE_PATH, file);
     args.put(SetStoragePolicyAction.STORAGE_POLICY, storagePolicy);
     action.init(args);
     action.run();
+    Assert.assertTrue(action.getExpectedAfterRun());
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(file);
     return fileStatus.getStoragePolicy();
   }

@@ -82,7 +82,7 @@ public class TestCmdlet extends MiniClusterHarness {
     args.put(CacheFileAction.FILE_PATH, "/testCacheFile");
     actions[2].init(args);
     // New Cmdlet
-    Cmdlet cmd = new Cmdlet(actions, null);
+    Cmdlet cmd = new Cmdlet(actions);
     cmd.setId(1);
     cmd.setRuleId(1);
     cmd.setState(CmdletState.PENDING);

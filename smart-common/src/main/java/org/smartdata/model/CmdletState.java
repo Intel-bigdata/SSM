@@ -33,7 +33,8 @@ public enum CmdletState {
   DISABLED(6), // Disable this Cmdlet, kill all executing actions
   DRYRUN(7),   // TODO Don't Run, but keep status
   FAILED(8),   // Running cmdlet failed
-  SCHEDULED(9);
+  SCHEDULED(9),
+  DISPATCHED(10);
 
   private int value;
 

@@ -17,12 +17,17 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.SmartAction;
 import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.message.CmdletStatusUpdate;
-import org.smartdata.protocol.message.StatusReporter;
+import org.smartdata.protocol.message.ActionStatus;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one
@@ -37,12 +42,16 @@ public class Cmdlet implements Runnable {
   private long ruleId;   // id of the rule that this cmdlet comes from
   private long id;
   private CmdletState state = CmdletState.NOTINITED;
+  private long stateUpdateTime;
   private final SmartAction[] actions;
-  private final StatusReporter statusReporter;
+  private List<SmartAction> actionReportList;
 
-  public Cmdlet(SmartAction[] actions, StatusReporter reporter) {
-    this.statusReporter = reporter;
+  public Cmdlet(SmartAction[] actions) {
     this.actions = actions;
+    this.actionReportList = new ArrayList<>();
+    for (int i = actions.length - 1; i >= 0; i--) {
+      this.actionReportList.add(actions[i]);
+    }
   }
 
   public long getRuleId() {
@@ -84,7 +93,7 @@ public class Cmdlet implements Runnable {
 
   private void runAllActions() {
     state = CmdletState.EXECUTING;
-    reportCurrentStatus();
+    stateUpdateTime = System.currentTimeMillis();
     for (SmartAction act : actions) {
       if (act == null) {
         continue;
@@ -94,13 +103,14 @@ public class Cmdlet implements Runnable {
       act.run();
       if (!act.isSuccessful()) {
         state = CmdletState.FAILED;
-        reportCurrentStatus();
+        stateUpdateTime = System.currentTimeMillis();
+        LOG.error("Executing Cmdlet [id={}] meets failed.", getId());
         return;
       }
     }
     state = CmdletState.DONE;
+    stateUpdateTime = System.currentTimeMillis();
     // TODO catch MetaStoreException and handle
-    reportCurrentStatus();
   }
 
   @Override
@@ -108,9 +118,24 @@ public class Cmdlet implements Runnable {
     runAllActions();
   }
 
-  private void reportCurrentStatus() {
-    if (statusReporter != null) {
-      statusReporter.report(new CmdletStatusUpdate(id, System.currentTimeMillis(), state));
+  public List<ActionStatus> getActionStatuses() throws UnsupportedEncodingException {
+    if (actionReportList.isEmpty()) {
+      return null;
     }
+
+    // get status in the order of the descend action id.
+    // The cmdletmanager should update action status in the ascend order.
+    List<ActionStatus> statuses = new ArrayList<>();
+    Iterator<SmartAction> iter = actionReportList.iterator();
+    while (iter.hasNext()) {
+      SmartAction action = iter.next();
+      ActionStatus status = action.getActionStatus();
+      statuses.add(status);
+      if (status.isFinished()) {
+        iter.remove();
+      }
+    }
+
+    return Lists.reverse(statuses);
   }
 }
