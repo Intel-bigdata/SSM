@@ -107,6 +107,38 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   }
 
   @Test
+  public void testCompressEmptyFile() throws Exception {
+    waitTillSSMExitSafeMode();
+
+    initDB();
+    String fileName = "/ssm/compression/file1";
+    prepareFile(fileName, 0);
+    MetaStore metaStore = ssm.getMetaStore();
+
+    int bufSize = 1024 * 1024;
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
+        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+
+    waitTillActionDone(cmdId);
+
+    // metastore  test
+    FileState fileState = metaStore.getFileState(fileName);
+    Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());
+    Assert.assertEquals(FileState.FileStage.DONE, fileState.getFileStage());
+    Assert.assertTrue(fileState instanceof CompressionFileState);
+    CompressionFileState compressionFileState = (CompressionFileState) fileState;
+    Assert.assertEquals(fileName, compressionFileState.getPath());
+    Assert.assertEquals(bufSize, compressionFileState.getBufferSize());
+    Assert.assertEquals(compressionImpl, compressionFileState.getCompressionImpl());
+    Assert.assertEquals(0, compressionFileState.getOriginalLength());
+    Assert.assertEquals(0, compressionFileState.getCompressedLength());
+
+    // File length test
+    Assert.assertEquals(0, dfsClient.getFileInfo(fileName).getLen());
+  }
+
+  @Test
   public void testCompressedFileRandomRead() throws Exception {
     waitTillSSMExitSafeMode();
 

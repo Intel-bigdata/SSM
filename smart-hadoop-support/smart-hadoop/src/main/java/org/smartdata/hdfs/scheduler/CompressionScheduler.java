@@ -19,18 +19,21 @@ package org.smartdata.hdfs.scheduler;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.hadoop.fs.Options;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.FileState;
-import org.smartdata.model.LaunchAction;
 import org.smartdata.model.CompressionFileState;
-import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,20 +41,24 @@ import java.util.List;
  * CompressionScheduler.
  */
 public class CompressionScheduler extends ActionSchedulerService {
-  static final Logger LOG =
-      LoggerFactory.getLogger(CompressionScheduler.class);
-
+  private DFSClient dfsClient;
+  private final URI nnUri;
+  private MetaStore metaStore;
   private static final List<String> actions = Arrays.asList("compress");
 
-  private MetaStore metaStore;
+  public static final Logger LOG =
+      LoggerFactory.getLogger(CompressionScheduler.class);
 
-  public CompressionScheduler(SmartContext context, MetaStore metaStore) {
+  public CompressionScheduler(SmartContext context, MetaStore metaStore)
+      throws IOException {
     super(context, metaStore);
     this.metaStore = metaStore;
+    nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
   }
 
   @Override
   public void init() throws IOException {
+    dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
   }
 
   @Override
@@ -71,9 +78,13 @@ public class CompressionScheduler extends ActionSchedulerService {
    * Check if the file type support compression action.
    *
    * @param path
-   * @return
+   * @return true if the file supports compression action, else false
    */
   private boolean supportCompression(String path) throws MetaStoreException {
+    if (path == null) {
+      LOG.warn("File is not specified.");
+      return false;
+    }
     // Current implementation: only normal file type supports compression action
     FileState fileState = metaStore.getFileState(path);
     if (fileState.getFileType().equals(FileState.FileType.NORMAL)
@@ -103,30 +114,34 @@ public class CompressionScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
-    String path = actionInfo.getArgs().get("-file");
-    try {
-      if (!supportCompression(path)) {
-        return ScheduleResult.FAIL;
-      }
-      return ScheduleResult.SUCCESS;
-    } catch (MetaStoreException e) {
-      LOG.error("Compress action of file " + path + " failed in metastore!", e);
-      return ScheduleResult.FAIL;
-    }
-  }
-
-  @Override
   public void onActionFinished(ActionInfo actionInfo) {
     if (actionInfo.isFinished()) {
       try {
-        Gson gson = new Gson();
-        String compressionInfoJson = actionInfo.getResult();
-        CompressionFileState compressionFileState = gson.fromJson(compressionInfoJson,
-            new TypeToken<CompressionFileState>() {
-            }.getType());
-        compressionFileState.setFileStage(FileState.FileStage.DONE);
-        metaStore.insertUpdateFileState(compressionFileState);
+        // Action failed
+        if (!actionInfo.isSuccessful()) {
+          // TODO: refactor FileState in order to revert to original state if action failed
+          // Currently only converting from normal file to other types is supported, so
+          // when action failed, just remove the record of this file from metastore.
+          // In current implementation, no record in FileState table means the file is normal type.
+          metaStore.deleteFileState(actionInfo.getArgs().get("-file"));
+        } else {
+        // Action successful
+          Gson gson = new Gson();
+          String compressionInfoJson = actionInfo.getResult();
+          CompressionFileInfo compressionFileInfo = gson.fromJson(compressionInfoJson,
+              new TypeToken<CompressionFileInfo>() {
+              }.getType());
+          boolean needReplace = compressionFileInfo.needReplace();
+          String path = actionInfo.getArgs().get("-file");
+          String tempPath = compressionFileInfo.getTempPath();
+          CompressionFileState compressionFileState = compressionFileInfo.getCompressionFileState();
+          compressionFileState.setFileStage(FileState.FileStage.DONE);
+          // Update metastore and then replace file with compressed one
+          metaStore.insertUpdateFileState(compressionFileState);
+          if (needReplace) {
+            dfsClient.rename(tempPath, path, Options.Rename.OVERWRITE);
+          }
+        }
       } catch (MetaStoreException e) {
         LOG.error("Compression action failed in metastore!", e);
       } catch (Exception e) {

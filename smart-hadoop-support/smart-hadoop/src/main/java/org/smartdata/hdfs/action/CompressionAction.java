@@ -26,6 +26,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.hdfs.SmartCompressorStream;
+import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.CompressionFileState;
 
 import java.io.IOException;
@@ -64,7 +65,8 @@ public class CompressionAction extends HdfsAction {
   private int UserDefinedbuffersize;
   private int Calculatedbuffersize;
 
-  private CompressionFileState compressionInfo;
+  private CompressionFileInfo compressionFileInfo;
+  private CompressionFileState compressionFileState;
 
   @Override
   public void init(Map<String, String> args) {
@@ -93,44 +95,45 @@ public class CompressionAction extends HdfsAction {
       throw new ActionException("ReadFile Action fails, file doesn't exist!");
     }
     // Generate compressed file
-    String compressedFileName = "/tmp/ssm" + filePath + "." + System.currentTimeMillis() + ".ssm_compression";
     HdfsFileStatus srcFile = defaultDfsClient.getFileInfo(filePath);
-    short replication = srcFile.getReplication();
-    long blockSize = srcFile.getBlockSize();
-    long fileSize = srcFile.getLen();
-    //The capacity of originalPos and compressedPos is 5000 in database 
-    this.Calculatedbuffersize = (int)fileSize/5000;
-    
-    //Determine the actual buffersize
-    if(UserDefinedbuffersize < bufferSize || UserDefinedbuffersize < Calculatedbuffersize){
-      if(bufferSize <= Calculatedbuffersize){
-        appendLog("User defined buffersize is too small,use the calculated buffersize:" + Calculatedbuffersize );
-      }else{
-        appendLog("User defined buffersize is too small,use the default buffersize:" + bufferSize );
-      }
-    }
-    bufferSize = Math.max(Math.max(UserDefinedbuffersize,Calculatedbuffersize),bufferSize);
-    
-    DFSInputStream dfsInputStream = defaultDfsClient.open(filePath);
-    compressionInfo = new CompressionFileState(filePath, bufferSize, compressionImpl);
-    compressionInfo.setCompressionImpl(compressionImpl);
-    compressionInfo.setOriginalLength(srcFile.getLen());
-    OutputStream compressedOutputStream = defaultDfsClient.create(compressedFileName,
-      true, replication, blockSize);
-    compress(dfsInputStream, compressedOutputStream);
-    HdfsFileStatus destFile = defaultDfsClient.getFileInfo(compressedFileName);
-    compressionInfo.setCompressedLength(destFile.getLen());
-    String compressionInfoJson = new Gson().toJson(compressionInfo);
-    appendResult(compressionInfoJson);
+    compressionFileState = new CompressionFileState(filePath, bufferSize, compressionImpl);
+    compressionFileState.setOriginalLength(srcFile.getLen());
+    if (srcFile.getLen() == 0) {
+      compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
+    } else {
+      String tempPath = "/tmp/ssm" + filePath + "." + System.currentTimeMillis() + ".ssm_compression";
+      short replication = srcFile.getReplication();
+      long blockSize = srcFile.getBlockSize();
+      long fileSize = srcFile.getLen();
+      //The capacity of originalPos and compressedPos is 5000 in database
+      this.Calculatedbuffersize = (int) fileSize / 5000;
 
-    // Replace the original file with the compressed file
-    defaultDfsClient.delete(filePath);
-    defaultDfsClient.rename(compressedFileName, filePath);
+      //Determine the actual buffersize
+      if (UserDefinedbuffersize < bufferSize || UserDefinedbuffersize < Calculatedbuffersize) {
+        if (bufferSize <= Calculatedbuffersize) {
+          appendLog("User defined buffersize is too small,use the calculated buffersize:" + Calculatedbuffersize);
+        } else {
+          appendLog("User defined buffersize is too small,use the default buffersize:" + bufferSize);
+        }
+      }
+      bufferSize = Math.max(Math.max(UserDefinedbuffersize, Calculatedbuffersize), bufferSize);
+
+      DFSInputStream dfsInputStream = defaultDfsClient.open(filePath);
+
+      OutputStream compressedOutputStream = defaultDfsClient.create(tempPath,
+          true, replication, blockSize);
+      compress(dfsInputStream, compressedOutputStream);
+      HdfsFileStatus destFile = defaultDfsClient.getFileInfo(tempPath);
+      compressionFileState.setCompressedLength(destFile.getLen());
+      compressionFileInfo = new CompressionFileInfo(true, tempPath, compressionFileState);
+    }
+    String compressionInfoJson = new Gson().toJson(compressionFileInfo);
+    appendResult(compressionInfoJson);
   }
 
   private void compress(InputStream inputStream, OutputStream outputStream) throws IOException {
     SmartCompressorStream smartCompressorStream = new SmartCompressorStream(
-        inputStream, outputStream, bufferSize, compressionInfo);
+        inputStream, outputStream, bufferSize, compressionFileState);
     smartCompressorStream.convert();
   }
 }
