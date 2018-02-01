@@ -10,7 +10,6 @@ DIR_NAME = TEST_DIR + random_string() + '/'
 
 def create_file_pyarrow(ip, port, start, end):
     fs = pa.hdfs.connect(ip, port)
-    fs.mkdir(TEST_DIR+DIR_NAME)
     for i in range(start, end):
         with fs.open(DIR_NAME+str(i), "wb") as f:
             f.write("")
