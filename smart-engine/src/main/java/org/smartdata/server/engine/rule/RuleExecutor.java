@@ -294,7 +294,7 @@ public class RuleExecutor implements Runnable {
       // System.out.println(this + " -> " + System.currentTimeMillis());
       long endProcessTime = System.currentTimeMillis();
 
-      if (endProcessTime - startCheckTime > 3000 || LOG.isDebugEnabled()) {
+      if (endProcessTime - startCheckTime > 2000 || LOG.isDebugEnabled()) {
         LOG.warn(
             "Rule "
                 + ctx.getRuleId()
@@ -304,7 +304,9 @@ public class RuleExecutor implements Runnable {
                 + (endCheckTime - startCheckTime)
                 + "ms, SubmitTime = "
                 + (endProcessTime - endCheckTime)
-                + "ms.");
+                + "ms, fileNum = "
+                + numCmdSubmitted
+                + ".");
       }
 
     } catch (IOException e) {

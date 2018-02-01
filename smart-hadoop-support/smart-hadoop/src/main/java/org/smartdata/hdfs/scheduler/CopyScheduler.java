@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.action.SyncAction;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -82,11 +83,11 @@ public class CopyScheduler extends ActionSchedulerService {
   // Check interval of executorService
   private long checkInterval = 150;
   // Base sync batch insert size
-  private int batchSize = 300;
+  private int batchSize = 500;
   // Cache of the file_diff
   private Map<Long, FileDiff> fileDiffCache;
-  // cache sync threshold, default 50
-  private int cacheSyncTh = 50;
+  // cache sync threshold, default 100
+  private int cacheSyncTh = 100;
   // record the file_diff whether being changed
   private Map<Long, Boolean> fileDiffCacheChanged;
 
@@ -103,6 +104,9 @@ public class CopyScheduler extends ActionSchedulerService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     try {
       conf = getContext().getConf();
+      cacheSyncTh = conf.getInt(SmartConfKeys
+          .SMART_COPY_SCHEDULER_BASE_SYNC_BATCH,
+          SmartConfKeys.SMART_COPY_SCHEDULER_BASE_SYNC_BATCH_DEFAULT);
     } catch (NullPointerException e) {
       // SmartContext is empty
       conf = new Configuration();
@@ -321,7 +325,9 @@ public class CopyScheduler extends ActionSchedulerService {
   private void baseSync(String srcDir,
       String destDir) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(srcDir);
-    LOG.debug("Directory Base Sync {} files", srcFiles.size());
+    if (srcFiles.size() > 0) {
+      LOG.info("Directory Base Sync {} files", srcFiles.size());
+    }
     // <file name, fileInfo>
     Map<String, FileInfo> srcFileSet = new HashMap<>();
     for (FileInfo fileInfo : srcFiles) {
@@ -548,6 +554,11 @@ public class CopyScheduler extends ActionSchedulerService {
 
   @Override
   public void stop() throws IOException {
+    try {
+      batchDirectSync();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
     executorService.shutdown();
   }
 
