@@ -22,7 +22,8 @@ bin=$(cd "${bin}">/dev/null; pwd)
 HOSTNAME=$(hostname)
 
 if [ $# = 0 ]; then
-    echo " [--hosts <host names>] [--hostsfile <hosts file path>]"
+    echo "manage-smartclient.sh [--hosts <host names>] [--hostsfile <hosts file path>] operation"
+    echo "  operation can be one of: --enable-smart-client, --disable-smart-client"
     exit 0
 fi
 
