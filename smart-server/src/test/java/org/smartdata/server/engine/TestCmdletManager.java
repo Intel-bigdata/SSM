@@ -35,6 +35,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.server.MiniSmartClusterHarness;
+import org.smartdata.server.SmartServer;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 
 import java.io.IOException;
@@ -50,10 +51,7 @@ import static org.mockito.Mockito.when;
 public class TestCmdletManager extends MiniSmartClusterHarness {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private CmdletDescriptor generateCmdletDescriptor() throws Exception {
-    String cmd =
-        "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; "
-            + "write -file /test -length 1024";
+  private CmdletDescriptor generateCmdletDescriptor(String cmd) throws Exception {
     CmdletDescriptor cmdletDescriptor = new CmdletDescriptor(cmd);
     cmdletDescriptor.setRuleId(1);
     return cmdletDescriptor;
@@ -62,7 +60,10 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
   @Test
   public void testCreateFromDescriptor() throws Exception {
     waitTillSSMExitSafeMode();
-    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
+    String cmd =
+            "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; "
+                    + "write -file /test -length 1024";
+    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor(cmd);
     List<ActionInfo> actionInfos = ssm.getCmdletManager().createActionInfos(cmdletDescriptor, 0);
     Assert.assertTrue(cmdletDescriptor.getActionSize() == actionInfos.size());
   }
@@ -126,7 +127,10 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
   public void testGetListDeleteCmdlet() throws Exception {
     waitTillSSMExitSafeMode();
     MetaStore metaStore = ssm.getMetaStore();
-    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
+    String cmd =
+            "allssd -file /testMoveFile/file1 ; cache -file /testCacheFile ; "
+                    + "write -file /test -length 1024";
+    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor(cmd);
     CmdletInfo cmdletInfo =
         new CmdletInfo(
             0,
@@ -200,34 +204,54 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     cmdletManager.stop();
   }
 
-  @Test
+  @Test(timeout = 40000)
   public void testReloadCmdletsInDB() throws Exception {
     waitTillSSMExitSafeMode();
     CmdletManager cmdletManager = ssm.getCmdletManager();
     // Stop cmdletmanager
-    cmdletManager.stop();
+//    cmdletManager.stop();
+    cmdletManager.setTimeout(1000);
     MetaStore metaStore = ssm.getMetaStore();
-    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
-    CmdletInfo cmdletInfo1 =
+    String cmd = "write -file /test -length 1024; read -file /test";
+    CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor(cmd);
+    long submitTime = System.currentTimeMillis();
+    CmdletInfo cmdletInfo0 =
         new CmdletInfo(
             0,
             cmdletDescriptor.getRuleId(),
             CmdletState.DISPATCHED,
             cmdletDescriptor.getCmdletString(),
-            123178333L,
-            232444994L);
-    CmdletInfo cmdletInfo2 =
+            submitTime,
+            submitTime);
+    CmdletInfo cmdletInfo1 =
         new CmdletInfo(
             1,
             cmdletDescriptor.getRuleId(),
             CmdletState.PENDING,
             cmdletDescriptor.getCmdletString(),
-            123178333L,
-            232444994L);
-    CmdletInfo[] cmdlets = {cmdletInfo1, cmdletInfo2};
-    metaStore.insertCmdlets(cmdlets);
+            submitTime,
+            submitTime);
+    List<ActionInfo> actionInfos0 = cmdletManager.createActionInfos(cmdletDescriptor, cmdletInfo0.getCid());
+    flushToDB(metaStore, actionInfos0, cmdletInfo0);
+    List<ActionInfo> actionInfos1 = cmdletManager.createActionInfos(cmdletDescriptor, cmdletInfo1.getCid());
+    flushToDB(metaStore, actionInfos1, cmdletInfo1);
     // init cmdletmanager
     cmdletManager.init();
+//    cmdletManager.start();
     Assert.assertEquals(2, cmdletManager.getCmdletsSizeInCache());
+    CmdletInfo cmdlet0 = cmdletManager.getCmdletInfo(cmdletInfo0.getCid());
+    CmdletInfo cmdlet1 = cmdletManager.getCmdletInfo(cmdletInfo1.getCid());
+    while(cmdlet0.getState() != CmdletState.FAILED && cmdlet1.getState() != CmdletState.DONE) {
+      Thread.sleep(100);
+    }
+  }
+
+  public void flushToDB(MetaStore metaStore,
+                        List<ActionInfo> actionInfos, CmdletInfo cmdletInfo) throws Exception{
+    for (ActionInfo actionInfo: actionInfos) {
+      cmdletInfo.addAction(actionInfo.getActionId());
+    }
+    metaStore.insertCmdlet(cmdletInfo);
+    metaStore.insertActions(actionInfos.toArray(new ActionInfo[actionInfos.size()]));
   }
 }

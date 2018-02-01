@@ -110,7 +110,7 @@ public class CmdletManager extends AbstractService {
     super(context);
 
     this.metaStore = context.getMetaStore();
-    this.executorService = Executors.newScheduledThreadPool(2);
+    this.executorService = Executors.newScheduledThreadPool(3);
     this.runningCmdlets = new ArrayList<>();
     this.pendingCmdlet = new LinkedList<>();
     this.schedulingCmdlet = new LinkedList<>();
@@ -128,6 +128,11 @@ public class CmdletManager extends AbstractService {
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
     this.timeout =
             TIMEOUT_MULTIPLIER * reportPeriod < 30000 ? 30000 : TIMEOUT_MULTIPLIER * reportPeriod;
+  }
+
+  @VisibleForTesting
+  void setTimeout(long timeout) {
+    this.timeout = timeout;
   }
 
   @VisibleForTesting
