@@ -40,4 +40,6 @@ public class SmartConstants {
     "/tmp/SMART_CLIENT_DISABLED_ID_FILE";
 
   public static final String NUMBER_OF_SMART_AGENT = "number_of_smart_agent_in_agents_file";
+
+  public static final String SMART_SERVER_ID_FILE = "/system/ssm.id";
 }

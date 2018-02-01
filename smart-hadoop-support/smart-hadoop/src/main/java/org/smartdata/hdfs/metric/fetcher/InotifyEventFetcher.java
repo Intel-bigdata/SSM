@@ -102,11 +102,21 @@ public class InotifyEventFetcher {
   }
 
   public void start() throws IOException {
-    Long lastTxid = getLastTxid();
-    if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)) {
-      startFromLastTxid(lastTxid);
+    boolean ignore = conf.getBoolean(
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_KEY,
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_DEFAULT);
+    if (!ignore) {
+      Long lastTxid = getLastTxid();
+      if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)) {
+        startFromLastTxid(lastTxid);
+      } else {
+        startWithFetchingNameSpace();
+      }
     } else {
-      startWithFetchingNameSpace();
+      long id = client.getNamenode().getCurrentEditLogTxid();
+      LOG.warn("NOTE: Incomplete iNotify event may cause unpredictable consequences. "
+          + "This should only be used for testing.");
+      startFromLastTxid(id);
     }
   }
 

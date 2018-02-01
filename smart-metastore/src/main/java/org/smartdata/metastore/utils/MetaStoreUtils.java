@@ -40,6 +40,8 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utilities for table operations.
@@ -389,11 +391,21 @@ public class MetaStoreUtils {
           // path/src index should be set to less than 767
           // to avoid "Specified key was too long" in
           // Mysql 5.6 or previous version
-          if (mysqlOldRelease
-              && s.startsWith("CREATE INDEX")
-              && (s.contains("path") || s.contains("src"))) {
+          if (mysqlOldRelease) {
             // Fix index size 767 in mysql 5.6 or previous version
-            s = s.replace(");", "(750));");
+            if (s.startsWith("CREATE INDEX")
+                && (s.contains("path") || s.contains("src"))) {
+              // Index longer than 767
+              s = s.replace(");", "(749));");
+            } else if (s.contains(") PRIMARY KEY")) {
+              // Primary key longer than 749
+              Pattern p = Pattern.compile("([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}). PRIMARY KEY");
+              Matcher m = p.matcher(s);
+              if (m.find()) {
+                String targetStr = m.group(0);
+                s = s.replace(targetStr, "749) PRIMARY KEY");
+              }
+            }
           }
           // Replace AUTOINCREMENT with AUTO_INCREMENT
           if (s.contains("AUTOINCREMENT")) {

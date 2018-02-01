@@ -18,12 +18,26 @@ SSM supports the configuration of multiply Smart Servers to achieve high availab
 
 2. HA Transition
 
-   Since active Smart Server can run cmdlets dispatched by itself, these tasks will crush if active server is down.
-   During the transition, the running Cmdlet on the new active server will also crush. SSM has been optimized to minimize the impact on user tasks during the transition.
-   SSM can put key information of cmdlet and action into metastore. According to whether the status of a cmdlet in DB is dispatched or not, SSM tackles it differently. If a cmdlet is not dispatched during the transition, the new active Smart Server will reload it's info from DB and dispatch it.
-   For the dispatched cmdlet, SSM can discover the crushed cmdlets by a heart beat like mechanism. The status of running cmdlet will be reported periodically.
-   If the status of running actions have not been updated for a certain time, these actions will be marked as failed.
+   When active server is down, a standby server will take at lease several seconds to transform its role to active server.
+   During this transition, we try to minimize the impact on some user's tasks. Two kinds of cmdlets are considered by SSM.
+   Their infomation is flushed to DB.
 
+   1. The pending cmdlet.
+
+      The pending cmdlet has not been dispatched to a server to execute. The new active server will reload these cmdlets from DB
+      and dispatch them.
+
+   2. The dispatched cmdlet.
+
+      A cmdlet can be dispatched to active server, standby server and agent.
+      If a cmdlet is dispatched to active server. It will terminate when the active server is down.
+      If a cmdlet is running on the standby server which transforms to active server, it will also terminate during the transition.
+      If a cmdlet is running on agent, it can be executed successfully.
+
+      For the dispatched cmdlet, SSM can discover the crushed cmdlet by a heart beat like mechanism.
+      The status of a dispatched cmdlet will be reported periodically till it is finished.
+      If the status of actions belonging to a dispatched cmdlet has not been reported for a certain time,
+      these actions will be marked as failed. A timeout log is attached to these actions.
 
 #### The configuration for SSM HA
 
