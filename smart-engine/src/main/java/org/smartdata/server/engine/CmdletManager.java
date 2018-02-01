@@ -80,6 +80,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CmdletManager extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
   public static final long TIMEOUT_MULTIPLIER = 60;
+  public static final String TIMEOUTLOG =
+          "Long time no report for this action. Mark it as failed.";
 
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
@@ -131,7 +133,7 @@ public class CmdletManager extends AbstractService {
   }
 
   @VisibleForTesting
-  void setTimeout(long timeout) {
+  public void setTimeout(long timeout) {
     this.timeout = timeout;
   }
 
@@ -1091,8 +1093,6 @@ public class CmdletManager extends AbstractService {
   }
 
   private class DetectFailedActionTask implements Runnable {
-    public final String timeoutLog = "Long time no report for this action. Mark it as failed.";
-
     public void run() {
       try {
         Set<CmdletInfo> failedCmdlet = new HashSet<>();
@@ -1110,7 +1110,7 @@ public class CmdletManager extends AbstractService {
                 }
                 long finishTime = System.currentTimeMillis();
                 ActionStatus actionStatus = new ActionStatus(actionInfo.getActionId(),
-                        timeoutLog, startTime, finishTime, new Throwable(), true);
+                        TIMEOUTLOG, startTime, finishTime, new Throwable(), true);
                 onActionStatusUpdate(actionStatus);
               }
             }
