@@ -32,20 +32,24 @@ import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
 import org.smartdata.model.FileState.FileStage;
 import org.smartdata.model.FileState.FileType;
-
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FSDataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.io.InputStream;
 
 public class SmartDFSClient extends DFSClient {
   private static final Logger LOG = LoggerFactory.getLogger(SmartDFSClient.class);
   private SmartClient smartClient = null;
   private boolean healthy = false;
+  private Configuration conf;
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeAddress, conf);
+    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -61,6 +65,7 @@ public class SmartDFSClient extends DFSClient {
   public SmartDFSClient(final URI nameNodeUri, final Configuration conf,
       final InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeUri, conf);
+    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -77,6 +82,7 @@ public class SmartDFSClient extends DFSClient {
       FileSystem.Statistics stats, InetSocketAddress smartServerAddress)
       throws IOException {
     super(nameNodeUri, conf, stats);
+    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -92,6 +98,7 @@ public class SmartDFSClient extends DFSClient {
   public SmartDFSClient(Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(conf);
+    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -106,6 +113,7 @@ public class SmartDFSClient extends DFSClient {
 
   public SmartDFSClient(Configuration conf) throws IOException {
     super(conf);
+    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -121,7 +129,10 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-    return super.open(src);
+        if(checkForXattr(src))
+	  return getS3inputStream(src,conf);
+        else
+	  return super.open(src);
   }
 
   @Override
@@ -194,4 +205,19 @@ public class SmartDFSClient extends DFSClient {
     File idFile = new File(SmartConstants.SMART_CLIENT_DISABLED_ID_FILE);
     return idFile.exists();
   }
+
+   public FSDataInputStream getS3inputStream(String dest, Configuration conf) throws IOException {
+    // Copy to remote S3
+    if (!dest.startsWith("s3")) {
+      throw new IOException();
+    }
+    // read from s3
+    org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
+    return fs.open(new Path(dest));
+  }
+
+  public boolean checkForXattr(String filePath){
+	return true;
+  }
+
 }
