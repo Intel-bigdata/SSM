@@ -43,6 +43,12 @@ public class CmdletDispatcherHelper {
     }
   }
 
+  public void unregister() {
+    synchronized (msgs) {
+      dispatcher = null;
+    }
+  }
+
   public static void init() {
     inst = new CmdletDispatcherHelper();
     EngineEventBus.register(inst);
