@@ -713,18 +713,16 @@ public class CmdletManager extends AbstractService {
 
   private void cmdletFinishedInternal(CmdletInfo cmdletInfo) throws IOException {
     numCmdletsFinished.incrementAndGet();
-    List<ActionInfo> removed = new ArrayList<>();
     ActionInfo actionInfo;
     for (Long aid : cmdletInfo.getAids()) {
       actionInfo = idToActions.get(aid);
-      // Set all action as finished
-      actionInfo.setProgress(1.0F);
-      actionInfo.setFinished(true);
-      actionInfo.setFinishTime(System.currentTimeMillis());
-      unLockFileIfNeeded(actionInfo);
-      idToActions.remove(aid);
+      synchronized (actionInfo) {
+        // Set all action as finished
+        actionInfo.setProgress(1.0F);
+        actionInfo.setFinished(true);
+        actionInfo.setFinishTime(System.currentTimeMillis());
+      }
     }
-    flushActionInfos(removed);
   }
 
   private void unLockFileIfNeeded(ActionInfo actionInfo) {
