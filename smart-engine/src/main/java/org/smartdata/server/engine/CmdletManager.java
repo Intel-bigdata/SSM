@@ -378,7 +378,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private synchronized void batchSyncCmdAction() throws IOException {
+  private void batchSyncCmdAction() throws IOException {
     synchronized (cacheCmd) {
       if (cacheCmd.size() == 0) {
         return;
