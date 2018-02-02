@@ -519,6 +519,7 @@ Performance Tuning
     or
     `./bin/enable-smartclient.sh --hostsfile <file path>`
     The arguments are same with `disable-smartclient.sh`
+    Note: To make the scripts work, you have to set up password-less SSH connections between the node that executing these scripts and the rest hosts.
 
 Trouble Shooting
 ---------------------------------------------------------------------------------
