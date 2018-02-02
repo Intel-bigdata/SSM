@@ -379,44 +379,46 @@ public class CmdletManager extends AbstractService {
   }
 
   private synchronized void batchSyncCmdAction() throws IOException {
-    if (cacheCmd.size() == 0) {
-      return;
-    }
-    LOG.debug("Number of cached cmds {}", cacheCmd.size());
-    List<CmdletInfo> cmdletInfos = new ArrayList<>();
-    List<ActionInfo> actionInfos = new ArrayList<>();
-    for (Long cid : cacheCmd.keySet()) {
-      cmdletInfos.add(cacheCmd.get(cid));
-      if (cmdletInfos.size() >= cacheCmdTh){
-        break;
+    synchronized (cacheCmd) {
+      if (cacheCmd.size() == 0) {
+        return;
       }
-      for (Long aid : cacheCmd.get(cid).getAids()) {
-        actionInfos.add(idToActions.get(aid));
-      }
-    }
-    if (cmdletInfos.size() == 0) {
-      return;
-    }
-    LOG.debug("Number of cmds {} to submit", cmdletInfos.size());
-    try {
-      metaStore.insertCmdlets(
-          cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
-      metaStore.insertActions(
-          actionInfos.toArray(new ActionInfo[actionInfos.size()]));
-      numCmdletsGen.incrementAndGet();
-    } catch (MetaStoreException e) {
-      LOG.error("{} submit to DB error", cmdletInfos, e);
-      for (CmdletInfo cmdletInfo : cmdletInfos) {
-        try {
-          metaStore.deleteCmdlet(cmdletInfo.getCid());
-        } catch (MetaStoreException e1) {
-          LOG.error("{} delete from DB error", cmdletInfo, e);
+      LOG.debug("Number of cached cmds {}", cacheCmd.size());
+      List<CmdletInfo> cmdletInfos = new ArrayList<>();
+      List<ActionInfo> actionInfos = new ArrayList<>();
+      for (Long cid : cacheCmd.keySet()) {
+        cmdletInfos.add(cacheCmd.get(cid));
+        if (cmdletInfos.size() >= cacheCmdTh) {
+          break;
+        }
+        for (Long aid : cacheCmd.get(cid).getAids()) {
+          actionInfos.add(idToActions.get(aid));
         }
       }
-      throw new IOException(e);
-    }
-    for (CmdletInfo cmdletInfo : cmdletInfos) {
-      cacheCmd.remove(cmdletInfo.getCid());
+      if (cmdletInfos.size() == 0) {
+        return;
+      }
+      LOG.debug("Number of cmds {} to submit", cmdletInfos.size());
+      try {
+        metaStore.insertCmdlets(
+                cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
+        metaStore.insertActions(
+                actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+        numCmdletsGen.incrementAndGet();
+      } catch (MetaStoreException e) {
+        LOG.error("{} submit to DB error", cmdletInfos, e);
+        for (CmdletInfo cmdletInfo : cmdletInfos) {
+          try {
+            metaStore.deleteCmdlet(cmdletInfo.getCid());
+          } catch (MetaStoreException e1) {
+            LOG.error("{} delete from DB error", cmdletInfo, e);
+          }
+        }
+        throw new IOException(e);
+      }
+      for (CmdletInfo cmdletInfo : cmdletInfos) {
+        cacheCmd.remove(cmdletInfo.getCid());
+      }
     }
   }
 
@@ -996,7 +998,9 @@ public class CmdletManager extends AbstractService {
 
   private void flushCmdletInfo(CmdletInfo info) throws IOException {
     try {
-      cacheCmd.remove(info.getCid());
+      synchronized (cacheCmd) {
+        cacheCmd.remove(info.getCid());
+      }
       metaStore.updateCmdlet(info.getCid(), info.getRid(), info.getState());
     } catch (MetaStoreException e) {
       LOG.error(
