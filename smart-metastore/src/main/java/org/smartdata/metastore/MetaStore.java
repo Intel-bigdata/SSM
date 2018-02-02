@@ -902,8 +902,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
 
-  public synchronized void insertCmdlets(CmdletInfo[] commands)
+  public void insertCmdlets(CmdletInfo[] commands)
       throws MetaStoreException {
+    if (commands.length == 0) {
+      return;
+    }
     try {
       cmdletDao.insert(commands);
     } catch (Exception e) {
@@ -911,7 +914,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertCmdlet(CmdletInfo command)
+  public void insertCmdlet(CmdletInfo command)
       throws MetaStoreException {
     try {
       // Update if exists
@@ -1032,7 +1035,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertActions(ActionInfo[] actionInfos)
+  public void insertActions(ActionInfo[] actionInfos)
       throws MetaStoreException {
     try {
       actionDao.insert(actionInfos);
@@ -1041,7 +1044,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertAction(ActionInfo actionInfo)
+  public void insertAction(ActionInfo actionInfo)
       throws MetaStoreException {
     LOG.debug("Insert Action ID {}", actionInfo.getActionId());
     try {
@@ -1115,7 +1118,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void updateActions(ActionInfo[] actionInfos)
+  public void updateActions(ActionInfo[] actionInfos)
       throws MetaStoreException {
     if (actionInfos == null || actionInfos.length == 0) {
       return;

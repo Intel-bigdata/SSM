@@ -506,8 +506,20 @@ Performance Tuning
 
 4. Disable SSM Client
 
-    For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by creating file "/tmp/SMART_CLIENT_DISABLED_ID_FILE" on that node's local file system. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
+    For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
+    To disable SmartDFSClients on hosts:
+    `./bin/disable-smartclient.sh --hosts <host names or ips>`
+    For example: ./bin/disable-smartclient.sh --hosts hostA hostB hostC 192.168.1.1
+    Or you can write all the host names or ips into a file, one name or ip each line. Then you can using the following command to do the same thing:
+    `./bin/disable-smartclient.sh --hostsfile <file path>`
+
+    After that if you want to re-enable, then the following commands can be used:
+    `./bin/enable-smartclient.sh --hosts <host names or ips>`
+    or
+    `./bin/enable-smartclient.sh --hostsfile <file path>`
+    The arguments are same with `disable-smartclient.sh`
+    Note: To make the scripts work, you have to set up password-less SSH connections between the node that executing these scripts and the rest hosts.
 
 Trouble Shooting
 ---------------------------------------------------------------------------------

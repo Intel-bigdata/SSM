@@ -34,6 +34,7 @@ public class CmdletDispatcherHelper {
 
   public void register(CmdletDispatcher dispatcher) {
     synchronized (msgs) {
+      this.dispatcher = dispatcher;
       for (int i = 0; i < msgs.size(); i++) {
         dispatcher.onNodeMessage(msgs.get(i), opers.get(i));
       }

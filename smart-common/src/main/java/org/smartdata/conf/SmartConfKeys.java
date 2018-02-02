@@ -94,6 +94,16 @@ public class SmartConfKeys {
       "smart.cmdlet.hist.max.record.lifetime";
   public static final String SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_DEFAULT =
       "30day";
+  public static final String SMART_CMDLET_CACHE_BATCH =
+      "smart.cmdlet.cache.batch";
+  public static final int SMART_CMDLET_CACHE_BATCH_DEFAULT =
+      600;
+
+  // Schedulers
+  public static final String SMART_COPY_SCHEDULER_BASE_SYNC_BATCH =
+      "smart.copy.scheduler.base.sync.batch";
+  public static final int SMART_COPY_SCHEDULER_BASE_SYNC_BATCH_DEFAULT =
+      500;
 
   // Action
   public static final String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
