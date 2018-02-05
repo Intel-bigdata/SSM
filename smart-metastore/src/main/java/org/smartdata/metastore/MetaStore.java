@@ -908,7 +908,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       return;
     }
     try {
-      cmdletDao.insert(commands);
+      cmdletDao.replace(commands);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1038,7 +1038,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void insertActions(ActionInfo[] actionInfos)
       throws MetaStoreException {
     try {
-      actionDao.insert(actionInfos);
+      actionDao.replace(actionInfos);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

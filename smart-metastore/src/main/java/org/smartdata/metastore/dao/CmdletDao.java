@@ -252,6 +252,36 @@ public class CmdletDao {
     simpleJdbcInsert.executeBatch(maps);
   }
 
+  public int[] replace(final CmdletInfo[] cmdletInfos) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "REPLACE INTO " + TABLE_NAME
+            + "(cid, "
+            + "rid, "
+            + "aids, "
+            + "state, "
+            + "parameters, "
+            + "generate_time, "
+            + "state_changed_time)"
+            + " VALUES(?, ?, ?, ?, ?, ?, ?)";
+
+    return jdbcTemplate.batchUpdate(
+            sql,
+            new BatchPreparedStatementSetter() {
+              public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, cmdletInfos[i].getCid());
+                ps.setLong(2, cmdletInfos[i].getRid());
+                ps.setString(3, StringUtils.join(cmdletInfos[i].getAidsString(), ","));
+                ps.setLong(4, cmdletInfos[i].getState().getValue());
+                ps.setString(5, cmdletInfos[i].getParameters());
+                ps.setLong(6, cmdletInfos[i].getGenerateTime());
+                ps.setLong(7, cmdletInfos[i].getStateChangedTime());
+              }
+              public int getBatchSize() {
+                return cmdletInfos.length;
+              }
+            });
+  }
+
   public int update(long cid, long rid, int state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql =

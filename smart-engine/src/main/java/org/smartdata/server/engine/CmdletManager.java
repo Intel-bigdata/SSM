@@ -365,59 +365,58 @@ public class CmdletManager extends AbstractService {
    * @throws IOException
    */
   private void syncCmdAction(CmdletInfo cmdletInfo,
-      List<ActionInfo> actionInfos) throws IOException {
+                             List<ActionInfo> actionInfos) throws IOException {
     lockMovefileActionFiles(actionInfos);
     LOG.debug("Cache cmd {}", cmdletInfo);
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
     }
     idToCmdlets.put(cmdletInfo.getCid(), cmdletInfo);
+    numCmdletsGen.incrementAndGet();
     cacheCmd.put(cmdletInfo.getCid(), cmdletInfo);
     synchronized (pendingCmdlet) {
       pendingCmdlet.add(cmdletInfo.getCid());
     }
   }
 
-  private void batchSyncCmdAction() throws IOException {
-    synchronized (cacheCmd) {
-      if (cacheCmd.size() == 0) {
-        return;
+  private void batchSyncCmdAction() {
+    if (cacheCmd.size() == 0) {
+      return;
+    }
+    List<CmdletInfo> cmdletInfos = new ArrayList<>();
+    List<ActionInfo> actionInfos = new ArrayList<>();
+    List<CmdletInfo> cmdletFinished = new ArrayList<>();
+    LOG.debug("Number of cached cmds {}", cacheCmd.size());
+    for (Long cid : cacheCmd.keySet()) {
+      CmdletInfo cmdletInfo = cacheCmd.remove(cid);
+      cmdletInfos.add(cmdletInfo);
+      if (CmdletState.isTerminalState(cmdletInfo.getState())) {
+        cmdletFinished.add(cmdletInfo);
       }
-      LOG.debug("Number of cached cmds {}", cacheCmd.size());
-      List<CmdletInfo> cmdletInfos = new ArrayList<>();
-      List<ActionInfo> actionInfos = new ArrayList<>();
-      for (Long cid : cacheCmd.keySet()) {
-        cmdletInfos.add(cacheCmd.get(cid));
-        if (cmdletInfos.size() >= cacheCmdTh) {
-          break;
-        }
-        for (Long aid : cacheCmd.get(cid).getAids()) {
-          actionInfos.add(idToActions.get(aid));
-        }
+      for (Long aid : cmdletInfo.getAids()) {
+        actionInfos.add(idToActions.get(aid));
       }
-      if (cmdletInfos.size() == 0) {
-        return;
+      if (cmdletInfos.size() >= cacheCmdTh) {
+        break;
       }
-      LOG.debug("Number of cmds {} to submit", cmdletInfos.size());
-      try {
-        metaStore.insertCmdlets(
-                cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
-        metaStore.insertActions(
-                actionInfos.toArray(new ActionInfo[actionInfos.size()]));
-        numCmdletsGen.incrementAndGet();
-      } catch (MetaStoreException e) {
-        LOG.error("{} submit to DB error", cmdletInfos, e);
-        for (CmdletInfo cmdletInfo : cmdletInfos) {
-          try {
-            metaStore.deleteCmdlet(cmdletInfo.getCid());
-          } catch (MetaStoreException e1) {
-            LOG.error("{} delete from DB error", cmdletInfo, e);
-          }
-        }
-        throw new IOException(e);
-      }
-      for (CmdletInfo cmdletInfo : cmdletInfos) {
-        cacheCmd.remove(cmdletInfo.getCid());
+    }
+    if (cmdletInfos.size() == 0) {
+      return;
+    }
+    LOG.debug("Number of cmds {} to submit", cmdletInfos.size());
+    try {
+      metaStore.insertCmdlets(
+              cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
+      metaStore.insertActions(
+              actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+    } catch (MetaStoreException e) {
+      LOG.error("{} submit to DB error", cmdletInfos, e);
+    }
+
+    for (CmdletInfo cmdletInfo: cmdletFinished) {
+      idToCmdlets.remove(cmdletInfo.getCid());
+      for (Long aid: cmdletInfo.getAids()) {
+        idToActions.remove(aid);
       }
     }
   }
@@ -688,27 +687,23 @@ public class CmdletManager extends AbstractService {
   //Todo: optimize this function.
   private void cmdletFinished(long cmdletId) throws IOException {
     numCmdletsFinished.incrementAndGet();
-    CmdletInfo cmdletInfo = idToCmdlets.remove(cmdletId);
-    if (cmdletInfo != null) {
-      flushCmdletInfo(cmdletInfo);
+    CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+    if (cmdletInfo == null) {
+      LOG.debug("CmdletInfo [id={}] does not exist in idToCmdlets.", cmdletId);
+      return;
     }
+
     dispatcher.onCmdletFinished(cmdletInfo.getCid());
     runningCmdlets.remove(cmdletId);
 
-    List<ActionInfo> removed = new ArrayList<>();
-    for (Iterator<Map.Entry<Long, ActionInfo>> it = idToActions.entrySet().iterator();
-        it.hasNext(); ) {
-      Map.Entry<Long, ActionInfo> entry = it.next();
-      if (entry.getValue().getCmdletId() == cmdletId) {
-        it.remove();
-        removed.add(entry.getValue());
-      }
-    }
-    for (ActionInfo actionInfo : removed) {
+    List<ActionInfo> actionInfos = new ArrayList<>();
+    for (Long aid: cmdletInfo.getAids()) {
+      ActionInfo actionInfo = idToActions.get(aid);
+      actionInfos.add(actionInfo);
       unLockFileIfNeeded(actionInfo);
     }
-    flushActionInfos(removed);
     idToLaunchCmdlet.remove(cmdletId);
+    flushCmdletInfo(cmdletInfo);
   }
 
   private void cmdletFinishedInternal(CmdletInfo cmdletInfo) throws IOException {
@@ -995,28 +990,7 @@ public class CmdletManager extends AbstractService {
   }
 
   private void flushCmdletInfo(CmdletInfo info) throws IOException {
-    try {
-      synchronized (cacheCmd) {
-        cacheCmd.remove(info.getCid());
-      }
-      metaStore.updateCmdlet(info.getCid(), info.getRid(), info.getState());
-    } catch (MetaStoreException e) {
-      LOG.error(
-          "CmdletId -> [ {} ], CmdletInfo -> [ {} ]. Batch Cmdlet Status Update error!",
-          info.getCid(),
-          info,
-          e);
-      throw new IOException(e);
-    }
-  }
-
-  private void flushActionInfos(List<ActionInfo> infos) throws IOException {
-    try {
-      metaStore.updateActions(infos.toArray(new ActionInfo[infos.size()]));
-    } catch (MetaStoreException e) {
-      LOG.error("Write CacheObject to DB error!", e);
-      throw new IOException(e);
-    }
+    cacheCmd.put(info.getCid(), info);
   }
 
   //Todo: remove this implementation
