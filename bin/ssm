@@ -91,8 +91,6 @@ SMART_VARGS="$@"
 
 . "${bin}/common.sh"
 
-init_command ${COMMAND}
-
 JAVA_OPTS+=" -Dsmart.log.dir=${SMART_LOG_DIR}"
 
 JAVA_VERSION=$($SMART_RUNNER -version 2>&1 | awk -F '.' '/version/ {print $2}')
@@ -127,7 +125,7 @@ SMART_VARGS+=" -D smart.log.dir="${SMART_LOG_DIR}
 
 #echo "$SMART_RUNNER $JAVA_OPTS -cp ${SMART_CLASSPATH} ${SMART_CLASSNAME} $@"
 
-#exec $SMART_RUNNER $JAVA_OPTS -cp "${SMART_CLASSPATH}" ${SMART_CLASSNAME} $@
+init_command ${COMMAND}
 
 if [ x"${REMOTE_MODE}" = x"true" ]; then
   for host in $SMART_HOSTS
