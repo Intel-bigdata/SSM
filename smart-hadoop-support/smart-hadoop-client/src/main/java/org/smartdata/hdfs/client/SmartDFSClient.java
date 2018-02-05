@@ -32,13 +32,11 @@ import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
 import org.smartdata.model.FileState.FileStage;
 import org.smartdata.model.FileState.FileType;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.FSDataInputStream;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.io.InputStream;
 
 public class SmartDFSClient extends DFSClient {
   private static final Logger LOG = LoggerFactory.getLogger(SmartDFSClient.class);
@@ -129,10 +127,9 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-        if(checkForXattr(src))
-	  return getS3inputStream(src,conf);
-        else
-	  return super.open(src);
+    src = checkS3ForXattr(src);
+    // DFSClient will handle the rest works
+    return super.open(src);
   }
 
   @Override
@@ -206,18 +203,12 @@ public class SmartDFSClient extends DFSClient {
     return idFile.exists();
   }
 
-   public FSDataInputStream getS3inputStream(String dest, Configuration conf) throws IOException {
-    // Copy to remote S3
-    if (!dest.startsWith("s3")) {
-      throw new IOException();
-    }
-    // read from s3
-    org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
-    return fs.open(new Path(dest));
-  }
 
-  public boolean checkForXattr(String filePath){
-	return true;
+  public String checkS3ForXattr(String filePath){
+    // I think we should return the true path if file is move to S3,
+    // or return filePath If Xattr doesn't contain the attribute we want
+    // For example, if file1 is move to s3a://XX/file1, then we can return
+    // s3a://XX/file1. If not, we just return filePath
+	return filePath;
   }
-
 }
