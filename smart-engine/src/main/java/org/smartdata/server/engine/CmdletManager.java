@@ -306,13 +306,13 @@ public class CmdletManager extends AbstractService {
 
   @Override
   public void stop() throws IOException {
-    batchSyncCmdAction();
     LOG.info("Stopping ...");
     dispatcher.stop();
     for (int i = schedulerServices.size() - 1; i >= 0; i--) {
       schedulerServices.get(i).stop();
     }
     executorService.shutdown();
+    batchSyncCmdAction();
     dispatcher.shutDownExcutorServices();
     LOG.info("Stopped.");
   }
