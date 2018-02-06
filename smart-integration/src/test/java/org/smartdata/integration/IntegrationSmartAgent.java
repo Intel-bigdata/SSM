@@ -15,24 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.action;
+package org.smartdata.integration;
 
-import org.junit.Assert;
-import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.protocol.message.StatusReport;
-import org.smartdata.protocol.message.StatusReporter;
+import org.smartdata.agent.SmartAgent;
 
-public class MockActionStatusReporter implements StatusReporter {
-  @Override
-  public void report(StatusMessage status) {
-    if (status instanceof StatusReport) {
-      StatusReport statusReport = (StatusReport) status;
-      for (ActionStatus actionStatus: statusReport.getActionStatuses()) {
-        if (actionStatus.isFinished()) {
-          Assert.assertNull(actionStatus.getThrowable());
-        }
+import java.io.IOException;
+
+public class IntegrationSmartAgent {
+  private AgentRunner agent;
+
+  public void setup() throws IOException{
+    this.agent = new AgentRunner();
+    agent.start();
+  }
+
+  public void close() {
+    this.agent.close();
+  }
+
+  private class AgentRunner extends Thread {
+    private SmartAgent agent;
+    @Override
+    public void run() {
+      agent = new SmartAgent();
+      try {
+        agent.main(null);
+      } catch (IOException ex) {
+        System.out.println(ex.getMessage());
       }
+    }
+
+    public void close() {
+      agent.close();
     }
   }
 }

@@ -282,11 +282,11 @@ public class CmdletDao {
             });
   }
 
-  public int update(long cid, long rid, int state) {
+  public int update(long cid, int state) { 
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql =
-        "UPDATE " + TABLE_NAME + " SET state = ?, state_changed_time = ? WHERE cid = ? AND rid = ?";
-    return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid, rid);
+        "UPDATE " + TABLE_NAME + " SET state = ?, state_changed_time = ? WHERE cid = ?";
+    return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid);
   }
 
   public int update(long cid, String parameters, int state) {

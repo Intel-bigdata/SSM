@@ -17,17 +17,14 @@
  */
 package org.smartdata.action;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.protocol.message.ActionFinished;
-import org.smartdata.protocol.message.ActionStarted;
 import org.smartdata.protocol.message.ActionStatus;
-import org.smartdata.protocol.message.StatusReporter;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
@@ -40,7 +37,6 @@ import java.util.Map;
 public abstract class SmartAction {
   static final Logger LOG = LoggerFactory.getLogger(SmartAction.class);
 
-  private StatusReporter statusReporter;
   private long actionId;
   private Map<String, String> actionArgs;
   private SmartContext context;
@@ -50,14 +46,13 @@ public abstract class SmartAction {
   private PrintStream psLogOs;
   private volatile boolean successful;
   protected String name;
+  private long startTime;
+  private long finishTime;
+  private Throwable throwable;
+  private boolean finished;
 
   public SmartAction() {
-    this(null);
-  }
-
-  public SmartAction(StatusReporter statusReporter) {
     this.successful = false;
-    this.statusReporter = statusReporter;
     //Todo: extract the print stream out of this class
     this.resultOs = new ByteArrayOutputStream(64 * 1024);
     this.psResultOs = new PrintStream(resultOs, false);
@@ -79,10 +74,6 @@ public abstract class SmartAction {
 
   public void setContext(SmartContext context) {
     this.context = context;
-  }
-
-  public void setStatusReporter(StatusReporter statusReporter) {
-    this.statusReporter = statusReporter;
   }
 
   /**
@@ -118,43 +109,31 @@ public abstract class SmartAction {
   protected abstract void execute() throws Exception;
 
   public final void run() {
-    Throwable throwable = null;
     try {
-      reportStart();
+      setStartTime();
       execute();
       successful = true;
     } catch (Throwable t) {
       LOG.error("SmartAction execute error ", t);
-      throwable = t;
+      setThrowable(t);
       appendLog(ExceptionUtils.getFullStackTrace(t));
     } finally {
-      reportFinished(throwable);
+      setFinishTime();
+      finished = true;
       stop();
     }
   }
 
-  private void reportStart() {
-    if (statusReporter != null) {
-      statusReporter.report(new ActionStarted(actionId, System.currentTimeMillis()));
-    }
+  private void setStartTime() {
+    this.startTime = System.currentTimeMillis();
   }
 
-  private void reportFinished(Throwable throwable) {
-    if (statusReporter != null) {
-      try {
-        statusReporter.report(
-            new ActionFinished(
-                actionId,
-                System.currentTimeMillis(),
-                resultOs.toString("UTF-8"),
-                logOs.toString("UTF-8"),
-                throwable));
-      } catch (IOException e) {
-        LOG.error("Action statusReporter ActionFinished aid={} error", this.actionId, e);
-        statusReporter.report(
-            new ActionFinished(actionId, System.currentTimeMillis(), throwable));
-      }
-    }
+  private void setThrowable(Throwable t) {
+    this.throwable = t;
+  }
+
+  private void setFinishTime() {
+    this.finishTime = System.currentTimeMillis();
   }
 
   protected void appendResult(String result) {
@@ -185,7 +164,11 @@ public abstract class SmartAction {
         actionId,
         getProgress(),
         resultOs.toString("UTF-8"),
-        resultOs.toString("UTF-8"));
+        logOs.toString("UTF-8"),
+        startTime,
+        finishTime,
+        throwable,
+        finished);
   }
 
   private void stop() {
@@ -195,5 +178,15 @@ public abstract class SmartAction {
 
   public boolean isSuccessful() {
     return successful;
+  }
+
+  public boolean isFinished() {
+    return finished;
+  }
+
+  @VisibleForTesting
+  public boolean getExpectedAfterRun() throws UnsupportedEncodingException {
+    ActionStatus actionStatus = getActionStatus();
+    return actionStatus.isFinished() && actionStatus.getThrowable() == null;
   }
 }

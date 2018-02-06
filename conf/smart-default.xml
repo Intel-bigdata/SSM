@@ -127,6 +127,10 @@
     <value>500</value>
     <description>
       Maximum batch size of copyscheduer base sync batch insert.
+    <name>smart.status.report.period</name>
+    <value>1000</value>
+    <description>
+      The status report period for actions. The time unit is millisecond.
     </description>
   </property>
 

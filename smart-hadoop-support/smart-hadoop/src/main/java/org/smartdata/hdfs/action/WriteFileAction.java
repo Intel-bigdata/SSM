@@ -27,7 +27,6 @@ import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
 
-import java.io.OutputStream;
 import java.util.Map;
 import java.util.Random;
 

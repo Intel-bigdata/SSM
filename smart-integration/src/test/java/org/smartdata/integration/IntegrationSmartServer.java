@@ -43,6 +43,7 @@ public class IntegrationSmartServer {
       dbUrl = MetaStoreUtils.SQLITE_URL_PREFIX + dbFile;
       conf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
     }
+    conf.setLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY, 100);
 
     ssm = SmartServer.launchWith(conf);
     waitTillSSMExitSafeMode();
@@ -76,7 +77,7 @@ public class IntegrationSmartServer {
     }
   }
 
-  public SmartServer getSsm() {
+  public SmartServer getSSM() {
     return ssm;
   }
 }

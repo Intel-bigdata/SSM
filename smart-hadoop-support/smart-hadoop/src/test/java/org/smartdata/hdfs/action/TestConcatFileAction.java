@@ -22,7 +22,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -59,7 +58,6 @@ public class TestConcatFileAction extends MiniClusterHarness {
     ConcatFileAction concatFileAction = new ConcatFileAction();
     concatFileAction.setDfsClient(dfsClient);
     concatFileAction.setContext(smartContext);
-    concatFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(CopyFileAction.FILE_PATH, dfs.getUri() + srcPath + "/" +
         file1 + "," + dfs.getUri() + srcPath + "/" + "file2");
@@ -67,6 +65,7 @@ public class TestConcatFileAction extends MiniClusterHarness {
     concatFileAction.init(args);
     concatFileAction.run();
 
+    Assert.assertTrue(concatFileAction.getExpectedAfterRun());
     Assert.assertTrue(dfsClient.exists(target));
     //read and check file
     FSDataInputStream in = dfs.open(new Path(target),50);
@@ -103,7 +102,6 @@ public class TestConcatFileAction extends MiniClusterHarness {
     ConcatFileAction concatFileAction = new ConcatFileAction();
     concatFileAction.setDfsClient(dfsClient);
     concatFileAction.setContext(smartContext);
-    concatFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(CopyFileAction.FILE_PATH, srcPath + "/" +
         file1 + "," + srcPath + "/" + "file2");
@@ -111,6 +109,7 @@ public class TestConcatFileAction extends MiniClusterHarness {
     concatFileAction.init(args);
     concatFileAction.run();
 
+    Assert.assertTrue(concatFileAction.getExpectedAfterRun());
     Assert.assertTrue(dfsClient.exists(target));
     //read and check file
     FSDataInputStream in = dfs.open(new Path(target),50);

@@ -60,4 +60,10 @@
     <value>5</value>
     <description>Max number of rules that can be executed in parallel</description>
   </property>
+
+  <property>
+    <name>smart.action.local.execution.disabled</name>
+    <value>true</value>
+    <description>Actions will not be executed on SSM server if true.</description>
+  </property>
 </configuration>
