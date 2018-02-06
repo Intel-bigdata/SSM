@@ -405,10 +405,10 @@ public class CmdletManager extends AbstractService {
     }
     LOG.debug("Number of cmds {} to submit", cmdletInfos.size());
     try {
-      metaStore.insertCmdlets(
-              cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
       metaStore.insertActions(
               actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+      metaStore.insertCmdlets(
+              cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("{} submit to DB error", cmdletInfos, e);
     }
