@@ -33,9 +33,9 @@ import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.ActionStatus;
+import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.server.MiniSmartClusterHarness;
-import org.smartdata.server.SmartServer;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 
 import java.io.IOException;
@@ -214,7 +214,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     Assert.assertEquals(info.getState(), CmdletState.DONE);
     Thread.sleep(500);
     verify(metaStore, times(2)).insertCmdlets(any(CmdletInfo[].class));
-    verify(metaStore, times(2)).insertActions(any(ActionInfo[].class)); 
+    verify(metaStore, times(2)).insertActions(any(ActionInfo[].class));
 
     cmdletManager.stop();
   }
@@ -246,9 +246,11 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
             cmdletDescriptor.getCmdletString(),
             submitTime,
             submitTime);
-    List<ActionInfo> actionInfos0 = cmdletManager.createActionInfos(cmdletDescriptor, cmdletInfo0.getCid());
+    List<ActionInfo> actionInfos0 =
+            cmdletManager.createActionInfos(cmdletDescriptor, cmdletInfo0.getCid());
     flushToDB(metaStore, actionInfos0, cmdletInfo0);
-    List<ActionInfo> actionInfos1 = cmdletManager.createActionInfos(cmdletDescriptor, cmdletInfo1.getCid());
+    List<ActionInfo> actionInfos1 =
+            cmdletManager.createActionInfos(cmdletDescriptor, cmdletInfo1.getCid());
     flushToDB(metaStore, actionInfos1, cmdletInfo1);
     // init cmdletmanager
     cmdletManager.init();
@@ -256,7 +258,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     Assert.assertEquals(2, cmdletManager.getCmdletsSizeInCache());
     CmdletInfo cmdlet0 = cmdletManager.getCmdletInfo(cmdletInfo0.getCid());
     CmdletInfo cmdlet1 = cmdletManager.getCmdletInfo(cmdletInfo1.getCid());
-    while(cmdlet0.getState() != CmdletState.FAILED && cmdlet1.getState() != CmdletState.DONE) {
+    while (cmdlet0.getState() != CmdletState.FAILED && cmdlet1.getState() != CmdletState.DONE) {
       Thread.sleep(100);
     }
   }

@@ -667,14 +667,12 @@ public class CmdletManager extends AbstractService {
 
     dispatcher.onCmdletFinished(cmdletInfo.getCid());
     runningCmdlets.remove(cmdletId);
+    idToLaunchCmdlet.remove(cmdletId);
 
-    List<ActionInfo> actionInfos = new ArrayList<>();
     for (Long aid: cmdletInfo.getAids()) {
       ActionInfo actionInfo = idToActions.get(aid);
-      actionInfos.add(actionInfo);
       unLockFileIfNeeded(actionInfo);
     }
-    idToLaunchCmdlet.remove(cmdletId);
     flushCmdletInfo(cmdletInfo);
   }
 
@@ -915,7 +913,7 @@ public class CmdletManager extends AbstractService {
     }
     long cmdletId = status.getCmdletId();
     if (idToCmdlets.containsKey(cmdletId)) {
-        CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+      CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
       synchronized (cmdletInfo) {
         CmdletState state = status.getCurrentState();
         cmdletInfo.setState(state);
@@ -923,7 +921,7 @@ public class CmdletManager extends AbstractService {
         if (CmdletState.isTerminalState(state)) {
           cmdletFinished(cmdletId);
         } else if (state == CmdletState.DISPATCHED) {
-          flushCmdletInfo(cmdletInfo); 
+          flushCmdletInfo(cmdletInfo);
         }
       }
     }
