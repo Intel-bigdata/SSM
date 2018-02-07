@@ -85,10 +85,12 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
         .get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
       HdfsConfiguration hadoopConf = HadoopUtil.loadHadoopConf(hadoopConfPath);
-      for (Map.Entry<String, String> entry : hadoopConf) {
-        String key = entry.getKey();
-        if (conf.get(key) == null) {
-          conf.set(key, entry.getValue());
+      if (hadoopConf != null) {
+        for (Map.Entry<String, String> entry : hadoopConf) {
+          String key = entry.getKey();
+          if (conf.get(key) == null) {
+            conf.set(key, entry.getValue());
+          }
         }
       }
     } catch (IOException e) {
@@ -96,6 +98,8 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     }
     final URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
     LOG.debug("Final Namenode URL:" + nnUri.toString());
+
+
     client = HadoopUtil.getDFSClient(nnUri, conf);
     checkAndCreateIdFiles(nnUri, context.getConf());
     this.executorService = Executors.newScheduledThreadPool(4);

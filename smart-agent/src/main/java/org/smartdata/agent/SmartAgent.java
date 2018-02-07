@@ -99,10 +99,12 @@ public class SmartAgent implements StatusReporter {
     String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
       HdfsConfiguration hadoopConf = HadoopUtil.loadHadoopConf(hadoopConfPath);
-      for (Map.Entry<String, String> entry : hadoopConf) {
-        String key = entry.getKey();
-        if (conf.get(key) == null) {
-          conf.set(key, entry.getValue());
+      if (hadoopConf != null) {
+        for (Map.Entry<String, String> entry : hadoopConf) {
+          String key = entry.getKey();
+          if (conf.get(key) == null) {
+            conf.set(key, entry.getValue());
+          }
         }
       }
     } catch (IOException e) {
