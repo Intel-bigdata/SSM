@@ -47,7 +47,7 @@ Configure SSM
 
    We need to let SSM know where Hadoop Namenode is. There are 2 cases,
    
-*   a.  HA Namenode
+a.  HA Namenode
    
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, fill the value field with Hadoop configuration files path, for example "file:///etc/hadoop/conf".
    
