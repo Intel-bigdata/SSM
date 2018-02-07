@@ -23,7 +23,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.zeppelin.server.SmartZeppelinServer;
 import org.slf4j.Logger;
@@ -56,7 +55,6 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -275,15 +273,7 @@ public class SmartServer {
     // Load Hadoop configuration files
     String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HdfsConfiguration hadoopConf = HadoopUtil.loadHadoopConf(hadoopConfPath);
-      if (hadoopConf != null) {
-        for (Map.Entry<String, String> entry : hadoopConf) {
-          String key = entry.getKey();
-          if (conf.get(key) == null) {
-            conf.set(key, entry.getValue());
-          }
-        }
-      }
+      HadoopUtil.loadHadoopConf(hadoopConfPath, conf);
     } catch (IOException e) {
         LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
             + "Please config smart.hadoop.conf.path property in smart-site.xml.");

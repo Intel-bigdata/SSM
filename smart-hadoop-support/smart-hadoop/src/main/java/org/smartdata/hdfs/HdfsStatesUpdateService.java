@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +41,6 @@ import org.smartdata.utils.SsmHostUtils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -84,15 +81,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     String hadoopConfPath = getContext().getConf()
         .get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HdfsConfiguration hadoopConf = HadoopUtil.loadHadoopConf(hadoopConfPath);
-      if (hadoopConf != null) {
-        for (Map.Entry<String, String> entry : hadoopConf) {
-          String key = entry.getKey();
-          if (conf.get(key) == null) {
-            conf.set(key, entry.getValue());
-          }
-        }
-      }
+      HadoopUtil.loadHadoopConf(hadoopConfPath, conf);
     } catch (IOException e) {
       throw new IOException("Fail to load Hadoop configuration for : " + e.getMessage());
     }

@@ -32,7 +32,6 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,6 @@ import org.smartdata.utils.SecurityUtil;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -98,15 +96,7 @@ public class SmartAgent implements StatusReporter {
     // Load Hadoop configuration files
     String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HdfsConfiguration hadoopConf = HadoopUtil.loadHadoopConf(hadoopConfPath);
-      if (hadoopConf != null) {
-        for (Map.Entry<String, String> entry : hadoopConf) {
-          String key = entry.getKey();
-          if (conf.get(key) == null) {
-            conf.set(key, entry.getValue());
-          }
-        }
-      }
+      HadoopUtil.loadHadoopConf(hadoopConfPath, conf);
     } catch (IOException e) {
       LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
           + "Please config smart.hadoop.conf.path property in smart-site.xml.");

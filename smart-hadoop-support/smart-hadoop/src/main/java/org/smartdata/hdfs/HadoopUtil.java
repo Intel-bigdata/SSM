@@ -81,7 +81,17 @@ public class HadoopUtil {
     } else {
       dir = ssmConfDir + "/" + HDFS_CONF_DIR + "/" + nameNodeUrl.getHost();
     }
-    HdfsConfiguration hadoopConf = HadoopUtil.loadHadoopConf(dir);
+    loadHadoopConf(dir, conf);
+  }
+
+  /**
+   * Load hadoop configure files in the given directory to 'conf'.
+   *
+   * @param hadoopConfPath directory that hadoop config files located.
+   */
+  public static void loadHadoopConf(String hadoopConfPath, Configuration conf)
+          throws IOException {
+    HdfsConfiguration hadoopConf = getHadoopConf(hadoopConfPath);
     if (hadoopConf != null) {
       for (Map.Entry<String, String> entry : hadoopConf) {
         String key = entry.getKey();
@@ -93,12 +103,12 @@ public class HadoopUtil {
   }
 
   /**
-   * Load hadoop configure files in the given directory to 'conf'.
+   * Get hadoop configuration from the configure files in the given directory.
    *
    * @param hadoopConfPath directory that hadoop config files located.
    */
-  public static HdfsConfiguration loadHadoopConf(String hadoopConfPath)
-      throws IOException {
+  public static HdfsConfiguration getHadoopConf(String hadoopConfPath)
+          throws IOException {
     if (hadoopConfPath == null || hadoopConfPath.isEmpty()) {
       LOG.warn("Hadoop configuration path is not set");
       return null;
