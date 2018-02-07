@@ -21,19 +21,25 @@ ParagraphCtrl.$inject = [
   '$window',
   '$routeParams',
   '$location',
+  'baseUrlSrv',
   '$timeout',
   '$q',
   'noteVarShareService',
-  'restapi'
+  'restapi',
+  '$interval',
+  '$http',
+  'conf'
 ];
 
-function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $location,
-                       $timeout, $q, noteVarShareService, restapi) {
+function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $location, baseUrlSrv,
+                       $timeout, $q, noteVarShareService, restapi, $interval, $http, conf) {
   $rootScope.keys = Object.keys;
   $scope.parentNote = null;
   $scope.paragraph = null;
   $scope.originalText = '';
   $scope.editor = null;
+
+  $scope.getActionResultTimer = null;
 
   var editorSetting = {};
   // flag that is used to set editor setting on paste percent sign
@@ -59,7 +65,6 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
     }
 
     noteVarShareService.put($scope.paragraph.id + '_paragraphScope', paragraphScope);
-
     initializeDefault($scope.paragraph.config);
   };
 
@@ -73,18 +78,55 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
       results.code = "SUCCESS";
       $scope.paragraph.status = "FINISHED";
       if ($scope.paragraph.id === 'add_rule') {
+        results.code = "SUCCESS";
+        $scope.paragraph.status = "FINISHED";
         result.data = "Success to add rule : " + response.body;
+        msg.push(result);
+        results.msg = msg;
+        $scope.paragraph.results = results;
       } else if ($scope.paragraph.id === 'run_action') {
-        result.data = "Success to submit action : " + response.body;
+        // results.code = "SUCCESS";
+
+        $rootScope.note.paragraphs[1].status = "PENDING";
+
+        $scope.getActionResultTimer = $interval(function(){
+          getActionInfo(response.body);
+        },1000);
       }
     } else {
       results.code = "ERROR";
       $scope.paragraph.status = "ERROR";
       result.data = response.error;
     }
-    msg.push(result);
-    results.msg = msg;
-    $scope.paragraph.results = results;
+
+  };
+
+  var getActionInfo = function (actionId) {
+    $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/'
+      + actionId + '/info').then(function(response) {
+        var actionInfo = response.data.body;
+        if (actionInfo.finished === true) {
+
+          var result = {};
+          var results = {};
+          var msg = new Array();
+          $scope.paragraph.results= results;
+
+          result.type = "TEXT";
+          result.data = actionInfo.result;
+          results.code = actionInfo.successful ? "SUCCESS" : "ERROR";
+          $scope.paragraph.status = actionInfo.successful ? "FINISHED" : "ERROR";
+
+          msg.push(result);
+          results.msg = msg;
+          $scope.paragraph.results = results;
+          $rootScope.note.paragraphs[1].results = results;
+
+          $interval.cancel($scope.getActionResultTimer);
+        }
+    }, function(errorResponse) {
+      console.log(errorResponse);
+    });
   };
 
   var initializeDefault = function(config) {
@@ -144,6 +186,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
   $scope.runParagraph = function(data) {
     var submitFn;
     $scope.paragraph.config.enabled = false;
+    $scope.paragraph.results = null;
     if ($scope.paragraph.id === 'add_rule') {
       submitFn = restapi.submitRule;
     } else if ($scope.paragraph.id === 'run_action') {
@@ -309,8 +352,6 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
       });
 
       $scope.editor.getSession().on('change', function(e, editSession) {
-        $scope.paragraph.status = 'READY';
-        $scope.paragraph.results = null;
         $scope.paragraph.config.enabled = true;
         autoAdjustEditorHeight(_editor);
       });
