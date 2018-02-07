@@ -81,12 +81,14 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     String hadoopConfPath = getContext().getConf()
         .get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HadoopUtil.loadHadoopConf(context.getConf(), hadoopConfPath);
+      HadoopUtil.loadHadoopConf(hadoopConfPath, conf);
     } catch (IOException e) {
       throw new IOException("Fail to load Hadoop configuration for : " + e.getMessage());
     }
     final URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
     LOG.debug("Final Namenode URL:" + nnUri.toString());
+
+
     client = HadoopUtil.getDFSClient(nnUri, conf);
     checkAndCreateIdFiles(nnUri, context.getConf());
     this.executorService = Executors.newScheduledThreadPool(4);
