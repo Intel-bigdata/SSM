@@ -37,10 +37,6 @@ angular.module('zeppelinWebApp')
         $ptb.datetime('Finish Time').done(),
         $ptb.duration("Running Time").done(),
         $ptb.text('Result').done()
-      /*
-       $ptb.text('User').done(),
-       $ptb.button('Quick Links').done()
-       */
     ];
 
     $scope.$watch('action', function (action) {
@@ -50,14 +46,6 @@ angular.module('zeppelinWebApp')
           action.finished ? action.finishTime : "",
           action.uptime,
           action.result
-          /*
-           rule.user,
-           [
-           {href: rule.configLink, target: '_blank', text: 'Config', class: 'btn-xs'},
-           helper.withClickToCopy({text: 'Home Dir.', class: 'btn-xs'}, rule.homeDirectory),
-           helper.withClickToCopy({text: 'Log Dir.', class: 'btn-xs'}, rule.logFile)
-           ]
-           */
       ]);
     });
   }

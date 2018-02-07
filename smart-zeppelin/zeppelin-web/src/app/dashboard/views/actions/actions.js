@@ -68,7 +68,7 @@ angular.module('zeppelinWebApp')
 
     getActions();
 
-    var timer=$interval(function(){
+    var timer = $interval(function(){
       getActions();
     },5000);
 
