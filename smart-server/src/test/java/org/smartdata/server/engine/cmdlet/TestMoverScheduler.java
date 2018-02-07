@@ -28,7 +28,7 @@ import org.smartdata.server.engine.CmdletManager;
 
 public class TestMoverScheduler extends MiniSmartClusterHarness {
 
-  @Test
+  @Test(timeout = 40000)
   public void testScheduler() throws Exception {
     waitTillSSMExitSafeMode();
 
@@ -49,6 +49,8 @@ public class TestMoverScheduler extends MiniSmartClusterHarness {
         return;
       } else if (state == CmdletState.FAILED) {
         Assert.fail("Mover failed.");
+      } else {
+        System.out.println(state);
       }
     }
   }
