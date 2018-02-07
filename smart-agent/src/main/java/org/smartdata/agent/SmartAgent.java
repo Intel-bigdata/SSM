@@ -96,7 +96,7 @@ public class SmartAgent implements StatusReporter {
     // Load Hadoop configuration files
     String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HadoopUtil.loadHadoopConf(conf, hadoopConfPath);
+      HadoopUtil.loadHadoopConf(hadoopConfPath, conf);
     } catch (IOException e) {
       LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
           + "Please config smart.hadoop.conf.path property in smart-site.xml.");

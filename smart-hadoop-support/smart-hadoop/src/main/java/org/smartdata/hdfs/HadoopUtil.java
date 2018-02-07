@@ -20,6 +20,7 @@ package org.smartdata.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
@@ -80,21 +81,40 @@ public class HadoopUtil {
     } else {
       dir = ssmConfDir + "/" + HDFS_CONF_DIR + "/" + nameNodeUrl.getHost();
     }
-    loadHadoopConf(conf, dir);
+    loadHadoopConf(dir, conf);
   }
 
   /**
    * Load hadoop configure files in the given directory to 'conf'.
    *
-   * @param conf
    * @param hadoopConfPath directory that hadoop config files located.
    */
-  public static void loadHadoopConf(Configuration conf, String hadoopConfPath)
-      throws IOException {
+  public static void loadHadoopConf(String hadoopConfPath, Configuration conf)
+          throws IOException {
+    HdfsConfiguration hadoopConf = getHadoopConf(hadoopConfPath);
+    if (hadoopConf != null) {
+      for (Map.Entry<String, String> entry : hadoopConf) {
+        String key = entry.getKey();
+        if (conf.get(key) == null) {
+          conf.set(key, entry.getValue());
+        }
+      }
+    }
+  }
+
+  /**
+   * Get hadoop configuration from the configure files in the given directory.
+   *
+   * @param hadoopConfPath directory that hadoop config files located.
+   */
+  public static HdfsConfiguration getHadoopConf(String hadoopConfPath)
+          throws IOException {
     if (hadoopConfPath == null || hadoopConfPath.isEmpty()) {
-      LOG.info("Hadoop configuration path is not set");
+      LOG.warn("Hadoop configuration path is not set");
+      return null;
     } else {
       URL hadoopConfDir;
+      HdfsConfiguration hadoopConf = new HdfsConfiguration();
       try {
         if (!hadoopConfPath.endsWith("/")) {
           hadoopConfPath += "/";
@@ -117,7 +137,7 @@ public class HadoopUtil {
           URL coreConfFile = new URL(hadoopConfDir, "core-site.xml");
           Path coreFilePath = Paths.get(coreConfFile.toURI());
           if (Files.exists(coreFilePath)) {
-            conf.addResource(coreConfFile);
+            hadoopConf.addResource(coreConfFile);
             LOG.debug("Hadoop configuration file [" +
                 coreConfFile.toExternalForm() + "] is loaded");
           } else {
@@ -132,7 +152,7 @@ public class HadoopUtil {
           URL hdfsConfFile = new URL(hadoopConfDir, "hdfs-site.xml");
           Path hdfsFilePath = Paths.get(hdfsConfFile.toURI());
           if (Files.exists(hdfsFilePath)) {
-            conf.addResource(hdfsConfFile);
+            hadoopConf.addResource(hdfsConfFile);
             LOG.debug("Hadoop configuration file [" +
                 hdfsConfFile.toExternalForm() + "] is loaded");
           } else {
@@ -146,6 +166,7 @@ public class HadoopUtil {
         throw new IOException("Access hadoop configuration path [" + hadoopConfPath
             + "] failed" + e);
       }
+      return hadoopConf;
     }
   }
 
