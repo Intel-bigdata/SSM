@@ -40,15 +40,14 @@ Build SSM Package
    A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
    More detailed information, please refer to BUILDING.txt file.
 
-Configure SSM
+# Configure SSM
 ---------------------------------------------------------------------------------
 
-* **Configure How to access Hadoop Namenode**
+## Configure How to access Hadoop Namenode**
 
    We need to let SSM know where Hadoop Namenode is. There are 2 cases,
    
-HA-Namenode
-----------------------------------------------------------------------------------
+### HA-Namenode
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, fill the value field with Hadoop configuration files path, for example "file:///etc/hadoop/conf".
    
    ```xml   
@@ -59,7 +58,7 @@ HA-Namenode
     </property>
    ``` 
    
-   b.  Single Namenode
+###  Single Namenode
    
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address,
    
