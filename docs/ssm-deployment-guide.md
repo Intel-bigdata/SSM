@@ -11,7 +11,7 @@ Requirements:
 * Maven 3.1.1+
 
 
-#Why JDK 1.7 is preferred
+Why JDK 1.7 is preferred
 ----------------------------------------------------------------------------------
 
   It is because by default CDH5.10.1 supports compile and run with JDK 1.7. If you
@@ -20,7 +20,7 @@ Requirements:
   For SSM, JDK 1.7 and 1.8 are both supported.
 
 
-#Build SSM Package
+Build SSM Package
 ---------------------------------------------------------------------------------
 * **Download SSM**
 
@@ -47,7 +47,7 @@ Configure SSM
 
    We need to let SSM know where Hadoop Namenode is. There are 2 cases,
    
-   a.  HA Namenode
+*   a.  HA Namenode
    
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, fill the value field with Hadoop configuration files path, for example "file:///etc/hadoop/conf".
    
