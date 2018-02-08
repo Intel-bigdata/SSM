@@ -11,7 +11,7 @@ Requirements:
 * Maven 3.1.1+
 
 
-Why JDK 1.7 is preferred
+# Why JDK 1.7 is preferred
 ----------------------------------------------------------------------------------
 
   It is because by default CDH5.10.1 supports compile and run with JDK 1.7. If you
@@ -20,19 +20,19 @@ Why JDK 1.7 is preferred
   For SSM, JDK 1.7 and 1.8 are both supported.
 
 
-Build SSM Package
+# Build SSM Package
 ---------------------------------------------------------------------------------
-* **Download SSM**
+## * **Download SSM**
 
   Download SSM branch from Github https://github.com/Intel-bigdata/SSM/ 
 
-* **Build SSM**
+## * **Build SSM**
 
-  * For CDH5.10.1
+###  * For CDH5.10.1
   
   	`mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests`
    
-  * For Hadoop 2.7.3
+###  * For Hadoop 2.7.3
   	
 	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
 
@@ -70,7 +70,8 @@ Build SSM Package
    </property>
    ```
 
-   SSM will fetch the whole HDFS namespace when it starts by default. If you do not care about files under some directories (directories for temporary files for example) then you can configure them in the following way, SSM will completely ignore these files. Please note, actions will also not be triggered for these files by rules.
+###   IGNORE DIRS
+SSM will fetch the whole HDFS namespace when it starts by default. If you do not care about files under some directories (directories for temporary files for example) then you can configure them in the following way, SSM will completely ignore these files. Please note, actions will also not be triggered for these files by rules.
 
    ```xml
    <property>
@@ -78,7 +79,7 @@ Build SSM Package
        <value>/foodirA,/foodirB</value>
    </property>
    ```
-* **Configure Smart Server**
+# * **Configure Smart Server**
 
    SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
 
