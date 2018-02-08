@@ -288,9 +288,9 @@ Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFi
 
 Follow the steps to add SSM Jars to classpath
 
-      *  After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
-      *  Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
-      *  Add the SSM jars directory to hadoop calsspath in `hadoop-env.sh` as following.
+*  After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
+*  Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
+*  Add the SSM jars directory to hadoop calsspath in `hadoop-env.sh` as following.
 
           `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
 
