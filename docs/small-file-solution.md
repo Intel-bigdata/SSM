@@ -102,14 +102,11 @@ ii. Due to the file container info (corresponding container file, offset and len
 
 iii. Operations like the following impact small file's meta in namespace as well as meta store of SSM.
 
-* rename small file
-Rename small file in both namespace and meta store.
+* Rename small file: rename small file in both namespace and meta store.
 
-* delete small file
-Delete small file in hdfs, then delete the file container info of small file in meta store.
+* Delete small file: delete small file in hdfs, then delete the file container info of small file in meta store.
 
-* truncate small file
-Since the small file is already truncated in hdfs, so only need to set the length of small file to zero in meta store.
+* Truncate small file: since the small file is already truncated in hdfs, so only need to set the length of small file to zero in meta store.
 
 > Note that the content of small file is still stored in the container file after delete or truncate.
 
