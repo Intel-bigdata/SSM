@@ -24,7 +24,7 @@ Requirements:
 ---------------------------------------------------------------------------------
 ##  **Download SSM**
 
-  Download SSM branch from Github https://github.com/Intel-bigdata/SSM/ 
+Download SSM branch from Github https://github.com/Intel-bigdata/SSM/ 
 
 ##  **Build SSM**
 
@@ -37,8 +37,8 @@ Requirements:
 	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
 
 
-   A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
-   More detailed information, please refer to BUILDING.txt file.
+A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
+More detailed information, please refer to BUILDING.txt file.
 
 # Configure SSM
 ---------------------------------------------------------------------------------
@@ -50,127 +50,116 @@ Requirements:
 ### HA-Namenode
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, fill the value field with Hadoop configuration files path, for example "file:///etc/hadoop/conf".
    
-   ```xml   
    <property>
        <name>smart.hadoop.conf.path</name>
        <value>/conf</value>
        <description>local file path which holds all hadoop configuration files, such as hdfs-site.xml, core-site.xml</description>
     </property>
-   ``` 
    
 ###  Single Namenode
    
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address,
    
-   ```xml
    <property>
        <name>smart.dfs.namenode.rpcserver</name>
        <value>hdfs://namenode-ip:rpc-port</value>
        <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
-   ```
 
 ###   Ignore Dirs
 SSM will fetch the whole HDFS namespace when it starts by default. If you do not care about files under some directories (directories for temporary files for example) then you can configure them in the following way, SSM will completely ignore these files. Please note, actions will also not be triggered for these files by rules.
 
-   ```xml
    <property>
        <name>smart.ignore.dirs</name>
        <value>/foodirA,/foodirB</value>
    </property>
-   ```
+
 ##  **Configure Smart Server**
 
-   SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
 
-   Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
+Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
 
-   The active SSM server is the first node in the `servers` file under ${SMART_HOME}/conf. After failover, please using the following command to find new active SSM servers
-   `hadoop fs -cat /system/ssm.id `
+The active SSM server is the first node in the `servers` file under ${SMART_HOME}/conf. After failover, please using the following command to find new active SSM servers
+     `hadoop fs -cat /system/ssm.id `
 
-   Please note, the configuration should be the same on all server hosts.
+Please note, the configuration should be the same on all server hosts.
 
 ## **Configure Smart Agent (optional)**
 
-   This step can be skipped if SSM standalone mode is preferred.
+This step can be skipped if SSM standalone mode is preferred.
   
-   Open `agents` file under ${SMART_HOME}/conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
-   After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
+Open `agents` file under ${SMART_HOME}/conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
+After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
  
 ## **Configure database**
 
-   SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
+SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
 
-   You just need to follow the guide in one of the two following options to configure database for SSM.
+You just need to follow the guide in one of the two following options to configure database for SSM.
 
 ###  Option 1. Use MySQL
 
-    You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password are enough.
-    Please be noted that, security support will be enabled later. Here is an example for MySQL,
+You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password are enough.
+Please be noted that, security support will be enabled later. Here is an example for MySQL,
    
-   ```xml
    <properties>
        <entry key="url">jdbc:mysql://localhost/ssm</entry>
        <entry key="username">username</entry>
        <entry key="password">password</entry>
 	   ......
    </properties>	   
-   ```
    
-   `ssm` is the database name. User needs to create it manually through MySQL client.
+`ssm` is the database name. User needs to create it manually through MySQL client.
 
 ### Option 2. Use SSM-TiDB
 
-    To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb/tree/release-1.0.0.
+To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb/tree/release-1.0.0.
 
-    TiDB can be enabled in smart-site.xml.
+TiDB can be enabled in smart-site.xml.
 
-   ```xml
     <property>
         <name>smart.tidb.enable</name>
         <value>true</value>
         ......
     </property>
-   ```
 
-    For SSM standalone mode, the three instances PD, TiKV and TiDB are all deployed on Smart Server host.
-    For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
-    So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over using MySQL.
+For SSM standalone mode, the three instances PD, TiKV and TiDB are all deployed on Smart Server host.
+For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
+So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over using MySQL.
 
-    If TiDB is enabled, there is no need to configure jdbc url in druid.xml. In TiDB only root user is created initially, so you should set username as root. Optionally, you can set a password for root user in druid.xml.
+If TiDB is enabled, there is no need to configure jdbc url in druid.xml. In TiDB only root user is created initially, so you should set username as root. Optionally, you can set a password for root user in druid.xml.
 
-    An example of configuration in druid.xml for using TiDB is shown as follows.
+An example of configuration in druid.xml for using TiDB is shown as follows.
 
-   ```xml
     <properties>
         <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> no need to configure url for TiDB -->
         <entry key="username">username</entry>
         <entry key="password">password</entry>
         ......
     <properties>
-   ```
 
-    TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
-    If user password is not set in druid, by default the command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 7070`.
-    The 7070 port is the default one configured for tidb.service.port in smart-default.xml.
-    If you modify it, the port in the above command should also be modified accordingly.
-    In TiDB, the database named ssm is used to store metadata.
+TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
+If user password is not set in druid, by default the command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 7070`.
+The 7070 port is the default one configured for tidb.service.port in smart-default.xml.
+If you modify it, the port in the above command should also be modified accordingly.
+In TiDB, the database named ssm is used to store metadata.
 
-    By default, the logs of Pd, TiKV and TiDB are under ${SMART_HOME}/logs directory. You can refer to these logs if encountering database fault.
+By default, the logs of Pd, TiKV and TiDB are under ${SMART_HOME}/logs directory. You can refer to these logs if encountering database fault.
 
 ## **Configure user account to authenticate to Web UI**
 
-    By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.ini file, 
+By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.ini file, 
     
-    `[users]` section
+`[users]` section
 
-	 define supported user name and password. It follows the username = password, role format. Here is an example,
+      define supported user name and password. It follows the username = password, role format. Here is an example,
 
 	     admin = ssm@123, admin
 	
 	     ssmoperator = operator@operation, operator 
 	
-    `[roles]` section
+`[roles]` section
 
 	 define support roles. Here is the example,
 
@@ -178,11 +167,11 @@ SSM will fetch the whole HDFS namespace when it starts by default. If you do not
 	
 	     admin = *
 
-     For more information about security configuration, please refer to official document
+For more information about security configuration, please refer to official document
 
-     https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html
+https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html
 
-     After finishing the SSM configuration, we can start to deploy the SSM package with the configuration files to all involved servers.
+After finishing the SSM configuration, we can start to deploy the SSM package with the configuration files to all involved servers.
 
 
 # Deploy SSM
@@ -192,12 +181,12 @@ SSM supports two running modes, standalone service and SSM service with multiple
    
    ## Standalone SSM Service
 
-     For deploy standalone SSM, SSM will only start SSM server without SSM agents. Distribute `${SMART_HOME}` directory to SSM Server nodes. The configuration files are under `${SMART_HOME}/conf`.
+For deploy standalone SSM, SSM will only start SSM server without SSM agents. Distribute `${SMART_HOME}` directory to SSM Server nodes. The configuration files are under `${SMART_HOME}/conf`.
 
    ## SSM Service with multiple Agents
 
-     Distribute `${SMART_HOME}` directory to SSM Server nodes and each Smart Agent nodes. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
-     On the SSM service server, switch to the SSM installation directory, ready to start and run the SSM service.
+Distribute `${SMART_HOME}` directory to SSM Server nodes and each Smart Agent nodes. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
+On the SSM service server, switch to the SSM installation directory, ready to start and run the SSM service.
 
 
 # Run SSM
@@ -436,14 +425,14 @@ SSM use ";" to separate different actions in a rule. The execution trigger of la
      
 Above rule means all the files under /test directory, if it's age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is a not a built-in action. Users need to implement it by themselves.
      
-     Please refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM.
+Please refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM.
      
 Rule priority and rule order will be considered to implement yet. Currently all rules
 will run in parallel. For a full detail rule format definition, please refer to
 https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 
 
-#Performance Tuning
+# Performance Tuning
 ---------------------------------------------------------------------------------
 ## Rule and Cmdlet concurrency
 
