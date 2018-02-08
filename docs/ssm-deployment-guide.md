@@ -286,6 +286,7 @@ Make sure you have the correct HDFS storage type applied to HDFS DataNode storag
 Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
    ####  Add SSM jars to the Hadoop classpath.
 
+Follow the steps to add SSM Jars to classpath
       *  After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
 
       *  Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
