@@ -395,7 +395,7 @@ the configuration takes effect. You can try TestDFSIO for example,
 
 	`file: path matches "/test/*" and accessCount(5m) > 3 | allssd`
 
-    This rule means all the files under /test directory, if it is accessed 3 times during
+This rule means all the files under /test directory, if it is accessed 3 times during
 last 5 minutes, SSM should trigger an action to move the file to SSD. Rule engine
 will evaluate the condition every MAX{5s,5m/20} internal.
 
@@ -404,21 +404,21 @@ will evaluate the condition every MAX{5s,5m/20} internal.
 
 	`file: path matches "/test/*" and age > 5h | archive`
 
-    This rule means all the files under /test directory, if it's age is more than 5 hours,
+This rule means all the files under /test directory, if it's age is more than 5 hours,
 then move the file to archive storage.
 
 ## **Move one type of file to specific storage**
 
 	`file: path matches "/test/*.xml" | allssd`
 
-    This rule will move all XML files under /test directory to SSD. In this rule, neither a
+This rule will move all XML files under /test directory to SSD. In this rule, neither a
 single date nor time value is specified, the rule will be evaluated every short time interval (5s by default).
 
 ## **Specify rule evaluation interval**
 
 	`file: every 3s | path matches "/test/*.xml" | allssd`
   
-    This rule will move all XML files under /test directory to SSD. The rule engine will
+This rule will move all XML files under /test directory to SSD. The rule engine will
 evaluate whether the condition meets every 3s. 
 
 
@@ -426,7 +426,7 @@ evaluate whether the condition meets every 3s.
      
      `file: every 500ms | path matches "/test-10000-10MB/*"| sync -dest hdfs://sr518:9000/test-10000-10MB/`
 	
-     This rule will copy file and update any namespace changes(add,delete,rename,append) under source directory "/test-10000-10MB/" to destination directory "hdfs://sr518:9000/test-10000-10MB/". 
+This rule will copy file and update any namespace changes(add,delete,rename,append) under source directory "/test-10000-10MB/" to destination directory "hdfs://sr518:9000/test-10000-10MB/". 
 
 ## **Support action chain**
 
@@ -447,11 +447,11 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 ---------------------------------------------------------------------------------
 ## Rule and Cmdlet concurrency
 
-   There are two configurable parameters which impact the SSM rule evaluation and action execution parallelism.
+There are two configurable parameters which impact the SSM rule evaluation and action execution parallelism.
 
-    **smart.rule.executors**
+### smart.rule.executors
 
-    Current default value is 5, which means system will concurrently evaluate 5 rule state at the same time.
+Current default value is 5, which means system will concurrently evaluate 5 rule state at the same time.
     
     <property>
         <name>smart.rule.executors</name>
@@ -459,10 +459,10 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
         <description>Max number of rules that can be executed in parallel</description>
      </property>
 
-    **smart.cmdlet.executors**
+### smart.cmdlet.executors
 
-    Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
-    If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under ${SMART_HOME}/conf directory. Here is an example to change the action execution parallelism to 50.
+Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
+If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under ${SMART_HOME}/conf directory. Here is an example to change the action execution parallelism to 50.
 
      <property>
          <name>smart.cmdlet.executors</name>
@@ -471,7 +471,7 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 
 ## Cmdlet history purge in metastore  
 
-    SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodically purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
+SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodically purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
 
     <property>
         <name>smart.cmdlet.hist.max.num.records</name>
@@ -487,32 +487,33 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
         </description>
      </property>
 
-      SSM service restart is required after the configuration changes.
+SSM service restart is required after the configuration changes.
 
 ## Batch Size of Namespace fetcher
 
-    SSM will fetch/sync namespace from namenode when it is started. According to our tests, a large namespace may lead to long start up time. To avoid this, we add a parameter named `smart.namespace.fetcher.batch`, its default value is 500. You can change it if namespace is very large, e.g., 100M or more. A larger batch size will greatly speed up fetcher efficiency, and reduce start up time.
+SSM will fetch/sync namespace from namenode when it is started. According to our tests, a large namespace may lead to long start up time. To avoid this, we add a parameter named `smart.namespace.fetcher.batch`, its default value is 500. You can change it if namespace is very large, e.g., 100M or more. A larger batch size will greatly speed up fetcher efficiency, and reduce start up time.
 
     <property>
         <name>smart.namespace.fetcher.batch</name>
         <value>500</value>
         <description>Batch size of Namespace fetcher</description>
     </property>
+
 ##  Disable SSM Client
 
-    For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
+For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
-    To disable SmartDFSClients on hosts:
-    `./bin/disable-smartclient.sh --hosts <host names or ips>`
-    For example: ./bin/disable-smartclient.sh --hosts hostA hostB hostC 192.168.1.1
-    Or you can write all the host names or ips into a file, one name or ip each line. Then you can using the following command to do the same thing:
-    `./bin/disable-smartclient.sh --hostsfile <file path>`
+To disable SmartDFSClients on hosts:
+`./bin/disable-smartclient.sh --hosts <host names or ips>`
+For example: ./bin/disable-smartclient.sh --hosts hostA hostB hostC 192.168.1.1
+Or you can write all the host names or ips into a file, one name or ip each line. Then you can using the following command to do the same thing:
+`./bin/disable-smartclient.sh --hostsfile <file path>`
 
-    After that if you want to re-enable, then the following commands can be used:
-    `./bin/enable-smartclient.sh --hosts <host names or ips>`
-    or
-    `./bin/enable-smartclient.sh --hostsfile <file path>`
-    The arguments are same with `disable-smartclient.sh`
+After that if you want to re-enable, then the following commands can be used:
+`./bin/enable-smartclient.sh --hosts <host names or ips>`
+or
+`./bin/enable-smartclient.sh --hostsfile <file path>`
+The arguments are same with `disable-smartclient.sh`
 
 
 # Trouble Shooting
