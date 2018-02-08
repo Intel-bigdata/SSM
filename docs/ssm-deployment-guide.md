@@ -185,25 +185,25 @@ SSM will fetch the whole HDFS namespace when it starts by default. If you do not
      After finishing the SSM configuration, we can start to deploy the SSM package with the configuration files to all involved servers.
 
 
-Deploy SSM
+# Deploy SSM
 ---------------------------------------------------------------------------------
 
 SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode.
    
-   * Standalone SSM Service
+   ## Standalone SSM Service
 
      For deploy standalone SSM, SSM will only start SSM server without SSM agents. Distribute `${SMART_HOME}` directory to SSM Server nodes. The configuration files are under `${SMART_HOME}/conf`.
 
-   * SSM Service with multiple Agents
+   ## SSM Service with multiple Agents
 
      Distribute `${SMART_HOME}` directory to SSM Server nodes and each Smart Agent nodes. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
      On the SSM service server, switch to the SSM installation directory, ready to start and run the SSM service.
 
 
-Run SSM
+# Run SSM
 ---------------------------------------------------------------------------------
 Enter into ${SMART_HOME} directory for running SSM.
-* **Start SSM server**
+##  **Start SSM server**
    
    SSM server requires HDFS superuser privilege to access some Namenode APIs. So please make sure the account you used to start SSM has the privilege.
    
@@ -224,7 +224,7 @@ Enter into ${SMART_HOME} directory for running SSM.
 
    If you meet any problem, please open the smartserver.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
 
-* **Start Smart Agent independently**(optional)
+##  **Start Smart Agent independently**(optional)
 
    If you want to add more agents while keeping the SSM service online, you can run the following command on Smart Server.
 
@@ -235,7 +235,7 @@ Enter into ${SMART_HOME} directory for running SSM.
 
    Please note that the SSM distribution directory should be under the same directory on the new agent host as that on Smart Server.
 
-* **Stop SSM server**
+## **Stop SSM server**
    
    The script `bin/stop-ssm.sh` is used to stop SSM server.
 
@@ -247,13 +247,13 @@ Enter into ${SMART_HOME} directory for running SSM.
    If Smart Agents are configured, the stop script will stop the Agents one by one remotely.
 
 
-Hadoop Configuration
+# Hadoop Configuration
 ----------------------------------------------------------------------------------
 After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configurations for integrating SSM.
 
-#### Apache Hadoop 2.7.3
+## Apache Hadoop 2.7.3
 
-* Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System". Add the following content to the `core-site.xml`
+### Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System". Add the following content to the `core-site.xml`
 
     ```xml
     <property>
@@ -263,7 +263,7 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
     </property>
     ```
 
-*   Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
+###   Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
 
     ```xml
     <property>
@@ -272,7 +272,7 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
     </property>   
     ```
 
-*   Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
+###   Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
 
      ```xml
      <property>
@@ -281,8 +281,8 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
      </property>
      ```
 
-* Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
-   *  Add SSM jars to the Hadoop classpath.
+###  Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
+   ####  Add SSM jars to the Hadoop classpath.
       1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
 
       2. Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
@@ -291,16 +291,16 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 
           `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
 
-   *  Copy the SSM jars to the default Hadoop class path
+   ####  Copy the SSM jars to the default Hadoop class path
 
       1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
 
       2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/hdfs/`.
 
 
-#### CDH5.10.1
+## CDH5.10.1
 
-* Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point to Smart Server provided "Smart File System".
+### Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point to Smart Server provided "Smart File System".
 
     1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
     2.    Search `Cluster-wide Advanced Configuration Snippet (Safety Valve) for core-site.xml` configuration, add the following xml context.
@@ -315,7 +315,7 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
     4.    Restart stale Services and re-deploy the client configurations
 
 
-* Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manager to point to the installed Smart Server.
+### Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manager to point to the installed Smart Server.
     1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
 
     2.    Search `HDFS Service Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, add the following xml context. The  default Smart Server RPC port is `7042`.
@@ -336,7 +336,7 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 
     5.    Restart stale Services and re-deploy the client configurations
 
-* Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
+### Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
     1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
 
     2.    Search `DataNode Data Directory` configuration. Below is an example which sets the SSD, DISK and Archive volumes.
@@ -347,7 +347,7 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
      </property>
      ```
 
-* Make sure Hadoop HDFS Client can access SSM jars
+### Make sure Hadoop HDFS Client can access SSM jars
 
     After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
 	 * Add SSM jars to the CDH Hadoop Classpath using Cloudera Manager.
@@ -371,7 +371,7 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 
 
 
-#### Validate the Hadoop Configuration
+## Validate the Hadoop Configuration
      After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if 
 the configuration takes effect. You can try TestDFSIO for example, 
 
@@ -386,7 +386,7 @@ the configuration takes effect. You can try TestDFSIO for example,
    You may want to replace the jar with the version used in your cluster. After the read data operation, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
 
 
-SSM Rule Examples
+# SSM Rule Examples
 ---------------------------------------------------------------------------------
 * **Move to SSD rule**
 
