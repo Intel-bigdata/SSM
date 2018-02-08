@@ -257,46 +257,40 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 
 Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System". Add the following content to the `core-site.xml`
 
-    ```xml
     <property>
         <name>fs.hdfs.impl</name>
         <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
         <description>The FileSystem for hdfs URL</description>
     </property>
-    ```
 
 ### hdfs-site.xml changes  
 
 Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
 
-    ```xml
     <property>
         <name>smart.server.rpc.address</name>
         <value>ssm-server-ip:rpc-port</value>
     </property>   
-    ```
 
 ### Storage volume types   
 
 Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
 
-     ```xml
      <property>
          <name>dfs.datanode.data.dir</name>
          <value>[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
      </property>
-     ```
 
 ### Check of HDFS client can access SSM jars  
 
 Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
    ####  Add SSM jars to the Hadoop classpath.
 
-      1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
+      *  After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
 
-      2. Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
+      *  Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
 
-      3. Add the SSM jars directory to hadoop calsspath in `hadoop-env.sh` as following.
+      *  Add the SSM jars directory to hadoop calsspath in `hadoop-env.sh` as following.
 
           `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
 
