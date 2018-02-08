@@ -339,8 +339,8 @@ Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manage
 
 Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
     
-    1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
-    2.    Search DataNode Data Directory configuration. Below is an example which sets the SSD, DISK and Archive volumes.
+ 1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
+ 2.    Search DataNode Data Directory configuration. Below is an example which sets the SSD, DISK and Archive volumes.
      
      <property>
          <name>dfs.datanode.data.dir</name>
@@ -357,20 +357,20 @@ After we switch to the SmartFileSystem from the default HDFS implementation, we 
  2. Search `HDFS Replication Environment Advanced Configuration Snippet (Safety Valve) for hadoop-env.sh`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
  3. Search `HDFS Service Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
  4. Search `HDFS Client Environment Advanced Configuration Snippet (Safety Valve) for hadoop-env.sh`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
-    5. Click the Save Changes button.
-    6. In the Cloudera Manager Admin Console, click the YARN indicator in the top navigation bar. Click the Configuration button.
-    7. Search `Gateway Client Environment Advanced Configuration Snippet (Safety Valve) for hadoop-env.sh`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
-    8. Search `NodeManager Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
-    9. Search `YARN (MR2 Included) Service Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
-    10. Search `YARN Application Classpath`. In the classpath list, click plus symbol to open an additional row, and enter the path to SSM jars. For example, `/PATH/TO/SSM_jars/*`
-    11. Search `MR Application Classpath`. In the classpath list, click plus symbol to open an additional row, and enter the path to SSM jars. For example, `/PATH/TO/SSM_jars/*`
-    12. Click the Save Changes button
-    13. Restart stale Services and re-deploy the client configurations.
+ 5. Click the Save Changes button.
+ 6. In the Cloudera Manager Admin Console, click the YARN indicator in the top navigation bar. Click the Configuration button.
+ 7. Search `Gateway Client Environment Advanced Configuration Snippet (Safety Valve) for hadoop-env.sh`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+ 8. Search `NodeManager Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+ 9. Search `YARN (MR2 Included) Service Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
+ 10. Search `YARN Application Classpath`. In the classpath list, click plus symbol to open an additional row, and enter the path to SSM jars. For example, `/PATH/TO/SSM_jars/*`
+ 11. Search `MR Application Classpath`. In the classpath list, click plus symbol to open an additional row, and enter the path to SSM jars. For example, `/PATH/TO/SSM_jars/*`
+ 12. Click the Save Changes button
+ 13. Restart stale Services and re-deploy the client configurations.
 
 ####  Copy the SSM jars to the CDH default Hadoop class path.
      
-   1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
-   2. Distribute the jars starts with smart to CDH default Hadoop Classpath in each NameNode/DataNode.
+ 1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
+ 2. Distribute the jars starts with smart to CDH default Hadoop Classpath in each NameNode/DataNode.
 
 
 
@@ -391,7 +391,7 @@ the configuration takes effect. You can try TestDFSIO for example,
 
 # SSM Rule Examples
 ---------------------------------------------------------------------------------
-* **Move to SSD rule**
+## **Move to SSD rule**
 
 	`file: path matches "/test/*" and accessCount(5m) > 3 | allssd`
 
@@ -400,21 +400,21 @@ last 5 minutes, SSM should trigger an action to move the file to SSD. Rule engin
 will evaluate the condition every MAX{5s,5m/20} internal.
 
 
-* **Move to Archive(Cold) rule**
+## **Move to Archive(Cold) rule**
 
 	`file: path matches "/test/*" and age > 5h | archive`
 
     This rule means all the files under /test directory, if it's age is more than 5 hours,
 then move the file to archive storage.
 
-* **Move one type of file to specific storage**
+## **Move one type of file to specific storage**
 
 	`file: path matches "/test/*.xml" | allssd`
 
     This rule will move all XML files under /test directory to SSD. In this rule, neither a
 single date nor time value is specified, the rule will be evaluated every short time interval (5s by default).
 
-* **Specify rule evaluation interval**
+## **Specify rule evaluation interval**
 
 	`file: every 3s | path matches "/test/*.xml" | allssd`
   
@@ -422,13 +422,13 @@ single date nor time value is specified, the rule will be evaluated every short 
 evaluate whether the condition meets every 3s. 
 
 
-* **Backup files between clusters**
+## **Backup files between clusters**
      
      `file: every 500ms | path matches "/test-10000-10MB/*"| sync -dest hdfs://sr518:9000/test-10000-10MB/`
 	
      This rule will copy file and update any namespace changes(add,delete,rename,append) under source directory "/test-10000-10MB/" to destination directory "hdfs://sr518:9000/test-10000-10MB/". 
 
-* **Support action chain**
+## **Support action chain**
 
 	`file: path matches "/test/*" and age > 90d | archive ; setReplica 1 `
 	
@@ -443,9 +443,9 @@ will run in parallel. For a full detail rule format definition, please refer to
 https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 
 
-Performance Tuning
+#Performance Tuning
 ---------------------------------------------------------------------------------
-1. Rule and Cmdlet concurrency
+## Rule and Cmdlet concurrency
 
    There are two configurable parameters which impact the SSM rule evaluation and action execution parallelism.
 
@@ -473,7 +473,7 @@ Performance Tuning
      </property>
      ```
 
-2. Cmdlet history purge in metastore  
+## Cmdlet history purge in metastore  
 
     SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodically purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
 
@@ -495,7 +495,7 @@ Performance Tuning
 
       SSM service restart is required after the configuration changes.
 
-3. Batch Size of Namespace fetcher
+## Batch Size of Namespace fetcher
 
     SSM will fetch/sync namespace from namenode when it is started. According to our tests, a large namespace may lead to long start up time. To avoid this, we add a parameter named `smart.namespace.fetcher.batch`, its default value is 500. You can change it if namespace is very large, e.g., 100M or more. A larger batch size will greatly speed up fetcher efficiency, and reduce start up time.
 
@@ -506,8 +506,7 @@ Performance Tuning
         <description>Batch size of Namespace fetcher</description>
     </property>
     ```
-
-4. Disable SSM Client
+##  Disable SSM Client
 
     For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
@@ -523,9 +522,10 @@ Performance Tuning
     `./bin/enable-smartclient.sh --hostsfile <file path>`
     The arguments are same with `disable-smartclient.sh`
 
+
 Trouble Shooting
----------------------------------------------------------------------------------
-All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
+
+## All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
