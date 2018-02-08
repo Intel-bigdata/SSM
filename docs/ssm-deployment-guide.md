@@ -253,7 +253,9 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 
 ## Apache Hadoop 2.7.3
 
-### Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System". Add the following content to the `core-site.xml`
+### core-site.xml changes 
+
+Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System". Add the following content to the `core-site.xml`
 
     ```xml
     <property>
@@ -263,7 +265,9 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
     </property>
     ```
 
-###   Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
+### hdfs-site.xml changes  
+
+Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
 
     ```xml
     <property>
@@ -272,7 +276,9 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
     </property>   
     ```
 
-###   Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
+### Storage volume types   
+
+Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
 
      ```xml
      <property>
@@ -281,8 +287,11 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
      </property>
      ```
 
-###  Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
+### Check of HDFS client can access SSM jars  
+
+Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
    ####  Add SSM jars to the Hadoop classpath.
+
       1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
 
       2. Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
@@ -300,7 +309,9 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 
 ## CDH5.10.1
 
-### Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point to Smart Server provided "Smart File System".
+### core-site.xml changes 
+
+Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point to Smart Server provided "Smart File System".
 
     1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
     2.    Search `Cluster-wide Advanced Configuration Snippet (Safety Valve) for core-site.xml` configuration, add the following xml context.
@@ -315,7 +326,9 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
     4.    Restart stale Services and re-deploy the client configurations
 
 
-### Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manager to point to the installed Smart Server.
+### hdfs-site.xml changes 
+
+Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manager to point to the installed Smart Server.
     1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
 
     2.    Search `HDFS Service Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, add the following xml context. The  default Smart Server RPC port is `7042`.
@@ -336,7 +349,9 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 
     5.    Restart stale Services and re-deploy the client configurations
 
-### Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
+###  HDFS Storage types
+
+Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
     1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
 
     2.    Search `DataNode Data Directory` configuration. Below is an example which sets the SSD, DISK and Archive volumes.
@@ -347,7 +362,9 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
      </property>
      ```
 
-### Make sure Hadoop HDFS Client can access SSM jars
+###  Check if HDFS can access SSM jars
+
+Make sure Hadoop HDFS Client can access SSM jars
 
     After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
 	 * Add SSM jars to the CDH Hadoop Classpath using Cloudera Manager.
