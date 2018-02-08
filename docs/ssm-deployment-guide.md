@@ -22,17 +22,17 @@ Requirements:
 
 # Build SSM Package
 ---------------------------------------------------------------------------------
-## * **Download SSM**
+##  **Download SSM**
 
   Download SSM branch from Github https://github.com/Intel-bigdata/SSM/ 
 
-## * **Build SSM**
+##  **Build SSM**
 
-###  * For CDH5.10.1
+###   For CDH5.10.1
   
   	`mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests`
    
-###  * For Hadoop 2.7.3
+###   For Hadoop 2.7.3
   	
 	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
 
@@ -43,7 +43,7 @@ Requirements:
 # Configure SSM
 ---------------------------------------------------------------------------------
 
-## Configure How to access Hadoop Namenode**
+## Configure How to access Hadoop Namenode
 
    We need to let SSM know where Hadoop Namenode is. There are 2 cases,
    
@@ -70,7 +70,7 @@ Requirements:
    </property>
    ```
 
-###   IGNORE DIRS
+###   Ignore Dirs
 SSM will fetch the whole HDFS namespace when it starts by default. If you do not care about files under some directories (directories for temporary files for example) then you can configure them in the following way, SSM will completely ignore these files. Please note, actions will also not be triggered for these files by rules.
 
    ```xml
@@ -79,7 +79,7 @@ SSM will fetch the whole HDFS namespace when it starts by default. If you do not
        <value>/foodirA,/foodirB</value>
    </property>
    ```
-# * **Configure Smart Server**
+##  **Configure Smart Server**
 
    SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
 
@@ -90,20 +90,20 @@ SSM will fetch the whole HDFS namespace when it starts by default. If you do not
 
    Please note, the configuration should be the same on all server hosts.
 
-* **Configure Smart Agent (optional)**
+## **Configure Smart Agent (optional)**
 
    This step can be skipped if SSM standalone mode is preferred.
   
    Open `agents` file under ${SMART_HOME}/conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
    After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
  
-* **Configure database**
+## **Configure database**
 
    SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
 
    You just need to follow the guide in one of the two following options to configure database for SSM.
 
-   * Option 1. Use MySQL
+###  Option 1. Use MySQL
 
     You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password are enough.
     Please be noted that, security support will be enabled later. Here is an example for MySQL,
@@ -119,7 +119,7 @@ SSM will fetch the whole HDFS namespace when it starts by default. If you do not
    
    `ssm` is the database name. User needs to create it manually through MySQL client.
 
-   * Option 2. Use SSM-TiDB
+### Option 2. Use SSM-TiDB
 
     To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb/tree/release-1.0.0.
 
@@ -158,7 +158,7 @@ SSM will fetch the whole HDFS namespace when it starts by default. If you do not
 
     By default, the logs of Pd, TiKV and TiDB are under ${SMART_HOME}/logs directory. You can refer to these logs if encountering database fault.
 
-* **Configure user account to authenticate to Web UI**
+## **Configure user account to authenticate to Web UI**
 
     By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.ini file, 
     
