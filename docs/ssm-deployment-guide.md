@@ -306,17 +306,16 @@ Copy the SSM jars to the default Hadoop class path
 
 Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point to Smart Server provided "Smart File System".
 
-    1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
-    2.    Search `Cluster-wide Advanced Configuration Snippet (Safety Valve) for core-site.xml` configuration, add the following xml context.
-    ```xml
+ 1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
+ 2.    Search `Cluster-wide Advanced Configuration Snippet (Safety Valve) for core-site.xml` configuration, add the following xml context.
+    
     <property>
         <name>fs.hdfs.impl</name>
         <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
         <description>The FileSystem for hdfs URL</description>
     </property>
-    ```
-    3.    Click the Save Changes button
-    4.    Restart stale Services and re-deploy the client configurations
+ 3.    Click the Save Changes button
+ 4.    Restart stale Services and re-deploy the client configurations
 
 
 ### hdfs-site.xml changes 
