@@ -50,29 +50,34 @@ More detailed information, please refer to BUILDING.txt file.
 ### HA-Namenode
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, fill the value field with Hadoop configuration files path, for example "file:///etc/hadoop/conf".
    
+   ```xml   
    <property>
        <name>smart.hadoop.conf.path</name>
        <value>/conf</value>
        <description>local file path which holds all hadoop configuration files, such as hdfs-site.xml, core-site.xml</description>
     </property>
-   
+   ```
 ###  Single Namenode
    
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address,
    
+ ```xml
    <property>
        <name>smart.dfs.namenode.rpcserver</name>
        <value>hdfs://namenode-ip:rpc-port</value>
        <description>Hadoop cluster Namenode RPC server address and port</description>
    </property>
+  ```
 
 ###   Ignore Dirs
 SSM will fetch the whole HDFS namespace when it starts by default. If you do not care about files under some directories (directories for temporary files for example) then you can configure them in the following way, SSM will completely ignore these files. Please note, actions will also not be triggered for these files by rules.
 
+  ```xml
    <property>
        <name>smart.ignore.dirs</name>
        <value>/foodirA,/foodirB</value>
    </property>
+   ```
 
 ##  **Configure Smart Server**
 
@@ -102,14 +107,16 @@ You just need to follow the guide in one of the two following options to configu
 
 You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password are enough.
 Please be noted that, security support will be enabled later. Here is an example for MySQL,
-   
+
+ ```xml   
    <properties>
        <entry key="url">jdbc:mysql://localhost/ssm</entry>
        <entry key="username">username</entry>
        <entry key="password">password</entry>
 	   ......
    </properties>	   
-   
+   ```
+ 
 `ssm` is the database name. User needs to create it manually through MySQL client.
 
 ### Option 2. Use SSM-TiDB
