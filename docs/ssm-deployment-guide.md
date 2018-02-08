@@ -432,9 +432,9 @@ evaluate whether the condition meets every 3s.
 
 	`file: path matches "/test/*" and age > 90d | archive ; setReplica 1 `
 	
-     SSM use ";" to separate different actions in a rule. The execution trigger of later action depends on the successful execution of the prior action. If prior action fails, the following actions will not be executed.
+SSM use ";" to separate different actions in a rule. The execution trigger of later action depends on the successful execution of the prior action. If prior action fails, the following actions will not be executed.
      
-     Above rule means all the files under /test directory, if it's age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is a not a built-in action. Users need to implement it by themselves.
+Above rule means all the files under /test directory, if it's age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is a not a built-in action. Users need to implement it by themselves.
      
      Please refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM.
      
@@ -453,31 +453,26 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 
     Current default value is 5, which means system will concurrently evaluate 5 rule state at the same time.
     
-    ```xml
     <property>
         <name>smart.rule.executors</name>
         <value>5</value>
         <description>Max number of rules that can be executed in parallel</description>
      </property>
-     ```
 
     **smart.cmdlet.executors**
 
     Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
     If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under ${SMART_HOME}/conf directory. Here is an example to change the action execution parallelism to 50.
 
-     ```xml
      <property>
          <name>smart.cmdlet.executors</name>
          <value>50</value>
      </property>
-     ```
 
 ## Cmdlet history purge in metastore  
 
     SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodically purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
 
-    ```xml
     <property>
         <name>smart.cmdlet.hist.max.num.records</name>
         <value>100000</value>
@@ -491,7 +486,6 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
         <description>Maximum life time of historic cmdlet records kept in SSM server. Cmdlet record will be deleted from SSM server if exceeds the threshold. Valid time unit can be 'day', 'hour', 'min', 'sec'. The minimum update granularity is 5sec.
         </description>
      </property>
-     ```
 
       SSM service restart is required after the configuration changes.
 
@@ -499,13 +493,11 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
 
     SSM will fetch/sync namespace from namenode when it is started. According to our tests, a large namespace may lead to long start up time. To avoid this, we add a parameter named `smart.namespace.fetcher.batch`, its default value is 500. You can change it if namespace is very large, e.g., 100M or more. A larger batch size will greatly speed up fetcher efficiency, and reduce start up time.
 
-    ```xml
     <property>
         <name>smart.namespace.fetcher.batch</name>
         <value>500</value>
         <description>Batch size of Namespace fetcher</description>
     </property>
-    ```
 ##  Disable SSM Client
 
     For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
@@ -523,9 +515,10 @@ https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
     The arguments are same with `disable-smartclient.sh`
 
 
-Trouble Shooting
+# Trouble Shooting
 
-## All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
+---------------------------------------------------------------------------------
+ All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
