@@ -86,6 +86,7 @@ public class SmartServer {
   public void initWith() throws Exception {
     LOG.info("Start Init Smart Server");
 
+    HadoopUtil.setSmartConfByHadoop(conf);
     authentication();
     MetaStore metaStore = MetaStoreUtils.getDBAdapter(conf);
     context = new ServerContext(conf, metaStore);
@@ -270,15 +271,15 @@ public class SmartServer {
     if (!SecurityUtil.isSecurityEnabled(conf)) {
       return;
     }
+
     // Load Hadoop configuration files
-    String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HadoopUtil.loadHadoopConf(hadoopConfPath, conf);
+      HadoopUtil.loadHadoopConf(conf);
     } catch (IOException e) {
-        LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
-            + "Please config smart.hadoop.conf.path property in smart-site.xml.");
-        conf.set("hadoop.security.authentication", "kerberos");
-        conf.set("hadoop.security.authorization", "true");
+      LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
+              + "Please config smart.hadoop.conf.path property in smart-site.xml.");
+      conf.set("hadoop.security.authentication", "kerberos");
+      conf.set("hadoop.security.authorization", "true");
     }
 
     UserGroupInformation.setConfiguration(conf);

@@ -73,6 +73,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
    *
    * @return true if initialized successfully
    */
+  //@TODO: remove loadHadoopConf because it is done in Smart Server
   @Override
   public void init() throws IOException {
     LOG.info("Initializing ...");
