@@ -103,6 +103,37 @@ public class HadoopUtil {
   }
 
   /**
+   * Load hadoop configure files from path configured in conf and override same key's value.
+   *
+   * @param conf
+   */
+  public static void loadHadoopConf(Configuration conf) throws IOException {
+    String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
+    HdfsConfiguration hadoopConf = getHadoopConf(hadoopConfPath);
+    if (hadoopConf != null) {
+      for (Map.Entry<String, String> entry : hadoopConf) {
+        String key = entry.getKey();
+        conf.set(key, entry.getValue());
+      }
+    }
+  }
+
+  public static void setSmartConfByHadoop(SmartConf conf) {
+    try {
+      if (conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY) != null) {
+        HadoopUtil.loadHadoopConf(conf);
+        URI nnUri = HadoopUtil.getNameNodeUri(conf);
+        if (nnUri != null) {
+          conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
+                  nnUri.toString());
+        }
+      }
+    } catch (IOException ex) {
+      LOG.error("Load hadoop conf in {} error", conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY));
+    }
+  }
+
+  /**
    * Get hadoop configuration from the configure files in the given directory.
    *
    * @param hadoopConfPath directory that hadoop config files located.

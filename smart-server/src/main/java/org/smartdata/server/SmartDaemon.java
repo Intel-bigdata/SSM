@@ -20,6 +20,7 @@ package org.smartdata.server;
 import com.hazelcast.core.HazelcastInstance;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.server.cluster.ClusterMembershipListener;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cluster.HazelcastWorker;
@@ -43,7 +44,11 @@ public class SmartDaemon implements ServerDaemon {
       SmartServer.main(args);
     } else {
       instance.getCluster().addMembershipListener(new ClusterMembershipListener(this));
-      this.hazelcastWorker = new HazelcastWorker(new SmartContext(new SmartConf()));
+
+      SmartConf conf = new SmartConf();
+      HadoopUtil.setSmartConfByHadoop(conf);
+
+      this.hazelcastWorker = new HazelcastWorker(new SmartContext(conf));
       this.hazelcastWorker.start();
     }
   }
