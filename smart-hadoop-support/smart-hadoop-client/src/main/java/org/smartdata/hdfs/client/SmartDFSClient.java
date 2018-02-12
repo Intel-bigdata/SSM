@@ -17,6 +17,8 @@
  */
 package org.smartdata.hdfs.client;
 
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
@@ -32,6 +34,8 @@ import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
 import org.smartdata.model.FileState.FileStage;
 import org.smartdata.model.FileState.FileType;
+
+
 
 import java.io.File;
 import java.io.IOException;
@@ -136,7 +140,8 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum)
       throws IOException, UnresolvedLinkException {
-    FileState fileState;
+    FileState fileState; 
+    src = checkS3ForXattr(src);
     if (healthy) { // TODO: required indeed
       fileState = smartClient.getFileState(src);
       if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
@@ -157,6 +162,7 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException, UnresolvedLinkException {
+    src = checkS3ForXattr(src);
     return super.open(src, buffersize, verifyChecksum, stats);
   }
 
@@ -204,11 +210,22 @@ public class SmartDFSClient extends DFSClient {
   }
 
 
-  public String checkS3ForXattr(String filePath){
+  public String checkS3ForXattr(String filePath) throws IOException {
     // I think we should return the true path if file is move to S3,
     // or return filePath If Xattr doesn't contain the attribute we want
     // For example, if file1 is move to s3a://XX/file1, then we can return
     // s3a://XX/file1. If not, we just return filePath
-	return filePath;
+	
+
+     LocatedBlocks  locatedBlocks  = super.getLocatedBlocks(filePath.toString(),  0);
+     if(locatedBlocks!=null  &&  locatedBlocks.getFileLength()  ==  0){
+        byte[]  xAttr  =  super.getXAttr(filePath,  "user.coldloc");
+        if(xAttr!=null){
+             //Input  stream  to  read  the  data  directly  from  s3fs
+           filePath = new  String(xAttr) ;  
+        }
+     }
+     return filePath;
+
   }
 }
