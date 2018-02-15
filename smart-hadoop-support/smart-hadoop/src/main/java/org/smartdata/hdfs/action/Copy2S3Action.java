@@ -30,6 +30,7 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 
+import java.util.Random;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -54,6 +55,7 @@ public class Copy2S3Action extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   public static final String SRC = HdfsAction.FILE_PATH;
   public static final String DEST = "-dest";
+  public static final String bucket = "s3a://ssmBucket";
   private String srcPath;
   private String destPath;
   private int bufferSize = 64 * 1024;
@@ -73,8 +75,15 @@ public class Copy2S3Action extends HdfsAction {
     super.init(args);
     this.srcPath = args.get(FILE_PATH);
     if (args.containsKey(DEST)) {
-      this.destPath = args.get(DEST);
-    }
+      //this.destPath = args.get(DEST);
+      // I'm changing the contents of destPath to one of the 16 buckets
+    	try{
+		this.destPath = getBucketName();
+	}
+	catch(Exception e){
+		appendLog("Conf error!, S3 Bucket over/underflowError");
+        }
+	}
     if (args.containsKey(BUF_SIZE)) {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
@@ -101,6 +110,16 @@ public class Copy2S3Action extends HdfsAction {
     setXAttribute(srcPath, destPath);
     appendLog("SetXattr Successfully!!");
 }
+
+
+
+  private String getBucketName() throws IOException {
+    Random rand = new Random();
+    int min = 1;
+    int max = 16;
+    int randomNum = ((rand.nextInt((max - min) + 1) + min) % 16);
+    return this.bucket + randomNum; 
+  }
 
   private long getFileSize(String fileName) throws IOException {
     if (fileName.startsWith("hdfs")) {

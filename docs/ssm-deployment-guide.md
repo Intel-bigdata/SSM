@@ -513,6 +513,13 @@ The arguments are same with `disable-smartclient.sh`
 
 
 # Trouble Shooting
+=======
+    After that if you want to re-enable, then the following commands can be used:
+    `./bin/enable-smartclient.sh --hosts <host names or ips>`
+    or
+    `./bin/enable-smartclient.sh --hostsfile <file path>`
+    The arguments are same with `disable-smartclient.sh`
+    Note: To make the scripts work, you have to set up password-less SSH connections between the node that executing these scripts and the rest hosts.
 
 ---------------------------------------------------------------------------------
  All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
