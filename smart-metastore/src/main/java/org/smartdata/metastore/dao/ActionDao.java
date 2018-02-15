@@ -228,6 +228,45 @@ public class ActionDao {
     simpleJdbcInsert.executeBatch(maps);
   }
 
+  public int[] replace(final ActionInfo[] actionInfos) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql =
+            "REPLACE INTO "
+                    + TABLE_NAME
+                    + "(aid, "
+                    + "cid, "
+                    + "action_name, "
+                    + "args, "
+                    + "result, "
+                    + "log, "
+                    + "successful, "
+                    + "create_time, "
+                    + "finished, "
+                    + "finish_time, "
+                    + "progress)"
+                    + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    return jdbcTemplate.batchUpdate(sql,
+            new BatchPreparedStatementSetter() {
+              public void setValues(PreparedStatement ps,
+                                    int i) throws SQLException {
+                ps.setLong(1, actionInfos[i].getActionId());
+                ps.setLong(2, actionInfos[i].getCmdletId());
+                ps.setString(3, actionInfos[i].getActionName());
+                ps.setString(4, actionInfos[i].getArgsJsonString());
+                ps.setString(5, actionInfos[i].getResult());
+                ps.setString(6, actionInfos[i].getLog());
+                ps.setBoolean(7, actionInfos[i].isSuccessful());
+                ps.setLong(8, actionInfos[i].getCreateTime());
+                ps.setBoolean(9, actionInfos[i].isFinished());
+                ps.setLong(10, actionInfos[i].getFinishTime());
+                ps.setFloat(11, actionInfos[i].getProgress());
+              }
+              public int getBatchSize() {
+                return actionInfos.length;
+              }
+            });
+  }
+
   public int update(final ActionInfo actionInfo) {
     return update(new ActionInfo[]{actionInfo})[0];
   }
