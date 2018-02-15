@@ -78,8 +78,10 @@ public class Copy2S3Action extends HdfsAction {
       //this.destPath = args.get(DEST);
       // I'm changing the contents of destPath to one of the 16 buckets
     	try{
-		this.destPath = getBucketName();
-	}
+	       String src = this.srcPath;
+               this.destPath = getBucketName() + src.substring(0, (src.lastIndexOf('/') + 1 ) );
+	       // extracting the heirarchy of directories to be saved in the same fashion in EverSpan
+         }
 	catch(Exception e){
 		appendLog("Conf error!, S3 Bucket over/underflowError");
         }
@@ -118,7 +120,7 @@ public class Copy2S3Action extends HdfsAction {
     int min = 1;
     int max = 16;
     int randomNum = ((rand.nextInt((max - min) + 1) + min) % 16);
-    return this.bucket + randomNum; 
+    return this.bucket + randomNum + "/" ; 
   }
 
   private long getFileSize(String fileName) throws IOException {
