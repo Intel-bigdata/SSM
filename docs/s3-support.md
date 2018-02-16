@@ -138,8 +138,42 @@ Found 2 items
 -rw-rw-rw-   1          1 2017-11-21 18:58 s3a://{test_dir}/1511319531258
 ```
 
+## Trouble Shooting
+
+### 1. Performance issue
+SSM cold storage feature is based on `s3a feature` of Hadoop. Our module serves as `s3a client` during moving files to s3. Note that default configuration may results poor performance just like any s3a client. If you need higher performance, please enable `s3a fast upload` feature.
+
+You can find more details in these documents: [Hadoop-AWS module: Integration with Amazon Web Services](https://hadoop.apache.org/docs/current/hadoop-aws/tools/hadoop-aws/index.html) and [S3A Fast Upload](https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.3/bk_cloud-data-access/content/s3a-fast-upload.html).
+
+### 2. NoSuchMethodError
+Detailed error messages:
+
+```
+java.lang.NoSuchMethodError: com.amazonaws.services.s3.transfer.TransferManagerConfiguration.setMultipartUploadThreshold(I)V
+at org.apache.hadoop.fs.s3a.S3AFileSystem.initialize(S3AFileSystem.java:285)
+at org.apache.hadoop.fs.FileSystem.createFileSystem(FileSystem.java:2669)
+at org.apache.hadoop.fs.FileSystem.access$200(FileSystem.java:94)
+at org.apache.hadoop.fs.FileSystem$Cache.getInternal(FileSystem.java:2703)
+at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:2685)
+at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:373)
+at org.smartdata.hdfs.CompatibilityHelper27.getS3outputStream(CompatibilityHelper27.java:166)
+at org.smartdata.hdfs.action.Copy2S3Action.copySingleFile(Copy2S3Action.java:130)
+at org.smartdata.hdfs.action.Copy2S3Action.execute(Copy2S3Action.java:99)
+at org.smartdata.action.SmartAction.run(SmartAction.java:124)
+at org.smartdata.server.engine.cmdlet.Cmdlet.runAllActions(Cmdlet.java:94)
+at org.smartdata.server.engine.cmdlet.Cmdlet.run(Cmdlet.java:108)
+at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+at java.lang.Thread.run(Thread.java:745)
+```
+This error only occurs on Hadoop-2.7.3. If you see these messages, please delete `aws-java-sdk-core-1.10.6.jar` and `aws-java-sdk-s3-1.10.6.jar` `${SMART_HOME}/lib`.
+
 ## References
 
 1. [S3 Support in Apache Hadoop](https://wiki.apache.org/hadoop/AmazonS3)
 2. [Hadoop-AWS module: Integration with Amazon Web Services](https://hadoop.apache.org/docs/current/hadoop-aws/tools/hadoop-aws/index.html)
 3. [Using the S3A FileSystem Client](https://hortonworks.github.io/hdp-aws/s3-s3aclient/index.html)
+4. [S3A Fast Upload](https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.3/bk_cloud-data-access/content/s3a-fast-upload.html)
+)
