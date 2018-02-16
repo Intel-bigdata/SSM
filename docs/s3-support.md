@@ -176,4 +176,3 @@ This error only occurs on Hadoop-2.7.3. If you see these messages, please delete
 2. [Hadoop-AWS module: Integration with Amazon Web Services](https://hadoop.apache.org/docs/current/hadoop-aws/tools/hadoop-aws/index.html)
 3. [Using the S3A FileSystem Client](https://hortonworks.github.io/hdp-aws/s3-s3aclient/index.html)
 4. [S3A Fast Upload](https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.3/bk_cloud-data-access/content/s3a-fast-upload.html)
-)
