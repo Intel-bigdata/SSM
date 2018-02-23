@@ -55,7 +55,16 @@ public class Copy2S3Action extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   public static final String SRC = HdfsAction.FILE_PATH;
   public static final String DEST = "-dest";
-  public static final String bucket = "s3a://ssmBucket";
+   
+  public static final String BUCKET_PREFIX = "s3a://ssmBucket";
+    // 16 PVAs per library
+    // there are two Libraries in Equinix Cluster
+    // Ideally should be read in from a config file, it is an environment variable.
+  public static final int NUM_EVERSPAN_PROTECTED_VOLUME_ARCHIVES = 16 * 2 ;
+  public static final String BUCKET_PREFIX = 
+    // for determinism during debug always good to have a seed!
+  public static final int RANDOM_SEED = 11;
+  private static Random rand = new Random(RANDOM_SEED);
   private String srcPath;
   private String destPath;
   private int bufferSize = 64 * 1024;
@@ -108,19 +117,17 @@ public class Copy2S3Action extends HdfsAction {
     appendLog(
         String.format("Copy from %s to %s", srcPath, destPath));
     copySingleFile(srcPath, destPath);
-    appendLog("Copy Successfully!!");
+    appendLog(String.format("Successful Copy from %s to %s", srcPath, destPath))
     setXAttribute(srcPath, destPath);
-    appendLog("SetXattr Successfully!!");
+    appendLog(String.format("Successful SetXattr for %s to %s", srcPath, destPath));
 }
 
 
+    // Everspan Related to achieve greater parallelism of writes
 
   private String getBucketName() throws IOException {
-    Random rand = new Random();
-    int min = 1;
-    int max = 16;
-    int randomNum = ((rand.nextInt((max - min) + 1) + min) % 16);
-    return this.bucket + randomNum + "/" ; 
+      int randomNum = rand.nextInt(NUM_EVERSPAN_PROTECTED_VOLUME_ARCHIVES) + 1;
+    return BUCKET_PREFIX + randomNum + "/" ; 
   }
 
   private long getFileSize(String fileName) throws IOException {
