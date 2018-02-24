@@ -153,4 +153,12 @@ public class SmartConfKeys {
   public static final String TIKV_SERVICE_PORT_DEFAULT = "20160";
   public static final String TIDB_SERVICE_PORT_KEY = "tidb.service.port";
   public static final String TIDB_SERVICE_PORT_KEY_DEFAULT = "7070";
+
+  //EverSpan related
+  public static final String EVERSPAN_BUCKETS_KEY = "everspan.bucket.names";
+  public static final String EVERSPAN_BUCKETS_KEY_DEFAULT = "s3a://ssmBucket";
+  public static final String EVERSPAN_PARTITION_VOLUME_SIZE_KEY = "everspan.partition.volume.size";
+  public static final int EVERSPAN_PARTITION_VOLUME_SIZE_KEY_DEFAULT = 16;
+  public static final String EVERSPAN_RANDOM_NUMBER_KEY = "everspan.random.number.key";
+  public static final int EVERSPAN_RANDOM_NUMBER_KEY_DEFAULT = 11;
 }
