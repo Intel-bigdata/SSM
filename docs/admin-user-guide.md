@@ -6,25 +6,23 @@ Storage Management (SSM) to make seamless integration with other Hadoop
 components.
 
 There are two sets of APIs, Admin APIs and Application APIs. Admin APIs
-are used by Hadoop cluster administrators who are responsible for manage
+are used by Hadoop cluster administrators who are responsible for managing
 SSM rules. This set of APIs includes create/delete/list/update SSM
-rules. Hadoop super user privilege is required for access Admin APIs.
+rules. Hadoop super user privilege is required to access Admin APIs.
 
-Application APIs are used by applications run on top of HDFS. This set
-of APIs include move/archive/cache file level operation etc. System will
-execute the file operation on half of application, with the privilege of
-the user who starts the application.
+Application APIs are used by applications running on top of HDFS. This set
+of APIs include move/archive/cache file level operations. The system will
+execute the file operations on behalf of the application, with the privilege of
+the user who started the application.
 
-If Application API and Admin API have conflictions, for example, they
-want to execute different operation on the same file in the same time,
+If Application API and Admin API are in conflict, for example, they
+want to execute different operations on the same file at the same time,
 Application API will precede Admin API. Application API operation will
 succeed and Admin API operation on the same file will be cancelled. This
 rule is based on the assumption that application knows more about its
 data (files) than the cluster administrator.
 
-For easily integration, APIs are exposed as both RPC call and RESTfull
-Http interface. Audience can choose the one which fit for their own
-environment.
+For easily integration, the APIs are exposed via both RPC and RESTful interfaces. Users can choose the one which fits their environment.
 
 <img src="./image/api.png" width="461" height="295" />
 
@@ -46,7 +44,7 @@ A rule contains four parts, Object to manipulate, trigger, conditions
 and commands. “:” and “|” are used as the separator to separate
 different rule part.
 
-Detail information of each rule part are listed in following tables.
+Detailed information for each rule part is listed in the following tables.
 
 Table - 1 Objects to manipulate
 
@@ -100,8 +98,8 @@ Table – 5 Commands
 | allssd                    | Move all copies of file to SSD                            |
 | archive                   | Move file to ‘Archive’ storage type                       |
 | checkstorage              | Check file block storage type                             |
-| read                      | Read the file and discart the content readed              |
-| write                     | Create the file and fill the content with random value    |
+| read                      | Read the file and discard the content read                |
+| write                     | Create the file and fill with random values               |
 | user defined actions      | Interface defined for user to implement their own actions |
 
 Here is a rule example,
@@ -118,51 +116,49 @@ The boolean expression can also be placed in condition expression.
 
 For those who not sure if the rule is defined correctly or not, an API
 is provided to check whether the rule is valid or not. Please refer to
-the Rule API section for detail API information.
+the Rule API section for detailed API information.
 
 Use Rule
 --------
 
-A rule has 4 states in the system, active, disabled, finished and
+A rule has 4 states in the system: active, disabled, finished, and
 deleted. Here is the rule state transition diagram.
 
 <img src="./image/rule-state.png" width="461" height="295" />
 
 **Active**:
 
-Once a rule is defined and submitted to SSM, the rule is of “**Active”**
+Once a rule is defined and submitted to SSM, the rule is in “**Active”**
 state. When a rule is in this state, SSM will regularly evaluate the
 conditions of the rule, create commands when the conditions are met and
-execute commands. Once a rule finishes (rule that only be checked at a
-given time or time interval), the rule will transit into “**Finished**” state.
+execute the commands. Once a rule finishes (rules that are only  checked at a
+given time or within a time interval), the rule will transition to “**Finished**” state.
 
 **Disabled**:
 
 User can disable an **“Active”** rule if he/she wants to pause the
-evaluation of the rule for time being. Later if user want to enable the
-rule again, he/she can reactivate the rule, continue the evaluation of
-the rule conditions. If there are not executed commands when user
-disable a rule, user can choose to cancel these not executed commands or
-continue finish these commands. By default, not executed commands will
+evaluation of the rule for the time being. Later if the user wants to enable the
+rule again, he/she can re-activate the rule, to continue the evaluation of
+the rule conditions. If there are as yet unexecuted commands associated with a rule when the userat the point in timem when it was disabled, the user can choose to cancel these not unexecuted commands or
+continue to process/finish them. By default, the  unexecuted commands will
 be cancelled.
 
 **Finished**:
 
-If a rule is one-shot rule or has time constrains, once the time exceeds
-the constrains, the rule enters “**Finished**” state. A finished rule can
-be deleted permanently from the system when it’s in a **“Finished”** state.
+If a rule is a one-shot rule or a time-constrained rule whose time is past, the rule enters the “**Finished**” state. A finished rule can
+be deleted permanently from the system.
 
 **Deleted:**
 
 It’s an ephemeral state of a rule. A rule in this state means the rule
-is already been deleted by user, but there are pending commands of this
-rule that user still wants to finish. Once all pending commands are
+has already been deleted by user, but there are pending commands of this
+rule that user would like should run to completion. Once all pending commands are
 finished, the rule will be permanently deleted from the system.
 
 Rule Management API
 -------------------
 
-Rule management API are provided in both RPC and RESTful HTTP interface.
+Rule management API is provided for both the RPC and RESTful HTTP interfaces.
 Here is the RPC interface definition. RESTFull HTTP interface will be
 updated later.
 
@@ -185,16 +181,16 @@ updated later.
 
 * List&lt;RuleInfo&gt; **listRules**() **throws** IOException;  
 
-  List all current rules in the system, including active, disabled, finished and deleted.
+  List all current rules in the system, including active, disabled, finished, or deleted.
 
 * void **deleteRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
 
-  Delete a rule. If dropPendingCommands is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted ultimately. Only “disabled” or “finished” rule can be deleted.  
+  Delete a rule. If dropPendingCommands is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted. Only “disabled” or “finished” rule can be deleted.  
 
 * void **enableRule**(**long** ruleID) **throws** IOException;
  
-  Enable a rule. Only “disabled” rule can be enabled. Enable other state rule will throw exception.
+  Enable a rule. Only “disabled” rules can be enabled. Enabling a rule in another state rule will throw exception.
 
 * void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
  
-  Disable a rule. If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only “active” rule can be disabled.
+  Disable a rule. If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only an “active” rule can be disabled.
