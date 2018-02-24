@@ -71,6 +71,11 @@ public class TestCheckStorageAction extends MiniClusterHarness {
           Assert.assertNotNull(finished.getThrowable());
         }
       }
+
+      @Override
+      public String getRpcServerHost() {
+        return "localhost";
+      }
     });
 
     final String file = "/testPath/wrongfile";

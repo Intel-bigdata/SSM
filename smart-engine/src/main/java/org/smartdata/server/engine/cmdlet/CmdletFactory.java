@@ -105,6 +105,8 @@ public class CmdletFactory {
                 SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
                 SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
             .split(":");
+    strings[0] = reporter.getRpcServerHost();
+    LOG.info("smart rpc host is " + strings[0]);
     return new InetSocketAddress(
         strings[strings.length - 2], Integer.parseInt(strings[strings.length - 1]));
   }

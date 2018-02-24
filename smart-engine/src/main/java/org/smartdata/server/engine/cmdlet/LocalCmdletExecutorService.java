@@ -62,6 +62,11 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
   }
 
   @Override
+  public String getRpcServerHost() {
+    return "localhost";
+  }
+
+  @Override
   public boolean canAcceptMore() {
     return true;
   }

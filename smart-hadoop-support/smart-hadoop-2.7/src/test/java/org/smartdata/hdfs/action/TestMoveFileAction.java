@@ -136,6 +136,11 @@ public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
           Assert.assertNotNull(finished.getThrowable());
         }
       }
+
+      @Override
+      public String getRpcServerHost() {
+        return "localhost";
+      }
     });
 
     Map<String, String> args = new HashMap();
