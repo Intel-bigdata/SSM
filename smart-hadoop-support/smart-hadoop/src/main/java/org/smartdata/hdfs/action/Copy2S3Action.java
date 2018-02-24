@@ -118,7 +118,6 @@ public class Copy2S3Action extends HdfsAction {
     copySingleFile(srcPath, destPath);
     appendLog(String.format("Successful Copy from %s to %s", srcPath, destPath))
     setXAttribute(srcPath, destPath);
-    appendLog(String.format("Successful SetXattr for %s to %s", srcPath, destPath));
 }
 
     // Everspan Related to achieve greater parallelism of writes
