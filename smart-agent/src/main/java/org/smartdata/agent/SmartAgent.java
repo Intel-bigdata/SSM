@@ -224,6 +224,14 @@ public class SmartAgent implements StatusReporter {
           master = identity.getRef();
           if (master != null) {
             findMaster.cancel();
+
+            String rpcHost = master.path().address().host().get();
+            String rpcPort = conf
+                    .get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+                            SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
+                    .split(":")[1];
+            conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY, rpcHost + ":" + rpcPort);
+
             Cancellable registerAgent =
                 AgentUtils.repeatActionUntil(getContext().system(), Duration.Zero(),
                     RETRY_INTERVAL, TIMEOUT,
