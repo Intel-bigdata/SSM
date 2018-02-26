@@ -20,13 +20,17 @@ package org.smartdata.server.cluster;
 import com.hazelcast.core.MemberAttributeEvent;
 import com.hazelcast.core.MembershipEvent;
 import com.hazelcast.core.MembershipListener;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.server.utils.HazelcastUtil;
 
 public class ClusterMembershipListener implements MembershipListener {
   private final ServerDaemon daemon;
+  private SmartConf conf;
 
-  public ClusterMembershipListener(ServerDaemon daemon) {
+  public ClusterMembershipListener(ServerDaemon daemon, SmartConf conf) {
     this.daemon = daemon;
+    this.conf = conf;
   }
 
   @Override
@@ -35,6 +39,16 @@ public class ClusterMembershipListener implements MembershipListener {
 
   @Override
   public void memberRemoved(MembershipEvent membershipEvent) {
+    String rpcHost = HazelcastUtil
+            .getMasterMember(HazelcastInstanceProvider.getInstance())
+            .getAddress()
+            .getHost();
+    String rpcPort = conf
+            .get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+                    SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
+            .split(":")[1];
+    conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY, rpcHost + ":" + rpcPort);
+
     if (HazelcastUtil.isMaster(HazelcastInstanceProvider.getInstance())) {
       this.daemon.becomeActive();
     }
