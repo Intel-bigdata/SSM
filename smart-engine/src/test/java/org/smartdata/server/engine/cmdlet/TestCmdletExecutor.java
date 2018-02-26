@@ -46,6 +46,11 @@ public class TestCmdletExecutor {
           public void report(StatusMessage status) {
             statusMessages.add(status);
           }
+
+          @Override
+          public String getRpcServerHost() {
+            return "localhost";
+          }
         };
     CmdletExecutor executor = new CmdletExecutor(new SmartConf(), reporter);
     SmartAction action = new HelloAction();
@@ -86,6 +91,11 @@ public class TestCmdletExecutor {
           @Override
           public void report(StatusMessage status) {
             statusMessages.add(status);
+          }
+
+          @Override
+          public String getRpcServerHost() {
+            return "localhost";
           }
         };
     CmdletExecutor executor = new CmdletExecutor(new SmartConf(), reporter);

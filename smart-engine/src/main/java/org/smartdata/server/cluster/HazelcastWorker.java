@@ -32,6 +32,7 @@ import org.smartdata.server.engine.cmdlet.CmdletFactory;
 import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
+import org.smartdata.server.utils.HazelcastUtil;
 
 import java.io.Serializable;
 import java.util.concurrent.Executors;
@@ -60,6 +61,11 @@ public class HazelcastWorker implements StatusReporter {
     this.masterMessages =
         instance.getTopic(HazelcastExecutorService.WORKER_TOPIC_PREFIX + instanceId);
     this.masterMessages.addMessageListener(new MasterMessageListener());
+  }
+
+  @Override
+  public String getRpcServerHost() {
+    return HazelcastUtil.getMasterMember(instance).getAddress().getHost();
   }
 
   public void start() {

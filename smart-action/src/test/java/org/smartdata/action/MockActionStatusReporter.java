@@ -30,4 +30,9 @@ public class MockActionStatusReporter implements StatusReporter {
       Assert.assertNull(finished.getThrowable());
     }
   }
+
+  @Override
+  public String getRpcServerHost() {
+    return "localhost";
+  }
 }

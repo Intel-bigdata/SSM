@@ -67,6 +67,7 @@ public class SmartAgent implements StatusReporter {
   private static final Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
   private ActorRef agentActor;
+  private String masterHost;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
@@ -88,6 +89,11 @@ public class SmartAgent implements StatusReporter {
 
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
+  }
+
+  @Override
+  public String getRpcServerHost() {
+    return masterHost;
   }
 
   //TODO: remove loadHadoopConf
@@ -224,6 +230,7 @@ public class SmartAgent implements StatusReporter {
           master = identity.getRef();
           if (master != null) {
             findMaster.cancel();
+            agent.masterHost = master.path().address().host().get();
             Cancellable registerAgent =
                 AgentUtils.repeatActionUntil(getContext().system(), Duration.Zero(),
                     RETRY_INTERVAL, TIMEOUT,

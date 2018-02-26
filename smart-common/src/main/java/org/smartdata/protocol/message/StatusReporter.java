@@ -19,4 +19,5 @@ package org.smartdata.protocol.message;
 
 public interface StatusReporter {
   void report(StatusMessage status);
+  String getRpcServerHost();
 }

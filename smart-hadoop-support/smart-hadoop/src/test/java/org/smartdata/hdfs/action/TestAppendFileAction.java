@@ -73,6 +73,11 @@ public class TestAppendFileAction extends MiniClusterHarness {
           Assert.assertTrue(finished.getThrowable() != null);
         }
       }
+
+      @Override
+      public String getRpcServerHost() {
+        return "localhost";
+      }
     });
     appendFileAction.run();
   }
