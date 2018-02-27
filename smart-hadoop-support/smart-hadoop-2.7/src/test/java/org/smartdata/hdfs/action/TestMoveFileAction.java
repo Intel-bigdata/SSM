@@ -28,11 +28,9 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.model.action.FileMovePlan;
-import org.smartdata.protocol.message.ActionFinished;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
 
@@ -69,7 +67,6 @@ public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
     AllSsdFileAction moveFileAction1 = new AllSsdFileAction();
     moveFileAction1.setDfsClient(dfsClient);
     moveFileAction1.setContext(smartContext);
-    moveFileAction1.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args1 = new HashMap();
     args1.put(MoveFileAction.FILE_PATH, dir);
     FileMovePlan plan1 = createPlan(file1, "SSD");
@@ -78,7 +75,6 @@ public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
     AllSsdFileAction moveFileAction2 = new AllSsdFileAction();
     moveFileAction2.setDfsClient(dfsClient);
     moveFileAction2.setContext(smartContext);
-    moveFileAction2.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args2 = new HashMap();
     args2.put(MoveFileAction.FILE_PATH, dir);
     FileMovePlan plan2 = createPlan(file2, "SSD");
@@ -88,7 +84,9 @@ public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
     moveFileAction1.init(args1);
     moveFileAction2.init(args2);
     moveFileAction1.run();
+    Assert.assertTrue(moveFileAction1.getExpectedAfterRun());
     moveFileAction2.run();
+    Assert.assertTrue(moveFileAction2.getExpectedAfterRun());
   }
 
   @Test(timeout = 300000)
@@ -107,7 +105,6 @@ public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
     MoveFileAction moveFileAction = new MoveFileAction();
     moveFileAction.setDfsClient(dfsClient);
     moveFileAction.setContext(smartContext);
-    moveFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(MoveFileAction.FILE_PATH, dir);
     String storageType = "ONE_SSD";
@@ -118,6 +115,7 @@ public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
     //init and run
     moveFileAction.init(args);
     moveFileAction.run();
+    Assert.assertTrue(moveFileAction.getExpectedAfterRun());
   }
 
   @Test(timeout = 300000)
@@ -128,21 +126,13 @@ public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
     MoveFileAction moveFileAction = new MoveFileAction();
     moveFileAction.setDfsClient(dfsClient);
     moveFileAction.setContext(smartContext);
-    moveFileAction.setStatusReporter(new StatusReporter() {
-      @Override
-      public void report(StatusMessage status) {
-        if (status instanceof ActionFinished) {
-          ActionFinished finished = (ActionFinished) status;
-          Assert.assertNotNull(finished.getThrowable());
-        }
-      }
-    });
 
     Map<String, String> args = new HashMap();
     args.put(MoveFileAction.FILE_PATH, dir);
     args.put(MoveFileAction.STORAGE_POLICY, "ALL_SSD");
     moveFileAction.init(args);
     moveFileAction.run();
+    Assert.assertNotNull(moveFileAction.getActionStatus().getThrowable());
   }
 
   @Test
@@ -175,13 +165,13 @@ public class TestMoveFileAction extends MiniClusterWithStoragesHarness {
     ArchiveFileAction action = new ArchiveFileAction();
     action.setDfsClient(dfsClient);
     action.setContext(smartContext);
-    action.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(ArchiveFileAction.FILE_PATH, file);
     FileMovePlan plan = createPlan(file, "ARCHIVE");
     args.put(MoveFileAction.MOVE_PLAN, plan.toString());
     action.init(args);
     action.run();
+    Assert.assertTrue(action.getExpectedAfterRun());
   }
 
   private FileMovePlan createPlan(String dir, String storageType) throws Exception {

@@ -22,7 +22,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -31,7 +30,7 @@ import java.util.Map;
 
 public class TestSetXAttrAction extends MiniClusterHarness {
   private String testAttName = "user.coldloc";
-  protected void setXAttr(String srcPath, String attName, String attValue) {
+  protected void setXAttr(String srcPath, String attName, String attValue) throws IOException {
     Map<String, String> args = new HashMap<>();
     args.put(SetXAttrAction.FILE_PATH, srcPath);
     args.put(SetXAttrAction.ATT_NAME, "" + attName);
@@ -40,14 +39,13 @@ public class TestSetXAttrAction extends MiniClusterHarness {
     setXAttrAction.setDfsClient(dfsClient);
     setXAttrAction.setContext(smartContext);
     setXAttrAction.init(args);
-    setXAttrAction.setStatusReporter(new MockActionStatusReporter());
     setXAttrAction.run();
+    Assert.assertTrue(setXAttrAction.getExpectedAfterRun());
   }
 
   @Test
   public void testInit() throws IOException {
     SetXAttrAction setXAttrAction = new SetXAttrAction();
-    setXAttrAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(SetXAttrAction.FILE_PATH, "Test");
     setXAttrAction.init(args);
