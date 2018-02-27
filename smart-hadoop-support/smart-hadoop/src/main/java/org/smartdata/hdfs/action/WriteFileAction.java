@@ -43,10 +43,10 @@ import java.util.Random;
   usage =
       HdfsAction.FILE_PATH
           + " $file "
-          + WriteFileAction.BUF_SIZE
-          + " $size "
           + WriteFileAction.LENGTH
-          + " $length"
+          + " $length "
+          + WriteFileAction.BUF_SIZE
+          + " $size"
 )
 public class WriteFileAction extends HdfsAction {
   public static final String LENGTH = "-length";
