@@ -19,18 +19,14 @@ package org.smartdata.protocol.message;
 
 import java.util.List;
 
-public class ActionStatusReport implements StatusMessage {
+public class StatusReport implements StatusMessage {
   private List<ActionStatus> actionStatuses;
 
-  public ActionStatusReport(List<ActionStatus> actionStatuses) {
+  public StatusReport(List<ActionStatus> actionStatuses) {
     this.actionStatuses = actionStatuses;
   }
 
   public List<ActionStatus> getActionStatuses() {
     return actionStatuses;
-  }
-
-  public void setActionStatuses(List<ActionStatus> actionStatuses) {
-    this.actionStatuses = actionStatuses;
   }
 }
