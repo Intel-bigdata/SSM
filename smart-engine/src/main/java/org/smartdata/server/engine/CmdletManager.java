@@ -982,7 +982,7 @@ public class CmdletManager extends AbstractService {
     if (!actionInfo.isSuccessful()) {
       for (int i = index + 1; i < aids.size(); i++) {
         ActionStatus actionStatus = new ActionStatus(aids.get(i), ACTION_SKIP_LOG,
-                System.currentTimeMillis(), System.currentTimeMillis(), new Throwable(), true);
+                actionInfo.getFinishTime(), actionInfo.getFinishTime(), new Throwable(), true);
         onActionStatusUpdate(actionStatus);
       }
       CmdletStatus cmdletStatus =
