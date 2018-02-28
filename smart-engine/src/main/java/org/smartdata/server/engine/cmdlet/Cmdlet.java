@@ -28,6 +28,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one
@@ -43,14 +45,15 @@ public class Cmdlet implements Runnable {
   private long id;
   private CmdletState state = CmdletState.NOTINITED;
   private long stateUpdateTime;
-  private final SmartAction[] actions;
+  private final List<SmartAction> actions;
   private List<SmartAction> actionReportList;
 
-  public Cmdlet(SmartAction[] actions) {
+  public Cmdlet(List<SmartAction> actions) {
     this.actions = actions;
-    this.actionReportList = new ArrayList<>();
-    for (int i = actions.length - 1; i >= 0; i--) {
-      this.actionReportList.add(actions[i]);
+    this.actionReportList = new CopyOnWriteArrayList<>();
+    ListIterator<SmartAction> iter = actions.listIterator(actions.size());
+    while (iter.hasPrevious()) {
+      this.actionReportList.add(iter.previous());
     }
   }
 
@@ -79,10 +82,6 @@ public class Cmdlet implements Runnable {
     this.state = state;
   }
 
-  public SmartAction[] getActions() {
-    return actions == null ? null : actions.clone();
-  }
-
   public String toString() {
     return "Rule-" + ruleId + "-Cmd-" + id;
   }
@@ -94,7 +93,9 @@ public class Cmdlet implements Runnable {
   private void runAllActions() {
     state = CmdletState.EXECUTING;
     stateUpdateTime = System.currentTimeMillis();
-    for (SmartAction act : actions) {
+    Iterator<SmartAction> iter = actions.iterator();
+    while (iter.hasNext()) {
+      SmartAction act = iter.next();
       if (act == null) {
         continue;
       }
@@ -102,6 +103,10 @@ public class Cmdlet implements Runnable {
       act.init(act.getArguments());
       act.run();
       if (!act.isSuccessful()) {
+        while (iter.hasNext()) {
+          SmartAction nextAct = iter.next();
+          actionReportList.remove(nextAct);
+        }
         state = CmdletState.FAILED;
         stateUpdateTime = System.currentTimeMillis();
         LOG.error("Executing Cmdlet [id={}] meets failed.", getId());
@@ -126,13 +131,11 @@ public class Cmdlet implements Runnable {
     // get status in the order of the descend action id.
     // The cmdletmanager should update action status in the ascend order.
     List<ActionStatus> statuses = new ArrayList<>();
-    Iterator<SmartAction> iter = actionReportList.iterator();
-    while (iter.hasNext()) {
-      SmartAction action = iter.next();
+    for (SmartAction action: actionReportList) {
       ActionStatus status = action.getActionStatus();
       statuses.add(status);
       if (status.isFinished()) {
-        iter.remove();
+        actionReportList.remove(action);
       }
     }
 
