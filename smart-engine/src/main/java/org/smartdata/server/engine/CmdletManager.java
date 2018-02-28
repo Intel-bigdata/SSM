@@ -88,8 +88,8 @@ public class CmdletManager extends AbstractService {
   private MetaStore metaStore;
   private AtomicLong maxActionId;
   private AtomicLong maxCmdletId;
-  // cache sync threshold, default 500
-  private int cacheCmdTh = 600;
+  // cache sync threshold
+  private int cacheCmdTh;
 
   private int maxNumPendingCmdlets;
   private List<Long> pendingCmdlet;
