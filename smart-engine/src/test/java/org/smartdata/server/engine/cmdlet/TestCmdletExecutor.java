@@ -28,6 +28,7 @@ import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class TestCmdletExecutor {
     args.put(HelloAction.PRINT_MESSAGE, "message");
     action.setArguments(args);
     action.setActionId(101);
-    Cmdlet cmdlet = new Cmdlet(new SmartAction[] {action});
+    Cmdlet cmdlet = new Cmdlet(Arrays.asList(action));
 
     executor.execute(cmdlet);
 
@@ -96,7 +97,7 @@ public class TestCmdletExecutor {
             statusReportTask, 1000, 1000, TimeUnit.MILLISECONDS);
     SmartAction action = new HangingAction();
     action.setActionId(101);
-    Cmdlet cmdlet = new Cmdlet(new SmartAction[] {action});
+    Cmdlet cmdlet = new Cmdlet(Arrays.asList(action));
     cmdlet.setId(10);
 
     executor.execute(cmdlet);

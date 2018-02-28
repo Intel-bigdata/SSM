@@ -81,7 +81,9 @@ public class CmdletManager extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
   public static final long TIMEOUT_MULTIPLIER = 60;
   public static final String TIMEOUTLOG =
-          "Long time no report for this action. Mark it as failed.";
+          "Timeout error occurred for getting this action's status report.";
+  public static final String ACTION_SKIP_LOG =
+          "The action is not executed because the prior action in the same cmdlet failed.";
 
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
@@ -969,19 +971,25 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void inferCmdletStatus(ActionInfo actionInfo) throws IOException {
+  private void inferCmdletStatus(ActionInfo actionInfo) throws IOException, ActionException {
     if (!actionInfo.isFinished()) {
       return;
     }
     long actionId = actionInfo.getActionId();
     long cmdletId = actionInfo.getCmdletId();
+    List<Long> aids = idToCmdlets.get(cmdletId).getAids();
+    int index = aids.indexOf(actionId);
     if (!actionInfo.isSuccessful()) {
+      for (int i = index + 1; i < aids.size(); i++) {
+        ActionStatus actionStatus = new ActionStatus(aids.get(i), ACTION_SKIP_LOG,
+                actionInfo.getFinishTime(), actionInfo.getFinishTime(), new Throwable(), true);
+        onActionStatusUpdate(actionStatus);
+      }
       CmdletStatus cmdletStatus =
               new CmdletStatus(cmdletId, actionInfo.getFinishTime(), CmdletState.FAILED);
       onCmdletStatusUpdate(cmdletStatus);
     } else {
-      List<Long> aids = idToCmdlets.get(cmdletId).getAids();
-      if (aids.get(aids.size() - 1) == actionId) {
+      if (index == aids.size() - 1) {
         CmdletStatus cmdletStatus =
                 new CmdletStatus(cmdletId, actionInfo.getFinishTime(), CmdletState.DONE);
         onCmdletStatusUpdate(cmdletStatus);
