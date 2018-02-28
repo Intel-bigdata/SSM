@@ -81,7 +81,7 @@ public class CmdletManager extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
   public static final long TIMEOUT_MULTIPLIER = 60;
   public static final String TIMEOUTLOG =
-          "Long time no report for this action. Mark it as failed.";
+          "Timeout error occurred for getting this action's status report.";
   public static final String ACTION_SKIP_LOG =
           "The action is not executed because the prior action in the same cmdlet failed.";
 
