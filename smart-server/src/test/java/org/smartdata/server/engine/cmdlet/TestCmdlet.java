@@ -20,12 +20,14 @@ package org.smartdata.server.engine.cmdlet;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
+import org.smartdata.action.SmartAction;
 import org.smartdata.hdfs.MiniClusterHarness;
 import org.smartdata.hdfs.action.CacheFileAction;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.model.CmdletState;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,7 +67,7 @@ public class TestCmdlet extends MiniClusterHarness {
   }
 
   private Cmdlet runHelper() throws IOException {
-    HdfsAction[] actions = new HdfsAction[4];
+    SmartAction[] actions = new SmartAction[4];
     // New action
     // actions[0] = new AllSsdFileAction();
     // actions[0].setDfsClient(client);
@@ -76,13 +78,13 @@ public class TestCmdlet extends MiniClusterHarness {
     // actions[1].setContext(new SmartContext(smartConf));
     // actions[1].getDNStorageReports(new String[]{"/testMoveFile/file2", "COLD"});
     actions[2] = new CacheFileAction();
-    actions[2].setDfsClient(dfsClient);
+    ((HdfsAction) actions[2]).setDfsClient(dfsClient);
     actions[2].setContext(smartContext);
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, "/testCacheFile");
     actions[2].init(args);
     // New Cmdlet
-    Cmdlet cmd = new Cmdlet(actions);
+    Cmdlet cmd = new Cmdlet(Arrays.asList(actions));
     cmd.setId(1);
     cmd.setRuleId(1);
     cmd.setState(CmdletState.PENDING);

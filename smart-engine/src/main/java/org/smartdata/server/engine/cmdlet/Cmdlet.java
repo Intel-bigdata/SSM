@@ -28,6 +28,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one
@@ -43,14 +44,15 @@ public class Cmdlet implements Runnable {
   private long id;
   private CmdletState state = CmdletState.NOTINITED;
   private long stateUpdateTime;
-  private final SmartAction[] actions;
+  private final List<SmartAction> actions;
   private List<SmartAction> actionReportList;
 
-  public Cmdlet(SmartAction[] actions) {
+  public Cmdlet(List<SmartAction> actions) {
     this.actions = actions;
     this.actionReportList = new ArrayList<>();
-    for (int i = actions.length - 1; i >= 0; i--) {
-      this.actionReportList.add(actions[i]);
+    ListIterator<SmartAction> iter = actions.listIterator(actions.size());
+    while (iter.hasPrevious()) {
+      this.actionReportList.add(iter.previous());
     }
   }
 
@@ -79,10 +81,6 @@ public class Cmdlet implements Runnable {
     this.state = state;
   }
 
-  public SmartAction[] getActions() {
-    return actions == null ? null : actions.clone();
-  }
-
   public String toString() {
     return "Rule-" + ruleId + "-Cmd-" + id;
   }
@@ -94,7 +92,9 @@ public class Cmdlet implements Runnable {
   private void runAllActions() {
     state = CmdletState.EXECUTING;
     stateUpdateTime = System.currentTimeMillis();
-    for (SmartAction act : actions) {
+    Iterator<SmartAction> iter = actions.iterator();
+    while (iter.hasNext()) {
+      SmartAction act = iter.next();
       if (act == null) {
         continue;
       }
@@ -102,6 +102,12 @@ public class Cmdlet implements Runnable {
       act.init(act.getArguments());
       act.run();
       if (!act.isSuccessful()) {
+          while (iter.hasNext()) {
+            SmartAction nextAct = iter.next();
+            synchronized (this) {
+              actionReportList.remove(nextAct);
+            }
+          }
         state = CmdletState.FAILED;
         stateUpdateTime = System.currentTimeMillis();
         LOG.error("Executing Cmdlet [id={}] meets failed.", getId());
@@ -118,7 +124,7 @@ public class Cmdlet implements Runnable {
     runAllActions();
   }
 
-  public List<ActionStatus> getActionStatuses() throws UnsupportedEncodingException {
+  public synchronized List<ActionStatus> getActionStatuses() throws UnsupportedEncodingException {
     if (actionReportList.isEmpty()) {
       return null;
     }
