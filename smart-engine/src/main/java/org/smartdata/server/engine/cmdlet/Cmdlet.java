@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Action is the minimum unit of execution. A cmdlet can contain more than one
@@ -50,7 +49,7 @@ public class Cmdlet implements Runnable {
 
   public Cmdlet(List<SmartAction> actions) {
     this.actions = actions;
-    this.actionReportList = new CopyOnWriteArrayList<>();
+    this.actionReportList = new ArrayList<>();
     ListIterator<SmartAction> iter = actions.listIterator(actions.size());
     while (iter.hasPrevious()) {
       this.actionReportList.add(iter.previous());
@@ -103,10 +102,12 @@ public class Cmdlet implements Runnable {
       act.init(act.getArguments());
       act.run();
       if (!act.isSuccessful()) {
-        while (iter.hasNext()) {
-          SmartAction nextAct = iter.next();
-          actionReportList.remove(nextAct);
-        }
+          while (iter.hasNext()) {
+            SmartAction nextAct = iter.next();
+            synchronized (this) {
+              actionReportList.remove(nextAct);
+            }
+          }
         state = CmdletState.FAILED;
         stateUpdateTime = System.currentTimeMillis();
         LOG.error("Executing Cmdlet [id={}] meets failed.", getId());
@@ -123,7 +124,7 @@ public class Cmdlet implements Runnable {
     runAllActions();
   }
 
-  public List<ActionStatus> getActionStatuses() throws UnsupportedEncodingException {
+  public synchronized List<ActionStatus> getActionStatuses() throws UnsupportedEncodingException {
     if (actionReportList.isEmpty()) {
       return null;
     }
@@ -131,11 +132,13 @@ public class Cmdlet implements Runnable {
     // get status in the order of the descend action id.
     // The cmdletmanager should update action status in the ascend order.
     List<ActionStatus> statuses = new ArrayList<>();
-    for (SmartAction action: actionReportList) {
+    Iterator<SmartAction> iter = actionReportList.iterator();
+    while (iter.hasNext()) {
+      SmartAction action = iter.next();
       ActionStatus status = action.getActionStatus();
       statuses.add(status);
       if (status.isFinished()) {
-        actionReportList.remove(action);
+        iter.remove();
       }
     }
 
