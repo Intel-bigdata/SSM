@@ -361,17 +361,27 @@ public class CmdletManager extends AbstractService {
     LOG.debug("Number of cached cmds {}", cacheCmd.size());
     for (Long cid : cacheCmd.keySet()) {
       CmdletInfo cmdletInfo = cacheCmd.remove(cid);
-      cmdletInfos.add(cmdletInfo);
+      if (cmdletInfo.getState() != CmdletState.DISABLED) {
+        cmdletInfos.add(cmdletInfo);
+        for (Long aid : cmdletInfo.getAids()) {
+          actionInfos.add(idToActions.get(aid));
+        }
+      }
       if (CmdletState.isTerminalState(cmdletInfo.getState())) {
         cmdletFinished.add(cmdletInfo);
-      }
-      for (Long aid : cmdletInfo.getAids()) {
-        actionInfos.add(idToActions.get(aid));
       }
       if (cmdletInfos.size() >= cacheCmdTh) {
         break;
       }
     }
+
+    for (CmdletInfo cmdletInfo: cmdletFinished) {
+      idToCmdlets.remove(cmdletInfo.getCid());
+      for (Long aid: cmdletInfo.getAids()) {
+        idToActions.remove(aid);
+      }
+    }
+
     if (cmdletInfos.size() == 0) {
       return;
     }
@@ -383,13 +393,6 @@ public class CmdletManager extends AbstractService {
               cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
     } catch (MetaStoreException e) {
       LOG.error("{} submit to DB error", cmdletInfos, e);
-    }
-
-    for (CmdletInfo cmdletInfo: cmdletFinished) {
-      idToCmdlets.remove(cmdletInfo.getCid());
-      for (Long aid: cmdletInfo.getAids()) {
-        idToActions.remove(aid);
-      }
     }
   }
 
