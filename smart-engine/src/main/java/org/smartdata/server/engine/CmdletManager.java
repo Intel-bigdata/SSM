@@ -660,9 +660,11 @@ public class CmdletManager extends AbstractService {
    * @throws IOException
    */
   public void dropRuleCmdlets(long ruleId) throws IOException {
-    for (CmdletInfo info : idToCmdlets.values()) {
-      if (info.getRid() == ruleId && !CmdletState.isTerminalState(info.getState())) {
-        deleteCmdlet(info.getCid());
+    synchronized (cacheCmd) {
+      for (CmdletInfo info : idToCmdlets.values()) {
+        if (info.getRid() == ruleId && !CmdletState.isTerminalState(info.getState())) {
+          deleteCmdlet(info.getCid());
+        }
       }
     }
   }
@@ -720,16 +722,15 @@ public class CmdletManager extends AbstractService {
   }
 
   public void deleteCmdlet(long cid) throws IOException {
-    synchronized (cacheCmd) {
-      this.disableCmdlet(cid);
-      try {
-        metaStore.deleteCmdlet(cid);
-        metaStore.deleteCmdletActions(cid);
-      } catch (MetaStoreException e) {
-        LOG.error("CmdletId -> [ {} ], delete from DB error", cid, e);
-        throw new IOException(e);
-      }
+    this.disableCmdlet(cid);
+    try {
+      metaStore.deleteCmdlet(cid);
+      metaStore.deleteCmdletActions(cid);
+    } catch (MetaStoreException e) {
+      LOG.error("CmdletId -> [ {} ], delete from DB error", cid, e);
+      throw new IOException(e);
     }
+
   }
 
   public int getCmdletsSizeInCache() {
