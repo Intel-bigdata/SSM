@@ -53,6 +53,7 @@ public class Copy2S3Action extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CopyFileAction.class);
   public static final String BUF_SIZE = "-bufSize";
+  public static final String USE_SINGLE_BUCKET = "-useSingleBucket";
   public static final String SRC = HdfsAction.FILE_PATH;
   public static final String DEST = "-dest";
   private String bucketPrefix;
@@ -62,7 +63,7 @@ public class Copy2S3Action extends HdfsAction {
   private String destPath;
   private int bufferSize = 64 * 1024;
   private Configuration conf;
-  Random rand ;
+  private static Random rand ;
   @Override
   public void init(Map<String, String> args) {
     try {
@@ -78,25 +79,37 @@ public class Copy2S3Action extends HdfsAction {
     this.srcPath = args.get(FILE_PATH);
     this.bucketPrefix = this.conf.get(SmartConfKeys.EVERSPAN_BUCKETS_KEY, SmartConfKeys.EVERSPAN_BUCKETS_KEY_DEFAULT ) ;
     this.volumeSize = this.conf.getInt(SmartConfKeys.EVERSPAN_PARTITION_VOLUME_SIZE_KEY, SmartConfKeys.EVERSPAN_PARTITION_VOLUME_SIZE_KEY_DEFAULT)  ;
-    this.randomSeed = this.conf.getInt(SmartConfKeys.EVERSPAN_RANDOM_NUMBER_KEY,  SmartConfKeys.EVERSPAN_RANDOM_NUMBER_KEY_DEFAULT);
-    rand = new Random(this.randomSeed);
-    appendLog( "Debug parameters - in class Copy2S3Action - BucketPrefix -" + this.bucketPrefix );
-    appendLog( "Debug parameters - in class Copy2S3Action - volumeSize -" + this.volumeSize );
-    appendLog( "Debug parameters - in class Copy2S3Action - randomSeed -" + this.randomSeed );
+    appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - BucketPrefix -" + this.bucketPrefix );
+    appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - volumeSize -" + this.volumeSize );
+    appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - randomSeed -" + this.randomSeed );
+    
+       
     if (args.containsKey(DEST)) {
     	try {
-	  //String src = this.srcPath;
-          this.destPath = getBucketName() + this.srcPath ;
-          //this.destPath = getBucketName() + src.substring(0, (src.lastIndexOf('/') + 1 ) );
-          appendLog( "Debug parameters - in class Copy2S3Action - destination -" + this.destPath );
+          if(args.containsKey(USE_SINGLE_BUCKET)) {
+            Pattern p = Pattern.compile("(session)(\\d+)");
+	    Matcher m = p.matcher(this.srcPath);
+            String sessionID ; 
+	    while (m.find()) {
+              sessionID = m.group(2);
+	      appendLog("Session ID is " +  sessionID );
+	    }          
+            this.destPath = getConstBucketName() + this.srcPath ;   
+            appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - destination -" + this.destPath );
+          }
+          else {
+            this.destPath = getBucketName() + this.srcPath ;
+            appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - destination -" + this.destPath );
+           }
         }
 	catch(Exception e) {
-		appendLog("Conf error!, S3 Bucket doesn't exist! ");
+          appendLog("Conf error!, S3 Bucket doesn't exist! ");
         }
-	}
+    }
     if (args.containsKey(BUF_SIZE)) {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
+    
   }
 
   @Override
@@ -116,7 +129,7 @@ public class Copy2S3Action extends HdfsAction {
     appendLog(
         String.format("Copy from %s to %s", srcPath, destPath));
     copySingleFile(srcPath, destPath);
-    appendLog(String.format("Successful Copy from %s to %s", srcPath, destPath))
+    appendLog(String.format("Successful Copy from %s to %s", srcPath, destPath));
     setXAttribute(srcPath, destPath);
 }
 
@@ -127,6 +140,14 @@ public class Copy2S3Action extends HdfsAction {
     appendLog( "Debug parameters - in class Copy2S3Action - randomNum -" + randomNum );
     return this.bucketPrefix + randomNum  ;
   }
+
+
+
+    static private final int randBucket(byte[] md5_bytes) {
+	int temp = md5_bytes[3] + md5_bytes[5] + md5_bytes[7] + md5_bytes[11] + md5_bytes[13];
+	return (Math.abs((temp % NUM_BUCKETS))) + 1;
+    }
+
 
   private long getFileSize(String fileName) throws IOException {
     if (fileName.startsWith("hdfs")) {
