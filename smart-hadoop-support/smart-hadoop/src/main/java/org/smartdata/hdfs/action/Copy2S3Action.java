@@ -37,6 +37,9 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Map;
 import java.util.EnumSet;
+import java.security.MessageDigest;
+import java.util.regex.*;  
+
 /**
  * An action to copy a single file from src to destination.
  * If dest doesn't contains "hdfs" prefix, then destination will be set to
@@ -89,12 +92,16 @@ public class Copy2S3Action extends HdfsAction {
           if(args.containsKey(USE_SINGLE_BUCKET)) {
             Pattern p = Pattern.compile("(session)(\\d+)");
 	    Matcher m = p.matcher(this.srcPath);
-            String sessionID ; 
+            String sessionID = "" ; 
 	    while (m.find()) {
               sessionID = m.group(2);
 	      appendLog("Session ID is " +  sessionID );
-	    }          
-            this.destPath = getConstBucketName() + this.srcPath ;   
+	    }         
+            MessageDigest md = MessageDigest.getInstance("MD5");
+	    md.update(sessionID.getBytes());
+	    byte[] digest_bytes = md.digest();
+	    appendLog("Digest bytes " + digest_bytes);
+            this.destPath = getConstBucketName(digest_bytes) + this.srcPath ;   
             appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - destination -" + this.destPath );
           }
           else {
@@ -141,12 +148,11 @@ public class Copy2S3Action extends HdfsAction {
     return this.bucketPrefix + randomNum  ;
   }
 
-
-
-    static private final int randBucket(byte[] md5_bytes) {
-	int temp = md5_bytes[3] + md5_bytes[5] + md5_bytes[7] + md5_bytes[11] + md5_bytes[13];
-	return (Math.abs((temp % NUM_BUCKETS))) + 1;
-    }
+  private String getConstBucketName(byte[] md5_bytes) throws IOException {
+    int temp = md5_bytes[3] + md5_bytes[5] + md5_bytes[7] + md5_bytes[11] + md5_bytes[13];
+    appendLog( "Debug parameters - in class Copy2S3Action - getConstBucketName -" + temp );
+    return this.bucketPrefix + ((Math.abs((temp % this.volumeSize))) + 1);
+  }
 
 
   private long getFileSize(String fileName) throws IOException {
