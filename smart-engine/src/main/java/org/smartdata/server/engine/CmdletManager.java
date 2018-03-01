@@ -638,6 +638,10 @@ public class CmdletManager extends AbstractService {
         }
       }
 
+      if (schedulingCmdlet.contains(cid)) {
+        schedulingCmdlet.remove(cid);
+      }
+
       if (scheduledCmdlet.contains(cid)) {
         scheduledCmdlet.remove(cid);
       }
