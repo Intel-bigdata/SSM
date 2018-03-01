@@ -45,6 +45,9 @@ import java.util.regex.*;
  * If dest doesn't contains "hdfs" prefix, then destination will be set to
  * current cluster, i.e., copy between dirs in current cluster.
  * Note that destination should contains filename.
+ * If -useSingleBucketPerSession option is passed into copy2s3 action,
+ * All the files in a particular SessionId will be placed in single bucket
+ * for easy access
  */
 @ActionSignature(
     actionId = "copy2s3",
@@ -56,11 +59,11 @@ public class Copy2S3Action extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CopyFileAction.class);
   public static final String BUF_SIZE = "-bufSize";
-  public static final String USE_SINGLE_BUCKET = "-useSingleBucket";
+  public static final String USE_SINGLE_BUCKET_PER_SESSION = "-useSingleBucketPerSession";
   public static final String SRC = HdfsAction.FILE_PATH;
   public static final String DEST = "-dest";
   private String bucketPrefix;
-  private int volumeSize;
+  private int numBuckets;
   private int randomSeed;
   private String srcPath;
   private String destPath;
@@ -80,33 +83,36 @@ public class Copy2S3Action extends HdfsAction {
     }
     super.init(args);
     this.srcPath = args.get(FILE_PATH);
-    this.bucketPrefix = this.conf.get(SmartConfKeys.EVERSPAN_BUCKETS_KEY, SmartConfKeys.EVERSPAN_BUCKETS_KEY_DEFAULT ) ;
-    this.volumeSize = this.conf.getInt(SmartConfKeys.EVERSPAN_PARTITION_VOLUME_SIZE_KEY, SmartConfKeys.EVERSPAN_PARTITION_VOLUME_SIZE_KEY_DEFAULT)  ;
-    appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - BucketPrefix -" + this.bucketPrefix );
-    appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - volumeSize -" + this.volumeSize );
-    appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - randomSeed -" + this.randomSeed );
+    this.bucketPrefix = this.conf.get(SmartConfKeys.EVERSPAN_BUCKET_PREFIX_KEY, SmartConfKeys.EVERSPAN_BUCKET_PREFIX_KEY_DEFAULT ) ;
+    this.numBuckets = this.conf.getInt(SmartConfKeys.EVERSPAN_PARTITION_NUM_BUCKETS_KEY, SmartConfKeys.EVERSPAN_PARTITION_NUM_BUCKETS_KEY_DEFAULT)  ;
+    appendLog( "BucketPrefix -" + this.bucketPrefix );
+    appendLog( "Number of buckets -" + this.numBuckets );
     
        
     if (args.containsKey(DEST)) {
     	try {
-          if(args.containsKey(USE_SINGLE_BUCKET)) {
+          if(args.containsKey(USE_SINGLE_BUCKET_PER_SESSION)) {
             Pattern p = Pattern.compile("(session)(\\d+)");
 	    Matcher m = p.matcher(this.srcPath);
             String sessionID = "" ; 
 	    while (m.find()) {
               sessionID = m.group(2);
 	      appendLog("Session ID is " +  sessionID );
-	    }         
+	    }        
+            if (sessionID == "") {
+              throw new IllegalArgumentException("Using single bucket per sessionID - Session ID is missing, check the srcPath - " + this.srcPath);
+            }
+ 
             MessageDigest md = MessageDigest.getInstance("MD5");
 	    md.update(sessionID.getBytes());
 	    byte[] digest_bytes = md.digest();
-	    appendLog("Digest bytes " + digest_bytes);
+	    appendLog("Using single bucket per sessionID - Digest bytes " + digest_bytes);
             this.destPath = getConstBucketName(digest_bytes) + this.srcPath ;   
-            appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - destination -" + this.destPath );
+            appendLog( "In class Copy2S3Action - destination -" + this.destPath );
           }
           else {
             this.destPath = getBucketName() + this.srcPath ;
-            appendLog( "Feb 26 Debug parameters - in class Copy2S3Action - destination -" + this.destPath );
+            appendLog( "In class Copy2S3Action - Using Random order of buckets - destination -" + this.destPath );
            }
         }
 	catch(Exception e) {
@@ -143,15 +149,16 @@ public class Copy2S3Action extends HdfsAction {
     // Everspan Related to achieve greater parallelism of writes
 
   private String getBucketName() throws IOException {
-    int randomNum = rand.nextInt(this.volumeSize) + 1;
+    int randomNum = rand.nextInt(this.numBuckets) + 1;
     appendLog( "Debug parameters - in class Copy2S3Action - randomNum -" + randomNum );
     return this.bucketPrefix + randomNum  ;
   }
 
+  //hashing the sessionID to distribute the randomBucket and also using the same bucket per session
   private String getConstBucketName(byte[] md5_bytes) throws IOException {
     int temp = md5_bytes[3] + md5_bytes[5] + md5_bytes[7] + md5_bytes[11] + md5_bytes[13];
     appendLog( "Debug parameters - in class Copy2S3Action - getConstBucketName -" + temp );
-    return this.bucketPrefix + ((Math.abs((temp % this.volumeSize))) + 1);
+    return this.bucketPrefix + ((Math.abs((temp % this.numBuckets))) + 1);
   }
 
 
