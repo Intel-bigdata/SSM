@@ -628,13 +628,12 @@ public class CmdletManager extends AbstractService {
   public void disableCmdlet(long cid) throws IOException {
     if (idToCmdlets.containsKey(cid)) {
       CmdletInfo info = idToCmdlets.get(cid);
-      synchronized (info) {
-        info.updateState(CmdletState.DISABLED);
-      }
+      onCmdletStatusUpdate(
+              new CmdletStatus(info.getCid(), System.currentTimeMillis(), CmdletState.DISABLED));
+
       synchronized (pendingCmdlet) {
         if (pendingCmdlet.contains(cid)) {
           pendingCmdlet.remove(cid);
-          this.cmdletFinished(cid);
         }
       }
 
@@ -730,7 +729,6 @@ public class CmdletManager extends AbstractService {
       LOG.error("CmdletId -> [ {} ], delete from DB error", cid, e);
       throw new IOException(e);
     }
-
   }
 
   public int getCmdletsSizeInCache() {
