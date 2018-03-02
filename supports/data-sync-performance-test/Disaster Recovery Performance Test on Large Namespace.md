@@ -2,11 +2,11 @@
 Intuitively, storing large amount of records/data in database may lead to performance degrade. In our cases, large namespace (large amount of files on HDFS) may lead to performance degrade of SSM. Because SSM fetches all namespace from namenode and stores them in database (default is mysql). In this test, we want to evalute this issue on SSM Data Sync.
 
 ## Objectives
-1. Evaluting SSM Data Sync's performance on large namespace.
-2. Find and solve bottlenecks in SSM.
-3. Find and solve bottlenecks in Data Sync module.
+1. Evaluting SSM Data Sync's performance on large namespace (from 10M~100M).
+2. Find/solve bottlenecks in SSM.
+3. Find/solve bottlenecks in Data Sync module.
 
-Baseline: Distcp
+**Baseline: Distcp**
 
 ## Metrics and Analysis
 ### Environment
@@ -21,23 +21,37 @@ Note that if there are less than 10 nodes available, we can merge mysql and SSM 
 **Hardware/Software requirement**
 
 **Hardware requriment:**
+
 1. Namenode: at least 20GB memory and 15GB disk space are required. Please change the default heap size in `hadoop-env.sh`. Please change the location of `name` and `checkpoint` in `hdfs-site.xml` (Each `fsimage`/checkpoint will be at least 5GB).
 2. Datanode: at least 2GB memory is requred by Datanode.
-3. Mysql: at least 20GB memory and 30GB disk space are required. Please change mysql data dir to SSD in `my.cnf`, and tune mysql with [mysqltuner](http://mysqltuner.pl/).
+3. Mysql: at least 20GB memory and 30GB disk space are required. Please change mysql data dir location to SSD in `my.cnf`, and tune mysql with [mysqltuner](http://mysqltuner.pl/). Otherwise, Mysql will become the main bottleneck of SSM.
 
 **Software requirement:**
+
 1. Hadoop (Hadoop-2.7.3/CDH-5.12.X or higher)
 2. Mysql (5.6.X or higher)
-3. SSM (1.4.X or higher)
+3. SSM (1.3.2 or higher)
 
 
+### Variables and Metics
+Main Variables:
 
-### Common Variables and Setting
-Namespace size: 0M, 25M, 50M, 75M and 100M
-Task Concurrency: 30, 60, 90
+1. Namespace size: 0M, 10M, 25M, 50M, 75M and 100M
+2. Task Concurrency: 30, 60, 90
 
-### Metric to Collect
+SSM Variables:
+
+1. Rule Check period: 100ms, 200ms, 500ms, 1s
+2. Cmdlet batch size: 100, 200, 300
+3. Data Sync Check period: 100ms, 200ms
+4. Data Sync diff batch size: 100, 200, 300
+5. Database: local mysql, remote mysql and TiDB
+
+Note that lots of variables may effect SSM Data Sync's performance. I think we can fix some variables and focus on main variables.
+
+### Metrics to Collect
 System Metrics: 
+
 1. Total Running Time
 2. Trigger Time for each increamental change
 3. Average Running Time for each task
@@ -52,3 +66,5 @@ System Metrics:
 ### Case 1: Single File ASync
 
 ### Case 2: Batch ASync
+
+## Trouble Shooting
