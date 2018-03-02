@@ -659,12 +659,14 @@ public class CmdletManager extends AbstractService {
    * @throws IOException
    */
   public void dropRuleCmdlets(long ruleId) throws IOException {
-    synchronized (cacheCmd) {
-      for (CmdletInfo info : idToCmdlets.values()) {
-        if (info.getRid() == ruleId && !CmdletState.isTerminalState(info.getState())) {
-          deleteCmdlet(info.getCid());
-        }
+    List<Long> cids = new ArrayList<>();
+    for (CmdletInfo info : idToCmdlets.values()) {
+      if (info.getRid() == ruleId && !CmdletState.isTerminalState(info.getState())) {
+        cids.add(info.getCid());
       }
+    }
+    synchronized (cacheCmd) {
+      batchDeleteCmdlet(cids);
     }
   }
 
@@ -727,6 +729,19 @@ public class CmdletManager extends AbstractService {
       metaStore.deleteCmdletActions(cid);
     } catch (MetaStoreException e) {
       LOG.error("CmdletId -> [ {} ], delete from DB error", cid, e);
+      throw new IOException(e);
+    }
+  }
+
+  public void batchDeleteCmdlet(List<Long> cids) throws IOException {
+    for (Long cid: cids) {
+      this.disableCmdlet(cid);
+    }
+    try {
+      metaStore.batchDeleteCmdlet(cids);
+      metaStore.batchDeleteCmdletActions(cids);
+    } catch (MetaStoreException e) {
+      LOG.error("CmdletIds -> [ {} ], delete from DB error", cids, e);
       throw new IOException(e);
     }
   }
@@ -886,9 +901,11 @@ public class CmdletManager extends AbstractService {
     if (cmdletInfoList == null || cmdletInfoList.size() == 0) {
       return;
     }
+    List<Long> cids = new ArrayList<>();
     for (CmdletInfo cmdletInfo : cmdletInfoList) {
-      deleteCmdlet(cmdletInfo.getCid());
+      cids.add(cmdletInfo.getCid());
     }
+    batchDeleteCmdlet(cids);
   }
 
   public void updateStatus(StatusMessage status) {
