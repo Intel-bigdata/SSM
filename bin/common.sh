@@ -283,12 +283,14 @@ function init_command() {
       ALLOW_DAEMON_OPT=true
       SMART_VARGS+=" -format"
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
+      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
     ;;
     smartserver)
       SMART_CLASSNAME=org.smartdata.server.SmartDaemon
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
+      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
       reorder_lib
     ;;
@@ -299,6 +301,7 @@ function init_command() {
       export SMART_LOG_FILE_NAME=${SMART_AGENT_LOG_FILE_NAME}
       export SMART_LOG_FILE=${SMART_LOG_DIR}/${SMART_LOG_FILE_NAME}
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
+      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_AGENT_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.address="${SSM_EXEC_HOST}
     ;;
     getconf)
