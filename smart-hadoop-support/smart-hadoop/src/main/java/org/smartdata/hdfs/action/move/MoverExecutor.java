@@ -104,7 +104,12 @@ public class MoverExecutor {
     parseSchedulePlan(plan);
 
     moveExecutor = Executors.newFixedThreadPool(maxConcurrentMoves);
-    return doMove(resultOs, logOs);
+    try {
+      return doMove(resultOs, logOs);
+    } finally {
+      moveExecutor.shutdown();
+      moveExecutor = null;
+    }
   }
 
   /**
