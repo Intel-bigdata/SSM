@@ -21,11 +21,11 @@
 #export JAVA_HOME=
 
 
-# Options used to start SSM Server JVM
+# Parameters used to start SSM Server JVM
 #export SSM_SERVER_JAVA_OPT=
 
-# Options used to start SSM Agent JVM
+# Parameters used to start SSM Agent JVM
 #export SSM_AGENT_JAVA_OPT=
 
-# Common options used to start JVM both for SSM Server and Agent
+# Common parameters used to start JVM both for SSM Server and Agent
 #export SSM_JAVA_OPT=
