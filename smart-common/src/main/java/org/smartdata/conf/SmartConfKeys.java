@@ -98,6 +98,9 @@ public class SmartConfKeys {
       "smart.cmdlet.cache.batch";
   public static final int SMART_CMDLET_CACHE_BATCH_DEFAULT =
       600;
+  public static final String SMART_CMDLET_MOVER_MAX_CONCURRENT_BLOCKS_PER_SRV_INST_KEY =
+      "smart.cmdlet.mover.max.concurrent.blocks.per.srv.inst";
+  public static final int SMART_CMDLET_MOVER_MAX_CONCURRENT_BLOCKS_PER_SRV_INST_DEFAULT = 0;
 
   // Schedulers
   public static final String SMART_COPY_SCHEDULER_BASE_SYNC_BATCH =

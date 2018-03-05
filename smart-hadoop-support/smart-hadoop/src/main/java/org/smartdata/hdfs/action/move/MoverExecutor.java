@@ -29,6 +29,7 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.DataTransferSaslUtil;
 import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.SaslDataTransferClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.model.action.FileMovePlan;
 
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A light-weight executor for Mover.
@@ -55,7 +57,9 @@ public class MoverExecutor {
   private DFSClient dfsClient;
   private SaslDataTransferClient saslClient;
 
+  private int concurrentMoves;
   private int maxConcurrentMoves;
+  private int maxConcurrentMovesPerInst;
   private int maxRetryTimes;
   private ExecutorService moveExecutor;
   private List<ReplicaMove> allMoves;
@@ -65,12 +69,17 @@ public class MoverExecutor {
   private MoverStatus status;
   private List<LocatedBlock> locatedBlocks;
 
+  private static AtomicInteger instances = new AtomicInteger(0);
+
   public MoverExecutor(MoverStatus status, Configuration conf,
       int maxRetryTimes, int maxConcurrentMoves) {
     this.status = status;
     this.conf = conf;
     this.maxRetryTimes = maxRetryTimes;
     this.maxConcurrentMoves = maxConcurrentMoves;
+    maxConcurrentMovesPerInst = conf.getInt(
+        SmartConfKeys.SMART_CMDLET_MOVER_MAX_CONCURRENT_BLOCKS_PER_SRV_INST_KEY,
+        SmartConfKeys.SMART_CMDLET_MOVER_MAX_CONCURRENT_BLOCKS_PER_SRV_INST_DEFAULT);
   }
 
   /**
@@ -103,10 +112,13 @@ public class MoverExecutor {
 
     parseSchedulePlan(plan);
 
-    moveExecutor = Executors.newFixedThreadPool(maxConcurrentMoves);
+    concurrentMoves = allMoves.size() >= maxConcurrentMoves ? maxConcurrentMoves : allMoves.size();
+    moveExecutor = Executors.newFixedThreadPool(concurrentMoves);
     try {
+      instances.incrementAndGet();
       return doMove(resultOs, logOs);
     } finally {
+      instances.decrementAndGet();
       moveExecutor.shutdown();
       moveExecutor = null;
     }
@@ -122,13 +134,25 @@ public class MoverExecutor {
    */
   public int doMove(PrintStream resultOs, PrintStream logOs) throws Exception {
     for (int retryTimes = 0; retryTimes < maxRetryTimes; retryTimes ++) {
+      final AtomicInteger running = new AtomicInteger(0);
       for (final ReplicaMove replicaMove : allMoves) {
         moveExecutor.execute(new Runnable() {
           @Override
           public void run() {
-            replicaMove.run();
+            try {
+              running.incrementAndGet();
+              replicaMove.run();
+            } finally {
+              running.decrementAndGet();
+            }
           }
         });
+
+        if (maxConcurrentMovesPerInst != 0) {
+          while (running.get() > (maxConcurrentMovesPerInst * 1.0 / instances.get())) {
+            Thread.sleep(50);
+          }
+        }
       }
 
       int sleeped = 0;
