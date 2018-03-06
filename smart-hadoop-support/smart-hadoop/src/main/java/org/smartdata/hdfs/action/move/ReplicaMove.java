@@ -106,10 +106,14 @@ class ReplicaMove {
 
       sendRequest(out, eb, accessToken);
       receiveResponse(in);
-      LOG.debug("Successfully moved " + this);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Successfully moved " + this);
+      }
       status.setSuccessful(true);
     } catch (IOException e) {
-      LOG.warn("Failed to move " + this + ": " + e.getMessage());
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Failed to move " + this + ": " + e.getMessage());
+      }
       status.setSuccessful(false);
     } finally {
       IOUtils.closeStream(out);
