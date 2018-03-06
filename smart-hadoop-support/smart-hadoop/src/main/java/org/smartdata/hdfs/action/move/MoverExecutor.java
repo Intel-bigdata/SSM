@@ -113,6 +113,7 @@ public class MoverExecutor {
     parseSchedulePlan(plan);
 
     concurrentMoves = allMoves.size() >= maxConcurrentMoves ? maxConcurrentMoves : allMoves.size();
+    concurrentMoves = concurrentMoves == 0 ? 1 : concurrentMoves;
     moveExecutor = Executors.newFixedThreadPool(concurrentMoves);
     try {
       instances.incrementAndGet();
