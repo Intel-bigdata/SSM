@@ -1,7 +1,7 @@
 package org.smartdata.hdfs.action;
 
+import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -32,7 +32,6 @@ public class TestReadFileAction extends MiniClusterHarness {
   @Test
   public void testInit() throws IOException {
     ReadFileAction readFileAction = new ReadFileAction();
-    readFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(ReadFileAction.FILE_PATH, "Test");
     readFileAction.init(args);
@@ -48,10 +47,10 @@ public class TestReadFileAction extends MiniClusterHarness {
     ReadFileAction readFileAction = new ReadFileAction();
     readFileAction.setDfsClient(dfsClient);
     readFileAction.setContext(smartContext);
-    readFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(ReadFileAction.FILE_PATH, filePath);
     readFileAction.init(args);
     readFileAction.run();
+    Assert.assertTrue(readFileAction.getExpectedAfterRun());
   }
 }

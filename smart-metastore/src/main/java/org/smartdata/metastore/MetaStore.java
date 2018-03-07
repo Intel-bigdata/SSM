@@ -977,10 +977,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public boolean updateCmdlet(long cid, long rid, CmdletState state)
+  public boolean updateCmdlet(long cid, CmdletState state)
       throws MetaStoreException {
     try {
-      return cmdletDao.update(cid, rid, state.getValue()) >= 0;
+      return cmdletDao.update(cid, state.getValue()) >= 0;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1048,7 +1048,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throws MetaStoreException {
     LOG.debug("Insert Action ID {}", actionInfo.getActionId());
     try {
-      actionDao.insert(actionInfo);
+      if (getActionById(actionInfo.getActionId()) != null) {
+        actionDao.update(actionInfo);
+      } else {
+        actionDao.insert(actionInfo);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1541,18 +1545,25 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public synchronized void checkTables() throws MetaStoreException {
-    Connection conn = getConnection();
     try {
-      if (!MetaStoreUtils.isTableSetExist(conn)) {
+      int num = getTablesNum(MetaStoreUtils.TABLESET);
+      if (num == 0) {
         LOG.info("The table set required by SSM does not exist. "
                 + "The configured database will be formatted.");
         formatDataBase();
+      } else if (num < MetaStoreUtils.TABLESET.length) {
+        LOG.error("One or more tables required by SSM are missing! "
+                + "You can restart SSM with -format option or configure another database.");
+        System.exit(1);
       }
     } catch (Exception e) {
       throw new MetaStoreException(e);
-    } finally {
-      closeConnection(conn);
     }
+  }
+
+  public int getTablesNum(String tableSet[]) throws MetaStoreException {
+    Connection conn = getConnection();
+    return MetaStoreUtils.getTableSetNum(conn, tableSet);
   }
 
   public synchronized void formatDataBase() throws MetaStoreException {

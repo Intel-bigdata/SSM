@@ -45,6 +45,10 @@ public class Services {
 
   private Services() {}
 
+  public static AgentService getService(String name) {
+    return services.get(name);
+  }
+
   public static void dispatch(AgentService.Message message) throws Exception {
     AgentService service = services.get(message.getServiceName());
     service.execute(message);

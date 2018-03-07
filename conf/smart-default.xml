@@ -76,7 +76,16 @@
   <property>
     <name>smart.cmdlet.executors</name>
     <value>40</value>
-    <description>Max number of cmdlets that can be executed in parallel on agent</description>
+    <description>Max number of cmdlets that can be executed in parallel</description>
+  </property>
+
+  <property>
+    <name>smart.cmdlet.mover.max.concurrent.blocks.per.srv.inst</name>
+    <value>0</value>
+    <description>
+      Max number of file mover cmdlets that can be executed in parallel per SSM service.
+      0 means unlimited.
+    </description>
   </property>
 
   <property>
@@ -126,7 +135,15 @@
     <name>smart.copy.scheduler.base.sync.batch</name>
     <value>500</value>
     <description>
-      Maximum batch size of copyscheduer base sync batch insert.
+      Maximum batch size of copyscheduler base sync batch insert.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.status.report.period</name>
+    <value>1000</value>
+    <description>
+      The status report period for actions. The time unit is millisecond.
     </description>
   </property>
 

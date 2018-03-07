@@ -30,6 +30,10 @@ public class CmdletStatusUpdate implements StatusMessage {
     this.currentState = currentState;
   }
 
+  public CmdletStatus getCmdletStatus() {
+    return new CmdletStatus(cmdletId, timestamp, currentState);
+  }
+
   public long getCmdletId() {
     return cmdletId;
   }
