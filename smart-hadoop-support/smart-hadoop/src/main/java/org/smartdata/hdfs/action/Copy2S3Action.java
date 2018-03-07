@@ -69,7 +69,7 @@ public class Copy2S3Action extends HdfsAction {
   private String destPath;
   private int bufferSize = 64 * 1024;
   private Configuration conf;
-  private static Random rand ;
+  Random rand ;
   @Override
   public void init(Map<String, String> args) {
     try {
@@ -87,7 +87,7 @@ public class Copy2S3Action extends HdfsAction {
     this.numBuckets = this.conf.getInt(SmartConfKeys.EVERSPAN_PARTITION_NUM_BUCKETS_KEY, SmartConfKeys.EVERSPAN_PARTITION_NUM_BUCKETS_KEY_DEFAULT)  ;
     appendLog( "BucketPrefix -" + this.bucketPrefix );
     appendLog( "Number of buckets -" + this.numBuckets );
-    
+    rand = new Random(); 
        
     if (args.containsKey(DEST)) {
     	try {
