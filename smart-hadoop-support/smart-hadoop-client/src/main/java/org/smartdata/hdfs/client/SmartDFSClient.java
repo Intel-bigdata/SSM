@@ -17,8 +17,6 @@
  */
 package org.smartdata.hdfs.client;
 
-import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
@@ -35,8 +33,6 @@ import org.smartdata.model.FileState;
 import org.smartdata.model.FileState.FileStage;
 import org.smartdata.model.FileState.FileType;
 
-
-
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -46,12 +42,10 @@ public class SmartDFSClient extends DFSClient {
   private static final Logger LOG = LoggerFactory.getLogger(SmartDFSClient.class);
   private SmartClient smartClient = null;
   private boolean healthy = false;
-  private Configuration conf;
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeAddress, conf);
-    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -67,7 +61,6 @@ public class SmartDFSClient extends DFSClient {
   public SmartDFSClient(final URI nameNodeUri, final Configuration conf,
       final InetSocketAddress smartServerAddress) throws IOException {
     super(nameNodeUri, conf);
-    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -84,7 +77,6 @@ public class SmartDFSClient extends DFSClient {
       FileSystem.Statistics stats, InetSocketAddress smartServerAddress)
       throws IOException {
     super(nameNodeUri, conf, stats);
-    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -100,7 +92,6 @@ public class SmartDFSClient extends DFSClient {
   public SmartDFSClient(Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
     super(conf);
-    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -115,7 +106,6 @@ public class SmartDFSClient extends DFSClient {
 
   public SmartDFSClient(Configuration conf) throws IOException {
     super(conf);
-    this.conf = conf;
     if (isSmartClientDisabled()) {
       return;
     }
@@ -131,8 +121,6 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public DFSInputStream open(String src)
       throws IOException, UnresolvedLinkException {
-    src = checkS3ForXattr(src);
-    // DFSClient will handle the rest works
     return super.open(src);
   }
 
@@ -140,8 +128,7 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum)
       throws IOException, UnresolvedLinkException {
-    FileState fileState; 
-    src = checkS3ForXattr(src);
+    FileState fileState;
     if (healthy) { // TODO: required indeed
       fileState = smartClient.getFileState(src);
       if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
@@ -162,7 +149,6 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException, UnresolvedLinkException {
-    src = checkS3ForXattr(src);
     return super.open(src, buffersize, verifyChecksum, stats);
   }
 
@@ -207,25 +193,5 @@ public class SmartDFSClient extends DFSClient {
   private boolean isSmartClientDisabled() {
     File idFile = new File(SmartConstants.SMART_CLIENT_DISABLED_ID_FILE);
     return idFile.exists();
-  }
-
-
-  public String checkS3ForXattr(String filePath) throws IOException {
-    // I think we should return the true path if file is move to S3,
-    // or return filePath If Xattr doesn't contain the attribute we want
-    // For example, if file1 is move to s3a://XX/file1, then we can return
-    // s3a://XX/file1. If not, we just return filePath
-	
-
-     LocatedBlocks  locatedBlocks  = super.getLocatedBlocks(filePath.toString(),  0);
-     if(locatedBlocks!=null  &&  locatedBlocks.getFileLength()  ==  0){
-        byte[]  xAttr  =  super.getXAttr(filePath,  "user.coldloc");
-        if(xAttr!=null){
-             //Input  stream  to  read  the  data  directly  from  s3fs
-           filePath = new  String(xAttr) ;  
-        }
-     }
-     return filePath;
-
   }
 }
