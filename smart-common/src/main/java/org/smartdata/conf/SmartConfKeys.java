@@ -98,6 +98,9 @@ public class SmartConfKeys {
       "smart.cmdlet.cache.batch";
   public static final int SMART_CMDLET_CACHE_BATCH_DEFAULT =
       600;
+  public static final String SMART_CMDLET_MOVER_MAX_CONCURRENT_BLOCKS_PER_SRV_INST_KEY =
+      "smart.cmdlet.mover.max.concurrent.blocks.per.srv.inst";
+  public static final int SMART_CMDLET_MOVER_MAX_CONCURRENT_BLOCKS_PER_SRV_INST_DEFAULT = 0;
 
   // Schedulers
   public static final String SMART_COPY_SCHEDULER_BASE_SYNC_BATCH =
@@ -140,6 +143,9 @@ public class SmartConfKeys {
       "smart.storage.info.sampling.intervals";
   public static final String SMART_STORAGE_INFO_SAMPLING_INTERVALS_DEFAULT =
       "60s,60;1hour,60;1day";
+
+  public static final String SMART_STATUS_REPORT_PERIOD_KEY = "smart.status.report.period";
+  public static final long SMART_STATUS_REPORT_PERIOD_DEFAULT = 1000;
 
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";

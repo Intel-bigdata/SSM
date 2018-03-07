@@ -38,7 +38,7 @@ public class AgentCmdletService extends AgentService {
   public void init() throws IOException {
     SmartAgentContext context = (SmartAgentContext) getContext();
     SmartConf conf = context.getConf();
-    this.executor = new CmdletExecutor(conf, context.getStatusReporter());
+    this.executor = new CmdletExecutor(conf);
     this.factory = new CmdletFactory(context, context.getStatusReporter());
   }
 
@@ -68,4 +68,7 @@ public class AgentCmdletService extends AgentService {
     return NAME;
   }
 
+  public CmdletExecutor getCmdletExecutor() {
+    return executor;
+  }
 }

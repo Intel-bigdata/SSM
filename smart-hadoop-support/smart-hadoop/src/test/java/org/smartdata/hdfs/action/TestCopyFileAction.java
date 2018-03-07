@@ -24,7 +24,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.util.HashMap;
@@ -40,7 +39,6 @@ public class TestCopyFileAction extends MiniClusterHarness {
     CopyFileAction copyFileAction = new CopyFileAction();
     copyFileAction.setDfsClient(dfsClient);
     copyFileAction.setContext(smartContext);
-    copyFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(CopyFileAction.FILE_PATH, src);
     args.put(CopyFileAction.DEST_PATH, dest);
@@ -48,6 +46,7 @@ public class TestCopyFileAction extends MiniClusterHarness {
     args.put(CopyFileAction.OFFSET_INDEX, "" + offset);
     copyFileAction.init(args);
     copyFileAction.run();
+    Assert.assertTrue(copyFileAction.getExpectedAfterRun());
   }
 
   /*@Test
