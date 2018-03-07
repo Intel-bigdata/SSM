@@ -252,6 +252,9 @@ public class NamespaceFetcher {
               }
             }
           } while (startAfter != null && batches.size() < maxPendingBatches);
+          if (startAfter != null) {
+            this.deque.addFirst(parent);
+          }
         }
       } catch (IOException | InterruptedException e) {
         startAfter = null;
