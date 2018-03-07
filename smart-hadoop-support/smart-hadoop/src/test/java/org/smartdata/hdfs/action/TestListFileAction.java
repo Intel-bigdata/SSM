@@ -21,7 +21,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.util.HashMap;
@@ -58,20 +57,20 @@ public class TestListFileAction extends MiniClusterHarness {
     ListFileAction listFileAction = new ListFileAction();
     listFileAction.setDfsClient(dfsClient);
     listFileAction.setContext(smartContext);
-    listFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String , String> args = new HashMap<>();
     args.put(ListFileAction.FILE_PATH , dfs.getUri() + srcPath);
     listFileAction.init(args);
     listFileAction.run();
+    Assert.assertTrue(listFileAction.getExpectedAfterRun());
 
     listFileAction = new ListFileAction();
     listFileAction.setDfsClient(dfsClient);
     listFileAction.setContext(smartContext);
-    listFileAction.setStatusReporter(new MockActionStatusReporter());
     args = new HashMap<>();
     args.put(ListFileAction.FILE_PATH , dfs.getUri() + srcPath + "/" + file1);
     listFileAction.init(args);
     listFileAction.run();
+    Assert.assertTrue(listFileAction.getExpectedAfterRun());
   }
 
   @Test
@@ -101,19 +100,19 @@ public class TestListFileAction extends MiniClusterHarness {
     ListFileAction listFileAction = new ListFileAction();
     listFileAction.setDfsClient(dfsClient);
     listFileAction.setContext(smartContext);
-    listFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String , String> args = new HashMap<>();
     args.put(ListFileAction.FILE_PATH , srcPath);
     listFileAction.init(args);
     listFileAction.run();
+    Assert.assertTrue(listFileAction.getExpectedAfterRun());
 
     listFileAction = new ListFileAction();
     listFileAction.setDfsClient(dfsClient);
     listFileAction.setContext(smartContext);
-    listFileAction.setStatusReporter(new MockActionStatusReporter());
     args = new HashMap<>();
     args.put(ListFileAction.FILE_PATH , srcPath + "/" + file1);
     listFileAction.init(args);
     listFileAction.run();
+    Assert.assertTrue(listFileAction.getExpectedAfterRun());
   }
 }

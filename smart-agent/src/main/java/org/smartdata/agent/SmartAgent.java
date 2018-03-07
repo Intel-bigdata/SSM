@@ -41,6 +41,9 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
+import org.smartdata.server.engine.cmdlet.CmdletExecutor;
+import org.smartdata.server.engine.cmdlet.StatusReportTask;
+import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
@@ -57,6 +60,8 @@ import org.smartdata.utils.SecurityUtil;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import scala.concurrent.duration.Duration;
@@ -67,11 +72,13 @@ public class SmartAgent implements StatusReporter {
   private static final Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
   private ActorRef agentActor;
+  private CmdletExecutor cmdletExecutor;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
 
     SmartConf conf = (SmartConf) new GenericOptionsParser(new SmartConf(), args).getConfiguration();
+
     String[] masters = AgentUtils.getMasterAddress(conf);
     if (masters == null) {
       throw new IOException("No master address found!");
@@ -82,27 +89,29 @@ public class SmartAgent implements StatusReporter {
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
 
+    HadoopUtil.setSmartConfByHadoop(conf);
     agent.authentication(conf);
 
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
   }
 
+  //TODO: remove loadHadoopConf
   private void authentication(SmartConf conf) throws IOException {
     if (!SecurityUtil.isSecurityEnabled(conf)) {
       return;
     }
 
     // Load Hadoop configuration files
-    String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HadoopUtil.loadHadoopConf(conf, hadoopConfPath);
+      HadoopUtil.loadHadoopConf(conf);
     } catch (IOException e) {
       LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
-          + "Please config smart.hadoop.conf.path property in smart-site.xml.");
+              + "Please config smart.hadoop.conf.path property in smart-site.xml.");
       conf.set("hadoop.security.authentication", "kerberos");
       conf.set("hadoop.security.authorization", "true");
     }
+
     UserGroupInformation.setConfiguration(conf);
 
     String keytabFilename = conf.get(SmartConfKeys.SMART_AGENT_KEYTAB_FILE_KEY);
@@ -116,6 +125,7 @@ public class SmartAgent implements StatusReporter {
     system = ActorSystem.apply(NAME, config);
     agentActor = system.actorOf(
             Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
+
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -130,6 +140,18 @@ public class SmartAgent implements StatusReporter {
     });
     Services.init(new SmartAgentContext(conf, this));
     Services.start();
+
+    AgentCmdletService agentCmdletService =
+            (AgentCmdletService) Services.getService(AgentCmdletService.NAME);
+    cmdletExecutor = agentCmdletService.getCmdletExecutor();
+
+    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
+    long reportPeriod = conf.getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    executorService.scheduleAtFixedRate(
+            statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
+
     system.awaitTermination();
   }
 
@@ -221,6 +243,14 @@ public class SmartAgent implements StatusReporter {
           master = identity.getRef();
           if (master != null) {
             findMaster.cancel();
+
+            String rpcHost = master.path().address().host().get();
+            String rpcPort = conf
+                    .get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+                            SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
+                    .split(":")[1];
+            conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY, rpcHost + ":" + rpcPort);
+
             Cancellable registerAgent =
                 AgentUtils.repeatActionUntil(getContext().system(), Duration.Zero(),
                     RETRY_INTERVAL, TIMEOUT,

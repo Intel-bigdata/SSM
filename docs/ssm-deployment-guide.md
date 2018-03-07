@@ -90,12 +90,22 @@ Configure SSM
 
    Please note, the configuration should be the same on all server hosts.
 
+   Optionally, JVM parameters may needs to be adjusted according to resource available (such as physical memory) to achieve better performance. JVM parameters can be configured in file ${SMART_HOME}/conf/smart-env.sh.
+   Take setting maximum heap size for example, you can add the following line to the file:
+   `export SSM_SERVER_JAVA_OPT="-XX:MaxHeapSize=10g"`
+   It changes only Smart Servers' maximum heap size to 10GB.
+   Also, the following line can be used instead:
+   `export SSM_JAVA_OPT="-XX:MaxHeapSize=10g"`
+   It changes heap size for all SSM services, including Smart Server and Smart Agent.
+
 * **Configure Smart Agent (optional)**
 
    This step can be skipped if SSM standalone mode is preferred.
   
    Open `agents` file under ${SMART_HOME}/conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
    After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
+   Smart Agent specific JVM parameters can be changed through the following way in file ${SMART_HOME}/conf/smart-env.sh.
+   `export SSM_AGENT_JAVA_OPT=<Your Parameters>`
  
 * **Configure database**
 

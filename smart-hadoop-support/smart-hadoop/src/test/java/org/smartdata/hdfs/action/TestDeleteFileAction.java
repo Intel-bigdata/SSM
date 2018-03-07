@@ -21,7 +21,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -49,11 +48,11 @@ public class TestDeleteFileAction extends MiniClusterHarness {
     DeleteFileAction deleteFileAction = new DeleteFileAction();
     deleteFileAction.setDfsClient(dfsClient);
     deleteFileAction.setContext(smartContext);
-    deleteFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(DeleteFileAction.FILE_PATH, srcPath + "/" + file1);
     deleteFileAction.init(args);
     deleteFileAction.run();
+    Assert.assertTrue(deleteFileAction.getExpectedAfterRun());
     //Check if file is not exist
     Assert.assertFalse(dfsClient.exists(srcPath + "/" + file1));
   }
@@ -73,12 +72,12 @@ public class TestDeleteFileAction extends MiniClusterHarness {
     DeleteFileAction deleteFileAction = new DeleteFileAction();
     deleteFileAction.setDfsClient(dfsClient);
     deleteFileAction.setContext(smartContext);
-    deleteFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     // Destination with "hdfs" prefix
     args.put(DeleteFileAction.FILE_PATH, dfs.getUri() + srcPath + "/" + file1);
     deleteFileAction.init(args);
     deleteFileAction.run();
+    Assert.assertTrue(deleteFileAction.getExpectedAfterRun());
     Assert.assertFalse(dfsClient.exists(srcPath + "/" + file1));
   }
 }

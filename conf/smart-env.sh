@@ -19,3 +19,13 @@
 # when starting a distributed SSM cluster. Or in some cases, it may leads to some
 # error (cases reported on Ubuntu OS).
 #export JAVA_HOME=
+
+
+# Parameters used to start SSM Server JVM
+#export SSM_SERVER_JAVA_OPT=
+
+# Parameters used to start SSM Agent JVM
+#export SSM_AGENT_JAVA_OPT=
+
+# Common parameters used to start JVM both for SSM Server and Agent
+#export SSM_JAVA_OPT=
