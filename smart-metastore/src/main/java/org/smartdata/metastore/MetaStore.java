@@ -429,8 +429,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
     Map<String, StorageCapacity> ret = new HashMap<>();
     if (mapStorageCapacity != null) {
-      for (String key : mapStorageCapacity.keySet()) {
-        ret.put(key, mapStorageCapacity.get(key));
+      synchronized (mapStorageCapacity) {
+        for (String key : mapStorageCapacity.keySet()) {
+          ret.put(key, mapStorageCapacity.get(key));
+        }
       }
     }
     return ret;
@@ -509,7 +511,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       }
     }
     try {
-      mapStorageCapacity = storageDao.getStorageTablesItem();
+      synchronized (mapStorageCapacity) {
+        mapStorageCapacity = storageDao.getStorageTablesItem();
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
