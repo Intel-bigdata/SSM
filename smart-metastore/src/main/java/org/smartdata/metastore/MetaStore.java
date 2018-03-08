@@ -398,23 +398,23 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void insertUpdateStoragesTable(StorageCapacity[] storages)
       throws MetaStoreException {
-    mapStorageCapacity = null;
     try {
       storageDao.insertUpdateStoragesTable(storages);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+    updateCache();
   }
 
   public void insertUpdateStoragesTable(List<StorageCapacity> storages)
       throws MetaStoreException {
-    mapStorageCapacity = null;
     try {
       storageDao.insertUpdateStoragesTable(
           storages.toArray(new StorageCapacity[storages.size()]));
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+    updateCache();
   }
 
   public void insertUpdateStoragesTable(StorageCapacity storage)
@@ -508,12 +508,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
       }
     }
-    if (mapStorageCapacity == null) {
-      try {
-        mapStorageCapacity = storageDao.getStorageTablesItem();
-      } catch (Exception e) {
-        throw new MetaStoreException(e);
-      }
+    try {
+      mapStorageCapacity = storageDao.getStorageTablesItem();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
