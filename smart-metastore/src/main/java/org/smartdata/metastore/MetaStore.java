@@ -424,14 +424,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public Map<String, StorageCapacity> getStorageCapacity() throws MetaStoreException {
-    if (mapStorageCapacity == null) {
-      updateCache();
-    }
+    updateCache();
 
     Map<String, StorageCapacity> ret = new HashMap<>();
-    if (mapStorageCapacity != null) {
-      for (String key : mapStorageCapacity.keySet()) {
-        ret.put(key, mapStorageCapacity.get(key));
+    Map<String, StorageCapacity> currentMapStorageCapacity = mapStorageCapacity;
+    if (currentMapStorageCapacity != null) {
+      for (String key : currentMapStorageCapacity.keySet()) {
+        ret.put(key, currentMapStorageCapacity.get(key));
       }
     }
     return ret;
@@ -439,6 +438,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void deleteStorage(String storageType) throws MetaStoreException {
     try {
+      mapStorageCapacity = null;
       storageDao.deleteStorage(storageType);
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -448,8 +448,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public StorageCapacity getStorageCapacity(
       String type) throws MetaStoreException {
     updateCache();
+    Map<String, StorageCapacity> currentMapStorageCapacity = mapStorageCapacity;
+    while (currentMapStorageCapacity == null) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException ex) {
+        LOG.error(ex.getMessage());
+      }
+      currentMapStorageCapacity = mapStorageCapacity;
+    }
     try {
-      return mapStorageCapacity.get(type);
+      return currentMapStorageCapacity.get(type);
     } catch (EmptyResultDataAccessException e) {
       return null;
     } catch (Exception e) {
@@ -460,6 +469,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public synchronized boolean updateStoragesTable(String type,
       Long capacity, Long free) throws MetaStoreException {
     try {
+      mapStorageCapacity = null;
       return storageDao.updateStoragesTable(type, capacity, free);
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -509,6 +519,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
       }
     }
+
     if (mapStorageCapacity == null) {
       try {
         mapStorageCapacity = storageDao.getStorageTablesItem();
