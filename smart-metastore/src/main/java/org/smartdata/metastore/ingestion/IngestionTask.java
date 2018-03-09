@@ -29,6 +29,7 @@ public abstract class IngestionTask implements Runnable {
   public static long numPersisted = 0L;
 
   protected int defaultBatchSize = 20;
+  protected int maxPendingBatches = 55;
 
   protected static final String ROOT = "/";
   // Deque for Breadth-First-Search
