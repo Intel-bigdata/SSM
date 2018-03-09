@@ -211,7 +211,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(storageCapacity1.equals(storage1));
     Assert.assertTrue(storageCapacity2.equals(storage2));
     Assert.assertTrue(metaStore.updateStoragesTable("Flash", 123456L, 4562233L));
-    Assert.assertTrue(metaStore.getStorageCapacity("Flash").getCapacity() == 12343333L);
+    Assert.assertTrue(metaStore.getStorageCapacity("Flash").getCapacity() == 123456L);
   }
 
   @Test
