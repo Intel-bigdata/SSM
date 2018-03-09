@@ -179,4 +179,12 @@
       NOTE: This may leads to some unpredictable consequences and should only be used for testing.
     </description>
   </property>
+
+  <property>
+    <name>smart.cmdlet.dispatcher.log.disp.result</name>
+    <value>true</value>
+    <description>
+      Log dispatch result for each cmdlet been dispatched.
+    </description>
+  </property>
 </configuration>
