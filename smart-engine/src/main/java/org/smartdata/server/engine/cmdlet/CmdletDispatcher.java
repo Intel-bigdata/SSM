@@ -58,6 +58,7 @@ public class CmdletDispatcher {
   private int[] cmdExecSrvInstsSlotsLeft;
   private Map<Long, ExecutorType> dispatchedToSrvs;
   private boolean disableLocalExec;
+  private boolean logDispResult;
 
   // TODO: to be refined
   private final int defaultSlots;
@@ -103,6 +104,9 @@ public class CmdletDispatcher {
     this.index = 0;
 
     schExecService = Executors.newScheduledThreadPool(1);
+    logDispResult = smartContext.getConf().getBoolean(
+        SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY,
+        SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT);
   }
 
   public void registerExecutorService(CmdletExecutorService executorService) {
@@ -158,10 +162,12 @@ public class CmdletDispatcher {
     updateSlotsLeft(selected.getExecutorType().ordinal(), -1);
     dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
-    LOG.info(
-        String.format(
-            "Dispatching cmdlet->[%s] to executor service %s : %s",
-            cmdlet.getCmdletId(), selected.getExecutorType(), id));
+    if (logDispResult) {
+      LOG.info(
+          String.format(
+              "Dispatching cmdlet->[%s] to executor service %s : %s",
+              cmdlet.getCmdletId(), selected.getExecutorType(), id));
+    }
     return true;
   }
 
@@ -233,7 +239,8 @@ public class CmdletDispatcher {
     private int statFail = 0;
     private int statDispatched = 0;
     private int statNoMoreCmdlet = 0;
-    private int statNoExecutorOrFull = 0;
+    private int statFull = 0;
+    private long lastReportNoExecutor = 0;
 
     public DispatchTask(CmdletDispatcher dispatcher) {
       this.dispatcher = dispatcher;
@@ -242,25 +249,35 @@ public class CmdletDispatcher {
     @Override
     public void run() {
       long curr = System.currentTimeMillis();
-      if (curr - lastInfo >= 3000) {
+      if (curr - lastInfo >= 5000) {
         if (!(statDispatched == 0 && statRound == statNoMoreCmdlet)) {
-          LOG.info(
-              "timeInterval={} statRound={} statFail={} statDispatched={} "
-                  + "statNoMoreCmdlet={} statNoExecutorOrFull={} pendingCmdlets={}",
-              curr - lastInfo, statRound, statFail, statDispatched, statNoMoreCmdlet,
-              statNoExecutorOrFull, pendingCmdlets.size());
+          if (cmdExecSrvTotalInsts != 0 || statFull != 0) {
+            LOG.info("timeInterval={} statRound={} statFail={} statDispatched={} "
+                    + "statNoMoreCmdlet={} statFull={} pendingCmdlets={} numExecutor={}",
+                curr - lastInfo, statRound, statFail, statDispatched, statNoMoreCmdlet,
+                statFull, pendingCmdlets.size(), cmdExecSrvTotalInsts);
+          } else {
+            if (curr - lastReportNoExecutor >= 600 * 1000L) {
+              LOG.info("No cmdlet executor. pendingCmdlets={}", pendingCmdlets.size());
+              lastReportNoExecutor = curr;
+            }
+          }
         }
         statRound = 0;
         statFail = 0;
         statDispatched = 0;
-        statNoExecutorOrFull = 0;
+        statFull = 0;
         statNoMoreCmdlet = 0;
         lastInfo = curr;
       }
       statRound++;
 
-      if (cmdExecSrvTotalInsts == 0 || !dispatcher.canDispatchMore()) {
-        statNoExecutorOrFull++;
+      if (cmdExecSrvTotalInsts == 0) {
+        return;
+      }
+
+      if (!dispatcher.canDispatchMore()) {
+        statFull++;
         return;
       }
 
