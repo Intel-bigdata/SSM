@@ -35,7 +35,6 @@
     <servlet-name>DruidStatView</servlet-name>
     <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
     <init-param>
-      <!-- 不允许清空统计数据 -->
       <param-name>resetEnable</param-name>
       <param-value>false</param-value>
     </init-param>
