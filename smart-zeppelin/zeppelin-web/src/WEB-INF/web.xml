@@ -31,6 +31,20 @@
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
+  <servlet>
+    <servlet-name>DruidStatView</servlet-name>
+    <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
+    <init-param>
+      <param-name>resetEnable</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>DruidStatView</servlet-name>
+    <url-pattern>/druid/*</url-pattern>
+  </servlet-mapping>
+
 	<context-param>
 		<param-name>configuration</param-name>
 		<param-value>deployment</param-value>
