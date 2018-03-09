@@ -211,7 +211,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(storageCapacity1.equals(storage1));
     Assert.assertTrue(storageCapacity2.equals(storage2));
     Assert.assertTrue(metaStore.updateStoragesTable("Flash", 123456L, 4562233L));
-    Assert.assertTrue(metaStore.getStorageCapacity("Flash").getCapacity() == 12343333L);
+    Assert.assertTrue(metaStore.getStorageCapacity("Flash").getCapacity() == 123456L);
   }
 
   @Test
@@ -515,7 +515,7 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertTrue(commandId == commands.length);
     for (CmdletInfo cmd : com) {
       // System.out.printf("Cid = %d \n", cmd.getCid());
-      metaStore.updateCmdlet(cmd.getCid(), cmd.getRid(), CmdletState.DONE);
+      metaStore.updateCmdlet(cmd.getCid(), CmdletState.DONE);
     }
     List<CmdletInfo> com1 = metaStore.getCmdlets(cidCondition, ridCondition, CmdletState.DONE);
     Assert.assertTrue(com1.size() == 1);

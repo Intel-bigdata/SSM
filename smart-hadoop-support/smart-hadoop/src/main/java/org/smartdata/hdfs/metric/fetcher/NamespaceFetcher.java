@@ -132,6 +132,9 @@ public class NamespaceFetcher {
     private final DFSClient client;
     private final SmartConf conf;
     private List<String> ignoreList;
+    private byte[] startAfter = null;
+    private final byte[] empty = HdfsFileStatus.EMPTY_NAME;
+
     public HdfsFetchTask(DFSClient client, SmartConf conf) {
       super();
       this.client = client;
@@ -182,6 +185,10 @@ public class NamespaceFetcher {
         }
       }
 
+      if (batches.size() >= maxPendingBatches) {
+        return;
+      }
+
       String parent = deque.pollFirst();
       if (parent == null) { // BFS finished
         if (currentBatch.actualSize() > 0) {
@@ -206,35 +213,51 @@ public class NamespaceFetcher {
         }
         return;
       }
-      String tmpParent = parent;
-      if (!tmpParent.endsWith("/")) {
-        tmpParent = tmpParent.concat("/");
-      }
-      for (int i = 0; i < ignoreList.size(); i++) {
 
-        if (ignoreList.get(i).equals(tmpParent)) {
-          return;
+      if (startAfter == null) {
+        String tmpParent = parent;
+        if (!tmpParent.endsWith("/")) {
+          tmpParent = tmpParent.concat("/");
+        }
+        for (int i = 0; i < ignoreList.size(); i++) {
+
+          if (ignoreList.get(i).equals(tmpParent)) {
+            return;
+          }
         }
       }
 
       try {
         HdfsFileStatus status = client.getFileInfo(parent);
         if (status != null && status.isDir()) {
-          FileInfo internal = convertToFileInfo(status, "");
-          internal.setPath(parent);
-          this.addFileStatus(internal);
-          numDirectoriesFetched++;
-          HdfsFileStatus[] children = this.listStatus(parent);
-          for (HdfsFileStatus child : children) {
-            if (child.isDir()) {
-              this.deque.add(child.getFullName(parent));
-            } else {
-              this.addFileStatus(convertToFileInfo(child, parent));
-              numFilesFetched++;
+          if (startAfter == null) {
+            FileInfo internal = convertToFileInfo(status, "");
+            internal.setPath(parent);
+            this.addFileStatus(internal);
+            numDirectoriesFetched++;
+          }
+
+          HdfsFileStatus[] children;
+          do {
+            children = listStatus(parent);
+            if (children == null || children.length == 0) {
+              break;
             }
+            for (HdfsFileStatus child : children) {
+              if (child.isDir()) {
+                this.deque.add(child.getFullName(parent));
+              } else {
+                this.addFileStatus(convertToFileInfo(child, parent));
+                numFilesFetched++;
+              }
+            }
+          } while (startAfter != null && batches.size() < maxPendingBatches);
+          if (startAfter != null) {
+            this.deque.addFirst(parent);
           }
         }
       } catch (IOException | InterruptedException e) {
+        startAfter = null;
         LOG.error("Totally, numDirectoriesFetched = " + numDirectoriesFetched
             + ", numFilesFetched = " + numFilesFetched
             + ". Parent = " + parent, e);
@@ -247,37 +270,20 @@ public class NamespaceFetcher {
      */
     private HdfsFileStatus[] listStatus(String src) throws IOException {
       DirectoryListing thisListing = client.listPaths(
-        src, HdfsFileStatus.EMPTY_NAME);
+        src, startAfter == null ? empty : startAfter);
       if (thisListing == null) {
         // the directory does not exist
+        startAfter = null;
         return EMPTY_STATUS;
       }
       HdfsFileStatus[] partialListing = thisListing.getPartialListing();
       if (!thisListing.hasMore()) {
         // got all entries of the directory
-        return partialListing;
+        startAfter = null;
+      } else {
+        startAfter = thisListing.getLastName();
       }
-      // The directory size is too big that it needs to fetch more
-      // estimate the total number of entries in the directory
-      int totalNumEntries =
-        partialListing.length + thisListing.getRemainingEntries();
-      ArrayList<HdfsFileStatus> listing = new ArrayList<>(totalNumEntries);
-      Collections.addAll(listing, partialListing);
-
-      // now fetch more entries
-      do {
-        thisListing = client.listPaths(src, thisListing.getLastName());
-
-        if (thisListing == null) {
-          // the directory is deleted
-          listing.toArray(new HdfsFileStatus[listing.size()]);
-        }
-
-        partialListing = thisListing.getPartialListing();
-        Collections.addAll(listing, partialListing);
-      } while (thisListing.hasMore());
-
-      return listing.toArray(new HdfsFileStatus[listing.size()]);
+      return partialListing;
     }
 
     private FileInfo convertToFileInfo(HdfsFileStatus status, String parent) {

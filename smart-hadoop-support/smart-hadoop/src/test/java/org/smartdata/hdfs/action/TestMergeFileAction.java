@@ -22,7 +22,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.util.HashMap;
@@ -59,7 +58,6 @@ public class TestMergeFileAction extends MiniClusterHarness {
     MergeFileAction mergeFileAction = new MergeFileAction();
     mergeFileAction.setDfsClient(dfsClient);
     mergeFileAction.setContext(smartContext);
-    mergeFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(MergeFileAction.FILE_PATH, srcPath + "/" +
         file1 + "," + dfs.getUri() + srcPath + "/" + "file2");
@@ -67,6 +65,7 @@ public class TestMergeFileAction extends MiniClusterHarness {
     mergeFileAction.init(args);
     mergeFileAction.run();
 
+    Assert.assertTrue(mergeFileAction.getExpectedAfterRun());
     Assert.assertTrue(dfsClient.exists(target));
     //read and check file
     FSDataInputStream in = dfs.open(new Path(target),50);
@@ -104,7 +103,6 @@ public class TestMergeFileAction extends MiniClusterHarness {
     MergeFileAction mergeFileAction = new MergeFileAction();
     mergeFileAction.setDfsClient(dfsClient);
     mergeFileAction.setContext(smartContext);
-    mergeFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(MergeFileAction.FILE_PATH, dfs.getUri() + srcPath + "/" +
         file1 + "," + dfs.getUri() + srcPath + "/" + "file2");
@@ -112,6 +110,7 @@ public class TestMergeFileAction extends MiniClusterHarness {
     mergeFileAction.init(args);
     mergeFileAction.run();
 
+    Assert.assertTrue(mergeFileAction.getExpectedAfterRun());
     Assert.assertTrue(dfsClient.exists(target));
     //read and check file
     FSDataInputStream in = dfs.open(new Path(target),50);

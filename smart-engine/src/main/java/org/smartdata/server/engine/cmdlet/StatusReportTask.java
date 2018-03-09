@@ -15,35 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.protocol.message;
+package org.smartdata.server.engine.cmdlet;
 
-public class ActionStarted implements StatusMessage {
-  private long actionId;
-  private long timestamp;
+import org.smartdata.protocol.message.StatusReport;
+import org.smartdata.protocol.message.StatusReporter;
 
-  public ActionStarted(long actionId, long timestamp) {
-    this.actionId = actionId;
-    this.timestamp = timestamp;
-  }
+public class StatusReportTask implements Runnable {
+  StatusReporter statusReporter;
+  CmdletExecutor cmdletExecutor;
 
-  public long getActionId() {
-    return actionId;
-  }
-
-  public void setActionId(long actionId) {
-    this.actionId = actionId;
-  }
-
-  public long getTimestamp() {
-    return timestamp;
-  }
-
-  public void setTimestamp(long timestamp) {
-    this.timestamp = timestamp;
+  public StatusReportTask(StatusReporter statusReporter, CmdletExecutor cmdletExecutor) {
+    this.statusReporter = statusReporter;
+    this.cmdletExecutor = cmdletExecutor;
   }
 
   @Override
-  public String toString() {
-    return String.format("Action %s started at %s", actionId, timestamp);
+  public void run() {
+    StatusReport statusReport = cmdletExecutor.getStatusReport();
+    if (statusReport != null && !statusReport.getActionStatuses().isEmpty()) {
+      statusReporter.report(statusReport);
+    }
   }
 }

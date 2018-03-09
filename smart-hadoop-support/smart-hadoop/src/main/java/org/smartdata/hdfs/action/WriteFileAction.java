@@ -27,7 +27,6 @@ import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
 
-import java.io.OutputStream;
 import java.util.Map;
 import java.util.Random;
 
@@ -43,10 +42,10 @@ import java.util.Random;
   usage =
       HdfsAction.FILE_PATH
           + " $file "
-          + WriteFileAction.BUF_SIZE
-          + " $size "
           + WriteFileAction.LENGTH
-          + " $length"
+          + " $length "
+          + WriteFileAction.BUF_SIZE
+          + " $size"
 )
 public class WriteFileAction extends HdfsAction {
   public static final String LENGTH = "-length";

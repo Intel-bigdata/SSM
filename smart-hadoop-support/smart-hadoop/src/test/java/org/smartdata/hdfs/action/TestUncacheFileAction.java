@@ -21,7 +21,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.util.HashMap;
@@ -45,7 +44,6 @@ public class TestUncacheFileAction extends MiniClusterHarness {
     CacheFileAction cacheFileAction = new CacheFileAction();
     cacheFileAction.setDfsClient(dfsClient);
     cacheFileAction.setContext(smartContext);
-    cacheFileAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> argsCache = new HashMap();
     argsCache.put(CacheFileAction.FILE_PATH, file);
     cacheFileAction.init(argsCache);
@@ -53,16 +51,17 @@ public class TestUncacheFileAction extends MiniClusterHarness {
     UncacheFileAction uncacheFileAction = new UncacheFileAction();
     uncacheFileAction.setDfsClient(dfsClient);
     uncacheFileAction.setContext(smartContext);
-    uncacheFileAction.setStatusReporter(new MockActionStatusReporter());
 
     Map<String, String> argsUncache = new HashMap();
     argsUncache.put(UncacheFileAction.FILE_PATH, file);
     uncacheFileAction.init(argsUncache);
 
     cacheFileAction.run();
+    Assert.assertTrue(cacheFileAction.getExpectedAfterRun());
     Assert.assertTrue(cacheFileAction.isCached(file));
 
     uncacheFileAction.run();
+    Assert.assertTrue(uncacheFileAction.getExpectedAfterRun());
     Assert.assertFalse(cacheFileAction.isCached(file));
   }
 
@@ -80,15 +79,14 @@ public class TestUncacheFileAction extends MiniClusterHarness {
     UncacheFileAction uncacheFileAction = new UncacheFileAction();
     uncacheFileAction.setDfsClient(dfsClient);
     uncacheFileAction.setContext(smartContext);
-    uncacheFileAction.setStatusReporter(new MockActionStatusReporter());
 
     Map<String, String> argsUncache = new HashMap();
     argsUncache.put(UncacheFileAction.FILE_PATH, file);
     uncacheFileAction.init(argsUncache);
 
     uncacheFileAction.run();
+    Assert.assertTrue(uncacheFileAction.getExpectedAfterRun());
     CacheFileAction cacheFileAction = new CacheFileAction();
-    cacheFileAction.setStatusReporter(new MockActionStatusReporter());
     cacheFileAction.setDfsClient(dfsClient);
     cacheFileAction.setContext(smartContext);
     Assert.assertFalse(cacheFileAction.isCached(file));
