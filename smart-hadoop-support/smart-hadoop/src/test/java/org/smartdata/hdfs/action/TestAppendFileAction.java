@@ -22,19 +22,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.ActionException;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
-import org.smartdata.protocol.message.ActionFinished;
-import org.smartdata.protocol.message.StatusMessage;
-import org.smartdata.protocol.message.StatusReporter;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TestAppendFileAction extends MiniClusterHarness {
-  private void appendFile(String src, long length) {
+  private void appendFile(String src, long length) throws IOException {
     Map<String, String> args = new HashMap<>();
     args.put(AppendFileAction.FILE_PATH, src);
     args.put(AppendFileAction.LENGTH, "" + length);
@@ -43,8 +39,8 @@ public class TestAppendFileAction extends MiniClusterHarness {
     appendFileAction.setContext(smartContext);
     appendFileAction.init(args);
     appendFileAction.setConf(smartContext.getConf());
-    appendFileAction.setStatusReporter(new MockActionStatusReporter());
     appendFileAction.run();
+    Assert.assertTrue(appendFileAction.getExpectedAfterRun());
   }
 
   @Test
@@ -54,27 +50,18 @@ public class TestAppendFileAction extends MiniClusterHarness {
     args.put(AppendFileAction.LENGTH, "100000000000000");
     AppendFileAction appendFileAction = new AppendFileAction();
     appendFileAction.init(args);
-    appendFileAction.setStatusReporter(new MockActionStatusReporter());
     args.put(AppendFileAction.BUF_SIZE, "1024");
     appendFileAction.init(args);
   }
 
   @Test
-  public void testAppendNonExistFile() {
+  public void testAppendNonExistFile() throws UnsupportedEncodingException {
     Map<String, String> args = new HashMap<>();
     args.put(WriteFileAction.FILE_PATH, "/Test");
     AppendFileAction appendFileAction = new AppendFileAction();
     appendFileAction.init(args);
-    appendFileAction.setStatusReporter(new StatusReporter() {
-      @Override
-      public void report(StatusMessage status) {
-        if (status instanceof ActionFinished) {
-          ActionFinished finished = (ActionFinished) status;
-          Assert.assertTrue(finished.getThrowable() != null);
-        }
-      }
-    });
     appendFileAction.run();
+    Assert.assertNotNull(appendFileAction.getActionStatus().getThrowable());
   }
 
   @Test

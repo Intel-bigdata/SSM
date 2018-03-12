@@ -22,18 +22,20 @@ import org.junit.Test;
 import org.smartdata.action.HelloAction;
 import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.model.CmdletState;
-import org.smartdata.protocol.message.ActionFinished;
-import org.smartdata.protocol.message.ActionStarted;
-import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class TestCmdletExecutor {
 
@@ -47,27 +49,27 @@ public class TestCmdletExecutor {
             statusMessages.add(status);
           }
         };
-    CmdletExecutor executor = new CmdletExecutor(new SmartConf(), reporter);
+    CmdletExecutor executor = new CmdletExecutor(new SmartConf());
+    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor);
+    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    executorService.scheduleAtFixedRate(
+            statusReportTask, 1000, 1000, TimeUnit.MILLISECONDS);
     SmartAction action = new HelloAction();
     Map<String, String> args = new HashMap<>();
     args.put(HelloAction.PRINT_MESSAGE, "message");
-    action.setStatusReporter(reporter);
     action.setArguments(args);
     action.setActionId(101);
-    Cmdlet cmdlet = new Cmdlet(new SmartAction[] {action}, reporter);
+    Cmdlet cmdlet = new Cmdlet(Arrays.asList(action));
 
     executor.execute(cmdlet);
 
     Thread.sleep(2000);
-    Assert.assertTrue(statusMessages.size() == 4);
-    Assert.assertTrue(statusMessages.get(0) instanceof CmdletStatusUpdate);
-    Assert.assertTrue(statusMessages.get(1) instanceof ActionStarted);
-    Assert.assertTrue(statusMessages.get(2) instanceof ActionFinished);
-    Assert.assertNull(((ActionFinished) statusMessages.get(2)).getThrowable());
-    Assert.assertTrue(((ActionFinished) statusMessages.get(2)).getResult().contains("message"));
-    Assert.assertTrue(statusMessages.get(3) instanceof CmdletStatusUpdate);
-    Assert.assertEquals(
-        CmdletState.DONE, ((CmdletStatusUpdate) statusMessages.get(3)).getCurrentState());
+
+    StatusReport lastReport = (StatusReport) statusMessages.get(statusMessages.size() - 1);
+    ActionStatus status = lastReport.getActionStatuses().get(0);
+    Assert.assertTrue(status.isFinished());
+    Assert.assertNull(status.getThrowable());
+
     executor.shutdown();
   }
 
@@ -88,11 +90,14 @@ public class TestCmdletExecutor {
             statusMessages.add(status);
           }
         };
-    CmdletExecutor executor = new CmdletExecutor(new SmartConf(), reporter);
+    CmdletExecutor executor = new CmdletExecutor(new SmartConf());
+    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor);
+    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    executorService.scheduleAtFixedRate(
+            statusReportTask, 1000, 1000, TimeUnit.MILLISECONDS);
     SmartAction action = new HangingAction();
-    action.setStatusReporter(reporter);
     action.setActionId(101);
-    Cmdlet cmdlet = new Cmdlet(new SmartAction[] {action}, reporter);
+    Cmdlet cmdlet = new Cmdlet(Arrays.asList(action));
     cmdlet.setId(10);
 
     executor.execute(cmdlet);
@@ -100,14 +105,10 @@ public class TestCmdletExecutor {
     executor.stop(10L);
     Thread.sleep(2000);
 
-    Assert.assertTrue(statusMessages.size() == 4);
-    Assert.assertTrue(statusMessages.get(0) instanceof CmdletStatusUpdate);
-    Assert.assertTrue(statusMessages.get(1) instanceof ActionStarted);
-    Assert.assertTrue(statusMessages.get(2) instanceof ActionFinished);
-    Assert.assertNotNull(((ActionFinished) statusMessages.get(2)).getThrowable());
-    Assert.assertTrue(statusMessages.get(3) instanceof CmdletStatusUpdate);
-    Assert.assertEquals(
-        CmdletState.FAILED, ((CmdletStatusUpdate) statusMessages.get(3)).getCurrentState());
+    StatusReport lastReport = (StatusReport) statusMessages.get(statusMessages.size() - 1);
+    ActionStatus status = lastReport.getActionStatuses().get(0);
+    Assert.assertTrue(status.isFinished());
+    Assert.assertNotNull(status.getThrowable());
     executor.shutdown();
   }
 }

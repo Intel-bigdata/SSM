@@ -48,14 +48,13 @@ public class TestTruncateAction extends MiniClusterHarness {
     TruncateAction truncateAction = new TruncateAction();
     truncateAction.setDfsClient(dfsClient);
     truncateAction.setContext(smartContext);
-    truncateAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(TruncateAction.FILE_PATH, srcPath + "/" + file);
     args.put(TruncateAction.LENGTH, "20");
 
     truncateAction.init(args);
     truncateAction.run();
-
+    Assert.assertTrue(truncateAction.getExpectedAfterRun());
 
     FSDataInputStream in = dfs.open(new Path(srcPath + "/" + file),50);
     //check the length
@@ -82,14 +81,13 @@ public class TestTruncateAction extends MiniClusterHarness {
     TruncateAction truncateAction = new TruncateAction();
     truncateAction.setDfsClient(dfsClient);
     truncateAction.setContext(smartContext);
-    truncateAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(TruncateAction.FILE_PATH, dfs.getUri() + srcPath + "/" + file);
     args.put(TruncateAction.LENGTH, "20");
 
     truncateAction.init(args);
     truncateAction.run();
-
+    Assert.assertTrue(truncateAction.getExpectedAfterRun());
 
     FSDataInputStream in = dfs.open(new Path(srcPath + "/" + file),50);
     //check the length

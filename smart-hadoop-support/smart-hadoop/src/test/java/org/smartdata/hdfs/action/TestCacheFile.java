@@ -21,7 +21,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -46,7 +45,6 @@ public class TestCacheFile extends MiniClusterHarness {
     CacheFileAction cacheAction = new CacheFileAction();
     cacheAction.setContext(smartContext);
     cacheAction.setDfsClient(dfsClient);
-    cacheAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap();
     args.put(CacheFileAction.FILE_PATH, file);
     cacheAction.init(args);
@@ -54,6 +52,7 @@ public class TestCacheFile extends MiniClusterHarness {
       Assert.assertFalse(cacheAction.isCached(file));
       cacheAction.run();
       Assert.assertTrue(cacheAction.isCached(file));
+      Assert.assertTrue(cacheAction.getExpectedAfterRun());
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

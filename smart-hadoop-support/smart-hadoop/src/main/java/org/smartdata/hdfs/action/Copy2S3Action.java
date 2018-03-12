@@ -46,7 +46,7 @@ import java.util.EnumSet;
     actionId = "copy2s3",
     displayName = "copy2s3",
     usage = HdfsAction.FILE_PATH + " $src " + Copy2S3Action.DEST +
-        " $dest "
+        " $dest " + Copy2S3Action.BUF_SIZE + " $size"
 )
 public class Copy2S3Action extends HdfsAction {
   private static final Logger LOG =
@@ -127,7 +127,8 @@ public class Copy2S3Action extends HdfsAction {
 
     try {
       in = getSrcInputStream(src);
-      out = CompatibilityHelperLoader.getHelper().getS3outputStream(dest,conf);
+      out = CompatibilityHelperLoader
+          .getHelper().getS3outputStream(dest, conf);
       byte[] buf = new byte[bufferSize];
       long bytesRemaining = getFileSize(src);
 
