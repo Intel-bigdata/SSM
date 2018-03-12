@@ -46,7 +46,8 @@ public class SmartConfKeys {
   // Configure keys for Alluxio
   public static final String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
   public static final String SMART_ALLUXIO_CONF_DIR_KEY = "smart.alluxio.conf.dir";
-  public static final String SMART_ALLUXIO_MASTER_JOURNAL_DIR_KEY = "smart.alluxio.master.journal.dir";
+  public static final String SMART_ALLUXIO_MASTER_JOURNAL_DIR_KEY =
+      "smart.alluxio.master.journal.dir";
 
   // SSM
   public static final String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
