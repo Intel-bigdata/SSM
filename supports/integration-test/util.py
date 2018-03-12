@@ -185,6 +185,9 @@ def start_rule(rid):
 def stop_rule(rid):
     requests.post(RULE_ROOT + "/" + str(rid) + "/stop")
 
+def list_sync():
+    resp = requests.get(RULE_ROOT + "/list/sync")
+    return resp.json()["body"]
 
 def get_action(aid):
     resp = requests.get(ACTION_ROOT + "/" + str(aid) + "/info")
