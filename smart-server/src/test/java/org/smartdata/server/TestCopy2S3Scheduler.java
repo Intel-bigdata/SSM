@@ -17,7 +17,7 @@
  */
 package org.smartdata.server;
 
-/*import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.junit.Assert;
@@ -25,14 +25,16 @@ import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.FileState;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.S3FileState;
 import org.smartdata.server.engine.CmdletManager;
 
-import java.util.List;*/
+import java.util.List;
 
 public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
 
-  /*@Test(timeout = 45000)
+  @Test(timeout = 45000)
   public void testDir() throws Exception {
     waitTillSSMExitSafeMode();
     MetaStore metaStore = ssm.getMetaStore();
@@ -74,8 +76,35 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
     long ruleId =
         admin.submitRule(
             "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/", RuleState.ACTIVE);
-    Thread.sleep(3500);
+    Thread.sleep(2500);
     List<ActionInfo> actions = metaStore.getActions(ruleId, 0);
     Assert.assertTrue(actions.size() == 0);
-  }*/
+  }
+
+  @Test(timeout = 45000)
+  public void testOnS3() throws Exception {
+    waitTillSSMExitSafeMode();
+    MetaStore metaStore = ssm.getMetaStore();
+    SmartAdmin admin = new SmartAdmin(smartContext.getConf());
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    DistributedFileSystem dfs = cluster.getFileSystem();
+    final String srcPath = "/src/";
+    dfs.mkdirs(new Path(srcPath));
+    // Write to src
+    for (int i = 0; i < 3; i++) {
+      // Create test files
+      // Not 0 because this file may be not be truncated yet
+      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 10, (short) 1, 1);
+      FileState fileState = new S3FileState(srcPath + i);
+      metaStore.insertUpdateFileState(fileState);
+    }
+    Thread.sleep(500);
+    long ruleId =
+        admin.submitRule(
+            "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/", RuleState.ACTIVE);
+    Thread.sleep(2500);
+    List<ActionInfo> actions = metaStore.getActions(ruleId, 0);
+    Assert.assertTrue(actions.size() == 0);
+  }
+
 }
