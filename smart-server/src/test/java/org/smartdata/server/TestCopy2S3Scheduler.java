@@ -46,11 +46,12 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
     // Write to src
     for (int i = 0; i < 3; i++) {
       // Create test files
-      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 1024, (short) 1, 1);
+      DFSTestUtil.createFile(dfs, new Path(srcPath + i),
+          1024, (short) 1, 1);
     }
-    long ruleId =
-        admin.submitRule(
-            "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/", RuleState.ACTIVE);
+    long ruleId = admin.submitRule(
+        "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/",
+        RuleState.ACTIVE);
     List<ActionInfo> actions;
     do {
       actions = metaStore.getActions(ruleId, 0);
@@ -71,11 +72,12 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
     // Write to src
     for (int i = 0; i < 3; i++) {
       // Create test files
-      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 0, (short) 1, 1);
+      DFSTestUtil.createFile(dfs, new Path(srcPath + i),
+          0, (short) 1, 1);
     }
-    long ruleId =
-        admin.submitRule(
-            "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/", RuleState.ACTIVE);
+    long ruleId = admin.submitRule(
+        "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/",
+        RuleState.ACTIVE);
     Thread.sleep(2500);
     List<ActionInfo> actions = metaStore.getActions(ruleId, 0);
     Assert.assertTrue(actions.size() == 0);
@@ -94,17 +96,17 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
     for (int i = 0; i < 3; i++) {
       // Create test files
       // Not 0 because this file may be not be truncated yet
-      DFSTestUtil.createFile(dfs, new Path(srcPath + i), 10, (short) 1, 1);
+      DFSTestUtil.createFile(dfs, new Path(srcPath + i),
+          10, (short) 1, 1);
       FileState fileState = new S3FileState(srcPath + i);
       metaStore.insertUpdateFileState(fileState);
     }
     Thread.sleep(500);
-    long ruleId =
-        admin.submitRule(
-            "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/", RuleState.ACTIVE);
+    long ruleId = admin.submitRule(
+        "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/",
+        RuleState.ACTIVE);
     Thread.sleep(2500);
     List<ActionInfo> actions = metaStore.getActions(ruleId, 0);
     Assert.assertTrue(actions.size() == 0);
   }
-
 }
