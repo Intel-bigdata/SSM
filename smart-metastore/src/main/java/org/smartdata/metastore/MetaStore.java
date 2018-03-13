@@ -423,9 +423,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public Map<String, StorageCapacity> getStorageCapacity() throws MetaStoreException {
-    if (mapStorageCapacity == null) {
-      updateCache();
-    }
+    updateCache();
 
     Map<String, StorageCapacity> ret = new HashMap<>();
     Map<String, StorageCapacity> currentMapStorageCapacity = mapStorageCapacity;
@@ -439,6 +437,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void deleteStorage(String storageType) throws MetaStoreException {
     try {
+      mapStorageCapacity = null;
       storageDao.deleteStorage(storageType);
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -448,8 +447,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public StorageCapacity getStorageCapacity(
       String type) throws MetaStoreException {
     updateCache();
+    Map<String, StorageCapacity> currentMapStorageCapacity = mapStorageCapacity;
+    while (currentMapStorageCapacity == null) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException ex) {
+        LOG.error(ex.getMessage());
+      }
+      currentMapStorageCapacity = mapStorageCapacity;
+    }
     try {
-      return mapStorageCapacity.get(type);
+      return currentMapStorageCapacity.get(type);
     } catch (EmptyResultDataAccessException e) {
       return null;
     } catch (Exception e) {
