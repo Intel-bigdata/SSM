@@ -102,13 +102,14 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-    // unlock filelock
-    if (ifLocked(path)) {
+    if (actionInfo.isFinished() && actionInfo.isSuccessful()) {
       // Insert fileState
       metaStore.insertUpdateFileState(new S3FileState(path));
+    }
+    // unlock filelock
+    if (ifLocked(path)) {
       unLockTheFile(path);
-    } else {
-      LOG.debug("The file {} has already unlocked", path);
+      LOG.debug("unlocked copy2s3 file {}", path);
     }
   }
 
