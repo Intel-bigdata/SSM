@@ -398,23 +398,23 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void insertUpdateStoragesTable(StorageCapacity[] storages)
       throws MetaStoreException {
+    mapStorageCapacity = null;
     try {
       storageDao.insertUpdateStoragesTable(storages);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
-    updateCache();
   }
 
   public void insertUpdateStoragesTable(List<StorageCapacity> storages)
       throws MetaStoreException {
+    mapStorageCapacity = null;
     try {
       storageDao.insertUpdateStoragesTable(
           storages.toArray(new StorageCapacity[storages.size()]));
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
-    updateCache();
   }
 
   public void insertUpdateStoragesTable(StorageCapacity storage)
@@ -428,11 +428,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
 
     Map<String, StorageCapacity> ret = new HashMap<>();
-    if (mapStorageCapacity != null) {
-      synchronized (storageDao) {
-        for (String key : mapStorageCapacity.keySet()) {
-          ret.put(key, mapStorageCapacity.get(key));
-        }
+    Map<String, StorageCapacity> currentMapStorageCapacity = mapStorageCapacity;
+    if (currentMapStorageCapacity != null) {
+      for (String key : currentMapStorageCapacity.keySet()) {
+        ret.put(key, currentMapStorageCapacity.get(key));
       }
     }
     return ret;
@@ -510,12 +509,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         mapStoragePolicyNameId.put(mapStoragePolicyIdName.get(key), key);
       }
     }
-    try {
-      synchronized (storageDao) {
+
+    if (mapStorageCapacity == null) {
+      try {
         mapStorageCapacity = storageDao.getStorageTablesItem();
+      } catch (Exception e) {
+        throw new MetaStoreException(e);
       }
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
     }
   }
 
