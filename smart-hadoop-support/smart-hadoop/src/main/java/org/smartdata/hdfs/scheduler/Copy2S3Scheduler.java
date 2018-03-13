@@ -9,7 +9,9 @@ import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.FileState;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.model.S3FileState;
 import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
@@ -63,6 +65,11 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
     return 0;
   }
 
+  private boolean isOnS3(String fileName) {
+    return metaStore.getFileState(fileName)
+        .getFileType().getValue() == FileState.FileType.S3.getValue();
+  }
+
   public List<String> getSupportedActions() {
     return actions;
   }
@@ -75,19 +82,20 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-    if (checkTheLengthOfFile(path) == 0) {
-      LOG.debug("The submit file {}'s length is 0", path);
-      return false;
-    }
-
     if (ifLocked(path)) {
       LOG.debug("The submit file {} is locked", path);
       return false;
     }
-
+    if (checkTheLengthOfFile(path) == 0) {
+      LOG.debug("The submit file {}'s length is 0", path);
+      return false;
+    }
+    if (isOnS3(path)) {
+      LOG.debug("The submit file {} is already copied", path);
+      return false;
+    }
     lockTheFile(path);
-
-    LOG.debug("The file {} can be submited", path);
+    LOG.debug("The file {} can be submitted", path);
     return true;
   }
 
@@ -96,6 +104,8 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     // unlock filelock
     if (ifLocked(path)) {
+      // Insert fileState
+      metaStore.insertUpdateFileState(new S3FileState(path));
       unLockTheFile(path);
     } else {
       LOG.debug("The file {} has already unlocked", path);
