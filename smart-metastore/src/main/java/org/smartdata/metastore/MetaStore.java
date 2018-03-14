@@ -66,6 +66,7 @@ import org.smartdata.model.GlobalConfig;
 import org.smartdata.model.NormalFileState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.S3FileState;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.SystemInfo;
@@ -2074,6 +2075,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       case COMPRESSION:
         break;
       case S3:
+        fileState = new S3FileState(path);
         break;
       default:
     }
