@@ -468,6 +468,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public synchronized boolean updateStoragesTable(String type,
       Long capacity, Long free) throws MetaStoreException {
     try {
+      mapStorageCapacity = null;
       return storageDao.updateStoragesTable(type, capacity, free);
     } catch (Exception e) {
       throw new MetaStoreException(e);
