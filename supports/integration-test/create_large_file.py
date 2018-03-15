@@ -27,7 +27,7 @@ def create_file_pyarrow():
             break
         finish.value = finish.value-1
         lock.release()
-        with fs.open(file_name, "wb") as f:
+        with fs.open(file_name, "wb", replication=3) as f:
             f.write(FILE_SIZE*1024*random.choice(letter))
 
 
