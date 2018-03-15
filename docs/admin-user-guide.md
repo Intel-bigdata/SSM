@@ -139,7 +139,7 @@ given time or within a time interval), the rule will transition to “**Finished
 User can disable an **“Active”** rule if he/she wants to pause the
 evaluation of the rule for the time being. Later if the user wants to enable the
 rule again, he/she can re-activate the rule, to continue the evaluation of
-the rule conditions. If there are as yet unexecuted commands associated with a rule when the userat the point in timem when it was disabled, the user can choose to cancel these not unexecuted commands or
+the rule conditions. If there are as yet unexecuted commands associated with a rule when the user at the point in time when it was disabled, the user can choose to cancel these not unexecuted commands or
 continue to process/finish them. By default, the  unexecuted commands will
 be cancelled.
 
