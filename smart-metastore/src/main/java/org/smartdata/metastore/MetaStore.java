@@ -1015,6 +1015,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void batchDeleteCmdlet(List<Long> cids) throws MetaStoreException {
+    try {
+      cmdletDao.batchDelete(cids);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   /**
    * Delete finished cmdlets before given timestamp, actions belonging to these cmdlets
    * will also be deleted. Cmdlet's generate_time is used for comparison.
@@ -1088,6 +1096,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteCmdletActions(long cmdletId) throws MetaStoreException {
     try {
       actionDao.deleteCmdletActions(cmdletId);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void batchDeleteCmdletActions(List<Long> cmdletIds) throws MetaStoreException {
+    try {
+      actionDao.batchDeleteCmdletActions(cmdletIds);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
