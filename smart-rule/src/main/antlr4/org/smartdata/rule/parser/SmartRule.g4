@@ -107,6 +107,7 @@ stringexpr
 
 cmdlet
     : .*
+    | ';'
     ;
 
 id
