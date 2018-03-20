@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 ssh sr518 "hdfs dfs -rm -r /10KB_10000"
 ssh sr518 "hdfs dfs -mkdir /10KB_10000"
 ssh sr518 "hdfs dfs -rm -r /1MB_10000"
