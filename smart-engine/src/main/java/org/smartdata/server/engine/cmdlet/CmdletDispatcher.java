@@ -21,6 +21,8 @@ import com.google.common.collect.ListMultimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.action.ActionException;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.ExecutorType;
 import org.smartdata.model.LaunchAction;
@@ -37,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CmdletDispatcher {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletDispatcher.class);
@@ -51,13 +54,17 @@ public class CmdletDispatcher {
   private CmdletExecutorService[] cmdExecServices;
   private int[] cmdExecSrvInsts;
   private int cmdExecSrvTotalInsts;
-  private int[] cmdExecSrvInstsSlotsLeft;
+  private int[] execSrvSlotsLeft;
+  private AtomicInteger totalSlotsLeft = new AtomicInteger();
+
   private Map<Long, ExecutorType> dispatchedToSrvs;
   private boolean disableLocalExec;
+  private boolean logDispResult;
+  private DispatchTask[] dispatchTasks;
 
   // TODO: to be refined
   private final int defaultSlots;
-  private int index;
+  private AtomicInteger index = new AtomicInteger(0);
 
   private final ExecutorType[] preferLocalTryList = new ExecutorType[]
       {ExecutorType.LOCAL, ExecutorType.REMOTE_SSM, ExecutorType.AGENT};
@@ -84,8 +91,8 @@ public class CmdletDispatcher {
 
     this.cmdExecServices = new CmdletExecutorService[ExecutorType.values().length];
     cmdExecSrvInsts = new int[ExecutorType.values().length];
+    execSrvSlotsLeft = new int[ExecutorType.values().length];
     cmdExecSrvTotalInsts = 0;
-    cmdExecSrvInstsSlotsLeft = new int[ExecutorType.values().length];
     dispatchedToSrvs = new ConcurrentHashMap<>();
 
     disableLocalExec = smartContext.getConf().getBoolean(
@@ -96,9 +103,18 @@ public class CmdletDispatcher {
     if (!disableLocalExec) {
       registerExecutorService(exe);
     }
-    this.index = 0;
 
-    schExecService = Executors.newScheduledThreadPool(1);
+    SmartConf conf = smartContext.getConf();
+    logDispResult = conf.getBoolean(
+        SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY,
+        SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT);
+    int numDisp = conf.getInt(SmartConfKeys.SMART_CMDLET_DISPATCHERS_KEY,
+        SmartConfKeys.SMART_CMDLET_DISPATCHERS_DEFAULT);
+    dispatchTasks = new DispatchTask[numDisp];
+    for (int i = 0; i < numDisp; i++) {
+      dispatchTasks[i] = new DispatchTask(this);
+    }
+    schExecService = Executors.newScheduledThreadPool(numDisp + 1);
   }
 
   public void registerExecutorService(CmdletExecutorService executorService) {
@@ -110,34 +126,32 @@ public class CmdletDispatcher {
   }
 
   public boolean dispatch(LaunchCmdlet cmdlet) {
-    CmdletDispatchPolicy policy = cmdlet.getDispPolicy();
-    if (policy == CmdletDispatchPolicy.ANY) {
-      policy = getRoundrobinDispatchPolicy();
+    int mod = index.incrementAndGet() % cmdExecSrvTotalInsts;
+    int idx = 0;
+
+    for (int nround = 0; nround < 2 && mod >= 0; nround++) {
+      for (idx = 0; idx < cmdExecSrvInsts.length; idx++) {
+        mod -= cmdExecSrvInsts[idx];
+        if (mod < 0) {
+          break;
+        }
+      }
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        // ignore
+      }
     }
-    index++;
-    ExecutorType[] tryOrder;
-    switch (policy) {
-      case PREFER_LOCAL:
-        tryOrder = preferLocalTryList;
-        break;
 
-      case PREFER_REMOTE_SSM:
-        tryOrder = preferRemoteSsmTryList;
-        break;
-
-      case PREFER_AGENT:
-        tryOrder = preferAgentTryList;
-        break;
-
-      default:
-        LOG.error("Unknown cmdlet dispatch policy. " + cmdlet);
-        return false;
+    if (mod >= 0) {
+      return false;
     }
 
     CmdletExecutorService selected = null;
-    for (ExecutorType etTry : tryOrder) {
-      if (cmdExecServices[etTry.ordinal()] != null && executorSlotAvaliable(etTry)) {
-        selected = cmdExecServices[etTry.ordinal()];
+    for (int i = 0; i < ExecutorType.values().length; i++) {
+      idx = idx % ExecutorType.values().length;
+      if (execSrvSlotsLeft[idx] > 0) {
+        selected = cmdExecServices[idx];
         break;
       }
     }
@@ -148,7 +162,8 @@ public class CmdletDispatcher {
     }
 
     String id = selected.execute(cmdlet);
-    updateSlotsLeft(selected.getExecutorType().ordinal(), -1);
+
+    execSrvSlotsLeft[selected.getExecutorType().ordinal()] -= 1;
     dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
     LOG.info(
@@ -158,12 +173,8 @@ public class CmdletDispatcher {
     return true;
   }
 
-  private boolean executorSlotAvaliable(ExecutorType executorType) {
-    return cmdExecSrvInstsSlotsLeft[executorType.ordinal()] > 0;
-  }
-
   private CmdletDispatchPolicy getRoundrobinDispatchPolicy() {
-    int rev = index % cmdExecSrvTotalInsts;
+    int rev = index.get() % cmdExecSrvTotalInsts;
     for (int i = 0; i < cmdExecSrvInsts.length; i++) {
       if (cmdExecSrvInsts[i] > 0 && rev < cmdExecSrvInsts[i]) {
         return roundRobinPolicies[i];
@@ -204,35 +215,29 @@ public class CmdletDispatcher {
 
   private class DispatchTask implements Runnable {
     private final CmdletDispatcher dispatcher;
-    private long lastInfo = System.currentTimeMillis();
     private int statRound = 0;
     private int statFail = 0;
     private int statDispatched = 0;
     private int statNoMoreCmdlet = 0;
-    private int statNoExecutorOrFull = 0;
+    private int statFull = 0;
 
     public DispatchTask(CmdletDispatcher dispatcher) {
       this.dispatcher = dispatcher;
     }
 
+    public CmdletDispatcherStat getStat() {
+      CmdletDispatcherStat stat = new CmdletDispatcherStat(statRound, statFail,
+          statDispatched, statNoMoreCmdlet, statFull);
+      statRound = 0;
+      statFail = 0;
+      statDispatched = 0;
+      statFull = 0;
+      statNoMoreCmdlet = 0;
+      return stat;
+    }
+
     @Override
     public void run() {
-      long curr = System.currentTimeMillis();
-      if (curr - lastInfo >= 3000) {
-        if (!(statDispatched == 0 && statRound == statNoMoreCmdlet)) {
-          LOG.info(
-              "timeInterval={} statRound={} statFail={} statDispatched={} "
-                  + "statNoMoreCmdlet={} statNoExecutorOrFull={} pendingCmdlets={}",
-              curr - lastInfo, statRound, statFail, statDispatched, statNoMoreCmdlet,
-              statNoExecutorOrFull, pendingCmdlets.size());
-        }
-        statRound = 0;
-        statFail = 0;
-        statDispatched = 0;
-        statNoExecutorOrFull = 0;
-        statNoMoreCmdlet = 0;
-        lastInfo = curr;
-      }
       statRound++;
 
       if (cmdExecSrvTotalInsts == 0 || !dispatcher.canDispatchMore()) {
@@ -241,31 +246,69 @@ public class CmdletDispatcher {
       }
 
       LaunchCmdlet launchCmdlet = null;
-      try {
-        while (dispatcher.canDispatchMore()) {
-          try {
-            launchCmdlet = getNextCmdletToRun();
-            if (launchCmdlet == null) {
-              statNoMoreCmdlet++;
-              break;
-            } else {
-              cmdletPreExecutionProcess(launchCmdlet);
-              if (!dispatcher.dispatch(launchCmdlet)) {
-                if (LOG.isDebugEnabled()) {
-                  LOG.debug("Stop this round dispatch due : " + launchCmdlet);
-                }
-                statFail++;
-                break;
+      boolean disped;
+      while (resvExecSlot()) {
+        disped = false;
+        try {
+          launchCmdlet = getNextCmdletToRun();
+          if (launchCmdlet == null) {
+            statNoMoreCmdlet++;
+            break;
+          } else {
+            cmdletPreExecutionProcess(launchCmdlet);
+            if (!dispatcher.dispatch(launchCmdlet)) {
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("Stop this round dispatch due : " + launchCmdlet);
               }
-              statDispatched++;
+              statFail++;
+              break;
             }
-          } catch (IOException e) {
-            LOG.error("Cmdlet dispatcher error", e);
+            disped = true;
+            statDispatched++;
+          }
+        } catch (Throwable t) {
+          LOG.error("Cmdlet dispatcher error", t);
+        } finally {
+          if (!disped) {
+            freeExecSlot();
           }
         }
-      } catch (Throwable t) {
-        LOG.error("Dispatch {} error", launchCmdlet, t);
       }
+    }
+  }
+
+  private class LogStatTask implements Runnable {
+    public DispatchTask[] tasks;
+    private long lastReportNoExecutor = 0;
+    private long lastInfo = System.currentTimeMillis();
+
+    public LogStatTask(DispatchTask[] tasks) {
+      this.tasks = tasks;
+    }
+
+    @Override
+    public void run() {
+      long curr = System.currentTimeMillis();
+      CmdletDispatcherStat stat = new CmdletDispatcherStat();
+      for (DispatchTask task : tasks) {
+        stat.add(task.getStat());
+      }
+
+      if (!(stat.getStatDispatched() == 0 && stat.getStatRound() == stat.getStatNoMoreCmdlet())) {
+        if (cmdExecSrvTotalInsts != 0 || stat.getStatFull() != 0) {
+          LOG.info("timeInterval={} statRound={} statFail={} statDispatched={} "
+                  + "statNoMoreCmdlet={} statFull={} pendingCmdlets={} numExecutor={}",
+              curr - lastInfo, stat.getStatRound(), stat.getStatFail(), stat.getStatDispatched(),
+              stat.getStatNoMoreCmdlet(), stat.getStatFull(), pendingCmdlets.size(),
+              cmdExecSrvTotalInsts);
+        } else {
+          if (curr - lastReportNoExecutor >= 600 * 1000L) {
+            LOG.info("No cmdlet executor. pendingCmdlets={}", pendingCmdlets.size());
+            lastReportNoExecutor = curr;
+          }
+        }
+      }
+      lastInfo = System.currentTimeMillis();
     }
   }
 
@@ -300,21 +343,25 @@ public class CmdletDispatcher {
     LOG.info(String.format("Node " + msg.getNodeInfo() + (isAdd ? " added." : " removed.")));
   }
 
-  private int updateSlotsLeft(int index, int delta) {
-    synchronized (cmdExecSrvInstsSlotsLeft) {
-      cmdExecSrvInstsSlotsLeft[index] += delta;
-      return cmdExecSrvInstsSlotsLeft[index];
-    }
+  private void updateSlotsLeft(int idx, int delta) {
+    execSrvSlotsLeft[idx] += delta;
+    totalSlotsLeft.addAndGet(delta);
   }
 
   public int getTotalSlotsLeft() {
-    synchronized (cmdExecSrvInstsSlotsLeft) {
-      int total = 0;
-      for (int i : cmdExecSrvInstsSlotsLeft) {
-        total += i;
-      }
-      return total;
+    return totalSlotsLeft.get();
+  }
+
+  public boolean resvExecSlot() {
+    if (totalSlotsLeft.decrementAndGet() >= 0) {
+      return true;
     }
+    totalSlotsLeft.incrementAndGet();
+    return false;
+  }
+
+  public void freeExecSlot() {
+    totalSlotsLeft.incrementAndGet();
   }
 
   public int getTotalSlots() {
@@ -323,8 +370,14 @@ public class CmdletDispatcher {
 
   public void start() {
     CmdletDispatcherHelper.getInst().register(this);
-    schExecService.scheduleAtFixedRate(
-        new DispatchTask(this), 200, 100, TimeUnit.MILLISECONDS);
+    int idx = 0;
+    for (DispatchTask task : dispatchTasks) {
+      schExecService.scheduleAtFixedRate(task, idx * 200 / dispatchTasks.length,
+          100, TimeUnit.MILLISECONDS);
+      idx++;
+    }
+    schExecService.scheduleAtFixedRate(new LogStatTask(dispatchTasks),
+        5000, 5000, TimeUnit.MILLISECONDS);
   }
 
   public void stop() {
