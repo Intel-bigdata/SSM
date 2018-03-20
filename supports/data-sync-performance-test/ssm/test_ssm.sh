@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 for i in {1..5}
 do
 for name in 1MB_10000 100MB_1000
