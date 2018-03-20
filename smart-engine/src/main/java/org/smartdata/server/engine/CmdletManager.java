@@ -365,7 +365,10 @@ public class CmdletManager extends AbstractService {
         if (cmdletInfo.getState() != CmdletState.DISABLED) {
           cmdletInfos.add(cmdletInfo);
           for (Long aid : cmdletInfo.getAids()) {
-            actionInfos.add(idToActions.get(aid));
+            ActionInfo actionInfo = idToActions.get(aid);
+            if (actionInfo != null) {
+              actionInfos.add(actionInfo);
+            }
           }
         }
         if (CmdletState.isTerminalState(cmdletInfo.getState())) {
@@ -999,6 +1002,9 @@ public class CmdletManager extends AbstractService {
   }
 
   private void inferCmdletStatus(ActionInfo actionInfo) throws IOException, ActionException {
+    if (actionInfo == null) {
+      return;
+    }
     if (!actionInfo.isFinished()) {
       return;
     }
