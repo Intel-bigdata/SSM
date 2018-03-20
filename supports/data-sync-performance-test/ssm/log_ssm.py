@@ -3,10 +3,10 @@ import re
 pstart = re.compile(r'\d\d:\d\d:\d\d.*Start rule\d')
 pend = re.compile(r'\d\d:\d\d:\d\d.*\n.*\d\d:\d\d:\d\d.*Stop rule\d')
 
-action = [[],[],[]]
+action = [[], [], []]
 hack = 3
 a = ""
-with open("/root/smart-data-1.3.2/logs/smartserver.log",'r') as f:
+with open("/root/smart-data-1.3.2/logs/smartserver.log", 'r') as f:
     a = f.read()
 start = pstart.findall(a)
 end = pend.findall(a)
