@@ -45,9 +45,6 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.util.json.JSONArray;
-import com.amazonaws.util.json.JSONException;
-import com.amazonaws.util.json.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -248,38 +245,6 @@ public class ZeppelinhubClient {
   }
 
   boolean runAllParagraph(String noteId, String hubMsg) {
-    LOG.info("Running paragraph with noteId {}", noteId);
-    try {
-      JSONObject data = new JSONObject(hubMsg);
-      if (data.equals(JSONObject.NULL) || !(data.get("data") instanceof JSONArray)) {
-        LOG.error("Wrong \"data\" format for RUN_NOTEBOOK");
-        return false;
-      }
-      Client client = Client.getInstance();
-      if (client == null) {
-        LOG.warn("Base client isn't initialized, returning");
-        return false;
-      }
-      Message zeppelinMsg = new Message(OP.RUN_PARAGRAPH);
-
-      JSONArray paragraphs = data.getJSONArray("data");
-      String principal = data.getJSONObject("meta").getString("owner");
-      for (int i = 0; i < paragraphs.length(); i++) {
-        if (!(paragraphs.get(i) instanceof JSONObject)) {
-          LOG.warn("Wrong \"paragraph\" format for RUN_NOTEBOOK");
-          continue;
-        }
-        zeppelinMsg.data = gson.fromJson(paragraphs.getString(i), 
-            new TypeToken<Map<String, Object>>(){}.getType());
-        zeppelinMsg.principal = principal;
-        zeppelinMsg.ticket = TicketContainer.instance.getTicket(principal);
-        client.relayToZeppelin(zeppelinMsg, noteId);
-        LOG.info("\nSending RUN_PARAGRAPH message to Zeppelin ");
-      }
-    } catch (JSONException e) {
-      LOG.error("Failed to parse RUN_NOTEBOOK message from ZeppelinHub ", e);
-      return false;
-    }
     return true;
   }
 
