@@ -112,6 +112,8 @@ public class SmartConfKeys {
   public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY =
       "smart.cmdlet.dispatcher.log.disp.result";
   public static final boolean SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT = true;
+  public static final String SMART_CMDLET_DISPATCHERS_KEY = "smart.cmdlet.dispatchers";
+  public static final int SMART_CMDLET_DISPATCHERS_DEFAULT = 3;
 
   // Action
   public static final String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
