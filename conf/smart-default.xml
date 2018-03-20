@@ -80,6 +80,12 @@
   </property>
 
   <property>
+    <name>smart.cmdlet.dispatchers</name>
+    <value>3</value>
+    <description>Max number of cmdlet dispatchers that work in parallel</description>
+  </property>
+
+  <property>
     <name>smart.cmdlet.mover.max.concurrent.blocks.per.srv.inst</name>
     <value>0</value>
     <description>
