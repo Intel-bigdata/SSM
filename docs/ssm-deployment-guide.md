@@ -257,6 +257,9 @@ Enter into ${SMART_HOME} directory for running SSM.
 ----------------------------------------------------------------------------------
 After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configurations for integrating SSM.
 
+**Warning: This step may lead to `Hadoop not working issue` if it's not configured correctly. So, during testing, we don't recommend changing any configurations in Hadoop.** Actually, SSM can work with an existing Hadoop cluster without any configuration change in Hadoop. Although in that case SSM cannot collect access count or data temperature from Hadoop, you can still use SSM action to change access count or data temperature. For example, you can use `read -file XXX` to change access count or data temperature of file `XXX`.
+
+
 ## Apache Hadoop 2.7.3
 
 ### core-site.xml changes 
