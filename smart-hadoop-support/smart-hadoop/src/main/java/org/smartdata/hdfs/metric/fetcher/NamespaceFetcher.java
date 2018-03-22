@@ -35,7 +35,6 @@ import org.smartdata.metastore.ingestion.FileStatusIngester;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,8 +47,8 @@ public class NamespaceFetcher {
   private final ScheduledExecutorService scheduledExecutorService;
   private final long fetchInterval;
   private ScheduledFuture fetchTaskFuture;
-  private ScheduledFuture consumerFuture;
-  private FileStatusIngester consumer;
+  private ScheduledFuture[] consumerFutures;
+  private FileStatusIngester[] consumers;
   private IngestionTask ingestionTask;
   private MetaStore metaStore;
   private SmartConf conf;
@@ -57,46 +56,34 @@ public class NamespaceFetcher {
   public static final Logger LOG =
       LoggerFactory.getLogger(NamespaceFetcher.class);
 
-  public NamespaceFetcher(DFSClient client, MetaStore metaStore) {
-    this(client, metaStore, DEFAULT_INTERVAL);
-  }
-
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, ScheduledExecutorService service) {
-    this(client, metaStore, DEFAULT_INTERVAL, service);
-    this.conf = new SmartConf();
+    this(client, metaStore, DEFAULT_INTERVAL, service, new SmartConf());
   }
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, ScheduledExecutorService service, SmartConf conf) {
-    this(client, metaStore, DEFAULT_INTERVAL, service);
-    this.conf = conf;
+    this(client, metaStore, DEFAULT_INTERVAL, service, conf);
   }
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval) {
-    this(client, metaStore, fetchInterval, Executors.newSingleThreadScheduledExecutor());
-    this.conf = new SmartConf();
-  }
-
-  public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval, SmartConf conf) {
-    this(client, metaStore, fetchInterval, Executors.newSingleThreadScheduledExecutor());
-    this.conf = conf;
-  }
-
-  public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
-      ScheduledExecutorService service) {
-    this.ingestionTask = new HdfsFetchTask(client);
-    this.consumer = new FileStatusIngester(metaStore, ingestionTask);
-    this.fetchInterval = fetchInterval;
-    this.scheduledExecutorService = service;
-    this.metaStore = metaStore;
-    this.conf = new SmartConf();
+    this(client, metaStore, fetchInterval, null, new SmartConf());
   }
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service, SmartConf conf) {
     this.ingestionTask = new HdfsFetchTask(client, conf);
-    this.consumer = new FileStatusIngester(metaStore, ingestionTask);
+    int numConsumers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_NUM_CONSUMERS_KEY,
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_NUM_CONSUMERS_DEFAULT);
+    numConsumers = numConsumers <= 0 ? 1 : numConsumers;
+    consumers = new FileStatusIngester[numConsumers];
+    for (int i = 0; i < numConsumers; i++) {
+      consumers[i] = new FileStatusIngester(metaStore, ingestionTask);
+    }
     this.fetchInterval = fetchInterval;
-    this.scheduledExecutorService = service;
+    if (service != null) {
+      this.scheduledExecutorService = service;
+    } else {
+      scheduledExecutorService = Executors.newScheduledThreadPool(numConsumers + 1);
+    }
     this.metaStore = metaStore;
     this.conf = conf;
   }
@@ -109,8 +96,12 @@ public class NamespaceFetcher {
     }
     this.fetchTaskFuture = this.scheduledExecutorService.scheduleAtFixedRate(
         ingestionTask, 0, fetchInterval, TimeUnit.MILLISECONDS);
-    this.consumerFuture = this.scheduledExecutorService.scheduleAtFixedRate(
-        consumer, 0, 100, TimeUnit.MILLISECONDS);
+
+    consumerFutures = new ScheduledFuture[consumers.length];
+    for (int i = 0; i < consumers.length; i++) {
+      consumerFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
+          consumers[i], 0, 100, TimeUnit.MILLISECONDS);
+    }
     LOG.info("Started.");
   }
 
@@ -122,8 +113,12 @@ public class NamespaceFetcher {
     if (fetchTaskFuture != null) {
       this.fetchTaskFuture.cancel(false);
     }
-    if (consumerFuture != null) {
-      this.consumerFuture.cancel(false);
+    if (consumerFutures != null) {
+      for (ScheduledFuture f : consumerFutures) {
+        if (f != null) {
+          f.cancel(false);
+        }
+      }
     }
   }
 
@@ -131,7 +126,10 @@ public class NamespaceFetcher {
     private final HdfsFileStatus[] EMPTY_STATUS = new HdfsFileStatus[0];
     private final DFSClient client;
     private final SmartConf conf;
-    private List<String> ignoreList;
+    private List<String> ignoreList = new ArrayList<>();
+    private byte[] startAfter = null;
+    private final byte[] empty = HdfsFileStatus.EMPTY_NAME;
+
     public HdfsFetchTask(DFSClient client, SmartConf conf) {
       super();
       this.client = client;
@@ -140,33 +138,18 @@ public class NamespaceFetcher {
       defaultBatchSize = conf.getInt(SmartConfKeys
               .SMART_NAMESPACE_FETCHER_BATCH_KEY,
           SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
-      if (configString == null){
-        configString = "";
-      }
-
-      //only when parent dir is not ignored we run the follow code
-      ignoreList = Arrays.asList(configString.split(","));
-      for (int i = 0; i < ignoreList.size(); i++) {
-        if (!ignoreList.get(i).endsWith("/")) {
-          ignoreList.set(i, ignoreList.get(i).concat("/"));
+      if (configString != null) {
+        configString = configString.trim();
+        if (!configString.equals("")) {
+          //only when parent dir is not ignored we run the follow code
+          ignoreList = Arrays.asList(configString.split(","));
+          for (int i = 0; i < ignoreList.size(); i++) {
+            if (!ignoreList.get(i).endsWith("/")) {
+              ignoreList.set(i, ignoreList.get(i).concat("/"));
+            }
+          }
         }
       }
-    }
-
-    public HdfsFetchTask(DFSClient client) {
-      super();
-      this.client = client;
-      this.conf = new SmartConf();
-      String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-      defaultBatchSize = conf.getInt(SmartConfKeys
-          .SMART_NAMESPACE_FETCHER_BATCH_KEY,
-          SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
-      if (configString == null){
-        configString = "";
-      }
-
-      //only when parent dir is not ignored we run the follow code
-      ignoreList = Arrays.asList(configString.split(","));
     }
 
     @Override
@@ -212,8 +195,15 @@ public class NamespaceFetcher {
       }
       for (int i = 0; i < ignoreList.size(); i++) {
 
-        if (ignoreList.get(i).equals(tmpParent)) {
-          return;
+      if (startAfter == null) {
+        String tmpParent = parent;
+        if (!tmpParent.endsWith("/")) {
+          tmpParent = tmpParent.concat("/");
+        }
+        for (int i = 0; i < ignoreList.size(); i++) {
+          if (ignoreList.get(i).equals(tmpParent)) {
+            return;
+          }
         }
       }
 

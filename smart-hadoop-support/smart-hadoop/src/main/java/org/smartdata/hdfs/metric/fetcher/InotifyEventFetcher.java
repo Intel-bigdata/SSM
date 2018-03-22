@@ -85,7 +85,8 @@ public class InotifyEventFetcher {
     this.metaStore = metaStore;
     this.scheduledExecutorService = service;
     this.finishedCallback = callBack;
-    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service);
+    // use independent thread pool
+    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, null);
     this.conf = new SmartConf();
   }
 
@@ -98,7 +99,7 @@ public class InotifyEventFetcher {
     this.scheduledExecutorService = service;
     this.finishedCallback = callBack;
     this.conf = conf;
-    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service,conf);
+    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, null, conf);
   }
 
   public void start() throws IOException {
