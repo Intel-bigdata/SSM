@@ -83,6 +83,7 @@ public class TestSmartRuleParser {
     rules.add("file : accessCount(1min) > 5 | cache -replica 2");
     rules.add("file : age <= 1 | hello -print_message \"crul world\"");
     rules.add("file : age <= 1 | read ; read");
+    rules.add("file : age <= 1 | read ; sync -dest hdfs://{}[]@&$=?!");
 
     for (String rule : rules) {
       parseAndExecuteRule(rule);
