@@ -42,6 +42,9 @@ public class SmartConfKeys {
       "smart.namespace.fetcher.ignore.unsuccessive.inotify.event";
   public static final boolean SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_DEFAULT =
       false;
+  public static final String SMART_NAMESPACE_FETCHER_NUM_CONSUMERS_KEY =
+      "smart.namespace.fetcher.num.consumers";
+  public static final int SMART_NAMESPACE_FETCHER_NUM_CONSUMERS_DEFAULT = 3;
 
   // Configure keys for Alluxio
   public static final String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
