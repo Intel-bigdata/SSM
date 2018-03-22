@@ -68,6 +68,12 @@
   </property>
 
   <property>
+    <name>smart.namespace.fetcher.num.consumers</name>
+    <value>3</value>
+    <description>Number of consumers to consume data fetched by Namespace fetcher</description>
+  </property>
+
+  <property>
     <name>smart.rule.executors</name>
     <value>5</value>
     <description>Max number of rules that can be executed in parallel</description>
