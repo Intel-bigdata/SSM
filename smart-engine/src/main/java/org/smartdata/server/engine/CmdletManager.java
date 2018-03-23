@@ -1076,9 +1076,7 @@ public class CmdletManager extends AbstractService {
   }
 
   private class ScheduleTask implements Runnable {
-    private int round;
     public ScheduleTask() {
-      round = 0;
     }
 
     @Override
@@ -1090,9 +1088,8 @@ public class CmdletManager extends AbstractService {
           nScheduled = scheduleCmdlet();
           totalScheduled += nScheduled;
         } while (nScheduled != 0);
-      } catch (IOException e) {
-        LOG.error("Exception when Scheduling Cmdlet. "
-            + scheduledCmdlet.size() + " cmdlets are pending for dispatch.", e);
+      } catch (Throwable t) {
+        // no meaningful info, ignore
       }
     }
   }
