@@ -22,11 +22,12 @@ import org.smartdata.model.FileInfoBatch;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class IngestionTask implements Runnable {
   public static long numFilesFetched = 0L;
   public static long numDirectoriesFetched = 0L;
-  public static long numPersisted = 0L;
+  public static AtomicLong numPersisted = new AtomicLong(0);
 
   protected int defaultBatchSize = 20;
   protected int maxPendingBatches = 80;
