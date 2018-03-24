@@ -144,14 +144,6 @@
 </property>
 -->
 
-<!-- Notebook storage layer using local file system
-<property>
-  <name>zeppelin.notebook.storage</name>
-  <value>org.apache.zeppelin.notebook.repo.VFSNotebookRepo</value>
-  <description>local notebook persistence layer implementation</description>
-</property>
--->
-
 <!-- For connecting your Zeppelin with ZeppelinHub -->
 <!--
 <property>
