@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.rest;
 
-import com.amazonaws.util.json.JSONArray;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
