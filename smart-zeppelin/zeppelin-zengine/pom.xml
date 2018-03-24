@@ -84,22 +84,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-vfs2</artifactId>
-      <version>${commons.vfs2.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.maven.scm</groupId>
-          <artifactId>maven-scm-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.plexus</groupId>
-          <artifactId>plexus-utils</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
     </dependency>
