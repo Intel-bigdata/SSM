@@ -39,7 +39,6 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.SystemInfo;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -182,7 +181,7 @@ public class InotifyEventFetcher {
   private class NameSpaceFetcherCallBack implements FutureCallback<Object> {
 
     @Override
-    public void onSuccess(@Nullable Object o) {
+    public void onSuccess(Object o) {
       inotifyFetchFuture.cancel(false);
       nameSpaceFetcher.stop();
       try {
