@@ -31,8 +31,6 @@ import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.ActionStatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
-import javax.annotation.Nullable;
-
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,7 +107,7 @@ public class CmdletExecutor {
     }
 
     @Override
-    public void onSuccess(@Nullable Object result) {
+    public void onSuccess(Object result) {
       removeCmdlet(cmdlet.getId());
     }
 
