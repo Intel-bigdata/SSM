@@ -597,7 +597,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
     ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING("zeppelin.notebook.azure.connectionString", null),
     ZEPPELIN_NOTEBOOK_AZURE_SHARE("zeppelin.notebook.azure.share", "zeppelin"),
     ZEPPELIN_NOTEBOOK_AZURE_USER("zeppelin.notebook.azure.user", "user"),
-    ZEPPELIN_NOTEBOOK_STORAGE("zeppelin.notebook.storage", null),
+    ZEPPELIN_NOTEBOOK_STORAGE("zeppelin.notebook.storage", ""),
     ZEPPELIN_NOTEBOOK_ONE_WAY_SYNC("zeppelin.notebook.one.way.sync", false),
     // whether by default note is public or private
     ZEPPELIN_NOTEBOOK_PUBLIC("zeppelin.notebook.public", true),

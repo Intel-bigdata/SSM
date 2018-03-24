@@ -35,11 +35,9 @@ import org.apache.zeppelin.interpreter.InterpreterOutput;
 import org.apache.zeppelin.interpreter.InterpreterSettingManager;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
-import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
 import org.apache.zeppelin.rest.CredentialRestApi;
 import org.apache.zeppelin.rest.HeliumRestApi;
 import org.apache.zeppelin.rest.LoginRestApi;
-import org.apache.zeppelin.rest.NotebookRepoRestApi;
 import org.apache.zeppelin.rest.SecurityRestApi;
 import org.apache.zeppelin.rest.ZeppelinRestApi;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
@@ -95,7 +93,6 @@ public class SmartZeppelinServer {
   private SchedulerFactory schedulerFactory;
   private InterpreterFactory replFactory;
   private SearchService noteSearchService;
-  private NotebookRepoSync notebookRepo;
   private NotebookAuthorization notebookAuthorization;
   private Credentials credentials;
   private DependencyResolver depResolver;
@@ -175,7 +172,6 @@ public class SmartZeppelinServer {
     this.schedulerFactory = new SchedulerFactory();
     this.interpreterSettingManager = new InterpreterSettingManager(zconf, depResolver,
         new InterpreterOption(true));
-    this.notebookRepo = new NotebookRepoSync(zconf);
     this.noteSearchService = new LuceneSearch();
     this.notebookAuthorization = NotebookAuthorization.init(zconf);
     this.credentials = new Credentials(zconf.credentialsPersist(), zconf.getCredentialsPath());
@@ -376,14 +372,6 @@ public class SmartZeppelinServer {
       /** Rest-api root endpoint */
       ZeppelinRestApi root = new ZeppelinRestApi();
       singletons.add(root);
-/*
-      NotebookRestApi notebookApi =
-        new NotebookRestApi(notebook, notebookWsServer, noteSearchService);
-      singletons.add(notebookApi);*/
-
-      NotebookRepoRestApi notebookRepoApi =
-        new NotebookRepoRestApi(notebookRepo);
-      singletons.add(notebookRepoApi);
 
       HeliumRestApi heliumApi = new HeliumRestApi(helium, notebook);
       singletons.add(heliumApi);
