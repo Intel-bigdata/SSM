@@ -48,12 +48,12 @@ public class FileStatusIngester implements Runnable {
         FileInfo[] statuses = batch.getFileInfos();
         if (statuses.length == batch.actualSize()) {
           this.dbAdapter.insertFiles(batch.getFileInfos());
-          IngestionTask.numPersisted += statuses.length;
+          IngestionTask.numPersisted.addAndGet(statuses.length);
         } else {
           FileInfo[] actual = new FileInfo[batch.actualSize()];
           System.arraycopy(statuses, 0, actual, 0, batch.actualSize());
           this.dbAdapter.insertFiles(actual);
-          IngestionTask.numPersisted += actual.length;
+          IngestionTask.numPersisted.addAndGet(actual.length);
         }
 
         if (LOG.isDebugEnabled()) {
@@ -66,16 +66,16 @@ public class FileStatusIngester implements Runnable {
       LOG.error("Consumer {} error", id);
     }
 
-    if (LOG.isDebugEnabled() && id == 0) {
+    if (id == 0) {
       long curr = System.currentTimeMillis();
-      if (curr - lastUpdateTime >= 2000) {
+      if (curr - lastUpdateTime >= 5000) {
         long total = IngestionTask.numDirectoriesFetched + IngestionTask.numFilesFetched;
         if (total > 0) {
-          LOG.debug(String.format(
+          LOG.info(String.format(
               "%d sec, %%%d persisted into database",
-              (curr - startTime) / 1000, IngestionTask.numPersisted * 100 / total));
+              (curr - startTime) / 1000, IngestionTask.numPersisted.get() * 100 / total));
         } else {
-          LOG.debug(String.format(
+          LOG.info(String.format(
               "%d sec, %%0 persisted into database",
               (curr - startTime) / 1000));
         }
