@@ -46,10 +46,10 @@ public class NamespaceFetcher {
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final long fetchInterval;
-  private ScheduledFuture fetchTaskFuture;
+  private ScheduledFuture[] fetchTaskFutures;
   private ScheduledFuture[] consumerFutures;
   private FileStatusIngester[] consumers;
-  private IngestionTask ingestionTask;
+  private IngestionTask[] ingestionTask;
   private MetaStore metaStore;
   private SmartConf conf;
 
@@ -70,19 +70,26 @@ public class NamespaceFetcher {
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service, SmartConf conf) {
-    this.ingestionTask = new HdfsFetchTask(client, conf);
-    int numConsumers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_NUM_CONSUMERS_KEY,
-        SmartConfKeys.SMART_NAMESPACE_FETCHER_NUM_CONSUMERS_DEFAULT);
+    int numProducers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_KEY,
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_DEFAULT);
+    numProducers = numProducers <= 0 ? 1 : numProducers;
+    this.ingestionTask = new IngestionTask[numProducers];
+    for (int i = 0; i < numProducers; i++) {
+      ingestionTask[i] = new HdfsFetchTask(client, conf);
+    }
+
+    int numConsumers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_KEY,
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_DEFAULT);
     numConsumers = numConsumers <= 0 ? 1 : numConsumers;
     consumers = new FileStatusIngester[numConsumers];
     for (int i = 0; i < numConsumers; i++) {
-      consumers[i] = new FileStatusIngester(metaStore, ingestionTask);
+      consumers[i] = new FileStatusIngester(metaStore);
     }
     this.fetchInterval = fetchInterval;
     if (service != null) {
       this.scheduledExecutorService = service;
     } else {
-      scheduledExecutorService = Executors.newScheduledThreadPool(numConsumers + 1);
+      scheduledExecutorService = Executors.newScheduledThreadPool(numProducers + numConsumers);
     }
     this.metaStore = metaStore;
     this.conf = conf;
@@ -94,10 +101,13 @@ public class NamespaceFetcher {
     } catch (MetaStoreException e) {
       throw new IOException("Error while reset files", e);
     }
-    this.fetchTaskFuture = this.scheduledExecutorService.scheduleAtFixedRate(
-        ingestionTask, 0, fetchInterval, TimeUnit.MILLISECONDS);
+    this.fetchTaskFutures = new ScheduledFuture[ingestionTask.length];
+    for (int i = 0; i < ingestionTask.length; i++) {
+      fetchTaskFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
+          ingestionTask[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
+    }
 
-    consumerFutures = new ScheduledFuture[consumers.length];
+    this.consumerFutures = new ScheduledFuture[consumers.length];
     for (int i = 0; i < consumers.length; i++) {
       consumerFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
           consumers[i], 0, 100, TimeUnit.MILLISECONDS);
@@ -106,12 +116,16 @@ public class NamespaceFetcher {
   }
 
   public boolean fetchFinished() {
-    return this.ingestionTask.finished();
+    return IngestionTask.finished();
   }
 
   public void stop() {
-    if (fetchTaskFuture != null) {
-      this.fetchTaskFuture.cancel(false);
+    if (fetchTaskFutures != null) {
+      for (ScheduledFuture f: fetchTaskFutures) {
+        if (f != null) {
+          f.cancel(false);
+        }
+      }
     }
     if (consumerFutures != null) {
       for (ScheduledFuture f : consumerFutures) {
@@ -160,7 +174,7 @@ public class NamespaceFetcher {
           LOG.debug(String.format(
               "%d sec, numDirectories = %d, numFiles = %d, batchsInqueue = %d",
               (curr - startTime) / 1000,
-              numDirectoriesFetched, numFilesFetched, batches.size()));
+              numDirectoriesFetched.get(), numFilesFetched.get(), batches.size()));
           lastUpdateTime = curr;
         }
       }
@@ -188,7 +202,7 @@ public class NamespaceFetcher {
             LOG.info(String.format(
                 "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
                 (curr - startTime) / 1000,
-                numDirectoriesFetched, numFilesFetched));
+                numDirectoriesFetched.get(), numFilesFetched.get()));
           }
         }
         return;
@@ -213,7 +227,7 @@ public class NamespaceFetcher {
             FileInfo internal = convertToFileInfo(status, "");
             internal.setPath(parent);
             this.addFileStatus(internal);
-            numDirectoriesFetched++;
+            numDirectoriesFetched.incrementAndGet();
           }
 
           HdfsFileStatus[] children;
@@ -227,7 +241,7 @@ public class NamespaceFetcher {
                 this.deque.add(child.getFullName(parent));
               } else {
                 this.addFileStatus(convertToFileInfo(child, parent));
-                numFilesFetched++;
+                numFilesFetched.incrementAndGet();
               }
             }
           } while (startAfter != null && batches.size() < maxPendingBatches);

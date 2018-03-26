@@ -28,21 +28,19 @@ public class FileStatusIngester implements Runnable {
   public static final Logger LOG = LoggerFactory.getLogger(FileStatusIngester.class);
 
   private final MetaStore dbAdapter;
-  private final IngestionTask ingestionTask;
   private long startTime = System.currentTimeMillis();
   private long lastUpdateTime = startTime;
   private static int idCounter = 0;
   private int id;
 
-  public FileStatusIngester(MetaStore dbAdapter, IngestionTask ingestionTask) {
+  public FileStatusIngester(MetaStore dbAdapter) {
     this.dbAdapter = dbAdapter;
-    this.ingestionTask = ingestionTask;
     id = idCounter++;
   }
 
   @Override
   public void run() {
-    FileInfoBatch batch = ingestionTask.pollBatch();
+    FileInfoBatch batch = IngestionTask.pollBatch();
     try {
       if (batch != null) {
         FileInfo[] statuses = batch.getFileInfos();
@@ -69,7 +67,8 @@ public class FileStatusIngester implements Runnable {
     if (id == 0) {
       long curr = System.currentTimeMillis();
       if (curr - lastUpdateTime >= 5000) {
-        long total = IngestionTask.numDirectoriesFetched + IngestionTask.numFilesFetched;
+        long total =
+              IngestionTask.numDirectoriesFetched.get() + IngestionTask.numFilesFetched.get();
         if (total > 0) {
           LOG.info(String.format(
               "%d sec, %%%d persisted into database",
