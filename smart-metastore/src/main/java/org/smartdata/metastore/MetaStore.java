@@ -204,7 +204,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    *
    * @param file
    */
-  public synchronized void insertFile(FileInfo file)
+  public void insertFile(FileInfo file)
       throws MetaStoreException {
     updateCache();
     String owner = file.getOwner();
@@ -226,7 +226,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    *
    * @param files
    */
-  public synchronized void insertFiles(FileInfo[] files)
+  public void insertFiles(FileInfo[] files)
       throws MetaStoreException {
     updateCache();
     for (FileInfo file : files) {
