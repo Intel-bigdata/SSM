@@ -31,6 +31,28 @@ message ReportFileAccessEventRequestProto {
 message ReportFileAccessEventResponseProto {
 }
 
+message DeleteSmallFileRequestProto {
+  required string filePath = 1;
+}
+
+message DeleteSmallFileResponseProto {
+}
+
+message TruncateSmallFileRequestProto {
+  required string filePath = 1;
+}
+
+message TruncateSmallFileResponseProto {
+}
+
+message RenameSmallFileRequestProto {
+  required string filePath = 1;
+  required string newPath = 2;
+}
+
+message RenameSmallFileResponseProto {
+}
+
 message GetFileStateRequestProto {
   required string filePath = 1;
 }
@@ -63,4 +85,10 @@ service protoService {
   returns (ReportFileAccessEventResponseProto);
   rpc getFileState (GetFileStateRequestProto)
   returns (GetFileStateResponseProto);
+  rpc deleteSmallFile (DeleteSmallFileRequestProto)
+  returns (DeleteSmallFileResponseProto);
+  rpc truncateSmallFile (TruncateSmallFileRequestProto)
+  returns (TruncateSmallFileResponseProto);
+  rpc renameSmallFile (RenameSmallFileRequestProto)
+  returns (RenameSmallFileResponseProto);
 }

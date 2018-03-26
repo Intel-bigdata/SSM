@@ -261,4 +261,19 @@ public class SmartRpcServer implements SmartServerProtocols {
   public FileState getFileState(String filePath) throws IOException {
     return ssm.getMetaStore().getFileState(filePath);
   }
+
+  @Override
+  public void deleteSmallFile(String filePath) throws IOException {
+    ssm.getMetaStore().deleteSmallFile(filePath);
+  }
+
+  @Override
+  public void truncateSmallFile(String filePath) throws IOException {
+    ssm.getMetaStore().truncateSmallFile(filePath);
+  }
+
+  @Override
+  public void renameSmallFile(String filePath, String newFilePath) throws IOException {
+    ssm.getMetaStore().renameSmallFile(filePath, newFilePath);
+  }
 }

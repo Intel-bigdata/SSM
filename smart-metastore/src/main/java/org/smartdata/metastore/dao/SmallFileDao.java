@@ -64,6 +64,18 @@ public class SmallFileDao {
         new Object[]{path}, new FileContainerInfoRowMapper());
   }
 
+  public synchronized void truncateSmallFile(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "UPDATE small_file SET length = 0 WHERE path = ?";
+    jdbcTemplate.update(sql, path);
+  }
+
+  public synchronized void renameSmallFile(String path, String newPath) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "UPDATE small_file SET path = ? WHERE path = ?";
+    jdbcTemplate.update(sql, path, newPath);
+  }
+
   public synchronized void updateSmallFile(String path, String containerFilePath,
                                            long offset, long length) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);

@@ -140,4 +140,3 @@ Security Consideration
 For now container file includes the small files which have the same acl under a folder, and the container file is saved in the same directory of small files. In this way we can ensure container file has the same acl of small files.
 
 When reading small file, SSM server will check whether the user has the necessary permission to the small file, after privilege check passed, SSM server will use the file container info queried from meta store to read small file from the container file.
-

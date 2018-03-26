@@ -21,9 +21,12 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
+import org.smartdata.protocol.ClientServerProto.DeleteSmallFileRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
+import org.smartdata.protocol.ClientServerProto.RenameSmallFileRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
+import org.smartdata.protocol.ClientServerProto.TruncateSmallFileRequestProto;
 import org.smartdata.protocol.SmartClientProtocol;
 
 import java.io.IOException;
@@ -60,12 +63,49 @@ public class ClientProtocolClientSideTranslator implements
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
-    GetFileStateRequestProto  req = GetFileStateRequestProto.newBuilder()
+    GetFileStateRequestProto req = GetFileStateRequestProto.newBuilder()
         .setFilePath(filePath)
         .build();
     try {
       GetFileStateResponseProto response = rpcProxy.getFileState(null, req);
       return ProtoBufferHelper.convert(response);
+    } catch (ServiceException e) {
+      throw ProtoBufferHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public void deleteSmallFile(String filePath) throws IOException {
+    DeleteSmallFileRequestProto req = DeleteSmallFileRequestProto.newBuilder()
+        .setFilePath(filePath)
+        .build();
+    try {
+      rpcProxy.deleteSmallFile(null, req);
+    } catch (ServiceException e) {
+      throw ProtoBufferHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public void truncateSmallFile(String filePath) throws IOException {
+    TruncateSmallFileRequestProto req = TruncateSmallFileRequestProto.newBuilder()
+        .setFilePath(filePath)
+        .build();
+    try {
+      rpcProxy.truncateSmallFile(null, req);
+    } catch (ServiceException e) {
+      throw ProtoBufferHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public void renameSmallFile(String filePath, String newPath) throws IOException {
+    RenameSmallFileRequestProto req = RenameSmallFileRequestProto.newBuilder()
+        .setFilePath(filePath)
+        .setNewPath(newPath)
+        .build();
+    try {
+      rpcProxy.renameSmallFile(null, req);
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }

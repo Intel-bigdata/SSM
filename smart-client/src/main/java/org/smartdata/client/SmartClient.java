@@ -17,7 +17,6 @@
  */
 package org.smartdata.client;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
@@ -95,6 +94,21 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     return server.getFileState(filePath);
   }
 
+  @Override
+  public void deleteSmallFile(String filePath) throws IOException {
+    server.deleteSmallFile(filePath);
+  }
+
+  @Override
+  public void truncateSmallFile(String filePath) throws IOException {
+    server.truncateSmallFile(filePath);
+  }
+
+  @Override
+  public void renameSmallFile(String filePath, String newPath) throws IOException {
+    server.renameSmallFile(filePath, newPath);
+  }
+
   private boolean shouldIgnore(String path) {
     String toCheck = path.endsWith("/") ? path : path + "/";
     for (String s : ignoreAccessEventDirs) {
@@ -104,7 +118,6 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     }
     return false;
   }
-
 
   public void checkOpen() throws IOException {
     if (!running) {
