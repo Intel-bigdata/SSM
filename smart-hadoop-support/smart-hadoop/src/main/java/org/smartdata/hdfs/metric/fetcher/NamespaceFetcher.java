@@ -49,7 +49,7 @@ public class NamespaceFetcher {
   private ScheduledFuture[] fetchTaskFutures;
   private ScheduledFuture[] consumerFutures;
   private FileStatusIngester[] consumers;
-  private IngestionTask[] ingestionTask;
+  private IngestionTask[] ingestionTasks;
   private MetaStore metaStore;
   private SmartConf conf;
 
@@ -73,9 +73,9 @@ public class NamespaceFetcher {
     int numProducers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_KEY,
         SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_DEFAULT);
     numProducers = numProducers <= 0 ? 1 : numProducers;
-    this.ingestionTask = new IngestionTask[numProducers];
+    this.ingestionTasks = new IngestionTask[numProducers];
     for (int i = 0; i < numProducers; i++) {
-      ingestionTask[i] = new HdfsFetchTask(client, conf);
+      ingestionTasks[i] = new HdfsFetchTask(ingestionTasks, client, conf);
     }
 
     int numConsumers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_KEY,
@@ -101,10 +101,10 @@ public class NamespaceFetcher {
     } catch (MetaStoreException e) {
       throw new IOException("Error while reset files", e);
     }
-    this.fetchTaskFutures = new ScheduledFuture[ingestionTask.length];
-    for (int i = 0; i < ingestionTask.length; i++) {
+    this.fetchTaskFutures = new ScheduledFuture[ingestionTasks.length];
+    for (int i = 0; i < ingestionTasks.length; i++) {
       fetchTaskFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
-          ingestionTask[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
+          ingestionTasks[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
     }
 
     this.consumerFutures = new ScheduledFuture[consumers.length];
@@ -143,9 +143,15 @@ public class NamespaceFetcher {
     private List<String> ignoreList = new ArrayList<>();
     private byte[] startAfter = null;
     private final byte[] empty = HdfsFileStatus.EMPTY_NAME;
+    private String parent = "";
+    private IngestionTask[] ingestionTasks;
+    private static int idCounter = 0;
+    private int id;
 
-    public HdfsFetchTask(DFSClient client, SmartConf conf) {
+    public HdfsFetchTask(IngestionTask[] ingestionTasks, DFSClient client, SmartConf conf) {
       super();
+      id = idCounter++;
+      this.ingestionTasks = ingestionTasks;
       this.client = client;
       this.conf = conf;
       String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
@@ -166,6 +172,16 @@ public class NamespaceFetcher {
       }
     }
 
+    // BFS finished
+    public boolean isDequeEmpty() {
+      for (IngestionTask ingestionTask: ingestionTasks) {
+        if (((HdfsFetchTask)ingestionTask).parent != null) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     @Override
     public void run() {
       if (LOG.isDebugEnabled()) {
@@ -183,8 +199,8 @@ public class NamespaceFetcher {
         return;
       }
 
-      String parent = deque.pollFirst();
-      if (parent == null) { // BFS finished
+      this.parent = deque.pollFirst();
+      if (parent == null) {
         if (currentBatch.actualSize() > 0) {
           try {
             this.batches.put(currentBatch);
@@ -195,9 +211,9 @@ public class NamespaceFetcher {
           this.currentBatch = new FileInfoBatch(defaultBatchSize);
         }
 
-        if (this.batches.isEmpty()) {
-          if (!this.isFinished) {
-            this.isFinished = true;
+        if (this.id == 0 && isDequeEmpty() && this.batches.isEmpty()) {
+          if (!IngestionTask.isFinished) {
+            IngestionTask.isFinished = true;
             long curr = System.currentTimeMillis();
             LOG.info(String.format(
                 "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",

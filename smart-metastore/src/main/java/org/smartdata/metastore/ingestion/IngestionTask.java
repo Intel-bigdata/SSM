@@ -48,6 +48,7 @@ public abstract class IngestionTask implements Runnable {
       this.deque.add(ROOT);
     }
   }
+
   public static boolean finished() {
     return isFinished;
   }
