@@ -23,12 +23,10 @@ import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.SmartInputStreamFactory;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartConstants;
 import org.smartdata.client.SmartClient;
-import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
 import org.smartdata.model.FileState.FileStage;
 import org.smartdata.model.FileState.FileType;
@@ -139,8 +137,8 @@ public class SmartDFSClient extends DFSClient {
       fileState = new FileState(src, FileType.NORMAL, FileStage.DONE);
     }
     DFSInputStream is = SmartInputStreamFactory.get().create(this, src,
-        verifyChecksum, fileState);
-    reportFileAccessEvent(src);
+        verifyChecksum, fileState, smartClient);
+    //reportFileAccessEvent(src);
     return is;
   }
 
@@ -152,6 +150,9 @@ public class SmartDFSClient extends DFSClient {
     return super.open(src, buffersize, verifyChecksum, stats);
   }
 
+
+  /*
+  // Move this function to SmartInputStream
   private void reportFileAccessEvent(String src) {
     try {
       if (!healthy) {
@@ -172,6 +173,7 @@ public class SmartDFSClient extends DFSClient {
       healthy = false;
     }
   }
+  */
 
   @Override
   public synchronized void close() throws IOException {

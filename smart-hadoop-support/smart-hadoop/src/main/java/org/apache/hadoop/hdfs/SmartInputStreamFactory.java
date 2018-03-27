@@ -18,6 +18,7 @@
 package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.fs.UnresolvedLinkException;
+import org.smartdata.client.SmartClient;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.model.FileState;
 
@@ -32,23 +33,24 @@ public abstract class SmartInputStreamFactory {
   }
 
   public abstract DFSInputStream create(DFSClient dfsClient, String src,
-      boolean verifyChecksum, FileState fileState) throws IOException, UnresolvedLinkException;
+      boolean verifyChecksum, FileState fileState, SmartClient smartClient)
+      throws IOException, UnresolvedLinkException;
 
   protected DFSInputStream createSmartInputStream(DFSClient dfsClient, String src,
-      boolean verifyChecksum, FileState fileState) throws IOException{
+      boolean verifyChecksum, FileState fileState, SmartClient smartClient) throws IOException{
     DFSInputStream inputStream = null;
     switch (fileState.getFileType()) {
       case NORMAL:
-        inputStream = new DFSInputStream(dfsClient, src, verifyChecksum);
+        inputStream = new SmartInputStream(dfsClient, src, verifyChecksum, fileState, smartClient);
         break;
       case COMPACT:
-        inputStream = new CompactInputStream(dfsClient, src, verifyChecksum, fileState);
+        inputStream = new CompactInputStream(dfsClient, src, verifyChecksum, fileState, smartClient);
         break;
       case COMPRESSION:
-        inputStream = new CompressionInputStream(dfsClient, src, verifyChecksum, fileState);
+        inputStream = new CompressionInputStream(dfsClient, src, verifyChecksum, fileState, smartClient);
         break;
       case S3:
-        inputStream = new S3InputStream(dfsClient, src, verifyChecksum, fileState);
+        inputStream = new S3InputStream(dfsClient, src, verifyChecksum, fileState, smartClient);
         break;
       default:
         throw new IOException("Unsupported file type");
