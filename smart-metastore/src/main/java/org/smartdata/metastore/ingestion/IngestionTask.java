@@ -42,11 +42,12 @@ public abstract class IngestionTask implements Runnable {
   protected long lastUpdateTime = System.currentTimeMillis();
   protected long startTime = lastUpdateTime;
 
+  static {
+    deque.add(ROOT);
+  }
+
   public IngestionTask() {
     this.currentBatch = new FileInfoBatch(defaultBatchSize);
-    if (deque.isEmpty()) {
-      this.deque.add(ROOT);
-    }
   }
 
   public static boolean finished() {

@@ -140,11 +140,11 @@ public class NamespaceFetcher {
     private final HdfsFileStatus[] EMPTY_STATUS = new HdfsFileStatus[0];
     private final DFSClient client;
     private final SmartConf conf;
-    private List<String> ignoreList = new ArrayList<>();
     private byte[] startAfter = null;
     private final byte[] empty = HdfsFileStatus.EMPTY_NAME;
     private String parent = "";
     private IngestionTask[] ingestionTasks;
+    private static List<String> ignoreList;
     private static int idCounter = 0;
     private int id;
 
@@ -154,18 +154,21 @@ public class NamespaceFetcher {
       this.ingestionTasks = ingestionTasks;
       this.client = client;
       this.conf = conf;
-      String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
       defaultBatchSize = conf.getInt(SmartConfKeys
               .SMART_NAMESPACE_FETCHER_BATCH_KEY,
           SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
-      if (configString != null) {
-        configString = configString.trim();
-        if (!configString.equals("")) {
-          //only when parent dir is not ignored we run the follow code
-          ignoreList = Arrays.asList(configString.split(","));
-          for (int i = 0; i < ignoreList.size(); i++) {
-            if (!ignoreList.get(i).endsWith("/")) {
-              ignoreList.set(i, ignoreList.get(i).concat("/"));
+      if (ignoreList == null) {
+        ignoreList = new ArrayList<>();
+        String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+        if (configString != null) {
+          configString = configString.trim();
+          if (!configString.equals("")) {
+            //only when parent dir is not ignored we run the follow code
+            ignoreList = Arrays.asList(configString.split(","));
+            for (int i = 0; i < ignoreList.size(); i++) {
+              if (!ignoreList.get(i).endsWith("/")) {
+                ignoreList.set(i, ignoreList.get(i).concat("/"));
+              }
             }
           }
         }
