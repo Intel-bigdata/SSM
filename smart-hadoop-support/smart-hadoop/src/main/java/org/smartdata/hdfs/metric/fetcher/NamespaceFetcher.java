@@ -30,6 +30,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.ingestion.IngestionTask;
 import org.smartdata.model.FileInfoBatch;
 import org.smartdata.metastore.ingestion.FileStatusIngester;
+import org.smartdata.protocol.message.StatusReport;
 
 
 import java.io.IOException;
@@ -143,6 +144,7 @@ public class NamespaceFetcher {
     private byte[] startAfter = null;
     private final byte[] empty = HdfsFileStatus.EMPTY_NAME;
     private String parent = "";
+    private String pendingParent;
     private IngestionTask[] ingestionTasks;
     private static List<String> ignoreList;
     private static int idCounter = 0;
@@ -202,7 +204,12 @@ public class NamespaceFetcher {
         return;
       }
 
-      this.parent = deque.pollFirst();
+      if (this.pendingParent != null) {
+        this.parent = pendingParent;
+        this.pendingParent = null;
+      } else {
+        this.parent = deque.pollFirst();
+      }
       if (parent == null) {
         if (currentBatch.actualSize() > 0) {
           try {
@@ -265,7 +272,7 @@ public class NamespaceFetcher {
             }
           } while (startAfter != null && batches.size() < maxPendingBatches);
           if (startAfter != null) {
-            this.deque.addFirst(parent);
+            pendingParent = parent;
           }
         }
       } catch (IOException | InterruptedException e) {
