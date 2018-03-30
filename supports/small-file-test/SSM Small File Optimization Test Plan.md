@@ -3,26 +3,26 @@ SSM Small File Optimization Integration Test Plan
 
 I. Hardware Configuration
 ----------------------------
-Processor: Intel(R) Xeon(R) Gold 6140 CPU @ 2.30GHz
-DRAM: DDR4 187GB
-Network: 10GbE
-Disks: 1 * 1TB SATA SSD, 6 * 1TB HDDs
+Processor: Intel(R) Xeon(R) Gold 6140 CPU @ 2.30GHz         
+DRAM: DDR4 187GB                
+Network: 10GbE              
+Disks: 1 * 1TB SATA SSD, 6 * 1TB HDDs               
 
 II. Software Configuration
 -----------------------------
-1. Hadoop Configuration
-Cluster: 1 NameNode + 3 DataNode
-Data Disks: 6 * 1TB HDDs on each DataNode
-Block Size: 128MB
-Version: 2.7.3
+1. Hadoop Configuration                 
+Cluster: 1 NameNode + 3 DataNode            
+Data Disks: 6 * 1TB HDDs on each DataNode               
+Block Size: 128MB           
+Version: 2.7.3              
 
-2. SSM Configuration
-1 * Server Node
-3 * Agents
+2. SSM Configuration                
+1 * Server Node             
+3 * Agents          
 
-3. Other Configurations
-MySQL: 5.7
-Java: 1.8
+3. Other Configurations                 
+MySQL: 5.7                  
+Java: 1.8                   
 
 ### 1. Compact
 #### Purpose
