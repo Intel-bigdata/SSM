@@ -72,17 +72,17 @@ public class SmallFileScheduler extends ActionSchedulerService {
     this.dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
   }
 
-  private static final List<String> actions = Arrays.asList("write", "read", "compact");
+  private static final List<String> ACTIONS = Arrays.asList("write", "read", "compact");
 
   @Override
   public List<String> getSupportedActions() {
-    return actions;
+    return ACTIONS;
   }
 
   @Override
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     long actionId = actionInfo.getActionId();
-    if (actionInfo.getActionName().equals("compact")) {
+    if ("compact".equals(actionInfo.getActionName())) {
       try {
 
         // Check if container file is null
@@ -138,11 +138,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
         LOG.error("Exception occurred while processing " + action, e);
         return ScheduleResult.FAIL;
       }
-    } else if (actionInfo.getActionName().equals("write")) {
+    } else if ("write".equals(actionInfo.getActionName())) {
       // TODO: scheduler for write
-      return ScheduleResult.SUCCESS;
-    } else if (actionInfo.getActionName().equals("read")) {
-      // TODO: scheduler for read
       return ScheduleResult.SUCCESS;
     } else {
       LOG.error("Not support this action: " + actionInfo.getActionName());
@@ -155,7 +152,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
     if (actionInfo.isFinished()) {
       if (actionInfo.isSuccessful()) {
         long actionId = actionInfo.getActionId();
-        if (actionInfo.getActionName().equals("compact")) {
+        if ("compact".equals(actionInfo.getActionName())) {
           try {
             for (Map.Entry<String, FileContainerInfo> entry : fileContainerInfoMap.get(actionId).entrySet()) {
               CompactFileState compactFileState = new CompactFileState(entry.getKey(), entry.getValue());
