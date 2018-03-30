@@ -25,16 +25,20 @@ import org.smartdata.hdfs.action.SmallFileCompactAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class SmallFilePlugin implements RuleExecutorPlugin {
   private MetaStore metaStore;
+  private static final int BATCH_SIZE = 200;
   private static final Logger LOG = LoggerFactory.getLogger(SmallFilePlugin.class);
 
   public SmallFilePlugin(MetaStore metaStore) {
@@ -49,24 +53,41 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     return true;
   }
 
+  @Override
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
     if (objects == null) {
       return null;
     }
     try {
       List<String> validObjects = getValidFileList(objects);
-      int size = validObjects.size();
+      List<List<String>> validLists = new ArrayList<>();
+      while (!validObjects.isEmpty()) {
+        Iterator<String> iterator = validObjects.iterator();
+        String first = iterator.next();
+        List<String> listElement = new ArrayList<>();
+        listElement.add(first);
+        FileInfo fileInfoFirst = metaStore.getFile(first);
+        while (iterator.hasNext()) {
+          String temp = iterator.next();
+          FileInfo fileInfo = metaStore.getFile(temp);
+          if (checkPermissions(fileInfoFirst, fileInfo)) {
+            listElement.add(temp);
+            iterator.remove();
+          }
+        }
+        validLists.add(listElement);
+      }
+
       List<String> fileList = new ArrayList<>();
-      if (size > 0) {
-        for (int i = 0; i < size; i += 100) {
-          int toIndex = (i + 100 <= size) ? i + 100 : size;
+      for (List<String> list : validLists) {
+        int size = list.size();
+        for (int i = 0; i < size; i += BATCH_SIZE) {
+          int toIndex = (i + BATCH_SIZE <= size) ? i + BATCH_SIZE : size;
           String files = new Gson().toJson(validObjects.subList(i, toIndex));
           fileList.add(files);
         }
-        return fileList;
-      } else {
-        return null;
       }
+      return fileList;
     } catch (MetaStoreException e) {
       LOG.error("Failed to generate a new container file.", e);
     }
@@ -84,10 +105,17 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     return fileList;
   }
 
+  private boolean checkPermissions(FileInfo checkInfo, FileInfo checkedInfo) {
+    return (checkInfo.getPermission() == checkedInfo.getPermission())
+        && checkInfo.getOwner().equals(checkedInfo.getOwner())
+        && checkInfo.getGroup().equals(checkedInfo.getGroup());
+  }
+
+  @Override
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
     for (int i = 0; i < descriptor.actionSize(); i++) {
-      if (descriptor.getActionName(i).equals("compact")) {
+      if ("compact".equals(descriptor.getActionName(i))) {
         Map<String, String> args = descriptor.getActionArgs(i);
         String smallFileList = args.get(HdfsAction.FILE_PATH);
         if (smallFileList != null) {
@@ -106,13 +134,14 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     return descriptor;
   }
 
+  @Override
   public void onRuleExecutorExit(final RuleInfo ruleInfo) {
   }
 
   private String getContainerFile() throws MetaStoreException {
     String prefix = "/container_files/container_file_";
     while (true) {
-      int random = (int) (Math.random() * 10000);
+      int random = new Random().nextInt();
       String genContainerFile = prefix + random;
       if (metaStore.getFile(genContainerFile) == null) {
         return genContainerFile;

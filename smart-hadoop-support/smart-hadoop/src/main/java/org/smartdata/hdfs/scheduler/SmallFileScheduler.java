@@ -74,10 +74,12 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   private static final List<String> actions = Arrays.asList("write", "read", "compact");
 
+  @Override
   public List<String> getSupportedActions() {
     return actions;
   }
 
+  @Override
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     long actionId = actionInfo.getActionId();
     if (actionInfo.getActionName().equals("compact")) {
@@ -103,7 +105,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
         if (smallFiles == null) {
           return ScheduleResult.FAIL;
         }
-        ArrayList<String> smallFileList = new Gson().fromJson(smallFiles, new ArrayList<String>().getClass());
+        ArrayList<String> smallFileList = new Gson().fromJson(
+            smallFiles, new ArrayList<String>().getClass());
         Map<String, FileContainerInfo> fileContainerInfo = new HashMap<>();
         for (String filePath : smallFileList) {
           FileInfo fileInfo = metaStore.getFile(filePath);
@@ -126,7 +129,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
             return ScheduleResult.RETRY;
           }
         } else {
-          fileLock.put(containerFilePath, 0); // Lock this container file
+          // Lock this container file
+          fileLock.put(containerFilePath, 0);
         }
 
         return ScheduleResult.SUCCESS;
@@ -146,16 +150,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
     }
   }
 
-  public void postSchedule(ActionInfo actionInfo, ScheduleResult result) {
-  }
-
-  public void onPreDispatch(LaunchAction action) {
-  }
-
-  public boolean onSubmit(ActionInfo actionInfo) {
-    return true;
-  }
-
+  @Override
   public void onActionFinished(ActionInfo actionInfo) {
     if (actionInfo.isFinished()) {
       if (actionInfo.isSuccessful()) {
@@ -173,7 +168,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
             }
             String containerFilePath = containerFileMap.get(actionId);
             if (fileLock.containsKey(containerFilePath)) {
-              fileLock.remove(containerFilePath); // Remove container file lock
+              // Remove container file lock
+              fileLock.remove(containerFilePath);
             }
             LOG.info("Update file container info successfully.");
           } catch (MetaStoreException e2) {
@@ -185,10 +181,10 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void stop() throws IOException {
+  public void stop() {
   }
 
   @Override
-  public void start() throws IOException {
+  public void start() {
   }
 }
