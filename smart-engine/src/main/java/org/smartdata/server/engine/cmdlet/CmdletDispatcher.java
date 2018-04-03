@@ -57,7 +57,7 @@ public class CmdletDispatcher {
   private CmdletExecutorService[] cmdExecServices;
   private int[] cmdExecSrvInsts;
   private int cmdExecSrvTotalInsts;
-  private int[] execSrvSlotsLeft;
+  private AtomicInteger[] execSrvSlotsLeft;
   private AtomicInteger totalSlotsLeft = new AtomicInteger();
 
   private Map<Long, ExecutorType> dispatchedToSrvs;
@@ -68,18 +68,6 @@ public class CmdletDispatcher {
   // TODO: to be refined
   private final int defaultSlots;
   private AtomicInteger index = new AtomicInteger(0);
-
-  private final ExecutorType[] preferLocalTryList = new ExecutorType[]
-      {ExecutorType.LOCAL, ExecutorType.REMOTE_SSM, ExecutorType.AGENT};
-  private final ExecutorType[] preferRemoteSsmTryList = new ExecutorType[]
-      {ExecutorType.REMOTE_SSM, ExecutorType.AGENT, ExecutorType.LOCAL};
-  private final ExecutorType[] preferAgentTryList = new ExecutorType[]
-      {ExecutorType.AGENT, ExecutorType.LOCAL, ExecutorType.REMOTE_SSM};
-  private final CmdletDispatchPolicy[] roundRobinPolicies = new CmdletDispatchPolicy[] {
-      CmdletDispatchPolicy.PREFER_LOCAL,
-      CmdletDispatchPolicy.PREFER_REMOTE_SSM,
-      CmdletDispatchPolicy.PREFER_AGENT
-  };
 
   public CmdletDispatcher(SmartContext smartContext, CmdletManager cmdletManager,
       Queue<Long> scheduledCmdlets, Map<Long, LaunchCmdlet> idToLaunchCmdlet,
@@ -94,7 +82,10 @@ public class CmdletDispatcher {
 
     this.cmdExecServices = new CmdletExecutorService[ExecutorType.values().length];
     cmdExecSrvInsts = new int[ExecutorType.values().length];
-    execSrvSlotsLeft = new int[ExecutorType.values().length];
+    execSrvSlotsLeft = new AtomicInteger[ExecutorType.values().length];
+    for (int i = 0; i < execSrvSlotsLeft.length; i++) {
+      execSrvSlotsLeft[i] = new AtomicInteger(0);
+    }
     cmdExecSrvTotalInsts = 0;
     dispatchedToSrvs = new ConcurrentHashMap<>();
 
@@ -153,7 +144,7 @@ public class CmdletDispatcher {
     CmdletExecutorService selected = null;
     for (int i = 0; i < ExecutorType.values().length; i++) {
       idx = idx % ExecutorType.values().length;
-      if (execSrvSlotsLeft[idx] > 0) {
+      if (execSrvSlotsLeft[idx].get() > 0) {
         selected = cmdExecServices[idx];
         break;
       }
@@ -168,7 +159,8 @@ public class CmdletDispatcher {
 
     String id = selected.execute(cmdlet);
 
-    execSrvSlotsLeft[selected.getExecutorType().ordinal()] -= 1;
+    execSrvSlotsLeft[selected.getExecutorType().ordinal()].decrementAndGet();
+
     dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
     if (logDispResult) {
@@ -178,18 +170,6 @@ public class CmdletDispatcher {
               cmdlet.getCmdletId(), selected.getExecutorType(), id));
     }
     return true;
-  }
-
-  private CmdletDispatchPolicy getRoundrobinDispatchPolicy() {
-    int rev = index.get() % cmdExecSrvTotalInsts;
-    for (int i = 0; i < cmdExecSrvInsts.length; i++) {
-      if (cmdExecSrvInsts[i] > 0 && rev < cmdExecSrvInsts[i]) {
-        return roundRobinPolicies[i];
-      } else {
-        rev -= cmdExecSrvInsts[i];
-      }
-    }
-    return roundRobinPolicies[0]; // not reachable
   }
 
   //Todo: pick the right service to stop cmdlet
@@ -372,7 +352,7 @@ public class CmdletDispatcher {
   }
 
   private void updateSlotsLeft(int idx, int delta) {
-    execSrvSlotsLeft[idx] += delta;
+    execSrvSlotsLeft[idx].addAndGet(delta);
     totalSlotsLeft.addAndGet(delta);
   }
 
