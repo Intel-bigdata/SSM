@@ -87,6 +87,7 @@ public class CompressionFileDao {
     String compressedPosGson = gson.toJson(compressedPos);
     parameters.put("file_name", compressionInfo.getPath());
     parameters.put("buffer_size", compressionInfo.getBufferSize());
+    parameters.put("compression_impl", compressionInfo.getCompressionImpl());
     parameters.put("original_length", compressionInfo.getOriginalLength());
     parameters.put("compressed_length", compressionInfo.getCompressedLength());
     parameters.put("originalPos", originalPosGson);
@@ -106,6 +107,7 @@ public class CompressionFileDao {
           CompressionFileState.newBuilder()
           .setFileName(resultSet.getString("file_name"))
           .setBufferSize(resultSet.getInt("buffer_size"))
+          .setCompressImpl(resultSet.getString("compression_impl"))
           .setOriginalLength(resultSet.getLong("original_length"))
           .setCompressedLength(resultSet.getLong("compressed_length"))
           .setOriginalPos(originalPos)
