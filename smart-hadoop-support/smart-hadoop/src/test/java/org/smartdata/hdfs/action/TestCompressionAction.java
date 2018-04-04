@@ -49,7 +49,7 @@ public class TestCompressionAction extends MiniClusterHarness {
     args.put(compressionAction.FILE_PATH, filePath);
     args.put(compressionAction.BUF_SIZE, "" + bufferSize);
 //    args.put(CompressionAction.COMPRESS_IMPL, "Lz4");
-    args.put(CompressionAction.COMPRESS_IMPL,"Bzip2");
+//    args.put(CompressionAction.COMPRESS_IMPL,"Bzip2");
 //    args.put(CompressionAction.COMPRESS_IMPL,"Zlib");
     compressionAction.init(args);
     compressionAction.run();
@@ -61,7 +61,7 @@ public class TestCompressionAction extends MiniClusterHarness {
     args.put(CompressionAction.FILE_PATH, "/Test");
     args.put(CompressionAction.BUF_SIZE, "1024");
 //    args.put(CompressionAction.COMPRESS_IMPL, "Lz4");
-    args.put(CompressionAction.COMPRESS_IMPL,"Bzip2");
+//    args.put(CompressionAction.COMPRESS_IMPL,"Bzip2");
 //    args.put(CompressionAction.COMPRESS_IMPL,"Zlib");
     CompressionAction compressionAction = new CompressionAction();
     compressionAction.init(args);
@@ -74,7 +74,7 @@ public class TestCompressionAction extends MiniClusterHarness {
     String filePath = "/testCompressFile/fadsfa/213";
     int bufferSize = 1024*128;
 //    String compressionImpl = "Lz4";
-    String compressionImpl = "Bzip2";
+//    String compressionImpl = "Bzip2";
 //    String compressionImpl = "Zlib";
     byte[] bytes = TestCompressionAction.BytesGenerator.get(bufferSize);
 

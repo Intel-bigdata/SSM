@@ -43,17 +43,22 @@ import java.util.Random;
 public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   public static final int DEFAULT_BLOCK_SIZE = 1024 * 1024 * 2;
   private DFSClient smartDFSClient;
+  private String compressionImpl;
 
   @Override
   @Before
   public void setup() throws Exception {
     init(DEFAULT_BLOCK_SIZE);
+//    this.compressionImpl = "snappy";
+//    this.compressionImpl = "Lz4";
+//    this.compressionImpl = "Bzip2";
+    this.compressionImpl = "Zlib";
     smartDFSClient = new SmartDFSClient(ssm.getContext().getConf());
   }
 
   private void initDB() throws Exception {
     MetaStore metaStore = ssm.getMetaStore();
-    metaStore.deleteAllFileState();
+    metaStore.formatDataBase();
   }
 
   @Test
@@ -69,7 +74,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize);
+        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
 
     waitTillActionDone(cmdId);
 
@@ -81,6 +86,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     CompressionFileState compressionFileState = (CompressionFileState) fileState;
     Assert.assertEquals(fileName, compressionFileState.getPath());
     Assert.assertEquals(bufSize, compressionFileState.getBufferSize());
+    Assert.assertEquals(compressionImpl, compressionFileState.getCompressionImpl());
     Assert.assertEquals(arraySize, compressionFileState.getOriginalLength());
     Assert.assertTrue(compressionFileState.getCompressedLength() > 0);
     Assert.assertTrue(compressionFileState.getCompressedLength()
@@ -101,6 +107,38 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   }
 
   @Test
+  public void testCompressEmptyFile() throws Exception {
+    waitTillSSMExitSafeMode();
+
+    initDB();
+    String fileName = "/ssm/compression/file1";
+    prepareFile(fileName, 0);
+    MetaStore metaStore = ssm.getMetaStore();
+
+    int bufSize = 1024 * 1024;
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
+        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+
+    waitTillActionDone(cmdId);
+
+    // metastore  test
+    FileState fileState = metaStore.getFileState(fileName);
+    Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());
+    Assert.assertEquals(FileState.FileStage.DONE, fileState.getFileStage());
+    Assert.assertTrue(fileState instanceof CompressionFileState);
+    CompressionFileState compressionFileState = (CompressionFileState) fileState;
+    Assert.assertEquals(fileName, compressionFileState.getPath());
+    Assert.assertEquals(bufSize, compressionFileState.getBufferSize());
+    Assert.assertEquals(compressionImpl, compressionFileState.getCompressionImpl());
+    Assert.assertEquals(0, compressionFileState.getOriginalLength());
+    Assert.assertEquals(0, compressionFileState.getCompressedLength());
+
+    // File length test
+    Assert.assertEquals(0, dfsClient.getFileInfo(fileName).getLen());
+  }
+
+  @Test
   public void testCompressedFileRandomRead() throws Exception {
     waitTillSSMExitSafeMode();
 
@@ -112,7 +150,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize);
+      + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
 
     waitTillActionDone(cmdId);
 
@@ -168,7 +206,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize);
+      + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
     waitTillActionDone(cmdId);
     RemoteIterator<LocatedFileStatus> iter3 = dfs.listLocatedStatus(new Path(fileName));
     LocatedFileStatus stat3 = iter3.next();

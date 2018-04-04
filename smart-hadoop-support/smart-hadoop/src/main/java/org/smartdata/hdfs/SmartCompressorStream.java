@@ -57,7 +57,7 @@ public class SmartCompressorStream {
     int overHead = bufferSize / 6 + 32;
     buffer = new byte[bufferSize + overHead];
     this.compressor = compressionCodec.createCompressor(bufferSize + overHead, compressionInfo.getCompressionImpl());
-    if(compressor instanceof SnappyCompressor){
+    if (compressor instanceof SnappyCompressor) {
       compressionInfo.setCompressionImpl("snappy");
     }
   }

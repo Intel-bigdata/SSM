@@ -22,22 +22,28 @@ package org.smartdata.model;
  */
 public class CompressionTrunk {
   private int index;
+  private String compressionImpl;
   private long originOffset;
   private long originLength;
   private long compressedOffset;
   private long compressedLength;
 
   public CompressionTrunk(int index) {
-    this(index, 0, 0, 0, 0);
+    this(index, "snappy", 0, 0, 0, 0);
   }
 
-  public CompressionTrunk(int index, long originOffset, long originLength,
-      long compressedOffset, long compressedLength) {
+  public CompressionTrunk(int index, String compressionImpl, long originOffset, long originLength,
+                          long compressedOffset, long compressedLength) {
     this.index = index;
+    this.compressionImpl = compressionImpl;
     this.originOffset = originOffset;
     this.originLength = originLength;
     this.compressedOffset = compressedOffset;
     this.compressedLength = compressedLength;
+  }
+
+  public String getCompressionImpl() {
+    return compressionImpl;
   }
 
   public void setOriginOffset(long originOffset) {
@@ -58,6 +64,10 @@ public class CompressionTrunk {
 
   public int getIndex() {
     return index;
+  }
+
+  public void setCompressionImpl(String compressionImpl) {
+    this.compressionImpl = compressionImpl;
   }
 
   public long getOriginOffset() {

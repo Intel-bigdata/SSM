@@ -22,7 +22,7 @@ import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.io.ByteBufferPool;
 import org.apache.hadoop.io.compress.Decompressor;
-import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
+import org.smartdata.hdfs.CompressionCodec;
 import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.CompressionTrunk;
 import org.smartdata.model.FileState;
@@ -40,6 +40,7 @@ public class CompressionInputStream extends SmartInputStream {
 
   private CompressionFileState compressionFileState;
   private final long originalLength;
+  private CompressionCodec compressionCodec;
 
   CompressionInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
       FileState fileState) throws IOException, UnresolvedLinkException {
@@ -51,8 +52,9 @@ public class CompressionInputStream extends SmartInputStream {
     }
     originalLength = compressionFileState.getOriginalLength();
     int bufferSize = compressionFileState.getBufferSize();
-    this.decompressor = new SnappyDecompressor(bufferSize);
+    this.compressionCodec = new CompressionCodec();
     this.buffer = new byte[bufferSize];
+    this.decompressor = compressionCodec.creatDecompressor(bufferSize, compressionFileState.getCompressionImpl());
   }
 
   @Override
@@ -104,6 +106,7 @@ public class CompressionInputStream extends SmartInputStream {
           return -1;
         }
         // Send the read data to the decompressor
+        decompressor.reset();
         decompressor.setInput(buffer, 0, m);
       }
     }

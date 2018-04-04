@@ -230,6 +230,7 @@ public class ProtoBufferHelper {
     builder.setFileName(path)
         .setFileStage(stage)
         .setBufferSize(proto.getBufferSize())
+        .setCompressImpl(proto.getCompressionImpl())
         .setOriginalLength(proto.getOriginalLength())
         .setCompressedLength(proto.getCompressedLength())
         .setOriginalPos(proto.getOriginalPosList())
@@ -240,6 +241,7 @@ public class ProtoBufferHelper {
   public static CompressionFileStateProto convert(CompressionFileState fileState) {
     CompressionFileStateProto.Builder builder = CompressionFileStateProto.newBuilder();
     builder.setBufferSize(fileState.getBufferSize())
+        .setCompressionImpl(fileState.getCompressionImpl())
         .setOriginalLength(fileState.getOriginalLength())
         .setCompressedLength(fileState.getCompressedLength());
     builder.addAllOriginalPos(Arrays.asList(fileState.getOriginalPos()));

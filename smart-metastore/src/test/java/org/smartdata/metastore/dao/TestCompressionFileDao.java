@@ -30,6 +30,7 @@ import java.util.List;
 public class TestCompressionFileDao extends TestDaoUtil {
 
   private CompressionFileDao compressionFileDao;
+  private String compressionImpl = "Zlib";
   private List<Long> originalPos = new ArrayList<>();
   private List<Long> compressedPos = new ArrayList<>();
 
@@ -52,7 +53,7 @@ public class TestCompressionFileDao extends TestDaoUtil {
   @Test
   public void testInsertDeleteCompressionFiles() throws Exception {
     CompressionFileState compressionInfo = new CompressionFileState(
-      "/test", 131072, originalPos.toArray(new Long[0]),
+      "/test", 131072, compressionImpl, originalPos.toArray(new Long[0]),
         compressedPos.toArray(new Long[0]));
 
     //insert test
@@ -69,12 +70,11 @@ public class TestCompressionFileDao extends TestDaoUtil {
   public void testGetCompressionInfo() throws Exception {
     long originalLen = 100;
     long compressedLen = 50;
-    String compressionImpl = "Lz4";
     CompressionFileState compressionInfo = new CompressionFileState(
       "/test1", 131072, compressionImpl, originalLen, compressedLen,
         originalPos.toArray(new Long[0]), compressedPos.toArray(new Long[0]));
     CompressionFileState compressionInfo2 = new CompressionFileState(
-      "/test2", 131072, originalPos.toArray(new Long[0]),
+      "/test2", 131072, compressionImpl, originalPos.toArray(new Long[0]),
         compressedPos.toArray(new Long[0]));
 
     compressionFileDao.insert(compressionInfo);
@@ -83,6 +83,7 @@ public class TestCompressionFileDao extends TestDaoUtil {
 
     Assert.assertTrue(dbcompressionInfo.getPath().equals("/test1"));
     Assert.assertTrue(dbcompressionInfo.getBufferSize() == 131072);
+    Assert.assertTrue(dbcompressionInfo.getCompressionImpl().equals(compressionImpl));
     Assert.assertTrue(dbcompressionInfo.getOriginalPos()[0].equals(9000L));
     Assert.assertTrue(dbcompressionInfo.getCompressedPos()[1].equals(2000L));
     Assert.assertTrue(compressionFileDao.getAll().size() == 2);
