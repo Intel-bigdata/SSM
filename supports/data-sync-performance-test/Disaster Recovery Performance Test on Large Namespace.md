@@ -2,17 +2,17 @@
 Intuitively, storing large amount of records/data in database may lead to performance degrade. In our cases, large namespace (large amount of files on HDFS) may lead to performance degrade of SSM. Because SSM fetches all namespace from namenode and stores them in database (default is mysql). In this test, we want to evalute this issue on SSM Data Sync.
 
 ## Objectives
-1. Evaluting SSM Data Sync's performance on large namespace (from 10M~100M).
+1. Evaluating SSM Data Sync's performance on large namespace (from 10M~100M).
 2. Find/solve bottlenecks in SSM.
 3. Find/solve bottlenecks in Data Sync module.
 
-**Baseline: Distcp**
+**Baseline: DistCp**
 
 ## Metrics and Analysis
 ### Environment
 **10 Nodes are required:**
 
-1. 8 nodes for 2 HDFS Clusters (each contains 1 namenode and 3 datanodes)
+1. 8 nodes for 2 HDFS Clusters (primary and standby clusters, each contains 1 namenode and 3 datanodes)
 2. 1 node for SSM Server. SSM Agents are deployed on datanode of Primary HDFS.
 3. 1 node for mysql.
 
@@ -20,11 +20,13 @@ Note that if there are less than 10 nodes available, we can merge mysql and SSM 
 
 **Hardware/Software requirement**
 
-**Hardware requriment:**
+**Hardware requirement:**
 
 1. Namenode: at least 20GB memory and 15GB disk space are required. Please change the default heap size in `hadoop-env.sh`. Please change the location of `name` and `checkpoint` in `hdfs-site.xml` (Each `fsimage`/checkpoint will be at least 5GB).
-2. Datanode: at least 2GB memory is requred by Datanode.
+2. Datanode: at least 2GB memory is required by Datanode.
 3. Mysql: at least 20GB memory and 30GB disk space are required. Please change mysql data dir location to SSD in `my.cnf`, and tune mysql with [mysqltuner](http://mysqltuner.pl/). Otherwise, Mysql will become the main bottleneck of SSM.
+
+Note that some of our test cases may reach peak write IOPS in standby HDFS namenode. So, we suggest to put both primary and standby namenode meta to SSD to avoid this bottleneck.
 
 **Software requirement:**
 
@@ -33,8 +35,8 @@ Note that if there are less than 10 nodes available, we can merge mysql and SSM 
 3. SSM (1.3.2 or higher)
 
 
-### Variables and Metics
-All variables about HDFS, SSM and Distcp, bolded as default.
+### Variables and Metrics
+All variables about HDFS, SSM and DistCp, bold as default.
 
 **Main Variables:**
 
@@ -55,7 +57,7 @@ Note that lots of variables may effect SSM Data Sync's performance. I think we c
 **System Metrics:**
 
 1. Total Running Time
-2. Trigger Time for each increamental change
+2. Trigger Time for each incremental change
 3. Average Running Time for each task
 4. Scheduler Time
 5. CPU usage
@@ -67,7 +69,7 @@ Note that lots of variables may effect SSM Data Sync's performance. I think we c
 ## Test Cases
 
 ### Case 1: Batch ASync
-Copy **a batch of files** from primary HDFS cluster to sencondary HDFS cluster, and check the **total running time**, **scheduler time** and **system metrics** on these cases:
+Copy **a batch of files** from primary HDFS cluster to standby HDFS cluster, and check the **total running time**, **scheduler time** and **system metrics** on these cases:
 
 1. 10000 * 10KB
 2. **10000 * 1MB**
@@ -79,17 +81,25 @@ Case 1-3 is less than block size, case 4-5 is larger than block size. Note that 
 
 **Baseline: DistCp**
 
-### Case 2: Single File ASync
-Copy **a single of file** from primary HDFS cluster to sencondary HDFS cluster, and check the **total running time**, **scheduler time** and **system metrics** on these cases:
+### Case 2: Incremental Change ASync
+Incremental change **a single of file** in primary HDFS cluster, and check the **total running time** and **scheduler time** (trigger time) needed to async these changes to standby HDFS cluster, on these cases:
+
+1. Create 10KB file, Append 10KB, Rename, Delete
+2. Create 1MB file, Append 1MB, Rename, Delete
+3. Create 100MB file, Append 100MB, Rename, Delete
+
+Note that the running time and scheduler time is not stable, multiple tests (at least 10) are necessary.
+
+### Case 3: Single File ASync
+Copy **a single of file** from primary HDFS cluster to standby HDFS cluster, and check the **total running time**, **scheduler time** and **system metrics** on these cases:
 
 1. 1MB
 2. **100MB**
 3. 1GB
 4. 2GB
 5. 5GB
-
+6. 10GB
 
 **Baseline: DistCp**
-
 
 ## Trouble Shooting
