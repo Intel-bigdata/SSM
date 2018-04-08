@@ -26,6 +26,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.FileState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
@@ -58,12 +59,15 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     if (objects == null) {
       return null;
     }
+
+    // Get valid small file lists according to the file permission
+    List<List<String>> validFileLists = new ArrayList<>();
     try {
-      List<String> validObjects = getValidFileList(objects);
-      List<List<String>> validLists = new ArrayList<>();
-      while (!validObjects.isEmpty()) {
-        Iterator<String> iterator = validObjects.iterator();
+      List<String> validFiles = getValidFileList(objects);
+      while (!validFiles.isEmpty()) {
+        Iterator<String> iterator = validFiles.iterator();
         String first = iterator.next();
+        iterator.remove();
         List<String> listElement = new ArrayList<>();
         listElement.add(first);
         FileInfo fileInfoFirst = metaStore.getFile(first);
@@ -75,30 +79,35 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
             iterator.remove();
           }
         }
-        validLists.add(listElement);
+        validFileLists.add(listElement);
       }
-
-      List<String> fileList = new ArrayList<>();
-      for (List<String> list : validLists) {
-        int size = list.size();
-        for (int i = 0; i < size; i += BATCH_SIZE) {
-          int toIndex = (i + BATCH_SIZE <= size) ? i + BATCH_SIZE : size;
-          String files = new Gson().toJson(validObjects.subList(i, toIndex));
-          fileList.add(files);
-        }
-      }
-      return fileList;
     } catch (MetaStoreException e) {
-      LOG.error("Failed to generate a new container file.", e);
+      LOG.error("Failed to get valid small files.", e);
     }
-    return null;
+
+    // Split small files according to the batch size
+    List<String> smallFileList = new ArrayList<>(200);
+    for (List<String> listElement : validFileLists) {
+      int size = listElement.size();
+      for (int i = 0; i < size; i += BATCH_SIZE) {
+        int toIndex = (i + BATCH_SIZE <= size) ? i + BATCH_SIZE : size;
+        String smallFiles = new Gson().toJson(listElement.subList(i, toIndex));
+        smallFileList.add(smallFiles);
+      }
+    }
+
+    return smallFileList;
   }
 
   private List<String> getValidFileList(List<String> objects) throws MetaStoreException {
     List<String> fileList  = new ArrayList<>();
     for (String object : objects) {
       long fileLen  = metaStore.getFile(object).getLength();
-      if (fileLen > 0) {
+      FileState fileState = metaStore.getFileState(object);
+      FileState.FileType fileType = fileState.getFileType();
+      FileState.FileStage fileStage = fileState.getFileStage();
+      if (fileLen > 0 && fileType.equals(FileState.FileType.NORMAL)
+          && fileStage.equals(FileState.FileStage.DONE)) {
         fileList.add(object);
       }
     }
@@ -141,7 +150,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   private String getContainerFile() throws MetaStoreException {
     String prefix = "/container_files/container_file_";
     while (true) {
-      int random = new Random().nextInt();
+      int random = Math.abs(new Random().nextInt());
       String genContainerFile = prefix + random;
       if (metaStore.getFile(genContainerFile) == null) {
         return genContainerFile;
