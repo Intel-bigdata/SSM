@@ -77,7 +77,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
           while (iterator.hasNext()) {
             String temp = iterator.next();
             FileInfo fileInfo = metaStore.getFile(temp);
-            if (checkPermissions(fileInfoFirst, fileInfo)) {
+            if (checkFilePermission(fileInfoFirst, fileInfo)) {
               listElement.add(temp);
               iterator.remove();
             }
@@ -120,7 +120,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     return fileList;
   }
 
-  private boolean checkPermissions(FileInfo checkInfo, FileInfo checkedInfo) {
+  private boolean checkFilePermission(FileInfo checkInfo, FileInfo checkedInfo) {
     return (checkInfo.getPermission() == checkedInfo.getPermission())
         && checkInfo.getOwner().equals(checkedInfo.getOwner())
         && checkInfo.getGroup().equals(checkedInfo.getGroup());

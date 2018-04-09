@@ -65,11 +65,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private Map<Long, Map<String, FileContainerInfo>> fileContainerInfoMap;
 
   /**
-   * The mapping between container file and offset.
-   */
-  private Map<String, Long> containerFileOffsetMap;
-
-  /**
    * The mapping between small file and state.
    */
   private Map<String, Long> smallFilesLock;
@@ -94,7 +89,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
     this.containerFilesLock = new ConcurrentHashMap<>(32);
     this.containerFileMap = new ConcurrentHashMap<>(32);
     this.fileContainerInfoMap = new ConcurrentHashMap<>(32);
-    this.containerFileOffsetMap = new ConcurrentHashMap<>(32);
     this.smallFilesLock = new ConcurrentHashMap<>(200);
     this.smallFilesMap = new ConcurrentHashMap<>(32);
     this.dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
@@ -109,8 +103,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
-    long actionId = actionInfo.getActionId();
     if (ACTIONS.get(1).equals(actionInfo.getActionName())) {
+      long actionId = actionInfo.getActionId();
+
       // Check if container file is null
       String containerFilePath = actionInfo.getArgs().get(
           SmallFileCompactAction.CONTAINER_FILE);
@@ -145,6 +140,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
         return false;
       }
     }
+
     return true;
   }
 
@@ -152,13 +148,34 @@ public class SmallFileScheduler extends ActionSchedulerService {
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     long actionId = actionInfo.getActionId();
     if (ACTIONS.get(1).equals(actionInfo.getActionName())) {
-      // Get or set the mapping between container file and offset
       String containerFilePath = containerFileMap.get(actionId);
-      long offset = 0L;
-      if (containerFileOffsetMap.containsKey(containerFilePath)) {
-        offset = containerFileOffsetMap.get(containerFilePath);
+
+      // Check if container file is locked and retry
+      if (containerFilesLock.containsKey(containerFilePath)) {
+        int retryNum = containerFilesLock.get(containerFilePath);
+        if (retryNum > MAX_RETRY_COUNT) {
+          LOG.error(
+              "This container file: " + containerFilePath + " is locked, failed.");
+          return ScheduleResult.FAIL;
+        } else {
+          LOG.warn(
+              "This container file: " + containerFilePath + " is locked, retrying.");
+          containerFilesLock.put(containerFilePath, retryNum + 1);
+          return ScheduleResult.RETRY;
+        }
       } else {
-        containerFileOffsetMap.put(containerFilePath, 0L);
+        // Lock the container file
+        containerFilesLock.put(containerFilePath, 0);
+      }
+
+      // Get offset of container file
+      long offset;
+      try {
+        FileInfo containerFileInfo = metaStore.getFile(containerFilePath);
+        offset = (containerFileInfo == null) ? 0L : containerFileInfo.getLength();
+      } catch (MetaStoreException e) {
+        LOG.error("Failed to get file info of the container file: " + containerFilePath);
+        return ScheduleResult.FAIL;
       }
 
       // Get file container info of small files
@@ -178,25 +195,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
         }
       }
       fileContainerInfoMap.put(actionId, fileContainerInfo);
-      containerFileOffsetMap.put(containerFilePath, offset);
-
-      // Check if container file is locked and retry
-      if (containerFilesLock.containsKey(containerFilePath)) {
-        int retryNum = containerFilesLock.get(containerFilePath);
-        if (retryNum > MAX_RETRY_COUNT) {
-          LOG.error(
-              "This container file: " + containerFilePath + " is locked, failed.");
-          return ScheduleResult.FAIL;
-        } else {
-          LOG.warn(
-              "This container file: " + containerFilePath + " is locked, retrying.");
-          containerFilesLock.put(containerFilePath, retryNum + 1);
-          return ScheduleResult.RETRY;
-        }
-      } else {
-        // Lock the container file
-        containerFilesLock.put(containerFilePath, 0);
-      }
 
       return ScheduleResult.SUCCESS;
     } else if (ACTIONS.get(0).equals(actionInfo.getActionName())) {
