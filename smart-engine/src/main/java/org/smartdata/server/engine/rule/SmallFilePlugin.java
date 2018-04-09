@@ -40,6 +40,8 @@ import java.util.Random;
 public class SmallFilePlugin implements RuleExecutorPlugin {
   private MetaStore metaStore;
   private static final int BATCH_SIZE = 200;
+  private static final String COMPACT_SYMBOL = "compact";
+  private static final String CONTAINER_PREFIX = "/container_files/container_file_";
   private static final Logger LOG = LoggerFactory.getLogger(SmallFilePlugin.class);
 
   public SmallFilePlugin(MetaStore metaStore) {
@@ -56,47 +58,51 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
 
   @Override
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
-    if (objects == null) {
-      return null;
-    }
+    if (ruleInfo.getRuleText().contains(COMPACT_SYMBOL)) {
+      if (objects == null) {
+        return null;
+      }
 
-    // Get valid small file lists according to the file permission
-    List<List<String>> validFileLists = new ArrayList<>();
-    try {
-      List<String> validFiles = getValidFileList(objects);
-      while (!validFiles.isEmpty()) {
-        Iterator<String> iterator = validFiles.iterator();
-        String first = iterator.next();
-        iterator.remove();
-        List<String> listElement = new ArrayList<>();
-        listElement.add(first);
-        FileInfo fileInfoFirst = metaStore.getFile(first);
-        while (iterator.hasNext()) {
-          String temp = iterator.next();
-          FileInfo fileInfo = metaStore.getFile(temp);
-          if (checkPermissions(fileInfoFirst, fileInfo)) {
-            listElement.add(temp);
-            iterator.remove();
+      // Get valid small file lists according to the file permission
+      List<List<String>> validFileLists = new ArrayList<>();
+      try {
+        List<String> validFiles = getValidFileList(objects);
+        while (!validFiles.isEmpty()) {
+          Iterator<String> iterator = validFiles.iterator();
+          String first = iterator.next();
+          iterator.remove();
+          List<String> listElement = new ArrayList<>();
+          listElement.add(first);
+          FileInfo fileInfoFirst = metaStore.getFile(first);
+          while (iterator.hasNext()) {
+            String temp = iterator.next();
+            FileInfo fileInfo = metaStore.getFile(temp);
+            if (checkPermissions(fileInfoFirst, fileInfo)) {
+              listElement.add(temp);
+              iterator.remove();
+            }
           }
+          validFileLists.add(listElement);
         }
-        validFileLists.add(listElement);
+      } catch (MetaStoreException e) {
+        LOG.error("Failed to get valid small files.", e);
       }
-    } catch (MetaStoreException e) {
-      LOG.error("Failed to get valid small files.", e);
-    }
 
-    // Split small files according to the batch size
-    List<String> smallFileList = new ArrayList<>(200);
-    for (List<String> listElement : validFileLists) {
-      int size = listElement.size();
-      for (int i = 0; i < size; i += BATCH_SIZE) {
-        int toIndex = (i + BATCH_SIZE <= size) ? i + BATCH_SIZE : size;
-        String smallFiles = new Gson().toJson(listElement.subList(i, toIndex));
-        smallFileList.add(smallFiles);
+      // Split small files according to the batch size
+      List<String> smallFileList = new ArrayList<>(200);
+      for (List<String> listElement : validFileLists) {
+        int size = listElement.size();
+        for (int i = 0; i < size; i += BATCH_SIZE) {
+          int toIndex = (i + BATCH_SIZE <= size) ? i + BATCH_SIZE : size;
+          String smallFiles = new Gson().toJson(listElement.subList(i, toIndex));
+          smallFileList.add(smallFiles);
+        }
       }
-    }
 
-    return smallFileList;
+      return smallFileList;
+    } else {
+      return objects;
+    }
   }
 
   private List<String> getValidFileList(List<String> objects) throws MetaStoreException {
@@ -124,7 +130,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
     for (int i = 0; i < descriptor.actionSize(); i++) {
-      if ("compact".equals(descriptor.getActionName(i))) {
+      if (COMPACT_SYMBOL.equals(descriptor.getActionName(i))) {
         Map<String, String> args = descriptor.getActionArgs(i);
         String smallFileList = args.get(HdfsAction.FILE_PATH);
         if (smallFileList != null) {
@@ -148,10 +154,9 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   }
 
   private String getContainerFile() throws MetaStoreException {
-    String prefix = "/container_files/container_file_";
     while (true) {
       int random = Math.abs(new Random().nextInt());
-      String genContainerFile = prefix + random;
+      String genContainerFile = CONTAINER_PREFIX + random;
       if (metaStore.getFile(genContainerFile) == null) {
         return genContainerFile;
       }
