@@ -155,7 +155,7 @@ public class SmartConfKeys {
       "60s,60;1hour,60;1day";
 
   public static final String SMART_STATUS_REPORT_PERIOD_KEY = "smart.status.report.period";
-  public static final long SMART_STATUS_REPORT_PERIOD_DEFAULT = 1000;
+  public static final long SMART_STATUS_REPORT_PERIOD_DEFAULT = 50;
 
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";
