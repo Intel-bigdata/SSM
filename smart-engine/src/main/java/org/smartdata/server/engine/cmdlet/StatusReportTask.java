@@ -17,12 +17,17 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
+import java.util.List;
+
 public class StatusReportTask implements Runnable {
-  StatusReporter statusReporter;
-  CmdletExecutor cmdletExecutor;
+  private StatusReporter statusReporter;
+  private CmdletExecutor cmdletExecutor;
+  public static int REPORT_THRESHOLD = 50;
+  public static double FINISHED_RATIO = 0.2;
 
   public StatusReportTask(StatusReporter statusReporter, CmdletExecutor cmdletExecutor) {
     this.statusReporter = statusReporter;
@@ -32,8 +37,20 @@ public class StatusReportTask implements Runnable {
   @Override
   public void run() {
     StatusReport statusReport = cmdletExecutor.getStatusReport();
-    if (statusReport != null && !statusReport.getActionStatuses().isEmpty()) {
-      statusReporter.report(statusReport);
+    if (statusReport != null) {
+      List<ActionStatus> actionStatuses = statusReport.getActionStatuses();
+      if (!actionStatuses.isEmpty()) {
+        int finishedNum = 0;
+        for (ActionStatus actionStatus : actionStatuses) {
+          if (actionStatus.isFinished()) {
+            finishedNum++;
+          }
+        }
+        if (actionStatuses.size() < REPORT_THRESHOLD ||
+            finishedNum / actionStatuses.size() > FINISHED_RATIO) {
+          statusReporter.report(statusReport);
+        }
+      }
     }
   }
 }
