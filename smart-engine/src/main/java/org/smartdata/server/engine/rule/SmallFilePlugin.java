@@ -48,14 +48,23 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     this.metaStore = metaStore;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void onNewRuleExecutor(final RuleInfo ruleInfo, TranslateResult tResult) {}
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean preExecution(final RuleInfo ruleInfo, TranslateResult tResult) {
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
     if (ruleInfo.getRuleText().contains(COMPACT_SYMBOL)) {
@@ -105,6 +114,9 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   private List<String> getValidFileList(List<String> objects) throws MetaStoreException {
     List<String> fileList  = new ArrayList<>();
     for (String object : objects) {
@@ -120,12 +132,18 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     return fileList;
   }
 
+  /**
+   * Check if the permission is same between small files.
+   */
   private boolean checkFilePermission(FileInfo checkInfo, FileInfo checkedInfo) {
     return (checkInfo.getPermission() == checkedInfo.getPermission())
         && checkInfo.getOwner().equals(checkedInfo.getOwner())
         && checkInfo.getGroup().equals(checkedInfo.getGroup());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
@@ -149,6 +167,9 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     return descriptor;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void onRuleExecutorExit(final RuleInfo ruleInfo) {
   }

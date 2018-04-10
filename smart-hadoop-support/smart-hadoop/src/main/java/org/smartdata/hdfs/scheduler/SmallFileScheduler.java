@@ -76,6 +76,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   private static final int MIN_BATCH_SIZE = 10;
   private static final int MAX_RETRY_COUNT = 3;
+  private static final List<String> ACTIONS = Arrays.asList("write", "compact");
   public static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
 
   public SmallFileScheduler(SmartContext context, MetaStore metaStore) throws IOException {
@@ -84,6 +85,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
     this.nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void init() throws IOException {
     this.containerFilesLock = new ConcurrentHashMap<>(32);
@@ -94,13 +98,17 @@ public class SmallFileScheduler extends ActionSchedulerService {
     this.dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
   }
 
-  private static final List<String> ACTIONS = Arrays.asList("write", "compact");
-
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getSupportedActions() {
     return ACTIONS;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
     if (ACTIONS.get(1).equals(actionInfo.getActionName())) {
@@ -144,6 +152,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     long actionId = actionInfo.getActionId();
@@ -206,6 +217,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
     if (actionInfo.isFinished()) {
@@ -239,10 +253,16 @@ public class SmallFileScheduler extends ActionSchedulerService {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void stop() {
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void start() {
   }
