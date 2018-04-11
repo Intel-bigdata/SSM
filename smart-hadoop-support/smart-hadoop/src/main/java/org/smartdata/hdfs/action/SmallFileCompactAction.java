@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.io.IOUtils;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
@@ -69,7 +70,7 @@ public class SmallFileCompactAction extends HdfsAction {
       Long fileLen = getFileLength(smallFile);
       if (fileLen > 0) {
         appendLog(String.format("Compacting %s to %s", smallFile, containerFile));
-        compact(smallFile, out, fileLen);
+        compact(smallFile, out);
       }
     }
     if (out != null) {
@@ -81,22 +82,10 @@ public class SmallFileCompactAction extends HdfsAction {
   /**
    * Compact the small file to the big container file.
    */
-  private void compact(String path, OutputStream out, long fileLen) throws IOException {
+  private void compact(String path, OutputStream out) throws IOException {
     InputStream in = getInputStream(path);
-    byte[] buf = new byte[4096];
-    int bytesRemaining = (int) fileLen;
-    while (bytesRemaining > 0L) {
-      int bytesToRead = (bytesRemaining < buf.length) ? bytesRemaining : buf.length;
-      int bytesRead = in.read(buf, 0, bytesToRead);
-      if (bytesRead == -1) {
-        break;
-      }
-      out.write(buf, 0, bytesRead);
-      bytesRemaining -= (long) bytesRead;
-    }
-    if (in != null) {
-      in.close();
-    }
+    IOUtils.copyBytes(in, out, 4096);
+    in.close();
   }
 
   /**
