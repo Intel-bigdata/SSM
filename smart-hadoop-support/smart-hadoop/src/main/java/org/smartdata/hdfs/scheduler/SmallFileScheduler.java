@@ -85,9 +85,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
     this.nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void init() throws IOException {
     this.containerFilesLock = new ConcurrentHashMap<>(32);
@@ -98,17 +95,11 @@ public class SmallFileScheduler extends ActionSchedulerService {
     this.dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public List<String> getSupportedActions() {
     return ACTIONS;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
     if (ACTIONS.get(1).equals(actionInfo.getActionName())) {
@@ -152,9 +143,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
     return true;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     long actionId = actionInfo.getActionId();
@@ -217,9 +205,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
     if (actionInfo.isFinished()) {
@@ -253,16 +238,10 @@ public class SmallFileScheduler extends ActionSchedulerService {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void stop() {
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void start() {
   }

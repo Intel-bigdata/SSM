@@ -31,8 +31,8 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,23 +49,14 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     this.metaStore = metaStore;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void onNewRuleExecutor(final RuleInfo ruleInfo, TranslateResult tResult) {}
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean preExecution(final RuleInfo ruleInfo, TranslateResult tResult) {
     return true;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
     if (ruleInfo.getRuleText().contains(COMPACT_SYMBOL)) {
@@ -107,7 +98,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   }
 
   /**
-   * {@inheritDoc}
+   * Get valid small files according to file size and file state.
    */
   private List<String> getValidFileList(List<String> objects) throws MetaStoreException {
     List<String> fileList  = new ArrayList<>();
@@ -158,9 +149,6 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
@@ -184,9 +172,6 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     return descriptor;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void onRuleExecutorExit(final RuleInfo ruleInfo) {
   }
