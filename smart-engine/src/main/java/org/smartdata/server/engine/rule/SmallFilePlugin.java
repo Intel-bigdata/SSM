@@ -31,8 +31,9 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
 
+import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -73,33 +74,24 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
       }
 
       // Get valid small file lists according to the file permission
-      List<List<String>> validFileLists = new ArrayList<>();
+      Map<FilePermission, List<String>> filePermissionMap = new HashMap<>(200);
       try {
         List<String> validFiles = getValidFileList(objects);
-        while (!validFiles.isEmpty()) {
-          Iterator<String> iterator = validFiles.iterator();
-          String first = iterator.next();
-          iterator.remove();
-          List<String> listElement = new ArrayList<>();
-          listElement.add(first);
-          FileInfo fileInfoFirst = metaStore.getFile(first);
-          while (iterator.hasNext()) {
-            String temp = iterator.next();
-            FileInfo fileInfo = metaStore.getFile(temp);
-            if (checkFilePermission(fileInfoFirst, fileInfo)) {
-              listElement.add(temp);
-              iterator.remove();
-            }
+        for (String element : validFiles) {
+          FilePermission filePermission = new FilePermission(metaStore.getFile(element));
+          if (filePermissionMap.containsKey(filePermission)) {
+            filePermissionMap.get(filePermission).add(element);
+          } else {
+            filePermissionMap.put(filePermission, Arrays.asList(element));
           }
-          validFileLists.add(listElement);
         }
       } catch (MetaStoreException e) {
-        LOG.error("Failed to get valid small files.", e);
+        LOG.error("Failed to get file permission info.", e);
       }
 
       // Split small files according to the batch size
       List<String> smallFileList = new ArrayList<>(200);
-      for (List<String> listElement : validFileLists) {
+      for (List<String> listElement : filePermissionMap.values()) {
         int size = listElement.size();
         for (int i = 0; i < size; i += BATCH_SIZE) {
           int toIndex = (i + BATCH_SIZE <= size) ? i + BATCH_SIZE : size;
@@ -133,12 +125,37 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   }
 
   /**
-   * Check if the permission is same between small files.
+   * An inner class for getting small files with same permission.
    */
-  private boolean checkFilePermission(FileInfo checkInfo, FileInfo checkedInfo) {
-    return (checkInfo.getPermission() == checkedInfo.getPermission())
-        && checkInfo.getOwner().equals(checkedInfo.getOwner())
-        && checkInfo.getGroup().equals(checkedInfo.getGroup());
+  private class FilePermission {
+    private short permission;
+    private String owner;
+    private String group;
+
+    private FilePermission(FileInfo fileInfo) {
+      this.permission = fileInfo.getPermission();
+      this.owner = fileInfo.getOwner();
+      this.group = fileInfo.getGroup();
+    }
+
+    @Override
+    public int hashCode() {
+      return permission ^ owner.hashCode() ^ group.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object filePermission) {
+      if (this == filePermission) {
+        return true;
+      }
+      if (filePermission instanceof FilePermission) {
+        FilePermission anPermissionInfo = (FilePermission) filePermission;
+        return (this.permission == anPermissionInfo.permission)
+            && this.owner.equals(anPermissionInfo.owner)
+            && this.group.equals(anPermissionInfo.owner);
+      }
+      return false;
+    }
   }
 
   /**
