@@ -32,7 +32,6 @@ import org.smartdata.model.rule.RuleExecutorPlugin;
 import org.smartdata.model.rule.TranslateResult;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,12 +59,8 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   @Override
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
     if (ruleInfo.getRuleText().contains(COMPACT_SYMBOL)) {
-      if (objects == null) {
-        return null;
-      }
-
-      // Get valid small file lists according to the file permission
-      Map<FilePermission, List<String>> filePermissionMap = new HashMap<>(200);
+      // Split valid small files according to the file permission
+      Map<FilePermission, List<String>> filePermissionMap = new HashMap<>(32);
       try {
         List<String> validFiles = getValidFileList(objects);
         for (String element : validFiles) {
@@ -73,7 +68,9 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
           if (filePermissionMap.containsKey(filePermission)) {
             filePermissionMap.get(filePermission).add(element);
           } else {
-            filePermissionMap.put(filePermission, Arrays.asList(element));
+            List<String> list = new ArrayList<>(128);
+            list.add(element);
+            filePermissionMap.put(filePermission, list);
           }
         }
       } catch (MetaStoreException e) {
@@ -116,7 +113,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   }
 
   /**
-   * An inner class for getting small files with same permission.
+   * An inner class for handling file permission info conveniently.
    */
   private class FilePermission {
     private short permission;
@@ -143,7 +140,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
         FilePermission anPermissionInfo = (FilePermission) filePermission;
         return (this.permission == anPermissionInfo.permission)
             && this.owner.equals(anPermissionInfo.owner)
-            && this.group.equals(anPermissionInfo.owner);
+            && this.group.equals(anPermissionInfo.group);
       }
       return false;
     }

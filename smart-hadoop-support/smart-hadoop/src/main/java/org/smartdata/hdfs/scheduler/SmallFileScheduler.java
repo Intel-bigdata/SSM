@@ -90,7 +90,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
     this.containerFilesLock = new ConcurrentHashMap<>(32);
     this.containerFileMap = new ConcurrentHashMap<>(32);
     this.fileContainerInfoMap = new ConcurrentHashMap<>(32);
-    this.smallFilesLock = new ConcurrentHashMap<>(200);
+    this.smallFilesLock = new ConcurrentHashMap<>(256);
     this.smallFilesMap = new ConcurrentHashMap<>(32);
     this.dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
   }
