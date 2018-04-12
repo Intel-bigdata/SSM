@@ -55,9 +55,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private Map<String, Integer> containerFilesLock;
 
   /**
-   * The mapping between action and container file.
+   * The mapping between action and container file exist info.
    */
-  private Map<Long, String> containerFileMap;
+  private Map<Long, ContainerFileExistInfo> containerFileMap;
 
   /**
    * The mapping between action and file container information.
@@ -65,7 +65,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private Map<Long, Map<String, FileContainerInfo>> fileContainerInfoMap;
 
   /**
-   * The mapping between small file and state.
+   * The mapping between small file and action.
    */
   private Map<String, Long> smallFilesLock;
 
@@ -100,6 +100,16 @@ public class SmallFileScheduler extends ActionSchedulerService {
     return ACTIONS;
   }
 
+  private class ContainerFileExistInfo {
+    private String containerFilePath;
+    private boolean isExist;
+
+    private ContainerFileExistInfo(String containerFilePath, boolean isExist) {
+      this.containerFilePath = containerFilePath;
+      this.isExist = isExist;
+    }
+  }
+
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
     if (ACTIONS.get(1).equals(actionInfo.getActionName())) {
@@ -132,7 +142,19 @@ public class SmallFileScheduler extends ActionSchedulerService {
       // Check if the valid number of small files is greater than the min batch size
       if (tempSmallFiles.size() > MIN_BATCH_SIZE) {
         smallFilesLock.putAll(tempSmallFiles);
-        containerFileMap.put(actionInfo.getActionId(), containerFilePath);
+
+        // Update container file map, save the info that whether it already exists
+        try {
+          if (dfsClient.exists(containerFilePath)) {
+            containerFileMap.put(actionId, new ContainerFileExistInfo(containerFilePath, true));
+          } else {
+            containerFileMap.put(actionId, new ContainerFileExistInfo(containerFilePath, false));
+          }
+        } catch (IOException e) {
+          LOG.error("Failed to check if the container file is exists: " + containerFilePath, e);
+          return false;
+        }
+
         smallFilesMap.put(actionId, new ArrayList<>(tempSmallFiles.keySet()));
         return true;
       } else {
@@ -147,7 +169,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     long actionId = actionInfo.getActionId();
     if (ACTIONS.get(1).equals(actionInfo.getActionName())) {
-      String containerFilePath = containerFileMap.get(actionId);
+      String containerFilePath = containerFileMap.get(actionId).containerFilePath;
 
       // Check if container file is locked and retry
       if (containerFilesLock.containsKey(containerFilePath)) {
@@ -207,9 +229,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
-    if (actionInfo.isFinished()) {
+    if (actionInfo.isFinished() && ACTIONS.get(1).equals(actionInfo.getActionName())) {
       long actionId = actionInfo.getActionId();
-      if (actionInfo.isSuccessful() && ACTIONS.get(1).equals(actionInfo.getActionName())) {
+      if (actionInfo.isSuccessful()) {
         for (Map.Entry<String, FileContainerInfo> entry :
             fileContainerInfoMap.get(actionId).entrySet()) {
           CompactFileState compactFileState = new CompactFileState(
@@ -227,10 +249,18 @@ public class SmallFileScheduler extends ActionSchedulerService {
           }
         }
         LOG.info("Update file container info successfully.");
+      } else {
+        try {
+          if (containerFileMap.get(actionId).isExist) {
+            dfsClient.delete(containerFileMap.get(actionId).containerFilePath, false);
+          }
+        } catch (IOException e3) {
+          LOG.error("Failed to delete the container file: " + containerFileMap.get(actionId), e3);
+        }
       }
 
       // Remove locks of container file and small files
-      containerFilesLock.remove(containerFileMap.get(actionId));
+      containerFilesLock.remove(containerFileMap.get(actionId).containerFilePath);
       for (Map.Entry<String, FileContainerInfo> entry :
           fileContainerInfoMap.get(actionId).entrySet()) {
         smallFilesLock.remove(entry.getKey());
