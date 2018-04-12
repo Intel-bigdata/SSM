@@ -149,7 +149,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   @Override
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
-    for (int i = 0; i < descriptor.actionSize(); i++) {
+    for (int i = 0; i < descriptor.getActionSize(); i++) {
       if (COMPACT_SYMBOL.equals(descriptor.getActionName(i))) {
         Map<String, String> args = descriptor.getActionArgs(i);
         String smallFileList = args.get(HdfsAction.FILE_PATH);

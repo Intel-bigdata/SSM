@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.util.ArrayList;
@@ -64,7 +63,6 @@ public class TestSmallFileCompactAction extends MiniClusterHarness {
     SmallFileCompactAction smallFileCompactAction = new SmallFileCompactAction();
     smallFileCompactAction.setDfsClient(dfsClient);
     smallFileCompactAction.setContext(smartContext);
-    smallFileCompactAction.setStatusReporter(new MockActionStatusReporter());
     Map<String , String> args = new HashMap<>();
     args.put(SmallFileCompactAction.FILE_PATH , new Gson().toJson(smallFileList));
     args.put(SmallFileCompactAction.CONTAINER_FILE, "/test/small_files/container_file");

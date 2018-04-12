@@ -242,8 +242,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
             LOG.error("Process small file compact action in metaStore failed!", e1);
           }
           try {
-            CompatibilityHelperLoader.getHelper().setLen2Zero(
-                dfsClient, entry.getKey());
+            CompatibilityHelperLoader.getHelper().truncate(dfsClient, entry.getKey(), 0);
           } catch (IOException e2) {
             LOG.error("Failed to truncate the small file: " + entry.getKey(), e2);
           }

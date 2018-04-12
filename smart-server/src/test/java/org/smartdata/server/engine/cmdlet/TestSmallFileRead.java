@@ -50,7 +50,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
     ArrayList<String> smallFileList = new ArrayList<>();
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 15; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
       long fileLen = 5 + (int) (Math.random() * 11);

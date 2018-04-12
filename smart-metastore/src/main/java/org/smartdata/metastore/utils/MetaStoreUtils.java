@@ -86,7 +86,8 @@ public class MetaStoreUtils {
             "sys_info",
             "cluster_info",
             "backup_file",
-            "file_state"
+            "file_state",
+            "small_file"
   };
 
   public static Connection createConnection(String url,
@@ -342,6 +343,12 @@ public class MetaStoreUtils {
               + " path varchar(1000) PRIMARY KEY,\n"
               + " type tinyint(4) NOT NULL,\n"
               + " stage tinyint(4) NOT NULL\n"
+              + ");",
+          "CREATE TABLE small_file (\n"
+              + "path varchar(1000) NOT NULL PRIMARY KEY,\n"
+              + "container_file_path varchar(4096) NOT NULL,\n"
+              + "offset bigint(20) NOT NULL,\n"
+              + "length bigint(20) NOT NULL\n"
               + ");"
         };
     try {
