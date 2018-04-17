@@ -38,7 +38,7 @@ public class TestCaseMoveData extends IntegrationTestBase {
     Assert.assertTrue(checkStorage(file, "ARCHIVE", "SSD"));
 
     String rule = "file : every 1s | path matches \"/testOneSsd/*\" "
-        + "and accessCount(1min) > 1 | onessd";
+        + "and accessCount(10min) > 1 | onessd";
     long ruleId = RuleRestApi.submitRule(rule);
     startRule(ruleId);
 

@@ -42,15 +42,33 @@ public class TestSystemRestApi extends IntegrationTestBase {
   public void testServers() throws IOException, InterruptedException {
     Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/servers");
     response.then().body("body", Matchers.empty());
-    Process worker = Util.startNewServer();
-    Process agent = Util.startNewAgent();
+    Process worker = null;
+    Process agent = null;
 
-    Util.waitSlaveServerAvailable();
-    Util.waitAgentAvailable();
+    try {
+      worker = Util.startNewServer();
+      Util.waitSlaveServerAvailable();
 
-    agent.destroy();
-    worker.destroy();
-    Util.waitAgentsDown();
-    Util.waitSlaveServersDown();
+      agent = Util.startNewAgent();
+      Util.waitAgentAvailable();
+    } finally {
+      if (worker != null) {
+        try {
+          worker.destroy();
+          Util.waitSlaveServersDown();
+        } catch (Throwable t) {
+          // ignore
+        }
+      }
+
+      if (agent != null) {
+        try {
+          agent.destroy();
+          Util.waitAgentsDown();
+        } catch (Throwable t) {
+          // ignore
+        }
+      }
+    }
   }
 }
