@@ -75,7 +75,6 @@ public class TestCaseMoveData extends IntegrationTestBase {
     waitCmdletComplete(cmdletChkArchive);
     String result = getActionInfo(getCmdletActionIds(cmdletChkArchive).get(0))
         .getString("result");
-    System.out.println("Result: " + result);
     return checkStorageResult(result, containStorageType, notContainStorageType);
   }
 
