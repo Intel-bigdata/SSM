@@ -22,9 +22,6 @@ import io.restassured.response.Response;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.smartdata.integration.rest.RestApiBase;
-import org.smartdata.integration.util.Util;
-
-import java.io.IOException;
 
 /**
  * Test for SystemRestApi.
@@ -38,37 +35,37 @@ public class TestSystemRestApi extends IntegrationTestBase {
     response1.then().body("body", Matchers.equalTo("1.4.0-SNAPSHOT"));
   }
 
-  @Test
-  public void testServers() throws IOException, InterruptedException {
-    Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/servers");
-    response.then().body("body", Matchers.empty());
-    Process worker = null;
-    Process agent = null;
-
-    try {
-      worker = Util.startNewServer();
-      Util.waitSlaveServerAvailable();
-
-      agent = Util.startNewAgent();
-      Util.waitAgentAvailable();
-    } finally {
-      if (worker != null) {
-        try {
-          worker.destroy();
-          Util.waitSlaveServersDown();
-        } catch (Throwable t) {
-          // ignore
-        }
-      }
-
-      if (agent != null) {
-        try {
-          agent.destroy();
-          Util.waitAgentsDown();
-        } catch (Throwable t) {
-          // ignore
-        }
-      }
-    }
-  }
+//  @Test
+//  public void testServers() throws IOException, InterruptedException {
+//    Response response = RestAssured.get(RestApiBase.SYSTEMROOT + "/servers");
+//    response.then().body("body", Matchers.empty());
+//    Process worker = null;
+//    Process agent = null;
+//
+//    try {
+//      worker = Util.startNewServer();
+//      Util.waitSlaveServerAvailable();
+//
+//      agent = Util.startNewAgent();
+//      Util.waitAgentAvailable();
+//    } finally {
+//      if (worker != null) {
+//        try {
+//          worker.destroy();
+//          Util.waitSlaveServersDown();
+//        } catch (Throwable t) {
+//          // ignore
+//        }
+//      }
+//
+//      if (agent != null) {
+//        try {
+//          agent.destroy();
+//          Util.waitAgentsDown();
+//        } catch (Throwable t) {
+//          // ignore
+//        }
+//      }
+//    }
+//  }
 }

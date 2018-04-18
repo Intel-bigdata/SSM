@@ -33,7 +33,7 @@ public class TestCaseMoveData extends IntegrationTestBase {
   @Test(timeout = 120000)
   public void testOneSsdHotData() throws Exception {
     String file = "/testOneSsd/testOneSsdFile";
-    waitCmdletComplete(submitCmdlet("write -length 1024 -file " + file));
+    waitCmdletComplete(submitCmdlet("write -length 104 -file " + file));
     waitCmdletComplete(submitCmdlet("archive -file " + file));
     Assert.assertTrue(checkStorage(file, "ARCHIVE", "SSD"));
 
@@ -55,7 +55,7 @@ public class TestCaseMoveData extends IntegrationTestBase {
   @Test(timeout = 120000)
   public void testArchiveColdData() throws Exception {
     String file = "/testArchive/testArchiveFile";
-    waitCmdletComplete(submitCmdlet("write -length 1024 -file " + file));
+    waitCmdletComplete(submitCmdlet("write -length 104 -file " + file));
     Assert.assertTrue(checkStorage(file, null, "ARCHIVE"));
 
     String rule = "file : every 1s | path matches \"/testArchive/*\" and age > 10s | archive";
@@ -75,6 +75,7 @@ public class TestCaseMoveData extends IntegrationTestBase {
     waitCmdletComplete(cmdletChkArchive);
     String result = getActionInfo(getCmdletActionIds(cmdletChkArchive).get(0))
         .getString("result");
+    System.out.println("Result: " + result);
     return checkStorageResult(result, containStorageType, notContainStorageType);
   }
 
