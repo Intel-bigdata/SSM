@@ -26,6 +26,9 @@ cache:
 install:
   - mvn install $PROFILE -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
+after_failure:
+  - cat target/surefire-reports/*.txt
+
 script:
   - mvn test $PROFILE
 group: deprecated-2017Q4
