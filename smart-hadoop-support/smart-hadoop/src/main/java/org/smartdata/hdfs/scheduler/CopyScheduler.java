@@ -18,6 +18,7 @@
 package org.smartdata.hdfs.scheduler;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -90,6 +91,9 @@ public class CopyScheduler extends ActionSchedulerService {
   private int cacheSyncTh = 100;
   // record the file_diff whether being changed
   private Map<Long, Boolean> fileDiffCacheChanged;
+  // throttle for copy action
+  private long throttleInMb;
+  private RateLimiter rateLimiter = null;
 
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
@@ -113,6 +117,12 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     this.fileDiffCache = new ConcurrentHashMap<>();
     this.fileDiffCacheChanged = new ConcurrentHashMap<>();
+
+    throttleInMb = conf.getLong(SmartConfKeys.SMART_ACTION_COPY_THROTTLE_MB_KEY,
+        SmartConfKeys.SMART_ACTION_COPY_THROTTLE_MB_DEFAULT);
+    if (throttleInMb > 0) {
+      rateLimiter = RateLimiter.create(throttleInMb);
+    }
   }
 
   @Override
@@ -143,6 +153,20 @@ public class CopyScheduler extends ActionSchedulerService {
       case APPEND:
         action.setActionType("copy");
         action.getArgs().put("-dest", path.replace(srcDir, destDir));
+        if (rateLimiter != null) {
+          String strLen = fileDiff.getParameters().get("-length");
+          if (strLen != null) {
+            int appendLen = (int)(Long.valueOf(strLen) >> 20);
+            if (appendLen > 0) {
+              if (!rateLimiter.tryAcquire(appendLen)) {
+                if (LOG.isDebugEnabled()) {
+                  LOG.debug("Cancel Scheduling COPY action {} due to throttling.", actionInfo);
+                }
+                return ScheduleResult.RETRY;
+              }
+            }
+          }
+        }
         break;
       case DELETE:
         action.setActionType("delete");
