@@ -194,6 +194,7 @@ public class CopyScheduler extends ActionSchedulerService {
     return ScheduleResult.SUCCESS;
   }
 
+  @Override
   public List<String> getSupportedActions() {
     return actions;
   }
@@ -338,7 +339,7 @@ public class CopyScheduler extends ActionSchedulerService {
         }
       }
     } catch (IOException e) {
-      LOG.error("Fetch remote file list error!", e);
+      LOG.debug("Fetch remote file list error!", e);
     }
     if (returnStatus.size() == 0) {
       return new FileStatus[0];
