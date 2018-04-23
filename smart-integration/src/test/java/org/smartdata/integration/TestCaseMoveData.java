@@ -37,7 +37,7 @@ public class TestCaseMoveData extends IntegrationTestBase {
     waitCmdletComplete(submitCmdlet("archive -file " + file));
     Assert.assertTrue(checkStorage(file, "ARCHIVE", "SSD"));
 
-    String rule = "file : every 1s | path matches \"/testOneSsd/*\" "
+    String rule = "file : every 5s | path matches \"/testOneSsd/*\" "
         + "and accessCount(10min) > 1 | onessd";
     long ruleId = RuleRestApi.submitRule(rule);
     startRule(ruleId);
@@ -58,7 +58,7 @@ public class TestCaseMoveData extends IntegrationTestBase {
     waitCmdletComplete(submitCmdlet("write -length 104 -file " + file));
     Assert.assertTrue(checkStorage(file, null, "ARCHIVE"));
 
-    String rule = "file : every 1s | path matches \"/testArchive/*\" and age > 10s | archive";
+    String rule = "file : every 5s | path matches \"/testArchive/*\" and age > 10s | archive";
     long ruleId = RuleRestApi.submitRule(rule);
     startRule(ruleId);
 
