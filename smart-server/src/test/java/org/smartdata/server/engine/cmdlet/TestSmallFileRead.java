@@ -50,7 +50,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
     ArrayList<String> smallFileList = new ArrayList<>();
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 3; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
       long fileLen = 5 + (int) (Math.random() * 11);
@@ -95,7 +95,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     is.close();
   }
 
-  //@Test
+  @Test
   public void testByteRead() throws Exception {
     waitTillSSMExitSafeMode();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
@@ -105,7 +105,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     is.close();
   }
 
-  //@Test
+  @Test
   public void testByteArrayRead() throws Exception {
     waitTillSSMExitSafeMode();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
@@ -115,7 +115,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     is.close();
   }
 
-  //@Test
+  @Test
   public void testByteBufferRead() throws Exception {
     waitTillSSMExitSafeMode();
     String smallFile = "/test/small_files/file_1";
@@ -126,7 +126,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     is.close();
   }
 
-  //@Test
+  @Test
   public void testBytesRead() throws Exception {
     waitTillSSMExitSafeMode();
     String smallFile = "/test/small_files/file_2";
@@ -137,7 +137,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     is.close();
   }
 
-  //@Test
+  @Test
   public void testPositionRead() throws Exception {
     waitTillSSMExitSafeMode();
     String smallFile = "/test/small_files/file_1";

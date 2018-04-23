@@ -70,6 +70,10 @@ public interface CompatibilityHelper {
 
   boolean truncate(DistributedFileSystem fileSystem, String src, long newLength) throws IOException;
 
+  boolean truncate0(DFSClient client, String src) throws IOException;
+
+  boolean truncate0(DistributedFileSystem fileSystem, String src) throws IOException;
+
   int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage);
 
   OutputStream getDFSClientAppend(DFSClient client, String dest, int buffersize, long offset) throws IOException;

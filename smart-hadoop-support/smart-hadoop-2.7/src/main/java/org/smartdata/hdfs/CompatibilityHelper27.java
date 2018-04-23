@@ -21,6 +21,7 @@ import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.SmartInputStreamFactory;
@@ -46,9 +47,11 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 public class CompatibilityHelper27 implements CompatibilityHelper {
 
+  @Override
   public String[] getStorageTypes(LocatedBlock lb) {
     List<String> types = new ArrayList<>();
     for(StorageType type : lb.getStorageTypes()) {
@@ -57,6 +60,7 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return types.toArray(new String[types.size()]);
   }
 
+  @Override
   public void replaceBlock(
       DataOutputStream out,
       ExtendedBlock eb,
@@ -68,6 +72,7 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     new Sender(out).replaceBlock(eb, StorageType.valueOf(storageType), accessToken, dnUUID, info);
   }
 
+  @Override
   public String[] getMovableTypes() {
     List<String> types = new ArrayList<>();
     for(StorageType type : StorageType.getMovableTypes()) {
@@ -76,10 +81,12 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return types.toArray(new String[types.size()]);
   }
 
+  @Override
   public String getStorageType(StorageReport report) {
     return report.getStorage().getStorageType().toString();
   }
 
+  @Override
   public List<String> chooseStorageTypes(BlockStoragePolicy policy, short replication) {
     List<String> types = new ArrayList<>();
     for(StorageType type : policy.chooseStorageTypes(replication)) {
@@ -88,6 +95,7 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return types;
   }
 
+  @Override
   public boolean isMovable(String type) {
     return StorageType.valueOf(type).isMovable();
   }
@@ -137,6 +145,60 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
   @Override
   public boolean truncate(DistributedFileSystem fileSystem, String src, long newLength) throws IOException {
     return fileSystem.truncate(new Path(src), newLength);
+  }
+
+  @Override
+  public boolean truncate0(DFSClient client, String src) throws IOException {
+    // Save the original metadata
+    HdfsFileStatus fileStatus = client.getFileInfo(src);
+    Map<String, byte[]> XAttr = client.getXAttrs(src);
+
+    // Delete file
+    client.delete(src, true);
+
+    // Create file
+    client.create(src, true);
+
+    // Set metadata
+    client.setOwner(src, fileStatus.getOwner(), fileStatus.getGroup());
+    client.setPermission(src, fileStatus.getPermission());
+    client.setReplication(src, fileStatus.getReplication());
+    client.setStoragePolicy(src, "Cold");
+    client.setTimes(src, fileStatus.getAccessTime(),
+        client.getFileInfo(src).getModificationTime());
+
+    for(Map.Entry<String, byte[]> entry : XAttr.entrySet()){
+      client.setXAttr(src, entry.getKey(), entry.getValue(),
+          EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
+    }
+    return true;
+  }
+
+  @Override
+  public boolean truncate0(DistributedFileSystem fileSystem, String src) throws IOException {
+    // Save the metadata
+    FileStatus fileStatus = fileSystem.getFileStatus(new Path(src));
+    Map<String, byte[]> XAttr = fileSystem.getXAttrs(new Path(src));
+
+    // Delete file
+    fileSystem.delete(new Path(src), true);
+
+    // Create file
+    fileSystem.create(new Path(src), true);
+
+    // Set metadata
+    fileSystem.setOwner(new Path(src), fileStatus.getOwner(), fileStatus.getGroup());
+    fileSystem.setPermission(new Path(src), fileStatus.getPermission());
+    fileSystem.setReplication(new Path(src), fileStatus.getReplication());
+    fileSystem.setStoragePolicy(new Path(src), "Cold");
+    fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
+        fileSystem.getFileStatus(new Path(src)).getModificationTime());
+
+    for(Map.Entry<String, byte[]> entry : XAttr.entrySet()){
+      fileSystem.setXAttr(new Path(src), entry.getKey(), entry.getValue(),
+          EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
+    }
+    return true;
   }
 
   @Override

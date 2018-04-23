@@ -21,15 +21,26 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileSystemLinkResolver;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.DirectoryListing;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.CompactFileState;
+import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.FileState;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -40,10 +51,10 @@ import java.util.ArrayList;
  * 1. Build SSM, get all jar files start with name Smart*
  * 2. Copy these jar files to HDFS classpath
  * 3. Reconfigure HDFS
- *   Please do the following configurations,
- *   1. core-site.xml
- *   Change property "fs.hdfs.impl" value, to point to the Smart Server provided
- *   "Smart  File System".
+ *    Please do the following configurations,
+ *    1. core-site.xml
+ *    Change property "fs.hdfs.impl" value, to point to the Smart Server provided
+ *    "Smart File System".
  *    <property>
  *      <name>fs.hdfs.impl</name>
  *      <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
@@ -58,7 +69,6 @@ import java.util.ArrayList;
  *
  * 4. Restart HDFS
  */
-
 public class SmartFileSystem extends DistributedFileSystem {
   private SmartDFSClient smartClient;
   private boolean verifyChecksum = true;
@@ -92,8 +102,8 @@ public class SmartFileSystem extends DistributedFileSystem {
     throws IOException {
     statistics.incrementReadOps(1);
     Path absF = fixRelativePart(path);
-    final DFSInputStream dfsis = smartClient.open(absF.toUri().getPath(), bufferSize, verifyChecksum);
-    return smartClient.createWrappedInputStream(dfsis);
+    final DFSInputStream in = smartClient.open(absF.toUri().getPath(), bufferSize, verifyChecksum);
+    return smartClient.createWrappedInputStream(in);
   }
 
   @Override
@@ -104,7 +114,7 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public FileStatus getFileStatus(Path f) throws IOException {
     FileStatus oldStatus = super.getFileStatus(f);
-    FileState fileState = smartClient.getFileState(f.toString());
+    FileState fileState = smartClient.getFileState(getPathName(f));
     if (fileState instanceof CompactFileState) {
       long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
       return new FileStatus(len, oldStatus.isDirectory(), oldStatus.getReplication(),
@@ -119,10 +129,9 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public FileStatus[] listStatus(Path p) throws IOException {
     FileStatus[] oldStatus = super.listStatus(p);
-    ArrayList<FileStatus> newStatus = new ArrayList<>(16);
+    ArrayList<FileStatus> newStatus = new ArrayList<>(oldStatus.length);
     for (FileStatus status : oldStatus) {
-      FileState fileState = smartClient.getFileState(
-          Path.getPathWithoutSchemeAndAuthority(status.getPath()).toString());
+      FileState fileState = smartClient.getFileState(getPathName(status.getPath()));
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
         newStatus.add(new FileStatus(len, status.isDirectory(), status.getReplication(),
@@ -139,19 +148,187 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public BlockLocation[] getFileBlockLocations(Path p, final long start,
                                                final long len) throws IOException {
-    FileState fileState = smartClient.getFileState(p.toString());
+    FileState fileState = smartClient.getFileState(getPathName(p));
     if (fileState instanceof CompactFileState) {
-      String containerFile = ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath();
-      long offset = ((CompactFileState) fileState).getFileContainerInfo().getOffset();
-      return super.getFileBlockLocations(new Path(containerFile), offset + start, len);
+      FileContainerInfo fileContainerInfo = ((CompactFileState) fileState).getFileContainerInfo();
+      String containerFile = fileContainerInfo.getContainerFilePath();
+      long offset = fileContainerInfo.getOffset();
+      BlockLocation[] blockLocations = super.getFileBlockLocations(
+          new Path(containerFile), offset + start, len);
+      for (BlockLocation blockLocation : blockLocations) {
+        blockLocation.setOffset(blockLocation.getOffset() - offset);
+      }
+      return blockLocations;
     } else {
       return super.getFileBlockLocations(p, start, len);
     }
   }
 
   @Override
+  protected RemoteIterator<LocatedFileStatus> listLocatedStatus(final Path p,
+                                                                final PathFilter filter)
+      throws IOException {
+    Path absF = fixRelativePart(p);
+    return new FileSystemLinkResolver<RemoteIterator<LocatedFileStatus>>() {
+      @Override
+      public RemoteIterator<LocatedFileStatus> doCall(final Path p)
+          throws IOException {
+        return new SmartDirListingIterator<>(p, filter, true);
+      }
+
+      @Override
+      public RemoteIterator<LocatedFileStatus> next(final FileSystem fs, final Path p)
+          throws IOException {
+        if (fs instanceof SmartFileSystem) {
+          return ((SmartFileSystem)fs).listLocatedStatus(p, filter);
+        }
+        // symlink resolution for this methods does not work cross file systems
+        // because it is a protected method.
+        throw new IOException("Link resolution does not work with multiple " +
+            "file systems for listLocatedStatus(): " + p);
+      }
+    }.resolve(this, absF);
+  }
+
+  private class SmartDirListingIterator<T extends FileStatus>
+      implements RemoteIterator<T> {
+    private DirectoryListing thisListing;
+    private int i;
+    private Path p;
+    private String src;
+    private T curStat = null;
+    private PathFilter filter;
+    private boolean needLocation;
+
+    private SmartDirListingIterator(Path p, PathFilter filter,
+                                    boolean needLocation) throws IOException {
+      this.p = p;
+      this.src = getPathName(p);
+      this.filter = filter;
+      this.needLocation = needLocation;
+      // fetch the first batch of entries in the directory
+      thisListing = smartClient.listPaths(src, HdfsFileStatus.EMPTY_NAME,
+          needLocation);
+      statistics.incrementReadOps(1);
+      // the directory does not exist
+      if (thisListing == null) {
+        throw new FileNotFoundException("File " + p + " does not exist.");
+      }
+      i = 0;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean hasNext() throws IOException {
+      while (curStat == null && hasNextNoFilter()) {
+        T next;
+        HdfsFileStatus fileStat = thisListing.getPartialListing()[i++];
+        if (needLocation) {
+          next = (T)((HdfsLocatedFileStatus) fileStat).makeQualifiedLocated(getUri(), p);
+          String fileName = next.getPath().toUri().getPath();
+
+          // Reconstruct FileStatus
+          FileState fileState = smartClient.getFileState(fileName);
+          if (fileState instanceof CompactFileState) {
+            CompactFileState compactFileState = (CompactFileState) fileState;
+            long len = compactFileState.getFileContainerInfo().getLength();
+            BlockLocation[] blockLocations = smartClient.getBlockLocations(
+                fileName, 0, len);
+            next = (T) new LocatedFileStatus(len,
+                next.isDirectory(),
+                next.getReplication(),
+                next.getBlockSize(),
+                next.getModificationTime(),
+                next.getAccessTime(),
+                next.getPermission(),
+                next.getOwner(),
+                next.getGroup(),
+                next.isSymlink() ? next.getSymlink() : null,
+                next.getPath(),
+                blockLocations);
+          }
+        } else {
+          next = (T) fileStat.makeQualified(getUri(), p);
+          String fileName = next.getPath().toUri().getPath();
+
+          // Reconstruct FileStatus
+          FileState fileState = smartClient.getFileState(fileName);
+          if (fileState instanceof CompactFileState) {
+            CompactFileState compactFileState = (CompactFileState) fileState;
+            long len = compactFileState.getFileContainerInfo().getLength();
+            next = (T) new FileStatus(len,
+                next.isDirectory(),
+                next.getReplication(),
+                next.getBlockSize(),
+                next.getModificationTime(),
+                next.getAccessTime(),
+                next.getPermission(),
+                next.getOwner(),
+                next.getGroup(),
+                next.isSymlink() ? next.getSymlink() : null,
+                next.getPath());
+          }
+        }
+
+        // apply filter if not null
+        if (filter == null || filter.accept(next.getPath())) {
+          curStat = next;
+        }
+      }
+      return curStat != null;
+    }
+
+    /**
+     * Check if there is a next item before applying the given filter
+     */
+    private boolean hasNextNoFilter() throws IOException {
+      if (thisListing == null) {
+        return false;
+      }
+      if (i >= thisListing.getPartialListing().length && thisListing.hasMore()) {
+        // current listing is exhausted & fetch a new listing
+        thisListing = smartClient.listPaths(src, thisListing.getLastName(), needLocation);
+        statistics.incrementReadOps(1);
+        if (thisListing == null) {
+          return false;
+        }
+        i = 0;
+      }
+      return (i < thisListing.getPartialListing().length);
+    }
+
+    @Override
+    public T next() throws IOException {
+      if (hasNext()) {
+        T tmp = curStat;
+        curStat = null;
+        return tmp;
+      }
+      throw new java.util.NoSuchElementException("No more entry in " + p);
+    }
+  }
+
+  /**
+   * Checks that the passed URI belongs to this filesystem and returns
+   * just the path component. Expects a URI with an absolute path.
+   *
+   * @param file URI with absolute path
+   * @return path component of {file}
+   * @throws IllegalArgumentException if URI does not belong to this DFS
+   */
+  private String getPathName(Path file) {
+    checkPath(file);
+    String result = file.toUri().getPath();
+    if (!DFSUtil.isValidName(result)) {
+      throw new IllegalArgumentException("Pathname " + result + " from " +
+          file+" is not a valid DFS filename.");
+    }
+    return result;
+  }
+
+  @Override
   public boolean isFileClosed(final Path src) throws IOException {
-    FileState fileState = smartClient.getFileState(src.toString());
+    FileState fileState = smartClient.getFileState(getPathName(src));
     if (fileState instanceof CompactFileState) {
       String containerFile = ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath();
       return super.isFileClosed(new Path(containerFile));
@@ -162,33 +339,31 @@ public class SmartFileSystem extends DistributedFileSystem {
 
   @Override
   public boolean delete(Path f, final boolean recursive) throws IOException {
-    return smartClient.delete(f.toString(), recursive);
+    return smartClient.delete(getPathName(f), recursive);
   }
 
   @Override
   public boolean truncate(Path f, final long newLength) throws IOException {
-    return smartClient.truncate(f.toString(), newLength);
+    return smartClient.truncate(getPathName(f), newLength);
   }
 
   @SuppressWarnings("deprecation")
   @Override
   public boolean rename(Path src, Path dst) throws IOException {
-    return smartClient.rename(src.toString(), dst.toString());
+    return smartClient.rename(getPathName(src), getPathName(dst));
   }
 
   @SuppressWarnings("deprecation")
   @Override
   public void rename(Path src, Path dst, final Options.Rename... options)
       throws IOException {
-    smartClient.rename(src.toString(), dst.toString(), options);
+    smartClient.rename(getPathName(src), getPathName(src), options);
   }
 
   @Override
   public void close() throws IOException {
     try {
       super.close();
-    } catch (IOException e) {
-      throw e;
     } finally {
       if (smartClient != null) {
         this.smartClient.close();

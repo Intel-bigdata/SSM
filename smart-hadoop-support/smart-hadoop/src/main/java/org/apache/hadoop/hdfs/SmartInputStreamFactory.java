@@ -42,7 +42,7 @@ public abstract class SmartInputStreamFactory {
         inputStream = new DFSInputStream(dfsClient, src, verifyChecksum);
         break;
       case COMPACT:
-        inputStream = new CompactInputStream(dfsClient, src, verifyChecksum, fileState);
+        inputStream = new CompactInputStream(dfsClient, verifyChecksum, fileState);
         break;
       case COMPRESSION:
         inputStream = new CompressionInputStream(dfsClient, src, verifyChecksum, fileState);

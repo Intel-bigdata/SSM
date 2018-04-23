@@ -122,7 +122,8 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public DFSInputStream open(String src) throws IOException {
-    return open(src, 1024, true);
+    smartClient.checkOpen();
+    return open(src, 4096, true);
   }
 
   @Override
@@ -144,15 +145,18 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException {
-    return super.open(src, buffersize, verifyChecksum, stats);
+    smartClient.checkOpen();
+    return open(src, 4096, verifyChecksum);
   }
 
   @Override
   public LocatedBlocks getLocatedBlocks(String src, long start)
       throws IOException {
+    smartClient.checkOpen();
     FileState fileState = smartClient.getFileState(src);
     if (fileState instanceof CompactFileState) {
-      String containerFile = ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath();
+      String containerFile = ((CompactFileState) fileState)
+          .getFileContainerInfo().getContainerFilePath();
       long offset = ((CompactFileState) fileState).getFileContainerInfo().getOffset();
       return super.getLocatedBlocks(containerFile, offset + start);
     } else {
@@ -163,11 +167,18 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public BlockLocation[] getBlockLocations(String src, long start,
                                            long length) throws IOException {
+    smartClient.checkOpen();
     FileState fileState = smartClient.getFileState(src);
     if (fileState instanceof CompactFileState) {
-      String containerFile = ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath();
+      String containerFile = ((CompactFileState) fileState)
+          .getFileContainerInfo().getContainerFilePath();
       long offset = ((CompactFileState) fileState).getFileContainerInfo().getOffset();
-      return super.getBlockLocations(containerFile, offset + start, length);
+      BlockLocation[] blockLocations = super.getBlockLocations(
+          containerFile, offset + start, length);
+      for (BlockLocation blockLocation : blockLocations) {
+        blockLocation.setOffset(blockLocation.getOffset() - offset);
+      }
+      return blockLocations;
     } else {
       return super.getBlockLocations(src, start, length);
     }
@@ -175,6 +186,7 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public HdfsFileStatus getFileInfo(String src) throws IOException {
+    smartClient.checkOpen();
     HdfsFileStatus oldStatus = super.getFileInfo(src);
     FileState fileState = smartClient.getFileState(src);
     if (fileState instanceof CompactFileState) {
@@ -182,8 +194,10 @@ public class SmartDFSClient extends DFSClient {
       return new HdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
           oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
           oldStatus.getPermission(), oldStatus.getOwner(), oldStatus.getGroup(),
-          oldStatus.getSymlinkInBytes(), oldStatus.getLocalNameInBytes(), oldStatus.getFileId(),
-          oldStatus.getChildrenNum(), oldStatus.getFileEncryptionInfo(), oldStatus.getStoragePolicy());
+          oldStatus.isSymlink() ? oldStatus.getSymlinkInBytes() : null,
+          oldStatus.isEmptyLocalName() ? new byte[0] : oldStatus.getLocalNameInBytes(),
+          oldStatus.getFileId(), oldStatus.getChildrenNum(),
+          oldStatus.getFileEncryptionInfo(), oldStatus.getStoragePolicy());
     } else {
       return oldStatus;
     }
@@ -192,10 +206,15 @@ public class SmartDFSClient extends DFSClient {
   @Override
   @Deprecated
   public boolean delete(String src) throws IOException {
+    smartClient.checkOpen();
     FileState fileState = smartClient.getFileState(src);
     if (fileState instanceof CompactFileState) {
-      smartClient.deleteSmallFile(src);
-      return super.delete(src);
+      if (super.delete(src)) {
+        smartClient.deleteSmallFile(src);
+        return true;
+      } else {
+        return false;
+      }
     } else {
       return super.delete(src);
     }
@@ -203,21 +222,32 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public boolean delete(String src, boolean recursive) throws IOException {
-    FileState fileState = smartClient.getFileState(src);
-    if (fileState instanceof CompactFileState) {
-      smartClient.deleteSmallFile(src);
-      return super.delete(src, recursive);
+    smartClient.checkOpen();
+    if (recursive) {
+      // TODO: support delete small files recursively
+      return super.delete(src,true);
     } else {
-      return super.delete(src, recursive);
+      FileState fileState = smartClient.getFileState(src);
+      if (fileState instanceof CompactFileState) {
+        smartClient.deleteSmallFile(src);
+        return super.delete(src, false);
+      } else {
+        return super.delete(src, false);
+      }
     }
   }
 
   @Override
   public boolean truncate(String src, long newLength) throws IOException {
+    smartClient.checkOpen();
     FileState fileState = smartClient.getFileState(src);
     if (fileState instanceof CompactFileState && newLength == 0) {
-      smartClient.truncateSmallFile(src);
-      return super.truncate(src, 0);
+      if (super.truncate(src, 0)) {
+        smartClient.truncateSmallFile(src);
+        return true;
+      } else {
+        return false;
+      }
     } else {
       return super.truncate(src, newLength);
     }
@@ -226,10 +256,15 @@ public class SmartDFSClient extends DFSClient {
   @Override
   @Deprecated
   public boolean rename(String src, String dst) throws IOException {
+    smartClient.checkOpen();
     FileState fileState = smartClient.getFileState(src);
     if (fileState instanceof CompactFileState) {
-      smartClient.renameSmallFile(src, dst);
-      return super.rename(src, dst);
+      if (super.rename(src, dst)) {
+        smartClient.renameSmallFile(src, dst);
+        return true;
+      } else {
+        return false;
+      }
     } else {
       return super.rename(src, dst);
     }
@@ -238,10 +273,11 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void rename(String src, String dst, Options.Rename... options)
       throws IOException {
+    smartClient.checkOpen();
     FileState fileState = smartClient.getFileState(src);
     if (fileState instanceof CompactFileState) {
-      smartClient.renameSmallFile(src, dst);
       super.rename(src, dst, options);
+      smartClient.renameSmallFile(src, dst);
     } else {
       super.rename(src, dst, options);
     }
@@ -258,6 +294,7 @@ public class SmartDFSClient extends DFSClient {
       } catch (IOException e) {
         userName = "Unknown";
       }
+      smartClient.checkOpen();
       smartClient.reportFileAccessEvent(new FileAccessEvent(src, userName));
     } catch (IOException e) {
       // Here just ignores that failed to report
@@ -269,6 +306,7 @@ public class SmartDFSClient extends DFSClient {
   }
 
   public FileState getFileState(String filePath) throws IOException {
+    smartClient.checkOpen();
     return smartClient.getFileState(filePath);
   }
 
@@ -279,9 +317,11 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public boolean isFileClosed(String src) throws IOException{
+    smartClient.checkOpen();
     FileState fileState = smartClient.getFileState(src);
     if (fileState instanceof CompactFileState) {
-      String containerFile = ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath();
+      String containerFile = ((CompactFileState) fileState)
+          .getFileContainerInfo().getContainerFilePath();
       return super.isFileClosed(containerFile);
     } else {
       return super.isFileClosed(src);
@@ -292,8 +332,6 @@ public class SmartDFSClient extends DFSClient {
   public synchronized void close() throws IOException {
     try {
       super.close();
-    } catch (IOException e) {
-      throw e;
     } finally {
       try {
         if (smartClient != null) {

@@ -40,6 +40,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,7 +75,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   private Map<Long, ArrayList<String>> smallFilesMap;
 
-  private static final int MIN_BATCH_SIZE = 10;
+  private static final int MIN_BATCH_SIZE = 3;
   private static final int MAX_RETRY_COUNT = 3;
   private static final List<String> ACTIONS = Arrays.asList("write", "compact");
   public static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
@@ -130,17 +131,19 @@ public class SmallFileScheduler extends ActionSchedulerService {
       ArrayList<String> smallFileList = new Gson().fromJson(
           actionInfo.getArgs().get(HdfsAction.FILE_PATH),
           new ArrayList<String>().getClass());
+      Iterator<String> iterator = smallFileList.iterator();
       Map<String, Long> tempSmallFiles = new ConcurrentHashMap<>(200);
-      for (String smallFile : smallFileList) {
+      while (iterator.hasNext()) {
+        String smallFile = iterator.next();
         if (!smallFilesLock.containsKey(smallFile)) {
           tempSmallFiles.put(smallFile, actionId);
         } else {
-          return false;
+          iterator.remove();
         }
       }
 
       // Check if the valid number of small files is greater than the min batch size
-      if (tempSmallFiles.size() > MIN_BATCH_SIZE) {
+      if (smallFileList.size() >= MIN_BATCH_SIZE) {
         smallFilesLock.putAll(tempSmallFiles);
 
         // Update container file map, save the info that whether it already exists
@@ -155,7 +158,12 @@ public class SmallFileScheduler extends ActionSchedulerService {
           return false;
         }
 
-        smallFilesMap.put(actionId, new ArrayList<>(tempSmallFiles.keySet()));
+        smallFilesMap.put(actionId, smallFileList);
+        Map<String, String> args = new HashMap<>(2);
+        args.put(SmallFileCompactAction.CONTAINER_FILE,
+            actionInfo.getArgs().get(SmallFileCompactAction.CONTAINER_FILE));
+        args.put(SmallFileCompactAction.FILE_PATH, new Gson().toJson(smallFileList));
+        actionInfo.setArgs(args);
         return true;
       } else {
         return false;
@@ -242,7 +250,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
             LOG.error("Process small file compact action in metaStore failed!", e1);
           }
           try {
-            CompatibilityHelperLoader.getHelper().truncate(dfsClient, entry.getKey(), 0);
+            CompatibilityHelperLoader.getHelper().truncate0(dfsClient, entry.getKey());
           } catch (IOException e2) {
             LOG.error("Failed to truncate the small file: " + entry.getKey(), e2);
           }
