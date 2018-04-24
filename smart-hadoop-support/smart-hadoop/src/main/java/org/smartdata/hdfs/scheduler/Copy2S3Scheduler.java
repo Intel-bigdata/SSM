@@ -70,6 +70,7 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
         .getFileType().getValue() == FileState.FileType.S3.getValue();
   }
 
+  @Override
   public List<String> getSupportedActions() {
     return actions;
   }
