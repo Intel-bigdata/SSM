@@ -35,6 +35,7 @@ import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.message.NodeMessage;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -68,6 +69,8 @@ public class CmdletDispatcher {
   // TODO: to be refined
   private final int defaultSlots;
   private AtomicInteger index = new AtomicInteger(0);
+
+  private Map<String, Integer> regNodes = new HashMap<>();
 
   public CmdletDispatcher(SmartContext smartContext, CmdletManager cmdletManager,
       Queue<Long> scheduledCmdlets, Map<Long, LaunchCmdlet> idToLaunchCmdlet,
@@ -341,7 +344,25 @@ public class CmdletDispatcher {
     if (disableLocalExec && msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
       return;
     }
+
     synchronized (cmdExecSrvInsts) {
+      String nodeId = msg.getNodeInfo().getId();
+      if (isAdd) {
+        if (regNodes.containsKey(nodeId)) {
+          LOG.warn("Skip duplicate add node for {}", msg.getNodeInfo());
+          return;
+        } else {
+          regNodes.put(nodeId, 0);
+        }
+      } else {
+        if (!regNodes.containsKey(nodeId)) {
+          LOG.warn("Skip duplicate remove node for {}", msg.getNodeInfo());
+          return;
+        } else {
+          regNodes.remove(nodeId);
+        }
+      }
+
       int v = isAdd ? 1 : -1;
       int idx = msg.getNodeInfo().getExecutorType().ordinal();
       cmdExecSrvInsts[idx] += v;
