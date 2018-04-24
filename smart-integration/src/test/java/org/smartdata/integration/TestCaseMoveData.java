@@ -30,27 +30,27 @@ import static org.smartdata.integration.rest.RuleRestApi.waitRuleTriggered;
 
 public class TestCaseMoveData extends IntegrationTestBase {
 
-  @Test(timeout = 120000)
-  public void testOneSsdHotData() throws Exception {
-    String file = "/testOneSsd/testOneSsdFile";
-    waitCmdletComplete(submitCmdlet("write -length 104 -file " + file));
-    waitCmdletComplete(submitCmdlet("archive -file " + file));
-    Assert.assertTrue(checkStorage(file, "ARCHIVE", "SSD"));
-
-    String rule = "file : every 5s | path matches \"/testOneSsd/*\" "
-        + "and accessCount(10min) > 1 | onessd";
-    long ruleId = RuleRestApi.submitRule(rule);
-    startRule(ruleId);
-
-    waitCmdletComplete(submitCmdlet("read -file " + file));
-    waitCmdletComplete(submitCmdlet("read -file " + file));
-
-    waitRuleTriggered(ruleId);
-
-    while (!checkStorage(file, "SSD", "ARCHIVE")) {
-      Thread.sleep(1000);
-    }
-  }
+//  @Test(timeout = 120000)
+//  public void testOneSsdHotData() throws Exception {
+//    String file = "/testOneSsd/testOneSsdFile";
+//    waitCmdletComplete(submitCmdlet("write -length 104 -file " + file));
+//    waitCmdletComplete(submitCmdlet("archive -file " + file));
+//    Assert.assertTrue(checkStorage(file, "ARCHIVE", "SSD"));
+//
+//    String rule = "file : every 5s | path matches \"/testOneSsd/*\" "
+//        + "and accessCount(10min) > 1 | onessd";
+//    long ruleId = RuleRestApi.submitRule(rule);
+//    startRule(ruleId);
+//
+//    waitCmdletComplete(submitCmdlet("read -file " + file));
+//    waitCmdletComplete(submitCmdlet("read -file " + file));
+//
+//    waitRuleTriggered(ruleId);
+//
+//    while (!checkStorage(file, "SSD", "ARCHIVE")) {
+//      Thread.sleep(1000);
+//    }
+//  }
 
   @Test(timeout = 120000)
   public void testArchiveColdData() throws Exception {
