@@ -18,15 +18,23 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.util.VersionInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CompatibilityHelperLoader {
   private static CompatibilityHelper instance;
   private static final String HADOOP_26_HELPER_CLASS = "org.smartdata.hdfs.CompatibilityHelper26";
   private static final String HADOOP_27_HELPER_CLASS = "org.smartdata.hdfs.CompatibilityHelper27";
+  public static final Logger LOG =
+      LoggerFactory.getLogger(CompatibilityHelperLoader.class);
 
   public static CompatibilityHelper getHelper() {
     if (instance == null) {
       String version = VersionInfo.getVersion();
+      if (version == null || version.isEmpty() || version.equalsIgnoreCase("Unknown")) {
+        LOG.error("Cannot get Hadoop version. Use default 2.6.3 version. ");
+        version = "2.6.3";
+      }
       String[] parts = version.split("\\.");
       if (parts.length < 2) {
         throw new RuntimeException("Illegal Hadoop Version: " + version + " (expected A.B.* format)");
