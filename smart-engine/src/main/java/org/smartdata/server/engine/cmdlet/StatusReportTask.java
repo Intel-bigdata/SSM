@@ -26,12 +26,14 @@ import java.util.List;
 public class StatusReportTask implements Runnable {
   private StatusReporter statusReporter;
   private CmdletExecutor cmdletExecutor;
-  public static int REPORT_THRESHOLD = 50;
+  private long lastReportTime;
+  public static int INTERVAL = 200;
   public static double FINISHED_RATIO = 0.2;
 
   public StatusReportTask(StatusReporter statusReporter, CmdletExecutor cmdletExecutor) {
     this.statusReporter = statusReporter;
     this.cmdletExecutor = cmdletExecutor;
+    this.lastReportTime = System.currentTimeMillis();
   }
 
   @Override
@@ -46,9 +48,11 @@ public class StatusReportTask implements Runnable {
             finishedNum++;
           }
         }
-        if (actionStatuses.size() < REPORT_THRESHOLD ||
-            finishedNum / actionStatuses.size() > FINISHED_RATIO) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastReportTime >= INTERVAL ||
+            (float) finishedNum / actionStatuses.size() > FINISHED_RATIO) {
           statusReporter.report(statusReport);
+          lastReportTime = currentTime;
         }
       }
     }
