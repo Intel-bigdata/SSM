@@ -66,6 +66,9 @@ public class FileObject extends SmartObject {
         new Property("unsynced", ValueType.BOOLEAN,
             null, "file_diff", null, false,
             "state = 0"));
+    PROPERTIES.put("isDir",
+        new Property("isDir", ValueType.BOOLEAN,
+            null, "file", "is_dir", false));
   }
 
   public FileObject() {
