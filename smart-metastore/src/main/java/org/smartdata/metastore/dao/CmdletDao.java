@@ -372,15 +372,15 @@ public class CmdletDao {
 
     @Override
     public CmdletInfo mapRow(ResultSet resultSet, int i) throws SQLException {
-      CmdletInfo cmdletInfo = new CmdletInfo();
-      cmdletInfo.setCid(resultSet.getLong("cid"));
-      cmdletInfo.setRid(resultSet.getLong("rid"));
-      cmdletInfo.setAids(convertStringListToLong(resultSet.getString("aids").split(",")));
-      cmdletInfo.setState(CmdletState.fromValue((int) resultSet.getByte("state")));
-      cmdletInfo.setParameters(resultSet.getString("parameters"));
-      cmdletInfo.setGenerateTime(resultSet.getLong("generate_time"));
-      cmdletInfo.setStateChangedTime(resultSet.getLong("state_changed_time"));
-      return cmdletInfo;
+      CmdletInfo.Builder builder = CmdletInfo.newBuilder();
+      builder.setCid(resultSet.getLong("cid"));
+      builder.setRid(resultSet.getLong("rid"));
+      builder.setAids(convertStringListToLong(resultSet.getString("aids").split(",")));
+      builder.setState(CmdletState.fromValue((int) resultSet.getByte("state")));
+      builder.setParameters(resultSet.getString("parameters"));
+      builder.setGenerateTime(resultSet.getLong("generate_time"));
+      builder.setStateChangedTime(resultSet.getLong("state_changed_time"));
+      return builder.build();
     }
 
     private List<Long> convertStringListToLong(String[] strings) {

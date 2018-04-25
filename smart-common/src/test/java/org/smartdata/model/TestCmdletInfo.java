@@ -27,8 +27,6 @@ import java.util.Random;
 public class TestCmdletInfo {
   @Test
   public void testEquals() throws Exception {
-    //Case 1
-    Assert.assertEquals(true, new CmdletInfo().equals(new CmdletInfo()));
 
     //Case 2
     Random random = new Random();

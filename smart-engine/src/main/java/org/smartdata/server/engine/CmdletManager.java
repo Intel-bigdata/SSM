@@ -312,7 +312,7 @@ public class CmdletManager extends AbstractService {
             cmdletDescriptor.getCmdletString(),
             submitTime,
             submitTime,
-            cmdletDescriptor.getDeferIntervalMs());
+            submitTime + cmdletDescriptor.getDeferIntervalMs());
     List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     // Check action names
     checkActionNames(cmdletDescriptor);

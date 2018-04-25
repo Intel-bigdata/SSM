@@ -33,9 +33,6 @@ public class CmdletInfo {
   private long stateChangedTime;
   private long deferedToTime;
 
-  public CmdletInfo() {
-  }
-
   public CmdletInfo(long cid, long rid, CmdletState state,
       String parameters, long generateTime, long stateChangedTime) {
     this(cid, rid, state, parameters, generateTime, stateChangedTime, generateTime);
@@ -49,11 +46,7 @@ public class CmdletInfo {
     this.parameters = parameters;
     this.generateTime = generateTime;
     this.stateChangedTime = stateChangedTime;
-    if (deferedToTime < 10L * 365 * 24 * 3600 * 1000) {
-      this.deferedToTime = generateTime + deferedToTime;
-    } else {
-      this.deferedToTime = deferedToTime;
-    }
+    this.deferedToTime = deferedToTime;
     this.aids = new ArrayList<>();
   }
 
@@ -139,10 +132,6 @@ public class CmdletInfo {
 
   public long getGenerateTime() {
     return generateTime;
-  }
-
-  public void setGenerateTime(long generateTime) {
-    this.generateTime = generateTime;
   }
 
   public long getStateChangedTime() {
@@ -243,7 +232,8 @@ public class CmdletInfo {
 
     public CmdletInfo build() {
       return new CmdletInfo(cid, rid, aids, state, parameters,
-          generateTime, stateChangedTime, deferedToTime);
+          generateTime, stateChangedTime,
+          deferedToTime == 0 ? generateTime : deferedToTime);
     }
   }
 }
