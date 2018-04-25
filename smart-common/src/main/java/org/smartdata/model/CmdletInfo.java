@@ -31,24 +31,41 @@ public class CmdletInfo {
   private String parameters;
   private long generateTime;
   private long stateChangedTime;
+  private long deferedToTime;
 
   public CmdletInfo() {
   }
 
   public CmdletInfo(long cid, long rid, CmdletState state,
       String parameters, long generateTime, long stateChangedTime) {
+    this(cid, rid, state, parameters, generateTime, stateChangedTime, generateTime);
+  }
+
+  public CmdletInfo(long cid, long rid, CmdletState state,
+      String parameters, long generateTime, long stateChangedTime, long deferedToTime) {
     this.cid = cid;
     this.rid = rid;
     this.state = state;
     this.parameters = parameters;
     this.generateTime = generateTime;
     this.stateChangedTime = stateChangedTime;
+    if (deferedToTime < 10L * 365 * 24 * 3600 * 1000) {
+      this.deferedToTime = generateTime + deferedToTime;
+    } else {
+      this.deferedToTime = deferedToTime;
+    }
     this.aids = new ArrayList<>();
   }
 
   public CmdletInfo(long cid, long rid, List<Long> aids, CmdletState state,
       String parameters, long generateTime, long stateChangedTime) {
     this(cid, rid, state, parameters, generateTime, stateChangedTime);
+    this.aids = aids;
+  }
+
+  public CmdletInfo(long cid, long rid, List<Long> aids, CmdletState state,
+      String parameters, long generateTime, long stateChangedTime, long deferedToTime) {
+    this(cid, rid, state, parameters, generateTime, stateChangedTime, deferedToTime);
     this.aids = aids;
   }
 
@@ -136,6 +153,10 @@ public class CmdletInfo {
     this.stateChangedTime = stateChangedTime;
   }
 
+  public long getDeferedToTime() {
+    return deferedToTime;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -149,6 +170,7 @@ public class CmdletInfo {
         && rid == that.rid
         && generateTime == that.generateTime
         && stateChangedTime == that.stateChangedTime
+        && deferedToTime == that.deferedToTime
         && Objects.equals(aids, that.aids)
         && state == that.state
         && Objects.equals(parameters, that.parameters);
@@ -156,7 +178,8 @@ public class CmdletInfo {
 
   @Override
   public int hashCode() {
-    return Objects.hash(cid, rid, aids, state, parameters, generateTime, stateChangedTime);
+    return Objects.hash(cid, rid, aids, state, parameters,
+        generateTime, stateChangedTime, deferedToTime);
   }
 
   public static Builder newBuilder() {
@@ -171,6 +194,7 @@ public class CmdletInfo {
     private String parameters;
     private long generateTime;
     private long stateChangedTime;
+    private long deferedToTime;
 
     public static Builder create() {
       return new Builder();
@@ -212,9 +236,14 @@ public class CmdletInfo {
       return this;
     }
 
+    public Builder setDeferedToTime(long deferedToTime) {
+      this.deferedToTime = deferedToTime;
+      return this;
+    }
+
     public CmdletInfo build() {
       return new CmdletInfo(cid, rid, aids, state, parameters,
-          generateTime, stateChangedTime);
+          generateTime, stateChangedTime, deferedToTime);
     }
   }
 }
