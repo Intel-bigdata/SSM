@@ -302,6 +302,17 @@ Follow the steps to add SSM Jars to classpath
   *  Add the SSM jars directory to hadoop calsspath in `hadoop-env.sh` as following.
 
           `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
+  
+  *  For YARN and MapReduce, add the following content to the `yarn-site.xml`:
+
+```xml
+    <property>
+        <name>yarn.application.classpath</name>
+        <value>    
+	$HADOOP_CONF_DIR:$HADOOP_COMMON_HOME/share/hadoop/common/*:$HADOOP_COMMON_HOME/share/hadoop/common/lib/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*:$HADOOP_YARN_HOME/share/hadoop/yarn/*:$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*:${SSM_jars}/*
+        </value>
+    </property>
+```
 
    #### Copy the Jars  
 Copy the SSM jars to the default Hadoop class path
