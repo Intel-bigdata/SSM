@@ -305,13 +305,14 @@ public class CmdletManager extends AbstractService {
     }
     long submitTime = System.currentTimeMillis();
     CmdletInfo cmdletInfo =
-      new CmdletInfo(
-        maxCmdletId.getAndIncrement(),
-        cmdletDescriptor.getRuleId(),
-        CmdletState.PENDING,
-        cmdletDescriptor.getCmdletString(),
-        submitTime,
-        submitTime);
+        new CmdletInfo(
+            maxCmdletId.getAndIncrement(),
+            cmdletDescriptor.getRuleId(),
+            CmdletState.PENDING,
+            cmdletDescriptor.getCmdletString(),
+            submitTime,
+            submitTime,
+            submitTime + cmdletDescriptor.getDeferIntervalMs());
     List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     // Check action names
     checkActionNames(cmdletDescriptor);
@@ -451,9 +452,13 @@ public class CmdletManager extends AbstractService {
       }
     }
 
+    long curr = System.currentTimeMillis();
     Iterator<Long> it = schedulingCmdlet.iterator();
     while (it.hasNext() && !shouldStopSchedule()) {
       long id = it.next();
+      if (nScheduled % 20 == 0) {
+        curr = System.currentTimeMillis();
+      }
       CmdletInfo cmdlet = idToCmdlets.get(id);
       synchronized (cmdlet) {
         switch (cmdlet.getState()) {
@@ -463,6 +468,10 @@ public class CmdletManager extends AbstractService {
             break;
 
           case PENDING:
+            if (cmdlet.getDeferedToTime() > curr) {
+              break;
+            }
+
             LaunchCmdlet launchCmdlet = createLaunchCmdlet(cmdlet);
             ScheduleResult result = scheduleCmdletActions(cmdlet, launchCmdlet);
             if (result != ScheduleResult.RETRY) {
