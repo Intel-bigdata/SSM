@@ -55,7 +55,11 @@ public class CompatibilityHelperLoader {
 
   private static CompatibilityHelper create(String classString) {
     try {
-      Class clazz = Thread.currentThread().getContextClassLoader().loadClass(classString);
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      if (loader == null) {
+        loader = ClassLoader.getSystemClassLoader();
+      }
+      Class clazz = loader.loadClass(classString);
       return (CompatibilityHelper) clazz.newInstance();
     } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
       e.printStackTrace();
