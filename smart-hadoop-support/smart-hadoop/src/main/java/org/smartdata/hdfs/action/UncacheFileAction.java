@@ -49,9 +49,6 @@ public class UncacheFileAction extends HdfsAction {
     if (fileName == null) {
       throw new IllegalArgumentException("File parameter is missing! ");
     }
-    this.appendLog(
-        String.format(
-            "Action starts at %s : %s -> uncache", Utils.getFormatedCurrentTime(), fileName));
     removeDirective(fileName);
   }
 
@@ -70,7 +67,7 @@ public class UncacheFileAction extends HdfsAction {
   private void removeDirective(String fileName) throws Exception {
     Long id = getCacheId(fileName);
     if (id == null) {
-      this.appendLog(String.format("File %s is already cached. No action taken.", fileName));
+      this.appendLog(String.format("File %s is already uncached. No action taken.", fileName));
       return;
     }
     dfsClient.removeCacheDirective(id);

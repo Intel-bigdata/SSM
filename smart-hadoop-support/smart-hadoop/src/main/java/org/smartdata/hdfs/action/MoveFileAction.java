@@ -84,9 +84,7 @@ public class MoveFileAction extends AbstractMoveFileAction {
 
     int totalReplicas = movePlan.getBlockIds().size();
     this.appendLog(
-        String.format(
-            "Action starts at %s : %s -> %s with %d replicas to move in total.",
-            Utils.getFormatedCurrentTime(), fileName, storagePolicy, totalReplicas));
+        String.format("Totally, %d replicas to move.", totalReplicas));
 
     int numFailed = move();
     if (numFailed == 0) {

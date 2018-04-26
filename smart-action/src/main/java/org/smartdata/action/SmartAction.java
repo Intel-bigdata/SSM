@@ -116,7 +116,7 @@ public abstract class SmartAction {
     } catch (Throwable t) {
       LOG.error("SmartAction execute error ", t);
       setThrowable(t);
-      appendLog(ExceptionUtils.getFullStackTrace(t));
+      appendResult(ExceptionUtils.getFullStackTrace(t));
     } finally {
       setFinishTime();
       finished = true;

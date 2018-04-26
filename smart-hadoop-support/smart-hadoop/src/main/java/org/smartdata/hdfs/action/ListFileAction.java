@@ -26,7 +26,6 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 
 import java.io.IOException;
@@ -56,8 +55,6 @@ public class ListFileAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : List %s", Utils.getFormatedCurrentTime(), srcPath));
     //list the file in directionary
     listDirectory(srcPath);
   }
@@ -66,15 +63,20 @@ public class ListFileAction extends HdfsAction {
     if (!src.startsWith("hdfs")) {
       //list file in local Dir
       HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(src);
+      if (hdfsFileStatus == null) {
+        appendResult("No such file or directory");
+        return false;
+      }
+
       if (hdfsFileStatus.isDir()) {
         DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
         HdfsFileStatus[] fileList = listing.getPartialListing();
         for (int i = 0; i < fileList.length; i++) {
-          appendLog(
+          appendResult(
               String.format("%s", fileList[i].getFullPath(new Path(src))));
         }
       } else {
-        appendLog(String.format("%s", src));
+        appendResult(String.format("%s", src));
       }
       return true;
     } else {
@@ -85,11 +87,11 @@ public class ListFileAction extends HdfsAction {
       if (fs.isDirectory(new Path(src))) {
         RemoteIterator<FileStatus> pathIterator = fs.listStatusIterator(new Path(src));
         while (pathIterator.hasNext()) {
-          appendLog(
+          appendResult(
               String.format("%s", pathIterator.next().getPath()));
         }
       } else {
-        appendLog(String.format("%s", src));
+        appendResult(String.format("%s", src));
       }
       return true;
     }

@@ -98,9 +98,6 @@ public class CopyFileAction extends HdfsAction {
     if (destPath == null) {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : Read %s",
-            Utils.getFormatedCurrentTime(), srcPath));
     if (!dfsClient.exists(srcPath)) {
       throw new ActionException("CopyFile Action fails, file doesn't exist!");
     }

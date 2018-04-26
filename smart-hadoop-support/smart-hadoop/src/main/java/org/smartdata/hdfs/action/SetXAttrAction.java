@@ -75,8 +75,6 @@ public class SetXAttrAction extends HdfsAction {
       throw new ActionException("SetXAttr Action fails, file doesn't exist!");
     }
     LOG.debug("SetXattr path={} name={} value={}", srcPath, attName, attValue);
-    appendLog(String.format("SetXattr path=%s name=%s value=%s",
-        srcPath, attName, attValue));
     dfsClient.setXAttr(srcPath, attName, attValue.getBytes(),
         EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
     appendLog("SetXattr Successfully!!");

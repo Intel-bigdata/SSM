@@ -53,17 +53,24 @@ public class CheckStorageAction extends HdfsAction {
     if (fileStatus == null) {
       throw new ActionException("File does not exist.");
     }
+
+    if (fileStatus.isDir()) {
+      appendResult("File '" + fileName + "' is a directory.");
+      return;
+    }
+
     long length = fileStatus.getLen();
     List<LocatedBlock> locatedBlocks =
         dfsClient.getLocatedBlocks(fileName, 0, length).getLocatedBlocks();
 
     if (locatedBlocks.size() == 0) {
       appendResult("File '" + fileName + "' has no blocks.");
+      return;
     }
 
     for (LocatedBlock locatedBlock : locatedBlocks) {
       StringBuilder blockInfo = new StringBuilder();
-      blockInfo.append("File offset = ").append(locatedBlock.getStartOffset()).append(", ");
+      blockInfo.append("Offset = ").append(locatedBlock.getStartOffset()).append(", ");
       blockInfo.append("Block locations = {");
       for (DatanodeInfo datanodeInfo : locatedBlock.getLocations()) {
         blockInfo.append(datanodeInfo.getName());

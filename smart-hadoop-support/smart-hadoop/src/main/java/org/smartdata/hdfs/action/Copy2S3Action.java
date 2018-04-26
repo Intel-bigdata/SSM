@@ -25,7 +25,6 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
-import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
@@ -88,9 +87,6 @@ public class Copy2S3Action extends HdfsAction {
     if (destPath == null) {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : Read %s",
-            Utils.getFormatedCurrentTime(), srcPath));
     if (!dfsClient.exists(srcPath)) {
       throw new ActionException("CopyFile Action fails, file doesn't exist!");
     }

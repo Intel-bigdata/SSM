@@ -58,9 +58,6 @@ public class DeleteFileAction extends HdfsAction {
     if (filePath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : Delete %s",
-            Utils.getFormatedCurrentTime(), filePath));
     //delete File
     deleteFile(filePath);
   }

@@ -17,8 +17,6 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.action.annotation.ActionSignature;
 
 /**
@@ -30,7 +28,6 @@ import org.smartdata.action.annotation.ActionSignature;
   usage = HdfsAction.FILE_PATH + " $file "
 )
 public class AllSsdFileAction extends MoveFileAction {
-  private static final Logger LOG = LoggerFactory.getLogger(AllSsdFileAction.class);
 
   @Override
   public String getStoragePolicy() {

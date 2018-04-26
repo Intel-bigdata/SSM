@@ -72,9 +72,6 @@ public class ConcatFileAction extends HdfsAction {
       throw new IllegalArgumentException("File parameter is missing.");
     }
 
-    appendLog(
-        String.format("Action starts at %s : Concat %s to %s",
-            Utils.getFormatedCurrentTime(), srcPathList, targetPath));
     //Merge the files
     concatFiles(srcPathList, targetPath);
   }
