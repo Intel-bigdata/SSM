@@ -136,7 +136,7 @@ public class CmdletManager extends AbstractService {
         .getInt(SmartConfKeys.SMART_CMDLET_CACHE_BATCH,
         SmartConfKeys.SMART_CMDLET_CACHE_BATCH_DEFAULT);
 
-    long reportPeriod = context.getConf().getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+    int reportPeriod = context.getConf().getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
     this.timeout =
             TIMEOUT_MULTIPLIER * reportPeriod < 30000 ? 30000 : TIMEOUT_MULTIPLIER * reportPeriod;

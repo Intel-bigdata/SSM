@@ -146,9 +146,9 @@ public class SmartAgent implements StatusReporter {
     cmdletExecutor = agentCmdletService.getCmdletExecutor();
 
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
-    long reportPeriod = conf.getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+    int reportPeriod = conf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, reportPeriod);
     executorService.scheduleAtFixedRate(
             statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
 

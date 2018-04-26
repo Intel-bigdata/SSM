@@ -55,9 +55,9 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     this.cmdletExecutor = new CmdletExecutor(smartConf);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
 
-    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
-    long reportPeriod = smartConf.getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+    int reportPeriod = smartConf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, reportPeriod);
     this.executorService.scheduleAtFixedRate(
         statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
 
