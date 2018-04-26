@@ -50,10 +50,10 @@ public class TestCmdletExecutor {
           }
         };
     CmdletExecutor executor = new CmdletExecutor(new SmartConf());
-    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor);
+    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor, 10);
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     executorService.scheduleAtFixedRate(
-            statusReportTask, 1000, 1000, TimeUnit.MILLISECONDS);
+            statusReportTask, 100, 10, TimeUnit.MILLISECONDS);
     SmartAction action = new HelloAction();
     Map<String, String> args = new HashMap<>();
     args.put(HelloAction.PRINT_MESSAGE, "message");
@@ -91,10 +91,10 @@ public class TestCmdletExecutor {
           }
         };
     CmdletExecutor executor = new CmdletExecutor(new SmartConf());
-    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor);
+    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor, 10);
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     executorService.scheduleAtFixedRate(
-            statusReportTask, 1000, 1000, TimeUnit.MILLISECONDS);
+            statusReportTask, 100, 10, TimeUnit.MILLISECONDS);
     SmartAction action = new HangingAction();
     action.setActionId(101);
     Cmdlet cmdlet = new Cmdlet(Arrays.asList(action));

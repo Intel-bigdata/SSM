@@ -48,7 +48,7 @@ public class HazelcastWorker implements StatusReporter {
   private ITopic<StatusMessage> statusTopic;
   private CmdletExecutor cmdletExecutor;
   private CmdletFactory factory;
-  private long reportPeriod;
+  private int reportPeriod;
 
   public HazelcastWorker(SmartContext smartContext) {
     this.factory = new CmdletFactory(smartContext, this);
@@ -60,12 +60,12 @@ public class HazelcastWorker implements StatusReporter {
     this.masterMessages =
         instance.getTopic(HazelcastExecutorService.WORKER_TOPIC_PREFIX + instanceId);
     this.masterMessages.addMessageListener(new MasterMessageListener());
-    this.reportPeriod = smartContext.getConf().getLong(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+    this.reportPeriod = smartContext.getConf().getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
   }
 
   public void start() {
-    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor);
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, reportPeriod);
     executorService.scheduleAtFixedRate(
             statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
   }

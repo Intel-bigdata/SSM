@@ -27,13 +27,16 @@ public class StatusReportTask implements Runnable {
   private StatusReporter statusReporter;
   private CmdletExecutor cmdletExecutor;
   private long lastReportTime;
-  public static int INTERVAL = 200;
-  public static double FINISHED_RATIO = 0.2;
+  private int interval;
+  public static final int TIME_MULTIPLIER = 5;
+  public static final double FINISHED_RATIO = 0.2;
 
-  public StatusReportTask(StatusReporter statusReporter, CmdletExecutor cmdletExecutor) {
+  public StatusReportTask(
+      StatusReporter statusReporter, CmdletExecutor cmdletExecutor, int period) {
     this.statusReporter = statusReporter;
     this.cmdletExecutor = cmdletExecutor;
     this.lastReportTime = System.currentTimeMillis();
+    this.interval = TIME_MULTIPLIER * period;
   }
 
   @Override
@@ -49,8 +52,8 @@ public class StatusReportTask implements Runnable {
           }
         }
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastReportTime >= INTERVAL ||
-            (float) finishedNum / actionStatuses.size() > FINISHED_RATIO) {
+        if (currentTime - lastReportTime >= interval
+            || (float) finishedNum / actionStatuses.size() > FINISHED_RATIO) {
           statusReporter.report(statusReport);
           lastReportTime = currentTime;
         }
