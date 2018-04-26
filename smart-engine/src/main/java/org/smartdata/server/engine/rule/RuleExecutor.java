@@ -266,9 +266,8 @@ public class RuleExecutor implements Runnable {
       TimeBasedScheduleInfo scheduleInfo = tr.getTbScheduleInfo();
 
       if (scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER
-          // TODO: tricky here, time passed
+          && !scheduleInfo.isOneShot()
           && startCheckTime - scheduleInfo.getEndTime() > 0) {
-        // TODO: special for scheduleInfo.isOneShot()
         LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to time passed or finished");
         ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
         exitSchedule();
@@ -288,12 +287,8 @@ public class RuleExecutor implements Runnable {
         numCmdSubmitted = submitCmdlets(info, files);
       }
       ruleManager.updateRuleInfo(rid, null, System.currentTimeMillis(), 1, numCmdSubmitted);
-      if (exited) {
-        exitSchedule();
-      }
-      // System.out.println(this + " -> " + System.currentTimeMillis());
-      long endProcessTime = System.currentTimeMillis();
 
+      long endProcessTime = System.currentTimeMillis();
       if (endProcessTime - startCheckTime > 2000 || LOG.isDebugEnabled()) {
         LOG.warn(
             "Rule "
@@ -309,6 +304,14 @@ public class RuleExecutor implements Runnable {
                 + ".");
       }
 
+      if (scheduleInfo.isOneShot()) {
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+        exitSchedule();
+      }
+
+      if (exited) {
+        exitSchedule();
+      }
     } catch (IOException e) {
       LOG.error("Rule " + ctx.getRuleId() + " exception", e);
     }
