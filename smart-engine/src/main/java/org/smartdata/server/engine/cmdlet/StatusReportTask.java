@@ -17,23 +17,56 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
-public class StatusReportTask implements Runnable {
-  StatusReporter statusReporter;
-  CmdletExecutor cmdletExecutor;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-  public StatusReportTask(StatusReporter statusReporter, CmdletExecutor cmdletExecutor) {
+public class StatusReportTask implements Runnable {
+  private StatusReporter statusReporter;
+  private CmdletExecutor cmdletExecutor;
+  private long lastReportTime;
+  private int interval;
+  private Map<Long, ActionStatus> idToActionStatus;
+  public static final int TIME_MULTIPLIER = 50;
+  public static final double FINISHED_RATIO = 0.2;
+
+  public StatusReportTask(
+      StatusReporter statusReporter, CmdletExecutor cmdletExecutor, int period) {
     this.statusReporter = statusReporter;
     this.cmdletExecutor = cmdletExecutor;
+    this.lastReportTime = System.currentTimeMillis();
+    this.interval = TIME_MULTIPLIER * period;
+    this.idToActionStatus = new HashMap<>();
   }
 
   @Override
   public void run() {
     StatusReport statusReport = cmdletExecutor.getStatusReport();
-    if (statusReport != null && !statusReport.getActionStatuses().isEmpty()) {
-      statusReporter.report(statusReport);
+    if (statusReport != null) {
+      List<ActionStatus> actionStatuses = statusReport.getActionStatuses();
+      for (ActionStatus actionStatus : actionStatuses) {
+        idToActionStatus.put(actionStatus.getActionId(), actionStatus);
+      }
+      if (!idToActionStatus.values().isEmpty()) {
+        int finishedNum = 0;
+        for (ActionStatus actionStatus : idToActionStatus.values()) {
+          if (actionStatus.isFinished()) {
+            finishedNum++;
+          }
+        }
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastReportTime >= interval
+            || (float) finishedNum / idToActionStatus.size() >= FINISHED_RATIO) {
+          statusReporter.report(new StatusReport(new ArrayList(idToActionStatus.values())));
+          idToActionStatus.clear();
+          lastReportTime = currentTime;
+        }
+      }
     }
   }
 }
