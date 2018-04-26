@@ -27,7 +27,6 @@ import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.action.ActionType;
-import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 
 import java.util.EnumSet;
@@ -87,9 +86,6 @@ public class CacheFileAction extends HdfsAction {
     if (isCached(fileName)) {
       return;
     }
-    this.appendLog(
-        String.format(
-            "Action starts at %s : cache -> %s", Utils.getFormatedCurrentTime(), fileName));
     addDirective(fileName);
   }
 

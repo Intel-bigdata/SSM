@@ -24,7 +24,6 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
-import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 
 import java.io.IOException;
@@ -67,9 +66,6 @@ public class RenameFileAction extends HdfsAction {
     if (destPath == null) {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : Rename %s to %s",
-            Utils.getFormatedCurrentTime(), srcPath, destPath));
     //rename
     renameSingleFile(srcPath, destPath);
   }

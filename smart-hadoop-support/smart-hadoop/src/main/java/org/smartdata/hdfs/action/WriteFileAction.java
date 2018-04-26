@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
 
@@ -83,10 +82,6 @@ public class WriteFileAction extends HdfsAction {
     if (length == -1) {
       throw new IllegalArgumentException("Write Action provides wrong length! ");
     }
-    appendLog(
-        String.format(
-            "Action starts at %s : Write %s with length %s",
-            Utils.getFormatedCurrentTime(), filePath, length));
 
     Path path = new Path(filePath);
     FileSystem fileSystem = path.getFileSystem(conf);
@@ -95,7 +90,6 @@ public class WriteFileAction extends HdfsAction {
     // generate random data with given length
     byte[] buffer = new byte[bufferSize];
     new Random().nextBytes(buffer);
-    appendLog(String.format("Generate random data with length %d", length));
     for (long pos = 0; pos < length; pos += bufferSize) {
       long writeLength = pos + bufferSize < length ? bufferSize : length - pos;
       out.write(buffer, 0, (int) writeLength);

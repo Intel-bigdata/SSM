@@ -23,7 +23,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 
 import java.io.IOException;
@@ -79,10 +78,6 @@ public class MergeFileAction extends HdfsAction {
     if (srcPathList.size() == 1) {
       throw new IllegalArgumentException("Don't accept only one source file");
     }
-
-    appendLog(
-        String.format("Action starts at %s : Merge %s to %s",
-            Utils.getFormatedCurrentTime(), srcPathList, target));
 
     //Merge
     mergeFiles(srcPathList,target);
