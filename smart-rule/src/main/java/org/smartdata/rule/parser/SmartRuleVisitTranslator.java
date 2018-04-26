@@ -97,6 +97,12 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   }
 
   @Override
+  public TreeNode visitTriOnce(SmartRuleParser.TriOnceContext ctx) {
+    timeBasedScheduleInfo = new TimeBasedScheduleInfo();
+    return null;
+  }
+
+  @Override
   public TreeNode visitTriTimePoint(SmartRuleParser.TriTimePointContext ctx) {
     timeBasedScheduleInfo = new TimeBasedScheduleInfo();
     TreeNode tr = visit(ctx.timepointexpr());
