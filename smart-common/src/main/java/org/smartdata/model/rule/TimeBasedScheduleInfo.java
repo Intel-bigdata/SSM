@@ -57,6 +57,6 @@ public class TimeBasedScheduleInfo {
   }
 
   public boolean isOneShot() {
-    return startTime == endTime && every == 0;
+    return startTime == endTime && startTime == 0 && every == 0;
   }
 }
