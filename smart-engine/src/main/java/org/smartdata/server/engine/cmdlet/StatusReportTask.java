@@ -32,7 +32,7 @@ public class StatusReportTask implements Runnable {
   private long lastReportTime;
   private int interval;
   private Map<Long, ActionStatus> idToActionStatus;
-  public static final int TIME_MULTIPLIER = 5;
+  public static final int TIME_MULTIPLIER = 50;
   public static final double FINISHED_RATIO = 0.2;
 
   public StatusReportTask(
@@ -61,7 +61,7 @@ public class StatusReportTask implements Runnable {
         }
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastReportTime >= interval
-            || (float) finishedNum / actionStatuses.size() >= FINISHED_RATIO) {
+            || (float) finishedNum / idToActionStatus.size() >= FINISHED_RATIO) {
           statusReporter.report(new StatusReport(new ArrayList(idToActionStatus.values())));
           idToActionStatus.clear();
           lastReportTime = currentTime;
