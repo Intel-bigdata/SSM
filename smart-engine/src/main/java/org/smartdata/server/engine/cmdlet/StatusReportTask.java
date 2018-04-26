@@ -21,6 +21,7 @@ import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StatusReportTask implements Runnable {
@@ -28,6 +29,7 @@ public class StatusReportTask implements Runnable {
   private CmdletExecutor cmdletExecutor;
   private long lastReportTime;
   private int interval;
+  private List<ActionStatus> delayList;
   public static final int TIME_MULTIPLIER = 5;
   public static final double FINISHED_RATIO = 0.2;
 
@@ -37,6 +39,7 @@ public class StatusReportTask implements Runnable {
     this.cmdletExecutor = cmdletExecutor;
     this.lastReportTime = System.currentTimeMillis();
     this.interval = TIME_MULTIPLIER * period;
+    this.delayList = new ArrayList<>();
   }
 
   @Override
@@ -44,6 +47,8 @@ public class StatusReportTask implements Runnable {
     StatusReport statusReport = cmdletExecutor.getStatusReport();
     if (statusReport != null) {
       List<ActionStatus> actionStatuses = statusReport.getActionStatuses();
+      actionStatuses.addAll(delayList);
+      delayList.clear();
       if (!actionStatuses.isEmpty()) {
         int finishedNum = 0;
         for (ActionStatus actionStatus : actionStatuses) {
@@ -56,6 +61,8 @@ public class StatusReportTask implements Runnable {
             || (float) finishedNum / actionStatuses.size() > FINISHED_RATIO) {
           statusReporter.report(statusReport);
           lastReportTime = currentTime;
+        } else {
+          delayList.addAll(actionStatuses);
         }
       }
     }
