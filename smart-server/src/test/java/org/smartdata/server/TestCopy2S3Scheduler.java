@@ -28,7 +28,6 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.S3FileState;
-import org.smartdata.server.engine.CmdletManager;
 
 import java.util.List;
 
@@ -39,7 +38,6 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     MetaStore metaStore = ssm.getMetaStore();
     SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    CmdletManager cmdletManager = ssm.getCmdletManager();
     DistributedFileSystem dfs = cluster.getFileSystem();
     final String srcPath = "/src/";
     dfs.mkdirs(new Path(srcPath));
@@ -57,7 +55,6 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
       actions = metaStore.getActions(ruleId, 0);
       Thread.sleep(1000);
     } while (actions.size() < 3);
-    Assert.assertTrue(actions.size() == 3);
   }
 
   @Test(timeout = 45000)
@@ -65,7 +62,6 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     MetaStore metaStore = ssm.getMetaStore();
     SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    CmdletManager cmdletManager = ssm.getCmdletManager();
     DistributedFileSystem dfs = cluster.getFileSystem();
     final String srcPath = "/src/";
     dfs.mkdirs(new Path(srcPath));
@@ -80,7 +76,7 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
         RuleState.ACTIVE);
     Thread.sleep(2500);
     List<ActionInfo> actions = metaStore.getActions(ruleId, 0);
-    Assert.assertTrue(actions.size() == 0);
+    Assert.assertEquals(actions.size(), 0);
   }
 
   @Test(timeout = 45000)
@@ -88,7 +84,6 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     MetaStore metaStore = ssm.getMetaStore();
     SmartAdmin admin = new SmartAdmin(smartContext.getConf());
-    CmdletManager cmdletManager = ssm.getCmdletManager();
     DistributedFileSystem dfs = cluster.getFileSystem();
     final String srcPath = "/src/";
     dfs.mkdirs(new Path(srcPath));
@@ -98,6 +93,7 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
       // Not 0 because this file may be not be truncated yet
       DFSTestUtil.createFile(dfs, new Path(srcPath + i),
           10, (short) 1, 1);
+      // Add S3 Statuses
       FileState fileState = new S3FileState(srcPath + i);
       metaStore.insertUpdateFileState(fileState);
     }
@@ -107,6 +103,6 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
         RuleState.ACTIVE);
     Thread.sleep(2500);
     List<ActionInfo> actions = metaStore.getActions(ruleId, 0);
-    Assert.assertTrue(actions.size() == 0);
+    Assert.assertEquals(actions.size(), 0);
   }
 }
