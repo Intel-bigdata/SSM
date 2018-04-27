@@ -37,7 +37,7 @@ import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.protocol.ClientServerProto.CompactFileStateProto;
 import org.smartdata.protocol.ClientServerProto.CompressionFileStateProto;
-import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
+import org.smartdata.protocol.ClientServerProto.FileStateProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.S3FileStateProto;
 
@@ -187,7 +187,7 @@ public class ProtoBufferHelper {
     return new FileContainerInfo(containerFilePath, offset, length);
   }
 
-  public static FileState convert(GetFileStateResponseProto proto) {
+  public static FileState convert(FileStateProto proto) {
     FileState fileState = null;
     String path = proto.getPath();
     FileState.FileType type = FileState.FileType.fromValue(proto.getType());
@@ -215,23 +215,28 @@ public class ProtoBufferHelper {
     return fileState;
   }
 
-  public static GetFileStateResponseProto convert(FileState fileState) {
-    GetFileStateResponseProto.Builder builder = GetFileStateResponseProto.newBuilder();
+  public static FileStateProto convert(FileState fileState) {
+    FileStateProto.Builder builder = FileStateProto.newBuilder();
     builder.setPath(fileState.getPath())
         .setType(fileState.getFileType().getValue())
         .setStage(fileState.getFileStage().getValue());
-    // Set corresponding segment
+
     if (fileState instanceof CompactFileState) {
-      FileContainerInfo fileContainerInfo = ((CompactFileState) fileState).getFileContainerInfo();
+      FileContainerInfo fileContainerInfo = (
+          (CompactFileState) fileState).getFileContainerInfo();
       builder.setCompactFileState(CompactFileStateProto.newBuilder()
           .setContainerFilePath(fileContainerInfo.getContainerFilePath())
           .setOffset(fileContainerInfo.getOffset())
           .setLength(fileContainerInfo.getLength()));
-    }/* else if (fileState instanceof CompressionFileState) {
+    }
+    /*
+    else if (fileState instanceof CompressionFileState) {
       builder.setCompressionFileState();
     } else if (fileState instanceof S3FileState) {
       builder.setS3FileState();
-    } */
+    } else if (fileState instanceof ) {
+    }
+    */
     return builder.build();
   }
 }

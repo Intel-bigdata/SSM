@@ -33,7 +33,6 @@ public interface  SmartClientProtocol {
   void reportFileAccessEvent(FileAccessEvent event) throws IOException;
 
   FileState getFileState(String filePath) throws IOException;
-  void deleteSmallFile(String filePath) throws IOException;
-  void truncateSmallFile(String filePath) throws IOException;
-  void renameSmallFile(String filePath, String newPath) throws IOException;
+  void updateFileState(FileState fileState) throws IOException;
+  void deleteFileState(String filePath, boolean recursive) throws IOException;
 }

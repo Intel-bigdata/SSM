@@ -19,21 +19,27 @@ package org.smartdata.hadoop.filesystem;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileSystemLinkResolver;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.UnresolvedLinkException;
+import org.apache.hadoop.fs.UnsupportedFileSystemException;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
+import org.apache.hadoop.util.Progressable;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.CompactFileState;
@@ -45,6 +51,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.EnumSet;
 
 /**
  * SmartFileSystem Deploy Guide
@@ -70,7 +77,7 @@ import java.util.ArrayList;
  * 4. Restart HDFS
  */
 public class SmartFileSystem extends DistributedFileSystem {
-  private SmartDFSClient smartClient;
+  private SmartDFSClient smartDFSClient;
   private boolean verifyChecksum = true;
 
   @Override
@@ -93,8 +100,7 @@ public class SmartFileSystem extends DistributedFileSystem {
       throw new IOException("Incorrect SmartServer address. Please follow the "
           + "IP/Hostname:Port format");
     }
-
-    this.smartClient = new SmartDFSClient(conf, smartServerAddress);
+    this.smartDFSClient = new SmartDFSClient(conf, smartServerAddress);
   }
 
   @Override
@@ -102,8 +108,9 @@ public class SmartFileSystem extends DistributedFileSystem {
     throws IOException {
     statistics.incrementReadOps(1);
     Path absF = fixRelativePart(path);
-    final DFSInputStream in = smartClient.open(absF.toUri().getPath(), bufferSize, verifyChecksum);
-    return smartClient.createWrappedInputStream(in);
+    final DFSInputStream in = smartDFSClient.open(
+        absF.toUri().getPath(), bufferSize, verifyChecksum);
+    return smartDFSClient.createWrappedInputStream(in);
   }
 
   @Override
@@ -114,7 +121,7 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public FileStatus getFileStatus(Path f) throws IOException {
     FileStatus oldStatus = super.getFileStatus(f);
-    FileState fileState = smartClient.getFileState(getPathName(f));
+    FileState fileState = smartDFSClient.getFileState(getPathName(f));
     if (fileState instanceof CompactFileState) {
       long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
       return new FileStatus(len, oldStatus.isDirectory(), oldStatus.getReplication(),
@@ -131,7 +138,7 @@ public class SmartFileSystem extends DistributedFileSystem {
     FileStatus[] oldStatus = super.listStatus(p);
     ArrayList<FileStatus> newStatus = new ArrayList<>(oldStatus.length);
     for (FileStatus status : oldStatus) {
-      FileState fileState = smartClient.getFileState(getPathName(status.getPath()));
+      FileState fileState = smartDFSClient.getFileState(getPathName(status.getPath()));
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
         newStatus.add(new FileStatus(len, status.isDirectory(), status.getReplication(),
@@ -148,7 +155,7 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public BlockLocation[] getFileBlockLocations(Path p, final long start,
                                                final long len) throws IOException {
-    FileState fileState = smartClient.getFileState(getPathName(p));
+    FileState fileState = smartDFSClient.getFileState(getPathName(p));
     if (fileState instanceof CompactFileState) {
       FileContainerInfo fileContainerInfo = ((CompactFileState) fileState).getFileContainerInfo();
       String containerFile = fileContainerInfo.getContainerFilePath();
@@ -162,6 +169,247 @@ public class SmartFileSystem extends DistributedFileSystem {
     } else {
       return super.getFileBlockLocations(p, start, len);
     }
+  }
+
+  private boolean isCompactFile(final Path p) throws IOException {
+    FileState fileState = smartDFSClient.getFileState(getPathName(p));
+    return fileState instanceof CompactFileState;
+  }
+
+  @Override
+  public boolean recoverLease(final Path f) throws IOException {
+    FileState fileState = smartDFSClient.getFileState(getPathName(f));
+    if (fileState instanceof CompactFileState) {
+      return super.recoverLease(
+          new Path(((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath()));
+    } else {
+      return super.recoverLease(f);
+    }
+  }
+
+  @Override
+  public FSDataOutputStream append(Path f, final int bufferSize,
+                                   final Progressable progress) throws IOException {
+    if (isCompactFile(f)) {
+      throw new IOException("This operation not supported for SSM small file.");
+    } else {
+      return super.append(f, bufferSize, progress);
+    }
+  }
+
+  @Override
+  public FSDataOutputStream append(Path f, final EnumSet<CreateFlag> flag,
+                                   final int bufferSize, final Progressable progress)
+      throws IOException {
+    if (isCompactFile(f)) {
+      throw new IOException("This operation not supported for SSM small file.");
+    } else {
+      return super.append(f, flag, bufferSize, progress);
+    }
+  }
+
+  @Override
+  public FSDataOutputStream append(Path f, final EnumSet<CreateFlag> flag,
+                                   final int bufferSize, final Progressable progress,
+                                   final InetSocketAddress[] favoredNodes)
+      throws IOException {
+    if (isCompactFile(f)) {
+      throw new IOException("This operation not supported for SSM small file.");
+    } else {
+      return super.append(f, flag, bufferSize, progress, favoredNodes);
+    }
+  }
+
+  @Override
+  public boolean setReplication(Path src,
+                                final short replication) throws IOException {
+    if (isCompactFile(src)) {
+      throw new IOException("This operation not supported for SSM small file.");
+    } else {
+      return super.setReplication(src, replication);
+    }
+  }
+
+  @Override
+  public void setStoragePolicy(final Path src, final String policyName)
+      throws IOException {
+    if (isCompactFile(src)) {
+      throw new IOException("This operation not supported for SSM small file.");
+    } else {
+      super.setStoragePolicy(src, policyName);
+    }
+  }
+
+  @Override
+  public void concat(Path trg, Path [] psrcs) throws IOException {
+    for (Path src : psrcs) {
+      if (isCompactFile(src)) {
+        throw new IOException("This operation not supported for SSM small file.");
+      }
+    }
+    super.concat(trg, psrcs);
+  }
+
+  @SuppressWarnings("deprecation")
+  @Override
+  public boolean rename(Path src, Path dst) throws IOException {
+    statistics.incrementWriteOps(1);
+
+    final Path absSrc = fixRelativePart(src);
+    final Path absDst = fixRelativePart(dst);
+
+    // Try the rename without resolving first
+    try {
+      return smartDFSClient.rename(getPathName(absSrc), getPathName(absDst));
+    } catch (UnresolvedLinkException e) {
+      // Fully resolve the source
+      final Path source = getFileLinkStatus(absSrc).getPath();
+      // Keep trying to resolve the destination
+      return new FileSystemLinkResolver<Boolean>() {
+        @Override
+        public Boolean doCall(final Path p)
+            throws IOException {
+          return smartDFSClient.rename(getPathName(source), getPathName(p));
+        }
+        @Override
+        public Boolean next(final FileSystem fs, final Path p)
+            throws IOException {
+          // Should just throw an error in FileSystem#checkPath
+          return doCall(p);
+        }
+      }.resolve(this, absDst);
+    }
+  }
+
+  @SuppressWarnings("deprecation")
+  @Override
+  public void rename(Path src, Path dst, final Options.Rename... options)
+      throws IOException {
+    statistics.incrementWriteOps(1);
+    final Path absSrc = fixRelativePart(src);
+    final Path absDst = fixRelativePart(dst);
+    // Try the rename without resolving first
+    try {
+      smartDFSClient.rename(getPathName(absSrc), getPathName(absDst), options);
+    } catch (UnresolvedLinkException e) {
+      // Fully resolve the source
+      final Path source = getFileLinkStatus(absSrc).getPath();
+      // Keep trying to resolve the destination
+      new FileSystemLinkResolver<Void>() {
+        @Override
+        public Void doCall(final Path p)
+            throws IOException {
+          smartDFSClient.rename(getPathName(source), getPathName(p), options);
+          return null;
+        }
+        @Override
+        public Void next(final FileSystem fs, final Path p)
+            throws IOException {
+          // Should just throw an error in FileSystem#checkPath
+          return doCall(p);
+        }
+      }.resolve(this, absDst);
+    }
+  }
+
+  @Override
+  public boolean truncate(Path f, final long newLength) throws IOException {
+    statistics.incrementWriteOps(1);
+    Path absF = fixRelativePart(f);
+    return new FileSystemLinkResolver<Boolean>() {
+      @Override
+      public Boolean doCall(final Path p)
+          throws IOException {
+        return smartDFSClient.truncate(getPathName(p), newLength);
+      }
+      @Override
+      public Boolean next(final FileSystem fs, final Path p)
+          throws IOException {
+        return fs.truncate(p, newLength);
+      }
+    }.resolve(this, absF);
+  }
+
+  @Override
+  public boolean delete(Path f, final boolean recursive) throws IOException {
+    statistics.incrementWriteOps(1);
+    Path absF = fixRelativePart(f);
+    return new FileSystemLinkResolver<Boolean>() {
+      @Override
+      public Boolean doCall(final Path p)
+          throws IOException {
+        return smartDFSClient.delete(getPathName(p), recursive);
+      }
+      @Override
+      public Boolean next(final FileSystem fs, final Path p)
+          throws IOException {
+        return fs.delete(p, recursive);
+      }
+    }.resolve(this, absF);
+  }
+
+  @Override
+  public FileChecksum getFileChecksum(Path f) throws IOException {
+    statistics.incrementReadOps(1);
+    Path absF = fixRelativePart(f);
+    return new FileSystemLinkResolver<FileChecksum>() {
+      @Override
+      public FileChecksum doCall(final Path p)
+          throws IOException {
+        return smartDFSClient.getFileChecksum(getPathName(p), Long.MAX_VALUE);
+      }
+
+      @Override
+      public FileChecksum next(final FileSystem fs, final Path p)
+          throws IOException {
+        return fs.getFileChecksum(p);
+      }
+    }.resolve(this, absF);
+  }
+
+  @Override
+  public FileChecksum getFileChecksum(Path f, final long length)
+      throws IOException {
+    statistics.incrementReadOps(1);
+    Path absF = fixRelativePart(f);
+    return new FileSystemLinkResolver<FileChecksum>() {
+      @Override
+      public FileChecksum doCall(final Path p)
+          throws IOException {
+        return smartDFSClient.getFileChecksum(getPathName(p), length);
+      }
+
+      @Override
+      public FileChecksum next(final FileSystem fs, final Path p)
+          throws IOException {
+        if (fs instanceof SmartFileSystem) {
+          return fs.getFileChecksum(p, length);
+        } else {
+          throw new UnsupportedFileSystemException(
+              "getFileChecksum(Path, long) is not supported by "
+                  + fs.getClass().getSimpleName());
+        }
+      }
+    }.resolve(this, absF);
+  }
+
+  @Override
+  public RemoteIterator<FileStatus> listStatusIterator(final Path p)
+      throws IOException {
+    Path absF = fixRelativePart(p);
+    return new FileSystemLinkResolver<RemoteIterator<FileStatus>>() {
+      @Override
+      public RemoteIterator<FileStatus> doCall(final Path p)
+          throws IOException {
+        return new SmartDirListingIterator<>(p, false);
+      }
+
+      @Override
+      public RemoteIterator<FileStatus> next(final FileSystem fs, final Path p)
+          throws IOException {
+        return ((DistributedFileSystem) fs).listStatusIterator(p);
+      }
+    }.resolve(this, absF);
   }
 
   @Override
@@ -207,7 +455,7 @@ public class SmartFileSystem extends DistributedFileSystem {
       this.filter = filter;
       this.needLocation = needLocation;
       // fetch the first batch of entries in the directory
-      thisListing = smartClient.listPaths(src, HdfsFileStatus.EMPTY_NAME,
+      thisListing = smartDFSClient.listPaths(src, HdfsFileStatus.EMPTY_NAME,
           needLocation);
       statistics.incrementReadOps(1);
       // the directory does not exist
@@ -215,6 +463,11 @@ public class SmartFileSystem extends DistributedFileSystem {
         throw new FileNotFoundException("File " + p + " does not exist.");
       }
       i = 0;
+    }
+
+    private SmartDirListingIterator(Path p, boolean needLocation)
+        throws IOException {
+      this(p, null, needLocation);
     }
 
     @Override
@@ -228,11 +481,11 @@ public class SmartFileSystem extends DistributedFileSystem {
           String fileName = next.getPath().toUri().getPath();
 
           // Reconstruct FileStatus
-          FileState fileState = smartClient.getFileState(fileName);
+          FileState fileState = smartDFSClient.getFileState(fileName);
           if (fileState instanceof CompactFileState) {
             CompactFileState compactFileState = (CompactFileState) fileState;
             long len = compactFileState.getFileContainerInfo().getLength();
-            BlockLocation[] blockLocations = smartClient.getBlockLocations(
+            BlockLocation[] blockLocations = smartDFSClient.getBlockLocations(
                 fileName, 0, len);
             next = (T) new LocatedFileStatus(len,
                 next.isDirectory(),
@@ -252,7 +505,7 @@ public class SmartFileSystem extends DistributedFileSystem {
           String fileName = next.getPath().toUri().getPath();
 
           // Reconstruct FileStatus
-          FileState fileState = smartClient.getFileState(fileName);
+          FileState fileState = smartDFSClient.getFileState(fileName);
           if (fileState instanceof CompactFileState) {
             CompactFileState compactFileState = (CompactFileState) fileState;
             long len = compactFileState.getFileContainerInfo().getLength();
@@ -287,7 +540,8 @@ public class SmartFileSystem extends DistributedFileSystem {
       }
       if (i >= thisListing.getPartialListing().length && thisListing.hasMore()) {
         // current listing is exhausted & fetch a new listing
-        thisListing = smartClient.listPaths(src, thisListing.getLastName(), needLocation);
+        thisListing = smartDFSClient.listPaths(
+            src, thisListing.getLastName(), needLocation);
         statistics.incrementReadOps(1);
         if (thisListing == null) {
           return false;
@@ -308,6 +562,48 @@ public class SmartFileSystem extends DistributedFileSystem {
     }
   }
 
+  @Override
+  public RemoteIterator<Path> listCorruptFileBlocks(Path path)
+      throws IOException {
+    FileState fileState = smartDFSClient.getFileState(getPathName(path));
+    if (fileState instanceof CompactFileState) {
+      return super.listCorruptFileBlocks(
+          new Path(((CompactFileState) fileState)
+              .getFileContainerInfo().getContainerFilePath()));
+    } else {
+      return super.listCorruptFileBlocks(path);
+    }
+  }
+
+  @SuppressWarnings("deprecation")
+  @Override
+  public void createSymlink(final Path target, final Path link,
+                            final boolean createParent) throws IOException {
+    if (isCompactFile(target)) {
+      throw new IOException("This operation not supported for SSM small file.");
+    } else {
+      super.createSymlink(target, link, createParent);
+    }
+  }
+
+  @Override
+  public FileStatus getFileLinkStatus(final Path f) throws IOException {
+    if (isCompactFile(f)) {
+      throw new IOException("This operation not supported for SSM small file.");
+    } else {
+      return super.getFileLinkStatus(f);
+    }
+  }
+
+  @Override
+  public Path getLinkTarget(final Path f) throws IOException {
+    if (isCompactFile(f)) {
+      throw new IOException("This operation not supported for SSM small file.");
+    } else {
+      return super.getLinkTarget(f);
+    }
+  }
+
   /**
    * Checks that the passed URI belongs to this filesystem and returns
    * just the path component. Expects a URI with an absolute path.
@@ -318,19 +614,20 @@ public class SmartFileSystem extends DistributedFileSystem {
    */
   private String getPathName(Path file) {
     checkPath(file);
-    String result = file.toUri().getPath();
+    String result = fixRelativePart(file).toUri().getPath();
     if (!DFSUtil.isValidName(result)) {
       throw new IllegalArgumentException("Pathname " + result + " from " +
-          file+" is not a valid DFS filename.");
+          file + " is not a valid DFS filename.");
     }
     return result;
   }
 
   @Override
   public boolean isFileClosed(final Path src) throws IOException {
-    FileState fileState = smartClient.getFileState(getPathName(src));
+    FileState fileState = smartDFSClient.getFileState(getPathName(src));
     if (fileState instanceof CompactFileState) {
-      String containerFile = ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath();
+      String containerFile = (
+          (CompactFileState) fileState).getFileContainerInfo().getContainerFilePath();
       return super.isFileClosed(new Path(containerFile));
     } else {
       return super.isFileClosed(src);
@@ -338,35 +635,12 @@ public class SmartFileSystem extends DistributedFileSystem {
   }
 
   @Override
-  public boolean delete(Path f, final boolean recursive) throws IOException {
-    return smartClient.delete(getPathName(f), recursive);
-  }
-
-  @Override
-  public boolean truncate(Path f, final long newLength) throws IOException {
-    return smartClient.truncate(getPathName(f), newLength);
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public boolean rename(Path src, Path dst) throws IOException {
-    return smartClient.rename(getPathName(src), getPathName(dst));
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public void rename(Path src, Path dst, final Options.Rename... options)
-      throws IOException {
-    smartClient.rename(getPathName(src), getPathName(src), options);
-  }
-
-  @Override
   public void close() throws IOException {
     try {
       super.close();
     } finally {
-      if (smartClient != null) {
-        this.smartClient.close();
+      if (smartDFSClient != null) {
+        this.smartDFSClient.close();
       }
     }
   }

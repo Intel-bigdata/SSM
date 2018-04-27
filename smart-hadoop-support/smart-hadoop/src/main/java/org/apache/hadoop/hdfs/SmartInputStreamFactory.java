@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.hdfs;
 
-import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.model.FileState;
 
@@ -31,12 +30,22 @@ public abstract class SmartInputStreamFactory {
     return CompatibilityHelperLoader.getHelper().getSmartInputStreamFactory();
   }
 
+  /**
+   *  Get HDFS input stream from dfsClient, file path and its file state.
+   *
+   * @param dfsClient HDFS client
+   * @param src file path
+   * @param fileState file state
+   * @param verifyChecksum  check if need to checksum
+   * @return HDFS input stream
+   * @throws IOException if IOException occurs
+   */
   public abstract DFSInputStream create(DFSClient dfsClient, String src,
-      boolean verifyChecksum, FileState fileState) throws IOException, UnresolvedLinkException;
+      boolean verifyChecksum, FileState fileState) throws IOException;
 
   protected DFSInputStream createSmartInputStream(DFSClient dfsClient, String src,
       boolean verifyChecksum, FileState fileState) throws IOException{
-    DFSInputStream inputStream = null;
+    DFSInputStream inputStream;
     switch (fileState.getFileType()) {
       case NORMAL:
         inputStream = new DFSInputStream(dfsClient, src, verifyChecksum);

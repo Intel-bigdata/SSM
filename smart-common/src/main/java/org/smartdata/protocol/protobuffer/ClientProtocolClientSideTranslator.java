@@ -21,12 +21,11 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.ipc.RPC;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
-import org.smartdata.protocol.ClientServerProto.DeleteSmallFileRequestProto;
+import org.smartdata.protocol.ClientServerProto.DeleteFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
-import org.smartdata.protocol.ClientServerProto.RenameSmallFileRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
-import org.smartdata.protocol.ClientServerProto.TruncateSmallFileRequestProto;
+import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
 import org.smartdata.protocol.SmartClientProtocol;
 
 import java.io.IOException;
@@ -68,44 +67,32 @@ public class ClientProtocolClientSideTranslator implements
         .build();
     try {
       GetFileStateResponseProto response = rpcProxy.getFileState(null, req);
-      return ProtoBufferHelper.convert(response);
+      return ProtoBufferHelper.convert(response.getFileState());
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
   @Override
-  public void deleteSmallFile(String filePath) throws IOException {
-    DeleteSmallFileRequestProto req = DeleteSmallFileRequestProto.newBuilder()
-        .setFilePath(filePath)
+  public void updateFileState(FileState fileState) throws IOException {
+    UpdateFileStateRequestProto req = UpdateFileStateRequestProto.newBuilder()
+        .setFileState(ProtoBufferHelper.convert(fileState))
         .build();
     try {
-      rpcProxy.deleteSmallFile(null, req);
+      rpcProxy.updateFileState(null, req);
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }
   }
 
   @Override
-  public void truncateSmallFile(String filePath) throws IOException {
-    TruncateSmallFileRequestProto req = TruncateSmallFileRequestProto.newBuilder()
+  public void deleteFileState(String filePath, boolean recursive) throws IOException {
+    DeleteFileStateRequestProto req = DeleteFileStateRequestProto.newBuilder()
         .setFilePath(filePath)
+        .setRecursive(recursive)
         .build();
     try {
-      rpcProxy.truncateSmallFile(null, req);
-    } catch (ServiceException e) {
-      throw ProtoBufferHelper.getRemoteException(e);
-    }
-  }
-
-  @Override
-  public void renameSmallFile(String filePath, String newPath) throws IOException {
-    RenameSmallFileRequestProto req = RenameSmallFileRequestProto.newBuilder()
-        .setFilePath(filePath)
-        .setNewPath(newPath)
-        .build();
-    try {
-      rpcProxy.renameSmallFile(null, req);
+      rpcProxy.deleteFileState(null, req);
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }

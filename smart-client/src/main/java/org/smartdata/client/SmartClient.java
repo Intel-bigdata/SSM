@@ -91,22 +91,21 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
+    checkOpen();
     return server.getFileState(filePath);
   }
 
   @Override
-  public void deleteSmallFile(String filePath) throws IOException {
-    server.deleteSmallFile(filePath);
+  public void updateFileState(FileState fileState)
+      throws IOException {
+    checkOpen();
+    server.updateFileState(fileState);
   }
 
   @Override
-  public void truncateSmallFile(String filePath) throws IOException {
-    server.truncateSmallFile(filePath);
-  }
-
-  @Override
-  public void renameSmallFile(String filePath, String newPath) throws IOException {
-    server.renameSmallFile(filePath, newPath);
+  public void deleteFileState(String filePath, boolean recursive) throws IOException {
+    checkOpen();
+    server.deleteFileState(filePath, recursive);
   }
 
   private boolean shouldIgnore(String path) {
@@ -119,7 +118,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     return false;
   }
 
-  public void checkOpen() throws IOException {
+  private void checkOpen() throws IOException {
     if (!running) {
       throw new IOException("SmartClient closed");
     }

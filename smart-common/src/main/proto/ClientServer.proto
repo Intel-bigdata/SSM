@@ -31,34 +31,20 @@ message ReportFileAccessEventRequestProto {
 message ReportFileAccessEventResponseProto {
 }
 
-message DeleteSmallFileRequestProto {
-  required string filePath = 1;
-}
-
-message DeleteSmallFileResponseProto {
-}
-
-message TruncateSmallFileRequestProto {
-  required string filePath = 1;
-}
-
-message TruncateSmallFileResponseProto {
-}
-
-message RenameSmallFileRequestProto {
-  required string filePath = 1;
-  required string newPath = 2;
-}
-
-message RenameSmallFileResponseProto {
-}
-
 message GetFileStateRequestProto {
   required string filePath = 1;
 }
 
-message CompressionFileStateProto {
+message FileStateProto {
+  required string path = 1;
+  required int32 type = 2;
+  required int32 stage = 3;
+  optional CompressionFileStateProto compressionFileState = 4;
+  optional CompactFileStateProto compactFileState = 5;
+  optional S3FileStateProto s3FileState = 6;
+}
 
+message CompressionFileStateProto {
 }
 
 message CompactFileStateProto {
@@ -68,16 +54,25 @@ message CompactFileStateProto {
 }
 
 message S3FileStateProto {
-
 }
 
 message GetFileStateResponseProto {
-  required string path = 1;
-  required int32 type = 2;
-  required int32 stage = 3;
-  optional CompressionFileStateProto compressionFileState = 4;
-  optional CompactFileStateProto compactFileState = 5;
-  optional S3FileStateProto s3FileState = 6;
+  required FileStateProto fileState = 1;
+}
+
+message UpdateFileStateRequestProto {
+  required FileStateProto fileState = 1;
+}
+
+message UpdateFileStateResponseProto {
+}
+
+message DeleteFileStateRequestProto {
+  required string filePath = 1;
+  required bool recursive = 2;
+}
+
+message DeleteFileStateResponseProto {
 }
 
 service protoService {
@@ -85,10 +80,8 @@ service protoService {
   returns (ReportFileAccessEventResponseProto);
   rpc getFileState (GetFileStateRequestProto)
   returns (GetFileStateResponseProto);
-  rpc deleteSmallFile (DeleteSmallFileRequestProto)
-  returns (DeleteSmallFileResponseProto);
-  rpc truncateSmallFile (TruncateSmallFileRequestProto)
-  returns (TruncateSmallFileResponseProto);
-  rpc renameSmallFile (RenameSmallFileRequestProto)
-  returns (RenameSmallFileResponseProto);
+  rpc updateFileState (UpdateFileStateRequestProto)
+  returns (UpdateFileStateResponseProto);
+  rpc deleteFileState (DeleteFileStateRequestProto)
+  returns (DeleteFileStateResponseProto);
 }

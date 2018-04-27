@@ -28,6 +28,7 @@ import org.smartdata.SmartPolicyProvider;
 import org.smartdata.SmartServiceState;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.ActionDescriptor;
 import org.smartdata.model.ActionInfo;
@@ -241,7 +242,8 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   @Override
-  public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
+  public void reportFileAccessEvent(FileAccessEvent event)
+      throws IOException {
     checkIfActive();
     ssm.getStatesManager().reportFileAccessEvent(event);
   }
@@ -259,21 +261,25 @@ public class SmartRpcServer implements SmartServerProtocols {
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
+    checkIfActive();
     return ssm.getMetaStore().getFileState(filePath);
   }
 
   @Override
-  public void deleteSmallFile(String filePath) throws IOException {
-    ssm.getMetaStore().deleteSmallFile(filePath);
+  public void updateFileState(FileState fileState)
+      throws IOException {
+    checkIfActive();
+    try {
+      ssm.getMetaStore().insertUpdateFileState(fileState);
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
   }
 
   @Override
-  public void truncateSmallFile(String filePath) throws IOException {
-    ssm.getMetaStore().truncateSmallFile(filePath);
-  }
-
-  @Override
-  public void renameSmallFile(String filePath, String newFilePath) throws IOException {
-    ssm.getMetaStore().renameSmallFile(filePath, newFilePath);
+  public void deleteFileState(String filePath, boolean recursive)
+      throws IOException {
+    checkIfActive();
+    ssm.getMetaStore().deleteFileState(filePath, recursive);
   }
 }

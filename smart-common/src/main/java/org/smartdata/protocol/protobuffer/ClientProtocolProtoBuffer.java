@@ -23,16 +23,14 @@ import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.security.KerberosInfo;
 import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.protocol.ClientServerProto.DeleteSmallFileRequestProto;
-import org.smartdata.protocol.ClientServerProto.DeleteSmallFileResponseProto;
+import org.smartdata.protocol.ClientServerProto.DeleteFileStateRequestProto;
+import org.smartdata.protocol.ClientServerProto.DeleteFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
-import org.smartdata.protocol.ClientServerProto.RenameSmallFileRequestProto;
-import org.smartdata.protocol.ClientServerProto.RenameSmallFileResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
-import org.smartdata.protocol.ClientServerProto.TruncateSmallFileRequestProto;
-import org.smartdata.protocol.ClientServerProto.TruncateSmallFileResponseProto;
+import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
+import org.smartdata.protocol.ClientServerProto.UpdateFileStateResponseProto;
 
 @KerberosInfo(
   serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
@@ -41,21 +39,17 @@ import org.smartdata.protocol.ClientServerProto.TruncateSmallFileResponseProto;
 public interface ClientProtocolProtoBuffer {
   ReportFileAccessEventResponseProto
   reportFileAccessEvent(RpcController controller,
-      ReportFileAccessEventRequestProto req) throws ServiceException;
+                        ReportFileAccessEventRequestProto req) throws ServiceException;
 
   GetFileStateResponseProto
   getFileState(RpcController controller,
-      GetFileStateRequestProto req) throws ServiceException;
+               GetFileStateRequestProto req) throws ServiceException;
 
-  DeleteSmallFileResponseProto
-  deleteSmallFile(RpcController controller,
-      DeleteSmallFileRequestProto req) throws ServiceException;
+  UpdateFileStateResponseProto
+  updateFileState(RpcController controller,
+                  UpdateFileStateRequestProto req) throws ServiceException;
 
-  TruncateSmallFileResponseProto
-  truncateSmallFile(RpcController controller,
-                    TruncateSmallFileRequestProto req) throws ServiceException;
-
-  RenameSmallFileResponseProto
-  renameSmallFile(RpcController controller,
-                  RenameSmallFileRequestProto req) throws ServiceException;
+  DeleteFileStateResponseProto
+  deleteFileState(RpcController controller,
+                  DeleteFileStateRequestProto req) throws ServiceException;
 }

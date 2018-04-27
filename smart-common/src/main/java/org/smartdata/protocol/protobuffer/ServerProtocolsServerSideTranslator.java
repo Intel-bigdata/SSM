@@ -66,16 +66,14 @@ import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleResponseProto;
 import org.smartdata.protocol.ClientServerProto;
-import org.smartdata.protocol.ClientServerProto.DeleteSmallFileRequestProto;
-import org.smartdata.protocol.ClientServerProto.DeleteSmallFileResponseProto;
+import org.smartdata.protocol.ClientServerProto.DeleteFileStateRequestProto;
+import org.smartdata.protocol.ClientServerProto.DeleteFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
-import org.smartdata.protocol.ClientServerProto.RenameSmallFileRequestProto;
-import org.smartdata.protocol.ClientServerProto.RenameSmallFileResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
-import org.smartdata.protocol.ClientServerProto.TruncateSmallFileRequestProto;
-import org.smartdata.protocol.ClientServerProto.TruncateSmallFileResponseProto;
+import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
+import org.smartdata.protocol.ClientServerProto.UpdateFileStateResponseProto;
 import org.smartdata.protocol.SmartServerProtocols;
 
 import java.io.IOException;
@@ -343,43 +341,36 @@ public class ServerProtocolsServerSideTranslator implements
     try {
       String path = req.getFilePath();
       FileState fileState = server.getFileState(path);
-      return ProtoBufferHelper.convert(fileState);
+      return GetFileStateResponseProto.newBuilder()
+          .setFileState(ProtoBufferHelper.convert(fileState))
+          .build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
   }
 
   @Override
-  public DeleteSmallFileResponseProto deleteSmallFile(RpcController controller,
-      DeleteSmallFileRequestProto req) throws ServiceException {
+  public UpdateFileStateResponseProto updateFileState(RpcController controller,
+                                                      UpdateFileStateRequestProto req)
+      throws ServiceException {
     try {
-      String path = req.getFilePath();
-      server.deleteSmallFile(path);
-      return DeleteSmallFileResponseProto.newBuilder().build();
+      FileState fileState = ProtoBufferHelper.convert(req.getFileState());
+      server.updateFileState(fileState);
+      return UpdateFileStateResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
   }
 
   @Override
-  public TruncateSmallFileResponseProto truncateSmallFile(RpcController controller,
-      TruncateSmallFileRequestProto req) throws ServiceException {
+  public DeleteFileStateResponseProto deleteFileState(RpcController controller,
+                                                      DeleteFileStateRequestProto req)
+      throws ServiceException {
     try {
       String path = req.getFilePath();
-      server.deleteSmallFile(path);
-      return TruncateSmallFileResponseProto.newBuilder().build();
-    } catch (IOException e) {
-      throw new ServiceException(e);
-    }
-  }
-
-  @Override
-  public RenameSmallFileResponseProto renameSmallFile(RpcController controller,
-      RenameSmallFileRequestProto req) throws ServiceException {
-    try {
-      String path = req.getFilePath();
-      server.deleteSmallFile(path);
-      return RenameSmallFileResponseProto.newBuilder().build();
+      boolean recursive = req.getRecursive();
+      server.deleteFileState(path, recursive);
+      return DeleteFileStateResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }

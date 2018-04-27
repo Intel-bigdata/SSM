@@ -41,9 +41,9 @@ public class FileStateDao {
     this.dataSource = dataSource;
   }
 
-  public void insertUpate(FileState fileState) {
+  public void insertUpdate(FileState fileState) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "REPLACE INTO " + TABLE_NAME + " (path, type, stage) VALUES (?,?,?);";
+    String sql = "REPLACE INTO " + TABLE_NAME + " (path, type, stage) VALUES (?,?,?)";
     jdbcTemplate.update(sql, fileState.getPath(), fileState.getFileType().getValue(),
         fileState.getFileStage().getValue());
   }
@@ -60,10 +60,15 @@ public class FileStateDao {
         new FileStateRowMapper());
   }
 
-  public void deleteByPath(String path) {
+  public void deleteByPath(String path, boolean recursive) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
-    jdbcTemplate.update(sql, path);
+    if (recursive) {
+      final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path LIKE ?";
+      jdbcTemplate.update(sql, path + "%");
+    } else {
+      final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
+      jdbcTemplate.update(sql, path);
+    }
   }
 
   public void deleteAll() {
@@ -84,10 +89,9 @@ public class FileStateDao {
     @Override
     public FileState mapRow(ResultSet resultSet, int i)
         throws SQLException {
-      FileState fileState = new FileState(resultSet.getString("path"),
+      return new FileState(resultSet.getString("path"),
           FileState.FileType.fromValue(resultSet.getInt("type")),
           FileState.FileStage.fromValue(resultSet.getInt("stage")));
-      return fileState;
     }
   }
 }

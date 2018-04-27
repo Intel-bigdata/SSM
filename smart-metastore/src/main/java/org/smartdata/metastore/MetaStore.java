@@ -973,6 +973,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public CmdletInfo getCmdletById(long cid) throws MetaStoreException {
     LOG.debug("Get cmdlet by cid {}", cid);
     try {
@@ -984,6 +985,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public List<CmdletInfo> getCmdlets(String cidCondition,
       String ridCondition, CmdletState state) throws MetaStoreException {
     try {
@@ -1014,6 +1016,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public boolean updateCmdlet(long cid, CmdletState state)
       throws MetaStoreException {
     try {
@@ -1023,6 +1026,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public boolean updateCmdlet(long cid, String parameters, CmdletState state)
       throws MetaStoreException {
     try {
@@ -1032,6 +1036,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public void deleteCmdlet(long cid) throws MetaStoreException {
     try {
       cmdletDao.delete(cid);
@@ -1909,6 +1914,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public List<BackUpInfo> listAllBackUpInfo() throws MetaStoreException {
     try {
       return backUpInfoDao.getAll();
@@ -1934,6 +1940,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return false;
   }
 
+  @Override
   public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
       return backUpInfoDao.getByRid(rid);
@@ -1944,6 +1951,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public void deleteAllBackUpInfo() throws MetaStoreException {
     try {
       backUpInfoDao.deleteAll();
@@ -1953,6 +1961,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public void deleteBackUpInfo(long rid) throws MetaStoreException {
     try {
       BackUpInfo backUpInfo = getBackUpInfo(rid);
@@ -1969,7 +1978,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertBackUpInfo(
+  @Override
+  public void insertBackUpInfo (
       BackUpInfo backUpInfo) throws MetaStoreException {
     try {
       backUpInfoDao.insert(backUpInfo);
@@ -2081,8 +2091,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertSystemInfo(
-      SystemInfo systemInfo) throws MetaStoreException {
+  public void insertSystemInfo(SystemInfo systemInfo)
+      throws MetaStoreException {
     try {
       if (systemInfoDao.containsProperty(systemInfo.getProperty())) {
         throw new Exception("The system property already exists");
@@ -2093,18 +2103,26 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertUpdateFileState(FileState fileState) throws MetaStoreException {
-    fileStateDao.insertUpate(fileState);
-    // Update corresponding table if fileState is a specific FileState
-    if (fileState instanceof CompactFileState) {
-      String path = fileState.getPath();
-      FileContainerInfo fileContainerInfo = ((CompactFileState) fileState).getFileContainerInfo();
-      insertSmallFile(path, fileContainerInfo);
-    }/* else if (fileState instanceof CompressFileState) {
+  public void insertUpdateFileState(FileState fileState)
+      throws MetaStoreException {
+    try {
+      fileStateDao.insertUpdate(fileState);
+      // Update corresponding table if fileState is a specific FileState
+      if (fileState instanceof CompactFileState) {
+        FileContainerInfo fileContainerInfo = (
+            (CompactFileState) fileState).getFileContainerInfo();
+        smallFileDao.insertUpdate(fileState.getPath(), fileContainerInfo);
+      }
+      /*
+       else if (fileState instanceof CompressFileState) {
 
-    } else if (fileState instanceof S3FileState) {
+       } else if (fileState instanceof S3FileState) {
 
-    }*/
+       }
+      */
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   public FileState getFileState(String path) {
@@ -2121,7 +2139,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         fileState = new NormalFileState(path);
         break;
       case COMPACT:
-        FileContainerInfo fileContainerInfo = getFileContainerInfo(path);
+        if (smallFileDao.getCountByPath(path) == 0) {
+          throw new RuntimeException("The file: " + path + " is not SSM small file.");
+        }
+        FileContainerInfo fileContainerInfo = smallFileDao.getFileContainerInfo(path);
         fileState = new CompactFileState(path, fileContainerInfo);
         break;
       case COMPRESSION:
@@ -2132,5 +2153,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       default:
     }
     return fileState;
+  }
+
+  public void deleteFileState(String path, boolean recursive) {
+    fileStateDao.deleteByPath(path, recursive);
+    smallFileDao.deleteByPath(path, recursive);
   }
 }

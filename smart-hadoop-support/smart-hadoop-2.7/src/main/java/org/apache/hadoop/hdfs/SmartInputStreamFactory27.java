@@ -17,23 +17,23 @@
  */
 package org.apache.hadoop.hdfs;
 
-import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.htrace.TraceScope;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
 
+/**
+ * Factory to create SmartInputStream for Apache Hadoop 2.7.
+ */
 public class SmartInputStreamFactory27 extends SmartInputStreamFactory {
   @Override
   public DFSInputStream create(DFSClient dfsClient, String src,
       boolean verifyChecksum, FileState fileState)
-      throws IOException, UnresolvedLinkException {
+      throws IOException {
     dfsClient.checkOpen();
     TraceScope scope = dfsClient.getPathTraceScope("newDFSInputStream", src);
     try {
-      DFSInputStream inputStream = createSmartInputStream(dfsClient, src,
-          verifyChecksum, fileState);
-      return inputStream;
+      return createSmartInputStream(dfsClient, src, verifyChecksum, fileState);
     } finally {
       scope.close();
     }

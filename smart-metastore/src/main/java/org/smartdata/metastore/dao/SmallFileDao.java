@@ -20,14 +20,11 @@ package org.smartdata.metastore.dao;
 import org.smartdata.model.FileContainerInfo;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class SmallFileDao {
@@ -41,50 +38,32 @@ public class SmallFileDao {
     this.dataSource = dataSource;
   }
 
-  public synchronized void addSmallFile(String path, FileContainerInfo fileContainerInfo) {
-    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
-    simpleJdbcInsert.setTableName("small_file");
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("path", path);
-    parameters.put("container_file_path", fileContainerInfo.getContainerFilePath());
-    parameters.put("offset", fileContainerInfo.getOffset());
-    parameters.put("length", fileContainerInfo.getLength());
-    simpleJdbcInsert.execute(parameters);
-  }
-
-  public synchronized void deleteSmallFile(String path) {
+  public synchronized void insertUpdate(String path, FileContainerInfo fileContainerInfo) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "DELETE FROM small_file WHERE path = ?";
-    jdbcTemplate.update(sql, path);
+    String sql = "REPLACE INTO small_file (path, container_file_path, offset, length)"
+        + " VALUES (?,?,?,?)";
+    jdbcTemplate.update(sql, path, fileContainerInfo.getContainerFilePath(),
+        fileContainerInfo.getOffset(), fileContainerInfo.getLength());
   }
 
-  public FileContainerInfo getSmallFile(String path) {
+  public synchronized void deleteByPath(String path, boolean recursive) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    if (recursive) {
+      String sql = "DELETE FROM small_file WHERE path LIKE ?";
+      jdbcTemplate.update(sql, path + "%");
+    } else {
+      String sql = "DELETE FROM small_file WHERE path = ?";
+      jdbcTemplate.update(sql, path);
+    }
+  }
+
+  public FileContainerInfo getFileContainerInfo(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM small_file WHERE path = ?",
         new Object[]{path}, new FileContainerInfoRowMapper());
   }
 
-  public synchronized void truncateSmallFile(String path) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE small_file SET length = 0 WHERE path = ?";
-    jdbcTemplate.update(sql, path);
-  }
-
-  public synchronized void renameSmallFile(String path, String newPath) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE small_file SET path = ? WHERE path = ?";
-    jdbcTemplate.update(sql, path, newPath);
-  }
-
-  public synchronized void updateSmallFile(String path, String containerFilePath,
-                                           long offset, long length) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "UPDATE small_file SET container_file_path = ? offset = ?"
-        + " length = ? WHERE path = ?";
-    jdbcTemplate.update(sql, containerFilePath, offset, length, path);
-  }
-
-  public int getCountByPath(String path) {
+  public Integer getCountByPath(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "SELECT COUNT(*) FROM small_file WHERE path = ?";
     return jdbcTemplate.queryForObject(sql, Integer.class, path);
