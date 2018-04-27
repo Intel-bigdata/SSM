@@ -229,6 +229,7 @@ public class RuleExecutor implements Runnable {
 
   @Override
   public void run() {
+    long startCheckTime = System.currentTimeMillis();
     if (exited) {
       exitSchedule();
     }
@@ -237,7 +238,6 @@ public class RuleExecutor implements Runnable {
 
     long rid = ctx.getRuleId();
     try {
-      long startCheckTime = System.currentTimeMillis();
       if (ruleManager.isClosed()) {
         exitSchedule();
       }
@@ -265,12 +265,21 @@ public class RuleExecutor implements Runnable {
       }
       TimeBasedScheduleInfo scheduleInfo = tr.getTbScheduleInfo();
 
-      if (scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER
-          && !scheduleInfo.isOneShot()
-          && startCheckTime - scheduleInfo.getEndTime() > 0) {
-        LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to time passed or finished");
-        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
-        exitSchedule();
+      if (!scheduleInfo.isOnce() && scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER) {
+        boolean befExit = false;
+        if (scheduleInfo.isOneShot()) {
+          if (scheduleInfo.getSubScheduleTime() > scheduleInfo.getStartTime()) {
+            befExit = true;
+          }
+        } else if (startCheckTime - scheduleInfo.getEndTime() > 0) {
+          befExit = true;
+        }
+
+        if (befExit) {
+          LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to time passed");
+          ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+          exitSchedule();
+        }
       }
 
       if (doExec) {
@@ -305,6 +314,12 @@ public class RuleExecutor implements Runnable {
       }
 
       if (scheduleInfo.isOneShot()) {
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+        exitSchedule();
+      }
+
+      if (endProcessTime + scheduleInfo.getEvery() > scheduleInfo.getEndTime()) {
+        LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to finished");
         ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
         exitSchedule();
       }
