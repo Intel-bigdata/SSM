@@ -63,7 +63,6 @@ public class TestStorageDao extends TestDaoUtil {
     StoragePolicy storagePolicy = new StoragePolicy((byte) 1, "pName");
     storageDao.insertStoragePolicyTable(storagePolicy);
     Assert.assertTrue(storageDao.getStoragePolicyName(1).equals("pName"));
-    Assert.assertTrue(storageDao.getStoragePolicyID("pName") == 1);
   }
 }
 

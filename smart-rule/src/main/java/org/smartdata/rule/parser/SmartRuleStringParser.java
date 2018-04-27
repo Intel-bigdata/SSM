@@ -47,6 +47,9 @@ public class SmartRuleStringParser {
     optCond.put("allssd", "storagePolicy != \"ALL_SSD\"");
     optCond.put("onessd", "storagePolicy != \"ONE_SSD\"");
     optCond.put("archive", "storagePolicy != \"COLD\"");
+    optCond.put("alldisk", "storagePolicy != \"HOT\"");
+    optCond.put("onedisk", "storagePolicy != \"WARM\"");
+    optCond.put("ramdisk", "storagePolicy != \"LAZY_PERSIST\"");
     optCond.put("cache", "not inCache");
     optCond.put("uncache", "inCache");
     optCond.put("sync", "unsynced");

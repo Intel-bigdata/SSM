@@ -17,21 +17,17 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.action.annotation.ActionSignature;
-import org.smartdata.hdfs.action.HdfsAction;
-import org.smartdata.hdfs.action.MoveFileAction;
 
 /**
  * An action to do all-ssd for a file.
  */
 @ActionSignature(
-  actionId = "allhdd",
-  displayName = "allhdd",
+  actionId = "alldisk",
+  displayName = "alldisk",
   usage = HdfsAction.FILE_PATH + " $file "
 )
-public class AllHddFileAction extends MoveFileAction {
+public class AllDiskFileAction extends MoveFileAction {
 
   @Override
   public String getStoragePolicy() {
