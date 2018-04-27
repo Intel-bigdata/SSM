@@ -23,11 +23,11 @@ import org.smartdata.action.annotation.ActionSignature;
  * An action to do all-ssd for a file.
  */
 @ActionSignature(
-  actionId = "oneramdisk",
-  displayName = "oneramdisk",
+  actionId = "ramdisk",
+  displayName = "ramdisk",
   usage = HdfsAction.FILE_PATH + " $file "
 )
-public class OneRamDiskFileAction extends MoveFileAction {
+public class RamDiskFileAction extends MoveFileAction {
 
   @Override
   public String getStoragePolicy() {
