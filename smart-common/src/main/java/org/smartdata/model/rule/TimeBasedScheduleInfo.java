@@ -22,6 +22,7 @@ public class TimeBasedScheduleInfo {
   private long startTime;
   private long endTime;
   private long every;
+  private long subScheduleTime;
 
   public TimeBasedScheduleInfo() {
   }
@@ -56,7 +57,19 @@ public class TimeBasedScheduleInfo {
     return every;
   }
 
-  public boolean isOneShot() {
+  public boolean isOnce() {
     return startTime == endTime && startTime == 0 && every == 0;
+  }
+
+  public boolean isOneShot() {
+    return startTime == endTime && every == 0;
+  }
+
+  public void setSubScheduleTime(long subScheduleTime) {
+    this.subScheduleTime = subScheduleTime;
+  }
+
+  public long getSubScheduleTime() {
+    return subScheduleTime;
   }
 }
