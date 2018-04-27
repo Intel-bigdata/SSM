@@ -302,6 +302,17 @@ Follow the steps to add SSM Jars to classpath
   *  Add the SSM jars directory to hadoop calsspath in `hadoop-env.sh` as following.
 
           `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
+  
+  *  For YARN and MapReduce, add the following content to the `yarn-site.xml`:
+
+```xml
+    <property>
+        <name>yarn.application.classpath</name>
+        <value>    
+	$HADOOP_CONF_DIR:$HADOOP_COMMON_HOME/share/hadoop/common/*:$HADOOP_COMMON_HOME/share/hadoop/common/lib/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*:$HADOOP_YARN_HOME/share/hadoop/yarn/*:$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*:${SSM_jars}/*
+        </value>
+    </property>
+```
 
    #### Copy the Jars  
 Copy the SSM jars to the default Hadoop class path
@@ -332,15 +343,19 @@ Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point t
 Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manager to point to the installed Smart Server.
  1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
  2.    Search `HDFS Service Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, add the following xml context. The  default Smart Server RPC port is `7042`.
+```xml
     <property>
         <name>smart.server.rpc.address</name>
         <value>ssm-server-ip:rpc-port</value>
     </property>
+```
  3.    Search `HDFS Client Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, add the following xml context. The  default Smart Server RPC port is `7042`.
+ ```xml
          <property>
              <name>smart.server.rpc.address</name>
              <value>ssm-server-ip:rpc-port</value>
          </property>
+```
  4.    Click the Save Changes button
  5.    Restart stale Services and re-deploy the client configurations
 
