@@ -106,7 +106,8 @@ public class MoverScheduler extends ActionSchedulerService {
     }
   }
 
-  private static final List<String> actions = Arrays.asList("allssd", "onessd", "archive");
+  private static final List<String> actions =
+      Arrays.asList("allssd", "onessd", "archive", "alldisk", "onedisk", "ramdisk");
   public List<String> getSupportedActions() {
     return actions;
   }
@@ -132,6 +133,15 @@ public class MoverScheduler extends ActionSchedulerService {
         break;
       case "archive":
         policy = "COLD";
+        break;
+      case "alldisk":
+        policy = "HOT";
+        break;
+      case "onedisk":
+        policy = "WARM";
+        break;
+      case "ramdisk":
+        policy = "LAZY_PERSIST";
         break;
     }
 

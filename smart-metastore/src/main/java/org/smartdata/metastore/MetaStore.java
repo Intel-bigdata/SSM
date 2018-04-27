@@ -254,7 +254,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           + policyName + "'");
     }
     try {
-      return storageDao.updateFileStoragePolicy(path, policyName);
+      return storageDao.updateFileStoragePolicy(path, mapStoragePolicyNameId.get(policyName));
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -683,7 +683,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       detailedFileAction.setFilePath(filePath);
       if (actionInfo.getActionName().contains("allssd")
           || actionInfo.getActionName().contains("onessd")
-          || actionInfo.getActionName().contains("archive")) {
+          || actionInfo.getActionName().contains("archive")
+          || actionInfo.getActionName().contains("alldisk")
+          || actionInfo.getActionName().contains("onedisk")
+          || actionInfo.getActionName().contains("ramdisk")) {
         detailedFileAction.setTarget(actionInfo.getActionName());
         detailedFileAction.setSrc(mapStoragePolicyIdName.get((int) fileInfo.getStoragePolicy()));
       } else {
@@ -717,7 +720,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       detailedFileAction.setFilePath(filePath);
       if (actionInfo.getActionName().contains("allssd")
           || actionInfo.getActionName().contains("onessd")
-          || actionInfo.getActionName().contains("archive")) {
+          || actionInfo.getActionName().contains("archive")
+          || actionInfo.getActionName().contains("alldisk")
+          || actionInfo.getActionName().contains("onedisk")
+          || actionInfo.getActionName().contains("ramdisk")) {
         detailedFileAction.setTarget(actionInfo.getActionName());
         detailedFileAction.setSrc(mapStoragePolicyIdName.get((int) fileInfo.getStoragePolicy()));
       } else {
@@ -739,7 +745,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     for (RuleInfo ruleInfo : ruleInfos) {
       if (ruleInfo.getRuleText().contains("allssd")
           || ruleInfo.getRuleText().contains("onessd")
-          || ruleInfo.getRuleText().contains("archive")) {
+          || ruleInfo.getRuleText().contains("archive")
+          || ruleInfo.getRuleText().contains("alldisk")
+          || ruleInfo.getRuleText().contains("onedisk")
+          || ruleInfo.getRuleText().contains("ramdisk")) {
         DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add mover progress
         List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());

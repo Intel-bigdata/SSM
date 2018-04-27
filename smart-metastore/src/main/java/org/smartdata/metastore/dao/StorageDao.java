@@ -99,13 +99,6 @@ public class StorageDao {
     return jdbcTemplate.queryForObject(sql, new Object[]{sid}, String.class);
   }
 
-  public Integer getStoragePolicyID(String policyName) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT sid FROM storage_policy WHERE policy_name = ?";
-    return jdbcTemplate
-        .queryForObject(sql, new Object[]{policyName}, Integer.class);
-  }
-
   public synchronized void insertStoragePolicyTable(StoragePolicy s) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "INSERT INTO storage_policy (sid, policy_name) VALUES('"
@@ -114,18 +107,11 @@ public class StorageDao {
   }
 
   public int updateFileStoragePolicy(String path,
-      String policyName) throws SQLException {
+      Integer policyId) throws SQLException {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql0 = "SELECT sid FROM storage_policy WHERE policy_name = ?";
-    Integer sid = jdbcTemplate
-        .queryForObject(sql0, new Object[]{policyName}, Integer.class);
-    if (sid == null) {
-      throw new SQLException("Unknown storage policy name '"
-          + policyName + "'");
-    }
     String sql = String.format(
         "UPDATE file SET sid = %d WHERE path = '%s';",
-        sid, path);
+        policyId, path);
     return jdbcTemplate.update(sql);
   }
 

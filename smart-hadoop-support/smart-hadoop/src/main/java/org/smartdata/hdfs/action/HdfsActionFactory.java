@@ -26,10 +26,10 @@ public class HdfsActionFactory extends AbstractActionFactory {
 
   static {
     addAction(AllSsdFileAction.class);
-    addAction(AllHddFileAction.class);
+    addAction(AllDiskFileAction.class);
     addAction(OneSsdFileAction.class);
-    addAction(OneHddFileAction.class);
-    addAction(OneRamDiskFileAction.class);
+    addAction(OneDiskFileAction.class);
+    addAction(RamDiskFileAction.class);
     addAction(ArchiveFileAction.class);
     addAction(CacheFileAction.class);
     addAction(UncacheFileAction.class);
