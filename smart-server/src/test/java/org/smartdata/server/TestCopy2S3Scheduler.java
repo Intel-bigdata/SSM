@@ -28,7 +28,6 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.S3FileState;
-import org.smartdata.server.engine.CmdletManager;
 
 import java.util.List;
 
