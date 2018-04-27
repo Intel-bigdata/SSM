@@ -38,6 +38,7 @@ public class ExecutorScheduler {
   public void addPeriodicityTask(RuleExecutor re) {
     TimeBasedScheduleInfo si = re.getTranslateResult().getTbScheduleInfo();
     long now = System.currentTimeMillis();
+    si.setSubScheduleTime(now);
     long startDelay = si.getStartTime() - now;
     if (startDelay < 0) {
       startDelay = 0;
