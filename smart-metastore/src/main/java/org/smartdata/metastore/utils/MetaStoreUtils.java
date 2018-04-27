@@ -251,7 +251,7 @@ public class MetaStoreUtils {
               + "  sid tinyint(4) PRIMARY KEY,\n"
               + "  policy_name varchar(64) DEFAULT NULL\n"
               + ") ;",
-          "INSERT INTO storage_policy VALUES ('0', 'HOT');",
+          "INSERT INTO storage_policy VALUES ('0', 'UNDEF');",
           "INSERT INTO storage_policy VALUES ('2', 'COLD');",
           "INSERT INTO storage_policy VALUES ('5', 'WARM');",
           "INSERT INTO storage_policy VALUES ('7', 'HOT');",
