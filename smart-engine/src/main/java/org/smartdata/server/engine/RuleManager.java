@@ -211,7 +211,10 @@ public class RuleManager extends AbstractService {
       if (ruleInfo.getState() != RuleState.DELETED) {
         if (ruleInfo.getRuleText().contains("allssd")
             || ruleInfo.getRuleText().contains("onessd")
-            || ruleInfo.getRuleText().contains("archive")) {
+            || ruleInfo.getRuleText().contains("archive")
+            || ruleInfo.getRuleText().contains("alldisk")
+            || ruleInfo.getRuleText().contains("onedisk")
+            || ruleInfo.getRuleText().contains("ramdisk")) {
           DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
           List<CmdletInfo> cmdletInfos = new ArrayList<CmdletInfo>();
           cmdletInfos = cmdletManager.listCmdletsInfo(ruleInfo.getId());
