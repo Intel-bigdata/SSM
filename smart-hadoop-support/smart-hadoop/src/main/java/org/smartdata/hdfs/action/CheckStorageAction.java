@@ -53,6 +53,10 @@ public class CheckStorageAction extends HdfsAction {
     if (fileStatus == null) {
       throw new ActionException("File does not exist.");
     }
+    if (fileStatus.isDir()) {
+      appendResult("This is a directory which has no storage result!");
+      return;
+    }
     long length = fileStatus.getLen();
     List<LocatedBlock> locatedBlocks =
         dfsClient.getLocatedBlocks(fileName, 0, length).getLocatedBlocks();
