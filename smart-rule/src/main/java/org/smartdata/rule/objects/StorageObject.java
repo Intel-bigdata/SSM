@@ -33,7 +33,7 @@ public class StorageObject extends SmartObject {
     PROPERTIES = new HashMap<>();
     PROPERTIES.put("capacity", new Property("capacity", ValueType.LONG,
         Arrays.asList(ValueType.STRING), "storage", "capacity", true,
-        "type = $0"));
+        "type = $0 AND capacity"));
     PROPERTIES.put("free", new Property("free", ValueType.LONG,
         Arrays.asList(ValueType.STRING), "storage", "free", true,
         "type = $0 AND free"));
