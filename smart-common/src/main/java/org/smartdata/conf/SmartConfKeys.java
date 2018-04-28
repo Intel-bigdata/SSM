@@ -137,6 +137,16 @@ public class SmartConfKeys {
   public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
   public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
 
+  // Small File Compact
+  public static final String SMART_COMPACT_CONTAINER_FILE_DIR_KEY =
+      "smart.compact.container.file.dir";
+  public static final String SMART_COMPACT_CONTAINER_FILE_DIR_DEFAULT =
+      "/container_files";
+  public static final String SMART_COMPACT_BATCH_SIZE_KEY =
+      "smart.compact.batch.size";
+  public static final int SMART_COMPACT_BATCH_SIZE_DEFAULT =
+      200;
+
   // SmartClient
 
   // Common

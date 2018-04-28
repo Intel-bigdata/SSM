@@ -75,7 +75,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   private Map<Long, ArrayList<String>> smallFilesMap;
 
-  private static final int MIN_BATCH_SIZE = 3;
   private static final int MAX_RETRY_COUNT = 3;
   private static final List<String> ACTIONS = Arrays.asList("write", "compact");
   public static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
@@ -141,33 +140,27 @@ public class SmallFileScheduler extends ActionSchedulerService {
           iterator.remove();
         }
       }
+      smallFilesLock.putAll(tempSmallFiles);
 
-      // Check if the valid number of small files is greater than the min batch size
-      if (smallFileList.size() >= MIN_BATCH_SIZE) {
-        smallFilesLock.putAll(tempSmallFiles);
-
-        // Update container file map, save the info that whether it already exists
-        try {
-          if (dfsClient.exists(containerFilePath)) {
-            containerFileMap.put(actionId, new ContainerFileExistInfo(containerFilePath, true));
-          } else {
-            containerFileMap.put(actionId, new ContainerFileExistInfo(containerFilePath, false));
-          }
-        } catch (IOException e) {
-          LOG.error("Failed to check if the container file is exists: " + containerFilePath, e);
-          return false;
+      // Update container file map, save the info that whether it already exists
+      try {
+        if (dfsClient.exists(containerFilePath)) {
+          containerFileMap.put(actionId, new ContainerFileExistInfo(containerFilePath, true));
+        } else {
+          containerFileMap.put(actionId, new ContainerFileExistInfo(containerFilePath, false));
         }
-
-        smallFilesMap.put(actionId, smallFileList);
-        Map<String, String> args = new HashMap<>(2);
-        args.put(SmallFileCompactAction.CONTAINER_FILE,
-            actionInfo.getArgs().get(SmallFileCompactAction.CONTAINER_FILE));
-        args.put(SmallFileCompactAction.FILE_PATH, new Gson().toJson(smallFileList));
-        actionInfo.setArgs(args);
-        return true;
-      } else {
+      } catch (IOException e) {
+        LOG.error("Failed to check if the container file is exists: " + containerFilePath, e);
         return false;
       }
+
+      smallFilesMap.put(actionId, smallFileList);
+      Map<String, String> args = new HashMap<>(2);
+      args.put(SmallFileCompactAction.CONTAINER_FILE,
+          actionInfo.getArgs().get(SmallFileCompactAction.CONTAINER_FILE));
+      args.put(SmallFileCompactAction.FILE_PATH, new Gson().toJson(smallFileList));
+      actionInfo.setArgs(args);
+      return true;
     }
 
     return true;

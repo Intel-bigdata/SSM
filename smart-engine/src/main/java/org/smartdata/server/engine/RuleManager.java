@@ -82,9 +82,17 @@ public class RuleManager extends AbstractService {
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
 
+    String containerFileDir = context.getConf().get(
+        SmartConfKeys.SMART_COMPACT_CONTAINER_FILE_DIR_KEY,
+        SmartConfKeys.SMART_COMPACT_CONTAINER_FILE_DIR_DEFAULT);
+    int compactBatchSize = context.getConf().getInt(
+        SmartConfKeys.SMART_COMPACT_BATCH_SIZE_KEY,
+        SmartConfKeys.SMART_COMPACT_BATCH_SIZE_DEFAULT);
+
     RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
     RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
-    RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context.getMetaStore()));
+    RuleExecutorPluginManager.addPlugin(
+        new SmallFilePlugin(context.getMetaStore(), containerFileDir, compactBatchSize));
   }
 
   /**

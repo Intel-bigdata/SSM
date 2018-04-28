@@ -38,14 +38,20 @@ import java.util.Map;
 import java.util.Random;
 
 public class SmallFilePlugin implements RuleExecutorPlugin {
+  private int batchSize;
   private MetaStore metaStore;
-  private static final int BATCH_SIZE = 200;
-  private static final String COMPACT_SYMBOL = "compact";
-  private static final String CONTAINER_PREFIX = "/container_files/container_file_";
+  private String containerFileDir;
+  private static final String CONTAINER_FILE_PREFIX = "container_file_";
   private static final Logger LOG = LoggerFactory.getLogger(SmallFilePlugin.class);
 
-  public SmallFilePlugin(MetaStore metaStore) {
+  public SmallFilePlugin(MetaStore metaStore, String containerFileDir, int batchSize) {
     this.metaStore = metaStore;
+    this.batchSize = batchSize;
+    if (containerFileDir.charAt(containerFileDir.length() - 1) != '/') {
+      this.containerFileDir = containerFileDir + "/";
+    } else {
+      this.containerFileDir = containerFileDir;
+    }
   }
 
   @Override
@@ -58,7 +64,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
 
   @Override
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
-    if (ruleInfo.getRuleText().contains(COMPACT_SYMBOL)) {
+    if (ruleInfo.getRuleText().contains("compact")) {
       // Split valid small files according to the file permission
       Map<FilePermission, List<String>> filePermissionMap = new HashMap<>(32);
       try {
@@ -81,8 +87,8 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
       List<String> smallFileList = new ArrayList<>(200);
       for (List<String> listElement : filePermissionMap.values()) {
         int size = listElement.size();
-        for (int i = 0; i < size; i += BATCH_SIZE) {
-          int toIndex = (i + BATCH_SIZE <= size) ? i + BATCH_SIZE : size;
+        for (int i = 0; i < size; i += batchSize) {
+          int toIndex = (i + batchSize <= size) ? i + batchSize : size;
           String smallFiles = new Gson().toJson(listElement.subList(i, toIndex));
           smallFileList.add(smallFiles);
         }
@@ -150,19 +156,16 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
     for (int i = 0; i < descriptor.getActionSize(); i++) {
-      if (COMPACT_SYMBOL.equals(descriptor.getActionName(i))) {
+      if ("compact".equals(descriptor.getActionName(i))) {
         Map<String, String> args = descriptor.getActionArgs(i);
         String smallFileList = args.get(HdfsAction.FILE_PATH);
         if (smallFileList != null) {
-          String containerFile = args.get(SmallFileCompactAction.CONTAINER_FILE);
-          if (containerFile == null) {
-            try {
-              containerFile = getContainerFile();
-            } catch (MetaStoreException e) {
-              LOG.error("Failed to generate a new container file.", e);
-            }
+          try {
+            String containerFile = getContainerFileName();
+            descriptor.addActionArg(i, SmallFileCompactAction.CONTAINER_FILE, containerFile);
+          } catch (MetaStoreException e) {
+            LOG.error("Failed to generate a new container file.", e);
           }
-          descriptor.addActionArg(i, SmallFileCompactAction.CONTAINER_FILE, containerFile);
         }
       }
     }
@@ -173,10 +176,10 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   public void onRuleExecutorExit(final RuleInfo ruleInfo) {
   }
 
-  private String getContainerFile() throws MetaStoreException {
+  private String getContainerFileName() throws MetaStoreException {
     while (true) {
       int random = Math.abs(new Random().nextInt());
-      String genContainerFile = CONTAINER_PREFIX + random;
+      String genContainerFile = containerFileDir + CONTAINER_FILE_PREFIX + random;
       if (metaStore.getFile(genContainerFile) == null) {
         return genContainerFile;
       }
