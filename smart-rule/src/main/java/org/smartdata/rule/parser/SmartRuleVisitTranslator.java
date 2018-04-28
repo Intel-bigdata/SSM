@@ -586,19 +586,19 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       str = str.substring(0, str.length() - unit.length());
       switch (unit) {
         case "PB":
-          times *= 1024;
+          times *= 1024L * 1024 * 1024 * 1024 * 1024;
           break;
         case "TB":
-          times *= 1024;
+          times *= 1024L * 1024 * 1024 * 1024;
           break;
         case "GB":
-          times *= 1024;
+          times *= 1024L * 1024 * 1024;
           break;
         case "MB":
-          times *= 1024;
+          times *= 1024L * 1024;
           break;
         case "KB":
-          times *= 1024;
+          times *= 1024L;
           break;
       }
       ret = Long.parseLong(str);
@@ -757,10 +757,12 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         rop = doGenerateSql(root.getRight(), tableName);
       }
 
+      boolean bEflag = false;
       if (lop.getTableName() == null && rop.getTableName() != null) {
         NodeTransResult temp = lop;
         lop = rop;
         rop = temp;
+        bEflag = true;
       }
 
       if (optype == OperatorType.AND || optype == OperatorType.OR || optype == OperatorType.NONE) {
@@ -787,6 +789,24 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           ropStr = ropStr.replace("*", "%");
           ropStr = ropStr.replace("?", "_");
         }
+
+        if (bEflag && !procAcc) {
+          switch (optype) {
+            case LT:
+              op = ">";
+              break;
+            case LE:
+              op = ">=";
+              break;
+            case GT:
+              op = "<";
+              break;
+            case GE:
+              op = "<=";
+              break;
+          }
+        }
+
         if (procAcc) {
           switch (optype) {
             case LT:
