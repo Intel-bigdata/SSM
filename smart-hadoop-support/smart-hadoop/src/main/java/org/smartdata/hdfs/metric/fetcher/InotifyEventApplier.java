@@ -307,7 +307,7 @@ public class InotifyEventApplier {
       LOG.warn("Deleting root directory!!!");
       insertDeleteDiff(root, true);
       return Arrays.asList(
-          String.format("DELETE FROM file WHERE path = '%s%%'", root));
+          String.format("DELETE FROM file WHERE path like '%s%%'", root));
     }
     FileInfo fileInfo = metaStore.getFile(unlinkEvent.getPath());
     if (fileInfo == null) return Arrays.asList();
@@ -315,7 +315,8 @@ public class InotifyEventApplier {
       insertDeleteDiff(unlinkEvent.getPath(), true);
       // delete all files in this dir from file table
       return Arrays.asList(
-          String.format("DELETE FROM file WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
+          String.format("DELETE FROM file WHERE path LIKE '%s/%%';", unlinkEvent.getPath()),
+          String.format("DELETE FROM file WHERE path = '%s';", unlinkEvent.getPath()));
     } else {
       insertDeleteDiff(unlinkEvent.getPath(), false);
       // delete file in file table
