@@ -140,6 +140,8 @@ public class SmartConfKeys {
       "smart.storage.info.sampling.intervals";
   public static final String SMART_STORAGE_INFO_SAMPLING_INTERVALS_DEFAULT =
       "60s,60;1hour,60;1day";
+  public static final String SMART_TOP_HOT_FILES_NUM_KEY = "smart.top.hot.files.num";
+  public static final int SMART_TOP_HOT_FILES_NUM_DEFAULT = 200;
 
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";

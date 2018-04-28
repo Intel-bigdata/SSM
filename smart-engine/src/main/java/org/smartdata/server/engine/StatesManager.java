@@ -162,6 +162,11 @@ public class StatesManager extends AbstractService implements Reconfigurable {
   public List<FileAccessInfo> getHotFiles(List<AccessCountTable> tables,
       int topNum) throws IOException {
     try {
+      if (topNum == 0) {
+        topNum = serverContext.getConf().getInt(SmartConfKeys.SMART_TOP_HOT_FILES_NUM_KEY,
+            SmartConfKeys.SMART_TOP_HOT_FILES_NUM_DEFAULT);
+        return serverContext.getMetaStore().getHotFiles(tables, topNum);
+      }
       return serverContext.getMetaStore().getHotFiles(tables, topNum);
     } catch (MetaStoreException e) {
       throw new IOException(e);
