@@ -39,6 +39,10 @@ public class FileObject extends SmartObject {
         new Property("accessCount", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
+    PROPERTIES.put("accessCountMax",
+        new Property("accessCountMax", ValueType.LONG,
+            Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG),
+            "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
     PROPERTIES.put("length",
         new Property("length", ValueType.LONG,
             null, "file", "length", false));
