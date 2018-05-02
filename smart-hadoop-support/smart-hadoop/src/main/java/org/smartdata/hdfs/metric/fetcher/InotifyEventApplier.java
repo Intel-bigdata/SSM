@@ -301,17 +301,54 @@ public class InotifyEventApplier {
   }
 
   private List<String> getUnlinkSql(Event.UnlinkEvent unlinkEvent) throws MetaStoreException {
-    List<FileInfo> fileInfos = metaStore.getFilesByPrefix(unlinkEvent.getPath());
-    for (FileInfo fileInfo:fileInfos) {
-      if (fileInfo.isdir()) {
-        continue;
-      }
-      if (inBackup(unlinkEvent.getPath())) {
-        FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
-        fileDiff.setSrc(unlinkEvent.getPath());
-        metaStore.insertFileDiff(fileDiff);
-      }
+    // delete root, i.e., /
+    String root = "/";
+    if (root.equals(unlinkEvent.getPath())) {
+      LOG.warn("Deleting root directory!!!");
+      insertDeleteDiff(root, true);
+      return Arrays.asList(
+          String.format("DELETE FROM file WHERE path like '%s%%'", root));
     }
-    return Arrays.asList(String.format("DELETE FROM file WHERE path LIKE '%s%%';", unlinkEvent.getPath()));
+    FileInfo fileInfo = metaStore.getFile(unlinkEvent.getPath());
+    if (fileInfo == null) return Arrays.asList();
+    if (fileInfo.isdir()) {
+      insertDeleteDiff(unlinkEvent.getPath(), true);
+      // delete all files in this dir from file table
+      return Arrays.asList(
+          String.format("DELETE FROM file WHERE path LIKE '%s/%%';", unlinkEvent.getPath()),
+          String.format("DELETE FROM file WHERE path = '%s';", unlinkEvent.getPath()));
+    } else {
+      insertDeleteDiff(unlinkEvent.getPath(), false);
+      // delete file in file table
+      return Arrays.asList(
+          String.format("DELETE FROM file WHERE path = '%s';", unlinkEvent.getPath()));
+    }
+  }
+
+  private void insertDeleteDiff(String path, boolean isDir) throws MetaStoreException {
+    if (isDir) {
+      List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
+      for (FileInfo fileInfo : fileInfos) {
+        // recursively on dir
+        if (fileInfo.isdir()) {
+          if (path.equals(fileInfo.getPath())) {
+            continue;
+          }
+          insertDeleteDiff(fileInfo.getPath(), true);
+          continue;
+        }
+        insertDeleteDiff(fileInfo.getPath());
+      }
+    } else {
+      insertDeleteDiff(path);
+    }
+  }
+
+  private void insertDeleteDiff(String path) throws MetaStoreException {
+    if (inBackup(path)) {
+      FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+      fileDiff.setSrc(path);
+      metaStore.insertFileDiff(fileDiff);
+    }
   }
 }
