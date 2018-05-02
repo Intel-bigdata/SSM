@@ -35,6 +35,7 @@ import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
 import org.smartdata.metastore.dao.FileStateDao;
+import org.smartdata.metastore.dao.GeneralDao;
 import org.smartdata.metastore.dao.GlobalConfigDao;
 import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
@@ -121,6 +122,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private ClusterInfoDao clusterInfoDao;
   private SystemInfoDao systemInfoDao;
   private FileStateDao fileStateDao;
+  private GeneralDao generalDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -145,6 +147,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
     fileStateDao = new FileStateDao(pool.getDataSource());
+    generalDao = new GeneralDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -165,6 +168,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       } catch (SQLException e) {
         throw new MetaStoreException(e);
       }
+    }
+  }
+
+  public Long queryForLong(String sql) throws MetaStoreException {
+    try {
+      return generalDao.queryForLong(sql);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
   }
 
