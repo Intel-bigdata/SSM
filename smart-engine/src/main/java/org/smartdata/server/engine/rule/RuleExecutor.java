@@ -95,7 +95,7 @@ public class RuleExecutor implements Runnable {
       String paraName = m.groupCount() == 2 ? m.group(2) : null;
       List<Object> params = tr.getParameter(paraName);
       String value = callFunction(funcName, params);
-      ret = ret.replace(rep, value);
+      ret = ret.replace(rep, value == null ? "" : value);
     }
     return ret;
   }
@@ -112,7 +112,9 @@ public class RuleExecutor implements Runnable {
         if (index == tr.getRetSqlIndex()) {
           ret = adapter.executeFilesPathQuery(sql);
         } else {
-          adapter.execute(sql);
+          if (sql != null && sql.length() > 3) {
+            adapter.execute(sql);
+          }
         }
         index++;
       } catch (MetaStoreException e) {
@@ -141,6 +143,23 @@ public class RuleExecutor implements Runnable {
       LOG.error("Rule " + ctx.getRuleId() + " exception when call " + funcName, e);
       return null;
     }
+  }
+
+  public String genVirtualAccessCountTableMaxValue(List<Object> parameters) {
+    List<Object> paraList = (List<Object>) parameters.get(0);
+    String table = (String) parameters.get(1);
+    String var = (String) parameters.get(2);
+    Long num = (Long) paraList.get(1);
+    String sql0 = "SELECT min(count) FROM ( SELECT * FROM " + table
+        + " ORDER BY count LIMIT " + num + ") AS " + table + "_TMP;";
+    Long count = null;
+    try {
+      count = adapter.queryForLong(sql0);
+    } catch (MetaStoreException e) {
+      LOG.error("Get maximum access count from table '" + table + "' error.", e);
+    }
+    ctx.setProperty(var, count == null ? 0L : count);
+    return null;
   }
 
   public String genVirtualAccessCountTable(List<Object> parameters) {
