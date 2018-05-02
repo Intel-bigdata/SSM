@@ -77,6 +77,8 @@ public class ClusterRestApi {
     }
   }
 
+  //TODO(Philo): Make topNum settable on web UI.
+  //Currently, topNum=0 means that SSM will use the value configured in smart-default.xml
   @GET
   @Path("/primary/hotfiles")
   public Response hotFiles() {
@@ -84,7 +86,7 @@ public class ClusterRestApi {
       List<AccessCountTable> tables =
           smartEngine.getStatesManager().getTablesInLast(Constants.ONE_HOUR_IN_MILLIS);
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getStatesManager().getHotFiles(tables, 20)).build();
+          smartEngine.getStatesManager().getHotFiles(tables, 0)).build();
     } catch (Exception e) {
       logger.error("Exception in ClusterRestApi while listing hot files", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
