@@ -75,7 +75,7 @@
 
   <property>
     <name>smart.namespace.fetcher.consumers.num</name>
-    <value>3</value>
+    <value>6</value>
     <description>Number of consumers to consume data fetched by Namespace fetcher</description>
   </property>
 
