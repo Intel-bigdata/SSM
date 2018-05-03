@@ -52,7 +52,7 @@ public class AlluxioNamespaceFetcher {
   public AlluxioNamespaceFetcher(FileSystem fs, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service) {
     this.fetchTask = new AlluxioFetchTask(fs);
-    this.consumer = new FileStatusIngester(metaStore, fetchTask);
+    this.consumer = new FileStatusIngester(metaStore);
     this.fetchInterval = fetchInterval;
     this.scheduledExecutorService = service;
   }
@@ -98,7 +98,7 @@ public class AlluxioNamespaceFetcher {
           LOG.debug(String.format(
               "%d sec, numDirectories = %d, numFiles = %d, batchsInqueue = %d",
               (curr - startTime) / 1000,
-              numDirectoriesFetched, numFilesFetched, batches.size()));
+              numDirectoriesFetched.get(), numFilesFetched.get(), batches.size()));
           lastUpdateTime = curr;
         }
       }
@@ -121,7 +121,7 @@ public class AlluxioNamespaceFetcher {
             LOG.info(String.format(
                 "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
                 (curr - startTime) / 1000,
-                numDirectoriesFetched, numFilesFetched));
+                numDirectoriesFetched.get(), numFilesFetched.get()));
           }
         }
         return;
@@ -133,13 +133,13 @@ public class AlluxioNamespaceFetcher {
           List<URIStatus> children = fs.listStatus(new AlluxioURI(parent));
           FileInfo fileInfo = convertToFileInfo(status);
           this.addFileStatus(fileInfo);
-          numDirectoriesFetched++;
+          numDirectoriesFetched.incrementAndGet();
           for (URIStatus child : children) {
             if (child.isFolder()) {
               this.deque.add(child.getPath());
             } else {
               this.addFileStatus(convertToFileInfo(child));
-              numFilesFetched++;
+              numFilesFetched.incrementAndGet();
             }
           }
         }
