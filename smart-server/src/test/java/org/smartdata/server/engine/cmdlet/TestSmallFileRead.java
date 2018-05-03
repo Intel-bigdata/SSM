@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,13 +39,6 @@ import java.util.Random;
 public class TestSmallFileRead extends MiniSmartClusterHarness {
   private long fileLength;
   private int ret;
-
-  @Before
-  @Override
-  public void init() throws Exception {
-    super.init();
-    createSmallFiles();
-  }
 
   private void createSmallFiles() throws Exception {
     Path path = new Path("/test/small_files/");
@@ -84,67 +78,42 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     }
   }
 
+  @Before
+  @Override
+  public void init() throws Exception {
+    super.init();
+    createSmallFiles();
+  }
+
   @Test
-  public void testBasicInfo() throws Exception {
+  public void testRead() throws Exception {
     waitTillSSMExitSafeMode();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     DFSInputStream is = smartDFSClient.open("/test/small_files/file_1");
     Assert.assertEquals(1, is.getAllBlocks().size());
     Assert.assertEquals(fileLength, is.getFileLength());
     Assert.assertEquals(0, is.getPos());
-    is.close();
-  }
-
-  @Test
-  public void testByteRead() throws Exception {
-    waitTillSSMExitSafeMode();
-    SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open("/test/small_files/file_1");
     int byteRead = is.read();
     Assert.assertEquals(ret, byteRead);
     is.close();
-  }
-
-  @Test
-  public void testByteArrayRead() throws Exception {
-    waitTillSSMExitSafeMode();
-    SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open("/test/small_files/file_1");
+    is = smartDFSClient.open("/test/small_files/file_1");
     byte[] bytes = new byte[50];
     Assert.assertEquals(fileLength, is.read(bytes));
     is.close();
-  }
-
-  @Test
-  public void testByteBufferRead() throws Exception {
-    waitTillSSMExitSafeMode();
-    String smallFile = "/test/small_files/file_1";
-    SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open(smallFile);
+    is = smartDFSClient.open("/test/small_files/file_1");
     ByteBuffer buffer = ByteBuffer.allocate(50);
     Assert.assertEquals(fileLength, is.read(buffer));
     is.close();
-  }
-
-  @Test
-  public void testBytesRead() throws Exception {
-    waitTillSSMExitSafeMode();
-    String smallFile = "/test/small_files/file_2";
-    SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open(smallFile);
-    byte[] bytes = new byte[50];
+    is = smartDFSClient.open("/test/small_files/file_2");
     Assert.assertEquals(5, is.read(bytes, 1, 5));
     is.close();
-  }
-
-  @Test
-  public void testPositionRead() throws Exception {
-    waitTillSSMExitSafeMode();
-    String smallFile = "/test/small_files/file_1";
-    SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open(smallFile);
-    byte[] bytes = new byte[50];
+    is = smartDFSClient.open("/test/small_files/file_1");
     Assert.assertEquals(fileLength - 2, is.read(2, bytes, 1, 50));
     is.close();
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    dfs.delete(new Path("/test").makeQualified(dfs), true);
   }
 }

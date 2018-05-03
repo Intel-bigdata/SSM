@@ -20,6 +20,7 @@ package org.smartdata.server.engine.cmdlet;
 import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,5 +94,10 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
         Assert.fail("Compact failed.");
       }
     }
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    dfs.delete(new Path("/test").makeQualified(dfs), true);
   }
 }

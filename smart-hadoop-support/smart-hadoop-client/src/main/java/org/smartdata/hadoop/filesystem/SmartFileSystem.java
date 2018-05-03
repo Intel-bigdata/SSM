@@ -171,11 +171,6 @@ public class SmartFileSystem extends DistributedFileSystem {
     }
   }
 
-  private boolean isCompactFile(final Path p) throws IOException {
-    FileState fileState = smartDFSClient.getFileState(getPathName(p));
-    return fileState instanceof CompactFileState;
-  }
-
   @Override
   public boolean recoverLease(final Path f) throws IOException {
     FileState fileState = smartDFSClient.getFileState(getPathName(f));
@@ -440,6 +435,7 @@ public class SmartFileSystem extends DistributedFileSystem {
 
   private class SmartDirListingIterator<T extends FileStatus>
       implements RemoteIterator<T> {
+
     private DirectoryListing thisListing;
     private int i;
     private Path p;
@@ -604,24 +600,6 @@ public class SmartFileSystem extends DistributedFileSystem {
     }
   }
 
-  /**
-   * Checks that the passed URI belongs to this filesystem and returns
-   * just the path component. Expects a URI with an absolute path.
-   *
-   * @param file URI with absolute path
-   * @return path component of {file}
-   * @throws IllegalArgumentException if URI does not belong to this DFS
-   */
-  private String getPathName(Path file) {
-    checkPath(file);
-    String result = fixRelativePart(file).toUri().getPath();
-    if (!DFSUtil.isValidName(result)) {
-      throw new IllegalArgumentException("Pathname " + result + " from " +
-          file + " is not a valid DFS filename.");
-    }
-    return result;
-  }
-
   @Override
   public boolean isFileClosed(final Path src) throws IOException {
     FileState fileState = smartDFSClient.getFileState(getPathName(src));
@@ -643,5 +621,31 @@ public class SmartFileSystem extends DistributedFileSystem {
         this.smartDFSClient.close();
       }
     }
+  }
+
+  /**
+   * Check if the file is SSM small file according to file path.
+   */
+  private boolean isCompactFile(final Path p) throws IOException {
+    FileState fileState = smartDFSClient.getFileState(getPathName(p));
+    return fileState instanceof CompactFileState;
+  }
+
+  /**
+   * Checks that the passed URI belongs to this filesystem and returns
+   * just the path component. Expects a URI with an absolute path.
+   *
+   * @param file URI with absolute path
+   * @return path component of {file}
+   * @throws IllegalArgumentException if URI does not belong to this DFS
+   */
+  private String getPathName(Path file) {
+    checkPath(file);
+    String result = fixRelativePart(file).toUri().getPath();
+    if (!DFSUtil.isValidName(result)) {
+      throw new IllegalArgumentException("Pathname " + result + " from " +
+          file + " is not a valid DFS filename.");
+    }
+    return result;
   }
 }

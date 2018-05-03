@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.hdfs.MiniClusterHarness;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Random;
 
 public class TestSmallFileCompactAction extends MiniClusterHarness {
+
   @Test
   public void testSmallFileCompactAction() throws Exception {
     Path path = new Path("/test/small_files/");
@@ -71,5 +73,10 @@ public class TestSmallFileCompactAction extends MiniClusterHarness {
     Assert.assertTrue(dfsClient.exists("/test/small_files/container_file"));
     HdfsFileStatus containerFileInfo = dfsClient.getFileInfo("/test/small_files/container_file");
     Assert.assertEquals(sumFileLen, containerFileInfo.getLen());
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    dfs.delete(new Path("/test").makeQualified(dfs), true);
   }
 }
