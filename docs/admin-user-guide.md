@@ -76,18 +76,19 @@ Table – 3 Conditions
 
 Table – 4 Object properties
 
-| Object   | Property                 | Description                                    |
-|----------|--------------------------|------------------------------------------------|
-| file     | path                     | Path in HDFS                                   |
-|          | age                      | Time from last been modified                   |
-|          | atime                    | Time accessed last time                        |
-|          | accessCount(Time Interval)    | Access counts during the last time interval |
-|          | blocksize                | Block size of the file                         |
-|          | storagePolicy            | Storage policy of file                         |
-|          | length                   | Length of the file                             |
-|          | inCache                  | Test if file is in cache now                   |
-|          | isDir                    | Test if file is a directory                    |
-|          | mtime                    | Last modification time of the file             |
+| Object   | Property                         | Description                                      |
+|----------|----------------------------------|--------------------------------------------------|
+| file     | path                             | Path in HDFS                                     |
+|          | age                              | Time from last been modified                     |
+|          | atime                            | Time accessed last time                          |
+|          | accessCount(Time Interval)       | Access counts during the last time interval      |
+|          | accessCountTop(Time Interval, N) | Top N access count during the last time interval |
+|          | blocksize                        | Block size of the file                           |
+|          | storagePolicy                    | Storage policy of file                           |
+|          | length                           | Length of the file                               |
+|          | inCache                          | Test if file is in cache now                     |
+|          | isDir                            | Test if file is a directory                      |
+|          | mtime                            | Last modification time of the file               |
 
 Table – 5 Commands
 
