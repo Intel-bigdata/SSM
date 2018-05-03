@@ -112,7 +112,8 @@ public class RuleExecutor implements Runnable {
         if (index == tr.getRetSqlIndex()) {
           ret = adapter.executeFilesPathQuery(sql);
         } else {
-          if (sql != null && sql.length() > 3) {
+          sql = sql.trim();
+          if (sql.length() > 5) {
             adapter.execute(sql);
           }
         }
@@ -145,7 +146,7 @@ public class RuleExecutor implements Runnable {
     }
   }
 
-  public String genVirtualAccessCountTableMaxValue(List<Object> parameters) {
+  public String genVirtualAccessCountTableTopValue(List<Object> parameters) {
     List<Object> paraList = (List<Object>) parameters.get(0);
     String table = (String) parameters.get(1);
     String var = (String) parameters.get(2);
@@ -156,7 +157,7 @@ public class RuleExecutor implements Runnable {
     try {
       count = adapter.queryForLong(sql0);
     } catch (MetaStoreException e) {
-      LOG.error("Get maximum access count from table '" + table + "' error.", e);
+      LOG.error("Get top access count from table '" + table + "' error.", e);
     }
     ctx.setProperty(var, count == null ? 0L : count);
     return null;
