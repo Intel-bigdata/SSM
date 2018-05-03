@@ -56,9 +56,9 @@ Table - 2 Triggers
 
 | Format                                | Description                                             | Example                               |
 |---------------------------------------|---------------------------------------------------------|---------------------------------------|
-| at &lt;time&gt;                       | Execute the rule at the given time                      | -   at “2017-07-29 23:00:00” <br> -   at now |
-| every &lt;time interval&gt;           | Execute the rule at the given frequency                 | -   every 1min                            |
-| from &lt;time&gt; \[To &lt;time&gt;\] | Along with ‘every’ expression to specify the time scope | -   every 1day from now <br>  -   every 1min from now to now + 7day  |
+| at &lt;time&gt;                       | Execute the rule at the given time                      | - at “2017-07-29 23:00:00” <br> -   at now |
+| every &lt;time interval&gt;           | Execute the rule at the given frequency                 | - every 1min                            |
+| from &lt;time&gt; \[To &lt;time&gt;\] | Along with ‘every’ expression to specify the time scope | - every 1day from now <br>  -   every 1min from now to now + 7day  |
 
 
 Table – 3 Conditions
@@ -66,13 +66,13 @@ Table – 3 Conditions
 | Ingredient       | Description                                                                              | Example                                  |
 |------------------|------------------------------------------------------------------------------------------|------------------------------------------|
 | Object property  | Object property as condition subject, refer to table-4 to supported object property list | - length &gt; 5MB                          |
-| Time             | -   “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + Time Interval | -   “2017-07-29 23:00:00” <br>  -   now  <br>  -   now + 7day  |
-| Time Interval    | -   Digital + unit <br> -   Time – Time <br> -   Time Interval + Time Interval | -   5ms, 5sec, 5min, 5hour, 5day <br>  -   now - “2016-03-19 23:00:00” <br>  -   5hour + 5min           |
-| File Size        | -   Digital + unit                                                                           | - 5B, 5kb, 5MB, 5GB, 5TB, 5PB              |
+| Time             | - “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + Time Interval           | - “2017-07-29 23:00:00” <br>  -   now  <br>  -   now + 7day  |
+| Time Interval    | - Digital + unit <br> -   Time – Time <br> -   Time Interval + Time Interval             | - 5ms, 5sec, 5min, 5hour, 5day <br>  -   now - “2016-03-19 23:00:00” <br>  -   5hour + 5min           |
+| File Size        | - Digital + unit                                                                         | - 5B, 5kb, 5MB, 5GB, 5TB, 5PB              |
 | String           | Start and ends with “, support escapes                                                   | - “abc”, “123”, “Hello world\\n”           |
 | Logical operator | and, or, not                                                                             |                                          |
 | Digital operator | +, -, \*, /, %                                                                           |                                          |
-| Compare          | &gt;, &gt;=, &lt;, &lt;=, ==, !=                                                              |                                          |
+| Compare          | &gt;, &gt;=, &lt;, &lt;=, ==, !=                                                         |                                          |
 
 Table – 4 Object properties
 
@@ -85,7 +85,8 @@ Table – 4 Object properties
 |          | blocksize                | Block size of the file                         |
 |          | storagePolicy            | Storage policy of file                         |
 |          | length                   | Length of the file                             |
-|          | isInCache                | Test if file is in cache now                   |
+|          | inCache                  | Test if file is in cache now                   |
+|          | isDir                    | Test if file is a directory                    |
 |          | mtime                    | Last modification time of the file             |
 
 Table – 5 Commands
@@ -96,10 +97,15 @@ Table – 5 Commands
 | uncache                   | Uncache file                                              |
 | onessd                    | Move one copy of file to SSD                              |
 | allssd                    | Move all copies of file to SSD                            |
+| onedisk                   | Move one copy of file to DISK                             |
+| alldisk                   | Move all copies of file to DISK                           |
 | archive                   | Move file to ‘Archive’ storage type                       |
+| ramdisk                   | Store one copy of file to RAM_DISK                        |
 | checkstorage              | Check file block storage type                             |
 | read                      | Read the file and discard the content read                |
 | write                     | Create the file and fill with random values               |
+| sleep                     | Sleep for given time                                      |
+| sync                      | Sync file to remote cluster                               |
 | user defined actions      | Interface defined for user to implement their own actions |
 
 Here is a rule example,
