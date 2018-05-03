@@ -30,7 +30,6 @@ public class GeneralDao {
 
   public Long queryForLong(String sql) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    Long x = jdbcTemplate.queryForObject(sql, Long.class);
-    return x;
+    return jdbcTemplate.queryForObject(sql, Long.class);
   }
 }
