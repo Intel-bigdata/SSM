@@ -179,7 +179,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void addUser(String userName) throws MetaStoreException {
+  public void addUser(String userName) throws MetaStoreException {
     try {
       userDao.addUser(userName);
     } catch (Exception e) {
@@ -187,7 +187,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void addGroup(
+  public void addGroup(
       String groupName) throws MetaStoreException {
     try {
       groupsDao.addGroup(groupName);
@@ -337,7 +337,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized List<FileAccessInfo> getHotFiles(
+  public List<FileAccessInfo> getHotFiles(
       List<AccessCountTable> tables,
       int topNum) throws MetaStoreException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
@@ -477,7 +477,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized boolean updateStoragesTable(String type,
+  public boolean updateStoragesTable(String type,
       Long capacity, Long free) throws MetaStoreException {
     try {
       mapStorageCapacity = null;
@@ -487,7 +487,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertStorageHistTable(StorageCapacity[] storages, long interval)
+  public void insertStorageHistTable(StorageCapacity[] storages, long interval)
       throws MetaStoreException {
     try {
       storageHistoryDao.insertStorageHistTable(storages, interval);
@@ -540,7 +540,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertCachedFiles(long fid, String path,
+  public void insertCachedFiles(long fid, String path,
       long fromTime,
       long lastAccessTime, int numAccessed) throws MetaStoreException {
     try {
@@ -550,7 +550,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertCachedFiles(List<CachedFileStatus> s)
+  public void insertCachedFiles(List<CachedFileStatus> s)
       throws MetaStoreException {
     try {
       cacheFileDao.insert(s.toArray(new CachedFileStatus[s.size()]));
@@ -567,7 +567,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized boolean updateCachedFiles(Long fid,
+  public boolean updateCachedFiles(Long fid,
       Long lastAccessTime, Integer numAccessed) throws MetaStoreException {
     try {
       return cacheFileDao.update(fid, lastAccessTime, numAccessed) >= 0;
@@ -815,7 +815,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return detailedRuleInfos;
   }
 
-  public synchronized boolean insertNewRule(RuleInfo info)
+  public boolean insertNewRule(RuleInfo info)
       throws MetaStoreException {
     try {
       return ruleDao.insert(info) >= 0;
@@ -824,7 +824,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized boolean updateRuleInfo(long ruleId, RuleState rs,
+  public boolean updateRuleInfo(long ruleId, RuleState rs,
       long lastCheckTime, long checkedCount, int commandsGen)
       throws MetaStoreException {
     try {
@@ -839,7 +839,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized boolean updateRuleState(long ruleId, RuleState rs)
+  public boolean updateRuleState(long ruleId, RuleState rs)
       throws MetaStoreException {
     if (rs == null) {
       throw new MetaStoreException("Rule state can not be null, ruleId = " + ruleId);
@@ -1353,7 +1353,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertStoragePolicy(StoragePolicy s)
+  public void insertStoragePolicy(StoragePolicy s)
       throws MetaStoreException {
     try {
       storageDao.insertStoragePolicyTable(s);
@@ -1385,7 +1385,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized boolean insertXattrList(Long fid,
+  public boolean insertXattrList(Long fid,
       List<XAttribute> attributes) throws MetaStoreException {
     try {
       return xattrDao.insertXattrList(fid, attributes);
@@ -1405,7 +1405,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   @Override
-  public synchronized boolean insertFileDiff(FileDiff fileDiff)
+  public boolean insertFileDiff(FileDiff fileDiff)
       throws MetaStoreException {
     try {
       return fileDiffDao.insert(fileDiff) >= 0;
@@ -1414,7 +1414,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertFileDiffs(FileDiff[] fileDiffs)
+  public void insertFileDiffs(FileDiff[] fileDiffs)
       throws MetaStoreException {
     try {
       fileDiffDao.insert(fileDiffs);
@@ -1423,7 +1423,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void insertFileDiffs(List<FileDiff> fileDiffs)
+  public void insertFileDiffs(List<FileDiff> fileDiffs)
       throws MetaStoreException {
     try {
       fileDiffDao.insert(fileDiffs);
@@ -1561,7 +1561,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void initializeDataBase() throws MetaStoreException {
+  public void initializeDataBase() throws MetaStoreException {
     Connection conn = getConnection();
     try {
       MetaStoreUtils.initializeDataBase(conn);
@@ -1572,22 +1572,29 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public synchronized void checkTables() throws MetaStoreException {
-    Connection conn = getConnection();
+  public void checkTables() throws MetaStoreException {
     try {
-      if (!MetaStoreUtils.isTableSetExist(conn)) {
+      int num = getTablesNum(MetaStoreUtils.TABLESET);
+      if (num == 0) {
         LOG.info("The table set required by SSM does not exist. "
                 + "The configured database will be formatted.");
         formatDataBase();
+      } else if (num < MetaStoreUtils.TABLESET.length) {
+        LOG.error("One or more tables required by SSM are missing! "
+                + "You can restart SSM with -format option or configure another database.");
+        System.exit(1);
       }
     } catch (Exception e) {
       throw new MetaStoreException(e);
-    } finally {
-      closeConnection(conn);
     }
   }
 
-  public synchronized void formatDataBase() throws MetaStoreException {
+  public int getTablesNum(String tableSet[]) throws MetaStoreException {
+    Connection conn = getConnection();
+    return MetaStoreUtils.getTableSetNum(conn, tableSet);
+  }
+
+  public void formatDataBase() throws MetaStoreException {
     dropAllTables();
     initializeDataBase();
   }

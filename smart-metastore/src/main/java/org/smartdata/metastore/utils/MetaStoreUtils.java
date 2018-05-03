@@ -43,6 +43,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.springframework.jdbc.support.JdbcUtils.closeConnection;
+
 /**
  * Utilities for table operations.
  */
@@ -61,6 +63,31 @@ public class MetaStoreUtils {
   public static final String TIDB_DB_NAME = "ssm";
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
   private static boolean tidbInited = false;
+  public static final String TABLESET[] = new String[]{
+    "access_count_table",
+            "blank_access_count_info",
+            "cached_file",
+            "ec_policy",
+            "file",
+            "user_group",
+            "owner",
+            "storage",
+            "storage_hist",
+            "storage_policy",
+            "xattr",
+            "datanode_info",
+            "datanode_storage_info",
+            "rule",
+            "cmdlet",
+            "action",
+            "file_diff",
+            "global_config",
+            "cluster_config",
+            "sys_info",
+            "cluster_info",
+            "backup_file",
+            "file_state"
+  };
 
   public static Connection createConnection(String url,
       String userName, String password)
@@ -92,32 +119,7 @@ public class MetaStoreUtils {
     }
   }
 
-  public static boolean isTableSetExist(Connection conn) throws MetaStoreException {
-    String tableSet[] = new String[]{
-            "access_count_table",
-            "blank_access_count_info",
-            "cached_file",
-            "ec_policy",
-            "file",
-            "user_group",
-            "owner",
-            "storage",
-            "storage_hist",
-            "storage_policy",
-            "xattr",
-            "datanode_info",
-            "datanode_storage_info",
-            "rule",
-            "cmdlet",
-            "action",
-            "file_diff",
-            "global_config",
-            "cluster_config",
-            "sys_info",
-            "cluster_info",
-            "backup_file",
-            "file_state"
-    };
+  public static int getTableSetNum(Connection conn, String tableSet[]) throws MetaStoreException {
     String tables = "('" + StringUtils.join(tableSet, "','") + "')";
     try {
       String url = conn.getMetaData().getURL();
@@ -139,47 +141,22 @@ public class MetaStoreUtils {
       if (rs.next()) {
         num = rs.getInt(1);
       }
-
-      if (num == 0) {
-        return false;
-      } else if (num < tableSet.length) {
-        LOG.error("One or more tables required by SSM are missing! "
-                + "You can restart SSM with -format option or configure another database.");
-        System.exit(1);
-      }
-      return true;
+      return num;
     } catch (Exception e) {
       throw new MetaStoreException(e);
+    } finally {
+      closeConnection(conn);
     }
   }
 
   public static void initializeDataBase(
       Connection conn) throws MetaStoreException {
-    String deleteExistingTables[] = new String[] {
-        "DROP TABLE IF EXISTS access_count_table;",
-        "DROP TABLE IF EXISTS cached_file;",
-        "DROP TABLE IF EXISTS ec_policy;",
-        "DROP TABLE IF EXISTS file;",
-        "DROP TABLE IF EXISTS user_group;",
-        "DROP TABLE IF EXISTS owner;",
-        "DROP TABLE IF EXISTS storage;",
-        "DROP TABLE IF EXISTS storage_hist;",
-        "DROP TABLE IF EXISTS storage_policy;",
-        "DROP TABLE IF EXISTS xattr;",
-        "DROP TABLE IF EXISTS datanode_info;",
-        "DROP TABLE IF EXISTS datanode_storage_info;",
-        "DROP TABLE IF EXISTS rule;",
-        "DROP TABLE IF EXISTS cmdlet;",
-        "DROP TABLE IF EXISTS action;",
-        "DROP TABLE IF EXISTS blank_access_count_info;",  // for special cases
-        "DROP TABLE IF EXISTS file_diff;",  // incremental diff for disaster recovery
-        "DROP TABLE IF EXISTS global_config",
-        "DROP TABLE IF EXISTS cluster_config",
-        "DROP TABLE IF EXISTS backup_file",
-        "DROP TABLE IF EXISTS sys_info",
-        "DROP TABLE IF EXISTS cluster_info",
-        "DROP TABLE IF EXISTS file_state"
-    };
+    ArrayList<String> tableList = new ArrayList<>();
+    for (String table: TABLESET) {
+      tableList.add("DROP TABLE IF EXISTS " + table);
+    }
+    String deleteExistingTables[] = tableList.toArray(new String[tableList.size()]);
+
     String createEmptyTables[] =
         new String[] {
           "CREATE TABLE access_count_table (\n"
