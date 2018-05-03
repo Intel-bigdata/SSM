@@ -30,6 +30,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.ingestion.IngestionTask;
 import org.smartdata.model.FileInfoBatch;
 import org.smartdata.metastore.ingestion.FileStatusIngester;
+import org.smartdata.protocol.message.StatusReport;
 
 
 import java.io.IOException;
@@ -46,10 +47,10 @@ public class NamespaceFetcher {
 
   private final ScheduledExecutorService scheduledExecutorService;
   private final long fetchInterval;
-  private ScheduledFuture fetchTaskFuture;
+  private ScheduledFuture[] fetchTaskFutures;
   private ScheduledFuture[] consumerFutures;
   private FileStatusIngester[] consumers;
-  private IngestionTask ingestionTask;
+  private IngestionTask[] ingestionTasks;
   private MetaStore metaStore;
   private SmartConf conf;
 
@@ -70,19 +71,26 @@ public class NamespaceFetcher {
 
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service, SmartConf conf) {
-    this.ingestionTask = new HdfsFetchTask(client, conf);
-    int numConsumers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_NUM_CONSUMERS_KEY,
-        SmartConfKeys.SMART_NAMESPACE_FETCHER_NUM_CONSUMERS_DEFAULT);
+    int numProducers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_KEY,
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_DEFAULT);
+    numProducers = numProducers <= 0 ? 1 : numProducers;
+    this.ingestionTasks = new IngestionTask[numProducers];
+    for (int i = 0; i < numProducers; i++) {
+      ingestionTasks[i] = new HdfsFetchTask(ingestionTasks, client, conf);
+    }
+
+    int numConsumers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_KEY,
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_DEFAULT);
     numConsumers = numConsumers <= 0 ? 1 : numConsumers;
     consumers = new FileStatusIngester[numConsumers];
     for (int i = 0; i < numConsumers; i++) {
-      consumers[i] = new FileStatusIngester(metaStore, ingestionTask);
+      consumers[i] = new FileStatusIngester(metaStore);
     }
     this.fetchInterval = fetchInterval;
     if (service != null) {
       this.scheduledExecutorService = service;
     } else {
-      scheduledExecutorService = Executors.newScheduledThreadPool(numConsumers + 1);
+      scheduledExecutorService = Executors.newScheduledThreadPool(numProducers + numConsumers);
     }
     this.metaStore = metaStore;
     this.conf = conf;
@@ -94,10 +102,13 @@ public class NamespaceFetcher {
     } catch (MetaStoreException e) {
       throw new IOException("Error while reset files", e);
     }
-    this.fetchTaskFuture = this.scheduledExecutorService.scheduleAtFixedRate(
-        ingestionTask, 0, fetchInterval, TimeUnit.MILLISECONDS);
+    this.fetchTaskFutures = new ScheduledFuture[ingestionTasks.length];
+    for (int i = 0; i < ingestionTasks.length; i++) {
+      fetchTaskFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
+          ingestionTasks[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
+    }
 
-    consumerFutures = new ScheduledFuture[consumers.length];
+    this.consumerFutures = new ScheduledFuture[consumers.length];
     for (int i = 0; i < consumers.length; i++) {
       consumerFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
           consumers[i], 0, 100, TimeUnit.MILLISECONDS);
@@ -106,12 +117,16 @@ public class NamespaceFetcher {
   }
 
   public boolean fetchFinished() {
-    return this.ingestionTask.finished();
+    return IngestionTask.finished();
   }
 
   public void stop() {
-    if (fetchTaskFuture != null) {
-      this.fetchTaskFuture.cancel(false);
+    if (fetchTaskFutures != null) {
+      for (ScheduledFuture f: fetchTaskFutures) {
+        if (f != null) {
+          f.cancel(false);
+        }
+      }
     }
     if (consumerFutures != null) {
       for (ScheduledFuture f : consumerFutures) {
@@ -126,30 +141,50 @@ public class NamespaceFetcher {
     private final HdfsFileStatus[] EMPTY_STATUS = new HdfsFileStatus[0];
     private final DFSClient client;
     private final SmartConf conf;
-    private List<String> ignoreList = new ArrayList<>();
     private byte[] startAfter = null;
     private final byte[] empty = HdfsFileStatus.EMPTY_NAME;
+    private String parent = "";
+    private String pendingParent;
+    private IngestionTask[] ingestionTasks;
+    private static List<String> ignoreList;
+    private static int idCounter = 0;
+    private int id;
 
-    public HdfsFetchTask(DFSClient client, SmartConf conf) {
+    public HdfsFetchTask(IngestionTask[] ingestionTasks, DFSClient client, SmartConf conf) {
       super();
+      id = idCounter++;
+      this.ingestionTasks = ingestionTasks;
       this.client = client;
       this.conf = conf;
-      String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
       defaultBatchSize = conf.getInt(SmartConfKeys
               .SMART_NAMESPACE_FETCHER_BATCH_KEY,
           SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
-      if (configString != null) {
-        configString = configString.trim();
-        if (!configString.equals("")) {
-          //only when parent dir is not ignored we run the follow code
-          ignoreList = Arrays.asList(configString.split(","));
-          for (int i = 0; i < ignoreList.size(); i++) {
-            if (!ignoreList.get(i).endsWith("/")) {
-              ignoreList.set(i, ignoreList.get(i).concat("/"));
+      if (ignoreList == null) {
+        ignoreList = new ArrayList<>();
+        String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+        if (configString != null) {
+          configString = configString.trim();
+          if (!configString.equals("")) {
+            //only when parent dir is not ignored we run the follow code
+            ignoreList = Arrays.asList(configString.split(","));
+            for (int i = 0; i < ignoreList.size(); i++) {
+              if (!ignoreList.get(i).endsWith("/")) {
+                ignoreList.set(i, ignoreList.get(i).concat("/"));
+              }
             }
           }
         }
       }
+    }
+
+    // BFS finished
+    public boolean isDequeEmpty() {
+      for (IngestionTask ingestionTask: ingestionTasks) {
+        if (((HdfsFetchTask)ingestionTask).parent != null) {
+          return false;
+        }
+      }
+      return true;
     }
 
     @Override
@@ -160,13 +195,22 @@ public class NamespaceFetcher {
           LOG.debug(String.format(
               "%d sec, numDirectories = %d, numFiles = %d, batchsInqueue = %d",
               (curr - startTime) / 1000,
-              numDirectoriesFetched, numFilesFetched, batches.size()));
+              numDirectoriesFetched.get(), numFilesFetched.get(), batches.size()));
           lastUpdateTime = curr;
         }
       }
 
-      String parent = deque.pollFirst();
-      if (parent == null) { // BFS finished
+      if (batches.size() >= maxPendingBatches) {
+        return;
+      }
+
+      if (this.pendingParent != null) {
+        this.parent = pendingParent;
+        this.pendingParent = null;
+      } else {
+        this.parent = deque.pollFirst();
+      }
+      if (parent == null) {
         if (currentBatch.actualSize() > 0) {
           try {
             this.batches.put(currentBatch);
@@ -177,23 +221,18 @@ public class NamespaceFetcher {
           this.currentBatch = new FileInfoBatch(defaultBatchSize);
         }
 
-        if (this.batches.isEmpty()) {
-          if (!this.isFinished) {
-            this.isFinished = true;
+        if (this.id == 0 && isDequeEmpty() && this.batches.isEmpty()) {
+          if (!IngestionTask.isFinished) {
+            IngestionTask.isFinished = true;
             long curr = System.currentTimeMillis();
             LOG.info(String.format(
                 "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
                 (curr - startTime) / 1000,
-                numDirectoriesFetched, numFilesFetched));
+                numDirectoriesFetched.get(), numFilesFetched.get()));
           }
         }
         return;
       }
-      String tmpParent = parent;
-      if (!tmpParent.endsWith("/")) {
-        tmpParent = tmpParent.concat("/");
-      }
-      for (int i = 0; i < ignoreList.size(); i++) {
 
       if (startAfter == null) {
         String tmpParent = parent;
@@ -210,21 +249,34 @@ public class NamespaceFetcher {
       try {
         HdfsFileStatus status = client.getFileInfo(parent);
         if (status != null && status.isDir()) {
-          FileInfo internal = convertToFileInfo(status, "");
-          internal.setPath(parent);
-          this.addFileStatus(internal);
-          numDirectoriesFetched++;
-          HdfsFileStatus[] children = this.listStatus(parent);
-          for (HdfsFileStatus child : children) {
-            if (child.isDir()) {
-              this.deque.add(child.getFullName(parent));
-            } else {
-              this.addFileStatus(convertToFileInfo(child, parent));
-              numFilesFetched++;
+          if (startAfter == null) {
+            FileInfo internal = convertToFileInfo(status, "");
+            internal.setPath(parent);
+            this.addFileStatus(internal);
+            numDirectoriesFetched.incrementAndGet();
+          }
+
+          HdfsFileStatus[] children;
+          do {
+            children = listStatus(parent);
+            if (children == null || children.length == 0) {
+              break;
             }
+            for (HdfsFileStatus child : children) {
+              if (child.isDir()) {
+                this.deque.add(child.getFullName(parent));
+              } else {
+                this.addFileStatus(convertToFileInfo(child, parent));
+                numFilesFetched.incrementAndGet();
+              }
+            }
+          } while (startAfter != null && batches.size() < maxPendingBatches);
+          if (startAfter != null) {
+            pendingParent = parent;
           }
         }
       } catch (IOException | InterruptedException e) {
+        startAfter = null;
         LOG.error("Totally, numDirectoriesFetched = " + numDirectoriesFetched
             + ", numFilesFetched = " + numFilesFetched
             + ". Parent = " + parent, e);
@@ -237,37 +289,20 @@ public class NamespaceFetcher {
      */
     private HdfsFileStatus[] listStatus(String src) throws IOException {
       DirectoryListing thisListing = client.listPaths(
-        src, HdfsFileStatus.EMPTY_NAME);
+        src, startAfter == null ? empty : startAfter);
       if (thisListing == null) {
         // the directory does not exist
+        startAfter = null;
         return EMPTY_STATUS;
       }
       HdfsFileStatus[] partialListing = thisListing.getPartialListing();
       if (!thisListing.hasMore()) {
         // got all entries of the directory
-        return partialListing;
+        startAfter = null;
+      } else {
+        startAfter = thisListing.getLastName();
       }
-      // The directory size is too big that it needs to fetch more
-      // estimate the total number of entries in the directory
-      int totalNumEntries =
-        partialListing.length + thisListing.getRemainingEntries();
-      ArrayList<HdfsFileStatus> listing = new ArrayList<>(totalNumEntries);
-      Collections.addAll(listing, partialListing);
-
-      // now fetch more entries
-      do {
-        thisListing = client.listPaths(src, thisListing.getLastName());
-
-        if (thisListing == null) {
-          // the directory is deleted
-          listing.toArray(new HdfsFileStatus[listing.size()]);
-        }
-
-        partialListing = thisListing.getPartialListing();
-        Collections.addAll(listing, partialListing);
-      } while (thisListing.hasMore());
-
-      return listing.toArray(new HdfsFileStatus[listing.size()]);
+      return partialListing;
     }
 
     private FileInfo convertToFileInfo(HdfsFileStatus status, String parent) {

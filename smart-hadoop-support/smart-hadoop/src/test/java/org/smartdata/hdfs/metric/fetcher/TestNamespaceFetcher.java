@@ -24,42 +24,24 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.inotify.MissingEventsException;
+import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.smartdata.model.FileInfo;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 
+import static org.mockito.Mockito.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class TestNamespaceFetcher {
-
-  public class FileStatusArgMatcher extends ArgumentMatcher<FileInfo[]> {
-    private List<String> expected;
-
-    public FileStatusArgMatcher(List<String> path) {
-      this.expected = path;
-    }
-
-    @Override
-    public boolean matches(Object o) {
-      FileInfo[] array = (FileInfo[]) o;
-      List<String> paths = new ArrayList<>();
-      for (FileInfo statusInternal : array) {
-        paths.add(statusInternal.getPath());
-      }
-      Collections.sort(paths);
-      return paths.size() == expected.size() && paths.containsAll(expected);
-    }
-  }
-
   @Test
   public void testNamespaceFetcher() throws IOException, InterruptedException,
       MissingEventsException, MetaStoreException {
@@ -75,14 +57,28 @@ public class TestNamespaceFetcher {
       DFSClient client = dfs.getClient();
 
       MetaStore adapter = Mockito.mock(MetaStore.class);
+      final List<String> pathesInDB = new ArrayList<>();
+      doAnswer(new Answer<Void>() {
+        @Override
+        public Void answer(InvocationOnMock invocationOnMock) {
+          try {
+            Object[] objects = invocationOnMock.getArguments();
+            for (FileInfo fileInfo : (FileInfo[]) objects[0]) {
+              pathesInDB.add(fileInfo.getPath());
+            }
+          } catch (Throwable t) {
+            t.printStackTrace();
+          }
+          return null;
+        }
+      }).when(adapter).insertFiles(any(FileInfo[].class));
       NamespaceFetcher fetcher = new NamespaceFetcher(client, adapter, 100);
       fetcher.startFetch();
       List<String> expected = Arrays.asList("/", "/user", "/user/user1", "/user/user2", "/tmp");
       while (!fetcher.fetchFinished()) {
-        Thread.sleep(1000);
+        Thread.sleep(100);
       }
-
-      Mockito.verify(adapter).insertFiles(Matchers.argThat(new FileStatusArgMatcher(expected)));
+      Assert.assertTrue(pathesInDB.size() == expected.size() && pathesInDB.containsAll(expected));
       fetcher.stop();
     } finally {
       cluster.shutdown();
