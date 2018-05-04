@@ -18,13 +18,14 @@
 package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.fs.UnresolvedLinkException;
+import org.smartdata.client.SmartClient;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
 
 public class CompressionInputStream extends SmartInputStream {
   CompressionInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
-      FileState fileState) throws IOException, UnresolvedLinkException {
-    super(dfsClient, src, verifyChecksum, fileState);
+      FileState fileState, SmartClient smartClient) throws IOException, UnresolvedLinkException {
+    super(dfsClient, src, verifyChecksum, fileState, smartClient);
   }
 }

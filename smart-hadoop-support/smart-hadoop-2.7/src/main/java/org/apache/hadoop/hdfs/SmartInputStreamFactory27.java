@@ -19,6 +19,7 @@ package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.htrace.TraceScope;
+import org.smartdata.client.SmartClient;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
@@ -26,13 +27,13 @@ import java.io.IOException;
 public class SmartInputStreamFactory27 extends SmartInputStreamFactory {
   @Override
   public DFSInputStream create(DFSClient dfsClient, String src,
-      boolean verifyChecksum, FileState fileState)
+      boolean verifyChecksum, FileState fileState, SmartClient smartClient)
       throws IOException, UnresolvedLinkException {
     dfsClient.checkOpen();
     TraceScope scope = dfsClient.getPathTraceScope("newDFSInputStream", src);
     try {
       DFSInputStream inputStream = createSmartInputStream(dfsClient, src,
-          verifyChecksum, fileState);
+          verifyChecksum, fileState, smartClient);
       return inputStream;
     } finally {
       scope.close();
