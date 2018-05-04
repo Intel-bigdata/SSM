@@ -21,7 +21,6 @@ import com.google.common.collect.ListMultimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.action.ActionException;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.ExecutorType;
@@ -223,8 +222,12 @@ public class CmdletDispatcher {
     public void run() {
       statRound++;
 
-      if (cmdExecSrvTotalInsts == 0 || !dispatcher.canDispatchMore()) {
-        statNoExecutorOrFull++;
+      if (cmdExecSrvTotalInsts == 0) {
+        return;
+      }
+
+      if (!dispatcher.canDispatchMore()) {
+        statFull++;
         return;
       }
 
