@@ -166,6 +166,22 @@
   </property>
 
   <property>
+    <name>smart.status.report.period.multiplier</name>
+    <value>50</value>
+    <description>
+      The report period multiplied by this multiplier defines largest report interval.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.status.report.ratio</name>
+    <value>0.2</value>
+    <description>
+      If the finished actions ratio equals or exceeds this value, status report will be triggered.
+    </description>
+  </property>
+
+  <property>
     <name>smart.top.hot.files.num</name>
     <value>200</value>
     <description>
