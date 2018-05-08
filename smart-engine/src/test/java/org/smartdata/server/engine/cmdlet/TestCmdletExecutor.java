@@ -50,7 +50,7 @@ public class TestCmdletExecutor {
           }
         };
     CmdletExecutor executor = new CmdletExecutor(new SmartConf());
-    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor, 10);
+    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor, new SmartConf());
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     executorService.scheduleAtFixedRate(
             statusReportTask, 100, 10, TimeUnit.MILLISECONDS);
@@ -91,7 +91,7 @@ public class TestCmdletExecutor {
           }
         };
     CmdletExecutor executor = new CmdletExecutor(new SmartConf());
-    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor, 10);
+    StatusReportTask statusReportTask = new StatusReportTask(reporter, executor, new SmartConf());
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     executorService.scheduleAtFixedRate(
             statusReportTask, 100, 10, TimeUnit.MILLISECONDS);
