@@ -17,6 +17,8 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.protocol.message.StatusReporter;
@@ -31,16 +33,21 @@ public class StatusReportTask implements Runnable {
   private CmdletExecutor cmdletExecutor;
   private long lastReportTime;
   private int interval;
+  public double ratio;
   private Map<Long, ActionStatus> idToActionStatus;
-  public static final int TIME_MULTIPLIER = 50;
-  public static final double FINISHED_RATIO = 0.2;
 
   public StatusReportTask(
-      StatusReporter statusReporter, CmdletExecutor cmdletExecutor, int period) {
+      StatusReporter statusReporter, CmdletExecutor cmdletExecutor, SmartConf conf) {
     this.statusReporter = statusReporter;
     this.cmdletExecutor = cmdletExecutor;
     this.lastReportTime = System.currentTimeMillis();
-    this.interval = TIME_MULTIPLIER * period;
+    int period = conf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    int multiplier = conf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_MULTIPLIER_KEY,
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_MULTIPLIER_DEFAULT);
+    this.interval = period * multiplier;
+    this.ratio = conf.getDouble(SmartConfKeys.SMART_STATUS_REPORT_RATIO_KEY,
+        SmartConfKeys.SMART_STATUS_REPORT_RATIO_DEFAULT);
     this.idToActionStatus = new HashMap<>();
   }
 
@@ -61,7 +68,7 @@ public class StatusReportTask implements Runnable {
         }
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastReportTime >= interval
-            || (float) finishedNum / idToActionStatus.size() >= FINISHED_RATIO) {
+            || (double) finishedNum / idToActionStatus.size() >= ratio) {
           statusReporter.report(new StatusReport(new ArrayList(idToActionStatus.values())));
           idToActionStatus.clear();
           lastReportTime = currentTime;

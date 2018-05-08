@@ -161,8 +161,14 @@ public class SmartConfKeys {
   public static final String SMART_TOP_HOT_FILES_NUM_KEY = "smart.top.hot.files.num";
   public static final int SMART_TOP_HOT_FILES_NUM_DEFAULT = 200;
 
+  //Status report
   public static final String SMART_STATUS_REPORT_PERIOD_KEY = "smart.status.report.period";
   public static final int SMART_STATUS_REPORT_PERIOD_DEFAULT = 10;
+  public static final String SMART_STATUS_REPORT_PERIOD_MULTIPLIER_KEY =
+      "smart.status.report.period.multiplier";
+  public static final int SMART_STATUS_REPORT_PERIOD_MULTIPLIER_DEFAULT = 50;
+  public static final String SMART_STATUS_REPORT_RATIO_KEY = "smart.status.report.ratio";
+  public static final double SMART_STATUS_REPORT_RATIO_DEFAULT = 0.2;
 
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";
