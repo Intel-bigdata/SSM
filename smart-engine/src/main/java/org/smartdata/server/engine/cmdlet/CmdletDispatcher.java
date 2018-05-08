@@ -80,8 +80,11 @@ public class CmdletDispatcher {
     this.runningCmdlets = runningCmdlets;
     this.idToLaunchCmdlet = idToLaunchCmdlet;
     this.schedulers = schedulers;
-    defaultSlots = smartContext.getConf().getInt(SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
+    int executorsNum = smartContext.getConf().getInt(SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
         SmartConfKeys.SMART_CMDLET_EXECUTORS_DEFAULT);
+    int delta = smartContext.getConf().getInt(SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_KEY,
+        SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_DEFAULT);
+    defaultSlots = executorsNum + delta;
 
     this.cmdExecServices = new CmdletExecutorService[ExecutorType.values().length];
     cmdExecSrvInsts = new int[ExecutorType.values().length];

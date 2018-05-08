@@ -92,6 +92,12 @@
   </property>
 
   <property>
+    <name>smart.dispatch.cmdlets.extra.num</name>
+    <value>10</value>
+    <description>The number of extra cmdlets dispatched by Smart Server</description>
+  </property>
+
+  <property>
     <name>smart.cmdlet.dispatchers</name>
     <value>3</value>
     <description>Max number of cmdlet dispatchers that work in parallel</description>
