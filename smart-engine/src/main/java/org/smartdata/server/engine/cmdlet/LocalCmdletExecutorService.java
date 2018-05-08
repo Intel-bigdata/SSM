@@ -57,7 +57,7 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
 
     int reportPeriod = smartConf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
-    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, reportPeriod);
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, smartConf);
     this.executorService.scheduleAtFixedRate(
         statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
 

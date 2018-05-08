@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.action.ActionException;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CmdletState;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
@@ -48,9 +49,10 @@ public class HazelcastWorker implements StatusReporter {
   private ITopic<StatusMessage> statusTopic;
   private CmdletExecutor cmdletExecutor;
   private CmdletFactory factory;
-  private int reportPeriod;
+  private SmartConf smartConf;
 
   public HazelcastWorker(SmartContext smartContext) {
+    this.smartConf = smartContext.getConf();
     this.factory = new CmdletFactory(smartContext, this);
     this.cmdletExecutor = new CmdletExecutor(smartContext.getConf());
     this.executorService = Executors.newSingleThreadScheduledExecutor();
@@ -60,12 +62,12 @@ public class HazelcastWorker implements StatusReporter {
     this.masterMessages =
         instance.getTopic(HazelcastExecutorService.WORKER_TOPIC_PREFIX + instanceId);
     this.masterMessages.addMessageListener(new MasterMessageListener());
-    this.reportPeriod = smartContext.getConf().getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
-            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
   }
 
   public void start() {
-    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, reportPeriod);
+    int reportPeriod = smartConf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, smartConf);
     executorService.scheduleAtFixedRate(
             statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
   }
