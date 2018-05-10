@@ -271,7 +271,7 @@ public class AgentMaster {
       if (message instanceof LaunchCmdlet) {
         if (agentManager.hasFreeAgent()) {
           LaunchCmdlet launch = (LaunchCmdlet) message;
-          ActorRef agent = this.agentManager.dispatch();
+          ActorRef agent = this.agentManager.dispatch(launch.getNodeId());
           AgentId agentId = this.agentManager.getAgentId(agent);
           agent.tell(launch, getSelf());
           dispatches.put(launch.getCmdletId(), agent);

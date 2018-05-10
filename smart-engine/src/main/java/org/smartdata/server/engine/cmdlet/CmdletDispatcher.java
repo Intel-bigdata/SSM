@@ -35,6 +35,7 @@ import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.message.NodeMessage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,10 @@ public class CmdletDispatcher {
   private final int defaultSlots;
   private AtomicInteger index = new AtomicInteger(0);
 
-  private Map<String, Integer> regNodes = new HashMap<>();
+  private Map<String, AtomicInteger> regNodes = new HashMap<>();
+
+  private List<List<String>> cmdExecSrvNodeIds = new ArrayList<>();
+  private String[] completeOn = new String[ExecutorType.values().length];
 
   public CmdletDispatcher(SmartContext smartContext, CmdletManager cmdletManager,
       Queue<Long> scheduledCmdlets, Map<Long, LaunchCmdlet> idToLaunchCmdlet,
@@ -91,6 +95,7 @@ public class CmdletDispatcher {
     execSrvSlotsLeft = new AtomicInteger[ExecutorType.values().length];
     for (int i = 0; i < execSrvSlotsLeft.length; i++) {
       execSrvSlotsLeft[i] = new AtomicInteger(0);
+      cmdExecSrvNodeIds.add(new ArrayList<String>());
     }
     cmdExecSrvTotalInsts = 0;
     dispatchedToSrvs = new ConcurrentHashMap<>();
@@ -112,7 +117,7 @@ public class CmdletDispatcher {
         SmartConfKeys.SMART_CMDLET_DISPATCHERS_DEFAULT);
     dispatchTasks = new DispatchTask[numDisp];
     for (int i = 0; i < numDisp; i++) {
-      dispatchTasks[i] = new DispatchTask(this);
+      dispatchTasks[i] = new DispatchTask(this, i);
     }
     schExecService = Executors.newScheduledThreadPool(numDisp + 1);
   }
@@ -123,59 +128,6 @@ public class CmdletDispatcher {
 
   public boolean canDispatchMore() {
     return getTotalSlotsLeft() > 0;
-  }
-
-  public boolean dispatch(LaunchCmdlet cmdlet) {
-    int mod = index.incrementAndGet() % cmdExecSrvTotalInsts;
-    int idx = 0;
-
-    for (int nround = 0; nround < 2 && mod >= 0; nround++) {
-      for (idx = 0; idx < cmdExecSrvInsts.length; idx++) {
-        mod -= cmdExecSrvInsts[idx];
-        if (mod < 0) {
-          break;
-        }
-      }
-      try {
-        Thread.sleep(10);
-      } catch (InterruptedException e) {
-        // ignore
-      }
-    }
-
-    if (mod >= 0) {
-      return false;
-    }
-
-    CmdletExecutorService selected = null;
-    for (int i = 0; i < ExecutorType.values().length; i++) {
-      idx = idx % ExecutorType.values().length;
-      if (execSrvSlotsLeft[idx].get() > 0) {
-        selected = cmdExecServices[idx];
-        break;
-      }
-    }
-
-    if (selected == null) {
-      LOG.error("No cmdlet executor service available. " + cmdlet);
-      return false;
-    }
-
-    updateCmdActionStatus(cmdlet);
-
-    String id = selected.execute(cmdlet);
-
-    execSrvSlotsLeft[selected.getExecutorType().ordinal()].decrementAndGet();
-
-    dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
-
-    if (logDispResult) {
-      LOG.info(
-          String.format(
-              "Dispatching cmdlet->[%s] to executor service %s : %s",
-              cmdlet.getCmdletId(), selected.getExecutorType(), id));
-    }
-    return true;
   }
 
   //Todo: pick the right service to stop cmdlet
@@ -225,14 +177,18 @@ public class CmdletDispatcher {
 
   private class DispatchTask implements Runnable {
     private final CmdletDispatcher dispatcher;
+    private final int taskId;
     private int statRound = 0;
     private int statFail = 0;
     private int statDispatched = 0;
     private int statNoMoreCmdlet = 0;
     private int statFull = 0;
 
-    public DispatchTask(CmdletDispatcher dispatcher) {
+    private int[] dispInstIdxs = new int[ExecutorType.values().length];
+
+    public DispatchTask(CmdletDispatcher dispatcher, int taskId) {
       this.dispatcher = dispatcher;
+      this.taskId = taskId;
     }
 
     public CmdletDispatcherStat getStat() {
@@ -270,7 +226,7 @@ public class CmdletDispatcher {
             break;
           } else {
             cmdletPreExecutionProcess(launchCmdlet);
-            if (!dispatcher.dispatch(launchCmdlet)) {
+            if (!dispatch(launchCmdlet)) {
               if (LOG.isDebugEnabled()) {
                 LOG.debug("Stop this round dispatch due : " + launchCmdlet);
               }
@@ -288,6 +244,91 @@ public class CmdletDispatcher {
           }
         }
       }
+    }
+
+    private boolean dispatch(LaunchCmdlet cmdlet) {
+      int mod = index.incrementAndGet() % cmdExecSrvTotalInsts;
+      int idx = 0;
+
+      for (int nround = 0; nround < 2 && mod >= 0; nround++) {
+        for (idx = 0; idx < cmdExecSrvInsts.length; idx++) {
+          mod -= cmdExecSrvInsts[idx];
+          if (mod < 0) {
+            break;
+          }
+        }
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          // ignore
+        }
+      }
+
+      if (mod >= 0) {
+        return false;
+      }
+
+      CmdletExecutorService selected = null;
+      for (int i = 0; i < ExecutorType.values().length; i++) {
+        idx = idx % ExecutorType.values().length;
+        int left;
+        do {
+          left = execSrvSlotsLeft[idx].get();
+          if (left > 0) {
+            if (execSrvSlotsLeft[idx].compareAndSet(left, left - 1)) {
+              selected = cmdExecServices[idx];
+              break;
+            }
+          }
+        } while (left > 0);
+
+        if (selected != null) {
+          break;
+        }
+      }
+
+      if (selected == null) {
+        LOG.error("No cmdlet executor service available. " + cmdlet);
+        return false;
+      }
+
+      updateCmdActionStatus(cmdlet);
+
+      int srvId = selected.getExecutorType().ordinal();
+
+      boolean sFlag = true;
+      String nodeId;
+
+      do {
+        dispInstIdxs[srvId] = (dispInstIdxs[srvId] + 1) % cmdExecSrvNodeIds.get(srvId).size();
+        nodeId = cmdExecSrvNodeIds.get(srvId).get(dispInstIdxs[srvId]);
+        AtomicInteger counter = regNodes.get(nodeId);
+        int left = counter.get();
+        if (left > 0) {
+          if (counter.compareAndSet(left, left - 1)) {
+            selected = cmdExecServices[idx];
+            break;
+          }
+        }
+
+        if (sFlag && completeOn[srvId] != null) {
+          dispInstIdxs[srvId] = cmdExecSrvNodeIds.get(srvId).indexOf(completeOn[srvId]);
+          sFlag = false;
+        }
+      } while (true);
+
+      cmdlet.setNodeId(nodeId);
+      selected.execute(cmdlet);
+
+      dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
+
+      if (logDispResult) {
+        LOG.info(
+            String.format(
+                "Dispatching cmdlet->[%s] to executor service %s : %s",
+                cmdlet.getCmdletId(), selected.getExecutorType(), nodeId));
+      }
+      return true;
     }
   }
 
@@ -337,8 +378,11 @@ public class CmdletDispatcher {
   public void onCmdletFinished(long cmdletId) {
     synchronized (dispatchedToSrvs) {
       if (dispatchedToSrvs.containsKey(cmdletId)) {
+        LaunchCmdlet cmdlet = idToLaunchCmdlet.get(cmdletId);
+        regNodes.get(cmdlet.getNodeId()).incrementAndGet();
         ExecutorType t = dispatchedToSrvs.remove(cmdletId);
         updateSlotsLeft(t.ordinal(), 1);
+        completeOn[t.ordinal()] = cmdlet.getNodeId();
       }
     }
   }
@@ -355,7 +399,8 @@ public class CmdletDispatcher {
           LOG.warn("Skip duplicate add node for {}", msg.getNodeInfo());
           return;
         } else {
-          regNodes.put(nodeId, 0);
+          regNodes.put(nodeId, new AtomicInteger(defaultSlots));
+          cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).add(nodeId);
         }
       } else {
         if (!regNodes.containsKey(nodeId)) {
@@ -363,6 +408,7 @@ public class CmdletDispatcher {
           return;
         } else {
           regNodes.remove(nodeId);
+          cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).remove(nodeId);
         }
       }
 
