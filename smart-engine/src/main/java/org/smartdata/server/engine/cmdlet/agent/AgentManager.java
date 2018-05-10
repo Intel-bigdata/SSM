@@ -34,6 +34,7 @@ public class AgentManager {
 
   private final Map<ActorRef, AgentId> agents = new HashMap<>();
   private final Map<ActorRef, NodeInfo> agentNodeInfos = new HashMap<>();
+  private final Map<String, ActorRef> agentActorRefs = new HashMap<>();
   private List<ActorRef> resources = new ArrayList<>();
   private List<NodeInfo> nodeInfos = new LinkedList<>();
   private int dispatchIndex = 0;
@@ -45,6 +46,7 @@ public class AgentManager {
     NodeInfo info = new AgentInfo(String.valueOf(id.getId()), location);
     nodeInfos.add(info);
     agentNodeInfos.put(agent, info);
+    agentActorRefs.put(info.getId(), agent);
     EngineEventBus.post(new AddNodeMessage(info));
   }
 
@@ -53,6 +55,7 @@ public class AgentManager {
     resources.remove(agent);
     NodeInfo info = agentNodeInfos.remove(agent);
     nodeInfos.remove(info);
+    agentActorRefs.remove(info.getId());
     EngineEventBus.post(new RemoveNodeMessage(info));
     return id;
   }
@@ -61,10 +64,8 @@ public class AgentManager {
     return !resources.isEmpty();
   }
 
-  ActorRef dispatch() {
-    int id = dispatchIndex % resources.size();
-    dispatchIndex++;
-    return resources.get(id);
+  ActorRef dispatch(String nodeId) {
+    return agentActorRefs.get(nodeId);
   }
 
   Map<ActorRef, AgentId> getAgents() {

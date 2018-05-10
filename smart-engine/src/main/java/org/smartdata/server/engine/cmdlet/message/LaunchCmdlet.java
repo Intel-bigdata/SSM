@@ -28,6 +28,7 @@ public class LaunchCmdlet implements AgentService.Message {
   private long cmdletId;
   private List<LaunchAction> launchActions;
   private CmdletDispatchPolicy dispPolicy = CmdletDispatchPolicy.ANY;
+  private String nodeId;
 
   public LaunchCmdlet(long cmdletId, List<LaunchAction> launchActions) {
     this.cmdletId = cmdletId;
@@ -66,5 +67,13 @@ public class LaunchCmdlet implements AgentService.Message {
   @Override
   public String toString() {
     return String.format("{cmdletId = %d, dispPolicy = '%s'}", cmdletId, dispPolicy);
+  }
+
+  public String getNodeId() {
+    return nodeId;
+  }
+
+  public void setNodeId(String nodeId) {
+    this.nodeId = nodeId;
   }
 }
