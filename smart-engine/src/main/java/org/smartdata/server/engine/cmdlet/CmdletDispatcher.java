@@ -183,6 +183,7 @@ public class CmdletDispatcher {
     private int statDispatched = 0;
     private int statNoMoreCmdlet = 0;
     private int statFull = 0;
+    private LaunchCmdlet launchCmdlet = null;
 
     private int[] dispInstIdxs = new int[ExecutorType.values().length];
 
@@ -215,17 +216,23 @@ public class CmdletDispatcher {
         return;
       }
 
-      LaunchCmdlet launchCmdlet = null;
+      boolean redisp = launchCmdlet != null;
       boolean disped;
       while (resvExecSlot()) {
         disped = false;
         try {
-          launchCmdlet = getNextCmdletToRun();
+          if (launchCmdlet == null) {
+            launchCmdlet = getNextCmdletToRun();
+          }
           if (launchCmdlet == null) {
             statNoMoreCmdlet++;
             break;
           } else {
-            cmdletPreExecutionProcess(launchCmdlet);
+            if (!redisp) {
+              cmdletPreExecutionProcess(launchCmdlet);
+            } else {
+              redisp = false;
+            }
             if (!dispatch(launchCmdlet)) {
               if (LOG.isDebugEnabled()) {
                 LOG.debug("Stop this round dispatch due : " + launchCmdlet);
@@ -241,6 +248,8 @@ public class CmdletDispatcher {
         } finally {
           if (!disped) {
             freeExecSlot();
+          } else {
+            launchCmdlet = null;
           }
         }
       }
@@ -285,6 +294,7 @@ public class CmdletDispatcher {
         if (selected != null) {
           break;
         }
+        idx++;
       }
 
       if (selected == null) {
@@ -292,21 +302,18 @@ public class CmdletDispatcher {
         return false;
       }
 
-      updateCmdActionStatus(cmdlet);
-
       int srvId = selected.getExecutorType().ordinal();
 
       boolean sFlag = true;
       String nodeId;
-
+      AtomicInteger counter;
       do {
         dispInstIdxs[srvId] = (dispInstIdxs[srvId] + 1) % cmdExecSrvNodeIds.get(srvId).size();
         nodeId = cmdExecSrvNodeIds.get(srvId).get(dispInstIdxs[srvId]);
-        AtomicInteger counter = regNodes.get(nodeId);
+        counter = regNodes.get(nodeId);
         int left = counter.get();
         if (left > 0) {
           if (counter.compareAndSet(left, left - 1)) {
-            selected = cmdExecServices[idx];
             break;
           }
         }
@@ -316,10 +323,23 @@ public class CmdletDispatcher {
           sFlag = false;
         }
       } while (true);
-
       cmdlet.setNodeId(nodeId);
-      selected.execute(cmdlet);
 
+      boolean dispSucc = false;
+      try {
+        selected.execute(cmdlet);
+        dispSucc = true;
+      } finally {
+        if (!dispSucc) {
+          counter.incrementAndGet();
+          execSrvSlotsLeft[idx].incrementAndGet();
+        }
+      }
+      if (!dispSucc) {
+        return false;
+      }
+
+      updateCmdActionStatus(cmdlet);
       dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
       if (logDispResult) {
