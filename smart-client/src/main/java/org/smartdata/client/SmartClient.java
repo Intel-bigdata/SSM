@@ -34,7 +34,9 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
@@ -42,6 +44,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private SmartClientProtocol server;
   private volatile boolean running = true;
   private List<String> ignoreAccessEventDirs;
+  private Map<String, Integer> singleIgnoreList;
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
@@ -78,6 +81,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     Collection<String> dirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     ignoreAccessEventDirs = new ArrayList<>();
+    singleIgnoreList = new HashMap<>(1000);
     for (String s : dirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
@@ -99,11 +103,16 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       return server.getFileState(filePath);
     } catch (ConnectException e) {
       // SSM is not started
+      singleIgnoreList.put(filePath, 0);
       return new NormalFileState(filePath);
     }
   }
 
   private boolean shouldIgnore(String path) {
+    if (singleIgnoreList.containsKey(path)) {
+      singleIgnoreList.remove(path);
+      return true;
+    }
     String toCheck = path.endsWith("/") ? path : path + "/";
     for (String s : ignoreAccessEventDirs) {
       if (toCheck.startsWith(s)) {
