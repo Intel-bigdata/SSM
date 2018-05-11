@@ -34,9 +34,9 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
@@ -81,7 +81,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     Collection<String> dirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     ignoreAccessEventDirs = new ArrayList<>();
-    singleIgnoreList = new HashMap<>(1000);
+    singleIgnoreList = new ConcurrentHashMap<>(200);
     for (String s : dirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
