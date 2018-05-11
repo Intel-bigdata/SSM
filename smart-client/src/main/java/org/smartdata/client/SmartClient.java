@@ -24,11 +24,13 @@ import org.apache.hadoop.ipc.RPC;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
+import org.smartdata.model.NormalFileState;
 import org.smartdata.protocol.SmartClientProtocol;
 import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,7 +94,13 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
-    return server.getFileState(filePath);
+    checkOpen();
+    try {
+      return server.getFileState(filePath);
+    } catch (ConnectException e) {
+      // SSM is not started
+      return new NormalFileState(filePath);
+    }
   }
 
   private boolean shouldIgnore(String path) {
