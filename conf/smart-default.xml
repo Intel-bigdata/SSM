@@ -87,7 +87,7 @@
 
   <property>
     <name>smart.cmdlet.executors</name>
-    <value>40</value>
+    <value>10</value>
     <description>Max number of cmdlets that can be executed in parallel</description>
   </property>
 

@@ -279,7 +279,18 @@ Add property `smart.server.rpc.address` to point to the installed Smart Server. 
     <property>
         <name>smart.server.rpc.address</name>
         <value>ssm-server-ip:rpc-port</value>
-    </property>   
+    </property>
+
+The value for the following property should be modified in hdfs-site.xml. It is recommended that this value should be set as follows.
+
+value=executors*(agents+servers)*10,
+
+in which executors represents the value for smart.cmdlet.executors in SSM and agents and servers represents the number of agents and smart servers respectively.
+
+    <property>
+        <name>dfs.datanode.balance.max.concurrent.moves</name>
+        <value></value>
+    </property>
 
 ### Storage volume types   
 
@@ -356,8 +367,15 @@ Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manage
              <value>ssm-server-ip:rpc-port</value>
          </property>
 ```
- 4.    Click the Save Changes button
- 5.    Restart stale Services and re-deploy the client configurations
+
+ 4. In HDFS configuration, dfs.datanode.balance.max.concurrent.moves should be set by
+
+ value=executors*(agents+servers)*10,
+
+ in which executors represents the value for smart.cmdlet.executors in SSM and agents and servers represents the number of agents and smart servers respectively.
+
+ 5.    Click the Save Changes button
+ 6.    Restart stale Services and re-deploy the client configurations
 
 ###  HDFS Storage types
 
