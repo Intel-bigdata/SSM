@@ -21,13 +21,6 @@
   <name>SmartData Project</name>
   <packaging>pom</packaging>
 
-  <repositories>
-    <repository>
-      <id>cloudera</id>
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-    </repository>
-  </repositories>
-
   <modules>
     <module>smart-maven-plugins</module>
     <module>smart-common</module>
@@ -43,7 +36,6 @@
     <module>smart-agent</module>
     <module>smart-dist</module>
     <module>smart-integration</module>
-    <module>smart-hadoop-support</module>
     <module>smart-tidb</module>
   </modules>
 
@@ -73,15 +65,6 @@
   </properties>
 
   <profiles>
-    <profile>
-      <id>java8</id>
-      <activation>
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <modules>
-        <module>smart-alluxio-support</module>
-      </modules>
-    </profile>
 
     <profile>
       <id>hadoop-2.7</id>
@@ -95,6 +78,19 @@
       <properties>
         <hadoop.version>2.6.0-cdh5.10.1</hadoop.version>
       </properties>
+      <repositories>
+        <repository>
+          <id>cloudera</id>
+          <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+      </repositories>
+    </profile>
+    <profile>
+      <id>alluxio</id>
+      <modules>
+        <module>smart-alluxio-support</module>
+        <module>smart-hadoop-support</module>
+      </modules>
     </profile>
   </profiles>
 
