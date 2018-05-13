@@ -102,7 +102,8 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     try {
       return server.getFileState(filePath);
     } catch (ConnectException e) {
-      // SSM is not started
+      // client cannot connect to server
+      // don't report access event for this file this time
       singleIgnoreList.put(filePath, 0);
       return new NormalFileState(filePath);
     }
@@ -110,6 +111,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
 
   private boolean shouldIgnore(String path) {
     if (singleIgnoreList.containsKey(path)) {
+      // this report should be ignored
       singleIgnoreList.remove(path);
       return true;
     }
