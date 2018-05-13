@@ -24,15 +24,19 @@ import org.apache.hadoop.ipc.RPC;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
+import org.smartdata.model.NormalFileState;
 import org.smartdata.protocol.SmartClientProtocol;
 import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
@@ -40,6 +44,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private SmartClientProtocol server;
   private volatile boolean running = true;
   private List<String> ignoreAccessEventDirs;
+  private Map<String, Integer> singleIgnoreList;
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
@@ -76,6 +81,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     Collection<String> dirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     ignoreAccessEventDirs = new ArrayList<>();
+    singleIgnoreList = new ConcurrentHashMap<>(200);
     for (String s : dirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
@@ -92,10 +98,23 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
-    return server.getFileState(filePath);
+    checkOpen();
+    try {
+      return server.getFileState(filePath);
+    } catch (ConnectException e) {
+      // client cannot connect to server
+      // don't report access event for this file this time
+      singleIgnoreList.put(filePath, 0);
+      return new NormalFileState(filePath);
+    }
   }
 
   private boolean shouldIgnore(String path) {
+    if (singleIgnoreList.containsKey(path)) {
+      // this report should be ignored
+      singleIgnoreList.remove(path);
+      return true;
+    }
     String toCheck = path.endsWith("/") ? path : path + "/";
     for (String s : ignoreAccessEventDirs) {
       if (toCheck.startsWith(s)) {
