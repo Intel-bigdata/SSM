@@ -147,20 +147,31 @@ public class RuleExecutor implements Runnable {
   }
 
   public String genVirtualAccessCountTableTopValue(List<Object> parameters) {
+    genVirtualAccessCountTableValue(parameters, true);
+    return null;
+  }
+
+  public String genVirtualAccessCountTableBottomValue(List<Object> parameters) {
+    genVirtualAccessCountTableValue(parameters, false);
+    return null;
+  }
+
+  private void genVirtualAccessCountTableValue(List<Object> parameters, boolean top) {
     List<Object> paraList = (List<Object>) parameters.get(0);
     String table = (String) parameters.get(1);
     String var = (String) parameters.get(2);
     Long num = (Long) paraList.get(1);
-    String sql0 = "SELECT min(count) FROM ( SELECT * FROM " + table
-        + " ORDER BY count LIMIT " + num + ") AS " + table + "_TMP;";
+    String sql0 = String.format(
+        "SELECT %s(count) FROM ( SELECT * FROM %s ORDER BY count %sLIMIT %d ) AS %s_TMP;",
+        top ? "min" : "max", table, top ? "DESC " : "", num, table);
     Long count = null;
     try {
       count = adapter.queryForLong(sql0);
     } catch (MetaStoreException e) {
-      LOG.error("Get top access count from table '" + table + "' error.", e);
+      LOG.error("Get " + (top ? "top" : "bottom") + " access count from table '"
+          + table + "' error.", e);
     }
     ctx.setProperty(var, count == null ? 0L : count);
-    return null;
   }
 
   public String genVirtualAccessCountTable(List<Object> parameters) {
