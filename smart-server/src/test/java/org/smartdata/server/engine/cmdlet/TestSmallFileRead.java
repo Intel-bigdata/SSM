@@ -44,7 +44,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
     ArrayList<String> smallFileList = new ArrayList<>();
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
       long fileLen = 5 + (int) (Math.random() * 11);
@@ -53,7 +53,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
       rb.nextBytes(buf);
       out.write(buf, 0, (int) fileLen);
       out.close();
-      if (i == 1) {
+      if (i == 0) {
         fileLength = fileLen;
         ret = buf[0] & 0xff;
       }
@@ -62,7 +62,7 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     CmdletManager cmdletManager = ssm.getCmdletManager();
     CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString("compact -containerFile"
-        + " /test/small_files/container_file");
+        + " /test/small_files/container_file_5");
     cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
     Thread.sleep(1000);
     long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
@@ -86,34 +86,36 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
   }
 
   @Test
-  public void testRead() throws Exception {
+  public void testSmallFileRead() throws Exception {
     waitTillSSMExitSafeMode();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open("/test/small_files/file_1");
+    DFSInputStream is = smartDFSClient.open("/test/small_files/file_0");
     Assert.assertEquals(1, is.getAllBlocks().size());
     Assert.assertEquals(fileLength, is.getFileLength());
     Assert.assertEquals(0, is.getPos());
     int byteRead = is.read();
     Assert.assertEquals(ret, byteRead);
     is.close();
-    is = smartDFSClient.open("/test/small_files/file_1");
+    is = smartDFSClient.open("/test/small_files/file_0");
     byte[] bytes = new byte[50];
     Assert.assertEquals(fileLength, is.read(bytes));
     is.close();
-    is = smartDFSClient.open("/test/small_files/file_1");
+    is = smartDFSClient.open("/test/small_files/file_0");
     ByteBuffer buffer = ByteBuffer.allocate(50);
     Assert.assertEquals(fileLength, is.read(buffer));
     is.close();
-    is = smartDFSClient.open("/test/small_files/file_2");
+    is = smartDFSClient.open("/test/small_files/file_1");
     Assert.assertEquals(5, is.read(bytes, 1, 5));
     is.close();
-    is = smartDFSClient.open("/test/small_files/file_1");
+    is = smartDFSClient.open("/test/small_files/file_0");
     Assert.assertEquals(fileLength - 2, is.read(2, bytes, 1, 50));
     is.close();
   }
 
   @After
   public void tearDown() throws Exception {
-    dfs.delete(new Path("/test").makeQualified(dfs), true);
+    dfs.getClient().delete("/test", true);
+    ssm.getMetaStore().dropTable("file_state");
+    ssm.getMetaStore().dropTable("small_file");
   }
 }

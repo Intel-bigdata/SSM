@@ -139,15 +139,31 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum) throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
-      throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
-          + fileState.getFileType());
+    if (isSmallFile(src, true)) {
+      CompactFileState fileState;
+      try {
+        fileState = (CompactFileState) getFileState(src);
+      } catch (ClassCastException e) {
+        addExcludedFileToBF(src);
+        return open(src, buffersize, verifyChecksum);
+      }
+      if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
+        throw new IOException(String.format("Cannot open %s when it is" +
+            " under PROCESSING to %s", src, fileState.getFileType()));
+      }
+      DFSInputStream is = SmartInputStreamFactory.get().create(this, src,
+          verifyChecksum, fileState);
+      reportFileAccessEvent(src);
+      return is;
+    } else {
+      DFSInputStream is = super.open(src, buffersize, verifyChecksum);
+      if ((is.getFileLength() == 0) && isSmallFile(src, false)) {
+        addFileToBF(src);
+        cacheCompactFileStates(src);
+        return open(src, buffersize, verifyChecksum);
+      }
+      return is;
     }
-    DFSInputStream is = SmartInputStreamFactory.get().create(this, src,
-        verifyChecksum, fileState);
-    reportFileAccessEvent(src);
-    return is;
   }
 
   @Deprecated
@@ -160,10 +176,9 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public HdfsDataOutputStream append(final String src, final int buffersize,
-                                     EnumSet<CreateFlag> flag, final Progressable progress,
-                                     final FileSystem.Statistics statistics) throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
+      EnumSet<CreateFlag> flag, final Progressable progress,
+      final FileSystem.Statistics statistics) throws IOException {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       return super.append(src, buffersize, flag, progress, statistics);
@@ -172,11 +187,10 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public HdfsDataOutputStream append(final String src, final int buffersize,
-                                     EnumSet<CreateFlag> flag, final Progressable progress,
-                                     final FileSystem.Statistics statistics,
-                                     final InetSocketAddress[] favoredNodes) throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
+      EnumSet<CreateFlag> flag, final Progressable progress,
+      final FileSystem.Statistics statistics,
+      final InetSocketAddress[] favoredNodes) throws IOException {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       return super.append(src, buffersize, flag, progress, statistics, favoredNodes);
@@ -186,45 +200,68 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public LocatedBlocks getLocatedBlocks(String src, long start)
       throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
-      String containerFile = ((CompactFileState) fileState)
-          .getFileContainerInfo().getContainerFilePath();
-      long offset = ((CompactFileState) fileState).getFileContainerInfo().getOffset();
+    if (isSmallFile(src, true)) {
+      CompactFileState fileState;
+      try {
+        fileState = (CompactFileState) getFileState(src);
+      } catch (ClassCastException e) {
+        addExcludedFileToBF(src);
+        return getLocatedBlocks(src, start);
+      }
+      String containerFile = fileState.getFileContainerInfo().getContainerFilePath();
+      long offset = fileState.getFileContainerInfo().getOffset();
       return super.getLocatedBlocks(containerFile, offset + start);
     } else {
-      return super.getLocatedBlocks(src, start);
+      LocatedBlocks locatedBlocks = super.getLocatedBlocks(src, start);
+      if ((locatedBlocks.getFileLength() == 0) && isSmallFile(src, false)) {
+        addFileToBF(src);
+        cacheCompactFileStates(src);
+        return getLocatedBlocks(src, start);
+      }
+      return locatedBlocks;
     }
   }
 
   @Override
   public BlockLocation[] getBlockLocations(String src, long start,
-                                           long length) throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
-      String containerFile = ((CompactFileState) fileState)
-          .getFileContainerInfo().getContainerFilePath();
-      long offset = ((CompactFileState) fileState).getFileContainerInfo().getOffset();
-      BlockLocation[] blockLocations = super.getBlockLocations(
-          containerFile, offset + start, length);
+      long length) throws IOException {
+    BlockLocation[] blockLocations;
+    if (isSmallFile(src, true)) {
+      CompactFileState fileState;
+      try {
+        fileState = (CompactFileState) getFileState(src);
+      } catch (ClassCastException e) {
+        addExcludedFileToBF(src);
+        return getBlockLocations(src, start, length);
+      }
+      String containerFile = fileState.getFileContainerInfo().getContainerFilePath();
+      long offset = fileState.getFileContainerInfo().getOffset();
+      blockLocations = super.getBlockLocations(containerFile, offset + start, length);
       for (BlockLocation blockLocation : blockLocations) {
         blockLocation.setOffset(blockLocation.getOffset() - offset);
       }
       return blockLocations;
     } else {
-      return super.getBlockLocations(src, start, length);
+      blockLocations = super.getBlockLocations(src, start, length);
+      if ((blockLocations.length == 0) && isSmallFile(src, false)) {
+        addFileToBF(src);
+        cacheCompactFileStates(src);
+        return getBlockLocations(src, start, length);
+      }
+      return blockLocations;
     }
   }
 
   @Override
   public HdfsFileStatus getFileInfo(String src) throws IOException {
     HdfsFileStatus oldStatus = super.getFileInfo(src);
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
-      long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
+    if (isSmallFile(src, false)) {
+      CompactFileState fileState = (CompactFileState) getFileState(src);
+      long len = fileState.getFileContainerInfo().getLength();
       return new HdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
-          oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
-          oldStatus.getPermission(), oldStatus.getOwner(), oldStatus.getGroup(),
+          oldStatus.getBlockSize(), oldStatus.getModificationTime(),
+          oldStatus.getAccessTime(), oldStatus.getPermission(),
+          oldStatus.getOwner(), oldStatus.getGroup(),
           oldStatus.isSymlink() ? oldStatus.getSymlinkInBytes() : null,
           oldStatus.isEmptyLocalName() ? new byte[0] : oldStatus.getLocalNameInBytes(),
           oldStatus.getFileId(), oldStatus.getChildrenNum(),
@@ -240,7 +277,7 @@ public class SmartDFSClient extends DFSClient {
       if (recursive) {
         smartClient.deleteFileState(src, true);
       } else {
-        if (getFileState(src) instanceof CompactFileState) {
+        if (isSmallFile(src, false)) {
           smartClient.deleteFileState(src, false);
         }
       }
@@ -252,10 +289,9 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public boolean truncate(String src, long newLength) throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
-      FileContainerInfo fileContainerInfo = (
-          (CompactFileState) fileState).getFileContainerInfo();
+    if (isSmallFile(src, false)) {
+      CompactFileState fileState = (CompactFileState) getFileState(src);
+      FileContainerInfo fileContainerInfo = fileState.getFileContainerInfo();
       long len = fileContainerInfo.getLength();
       if (len < newLength) {
         throw new IOException(String.format("Cannot truncate to a larger file size." +
@@ -273,12 +309,13 @@ public class SmartDFSClient extends DFSClient {
   @Override
   @Deprecated
   public boolean rename(String src, String dst) throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
+      FileState fileState = getFileState(src);
       if (super.rename(src, dst)) {
         FileContainerInfo fileContainerInfo = (
             (CompactFileState) fileState).getFileContainerInfo();
-        CompactFileState compactFileState = new CompactFileState(dst, fileContainerInfo);
+        CompactFileState compactFileState = new CompactFileState(
+            dst, fileContainerInfo);
         smartClient.deleteFileState(src, false);
         smartClient.updateFileState(compactFileState);
         return true;
@@ -293,8 +330,8 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void rename(String src, String dst, Options.Rename... options)
       throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
+      FileState fileState = getFileState(src);
       super.rename(src, dst, options);
       FileContainerInfo fileContainerInfo = (
           (CompactFileState) fileState).getFileContainerInfo();
@@ -308,8 +345,8 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public long getBlockSize(String f) throws IOException {
-    FileState fileState = getFileState(f);
-    if (fileState instanceof CompactFileState) {
+    if (isSmallFile(f, false)) {
+      FileState fileState = getFileState(f);
       return super.getBlockSize(
           ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath());
     } else {
@@ -320,8 +357,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void concat(String trg, String [] srcs) throws IOException {
     for (String src : srcs) {
-      FileState fileState = getFileState(src);
-      if (fileState instanceof CompactFileState) {
+      if (isSmallFile(src, false)) {
         throw new IOException("This operation not supported for SSM small file.");
       }
     }
@@ -331,7 +367,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void createSymlink(String target, String link, boolean createParent)
       throws IOException {
-    if (getFileState(target) instanceof CompactFileState) {
+    if (isSmallFile(target, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.createSymlink(target, link, createParent);
@@ -340,7 +376,7 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public String getLinkTarget(String path) throws IOException {
-    if (getFileState(path) instanceof CompactFileState) {
+    if (isSmallFile(path, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       return super.getLinkTarget(path);
@@ -349,7 +385,7 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public HdfsFileStatus getFileLinkInfo(String src) throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       return super.getFileLinkInfo(src);
@@ -359,7 +395,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public boolean setReplication(String src, short replication)
       throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       return super.setReplication(src, replication);
@@ -369,7 +405,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void setStoragePolicy(String src, String policyName)
       throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.setStoragePolicy(src, policyName);
@@ -385,7 +421,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void setPermission(String src, FsPermission permission)
       throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.setPermission(src, permission);
@@ -395,7 +431,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void setOwner(String src, String username, String groupname)
       throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.setOwner(src, username, groupname);
@@ -403,13 +439,13 @@ public class SmartDFSClient extends DFSClient {
   }
 
   @Override
-  public CorruptFileBlocks listCorruptFileBlocks(String path,
-                                                 String cookie)
+  public CorruptFileBlocks listCorruptFileBlocks(String path, String cookie)
       throws IOException {
-    FileState fileState = getFileState(path);
-    if (fileState instanceof CompactFileState) {
+    if (isSmallFile(path, false)) {
+      FileState fileState = getFileState(path);
       return super.listCorruptFileBlocks(
-          ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath(), cookie);
+          ((CompactFileState) fileState)
+              .getFileContainerInfo().getContainerFilePath(), cookie);
     } else {
       return super.listCorruptFileBlocks(path, cookie);
     }
@@ -418,7 +454,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void modifyAclEntries(String src, List<AclEntry> aclSpec)
       throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.modifyAclEntries(src, aclSpec);
@@ -428,7 +464,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void removeAclEntries(String src, List<AclEntry> aclSpec)
       throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.removeAclEntries(src, aclSpec);
@@ -437,7 +473,7 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public void removeDefaultAcl(String src) throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.removeDefaultAcl(src);
@@ -446,7 +482,7 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public void removeAcl(String src) throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.removeAcl(src);
@@ -455,7 +491,7 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public void setAcl(String src, List<AclEntry> aclSpec) throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.setAcl(src, aclSpec);
@@ -465,7 +501,7 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public void createEncryptionZone(String src, String keyName)
       throws IOException {
-    if (getFileState(src) instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
       throw new IOException("This operation not supported for SSM small file.");
     } else {
       super.createEncryptionZone(src, keyName);
@@ -474,10 +510,11 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public void checkAccess(String src, FsAction mode) throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
+      FileState fileState = getFileState(src);
       super.checkAccess(
-          ((CompactFileState) fileState).getFileContainerInfo().getContainerFilePath(), mode);
+          ((CompactFileState) fileState)
+              .getFileContainerInfo().getContainerFilePath(), mode);
     } else {
       super.checkAccess(src, mode);
     }
@@ -485,8 +522,8 @@ public class SmartDFSClient extends DFSClient {
 
   @Override
   public boolean isFileClosed(String src) throws IOException {
-    FileState fileState = getFileState(src);
-    if (fileState instanceof CompactFileState) {
+    if (isSmallFile(src, false)) {
+      FileState fileState = getFileState(src);
       String containerFile = ((CompactFileState) fileState)
           .getFileContainerInfo().getContainerFilePath();
       return super.isFileClosed(containerFile);
@@ -535,6 +572,25 @@ public class SmartDFSClient extends DFSClient {
   }
 
   /**
+   * Check if the smart client is disabled.
+   */
+  private boolean isSmartClientDisabled() {
+    File idFile = new File(SmartConstants.SMART_CLIENT_DISABLED_ID_FILE);
+    return idFile.exists();
+  }
+
+  /**
+   * Check if the file is SSM small file.
+   *
+   * @param filePath the path of source file
+   * @return is small file
+   */
+  public boolean isSmallFile(String filePath, boolean useBloomFilter)
+      throws IOException {
+    return smartClient.isSmallFile(filePath, useBloomFilter);
+  }
+
+  /**
    * Get file state of specified file.
    *
    * @param filePath the path of source file
@@ -546,10 +602,31 @@ public class SmartDFSClient extends DFSClient {
   }
 
   /**
-   * Check if the smart client is disabled.
+   * Add file to bloom filter.
+   *
+   * @param filePath the path of small file
    */
-  private boolean isSmartClientDisabled() {
-    File idFile = new File(SmartConstants.SMART_CLIENT_DISABLED_ID_FILE);
-    return idFile.exists();
+  public void addFileToBF(String filePath) {
+    smartClient.addElementToBF(filePath);
+  }
+
+  /**
+   * Add excluded file to bloom filter if misjudge.
+   *
+   * @param filePath the path of excluded small file
+   */
+  public void addExcludedFileToBF(String filePath) {
+    smartClient.addExcludedElementToBF(filePath);
+  }
+
+  /**
+   * Cache compact file states of the small files
+   * whose container file is same as the specified small file's.
+   *
+   * @param filePath the specified small file
+   * @throws IOException if exception occur
+   */
+  public void cacheCompactFileStates(String filePath) throws IOException {
+    smartClient.cacheCompactFileStates(filePath);
   }
 }

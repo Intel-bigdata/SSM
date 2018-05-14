@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,10 +50,10 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
     Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
     ArrayList<String> smallFileList = new ArrayList<>();
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 3; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
-      long fileLen = 8;
+      long fileLen = 9;
       byte[] buf = new byte[50];
       Random rb = new Random(2018);
       rb.nextBytes(buf);
@@ -63,7 +64,7 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     CmdletManager cmdletManager = ssm.getCmdletManager();
     CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString("compact -containerFile"
-        + " /test/small_files/container_file");
+        + " /test/small_files/container_file_3");
     cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
     Thread.sleep(1000);
     long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
@@ -79,51 +80,31 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
     }
   }
 
-  //@Test
-  public void testGetLocatedBlocks() throws Exception {
-    smartDFSClient.getLocatedBlocks("/test/small_files/file_0", 0);
-  }
-
-  //@Test
-  public void testGetBlockLocations() throws Exception {
+  @Test
+  public void testSmartDFSClient() throws Exception {
     BlockLocation[] blockLocations = smartDFSClient.getBlockLocations(
         "/test/small_files/file_0", 0, 30);
     Assert.assertEquals(blockLocations.length, 1);
-  }
-
-  @Test
-  public void testGetFileInfo() throws Exception {
     HdfsFileStatus fileInfo = smartDFSClient.getFileInfo(
         "/test/small_files/file_0");
-    Assert.assertEquals(fileInfo.getLen(), 8);
-  }
-
-  //@Test
-  public void testDeleteFile() throws Exception {
+    Assert.assertEquals(9, fileInfo.getLen());
+    smartDFSClient.truncate("/test/small_files/file_0", 0);
+    Assert.assertEquals(0, smartDFSClient.getFileInfo(
+        "/test/small_files/file_0").getLen());
+    smartDFSClient.rename("/test/small_files/file_0", "/test/small_files/file_5");
+    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
+    Assert.assertTrue(dfsClient.exists("/test/small_files/file_5"));
     smartDFSClient.delete("/test/small_files/file_0", false);
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
-  }
-
-  @Test
-  public void testDeleteFileRecur() throws Exception {
     smartDFSClient.delete("/test/small_files", true);
-    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_1"));
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_2"));
   }
 
-  //@Test
-  public void testTruncateFile() throws Exception {
-    smartDFSClient.truncate("/test/small_files/file_0", 0);
-    Thread.sleep(3000);
-    Assert.assertEquals(0, smartDFSClient.getFileInfo(
-        "/test/small_files/file_0").getLen());
-  }
-
-  //@Test
-  public void testRenameFile() throws Exception {
-    smartDFSClient.rename("/test/small_files/file_0", "/test/small_files/file_5");
-    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
-    Assert.assertTrue(dfsClient.exists("/test/small_files/file_5"));
+  @After
+  public void tearDown() throws Exception {
+    dfs.getClient().delete("/test", true);
+    ssm.getMetaStore().dropTable("file_state");
+    ssm.getMetaStore().dropTable("small_file");
   }
 }

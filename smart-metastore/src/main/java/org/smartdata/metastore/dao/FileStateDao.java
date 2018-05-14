@@ -62,12 +62,11 @@ public class FileStateDao {
 
   public void deleteByPath(String path, boolean recursive) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
+    jdbcTemplate.update(sql, path);
     if (recursive) {
-      final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path LIKE ?";
-      jdbcTemplate.update(sql, path + "%");
-    } else {
-      final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
-      jdbcTemplate.update(sql, path);
+      sql = "DELETE FROM " + TABLE_NAME + " WHERE path LIKE ?";
+      jdbcTemplate.update(sql, path + "/%");
     }
   }
 

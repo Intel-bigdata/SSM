@@ -68,8 +68,13 @@ import org.smartdata.protocol.AdminServerProto.SubmitRuleResponseProto;
 import org.smartdata.protocol.ClientServerProto;
 import org.smartdata.protocol.ClientServerProto.DeleteFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.DeleteFileStateResponseProto;
+import org.smartdata.protocol.ClientServerProto.FileStateProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStatesRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStatesResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetSmallFileListRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetSmallFileListResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
@@ -324,6 +329,20 @@ public class ServerProtocolsServerSideTranslator implements
   }
 
   @Override
+  public GetSmallFileListResponseProto getSmallFileList(RpcController controller,
+                                                        GetSmallFileListRequestProto req)
+      throws ServiceException {
+    try {
+      List<String> smallFileList = server.getSmallFileList();
+      return GetSmallFileListResponseProto.newBuilder()
+          .addAllSmallFile(smallFileList)
+          .build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
   public ReportFileAccessEventResponseProto reportFileAccessEvent(
       RpcController controller, ReportFileAccessEventRequestProto req)
       throws ServiceException {
@@ -343,6 +362,23 @@ public class ServerProtocolsServerSideTranslator implements
       FileState fileState = server.getFileState(path);
       return GetFileStateResponseProto.newBuilder()
           .setFileState(ProtoBufferHelper.convert(fileState))
+          .build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public GetFileStatesResponseProto getFileStates(RpcController controller,
+      GetFileStatesRequestProto req) throws ServiceException {
+    try {
+      String path = req.getFilePath();
+      List<FileStateProto> fileStateProtoList = new ArrayList<>();
+      for (FileState fileState : server.getFileStates(path)) {
+        fileStateProtoList.add(ProtoBufferHelper.convert(fileState));
+      }
+      return GetFileStatesResponseProto.newBuilder()
+          .addAllFileState(fileStateProtoList)
           .build();
     } catch (IOException e) {
       throw new ServiceException(e);

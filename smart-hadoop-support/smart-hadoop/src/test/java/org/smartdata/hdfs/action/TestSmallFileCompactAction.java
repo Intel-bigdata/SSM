@@ -77,6 +77,6 @@ public class TestSmallFileCompactAction extends MiniClusterHarness {
 
   @After
   public void tearDown() throws Exception {
-    dfs.delete(new Path("/test").makeQualified(dfs), true);
+    dfs.getClient().delete("/test", true);
   }
 }

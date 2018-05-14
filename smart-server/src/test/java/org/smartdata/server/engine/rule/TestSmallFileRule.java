@@ -19,6 +19,7 @@ package org.smartdata.server.engine.rule;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +66,7 @@ public class TestSmallFileRule extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
 
     String rule = "file: path matches \"/test/small_files/file*\" and length < 20KB"
-        + " | compact -containerFile \"/test/small_files/container_file\"";
+        + " | compact -containerFile \"/test/small_files/container_file_1\"";
     SmartAdmin admin = new SmartAdmin(smartContext.getConf());
     admin.submitRule(rule, RuleState.ACTIVE);
 
@@ -75,5 +76,12 @@ public class TestSmallFileRule extends MiniSmartClusterHarness {
       System.out.println(info);
     }
     Assert.assertEquals(1, ruleInfoList.size());
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    dfs.getClient().delete("/test", true);
+    ssm.getMetaStore().dropTable("file_state");
+    ssm.getMetaStore().dropTable("small_file");
   }
 }

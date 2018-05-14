@@ -2140,10 +2140,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         break;
       case COMPACT:
         if (smallFileDao.getCountByPath(path) == 0) {
-          throw new RuntimeException("The file: " + path + " is not SSM small file.");
+          // return new normal file state if compact file state not exist
+          return new NormalFileState(path);
         }
-        FileContainerInfo fileContainerInfo = smallFileDao.getFileContainerInfo(path);
-        fileState = new CompactFileState(path, fileContainerInfo);
+        fileState = smallFileDao.getFileStateByPath(path);
         break;
       case COMPRESSION:
         break;
@@ -2155,8 +2155,39 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return fileState;
   }
 
+  public List<FileState> getFileStates(String path) {
+    List<FileState> fileStates = new ArrayList<>();
+    FileState fileState = getFileState(path);
+    fileStates.add(fileState);
+
+    // Fetch info from corresponding table to regenerate a specific FileState
+    switch (fileState.getFileType()) {
+      case NORMAL:
+        break;
+      case COMPACT:
+        String containerFile = ((CompactFileState) fileState)
+            .getFileContainerInfo().getContainerFilePath();
+        fileStates = smallFileDao.getFileStatesByContainerFilePath(containerFile);
+        break;
+      case COMPRESSION:
+        break;
+      case S3:
+        break;
+      default:
+    }
+    return fileStates;
+  }
+
   public void deleteFileState(String path, boolean recursive) {
     fileStateDao.deleteByPath(path, recursive);
     smallFileDao.deleteByPath(path, recursive);
+  }
+
+  public List<String> getSmallFileList() {
+    try {
+      return smallFileDao.getSmallFileList();
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    }
   }
 }

@@ -22,13 +22,20 @@ import org.apache.hadoop.ipc.RPC;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
 import org.smartdata.protocol.ClientServerProto.DeleteFileStateRequestProto;
+import org.smartdata.protocol.ClientServerProto.FileStateProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStatesRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStatesResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetSmallFileListRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetSmallFileListResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
 import org.smartdata.protocol.SmartClientProtocol;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClientProtocolClientSideTranslator implements
     java.io.Closeable, SmartClientProtocol {
@@ -43,6 +50,17 @@ public class ClientProtocolClientSideTranslator implements
   public void close() throws IOException {
     RPC.stopProxy(rpcProxy);
     rpcProxy = null;
+  }
+
+  @Override
+  public List<String> getSmallFileList() throws IOException {
+    GetSmallFileListRequestProto req = GetSmallFileListRequestProto.newBuilder().build();
+    try {
+      GetSmallFileListResponseProto response = rpcProxy.getSmallFileList(null, req);
+      return response.getSmallFileList();
+    } catch (ServiceException e) {
+      throw ProtoBufferHelper.getRemoteException(e);
+    }
   }
 
   @Override
@@ -68,6 +86,23 @@ public class ClientProtocolClientSideTranslator implements
     try {
       GetFileStateResponseProto response = rpcProxy.getFileState(null, req);
       return ProtoBufferHelper.convert(response.getFileState());
+    } catch (ServiceException e) {
+      throw ProtoBufferHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public List<FileState> getFileStates(String filePath) throws IOException {
+    GetFileStatesRequestProto req = GetFileStatesRequestProto.newBuilder()
+        .setFilePath(filePath)
+        .build();
+    try {
+      GetFileStatesResponseProto response = rpcProxy.getFileStates(null, req);
+      List<FileState> fileStateList = new ArrayList<>();
+      for (FileStateProto fileStateProto : response.getFileStateList()) {
+        fileStateList.add(ProtoBufferHelper.convert(fileStateProto));
+      }
+      return fileStateList;
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }

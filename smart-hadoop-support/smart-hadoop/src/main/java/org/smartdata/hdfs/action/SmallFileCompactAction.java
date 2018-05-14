@@ -60,23 +60,37 @@ public class SmallFileCompactAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
+    // Check if the variables are legal
+    if (containerFile == null || containerFile.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Found invalid container file: " + containerFile);
+    }
     appendLog(String.format("Action starts at %s : small_file_compact %s",
         Utils.getFormatedCurrentTime(), containerFile));
+    if (smallFiles == null || smallFiles.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Found invalid small files: " + smallFiles);
+    }
 
     ArrayList<String> fileList = new Gson().fromJson(
         smallFiles, new ArrayList<String>().getClass());
     OutputStream out = getOutputStream(containerFile);
     for (String smallFile : fileList) {
-      Long fileLen = getFileLength(smallFile);
-      if (fileLen > 0) {
-        appendLog(String.format("Compacting %s to %s", smallFile, containerFile));
+      if ((smallFile != null) && !smallFile.isEmpty()
+          && (getFileLength(smallFile) > 0)) {
+        appendLog(String.format(
+            "Compacting %s to %s", smallFile, containerFile));
         compact(smallFile, out);
+      } else {
+        throw new IOException(
+            String.format("%s can not compact: ", smallFile));
       }
     }
     if (out != null) {
       out.close();
     }
-    appendLog(String.format("Compact small files to %s successfully", containerFile));
+    appendLog(String.format(
+        "Compact small files to %s successfully", containerFile));
   }
 
   /**

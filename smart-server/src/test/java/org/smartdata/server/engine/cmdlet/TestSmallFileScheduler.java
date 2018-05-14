@@ -76,7 +76,7 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
 
     CmdletManager cmdletManager = ssm.getCmdletManager();
     CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString("compact -containerFile "
-        + "/test/small_files/container_file");
+        + "/test/small_files/container_file_2");
     cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
     long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
 
@@ -85,7 +85,7 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
       CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
       if (state == CmdletState.DONE) {
         MetaStore metaStore = ssm.getMetaStore();
-        long containerFileLen = metaStore.getFile("/test/small_files/container_file").getLength();
+        long containerFileLen = metaStore.getFile("/test/small_files/container_file_2").getLength();
         Assert.assertEquals(sumFileLen, containerFileLen);
         long smallFileLen = metaStore.getFile("/test/small_files/file_1").getLength();
         Assert.assertEquals(0, smallFileLen);
@@ -98,6 +98,8 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
 
   @After
   public void tearDown() throws Exception {
-    dfs.delete(new Path("/test").makeQualified(dfs), true);
+    dfs.getClient().delete("/test", true);
+    ssm.getMetaStore().dropTable("file_state");
+    ssm.getMetaStore().dropTable("small_file");
   }
 }

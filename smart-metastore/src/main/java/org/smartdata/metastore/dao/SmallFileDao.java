@@ -17,7 +17,9 @@
  */
 package org.smartdata.metastore.dao;
 
+import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileContainerInfo;
+import org.smartdata.model.FileState;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -25,7 +27,7 @@ import javax.sql.DataSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
+import java.util.List;
 
 public class SmallFileDao {
   private DataSource dataSource;
@@ -48,35 +50,47 @@ public class SmallFileDao {
 
   public synchronized void deleteByPath(String path, boolean recursive) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "DELETE FROM small_file WHERE path = ?";
+    jdbcTemplate.update(sql, path);
     if (recursive) {
-      String sql = "DELETE FROM small_file WHERE path LIKE ?";
-      jdbcTemplate.update(sql, path + "%");
-    } else {
-      String sql = "DELETE FROM small_file WHERE path = ?";
-      jdbcTemplate.update(sql, path);
+      sql = "DELETE FROM small_file WHERE path LIKE ?";
+      jdbcTemplate.update(sql, path + "/%");
     }
   }
 
-  public FileContainerInfo getFileContainerInfo(String path) {
+  public FileState getFileStateByPath(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM small_file WHERE path = ?",
-        new Object[]{path}, new FileContainerInfoRowMapper());
+        new Object[]{path}, new FileStateRowMapper());
   }
 
-  public Integer getCountByPath(String path) {
+  public List<FileState> getFileStatesByContainerFilePath(String containerFilePath) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "SELECT COUNT(*) FROM small_file WHERE path = ?";
+    return jdbcTemplate.query("SELECT * FROM small_file WHERE container_file_path = ?",
+        new FileStateRowMapper(), containerFilePath);
+  }
+
+  public List<String> getSmallFileList() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT path FROM small_file";
+    return jdbcTemplate.queryForList(sql, String.class);
+  }
+
+  public int getCountByPath(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT COUNT(*) FROM small_file WHERE path = ?";
     return jdbcTemplate.queryForObject(sql, Integer.class, path);
   }
 
-  class FileContainerInfoRowMapper implements RowMapper<FileContainerInfo> {
+  private class FileStateRowMapper implements RowMapper<FileState> {
     @Override
-    public FileContainerInfo mapRow(ResultSet resultSet, int i)
+    public FileState mapRow(ResultSet resultSet, int i)
         throws SQLException {
-      return new FileContainerInfo(
-          resultSet.getString("container_file_path"),
-          resultSet.getLong("offset"),
-          resultSet.getLong("length")
+      return new CompactFileState(resultSet.getString("path"),
+          new FileContainerInfo(
+              resultSet.getString("container_file_path"),
+              resultSet.getLong("offset"),
+              resultSet.getLong("length"))
       );
     }
   }

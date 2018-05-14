@@ -27,6 +27,10 @@ import org.smartdata.protocol.ClientServerProto.DeleteFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.DeleteFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStatesRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetFileStatesResponseProto;
+import org.smartdata.protocol.ClientServerProto.GetSmallFileListRequestProto;
+import org.smartdata.protocol.ClientServerProto.GetSmallFileListResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
@@ -37,6 +41,10 @@ import org.smartdata.protocol.ClientServerProto.UpdateFileStateResponseProto;
 @ProtocolInfo(protocolName = SmartConstants.SMART_CLIENT_PROTOCOL_NAME,
     protocolVersion = 1)
 public interface ClientProtocolProtoBuffer {
+  GetSmallFileListResponseProto
+  getSmallFileList(RpcController controller,
+                   GetSmallFileListRequestProto req) throws ServiceException;
+
   ReportFileAccessEventResponseProto
   reportFileAccessEvent(RpcController controller,
                         ReportFileAccessEventRequestProto req) throws ServiceException;
@@ -44,6 +52,10 @@ public interface ClientProtocolProtoBuffer {
   GetFileStateResponseProto
   getFileState(RpcController controller,
                GetFileStateRequestProto req) throws ServiceException;
+
+  GetFileStatesResponseProto
+  getFileStates(RpcController controller,
+      GetFileStatesRequestProto req) throws ServiceException;
 
   UpdateFileStateResponseProto
   updateFileState(RpcController controller,

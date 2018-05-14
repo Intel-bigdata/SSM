@@ -32,6 +32,7 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.FileState;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
@@ -68,7 +69,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   /**
    * The mapping between small file and action.
    */
-  private Map<String, Long> smallFilesLock;
+  private List<String> smallFilesLock;
 
   /**
    * The mapping between action and small files.
@@ -79,7 +80,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private static final List<String> ACTIONS = Arrays.asList("write", "compact");
   public static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
 
-  public SmallFileScheduler(SmartContext context, MetaStore metaStore) throws IOException {
+  public SmallFileScheduler(SmartContext context, MetaStore metaStore)
+      throws IOException {
     super(context, metaStore);
     this.metaStore = metaStore;
     this.nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
@@ -87,11 +89,11 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void init() throws IOException {
-    this.containerFilesLock = new ConcurrentHashMap<>(32);
-    this.containerFileMap = new ConcurrentHashMap<>(32);
-    this.fileContainerInfoMap = new ConcurrentHashMap<>(32);
-    this.smallFilesLock = new ConcurrentHashMap<>(256);
-    this.smallFilesMap = new ConcurrentHashMap<>(32);
+    this.containerFilesLock = new ConcurrentHashMap<>();
+    this.containerFileMap = new ConcurrentHashMap<>();
+    this.fileContainerInfoMap = new ConcurrentHashMap<>();
+    this.smallFilesLock = new ArrayList<>();
+    this.smallFilesMap = new ConcurrentHashMap<>();
     this.dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
   }
 
@@ -118,43 +120,58 @@ public class SmallFileScheduler extends ActionSchedulerService {
       // Check if container file is null
       String containerFilePath = actionInfo.getArgs().get(
           SmallFileCompactAction.CONTAINER_FILE);
-      if (containerFilePath == null) {
+      if (containerFilePath == null || containerFilePath.isEmpty()) {
         return false;
       }
 
-      // Check if small file list is null
+      // Check if small file list is null or empty
       String smallFiles = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-      if (smallFiles == null) {
+      if (smallFiles == null || smallFiles.isEmpty()) {
         return false;
       }
+
+      // Get valid small file list according to the small file lock map
       ArrayList<String> smallFileList = new Gson().fromJson(
-          actionInfo.getArgs().get(HdfsAction.FILE_PATH),
-          new ArrayList<String>().getClass());
+          smallFiles, new ArrayList<String>().getClass());
       Iterator<String> iterator = smallFileList.iterator();
-      Map<String, Long> tempSmallFiles = new ConcurrentHashMap<>(200);
       while (iterator.hasNext()) {
         String smallFile = iterator.next();
-        if (!smallFilesLock.containsKey(smallFile)) {
-          tempSmallFiles.put(smallFile, actionId);
-        } else {
+        if (smallFile == null || smallFile.isEmpty()
+            || smallFilesLock.contains(smallFile)) {
           iterator.remove();
+        } else {
+          FileState fileState = new FileState(smallFile,
+              FileState.FileType.NORMAL, FileState.FileStage.PROCESSING);
+          try {
+            metaStore.insertUpdateFileState(fileState);
+          } catch (MetaStoreException e) {
+            LOG.error("Failed to insert file state.", e);
+          }
         }
       }
-      smallFilesLock.putAll(tempSmallFiles);
 
-      // Update container file map, save the info that whether it already exists
-      try {
-        if (dfsClient.exists(containerFilePath)) {
-          containerFileMap.put(actionId, new ContainerFileExistInfo(containerFilePath, true));
-        } else {
-          containerFileMap.put(actionId, new ContainerFileExistInfo(containerFilePath, false));
-        }
-      } catch (IOException e) {
-        LOG.error("Failed to check if the container file is exists: " + containerFilePath, e);
+      if (smallFileList.isEmpty()) {
         return false;
       }
+      smallFilesLock.addAll(smallFileList);
 
+      // Update container file map, save the info indicated whether it already exists
+      try {
+        if (dfsClient.exists(containerFilePath)) {
+          containerFileMap.put(
+              actionId, new ContainerFileExistInfo(containerFilePath, true));
+        } else {
+          containerFileMap.put(
+              actionId, new ContainerFileExistInfo(containerFilePath, false));
+        }
+      } catch (IOException e) {
+        LOG.error("Failed to check if the container file is exists: "
+            + containerFilePath, e);
+        return false;
+      }
       smallFilesMap.put(actionId, smallFileList);
+
+      // Reset args of the action
       Map<String, String> args = new HashMap<>(2);
       args.put(SmallFileCompactAction.CONTAINER_FILE,
           actionInfo.getArgs().get(SmallFileCompactAction.CONTAINER_FILE));
@@ -196,7 +213,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
         FileInfo containerFileInfo = metaStore.getFile(containerFilePath);
         offset = (containerFileInfo == null) ? 0L : containerFileInfo.getLength();
       } catch (MetaStoreException e) {
-        LOG.error("Failed to get file info of the container file: " + containerFilePath);
+        LOG.error("Failed to get file info of the container file: "
+            + containerFilePath);
         return ScheduleResult.FAIL;
       }
 
@@ -230,7 +248,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
-    if (actionInfo.isFinished() && ACTIONS.get(1).equals(actionInfo.getActionName())) {
+    if (actionInfo.isFinished()
+        && ACTIONS.get(1).equals(actionInfo.getActionName())) {
       long actionId = actionInfo.getActionId();
       if (actionInfo.isSuccessful()) {
         for (Map.Entry<String, FileContainerInfo> entry :
@@ -251,11 +270,13 @@ public class SmallFileScheduler extends ActionSchedulerService {
         LOG.info("Update file container info successfully.");
       } else {
         try {
-          if (containerFileMap.get(actionId).isExist) {
-            dfsClient.delete(containerFileMap.get(actionId).containerFilePath, false);
+          if (!containerFileMap.get(actionId).isExist) {
+            dfsClient.delete(
+                containerFileMap.get(actionId).containerFilePath, false);
           }
         } catch (IOException e3) {
-          LOG.error("Failed to delete the container file: " + containerFileMap.get(actionId), e3);
+          LOG.error("Failed to delete the container file: "
+              + containerFileMap.get(actionId), e3);
         }
       }
 
