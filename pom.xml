@@ -68,6 +68,9 @@
 
     <profile>
       <id>hadoop-2.7</id>
+      <modules>
+        <module>smart-hadoop-support</module>
+      </modules>
       <!-- Default hadoop profile. Uses global properties. -->
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -75,6 +78,9 @@
     </profile>
     <profile>
       <id>hadoop-cdh-2.6</id>
+      <modules>
+        <module>smart-hadoop-support</module>
+      </modules>
       <properties>
         <hadoop.version>2.6.0-cdh5.10.1</hadoop.version>
       </properties>
@@ -89,6 +95,7 @@
       <id>alluxio</id>
       <modules>
         <module>smart-alluxio-support</module>
+        <!-- TODO remove in future -->
         <module>smart-hadoop-support</module>
       </modules>
     </profile>
