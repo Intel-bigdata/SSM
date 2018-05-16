@@ -17,6 +17,8 @@
  */
 package org.smartdata.hdfs.client;
 
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.UnresolvedLinkException;
@@ -30,6 +32,7 @@ import org.smartdata.SmartConstants;
 import org.smartdata.client.SmartClient;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
+import org.smartdata.model.S3FileState;
 import org.smartdata.model.FileState.FileStage;
 import org.smartdata.model.FileState.FileType;
 
@@ -42,6 +45,7 @@ public class SmartDFSClient extends DFSClient {
   private static final Logger LOG = LoggerFactory.getLogger(SmartDFSClient.class);
   private SmartClient smartClient = null;
   private boolean healthy = false;
+  private Configuration conf;
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
@@ -129,13 +133,18 @@ public class SmartDFSClient extends DFSClient {
       boolean verifyChecksum)
       throws IOException, UnresolvedLinkException {
     FileState fileState;
+    src = checkS3ForXattr(src);
     if (healthy) { // TODO: required indeed
       fileState = smartClient.getFileState(src);
       if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
         throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
             + fileState.getFileType());
       }
-    } else {
+    } 
+    else if (src.startsWith("s3a")) {
+      fileState = new S3FileState(src);
+    }
+    else {
       fileState = new FileState(src, FileType.NORMAL, FileStage.DONE);
     }
     DFSInputStream is = SmartInputStreamFactory.get().create(this, src,
@@ -193,5 +202,23 @@ public class SmartDFSClient extends DFSClient {
   private boolean isSmartClientDisabled() {
     File idFile = new File(SmartConstants.SMART_CLIENT_DISABLED_ID_FILE);
     return idFile.exists();
+  }
+
+  public String checkS3ForXattr(String filePath) throws IOException {
+    // I think we should return the true path if file is move to S3,
+    // or return filePath If Xattr doesn't contain the attribute we want
+    // For example, if file1 is move to s3a://XX/file1, then we can return
+    // s3a://XX/file1. If not, we just return filePath
+       
+
+     LocatedBlocks  locatedBlocks  = super.getLocatedBlocks(filePath.toString(),  0);
+     if(locatedBlocks!=null  &&  locatedBlocks.getFileLength()  ==  0){
+        byte[]  xAttr  =  super.getXAttr(filePath,  "user.coldloc");
+        if(xAttr!=null){
+             //Input  stream  to  read  the  data  directly  from  s3fs
+           filePath = new  String(xAttr) ;  
+        }
+     }
+     return filePath;
   }
 }
