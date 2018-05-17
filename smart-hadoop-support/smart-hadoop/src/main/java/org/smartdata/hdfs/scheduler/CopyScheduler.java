@@ -615,6 +615,7 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private boolean fileExistOnStandby(String filePath) {
+    // TODO Need to be more general to handle failure
     try {
       // Check if file exists at standby cluster
       FileSystem fs = FileSystem.get(URI.create(filePath), conf);
