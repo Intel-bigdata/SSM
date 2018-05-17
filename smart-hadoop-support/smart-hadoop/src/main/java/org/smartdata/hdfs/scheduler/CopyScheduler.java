@@ -132,8 +132,8 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     String srcDir = action.getArgs().get(SyncAction.SRC);
     String path = action.getArgs().get(HdfsAction.FILE_PATH);
-    String destPath = path.replace(srcDir, destDir);
     String destDir = action.getArgs().get(SyncAction.DEST);
+    String destPath = path.replace(srcDir, destDir);
     // Check again to avoid corner cases
     long did = fileDiffChainMap.get(path).getHead();
     if (did == -1) {
@@ -235,7 +235,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     String srcDir = actionInfo.getArgs().get(SyncAction.SRC);
     String destDir = actionInfo.getArgs().get(SyncAction.DEST);
-    String destPath = actionInfo.replace(srcDir, destDir);
+    String destPath = path.replace(srcDir, destDir);
     if (!fileExistOnStandby(destPath)) {
       return true;
     }
@@ -620,6 +620,17 @@ public class CopyScheduler extends ActionSchedulerService {
     fileLock.remove(diff.getSrc());
   }
 
+  private boolean fileExistOnStandby(String filePath) {
+    try {
+      // Check if file exists at standby cluster
+      FileSystem fs = FileSystem.get(URI.create(filePath), conf);
+      return fs.exists(new Path(filePath));
+    } catch (IOException e) {
+      LOG.debug("Fetch remote file status fails!", e);
+      return false;
+    }
+  }
+
   private class ScheduleTask implements Runnable {
 
     private void syncFileDiff() {
@@ -630,16 +641,6 @@ public class CopyScheduler extends ActionSchedulerService {
         diffPreProcessing(pendingDiffs);
       } catch (MetaStoreException e) {
         LOG.error("Sync fileDiffs error", e);
-      }
-    }
-
-    private boolean fileExistOnStandby(String filePath) {
-      try {
-        fs = FileSystem.get(URI.create(filePath), conf);
-        return fs.exists(new Path(filePath));
-      } catch (IOException e) {
-        LOG.debug("Fetch remote file status fails!", e);
-        return false;
       }
     }
 
