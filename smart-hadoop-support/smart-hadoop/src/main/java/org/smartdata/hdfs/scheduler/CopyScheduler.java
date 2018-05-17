@@ -233,12 +233,6 @@ public class CopyScheduler extends ActionSchedulerService {
       fileLock.put(path, 0L);
       return true;
     }
-    String srcDir = actionInfo.getArgs().get(SyncAction.SRC);
-    String destDir = actionInfo.getArgs().get(SyncAction.DEST);
-    String destPath = path.replace(srcDir, destDir);
-    if (!fileExistOnStandby(destPath)) {
-      return true;
-    }
     return false;
   }
 
@@ -824,7 +818,10 @@ public class CopyScheduler extends ActionSchedulerService {
             // Delete raw is enough
             fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
           }
-          diffChain.add(fileDiff.getDiffId());
+          if (fileExistOnStandby(filePath)) {
+            // Only allow delete when file do exist on remote
+            diffChain.add(fileDiff.getDiffId());
+          }
         } else {
           updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }
