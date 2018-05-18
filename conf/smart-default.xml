@@ -70,13 +70,13 @@
   <property>
     <name>smart.namespace.fetcher.producers.num</name>
     <value>3</value>
-    <description>Number of producers to produce data fetched by Namespace fetcher</description>
+    <description>Number of producers in namespace fetcher</description>
   </property>
 
   <property>
     <name>smart.namespace.fetcher.consumers.num</name>
     <value>6</value>
-    <description>Number of consumers to consume data fetched by Namespace fetcher</description>
+    <description>Number of consumers in namespace fetcher</description>
   </property>
 
   <property>
