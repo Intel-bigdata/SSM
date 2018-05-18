@@ -20,7 +20,7 @@ package org.smartdata.hdfs.action;
 import org.smartdata.action.annotation.ActionSignature;
 
 /**
- * An action to do all-ssd for a file.
+ * An action to do one-disk for a file.
  */
 @ActionSignature(
   actionId = "onedisk",
