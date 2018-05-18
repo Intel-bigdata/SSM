@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@
 package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -26,12 +27,14 @@ import org.apache.hadoop.io.IOUtils;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
+import org.smartdata.model.FileContainerInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -44,6 +47,7 @@ import java.util.Map;
         + SmallFileCompactAction.CONTAINER_FILE + " $container_file "
 )
 public class SmallFileCompactAction extends HdfsAction {
+  private float status;
   private Configuration conf;
   private String smallFiles;
   private String containerFile;
@@ -60,46 +64,78 @@ public class SmallFileCompactAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-    // Check if the variables are legal
-    if (containerFile == null || containerFile.isEmpty()) {
-      throw new IllegalArgumentException(
-          "Found invalid container file: " + containerFile);
-    }
-    appendLog(String.format("Action starts at %s : small_file_compact %s",
-        Utils.getFormatedCurrentTime(), containerFile));
+    // Get small file list
     if (smallFiles == null || smallFiles.isEmpty()) {
       throw new IllegalArgumentException(
-          "Found invalid small files: " + smallFiles);
+          String.format("Invalid small files: %s.", smallFiles));
     }
+    ArrayList<String> smallFileList = new Gson().fromJson(
+        smallFiles, new TypeToken<ArrayList<String>>() {
+        }.getType());
 
-    ArrayList<String> fileList = new Gson().fromJson(
-        smallFiles, new ArrayList<String>().getClass());
+    // Get offset and output stream of container file
+    if (containerFile == null || containerFile.isEmpty()) {
+      throw new IllegalArgumentException(
+          String.format("Invalid container file: %s.", containerFile));
+    }
+    long offset = exists(containerFile) ? getFileLength(containerFile) : 0L;
     OutputStream out = getOutputStream(containerFile);
-    for (String smallFile : fileList) {
+
+    appendLog(String.format("Action starts at %s : compact small files to %s.",
+        Utils.getFormatedCurrentTime(), containerFile));
+    Map<String, FileContainerInfo> fileContainerInfoMap = new HashMap<>(
+        smallFileList.size());
+    for (String smallFile : smallFileList) {
       if ((smallFile != null) && !smallFile.isEmpty()
-          && (getFileLength(smallFile) > 0)) {
-        appendLog(String.format(
-            "Compacting %s to %s", smallFile, containerFile));
-        compact(smallFile, out);
-      } else {
-        throw new IOException(
-            String.format("%s can not compact: ", smallFile));
+          && exists(smallFile) && getFileLength(smallFile) > 0) {
+        try (InputStream in = getInputStream(smallFile)) {
+          IOUtils.copyBytes(in, out, 4096);
+          long fileLen = getFileLength(smallFile);
+          fileContainerInfoMap.put(
+              smallFile, new FileContainerInfo(containerFile, offset, fileLen));
+          offset += fileLen;
+          this.status = (smallFileList.indexOf(smallFile) + 1.0f) / smallFileList.size();
+          appendLog(String.format(
+              "Compact %s to %s successfully.", smallFile, containerFile));
+        } catch (IOException e) {
+          if (out != null) {
+            out.close();
+          }
+          throw e;
+        }
       }
     }
+
     if (out != null) {
       out.close();
     }
+    appendResult(new Gson().toJson(fileContainerInfoMap));
     appendLog(String.format(
-        "Compact small files to %s successfully", containerFile));
+        "Compact all the small files to %s successfully.", containerFile));
   }
 
   /**
-   * Compact the small file to the big container file.
+   * Check if exists.
    */
-  private void compact(String path, OutputStream out) throws IOException {
-    InputStream in = getInputStream(path);
-    IOUtils.copyBytes(in, out, 4096);
-    in.close();
+  private boolean exists(String path) throws IOException {
+    if (path.startsWith(HDFS_SCHEME)) {
+      FileSystem fs = FileSystem.get(URI.create(path), conf);
+      return fs.exists(new Path(path));
+    } else {
+      return dfsClient.exists(path);
+    }
+  }
+
+  /**
+   * Get length of the specified file.
+   */
+  private long getFileLength(String path) throws IOException {
+    if (path.startsWith(HDFS_SCHEME)) {
+      FileSystem fs = FileSystem.get(URI.create(path), conf);
+      return fs.getFileStatus(new Path(path)).getLen();
+    } else {
+      return dfsClient.getFileInfo(path).getLen();
+    }
   }
 
   /**
@@ -136,15 +172,8 @@ public class SmallFileCompactAction extends HdfsAction {
     }
   }
 
-  /**
-   * Get length of the specified file.
-   */
-  private long getFileLength(String path) throws IOException {
-    if (path.startsWith(HDFS_SCHEME)) {
-      FileSystem fs = FileSystem.get(URI.create(path), conf);
-      return fs.getFileStatus(new Path(path)).getLen();
-    } else {
-      return dfsClient.getFileInfo(path).getLen();
-    }
+  @Override
+  public float getProgress() {
+    return this.status;
   }
 }

@@ -66,8 +66,12 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   }
 
   private boolean isOnS3(String fileName) {
-    return metaStore.getFileState(fileName)
-        .getFileType().getValue() == FileState.FileType.S3.getValue();
+    try {
+      return metaStore.getFileState(fileName)
+          .getFileType().getValue() == FileState.FileType.S3.getValue();
+    } catch (MetaStoreException e) {
+      return false;
+    }
   }
 
   @Override

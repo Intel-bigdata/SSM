@@ -22,13 +22,6 @@ option java_outer_classname = "ClientServerProto";
 option java_generic_services = true;
 option java_generate_equals_and_hash = true;
 
-message GetSmallFileListRequestProto {
-}
-
-message GetSmallFileListResponseProto {
-  repeated string smallFile = 1;
-}
-
 message ReportFileAccessEventRequestProto {
   required string filePath = 1;
   required int64 fileId = 2;
@@ -91,8 +84,6 @@ message DeleteFileStateResponseProto {
 }
 
 service protoService {
-  rpc getSmallFileList (GetSmallFileListRequestProto)
-  returns (GetSmallFileListResponseProto);
   rpc reportFileAccessEvent (ReportFileAccessEventRequestProto)
   returns (ReportFileAccessEventResponseProto);
   rpc getFileState (GetFileStateRequestProto)

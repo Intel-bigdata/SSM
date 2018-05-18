@@ -2106,88 +2106,81 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void insertUpdateFileState(FileState fileState)
       throws MetaStoreException {
     try {
+      // Update corresponding tables according to the file state
       fileStateDao.insertUpdate(fileState);
-      // Update corresponding table if fileState is a specific FileState
-      if (fileState instanceof CompactFileState) {
-        FileContainerInfo fileContainerInfo = (
-            (CompactFileState) fileState).getFileContainerInfo();
-        smallFileDao.insertUpdate(fileState.getPath(), fileContainerInfo);
+      switch (fileState.getFileType()) {
+        case COMPACT:
+          FileContainerInfo fileContainerInfo = (
+              (CompactFileState) fileState).getFileContainerInfo();
+          smallFileDao.insertUpdate(fileState.getPath(), fileContainerInfo);
+          break;
+        case COMPRESSION:
+          break;
+        case S3:
+          break;
+        default:
       }
-      /*
-       else if (fileState instanceof CompressFileState) {
-
-       } else if (fileState instanceof S3FileState) {
-
-       }
-      */
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public FileState getFileState(String path) {
+  public FileState getFileState(String path) throws MetaStoreException {
     FileState fileState;
     try {
       fileState = fileStateDao.getByPath(path);
-    } catch (EmptyResultDataAccessException e) {
+      // Fetch info from corresponding table to regenerate a specific file state
+      switch (fileState.getFileType()) {
+        case NORMAL:
+          fileState = new NormalFileState(path);
+          break;
+        case COMPACT:
+          fileState = smallFileDao.getFileStateByPath(path);
+          break;
+        case COMPRESSION:
+          break;
+        case S3:
+          fileState = new S3FileState(path);
+          break;
+        default:
+      }
+    } catch (EmptyResultDataAccessException e1) {
       fileState = new NormalFileState(path);
-    }
-
-    // Fetch info from corresponding table to regenerate a specific FileState
-    switch (fileState.getFileType()) {
-      case NORMAL:
-        fileState = new NormalFileState(path);
-        break;
-      case COMPACT:
-        if (smallFileDao.getCountByPath(path) == 0) {
-          // return new normal file state if compact file state not exist
-          return new NormalFileState(path);
-        }
-        fileState = smallFileDao.getFileStateByPath(path);
-        break;
-      case COMPRESSION:
-        break;
-      case S3:
-        fileState = new S3FileState(path);
-        break;
-      default:
+    } catch (Exception e2) {
+      throw new MetaStoreException(e2);
     }
     return fileState;
   }
 
-  public List<FileState> getFileStates(String path) {
-    List<FileState> fileStates = new ArrayList<>();
-    FileState fileState = getFileState(path);
-    fileStates.add(fileState);
+  public List<FileState> getFileStates(String path) throws MetaStoreException {
+    try {
+      List<FileState> fileStates = new ArrayList<>();
+      FileState fileState = getFileState(path);
+      fileStates.add(fileState);
 
-    // Fetch info from corresponding table to regenerate a specific FileState
-    switch (fileState.getFileType()) {
-      case NORMAL:
-        break;
-      case COMPACT:
-        String containerFile = ((CompactFileState) fileState)
-            .getFileContainerInfo().getContainerFilePath();
-        fileStates = smallFileDao.getFileStatesByContainerFilePath(containerFile);
-        break;
-      case COMPRESSION:
-        break;
-      case S3:
-        break;
-      default:
+      // Fetch info from corresponding table to regenerate a specific FileState
+      switch (fileState.getFileType()) {
+        case NORMAL:
+          break;
+        case COMPACT:
+          String containerFile = ((CompactFileState) fileState)
+              .getFileContainerInfo().getContainerFilePath();
+          fileStates = smallFileDao.getFileStatesByContainerFilePath(containerFile);
+          break;
+        case COMPRESSION:
+          break;
+        case S3:
+          break;
+        default:
+      }
+      return fileStates;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
-    return fileStates;
   }
 
   public void deleteFileState(String path, boolean recursive) {
     fileStateDao.deleteByPath(path, recursive);
     smallFileDao.deleteByPath(path, recursive);
-  }
-
-  public List<String> getSmallFileList() {
-    try {
-      return smallFileDao.getSmallFileList();
-    } catch (EmptyResultDataAccessException e) {
-      return new ArrayList<>();
-    }
   }
 }

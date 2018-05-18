@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ public class SmallFileDao {
     this.dataSource = dataSource;
   }
 
-  public synchronized void insertUpdate(String path, FileContainerInfo fileContainerInfo) {
+  public void insertUpdate(String path, FileContainerInfo fileContainerInfo) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "REPLACE INTO small_file (path, container_file_path, offset, length)"
         + " VALUES (?,?,?,?)";
@@ -48,7 +48,7 @@ public class SmallFileDao {
         fileContainerInfo.getOffset(), fileContainerInfo.getLength());
   }
 
-  public synchronized void deleteByPath(String path, boolean recursive) {
+  public void deleteByPath(String path, boolean recursive) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "DELETE FROM small_file WHERE path = ?";
     jdbcTemplate.update(sql, path);
@@ -68,18 +68,6 @@ public class SmallFileDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("SELECT * FROM small_file WHERE container_file_path = ?",
         new FileStateRowMapper(), containerFilePath);
-  }
-
-  public List<String> getSmallFileList() {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT path FROM small_file";
-    return jdbcTemplate.queryForList(sql, String.class);
-  }
-
-  public int getCountByPath(String path) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT COUNT(*) FROM small_file WHERE path = ?";
-    return jdbcTemplate.queryForObject(sql, Integer.class, path);
   }
 
   private class FileStateRowMapper implements RowMapper<FileState> {

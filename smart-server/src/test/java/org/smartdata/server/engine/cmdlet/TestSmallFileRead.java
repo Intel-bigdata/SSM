@@ -37,21 +37,27 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class TestSmallFileRead extends MiniSmartClusterHarness {
-  private long fileLength;
   private int ret;
+  private long fileLength;
+  private ArrayList<String> smallFileList;
 
-  private void createSmallFiles() throws Exception {
+  private void createTestFiles() throws Exception {
     Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
-    ArrayList<String> smallFileList = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
-      long fileLen = 5 + (int) (Math.random() * 11);
-      byte[] buf = new byte[50];
+      long fileLen;
+      fileLen = 5 + (int) (Math.random() * 11);
+      byte[] buf = new byte[20];
       Random rb = new Random(2018);
-      rb.nextBytes(buf);
-      out.write(buf, 0, (int) fileLen);
+      int bytesRemaining = (int) fileLen;
+      while (bytesRemaining > 0) {
+        rb.nextBytes(buf);
+        int bytesToWrite = (bytesRemaining < buf.length) ? bytesRemaining : buf.length;
+        out.write(buf, 0, bytesToWrite);
+        bytesRemaining -= bytesToWrite;
+      }
       out.close();
       if (i == 0) {
         fileLength = fileLen;
@@ -59,57 +65,60 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
       }
       smallFileList.add(fileName);
     }
-    waitTillSSMExitSafeMode();
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString("compact -containerFile"
-        + " /test/small_files/container_file_5");
-    cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
-    Thread.sleep(1000);
-    long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
-
-    while (true) {
-      Thread.sleep(1000);
-      CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
-      if (state == CmdletState.DONE) {
-        return;
-      } else if (state == CmdletState.FAILED) {
-        Assert.fail("Compact failed.");
-      }
-    }
   }
 
   @Before
   @Override
   public void init() throws Exception {
     super.init();
-    createSmallFiles();
+    fileLength = 0L;
+    ret = 0;
+    smallFileList = new ArrayList<>();
+    createTestFiles();
   }
 
   @Test
   public void testSmallFileRead() throws Exception {
     waitTillSSMExitSafeMode();
-    SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
-    DFSInputStream is = smartDFSClient.open("/test/small_files/file_0");
-    Assert.assertEquals(1, is.getAllBlocks().size());
-    Assert.assertEquals(fileLength, is.getFileLength());
-    Assert.assertEquals(0, is.getPos());
-    int byteRead = is.read();
-    Assert.assertEquals(ret, byteRead);
-    is.close();
-    is = smartDFSClient.open("/test/small_files/file_0");
-    byte[] bytes = new byte[50];
-    Assert.assertEquals(fileLength, is.read(bytes));
-    is.close();
-    is = smartDFSClient.open("/test/small_files/file_0");
-    ByteBuffer buffer = ByteBuffer.allocate(50);
-    Assert.assertEquals(fileLength, is.read(buffer));
-    is.close();
-    is = smartDFSClient.open("/test/small_files/file_1");
-    Assert.assertEquals(5, is.read(bytes, 1, 5));
-    is.close();
-    is = smartDFSClient.open("/test/small_files/file_0");
-    Assert.assertEquals(fileLength - 2, is.read(2, bytes, 1, 50));
-    is.close();
+
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(
+        "compact -containerFile /test/small_files/container_file_5");
+    cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH,
+        new Gson().toJson(smallFileList));
+    long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
+
+    while (true) {
+      Thread.sleep(3000);
+      CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
+      if (state == CmdletState.DONE) {
+        SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
+        DFSInputStream is = smartDFSClient.open("/test/small_files/file_0");
+        Assert.assertEquals(1, is.getAllBlocks().size());
+        Assert.assertEquals(fileLength, is.getFileLength());
+        Assert.assertEquals(0, is.getPos());
+        int byteRead = is.read();
+        Assert.assertEquals(ret, byteRead);
+        is.close();
+        is = smartDFSClient.open("/test/small_files/file_0");
+        byte[] bytes = new byte[50];
+        Assert.assertEquals(fileLength, is.read(bytes));
+        is.close();
+        is = smartDFSClient.open("/test/small_files/file_0");
+        ByteBuffer buffer = ByteBuffer.allocate(50);
+        Assert.assertEquals(fileLength, is.read(buffer));
+        is.close();
+        is = smartDFSClient.open("/test/small_files/file_1");
+        Assert.assertEquals(5, is.read(bytes, 1, 5));
+        is.close();
+        is = smartDFSClient.open("/test/small_files/file_0");
+        Assert.assertEquals(fileLength - 2, is.read(2, bytes, 1, 50));
+        is.close();
+        return;
+      } else if (state == CmdletState.FAILED) {
+        Assert.fail("Compact failed.");
+      }
+    }
   }
 
   @After

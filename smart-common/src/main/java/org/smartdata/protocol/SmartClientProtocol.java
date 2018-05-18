@@ -31,7 +31,6 @@ import java.util.List;
 @KerberosInfo(
   serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
 public interface  SmartClientProtocol {
-  List<String> getSmallFileList() throws IOException;
   void reportFileAccessEvent(FileAccessEvent event) throws IOException;
   FileState getFileState(String filePath) throws IOException;
   List<FileState> getFileStates(String filePath) throws IOException;

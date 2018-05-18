@@ -148,6 +148,10 @@ public class SmartConfKeys {
       200;
 
   // SmartClient
+  public static final String SMART_CLIENT_CACHE_ENABLED_KEY =
+      "smart.client.cache.enable";
+  public static final boolean SMART_CLIENT_CACHE_ENABLED_DEFAULT =
+      false;
 
   // Common
   /**

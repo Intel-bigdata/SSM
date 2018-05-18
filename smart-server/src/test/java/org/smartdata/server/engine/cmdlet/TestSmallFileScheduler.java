@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.hdfs.action.HdfsAction;
-import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.server.MiniSmartClusterHarness;
@@ -51,10 +50,10 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
   private void createTestFiles() throws Exception {
     Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
-      long fileLen = 10 + (int) (Math.random() * 11);
+      long fileLen = 5 + (int) (Math.random() * 11);
       byte[] buf = new byte[20];
       Random rb = new Random(2018);
       int bytesRemaining = (int) fileLen;
@@ -75,19 +74,20 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
 
     CmdletManager cmdletManager = ssm.getCmdletManager();
-    CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString("compact -containerFile "
-        + "/test/small_files/container_file_2");
-    cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
+    CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(
+        "compact -containerFile /test/small_files/container_file_2");
+    cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH,
+        new Gson().toJson(smallFileList));
     long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
 
     while (true) {
       Thread.sleep(3000);
       CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
       if (state == CmdletState.DONE) {
-        MetaStore metaStore = ssm.getMetaStore();
-        long containerFileLen = metaStore.getFile("/test/small_files/container_file_2").getLength();
+        long containerFileLen = dfsClient.getFileInfo(
+            "/test/small_files/container_file_2").getLen();
         Assert.assertEquals(sumFileLen, containerFileLen);
-        long smallFileLen = metaStore.getFile("/test/small_files/file_1").getLength();
+        long smallFileLen = dfsClient.getFileInfo("/test/small_files/file_1").getLen();
         Assert.assertEquals(0, smallFileLen);
         return;
       } else if (state == CmdletState.FAILED) {

@@ -133,6 +133,16 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
   }
 
   @Override
+  public boolean truncate0(DFSClient client, String src) throws IOException {
+    throw new UnsupportedOperationException("Hadoop 2.6 does not support truncate.");
+  }
+
+  @Override
+  public boolean truncate0(DistributedFileSystem fileSystem, String src) throws IOException {
+    throw new UnsupportedOperationException("Hadoop 2.6 does not support truncate.");
+  }
+
+  @Override
   public int getSidInDatanodeStorageReport(DatanodeStorage datanodeStorage) {
     StorageType storageType = datanodeStorage.getStorageType();
     return storageType.ordinal();

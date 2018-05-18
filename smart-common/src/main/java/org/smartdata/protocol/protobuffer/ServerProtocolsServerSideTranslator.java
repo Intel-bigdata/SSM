@@ -73,8 +73,6 @@ import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStatesRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStatesResponseProto;
-import org.smartdata.protocol.ClientServerProto.GetSmallFileListRequestProto;
-import org.smartdata.protocol.ClientServerProto.GetSmallFileListResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
 import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
@@ -322,20 +320,6 @@ public class ServerProtocolsServerSideTranslator implements
       }
       return ListActionsSupportedResponseProto.newBuilder()
           .addAllActDesList(prolist)
-          .build();
-    } catch (IOException e) {
-      throw new ServiceException(e);
-    }
-  }
-
-  @Override
-  public GetSmallFileListResponseProto getSmallFileList(RpcController controller,
-                                                        GetSmallFileListRequestProto req)
-      throws ServiceException {
-    try {
-      List<String> smallFileList = server.getSmallFileList();
-      return GetSmallFileListResponseProto.newBuilder()
-          .addAllSmallFile(smallFileList)
           .build();
     } catch (IOException e) {
       throw new ServiceException(e);

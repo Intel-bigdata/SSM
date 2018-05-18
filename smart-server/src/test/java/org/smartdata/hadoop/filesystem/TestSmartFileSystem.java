@@ -25,7 +25,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.model.CmdletDescriptor;
@@ -118,20 +117,12 @@ public class TestSmartFileSystem extends MiniSmartClusterHarness {
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
   }
 
-  @Test
+  //@Test
   public void testDeleteFileRecur() throws Exception {
     smartFileSystem.delete(new Path("/test/small_files"), true);
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_1"));
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_2"));
-  }
-
-  //@Test
-  public void testTruncateFile() throws Exception {
-    smartFileSystem.truncate(new Path("/test/small_files/file_0"), 0);
-    Thread.sleep(3000);
-    Assert.assertEquals(0, smartFileSystem.getFileStatus(
-        new Path("/test/small_files/file_0")).getLen());
   }
 
   //@Test

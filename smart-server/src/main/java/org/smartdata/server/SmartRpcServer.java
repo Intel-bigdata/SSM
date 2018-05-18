@@ -260,21 +260,23 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   @Override
-  public List<String> getSmallFileList() throws IOException {
-    checkIfActive();
-    return ssm.getMetaStore().getSmallFileList();
-  }
-
-  @Override
   public FileState getFileState(String filePath) throws IOException {
     checkIfActive();
-    return ssm.getMetaStore().getFileState(filePath);
+    try {
+      return ssm.getMetaStore().getFileState(filePath);
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
   }
 
   @Override
   public List<FileState> getFileStates(String filePath) throws IOException {
     checkIfActive();
-    return ssm.getMetaStore().getFileStates(filePath);
+    try {
+      return ssm.getMetaStore().getFileStates(filePath);
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
   }
 
   @Override

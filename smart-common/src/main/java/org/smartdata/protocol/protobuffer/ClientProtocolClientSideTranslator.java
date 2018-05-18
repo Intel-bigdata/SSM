@@ -27,8 +27,6 @@ import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStatesRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStatesResponseProto;
-import org.smartdata.protocol.ClientServerProto.GetSmallFileListRequestProto;
-import org.smartdata.protocol.ClientServerProto.GetSmallFileListResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
 import org.smartdata.protocol.SmartClientProtocol;
@@ -50,17 +48,6 @@ public class ClientProtocolClientSideTranslator implements
   public void close() throws IOException {
     RPC.stopProxy(rpcProxy);
     rpcProxy = null;
-  }
-
-  @Override
-  public List<String> getSmallFileList() throws IOException {
-    GetSmallFileListRequestProto req = GetSmallFileListRequestProto.newBuilder().build();
-    try {
-      GetSmallFileListResponseProto response = rpcProxy.getSmallFileList(null, req);
-      return response.getSmallFileList();
-    } catch (ServiceException e) {
-      throw ProtoBufferHelper.getRemoteException(e);
-    }
   }
 
   @Override

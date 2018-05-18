@@ -25,7 +25,6 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
@@ -80,7 +79,7 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
     }
   }
 
-  @Test
+  //@Test
   public void testSmartDFSClient() throws Exception {
     BlockLocation[] blockLocations = smartDFSClient.getBlockLocations(
         "/test/small_files/file_0", 0, 30);
@@ -88,9 +87,6 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
     HdfsFileStatus fileInfo = smartDFSClient.getFileInfo(
         "/test/small_files/file_0");
     Assert.assertEquals(9, fileInfo.getLen());
-    smartDFSClient.truncate("/test/small_files/file_0", 0);
-    Assert.assertEquals(0, smartDFSClient.getFileInfo(
-        "/test/small_files/file_0").getLen());
     smartDFSClient.rename("/test/small_files/file_0", "/test/small_files/file_5");
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
     Assert.assertTrue(dfsClient.exists("/test/small_files/file_5"));

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,7 +43,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   private int batchSize;
   private MetaStore metaStore;
   private String containerFileDir;
-  private static final String SUPPORTED_ACTION = "compact";
+  private static final String COMPACT_ACTION_NAME = "compact";
   private static final String CONTAINER_FILE_PREFIX = "container_file_";
   private static final Logger LOG = LoggerFactory.getLogger(SmallFilePlugin.class);
 
@@ -70,18 +70,18 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
 
   @Override
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
-    if (ruleInfo.getRuleText().contains(SUPPORTED_ACTION)) {
+    if (ruleInfo.getRuleText().contains(COMPACT_ACTION_NAME)) {
       if (objects == null || objects.size() == 0) {
         return objects;
       }
 
       // Split valid small files according to the file permission
       Map<FilePermission, List<String>> filePermissionMap = new HashMap<>();
-      try {
-        for (String object : objects) {
+      for (String object : objects) {
+        try {
           FileInfo fileInfo = metaStore.getFile(object);
           FileState fileState = metaStore.getFileState(object);
-          if ((fileInfo.getLength() > 0)
+          if (fileInfo != null && (fileInfo.getLength() > 0)
               && fileState.getFileType().equals(FileState.FileType.NORMAL)
               && fileState.getFileStage().equals(FileState.FileStage.DONE)) {
             FilePermission filePermission = new FilePermission(fileInfo);
@@ -93,9 +93,9 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
               filePermissionMap.put(filePermission, list);
             }
           }
+        } catch (MetaStoreException e) {
+          LOG.error(String.format("Failed to get file info of %s.", object), e);
         }
-      } catch (MetaStoreException e) {
-        LOG.error("Failed to get file permission info.", e);
       }
 
       // Split small files according to the batch size
@@ -153,7 +153,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
     for (int i = 0; i < descriptor.getActionSize(); i++) {
-      if (SUPPORTED_ACTION.equals(descriptor.getActionName(i))
+      if (COMPACT_ACTION_NAME.equals(descriptor.getActionName(i))
           && (descriptor.getActionArgs(i).get(HdfsAction.FILE_PATH) != null)
           && !(descriptor.getActionArgs(i).get(HdfsAction.FILE_PATH).isEmpty())) {
           String containerFile = containerFileDir + CONTAINER_FILE_PREFIX
