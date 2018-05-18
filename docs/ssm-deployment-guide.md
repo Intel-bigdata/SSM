@@ -1,6 +1,6 @@
-Deployment SSM with Hadoop(CDH5.10.1 or Apache Hadoop 2.7.3) Guide
+# Deployment SSM with Hadoop(CDH5.10.1 or Apache Hadoop 2.7.3) Guide
 ----------------------------------------------------------------------------------
-Requirements:
+## Requirements:
 
 * Unix System/Unix-like System
 * JDK 1.7 for CDH5.10.1
@@ -55,7 +55,7 @@ More detailed information, please refer to BUILDING.txt file.
        <name>smart.hadoop.conf.path</name>
        <value>/conf</value>
        <description>local file path which holds all hadoop configuration files, such as hdfs-site.xml, core-site.xml</description>
-    </property>
+   </property>
    ```
 ###  Single Namenode
    
@@ -118,14 +118,14 @@ You just need to follow the guide in one of the two following options to configu
 You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password are enough.
 Please be noted that, security support will be enabled later. Here is an example for MySQL,
 
- ```xml   
+```xml
    <properties>
        <entry key="url">jdbc:mysql://localhost/ssm</entry>
        <entry key="username">username</entry>
        <entry key="password">password</entry>
 	   ......
    </properties>	   
-   ```
+```
  
 `ssm` is the database name. User needs to create it manually through MySQL client.
 
@@ -134,13 +134,13 @@ Please be noted that, security support will be enabled later. Here is an example
 To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb/tree/release-1.0.0.
 
 TiDB can be enabled in smart-site.xml.
-
+```xml
     <property>
         <name>smart.tidb.enable</name>
         <value>true</value>
         ......
     </property>
-
+```
 For SSM standalone mode, the three instances PD, TiKV and TiDB are all deployed on Smart Server host.
 For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
 So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over using MySQL.
@@ -148,14 +148,14 @@ So the storage capacity of SSM-TiDB can easily be scaled up by just adding more 
 If TiDB is enabled, there is no need to configure jdbc url in druid.xml. In TiDB only root user is created initially, so you should set username as root. Optionally, you can set a password for root user in druid.xml.
 
 An example of configuration in druid.xml for using TiDB is shown as follows.
-
+```xml
     <properties>
         <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> no need to configure url for TiDB -->
         <entry key="username">username</entry>
         <entry key="password">password</entry>
         ......
     <properties>
-
+```
 TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
 If user password is not set in druid, by default the command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 7070`.
 The 7070 port is the default one configured for tidb.service.port in smart-default.xml.
@@ -265,42 +265,42 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 ### core-site.xml changes 
 
 Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System". Add the following content to the `core-site.xml`
-
+```xml
     <property>
         <name>fs.hdfs.impl</name>
         <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
         <description>The FileSystem for hdfs URL</description>
     </property>
-
+```
 ### hdfs-site.xml changes  
 
 Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
-
+```xml
     <property>
         <name>smart.server.rpc.address</name>
         <value>ssm-server-ip:rpc-port</value>
     </property>
-
+```
 The value for the following property should be modified in hdfs-site.xml. It is recommended that this value should be set as follows.
 
 value=executors*(agents+servers)*10,
 
 in which executors represents the value for smart.cmdlet.executors in SSM and agents and servers represents the number of agents and smart servers respectively.
-
+```xml
     <property>
         <name>dfs.datanode.balance.max.concurrent.moves</name>
         <value></value>
     </property>
-
+```
 ### Storage volume types   
 
 Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
-
+```xml
      <property>
          <name>dfs.datanode.data.dir</name>
          <value>[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
      </property>
-
+```
 ### Check of HDFS client can access SSM jars  
 
 Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
@@ -339,12 +339,13 @@ Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point t
 
  1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
  2.    Search `Cluster-wide Advanced Configuration Snippet (Safety Valve) for core-site.xml` configuration, add the following xml context.
-    
+```xml
     <property>
         <name>fs.hdfs.impl</name>
         <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
         <description>The FileSystem for hdfs URL</description>
     </property>
+```
  3.    Click the Save Changes button
  4.    Restart stale Services and re-deploy the client configurations
 
@@ -361,18 +362,17 @@ Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manage
     </property>
 ```
  3.    Search `HDFS Client Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, add the following xml context. The  default Smart Server RPC port is `7042`.
- ```xml
-         <property>
-             <name>smart.server.rpc.address</name>
-             <value>ssm-server-ip:rpc-port</value>
-         </property>
+```xml
+    <property>
+        <name>smart.server.rpc.address</name>
+        <value>ssm-server-ip:rpc-port</value>
+    </property>
 ```
-
  4. In HDFS configuration, dfs.datanode.balance.max.concurrent.moves should be set by
 
- value=executors*(agents+servers)*10,
+    value=executors*(agents+servers)*10,
 
- in which executors represents the value for smart.cmdlet.executors in SSM and agents and servers represents the number of agents and smart servers respectively.
+    in which executors represents the value for smart.cmdlet.executors in SSM and agents and servers represents the number of agents and smart servers respectively.
 
  5.    Click the Save Changes button
  6.    Restart stale Services and re-deploy the client configurations
@@ -383,12 +383,12 @@ Make sure you have the correct HDFS storage type applied to HDFS DataNode storag
     
  1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
  2.    Search DataNode Data Directory configuration. Below is an example which sets the SSD, DISK and Archive volumes.
-     
-     <property>
-         <name>dfs.datanode.data.dir</name>
-         <value>[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
-     </property>
-
+```xml
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
+    </property>
+```
 ###  Check if HDFS can access SSM jars
 
 After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
@@ -494,27 +494,27 @@ There are two configurable parameters which impact the SSM rule evaluation and a
 ### smart.rule.executors
 
 Current default value is 5, which means system will concurrently evaluate 5 rule state at the same time.
-    
+```xml
     <property>
         <name>smart.rule.executors</name>
         <value>5</value>
         <description>Max number of rules that can be executed in parallel</description>
-     </property>
-
+    </property>
+```
 ### smart.cmdlet.executors
 
 Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
 If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under ${SMART_HOME}/conf directory. Here is an example to change the action execution parallelism to 50.
-
+```xml
      <property>
          <name>smart.cmdlet.executors</name>
          <value>50</value>
      </property>
-
+```
 ## Cmdlet history purge in metastore  
 
 SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodically purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
-
+```xml
     <property>
         <name>smart.cmdlet.hist.max.num.records</name>
         <value>100000</value>
@@ -528,19 +528,33 @@ SSM choose to save cmdlet and action execution history in metastore for audit an
         <description>Maximum life time of historic cmdlet records kept in SSM server. Cmdlet record will be deleted from SSM server if exceeds the threshold. Valid time unit can be 'day', 'hour', 'min', 'sec'. The minimum update granularity is 5sec.
         </description>
      </property>
-
+```
 SSM service restart is required after the configuration changes.
 
 ## Batch Size of Namespace fetcher
 
 SSM will fetch/sync namespace from namenode when it is started. According to our tests, a large namespace may lead to long start up time. To avoid this, we add a parameter named `smart.namespace.fetcher.batch`, its default value is 500. You can change it if namespace is very large, e.g., 100M or more. A larger batch size will greatly speed up fetcher efficiency, and reduce start up time.
-
+```xml
     <property>
         <name>smart.namespace.fetcher.batch</name>
         <value>500</value>
         <description>Batch size of Namespace fetcher</description>
     </property>
+```
+SSM supports concurrently fetching namespace. You can set a large value for each of the following two properties to increase concurrency.
+```xml
+    <property>
+        <name>smart.namespace.fetcher.producers.num</name>
+        <value>3</value>
+        <description>Number of producers in namespace fetcher</description>
+    </property>
 
+    <property>
+        <name>smart.namespace.fetcher.consumers.num</name>
+        <value>6</value>
+        <description>Number of consumers in namespace fetcher</description>
+    </property>
+```
 ##  Disable SSM Client
 
 For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
