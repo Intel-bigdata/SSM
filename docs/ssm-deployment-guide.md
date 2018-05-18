@@ -1,18 +1,14 @@
-# Deployment SSM with Hadoop(CDH5.10.1 or Apache Hadoop 2.7.3) Guide
+# SSM Deployment Guide with Hadoop(CDH5.10.1 or Apache Hadoop 2.7.3)
 ----------------------------------------------------------------------------------
 ## Requirements:
 
-* Unix System/Unix-like System
-* JDK 1.7 for CDH5.10.1
-* JDK 1.8 for Apache Hadoop 2.7.3
-* CDH 5.10.1
-* Apache Hadoop 2.7.3
-* MySQL Community 5.7.18
+* Unix/Unix-like Operation System
+* JDK 1.7 for CDH5.10.1 or JDK 1.8 for Apache Hadoop 2.7.3
+* CDH 5.10.1 or Apache Hadoop 2.7.3
+* MySQL Community 5.7.18+
 * Maven 3.1.1+
 
-
-# Why JDK 1.7 is preferred
-----------------------------------------------------------------------------------
+## Why JDK 1.7 is preferred
 
   It is because by default CDH5.10.1 supports compile and run with JDK 1.7. If you
   want to use JDK1.8, please turn to Cloudera web site for how to support JDK1.8
@@ -294,11 +290,11 @@ in which executors represents the value for smart.cmdlet.executors in SSM and ag
 ```
 ### Storage volume types   
 
-Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the SSD, DISK and Archive volumes,
+Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the RAM_DISK, SSD, DISK and Archive volumes,
 ```xml
      <property>
          <name>dfs.datanode.data.dir</name>
-         <value>[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
+         <value>[RAM_DISK]file://${RAM_DIR}/dfs/data,[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
      </property>
 ```
 ### Check of HDFS client can access SSM jars  
@@ -382,11 +378,11 @@ Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manage
 Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
     
  1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
- 2.    Search DataNode Data Directory configuration. Below is an example which sets the SSD, DISK and Archive volumes.
+ 2.    Search DataNode Data Directory configuration. Below is an example which sets the RAM_DISK, SSD, DISK and Archive volumes.
 ```xml
     <property>
         <name>dfs.datanode.data.dir</name>
-        <value>[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
+        <value>[RAM_DISK]file://${RAM_DIR}/dfs/data,[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
     </property>
 ```
 ###  Check if HDFS can access SSM jars
@@ -570,17 +566,10 @@ After that if you want to re-enable, then the following commands can be used:
 or
 `./bin/enable-smartclient.sh --hostsfile <file path>`
 The arguments are same with `disable-smartclient.sh`
+Note: To make the scripts work, you have to set up password-less SSH connections between the node that executing these scripts and the rest hosts.
 
 
 # Trouble Shooting
-=======
-    After that if you want to re-enable, then the following commands can be used:
-    `./bin/enable-smartclient.sh --hosts <host names or ips>`
-    or
-    `./bin/enable-smartclient.sh --hostsfile <file path>`
-    The arguments are same with `disable-smartclient.sh`
-    Note: To make the scripts work, you have to set up password-less SSH connections between the node that executing these scripts and the rest hosts.
-
 ---------------------------------------------------------------------------------
  All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
 
@@ -596,16 +585,16 @@ The arguments are same with `disable-smartclient.sh`
    
 2. UI can not show hot files list 
 
-  Possible causes:
+   Possible causes:
   
-  a. Cannot lock system mover locker. You may see something like this in the smartserver.log file,
-  
-	2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...
-	2017-07-15 00:38:29,350 ERROR org.smartdata.hdfs.HdfsStatesUpdateService.checkAndMarkRunning 138: Unable to lock 'mover', please stop 'mover' first.
-	2017-07-15 00:38:29,350 INFO org.smartdata.server.engine.StatesManager.initStatesUpdaterService 180: Failed to create states updater service.
-	 
-  Make sure there is no system mover running. Try to restart the SSM service will solve the problem. 
-	 
+   a. Cannot lock system mover locker. You may see something like follows in the smartserver.log file. Make sure there is no system mover running. Try to restart the SSM service will solve the problem.
+
+```
+   2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...
+   2017-07-15 00:38:29,350 ERROR org.smartdata.hdfs.HdfsStatesUpdateService.checkAndMarkRunning 138: Unable to lock 'mover', please stop 'mover' first.
+   2017-07-15 00:38:29,350 INFO org.smartdata.server.engine.StatesManager.initStatesUpdaterService 180: Failed to create states updater service.
+```
+
 	 
 Notes
 ---------------------------------------------------------------------------------
