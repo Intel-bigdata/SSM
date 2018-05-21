@@ -153,7 +153,7 @@ def wait_for_cmdlet(cid, period=300):
 def wait_for_cmdlets(cids, period=300):
     failed_cids = []
     while len(cids) != 0:
-        cmd = wait_for_cmdlet(cids[0])
+        cmd = wait_for_cmdlet(cids[0], period)
         if cmd is None or cmd['state'] == 'FAILED':
             failed_cids.append(cids[0])
         cids.pop(0)

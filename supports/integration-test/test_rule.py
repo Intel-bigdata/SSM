@@ -22,7 +22,7 @@ class TestRule(unittest.TestCase):
         cmds.append(read_file(file_path))
         wait_for_cmdlets(cmds)
         time.sleep(15)
-        # Statue check
+        # Status check
         rule = get_rule(rid)
         self.assertTrue(rule['numCmdsGen'] > 0)
         delete_rule(rid)
