@@ -70,7 +70,7 @@ public class UncacheFileAction extends HdfsAction {
   private void removeDirective(String fileName) throws Exception {
     Long id = getCacheId(fileName);
     if (id == null) {
-      this.appendLog(String.format("File %s is already cached. No action taken.", fileName));
+      this.appendLog(String.format("File %s is not in cache. So this action has no need to be executed.", fileName));
       return;
     }
     dfsClient.removeCacheDirective(id);
