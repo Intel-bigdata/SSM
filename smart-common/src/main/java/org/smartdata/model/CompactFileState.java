@@ -17,7 +17,9 @@
  */
 package org.smartdata.model;
 
-public class CompactFileState extends FileState {
+import java.io.Serializable;
+
+public class CompactFileState extends FileState implements Serializable {
   private FileContainerInfo fileContainerInfo;
 
   public CompactFileState(String path, FileContainerInfo fileContainerInfo) {

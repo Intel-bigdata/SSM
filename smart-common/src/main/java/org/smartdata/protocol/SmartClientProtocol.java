@@ -23,7 +23,6 @@ import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Interface between SmartClient and SmartServer.
@@ -33,7 +32,4 @@ import java.util.List;
 public interface  SmartClientProtocol {
   void reportFileAccessEvent(FileAccessEvent event) throws IOException;
   FileState getFileState(String filePath) throws IOException;
-  List<FileState> getFileStates(String filePath) throws IOException;
-  void updateFileState(FileState fileState) throws IOException;
-  void deleteFileState(String filePath, boolean recursive) throws IOException;
 }

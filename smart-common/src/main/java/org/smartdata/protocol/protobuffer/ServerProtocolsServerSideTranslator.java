@@ -66,17 +66,10 @@ import org.smartdata.protocol.AdminServerProto.SubmitCmdletResponseProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleRequestProto;
 import org.smartdata.protocol.AdminServerProto.SubmitRuleResponseProto;
 import org.smartdata.protocol.ClientServerProto;
-import org.smartdata.protocol.ClientServerProto.DeleteFileStateRequestProto;
-import org.smartdata.protocol.ClientServerProto.DeleteFileStateResponseProto;
-import org.smartdata.protocol.ClientServerProto.FileStateProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
-import org.smartdata.protocol.ClientServerProto.GetFileStatesRequestProto;
-import org.smartdata.protocol.ClientServerProto.GetFileStatesResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
-import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
-import org.smartdata.protocol.ClientServerProto.UpdateFileStateResponseProto;
 import org.smartdata.protocol.SmartServerProtocols;
 
 import java.io.IOException;
@@ -347,50 +340,6 @@ public class ServerProtocolsServerSideTranslator implements
       return GetFileStateResponseProto.newBuilder()
           .setFileState(ProtoBufferHelper.convert(fileState))
           .build();
-    } catch (IOException e) {
-      throw new ServiceException(e);
-    }
-  }
-
-  @Override
-  public GetFileStatesResponseProto getFileStates(RpcController controller,
-      GetFileStatesRequestProto req) throws ServiceException {
-    try {
-      String path = req.getFilePath();
-      List<FileStateProto> fileStateProtoList = new ArrayList<>();
-      for (FileState fileState : server.getFileStates(path)) {
-        fileStateProtoList.add(ProtoBufferHelper.convert(fileState));
-      }
-      return GetFileStatesResponseProto.newBuilder()
-          .addAllFileState(fileStateProtoList)
-          .build();
-    } catch (IOException e) {
-      throw new ServiceException(e);
-    }
-  }
-
-  @Override
-  public UpdateFileStateResponseProto updateFileState(RpcController controller,
-                                                      UpdateFileStateRequestProto req)
-      throws ServiceException {
-    try {
-      FileState fileState = ProtoBufferHelper.convert(req.getFileState());
-      server.updateFileState(fileState);
-      return UpdateFileStateResponseProto.newBuilder().build();
-    } catch (IOException e) {
-      throw new ServiceException(e);
-    }
-  }
-
-  @Override
-  public DeleteFileStateResponseProto deleteFileState(RpcController controller,
-                                                      DeleteFileStateRequestProto req)
-      throws ServiceException {
-    try {
-      String path = req.getFilePath();
-      boolean recursive = req.getRecursive();
-      server.deleteFileState(path, recursive);
-      return DeleteFileStateResponseProto.newBuilder().build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }

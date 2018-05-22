@@ -25,9 +25,7 @@ import javax.sql.DataSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class FileStateDao {
   private static final String TABLE_NAME = "file_state";
@@ -74,14 +72,6 @@ public class FileStateDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME;
     jdbcTemplate.execute(sql);
-  }
-
-  private Map<String, Object> toMap(FileState fileState) {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("path", fileState.getPath());
-    parameters.put("type", fileState.getFileType().getValue());
-    parameters.put("stage", fileState.getFileStage().getValue());
-    return parameters;
   }
 
   class FileStateRowMapper implements RowMapper<FileState> {

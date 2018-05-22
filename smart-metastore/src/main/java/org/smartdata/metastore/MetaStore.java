@@ -40,7 +40,6 @@ import org.smartdata.metastore.dao.GlobalConfigDao;
 import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.dao.RuleDao;
-import org.smartdata.metastore.dao.SmallFileDao;
 import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.StorageHistoryDao;
 import org.smartdata.metastore.dao.SystemInfoDao;
@@ -55,13 +54,11 @@ import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.ClusterInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
-import org.smartdata.model.CompactFileState;
 import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.FileAccessInfo;
-import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileInfo;
@@ -125,7 +122,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private ClusterInfoDao clusterInfoDao;
   private SystemInfoDao systemInfoDao;
   private FileStateDao fileStateDao;
-  private SmallFileDao smallFileDao;
   private GeneralDao generalDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
@@ -151,7 +147,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
     fileStateDao = new FileStateDao(pool.getDataSource());
-    smallFileDao = new SmallFileDao(pool.getDataSource());
     generalDao = new GeneralDao(pool.getDataSource());
   }
 
@@ -2106,20 +2101,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void insertUpdateFileState(FileState fileState)
       throws MetaStoreException {
     try {
-      // Update corresponding tables according to the file state
       fileStateDao.insertUpdate(fileState);
-      switch (fileState.getFileType()) {
-        case COMPACT:
-          FileContainerInfo fileContainerInfo = (
-              (CompactFileState) fileState).getFileContainerInfo();
-          smallFileDao.insertUpdate(fileState.getPath(), fileContainerInfo);
-          break;
-        case COMPRESSION:
-          break;
-        case S3:
-          break;
-        default:
-      }
+      // Update corresponding tables according to the file state
+      /*if (fileState instanceof CompressFileState) {
+
+      } else if (fileState instanceof S3FileState) {
+
+      }*/
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -2134,9 +2122,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         case NORMAL:
           fileState = new NormalFileState(path);
           break;
-        case COMPACT:
-          fileState = smallFileDao.getFileStateByPath(path);
-          break;
         case COMPRESSION:
           break;
         case S3:
@@ -2150,37 +2135,5 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e2);
     }
     return fileState;
-  }
-
-  public List<FileState> getFileStates(String path) throws MetaStoreException {
-    try {
-      List<FileState> fileStates = new ArrayList<>();
-      FileState fileState = getFileState(path);
-      fileStates.add(fileState);
-
-      // Fetch info from corresponding table to regenerate a specific FileState
-      switch (fileState.getFileType()) {
-        case NORMAL:
-          break;
-        case COMPACT:
-          String containerFile = ((CompactFileState) fileState)
-              .getFileContainerInfo().getContainerFilePath();
-          fileStates = smallFileDao.getFileStatesByContainerFilePath(containerFile);
-          break;
-        case COMPRESSION:
-          break;
-        case S3:
-          break;
-        default:
-      }
-      return fileStates;
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
-  public void deleteFileState(String path, boolean recursive) {
-    fileStateDao.deleteByPath(path, recursive);
-    smallFileDao.deleteByPath(path, recursive);
   }
 }

@@ -23,16 +23,10 @@ import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.security.KerberosInfo;
 import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.protocol.ClientServerProto.DeleteFileStateRequestProto;
-import org.smartdata.protocol.ClientServerProto.DeleteFileStateResponseProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateRequestProto;
 import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
-import org.smartdata.protocol.ClientServerProto.GetFileStatesRequestProto;
-import org.smartdata.protocol.ClientServerProto.GetFileStatesResponseProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponseProto;
-import org.smartdata.protocol.ClientServerProto.UpdateFileStateRequestProto;
-import org.smartdata.protocol.ClientServerProto.UpdateFileStateResponseProto;
 
 @KerberosInfo(
   serverPrincipal = SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY)
@@ -46,16 +40,4 @@ public interface ClientProtocolProtoBuffer {
   GetFileStateResponseProto
   getFileState(RpcController controller,
                GetFileStateRequestProto req) throws ServiceException;
-
-  GetFileStatesResponseProto
-  getFileStates(RpcController controller,
-      GetFileStatesRequestProto req) throws ServiceException;
-
-  UpdateFileStateResponseProto
-  updateFileState(RpcController controller,
-                  UpdateFileStateRequestProto req) throws ServiceException;
-
-  DeleteFileStateResponseProto
-  deleteFileState(RpcController controller,
-                  DeleteFileStateRequestProto req) throws ServiceException;
 }

@@ -19,22 +19,30 @@ package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.fs.XAttrSetFlag;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.IOUtils;
+import org.smartdata.SmartFilePermission;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
+import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileContainerInfo;
+import org.smartdata.model.FileState;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumSet;
 import java.util.Map;
 
 /**
@@ -47,23 +55,34 @@ import java.util.Map;
         + SmallFileCompactAction.CONTAINER_FILE + " $container_file "
 )
 public class SmallFileCompactAction extends HdfsAction {
-  private float status;
-  private Configuration conf;
-  private String smallFiles;
-  private String containerFile;
+  private float status = 0f;
+  private Configuration conf = null;
+  private String smallFiles = null;
+  private String containerFile = null;
+  private String containerFilePermission = null;
+  private String xAttrName = null;
   private final String HDFS_SCHEME = "hdfs";
   public static final String CONTAINER_FILE = "-containerFile";
+  public static final String CONTAINER_FILE_PERMISSION = "-containerFilePermission";
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
     this.conf = getContext().getConf();
+    this.xAttrName = conf.get(
+        SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_KEY,
+        SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_DEFAULT);
     this.smallFiles = args.get(FILE_PATH);
     this.containerFile = args.get(CONTAINER_FILE);
+    this.containerFilePermission = args.get(CONTAINER_FILE_PERMISSION);
   }
 
   @Override
   protected void execute() throws Exception {
+    // Set hdfs client by DFSClient rather than SmartDFSClient
+    this.setDfsClient(HadoopUtil.getDFSClient(
+        HadoopUtil.getNameNodeUri(conf), conf));
+
     // Get small file list
     if (smallFiles == null || smallFiles.isEmpty()) {
       throw new IllegalArgumentException(
@@ -73,26 +92,53 @@ public class SmallFileCompactAction extends HdfsAction {
         smallFiles, new TypeToken<ArrayList<String>>() {
         }.getType());
 
-    // Get offset and output stream of container file
+    // Get container file path
     if (containerFile == null || containerFile.isEmpty()) {
       throw new IllegalArgumentException(
           String.format("Invalid container file: %s.", containerFile));
     }
-    long offset = exists(containerFile) ? getFileLength(containerFile) : 0L;
-    OutputStream out = getOutputStream(containerFile);
+
+    // Get container file permission
+    SmartFilePermission filePermission = null;
+    if (containerFilePermission != null && !containerFilePermission.isEmpty()) {
+      filePermission = new Gson().fromJson(
+          containerFilePermission, new TypeToken<SmartFilePermission>() {
+          }.getType());
+    }
+
+    // Get initial offset and output stream
+    // Create container file and set permission if not exists
+    long offset;
+    OutputStream out;
+    if (exists(containerFile)) {
+      offset = getFileLength(containerFile);
+      out = getAppendOutputStream(containerFile);
+    } else {
+      out = dfsClient.create(containerFile, true);
+      if (filePermission != null) {
+        dfsClient.setOwner(
+            containerFile, filePermission.getOwner(), filePermission.getGroup());
+        dfsClient.setPermission(
+            containerFile, new FsPermission(filePermission.getPermission()));
+      }
+      offset = 0L;
+    }
 
     appendLog(String.format("Action starts at %s : compact small files to %s.",
         Utils.getFormatedCurrentTime(), containerFile));
-    Map<String, FileContainerInfo> fileContainerInfoMap = new HashMap<>(
-        smallFileList.size());
     for (String smallFile : smallFileList) {
       if ((smallFile != null) && !smallFile.isEmpty()
           && exists(smallFile) && getFileLength(smallFile) > 0) {
         try (InputStream in = getInputStream(smallFile)) {
+          // Copy bytes of small file to container file
           IOUtils.copyBytes(in, out, 4096);
+
+          // Truncate small file and add file container info to XAttr
           long fileLen = getFileLength(smallFile);
-          fileContainerInfoMap.put(
+          FileState compactFileState = new CompactFileState(
               smallFile, new FileContainerInfo(containerFile, offset, fileLen));
+          truncate0(smallFile, compactFileState);
+
           offset += fileLen;
           this.status = (smallFileList.indexOf(smallFile) + 1.0f) / smallFileList.size();
           appendLog(String.format(
@@ -109,8 +155,7 @@ public class SmallFileCompactAction extends HdfsAction {
     if (out != null) {
       out.close();
     }
-    appendResult(new Gson().toJson(fileContainerInfoMap));
-    appendLog(String.format(
+    appendResult(String.format(
         "Compact all the small files to %s successfully.", containerFile));
   }
 
@@ -139,24 +184,15 @@ public class SmallFileCompactAction extends HdfsAction {
   }
 
   /**
-   * Get output stream for the specified file.
+   * Get append output stream for the specified file.
    */
-  private OutputStream getOutputStream(String path) throws IOException {
+  private OutputStream getAppendOutputStream(String path) throws IOException {
     if (path.startsWith(HDFS_SCHEME)) {
       FileSystem fs = FileSystem.get(URI.create(path), conf);
-      int replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
-      if (fs.exists(new Path(path))) {
-        return fs.append(new Path(path));
-      } else {
-        return fs.create(new Path(path), true, (short) replication);
-      }
+      return fs.append(new Path(path));
     } else {
-      if (dfsClient.exists(path)) {
-        return CompatibilityHelperLoader.getHelper()
-            .getDFSClientAppend(dfsClient, path, 64 * 1024, 0);
-      } else {
-        return dfsClient.create(path, true);
-      }
+      return CompatibilityHelperLoader.getHelper()
+          .getDFSClientAppend(dfsClient, path, 64 * 1024, 0);
     }
   }
 
@@ -170,6 +206,43 @@ public class SmallFileCompactAction extends HdfsAction {
     } else {
       return dfsClient.open(path);
     }
+  }
+
+  /**
+   * Truncate small file and set XAttr contains file container info.
+   */
+  private void truncate0(String path, FileState compactFileState) throws IOException {
+    // Save original metadata of small file
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(path);
+    Map<String, byte[]> xAttr = dfsClient.getXAttrs(path);
+
+    // Delete file
+    dfsClient.delete(path, true);
+
+    // Create file
+    OutputStream out = dfsClient.create(path, true);
+    if (out != null) {
+      out.close();
+    }
+
+    // Set metadata
+    dfsClient.setOwner(path, fileStatus.getOwner(), fileStatus.getGroup());
+    dfsClient.setPermission(path, fileStatus.getPermission());
+    dfsClient.setReplication(path, fileStatus.getReplication());
+    dfsClient.setStoragePolicy(path, "Cold");
+    dfsClient.setTimes(path, fileStatus.getAccessTime(),
+        dfsClient.getFileInfo(path).getModificationTime());
+
+    for(Map.Entry<String, byte[]> entry : xAttr.entrySet()) {
+      dfsClient.setXAttr(path, entry.getKey(), entry.getValue(),
+          EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
+    }
+
+    // Set file container info
+    dfsClient.setXAttr(path,
+        xAttrName, SerializationUtils.serialize(compactFileState),
+        EnumSet.of(XAttrSetFlag.CREATE));
+
   }
 
   @Override

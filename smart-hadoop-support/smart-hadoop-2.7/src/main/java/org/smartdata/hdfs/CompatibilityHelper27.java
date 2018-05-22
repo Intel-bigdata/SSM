@@ -167,7 +167,7 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     client.setTimes(src, fileStatus.getAccessTime(),
         client.getFileInfo(src).getModificationTime());
 
-    for(Map.Entry<String, byte[]> entry : XAttr.entrySet()){
+    for(Map.Entry<String, byte[]> entry : XAttr.entrySet()) {
       client.setXAttr(src, entry.getKey(), entry.getValue(),
           EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
     }
@@ -194,7 +194,7 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
         fileSystem.getFileStatus(new Path(src)).getModificationTime());
 
-    for(Map.Entry<String, byte[]> entry : XAttr.entrySet()){
+    for(Map.Entry<String, byte[]> entry : XAttr.entrySet()) {
       fileSystem.setXAttr(new Path(src), entry.getKey(), entry.getValue(),
           EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
     }

@@ -18,8 +18,10 @@
 package org.smartdata.server.engine.rule;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.SmartFilePermission;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
@@ -42,7 +44,6 @@ import java.util.UUID;
 public class SmallFilePlugin implements RuleExecutorPlugin {
   private int batchSize;
   private MetaStore metaStore;
-  private String containerFileDir;
   private static final String COMPACT_ACTION_NAME = "compact";
   private static final String CONTAINER_FILE_PREFIX = "container_file_";
   private static final Logger LOG = LoggerFactory.getLogger(SmallFilePlugin.class);
@@ -52,11 +53,6 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     this.batchSize = context.getConf().getInt(
         SmartConfKeys.SMART_COMPACT_BATCH_SIZE_KEY,
         SmartConfKeys.SMART_COMPACT_BATCH_SIZE_DEFAULT);
-    String containerFileDir = context.getConf().get(
-        SmartConfKeys.SMART_COMPACT_CONTAINER_FILE_DIR_KEY,
-        SmartConfKeys.SMART_COMPACT_CONTAINER_FILE_DIR_DEFAULT);
-    this.containerFileDir = containerFileDir.endsWith("/")
-        ? containerFileDir : (containerFileDir + "/");
   }
 
   @Override
@@ -76,7 +72,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
       }
 
       // Split valid small files according to the file permission
-      Map<FilePermission, List<String>> filePermissionMap = new HashMap<>();
+      Map<SmartFilePermission, List<String>> filePermissionMap = new HashMap<>();
       for (String object : objects) {
         try {
           FileInfo fileInfo = metaStore.getFile(object);
@@ -84,7 +80,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
           if (fileInfo != null && (fileInfo.getLength() > 0)
               && fileState.getFileType().equals(FileState.FileType.NORMAL)
               && fileState.getFileStage().equals(FileState.FileStage.DONE)) {
-            FilePermission filePermission = new FilePermission(fileInfo);
+            SmartFilePermission filePermission = new SmartFilePermission(fileInfo);
             if (filePermissionMap.containsKey(filePermission)) {
               filePermissionMap.get(filePermission).add(object);
             } else {
@@ -115,50 +111,41 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     }
   }
 
-  /**
-   * An inner class for handling file permission info conveniently.
-   */
-  private class FilePermission {
-    private short permission;
-    private String owner;
-    private String group;
-
-    private FilePermission(FileInfo fileInfo) {
-      this.permission = fileInfo.getPermission();
-      this.owner = fileInfo.getOwner();
-      this.group = fileInfo.getGroup();
-    }
-
-    @Override
-    public int hashCode() {
-      return permission ^ owner.hashCode() ^ group.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object filePermission) {
-      if (this == filePermission) {
-        return true;
-      }
-      if (filePermission instanceof FilePermission) {
-        FilePermission anPermissionInfo = (FilePermission) filePermission;
-        return ((this.permission == anPermissionInfo.permission))
-            && this.owner.equals(anPermissionInfo.owner)
-            && this.group.equals(anPermissionInfo.group);
-      }
-      return false;
-    }
-  }
-
   @Override
   public CmdletDescriptor preSubmitCmdletDescriptor(
       final RuleInfo ruleInfo, TranslateResult tResult, CmdletDescriptor descriptor) {
     for (int i = 0; i < descriptor.getActionSize(); i++) {
-      if (COMPACT_ACTION_NAME.equals(descriptor.getActionName(i))
-          && (descriptor.getActionArgs(i).get(HdfsAction.FILE_PATH) != null)
-          && !(descriptor.getActionArgs(i).get(HdfsAction.FILE_PATH).isEmpty())) {
-          String containerFile = containerFileDir + CONTAINER_FILE_PREFIX
-              + UUID.randomUUID().toString().replace("-", "");
-          descriptor.addActionArg(i, SmallFileCompactAction.CONTAINER_FILE, containerFile);
+      if (COMPACT_ACTION_NAME.equals(descriptor.getActionName(i))) {
+        String smallFiles = descriptor.getActionArgs(i).get(HdfsAction.FILE_PATH);
+        if (smallFiles != null && !smallFiles.isEmpty()) {
+          ArrayList<String> smallFileList = new Gson().fromJson(
+              smallFiles, new TypeToken<ArrayList<String>>() {
+              }.getType());
+          try {
+            // Get the first small file info of this action
+            String firstFilePath = smallFileList.get(0);
+            FileInfo firstFileInfo = metaStore.getFile(firstFilePath);
+
+            // Get container file path
+            String containerFileDir = firstFilePath.substring(
+                0, firstFilePath.lastIndexOf("/") + 1);
+            String containerFile = containerFileDir + CONTAINER_FILE_PREFIX
+                + UUID.randomUUID().toString().replace("-", "");
+
+            // Get permission info of the container file
+            String containerFilePermission = new Gson().toJson(
+                new SmartFilePermission(firstFileInfo));
+
+            // Set container file path and permission of this action
+            descriptor.addActionArg(
+                i, SmallFileCompactAction.CONTAINER_FILE, containerFile);
+            descriptor.addActionArg(i,
+                SmallFileCompactAction.CONTAINER_FILE_PERMISSION,
+                containerFilePermission);
+          } catch (MetaStoreException e) {
+            LOG.error("Failed to generate meta data of container file. " + e.toString());
+          }
+        }
       }
     }
     return descriptor;

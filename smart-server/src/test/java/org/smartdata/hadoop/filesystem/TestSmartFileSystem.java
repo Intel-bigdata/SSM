@@ -17,17 +17,13 @@
  */
 package org.smartdata.hadoop.filesystem;
 
-import com.google.gson.Gson;
-import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSUtil;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.hdfs.action.HdfsAction;
-import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.CmdletManager;
@@ -46,9 +42,9 @@ public class TestSmartFileSystem extends MiniSmartClusterHarness {
     super.init();
     this.smartFileSystem = new SmartFileSystem();
     SmartConf conf = smartContext.getConf();
-    Collection<URI> namenodes = DFSUtil.getInternalNsRpcUris(conf);
+    Collection<URI> nameNodes = DFSUtil.getInternalNsRpcUris(conf);
     smartFileSystem.initialize(new ArrayList<>(
-        namenodes).get(0), smartContext.getConf());
+        nameNodes).get(0), smartContext.getConf());
     createSmallFiles();
   }
 
@@ -57,8 +53,7 @@ public class TestSmartFileSystem extends MiniSmartClusterHarness {
     dfs.mkdirs(smallFilePath);
     Path containerPath = new Path("/test/container_files/");
     dfs.mkdirs(containerPath);
-    ArrayList<String> smallFileList = new ArrayList<>();
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 2; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
       long fileLen = 8;
@@ -67,15 +62,12 @@ public class TestSmartFileSystem extends MiniSmartClusterHarness {
       rb.nextBytes(buf);
       out.write(buf, 0, (int) fileLen);
       out.close();
-      smallFileList.add(fileName);
     }
     waitTillSSMExitSafeMode();
     CmdletManager cmdletManager = ssm.getCmdletManager();
-    CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(
-        "compact -containerFile" + " /test/container_files/container_file");
-    cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
-    Thread.sleep(1000);
-    long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
+    long cmdId = cmdletManager.submitCmdlet("compact -file"
+        + " ['/test/small_files/file_0','/test/small_files/file_1']"
+        + " -containerFile /test/small_files/container_file_5");
 
     while (true) {
       Thread.sleep(1000);
@@ -89,47 +81,20 @@ public class TestSmartFileSystem extends MiniSmartClusterHarness {
   }
 
   //@Test
-  public void testGetFileBlockLocations() throws Exception {
-    BlockLocation[] ret = smartFileSystem.getFileBlockLocations(new Path(
-        "/test/small_files/file_0"), 0, 5);
-    Assert.assertEquals(ret.length, 1);
-  }
-
-  //@Test
-  public void testGetFileStatus() throws Exception {
-    FileStatus fileStatus = smartFileSystem.getFileStatus(new Path(
-        "/test/small_files/file_0"));
-    Assert.assertEquals(fileStatus.getLen(), 8);
-  }
-
-  //@Test
-  public void testListStatus() throws Exception {
-    FileStatus[] ret = smartFileSystem.listStatus(new Path("/test/small_files"));
-    Assert.assertEquals(ret.length, 3);
-    Assert.assertEquals(ret[0].getLen(), 8);
-    Assert.assertEquals(ret[1].getLen(), 8);
-    Assert.assertEquals(ret[2].getLen(), 8);
-  }
-
-  //@Test
-  public void testDeleteFile() throws Exception {
-    smartFileSystem.delete(new Path("/test/small_files/file_0"), false);
-    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
-  }
-
-  //@Test
-  public void testDeleteFileRecur() throws Exception {
-    smartFileSystem.delete(new Path("/test/small_files"), true);
-    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
-    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_1"));
-    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_2"));
-  }
-
-  //@Test
-  public void testRenameFile() throws Exception {
+  public void testSmartFileSystem() throws Exception {
     smartFileSystem.rename(new Path("/test/small_files/file_0"),
         new Path("/test/small_files/file_5"));
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
     Assert.assertTrue(dfsClient.exists("/test/small_files/file_5"));
+    smartFileSystem.delete(new Path("/test/small_files/file_0"), false);
+    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
+    smartFileSystem.delete(new Path("/test/small_files"), true);
+    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_1"));
+    Assert.assertTrue(!dfsClient.exists("/test/small_files/file_5"));
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    dfs.getClient().delete("/test", true);
   }
 }

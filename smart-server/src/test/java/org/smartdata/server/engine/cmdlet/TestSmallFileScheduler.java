@@ -17,33 +17,26 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
-import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.hdfs.action.HdfsAction;
-import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletState;
 import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.CmdletManager;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class TestSmallFileScheduler extends MiniSmartClusterHarness {
   private long sumFileLen;
-  private List<String> smallFileList;
 
   @Before
   @Override
   public void init() throws Exception {
     super.init();
     sumFileLen = 0L;
-    smallFileList = new ArrayList<>();
     createTestFiles();
   }
 
@@ -65,7 +58,6 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
       }
       out.close();
       sumFileLen += fileLen;
-      smallFileList.add(fileName);
     }
   }
 
@@ -74,11 +66,9 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
 
     CmdletManager cmdletManager = ssm.getCmdletManager();
-    CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(
-        "compact -containerFile /test/small_files/container_file_2");
-    cmdletDescriptor.addActionArg(0, HdfsAction.FILE_PATH,
-        new Gson().toJson(smallFileList));
-    long cmdId = cmdletManager.submitCmdlet(cmdletDescriptor);
+    long cmdId = cmdletManager.submitCmdlet("compact -file "
+        + "['/test/small_files/file_0','/test/small_files/file_1'] "
+        + "-containerFile /test/small_files/container_file_2");
 
     while (true) {
       Thread.sleep(3000);
@@ -87,8 +77,8 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
         long containerFileLen = dfsClient.getFileInfo(
             "/test/small_files/container_file_2").getLen();
         Assert.assertEquals(sumFileLen, containerFileLen);
-        long smallFileLen = dfsClient.getFileInfo("/test/small_files/file_1").getLen();
-        Assert.assertEquals(0, smallFileLen);
+        Assert.assertEquals(0,
+            dfsClient.getFileInfo("/test/small_files/file_1").getLen());
         return;
       } else if (state == CmdletState.FAILED) {
         Assert.fail("Compact failed.");
@@ -99,7 +89,5 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
   @After
   public void tearDown() throws Exception {
     dfs.getClient().delete("/test", true);
-    ssm.getMetaStore().dropTable("file_state");
-    ssm.getMetaStore().dropTable("small_file");
   }
 }

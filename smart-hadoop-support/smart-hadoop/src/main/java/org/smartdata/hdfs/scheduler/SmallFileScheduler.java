@@ -23,15 +23,11 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
 import org.smartdata.metastore.MetaStore;
-import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
-import org.smartdata.model.CompactFileState;
-import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
@@ -48,7 +44,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SmallFileScheduler extends ActionSchedulerService {
   private final URI nnUri;
   private DFSClient dfsClient;
-  private MetaStore metaStore;
 
   /**
    * container files lock, and whether exist in hdfs already.
@@ -67,7 +62,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
   public SmallFileScheduler(SmartContext context, MetaStore metaStore)
       throws IOException {
     super(context, metaStore);
-    this.metaStore = metaStore;
     this.nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
   }
 
@@ -172,27 +166,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
           actionInfo.getArgs().get(HdfsAction.FILE_PATH),
           new TypeToken<ArrayList<String>>() {
           }.getType());
-      if (actionInfo.isSuccessful()) {
-        Map<String, FileContainerInfo> fileContainerInfoMap = new Gson().fromJson(
-            actionInfo.getResult(),
-            new TypeToken<HashMap<String, FileContainerInfo>>() {
-            }.getType());
-        for (Map.Entry<String, FileContainerInfo> entry :
-            fileContainerInfoMap.entrySet()) {
-          CompactFileState compactFileState = new CompactFileState(
-              entry.getKey(), entry.getValue());
-          // Insert file container info of the small file into meta store
-          try {
-            metaStore.insertUpdateFileState(compactFileState);
-            CompatibilityHelperLoader.getHelper().truncate0(dfsClient, entry.getKey());
-          } catch (MetaStoreException | IOException e) {
-            containerFilesLock.remove(containerFilePath);
-            smallFilesLock.removeAll(smallFileList);
-            LOG.error("Failed to update file state of: " + entry.getKey(), e);
-            return;
-          }
-        }
-      } else {
+
+      // Delete container file if it's not exist before running action
+      if (!actionInfo.isSuccessful()) {
         try {
           if (!containerFilesLock.get(containerFilePath)) {
             dfsClient.delete(containerFilePath, false);

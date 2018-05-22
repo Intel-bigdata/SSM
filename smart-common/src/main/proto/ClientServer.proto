@@ -60,38 +60,9 @@ message GetFileStateResponseProto {
   required FileStateProto fileState = 1;
 }
 
-message GetFileStatesRequestProto {
-  required string filePath = 1;
-}
-
-message GetFileStatesResponseProto {
-  repeated FileStateProto fileState = 1;
-}
-
-message UpdateFileStateRequestProto {
-  required FileStateProto fileState = 1;
-}
-
-message UpdateFileStateResponseProto {
-}
-
-message DeleteFileStateRequestProto {
-  required string filePath = 1;
-  required bool recursive = 2;
-}
-
-message DeleteFileStateResponseProto {
-}
-
 service protoService {
   rpc reportFileAccessEvent (ReportFileAccessEventRequestProto)
   returns (ReportFileAccessEventResponseProto);
   rpc getFileState (GetFileStateRequestProto)
   returns (GetFileStateResponseProto);
-  rpc getFileStates (GetFileStatesRequestProto)
-  returns (GetFileStatesResponseProto);
-  rpc updateFileState (UpdateFileStateRequestProto)
-  returns (UpdateFileStateResponseProto);
-  rpc deleteFileState (DeleteFileStateRequestProto)
-  returns (DeleteFileStateResponseProto);
 }

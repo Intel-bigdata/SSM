@@ -35,11 +35,11 @@ import java.util.Random;
 public class TestSmallFileCompactAction extends MiniClusterHarness {
 
   @Test
-  public void testSmallFileCompactAction() throws Exception {
+  public void testAction() throws Exception {
     Path path = new Path("/test/small_files/");
     dfs.mkdirs(path);
     long sumFileLen = 0L;
-    List smallFileList = new ArrayList<String>();
+    List<String> smallFileList = new ArrayList<>();
     for (int i = 0; i < 3; i++) {
       String fileName = "/test/small_files/file_" + i;
       FSDataOutputStream out = dfs.create(new Path(fileName), (short) 1);
@@ -71,7 +71,8 @@ public class TestSmallFileCompactAction extends MiniClusterHarness {
     smallFileCompactAction.init(args);
     smallFileCompactAction.run();
     Assert.assertTrue(dfsClient.exists("/test/small_files/container_file"));
-    HdfsFileStatus containerFileInfo = dfsClient.getFileInfo("/test/small_files/container_file");
+    HdfsFileStatus containerFileInfo = dfsClient.getFileInfo(
+        "/test/small_files/container_file");
     Assert.assertEquals(sumFileLen, containerFileInfo.getLen());
   }
 

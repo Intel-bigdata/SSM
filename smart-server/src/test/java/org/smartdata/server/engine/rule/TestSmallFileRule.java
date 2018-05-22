@@ -81,7 +81,5 @@ public class TestSmallFileRule extends MiniSmartClusterHarness {
   @After
   public void tearDown() throws Exception {
     dfs.getClient().delete("/test", true);
-    ssm.getMetaStore().dropTable("file_state");
-    ssm.getMetaStore().dropTable("small_file");
   }
 }

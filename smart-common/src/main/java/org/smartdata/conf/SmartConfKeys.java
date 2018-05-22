@@ -69,6 +69,10 @@ public class SmartConfKeys {
     "smart.security.client.protocol.acl";
   public static final String SMART_SECURITY_ADMIN_PROTOCOL_ACL =
     "smart.security.admin.protocol.acl";
+  public static final String SMART_FILE_STATE_XATTR_NAME_KEY =
+      "smart.compact.file.state.xattr.name";
+  public static final String SMART_FILE_STATE_XATTR_NAME_DEFAULT =
+      "user.fileState";
 
   public static final String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
 
@@ -148,10 +152,6 @@ public class SmartConfKeys {
       200;
 
   // SmartClient
-  public static final String SMART_CLIENT_CACHE_ENABLED_KEY =
-      "smart.client.cache.enable";
-  public static final boolean SMART_CLIENT_CACHE_ENABLED_DEFAULT =
-      false;
 
   // Common
   /**

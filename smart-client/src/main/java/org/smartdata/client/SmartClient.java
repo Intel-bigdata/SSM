@@ -33,27 +33,20 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
-  private static final int CACHE_SIZE = 1000;
   private Configuration conf;
   private SmartClientProtocol server;
   private volatile boolean running = true;
-  private boolean cacheEnable;
   private List<String> ignoreAccessEventDirs;
   private Map<String, Integer> singleIgnoreList;
-  private Map<String, FileState> fileStateCache;
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
-    this.cacheEnable = conf.getBoolean(SmartConfKeys.SMART_CLIENT_CACHE_ENABLED_KEY,
-        SmartConfKeys.SMART_CLIENT_CACHE_ENABLED_DEFAULT);
     String rpcConfValue = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     if (rpcConfValue == null) {
       throw new IOException("SmartServer address not found. Please configure "
@@ -92,21 +85,33 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     for (String s : dirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
-    if (cacheEnable) {
-      fileStateCache = new LinkedHashMap<String, FileState>(
-          CACHE_SIZE, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(
-            Map.Entry<String, FileState> eldest) {
-          return size() > CACHE_SIZE;
-        }
-      };
-    }
   }
 
   private void checkOpen() throws IOException {
     if (!running) {
       throw new IOException("SmartClient closed");
+    }
+  }
+
+  @Override
+  public void reportFileAccessEvent(FileAccessEvent event)
+      throws IOException {
+    if (!shouldIgnore(event.getPath())) {
+      checkOpen();
+      server.reportFileAccessEvent(event);
+    }
+  }
+
+  @Override
+  public FileState getFileState(String filePath) throws IOException {
+    checkOpen();
+    try {
+      return server.getFileState(filePath);
+    } catch (ConnectException e) {
+      // client cannot connect to server
+      // don't report access event for this file this time
+      singleIgnoreList.put(filePath, 0);
+      return new NormalFileState(filePath);
     }
   }
 
@@ -123,69 +128,6 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       }
     }
     return false;
-  }
-
-  @Override
-  public void reportFileAccessEvent(FileAccessEvent event)
-      throws IOException {
-    if (!shouldIgnore(event.getPath())) {
-      checkOpen();
-      server.reportFileAccessEvent(event);
-    }
-  }
-
-  @Override
-  public FileState getFileState(String filePath) throws IOException {
-    checkOpen();
-    if (cacheEnable && fileStateCache.containsKey(filePath)) {
-      return fileStateCache.get(filePath);
-    } else {
-      try {
-        return server.getFileState(filePath);
-      } catch (ConnectException e) {
-        // client cannot connect to server
-        // don't report access event for this file this time
-        singleIgnoreList.put(filePath, 0);
-        return new NormalFileState(filePath);
-      }
-    }
-  }
-
-  @Override
-  public List<FileState> getFileStates(String filePath) throws IOException {
-    checkOpen();
-    return server.getFileStates(filePath);
-  }
-
-  /**
-   * Cache compact file states of the small files
-   * whose container file is same as the specified small file's.
-   *
-   * @param filePath the specified small file
-   * @throws IOException if exception occur
-   */
-  public void cacheCompactFileStates(String filePath) throws IOException {
-    if (cacheEnable) {
-      List<FileState> fileStates = getFileStates(filePath);
-      for (FileState filestate : fileStates) {
-        String key = filestate.getPath();
-        fileStateCache.put(key, filestate);
-      }
-    }
-  }
-
-  @Override
-  public void updateFileState(FileState fileState)
-      throws IOException {
-    checkOpen();
-    server.updateFileState(fileState);
-  }
-
-  @Override
-  public void deleteFileState(String filePath, boolean recursive)
-      throws IOException {
-    checkOpen();
-    server.deleteFileState(filePath, recursive);
   }
 
   @Override

@@ -17,7 +17,9 @@
  */
 package org.smartdata.model;
 
-public class FileContainerInfo {
+import java.io.Serializable;
+
+public class FileContainerInfo implements Serializable {
   private String containerFilePath;
   private long offset;
   private long length;

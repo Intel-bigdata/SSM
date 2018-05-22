@@ -23,7 +23,6 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
