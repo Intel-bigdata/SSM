@@ -29,8 +29,10 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -74,6 +76,10 @@ public class SmallFileUncompactAction extends HdfsAction {
     ArrayList<String> smallFileList = new Gson().fromJson(
         smallFiles, new TypeToken<ArrayList<String>>() {
         }.getType());
+    if (smallFileList == null || smallFileList.isEmpty()) {
+      throw new IllegalArgumentException(
+          String.format("Invalid small files: %s.", smallFiles));
+    }
 
     // Get container file path
     if (containerFile == null || containerFile.isEmpty()) {
@@ -84,26 +90,33 @@ public class SmallFileUncompactAction extends HdfsAction {
         "Action starts at %s : uncompact small files.",
         Utils.getFormatedCurrentTime()));
 
+    List<String> removeSmallFiles = new ArrayList<>();
     for (String smallFile : smallFileList) {
       if ((smallFile != null) && !smallFile.isEmpty()
           && dfsClient.exists(smallFile)) {
         try (DFSInputStream in = smartDFSClient.open(smallFile);
              OutputStream out = CompatibilityHelperLoader.getHelper()
-                 .getDFSClientAppend(dfsClient, smallFile, 4096, 0)) {
+                 .getAppendOutPutStream(dfsClient, smallFile, 4096)) {
           // Copy contents to original small file
           IOUtils.copyBytes(in, out, 4096);
 
           // Remove XAttr from original small file
           smartDFSClient.removeXAttr(smallFile, xAttrName);
 
+          // Update remove small file list
+          removeSmallFiles.add(smallFile);
+
           // Set status and update log
           this.status = (smallFileList.indexOf(smallFile) + 1.0f)
               / smallFileList.size();
           appendLog(String.format("Uncompact %s successfully.", smallFile));
+        } catch (IOException e) {
+          appendResult(new Gson().toJson(removeSmallFiles));
+          throw e;
         }
       }
     }
-    appendResult("Uncompact all the small files successfully.");
+    appendResult(new Gson().toJson(removeSmallFiles));
   }
 
   @Override

@@ -2152,6 +2152,25 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return fileState;
   }
 
+  public void deleteFileState(String filePath) throws MetaStoreException {
+    try {
+      FileState fileState = getFileState(filePath);
+      fileStateDao.deleteByPath(filePath, false);
+      switch (fileState.getFileType()) {
+        case COMPACT:
+          smallFileDao.deleteByPath(filePath, false);
+          break;
+        case COMPRESSION:
+          break;
+        case S3:
+          break;
+        default:
+      }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<String> getSmallFilesByContainerFile(String containerFilePath)
       throws MetaStoreException {
     try {

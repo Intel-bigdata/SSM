@@ -85,6 +85,10 @@ public class SmallFileCompactAction extends HdfsAction {
     ArrayList<String> smallFileList = new Gson().fromJson(
         smallFiles, new TypeToken<ArrayList<String>>() {
         }.getType());
+    if (smallFileList == null || smallFileList.isEmpty()) {
+      throw new IllegalArgumentException(
+          String.format("Invalid small files: %s.", smallFiles));
+    }
 
     // Get container file path
     if (containerFile == null || containerFile.isEmpty()) {
@@ -109,7 +113,7 @@ public class SmallFileCompactAction extends HdfsAction {
     if (dfsClient.exists(containerFile)) {
       offset = dfsClient.getFileInfo(containerFile).getLen();
       out = CompatibilityHelperLoader.getHelper()
-          .getDFSClientAppend(dfsClient, containerFile, 64 * 1024, 0);
+          .getAppendOutPutStream(dfsClient, containerFile, 64 * 1024);
     } else {
       out = dfsClient.create(containerFile, true);
       if (filePermission != null) {

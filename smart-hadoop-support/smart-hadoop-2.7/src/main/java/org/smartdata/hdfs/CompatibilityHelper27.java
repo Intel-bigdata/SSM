@@ -156,6 +156,17 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
   @Override
   public OutputStream getDFSClientAppend(DFSClient client, String dest,
       int buffersize, long offset) throws IOException {
+    if (client.exists(dest) && offset != 0) {
+      return client
+          .append(dest, buffersize,
+              EnumSet.of(CreateFlag.APPEND), null, null);
+    }
+    return client.create(dest, true);
+  }
+
+  @Override
+  public OutputStream getAppendOutPutStream(DFSClient client, String dest,
+      int buffersize) throws IOException {
     if (client.exists(dest)) {
       return client
           .append(dest, buffersize,
