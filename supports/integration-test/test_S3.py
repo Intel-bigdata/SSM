@@ -1,13 +1,13 @@
+import argparse
 import unittest
 from util import *
 
 
 # To run this script, we must install hadoop and enable S3 support in hadoop
-FILE_SIZE = 1024 * 1024
 DEST_DIR = "s3a://xxxctest/"
 
 
-class Test_S3_1MB(unittest.TestCase):
+class TestS3(unittest.TestCase):
 
     # move to S3
     def test_S3(self):
@@ -38,4 +38,12 @@ class Test_S3_1MB(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-size', default='1MB')
+    parser.add_argument('unittest_args', nargs='*')
+    args, unknown_args = parser.parse_known_args()
+    sys.argv[1:] = unknown_args
+    print "The file size for test is {}.".format(args.size)
+    FILE_SIZE = convert_to_byte(args.size)
+
     unittest.main()
