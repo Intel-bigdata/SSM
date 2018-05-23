@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartConstants;
 import org.smartdata.client.SmartClient;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileState;
@@ -56,9 +55,9 @@ import java.util.List;
 public class SmartDFSClient extends DFSClient {
   private static final Logger LOG = LoggerFactory.getLogger(SmartDFSClient.class);
   private static final String CALLER_CLASS = "org.apache.hadoop.hdfs.DFSInputStream";
-  private String xAttrName = null;
   private SmartClient smartClient = null;
   private boolean healthy = false;
+  private String xAttrName = null;
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
@@ -69,9 +68,7 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
-      this.xAttrName = conf.get(
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_KEY,
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_DEFAULT);
+      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -87,9 +84,7 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
-      this.xAttrName = conf.get(
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_KEY,
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_DEFAULT);
+      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -106,9 +101,7 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
-      this.xAttrName = conf.get(
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_KEY,
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_DEFAULT);
+      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -124,9 +117,7 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
-      this.xAttrName = conf.get(
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_KEY,
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_DEFAULT);
+      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -141,9 +132,7 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf);
       healthy = true;
-      this.xAttrName = conf.get(
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_KEY,
-          SmartConfKeys.SMART_FILE_STATE_XATTR_NAME_DEFAULT);
+      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -185,15 +174,14 @@ public class SmartDFSClient extends DFSClient {
   public HdfsDataOutputStream append(final String src, final int buffersize,
       EnumSet<CreateFlag> flag, final Progressable progress,
       final FileSystem.Statistics statistics) throws IOException {
-    try {
-      return super.append(src, buffersize, flag, progress, statistics);
-    } catch (IOException e) {
+    HdfsDataOutputStream out = super.append(src, buffersize, flag, progress, statistics);
+    if (out.getPos() == 0) {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
         throw new IOException(getExceptionMsg("Append", "SSM Small File"));
       }
-      throw e;
     }
+    return out;
   }
 
   @Override
@@ -201,15 +189,15 @@ public class SmartDFSClient extends DFSClient {
       EnumSet<CreateFlag> flag, final Progressable progress,
       final FileSystem.Statistics statistics,
       final InetSocketAddress[] favoredNodes) throws IOException {
-    try {
-      return super.append(src, buffersize, flag, progress, statistics, favoredNodes);
-    } catch (IOException e) {
+    HdfsDataOutputStream out = super.append(
+        src, buffersize, flag, progress, statistics, favoredNodes);
+    if (out.getPos() == 0) {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
         throw new IOException(getExceptionMsg("Append", "SSM Small File"));
       }
-      throw e;
     }
+    return out;
   }
 
   @Override
@@ -527,7 +515,7 @@ public class SmartDFSClient extends DFSClient {
    *
    * @param filePath the path of source file
    * @return file state of source file
-   * @throws IOException if smart client closed or SSM service not ready
+   * @throws IOException e
    */
   public FileState getFileState(String filePath) throws IOException {
     try {

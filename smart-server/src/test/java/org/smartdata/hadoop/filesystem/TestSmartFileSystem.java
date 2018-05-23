@@ -17,20 +17,24 @@
  */
 package org.smartdata.hadoop.filesystem;
 
+import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.model.CmdletState;
+import org.smartdata.hdfs.action.SmallFileCompactAction;
 import org.smartdata.server.MiniSmartClusterHarness;
-import org.smartdata.server.engine.CmdletManager;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class TestSmartFileSystem extends MiniSmartClusterHarness {
@@ -63,25 +67,24 @@ public class TestSmartFileSystem extends MiniSmartClusterHarness {
       out.write(buf, 0, (int) fileLen);
       out.close();
     }
-    waitTillSSMExitSafeMode();
-    CmdletManager cmdletManager = ssm.getCmdletManager();
-    long cmdId = cmdletManager.submitCmdlet("compact -file"
-        + " ['/test/small_files/file_0','/test/small_files/file_1']"
-        + " -containerFile /test/small_files/container_file_5");
 
-    while (true) {
-      Thread.sleep(1000);
-      CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
-      if (state == CmdletState.DONE) {
-        return;
-      } else if (state == CmdletState.FAILED) {
-        Assert.fail("Compact failed.");
-      }
-    }
+    SmallFileCompactAction smallFileCompactAction = new SmallFileCompactAction();
+    smallFileCompactAction.setDfsClient(dfsClient);
+    smallFileCompactAction.setContext(smartContext);
+    Map<String , String> args = new HashMap<>();
+    List<String> smallFileList = new ArrayList<>();
+    smallFileList.add("/test/small_files/file_0");
+    smallFileList.add("/test/small_files/file_1");
+    args.put(SmallFileCompactAction.FILE_PATH , new Gson().toJson(smallFileList));
+    args.put(SmallFileCompactAction.CONTAINER_FILE,
+        "/test/small_files/container_file_6");
+    smallFileCompactAction.init(args);
+    smallFileCompactAction.run();
   }
 
-  //@Test
+  @Test
   public void testSmartFileSystem() throws Exception {
+    waitTillSSMExitSafeMode();
     smartFileSystem.rename(new Path("/test/small_files/file_0"),
         new Path("/test/small_files/file_5"));
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_0"));
@@ -91,10 +94,5 @@ public class TestSmartFileSystem extends MiniSmartClusterHarness {
     smartFileSystem.delete(new Path("/test/small_files"), true);
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_1"));
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_5"));
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    dfs.getClient().delete("/test", true);
   }
 }

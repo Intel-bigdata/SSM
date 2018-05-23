@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
@@ -139,16 +140,15 @@ public class SmartFileSystem extends DistributedFileSystem {
   public FSDataOutputStream append(Path f, final EnumSet<CreateFlag> flag,
       final int bufferSize, final Progressable progress)
       throws IOException {
-    try {
-      return super.append(f, flag, bufferSize, progress);
-    } catch (IOException e) {
+    FSDataOutputStream out = super.append(f, flag, bufferSize, progress);
+    if (out.getPos() == 0) {
       FileState fileState = smartDFSClient.getFileState(getPathName(f));
       if (fileState instanceof CompactFileState) {
         throw new IOException(
             smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
       }
-      throw e;
     }
+    return out;
   }
 
   @Override
@@ -156,16 +156,15 @@ public class SmartFileSystem extends DistributedFileSystem {
       final int bufferSize, final Progressable progress,
       final InetSocketAddress[] favoredNodes)
       throws IOException {
-    try {
-      return super.append(f, flag, bufferSize, progress, favoredNodes);
-    } catch (IOException e) {
+    FSDataOutputStream out = super.append(f, flag, bufferSize, progress, favoredNodes);
+    if (out.getPos() == 0) {
       FileState fileState = smartDFSClient.getFileState(getPathName(f));
       if (fileState instanceof CompactFileState) {
         throw new IOException(
             smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
       }
-      throw e;
     }
+    return out;
   }
 
   @Override
@@ -176,8 +175,9 @@ public class SmartFileSystem extends DistributedFileSystem {
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
         return new FileStatus(len, oldStatus.isDirectory(), oldStatus.getReplication(),
-            oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
-            oldStatus.getPermission(), oldStatus.getOwner(), oldStatus.getGroup(),
+            oldStatus.getBlockSize(), oldStatus.getModificationTime(),
+            oldStatus.getAccessTime(), oldStatus.getPermission(),
+            oldStatus.getOwner(), oldStatus.getGroup(),
             oldStatus.isSymlink() ? oldStatus.getSymlink() : null, oldStatus.getPath());
       }
     }

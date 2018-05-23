@@ -26,14 +26,18 @@ import org.smartdata.SmartContext;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
+import org.smartdata.hdfs.action.SmallFileUncompactAction;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CompactFileState;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,6 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SmallFileScheduler extends ActionSchedulerService {
   private final URI nnUri;
   private DFSClient dfsClient;
+  private MetaStore metaStore;
 
   /**
    * container files lock, and whether exist in hdfs already.
@@ -51,24 +56,32 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private Map<String, Boolean> containerFilesLock;
 
   /**
-   * small files lock.
+   * compact small files lock.
    */
-  private List<String> smallFilesLock;
+  private List<String> compactSmallFilesLock;
+
+  /**
+   * uncompact small files lock.
+   */
+  private List<String> uncompactSmallFilesLock;
 
   private static final String COMPACT_ACTION_NAME = "compact";
-  private static final List<String> ACTIONS = Collections.singletonList("compact");
+  private static final String UNCOMPACT_ACTION_NAME = "uncompact";
+  private static final List<String> ACTIONS = Arrays.asList("compact", "uncompact");
   public static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
 
   public SmallFileScheduler(SmartContext context, MetaStore metaStore)
       throws IOException {
     super(context, metaStore);
+    this.metaStore = metaStore;
     this.nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
   }
 
   @Override
   public void init() throws IOException {
     this.containerFilesLock = new ConcurrentHashMap<>();
-    this.smallFilesLock = new ArrayList<>();
+    this.compactSmallFilesLock = Collections.synchronizedList(new ArrayList<String>());
+    this.uncompactSmallFilesLock = Collections.synchronizedList(new ArrayList<String>());
     this.dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
   }
 
@@ -89,38 +102,24 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
       // Check if small file list is null or empty
       String smallFiles = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-      if (smallFiles == null || smallFiles.isEmpty()) {
-        return false;
-      }
-
-      // Get valid small file list according to the small file lock map
-      ArrayList<String> smallFileList = new Gson().fromJson(
-          smallFiles, new TypeToken<ArrayList<String>>() {
-          }.getType());
-      Iterator<String> iterator = smallFileList.iterator();
-      while (iterator.hasNext()) {
-        String smallFile = iterator.next();
-        if (smallFile == null || smallFile.isEmpty()
-            || smallFilesLock.contains(smallFile)) {
-          iterator.remove();
+      return (smallFiles != null && !smallFiles.isEmpty());
+    } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
+      // Check if container file is exist
+      String containerFilePath = actionInfo.getArgs().get(
+          SmallFileUncompactAction.CONTAINER_FILE);
+      try {
+        if (containerFilePath == null
+            || containerFilePath.isEmpty()
+            || !dfsClient.exists(containerFilePath)) {
+          return false;
         }
-      }
-
-      if (smallFileList.isEmpty()) {
+      } catch (IOException e) {
         return false;
       }
-      smallFilesLock.addAll(smallFileList);
-
-      // Reset args of the action
-      Map<String, String> args = new HashMap<>(2);
-      args.put(SmallFileCompactAction.CONTAINER_FILE,
-          actionInfo.getArgs().get(SmallFileCompactAction.CONTAINER_FILE));
-      args.put(SmallFileCompactAction.FILE_PATH, new Gson().toJson(smallFileList));
-      actionInfo.setArgs(args);
+      return true;
+    } else {
       return true;
     }
-
-    return true;
   }
 
   @Override
@@ -130,7 +129,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
       String containerFilePath = actionInfo.getArgs().get(
           SmallFileCompactAction.CONTAINER_FILE);
       String smallFiles = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-      List<String> smallFileList = new Gson().fromJson(
+      ArrayList<String> smallFileList = new Gson().fromJson(
           smallFiles, new TypeToken<ArrayList<String>>() {
           }.getType());
 
@@ -138,18 +137,88 @@ public class SmallFileScheduler extends ActionSchedulerService {
       if (containerFilesLock.containsKey(containerFilePath)) {
         return ScheduleResult.RETRY;
       } else {
+        // Get valid small file list according to the small file lock map
+        Iterator<String> iterator = smallFileList.iterator();
+        while (iterator.hasNext()) {
+          String smallFile = iterator.next();
+          if (smallFile == null || smallFile.isEmpty()
+              || compactSmallFilesLock.contains(smallFile)) {
+            iterator.remove();
+          }
+        }
+
+        if (smallFileList.isEmpty()) {
+          return ScheduleResult.FAIL;
+        }
+
         try {
-          // Lock the container file, and set whether exist already
+          // Lock container file and set whether exists already
+          // Lock small files
           boolean exist = dfsClient.exists(containerFilePath);
           containerFilesLock.put(containerFilePath, exist);
+          compactSmallFilesLock.addAll(smallFileList);
         } catch (IOException e) {
           LOG.error("Failed to check if the container file is exists: "
               + containerFilePath, e);
-          smallFilesLock.removeAll(smallFileList);
           return ScheduleResult.FAIL;
         }
       }
+
+      // Reset args of this action
+      Map<String, String> args = new HashMap<>(2);
+      args.put(HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
+      args.put(SmallFileCompactAction.CONTAINER_FILE, containerFilePath);
+      action.setArgs(args);
+      actionInfo.setArgs(args);
       return ScheduleResult.SUCCESS;
+    } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
+      // Get container file and small file list of this action
+      String containerFilePath = actionInfo.getArgs().get(
+          SmallFileCompactAction.CONTAINER_FILE);
+
+      // Check if container file is locked
+      if (!containerFilesLock.containsKey(containerFilePath)) {
+        // Get small files of the container file if unlocked
+        List<String> smallFileList;
+        try {
+          smallFileList = metaStore.getSmallFilesByContainerFile(containerFilePath);
+        } catch (MetaStoreException e) {
+          return ScheduleResult.FAIL;
+        }
+
+        if (smallFileList != null) {
+          Iterator<String> iterator = smallFileList.iterator();
+          while (iterator.hasNext()) {
+            String smallFile = iterator.next();
+            if (smallFile == null || smallFile.isEmpty()
+                || uncompactSmallFilesLock.contains(smallFile)) {
+              iterator.remove();
+            }
+          }
+
+          if (smallFileList.isEmpty()) {
+            return ScheduleResult.FAIL;
+          }
+
+          // Update container files and uncompact small files lock
+          containerFilesLock.put(containerFilePath, true);
+          uncompactSmallFilesLock.addAll(smallFileList);
+
+          // Reset args of the action
+          Map<String, String> args = new HashMap<>(2);
+          args.put(HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
+          args.put(SmallFileUncompactAction.CONTAINER_FILE,
+              actionInfo.getArgs().get(SmallFileUncompactAction.CONTAINER_FILE));
+          action.setArgs(args);
+          actionInfo.setArgs(args);
+          return ScheduleResult.SUCCESS;
+        } else {
+          return ScheduleResult.FAIL;
+        }
+      } else {
+        // Retry if locked
+        return ScheduleResult.RETRY;
+      }
     } else {
       return ScheduleResult.SUCCESS;
     }
@@ -157,31 +226,60 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
-    if (actionInfo.isFinished()
-        && COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-      // Get container file path of this action
-      String containerFilePath = actionInfo.getArgs().get(
-          SmallFileCompactAction.CONTAINER_FILE);
-      List<String> smallFileList = new Gson().fromJson(
-          actionInfo.getArgs().get(HdfsAction.FILE_PATH),
-          new TypeToken<ArrayList<String>>() {
-          }.getType());
+    if (actionInfo.isFinished()) {
+      if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
+        // Get container file path, small files, result of this action
+        String containerFilePath = actionInfo.getArgs().get(
+            SmallFileCompactAction.CONTAINER_FILE);
+        List<String> smallFileList = new Gson().fromJson(
+            actionInfo.getArgs().get(HdfsAction.FILE_PATH),
+            new TypeToken<ArrayList<String>>() {
+            }.getType());
+        List<CompactFileState> compactFileStates = new Gson().fromJson(
+            actionInfo.getResult(),
+            new TypeToken<ArrayList<CompactFileState>>() {
+            }.getType());
 
-      // Delete container file if it's not exist before running action
-      if (!actionInfo.isSuccessful()) {
-        try {
-          if (!containerFilesLock.get(containerFilePath)) {
-            dfsClient.delete(containerFilePath, false);
+        // Insert file states into meta store
+        for (CompactFileState compactFileState : compactFileStates) {
+          try {
+            metaStore.insertUpdateFileState(compactFileState);
+          } catch (MetaStoreException e1) {
+            LOG.error(String.format("Failed to insert compact file state of %s for %s "
+                    ,compactFileState.getPath(), e1.toString()));
           }
-        } catch (IOException e) {
-          LOG.error("Failed to delete the container file: "
-              + containerFilePath, e);
         }
-      }
 
-      // Remove locks of container file and small files
-      containerFilesLock.remove(containerFilePath);
-      smallFilesLock.removeAll(smallFileList);
+        if (!actionInfo.isSuccessful()) {
+          try {
+            if (!containerFilesLock.get(containerFilePath)
+                && dfsClient.getFileInfo(containerFilePath).getLen() == 0) {
+              // Delete container file if not exists before running action,
+              // and no small file compacted to it
+              dfsClient.delete(containerFilePath, false);
+            }
+          } catch (IOException e2) {
+            LOG.error("Failed to handle container file: "
+                + containerFilePath, e2);
+          }
+        }
+
+        // Remove locks of container file and small files
+        containerFilesLock.remove(containerFilePath);
+        compactSmallFilesLock.removeAll(smallFileList);
+      } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
+        // Get container file path and small files of this action
+        String containerFilePath = actionInfo.getArgs().get(
+            SmallFileUncompactAction.CONTAINER_FILE);
+        List<String> smallFileList = new Gson().fromJson(
+            actionInfo.getArgs().get(HdfsAction.FILE_PATH),
+            new TypeToken<ArrayList<String>>() {
+            }.getType());
+
+        // Remove locks of container file and small files
+        containerFilesLock.remove(containerFilePath);
+        uncompactSmallFilesLock.removeAll(smallFileList);
+      }
     }
   }
 

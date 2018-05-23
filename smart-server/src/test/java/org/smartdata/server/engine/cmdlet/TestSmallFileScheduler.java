@@ -61,7 +61,7 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
     }
   }
 
-  @Test
+  @Test(timeout = 120000)
   public void testScheduler() throws Exception {
     waitTillSSMExitSafeMode();
 
@@ -82,6 +82,8 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
         return;
       } else if (state == CmdletState.FAILED) {
         Assert.fail("Compact failed.");
+      } else {
+        System.out.println(state);
       }
     }
   }

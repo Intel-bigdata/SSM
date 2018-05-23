@@ -70,7 +70,7 @@ public class TestSmallFileRule extends MiniSmartClusterHarness {
     SmartAdmin admin = new SmartAdmin(smartContext.getConf());
     admin.submitRule(rule, RuleState.ACTIVE);
 
-    Thread.sleep(10000);
+    Thread.sleep(6000);
     List<RuleInfo> ruleInfoList = admin.listRulesInfo();
     for (RuleInfo info : ruleInfoList) {
       System.out.println(info);
