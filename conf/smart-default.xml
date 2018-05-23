@@ -113,6 +113,18 @@
   </property>
 
   <property>
+    <name>smart.action.move.throttle.mb</name>
+    <value>0</value>
+    <description>The throughput limit (MB) for SSM move overall</description>
+  </property>
+
+  <property>
+    <name>smart.action.copy.throttle.mb</name>
+    <value>0</value>
+    <description>The throughput limit (MB) for SSM copy overall</description>
+  </property>
+
+  <property>
     <name>smart.action.local.execution.disabled</name>
     <value>false</value>
     <description>Actions will not be executed on SSM server if true.</description>
