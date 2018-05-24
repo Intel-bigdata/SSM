@@ -22,7 +22,7 @@ import java.util.BitSet;
 import java.util.List;
 
 public class BloomFilter {
-  private static final int BIT_SIZE = 2 << 28;
+  private static final int BIT_SIZE = 1 << 28;
   private final int[] seeds = new int[] { 3, 5, 7, 11, 13, 31, 37, 61 };
   private BitSet bitSet = new BitSet(BIT_SIZE);
   private BloomHash[] bloomHashes = new BloomHash[seeds.length];

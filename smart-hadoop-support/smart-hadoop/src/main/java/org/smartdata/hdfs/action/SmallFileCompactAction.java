@@ -138,8 +138,8 @@ public class SmallFileCompactAction extends HdfsAction {
             // Add compact file state to compact file state hash map
             CompactFileState compactFileState = new CompactFileState(
                 smallFile, new FileContainerInfo(containerFile, offset, fileLen));
-            truncateAndSetXAttr(smallFile, compactFileState);
             compactFileStates.add(compactFileState);
+            truncateAndSetXAttr(smallFile, compactFileState);
 
             // Update offset, status, and log
             offset += fileLen;

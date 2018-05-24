@@ -141,6 +141,10 @@ public class SmartConfKeys {
       "smart.compact.batch.size";
   public static final int SMART_COMPACT_BATCH_SIZE_DEFAULT =
       200;
+  public static final String SMART_COMPACT_CONTAINER_FILE_THRESHOLD_MB_KEY =
+      "smart.compact.container.file.threshold.mb";
+  public static final long SMART_COMPACT_CONTAINER_FILE_THRESHOLD_MB_DEFAULT =
+      1024;
 
   // SmartClient
 

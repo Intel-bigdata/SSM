@@ -100,11 +100,11 @@ public class SmallFileUncompactAction extends HdfsAction {
           // Copy contents to original small file
           IOUtils.copyBytes(in, out, 4096);
 
-          // Remove XAttr from original small file
-          smartDFSClient.removeXAttr(smallFile, xAttrName);
-
           // Update remove small file list
           removeSmallFiles.add(smallFile);
+
+          // Remove XAttr from original small file
+          smartDFSClient.removeXAttr(smallFile, xAttrName);
 
           // Set status and update log
           this.status = (smallFileList.indexOf(smallFile) + 1.0f)

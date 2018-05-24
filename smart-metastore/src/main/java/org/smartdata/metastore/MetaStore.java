@@ -61,7 +61,6 @@ import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.FileAccessInfo;
-import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
 import org.smartdata.model.FileInfo;
@@ -2110,9 +2109,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       fileStateDao.insertUpdate(fileState);
       switch (fileState.getFileType()) {
         case COMPACT:
-          FileContainerInfo fileContainerInfo = (
-              (CompactFileState) fileState).getFileContainerInfo();
-          smallFileDao.insertUpdate(fileState.getPath(), fileContainerInfo);
+          CompactFileState compactFileState = (CompactFileState) fileState;
+          smallFileDao.insertUpdate(compactFileState);
           break;
         case COMPRESSION:
           break;
@@ -2120,6 +2118,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           break;
         default:
       }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertCompactFileStates(CompactFileState[] compactFileStates)
+      throws MetaStoreException {
+    try {
+      fileStateDao.batchInsertUpdate(compactFileStates);
+      smallFileDao.batchInsertUpdate(compactFileStates);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -2152,6 +2160,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return fileState;
   }
 
+  public Map<String, FileState> getFileStates(List<String> paths)
+      throws MetaStoreException {
+    try {
+      return fileStateDao.getByPaths(paths);
+    } catch (EmptyResultDataAccessException e1) {
+      return new HashMap<>();
+    } catch (Exception e2) {
+      throw new MetaStoreException(e2);
+    }
+  }
+
   public void deleteFileState(String filePath) throws MetaStoreException {
     try {
       FileState fileState = getFileState(filePath);
@@ -2171,12 +2190,32 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteCompactFileStates(List<String> paths)
+      throws MetaStoreException {
+    try {
+      fileStateDao.batchDelete(paths);
+      smallFileDao.batchDelete(paths);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<String> getSmallFilesByContainerFile(String containerFilePath)
       throws MetaStoreException {
     try {
       return smallFileDao.getSmallFilesByContainerFile(containerFilePath);
     } catch (EmptyResultDataAccessException e1) {
       return null;
+    } catch (Exception e2) {
+      throw new MetaStoreException(e2);
+    }
+  }
+
+  public List<String> getAllContainerFiles() throws MetaStoreException {
+    try {
+      return smallFileDao.getAllContainerFiles();
+    } catch (EmptyResultDataAccessException e1) {
+      return new ArrayList<>();
     } catch (Exception e2) {
       throw new MetaStoreException(e2);
     }

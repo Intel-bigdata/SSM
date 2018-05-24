@@ -18,14 +18,20 @@
 package org.smartdata.metastore.dao;
 
 import org.smartdata.model.FileState;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import javax.sql.DataSource;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FileStateDao {
   private static final String TABLE_NAME = "file_state";
@@ -46,10 +52,44 @@ public class FileStateDao {
         fileState.getFileStage().getValue());
   }
 
+  public int[] batchInsertUpdate(final FileState[] fileStates) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "REPLACE INTO " + TABLE_NAME + " (path, type, stage) VALUES (?,?,?)";
+    return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+      @Override
+      public void setValues(PreparedStatement ps,
+          int i) throws SQLException {
+        ps.setString(1, fileStates[i].getPath());
+        ps.setInt(2, fileStates[i].getFileType().getValue());
+        ps.setInt(3, fileStates[i].getFileStage().getValue());
+      }
+      @Override
+      public int getBatchSize() {
+        return fileStates.length;
+      }
+    });
+  }
+
   public FileState getByPath(String path) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE path = ?",
         new Object[]{path}, new FileStateRowMapper());
+  }
+
+  public Map<String, FileState> getByPaths(List<String> paths) {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate =
+        new NamedParameterJdbcTemplate(dataSource);
+    Map<String, FileState> fileStateMap = new HashMap<>();
+    MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+    parameterSource.addValue("paths", paths);
+    List<FileState> fileStates = namedParameterJdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE path IN (:paths)",
+        parameterSource,
+        new FileStateRowMapper());
+    for (FileState fileState : fileStates) {
+      fileStateMap.put(fileState.getPath(), fileState);
+    }
+    return fileStateMap;
   }
 
   public List<FileState> getAll() {
@@ -66,6 +106,22 @@ public class FileStateDao {
       sql = "DELETE FROM " + TABLE_NAME + " WHERE path LIKE ?";
       jdbcTemplate.update(sql, path + "/%");
     }
+  }
+
+  public int[] batchDelete(final List<String> paths) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
+    return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+      @Override
+      public void setValues(PreparedStatement ps, int i) throws SQLException {
+        ps.setString(1, paths.get(i));
+      }
+
+      @Override
+      public int getBatchSize() {
+            return paths.size();
+      }
+    });
   }
 
   public void deleteAll() {

@@ -200,6 +200,8 @@ public class SmartFileSystem extends DistributedFileSystem {
         } else {
           newStatus.add(status);
         }
+      } else {
+        newStatus.add(status);
       }
     }
     return newStatus.toArray(new FileStatus[oldStatus.length]);

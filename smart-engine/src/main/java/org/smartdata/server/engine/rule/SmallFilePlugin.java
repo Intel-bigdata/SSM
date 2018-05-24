@@ -40,10 +40,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SmallFilePlugin implements RuleExecutorPlugin {
   private int batchSize;
   private MetaStore metaStore;
+  private long containerFileSizeThreshold;
+  private Map<String, FileInfo> smallFileInfoMap;
+  private Map<String, ContainerFileInfo> containerFileInfoMap;
   private static final String COMPACT_ACTION_NAME = "compact";
   private static final String CONTAINER_FILE_PREFIX = "container_file_";
   private static final Logger LOG = LoggerFactory.getLogger(SmallFilePlugin.class);
@@ -53,6 +57,12 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     this.batchSize = context.getConf().getInt(
         SmartConfKeys.SMART_COMPACT_BATCH_SIZE_KEY,
         SmartConfKeys.SMART_COMPACT_BATCH_SIZE_DEFAULT);
+    long containerFileThresholdMB = context.getConf().getLong(
+        SmartConfKeys.SMART_COMPACT_CONTAINER_FILE_THRESHOLD_MB_KEY,
+        SmartConfKeys.SMART_COMPACT_CONTAINER_FILE_THRESHOLD_MB_DEFAULT);
+    this.containerFileSizeThreshold = containerFileThresholdMB * 1024 * 1024;
+    this.containerFileInfoMap = new ConcurrentHashMap<>();
+    this.smallFileInfoMap = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -80,6 +90,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
           if (fileInfo != null && (fileInfo.getLength() > 0)
               && fileState.getFileType().equals(FileState.FileType.NORMAL)
               && fileState.getFileStage().equals(FileState.FileStage.DONE)) {
+            smallFileInfoMap.put(object, fileInfo);
             SmartFilePermission filePermission = new SmartFilePermission(fileInfo);
             if (filePermissionMap.containsKey(filePermission)) {
               filePermissionMap.get(filePermission).add(object);
@@ -118,37 +129,138 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
       if (COMPACT_ACTION_NAME.equals(descriptor.getActionName(i))) {
         String smallFiles = descriptor.getActionArgs(i).get(HdfsAction.FILE_PATH);
         if (smallFiles != null && !smallFiles.isEmpty()) {
+          // Check if small file list is empty
           ArrayList<String> smallFileList = new Gson().fromJson(
               smallFiles, new TypeToken<ArrayList<String>>() {
               }.getType());
-          try {
-            // Get the first small file info of this action
-            String firstFilePath = smallFileList.get(0);
-            FileInfo firstFileInfo = metaStore.getFile(firstFilePath);
-
-            // Get container file path
-            String containerFileDir = firstFilePath.substring(
-                0, firstFilePath.lastIndexOf("/") + 1);
-            String containerFile = containerFileDir + CONTAINER_FILE_PREFIX
-                + UUID.randomUUID().toString().replace("-", "");
-
-            // Get permission info of the container file
-            String containerFilePermission = new Gson().toJson(
-                new SmartFilePermission(firstFileInfo));
-
-            // Set container file path and permission of this action
-            descriptor.addActionArg(
-                i, SmallFileCompactAction.CONTAINER_FILE, containerFile);
-            descriptor.addActionArg(i,
-                SmallFileCompactAction.CONTAINER_FILE_PERMISSION,
-                containerFilePermission);
-          } catch (MetaStoreException e) {
-            LOG.error("Failed to generate meta data of container file. " + e.toString());
+          if (smallFileList == null || smallFileList.isEmpty()) {
+            continue;
           }
+
+          // Get the first small file info of this action
+          String firstFilePath = smallFileList.get(0);
+          FileInfo firstFileInfo = smallFileInfoMap.get(firstFilePath);
+          SmartFilePermission firstFilePermission = new SmartFilePermission(
+              firstFileInfo);
+          String firstFileDir = firstFilePath.substring(
+              0, firstFilePath.lastIndexOf("/") + 1);
+
+          // Get container file path and final small file list
+          String containerFile = null;
+          List<String> finalSmallFileList = new ArrayList<>();
+          if (!containerFileInfoMap.isEmpty()) {
+            for (Map.Entry<String, ContainerFileInfo> entry
+                : containerFileInfoMap.entrySet()) {
+              String containerFileDir = entry.getKey().substring(
+                  0, firstFilePath.lastIndexOf("/") + 1);
+              SmartFilePermission containerFilePermission =
+                  entry.getValue().smartFilePermission;
+              if (firstFileDir.equals(containerFileDir)
+                  && firstFilePermission.equals(containerFilePermission)) {
+                containerFile = entry.getKey();
+              }
+            }
+
+            if (containerFile != null) {
+              long sumLen;
+              try {
+                FileInfo containerFileInfo = metaStore.getFile(containerFile);
+                if (containerFileInfo != null) {
+                  sumLen = containerFileInfo.getLength();
+                } else {
+                  containerFileInfoMap.remove(containerFile);
+                  // Generate new container file for compact
+                  updateDescriptor(descriptor, i, firstFileDir, firstFilePermission);
+                  continue;
+                }
+              } catch (MetaStoreException e) {
+                LOG.error("Failed to get container file length: " + containerFile);
+                // Generate new container file for compact
+                updateDescriptor(descriptor, i, firstFileDir, firstFilePermission);
+                continue;
+              }
+              for (String smallFile : smallFileList) {
+                sumLen += smallFileInfoMap.get(smallFile).getLength();
+                if (sumLen < containerFileSizeThreshold * 1.2) {
+                  finalSmallFileList.add(smallFile);
+                }
+              }
+
+              // Update container file map
+              if (sumLen > containerFileSizeThreshold) {
+                containerFileInfoMap.remove(containerFile);
+              } else {
+                containerFileInfoMap.put(containerFile,
+                    new ContainerFileInfo(sumLen, firstFilePermission));
+              }
+
+              // Set container file path and permission of this action
+              descriptor.addActionArg(
+                  i, SmallFileCompactAction.CONTAINER_FILE, containerFile);
+              descriptor.addActionArg(
+                  i, HdfsAction.FILE_PATH, new Gson().toJson(finalSmallFileList));
+              continue;
+            }
+          }
+
+          // Generate new container file for compact
+          updateDescriptor(descriptor, i, firstFileDir, firstFilePermission);
         }
       }
     }
     return descriptor;
+  }
+
+  /**
+   * An inner class for handling container file info conveniently.
+   */
+  private class ContainerFileInfo {
+    private long length;
+    private SmartFilePermission smartFilePermission;
+
+    private ContainerFileInfo(long length,
+        SmartFilePermission filePermission) {
+      this.length = length;
+      this.smartFilePermission = filePermission;
+    }
+
+    @Override
+    public int hashCode() {
+      return Long.valueOf(length).hashCode() ^ smartFilePermission.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object containerFileInfo) {
+      if (this == containerFileInfo) {
+        return true;
+      }
+      if (containerFileInfo instanceof ContainerFileInfo) {
+        ContainerFileInfo anContainerFileInfo = (ContainerFileInfo) containerFileInfo;
+        return (this.length == anContainerFileInfo.length)
+            && this.smartFilePermission.equals(anContainerFileInfo.smartFilePermission);
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Update descriptor's args of compact action.
+   */
+  private void updateDescriptor(CmdletDescriptor descriptor, int i,
+      String containerFileDir, SmartFilePermission containerFilePermission) {
+    String containerFile = containerFileDir + CONTAINER_FILE_PREFIX
+        + UUID.randomUUID().toString().replace("-", "");
+
+    // Get permission info of the container file
+    containerFileInfoMap.put(containerFile,
+        new ContainerFileInfo(0, containerFilePermission));
+
+    // Set container file path and permission of this action
+    descriptor.addActionArg(
+        i, SmallFileCompactAction.CONTAINER_FILE, containerFile);
+    descriptor.addActionArg(i,
+        SmallFileCompactAction.CONTAINER_FILE_PERMISSION,
+        new Gson().toJson(containerFilePermission));
   }
 
   @Override

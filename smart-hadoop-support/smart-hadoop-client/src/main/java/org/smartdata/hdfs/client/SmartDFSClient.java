@@ -57,7 +57,6 @@ public class SmartDFSClient extends DFSClient {
   private static final String CALLER_CLASS = "org.apache.hadoop.hdfs.DFSInputStream";
   private SmartClient smartClient = null;
   private boolean healthy = false;
-  private String xAttrName = null;
 
   public SmartDFSClient(InetSocketAddress nameNodeAddress, Configuration conf,
       InetSocketAddress smartServerAddress) throws IOException {
@@ -68,7 +67,6 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
-      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -84,7 +82,6 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
-      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -101,7 +98,6 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
-      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -117,7 +113,6 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf, smartServerAddress);
       healthy = true;
-      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -132,7 +127,6 @@ public class SmartDFSClient extends DFSClient {
     try {
       smartClient = new SmartClient(conf);
       healthy = true;
-      this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     } catch (IOException e) {
       super.close();
       throw e;
@@ -519,7 +513,7 @@ public class SmartDFSClient extends DFSClient {
    */
   public FileState getFileState(String filePath) throws IOException {
     try {
-      byte[] fileState = getXAttr(filePath, xAttrName);
+      byte[] fileState = getXAttr(filePath, SmartConstants.SMART_FILE_STATE_XATTR_NAME);
       if (fileState != null) {
         return (FileState) SerializationUtils.deserialize(fileState);
       }

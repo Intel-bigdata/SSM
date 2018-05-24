@@ -31,6 +31,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CompactFileState;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
@@ -43,7 +44,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class SmallFileScheduler extends ActionSchedulerService {
   private final URI nnUri;
@@ -51,19 +57,34 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private MetaStore metaStore;
 
   /**
-   * container files lock, and whether exist in hdfs already.
+   * Container file lock, and whether exist in hdfs already.
    */
-  private Map<String, Boolean> containerFilesLock;
+  private Map<String, Boolean> containerFileLock;
 
   /**
-   * compact small files lock.
+   * Compact small file lock.
    */
-  private List<String> compactSmallFilesLock;
+  private List<String> compactSmallFileLock;
 
   /**
-   * uncompact small files lock.
+   * Uncompact small file lock.
    */
-  private List<String> uncompactSmallFilesLock;
+  private List<String> uncompactSmallFileLock;
+
+  /**
+   * Cache all the container files of SSM.
+   */
+  private List<String> containerFileCache;
+
+  /**
+   * Compact file state queue for caching these file state to update.
+   */
+  private Queue<CompactFileStateDiff> compactFileStateQueue;
+
+  /**
+   * Scheduled service to update meta store.
+   */
+  private ScheduledExecutorService executorService;
 
   private static final String COMPACT_ACTION_NAME = "compact";
   private static final String UNCOMPACT_ACTION_NAME = "uncompact";
@@ -79,10 +100,26 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void init() throws IOException {
-    this.containerFilesLock = new ConcurrentHashMap<>();
-    this.compactSmallFilesLock = Collections.synchronizedList(new ArrayList<String>());
-    this.uncompactSmallFilesLock = Collections.synchronizedList(new ArrayList<String>());
+    this.containerFileLock = new ConcurrentHashMap<>();
+    this.compactFileStateQueue = new ConcurrentLinkedQueue<>();
+    this.containerFileCache = Collections.synchronizedList(new ArrayList<String>());
+    this.compactSmallFileLock = Collections.synchronizedList(new ArrayList<String>());
+    this.uncompactSmallFileLock = Collections.synchronizedList(new ArrayList<String>());
     this.dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    this.executorService = Executors.newSingleThreadScheduledExecutor();
+  }
+
+  @Override
+  public void start() throws IOException {
+    executorService.scheduleAtFixedRate(
+        new ScheduleTask(), 5000, 1000,
+        TimeUnit.MILLISECONDS);
+    try {
+      List<String> containerFileList = metaStore.getAllContainerFiles();
+      this.containerFileCache.addAll(containerFileList);
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
   }
 
   @Override
@@ -107,6 +144,23 @@ public class SmallFileScheduler extends ActionSchedulerService {
         LOG.error("Illegal small files: " + smallFiles);
         return false;
       }
+      ArrayList<String> smallFileList = new Gson().fromJson(
+          smallFiles, new TypeToken<ArrayList<String>>() {
+          }.getType());
+
+      // Check if small file is locked
+      if (smallFileList.isEmpty()) {
+        LOG.error("Illegal small file list: " + smallFileList);
+        return false;
+      } else {
+        for (String smallFile : smallFileList) {
+          if (compactSmallFileLock.contains(smallFile)) {
+            LOG.error(smallFile + " is locked.");
+            return false;
+          }
+        }
+      }
+
       return true;
     } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
       // Check if container file is exist
@@ -123,6 +177,12 @@ public class SmallFileScheduler extends ActionSchedulerService {
         LOG.error("Failed to check if container file exists: " + containerFilePath);
         return false;
       }
+
+      if (containerFileLock.containsKey(containerFilePath)) {
+        LOG.error(containerFilePath + " is locked.");
+        return false;
+      }
+
       return true;
     } else {
       return true;
@@ -141,34 +201,48 @@ public class SmallFileScheduler extends ActionSchedulerService {
           }.getType());
 
       // Check if container file is locked and retry
-      if (containerFilesLock.containsKey(containerFilePath)) {
+      if (containerFileLock.containsKey(containerFilePath)) {
         return ScheduleResult.RETRY;
       } else {
         // Check if small file path is valid and unlocked
         for (String smallFile : smallFileList) {
           if (smallFile == null || smallFile.isEmpty()) {
             LOG.error("Illegal small file path: " + smallFile);
+            actionInfo.setResult("Illegal small file path: " + smallFile);
             return ScheduleResult.FAIL;
-          } else if (compactSmallFilesLock.contains(smallFile)) {
-            LOG.error("The small file is locked: " + smallFile);
+          } else if (containerFileCache.contains(smallFile)) {
+            LOG.error("This file is not small file: " + smallFile);
+            actionInfo.setResult("This file is not small file: " + smallFile);
             return ScheduleResult.FAIL;
           }
         }
 
+        // Get file state of small files from meta store.
+        Map<String, FileState> fileStateMap;
+        try {
+          fileStateMap = metaStore.getFileStates(smallFileList);
+        } catch (MetaStoreException e) {
+          LOG.error("Failed to get file states of small files. " + e.toString());
+          actionInfo.setResult(
+              "Failed to get file states of small files. " + e.toString());
+          return ScheduleResult.FAIL;
+        }
+
         // Check if small file is NORMAL
-        for (String smallFile : smallFileList) {
-          try {
-            FileState smallFileState = metaStore.getFileState(smallFile);
-            FileState.FileType smallFileType = smallFileState.getFileType();
-            if (smallFileType != FileState.FileType.NORMAL) {
-              LOG.error(String.format(
-                  "%s has invalid file state %s for small file compact.",
-                  smallFile, smallFileState.getFileType().toString()));
-              return ScheduleResult.FAIL;
+        if (fileStateMap.size() != 0) {
+          for (String smallFile : smallFileList) {
+            if (fileStateMap.containsKey(smallFile)) {
+              FileState.FileType smallFileType = fileStateMap.get(
+                  smallFile).getFileType();
+              if (smallFileType != FileState.FileType.NORMAL) {
+                String errMsg = String.format(
+                    "%s has invalid file state %s for small file compact.",
+                    smallFile, smallFileType.toString());
+                LOG.error(errMsg);
+                actionInfo.setResult(errMsg);
+                return ScheduleResult.FAIL;
+              }
             }
-          } catch (MetaStoreException e) {
-            LOG.error("Failed to get file state of: " + smallFile);
-            return ScheduleResult.FAIL;
           }
         }
 
@@ -176,11 +250,14 @@ public class SmallFileScheduler extends ActionSchedulerService {
           // Lock container file and set whether exists already
           // Lock small files
           boolean exist = dfsClient.exists(containerFilePath);
-          containerFilesLock.put(containerFilePath, exist);
-          compactSmallFilesLock.addAll(smallFileList);
+          containerFileLock.put(containerFilePath, exist);
+          compactSmallFileLock.addAll(smallFileList);
         } catch (IOException e) {
-          LOG.error("Failed to check if the container file is exists: "
-              + containerFilePath, e);
+          String errMsg = String.format(
+              "Failed to check if the container file is exists: %s for %s.",
+              containerFilePath, e.toString());
+          LOG.error(errMsg);
+          actionInfo.setResult(errMsg);
           return ScheduleResult.FAIL;
         }
       }
@@ -192,14 +269,17 @@ public class SmallFileScheduler extends ActionSchedulerService {
           SmallFileCompactAction.CONTAINER_FILE);
 
       // Check if container file is locked
-      if (!containerFilesLock.containsKey(containerFilePath)) {
+      if (!containerFileLock.containsKey(containerFilePath)) {
         // Get small files of the container file
         List<String> smallFileList;
         try {
           smallFileList = metaStore.getSmallFilesByContainerFile(containerFilePath);
         } catch (MetaStoreException e) {
-          LOG.error("Failed to get small files of the container file: "
-              + containerFilePath, e);
+          String errMsg = String.format(
+              "Failed to get small files of the container file: %s for %s.",
+              containerFilePath, e.toString());
+          LOG.error(errMsg);
+          actionInfo.setResult(errMsg);
           return ScheduleResult.FAIL;
         }
 
@@ -207,16 +287,23 @@ public class SmallFileScheduler extends ActionSchedulerService {
           // Check if small file path is valid and unlocked
           for (String smallFile : smallFileList) {
             if (smallFile == null || smallFile.isEmpty()) {
+              LOG.error("Illegal small file path: " + smallFile);
+              actionInfo.setResult("Illegal small file path: " + smallFile);
               return ScheduleResult.FAIL;
-            } else if (uncompactSmallFilesLock.contains(smallFile)) {
+            } else if (uncompactSmallFileLock.contains(smallFile)) {
               LOG.error("The small file is locked: " + smallFile);
+              actionInfo.setResult("The small file is locked: " + smallFile);
+              return ScheduleResult.FAIL;
+            } else if (containerFileCache.contains(smallFile)) {
+              LOG.error("This file is not small file: " + smallFile);
+              actionInfo.setResult("This file is not small file: " + smallFile);
               return ScheduleResult.FAIL;
             }
           }
 
           // Update container files and uncompact small files lock
-          containerFilesLock.put(containerFilePath, true);
-          uncompactSmallFilesLock.addAll(smallFileList);
+          containerFileLock.put(containerFilePath, true);
+          uncompactSmallFileLock.addAll(smallFileList);
 
           // Put small files into arguments of this action
           Map<String, String> args = new HashMap<>(2);
@@ -254,34 +341,35 @@ public class SmallFileScheduler extends ActionSchedulerService {
             new TypeToken<ArrayList<CompactFileState>>() {
             }.getType());
 
-        // Insert file states into meta store
+        // Update compact file state map
         for (CompactFileState compactFileState : compactFileStates) {
-          try {
-            metaStore.insertUpdateFileState(compactFileState);
-          } catch (MetaStoreException e1) {
-            LOG.error(String.format(
-                "Failed to insert compact file state of %s for %s ",
-                compactFileState.getPath(), e1.toString()));
-          }
+          compactFileStateQueue.add(new CompactFileStateDiff(
+              true, compactFileState));
         }
 
         if (compactFileStates.size() == 0 || !actionInfo.isSuccessful()) {
           try {
-            if (!containerFilesLock.get(containerFilePath)
-                && dfsClient.getFileInfo(containerFilePath).getLen() == 0) {
-              // Delete container file if not exists before running action,
-              // and no small file compacted to it
-              dfsClient.delete(containerFilePath, false);
+            if (!containerFileLock.get(containerFilePath)) {
+              if (dfsClient.getFileInfo(containerFilePath).getLen() == 0) {
+                // Delete container file if not exists before running action,
+                // and no small file compacted to it
+                containerFileCache.remove(containerFilePath);
+                dfsClient.delete(containerFilePath, false);
+              } else {
+                containerFileCache.add(containerFilePath);
+              }
             }
           } catch (IOException e2) {
             LOG.error("Failed to handle container file: "
                 + containerFilePath, e2);
           }
+        } else {
+          containerFileCache.add(containerFilePath);
         }
 
         // Remove locks of container file and small files
-        containerFilesLock.remove(containerFilePath);
-        compactSmallFilesLock.removeAll(smallFileList);
+        containerFileLock.remove(containerFilePath);
+        compactSmallFileLock.removeAll(smallFileList);
       } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
         // Get container file path, small files, result of this action
         String containerFilePath = actionInfo.getArgs().get(
@@ -295,21 +383,17 @@ public class SmallFileScheduler extends ActionSchedulerService {
             new TypeToken<ArrayList<String>>() {
             }.getType());
 
-        // Remove small file states from the meta store
+        // Update compact file state map
         for (String removeSmallFile : removeSmallFiles) {
-          try {
-            metaStore.deleteFileState(removeSmallFile);
-          } catch (MetaStoreException e1) {
-            LOG.error(String.format(
-                "Failed to remove small file state of %s from meta store for %s ",
-                removeSmallFile, e1.toString()));
-          }
+          compactFileStateQueue.add(new CompactFileStateDiff(
+              false, new CompactFileState(removeSmallFile, null)));
         }
 
         if (removeSmallFiles.size() > 0) {
           if (actionInfo.isSuccessful()) {
             try {
               // Delete container file if action is successful
+              containerFileCache.remove(containerFilePath);
               dfsClient.delete(containerFilePath, false);
             } catch (IOException e2) {
               LOG.error("Failed to delete container file: "
@@ -320,6 +404,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
               List<String> list = metaStore.getSmallFilesByContainerFile(containerFilePath);
               if (list == null || list.isEmpty()) {
                 // Delete container file if the container file does not have any small file
+                containerFileCache.remove(containerFilePath);
                 dfsClient.delete(containerFilePath, false);
               }
             } catch (MetaStoreException e3) {
@@ -333,17 +418,75 @@ public class SmallFileScheduler extends ActionSchedulerService {
         }
 
         // Remove locks of container file and small files
-        containerFilesLock.remove(containerFilePath);
-        uncompactSmallFilesLock.removeAll(smallFileList);
+        containerFileLock.remove(containerFilePath);
+        uncompactSmallFileLock.removeAll(smallFileList);
+      }
+    }
+  }
+
+  /**
+   * An inner class for updating compact file state conveniently.
+   */
+  private class CompactFileStateDiff {
+    boolean isInsert;
+    CompactFileState compactFileState;
+
+    private CompactFileStateDiff(boolean isInsert,
+        CompactFileState compactFileState) {
+      this.isInsert = isInsert;
+      this.compactFileState = compactFileState;
+    }
+  }
+
+  /**
+   * Scheduled task to update meta store.
+   */
+  private class ScheduleTask implements Runnable {
+    @Override
+    public void run() {
+      try {
+        List<CompactFileState> compactFileStates = new ArrayList<>();
+        List<String> unCompactFiles = new ArrayList<>();
+        while (true) {
+          CompactFileStateDiff diff = compactFileStateQueue.poll();
+          if (diff != null) {
+            try {
+              if (diff.isInsert) {
+                FileInfo info = metaStore.getFile(diff.compactFileState.getPath());
+                if (info != null && info.getLength() == 0) {
+                  compactFileStates.add(diff.compactFileState);
+                } else {
+                  compactFileStateQueue.offer(diff);
+                }
+              } else {
+                unCompactFiles.add(diff.compactFileState.getPath());
+              }
+            } catch (MetaStoreException e) {
+              LOG.error("Failed to get file info. " + e.toString());
+              compactFileStateQueue.offer(diff);
+            }
+          } else {
+            try {
+              if (compactFileStates.size() > 0) {
+                metaStore.insertCompactFileStates(
+                    compactFileStates.toArray(new CompactFileState[0]));
+              }
+              if (unCompactFiles.size() > 0) {
+                metaStore.deleteCompactFileStates(unCompactFiles);
+              }
+            } catch (MetaStoreException e) {
+              LOG.error("Failed to update file state of meta store. " + e.toString());
+              return;
+            }
+          }
+        }
+      } catch (Throwable t) {
+        LOG.error("Failed to update meta store. " + t.toString());
       }
     }
   }
 
   @Override
   public void stop() {
-  }
-
-  @Override
-  public void start() {
   }
 }
