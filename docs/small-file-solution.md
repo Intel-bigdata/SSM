@@ -97,7 +97,6 @@ i. Now that the original small files are truncated after compact, the meta data 
 ii. Due to the file container info (corresponding container file, offset and length) of small files are stored in SSM meta store, some operations need first query SSM server to get the file container info, then use these information to send exact requests to HDFS server.
 
 * Get block info: getLocatedBlocks, getBlockLocations, getFileBlockLocations.
-* Get checkSum: getFileChecksum.
 * Get file info: getFileInfo, listStatus, listStatusIterator, getFileStatus, isFileClosed.
 
 iii. Operations like the following impact small file's meta in namespace as well as meta store of SSM.
@@ -124,6 +123,7 @@ ii. The following operations are not allowed to execute.
 
 * Set acl: setPermission, setOwner, modifyAclEntries, removeAclEntries, setAcl, removeDefaultAcl.
 * Symlink: createSymlink, getFileLinkStatus, getLinkTarget, getFileLinkInfo.
+* Get checkSum: getFileChecksum.
 * Others: concat, listCorruptFileBlocks.
 
 Performance Consideration

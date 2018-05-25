@@ -172,6 +172,7 @@ public class SmartDFSClient extends DFSClient {
     if (out.getPos() == 0) {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
+        out.close();
         throw new IOException(getExceptionMsg("Append", "SSM Small File"));
       }
     }
@@ -188,6 +189,7 @@ public class SmartDFSClient extends DFSClient {
     if (out.getPos() == 0) {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
+        out.close();
         throw new IOException(getExceptionMsg("Append", "SSM Small File"));
       }
     }

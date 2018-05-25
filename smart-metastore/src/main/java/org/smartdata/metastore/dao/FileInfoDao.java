@@ -68,6 +68,17 @@ public class FileInfoDao {
         new FileInfoDao.FileInfoRowMapper(), path + "%");
   }
 
+  public List<FileInfo> getFilesByPaths(Collection<String> paths) {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate =
+        new NamedParameterJdbcTemplate(dataSource);
+    Map<String, Long> pathToId = new HashMap<>();
+    String sql = "SELECT * FROM file WHERE path IN (:paths)";
+    MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+    parameterSource.addValue("paths", paths);
+    return namedParameterJdbcTemplate.query(sql,
+        parameterSource, new FileInfoRowMapper());
+  }
+
   public FileInfo getById(long fid) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM file WHERE fid = ?",

@@ -3,7 +3,7 @@
 ## Configure small file compact in SSM (Optional)
 
 Compact batch size is the number of small files to be compacted per compact action, whose default value is 200.
-User also can set prefer value in `${SMART_HOME}/conf/smart-site.conf`.
+Default container file threshold size is 1G. User can set prefer values in `${SMART_HOME}/conf/smart-site.conf`.
 
 * Configure compact batch size
   ```xml
@@ -11,6 +11,14 @@ User also can set prefer value in `${SMART_HOME}/conf/smart-site.conf`.
     <name>smart.compact.batch.size</name>
     <value>200</value>
     <description>The number of small files to be compacted per action.</description>
+  </property>
+
+* Configure container file threshold size
+  ```xml
+  <property>
+    <name>smart.compact.container.file.threshold.mb</name>
+    <value>1024</value>
+    <description>The threshold size of container file, in units of MB.</description>
   </property>
 
 ## Small file compact rule example

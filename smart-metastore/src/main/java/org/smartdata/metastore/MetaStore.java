@@ -2220,4 +2220,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e2);
     }
   }
+
+  public List<FileInfo> getAllContainerFileInfo() throws MetaStoreException {
+    try {
+      List<String> containerFiles = getAllContainerFiles();
+      return fileInfoDao.getFilesByPaths(containerFiles);
+    } catch (EmptyResultDataAccessException e1) {
+      return new ArrayList<>();
+    } catch (Exception e2) {
+      throw new MetaStoreException(e2);
+    }
+  }
 }
