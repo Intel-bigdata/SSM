@@ -111,7 +111,7 @@ public class NamespaceFetcher {
     this.consumerFutures = new ScheduledFuture[consumers.length];
     for (int i = 0; i < consumers.length; i++) {
       consumerFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
-          consumers[i], 0, 100, TimeUnit.MILLISECONDS);
+          consumers[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
     }
     LOG.info("Started.");
   }
@@ -226,8 +226,8 @@ public class NamespaceFetcher {
             IngestionTask.isFinished = true;
             long curr = System.currentTimeMillis();
             LOG.info(String.format(
-                "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
-                (curr - startTime) / 1000,
+                "Finished fetch Namespace! %ds, %dms used, numDirs = %d, numFiles = %d",
+                (curr - startTime) / 1000, (curr -  startTime) % 1000,
                 numDirectoriesFetched.get(), numFilesFetched.get()));
           }
         }
