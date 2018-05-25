@@ -71,7 +71,6 @@ public class FileInfoDao {
   public List<FileInfo> getFilesByPaths(Collection<String> paths) {
     NamedParameterJdbcTemplate namedParameterJdbcTemplate =
         new NamedParameterJdbcTemplate(dataSource);
-    Map<String, Long> pathToId = new HashMap<>();
     String sql = "SELECT * FROM file WHERE path IN (:paths)";
     MapSqlParameterSource parameterSource = new MapSqlParameterSource();
     parameterSource.addValue("paths", paths);

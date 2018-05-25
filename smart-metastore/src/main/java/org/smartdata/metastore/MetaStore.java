@@ -319,6 +319,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<FileInfo> getFilesByPaths(Collection<String> paths)
+      throws MetaStoreException {
+    try {
+      return fileInfoDao.getFilesByPaths(paths);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public Map<String, Long> getFileIDs(Collection<String> paths)
       throws MetaStoreException {
     try {
@@ -2214,17 +2225,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public List<String> getAllContainerFiles() throws MetaStoreException {
     try {
       return smallFileDao.getAllContainerFiles();
-    } catch (EmptyResultDataAccessException e1) {
-      return new ArrayList<>();
-    } catch (Exception e2) {
-      throw new MetaStoreException(e2);
-    }
-  }
-
-  public List<FileInfo> getAllContainerFileInfo() throws MetaStoreException {
-    try {
-      List<String> containerFiles = getAllContainerFiles();
-      return fileInfoDao.getFilesByPaths(containerFiles);
     } catch (EmptyResultDataAccessException e1) {
       return new ArrayList<>();
     } catch (Exception e2) {

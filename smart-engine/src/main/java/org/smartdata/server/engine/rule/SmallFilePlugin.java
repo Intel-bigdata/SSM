@@ -71,7 +71,8 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
    */
   private void initializeContainerFileCache() {
     try {
-      List<FileInfo> fileInfos = metaStore.getAllContainerFileInfo();
+      List<String> containerFiles = metaStore.getAllContainerFiles();
+      List<FileInfo> fileInfos = metaStore.getFilesByPaths(containerFiles);
       for (FileInfo fileInfo : fileInfos) {
         if (fileInfo.getLength() < containerFileSizeThreshold) {
           containerFileCache.put(fileInfo.getPath(),
@@ -79,7 +80,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
         }
       }
     } catch (MetaStoreException e) {
-      LOG.error("Failed to get file info of all the container files.");
+      LOG.error("Failed to get file info of all the container files.", e);
     }
   }
 
@@ -95,7 +96,8 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   @Override
   public List<String> preSubmitCmdlet(final RuleInfo ruleInfo, List<String> objects) {
     if (ruleInfo.getRuleText().contains(COMPACT_ACTION_NAME)) {
-      if (objects == null || objects.size() == 0) {
+      if (objects == null || objects.isEmpty()) {
+        LOG.debug("Objects is null or empty.");
         return objects;
       }
 
@@ -108,15 +110,17 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
           if (fileInfo != null && (fileInfo.getLength() > 0)
               && fileState.getFileType().equals(FileState.FileType.NORMAL)
               && fileState.getFileStage().equals(FileState.FileStage.DONE)) {
-            smallFileInfoMap.put(object, fileInfo);
             SmartFilePermission filePermission = new SmartFilePermission(fileInfo);
             if (filePermissionMap.containsKey(filePermission)) {
               filePermissionMap.get(filePermission).add(object);
             } else {
+              smallFileInfoMap.put(object, fileInfo);
               List<String> list = new ArrayList<>();
               list.add(object);
               filePermissionMap.put(filePermission, list);
             }
+          } else {
+            LOG.debug("Invalid file {} for small file compact.", object);
           }
         } catch (MetaStoreException e) {
           LOG.error(String.format("Failed to get file info of %s.", object), e);
@@ -155,24 +159,30 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
             continue;
           }
 
-          // Get the first small file dir and smart file permission
-          SmartFilePermission firstFilePermission = new SmartFilePermission(
-              smallFileInfoMap.get(smallFileList.get(0)));
-          String firstFileDir = smallFileList.get(0).substring(
-              0, smallFileList.get(0).lastIndexOf("/") + 1);
+          // Get the first small file info
+          String firstFile = smallFileList.get(0);
+          FileInfo firstFileInfo;
+          if (smallFileInfoMap.containsKey(firstFile)) {
+            firstFileInfo = smallFileInfoMap.get(firstFile);
+          } else {
+            try {
+              firstFileInfo = metaStore.getFile(firstFile);
+              if (firstFileInfo == null) {
+                LOG.debug("{} is not exist!!!", firstFile);
+                continue;
+              }
+            } catch (MetaStoreException e) {
+              LOG.error("Failed to get file info of: " + firstFile, e);
+              continue;
+            }
+          }
 
-          // Get container file path and final small file list
+          // Get valid compact action arguments
+          SmartFilePermission firstFilePermission = new SmartFilePermission(
+              firstFileInfo);
+          String firstFileDir = firstFile.substring(0, firstFile.lastIndexOf("/") + 1);
           CompactActionArgs args = getCompactActionArgs(firstFileDir,
               firstFilePermission, smallFileList);
-          if (args == null) {
-            // Generate new container file
-            String containerFile = firstFileDir + CONTAINER_FILE_PREFIX
-                + UUID.randomUUID().toString().replace("-", "");
-            containerFileCache.put(containerFile,
-                new ContainerFileInfo(0, firstFilePermission));
-            args = new CompactActionArgs(containerFile,
-                firstFilePermission, smallFileList);
-          }
 
           // Set container file path and its permission, file path of this action
           descriptor.addActionArg(
@@ -223,7 +233,8 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
           try {
             validSmallFiles = getValidSmallFiles(containerFile, smallFileList);
           } catch (MetaStoreException e) {
-            return null;
+            return genCompactActionArgs(firstFileDir,
+                firstFilePermission, smallFileList);
           }
           if (validSmallFiles != null) {
             return new CompactActionArgs(containerFile, null, validSmallFiles);
@@ -231,7 +242,22 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
         }
       }
     }
-    return null;
+    return genCompactActionArgs(firstFileDir,
+        firstFilePermission, smallFileList);
+  }
+
+  /**
+   * Generate new compact action arguments based on first file info.
+   */
+  private CompactActionArgs genCompactActionArgs(String firstFileDir,
+      SmartFilePermission firstFilePermission, List<String> smallFileList) {
+    // Generate new container file
+    String containerFile = firstFileDir + CONTAINER_FILE_PREFIX
+        + UUID.randomUUID().toString().replace("-", "");
+    containerFileCache.put(containerFile,
+        new ContainerFileInfo(0, firstFilePermission));
+    return new CompactActionArgs(containerFile,
+        firstFilePermission, smallFileList);
   }
 
   /**
@@ -257,10 +283,11 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
 
     // Get small files can be compacted to container file
     List<String> ret = new ArrayList<>();
-    for (String smallFile : smallFileList) {
-      containerFileLen += smallFileInfoMap.get(smallFile).getLength();
+    List<FileInfo> smallFileInfos = metaStore.getFilesByPaths(smallFileList);
+    for (FileInfo fileInfo : smallFileInfos) {
+      containerFileLen += fileInfo.getLength();
       if (containerFileLen < containerFileSizeThreshold * 1.2) {
-        ret.add(smallFile);
+        ret.add(fileInfo.getPath());
       }
     }
 
