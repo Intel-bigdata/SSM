@@ -38,3 +38,11 @@ compact –file ['/small_files/1.txt','/small_files/2.txt'] -containerFile /cont
 
 This action means SSM will trigger an action to compact these specified files: `/small_files/1.txt`,
 `/small_files/2.txt` to the container file: `/container_file`.
+
+## Small file uncompact action example
+
+```
+uncompact -containerFile /container_file
+```
+
+This action means SSM will trigger an action to uncompact small files from the container file: `/container_file`.

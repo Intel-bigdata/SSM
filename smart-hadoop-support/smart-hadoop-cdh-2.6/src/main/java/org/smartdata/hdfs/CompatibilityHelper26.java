@@ -146,16 +146,6 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
   }
 
   @Override
-  public OutputStream getAppendOutPutStream(DFSClient client, String dest,
-      int buffersize) throws IOException {
-    if (client.exists(dest)) {
-      return client
-          .append(dest, buffersize, null, null);
-    }
-    return client.create(dest, true);
-  }
-
-  @Override
   public OutputStream getS3outputStream(String dest, Configuration conf) throws IOException {
     // Copy to remote S3
     if (!dest.startsWith("s3")) {

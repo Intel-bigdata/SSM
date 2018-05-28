@@ -20,19 +20,20 @@ package org.smartdata.hdfs.action;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.IOUtils;
 import org.smartdata.SmartConstants;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
-import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.EnumSet;
 import java.util.Map;
 
 /**
@@ -90,33 +91,62 @@ public class SmallFileUncompactAction extends HdfsAction {
         "Action starts at %s : uncompact small files.",
         Utils.getFormatedCurrentTime()));
 
-    List<String> removeSmallFiles = new ArrayList<>();
     for (String smallFile : smallFileList) {
       if ((smallFile != null) && !smallFile.isEmpty()
           && dfsClient.exists(smallFile)) {
-        try (DFSInputStream in = smartDFSClient.open(smallFile);
-             OutputStream out = CompatibilityHelperLoader.getHelper()
-                 .getAppendOutPutStream(dfsClient, smallFile, 4096)) {
+        DFSInputStream in = null;
+        OutputStream out = null;
+        try {
+          // Get compact input stream
+          in = smartDFSClient.open(smallFile);
+
+          // Save original metadata of small file and delete original small file
+          HdfsFileStatus fileStatus = dfsClient.getFileInfo(smallFile);
+          Map<String, byte[]> xAttr = dfsClient.getXAttrs(smallFile);
+          dfsClient.delete(smallFile, false);
+
+          // Create new small file
+          out = dfsClient.create(smallFile, true);
+
           // Copy contents to original small file
           IOUtils.copyBytes(in, out, 4096);
 
-          // Update remove small file list
-          removeSmallFiles.add(smallFile);
-
-          // Remove XAttr from original small file
-          smartDFSClient.removeXAttr(smallFile, xAttrName);
+          // Reset file meta data
+          resetFileMeta(smallFile, fileStatus, xAttr);
 
           // Set status and update log
           this.status = (smallFileList.indexOf(smallFile) + 1.0f)
               / smallFileList.size();
           appendLog(String.format("Uncompact %s successfully.", smallFile));
-        } catch (IOException e) {
-          appendResult(new Gson().toJson(removeSmallFiles));
-          throw e;
+        } finally {
+          if (in != null) {
+            in.close();
+          }
+          if (out != null) {
+            out.close();
+          }
         }
       }
     }
-    appendResult(new Gson().toJson(removeSmallFiles));
+
+    dfsClient.delete(containerFile, false);
+    appendLog(String.format("Uncompact all the small files of %s successfully.", containerFile));
+  }
+
+  /**
+   * Reset meta data of small file.
+   */
+  private void resetFileMeta(String path, HdfsFileStatus fileStatus,
+      Map<String, byte[]> xAttr) throws IOException {
+    dfsClient.setOwner(path, fileStatus.getOwner(), fileStatus.getGroup());
+    dfsClient.setPermission(path, fileStatus.getPermission());
+
+    for(Map.Entry<String, byte[]> entry : xAttr.entrySet()) {
+      if (!entry.getKey().equals(xAttrName)) {
+        dfsClient.setXAttr(path, entry.getKey(), entry.getValue(),
+            EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
+      }
+    }
   }
 
   @Override

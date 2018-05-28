@@ -114,7 +114,7 @@ public class SmallFileCompactAction extends HdfsAction {
     if (isContainerFileExist) {
       offset = dfsClient.getFileInfo(containerFile).getLen();
       out = CompatibilityHelperLoader.getHelper()
-          .getAppendOutPutStream(dfsClient, containerFile, 64 * 1024);
+          .getDFSClientAppend(dfsClient, containerFile, 64 * 1024, offset);
     } else {
       out = dfsClient.create(containerFile, true);
       if (filePermission != null) {
@@ -181,7 +181,7 @@ public class SmallFileCompactAction extends HdfsAction {
     Map<String, byte[]> xAttr = dfsClient.getXAttrs(path);
 
     // Delete file
-    dfsClient.delete(path, true);
+    dfsClient.delete(path, false);
 
     // Create file
     OutputStream out = dfsClient.create(path, true);

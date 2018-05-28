@@ -76,7 +76,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   /**
    * Compact file state queue for caching these file state to update.
    */
-  private Queue<CompactFileStateDiff> compactFileStateQueue;
+  private Queue<CompactFileState> compactFileStateQueue;
 
   /**
    * Scheduled service to update meta store.
@@ -94,7 +94,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void init() throws IOException {
+  public void init() {
     this.containerFileLock = Collections.synchronizedSet(new HashSet<String>());
     this.compactSmallFileLock = Collections.synchronizedSet(new HashSet<String>());
     this.containerFileCache = Collections.synchronizedSet(new HashSet<String>());
@@ -128,14 +128,14 @@ public class SmallFileScheduler extends ActionSchedulerService {
       String containerFilePath = actionInfo.getArgs().get(
           SmallFileCompactAction.CONTAINER_FILE);
       if (containerFilePath == null || containerFilePath.isEmpty()) {
-        LOG.debug("Illegal container file path: " + containerFilePath);
+        LOG.debug("Illegal container file path: {}", containerFilePath);
         return false;
       }
 
       // Check if small files is null or empty
       String smallFiles = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
       if (smallFiles == null || smallFiles.isEmpty()) {
-        LOG.debug("Illegal small files: " + smallFiles);
+        LOG.debug("Illegal small files: {}", smallFiles);
         return false;
       }
 
@@ -144,7 +144,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
           smallFiles, new TypeToken<ArrayList<String>>() {
           }.getType());
       if (smallFileList.isEmpty()) {
-        LOG.debug("Illegal small file list: " + smallFileList);
+        LOG.debug("Illegal small file list: {}", smallFileList);
         return false;
       }
 
@@ -166,7 +166,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private boolean checkIfValidSmallFiles(List<String> smallFileList) {
     for (String smallFile : smallFileList) {
       if (smallFile == null || smallFile.isEmpty()) {
-        LOG.debug("Illegal small file path: " + smallFile);
+        LOG.debug("Illegal small file path: {}", smallFile);
         return false;
       } else if (compactSmallFileLock.contains(smallFile)) {
         LOG.debug(String.format("%s is locked.", smallFile));
@@ -304,7 +304,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
             actionInfo, containerFilePath);
       } catch (MetaStoreException e1) {
         actionInfo.setResult(String.format(
-            "Failed to get file info of the container file: %s for %s.",
+            "Failed to get file info of the container file %s for %s.",
             containerFilePath, e1.toString()));
         return ScheduleResult.FAIL;
       } catch (IllegalArgumentException e2) {
@@ -337,7 +337,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
       } else {
         if (!containerFilePermission.equals(firstFilePermission)) {
           actionInfo.setResult(String.format(
-              "Container file: %s has different permission with %s.",
+              "Container file %s has different permission with %s.",
               containerFilePath, firstFileInfo.getPath()));
           return ScheduleResult.FAIL;
         }
@@ -360,12 +360,12 @@ public class SmallFileScheduler extends ActionSchedulerService {
     String containerFilePath = actionInfo.getArgs().get(
         SmallFileCompactAction.CONTAINER_FILE);
     if (containerFilePath == null || containerFilePath.isEmpty()) {
-      LOG.debug("Illegal container file path: " + containerFilePath);
+      LOG.debug("Illegal container file path: {}", containerFilePath);
       actionInfo.setResult("Illegal container file path: " + containerFilePath);
       return ScheduleResult.FAIL;
     }
     if (!containerFileCache.contains(containerFilePath)) {
-      LOG.debug(containerFilePath + " is not container file.");
+      LOG.debug("{} is not container file.", containerFilePath);
       actionInfo.setResult(containerFilePath + " is not container file.");
       return ScheduleResult.FAIL;
     }
@@ -378,7 +378,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
         smallFileList = metaStore.getSmallFilesByContainerFile(containerFilePath);
       } catch (MetaStoreException e) {
         String errMsg = String.format(
-            "Failed to get small files of the container file: %s for %s.",
+            "Failed to get small files of the container file %s for %s.",
             containerFilePath, e.toString());
         LOG.error(errMsg);
         actionInfo.setResult(errMsg);
@@ -439,13 +439,12 @@ public class SmallFileScheduler extends ActionSchedulerService {
     // Update container file cache, compact file state queue,
     // handling small file cache
     if (!compactFileStates.isEmpty()) {
-      LOG.debug(String.format("Add container file: %s into cache.",
+      LOG.debug(String.format("Add container file %s into cache.",
           containerFilePath));
       containerFileCache.add(containerFilePath);
       for (CompactFileState compactFileState : compactFileStates) {
         handlingSmallFileCache.add(compactFileState.getPath());
-        compactFileStateQueue.offer(new CompactFileStateDiff(
-            true, compactFileState));
+        compactFileStateQueue.offer(compactFileState);
       }
     }
 
@@ -461,16 +460,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
     // Get container file path, small files, result of this action
     String containerFilePath = actionInfo.getArgs().get(
         SmallFileUncompactAction.CONTAINER_FILE);
-    List<String> removeSmallFiles = new Gson().fromJson(
-        actionInfo.getResult(),
-        new TypeToken<ArrayList<String>>() {
-        }.getType());
-
-    // Update compact file state queue
-    for (String removeSmallFile : removeSmallFiles) {
-      compactFileStateQueue.offer(new CompactFileStateDiff(
-          false, new CompactFileState(removeSmallFile, null)));
-    }
 
     if (actionInfo.isSuccessful()) {
       containerFileCache.remove(containerFilePath);
@@ -492,44 +481,28 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   /**
-   * An inner class for updating compact file state conveniently.
-   */
-  private class CompactFileStateDiff {
-    boolean isInsert;
-    CompactFileState compactFileState;
-
-    private CompactFileStateDiff(boolean isInsert,
-        CompactFileState compactFileState) {
-      this.isInsert = isInsert;
-      this.compactFileState = compactFileState;
-    }
-  }
-
-  /**
    * Sync compact file states with meta store.
    */
   private void syncMetaStore() {
     List<CompactFileState> compactFileStates = new ArrayList<>();
-    List<String> unCompactFiles = new ArrayList<>();
     while (true) {
-      CompactFileStateDiff diff = compactFileStateQueue.poll();
-      if (diff != null) {
+      CompactFileState compactFileState = compactFileStateQueue.poll();
+      if (compactFileState != null) {
         try {
-          if (diff.isInsert) {
-            FileInfo info = metaStore.getFile(diff.compactFileState.getPath());
-            if (info != null && info.getLength() == 0) {
-              LOG.debug(String.format("Ready to insert the file state of: %s.",
-                  info.getPath()));
-              compactFileStates.add(diff.compactFileState);
-            } else {
-              compactFileStateQueue.offer(diff);
-            }
+          FileInfo info = metaStore.getFile(compactFileState.getPath());
+          if (info != null && info.getLength() == 0) {
+            LOG.debug(String.format("Ready to insert the file state of %s.",
+                compactFileState.getPath()));
+            compactFileStates.add(compactFileState);
           } else {
-            unCompactFiles.add(diff.compactFileState.getPath());
+            LOG.debug(String.format(
+                "Waiting for the small file %s synced in the meta store.",
+                compactFileState.getPath()));
+            compactFileStateQueue.offer(compactFileState);
           }
         } catch (MetaStoreException e) {
           LOG.error("Failed to get file info.", e);
-          compactFileStateQueue.offer(diff);
+          compactFileStateQueue.offer(compactFileState);
         }
       } else {
         try {
@@ -539,9 +512,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
             for (CompactFileState fileState : compactFileStates) {
               handlingSmallFileCache.remove(fileState.getPath());
             }
-          }
-          if (!unCompactFiles.isEmpty()) {
-            metaStore.deleteCompactFileStates(unCompactFiles);
           }
           return;
         } catch (MetaStoreException e) {

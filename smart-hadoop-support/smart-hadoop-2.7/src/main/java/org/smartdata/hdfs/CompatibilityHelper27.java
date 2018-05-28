@@ -18,10 +18,8 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.fs.CreateFlag;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
-import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.SmartInputStreamFactory;
@@ -30,7 +28,6 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
@@ -47,7 +44,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 
 public class CompatibilityHelper27 implements CompatibilityHelper {
 
@@ -157,17 +153,6 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
   public OutputStream getDFSClientAppend(DFSClient client, String dest,
       int buffersize, long offset) throws IOException {
     if (client.exists(dest) && offset != 0) {
-      return client
-          .append(dest, buffersize,
-              EnumSet.of(CreateFlag.APPEND), null, null);
-    }
-    return client.create(dest, true);
-  }
-
-  @Override
-  public OutputStream getAppendOutPutStream(DFSClient client, String dest,
-      int buffersize) throws IOException {
-    if (client.exists(dest)) {
       return client
           .append(dest, buffersize,
               EnumSet.of(CreateFlag.APPEND), null, null);

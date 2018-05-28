@@ -110,12 +110,15 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
       Map<SmallFileStatus, List<String>> smallFileStateMap = new HashMap<>();
       for (String object : objects) {
         if (containerFileQueue.contains(object)) {
+          LOG.debug("{} is container file.", object);
           continue;
         }
         try {
           FileInfo fileInfo = metaStore.getFile(object);
           FileState fileState = metaStore.getFileState(object);
-          if (fileInfo != null && (fileInfo.getLength() > 0)
+          if (fileInfo != null
+              && fileInfo.getLength() > 0
+              && fileInfo.getLength() < containerFileSizeThreshold
               && fileState.getFileType().equals(FileState.FileType.NORMAL)
               && fileState.getFileStage().equals(FileState.FileStage.DONE)) {
             SmallFileStatus smallFileStatus = new SmallFileStatus(fileInfo);

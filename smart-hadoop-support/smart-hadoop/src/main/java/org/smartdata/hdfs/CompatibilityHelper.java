@@ -74,8 +74,6 @@ public interface CompatibilityHelper {
 
   OutputStream getDFSClientAppend(DFSClient client, String dest, int buffersize, long offset) throws IOException;
 
-  OutputStream getAppendOutPutStream(DFSClient client, String dest, int buffersize) throws IOException;
-
   OutputStream getS3outputStream(String dest, Configuration conf) throws IOException;
 
   SmartInputStreamFactory getSmartInputStreamFactory();

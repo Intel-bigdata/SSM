@@ -44,6 +44,8 @@ public class BloomFilter {
       return;
     }
 
+    whiteList.remove(element);
+
     // Add element to bit set
     for (BloomHash bloomHash : bloomHashes) {
       bitSet.set(bloomHash.hash(element));
@@ -51,11 +53,11 @@ public class BloomFilter {
   }
 
   /**
-   * Add excluded element to bloom filter.
+   * Delete element to bloom filter.
    *
    * @param element the excluded element
    */
-  public void addExcludedElement(String element) {
+  public void deleteElement(String element) {
     whiteList.add(element);
   }
 
