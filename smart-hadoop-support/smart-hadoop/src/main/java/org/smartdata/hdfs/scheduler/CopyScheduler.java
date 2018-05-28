@@ -82,7 +82,7 @@ public class CopyScheduler extends ActionSchedulerService {
   private long mergeCountTh = 10;
   private int retryTh = 3;
   // Check interval of executorService
-  private long checkInterval = 150;
+  private long checkInterval = 500;
   // Base sync batch insert size
   private int batchSize = 500;
   // Cache of the file_diff
