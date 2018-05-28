@@ -61,7 +61,7 @@ public class TestSmallFileRule extends MiniSmartClusterHarness {
     }
   }
 
-  @Test
+  @Test(timeout = 180000)
   public void testRule() throws Exception {
     waitTillSSMExitSafeMode();
 

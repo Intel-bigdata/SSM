@@ -65,6 +65,7 @@ public class TestSmallFileScheduler extends MiniSmartClusterHarness {
   public void testScheduler() throws Exception {
     waitTillSSMExitSafeMode();
 
+    Thread.sleep(2000);
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compact -file "
         + "['/test/small_files/file_0','/test/small_files/file_1'] "

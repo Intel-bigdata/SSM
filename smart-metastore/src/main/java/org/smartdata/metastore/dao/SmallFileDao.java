@@ -112,7 +112,7 @@ public class SmallFileDao {
 
   public List<String> getAllContainerFiles() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT container_file_path FROM small_file";
+    String sql = "SELECT DISTINCT container_file_path FROM small_file";
     return jdbcTemplate.queryForList(sql, String.class);
   }
 

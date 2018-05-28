@@ -110,7 +110,8 @@ public class SmallFileCompactAction extends HdfsAction {
     // Create container file and set permission if not exists
     long offset;
     OutputStream out;
-    if (dfsClient.exists(containerFile)) {
+    boolean isContainerFileExist = dfsClient.exists(containerFile);
+    if (isContainerFileExist) {
       offset = dfsClient.getFileInfo(containerFile).getLen();
       out = CompatibilityHelperLoader.getHelper()
           .getAppendOutPutStream(dfsClient, containerFile, 64 * 1024);
@@ -135,13 +136,12 @@ public class SmallFileCompactAction extends HdfsAction {
             IOUtils.copyBytes(in, out, 4096);
 
             // Truncate small file, add file container info to XAttr
-            // Add compact file state to compact file state hash map
             CompactFileState compactFileState = new CompactFileState(
                 smallFile, new FileContainerInfo(containerFile, offset, fileLen));
-            compactFileStates.add(compactFileState);
             truncateAndSetXAttr(smallFile, compactFileState);
 
-            // Update offset, status, and log
+            // Update compact file state map, offset, status, and log
+            compactFileStates.add(compactFileState);
             offset += fileLen;
             this.status = (smallFileList.indexOf(smallFile) + 1.0f)
                 / smallFileList.size();
@@ -153,16 +153,22 @@ public class SmallFileCompactAction extends HdfsAction {
               out.close();
               appendResult(new Gson().toJson(compactFileStates));
             }
+            if (!isContainerFileExist && compactFileStates.isEmpty()) {
+              dfsClient.delete(containerFile, false);
+            }
             throw e;
           }
         }
       }
     }
 
+    appendResult(new Gson().toJson(compactFileStates));
     if (out != null) {
       out.close();
     }
-    appendResult(new Gson().toJson(compactFileStates));
+    if (!isContainerFileExist && compactFileStates.isEmpty()) {
+      dfsClient.delete(containerFile, false);
+    }
   }
 
   /**

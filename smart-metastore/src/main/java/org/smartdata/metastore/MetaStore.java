@@ -2216,7 +2216,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     try {
       return smallFileDao.getSmallFilesByContainerFile(containerFilePath);
     } catch (EmptyResultDataAccessException e1) {
-      return null;
+      return new ArrayList<>();
     } catch (Exception e2) {
       throw new MetaStoreException(e2);
     }
