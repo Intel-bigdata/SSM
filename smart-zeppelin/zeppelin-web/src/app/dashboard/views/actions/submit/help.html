@@ -35,6 +35,11 @@ limitations under the License.
       <td>Move $file to disk storage</td>
     </tr>
     <tr>
+      <td>append</td>
+      <td>-file $file [-length $length -bufSize $bufSize]</td>
+      <td>Append $file with $length length and $bufSize buffer size</td>
+    </tr>
+    <tr>
       <td>archive</td>
       <td>-file $file</td>
       <td>Archive $file</td>
@@ -48,6 +53,11 @@ limitations under the License.
       <td>checkstorage</td>
       <td>-file $file</td>
       <td>Show the storage type of $file</td>
+    </tr>
+    <tr>
+      <td>compact</td>
+      <td>-file [$file1,$file2,..] -containerFile $containerFile</td>
+      <td>compact $file1, $file2, etc. to $containerFile</td>
     </tr>
     <tr>
       <td>concat</td>
@@ -81,6 +91,12 @@ limitations under the License.
       <td>List all the files in $src</td>
     </tr>
     <tr>
+      <td>merge</td>
+      <td>-file $src -dest $dest [-bufSize $size]</td>
+      <td>Merge the files in $src which lists at least two files
+        separated by comma and $dest is the target file</td>
+    </tr>
+    <tr>
       <td>onedisk</td>
       <td>-file $file</td>
       <td>Move one replica of $file to disk</td>
@@ -106,9 +122,24 @@ limitations under the License.
       <td>Rename $src to $dest</td>
     </tr>
     <tr>
+      <td>truncate</td>
+      <td>-file $src -length $length</td>
+      <td>Truncate $src to $length size</td>
+    </tr>
+    <tr>
+      <td>truncate0</td>
+      <td>-file $src</td>
+      <td>Truncate $src to 0 size</td>
+    </tr>
+    <tr>
       <td>uncache</td>
       <td>-file $file</td>
       <td>Uncache $file from HDFS cache</td>
+    </tr>
+    <tr>
+      <td>uncompact</td>
+      <td>-containerFile $containerFile</td>
+      <td>uncompact $containerFile to original files</td>
     </tr>
     <tr>
       <td>write</td>
