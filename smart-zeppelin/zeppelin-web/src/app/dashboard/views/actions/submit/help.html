@@ -55,6 +55,11 @@ limitations under the License.
       <td>Show the storage type of $file</td>
     </tr>
     <tr>
+      <td>compact</td>
+      <td>-file [$file1,$file2,..] -containerFile $containerFile</td>
+      <td>compact $file1, $file2, etc. to $containerFile</td>
+    </tr>
+    <tr>
       <td>concat</td>
       <td>-file $src -dest $dest</td>
       <td>Concatenate the files in $src which lists at least two files
@@ -130,6 +135,11 @@ limitations under the License.
       <td>uncache</td>
       <td>-file $file</td>
       <td>Uncache $file from HDFS cache</td>
+    </tr>
+    <tr>
+      <td>uncompact</td>
+      <td>-containerFile $containerFile</td>
+      <td>uncompact $containerFile to original files</td>
     </tr>
     <tr>
       <td>write</td>
