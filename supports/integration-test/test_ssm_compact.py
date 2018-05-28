@@ -34,6 +34,7 @@ def add_ssm_rule(targetDir):
 
 
 def create_file_DFSIO(nums, size, targetDir, isCompact):
+    baseDir = targetDir
     for i in nums:
         if DEBUG:
             print("DEBUG: Current batch num: " + str(i) + "; each file size: " + str(size))
@@ -58,7 +59,7 @@ def create_file_DFSIO(nums, size, targetDir, isCompact):
         if (not call(["hdfs","dfs","-mv","/benchmarks/TestDFSIO/io_data",targetDir + os.sep + "data_" + str(i)])):
             print("**********Create Test File Success**********\n")
             if isCompact:
-                targetDir = targetDir + os.sep + "data_" + str(i)
+                targetDir = baseDir + os.sep + "data_" + str(i)
                 add_ssm_rule(targetDir)
         else:
             print("**********Create Test File ERROR**********\nmv Failed\n**********ERROR END**********\n")
