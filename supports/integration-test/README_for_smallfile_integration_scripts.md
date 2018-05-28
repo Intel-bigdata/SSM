@@ -6,7 +6,7 @@ Here are several integrated tests python scripts with the instrcution of [Small 
 
 All scripts are written for `python3`.
 
-##### `test_ssm_compact.py`
+##### `test_ssm_smallfile_compact_rule.py`
 This script is used to generate test data set with the help of TestDFSIO.
 After test data set created, an SSM rule will be automatically generated and added.
 Make sure it could connect to SSM before run the script.
@@ -29,10 +29,10 @@ Please check `-h` for further instructions.
 #### HTTP Requests for SSM
 
 It should be noticed that when connect to SSM server, make sure there is no proxy for the machine running the scripts. The following scripts require this action:
-- `test_ssm_compact.py`.
+- `test_ssm_smallfile_compact_rule.py`.
 
 
 ### Scripts
 
-- `test_ssm_compact.py` will generate test data set and generate SSM compact rule. Check `-h` for usage.
+- `test_ssm_smallfile_compact_rule.py` will generate test data set and generate SSM compact rule. Check `-h` for usage.
 - `test_transparent_read.py` will test transparent read feature of SSM with `HiBench`.
