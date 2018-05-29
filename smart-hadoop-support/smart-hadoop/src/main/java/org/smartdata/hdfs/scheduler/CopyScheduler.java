@@ -293,15 +293,15 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private void batchDirectSync() throws MetaStoreException {
-    int index = 0;
     // Use 90% of check interval to batchSync
     if (baseSyncQueue.size() == 0) {
-      LOG.debug("Base Sync size = 0!");
       return;
     }
+    LOG.debug("Base Sync size = {}", baseSyncQueue.size());
     List<FileDiff> batchFileDiffs = new ArrayList<>();
     List<String> removed = new ArrayList<>();
     FileDiff fileDiff;
+    int index = 0;
     for (Iterator<Map.Entry<String, String>> it =
         baseSyncQueue.entrySet().iterator(); it.hasNext(); ) {
       if (index >= batchSize) {
@@ -425,11 +425,13 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     // Mark all related diff in metastore as Merged
     List<FileDiff> fileDiffs = metaStore.getFileDiffsByFileName(src);
+    List<Long> dids = new ArrayList<>();
     for (FileDiff fileDiff : fileDiffs) {
       if (fileDiff.getState() == FileDiffState.PENDING) {
-        metaStore.updateFileDiff(fileDiff.getDiffId(), FileDiffState.MERGED);
+        dids.add(fileDiff.getDiffId());
       }
     }
+    metaStore.batchUpdateFileDiff(dids, FileDiffState.MERGED);
     // Unlock this file
     fileLock.remove(src);
     // Generate a new file diff
@@ -545,7 +547,6 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private void pushCacheToDB() throws MetaStoreException {
-    LOG.debug("Push FileFiff From cache Into FileDiff");
     List<FileDiff> updatedFileDiffs = new ArrayList<>();
     List<Long> needDel = new ArrayList<>();
     FileDiff fileDiff;
@@ -562,7 +563,10 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
     // Push cache to metastore
-    metaStore.updateFileDiff(updatedFileDiffs);
+    if (updatedFileDiffs.size() != 0) {
+      LOG.debug("Push FileDiff from cache to metastore");
+      metaStore.updateFileDiff(updatedFileDiffs);
+    }
     // Remove file diffs in cache and file lock
     for (long did : needDel) {
       deleteDiffInCache(did);
@@ -884,14 +888,17 @@ public class CopyScheduler extends ActionSchedulerService {
       }
 
       void markAllDiffs() throws MetaStoreException {
+        List<Long> dids = new ArrayList<>();
         for (long did : diffChain) {
           if (fileDiffCache.containsKey(did)) {
             updateFileDiffInCache(did, FileDiffState.MERGED);
           } else {
+            dids.add(did);
             LOG.error("FileDiff {} is in chain but not in cache", did);
-            metaStore.updateFileDiff(did, FileDiffState.MERGED);
+            // metaStore.updateFileDiff(did, FileDiffState.MERGED);
           }
         }
+        metaStore.batchUpdateFileDiff(dids, FileDiffState.MERGED);
         diffChain.clear();
       }
     }

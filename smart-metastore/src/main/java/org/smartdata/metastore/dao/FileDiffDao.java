@@ -173,6 +173,27 @@ public class FileDiffDao {
     });
   }
 
+  public int[] batchUpdate(
+      final List<Long> dids, final FileDiffState state) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+    final String sql = "UPDATE " + TABLE_NAME + " SET state = ? "
+        + "WHERE did = ?";
+    return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+      @Override
+      public void setValues(PreparedStatement ps, int i) throws SQLException {
+        ps.setShort(1, (short) state.getValue());
+        ps.setLong(2, dids.get(i));
+      }
+
+      @Override
+      public int getBatchSize() {
+        return dids.size();
+      }
+    });
+  }
+
+
   public int update(long did, FileDiffState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "UPDATE " + TABLE_NAME + " SET state = ? WHERE did = ?";

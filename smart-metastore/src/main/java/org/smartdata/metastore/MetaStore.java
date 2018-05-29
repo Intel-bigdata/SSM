@@ -1498,6 +1498,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public boolean batchUpdateFileDiff(
+      List<Long> did, FileDiffState state)
+      throws MetaStoreException {
+    try {
+      return fileDiffDao.batchUpdate(did, state).length > 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public boolean updateFileDiff(long did,
       FileDiffState state, String parameters) throws MetaStoreException {
     try {

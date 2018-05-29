@@ -100,6 +100,8 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileInfoList = fileDiffDao.getAll();
 
     Assert.assertTrue(fileInfoList.get(0).getState().equals(FileDiffState.APPLIED));
+    fileDiffDao.batchUpdate(dids, FileDiffState.MERGED);
+    Assert.assertTrue(fileDiffDao.getAll().get(0).getState().equals(FileDiffState.MERGED));
 
   }
 
