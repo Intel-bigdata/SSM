@@ -291,8 +291,9 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     Map<String, FileInfo> containerFileMap = containerFileInfoCache.get(ruleInfo);
     for (Iterator<Map.Entry<String, FileInfo>> iter =
          containerFileMap.entrySet().iterator(); iter.hasNext();) {
-      String containerFilePath = iter.next().getKey();
-      FileInfo containerFileInfo = iter.next().getValue();
+      Map.Entry<String, FileInfo> entry = iter.next();
+      String containerFilePath = entry.getKey();
+      FileInfo containerFileInfo = entry.getValue();
       iter.remove();
 
       // Get compact action arguments
@@ -343,11 +344,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
     Collections.sort(smallFileInfos, new Comparator<FileInfo>(){
       @Override
       public int compare(FileInfo a, FileInfo b) {
-        if (a.getLength() > b.getLength()) {
-          return 1;
-        } else {
-          return -1;
-        }
+        return Long.compare(a.getLength(), b.getLength());
       }
     });
 

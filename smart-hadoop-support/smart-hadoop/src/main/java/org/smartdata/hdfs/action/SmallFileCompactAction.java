@@ -169,6 +169,8 @@ public class SmallFileCompactAction extends HdfsAction {
     if (!isContainerFileExist && compactFileStates.isEmpty()) {
       dfsClient.delete(containerFile, false);
     }
+    appendLog(String.format(
+        "Compact all the small files to %s successfully.", containerFile));
   }
 
   /**
