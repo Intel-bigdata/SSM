@@ -193,8 +193,8 @@ public class MetaStoreUtils {
               + "  access_time bigint(20) DEFAULT NULL,\n"
               + "  is_dir tinyint(1) DEFAULT NULL,\n"
               + "  sid tinyint(4) DEFAULT NULL,\n"
-              + "  owner varchar(255) DEFAULT NULL,\n"
-              + "  group varchar(255) DEFAULT NULL,\n"
+              + "  owner varchar(255) DEFAULT NUL,\n"
+              + "  owner_group varchar(255) DEFAULT NULL,\n"
               + "  permission smallint(6) DEFAULT NULL,\n"
               + "  ec_policy_id smallint(6) DEFAULT NULL\n"
               + ") ;",

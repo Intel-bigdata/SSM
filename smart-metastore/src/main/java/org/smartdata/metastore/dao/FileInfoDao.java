@@ -149,7 +149,7 @@ public class FileInfoDao {
     parameters
         .put("owner", fileInfo.getOwner());
     parameters
-        .put("group", fileInfo.getGroup());
+        .put("owner_group", fileInfo.getGroup());
     parameters.put("permission", fileInfo.getPermission());
     return parameters;
   }
@@ -168,7 +168,7 @@ public class FileInfoDao {
           resultSet.getLong("access_time"),
           resultSet.getShort("permission"),
           resultSet.getString("owner"),
-          resultSet.getString("group"),
+          resultSet.getString("owner_group"),
           resultSet.getByte("sid")
       );
       return fileInfo;
