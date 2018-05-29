@@ -83,6 +83,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   private ScheduledExecutorService executorService;
 
+  private static final int META_STORE_INSERT_BATCH_SIZE = 200;
   private static final String COMPACT_ACTION_NAME = "compact";
   private static final String UNCOMPACT_ACTION_NAME = "uncompact";
   private static final List<String> ACTIONS = Arrays.asList("compact", "uncompact");
@@ -485,7 +486,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   private void syncMetaStore() {
     List<CompactFileState> compactFileStates = new ArrayList<>();
-    while (true) {
+
+    // Get compact file states from compactFileStateQueue
+    for (int i = 0; i < META_STORE_INSERT_BATCH_SIZE; i++) {
       CompactFileState compactFileState = compactFileStateQueue.poll();
       if (compactFileState != null) {
         try {
@@ -505,23 +508,24 @@ public class SmallFileScheduler extends ActionSchedulerService {
           compactFileStateQueue.offer(compactFileState);
         }
       } else {
-        try {
-          if (!compactFileStates.isEmpty()) {
-            metaStore.insertCompactFileStates(
-                compactFileStates.toArray(new CompactFileState[0]));
-            for (CompactFileState fileState : compactFileStates) {
-              handlingSmallFileCache.remove(fileState.getPath());
-            }
-          }
-          return;
-        } catch (MetaStoreException e) {
-          for (CompactFileState fileState : compactFileStates) {
-            handlingSmallFileCache.remove(fileState.getPath());
-          }
-          LOG.error("Failed to update file state of meta store.", e);
-          return;
+        break;
+      }
+    }
+
+    // Batch insert compact file states into meta store
+    try {
+      if (!compactFileStates.isEmpty()) {
+        metaStore.insertCompactFileStates(
+            compactFileStates.toArray(new CompactFileState[0]));
+        for (CompactFileState fileState : compactFileStates) {
+          handlingSmallFileCache.remove(fileState.getPath());
         }
       }
+    } catch (MetaStoreException e) {
+      for (CompactFileState fileState : compactFileStates) {
+        handlingSmallFileCache.remove(fileState.getPath());
+      }
+      LOG.error("Failed to update file state of meta store.", e);
     }
   }
 

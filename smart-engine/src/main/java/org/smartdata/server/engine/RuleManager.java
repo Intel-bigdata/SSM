@@ -84,7 +84,7 @@ public class RuleManager extends AbstractService {
 
     RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
     RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
-    RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context));
+    RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context, cmdletManager));
   }
 
   /**
