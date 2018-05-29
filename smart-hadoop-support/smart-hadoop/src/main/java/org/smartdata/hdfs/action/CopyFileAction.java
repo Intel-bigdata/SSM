@@ -206,8 +206,7 @@ public class CopyFileAction extends HdfsAction {
       // Copy to s3
       FileSystem fs = FileSystem.get(URI.create(dest), conf);
       return fs.create(new Path(dest), true);
-    }
-    else {
+    } else {
       return CompatibilityHelperLoader.getHelper()
           .getDFSClientAppend(dfsClient, dest, bufferSize, offset);
     }

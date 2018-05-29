@@ -72,7 +72,6 @@ public class SmartConfKeys {
     "smart.security.client.protocol.acl";
   public static final String SMART_SECURITY_ADMIN_PROTOCOL_ACL =
     "smart.security.admin.protocol.acl";
-
   public static final String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
 
   // StatesManager
@@ -142,6 +141,16 @@ public class SmartConfKeys {
   /** Do NOT configure the following two options manually. They are set by the boot scripts. **/
   public static final String SMART_AGENT_MASTER_ADDRESS_KEY = "smart.agent.master.address";
   public static final String SMART_AGENT_ADDRESS_KEY = "smart.agent.address";
+
+  // Small File Compact
+  public static final String SMART_COMPACT_BATCH_SIZE_KEY =
+      "smart.compact.batch.size";
+  public static final int SMART_COMPACT_BATCH_SIZE_DEFAULT =
+      200;
+  public static final String SMART_COMPACT_CONTAINER_FILE_THRESHOLD_MB_KEY =
+      "smart.compact.container.file.threshold.mb";
+  public static final long SMART_COMPACT_CONTAINER_FILE_THRESHOLD_MB_DEFAULT =
+      1024;
 
   // SmartClient
 

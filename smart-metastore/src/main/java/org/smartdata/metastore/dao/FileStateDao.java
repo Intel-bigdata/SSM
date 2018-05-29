@@ -18,11 +18,15 @@
 package org.smartdata.metastore.dao;
 
 import org.smartdata.model.FileState;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import javax.sql.DataSource;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -41,11 +45,29 @@ public class FileStateDao {
     this.dataSource = dataSource;
   }
 
-  public void insertUpate(FileState fileState) {
+  public void insertUpdate(FileState fileState) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "REPLACE INTO " + TABLE_NAME + " (path, type, stage) VALUES (?,?,?);";
+    String sql = "REPLACE INTO " + TABLE_NAME + " (path, type, stage) VALUES (?,?,?)";
     jdbcTemplate.update(sql, fileState.getPath(), fileState.getFileType().getValue(),
         fileState.getFileStage().getValue());
+  }
+
+  public int[] batchInsertUpdate(final FileState[] fileStates) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "REPLACE INTO " + TABLE_NAME + " (path, type, stage) VALUES (?,?,?)";
+    return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+      @Override
+      public void setValues(PreparedStatement ps,
+          int i) throws SQLException {
+        ps.setString(1, fileStates[i].getPath());
+        ps.setInt(2, fileStates[i].getFileType().getValue());
+        ps.setInt(3, fileStates[i].getFileStage().getValue());
+      }
+      @Override
+      public int getBatchSize() {
+        return fileStates.length;
+      }
+    });
   }
 
   public FileState getByPath(String path) {
@@ -54,16 +76,52 @@ public class FileStateDao {
         new Object[]{path}, new FileStateRowMapper());
   }
 
+  public Map<String, FileState> getByPaths(List<String> paths) {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate =
+        new NamedParameterJdbcTemplate(dataSource);
+    Map<String, FileState> fileStateMap = new HashMap<>();
+    MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+    parameterSource.addValue("paths", paths);
+    List<FileState> fileStates = namedParameterJdbcTemplate.query(
+        "SELECT * FROM " + TABLE_NAME + " WHERE path IN (:paths)",
+        parameterSource,
+        new FileStateRowMapper());
+    for (FileState fileState : fileStates) {
+      fileStateMap.put(fileState.getPath(), fileState);
+    }
+    return fileStateMap;
+  }
+
   public List<FileState> getAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
         new FileStateRowMapper());
   }
 
-  public void deleteByPath(String path) {
+  public void deleteByPath(String path, boolean recursive) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
+    jdbcTemplate.update(sql, path);
+    if (recursive) {
+      sql = "DELETE FROM " + TABLE_NAME + " WHERE path LIKE ?";
+      jdbcTemplate.update(sql, path + "/%");
+    }
+  }
+
+  public int[] batchDelete(final List<String> paths) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
-    jdbcTemplate.update(sql, path);
+    return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+      @Override
+      public void setValues(PreparedStatement ps, int i) throws SQLException {
+        ps.setString(1, paths.get(i));
+      }
+
+      @Override
+      public int getBatchSize() {
+            return paths.size();
+      }
+    });
   }
 
   public void deleteAll() {
@@ -72,22 +130,13 @@ public class FileStateDao {
     jdbcTemplate.execute(sql);
   }
 
-  private Map<String, Object> toMap(FileState fileState) {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("path", fileState.getPath());
-    parameters.put("type", fileState.getFileType().getValue());
-    parameters.put("stage", fileState.getFileStage().getValue());
-    return parameters;
-  }
-
   class FileStateRowMapper implements RowMapper<FileState> {
     @Override
     public FileState mapRow(ResultSet resultSet, int i)
         throws SQLException {
-      FileState fileState = new FileState(resultSet.getString("path"),
+      return new FileState(resultSet.getString("path"),
           FileState.FileType.fromValue(resultSet.getInt("type")),
           FileState.FileStage.fromValue(resultSet.getInt("stage")));
-      return fileState;
     }
   }
 }

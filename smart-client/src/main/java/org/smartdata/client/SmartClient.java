@@ -17,7 +17,6 @@
  */
 package org.smartdata.client;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
@@ -67,7 +66,8 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     initialize(address);
   }
 
-  public SmartClient(Configuration conf, InetSocketAddress address) throws IOException {
+  public SmartClient(Configuration conf, InetSocketAddress address)
+      throws IOException {
     this.conf = conf;
     initialize(address);
   }
@@ -77,13 +77,19 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         ProtobufRpcEngine.class);
     ClientProtocolProtoBuffer proxy = RPC.getProxy(
         ClientProtocolProtoBuffer.class, VERSION, address, conf);
-    this.server = new ClientProtocolClientSideTranslator(proxy);
+    server = new ClientProtocolClientSideTranslator(proxy);
     Collection<String> dirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     ignoreAccessEventDirs = new ArrayList<>();
     singleIgnoreList = new ConcurrentHashMap<>(200);
     for (String s : dirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
+    }
+  }
+
+  private void checkOpen() throws IOException {
+    if (!running) {
+      throw new IOException("SmartClient closed");
     }
   }
 
@@ -122,13 +128,6 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       }
     }
     return false;
-  }
-
-
-  public void checkOpen() throws IOException {
-    if (!running) {
-      throw new IOException("SmartClient closed");
-    }
   }
 
   @Override

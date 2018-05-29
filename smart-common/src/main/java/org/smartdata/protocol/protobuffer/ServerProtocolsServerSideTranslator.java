@@ -337,7 +337,9 @@ public class ServerProtocolsServerSideTranslator implements
     try {
       String path = req.getFilePath();
       FileState fileState = server.getFileState(path);
-      return ProtoBufferHelper.convert(fileState);
+      return GetFileStateResponseProto.newBuilder()
+          .setFileState(ProtoBufferHelper.convert(fileState))
+          .build();
     } catch (IOException e) {
       throw new ServiceException(e);
     }
