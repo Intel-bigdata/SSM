@@ -116,6 +116,10 @@ public class SmartConfKeys {
       "smart.copy.scheduler.base.sync.batch";
   public static final int SMART_COPY_SCHEDULER_BASE_SYNC_BATCH_DEFAULT =
       500;
+  public static final String SMART_COPY_SCHEDULER_CHECK_INTERVAL =
+      "smart.copy.scheduler.check.interval";
+  public static final int SMART_COPY_SCHEDULER_CHECK_INTERVAL_DEFAULT =
+      500;
 
   // Dispatcher
   public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY =

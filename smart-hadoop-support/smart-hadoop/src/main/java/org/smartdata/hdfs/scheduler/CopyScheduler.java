@@ -82,7 +82,7 @@ public class CopyScheduler extends ActionSchedulerService {
   private long mergeCountTh = 10;
   private int retryTh = 3;
   // Check interval of executorService
-  private long checkInterval = 500;
+  private long checkInterval;
   // Base sync batch insert size
   private int batchSize = 500;
   // Cache of the file_diff
@@ -106,18 +106,21 @@ public class CopyScheduler extends ActionSchedulerService {
     this.baseSyncQueue = new ConcurrentHashMap<>();
     this.overwriteQueue = new ConcurrentHashMap<>();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
+    this.fileDiffCache = new ConcurrentHashMap<>();
+    this.fileDiffCacheChanged = new ConcurrentHashMap<>();
+    // Get conf or new default conf
     try {
       conf = getContext().getConf();
-      cacheSyncTh = conf.getInt(SmartConfKeys
-          .SMART_COPY_SCHEDULER_BASE_SYNC_BATCH,
-          SmartConfKeys.SMART_COPY_SCHEDULER_BASE_SYNC_BATCH_DEFAULT);
     } catch (NullPointerException e) {
       // SmartContext is empty
       conf = new Configuration();
     }
-    this.fileDiffCache = new ConcurrentHashMap<>();
-    this.fileDiffCacheChanged = new ConcurrentHashMap<>();
-
+    // Conf related parameters
+    cacheSyncTh = conf.getInt(SmartConfKeys
+            .SMART_COPY_SCHEDULER_BASE_SYNC_BATCH,
+        SmartConfKeys.SMART_COPY_SCHEDULER_BASE_SYNC_BATCH_DEFAULT);
+    checkInterval = conf.getLong(SmartConfKeys.SMART_COPY_SCHEDULER_CHECK_INTERVAL,
+        SmartConfKeys.SMART_COPY_SCHEDULER_CHECK_INTERVAL_DEFAULT);
     throttleInMb = conf.getLong(SmartConfKeys.SMART_ACTION_COPY_THROTTLE_MB_KEY,
         SmartConfKeys.SMART_ACTION_COPY_THROTTLE_MB_DEFAULT);
     if (throttleInMb > 0) {
