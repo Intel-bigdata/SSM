@@ -5,6 +5,7 @@ from util import *
 
 
 class TestRule(unittest.TestCase):
+
     @timeout_decorator.timeout(seconds=60)
     def test_rule_access_count(self):
         # rule:

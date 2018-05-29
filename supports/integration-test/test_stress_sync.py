@@ -7,6 +7,7 @@ DEST_DIR = "hdfs://localhost:9000/dest"
 
 
 class TestStressDR(unittest.TestCase):
+
     def test_sync_rule(self):
         # file : every 1s | path matches "/1MB/*" | sync -dest
         # file_path = create_random_file(10 * 1024 * 1024)
