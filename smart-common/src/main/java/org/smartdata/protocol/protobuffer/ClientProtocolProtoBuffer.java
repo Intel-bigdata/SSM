@@ -35,9 +35,9 @@ import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventResponsePro
 public interface ClientProtocolProtoBuffer {
   ReportFileAccessEventResponseProto
   reportFileAccessEvent(RpcController controller,
-      ReportFileAccessEventRequestProto req) throws ServiceException;
+                        ReportFileAccessEventRequestProto req) throws ServiceException;
 
   GetFileStateResponseProto
   getFileState(RpcController controller,
-      GetFileStateRequestProto req) throws ServiceException;
+               GetFileStateRequestProto req) throws ServiceException;
 }

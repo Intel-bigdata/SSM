@@ -66,8 +66,12 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   }
 
   private boolean isOnS3(String fileName) {
-    return metaStore.getFileState(fileName)
-        .getFileType().getValue() == FileState.FileType.S3.getValue();
+    try {
+      return metaStore.getFileState(fileName)
+          .getFileType().getValue() == FileState.FileType.S3.getValue();
+    } catch (MetaStoreException e) {
+      return false;
+    }
   }
 
   @Override
@@ -105,7 +109,11 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (actionInfo.isFinished() && actionInfo.isSuccessful()) {
       // Insert fileState
-      metaStore.insertUpdateFileState(new S3FileState(path));
+      try {
+        metaStore.insertUpdateFileState(new S3FileState(path));
+      } catch (MetaStoreException e) {
+        LOG.error("Failed to insert file state.", e);
+      }
     }
     // unlock filelock
     if (ifLocked(path)) {

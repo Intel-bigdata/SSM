@@ -24,6 +24,8 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.CompactFileState;
+import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.NormalFileState;
 import org.smartdata.model.RuleInfo;
@@ -35,7 +37,7 @@ import org.smartdata.protocol.AdminServerProto.CmdletInfoProto;
 import org.smartdata.protocol.AdminServerProto.RuleInfoProto;
 import org.smartdata.protocol.ClientServerProto.CompactFileStateProto;
 import org.smartdata.protocol.ClientServerProto.CompressionFileStateProto;
-import org.smartdata.protocol.ClientServerProto.GetFileStateResponseProto;
+import org.smartdata.protocol.ClientServerProto.FileStateProto;
 import org.smartdata.protocol.ClientServerProto.ReportFileAccessEventRequestProto;
 import org.smartdata.protocol.ClientServerProto.S3FileStateProto;
 
@@ -178,7 +180,14 @@ public class ProtoBufferHelper {
         .build();
   }
 
-  public static FileState convert(GetFileStateResponseProto proto) {
+  private static FileContainerInfo convert(CompactFileStateProto proto) {
+    String containerFilePath = proto.getContainerFilePath();
+    long offset = proto.getOffset();
+    long length = proto.getLength();
+    return new FileContainerInfo(containerFilePath, offset, length);
+  }
+
+  public static FileState convert(FileStateProto proto) {
     FileState fileState = null;
     String path = proto.getPath();
     FileState.FileType type = FileState.FileType.fromValue(proto.getType());
@@ -189,8 +198,7 @@ public class ProtoBufferHelper {
         break;
       case COMPACT:
         CompactFileStateProto compactProto = proto.getCompactFileState();
-        // convert to CompactFileState
-        // fileState = convert(path, type, stage, compactProto);
+        fileState = new CompactFileState(path, convert(compactProto));
         break;
       case COMPRESSION:
         CompressionFileStateProto compressionProto = proto.getCompressionFileState();
@@ -207,19 +215,28 @@ public class ProtoBufferHelper {
     return fileState;
   }
 
-  public static GetFileStateResponseProto convert(FileState fileState) {
-    GetFileStateResponseProto.Builder builder = GetFileStateResponseProto.newBuilder();
+  public static FileStateProto convert(FileState fileState) {
+    FileStateProto.Builder builder = FileStateProto.newBuilder();
     builder.setPath(fileState.getPath())
         .setType(fileState.getFileType().getValue())
         .setStage(fileState.getFileStage().getValue());
-    // Set corresponding segment
-    /*if (fileState instanceof CompressionFileState) {
+
+    if (fileState instanceof CompactFileState) {
+      FileContainerInfo fileContainerInfo = (
+          (CompactFileState) fileState).getFileContainerInfo();
+      builder.setCompactFileState(CompactFileStateProto.newBuilder()
+          .setContainerFilePath(fileContainerInfo.getContainerFilePath())
+          .setOffset(fileContainerInfo.getOffset())
+          .setLength(fileContainerInfo.getLength()));
+    }
+    /*
+    else if (fileState instanceof CompressionFileState) {
       builder.setCompressionFileState();
-    } else if (fileState instanceof CompactFileState) {
-      builder.setCompactFileState();
     } else if (fileState instanceof S3FileState) {
       builder.setS3FileState();
-    }*/
+    } else if (fileState instanceof ) {
+    }
+    */
     return builder.build();
   }
 }

@@ -18,7 +18,6 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.fs.CreateFlag;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -29,7 +28,6 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
@@ -49,6 +47,7 @@ import java.util.List;
 
 public class CompatibilityHelper27 implements CompatibilityHelper {
 
+  @Override
   public String[] getStorageTypes(LocatedBlock lb) {
     List<String> types = new ArrayList<>();
     for(StorageType type : lb.getStorageTypes()) {
@@ -57,6 +56,7 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return types.toArray(new String[types.size()]);
   }
 
+  @Override
   public void replaceBlock(
       DataOutputStream out,
       ExtendedBlock eb,
@@ -68,6 +68,7 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     new Sender(out).replaceBlock(eb, StorageType.valueOf(storageType), accessToken, dnUUID, info);
   }
 
+  @Override
   public String[] getMovableTypes() {
     List<String> types = new ArrayList<>();
     for(StorageType type : StorageType.getMovableTypes()) {
@@ -76,10 +77,12 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return types.toArray(new String[types.size()]);
   }
 
+  @Override
   public String getStorageType(StorageReport report) {
     return report.getStorage().getStorageType().toString();
   }
 
+  @Override
   public List<String> chooseStorageTypes(BlockStoragePolicy policy, short replication) {
     List<String> types = new ArrayList<>();
     for(StorageType type : policy.chooseStorageTypes(replication)) {
@@ -88,6 +91,7 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     return types;
   }
 
+  @Override
   public boolean isMovable(String type) {
     return StorageType.valueOf(type).isMovable();
   }
