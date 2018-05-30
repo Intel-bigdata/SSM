@@ -87,8 +87,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
-
 /**
  * Operations supported for upper functions.
  */
@@ -1415,11 +1413,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public Integer getStoragePolicyID(
       String policyName) throws MetaStoreException {
-    updateCache();
     try {
-      return getKey(mapStoragePolicyIdName, policyName);
+      updateCache();
+      return mapStoragePolicyNameId.get(policyName);
     } catch (EmptyResultDataAccessException e) {
-      return -1;
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
