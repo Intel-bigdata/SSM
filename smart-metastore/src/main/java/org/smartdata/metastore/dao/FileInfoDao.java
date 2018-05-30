@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore.dao;
 
-import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.model.FileInfo;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -37,8 +36,6 @@ import java.util.Map;
 public class FileInfoDao {
 
   private DataSource dataSource;
-  private Map<Integer, String> mapOwnerIdName;
-  private Map<Integer, String> mapGroupIdName;
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -46,14 +43,6 @@ public class FileInfoDao {
 
   public FileInfoDao(DataSource dataSource) {
     this.dataSource = dataSource;
-  }
-
-  public void updateUsersMap(Map<Integer, String> mapOwnerIdName) {
-    this.mapOwnerIdName = mapOwnerIdName;
-  }
-
-  public void updateGroupsMap(Map<Integer, String> mapGroupIdName) {
-    this.mapGroupIdName = mapGroupIdName;
   }
 
   public List<FileInfo> getAll() {
@@ -125,8 +114,7 @@ public class FileInfoDao {
   public void insert(FileInfo fileInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName("file");
-    simpleJdbcInsert.execute(toMap(fileInfo,
-        mapOwnerIdName, mapGroupIdName));
+    simpleJdbcInsert.execute(toMap(fileInfo));
   }
 
   public void insert(FileInfo[] fileInfos) {
@@ -134,7 +122,7 @@ public class FileInfoDao {
     simpleJdbcInsert.setTableName("file");
     Map<String, Object>[] maps = new Map[fileInfos.length];
     for (int i = 0; i < fileInfos.length; i++) {
-      maps[i] = toMap(fileInfos[i], mapOwnerIdName, mapGroupIdName);
+      maps[i] = toMap(fileInfos[i]);
     }
     simpleJdbcInsert.executeBatch(maps);
   }
@@ -157,9 +145,7 @@ public class FileInfoDao {
     jdbcTemplate.execute(sql);
   }
 
-  private Map<String, Object> toMap(FileInfo fileInfo
-      , Map<Integer, String> mapOwnerIdName
-      , Map<Integer, String> mapGroupIdName) {
+  private Map<String, Object> toMap(FileInfo fileInfo) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("path", fileInfo.getPath());
     parameters.put("fid", fileInfo.getFileId());
@@ -171,9 +157,9 @@ public class FileInfoDao {
     parameters.put("is_dir", fileInfo.isdir());
     parameters.put("sid", fileInfo.getStoragePolicy());
     parameters
-        .put("oid", MetaStoreUtils.getKey(mapOwnerIdName, fileInfo.getOwner()));
+        .put("owner", fileInfo.getOwner());
     parameters
-        .put("gid", MetaStoreUtils.getKey(mapGroupIdName, fileInfo.getGroup()));
+        .put("owner_group", fileInfo.getGroup());
     parameters.put("permission", fileInfo.getPermission());
     return parameters;
   }
@@ -191,8 +177,8 @@ public class FileInfoDao {
           resultSet.getLong("modification_time"),
           resultSet.getLong("access_time"),
           resultSet.getShort("permission"),
-          mapOwnerIdName.get((int) resultSet.getShort("oid")),
-          mapGroupIdName.get((int) resultSet.getShort("gid")),
+          resultSet.getString("owner"),
+          resultSet.getString("owner_group"),
           resultSet.getByte("sid")
       );
       return fileInfo;
