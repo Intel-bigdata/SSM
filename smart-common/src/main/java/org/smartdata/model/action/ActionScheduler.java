@@ -20,6 +20,7 @@ package org.smartdata.model.action;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.LaunchAction;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface ActionScheduler {
@@ -32,7 +33,7 @@ public interface ActionScheduler {
    * @param actionInfo
    * @return acceptable if true, or discard
    */
-  boolean onSubmit(ActionInfo actionInfo);
+  boolean onSubmit(ActionInfo actionInfo) throws IOException;
 
   /**
    * Trying to schedule an action for Dispatch.

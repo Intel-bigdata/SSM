@@ -85,7 +85,7 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) {
+  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (ifLocked(path)) {
       LOG.debug("The submit file {} is locked", path);
