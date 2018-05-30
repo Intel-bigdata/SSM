@@ -33,10 +33,6 @@ public class TableMetaData {
         new String[] {"fid", "fid"});
     mapJoinableKeys.put("file-cached_file",
         new String[] {"fid", "fid"});
-    mapJoinableKeys.put("file-user_group",
-        new String[] {"gid", "gid"});
-    mapJoinableKeys.put("file-owner",
-        new String[] {"oid", "oid"});
     mapJoinableKeys.put("file-file_diff",
         new String[] {"path", "DISTINCT src"});
     // TODO: others
