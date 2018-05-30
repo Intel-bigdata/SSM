@@ -721,6 +721,11 @@ public class CopyScheduler extends ActionSchedulerService {
         addDiffToCache(fileDiff);
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
+          String offset = fileDiff.getParameters().get("-offset");
+          if (offset != null && offset.equals("0") && diffChain.size() != 0) {
+            markAllDiffs();
+          }
+
           if (currAppendLength >= mergeLenTh ||
               appendChain.size() >= mergeCountTh) {
             mergeAppend();
@@ -890,6 +895,8 @@ public class CopyScheduler extends ActionSchedulerService {
           }
         }
         diffChain.clear();
+        currAppendLength = 0;
+        appendChain.clear();
       }
     }
   }
