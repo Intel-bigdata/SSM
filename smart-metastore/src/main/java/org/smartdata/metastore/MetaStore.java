@@ -1518,6 +1518,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public boolean batchUpdateFileDiff(
+      List<Long> did, FileDiffState state)
+      throws MetaStoreException {
+    try {
+      return fileDiffDao.batchUpdate(did, state).length > 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public boolean updateFileDiff(long did,
       FileDiffState state, String parameters) throws MetaStoreException {
     try {
@@ -1550,17 +1560,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public boolean updateFileDiff(List<FileDiff> fileDiffs)
+  public void updateFileDiff(List<FileDiff> fileDiffs)
     throws MetaStoreException {
     if (fileDiffs == null || fileDiffs.size() == 0) {
-      return true;
+      return;
     }
-    for (FileDiff fileDiff: fileDiffs) {
-      if (!updateFileDiff(fileDiff)) {
-        return false;
-      }
+    try {
+      fileDiffDao.update(fileDiffs.toArray(new FileDiff[fileDiffs.size()]));
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
-    return true;
   }
 
 
