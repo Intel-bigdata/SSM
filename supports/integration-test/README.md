@@ -97,6 +97,7 @@ BASE_URL = "http://{SSM_Server}:7045"
 
 `{SSM_Server}` is the IP address or hostname of active Smart Server.
 
+
 [`HiBench`](https://github.com/intel-hadoop/HiBench) is also required by `test_transparent_read.py`.
 
 
@@ -121,7 +122,7 @@ The following workloads are included:
 - 'sql/aggregation', 
 - 'websearch/pagerank'
 
-You can just use 'workload' as the variable in python script.
+You can just use `workload` as the variable in python script.
 
 Please check `-h` for further instructions.
 
