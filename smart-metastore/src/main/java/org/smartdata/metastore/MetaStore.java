@@ -1540,17 +1540,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public boolean updateFileDiff(List<FileDiff> fileDiffs)
+  public void updateFileDiff(List<FileDiff> fileDiffs)
     throws MetaStoreException {
     if (fileDiffs == null || fileDiffs.size() == 0) {
-      return true;
+      return;
     }
-    for (FileDiff fileDiff: fileDiffs) {
-      if (!updateFileDiff(fileDiff)) {
-        return false;
-      }
+    try {
+      fileDiffDao.update(fileDiffs.toArray(new FileDiff[fileDiffs.size()]));
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
-    return true;
   }
 
 

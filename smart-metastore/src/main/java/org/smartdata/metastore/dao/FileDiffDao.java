@@ -153,7 +153,8 @@ public class FileDiffDao {
   }
 
   public int[] batchUpdate(
-      final List<Long> dids, final List<FileDiffState> states, final List<String> parameters) {
+      final List<Long> dids, final List<FileDiffState> states,
+      final List<String> parameters) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
     final String sql = "UPDATE " + TABLE_NAME + " SET state = ?, "
@@ -212,6 +213,37 @@ public class FileDiffDao {
     String sql = "UPDATE " + TABLE_NAME + " SET state = ?, "
         + "parameters = ? WHERE did = ?";
     return jdbcTemplate.update(sql, state.getValue(), parameters, did);
+  }
+
+  public int[] update(final FileDiff[] fileDiffs) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "UPDATE " + TABLE_NAME + " SET "
+        + "rid = ?, "
+        + "diff_type = ?, "
+        + "src = ?, "
+        + "parameters = ?, "
+        + "state = ?, "
+        + "create_time = ? "
+        + "WHERE did = ?";
+    return jdbcTemplate.batchUpdate(sql,
+        new BatchPreparedStatementSetter() {
+          @Override
+          public void setValues(PreparedStatement ps,
+              int i) throws SQLException {
+            ps.setLong(1, fileDiffs[i].getRuleId());
+            ps.setInt(2, fileDiffs[i].getDiffType().getValue());
+            ps.setString(3, fileDiffs[i].getSrc());
+            ps.setString(4, fileDiffs[i].getParametersJsonString());
+            ps.setInt(5, fileDiffs[i].getState().getValue());
+            ps.setLong(6, fileDiffs[i].getCreateTime());
+            ps.setLong(7, fileDiffs[i].getDiffId());
+          }
+
+          @Override
+          public int getBatchSize() {
+            return fileDiffs.length;
+          }
+        });
   }
 
   public int update(final FileDiff fileDiff) {
