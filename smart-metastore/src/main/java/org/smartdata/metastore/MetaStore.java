@@ -74,6 +74,7 @@ import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.SystemInfo;
 import org.smartdata.model.XAttribute;
+
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
@@ -392,6 +393,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteAllFileInfo() throws MetaStoreException {
     try {
       fileInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteFileByPath(String path) throws MetaStoreException {
+    try {
+      fileInfoDao.deleteByPath(path);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
