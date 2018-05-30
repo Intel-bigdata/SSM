@@ -32,6 +32,7 @@ public interface ActionScheduler {
    *
    * @param actionInfo
    * @return acceptable if true, or discard
+   * @throws IOException
    */
   boolean onSubmit(ActionInfo actionInfo) throws IOException;
 
