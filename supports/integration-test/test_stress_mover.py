@@ -3,23 +3,22 @@ import unittest
 from util import *
 
 
-class TestStressCmdlet(unittest.TestCase):
+class TestStressMover(unittest.TestCase):
 
-    def test_cmdlet_scheduler(self):
+    def test_move_scheduler(self):
         file_paths = []
         cids = []
+        failed_cids = []
         for i in range(MAX_NUMBER):
-            # 1 MB files
-            file_path, cid = create_random_file_parallel(FILE_SIZE)
-            file_paths.append(file_path)
-            cids.append(cid)
+            file_paths.append(create_random_file(FILE_SIZE))
         for i in range(MAX_NUMBER):
-            cids.append(read_file(file_paths[i]))
-        for i in range(MAX_NUMBER):
-            cids.append(delete_file(file_paths[i]))
-        failed_cids = wait_for_cmdlets(cids)
+            cids.append(move_randomly(file_paths[i]))
+        while len(cids) != 0:
+            cmd = wait_for_cmdlet(cids[0])
+            if cmd['state'] == 'FAILED':
+                failed_cids.append(cids[0])
+            cids.pop(0)
         self.assertTrue(len(failed_cids) == 0)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

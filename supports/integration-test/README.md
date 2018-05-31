@@ -3,10 +3,11 @@
 
 ## Pre-requests
 ### Python Environment
-Python 2 (2.6 or higher) with `requests` installed.
+Python 2 (2.6 or higher) with `requests` and `timeout-decorator` installed.
 ```
 python --version
 pip install requests
+pip install timeout-decorator
 ```
 
 ### HDFS and SSM Environment
@@ -17,9 +18,9 @@ BASE_URL = "http://{SSM_Server}:7045"
 
 `{SSM_Server}` is the IP address or hostname of active Smart Server.
 
-## Init/Rest Test Environment
+## Init/Reset Test Environment
 1. Remove all files in hdfs:/ssmtest/
-Run this command in HDFS enviroment.
+Run this command in HDFS environment.
 ```
 HDFS dfs -ls -rm -r /ssmtest/
 HDFS dfs -mkdir /ssmtest/
@@ -40,75 +41,86 @@ bin/start-ssm.sh -format
 
 ## Run Test Scripts
 ### 1. Test Mover
-Run all mover test cases with the following command:
 ```
-python test_mover_10MB.py -v
-python test_mover_64MB.py -v
-python test_mover_1GB.py -v
-python test_mover_2GB.py -v
+python test_mover.py -size 10MB -v
+
 ```
+This command will run all test cases for 10MB files.
+The default value of size is 64MB if not given.
 
 ### 2. Test Rule
-Run all rule test cases with the following command:
 ```
 python test_rule.py -v
 ```
+This command will run all test cases for rule.
 
 ### 3. Test Data Protection
-Run all data protection test cases (read, delete, append and overwrite files during moving) with the following command:
 ```
-python test_data_protection_1GB.py -v
-python test_data_protection_2GB.py -v
+python test_data_protection.py -size 2GB -v
 ```
+This command will run all test cases (read, delete, append and overwrite files during moving) for 10MB files.
+The default value of size is 1GB if not given. A large value is recommended.
 
 #### Corner Cases of Data Protection
 
-1. Test File Statue when move fails
-Set a very small SSD/ARCHIVE storage on datanode. Then, move a large file to it. Then, you can see only a few or none of blocks are moved to this storage. Check if file are still readable with read action.
+1. Test file status when move fails
+Set a very small SSD/ARCHIVE storage on datanode. Then, move a large file to it. Then, you can see only a few or none of blocks are moved to this storage. Check if this file is still readable with read action.
 
 ### 4. Test Stress/Performance
-Run all stress/performance test cases with the following command:
-```
-python test_stress.py -v
-```
 
-If you want to increase the number of files in `hdfs:/ssmtest/`, please remove all delete file actions in `test_stress.py`.
+#### Cmdlet Stress
 ```
-for i in range(max_number):
-    cids.append(delete_file(file_paths[i]))
+python test_S3.py -size 10MB -num 10 -v
 ```
+This command will run copy to S3 test on 10 files each of which is 10MB.
+The default values of size and num are 1MB and 100 respectively if not given.
 
-## Test Scripts for smallfile
+### 5. Test Stress/Performance
+
+#### Cmdlet Stress
+```
+python test_stress_cmdlet.py -size 10MB -num 1000 -v
+```
+This command will run test for create, read, delete action on 1000 files each of which is 10MB.
+The default values of size and num are 1MB and 10000 respectively if not given.
+
+#### Mover Stress
+```
+python test_stress_mover.py -size 10MB -num 1000 -v
+```
+This command will run mover test on 1000 files each of which is 10MB.
+The default values of size and num are 1MB and 10000 respectively if not given.
+
+#### Rule Stress
+```
+python test_stress_rule.py -num 10 -v
+```
+This command will trigger 10 rules on files under TEST_DIR.
+The default value of num is 100 if not given.
+
+#### Sync Stress
+```
+python test_stress_sync.py -size 10MB -num 1000 -v
+```
+This command will run sync test on 1000 files each of which is 10MB.
+The default values of size and num are 1MB and 10000 respectively if not given.
+
+### 6. Test Scripts for Small File Optimization
 
 This is a guide for SSM small file integration test with python scripts under the instruction of  [Test Plan](https://github.com/Intel-bigdata/SSM/blob/trunk/supports/small-file-test/SSM%20Small%20File%20Optimization%20Test%20Plan.md).
 
-### Usage
-
-#### Python Environment
-All scripts are written for `python3`.
-
-Python 3 with `requests` installed required.
-
-#### HDFS and SSM Environment
-Make sure SSM and HDFS are correctly installed. Before executing test scripts, please set SSM's web UI address in `util.py`.
-```
-BASE_URL = "http://{SSM_Server}:7045"
-```
-
-`{SSM_Server}` is the IP address or hostname of active Smart Server.
-
+#### Dependency
 
 [`HiBench`](https://github.com/intel-hadoop/HiBench) is also required by `test_transparent_read.py`.
 
-
 #### `test_generate_test_set.py`
-This script will generate the needed data set.
+This script will generate the required data set.
 
 #### `test_smallfile_action.py`
-This script will generate the needed data set, and then generate a new SSM compact or uncompact action.
+This script will generate the required data set, and then generate a new SSM compact or uncompact action.
 
 #### `test_smallfile_compact_rule.py`
-This script will generate the needed data set, and then generate a new SSM compact rule.
+This script will generate the required data set, and then generate a new SSM compact rule.
 
 #### `test_transparent_read.py`
 This script is used to run SSM transparent read test with HiBench for SSM integration test.
@@ -127,7 +139,7 @@ You can just use `workload` as the variable in python script.
 Please check `-h` for further instructions.
 
 
-### Scripts
+#### Scripts
 
 - `test_generate_test_set.py` will generate test data set. Check `-h` for usage.
 - `test_smallfile_action.py` will generate test data set and submit a new action. Check `-h` for usage.
@@ -135,7 +147,7 @@ Please check `-h` for further instructions.
 - `test_transparent_read.py` will test transparent read feature of SSM with `HiBench`. Check `-h` for usage.
 
 
-### Tips
+## Tips
 
 #### HTTP Requests for SSM
 
