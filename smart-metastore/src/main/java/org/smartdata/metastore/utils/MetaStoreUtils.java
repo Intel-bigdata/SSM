@@ -69,8 +69,6 @@ public class MetaStoreUtils {
             "cached_file",
             "ec_policy",
             "file",
-            "user_group",
-            "owner",
             "storage",
             "storage_hist",
             "storage_policy",
@@ -196,21 +194,13 @@ public class MetaStoreUtils {
               + "  access_time bigint(20) DEFAULT NULL,\n"
               + "  is_dir tinyint(1) DEFAULT NULL,\n"
               + "  sid tinyint(4) DEFAULT NULL,\n"
-              + "  oid smallint(6) DEFAULT NULL,\n"
-              + "  gid smallint(6) DEFAULT NULL,\n"
+              + "  owner varchar(255) DEFAULT NULL,\n"
+              + "  owner_group varchar(255) DEFAULT NULL,\n"
               + "  permission smallint(6) DEFAULT NULL,\n"
               + "  ec_policy_id smallint(6) DEFAULT NULL\n"
               + ") ;",
           "CREATE INDEX file_fid_idx ON file (fid);",
           "CREATE INDEX file_path_idx ON file (path);",
-          "CREATE TABLE user_group (\n"
-              + "  gid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-              + "  group_name varchar(255) DEFAULT NULL\n"
-              + ") ;",
-          "CREATE TABLE owner (\n"
-              + "  oid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-              + "  owner_name varchar(255) DEFAULT NULL\n"
-              + ") ;",
           "CREATE TABLE storage (\n"
               + "  type varchar(32) PRIMARY KEY,\n"
               + "  time_stamp bigint(20) DEFAULT NULL,\n"

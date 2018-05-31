@@ -174,6 +174,60 @@ public class RuleExecutor implements Runnable {
     ctx.setProperty(var, count == null ? 0L : count);
   }
 
+  public String genVirtualAccessCountTableTopValueOnStoragePolicy(List<Object> parameters) {
+    genVirtualAccessCountTableValueOnStoragePolicy(parameters, true);
+    return null;
+  }
+
+  public String genVirtualAccessCountTableBottomValueOnStoragePolicy(List<Object> parameters) {
+    genVirtualAccessCountTableValueOnStoragePolicy(parameters, false);
+    return null;
+  }
+
+  private void genVirtualAccessCountTableValueOnStoragePolicy(List<Object> parameters,
+      boolean top) {
+    List<Object> paraList = (List<Object>) parameters.get(0);
+    String table = (String) parameters.get(1);
+    String var = (String) parameters.get(2);
+    Long num = (Long) paraList.get(1);
+    String storage = ((String) paraList.get(2)).toUpperCase();
+    String sqlsub;
+    if (storage.equals("CACHE")) {
+      sqlsub = String.format("SELECT %s.fid, %s.count FROM %s LEFT JOIN cached_file ON "
+          + "(%s.fid = cached_file.fid)", table, table, table, table);
+    } else {
+      Integer id = null;
+      try {
+        id = adapter.getStoragePolicyID(storage);
+      } catch (Exception e) {
+        // Ignore
+      }
+      if (id == null) {
+        id = -1; // safe return
+      }
+      sqlsub = String.format("SELECT %s.fid, %s.count FROM %s LEFT JOIN file ON "
+          + "(%s.fid = file.fid) WHERE file.sid = %d",
+          table, table, table, table, id);
+    }
+
+    String sql0 = String.format(
+        "SELECT %s(count) FROM ( SELECT * FROM (%s) AS %s ORDER BY count %sLIMIT %d ) AS %s;",
+        top ? "min" : "max",
+        sqlsub,
+        table + "_AL1_TMP",
+        top ? "DESC " : "",
+        num,
+        table + "_AL2_TMP");
+    Long count = null;
+    try {
+      count = adapter.queryForLong(sql0);
+    } catch (MetaStoreException e) {
+      LOG.error(String.format("Get %s access count on storage [%s] from table '%s' error [%s].",
+          top ? "top" : "bottom", storage, table, sql0), e);
+    }
+    ctx.setProperty(var, count == null ? 0L : count);
+  }
+
   public String genVirtualAccessCountTable(List<Object> parameters) {
     List<Object> paraList = (List<Object>) parameters.get(0);
     String newTable = (String) parameters.get(1);

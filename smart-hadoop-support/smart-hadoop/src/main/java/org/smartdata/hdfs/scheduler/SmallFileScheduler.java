@@ -123,7 +123,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) {
+  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
     if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
       // Check if container file is null
       String containerFilePath = actionInfo.getArgs().get(

@@ -37,14 +37,12 @@ import org.smartdata.metastore.dao.FileInfoDao;
 import org.smartdata.metastore.dao.FileStateDao;
 import org.smartdata.metastore.dao.GeneralDao;
 import org.smartdata.metastore.dao.GlobalConfigDao;
-import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.dao.RuleDao;
 import org.smartdata.metastore.dao.SmallFileDao;
 import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.StorageHistoryDao;
 import org.smartdata.metastore.dao.SystemInfoDao;
-import org.smartdata.metastore.dao.UserDao;
 import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
@@ -74,6 +72,7 @@ import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.SystemInfo;
 import org.smartdata.model.XAttribute;
+
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
@@ -87,8 +86,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.smartdata.metastore.utils.MetaStoreUtils.getKey;
-
 /**
  * Operations supported for upper functions.
  */
@@ -97,8 +94,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   private DBPool pool = null;
 
-  private Map<Integer, String> mapOwnerIdName = null;
-  private Map<Integer, String> mapGroupIdName = null;
   private Map<Integer, String> mapStoragePolicyIdName = null;
   private Map<String, Integer> mapStoragePolicyNameId = null;
   private Map<String, StorageCapacity> mapStorageCapacity = null;
@@ -110,8 +105,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private CacheFileDao cacheFileDao;
   private StorageDao storageDao;
   private StorageHistoryDao storageHistoryDao;
-  private UserDao userDao;
-  private GroupsDao groupsDao;
   private XattrDao xattrDao;
   private FileDiffDao fileDiffDao;
   private AccessCountDao accessCountDao;
@@ -135,10 +128,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     fileInfoDao = new FileInfoDao(pool.getDataSource());
     xattrDao = new XattrDao(pool.getDataSource());
     cacheFileDao = new CacheFileDao(pool.getDataSource());
-    userDao = new UserDao(pool.getDataSource());
     storageDao = new StorageDao(pool.getDataSource());
     storageHistoryDao = new StorageHistoryDao(pool.getDataSource());
-    groupsDao = new GroupsDao(pool.getDataSource());
     accessCountDao = new AccessCountDao(pool.getDataSource());
     fileDiffDao = new FileDiffDao(pool.getDataSource());
     metaStoreHelper = new MetaStoreHelper(pool.getDataSource());
@@ -183,36 +174,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void addUser(String userName) throws MetaStoreException {
-    try {
-      userDao.addUser(userName);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
-  public void addGroup(
-      String groupName) throws MetaStoreException {
-    try {
-      groupsDao.addGroup(groupName);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
-  private void updateUsersMap() throws MetaStoreException {
-    mapOwnerIdName = userDao.getUsersMap();
-    fileInfoDao.updateUsersMap(mapOwnerIdName);
-  }
-
-  private void updateGroupsMap() throws MetaStoreException {
-    try {
-      mapGroupIdName = groupsDao.getGroupsMap();
-      fileInfoDao.updateGroupsMap(mapGroupIdName);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
 
   /**
    * Store a single file info into database.
@@ -222,16 +183,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void insertFile(FileInfo file)
       throws MetaStoreException {
     updateCache();
-    String owner = file.getOwner();
-    String group = file.getGroup();
-    if (!this.mapOwnerIdName.values().contains(owner)) {
-      this.addUser(owner);
-      this.updateUsersMap();
-    }
-    if (!this.mapGroupIdName.values().contains(group)) {
-      this.addGroup(group);
-      this.updateGroupsMap();
-    }
     fileInfoDao.insert(file);
   }
 
@@ -244,18 +195,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void insertFiles(FileInfo[] files)
       throws MetaStoreException {
     updateCache();
-    for (FileInfo file : files) {
-      String owner = file.getOwner();
-      String group = file.getGroup();
-      if (!this.mapOwnerIdName.values().contains(owner)) {
-        this.addUser(owner);
-        this.updateUsersMap();
-      }
-      if (!this.mapGroupIdName.values().contains(group)) {
-        this.addGroup(group);
-        this.updateGroupsMap();
-      }
-    }
     fileInfoDao.insert(files);
   }
 
@@ -397,6 +336,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteFileByPath(String path) throws MetaStoreException {
+    try {
+      fileInfoDao.deleteByPath(path);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<AccessCountTable> getAllSortedTables() throws MetaStoreException {
     try {
       return accessCountDao.getAllSortedTables();
@@ -526,13 +473,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   private void updateCache() throws MetaStoreException {
-    if (mapOwnerIdName == null) {
-      this.updateUsersMap();
-    }
-
-    if (mapGroupIdName == null) {
-      this.updateGroupsMap();
-    }
     if (mapStoragePolicyIdName == null) {
       mapStoragePolicyNameId = null;
       try {
@@ -1415,11 +1355,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public Integer getStoragePolicyID(
       String policyName) throws MetaStoreException {
-    updateCache();
     try {
-      return getKey(mapStoragePolicyIdName, policyName);
+      updateCache();
+      return mapStoragePolicyNameId.get(policyName);
     } catch (EmptyResultDataAccessException e) {
-      return -1;
+      return null;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1518,6 +1458,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public boolean batchUpdateFileDiff(
+      List<Long> did, FileDiffState state)
+      throws MetaStoreException {
+    try {
+      return fileDiffDao.batchUpdate(did, state).length > 0;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public boolean updateFileDiff(long did,
       FileDiffState state, String parameters) throws MetaStoreException {
     try {
@@ -1550,17 +1500,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public boolean updateFileDiff(List<FileDiff> fileDiffs)
+  public void updateFileDiff(List<FileDiff> fileDiffs)
     throws MetaStoreException {
     if (fileDiffs == null || fileDiffs.size() == 0) {
-      return true;
+      return;
     }
-    for (FileDiff fileDiff: fileDiffs) {
-      if (!updateFileDiff(fileDiff)) {
-        return false;
-      }
+    try {
+      fileDiffDao.update(fileDiffs.toArray(new FileDiff[fileDiffs.size()]));
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
-    return true;
   }
 
 

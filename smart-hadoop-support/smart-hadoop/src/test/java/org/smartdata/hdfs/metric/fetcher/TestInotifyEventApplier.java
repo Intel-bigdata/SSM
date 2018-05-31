@@ -48,10 +48,6 @@ public class TestInotifyEventApplier extends TestDaoUtil {
   public void init() throws Exception {
     initDao();
     metaStore = new MetaStore(druidPool);
-    metaStore.addGroup("cg1");
-    metaStore.addUser("user1");
-    metaStore.addGroup("cg2");
-    metaStore.addUser("user2");
   }
 
   @Test
