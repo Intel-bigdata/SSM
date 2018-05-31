@@ -3,20 +3,26 @@ import unittest
 from util import *
 
 
-class TestSmallFile(unittest.TestCase):
+DEST_DIR = "hdfs://localhost:9000/dest"
 
-    def test_small_file_compact(self):
+
+class TestStressDR(unittest.TestCase):
+
+    def test_sync_rule(self):
+        # file : every 1s | path matches "/1MB/*" | sync -dest
+        # file_path = create_random_file(10 * 1024 * 1024)
+        # submit rule
         file_paths = []
-        # create directory with random name under TEST_DIR
+        cids = []
+        # create a directory with random name
         source_dir = TEST_DIR + random_string() + "/"
-        # create files in the above directory
+        # create random files in the above directory
         for i in range(MAX_NUMBER):
             file_paths.append(create_random_file_parallel(FILE_SIZE,
                                                           source_dir)[0])
-        time.sleep(2)
-        # compact rule
-        rule_str = "file : path matches " + \
-            "\"" + source_dir + "*\" | compact"
+        time.sleep(1)
+        rule_str = "file : every 1s | path matches " + \
+            "\"" + source_dir + "*\" | sync -dest " + DEST_DIR
         rid = submit_rule(rule_str)
         # Activate rule
         start_rule(rid)
@@ -38,9 +44,13 @@ class TestSmallFile(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    requests.adapters.DEFAULT_RETRIES = 5
+    s = requests.session()
+    s.keep_alive = False
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-size', default='1MB')
-    parser.add_argument('-num', default='500')
+    parser.add_argument('-num', default='10000')
     parser.add_argument('unittest_args', nargs='*')
     args, unknown_args = parser.parse_known_args()
     sys.argv[1:] = unknown_args
