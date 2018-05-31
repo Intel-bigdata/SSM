@@ -124,20 +124,22 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+    // check args
+    if (actionInfo.getArgs() == null) {
+      throw new IOException("The args of the submit file is null");
+    }
     if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
       // Check if container file is null
       String containerFilePath = actionInfo.getArgs().get(
           SmallFileCompactAction.CONTAINER_FILE);
       if (containerFilePath == null || containerFilePath.isEmpty()) {
-        LOG.debug("Illegal container file path: {}", containerFilePath);
-        return false;
+        throw new IOException("Illegal container file path: "+containerFilePath);
       }
 
       // Check if small files is null or empty
       String smallFiles = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
       if (smallFiles == null || smallFiles.isEmpty()) {
-        LOG.debug("Illegal small files: {}", smallFiles);
-        return false;
+        throw new IOException("Illegal small files: "+smallFiles);
       }
 
       // Check if small file list converted from Json is not empty
@@ -145,16 +147,14 @@ public class SmallFileScheduler extends ActionSchedulerService {
           smallFiles, new TypeToken<ArrayList<String>>() {
           }.getType());
       if (smallFileList.isEmpty()) {
-        LOG.debug("Illegal small file list: {}", smallFileList);
-        return false;
+        throw new IOException("Illegal small files list: "+smallFileList);
       }
 
       // Check if the small file list is valid
       if (checkIfValidSmallFiles(smallFileList)) {
         return true;
       } else {
-        LOG.debug("The small file list is invalid.");
-        return false;
+        throw new IOException("Illegal small files is invalid.");
       }
     } else {
       return true;
