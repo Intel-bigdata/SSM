@@ -822,6 +822,9 @@ public class CopyScheduler extends ActionSchedulerService {
           if (fileExistOnStandby(filePath)) {
             // Only allow delete when file do exist on remote
             diffChain.add(fileDiff.getDiffId());
+          } else {
+            // Mark this delete diff as applied
+            updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
           }
         } else {
           updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
