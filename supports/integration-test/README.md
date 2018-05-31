@@ -18,9 +18,9 @@ BASE_URL = "http://{SSM_Server}:7045"
 
 `{SSM_Server}` is the IP address or hostname of active Smart Server.
 
-## Init/Rest Test Environment
+## Init/Reset Test Environment
 1. Remove all files in hdfs:/ssmtest/
-Run this command in HDFS enviroment.
+Run this command in HDFS environment.
 ```
 HDFS dfs -ls -rm -r /ssmtest/
 HDFS dfs -mkdir /ssmtest/
@@ -56,10 +56,10 @@ This command will run all test cases for rule.
 
 ### 3. Test Data Protection
 ```
-python test_data_protection.py -size 10MB -v
+python test_data_protection.py -size 2GB -v
 ```
 This command will run all test cases (read, delete, append and overwrite files during moving) for 10MB files.
-The default value of size is 64MB if not given.
+The default value of size is 1GB if not given. A large value is recommended.
 
 #### Corner Cases of Data Protection
 

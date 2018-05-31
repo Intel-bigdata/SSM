@@ -10,48 +10,55 @@ class TestMoverProtection(unittest.TestCase):
     def test_mover_read(self):
         for action in move_actions:
             file_path = create_random_file(FILE_SIZE)
+            cmds = []
             # move
-            cmd1 = wait_for_cmdlet(move_cmdlet(action, file_path))
-            self.assertTrue(cmd1['state'] == "DONE", "Test failed for action {}".format(action))
+            cmds.append(move_cmdlet(action, file_path))
+            time.sleep(5)
             # read the file
-            cmd2 = wait_for_cmdlet(read_file(file_path))
-            self.assertTrue(cmd2['state'] == "DONE", "Test failed for action read after action {}".format(action))
+            cmds.append(read_file(file_path))
+            failed = wait_for_cmdlets(cmds)
+            self.assertTrue(len(failed) == 0, "Test failed for read during {}".format(action))
 
     def test_mover_delete(self):
         for action in move_actions:
             file_path = create_random_file(FILE_SIZE)
+            cmds = []
             # move
-            cmd1 = wait_for_cmdlet(move_cmdlet(action, file_path))
-            self.assertTrue(cmd1['state'] == "DONE", "Test failed for action {}".format(action))
-            # delete the file
-            cmd2 = wait_for_cmdlet(delete_file(file_path))
-            self.assertTrue(cmd2['state'] == "DONE", "Test failed for action delete after action {}".format(action))
+            cmds.append(move_cmdlet(action, file_path))
+            time.sleep(5)
+            # read the file
+            cmds.append(delete_file(file_path))
+            failed = wait_for_cmdlets(cmds)
+            self.assertTrue(len(failed) == 0, "Test failed for delete during {}".format(action))
 
     def test_mover_append(self):
         for action in move_actions:
             file_path = create_random_file(FILE_SIZE)
+            cmds = []
             # move
-            cmd1 = wait_for_cmdlet(move_cmdlet(action, file_path))
-            self.assertTrue(cmd1['state'] == "DONE", "Test failed for action {}".format(action))
-            # append the file
-            cmd2 = wait_for_cmdlet(append_file(file_path,
+            cmds.append(move_cmdlet(action, file_path))
+            time.sleep(5)
+            # read the file
+            cmds.append(append_file(file_path,
                                     random.randrange(1024, 1024 * 1024 * 2)))
-            self.assertTrue(cmd2['state'] == "DONE", "Test failed for action append after action {}".format(action))
+            failed = wait_for_cmdlets(cmds)
+            self.assertTrue(len(failed) == 0, "Test failed for append during {}".format(action))
 
     def test_mover_overwrite(self):
         for action in move_actions:
             file_path = create_random_file(FILE_SIZE)
+            cmds = []
             # move
-            cmd1 = wait_for_cmdlet(move_cmdlet(action, file_path))
-            self.assertTrue(cmd1['state'] == "DONE", "Test failed for action {}".format(action))
-            # overwrite the file
-            cmd2 = wait_for_cmdlet(create_file(file_path, 24 * 1024 * 1024))
-            self.assertTrue(cmd2['state'] == "DONE", "Test failed for action write after action {}".format(action))
-
+            cmds.append(move_cmdlet(action, file_path))
+            time.sleep(5)
+            # read the file
+            cmds.append(create_file(file_path, 24 * 1024 * 1024))
+            failed = wait_for_cmdlets(cmds)
+            self.assertTrue(len(failed) == 0, "Test failed for overwrite during {}".format(action))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-size', default='64MB')
+    parser.add_argument('-size', default='1GB')
     parser.add_argument('unittest_args', nargs='*')
     args, unknown_args = parser.parse_known_args()
     sys.argv[1:] = unknown_args
