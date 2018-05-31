@@ -30,8 +30,19 @@ public class TestSmartRuleStringParser {
   @Test
   public void testRuleTranslate() throws Exception {
     List<String> rules = new LinkedList<>();
-    rules.add("file : path matches \"/test/*\" | sync -dest \"hdfs://remotecluster:port/somedir\"");
+    rules.add("file : path matches \"/src/*\" | sync -dest \"hdfs://remotecluster:port/dest\"");
     rules.add("file : accessCount(10min) > accessCountTop(10min, 10) | sleep -ms 0");
+    rules.add("file : ac(10min) > acTop(10min, 10) | sleep -ms 0");
+    rules.add("file : accessCount(10min) > accessCountBottom(10min, 10) | sleep -ms 0");
+    rules.add("file : ac(10min) > acBot(10min, 10) | sleep -ms 0");
+    rules.add("file : ac(10min) > accessCountTopOnStoragePolicy(10min, 10, \"ALL_SSD\") " +
+        "| sleep -ms 0");
+    rules.add("file : ac(10min) > acTopSp(10min, 10, \"ALL_SSD\") | sleep -ms 0");
+    rules.add("file : ac(10min) > accessCountBottomOnStoragePolicy(10min, 10, \"CACHE\") " +
+        "| sleep -ms 0");
+    rules.add("file : ac(10min) > acBotSp(10min, 10, \"CACHE\") | sleep -ms 0");
+    rules.add("file : ac(10min) > acBotSp(10min, 10, \"HOT\") and acBotSp(10min, 10, \"HOT\") " +
+        "> 0 | sleep -ms 0");
 
     for (String rule : rules) {
       parseRule(rule);
@@ -44,8 +55,9 @@ public class TestSmartRuleStringParser {
     TranslateResult tr = parser.translate();
 
     int index = 1;
+    System.out.println("\n" + rule);
     for (String sql : tr.getSqlStatements()) {
-      System.out.println("" + index + ". " + sql);
+      System.out.println("\t" + index + ". " + sql);
       index++;
     }
   }
