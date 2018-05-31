@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 This script is used to auto-run SSM transparent read with HiBench test for SSM integration test.
 The following tests are included:

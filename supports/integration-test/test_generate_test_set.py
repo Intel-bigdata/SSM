@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-
+This script will be used to generate test data set. It is also called by:
+- test_smallfile_compact_rule.py
+- test_smallfile_action.py
 """
 import sys
 import ast
