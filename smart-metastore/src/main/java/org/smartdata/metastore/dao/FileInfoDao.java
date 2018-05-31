@@ -139,6 +139,12 @@ public class FileInfoDao {
     jdbcTemplate.update(sql, fid);
   }
 
+  public void deleteByPath(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM file WHERE path = ?";
+    jdbcTemplate.update(sql, path);
+  }
+
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM file";
